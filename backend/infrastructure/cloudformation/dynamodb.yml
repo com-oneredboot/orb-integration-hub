@@ -1,0 +1,254 @@
+# --------------------------------------------------- #
+AWSTemplateFormatVersion: 2010-09-09
+
+# --------------------------------------------------- #
+Transform: AWS::Serverless-2016-10-31
+
+# --------------------------------------------------- #
+Description: Application Infrastructure
+
+# --------------------------------------------------- #
+Parameters:
+  Environment:
+    Default: dev
+    Type: String
+  CustomerId:
+    Default: orb
+    Type: String
+  ProjectId:
+    Default: integration-hub
+    Type: String
+  TracingIs:
+    Default: Active
+    Type: String
+
+# --------------------------------------------------- #
+Resources:
+
+  # Customers Table
+  CustomersTable:
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: customer_id
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        -
+          AttributeName: customer_id
+          KeyType: HASH
+      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-customers"
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
+    Type: AWS::DynamoDB::Table
+
+  # Payment Gateway Table
+  PaymentGatewayTable:
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: customer_id
+          AttributeType: S
+        -
+          AttributeName: payment_type_id
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        -
+          AttributeName: customer_id
+          KeyType: HASH
+        -
+          AttributeName: payment_type_id
+          KeyType: RANGE
+      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-integration-hub"
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
+    Type: AWS::DynamoDB::Table
+
+  # Payments Table
+  PaymentsTable:
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: customer_id
+          AttributeType: S
+        -
+          AttributeName: payment_id
+          AttributeType: S
+        -
+          AttributeName: created_on
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        -
+          AttributeName: customer_id
+          KeyType: HASH
+        -
+          AttributeName: payment_id
+          KeyType: RANGE
+
+      GlobalSecondaryIndexes:
+        -
+          IndexName: customer_id-timestamp-index
+          KeySchema:
+            -
+              AttributeName: customer_id
+              KeyType: HASH
+            -
+              AttributeName: created_on
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-payments"
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
+    Type: AWS::DynamoDB::Table
+
+  # Registrations Table
+  RegistrationsTable:
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: cognito_id
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        -
+          AttributeName: cognito_id
+          KeyType: HASH
+      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-registrations"
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
+    Type: AWS::DynamoDB::Table
+
+  # Customers Parameter Store
+  CustomersTableNameParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-customers-table-name"
+      Type: String
+      Value: !Ref CustomersTable
+      Description: DynamoDB Customers Table Name
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+    Type: AWS::SSM::Parameter
+  CustomersTableArnParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-customers-table-arn"
+      Type: String
+      Value: !GetAtt CustomersTable.Arn
+      Description: DynamoDB Customers Table Arn
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+    Type: AWS::SSM::Parameter
+
+  # Payment Gateway Parameter Store
+  PaymentGatewayTableNameParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-integration-hub-table-name"
+      Type: String
+      Value: !Ref PaymentGatewayTable
+      Description: DynamoDB Payment Gateway Table Name
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+    Type: AWS::SSM::Parameter
+  PaymentGatewayTableArnParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-integration-hub-table-arn"
+      Type: String
+      Value: !GetAtt PaymentGatewayTable.Arn
+      Description: DynamoDB Payment Gateway Table Arn
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+    Type: AWS::SSM::Parameter
+
+  # Payments Parameter Store
+  PaymentsTableNameParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-payments-table-name"
+      Type: String
+      Value: !Ref PaymentsTable
+      Description: DynamoDB Payments Table Name
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+    Type: AWS::SSM::Parameter
+  PaymentTableArnParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-payments-table-arn"
+      Type: String
+      Value: !GetAtt PaymentsTable.Arn
+      Description: DynamoDB Payments Table Arn
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+    Type: AWS::SSM::Parameter
+
+  # Registrations Parameter Store
+  RegistrationsTableNameParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-registrations-table-name"
+      Type: String
+      Value: !Ref RegistrationsTable
+      Description: DynamoDB Registrations Table Name
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+    Type: AWS::SSM::Parameter
+  RegistrationsTableArnParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-registrations-table-arn"
+      Type: String
+      Value: !GetAtt RegistrationsTable.Arn
+      Description: DynamoDB Registrations Table Arn
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+    Type: AWS::SSM::Parameter

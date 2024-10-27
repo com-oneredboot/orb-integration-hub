@@ -1,0 +1,61 @@
+name: deploy-ui
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ui/**'
+
+jobs:
+  deploy-ui-stack:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # Setup Node.js environment
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'
+
+    # Install dependencies
+    - name: Install dependencies
+      run: |
+        npm install
+      working-directory: ./ui
+
+    # Build Angular project
+    - name: Build Angular project
+      run: |
+        npm run build --prod
+      working-directory: ./ui
+
+    # Fetch AWS Credentials
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    # Queues
+    - name: Deploy UI Stack
+      run: |
+        sam build --template cloudfront.yml
+        sam package --template-file cloudfront.yml --s3-bucket sog-ai-repository-build-artifacts --output-template-file cloudfront-packaged.yml
+        sam deploy --template-file cloudfront-packaged.yml --s3-bucket sog-ai-repository-build-artifacts --stack-name sog-ai-repository-ui-cloudfront --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
+        aws s3 cp cloudfront-packaged.yml s3://sog-ai-repository-build-templates/cloudfront-packaged.yml
+      working-directory: ./ui
+
+    # Deploy to S3
+    - name: Deploy to S3
+      run: |
+        aws s3 sync dist/sog-ai-repository-ui/browser s3://sog-ai-repository-development-ui-cloudfront --delete
+      working-directory: ./ui
+
+    # Invalidate CloudFront Distribution
+    - name: Invalidate CloudFront Distribution
+      run: |
+        aws cloudfront create-invalidation --distribution-id EXXBLUFKD8FAX --paths "/*"

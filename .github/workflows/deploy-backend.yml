@@ -1,0 +1,98 @@
+name: deploy-backend
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'infrastructure/cloudformation/appsync.yml'
+      - 'infrastructure/cloudformation/cognito.yml'
+      - 'infrastructure/cloudformation/lambdas.yml'
+      - 'infrastructure/cloudformation/dynamodb.yml'
+      - 'backend/Pipfile'
+      - 'backend/src/**'
+      - '.github/workflows/deploy-backend.yml'
+
+jobs:
+  deploy-backend-stacks:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # Setup Python environment
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.12'
+
+    # Fetch AWS Credentials
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    # Cognito
+    - name: Deploy Cognito Stack
+      run: |
+        sam build --template cognito.yml
+        sam package --template-file cognito.yml --s3-bucket orb-integration-hub-build-artifacts --output-template-file cognito-packaged.yml
+        sam deploy --template-file cognito-packaged.yml --s3-bucket orb-integration-hub-build-artifacts --stack-name orb-integration-hub-cognito --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
+        aws s3 cp cognito-packaged.yml s3://orb-integration-hub-build-templates/cognito-packaged.yml
+      working-directory: ./infrastructure/cloudformation
+
+    # DynamoDb
+    - name: Deploy DynamoDb Stack
+      run: |
+        sam build --template dynamodb.yml
+        sam package --template-file dynamodb.yml --s3-bucket orb-integration-hub-build-artifacts --output-template-file dynamodb-packaged.yml
+        sam deploy --template-file dynamodb-packaged.yml --s3-bucket orb-integration-hub-build-artifacts --stack-name orb-integration-hub-dynamodb --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
+        aws s3 cp dynamodb-packaged.yml s3://orb-integration-hub-build-templates/dynamodb-packaged.yml
+      working-directory: ./infrastructure/cloudformation
+
+    # Lambdas
+    - name: Deploy Lambda Stack
+      run: |
+        sam build \
+          --template dynamodb.yml
+        sam package \
+          --template-file lambdas.yml \
+          --s3-bucket orb-integration-hub-build-artifacts \
+          --output-template-file lambdas-packaged.yml
+        
+        sam deploy \
+          --template-file lambdas-packaged.yml \
+          --s3-bucket orb-integration-hub-build-artifacts \
+          --stack-name orb-integration-hub-lambdas \
+          --capabilities CAPABILITY_NAMED_IAM \
+          --no-fail-on-empty-changeset
+        
+        aws s3 cp lambdas-packaged.yml \
+          s3://orb-integration-hub-build-templates/lambdas-packaged.yml
+
+      working-directory: ./infrastructure/cloudformation
+
+    # Appsync
+    - name: Deploy Appsync Stack
+      run: |
+        sam build \
+          --template appsync.yml
+
+        sam package \
+          --template-file appsync.yml \
+          --s3-bucket orb-integration-hub-build-artifacts \
+          --output-template-file appsync-packaged.yml
+
+        sam deploy \
+          --template-file appsync-packaged.yml \
+          --s3-bucket orb-integration-hub-build-artifacts \
+          --stack-name orb-integration-hub-appsync  \
+          --capabilities CAPABILITY_NAMED_IAM \
+          --no-fail-on-empty-changeset
+
+        aws s3 cp appsync-packaged.yml \
+          s3://orb-integration-hub-build-templates/appsync-packaged.yml
+
+      working-directory: ./infrastructure/cloudformation

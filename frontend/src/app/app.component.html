@@ -1,0 +1,22 @@
+<div class="app-container">
+  <header class="header">
+    <div class="logo-container">
+      <img src="assets/hardhat.jpg" alt="hardhat" />
+      <h1>Integration Hub</h1>
+    </div>
+    <nav class="nav-menu">
+      <ng-container *ngIf="!(isAuthenticated$ | async)">
+        <a routerLink="/home" routerLinkActive="active" class="nav-link">Home</a>
+        <a routerLink="/signin" routerLinkActive="active" class="nav-link">Sign In</a>
+        <a routerLink="/signup" routerLinkActive="active" class="nav-link">Sign Up</a>
+      </ng-container>
+      <ng-container *ngIf="isAuthenticated$ | async">
+        <button (click)="onSignOut()" class="signout-button">Sign Out</button>
+      </ng-container>
+    </nav>
+  </header>
+
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

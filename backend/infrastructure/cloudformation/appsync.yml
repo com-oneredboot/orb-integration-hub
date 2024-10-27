@@ -1,0 +1,377 @@
+# --------------------------------------------------- #
+AWSTemplateFormatVersion: 2010-09-09
+
+# --------------------------------------------------- #
+Transform: AWS::Serverless-2016-10-31
+
+# --------------------------------------------------- #
+Description: >
+ Application Infrastructure - AppSync Stack
+
+# --------------------------------------------------- #
+Parameters:
+  Environment:
+    Default: dev
+    Type: String
+  CustomerId:
+    Default: orb
+    Type: String
+  ProjectId:
+    Default: integration-hub
+    Type: String
+  TracingIs:
+    Default: Active
+    Type: String
+
+# --------------------------------------------------- #
+Resources:
+  PaymentGatewayApi:
+    Type: AWS::AppSync::GraphQLApi
+    Properties:
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-appsync'
+      AuthenticationType: AMAZON_COGNITO_USER_POOLS
+      UserPoolConfig:
+        UserPoolId: !Sub "${CustomerId}-${ProjectId}-${Environment}-cognito-user-pool-id"
+        AwsRegion: !Ref AWS::Region
+        DefaultAction: ALLOW
+      AdditionalAuthenticationProviders:
+        - AuthenticationType: API_KEY
+      LogConfig:
+        CloudWatchLogsRoleArn: !GetAtt AppSyncLoggingServiceRole.Arn
+        FieldLogLevel: ALL
+        ExcludeVerboseContent: false
+  PaymentGatewayApiKey:
+    Type: AWS::AppSync::ApiKey
+    Properties:
+      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      Description: "API Key for unauthenticated access"
+      Expires: 1735603200
+  ApiKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-appsync-graphql-key'
+      Description: "AppSync API Key for unauthenticated access"
+      SecretString: !GetAtt PaymentGatewayApiKey.ApiKey
+  PaymentGatewaySchema:
+    Type: AWS::AppSync::GraphQLSchema
+    Properties:
+      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      Definition: |
+        type Payment @aws_api_key{
+          payment_id: ID!
+          customer_id: String!
+          amount: Float!
+          currency: String!
+          payment_method_id: String!
+          created_on: AWSDateTime!
+        }
+  
+        type StripePaymentResponse @aws_api_key{
+          status: String!
+          message: String
+        }
+  
+        input StripePaymentInput @aws_api_key{
+          payment_id: ID!
+          customer_id: String!
+          amount: Float!
+          currency: String!
+          payment_method_id: String!
+          created_on: AWSDateTime!
+        }
+  
+        type ContactMessageResponse @aws_api_key {
+          success: Boolean
+          message: String
+        }
+  
+        input ContactMessageInput @aws_api_key { 
+          name_first: String!
+          name_last: String!
+          email: String!
+          subject: String!
+          message: String!
+        }
+
+        input RegistrationInput @aws_api_key {
+          registration_id: ID!
+          cognito_id: String!
+          name_first: String!
+          name_last: String!
+          email: String!
+          gender: String!
+          birthdate: AWSDate!
+          allergies: String!
+          dietary_restrictions: String!
+          home_church: String
+          photography_consent: String!
+          drug_policy_acknowledged: Boolean!
+          medication_policy_acknowledged: Boolean!
+          refund_policy_acknowledged: Boolean!
+          truthfulness_acknowledged: Boolean!
+          created_on: AWSDateTime!
+        }
+
+        type RegistrationResult @aws_api_key{
+          status: String!
+          registration_id: ID!
+        }
+  
+        type Mutation {
+          processStripePayment(input: StripePaymentInput!): StripePaymentResponse! @aws_api_key
+          sendContactMessage(input: ContactMessageInput!): ContactMessageResponse! @aws_api_key
+          processRegistration(input: RegistrationInput!): RegistrationResult! @aws_api_key
+        }
+  
+        type Query {
+          getPayment(payment_id: ID!, customer_id: String!): Payment @aws_cognito_user_pools @aws_api_key
+          getRegistrationByCognitoId(cognito_id: String!): Registration @aws_cognito_user_pools @aws_api_key
+          listPaymentsByCustomer(customer_id: String!, limit: Int, nextToken: String): PaymentConnection! @aws_api_key
+        }
+  
+        type PaymentConnection @aws_api_key{
+          items: [Payment!]!
+          nextToken: String
+        }
+  
+        schema {
+          query: Query
+          mutation: Mutation
+        }
+
+  # Data Sources
+  ContactFormDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      Name: ContactFormDataSource
+      Type: AWS_LAMBDA
+      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+      LambdaConfig:
+        LambdaFunctionArn: !Sub '{{resolve:ssm:/${CustomerId}/${ProjectId}/${Environment}/contact-us/lambda/arn}}'
+  DynamoDBDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      Name: DynamoDBDataSource
+      Type: AMAZON_DYNAMODB
+      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+      DynamoDBConfig:
+        TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-payments-table-name}}'
+        AwsRegion: !Ref AWS::Region
+  PaymentProcessorDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      Name: PaymentProcessorDataSource
+      Type: AWS_LAMBDA
+      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+      LambdaConfig:
+        LambdaFunctionArn: !Sub '{{resolve:ssm:/${CustomerId}/${ProjectId}/${Environment}/payment-processor/lambda/arn}}'
+  RegistrationsDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      Name: RegistrationsDataSource
+      Type: AMAZON_DYNAMODB
+      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+      DynamoDBConfig:
+        TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-registrations-table-name}}'
+        AwsRegion: !Ref AWS::Region
+
+  # Resolvers
+  ProcessStripePaymentResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      TypeName: Mutation
+      FieldName: processStripePayment
+      DataSourceName: !GetAtt PaymentProcessorDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": $util.toJson($context.arguments)
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($context.result)
+
+  SendContactMessageResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      TypeName: Mutation
+      FieldName: sendContactMessage
+      DataSourceName: !GetAtt ContactFormDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": $util.toJson($context.arguments)
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($context.result)
+
+  GetPaymentResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      TypeName: Query
+      FieldName: getPayment
+      DataSourceName: !GetAtt DynamoDBDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version" : "2017-02-28",
+          "operation" : "GetItem",
+          "key" : {
+            "payment_id" : $util.dynamodb.toDynamoDBJson($ctx.args.payment_id),
+            "customer_id" : $util.dynamodb.toDynamoDBJson($ctx.args.customer_id)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($context.result)
+
+  getRegistrationByCognitoIdResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      TypeName: Query
+      FieldName: getRegistrationById
+      DataSourceName: !GetAtt RegistrationsDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version" : "2017-02-28",
+          "operation" : "GetItem",
+          "key" : {
+            "cognito_id" : $util.dynamodb.toDynamoDBJson($ctx.args.cognito_id)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($context.result)
+  ListPaymentsByCustomerResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      TypeName: Query
+      FieldName: listPaymentsByCustomer
+      DataSourceName: !GetAtt DynamoDBDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version" : "2017-02-28",
+          "operation" : "Query",
+          "query" : {
+            "expression" : "customer_id = :customerId",
+            "expressionValues" : {
+              ":customerId" : $util.dynamodb.toDynamoDBJson($ctx.args.customer_id)
+            }
+          },
+          "index" : "customer_id-timestamp-index",
+          "scanIndexForward" : false,
+          "limit": $util.defaultIfNull($ctx.args.limit, 20),
+          "nextToken": $util.toJson($util.defaultIfNull($ctx.args.nextToken, null))
+        }
+      ResponseMappingTemplate: |
+        {
+          "items": $util.toJson($context.result.items),
+          "nextToken": $util.toJson($context.result.nextToken)
+        }
+
+  ProcessRegistrationResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      TypeName: Mutation
+      FieldName: processRegistration
+      DataSourceName: !GetAtt RegistrationsDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "PutItem",
+          "key": {
+            "cognito_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.cognito_id),
+            "registration_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.registration_id)
+          },
+          "attributeValues": {
+            "name_first": $util.dynamodb.toDynamoDBJson($ctx.args.input.name_first),
+            "name_last": $util.dynamodb.toDynamoDBJson($ctx.args.input.name_last),
+            "email": $util.dynamodb.toDynamoDBJson($ctx.args.input.email),
+            "gender": $util.dynamodb.toDynamoDBJson($ctx.args.input.gender),
+            "created_on": $util.dynamodb.toDynamoDBJson($ctx.args.input.created_on),
+          }
+        }
+      ResponseMappingTemplate: |
+        #if($context.error)
+          $util.error($context.error.message, $context.error.type)
+        #else
+          {
+            "status": "succeeded",
+            "registration_id": "$registration_id"
+          }
+        #end
+
+
+  # IAM
+  AppSyncServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: appsync.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: AppSyncServicePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !Sub '{{resolve:ssm:/${CustomerId}/${ProjectId}/${Environment}/payment-processor/lambda/arn}}'
+                  - !Sub '{{resolve:ssm:/${CustomerId}/${ProjectId}/${Environment}/contact-us/lambda/arn}}'
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:Query
+                Resource:
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-payments-table-arn}}'
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-payments-table-arn}}/index/*'
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                Resource:
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-registrations-table-arn}}'
+  AppSyncLoggingServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: appsync.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: AppSyncLoggingServicePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/appsync/apis/*:*'
+
+# --------------------------------------------------- #
+Outputs:
+  GraphQLApiUrl:
+    Description: 'URL of the AppSync GraphQL API'
+    Value: !GetAtt PaymentGatewayApi.GraphQLUrl
+  GraphQLApiKeySecretName:
+    Description: 'Name of the Secret containing the AppSync API Key'
+    Value: !Ref ApiKeySecret

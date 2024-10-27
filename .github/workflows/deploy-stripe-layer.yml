@@ -1,0 +1,70 @@
+name: stripe-layer
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/deploy-stripe-layer.yml'
+      - 'backend/src/layers/stripe_layer.yml'
+      - 'backend/src/layers/stripe/**'
+
+jobs:
+  deploy-api-stack:
+    runs-on: ubuntu-latest
+    steps:
+
+    # Checkout code
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # Setup Python environment
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.12'
+
+    # Fetch AWS Credentials
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    # Fetch Requirements
+    - name: Build and Deploy Layer
+      run: |
+
+        pip install --upgrade pip
+        pip install pipenv --user
+        
+        echo "Build Layer"
+        chmod +x build_stripe_layer.sh
+        bash build_stripe_layer.sh
+
+      working-directory: backend/src/layers/stripe
+
+    # Build
+    - name: Build and Deploy Layer
+      run: |
+
+        sam build \
+        --template stripe_layer.yml
+        
+        sam package \
+        --template-file stripe_layer.yml \
+        --s3-bucket orb-integration-hub-build-artifacts \
+        --output-template-file stripe_layer-packaged.yml
+        
+        sam deploy \
+        --template-file stripe_layer-packaged.yml \
+        --s3-bucket orb-integration-hub-build-artifacts \
+        --stack-name orb-integration-hub-stripe-layer \
+        --capabilities CAPABILITY_NAMED_IAM \
+        --no-fail-on-empty-changeset
+        
+        aws s3 cp stripe_layer-packaged.yml \
+        s3://orb-integration-hub-build-templates/stripe_layer-packaged.yml
+
+      working-directory: backend/src/layers

@@ -1,0 +1,290 @@
+# --------------------------------------------------- #
+AWSTemplateFormatVersion: 2010-09-09
+
+# --------------------------------------------------- #
+Transform: AWS::Serverless-2016-10-31
+
+# --------------------------------------------------- #
+Description: >
+  Application Infrastructure - Lambda Stack
+
+# --------------------------------------------------- #
+Parameters:
+  ApplicationLoggingLevel:
+    Default: DEBUG
+    Type: String
+  Environment:
+    Default: dev
+    Type: String
+  LogFormat:
+    Default: JSON
+    Type: String
+  NotificationEmail:
+    Default: models@oneredboot.com
+    Description: The email address for notifications
+    Type: String
+  CustomerId:
+    Default: orb
+    Type: String
+  ProjectId:
+    Default: integration-hub
+    Type: String
+  Runtime:
+    Default: python3.12
+    Type: String
+  SystemLoggingLevel:
+    Default: WARN
+    Type: String
+  ToEmail:
+    Default: corey@shabot.ca
+    Description: The email address to send contact form submissions to
+    Type: String
+
+# --------------------------------------------------- #
+Globals:
+  Function:
+    DeadLetterQueue:
+      TargetArn: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-dead-letter-queue-arn}}'
+      Type: SNS
+    Environment:
+      Variables:
+        ALERTS_QUEUE: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-alerts-queue-arn}}'
+        LOGGING_LEVEL: INFO
+        VERSION: 1
+    Handler: index.lambda_handler
+    MemorySize: 256
+    Runtime: !Ref Runtime
+    Tags:
+      Billable: true
+      CustomerId: !Ref CustomerId
+      Environment: !Ref Environment
+      ProjectId: !Ref ProjectId
+    Timeout: 30
+
+# --------------------------------------------------- #
+Resources:
+
+  # Lambda Function for Payment Processing
+  PaymentProcessorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${CustomerId}-${ProjectId}-${Environment}-payment-processor'
+      Role: !GetAtt LambdaExecutionRole.Arn
+      CodeUri: ../../backend/src/lambdas/stripe
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref Environment
+          LOG_LEVEL: !Ref ApplicationLoggingLevel
+          PAYMENTS_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-payments-table-name}}'
+          STRIPE_SECRET_KEY_PATH: !Sub '/${CustomerId}/${ProjectId}/${Environment}/stripe/publishable/key'
+      Layers:
+        - !Sub '{{resolve:ssm:/${CustomerId}/${ProjectId}/${Environment}/stripe/layer/arn}}'
+  StripePublishableKeyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${CustomerId}-${ProjectId}-${Environment}-stripe-publishable-key'
+      Role: !GetAtt LambdaExecutionRole.Arn
+      CodeUri: ../../backend/src/lambdas/stripe_publishable_key
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref Environment
+          LOG_LEVEL: !Ref ApplicationLoggingLevel
+          STRIPE_PUBLISHABLE_KEY_SECRET: !Ref StripePublishableKeySecret
+
+  # Lambda Function for Contact Us Form
+  ContactFormFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${CustomerId}-${ProjectId}-${Environment}-contact-us'
+      CodeUri: ../../backend/src/lambdas/contact_us
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TO_EMAIL: !Ref ToEmail
+
+  # IAM Roles
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Ref CloudWatchLoggingPolicy
+        - !Ref ParameterStorePolicy
+        - !Ref QueueStorePolicy
+        - !Ref SecretsManagerPolicy
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:GetItem
+                Resource:
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-payments-table-arn}}'
+        - PolicyName: SecretsManagerAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:orb/integration-hub/${Environment}/stripe/backend/key-*'
+        - PolicyName: SSMParameterAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource:
+                  - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CustomerId}-${ProjectId}-${Environment}-*'
+        - PolicyName: CloudWatchLogging
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${CustomerId}-${ProjectId}-${Environment}-*'
+        - PolicyName: SQSAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                Resource:
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-alerts-queue-arn}}'
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-dead-letter-queue-arn}}'
+        - PolicyName: SNSAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource:
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-alerts-queue-arn}}'
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-dead-letter-queue-arn}}'
+        - PolicyName: SESAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ses:SendEmail
+                Resource: '*'
+        - PolicyName: SecretsManagerAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${CustomerId}-${ProjectId}-${Environment}-*'
+
+  # IAM Policies
+  CloudWatchLoggingPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "${CustomerId}-${ProjectId}-${Environment}-cloudwatch-access-policy"
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "logs:CreateLogGroup"
+              - "logs:CreateLogStream"
+              - "logs:PutLogEvents"
+            Resource:
+              - "arn:aws:logs:*:*:*"
+  ParameterStorePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "${CustomerId}-${ProjectId}-${Environment}-parameter-store-policy"
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "ssm:GetParameter"
+            Resource:
+              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter//${CustomerId}/${ProjectId}/${Environment}/*"
+  QueueStorePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "${CustomerId}-${ProjectId}-${Environment}-queue-store-policy"
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "sqs:*"
+              - "sns:*"
+            Resource:
+              - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-dead-letter-queue-arn}}'
+              - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-alerts-queue-arn}}'
+  SecretsManagerPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "${CustomerId}-${ProjectId}-${Environment}-secrets-manager-policy"
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "secretsmanager:GetSecretValue"
+            Resource:
+              - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:/${CustomerId}/${ProjectId}/${Environment}/*"
+
+  # SSM Parameters
+  ContactUsLambdaArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${CustomerId}/${ProjectId}/${Environment}/contact-us/lambda/arn"
+      Type: String
+      Value: !GetAtt ContactFormFunction.Arn
+      Description: ARN of the Contact Us Lambda function
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+  PaymentProcessorLambdaArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${CustomerId}/${ProjectId}/${Environment}/payment-processor/lambda/arn"
+      Type: String
+      Value: !GetAtt PaymentProcessorFunction.Arn
+      Description: ARN of the Payment Processor Lambda function
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+  StripePublishableKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub '/${CustomerId}/${ProjectId}/${Environment}/stripe/publishable/key'
+      Description: "AppSync API Key for unauthenticated access"
+      SecretString: "change-me"
+
+# --------------------------------------------------- #
+Outputs:
+  PaymentProcessorFunctionArn:
+    Description: ARN of the Payment Processor Lambda function
+    Value: !GetAtt PaymentProcessorFunction.Arn
+  ContactFormFunctionArn:
+    Description: ARN of the Contact Us Lambda function
+    Value: !GetAtt ContactFormFunction.Arn

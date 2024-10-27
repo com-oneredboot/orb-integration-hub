@@ -1,0 +1,47 @@
+<div class="signin-container">
+  <div class="logo-container">
+    <img src="assets/onredboot-logo.jpg" alt="OneRedBoot Logo">
+  </div>
+
+  <form [formGroup]="signInForm" (ngSubmit)="onSubmit()" class="signin-form">
+    <div class="form-group">
+      <input
+        id="username"
+        type="email"
+        formControlName="username"
+        placeholder="Enter your email"
+        [class.error]="signInForm.get('username')?.touched && signInForm.get('username')?.invalid"
+      >
+      <div class="error-message" *ngIf="signInForm.get('username')?.touched && signInForm.get('username')?.invalid">
+        <span *ngIf="signInForm.get('username')?.errors?.['required']">Email is required</span>
+        <span *ngIf="signInForm.get('username')?.errors?.['email']">Please enter a valid email</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <input
+        id="password"
+        type="password"
+        formControlName="password"
+        placeholder="Enter your password"
+        [class.error]="signInForm.get('password')?.touched && signInForm.get('password')?.invalid"
+      >
+      <div class="error-message" *ngIf="signInForm.get('password')?.touched && signInForm.get('password')?.invalid">
+        <span *ngIf="signInForm.get('password')?.errors?.['required']">Password is required</span>
+        <span *ngIf="signInForm.get('password')?.errors?.['minlength']">Password must be at least 8 characters</span>
+      </div>
+    </div>
+
+    <button type="submit" class="submit-button" [disabled]="isLoading || signInForm.invalid">
+      <span *ngIf="!isLoading">Sign In</span>
+      <div class="loader" *ngIf="isLoading"></div>
+    </button>
+
+    <div class="form-links">
+      <a routerLink="/forgot-password" class="forgot-password">Forgot Password?</a>
+      <div class="signup-prompt">
+        Don't have an account? <a routerLink="/signup">Sign Up</a>
+      </div>
+    </div>
+  </form>
+</div>
