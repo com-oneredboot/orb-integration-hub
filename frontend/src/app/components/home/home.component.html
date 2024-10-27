@@ -1,10 +1,11 @@
+<!-- home.component.html -->
 <div class="home-container">
   <header class="hero-section">
     <div class="logo-container">
-      <img src="assets/onredboot-logo.jpg" alt="OneRedBoot Logo">
+      <img src="assets/hardhat.jpg" alt="hardhat" />
+      <h1>Integration Hub</h1>
     </div>
-    <h1>Seamless Payment Solutions for Your Business</h1>
-    <p class="hero-subtitle">A comprehensive payment gateway and event management system</p>
+    <p class="hero-subtitle">A comprehensive solution for payment processing, event management, and user authentication</p>
     <div class="cta-buttons">
       <button (click)="navigateToSignup()" class="primary-button">Get Started</button>
       <button (click)="navigateToSignin()" class="secondary-button">Sign In</button>
@@ -54,9 +55,16 @@
       </div>
       <div class="integration-image">
         <div class="code-preview">
-          <!-- Simplified integration code preview -->
-          <pre><code>
-          </code></pre>
+          <pre>
+            <code>
+              // Example Integration
+              const payment = await oneRedBoot.createPayment(&#123;
+                amount: 1000,
+                currency: 'USD',
+                description: 'Event Registration'
+              &#125;);
+            </code>
+          </pre>
         </div>
       </div>
     </div>

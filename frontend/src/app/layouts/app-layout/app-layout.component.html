@@ -1,7 +1,7 @@
 <div class="app-container">
   <header class="header">
     <div class="logo-container">
-      <img src="assets/hardhat.jpg" alt="hardhat" />
+      <img src="../../../assets/hardhat.jpg" alt="hardhat" />
       <h1>Integration Hub</h1>
     </div>
     <nav class="nav-menu">
@@ -11,7 +11,7 @@
         <a routerLink="/signup" routerLinkActive="active" class="nav-link">Sign Up</a>
       </ng-container>
       <ng-container *ngIf="isAuthenticated$ | async">
-        <button (click)="onSignOut()" class="signout-button">Sign Out</button>
+        <button (click)="signOut()" class="signout-button">Sign Out</button>
       </ng-container>
     </nav>
   </header>

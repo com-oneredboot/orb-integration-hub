@@ -5,13 +5,15 @@
 
   <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="signup-form">
     <div class="form-group">
-      <input
-        id="username"
-        type="text"
-        formControlName="username"
-        placeholder="Enter your username"
-        [class.error]="signupForm.get('username')?.touched && signupForm.get('username')?.invalid"
-      >
+      <div class="input-container">
+        <input
+          type="text"
+          formControlName="username"
+          placeholder="Enter your username"
+          class="form-input"
+          autocomplete="username"
+          [class.error]="signupForm.get('username')?.touched && signupForm.get('username')?.invalid">
+      </div>
       <div class="error-message" *ngIf="signupForm.get('username')?.touched && signupForm.get('username')?.invalid">
         <span *ngIf="signupForm.get('username')?.errors?.['required']">Username is required</span>
         <span *ngIf="signupForm.get('username')?.errors?.['minlength']">Username must be at least 3 characters</span>
@@ -19,13 +21,15 @@
     </div>
 
     <div class="form-group">
-      <input
-        id="email"
-        type="email"
-        formControlName="email"
-        placeholder="Enter your email"
-        [class.error]="signupForm.get('email')?.touched && signupForm.get('email')?.invalid"
-      >
+      <div class="input-container">
+        <input
+          type="email"
+          formControlName="email"
+          placeholder="Enter your email"
+          class="form-input"
+          autocomplete="email"
+          [class.error]="signupForm.get('email')?.touched && signupForm.get('email')?.invalid">
+      </div>
       <div class="error-message" *ngIf="signupForm.get('email')?.touched && signupForm.get('email')?.invalid">
         <span *ngIf="signupForm.get('email')?.errors?.['required']">Email is required</span>
         <span *ngIf="signupForm.get('email')?.errors?.['email']">Please enter a valid email</span>
@@ -33,20 +37,20 @@
     </div>
 
     <div class="form-group">
-      <input
-        id="password"
-        [type]="passwordVisible ? 'text' : 'password'"
-        formControlName="password"
-        placeholder="Enter your password"
-        [class.error]="signupForm.get('password')?.touched && signupForm.get('password')?.invalid"
-      >
-      <button
-        type="button"
-        class="password-toggle"
-        (click)="togglePasswordVisibility()"
-      >
-        <i [class.visible]="passwordVisible">👁</i>
-      </button>
+      <div class="password-input-container">
+        <input
+          [type]="passwordVisible ? 'text' : 'password'"
+          formControlName="password"
+          placeholder="Enter your password"
+          class="form-input"
+          autocomplete="new-password"
+          [class.error]="signupForm.get('password')?.touched && signupForm.get('password')?.invalid">
+        <button
+          type="button"
+          class="password-toggle">
+          <span class="eye-icon">👁</span>
+        </button>
+      </div>
       <div class="error-message" *ngIf="signupForm.get('password')?.touched && signupForm.get('password')?.invalid">
         <span *ngIf="signupForm.get('password')?.errors?.['required']">Password is required</span>
         <span *ngIf="signupForm.get('password')?.errors?.['pattern']">
@@ -55,7 +59,11 @@
       </div>
     </div>
 
-    <button type="submit" class="submit-button" [disabled]="isLoading || signupForm.invalid">
+    <button
+      type="submit"
+      class="submit-button"
+      [class.loading]="isLoading"
+      [disabled]="!signupForm.valid || isLoading">
       <span *ngIf="!isLoading">Sign Up</span>
       <div class="loader" *ngIf="isLoading"></div>
     </button>

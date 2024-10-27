@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { fetchAuthSession, ConfirmSignUpOutput, SignUpInput, SignUpOutput, signUp, signIn, signOut, confirmSignUp } from 'aws-amplify/auth';
+import { fetchAuthSession, ConfirmSignUpOutput, SignUpInput, SignUpOutput,
+  signUp, signIn, signOut, confirmSignUp, resendSignUpCode, ResendSignUpCodeInput } from 'aws-amplify/auth';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { User, UserRole } from '../models/user.model';
 import { generateClient, GraphQLResult } from 'aws-amplify/api';
@@ -274,7 +275,6 @@ export class AuthService {
     }
   }
 
-
   /**
    * Register a new user
    * @param username - The username for the new account
@@ -336,6 +336,35 @@ export class AuthService {
     } catch (error) {
       console.error('Error during sign out:', error);
       throw new AuthError(`Sign out failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  /**
+   * Resend the confirmation code for a user's registration
+   * @param username
+   */
+  async resendConfirmationCode(username: string): Promise<any> {
+    try {
+
+      const resendCode = {
+        username: username,
+      } as ResendSignUpCodeInput;
+
+      const resendCodeResult = await resendSignUpCode(resendCode);
+      console.debug('Confirmation code resent successfully:', resendCodeResult);
+
+      return {
+        success: true,
+        message: 'Confirmation code resent successfully'
+      };
+
+    } catch (error: any) {
+      console.error('Error resending confirmation code:', error);
+      throw {
+        success: false,
+        code: error.code,
+        message: error.message || 'Error resending confirmation code'
+      };
     }
   }
 }

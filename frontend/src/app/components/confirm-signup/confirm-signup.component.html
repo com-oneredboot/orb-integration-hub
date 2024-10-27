@@ -1,1 +1,69 @@
-<p>confirm-signup works!</p>
+<div class="confirm-signup-container">
+  <div class="logo-container">
+    <img src="assets/onredboot-logo.jpg" alt="Integration Hub Logo">
+  </div>
+
+  <div class="confirmation-info">
+    <h3>Verify Your Account</h3>
+    <p>Please enter the verification code sent to your email</p>
+  </div>
+
+  <form [formGroup]="confirmationForm" (ngSubmit)="onSubmit()">
+    <div class="form-group">
+      <div class="verification-input">
+        <label class="input-label" for="verificationCode">Verification Code</label>
+        <input
+          id="verificationCode"
+          type="text"
+          class="verification-code-input"
+          formControlName="verificationCode"
+          maxlength="6"
+          autocomplete="off"
+        >
+      </div>
+      <div
+        class="error-message"
+        *ngIf="confirmationForm.get('verificationCode')?.touched && confirmationForm.get('verificationCode')?.invalid"
+      >
+        <span *ngIf="confirmationForm.get('verificationCode')?.errors?.['required']">
+          Verification code is required
+        </span>
+        <span *ngIf="confirmationForm.get('verificationCode')?.errors?.['pattern']">
+          Please enter a valid verification code
+        </span>
+      </div>
+    </div>
+
+    <div class="error-banner" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+    <div class="submit-section">
+      <button
+        type="submit"
+        class="submit-button"
+        [disabled]="!confirmationForm.valid || isLoading"
+      >
+        <span *ngIf="!isLoading">Verify Account</span>
+        <div class="loader" *ngIf="isLoading"></div>
+      </button>
+    </div>
+
+    <div class="form-links">
+      <div class="resend-code">
+        Didn't receive the code?
+        <button
+          type="button"
+          class="link-button"
+          (click)="resendCode()"
+          [disabled]="resendDisabled"
+        >
+          Resend Code
+        </button>
+      </div>
+      <div class="back-to-signin">
+        <a routerLink="/signin">Back to Sign In</a>
+      </div>
+    </div>
+  </form>
+</div>

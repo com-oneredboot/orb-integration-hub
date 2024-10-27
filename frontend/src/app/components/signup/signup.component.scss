@@ -1,7 +1,7 @@
 @import '../../_variables';
 @import '../../mixins';
 
-.signin-container {
+.signup-container {
   @include auth-container;
   min-height: calc(100vh - 100px);
   padding: $spacing-xl;
@@ -20,7 +20,7 @@
     }
   }
 
-  .signin-form {
+  .signup-form {
     width: 100%;
     max-width: 400px;
     display: flex;
@@ -103,20 +103,22 @@
       }
     }
 
+    .error-banner {
+      width: 100%;
+      padding: $spacing-sm;
+      background-color: rgba($danger-color, 0.1);
+      color: $text-danger;
+      border-radius: $border-radius;
+      margin-bottom: $spacing-md;
+      text-align: center;
+    }
+
     .submit-button {
       width: 80%;
-      padding: $button-padding-y $button-padding-x;
-      background-color: $primary-color;
-      color: $white;
-      border: none;
-      border-radius: $button-border-radius;
-      font-family: $font-family-heading;
-      font-size: $font-size-lg;
+      @include primary-button;
+      margin: $spacing-md auto;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      cursor: pointer;
-      transition: $transition-normal;
-      margin: $spacing-md 0;
       position: relative;
 
       &:hover:not(:disabled) {
@@ -125,53 +127,31 @@
         box-shadow: $shadow-md;
       }
 
-      &:disabled {
-        opacity: $button-disabled-opacity;
-        cursor: not-allowed;
-      }
-
       &.loading {
         color: transparent;
       }
     }
+  }
 
-    .form-links {
-      width: 100%;
-      margin-top: $spacing-lg;
-      text-align: center;
-      font-family: $font-family-base;
+  .form-links {
+    width: 100%;
+    margin-top: $spacing-lg;
+    text-align: center;
+    font-family: $font-family-base;
 
-      .forgot-password {
-        font-family: $font-family-base;
-        font-size: $font-size-sm;
+    .signin-prompt {
+      font-size: $font-size-sm;
+      color: $text-secondary;
+
+      a {
         color: $primary-color;
         text-decoration: none;
-        margin-bottom: $spacing-md;
-        display: block;
+        margin-left: $spacing-xs;
         transition: $transition-normal;
 
         &:hover {
           color: darken($primary-color, 10%);
           text-decoration: underline;
-        }
-      }
-
-      .signup-prompt {
-        font-family: $font-family-base;
-        font-size: $font-size-sm;
-        color: $text-secondary;
-
-        a {
-          font-family: $font-family-base;
-          color: $primary-color;
-          text-decoration: none;
-          margin-left: $spacing-xs;
-          transition: $transition-normal;
-
-          &:hover {
-            color: darken($primary-color, 10%);
-            text-decoration: underline;
-          }
         }
       }
     }
@@ -183,25 +163,23 @@
 }
 
 @include responsive(tablet) {
-  .signin-container {
+  .signup-container {
     padding: $spacing-md;
 
     .logo-container img {
       width: 120px;
     }
-
-    .signin-form {
-      .submit-button {
-        width: 90%;
-      }
-    }
   }
 }
 
 @include responsive(mobile) {
-  .signin-form {
-    .submit-button {
-      width: 100%;
+  .signup-container {
+    padding: $spacing-sm;
+
+    .signup-form {
+      .submit-button {
+        width: 100%;
+      }
     }
   }
 }

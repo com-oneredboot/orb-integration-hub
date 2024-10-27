@@ -2,11 +2,11 @@
  * Enum defining all possible user roles in the system
  */
 export enum UserRole {
-  CUSTOMER = 'Customer',
-  CLIENT = 'Client',
-  DEVELOPER = 'Developer',
-  ADMINISTRATOR = 'Administrator',
-  OWNER = 'Owner'
+  CUSTOMER = 'CUSTOMER',
+  CLIENT = 'CLIENT',
+  DEVELOPER = 'DEVELOPER',
+  ADMINISTRATOR = 'ADMINISTRATOR',
+  OWNER = 'OWNER'
 }
 
 /**

@@ -5,35 +5,37 @@
 
   <form [formGroup]="signInForm" (ngSubmit)="onSubmit()" class="signin-form">
     <div class="form-group">
-      <input
-        id="username"
-        type="email"
-        formControlName="username"
-        placeholder="Enter your email"
-        [class.error]="signInForm.get('username')?.touched && signInForm.get('username')?.invalid"
-      >
-      <div class="error-message" *ngIf="signInForm.get('username')?.touched && signInForm.get('username')?.invalid">
-        <span *ngIf="signInForm.get('username')?.errors?.['required']">Email is required</span>
-        <span *ngIf="signInForm.get('username')?.errors?.['email']">Please enter a valid email</span>
+      <div class="input-container">
+        <input
+          type="email"
+          formControlName="username"
+          placeholder="Email"
+          class="form-input"
+          autocomplete="email">
       </div>
     </div>
 
     <div class="form-group">
-      <input
-        id="password"
-        type="password"
-        formControlName="password"
-        placeholder="Enter your password"
-        [class.error]="signInForm.get('password')?.touched && signInForm.get('password')?.invalid"
-      >
-      <div class="error-message" *ngIf="signInForm.get('password')?.touched && signInForm.get('password')?.invalid">
-        <span *ngIf="signInForm.get('password')?.errors?.['required']">Password is required</span>
-        <span *ngIf="signInForm.get('password')?.errors?.['minlength']">Password must be at least 8 characters</span>
+      <div class="password-input-container">
+        <input
+          [type]="passwordVisible ? 'text' : 'password'"
+          formControlName="password"
+          placeholder="Password"
+          class="form-input"
+          autocomplete="current-password">
+        <button
+          type="button"
+          class="password-toggle">
+          <span class="eye-icon">👁</span>
+        </button>
       </div>
     </div>
 
-    <button type="submit" class="submit-button" [disabled]="isLoading || signInForm.invalid">
-      <span *ngIf="!isLoading">Sign In</span>
+    <button
+      type="submit"
+      class="submit-button"
+      [disabled]="!signInForm.valid || isLoading">
+      <span *ngIf="!isLoading">SIGN IN</span>
       <div class="loader" *ngIf="isLoading"></div>
     </button>
 

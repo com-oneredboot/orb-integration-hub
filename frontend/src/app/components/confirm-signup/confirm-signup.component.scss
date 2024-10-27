@@ -1,0 +1,139 @@
+// src/app/components/confirm-signup/confirm-signup.component.scss
+@import '../../_variables';
+@import '../../mixins';
+
+.confirm-signup-container {
+  @include auth-container;
+  max-width: 480px;
+  margin: $spacing-xl auto;
+  padding: $spacing-xl;
+  background-color: $bg-primary;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-md;
+
+  .logo-container {
+    text-align: center;
+    margin-bottom: $spacing-xl;
+
+    img {
+      max-width: 200px;
+      height: auto;
+    }
+  }
+
+  .confirmation-info {
+    text-align: center;
+    margin-bottom: $spacing-xl;
+
+    h3 {
+      color: $primary-color;
+      margin-bottom: $spacing-xs;
+      font-family: $font-family-heading;
+    }
+
+    p {
+      color: $text-secondary;
+    }
+  }
+
+  .form-group {
+    margin-bottom: $spacing-lg;
+
+    .verification-input {
+      .input-label {
+        display: block;
+        margin-bottom: $spacing-xs;
+        color: $text-primary;
+        font-weight: $font-weight-medium;
+      }
+
+      .verification-code-input {
+        width: 100%;
+        padding: $input-padding-y $input-padding-x;
+        border: $input-border-width solid $input-border-color;
+        border-radius: $input-border-radius;
+        font-size: $font-size-base;
+        letter-spacing: 0.25rem;
+        text-align: center;
+        transition: $transition-normal;
+
+        &:focus {
+          outline: none;
+          border-color: $primary-color;
+          box-shadow: $input-focus-box-shadow;
+        }
+      }
+    }
+  }
+
+  .error-message {
+    color: $danger-color;
+    font-size: $font-size-xs;
+    margin-top: $spacing-xs;
+  }
+
+  .error-banner {
+    background-color: rgba($danger-color, 0.1);
+    color: $danger-color;
+    padding: $spacing-sm;
+    border-radius: $border-radius;
+    margin-bottom: $spacing-md;
+    text-align: center;
+  }
+
+  .submit-section {
+    margin-bottom: $spacing-lg;
+
+    .submit-button {
+      @include primary-button;
+      width: 100%;
+
+      &:disabled {
+        opacity: $button-disabled-opacity;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  .form-links {
+    text-align: center;
+
+    .resend-code {
+      margin-bottom: $spacing-md;
+      color: $text-secondary;
+
+      .link-button {
+        @include link-button;
+        color: $primary-color;
+
+        &:disabled {
+          opacity: $opacity-50;
+          cursor: not-allowed;
+        }
+      }
+    }
+
+    .back-to-signin {
+      a {
+        @include link-button;
+        color: $text-secondary;
+
+        &:hover {
+          color: $primary-color;
+        }
+      }
+    }
+  }
+
+  .loader {
+    @include loader;
+    margin: 0 auto;
+  }
+}
+
+@include responsive(tablet) {
+  .confirm-signup-container {
+    margin: $spacing-md;
+    padding: $spacing-md;
+  }
+}

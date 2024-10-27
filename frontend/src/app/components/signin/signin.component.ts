@@ -1,13 +1,9 @@
-// src/app/components/signin/signin.component.ts
-
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
-import { SigninResponse } from '../../services/auth.service';
-import { UserRole } from '../../models/user.model';
 
 @Component({
   selector: 'app-signin',
@@ -18,6 +14,7 @@ export class SignInComponent implements OnInit, OnDestroy {
   signInForm: FormGroup;
   isLoading = false;
   errorMessage = '';
+  passwordVisible = false;  // Add this property
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -37,21 +34,19 @@ export class SignInComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(isAuth => {
         if (isAuth) {
-          this.navigateBasedOnRole().then(r => {
-            console.debug('Role: ', r, 'for user:', this.authService.currentUser);
-          });
+          this.navigateBasedOnRole();
         }
       });
-
-    // Initial authentication check
-    this.authService.checkIsAuthenticated().then(isAuth => {
-      console.debug('Initial auth check:', isAuth, 'for user:', this.authService.currentUser);
-    });
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  // Add this method
+  togglePasswordVisibility(): void {
+    this.passwordVisible = !this.passwordVisible;
   }
 
   async onSubmit(): Promise<void> {
@@ -65,7 +60,11 @@ export class SignInComponent implements OnInit, OnDestroy {
           password: this.signInForm.get('password')?.value
         });
 
-        await this.handleSigninResponse(response);
+        if (response.success) {
+          await this.navigateBasedOnRole();
+        } else {
+          this.errorMessage = response.error || 'An error occurred during sign in';
+        }
       } catch (error: any) {
         this.handleError(error);
       } finally {
@@ -76,26 +75,18 @@ export class SignInComponent implements OnInit, OnDestroy {
     }
   }
 
-  private async handleSigninResponse(response: SigninResponse): Promise<void> {
-    if (response.success) {
-      await this.navigateBasedOnRole();
-    } else {
-      this.errorMessage = response.error || 'An error occurred during sign in';
-    }
-  }
-
   private async navigateBasedOnRole(): Promise<void> {
     try {
       const userRole = await this.authService.getUserRole();
-      const roleRouteMap: { [key in UserRole]: string } = {
-        [UserRole.CUSTOMER]: '/customer/dashboard',
-        [UserRole.CLIENT]: '/client/dashboard',
-        [UserRole.DEVELOPER]: '/developer/dashboard',
-        [UserRole.ADMINISTRATOR]: '/admin/dashboard',
-        [UserRole.OWNER]: '/owner/dashboard'
+      const roleRouteMap = {
+        CUSTOMER: '/customer/dashboard',
+        CLIENT: '/client/dashboard',
+        DEVELOPER: '/developer/dashboard',
+        ADMINISTRATOR: '/admin/dashboard',
+        OWNER: '/owner/dashboard'
       };
 
-      const route = roleRouteMap[userRole as UserRole] || '/dashboard';
+      const route = roleRouteMap[userRole] || '/dashboard';
       await this.router.navigate([route]);
     } catch (error) {
       console.error('Navigation error:', error);

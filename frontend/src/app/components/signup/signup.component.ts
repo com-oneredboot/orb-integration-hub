@@ -8,10 +8,10 @@ import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-signup',
-  templateUrl: './sign-up.component.html',
-  styleUrls: ['./sign-up.component.scss']
+  templateUrl: './signup.component.html',
+  styleUrls: ['./signup.component.scss']
 })
-export class SignUpComponent implements OnInit, OnDestroy {
+export class SignupComponent implements OnInit, OnDestroy {
   signupForm: FormGroup;
   isLoading = false;
   errorMessage = '';
