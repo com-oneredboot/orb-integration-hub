@@ -78,7 +78,7 @@ Resources:
           PAYMENTS_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-payments-table-name}}'
           STRIPE_SECRET_KEY_PATH: !Sub '/${CustomerId}/${ProjectId}/${Environment}/stripe/publishable/key'
       Layers:
-        - !Sub '{{resolve:ssm:/${CustomerId}/${ProjectId}/${Environment}/stripe/layer/arn}}'
+        - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-stripe-layer-arn}}'
   StripePublishableKeyFunction:
     Type: AWS::Serverless::Function
     Properties:
