@@ -6,10 +6,7 @@ on:
       environment:
         description: 'Environment to deploy to'
         required: true
-        type: choice
-        options:
-          - 'dev'
-          - 'prod'
+        type: environment
       region:
         description: 'AWS Region'
         required: true
@@ -30,114 +27,49 @@ on:
 jobs:
   deploy-backend-stacks:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    # Setup Python environment
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.12'
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.12'
 
-    # Fetch AWS Credentials
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
-      env:
-        ENVIRONMENT: ${{ inputs.environment }}
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.region }}
 
-    # Bootstrap
-    - name: Deploy Bootstrap Stack
-      run: |
-        sam build --template bootstrap.yml
-        sam package --template-file bootstrap.yml --s3-bucket ${{vars.customer_id}}-${{vars.project_id}}-build-artifacts --output-template-file bootstrap-packaged.yml
-        sam deploy --template-file bootstrap-packaged.yml --s3-bucket ${{vars.customer_id}}-${{vars.project_id}}-build-artifacts --stack-name ${{vars.customer_id}}-${{vars.project_id}}-bootstrap --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
-        aws s3 cp bootstrap-packaged.yml s3://${{vars.customer_id}}-${{vars.project_id}}-build-templates/bootstrap-packaged.yml
-      working-directory: ./infrastructure/cloudformation
-      env:
-        ENVIRONMENT: ${{ inputs.environment }}
-
-    # Cognito
-    - name: Deploy Cognito Stack
-      run: |
-        sam build --template cognito.yml
-        sam package --template-file cognito.yml --s3-bucket ${{vars.customer_id}}-${{vars.project_id}}-build-artifacts --output-template-file cognito-packaged.yml
-        sam deploy --template-file cognito-packaged.yml --s3-bucket ${{vars.customer_id}}-${{vars.project_id}}-build-artifacts --stack-name ${{vars.customer_id}}-${{vars.project_id}}-cognito --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
-        aws s3 cp cognito-packaged.yml s3://${{vars.customer_id}}-${{vars.project_id}}-build-templates/cognito-packaged.yml
-      working-directory: ./infrastructure/cloudformation
-      env:
-        ENVIRONMENT: ${{ inputs.environment }}
-
-    # DynamoDb
-    - name: Deploy DynamoDb Stack
-      run: |
-        sam build \
-          --template dynamodb.yml
-        sam package \
-          --template-file dynamodb.yml \
-          --s3-bucket ${{vars.customer_id}}-${{vars.project_id}}-build-artifacts \
-          --output-template-file dynamodb-packaged.yml
-        sam deploy \
-          --template-file dynamodb-packaged.yml \
-          --s3-bucket ${{vars.customer_id}}-${{vars.project_id}}-build-artifacts \
-          --stack-name ${{vars.customer_id}}-${{vars.project_id}}-dynamodb \
-          --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
-        aws s3 cp dynamodb-packaged.yml \
-          s3://${{vars.customer_id}}-${{vars.project_id}}-build-templates/dynamodb-packaged.yml
-
-      working-directory: ./infrastructure/cloudformation
-      env:
-        ENVIRONMENT: ${{ inputs.environment }}
-
-    # Lambdas
-    - name: Deploy Lambda Stack
-      run: |
-        sam build \
-          --template dynamodb.yml
-        sam package \
-          --template-file lambdas.yml \
-          --s3-bucket ${{vars.customer_id}}-${{vars.project_id}}-build-artifacts \
-          --output-template-file lambdas-packaged.yml
-        
-        sam deploy \
-          --template-file lambdas-packaged.yml \
-          --s3-bucket ${{vars.customer_id}}-${{vars.project_id}}-build-artifacts \
-          --stack-name orb-integration-hub-lambdas \
-          --capabilities CAPABILITY_NAMED_IAM \
-          --no-fail-on-empty-changeset
-        
-        aws s3 cp lambdas-packaged.yml \
-          s3://${{vars.customer_id}}-${{vars.project_id}}-build-templates/lambdas-packaged.yml
-
-      working-directory: ./infrastructure/cloudformation
-      env:
-        ENVIRONMENT: ${{ inputs.environment }}
-
-    # Appsync
-    - name: Deploy Appsync Stack
-      run: |
-        sam build \
-          --template appsync.yml
-
-        sam package \
-          --template-file appsync.yml \
-          --s3-bucket ${{vars.customer_id}}-${{vars.project_id}}-build-artifacts \
-          --output-template-file appsync-packaged.yml
-
-        sam deploy \
-          --template-file appsync-packaged.yml \
-          --s3-bucket ${{vars.customer_id}}-${{vars.project_id}}-build-artifacts \
-          --stack-name ${{vars.customer_id}}-${{vars.project_id}}-appsync  \
-          --capabilities CAPABILITY_NAMED_IAM \
-          --no-fail-on-empty-changeset
-
-        aws s3 cp appsync-packaged.yml \
-          s3://${{vars.customer_id}}-${{vars.project_id}}-build-templates/appsync-packaged.yml
-
-      working-directory: ./infrastructure/cloudformation
-      env:
-        ENVIRONMENT: ${{ inputs.environment }}
+      - name: Deploy All Stacks
+        run: |
+          for stack in bootstrap cognito dynamodb lambdas appsync; do
+            echo "Deploying $stack stack..."
+          
+            sam build --template ${stack}.yml
+          
+            sam package \
+              --template-file ${stack}.yml \
+              --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
+              --output-template-file ${stack}-packaged.yml
+          
+            sam deploy \
+              --template-file ${stack}-packaged.yml \
+              --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
+              --stack-name ${{ inputs.customer_id }}-${{ inputs.project_id }}-${stack} \
+              --capabilities CAPABILITY_NAMED_IAM \
+              --no-fail-on-empty-changeset \
+              --parameter-overrides \
+                Environment=${{ inputs.environment }} \
+                CustomerId=${{ inputs.customer_id }} \
+                ProjectId=${{ inputs.project_id }}
+          
+            aws s3 cp ${stack}-packaged.yml \
+              s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/${stack}-packaged.yml
+          
+          done
+        working-directory: ./infrastructure/cloudformation
