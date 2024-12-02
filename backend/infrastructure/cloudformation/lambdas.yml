@@ -70,7 +70,7 @@ Resources:
     Properties:
       FunctionName: !Sub '${CustomerId}-${ProjectId}-${Environment}-payment-processor'
       Role: !GetAtt LambdaExecutionRole.Arn
-      CodeUri: ../../backend/src/lambdas/stripe
+      CodeUri: ../../src/lambdas/stripe
       Environment:
         Variables:
           ENVIRONMENT: !Ref Environment
@@ -84,7 +84,7 @@ Resources:
     Properties:
       FunctionName: !Sub '${CustomerId}-${ProjectId}-${Environment}-stripe-publishable-key'
       Role: !GetAtt LambdaExecutionRole.Arn
-      CodeUri: ../../backend/src/lambdas/stripe_publishable_key
+      CodeUri: ../../src/lambdas/stripe_publishable_key
       Environment:
         Variables:
           ENVIRONMENT: !Ref Environment
@@ -96,7 +96,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub '${CustomerId}-${ProjectId}-${Environment}-contact-us'
-      CodeUri: ../../backend/src/lambdas/contact_us
+      CodeUri: ../../src/lambdas/contact_us
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:
