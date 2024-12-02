@@ -1,6 +1,7 @@
 name: deploy-stripe-layer
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
