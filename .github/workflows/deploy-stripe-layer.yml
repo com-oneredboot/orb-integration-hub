@@ -2,6 +2,11 @@ name: deploy-stripe-layer
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: environment
   push:
     branches:
       - main
@@ -13,6 +18,8 @@ on:
 jobs:
   deploy-api-stack:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
     steps:
 
     # Checkout code
