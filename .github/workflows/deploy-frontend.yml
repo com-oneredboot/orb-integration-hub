@@ -44,9 +44,9 @@ jobs:
     - name: Deploy UI Stack
       run: |
         sam build --template cloudfront.yml
-        sam package --template-file cloudfront.yml --s3-bucket sog-ai-repository-build-artifacts --output-template-file cloudfront-packaged.yml
-        sam deploy --template-file cloudfront-packaged.yml --s3-bucket sog-ai-repository-build-artifacts --stack-name sog-ai-repository-ui-cloudfront --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
-        aws s3 cp cloudfront-packaged.yml s3://sog-ai-repository-build-templates/cloudfront-packaged.yml
+        sam package --template-file cloudfront.yml --s3-bucket orb-integration-hub-build-artifacts --output-template-file cloudfront-packaged.yml
+        sam deploy --template-file cloudfront-packaged.yml --s3-bucket orb-integration-hub-build-artifacts --stack-name orb-integration-hub-ui-cloudfront --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
+        aws s3 cp cloudfront-packaged.yml s3://orb-integration-hub-build-templates/cloudfront-packaged.yml
       working-directory: ./ui
 
     # Deploy to S3

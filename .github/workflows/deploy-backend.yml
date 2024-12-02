@@ -1,17 +1,31 @@
 name: deploy-backend
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'infrastructure/cloudformation/appsync.yml'
-      - 'infrastructure/cloudformation/cognito.yml'
-      - 'infrastructure/cloudformation/lambdas.yml'
-      - 'infrastructure/cloudformation/dynamodb.yml'
-      - 'backend/Pipfile'
-      - 'backend/src/**'
-      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - 'dev'
+          - 'prod'
+      region:
+        description: 'AWS Region'
+        required: true
+        type: choice
+        options:
+          - 'us-east-1'
+      customer_id:
+        description: 'Customer ID'
+        required: true
+        type: string
+        default: 'orb'
+      project_id:
+        description: 'Project ID'
+        required: true
+        type: string
+        default: 'integration-hub'
 
 jobs:
   deploy-backend-stacks:
@@ -34,22 +48,41 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
 
+    # Bootstrap
+    - name: Deploy Bootstrap Stack
+      run: |
+        sam build --template bootstrap.yml
+        sam package --template-file bootstrap.yml --s3-bucket ${{vars.customer_id}}-${{vars.project_id}}-build-artifacts --output-template-file bootstrap-packaged.yml
+        sam deploy --template-file bootstrap-packaged.yml --s3-bucket ${{vars.customer_id}}-${{vars.project_id}}-build-artifacts --stack-name ${{vars.customer_id}}-${{vars.project_id}}-bootstrap --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
+        aws s3 cp bootstrap-packaged.yml s3://${{vars.customer_id}}-${{vars.project_id}}-build-templates/bootstrap-packaged.yml
+      working-directory: ./infrastructure/cloudformation
+
     # Cognito
     - name: Deploy Cognito Stack
       run: |
         sam build --template cognito.yml
-        sam package --template-file cognito.yml --s3-bucket orb-integration-hub-build-artifacts --output-template-file cognito-packaged.yml
-        sam deploy --template-file cognito-packaged.yml --s3-bucket orb-integration-hub-build-artifacts --stack-name orb-integration-hub-cognito --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
-        aws s3 cp cognito-packaged.yml s3://orb-integration-hub-build-templates/cognito-packaged.yml
+        sam package --template-file cognito.yml --s3-bucket ${{vars.customer_id}}-${{vars.project_id}}-build-artifacts --output-template-file cognito-packaged.yml
+        sam deploy --template-file cognito-packaged.yml --s3-bucket ${{vars.customer_id}}-${{vars.project_id}}-build-artifacts --stack-name ${{vars.customer_id}}-${{vars.project_id}}-cognito --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
+        aws s3 cp cognito-packaged.yml s3://${{vars.customer_id}}-${{vars.project_id}}-build-templates/cognito-packaged.yml
       working-directory: ./infrastructure/cloudformation
 
     # DynamoDb
     - name: Deploy DynamoDb Stack
       run: |
-        sam build --template dynamodb.yml
-        sam package --template-file dynamodb.yml --s3-bucket orb-integration-hub-build-artifacts --output-template-file dynamodb-packaged.yml
-        sam deploy --template-file dynamodb-packaged.yml --s3-bucket orb-integration-hub-build-artifacts --stack-name orb-integration-hub-dynamodb --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
-        aws s3 cp dynamodb-packaged.yml s3://orb-integration-hub-build-templates/dynamodb-packaged.yml
+        sam build \
+          --template dynamodb.yml
+        sam package \
+          --template-file dynamodb.yml \
+          --s3-bucket ${{vars.customer_id}}-${{vars.project_id}}-build-artifacts \
+          --output-template-file dynamodb-packaged.yml
+        sam deploy \
+          --template-file dynamodb-packaged.yml \
+          --s3-bucket ${{vars.customer_id}}-${{vars.project_id}}-build-artifacts \
+          --stack-name ${{vars.customer_id}}-${{vars.project_id}}-dynamodb \
+          --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
+        aws s3 cp dynamodb-packaged.yml \
+          s3://${{vars.customer_id}}-${{vars.project_id}}-build-templates/dynamodb-packaged.yml
+
       working-directory: ./infrastructure/cloudformation
 
     # Lambdas
@@ -59,18 +92,18 @@ jobs:
           --template dynamodb.yml
         sam package \
           --template-file lambdas.yml \
-          --s3-bucket orb-integration-hub-build-artifacts \
+          --s3-bucket ${{vars.customer_id}}-${{vars.project_id}}-build-artifacts \
           --output-template-file lambdas-packaged.yml
         
         sam deploy \
           --template-file lambdas-packaged.yml \
-          --s3-bucket orb-integration-hub-build-artifacts \
+          --s3-bucket ${{vars.customer_id}}-${{vars.project_id}}-build-artifacts \
           --stack-name orb-integration-hub-lambdas \
           --capabilities CAPABILITY_NAMED_IAM \
           --no-fail-on-empty-changeset
         
         aws s3 cp lambdas-packaged.yml \
-          s3://orb-integration-hub-build-templates/lambdas-packaged.yml
+          s3://${{vars.customer_id}}-${{vars.project_id}}-build-templates/lambdas-packaged.yml
 
       working-directory: ./infrastructure/cloudformation
 
@@ -82,17 +115,17 @@ jobs:
 
         sam package \
           --template-file appsync.yml \
-          --s3-bucket orb-integration-hub-build-artifacts \
+          --s3-bucket ${{vars.customer_id}}-${{vars.project_id}}-build-artifacts \
           --output-template-file appsync-packaged.yml
 
         sam deploy \
           --template-file appsync-packaged.yml \
-          --s3-bucket orb-integration-hub-build-artifacts \
-          --stack-name orb-integration-hub-appsync  \
+          --s3-bucket ${{vars.customer_id}}-${{vars.project_id}}-build-artifacts \
+          --stack-name ${{vars.customer_id}}-${{vars.project_id}}-appsync  \
           --capabilities CAPABILITY_NAMED_IAM \
           --no-fail-on-empty-changeset
 
         aws s3 cp appsync-packaged.yml \
-          s3://orb-integration-hub-build-templates/appsync-packaged.yml
+          s3://${{vars.customer_id}}-${{vars.project_id}}-build-templates/appsync-packaged.yml
 
       working-directory: ./infrastructure/cloudformation
