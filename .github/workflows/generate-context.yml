@@ -1,0 +1,50 @@
+name: Generate AI Context
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  generate-context:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Get full history
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Create output directory
+        run: mkdir -p ./context_output
+
+      - name: Run context generator
+        run: python .github/scripts/context_generator.py
+        env:
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+          OUTPUT_DIR: './context_output'
+
+      - name: Upload context files
+        uses: actions/upload-artifact@v3
+        with:
+          name: project-context
+          path: |
+            context_output/claude_context.json
+            context_output/context_summary.md
+
+      - name: Update context branch
+        if: github.ref == 'refs/heads/main'  # Only on main branch
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git checkout -B context-updates
+          cp -r context_output/* docs/context/
+          git add docs/context/
+          git commit -m "Update AI context files" || echo "No changes to commit"
+          git push -f origin context-updates
