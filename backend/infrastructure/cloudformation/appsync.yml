@@ -236,7 +236,7 @@ Resources:
     Properties:
       ApiId: !GetAtt PaymentGatewayApi.ApiId
       TypeName: Query
-      FieldName: getRegistrationById
+      FieldName: getRegistrationByCognitoId
       DataSourceName: !GetAtt RegistrationsDataSource.Name
       RequestMappingTemplate: |
         {
