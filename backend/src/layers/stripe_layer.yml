@@ -2,7 +2,7 @@
 # File: stripe_layer.yml
 # Author: Corey Peters
 # Organization: OneRedBoot.com
-# Description: Common Layer for DevSecOps Classifier
+# Description: Stripe Layer CloudFormation Template
 
 # --------------------------------------------------- #
 AWSTemplateFormatVersion: '2010-09-09'
@@ -47,7 +47,7 @@ Resources:
   # Lambda Layer ARN SSM Parameter
   LayerArnSSMParameter:
     Properties:
-      Name: !Sub '/${CustomerId}/${ProjectId}/${Environment}/stripe/layer/arn'
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-stripe-layer-arn'
       Type: String
       Value: !Ref Layer
     Type: AWS::SSM::Parameter
