@@ -42,11 +42,13 @@ jobs:
 
     # Fetch AWS Credentials
     - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
+      uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
 
     # Bootstrap
     - name: Deploy Bootstrap Stack
@@ -56,6 +58,8 @@ jobs:
         sam deploy --template-file bootstrap-packaged.yml --s3-bucket ${{vars.customer_id}}-${{vars.project_id}}-build-artifacts --stack-name ${{vars.customer_id}}-${{vars.project_id}}-bootstrap --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
         aws s3 cp bootstrap-packaged.yml s3://${{vars.customer_id}}-${{vars.project_id}}-build-templates/bootstrap-packaged.yml
       working-directory: ./infrastructure/cloudformation
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
 
     # Cognito
     - name: Deploy Cognito Stack
@@ -65,6 +69,8 @@ jobs:
         sam deploy --template-file cognito-packaged.yml --s3-bucket ${{vars.customer_id}}-${{vars.project_id}}-build-artifacts --stack-name ${{vars.customer_id}}-${{vars.project_id}}-cognito --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
         aws s3 cp cognito-packaged.yml s3://${{vars.customer_id}}-${{vars.project_id}}-build-templates/cognito-packaged.yml
       working-directory: ./infrastructure/cloudformation
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
 
     # DynamoDb
     - name: Deploy DynamoDb Stack
@@ -84,6 +90,8 @@ jobs:
           s3://${{vars.customer_id}}-${{vars.project_id}}-build-templates/dynamodb-packaged.yml
 
       working-directory: ./infrastructure/cloudformation
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
 
     # Lambdas
     - name: Deploy Lambda Stack
@@ -106,6 +114,8 @@ jobs:
           s3://${{vars.customer_id}}-${{vars.project_id}}-build-templates/lambdas-packaged.yml
 
       working-directory: ./infrastructure/cloudformation
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
 
     # Appsync
     - name: Deploy Appsync Stack
@@ -129,3 +139,5 @@ jobs:
           s3://${{vars.customer_id}}-${{vars.project_id}}-build-templates/appsync-packaged.yml
 
       working-directory: ./infrastructure/cloudformation
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
