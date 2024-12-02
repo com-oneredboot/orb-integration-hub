@@ -182,6 +182,7 @@ Resources:
   # Resolvers
   ProcessStripePaymentResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: Schema
     Properties:
       ApiId: !GetAtt PaymentGatewayApi.ApiId
       TypeName: Mutation
@@ -198,6 +199,7 @@ Resources:
 
   SendContactMessageResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: Schema
     Properties:
       ApiId: !GetAtt PaymentGatewayApi.ApiId
       TypeName: Mutation
@@ -214,6 +216,7 @@ Resources:
 
   GetPaymentResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: Schema
     Properties:
       ApiId: !GetAtt PaymentGatewayApi.ApiId
       TypeName: Query
@@ -233,6 +236,7 @@ Resources:
 
   getRegistrationByCognitoIdResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: Schema
     Properties:
       ApiId: !GetAtt PaymentGatewayApi.ApiId
       TypeName: Query
@@ -250,6 +254,7 @@ Resources:
         $util.toJson($context.result)
   ListPaymentsByCustomerResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: Schema
     Properties:
       ApiId: !GetAtt PaymentGatewayApi.ApiId
       TypeName: Query
@@ -278,6 +283,7 @@ Resources:
 
   ProcessRegistrationResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: Schema
     Properties:
       ApiId: !GetAtt PaymentGatewayApi.ApiId
       TypeName: Mutation
