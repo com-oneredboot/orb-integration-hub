@@ -44,6 +44,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git checkout -B context-updates
+          mkdir -p docs/context
           cp -r context_output/* docs/context/
           git add docs/context/
           git commit -m "Update AI context files" || echo "No changes to commit"
