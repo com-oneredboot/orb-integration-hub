@@ -137,7 +137,9 @@ Resources:
               - Effect: Allow
                 Action:
                   - secretsmanager:GetSecretValue
-                Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:orb/integration-hub/${Environment}/stripe/backend/key-*'
+                Resource:
+                  - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${CustomerId}-${ProjectId}-${Environment}-*'
+
         - PolicyName: SSMParameterAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -185,14 +187,6 @@ Resources:
                 Action:
                   - ses:SendEmail
                 Resource: '*'
-        - PolicyName: SecretsManagerAccess
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - secretsmanager:GetSecretValue
-                Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${CustomerId}-${ProjectId}-${Environment}-*'
 
   # IAM Policies
   CloudWatchLoggingPolicy:
