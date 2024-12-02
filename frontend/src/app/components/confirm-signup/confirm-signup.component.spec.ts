@@ -1,25 +1,29 @@
-// confirm-signup.component.spec.ts
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
-import { RouterTestingModule } from '@angular/router/testing';
-import { ActivatedRoute, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { provideRouter, Router, ActivatedRoute } from '@angular/router';
 import { ConfirmSignupComponent } from './confirm-signup.component';
 import { AuthService } from '../../services/auth.service';
+import { BehaviorSubject } from 'rxjs';
+import { ConfirmSignUpOutput } from 'aws-amplify/auth';
 
 describe('ConfirmSignupComponent', () => {
   let component: ConfirmSignupComponent;
   let fixture: ComponentFixture<ConfirmSignupComponent>;
   let authService: jasmine.SpyObj<AuthService>;
   let router: Router;
+  let activatedRoute: jasmine.SpyObj<ActivatedRoute>;
+
+  const mockUsername = 'testuser@example.com';
 
   beforeEach(async () => {
     const authSpy = jasmine.createSpyObj('AuthService', [
       'confirmRegistration',
-      'resendConfirmationCode',
-      'isAuthenticated$'
+      'resendConfirmationCode'
     ]);
-    authSpy.isAuthenticated$.and.returnValue(of(false));
+
+    const routeSpy = jasmine.createSpyObj('ActivatedRoute', [], {
+      queryParams: new BehaviorSubject({ username: mockUsername })
+    });
 
     await TestBed.configureTestingModule({
       declarations: [ ConfirmSignupComponent ],
@@ -27,18 +31,15 @@ describe('ConfirmSignupComponent', () => {
         ReactiveFormsModule
       ],
       providers: [
+        provideRouter([]),
         { provide: AuthService, useValue: authSpy },
-        {
-          provide: ActivatedRoute,
-          useValue: {
-            queryParams: of({ username: 'test@example.com' })
-          }
-        }
+        { provide: ActivatedRoute, useValue: routeSpy }
       ]
     }).compileComponents();
 
     router = TestBed.inject(Router);
     authService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
+    activatedRoute = TestBed.inject(ActivatedRoute) as jasmine.SpyObj<ActivatedRoute>;
   });
 
   beforeEach(() => {
@@ -52,65 +53,148 @@ describe('ConfirmSignupComponent', () => {
   });
 
   it('should initialize with empty form and username from query params', () => {
-    expect(component.confirmForm.get('code')?.value).toBe('');
-    expect(component.username).toBe('test@example.com');
+    expect(component.confirmationForm.get('verificationCode')?.value).toBe('');
+    expect(component.username).toBe(mockUsername);
   });
 
-  it('should redirect to signup if no username provided', fakeAsync(() => {
+  it('should redirect to signup if no username in query params', fakeAsync(() => {
     const navigateSpy = spyOn(router, 'navigate');
-    TestBed.inject(ActivatedRoute).queryParams = of({});
-    component.ngOnInit();
+    (activatedRoute.queryParams as BehaviorSubject<any>).next({});
     tick();
     expect(navigateSpy).toHaveBeenCalledWith(['/signup']);
   }));
 
-  // it('should handle successful confirmation', fakeAsync(async () => {
-  //   const navigateSpy = spyOn(router, 'navigate');
-  //   authService.confirmRegistration.and.returnValue(Promise.resolve());
-  //
-  //   component.confirmForm.setValue({ code: '123456' });
-  //   await component.onSubmit();
-  //   tick();
-  //
-  //   expect(authService.confirmRegistration).toHaveBeenCalledWith(
-  //     'test@example.com',
-  //     '123456'
-  //   );
-  //   expect(navigateSpy).toHaveBeenCalledWith(['/signin']);
-  // }));
+  it('should validate verification code format', () => {
+    const verificationControl = component.confirmationForm.get('verificationCode');
 
-  it('should handle confirmation error', fakeAsync(async () => {
-    authService.confirmRegistration.and.returnValue(
-      Promise.reject({
-        code: 'CodeMismatchException',
-        message: 'Invalid verification code'
-      })
-    );
+    verificationControl?.setValue('');
+    expect(verificationControl?.errors?.['required']).toBeTruthy();
 
-    component.confirmForm.setValue({ code: '123456' });
+    verificationControl?.setValue('abc123');
+    expect(verificationControl?.errors?.['pattern']).toBeTruthy();
+
+    verificationControl?.setValue('12345');
+    expect(verificationControl?.errors?.['pattern']).toBeTruthy();
+
+    verificationControl?.setValue('123456');
+    expect(verificationControl?.errors).toBeFalsy();
+  });
+
+  it('should handle successful confirmation', fakeAsync(async () => {
+    const navigateSpy = spyOn(router, 'navigate');
+    const mockConfirmResponse: ConfirmSignUpOutput = {
+      isSignUpComplete: true,
+      nextStep: {
+        signUpStep: 'DONE'
+      }
+    };
+
+    authService.confirmRegistration.and.returnValue(Promise.resolve(mockConfirmResponse));
+
+    component.confirmationForm.get('verificationCode')?.setValue('123456');
     await component.onSubmit();
     tick();
 
-    expect(component.errorMessage).toBe('Invalid verification code. Please try again.');
+    expect(authService.confirmRegistration).toHaveBeenCalledWith(
+      mockUsername,
+      '123456'
+    );
+    expect(navigateSpy).toHaveBeenCalledWith(['/signin']);
+    expect(component.errorMessage).toBe('');
   }));
 
-  it('should handle resend code', fakeAsync(async () => {
-    authService.resendConfirmationCode.and.returnValue(Promise.resolve());
+  it('should handle confirmation error', fakeAsync(async () => {
+    const error = new Error('Invalid verification code');
+    authService.confirmRegistration.and.returnValue(Promise.reject(error));
+
+    component.confirmationForm.get('verificationCode')?.setValue('123456');
+    await component.onSubmit();
+    tick();
+
+    expect(component.errorMessage).toBe('Invalid verification code');
+    expect(component.isLoading).toBeFalse();
+  }));
+
+  it('should handle resend code success', fakeAsync(async () => {
+    const mockResendResponse = { CodeDeliveryDetails: { Destination: 'test@example.com' } };
+    authService.resendConfirmationCode.and.returnValue(Promise.resolve(mockResendResponse));
+
     await component.resendCode();
     tick();
-    expect(authService.resendConfirmationCode).toHaveBeenCalledWith('test@example.com');
+
+    expect(authService.resendConfirmationCode).toHaveBeenCalledWith(mockUsername);
+    expect(component.resendDisabled).toBeTrue();
+    expect(component.errorMessage).toBe('');
   }));
 
-  it('should validate code format', () => {
-    const codeControl = component.confirmForm.get('code');
+  it('should handle resend code error', fakeAsync(async () => {
+    const error = new Error('Failed to resend code');
+    authService.resendConfirmationCode.and.returnValue(Promise.reject(error));
 
-    codeControl?.setValue('12345');
-    expect(codeControl?.errors?.['minlength']).toBeTruthy();
+    await component.resendCode();
+    tick();
 
-    codeControl?.setValue('1234567');
-    expect(codeControl?.errors?.['maxlength']).toBeTruthy();
+    expect(component.errorMessage).toBe('Failed to resend code');
+    expect(component.resendDisabled).toBeFalse();
+  }));
 
-    codeControl?.setValue('123456');
-    expect(codeControl?.errors).toBeFalsy();
-  });
+  it('should manage resend timer correctly', fakeAsync(() => {
+    const mockResendResponse = { CodeDeliveryDetails: { Destination: 'test@example.com' } };
+    authService.resendConfirmationCode.and.returnValue(Promise.resolve(mockResendResponse));
+
+    component.resendCode();
+    tick();
+
+    expect(component.resendDisabled).toBeTrue();
+    expect(component.resendCountdown).toBe(60);
+
+    tick(30000);
+    expect(component.resendCountdown).toBe(30);
+    expect(component.resendDisabled).toBeTrue();
+
+    tick(30000);
+    expect(component.resendDisabled).toBeFalse();
+  }));
+
+  it('should cleanup timer on destroy', fakeAsync(() => {
+    const mockResendResponse = { CodeDeliveryDetails: { Destination: 'test@example.com' } };
+    authService.resendConfirmationCode.and.returnValue(Promise.resolve(mockResendResponse));
+
+    component.resendCode();
+    tick();
+
+    expect(component.resendDisabled).toBeTrue();
+
+    component.ngOnDestroy();
+
+    tick(60000);
+    expect(component.resendTimer).toBeDefined();
+  }));
+
+  it('should not submit if form is invalid', fakeAsync(async () => {
+    component.confirmationForm.get('verificationCode')?.setValue('');
+    await component.onSubmit();
+    tick();
+
+    expect(authService.confirmRegistration).not.toHaveBeenCalled();
+  }));
+
+  it('should not submit if already loading', fakeAsync(async () => {
+    component.isLoading = true;
+    component.confirmationForm.get('verificationCode')?.setValue('123456');
+
+    await component.onSubmit();
+    tick();
+
+    expect(authService.confirmRegistration).not.toHaveBeenCalled();
+  }));
+
+  it('should not allow resend if disabled', fakeAsync(async () => {
+    component.resendDisabled = true;
+
+    await component.resendCode();
+    tick();
+
+    expect(authService.resendConfirmationCode).not.toHaveBeenCalled();
+  }));
 });

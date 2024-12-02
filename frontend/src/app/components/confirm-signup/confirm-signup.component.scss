@@ -1,19 +1,15 @@
-// src/app/components/confirm-signup/confirm-signup.component.scss
-@import '../../_variables';
-@import '../../mixins';
-
+// confirm-signup.component.scss
 .confirm-signup-container {
-  @include auth-container;
-  max-width: 480px;
-  margin: $spacing-xl auto;
-  padding: $spacing-xl;
-  background-color: $bg-primary;
-  border-radius: $border-radius-lg;
-  box-shadow: $shadow-md;
+  max-width: 400px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
   .logo-container {
     text-align: center;
-    margin-bottom: $spacing-xl;
+    margin-bottom: 2rem;
 
     img {
       max-width: 200px;
@@ -23,117 +19,125 @@
 
   .confirmation-info {
     text-align: center;
-    margin-bottom: $spacing-xl;
+    margin-bottom: 2rem;
 
-    h3 {
-      color: $primary-color;
-      margin-bottom: $spacing-xs;
-      font-family: $font-family-heading;
+    h2 {
+      margin-bottom: 0.5rem;
+      color: #333;
     }
 
     p {
-      color: $text-secondary;
+      color: #666;
     }
   }
 
   .form-group {
-    margin-bottom: $spacing-lg;
+    margin-bottom: 1.5rem;
+  }
 
-    .verification-input {
-      .input-label {
-        display: block;
-        margin-bottom: $spacing-xs;
-        color: $text-primary;
-        font-weight: $font-weight-medium;
-      }
+  .verification-input {
+    margin-bottom: 0.5rem;
+  }
 
-      .verification-code-input {
-        width: 100%;
-        padding: $input-padding-y $input-padding-x;
-        border: $input-border-width solid $input-border-color;
-        border-radius: $input-border-radius;
-        font-size: $font-size-base;
-        letter-spacing: 0.25rem;
-        text-align: center;
-        transition: $transition-normal;
+  .form-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    text-align: center;
+    letter-spacing: 0.25rem;
 
-        &:focus {
-          outline: none;
-          border-color: $primary-color;
-          box-shadow: $input-focus-box-shadow;
-        }
-      }
+    &:focus {
+      outline: none;
+      border-color: #0066cc;
     }
   }
 
   .error-message {
-    color: $danger-color;
-    font-size: $font-size-xs;
-    margin-top: $spacing-xs;
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
   }
 
   .error-banner {
-    background-color: rgba($danger-color, 0.1);
-    color: $danger-color;
-    padding: $spacing-sm;
-    border-radius: $border-radius;
-    margin-bottom: $spacing-md;
-    text-align: center;
+    background-color: #fff3f3;
+    color: #dc3545;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
   }
 
-  .submit-section {
-    margin-bottom: $spacing-lg;
+  .submit-button {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #0066cc;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
 
-    .submit-button {
-      @include primary-button;
-      width: 100%;
+    &:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
 
-      &:disabled {
-        opacity: $button-disabled-opacity;
-        cursor: not-allowed;
-      }
+    &:hover:not(:disabled) {
+      background-color: #0052a3;
     }
   }
 
   .form-links {
+    margin-top: 1.5rem;
     text-align: center;
 
     .resend-code {
-      margin-bottom: $spacing-md;
-      color: $text-secondary;
+      margin-bottom: 1rem;
+    }
 
-      .link-button {
-        @include link-button;
-        color: $primary-color;
+    .link-button {
+      background: none;
+      border: none;
+      color: #0066cc;
+      cursor: pointer;
+      padding: 0;
+      font: inherit;
+      text-decoration: underline;
 
-        &:disabled {
-          opacity: $opacity-50;
-          cursor: not-allowed;
-        }
+      &:hover {
+        color: #0052a3;
+      }
+
+      &:disabled {
+        color: #666;
+        cursor: not-allowed;
+        text-decoration: none;
       }
     }
 
-    .back-to-signin {
-      a {
-        @include link-button;
-        color: $text-secondary;
+    a {
+      color: #0066cc;
+      text-decoration: none;
 
-        &:hover {
-          color: $primary-color;
-        }
+      &:hover {
+        text-decoration: underline;
       }
     }
-  }
-
-  .loader {
-    @include loader;
-    margin: 0 auto;
   }
 }
 
-@include responsive(tablet) {
-  .confirm-signup-container {
-    margin: $spacing-md;
-    padding: $spacing-md;
-  }
+.loader {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255,255,255,.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }

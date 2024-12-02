@@ -1,3 +1,4 @@
+// confirm-signup.component.ts
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -15,6 +16,7 @@ export class ConfirmSignupComponent implements OnInit {
   username = '';
   resendDisabled = false;
   resendTimer: any;
+  resendCountdown = 0;
 
   constructor(
     private fb: FormBuilder,
@@ -37,6 +39,12 @@ export class ConfirmSignupComponent implements OnInit {
         this.router.navigate(['/signup']);
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.resendTimer) {
+      clearInterval(this.resendTimer);
+    }
   }
 
   async onSubmit(): Promise<void> {
@@ -71,20 +79,14 @@ export class ConfirmSignupComponent implements OnInit {
 
   private startResendTimer(): void {
     this.resendDisabled = true;
-    let timeLeft = 60;
+    this.resendCountdown = 60;
 
     this.resendTimer = setInterval(() => {
-      timeLeft -= 1;
-      if (timeLeft <= 0) {
+      this.resendCountdown -= 1;
+      if (this.resendCountdown <= 0) {
         this.resendDisabled = false;
         clearInterval(this.resendTimer);
       }
     }, 1000);
-  }
-
-  ngOnDestroy(): void {
-    if (this.resendTimer) {
-      clearInterval(this.resendTimer);
-    }
   }
 }

@@ -1,4 +1,4 @@
-name: stripe-layer
+name: deploy-stripe-layer
 
 on:
   push:

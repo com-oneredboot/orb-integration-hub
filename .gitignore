@@ -159,12 +159,10 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-# environment files
-.env
-.env.local
-.env.development
-.env.staging
-.env.production
 
 # No node_modules in any directory
 node_modules/
+
+# Environment files
+/src/environments/environment.ts
+/src/environments/environment.prod.ts

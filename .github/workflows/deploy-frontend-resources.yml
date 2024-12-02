@@ -1,4 +1,4 @@
-name: Deploy Infrastructure
+name: deploy-frontend-resources
 
 on:
   workflow_dispatch:

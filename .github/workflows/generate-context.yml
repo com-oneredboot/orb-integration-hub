@@ -1,4 +1,4 @@
-name: Generate AI Context
+name: generate-context
 
 on:
   push:
