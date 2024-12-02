@@ -72,19 +72,20 @@ Completed Tasks:
 10. Created custom error types for better error management
 11. Due to the expanded purpose (not just a payment gateway but a user, payment, event gateway should this project be renamed to reflect this?)
 12. Implement the signin component logic using the AuthService
-
-Next Steps:
 13. Create and implement the siqn-up component logic
 14. Create and implement confirm-signup component logic
 15. Set up protected routes using AuthGuard
-16. Implement error handling and form validation in authentication components
-17. Begin integration with backend Lambda functions
-18. Set up CI/CD pipelines using GitHub Actions
-19. Start implementing payment processing logic with Stripe
-20. Update AppSync API to include the getUserProfile query and implement the corresponding resolver
-21. Test the entire authentication flow from registration to login
-22. Implement user profile management functionality
-23. Begin work on integrating additional payment processors (PayPal, Apple Pay, Google Pay)
+16. Implemented the context-generator so we now have a way to update the projects context each time we commit
+
+Next Steps:
+17. Implement error handling and form validation in authentication components
+18. Begin integration with backend Lambda functions
+19. Set up CI/CD pipelines using GitHub Actions 
+20. Start implementing payment processing logic with Stripe
+21. Update AppSync API to include the getUserProfile query and implement the corresponding resolver
+22. Test the entire authentication flow from registration to login
+23. Implement user profile management functionality
+24. Begin work on integrating additional payment processors (PayPal, Apple Pay, Google Pay)
 
 Current Issues:
 No current issues reported.
