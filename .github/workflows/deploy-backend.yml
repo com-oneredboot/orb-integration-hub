@@ -72,4 +72,4 @@ jobs:
               s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/${stack}-packaged.yml
           
           done
-        working-directory: ./infrastructure/cloudformation
+        working-directory: ./backend/infrastructure/cloudformation
