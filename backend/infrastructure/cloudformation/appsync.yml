@@ -25,7 +25,7 @@ Parameters:
 
 # --------------------------------------------------- #
 Resources:
-  PaymentGatewayApi:
+  IntegrationHubApi:
     Type: AWS::AppSync::GraphQLApi
     Properties:
       Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-appsync'
@@ -40,10 +40,10 @@ Resources:
         CloudWatchLogsRoleArn: !GetAtt AppSyncLoggingServiceRole.Arn
         FieldLogLevel: ALL
         ExcludeVerboseContent: false
-  PaymentGatewayApiKey:
+  IntegrationHubApiKey:
     Type: AWS::AppSync::ApiKey
     Properties:
-      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      ApiId: !GetAtt IntegrationHubApi.ApiId
       Description: "API Key for unauthenticated access"
       Expires: 1735603200
   ApiKeySecret:
@@ -51,11 +51,11 @@ Resources:
     Properties:
       Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-appsync-graphql-key'
       Description: "AppSync API Key for unauthenticated access"
-      SecretString: !GetAtt PaymentGatewayApiKey.ApiKey
-  PaymentGatewaySchema:
+      SecretString: !GetAtt IntegrationHubApiKey.ApiKey
+  IntegrationHubSchema:
     Type: AWS::AppSync::GraphQLSchema
     Properties:
-      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      ApiId: !GetAtt IntegrationHubApi.ApiId
       Definition: |
         type Payment @aws_api_key{
           payment_id: ID!
@@ -143,7 +143,7 @@ Resources:
   ContactFormDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
-      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      ApiId: !GetAtt IntegrationHubApi.ApiId
       Name: ContactFormDataSource
       Type: AWS_LAMBDA
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
@@ -152,7 +152,7 @@ Resources:
   DynamoDBDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
-      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      ApiId: !GetAtt IntegrationHubApi.ApiId
       Name: DynamoDBDataSource
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
@@ -162,7 +162,7 @@ Resources:
   PaymentProcessorDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
-      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      ApiId: !GetAtt IntegrationHubApi.ApiId
       Name: PaymentProcessorDataSource
       Type: AWS_LAMBDA
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
@@ -171,7 +171,7 @@ Resources:
   RegistrationsDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
-      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      ApiId: !GetAtt IntegrationHubApi.ApiId
       Name: RegistrationsDataSource
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
@@ -182,9 +182,9 @@ Resources:
   # Resolvers
   ProcessStripePaymentResolver:
     Type: AWS::AppSync::Resolver
-    DependsOn: Schema
+    DependsOn: IntegrationHubSchema
     Properties:
-      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
       FieldName: processStripePayment
       DataSourceName: !GetAtt PaymentProcessorDataSource.Name
@@ -199,9 +199,9 @@ Resources:
 
   SendContactMessageResolver:
     Type: AWS::AppSync::Resolver
-    DependsOn: Schema
+    DependsOn: IntegrationHubSchema
     Properties:
-      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
       FieldName: sendContactMessage
       DataSourceName: !GetAtt ContactFormDataSource.Name
@@ -216,9 +216,9 @@ Resources:
 
   GetPaymentResolver:
     Type: AWS::AppSync::Resolver
-    DependsOn: Schema
+    DependsOn: IntegrationHubSchema
     Properties:
-      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
       FieldName: getPayment
       DataSourceName: !GetAtt DynamoDBDataSource.Name
@@ -236,9 +236,9 @@ Resources:
 
   getRegistrationByCognitoIdResolver:
     Type: AWS::AppSync::Resolver
-    DependsOn: Schema
+    DependsOn: IntegrationHubSchema
     Properties:
-      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
       FieldName: getRegistrationByCognitoId
       DataSourceName: !GetAtt RegistrationsDataSource.Name
@@ -254,9 +254,9 @@ Resources:
         $util.toJson($context.result)
   ListPaymentsByCustomerResolver:
     Type: AWS::AppSync::Resolver
-    DependsOn: Schema
+    DependsOn: IntegrationHubSchema
     Properties:
-      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
       FieldName: listPaymentsByCustomer
       DataSourceName: !GetAtt DynamoDBDataSource.Name
@@ -283,9 +283,9 @@ Resources:
 
   ProcessRegistrationResolver:
     Type: AWS::AppSync::Resolver
-    DependsOn: Schema
+    DependsOn: IntegrationHubSchema
     Properties:
-      ApiId: !GetAtt PaymentGatewayApi.ApiId
+      ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
       FieldName: processRegistration
       DataSourceName: !GetAtt RegistrationsDataSource.Name
@@ -377,7 +377,7 @@ Resources:
 Outputs:
   GraphQLApiUrl:
     Description: 'URL of the AppSync GraphQL API'
-    Value: !GetAtt PaymentGatewayApi.GraphQLUrl
+    Value: !GetAtt IntegrationHubApi.GraphQLUrl
   GraphQLApiKeySecretName:
     Description: 'Name of the Secret containing the AppSync API Key'
     Value: !Ref ApiKeySecret
