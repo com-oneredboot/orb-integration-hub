@@ -5,7 +5,7 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch:  # Allow manual triggering
+  workflow_dispatch:
 
 jobs:
   generate-context:
@@ -14,7 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Get full history
+          fetch-depth: 0
+          token: ${{ secrets.CONTEXT_PAT }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -39,13 +40,16 @@ jobs:
             context_output/context_summary.md
 
       - name: Update context branch
-        if: github.ref == 'refs/heads/main'  # Only on main branch
+        if: github.ref == 'refs/heads/main'
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
           git checkout -B context-updates
           mkdir -p docs/context
           cp -r context_output/* docs/context/
           git add docs/context/
           git commit -m "Update AI context files" || echo "No changes to commit"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
           git push -f origin context-updates
+        env:
+          GITHUB_TOKEN: ${{ secrets.CONTEXT_PAT }}
