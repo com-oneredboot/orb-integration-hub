@@ -125,7 +125,7 @@ Resources:
   
         type Query {
           getPayment(payment_id: ID!, customer_id: String!): Payment @aws_cognito_user_pools @aws_api_key
-          getRegistrationByCognitoId(cognito_id: String!): Registration @aws_cognito_user_pools @aws_api_key
+          getRegistrationByCognitoId(cognito_id: String!): RegistrationResult @aws_cognito_user_pools @aws_api_key
           listPaymentsByCustomer(customer_id: String!, limit: Int, nextToken: String): PaymentConnection! @aws_api_key
         }
   
