@@ -7,13 +7,6 @@ on:
         description: 'Environment to deploy to'
         required: true
         type: environment
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/deploy-stripe-layer.yml'
-      - 'backend/src/layers/stripe_layer.yml'
-      - 'backend/src/layers/stripe/**'
 
 jobs:
   deploy-api-stack:
