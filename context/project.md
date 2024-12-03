@@ -80,12 +80,43 @@ Completed Tasks:
 Next Steps:
 17. Implement error handling and form validation in authentication components
 18. Begin integration with backend Lambda functions
-19. Set up CI/CD pipelines using GitHub Actions 
+19. Set up CI/CD pipelines using GitHub Actions
 20. Start implementing payment processing logic with Stripe
 21. Update AppSync API to include the getUserProfile query and implement the corresponding resolver
 22. Test the entire authentication flow from registration to login
 23. Implement user profile management functionality
 24. Begin work on integrating additional payment processors (PayPal, Apple Pay, Google Pay)
+25. Configure Multi-Factor Authentication in Cognito User Pool:
+    - Enable MFA settings in Cognito
+    - Configure SMS, email, and TOTP (app-based) options
+    - Set up SNS for SMS delivery
+    - Configure device tracking settings
+26. Update AuthService for MFA Support:
+    - Add MFA setup and verification methods
+    - Implement device tracking functionality
+    - Add MFA preference management
+    - Implement remembered device handling
+27. Create MFA UI Components:
+    - MFA setup interface
+    - MFA verification flow
+    - Device remembrance options
+    - MFA method selection
+    - MFA management in user profile
+28. Implement MFA Lambda Functions:
+    - MFA verification handler
+    - Device tracking management
+    - MFA status checker
+    - Device verification handler
+29. Add MFA Security Features:
+    - Rate limiting for MFA attempts
+    - Bypass protection
+    - Secure device token storage
+    - Audit logging for MFA events
+30. Test and Document MFA Implementation:
+    - Unit tests for MFA components
+    - Integration testing for MFA flow
+    - Device remembrance testing
+    - Update user and API documentation
 
 Current Issues:
 No current issues reported.
