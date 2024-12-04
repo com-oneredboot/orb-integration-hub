@@ -5,7 +5,7 @@ import { ReactiveFormsModule} from "@angular/forms";
 import { RouterModule } from '@angular/router';
 
 import { AppComponent } from './app.component';
-import { SignupComponent } from './components/signup/signup.component';
+import { SignUpComponent } from './components/signup/signup.component';
 import { SignInComponent } from './components/signin/signin.component';
 import { ConfirmSignupComponent } from './components/confirm-signup/confirm-signup.component';
 import {AppRoutingModule} from "./app.routes";
@@ -18,7 +18,7 @@ import {PageLayoutComponent} from "./layouts/page-layout/page-layout.comonent";
     AppComponent,
     AppLayoutComponent,
     PageLayoutComponent,
-    SignupComponent,
+    SignUpComponent,
     SignInComponent,
     ConfirmSignupComponent
   ],

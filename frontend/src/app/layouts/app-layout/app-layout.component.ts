@@ -19,7 +19,7 @@ export class AppLayoutComponent {
 
   async signOut(): Promise<void> {
     try {
-      await this.authService.logoutUser();
+      await this.authService.signOut();
       await this.router.navigate(['/home']);
     } catch (error) {
       console.error('Sign out error:', error);

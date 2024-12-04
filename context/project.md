@@ -88,12 +88,12 @@ Completed Tasks:
     - Updated signup component for MFA
     - Added MFA setup interface
     - Implemented verification flow
+20. Update sign-in component to handle MFA verification
 21. Implement error handling and form validation in authentication components
 22. Begin integration with backend Lambda functions
 23. Set up CI/CD pipelines using GitHub Actions
 
 Next Steps:
-20. Update sign-in component to handle MFA verification
 24. Start implementing payment processing logic with Stripe
 25. Update AppSync API to include the getUserProfile query and implement the corresponding resolver
 26. Test the entire authentication flow from registration to login

@@ -3,7 +3,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { SignInComponent } from './components/signin/signin.component';
-import { SignupComponent } from './components/signup/signup.component';
+import { SignUpComponent } from './components/signup/signup.component';
 import {HomeComponent} from "./components/home/home.component";
 import {ConfirmSignupComponent} from "./components/confirm-signup/confirm-signup.component";
 import {PageLayoutComponent} from "./layouts/page-layout/page-layout.comonent";
@@ -21,7 +21,7 @@ export const routes: Routes = [
     component: AppLayoutComponent,
     children: [
       { path: 'signin', component: SignInComponent },
-      { path: 'signup', component: SignupComponent },
+      { path: 'signup', component: SignUpComponent },
       { path: 'confirm-signup', component: ConfirmSignupComponent },
       // { path: 'customer', loadChildren: () => import('./pages/customer/customer.module').then(m => m.CustomerModule) },
       // { path: 'client', loadChildren: () => import('./pages/client/client.module').then(m => m.ClientModule) },

@@ -257,7 +257,7 @@ export class AuthService {
     }
   }
 
-  async resendCode(username: string): Promise<AuthResponse> {
+  async resendConfirmationCode(username: string): Promise<AuthResponse> {
     try {
       await resendSignUpCode({ username });
       return {

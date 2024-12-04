@@ -1,5 +1,4 @@
-// confirm-signup.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -9,7 +8,7 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './confirm-signup.component.html',
   styleUrls: ['./confirm-signup.component.scss']
 })
-export class ConfirmSignupComponent implements OnInit {
+export class ConfirmSignupComponent implements OnInit, OnDestroy {
   confirmationForm: FormGroup;
   isLoading = false;
   errorMessage = '';
@@ -55,7 +54,8 @@ export class ConfirmSignupComponent implements OnInit {
       try {
         await this.authService.confirmRegistration(
           this.username,
-          this.confirmationForm.get('verificationCode')?.value
+          this.confirmationForm.get('verificationCode')?.value,
+          ''  // Pass empty string for mfaCode since this is just email verification
         );
         await this.router.navigate(['/signin']);
       } catch (error: any) {
