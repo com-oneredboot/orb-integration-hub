@@ -189,6 +189,7 @@ Resources:
               - cognito-identity:UpdateIdentityPool
               - cognito-identity:SetIdentityPoolRoles
               - cognito-idp:AddCustomAttributes
+              - cognito-idp:GetGroup
               - cognito-idp:CreateGroup
               - cognito-idp:DeleteGroup
               - cognito-idp:CreateUserPool
