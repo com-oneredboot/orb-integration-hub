@@ -96,6 +96,42 @@ Resources:
         ExternalId: !Sub "${CustomerId}-${ProjectId}-${Environment}-cognito-sms"
         SnsCallerArn: !GetAtt CognitoSMSRole.Arn
 
+  # Define Cognito Groups
+  UserGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: User
+      UserPoolId: !Ref UserPool
+      Description: Base group for all users
+
+  CustomerGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: Customer
+      UserPoolId: !Ref UserPool
+      Description: Group for end-users making purchases
+
+  ClientGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: Client
+      UserPoolId: !Ref UserPool
+      Description: Group for customers using the integration hub service
+
+  EmployeesGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: Employees
+      UserPoolId: !Ref UserPool
+      Description: Group for internal staff
+
+  OwnerGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: Owner
+      UserPoolId: !Ref UserPool
+      Description: Group for root-level system access
+
   # Identity Pool
   IdentityPool:
     Properties:
@@ -134,7 +170,7 @@ Resources:
         import boto3
         
         client = boto3.client('cognito-idp')
-                
+        
         def lambda_handler(event, context):
             print("Event received:", json.dumps(event))
         
@@ -148,9 +184,9 @@ Resources:
                 client.admin_add_user_to_group(
                     UserPoolId=event['userPoolId'],
                     Username=event['userName'],
-                    GroupName='AcpUserGroup'
+                    GroupName='User'  # Changed from 'AcpUserGroup' to 'User'
                 )
-                print(f"User {event['userName']} added to AcpUserGroup")
+                print(f"User {event['userName']} added to User group")
                 return event
             except Exception as e:
                 print(f"Error adding user to group: {str(e)}")
