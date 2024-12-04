@@ -63,6 +63,7 @@ Resources:
             Your temporary password for ${CustomerId}-${ProjectId}-${Environment}
       AutoVerifiedAttributes:
         - email
+        - phone_number
       LambdaConfig:
         PostConfirmation: !GetAtt PostUserConfirmationTrigger.Arn
       MfaConfiguration: 'ON'
@@ -90,7 +91,7 @@ Resources:
         - Name: phone_number
           AttributeDataType: String
           Mutable: true
-          Required: true
+          Required: false
       SmsConfiguration:
         ExternalId: !Sub "${CustomerId}-${ProjectId}-${Environment}-cognito-sms"
         SnsCallerArn: !GetAtt CognitoSMSRole.Arn
