@@ -63,10 +63,10 @@ Completed Tasks:
 5. Set up basic routing
 6. Configured testing environment with Karma and Jasmine
 7. Implemented the auth service (AuthService) with the following features:
-   - User registration (registerUser)
-   - Registration confirmation (confirmRegistration)
-   - User authentication (authenticateUser)
-   - User logout (logoutUser)
+    - User registration (registerUser)
+    - Registration confirmation (confirmRegistration)
+    - User authentication (authenticateUser)
+    - User logout (logoutUser)
 8. Integrated Amplify's GraphQL client for fetching user profiles
 9. Implemented error handling and logging in AuthService
 10. Created custom error types for better error management
@@ -76,37 +76,29 @@ Completed Tasks:
 14. Create and implement confirm-signup component logic
 15. Set up protected routes using AuthGuard
 16. Implemented the context-generator so we now have a way to update the projects context each time we commit
-
-Next Steps:
-17. Implement error handling and form validation in authentication components
-18. Begin integration with backend Lambda functions
-19. Set up CI/CD pipelines using GitHub Actions
-20. Start implementing payment processing logic with Stripe
-21. Update AppSync API to include the getUserProfile query and implement the corresponding resolver
-22. Test the entire authentication flow from registration to login
-23. Implement user profile management functionality
-24. Begin work on integrating additional payment processors (PayPal, Apple Pay, Google Pay)
-25. Configure Multi-Factor Authentication in Cognito User Pool:
+17. Configure Multi-Factor Authentication in Cognito User Pool:
     - Enable MFA settings in Cognito
-    - Configure SMS, email, and TOTP (app-based) options
-    - Set up SNS for SMS delivery
+    - Configure TOTP (app-based) options
     - Configure device tracking settings
-26. Update AuthService for MFA Support:
+18. Update AuthService for MFA Support:
+    - Simplified MFA implementation
     - Add MFA setup and verification methods
     - Implement device tracking functionality
-    - Add MFA preference management
-    - Implement remembered device handling
-27. Create MFA UI Components:
-    - MFA setup interface
-    - MFA verification flow
-    - Device remembrance options
-    - MFA method selection
-    - MFA management in user profile
-28. Implement MFA Lambda Functions:
-    - MFA verification handler
-    - Device tracking management
-    - MFA status checker
-    - Device verification handler
+19. Create MFA Registration Flow:
+    - Updated signup component for MFA
+    - Added MFA setup interface
+    - Implemented verification flow
+
+Next Steps:
+20. Update sign-in component to handle MFA verification
+21. Implement error handling and form validation in authentication components
+22. Begin integration with backend Lambda functions
+23. Set up CI/CD pipelines using GitHub Actions
+24. Start implementing payment processing logic with Stripe
+25. Update AppSync API to include the getUserProfile query and implement the corresponding resolver
+26. Test the entire authentication flow from registration to login
+27. Implement user profile management functionality
+28. Begin work on integrating additional payment processors (PayPal, Apple Pay, Google Pay)
 29. Add MFA Security Features:
     - Rate limiting for MFA attempts
     - Bypass protection

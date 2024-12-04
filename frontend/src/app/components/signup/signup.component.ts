@@ -6,42 +6,50 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
 
+enum SignupStep {
+  INITIAL,
+  MFA_SETUP,
+  VERIFY
+}
+
 @Component({
   selector: 'app-signup',
   templateUrl: './signup.component.html',
   styleUrls: ['./signup.component.scss']
 })
-export class SignupComponent implements OnInit, OnDestroy {
-  signupForm: FormGroup;
+export class SignUpComponent implements OnInit, OnDestroy {
+  currentStep = SignupStep.INITIAL;
+  form: FormGroup;
   isLoading = false;
-  errorMessage = '';
+  error = '';
+  qrCode = '';
+  secretKey = '';
+  username = '';
   passwordVisible = false;
   private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
-    private authService: AuthService,
+    private auth: AuthService,
     private router: Router
   ) {
-    this.signupForm = this.fb.group({
-      username: ['', [Validators.required, Validators.minLength(3)]],
-      email: ['', [Validators.required, Validators.email]],
+    this.form = this.fb.group({
+      username: ['', [Validators.required, Validators.email]],
       password: ['', [
         Validators.required,
         Validators.minLength(8),
         Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
-      ]]
+      ]],
+      mfaCode: ['', [Validators.pattern(/^\d{6}$/)]],
+      verificationCode: ['', [Validators.pattern(/^\d{6}$/)]]
     });
   }
 
   ngOnInit(): void {
-    // Check if user is already authenticated
-    this.authService.isAuthenticated$()
+    this.auth.isAuthenticated$()
       .pipe(takeUntil(this.destroy$))
       .subscribe(isAuth => {
-        if (isAuth) {
-          this.router.navigate(['/dashboard']);
-        }
+        if (isAuth) this.router.navigate(['/dashboard']);
       });
   }
 
@@ -51,23 +59,66 @@ export class SignupComponent implements OnInit, OnDestroy {
   }
 
   async onSubmit(): Promise<void> {
-    if (this.signupForm.valid) {
-      this.isLoading = true;
-      this.errorMessage = '';
+    if (this.isLoading || !this.form.valid) return;
 
-      try {
-        const { username, password, email } = this.signupForm.value;
-        await this.authService.registerUser(username, password, email);
-        await this.router.navigate(['/confirm-signup'], {
-          queryParams: { username: username }
-        });
-      } catch (error: any) {
-        this.handleError(error);
-      } finally {
-        this.isLoading = false;
+    this.isLoading = true;
+    this.error = '';
+
+    try {
+      switch (this.currentStep) {
+        case SignupStep.INITIAL:
+          await this.handleInitialSignup();
+          break;
+        case SignupStep.MFA_SETUP:
+          await this.handleMfaSetup();
+          break;
+        case SignupStep.VERIFY:
+          await this.handleVerification();
+          break;
       }
+    } catch (err) {
+      console.error('Signup error:', err);
+      this.error = err instanceof Error ? err.message : 'An error occurred';
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  private async handleInitialSignup(): Promise<void> {
+    const { username, password } = this.form.value;
+    const response = await this.auth.register(username, password, username);
+
+    if (response.success && response.setupDetails) {
+      this.username = username;
+      this.qrCode = response.setupDetails.qrCode || '';
+      this.secretKey = response.setupDetails.secretKey || '';
+      this.currentStep = SignupStep.MFA_SETUP;
+      this.form.get('mfaCode')?.setValidators([Validators.required, Validators.pattern(/^\d{6}$/)]);
     } else {
-      this.markFormFieldsAsTouched();
+      this.error = response.error || 'Registration failed';
+    }
+  }
+
+  private async handleMfaSetup(): Promise<void> {
+    if (!this.form.get('mfaCode')?.valid) return;
+
+    this.currentStep = SignupStep.VERIFY;
+    this.form.get('verificationCode')?.setValidators([Validators.required, Validators.pattern(/^\d{6}$/)]);
+  }
+
+  private async handleVerification(): Promise<void> {
+    const { verificationCode, mfaCode } = this.form.value;
+
+    const response = await this.auth.confirmRegistration(
+      this.username,
+      verificationCode,
+      mfaCode
+    );
+
+    if (response.success) {
+      await this.router.navigate(['/signin']);
+    } else {
+      this.error = response.error || 'Verification failed';
     }
   }
 
@@ -75,23 +126,21 @@ export class SignupComponent implements OnInit, OnDestroy {
     this.passwordVisible = !this.passwordVisible;
   }
 
-  private handleError(error: any): void {
-    console.error('Signup error:', error);
-    if (error.code === 'UsernameExistsException') {
-      this.errorMessage = 'This username is already taken. Please choose another one.';
-    } else if (error.code === 'InvalidPasswordException') {
-      this.errorMessage = 'Password does not meet the requirements. Please ensure it contains uppercase, lowercase, numbers, and special characters.';
-    } else if (error.code === 'InvalidParameterException') {
-      this.errorMessage = 'Please check your input and try again.';
-    } else {
-      this.errorMessage = error.message || 'An unexpected error occurred';
-    }
-  }
+  isStepValid(): boolean {
+    const usernameControl = this.form.get('username');
+    const passwordControl = this.form.get('password');
+    const mfaControl = this.form.get('mfaCode');
+    const verificationControl = this.form.get('verificationCode');
 
-  private markFormFieldsAsTouched(): void {
-    Object.keys(this.signupForm.controls).forEach(key => {
-      const control = this.signupForm.get(key);
-      control?.markAsTouched();
-    });
+    switch (this.currentStep) {
+      case SignupStep.INITIAL:
+        return !!(usernameControl?.valid && passwordControl?.valid);
+      case SignupStep.MFA_SETUP:
+        return !!mfaControl?.valid;
+      case SignupStep.VERIFY:
+        return !!verificationControl?.valid;
+      default:
+        return false;
+    }
   }
 }

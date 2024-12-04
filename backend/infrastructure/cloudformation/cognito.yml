@@ -136,28 +136,51 @@ Resources:
       UserPoolId: !Ref UserPool
     Type: AWS::Cognito::UserPoolClient
 
-  UserPool:
-    Properties:
-      AdminCreateUserConfig:
-        AllowAdminCreateUserOnly: false
-        InviteMessageTemplate:
-          EmailMessage: !Sub |
-            Your account for ${CustomerId}-${ProjectId}-${Environment} has been created.
-            Your username is {username} and temporary password is {####}.
-            Please login from here: https://ai-repository.oneredboot.com/authenticate/
-          EmailSubject: !Sub |
-            Your temporary password for ${CustomerId}-${ProjectId}-${Environment}
-      AutoVerifiedAttributes:
-        - email
-      LambdaConfig:
-        PostConfirmation: !GetAtt PostUserConfirmationTrigger.Arn
-      Schema:
-        - Name: email
-          AttributeDataType: String
-          Mutable: true
-          Required: true
-      UserPoolName: !Sub "${CustomerId}-${ProjectId}-${Environment}-user-pool"
-    Type: AWS::Cognito::UserPool
+UserPool:
+  Properties:
+    AdminCreateUserConfig:
+      AllowAdminCreateUserOnly: false
+      InviteMessageTemplate:
+        EmailMessage: !Sub |
+          Your account for ${CustomerId}-${ProjectId}-${Environment} has been created.
+          Your username is {username} and temporary password is {####}.
+          Please login from here: https://ai-repository.oneredboot.com/authenticate/
+        EmailSubject: !Sub |
+          Your temporary password for ${CustomerId}-${ProjectId}-${Environment}
+    AutoVerifiedAttributes:
+      - email
+    LambdaConfig:
+      PostConfirmation: !GetAtt PostUserConfirmationTrigger.Arn
+    MfaConfiguration: 'ON'  # Changed from OPTIONAL to ON to enforce MFA
+    UserPoolAddOns:
+      AdvancedSecurityMode: 'ENFORCED'
+    DeviceConfiguration:
+      ChallengeRequiredOnNewDevice: true
+      DeviceOnlyRememberedOnUserPrompt: true
+    SmsAuthenticationMessage: 'Your authentication code is {####}'
+    EnabledMfas:
+      - 'SOFTWARE_TOKEN_MFA'  # Removed SMS_MFA since we're only using authenticator apps
+    UserPoolName: !Sub "${CustomerId}-${ProjectId}-${Environment}-user-pool"
+    Policies:
+      PasswordPolicy:
+        MinimumLength: 8
+        RequireLowercase: true
+        RequireNumbers: true
+        RequireSymbols: true
+        RequireUppercase: true
+        TemporaryPasswordValidityDays: 7
+    Schema:
+      - Name: email
+        AttributeDataType: String
+        Mutable: true
+        Required: true
+      - Name: phone_number
+        AttributeDataType: String
+        Mutable: true
+        Required: false
+    SmsConfiguration:
+      ExternalId: !Sub "${CustomerId}-${ProjectId}-${Environment}-cognito-sms"
+      SnsCallerArn: !GetAtt CognitoSMSRole.Arn
 
   # IAM Roles
   AuthorizedRole:
@@ -200,6 +223,28 @@ Resources:
       RoleName: !Sub "${CustomerId}-${ProjectId}-${Environment}-authorized-role"
     Type: AWS::IAM::Role
 
+  CognitoSMSRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cognito-idp.amazonaws.com
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                'sts:ExternalId': !Sub "${CustomerId}-${ProjectId}-${Environment}-cognito-sms"
+      Policies:
+        - PolicyName: CognitoSMSPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sns:publish
+                Resource: '*'
   LambdaRole:
     Properties:
       AssumeRolePolicyDocument:

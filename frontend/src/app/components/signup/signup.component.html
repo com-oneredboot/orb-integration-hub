@@ -1,73 +1,119 @@
+<!-- signup.component.html -->
 <div class="signup-container">
   <div class="logo-container">
     <img src="assets/onredboot-logo.jpg" alt="OneRedBoot Logo">
   </div>
 
-  <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="signup-form">
-    <div class="form-group">
-      <div class="input-container">
-        <input
-          type="text"
-          formControlName="username"
-          placeholder="Enter your username"
-          class="form-input"
-          autocomplete="username"
-          [class.error]="signupForm.get('username')?.touched && signupForm.get('username')?.invalid">
-      </div>
-      <div class="error-message" *ngIf="signupForm.get('username')?.touched && signupForm.get('username')?.invalid">
-        <span *ngIf="signupForm.get('username')?.errors?.['required']">Username is required</span>
-        <span *ngIf="signupForm.get('username')?.errors?.['minlength']">Username must be at least 3 characters</span>
-      </div>
-    </div>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="signup-form">
+    <!-- Initial Signup -->
+    <ng-container *ngIf="currentStep === 0">
+      <h2>Create Account</h2>
 
-    <div class="form-group">
-      <div class="input-container">
+      <div class="form-group">
         <input
           type="email"
-          formControlName="email"
-          placeholder="Enter your email"
+          formControlName="username"
+          placeholder="Email address"
           class="form-input"
-          autocomplete="email"
-          [class.error]="signupForm.get('email')?.touched && signupForm.get('email')?.invalid">
-      </div>
-      <div class="error-message" *ngIf="signupForm.get('email')?.touched && signupForm.get('email')?.invalid">
-        <span *ngIf="signupForm.get('email')?.errors?.['required']">Email is required</span>
-        <span *ngIf="signupForm.get('email')?.errors?.['email']">Please enter a valid email</span>
-      </div>
-    </div>
+          [class.error]="form.get('username')?.touched && form.get('username')?.invalid">
 
-    <div class="form-group">
-      <div class="password-input-container">
+        <div class="error-message" *ngIf="form.get('username')?.touched && form.get('username')?.invalid">
+          <span *ngIf="form.get('username')?.errors?.['required']">Email is required</span>
+          <span *ngIf="form.get('username')?.errors?.['email']">Invalid email format</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="password-input-container">
+          <input
+            [type]="passwordVisible ? 'text' : 'password'"
+            formControlName="password"
+            placeholder="Password"
+            class="form-input"
+            [class.error]="form.get('password')?.touched && form.get('password')?.invalid">
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="togglePasswordVisibility()">
+            <span class="eye-icon">👁</span>
+          </button>
+        </div>
+
+        <div class="error-message" *ngIf="form.get('password')?.touched && form.get('password')?.invalid">
+          <span *ngIf="form.get('password')?.errors?.['required']">Password is required</span>
+          <span *ngIf="form.get('password')?.errors?.['pattern']">
+            Password must contain at least 8 characters, including uppercase, lowercase, numbers, and special characters
+          </span>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- MFA Setup -->
+    <ng-container *ngIf="currentStep === 1">
+      <h2>Set Up Two-Factor Authentication</h2>
+      <p class="mfa-instructions">Scan this QR code with your authenticator app:</p>
+
+      <div class="qr-container" [innerHTML]="qrCode"></div>
+
+      <div class="secret-key-container">
+        <p>Or manually enter this code in your authenticator app:</p>
+        <code class="secret-key">{{ secretKey }}</code>
+      </div>
+
+      <div class="form-group">
         <input
-          [type]="passwordVisible ? 'text' : 'password'"
-          formControlName="password"
-          placeholder="Enter your password"
+          type="text"
+          formControlName="mfaCode"
+          placeholder="Enter 6-digit code"
           class="form-input"
-          autocomplete="new-password"
-          [class.error]="signupForm.get('password')?.touched && signupForm.get('password')?.invalid">
-        <button
-          type="button"
-          class="password-toggle">
-          <span class="eye-icon">👁</span>
-        </button>
+          maxlength="6"
+          [class.error]="form.get('mfaCode')?.touched && form.get('mfaCode')?.invalid">
+
+        <div class="error-message" *ngIf="form.get('mfaCode')?.touched && form.get('mfaCode')?.invalid">
+          <span *ngIf="form.get('mfaCode')?.errors?.['pattern']">Enter a valid 6-digit code</span>
+        </div>
       </div>
-      <div class="error-message" *ngIf="signupForm.get('password')?.touched && signupForm.get('password')?.invalid">
-        <span *ngIf="signupForm.get('password')?.errors?.['required']">Password is required</span>
-        <span *ngIf="signupForm.get('password')?.errors?.['pattern']">
-          Password must contain at least 8 characters, including uppercase, lowercase, numbers, and special characters
-        </span>
+    </ng-container>
+
+    <!-- Email Verification -->
+    <ng-container *ngIf="currentStep === 2">
+      <h2>Verify Your Email</h2>
+      <p>Enter the verification code sent to your email</p>
+
+      <div class="form-group">
+        <input
+          type="text"
+          formControlName="verificationCode"
+          placeholder="Enter verification code"
+          class="form-input"
+          maxlength="6"
+          [class.error]="form.get('verificationCode')?.touched && form.get('verificationCode')?.invalid">
+
+        <div class="error-message" *ngIf="form.get('verificationCode')?.touched && form.get('verificationCode')?.invalid">
+          <span *ngIf="form.get('verificationCode')?.errors?.['pattern']">Enter a valid 6-digit code</span>
+        </div>
       </div>
+    </ng-container>
+
+    <!-- Error Message -->
+    <div class="error-banner" *ngIf="error">
+      {{ error }}
     </div>
 
+    <!-- Submit Button -->
     <button
       type="submit"
       class="submit-button"
-      [class.loading]="isLoading"
-      [disabled]="!signupForm.valid || isLoading">
-      <span *ngIf="!isLoading">Sign Up</span>
+      [disabled]="!isStepValid() || isLoading">
+      <span *ngIf="!isLoading">
+        {{ currentStep === 0 ? 'Create Account' :
+        currentStep === 1 ? 'Verify MFA' :
+          'Complete Registration' }}
+      </span>
       <div class="loader" *ngIf="isLoading"></div>
     </button>
 
+    <!-- Sign In Link -->
     <div class="form-links">
       <div class="signin-prompt">
         Already have an account? <a routerLink="/signin">Sign In</a>
