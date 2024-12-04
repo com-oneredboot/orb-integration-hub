@@ -12,10 +12,14 @@ import { AuthService } from '../../services/auth.service';
 })
 export class SignInComponent implements OnInit, OnDestroy {
   signInForm: FormGroup;
+  mfaForm: FormGroup;
   isLoading = false;
   errorMessage = '';
-  passwordVisible = false;  // Add this property
+  passwordVisible = false;
+  needsMFA = false;
+  mfaType: 'sms' | 'totp' | null = null;
   private destroy$ = new Subject<void>();
+  rememberDevice = false;
 
   constructor(
     private fb: FormBuilder,
@@ -26,10 +30,13 @@ export class SignInComponent implements OnInit, OnDestroy {
       username: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(8)]]
     });
+
+    this.mfaForm = this.fb.group({
+      code: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]]
+    });
   }
 
   ngOnInit(): void {
-    // Check if user is already authenticated
     this.authService.isAuthenticated$()
       .pipe(takeUntil(this.destroy$))
       .subscribe(isAuth => {
@@ -44,23 +51,34 @@ export class SignInComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // Add this method
   togglePasswordVisibility(): void {
     this.passwordVisible = !this.passwordVisible;
   }
 
   async onSubmit(): Promise<void> {
-    if (this.signInForm.valid) {
+    if (this.needsMFA) {
+      await this.handleMFASubmit();
+    } else {
+      await this.handleInitialSignIn();
+    }
+  }
+
+  private async handleInitialSignIn(): Promise<void> {
+    if (this.signInForm.valid && !this.isLoading) {
       this.isLoading = true;
       this.errorMessage = '';
 
       try {
-        const response = await this.authService.authenticateUser({
-          username: this.signInForm.get('username')?.value,
-          password: this.signInForm.get('password')?.value
-        });
+        const response = await this.authService.signIn(
+          this.signInForm.get('username')?.value,
+          this.signInForm.get('password')?.value
+        );
 
-        if (response.success) {
+        if (response.needsMFA) {
+          this.needsMFA = true;
+          this.mfaType = response.mfaType || 'totp';
+          this.errorMessage = '';
+        } else if (response.success) {
           await this.navigateBasedOnRole();
         } else {
           this.errorMessage = response.error || 'An error occurred during sign in';
@@ -71,7 +89,33 @@ export class SignInComponent implements OnInit, OnDestroy {
         this.isLoading = false;
       }
     } else {
-      this.markFormFieldsAsTouched();
+      this.markFormFieldsAsTouched(this.signInForm);
+    }
+  }
+
+  private async handleMFASubmit(): Promise<void> {
+    if (this.mfaForm.valid && !this.isLoading) {
+      this.isLoading = true;
+      this.errorMessage = '';
+
+      try {
+        const response = await this.authService.verifyMFA(
+          this.mfaForm.get('code')?.value,
+          this.rememberDevice
+        );
+
+        if (response.success) {
+          await this.navigateBasedOnRole();
+        } else {
+          this.errorMessage = response.error || 'MFA verification failed';
+        }
+      } catch (error: any) {
+        this.errorMessage = error.message || 'MFA verification failed';
+      } finally {
+        this.isLoading = false;
+      }
+    } else {
+      this.markFormFieldsAsTouched(this.mfaForm);
     }
   }
 
@@ -103,10 +147,14 @@ export class SignInComponent implements OnInit, OnDestroy {
     }
   }
 
-  private markFormFieldsAsTouched(): void {
-    Object.keys(this.signInForm.controls).forEach(key => {
-      const control = this.signInForm.get(key);
+  private markFormFieldsAsTouched(form: FormGroup): void {
+    Object.keys(form.controls).forEach(key => {
+      const control = form.get(key);
       control?.markAsTouched();
     });
+  }
+
+  toggleRememberDevice(): void {
+    this.rememberDevice = !this.rememberDevice;
   }
 }

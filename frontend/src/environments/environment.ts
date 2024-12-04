@@ -2,7 +2,7 @@
 export const environment = {
   production: false,
   cognito: {
-    userPoolId: 'orb-integration-hub-dev-user-pool-id',
-    userPoolClientId: 'orb-integration-hub-dev-user-pool-client-id'
+    userPoolId: 'us-east-1_YRI3K0Ijp',
+    userPoolClientId: '1tfddnvolaq04ufmcimq35mlkl'
   }
 };

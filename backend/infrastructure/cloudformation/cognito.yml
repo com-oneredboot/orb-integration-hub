@@ -49,8 +49,56 @@ Globals:
 
 # --------------------------------------------------- #
 Resources:
+  # Cognito User Pool
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+        InviteMessageTemplate:
+          EmailMessage: !Sub |
+            Your account for ${CustomerId}-${ProjectId}-${Environment} has been created.
+            Your username is {username} and temporary password is {####}.
+            Please login from here: https://ai-repository.oneredboot.com/authenticate/
+          EmailSubject: !Sub |
+            Your temporary password for ${CustomerId}-${ProjectId}-${Environment}
+      AutoVerifiedAttributes:
+        - email
+      LambdaConfig:
+        PostConfirmation: !GetAtt PostUserConfirmationTrigger.Arn
+      MfaConfiguration: 'ON'
+      EnabledMfas:
+        - 'SOFTWARE_TOKEN_MFA'
+        - 'SMS_MFA'
+      UserPoolAddOns:
+        AdvancedSecurityMode: 'ENFORCED'
+      DeviceConfiguration:
+        ChallengeRequiredOnNewDevice: true
+        DeviceOnlyRememberedOnUserPrompt: true
+      SmsAuthenticationMessage: 'Your authentication code is {####}'
+      UserPoolName: !Sub "${CustomerId}-${ProjectId}-${Environment}-user-pool"
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
+          TemporaryPasswordValidityDays: 7
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+        - Name: phone_number
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+      SmsConfiguration:
+        ExternalId: !Sub "${CustomerId}-${ProjectId}-${Environment}-cognito-sms"
+        SnsCallerArn: !GetAtt CognitoSMSRole.Arn
 
-  # Cognito
+  # Identity Pool
   IdentityPool:
     Properties:
       AllowUnauthenticatedIdentities: false
@@ -61,6 +109,7 @@ Resources:
       IdentityPoolName: !Sub "${CustomerId}-${ProjectId}-${Environment}-identity-pool"
     Type: AWS::Cognito::IdentityPool
 
+  # [Previous resources remain unchanged]
   IdentityPoolRoles:
     Properties:
       IdentityPoolId: !Ref IdentityPool
@@ -135,52 +184,6 @@ Resources:
       PreventUserExistenceErrors: ENABLED
       UserPoolId: !Ref UserPool
     Type: AWS::Cognito::UserPoolClient
-
-UserPool:
-  Properties:
-    AdminCreateUserConfig:
-      AllowAdminCreateUserOnly: false
-      InviteMessageTemplate:
-        EmailMessage: !Sub |
-          Your account for ${CustomerId}-${ProjectId}-${Environment} has been created.
-          Your username is {username} and temporary password is {####}.
-          Please login from here: https://ai-repository.oneredboot.com/authenticate/
-        EmailSubject: !Sub |
-          Your temporary password for ${CustomerId}-${ProjectId}-${Environment}
-    AutoVerifiedAttributes:
-      - email
-    LambdaConfig:
-      PostConfirmation: !GetAtt PostUserConfirmationTrigger.Arn
-    MfaConfiguration: 'ON'  # Changed from OPTIONAL to ON to enforce MFA
-    UserPoolAddOns:
-      AdvancedSecurityMode: 'ENFORCED'
-    DeviceConfiguration:
-      ChallengeRequiredOnNewDevice: true
-      DeviceOnlyRememberedOnUserPrompt: true
-    SmsAuthenticationMessage: 'Your authentication code is {####}'
-    EnabledMfas:
-      - 'SOFTWARE_TOKEN_MFA'  # Removed SMS_MFA since we're only using authenticator apps
-    UserPoolName: !Sub "${CustomerId}-${ProjectId}-${Environment}-user-pool"
-    Policies:
-      PasswordPolicy:
-        MinimumLength: 8
-        RequireLowercase: true
-        RequireNumbers: true
-        RequireSymbols: true
-        RequireUppercase: true
-        TemporaryPasswordValidityDays: 7
-    Schema:
-      - Name: email
-        AttributeDataType: String
-        Mutable: true
-        Required: true
-      - Name: phone_number
-        AttributeDataType: String
-        Mutable: true
-        Required: false
-    SmsConfiguration:
-      ExternalId: !Sub "${CustomerId}-${ProjectId}-${Environment}-cognito-sms"
-      SnsCallerArn: !GetAtt CognitoSMSRole.Arn
 
   # IAM Roles
   AuthorizedRole:

@@ -1,207 +1,48 @@
-@import '../../_variables';
-@import '../../mixins';
+.mfa-instructions {
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: #666;
+}
 
-.signin-container {
-  @include auth-container;
-  min-height: calc(100vh - 100px);
-  padding: $spacing-xl;
-  background-color: $bg-primary;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.remember-device {
+  margin: 1rem 0;
 
-  .logo-container {
-    text-align: center;
-    margin-bottom: $spacing-xl;
-
-    img {
-      width: 600px;
-      height: auto;
-    }
-  }
-
-  .signin-form {
-    width: 100%;
-    max-width: 400px;
+  label {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: $spacing-md;
-
-    .form-group {
-      width: 100%;
-      margin-bottom: $spacing-md;
-      position: relative;
-
-      .input-container,
-      .password-input-container {
-        position: relative;
-        display: flex;
-        align-items: center;
-        width: 100%;
-      }
-
-      .form-input {
-        width: 100%;
-        padding: $input-padding-y $input-padding-x;
-        font-family: $font-family-base;
-        font-size: $input-font-size;
-        color: $input-color;
-        border: $input-border-width solid $input-border-color;
-        border-radius: $input-border-radius;
-        background-color: $input-bg;
-        transition: $transition-normal;
-        box-sizing: border-box;
-
-        &:focus {
-          outline: none;
-          border-color: $input-focus-border-color;
-          box-shadow: $input-focus-box-shadow;
-        }
-
-        &::placeholder {
-          color: $input-placeholder-color;
-        }
-
-        &.error {
-          border-color: $danger-color;
-        }
-      }
-
-      // Password-specific styles
-      .password-input-container {
-        .form-input {
-          padding-right: 40px;
-        }
-
-        .password-toggle {
-          position: absolute;
-          right: 8px;
-          top: 50%;
-          transform: translateY(-50%);
-          background: none;
-          border: none;
-          cursor: pointer;
-          padding: 4px;
-          width: 28px;
-          height: 28px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: $text-secondary;
-          transition: $transition-normal;
-
-          .eye-icon {
-            font-size: $font-size-base;
-            line-height: 1;
-          }
-
-          &:hover {
-            color: $text-primary;
-          }
-        }
-      }
-    }
-
-    .submit-button {
-      width: 80%;
-      padding: $button-padding-y $button-padding-x;
-      background-color: $primary-color;
-      color: $white;
-      border: none;
-      border-radius: $button-border-radius;
-      font-family: $font-family-heading;
-      font-size: $font-size-lg;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      cursor: pointer;
-      transition: $transition-normal;
-      margin: $spacing-md 0;
-      position: relative;
-
-      &:hover:not(:disabled) {
-        background-color: darken($primary-color, 10%);
-        transform: translateY(-1px);
-        box-shadow: $shadow-md;
-      }
-
-      &:disabled {
-        opacity: $button-disabled-opacity;
-        cursor: not-allowed;
-      }
-
-      &.loading {
-        color: transparent;
-      }
-    }
-
-    .form-links {
-      width: 100%;
-      margin-top: $spacing-lg;
-      text-align: center;
-      font-family: $font-family-base;
-
-      .forgot-password {
-        font-family: $font-family-base;
-        font-size: $font-size-sm;
-        color: $primary-color;
-        text-decoration: none;
-        margin-bottom: $spacing-md;
-        display: block;
-        transition: $transition-normal;
-
-        &:hover {
-          color: darken($primary-color, 10%);
-          text-decoration: underline;
-        }
-      }
-
-      .signup-prompt {
-        font-family: $font-family-base;
-        font-size: $font-size-sm;
-        color: $text-secondary;
-
-        a {
-          font-family: $font-family-base;
-          color: $primary-color;
-          text-decoration: none;
-          margin-left: $spacing-xs;
-          transition: $transition-normal;
-
-          &:hover {
-            color: darken($primary-color, 10%);
-            text-decoration: underline;
-          }
-        }
-      }
-    }
+    gap: 0.5rem;
+    cursor: pointer;
+    color: #666;
   }
 
-  .loader {
-    @include loader;
+  input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
   }
 }
 
-@include responsive(tablet) {
-  .signin-container {
-    padding: $spacing-md;
-
-    .logo-container img {
-      width: 120px;
-    }
-
-    .signin-form {
-      .submit-button {
-        width: 90%;
-      }
-    }
-  }
+.error-banner {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: #fee2e2;
+  border: 1px solid #ef4444;
+  border-radius: 0.375rem;
+  color: #dc2626;
+  text-align: center;
 }
 
-@include responsive(mobile) {
-  .signin-form {
-    .submit-button {
-      width: 100%;
-    }
+.loader {
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }

@@ -1,5 +1,5 @@
 {
-  "dependencies": {
-    "@aws-sdk/client-ssm": "^3.699.0"
+  "devDependencies": {
+    "typescript": "^5.7.2"
   }
 }
