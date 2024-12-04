@@ -84,18 +84,36 @@ export class SignUpComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Handle the initial signup
+   * @private
+   */
   private async handleInitialSignup(): Promise<void> {
     const { username, password } = this.form.value;
     const response = await this.auth.register(username, password, username);
 
-    if (response.success && response.setupDetails) {
+    if (response.success) {
       this.username = username;
+      this.currentStep = SignupStep.VERIFY; // Go to verification first
+    } else {
+      this.error = response.error || 'Registration failed';
+    }
+  }
+
+  /**
+   * Setup MFA for the user
+   * @private
+   */
+  private async setupMFA(): Promise<void> {
+    const response = await this.auth.setupTOTP();
+
+    if (response.success && response.setupDetails) {
       this.qrCode = response.setupDetails.qrCode || '';
       this.secretKey = response.setupDetails.secretKey || '';
       this.currentStep = SignupStep.MFA_SETUP;
       this.form.get('mfaCode')?.setValidators([Validators.required, Validators.pattern(/^\d{6}$/)]);
     } else {
-      this.error = response.error || 'Registration failed';
+      this.error = response.error || 'MFA setup failed';
     }
   }
 

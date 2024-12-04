@@ -122,12 +122,29 @@ export class AuthService {
 
   async register(username: string, password: string, email: string): Promise<AuthResponse> {
     try {
+      // Just handle the initial signup
       await signUp({
         username,
         password,
         options: { userAttributes: { email } }
       });
 
+      return {
+        success: true,
+        needsMFA: false // We'll set up MFA after confirmation
+      };
+    } catch (error) {
+      console.error('Registration error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Registration failed'
+      };
+    }
+  }
+
+// Add a new method for setting up TOTP after sign-in
+  async setupTOTP(): Promise<AuthResponse> {
+    try {
       const totpSetup = await setUpTOTP();
       const setupDetails = totpSetup as any;
 
@@ -140,10 +157,10 @@ export class AuthService {
         }
       };
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('TOTP setup error:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Registration failed'
+        error: error instanceof Error ? error.message : 'MFA setup failed'
       };
     }
   }
