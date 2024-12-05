@@ -263,6 +263,7 @@ Resources:
   CognitoSMSRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: !Sub "${CustomerId}-${ProjectId}-${Environment}-cognito-sms-role"
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -274,15 +275,24 @@ Resources:
               StringEquals:
                 'sts:ExternalId': !Sub "${CustomerId}-${ProjectId}-${Environment}-cognito-sms"
       Policies:
-        - AWSXrayWriteOnlyAccess
+        - PolicyName: AWSXrayWriteOnlyAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - xray:PutTelemetryRecords
+                  - xray:PutTraceSegments
+                Resource: "*"
         - PolicyName: CognitoSMSPolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
-                  - sns:publish
+                  - sns:Publish
                 Resource: '*'
+
 
   LambdaRole:
     Properties:
