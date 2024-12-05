@@ -1,12 +1,12 @@
 /**
- * Enum defining all possible user roles in the system
+ * Enum defining all possible user groups in the system (matching Cognito groups)
  */
-export enum UserRole {
-  CUSTOMER = 'CUSTOMER',
-  CLIENT = 'CLIENT',
-  DEVELOPER = 'DEVELOPER',
-  ADMINISTRATOR = 'ADMINISTRATOR',
-  OWNER = 'OWNER'
+export enum UserGroup {
+  USER = 'User',           // Base group
+  CUSTOMER = 'Customer',   // End-users making purchases
+  CLIENT = 'Client',       // Customers using the service
+  EMPLOYEES = 'Employees', // Internal staff
+  OWNER = 'Owner'         // Root-level access
 }
 
 /**
@@ -37,7 +37,7 @@ export interface User {
   email: string;
 
   /** User's role in the system */
-  role: UserRole;
+  group: UserGroup;
 
   /** Current status of the user's account */
   status: UserStatus;
@@ -65,6 +65,8 @@ export interface User {
     };
   };
 }
+
+
 
 /**
  * Interface for creating a new user

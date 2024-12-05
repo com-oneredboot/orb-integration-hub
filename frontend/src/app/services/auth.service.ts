@@ -14,7 +14,7 @@ import {
   setUpTOTP
 } from 'aws-amplify/auth';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { User, UserRole } from '../models/user.model';
+import {User, UserGroup} from '../models/user.model';
 import { generateClient, GraphQLResult } from 'aws-amplify/api';
 import { getUserProfileQuery } from '../graphql/queries';
 
@@ -36,8 +36,8 @@ export interface AuthResponse {
   needsMFA?: boolean;
   mfaType?: 'sms' | 'totp';
   setupDetails?: {
-    qrCode?: string;
-    secretKey?: string;
+    qrCode: string;  // Changed from URL to string
+    secretKey: string;
   };
 }
 
@@ -113,11 +113,32 @@ export class AuthService {
     }
   }
 
-  public async getUserRole(): Promise<UserRole> {
-    const currentUser = this.currentUserSubject.value;
-    if (!currentUser) throw new AuthError('No authenticated user found');
-    if (!currentUser.role) throw new AuthError('User role not found');
-    return currentUser.role;
+  public async getUserGroup(): Promise<UserGroup> {
+    try {
+      const session = await fetchAuthSession();
+      const payload = session.tokens?.idToken?.payload;
+
+      if (!payload) {
+        throw new AuthError('No authenticated user found');
+      }
+
+      // Check for cognito:groups in the token
+      const groups = payload['cognito:groups'] as string[] || [];
+      console.log('User groups:', groups);
+
+      // Map Cognito groups to UserGroup
+      if (groups.includes('Owner')) return UserGroup.OWNER;
+      if (groups.includes('Employees')) return UserGroup.EMPLOYEES;
+      if (groups.includes('Client')) return UserGroup.CLIENT;
+      if (groups.includes('Customer')) return UserGroup.CUSTOMER;
+      if (groups.includes('User')) return UserGroup.USER;
+
+      // Default to User if no specific group found but user is authenticated
+      return UserGroup.USER;
+    } catch (error) {
+      console.error('Error getting user group:', error);
+      throw error;
+    }
   }
 
   async register(username: string, password: string, email: string): Promise<AuthResponse> {
@@ -167,21 +188,13 @@ export class AuthService {
 
   async confirmRegistration(username: string, code: string, mfaCode: string): Promise<AuthResponse> {
     try {
-      // Verify email
+      // Just confirm the registration first
       await confirmSignUp({ username, confirmationCode: code });
 
-      // Sign in and complete MFA setup
-      const signInResult = await signIn({ username });
-
-      if (signInResult.nextStep.signInStep.includes('TOTP')) {
-        await confirmSignIn({ challengeResponse: mfaCode });
-      }
-
-      await this.checkAuthState();
       return {
-        success: true,
-        user: this.currentUserSubject.value || undefined
+        success: true
       };
+
     } catch (error) {
       console.error('Confirmation error:', error);
       return {
@@ -193,8 +206,32 @@ export class AuthService {
 
   async signIn(username: string, password: string): Promise<AuthResponse> {
     try {
+      console.info('Starting sign in process for:', username);
       const signInResult = await signIn({ username, password });
+      console.debug('Sign in result:', signInResult);
       const nextStep = signInResult.nextStep.signInStep;
+      console.debug('Next step:', nextStep);
+
+      if (nextStep === 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP') {
+        console.info('TOTP setup required');
+        const totpSetupDetails = signInResult.nextStep.totpSetupDetails;
+
+        // Convert the QR code URI to a string
+        const qrCodeUri = totpSetupDetails.getSetupUri(
+          'OneRedBoot Integration Hub',
+          username
+        ).toString();  // Added toString()
+
+        return {
+          success: false,
+          needsMFA: true,
+          mfaType: 'totp',
+          setupDetails: {
+            qrCode: qrCodeUri,
+            secretKey: totpSetupDetails.sharedSecret
+          }
+        };
+      }
 
       if (nextStep === 'CONFIRM_SIGN_IN_WITH_TOTP_CODE') {
         return {
@@ -212,20 +249,19 @@ export class AuthService {
         };
       }
 
-      if (nextStep !== 'DONE') {
+      if (nextStep === 'DONE') {
+        console.info('Sign in completed');
         return {
-          success: false,
-          error: `Authentication requires: ${nextStep}`
+          success: true
         };
       }
 
-      await this.checkAuthState();
-      const user = this.currentUserSubject.value;
-
+      // Default return for any other nextStep value
       return {
-        success: true,
-        user: user || undefined
+        success: false,
+        error: `Authentication requires: ${nextStep}`
       };
+
     } catch (error) {
       console.error('Sign in error:', error);
       return {
@@ -237,12 +273,15 @@ export class AuthService {
 
   async verifyMFA(code: string, rememberDevice = false): Promise<AuthResponse> {
     try {
+      console.info('Verifying MFA code');
       const result = await confirmSignIn({
         challengeResponse: code,
         options: { rememberDevice }
       });
+      console.debug('MFA verification result:', result);
 
       if (result.isSignedIn) {
+        console.info('MFA verification successful');
         await this.checkAuthState();
         return {
           success: true,

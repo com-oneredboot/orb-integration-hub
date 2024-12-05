@@ -1,4 +1,3 @@
-<!-- signup.component.html -->
 <div class="signup-container">
   <div class="logo-container">
     <img src="assets/onredboot-logo.jpg" alt="OneRedBoot Logo">
@@ -46,6 +45,49 @@
           </span>
         </div>
       </div>
+
+      <div class="form-group">
+        <h3>Choose Authentication Method</h3>
+        <div class="mfa-options">
+          <div class="mfa-option">
+            <input
+              type="radio"
+              id="totp"
+              formControlName="mfaType"
+              [value]="MFAType.TOTP">
+            <label for="totp">
+              <span class="option-title">Authenticator App</span>
+              <span class="option-description">Use Google Authenticator, Authy, or similar apps</span>
+            </label>
+          </div>
+
+          <div class="mfa-option">
+            <input
+              type="radio"
+              id="sms"
+              formControlName="mfaType"
+              [value]="MFAType.SMS">
+            <label for="sms">
+              <span class="option-title">SMS Authentication</span>
+              <span class="option-description">Receive codes via text message</span>
+            </label>
+          </div>
+        </div>
+
+        <div *ngIf="form.get('mfaType')?.value === MFAType.SMS" class="phone-input">
+          <input
+            type="tel"
+            formControlName="phoneNumber"
+            placeholder="Phone number (+1234567890)"
+            class="form-input"
+            [class.error]="form.get('phoneNumber')?.touched && form.get('phoneNumber')?.invalid">
+
+          <div class="error-message" *ngIf="form.get('phoneNumber')?.touched && form.get('phoneNumber')?.invalid">
+            <span *ngIf="form.get('phoneNumber')?.errors?.['required']">Phone number is required for SMS authentication</span>
+            <span *ngIf="form.get('phoneNumber')?.errors?.['pattern']">Please enter a valid phone number (+1234567890)</span>
+          </div>
+        </div>
+      </div>
     </ng-container>
 
     <!-- MFA Setup -->
@@ -53,7 +95,9 @@
       <h2>Set Up Two-Factor Authentication</h2>
       <p class="mfa-instructions">Scan this QR code with your authenticator app:</p>
 
-      <div class="qr-container" [innerHTML]="qrCode"></div>
+      <div class="qr-container">
+        <img [src]="qrCode" alt="QR Code for authenticator setup" *ngIf="qrCode">
+      </div>
 
       <div class="secret-key-container">
         <p>Or manually enter this code in your authenticator app:</p>

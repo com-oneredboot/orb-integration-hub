@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
+import { UserGroup } from "../../models/user.model";
 
 @Component({
   selector: 'app-signin',
@@ -41,7 +42,7 @@ export class SignInComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(isAuth => {
         if (isAuth) {
-          this.navigateBasedOnRole();
+          this.navigateBasedOnGroup();
         }
       });
   }
@@ -69,21 +70,27 @@ export class SignInComponent implements OnInit, OnDestroy {
       this.errorMessage = '';
 
       try {
+        console.info('Starting initial sign in...');
         const response = await this.authService.signIn(
           this.signInForm.get('username')?.value,
           this.signInForm.get('password')?.value
         );
+        console.debug('Sign in response:', response);
 
         if (response.needsMFA) {
+          console.info('MFA verification required');
           this.needsMFA = true;
           this.mfaType = response.mfaType || 'totp';
           this.errorMessage = '';
         } else if (response.success) {
-          await this.navigateBasedOnRole();
+          console.info('Sign in successful, checking auth state...');
+          await this.navigateBasedOnGroup();
         } else {
+          console.warn('Sign in unsuccessful:', response.error);
           this.errorMessage = response.error || 'An error occurred during sign in';
         }
       } catch (error: any) {
+        console.error('Handle initial sign in error:', error);
         this.handleError(error);
       } finally {
         this.isLoading = false;
@@ -105,7 +112,7 @@ export class SignInComponent implements OnInit, OnDestroy {
         );
 
         if (response.success) {
-          await this.navigateBasedOnRole();
+          await this.navigateBasedOnGroup();
         } else {
           this.errorMessage = response.error || 'MFA verification failed';
         }
@@ -119,31 +126,35 @@ export class SignInComponent implements OnInit, OnDestroy {
     }
   }
 
-  private async navigateBasedOnRole(): Promise<void> {
+  private async navigateBasedOnGroup(): Promise<void> {
     try {
-      const userRole = await this.authService.getUserRole();
-      const roleRouteMap = {
-        CUSTOMER: '/customer/dashboard',
-        CLIENT: '/client/dashboard',
-        DEVELOPER: '/developer/dashboard',
-        ADMINISTRATOR: '/admin/dashboard',
-        OWNER: '/owner/dashboard'
+      console.info('Determining user group for navigation');
+      const userGroup = await this.authService.getUserGroup();
+      const groupRouteMap: { [key in UserGroup]: string } = {
+        [UserGroup.USER]: '/dashboard',
+        [UserGroup.CUSTOMER]: '/customer/dashboard',
+        [UserGroup.CLIENT]: '/client/dashboard',
+        [UserGroup.EMPLOYEES]: '/employees/dashboard',
+        [UserGroup.OWNER]: '/owner/dashboard'
       };
 
-      const route = roleRouteMap[userRole] || '/dashboard';
+      const route = groupRouteMap[userGroup] || '/dashboard';
+      console.info('Navigating to route:', route, 'for group:', userGroup);
       await this.router.navigate([route]);
     } catch (error) {
       console.error('Navigation error:', error);
-      this.errorMessage = 'Error determining user role';
+      this.errorMessage = 'Error determining user group';
     }
   }
 
   private handleError(error: any): void {
-    this.errorMessage = error.message || 'An unexpected error occurred';
     if (error.code === 'UserNotConfirmedException') {
+      console.info('User not confirmed, redirecting to confirmation page');
       this.router.navigate(['/confirm-signup'], {
         queryParams: { username: this.signInForm.get('username')?.value }
       });
+    } else {
+      this.errorMessage = error.message || 'An unexpected error occurred';
     }
   }
 
