@@ -41,7 +41,7 @@
 
 ### frontend/src/app/components/confirm-signup
 - confirm-signup.component.html
-- confirm-signup.component.ts
+- confirm-phone.component.ts
 
 ### frontend/src/app/components/home
 - home.component.html

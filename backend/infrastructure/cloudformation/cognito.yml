@@ -143,7 +143,6 @@ Resources:
       IdentityPoolName: !Sub "${CustomerId}-${ProjectId}-${Environment}-identity-pool"
     Type: AWS::Cognito::IdentityPool
 
-  # [Previous resources remain unchanged]
   IdentityPoolRoles:
     Properties:
       IdentityPoolId: !Ref IdentityPool
@@ -161,6 +160,17 @@ Resources:
           Type: Token
     Type: AWS::Cognito::IdentityPoolRoleAttachment
 
+  UserPoolClient:
+    Properties:
+      ClientName: !Sub "${CustomerId}-${ProjectId}-${Environment}-user-pool-client"
+      ExplicitAuthFlows:
+        - USER_PASSWORD_AUTH
+      GenerateSecret: false
+      PreventUserExistenceErrors: ENABLED
+      UserPoolId: !Ref UserPool
+    Type: AWS::Cognito::UserPoolClient
+
+  # Confirmation Trigger
   PostUserConfirmationTrigger:
     Properties:
       Description: Watches for new user created and assigns a default user group
@@ -208,16 +218,6 @@ Resources:
       Principal: cognito-idp.amazonaws.com
       SourceArn: !GetAtt UserPool.Arn
     Type: AWS::Lambda::Permission
-
-  UserPoolClient:
-    Properties:
-      ClientName: !Sub "${CustomerId}-${ProjectId}-${Environment}-user-pool-client"
-      ExplicitAuthFlows:
-        - USER_PASSWORD_AUTH
-      GenerateSecret: false
-      PreventUserExistenceErrors: ENABLED
-      UserPoolId: !Ref UserPool
-    Type: AWS::Cognito::UserPoolClient
 
   # IAM Roles
   AuthorizedRole:
@@ -274,6 +274,7 @@ Resources:
               StringEquals:
                 'sts:ExternalId': !Sub "${CustomerId}-${ProjectId}-${Environment}-cognito-sms"
       Policies:
+        - AWSXrayWriteOnlyAccess
         - PolicyName: CognitoSMSPolicy
           PolicyDocument:
             Version: '2012-10-17'
@@ -282,6 +283,7 @@ Resources:
                 Action:
                   - sns:publish
                 Resource: '*'
+
   LambdaRole:
     Properties:
       AssumeRolePolicyDocument:
@@ -310,6 +312,12 @@ Resources:
                 Resource: '*'
       RoleName: !Sub "${CustomerId}-${ProjectId}-${Environment}-cognito-lambda-role"
     Type: AWS::IAM::Role
+
+  SMSVerificationCodeTopic:
+    Properties:
+      TopicName: SMSVerificationCodeTopic
+      DisplayName: !Sub "${CustomerId}-${ProjectId}-${Environment}-phone-number-verification"
+    Type: AWS::SNS::Topic
 
   # Parameter Store
   UserPoolIdParameter:

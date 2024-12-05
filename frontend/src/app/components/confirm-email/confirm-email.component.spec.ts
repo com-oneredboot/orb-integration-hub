@@ -1,14 +1,14 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { provideRouter, Router, ActivatedRoute } from '@angular/router';
-import { ConfirmSignupComponent } from './confirm-signup.component';
+import { ConfirmEmailComponent } from './confirm-email.component';
 import { AuthService } from '../../services/auth.service';
 import { BehaviorSubject } from 'rxjs';
 import { ConfirmSignUpOutput } from 'aws-amplify/auth';
 
 describe('ConfirmSignupComponent', () => {
-  let component: ConfirmSignupComponent;
-  let fixture: ComponentFixture<ConfirmSignupComponent>;
+  let component: ConfirmEmailComponent;
+  let fixture: ComponentFixture<ConfirmEmailComponent>;
   let authService: jasmine.SpyObj<AuthService>;
   let router: Router;
   let activatedRoute: jasmine.SpyObj<ActivatedRoute>;
@@ -26,7 +26,7 @@ describe('ConfirmSignupComponent', () => {
     });
 
     await TestBed.configureTestingModule({
-      declarations: [ ConfirmSignupComponent ],
+      declarations: [ ConfirmEmailComponent ],
       imports: [
         ReactiveFormsModule
       ],
@@ -43,7 +43,7 @@ describe('ConfirmSignupComponent', () => {
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(ConfirmSignupComponent);
+    fixture = TestBed.createComponent(ConfirmEmailComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
@@ -89,13 +89,13 @@ describe('ConfirmSignupComponent', () => {
       }
     };
 
-    authService.confirmRegistration.and.returnValue(Promise.resolve(mockConfirmResponse));
+    authService.confirmEmail.and.returnValue(Promise.resolve(mockConfirmResponse));
 
     component.confirmationForm.get('verificationCode')?.setValue('123456');
     await component.onSubmit();
     tick();
 
-    expect(authService.confirmRegistration).toHaveBeenCalledWith(
+    expect(authService.confirmEmail).toHaveBeenCalledWith(
       mockUsername,
       '123456'
     );
@@ -105,7 +105,7 @@ describe('ConfirmSignupComponent', () => {
 
   it('should handle confirmation error', fakeAsync(async () => {
     const error = new Error('Invalid verification code');
-    authService.confirmRegistration.and.returnValue(Promise.reject(error));
+    authService.confirmEmail.and.returnValue(Promise.reject(error));
 
     component.confirmationForm.get('verificationCode')?.setValue('123456');
     await component.onSubmit();
@@ -176,7 +176,7 @@ describe('ConfirmSignupComponent', () => {
     await component.onSubmit();
     tick();
 
-    expect(authService.confirmRegistration).not.toHaveBeenCalled();
+    expect(authService.confirmEmail).not.toHaveBeenCalled();
   }));
 
   it('should not submit if already loading', fakeAsync(async () => {
@@ -186,7 +186,7 @@ describe('ConfirmSignupComponent', () => {
     await component.onSubmit();
     tick();
 
-    expect(authService.confirmRegistration).not.toHaveBeenCalled();
+    expect(authService.confirmEmail).not.toHaveBeenCalled();
   }));
 
   it('should not allow resend if disabled', fakeAsync(async () => {

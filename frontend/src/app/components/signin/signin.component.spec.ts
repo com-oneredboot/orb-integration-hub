@@ -157,7 +157,7 @@ describe('SignInComponent', () => {
     tick();
 
     expect(navigateSpy).toHaveBeenCalledWith(
-      ['/confirm-signup'],
+      ['/confirm-email'],
       { queryParams: { username: 'test@example.com' } }
     );
   }));

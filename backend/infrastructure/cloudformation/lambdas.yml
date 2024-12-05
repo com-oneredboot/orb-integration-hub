@@ -102,6 +102,19 @@ Resources:
         Variables:
           TO_EMAIL: !Ref ToEmail
 
+  # SMS Verification Lambda Function
+  SMSVerificationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${CustomerId}-${ProjectId}-${Environment}-sms-verification'
+      Role: !GetAtt LambdaExecutionRole.Arn
+      CodeUri: ../../src/lambdas/sms_verification
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref Environment
+          LOG_LEVEL: !Ref ApplicationLoggingLevel
+
+
   # IAM Roles
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -273,6 +286,18 @@ Resources:
       Name: !Sub '/${CustomerId}/${ProjectId}/${Environment}/stripe/publishable/key'
       Description: "AppSync API Key for unauthenticated access"
       SecretString: "change-me"
+  SMSVerificationLambdaArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${CustomerId}/${ProjectId}/${Environment}/sms-verification/lambda/arn"
+      Type: String
+      Value: !GetAtt SMSVerificationFunction.Arn
+      Description: ARN of the SMS Verification Lambda function
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
 
 # --------------------------------------------------- #
 Outputs:
@@ -282,3 +307,6 @@ Outputs:
   ContactFormFunctionArn:
     Description: ARN of the Contact Us Lambda function
     Value: !GetAtt ContactFormFunction.Arn
+  SMSVerificationFunctionArn:
+    Description: ARN of the SMS Verification Lambda function
+    Value: !GetAtt SMSVerificationFunction.Arn

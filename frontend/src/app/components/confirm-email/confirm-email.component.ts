@@ -4,11 +4,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
-  selector: 'app-confirm-signup',
-  templateUrl: './confirm-signup.component.html',
-  styleUrls: ['./confirm-signup.component.scss']
+  selector: 'app-confirm-email',
+  templateUrl: './confirm-email.component.html',
+  styleUrls: ['./confirm-email.component.scss']
 })
-export class ConfirmSignupComponent implements OnInit, OnDestroy {
+export class ConfirmEmailComponent implements OnInit, OnDestroy {
   confirmationForm: FormGroup;
   isLoading = false;
   errorMessage = '';
@@ -52,10 +52,9 @@ export class ConfirmSignupComponent implements OnInit, OnDestroy {
       this.errorMessage = '';
 
       try {
-        await this.authService.confirmRegistration(
+        await this.authService.confirmEmail(
           this.username,
           this.confirmationForm.get('verificationCode')?.value,
-          ''  // Pass empty string for mfaCode since this is just email verification
         );
         await this.router.navigate(['/signin']);
       } catch (error: any) {

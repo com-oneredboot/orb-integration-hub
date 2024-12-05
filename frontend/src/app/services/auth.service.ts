@@ -1,22 +1,26 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {
+  confirmSignIn,
+  confirmSignUp,
   fetchAuthSession,
-  ConfirmSignUpOutput,
-  SignUpInput,
-  SignUpOutput,
-  signUp,
+  fetchMFAPreference,
+  resendSignUpCode,
+  setUpTOTP,
   signIn,
   signOut,
-  confirmSignUp,
-  resendSignUpCode,
-  ResendSignUpCodeInput,
-  confirmSignIn,
-  setUpTOTP
+  signUp,
+  updateMFAPreference,
+  updateUserAttributes,
+  verifyTOTPSetup,
+  VerifyTOTPSetupInput
 } from 'aws-amplify/auth';
-import { BehaviorSubject, Observable } from 'rxjs';
+import {BehaviorSubject, Observable} from 'rxjs';
 import {User, UserGroup} from '../models/user.model';
-import { generateClient, GraphQLResult } from 'aws-amplify/api';
-import { getUserProfileQuery } from '../graphql/queries';
+
+import {Router} from '@angular/router';
+import {MFAType} from "../components/mfa-setup/mfa-setup.component";
+import {ApiService} from "./api.service";
+
 
 class AuthError extends Error {
   constructor(message: string) {
@@ -34,9 +38,20 @@ export interface AuthResponse {
   user?: User;
   error?: string;
   needsMFA?: boolean;
+  needsMFASetup?: boolean;
   mfaType?: 'sms' | 'totp';
   setupDetails?: {
-    qrCode: string;  // Changed from URL to string
+    qrCode: string;
+    secretKey: string;
+  };
+}
+
+export interface MFASetupResponse {
+  success: boolean;
+  needsMFASetup?: boolean;
+  error?: string;
+  setupDetails?: {
+    qrCode: string;
     secretKey: string;
   };
 }
@@ -45,18 +60,24 @@ export interface AuthResponse {
   providedIn: 'root'
 })
 export class AuthService {
+
   private currentUserSubject: BehaviorSubject<User | null>;
   private isAuthenticatedSubject: BehaviorSubject<boolean>;
+  private mfaSetupRequired: BehaviorSubject<boolean>;
   public currentUser: Observable<User | null>;
   public isAuthenticated: Observable<boolean>;
-  private amplifyClient = generateClient();
+  public mfaSetupRequired$: Observable<boolean>;
 
-  constructor() {
+  constructor(private router: Router, private api: ApiService) {
     this.currentUserSubject = new BehaviorSubject<User | null>(null);
     this.isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
+    this.mfaSetupRequired = new BehaviorSubject<boolean>(false);
     this.currentUser = this.currentUserSubject.asObservable();
     this.isAuthenticated = this.isAuthenticatedSubject.asObservable();
-    this.checkAuthState();
+    this.mfaSetupRequired$ = this.mfaSetupRequired.asObservable();
+    this.checkAuthState().then(r => {
+      console.debug('Auth state checked');
+    });
   }
 
   private async checkAuthState(): Promise<void> {
@@ -74,7 +95,8 @@ export class AuthService {
 
       if (!cognitoId) return;
 
-      await this.refreshUserProfile(cognitoId);
+      // await this.refreshUserProfile(cognitoId);
+
     } catch (error) {
       console.error('Auth state error:', error);
       this.isAuthenticatedSubject.next(false);
@@ -82,19 +104,8 @@ export class AuthService {
     }
   }
 
-  private async refreshUserProfile(cognitoId: string): Promise<void> {
-    try {
-      const result = await this.amplifyClient.graphql<GraphQLResult<GetUserProfileResult>>({
-        query: getUserProfileQuery,
-        variables: { cognito_id: cognitoId }
-      });
-
-      if ('data' in result && result.data?.getUserProfile) {
-        this.currentUserSubject.next(result.data.getUserProfile);
-      }
-    } catch (error) {
-      console.error('Profile refresh error:', error);
-    }
+  public getCognitoProfile(): User | null {
+    return this.currentUserSubject.value;
   }
 
   public isAuthenticated$(): Observable<boolean> {
@@ -113,6 +124,12 @@ export class AuthService {
     }
   }
 
+  // send a verification code to the user's phone number
+  async sendVerificationCode(phone: string): Promise<number> {
+    // send a request to appsync mutation sendSMSVerificationCode
+    return await this.api.sendSMSVerificationCode(phone)
+  }
+
   public async getUserGroup(): Promise<UserGroup> {
     try {
       const session = await fetchAuthSession();
@@ -122,37 +139,39 @@ export class AuthService {
         throw new AuthError('No authenticated user found');
       }
 
-      // Check for cognito:groups in the token
       const groups = payload['cognito:groups'] as string[] || [];
-      console.log('User groups:', groups);
+      console.debug('User groups:', groups);
 
-      // Map Cognito groups to UserGroup
       if (groups.includes('Owner')) return UserGroup.OWNER;
       if (groups.includes('Employees')) return UserGroup.EMPLOYEES;
       if (groups.includes('Client')) return UserGroup.CLIENT;
       if (groups.includes('Customer')) return UserGroup.CUSTOMER;
       if (groups.includes('User')) return UserGroup.USER;
 
-      // Default to User if no specific group found but user is authenticated
-      return UserGroup.USER;
+      throw new AuthError('User group not found');
+
     } catch (error) {
       console.error('Error getting user group:', error);
       throw error;
     }
   }
 
-  async register(username: string, password: string, email: string): Promise<AuthResponse> {
+  async register(username: string, password: string, email: string, phone: string): Promise<AuthResponse> {
     try {
-      // Just handle the initial signup
       await signUp({
         username,
         password,
-        options: { userAttributes: { email } }
+        options: {
+          userAttributes: {
+            email,
+            phone_number: phone
+          }
+        }
       });
 
       return {
         success: true,
-        needsMFA: false // We'll set up MFA after confirmation
+        needsMFA: false
       };
     } catch (error) {
       console.error('Registration error:', error);
@@ -163,15 +182,32 @@ export class AuthService {
     }
   }
 
-// Add a new method for setting up TOTP after sign-in
-  async setupTOTP(): Promise<AuthResponse> {
+  async setupSMSMFA(phoneNumber: string): Promise<MFASetupResponse> {
+    try {
+      await updateMFAPreference({
+        sms: "PREFERRED",
+        totp: "ENABLED"
+      });
+
+      return {
+        success: true
+      };
+    } catch (error) {
+      console.error('SMS MFA setup error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'SMS MFA setup failed'
+      };
+    }
+  }
+
+  async setupTOTP(): Promise<MFASetupResponse> {
     try {
       const totpSetup = await setUpTOTP();
       const setupDetails = totpSetup as any;
 
       return {
         success: true,
-        needsMFA: true,
         setupDetails: {
           qrCode: setupDetails.qrCode,
           secretKey: setupDetails.secretKey
@@ -186,9 +222,8 @@ export class AuthService {
     }
   }
 
-  async confirmRegistration(username: string, code: string, mfaCode: string): Promise<AuthResponse> {
+  async confirmEmail(username: string, code: string): Promise<AuthResponse> {
     try {
-      // Just confirm the registration first
       await confirmSignUp({ username, confirmationCode: code });
 
       return {
@@ -200,6 +235,45 @@ export class AuthService {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Confirmation failed'
+      };
+    }
+  }
+
+  // check the code to ensure it was what was sent and verify the Cognito phone
+  async confirmPhone(generated_code: number, entered_code: number, expiration: number): Promise<AuthResponse> {
+    try {
+
+      // check if the code has expired
+      if (new Date().getTime() > expiration) {
+        return {
+          success: false,
+          error: 'Verification code has expired'
+        };
+      }
+
+      // if the codes are not equal, then the phone number is verified
+      if (generated_code !== entered_code) {
+        return {
+          success: false
+        };
+      }
+
+      // Update the phone number attribute to mark it as verified in Cognito
+      await updateUserAttributes({
+        userAttributes: {
+          'phone_number_verified': 'true',
+        }
+      });
+
+      return {
+        success: true,
+      };
+
+    } catch (error) {
+      console.error('Error verifying phone number:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Phone verification failed',
       };
     }
   }
@@ -216,11 +290,10 @@ export class AuthService {
         console.info('TOTP setup required');
         const totpSetupDetails = signInResult.nextStep.totpSetupDetails;
 
-        // Convert the QR code URI to a string
         const qrCodeUri = totpSetupDetails.getSetupUri(
           'OneRedBoot Integration Hub',
           username
-        ).toString();  // Added toString()
+        ).toString();
 
         return {
           success: false,
@@ -256,7 +329,6 @@ export class AuthService {
         };
       }
 
-      // Default return for any other nextStep value
       return {
         success: false,
         error: `Authentication requires: ${nextStep}`
@@ -302,6 +374,46 @@ export class AuthService {
     }
   }
 
+  async verifyMFASetup(code: string, mfaType: MFAType): Promise<AuthResponse> {
+    try {
+      // change to switch
+      switch (mfaType) {
+        case MFAType.TOTP:
+          // Verify TOTP setup
+          const answer: VerifyTOTPSetupInput = {
+            code,
+            options: {
+              friendlyDeviceName: 'OneRedBoot Integration Hub'
+            }
+          }
+          await verifyTOTPSetup( answer );
+          break;
+        case MFAType.SMS:
+          // Verify SMS MFA setup
+          // No verification required
+          break;
+        case MFAType.EMAIL:
+          // Verify EMAIL MFA setup
+          // No verification required
+          break;
+        default:
+          throw new Error('Invalid MFA type');
+      }
+
+      this.mfaSetupRequired.next(false);
+
+      return {
+        success: true
+      };
+    } catch (error) {
+      console.error('MFA verification error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'MFA verification failed'
+      };
+    }
+  }
+
   async signOut(): Promise<void> {
     try {
       await signOut();
@@ -327,4 +439,5 @@ export class AuthService {
       };
     }
   }
+
 }
