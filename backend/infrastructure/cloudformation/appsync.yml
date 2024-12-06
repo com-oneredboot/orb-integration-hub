@@ -117,7 +117,7 @@ Resources:
       Type: DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       LambdaConfig:
-        LambdaFunctionArn: !Sub '{{resolve:ssm:/${CustomerId}/${ProjectId}/${Environment}/user-profiles/lambda/arn}}'
+        LambdaFunctionArn: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-user-profiles-lambda-arn}}'
 
   # Resolvers
   GetUserProfileResolver:
@@ -176,7 +176,7 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource:
-                  - !Sub '{{resolve:ssm:/${CustomerId}-${ProjectId}-${Environment}-sms-verification-lambda-arn}}'
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-sms-verification-lambda-arn}}'
               - Effect: Allow
                 Action:
                   - dynamodb:GetItem
