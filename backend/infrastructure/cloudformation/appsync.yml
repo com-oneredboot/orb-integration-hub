@@ -114,7 +114,7 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       Name: UserProfilesDataSource
-      Type: DYNAMODB
+      Type: AMAZON_DYNAMO
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
           TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-user-profiles-table-name}}'
