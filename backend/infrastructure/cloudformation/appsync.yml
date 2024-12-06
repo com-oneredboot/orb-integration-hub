@@ -108,7 +108,7 @@ Resources:
       Type: AWS_LAMBDA
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       LambdaConfig:
-        LambdaFunctionArn: !Sub '{{resolve:ssm:/${CustomerId}/${ProjectId}/${Environment}/sms-verification/lambda/arn}}'
+        LambdaFunctionArn: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-sms-verification-lambda-arn}}'
   UserProfilesDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -116,9 +116,9 @@ Resources:
       Name: UserProfilesDataSource
       Type: DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
-      LambdaConfig:
-        LambdaFunctionArn: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-user-profiles-lambda-arn}}'
-
+      DynamoDBConfig:
+          TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-user-profiles-table-name}}'
+          AwsRegion: !Ref AWS::Region
   # Resolvers
   GetUserProfileResolver:
     Type: AWS::AppSync::Resolver
