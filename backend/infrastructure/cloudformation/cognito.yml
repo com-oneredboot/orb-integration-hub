@@ -49,6 +49,7 @@ Globals:
 
 # --------------------------------------------------- #
 Resources:
+  # User Pool
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:

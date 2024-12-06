@@ -2,6 +2,10 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import {takeUntil} from "rxjs/operators";
+import {filter, Subject} from "rxjs";
+import {User} from "../../models/user.model";
+import {SMSVerificationInput} from "../../models/sms.model";
 
 @Component({
   selector: 'app-confirm-email',
@@ -18,6 +22,9 @@ export class ConfirmPhoneComponent implements OnInit, OnDestroy {
   resendCountdown = 0;
   sms_verification_code = 0;
   private sms_verification_timeout: any;
+  private currentUser = {} as User;
+
+  private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
@@ -34,39 +41,53 @@ export class ConfirmPhoneComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
-      this.username = params['username'];
-      if (!this.username) {
-        this.router.navigate(['/signup']);
-      }
-    });
-    this.sendVerificationCode().then(() => {
-      console.debug('Verification code sent');
-      this.sms_verification_timeout = new Date().getTime() + 300000;  // 5 minutes
-    });
+    this.authService.getCurrentUser$()
+      .pipe(
+        filter((user): user is User => user !== null),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(user => this.currentUser = user);
+
   }
 
   ngOnDestroy(): void {
     if (this.resendTimer) {
       clearInterval(this.resendTimer);
     }
+    this.destroy$.next();
+    this.destroy$.complete();
+
   }
 
   // send a verification code to the user's phone number
   async sendVerificationCode(): Promise<void> {
     try {
       // get the phone number from the user profile
-      const cognito_profile = this.authService.getCognitoProfile();
+      const cognito_profile = await this.authService.getCognitoProfile();
+      console.debug('Cognito profile:', cognito_profile);
 
-      const phone_number = cognito_profile?.profile?.phone;
+      const phone_number = this.currentUser.phone_number;
       if (!phone_number) {
         throw new Error('Phone number not found');
       }
 
-      this.sms_verification_code = await this.authService.sendVerificationCode(phone_number);
+      const smsVerificationInput = {
+        phone_number: phone_number
+      } as SMSVerificationInput;
+
+      const smsVerificationResponse
+        = await this.authService.sendVerificationCode(smsVerificationInput);
+
+      if (smsVerificationResponse.code) {
+        this.sms_verification_code = smsVerificationResponse.code;
+        this.sms_verification_timeout = 300;
+        this.startResendTimer();
+      }
 
     } catch (error: any) {
       this.errorMessage = error.message || 'Failed to send verification code';
+      throw error;
+
     } finally {
       this.isLoading = false;
     }

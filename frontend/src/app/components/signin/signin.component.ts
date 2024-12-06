@@ -1,10 +1,18 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
-import { AuthService } from '../../services/auth.service';
-import { UserGroup } from "../../models/user.model";
+// file: frontend/src/app/components/signin/signin.component.ts
+// author: Corey Dale Peters
+// date: 2024-12-06
+// description: The SignInComponent handles the sign in process for users
+
+// 3rd Party Imports
+import {Component, OnDestroy, OnInit} from '@angular/core';
+import {FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {Router} from '@angular/router';
+import {filter, Subject} from 'rxjs';
+import {takeUntil} from 'rxjs/operators';
+
+// Application Imports
+import {AuthService} from '../../services/auth.service';
+import {groupPriority, User, UserGroup} from "../../models/user.model";
 
 @Component({
   selector: 'app-signin',
@@ -13,7 +21,6 @@ import { UserGroup } from "../../models/user.model";
 })
 export class SignInComponent implements OnInit, OnDestroy {
   signInForm: FormGroup;
-  mfaForm: FormGroup;
   isLoading = false;
   errorMessage = '';
   passwordVisible = false;
@@ -21,28 +28,35 @@ export class SignInComponent implements OnInit, OnDestroy {
   mfaType: 'sms' | 'totp' | null = null;
   private destroy$ = new Subject<void>();
   rememberDevice = false;
+  private currentUser = {} as User;
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router
   ) {
+    console.debug('SignInComponent constructor');
     this.signInForm = this.fb.group({
       username: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(8)]]
     });
 
-    this.mfaForm = this.fb.group({
-      code: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]]
-    });
   }
 
   ngOnInit(): void {
+    this.authService.getCurrentUser$()
+      .pipe(
+        filter((user): user is User => user !== null),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(user => this.currentUser = user);
+
     this.authService.isAuthenticated$()
       .pipe(takeUntil(this.destroy$))
       .subscribe(isAuth => {
         if (isAuth) {
-          this.navigateBasedOnGroup();
+          this.navigateBasedOnGroup()
+            .then(r => console.debug('User is  authenticated. Navigating to dashboard.'));
         }
       });
   }
@@ -57,14 +71,6 @@ export class SignInComponent implements OnInit, OnDestroy {
   }
 
   async onSubmit(): Promise<void> {
-    if (this.needsMFA) {
-      await this.handleMFASubmit();
-    } else {
-      await this.handleInitialSignIn();
-    }
-  }
-
-  private async handleInitialSignIn(): Promise<void> {
     if (this.signInForm.valid && !this.isLoading) {
       this.isLoading = true;
       this.errorMessage = '';
@@ -100,47 +106,27 @@ export class SignInComponent implements OnInit, OnDestroy {
     }
   }
 
-  private async handleMFASubmit(): Promise<void> {
-    if (this.mfaForm.valid && !this.isLoading) {
-      this.isLoading = true;
-      this.errorMessage = '';
-
-      try {
-        const response = await this.authService.verifyMFA(
-          this.mfaForm.get('code')?.value,
-          this.rememberDevice
-        );
-
-        if (response.success) {
-          await this.navigateBasedOnGroup();
-        } else {
-          this.errorMessage = response.error || 'MFA verification failed';
-        }
-      } catch (error: any) {
-        this.errorMessage = error.message || 'MFA verification failed';
-      } finally {
-        this.isLoading = false;
-      }
-    } else {
-      this.markFormFieldsAsTouched(this.mfaForm);
-    }
-  }
-
   private async navigateBasedOnGroup(): Promise<void> {
     try {
       console.info('Determining user group for navigation');
-      const userGroup = await this.authService.getUserGroup();
-      const groupRouteMap: { [key in UserGroup]: string } = {
-        [UserGroup.USER]: '/dashboard',
-        [UserGroup.CUSTOMER]: '/customer/dashboard',
-        [UserGroup.CLIENT]: '/client/dashboard',
-        [UserGroup.EMPLOYEES]: '/employees/dashboard',
-        [UserGroup.OWNER]: '/owner/dashboard'
-      };
+      const userGroups = this.currentUser.groups;
+      console.debug('User groups:', userGroups);
 
-      const route = groupRouteMap[userGroup] || '/dashboard';
-      console.info('Navigating to route:', route, 'for group:', userGroup);
-      await this.router.navigate([route]);
+      // Define priority order (higher index = higher priority)
+
+
+      // Find highest priority group
+      const userGroup = groupPriority.reduce((highest, group) =>
+          userGroups.includes(group) &&
+          groupPriority.indexOf(group) > groupPriority.indexOf(highest)
+            ? group
+            : highest,
+        UserGroup.USER
+      );
+
+      console.info('Navigating to route: dashboard for group:', userGroup);
+      await this.router.navigate(['dashboard'], { queryParams: { group: userGroup } });
+
     } catch (error) {
       console.error('Navigation error:', error);
       this.errorMessage = 'Error determining user group';
@@ -165,7 +151,4 @@ export class SignInComponent implements OnInit, OnDestroy {
     });
   }
 
-  toggleRememberDevice(): void {
-    this.rememberDevice = !this.rememberDevice;
-  }
 }

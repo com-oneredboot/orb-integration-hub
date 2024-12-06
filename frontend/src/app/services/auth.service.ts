@@ -1,9 +1,16 @@
+// file: frontend/src/app/services/auth.service.ts
+// author: Corey Peters
+// date: 2024-12-06
+// description: Service for handling user authentication
+
+// 3rd-party imports
 import {Injectable} from '@angular/core';
 import {
   confirmSignIn,
   confirmSignUp,
   fetchAuthSession,
-  fetchMFAPreference,
+  getCurrentUser,
+  fetchUserAttributes,
   resendSignUpCode,
   setUpTOTP,
   signIn,
@@ -15,22 +22,24 @@ import {
   VerifyTOTPSetupInput
 } from 'aws-amplify/auth';
 import {BehaviorSubject, Observable} from 'rxjs';
-import {User, UserGroup} from '../models/user.model';
+
 
 import {Router} from '@angular/router';
+
+
+// Application-specific imports
+import {CreateUserInput, createUserMutation, User, UserGroup, UserResponse} from '../models/user.model';
 import {MFAType} from "../components/mfa-setup/mfa-setup.component";
 import {ApiService} from "./api.service";
-
+import {sendSMSVerificationCodeMutation, SMSVerificationInput, SMSVerificationResponse} from "../models/sms.model";
+import {GraphQLResult} from "@aws-amplify/api-graphql";
+import {UserService} from "./user.service";
 
 class AuthError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'AuthError';
   }
-}
-
-interface GetUserProfileResult {
-  getUserProfile: User | null;
 }
 
 export interface AuthResponse {
@@ -59,170 +68,75 @@ export interface MFASetupResponse {
 @Injectable({
   providedIn: 'root'
 })
-export class AuthService {
+export class AuthService extends ApiService {
+
+  public currentUser: Observable<User | null>;
+  public isAuthenticated: Observable<boolean>;
+  public mfaSetupRequired: Observable<boolean>;
 
   private currentUserSubject: BehaviorSubject<User | null>;
   private isAuthenticatedSubject: BehaviorSubject<boolean>;
-  private mfaSetupRequired: BehaviorSubject<boolean>;
-  public currentUser: Observable<User | null>;
-  public isAuthenticated: Observable<boolean>;
-  public mfaSetupRequired$: Observable<boolean>;
+  private mfaSetupRequiredSubject: BehaviorSubject<boolean>;
 
-  constructor(private router: Router, private api: ApiService) {
+  constructor(private router: Router, private userApi: UserService) {
+    super();
+
+    // Get BehaviorSubjects for current user, authentication status, and MFA setup
     this.currentUserSubject = new BehaviorSubject<User | null>(null);
     this.isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
-    this.mfaSetupRequired = new BehaviorSubject<boolean>(false);
+    this.mfaSetupRequiredSubject = new BehaviorSubject<boolean>(false);
+
+    // Set Observables for current user, authentication status, and MFA setup
     this.currentUser = this.currentUserSubject.asObservable();
     this.isAuthenticated = this.isAuthenticatedSubject.asObservable();
-    this.mfaSetupRequired$ = this.mfaSetupRequired.asObservable();
-    this.checkAuthState().then(r => {
-      console.debug('Auth state checked');
-    });
+    this.mfaSetupRequired = this.mfaSetupRequiredSubject.asObservable();
   }
 
-  private async checkAuthState(): Promise<void> {
-    try {
-      const session = await fetchAuthSession();
-      const tokens = session.tokens;
-
-      if (!tokens?.idToken?.payload) {
-        this.isAuthenticatedSubject.next(false);
-        return;
-      }
-
-      this.isAuthenticatedSubject.next(true);
-      const cognitoId = tokens.idToken.payload.sub;
-
-      if (!cognitoId) return;
-
-      // await this.refreshUserProfile(cognitoId);
-
-    } catch (error) {
-      console.error('Auth state error:', error);
-      this.isAuthenticatedSubject.next(false);
-      this.currentUserSubject.next(null);
-    }
-  }
-
-  public getCognitoProfile(): User | null {
-    return this.currentUserSubject.value;
-  }
-
-  public isAuthenticated$(): Observable<boolean> {
-    return this.isAuthenticated;
-  }
-
-  public async checkIsAuthenticated(): Promise<boolean> {
-    try {
-      const session = await fetchAuthSession();
-      const isAuth = !!session.tokens;
-      this.isAuthenticatedSubject.next(isAuth);
-      return isAuth;
-    } catch {
-      this.isAuthenticatedSubject.next(false);
-      return false;
-    }
-  }
-
-  // send a verification code to the user's phone number
-  async sendVerificationCode(phone: string): Promise<number> {
-    // send a request to appsync mutation sendSMSVerificationCode
-    return await this.api.sendSMSVerificationCode(phone)
-  }
-
-  public async getUserGroup(): Promise<UserGroup> {
-    try {
-      const session = await fetchAuthSession();
-      const payload = session.tokens?.idToken?.payload;
-
-      if (!payload) {
-        throw new AuthError('No authenticated user found');
-      }
-
-      const groups = payload['cognito:groups'] as string[] || [];
-      console.debug('User groups:', groups);
-
-      if (groups.includes('Owner')) return UserGroup.OWNER;
-      if (groups.includes('Employees')) return UserGroup.EMPLOYEES;
-      if (groups.includes('Client')) return UserGroup.CLIENT;
-      if (groups.includes('Customer')) return UserGroup.CUSTOMER;
-      if (groups.includes('User')) return UserGroup.USER;
-
-      throw new AuthError('User group not found');
-
-    } catch (error) {
-      console.error('Error getting user group:', error);
-      throw error;
-    }
-  }
-
-  async register(username: string, password: string, email: string, phone: string): Promise<AuthResponse> {
+  /**
+   * Register a new user
+   * @param input
+   * @param password
+   */
+  public async register(input: CreateUserInput, password:string): Promise<UserResponse> {
     try {
       await signUp({
-        username,
+        username: input.cognito_id,
         password,
         options: {
           userAttributes: {
-            email,
-            phone_number: phone
+            email: input.email,
+            phone_number: input.phone_number
           }
         }
       });
 
-      return {
-        success: true,
-        needsMFA: false
-      };
+      const userResponse = await this.userApi.createUser(input);
+
+      if (userResponse.status_code !== 200 || !userResponse.user) {
+        return userResponse;
+      }
+
+      // Set the Current user and authentication status
+      this.currentUserSubject.next(userResponse.user);
+      await this.checkIsAuthenticated();
+
+      return userResponse;
+
     } catch (error) {
       console.error('Registration error:', error);
       return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Registration failed'
+        status_code: 500,
+        message: error instanceof Error ? error.message : 'Registration failed'
       };
     }
   }
 
-  async setupSMSMFA(phoneNumber: string): Promise<MFASetupResponse> {
-    try {
-      await updateMFAPreference({
-        sms: "PREFERRED",
-        totp: "ENABLED"
-      });
-
-      return {
-        success: true
-      };
-    } catch (error) {
-      console.error('SMS MFA setup error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'SMS MFA setup failed'
-      };
-    }
-  }
-
-  async setupTOTP(): Promise<MFASetupResponse> {
-    try {
-      const totpSetup = await setUpTOTP();
-      const setupDetails = totpSetup as any;
-
-      return {
-        success: true,
-        setupDetails: {
-          qrCode: setupDetails.qrCode,
-          secretKey: setupDetails.secretKey
-        }
-      };
-    } catch (error) {
-      console.error('TOTP setup error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'MFA setup failed'
-      };
-    }
-  }
-
-  async confirmEmail(username: string, code: string): Promise<AuthResponse> {
+  /**
+   * Confirm the email using the verification code
+   * @param username
+   * @param code
+   */
+  public async confirmEmail(username: string, code: string): Promise<AuthResponse> {
     try {
       await confirmSignUp({ username, confirmationCode: code });
 
@@ -239,46 +153,12 @@ export class AuthService {
     }
   }
 
-  // check the code to ensure it was what was sent and verify the Cognito phone
-  async confirmPhone(generated_code: number, entered_code: number, expiration: number): Promise<AuthResponse> {
-    try {
-
-      // check if the code has expired
-      if (new Date().getTime() > expiration) {
-        return {
-          success: false,
-          error: 'Verification code has expired'
-        };
-      }
-
-      // if the codes are not equal, then the phone number is verified
-      if (generated_code !== entered_code) {
-        return {
-          success: false
-        };
-      }
-
-      // Update the phone number attribute to mark it as verified in Cognito
-      await updateUserAttributes({
-        userAttributes: {
-          'phone_number_verified': 'true',
-        }
-      });
-
-      return {
-        success: true,
-      };
-
-    } catch (error) {
-      console.error('Error verifying phone number:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Phone verification failed',
-      };
-    }
-  }
-
-  async signIn(username: string, password: string): Promise<AuthResponse> {
+  /**
+   * Sign in a user
+   * @param username
+   * @param password
+   */
+  public async signIn(username: string, password: string): Promise<AuthResponse> {
     try {
       console.info('Starting sign in process for:', username);
       const signInResult = await signIn({ username, password });
@@ -343,6 +223,181 @@ export class AuthService {
     }
   }
 
+  /**
+   * Get the current user
+   */
+  public isAuthenticated$(): Observable<boolean> {
+    return this.isAuthenticated;
+  }
+
+  /**
+   * Get the current user
+   */
+  public getCurrentUser$(): Observable<User | null> {
+    return this.currentUser;
+  }
+
+  /**
+   * Get the current user
+   */
+  public async checkIsAuthenticated(): Promise<boolean> {
+    try {
+      const session = await fetchAuthSession();
+      const isAuth = !!session.tokens;
+      this.isAuthenticatedSubject.next(isAuth);
+      return isAuth;
+    } catch {
+      this.isAuthenticatedSubject.next(false);
+      return false;
+    }
+  }
+
+
+
+
+
+
+
+  /**
+   * Send a verification code to the phone number
+   * @param input SMSVerificationInput
+   */
+  public async sendVerificationCode(input: SMSVerificationInput): Promise<SMSVerificationResponse> {
+    console.debug('Sending verification code:', input);
+    try {
+      const response = await this.mutate(
+        sendSMSVerificationCodeMutation, input) as GraphQLResult<SMSVerificationResponse>;
+      console.debug('Verification code sent:', response);
+
+      return response.data;
+
+    } catch (error) {
+      console.error('Verification code error:', error);
+      return {
+        status_code: 500,
+        message: 'Error sending verification code'
+      };
+    }
+  }
+
+  /**
+   * Confirm the phone number using the verification code
+   * @param generated_code
+   * @param entered_code
+   * @param expiration
+   */
+  public async confirmPhone(generated_code: number, entered_code: number, expiration: number): Promise<AuthResponse> {
+    try {
+
+      // check if the code has expired
+      if (new Date().getTime() > expiration) {
+        return {
+          success: false,
+          error: 'Verification code has expired'
+        };
+      }
+
+      // if the codes are not equal, then the phone number is verified
+      if (generated_code !== entered_code) {
+        return {
+          success: false
+        };
+      }
+
+      // Update the phone number attribute to mark it as verified in Cognito
+      await updateUserAttributes({
+        userAttributes: {
+          'phone_number_verified': 'true',
+        }
+      });
+
+      return {
+        success: true,
+      };
+
+    } catch (error) {
+      console.error('Error verifying phone number:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Phone verification failed',
+      };
+    }
+  }
+
+  public async getCognitoProfile(): Promise<any | null> {
+    try {
+      // Fetch the current session
+      const session = await fetchAuthSession();
+
+      if (!session.tokens?.idToken?.payload) {
+        console.debug('No valid session found');
+        return null;
+      }
+
+      // Get current authenticated user
+      const { username, signInDetails } = await getCurrentUser();
+
+      // Get user attributes using getCurrentUser() and getUserAttributes()
+      const userAttributes = await fetchUserAttributes();
+
+      return {
+        username,
+        ...userAttributes,
+        sub: session.tokens.idToken.payload.sub,
+        groups: session.tokens.idToken.payload['cognito:groups'] || []
+      };
+
+    } catch (error) {
+      console.error('Error fetching Cognito profile:', error);
+      return null;
+    }
+  }
+
+
+
+
+
+  async setupSMSMFA(phoneNumber: string): Promise<MFASetupResponse> {
+    try {
+      await updateMFAPreference({
+        sms: "PREFERRED",
+        totp: "ENABLED"
+      });
+
+      return {
+        success: true
+      };
+    } catch (error) {
+      console.error('SMS MFA setup error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'SMS MFA setup failed'
+      };
+    }
+  }
+
+  async setupTOTP(): Promise<MFASetupResponse> {
+    try {
+      const totpSetup = await setUpTOTP();
+      const setupDetails = totpSetup as any;
+
+      return {
+        success: true,
+        setupDetails: {
+          qrCode: setupDetails.qrCode,
+          secretKey: setupDetails.secretKey
+        }
+      };
+    } catch (error) {
+      console.error('TOTP setup error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'MFA setup failed'
+      };
+    }
+  }
+
+
   async verifyMFA(code: string, rememberDevice = false): Promise<AuthResponse> {
     try {
       console.info('Verifying MFA code');
@@ -354,7 +409,7 @@ export class AuthService {
 
       if (result.isSignedIn) {
         console.info('MFA verification successful');
-        await this.checkAuthState();
+
         return {
           success: true,
           user: this.currentUserSubject.value || undefined
@@ -400,7 +455,7 @@ export class AuthService {
           throw new Error('Invalid MFA type');
       }
 
-      this.mfaSetupRequired.next(false);
+      this.mfaSetupRequiredSubject.next(false);
 
       return {
         success: true

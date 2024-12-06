@@ -56,7 +56,10 @@ export class ConfirmEmailComponent implements OnInit, OnDestroy {
           this.username,
           this.confirmationForm.get('verificationCode')?.value,
         );
-        await this.router.navigate(['/signin']);
+        await this.router.navigate(['/confirm-phone'], {
+          queryParams: { username: this.username }
+        });
+
       } catch (error: any) {
         this.errorMessage = error.message || 'Failed to verify account';
       } finally {

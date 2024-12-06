@@ -1,17 +1,23 @@
-/**
- * Enum defining all possible user groups in the system (matching Cognito groups)
- */
+// file: frontend/src/app/models/user.model.ts
+// author: Corey Dale Peters
+// date: 2024-12-06
+// description: The user model is used only by the Integration Hub.
+
+// Application Imports
+import {GenericResponse} from "./appsync.model";
+
+
+// ------------------------------ //
+// Model Definitions
+// ------------------------------ //
 export enum UserGroup {
-  USER = 'User',           // Base group
-  CUSTOMER = 'Customer',   // End-users making purchases
-  CLIENT = 'Client',       // Customers using the service
-  EMPLOYEES = 'Employees', // Internal staff
-  OWNER = 'Owner'         // Root-level access
+  USER = 'USER',           // Base group
+  CUSTOMER = 'CUSTOMER',   // End-users making purchases
+  CLIENT = 'CLIENT',       // Customers using the service
+  EMPLOYEE = 'EMPLOYEE', // Internal staff
+  OWNER = 'OWNER'         // Root-level access
 }
 
-/**
- * Status of user's account
- */
 export enum UserStatus {
   ACTIVE = 'ACTIVE',
   PENDING = 'PENDING',
@@ -19,63 +25,79 @@ export enum UserStatus {
   INACTIVE = 'INACTIVE'
 }
 
-/**
- * Interface representing a user in the system
- * Contains all essential user information and profile data
- */
 export interface User {
-  /** Unique identifier for the user in our database */
   id: string;
-
-  /** User's Cognito ID for AWS authentication */
   cognito_id: string;
-
-  /** Username for login */
-  username: string;
-
-  /** User's email address */
   email: string;
-
-  /** User's role in the system */
-  group: UserGroup;
-
-  /** Current status of the user's account */
+  first_name: string;
+  last_name: string;
+  phone_number: string;
+  groups: [UserGroup];
   status: UserStatus;
-
-  /** Timestamp of when the user was created */
   created_at: string;
-
-  /** Timestamp of the last update to user's profile */
-  updated_at: string;
-
-  /** Optional profile data */
-  profile?: {
-    /** User's full name */
-    full_name?: string;
-    /** User's phone number */
-    phone?: string;
-    /** User's preferred language */
-    language?: string;
-    /** Additional preferences */
-    preferences?: {
-      /** Email notification settings */
-      email_notifications?: boolean;
-      /** Theme preference */
-      theme?: 'light' | 'dark';
-    };
-  };
 }
 
+export const groupPriority: UserGroup[] = [
+  UserGroup.OWNER,
+  UserGroup.EMPLOYEE,
+  UserGroup.CLIENT,
+  UserGroup.CUSTOMER,
+  UserGroup.USER
+];
 
+// ------------------------------ //
+// Type Definitions
+// ------------------------------ //
+export type UserResponse = GenericResponse & {
+  user?: User;
+};
 
-/**
- * Interface for creating a new user
- * Omits system-generated fields
- */
-export type CreateUserInput = Omit<User, 'id' | 'created_at' | 'updated_at'>;
+export type UserQueryInput = Partial<Pick<User, 'id' | 'cognito_id' | 'email'>>;
 
-/**
- * Interface for updating an existing user
- * Makes all fields optional except id
- */
-export type UpdateUserInput = Partial<Omit<User, 'id'>> & { id: string };
+export type CreateUserInput = Omit<User, 'id' | 'created_at'>;
+
+export type UpdateUserInput = Partial<Omit<User, 'id' | 'created_at' >> & { id: string };
+
+// ------------------------------ //
+// AppSync Mutations and Queries
+// ------------------------------ //
+export const createUserMutation = /* GraphQL */ `
+  mutation CreateUser($input: CreateUserInput!) {
+    createUser(input: $input) {
+      id
+    }
+  }
+`;
+
+export const getUserFromIdQuery = /* GraphQL */ `
+  query GetUserProfileFromId($input: UserProfileInput!) {
+    getUserProfileFromId(input: $input) {
+      id
+      cognito_id
+      username
+      email
+      groups
+      status
+      created_at
+      updated_at
+      profile {
+        name_first,
+        name_last,
+        phone_number
+        language
+        preferences {
+          email_notifications
+          theme
+        }
+      }
+    }
+  }
+`;
+
+export const updateUserMutation = /* GraphQL */ `
+  mutation UpdateUser($input: UpdateUserInput!) {
+    updateUser(input: $input) {
+      id
+    }
+  }
+`;

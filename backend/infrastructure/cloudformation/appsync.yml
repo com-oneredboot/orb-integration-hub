@@ -68,34 +68,67 @@ Resources:
           phone_number: String!
         }
         
-        input UserProfileInput {
-          user_id: String
+        enum UserStatus {
+          ACTIVE
+          PENDING
+          SUSPENDED
+          INACTIVE
+        }
+        enum UserGroup {
+          USER
+          CUSTOMER
+          CLIENT
+          EMPLOYEE
+          OWNER
+        }
+
+        input UserQueryInput {
+          id: String
+          cognito_id: String
           email: String
         }
         
-        type UserProfileResponse {
-          user_id: String!
-          first_name: String!
-          last_name: String!
+        type UserCreateInput {
+          id: String!
+          cognito_id: String!
           email: String!
-          phone_number: String!
-          profile_picture: String
+          phone_number: String
+          first_name: String
+          last_name: String
+          groups: [Group!]!
+          status: UserGroup!
           created_at: String!
-          updated_at: String!
+        }
+        type UserUpdateInput {
+          email: String
+          phone_number: String
+          first_name: String
+          last_name: String
+          groups: [Group]
+          status: UserGroup
+        }
+        
+        type UserResponse {
+          status_code: Float!
+          message: String
+          user: User
         }
   
         type Mutation {
           sendSMSVerificationCode(input: SMSVerificationInput!): SMSVerificationResponse!
+          createUser(input: UserCreateInput!): UserResponse!
+          updateUser(input: userUpdateInput!): UserResponse!
         }
   
         type Query {
-          getUserProfile(input: UserProfileInput!): UserProfileResponse!
+          getUserById(input: UserQueryInput!): UserResponse!
         }
     
         schema {
           query: Query
           mutation: Mutation
         }
+
 
 
 
@@ -109,7 +142,7 @@ Resources:
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       LambdaConfig:
         LambdaFunctionArn: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-sms-verification-lambda-arn}}'
-  UserProfilesDataSource:
+  UsersDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -117,27 +150,81 @@ Resources:
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-          TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-user-profiles-table-name}}'
+          TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-table-name}}'
           AwsRegion: !Ref AWS::Region
+
   # Resolvers
-  GetUserProfileResolver:
+  GetUserByIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: getUserProfile
-      DataSourceName: !GetAtt UserProfilesDataSource.Name
+      FieldName: getUserById
+      DataSourceName: !GetAtt UsersDataSource.Name
       RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "GetItem",
-          "key": {
-            "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id)
+        #set($ids = {})
+        #if($ctx.args.input.id)
+          $util.qr($ids.put("id", $ctx.args.input.id))
+        #end
+        #if($ctx.args.input.cognito_id && !$ids.id)
+          $util.qr($ids.put("cognito_id", $ctx.args.input.cognito_id))
+        #end
+        #if($ctx.args.input.email && !$ids.id && !$ids.cognito_id)
+          $util.qr($ids.put("email", $ctx.args.input.email))
+        #end
+        
+        #if($ids.isEmpty())
+          $util.error("At least one identifier (id, cognito_id, or email) must be provided")
+        #end
+        
+        #if($ids.id)
+          {
+            "version": "2017-02-28",
+            "operation": "GetItem",
+            "key": {
+              "id": $util.dynamodb.toDynamoDBJson($ids.id)
+            }
           }
-        }
+        #elseif($ids.cognito_id)
+          {
+            "version": "2017-02-28",
+            "operation": "Query",
+            "index": "cognito_id-index",
+            "query": {
+              "expression": "cognito_id = :cognitoId",
+              "expressionValues": {
+                ":cognitoId": $util.dynamodb.toDynamoDBJson($ids.cognito_id)
+              }
+            }
+          }
+        #else
+          {
+            "version": "2017-02-28",
+            "operation": "Query",
+            "index": "email-index",
+            "query": {
+              "expression": "email = :email",
+              "expressionValues": {
+                ":email": $util.dynamodb.toDynamoDBJson($ids.email)
+              }
+            }
+          }
+        #end
       ResponseMappingTemplate: |
-        $util.toJson($context.result)
+        #if($ctx.error)
+          $util.error($ctx.error.message, $ctx.error.type)
+        #end
+        
+        #if($ctx.result.items)
+          #if($ctx.result.items.size() == 0)
+            null
+          #else
+            $util.toJson($ctx.result.items[0])
+          #end
+        #else
+          $util.toJson($ctx.result)
+        #end
   SendSMSVerificationCodeResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
@@ -154,6 +241,7 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($context.result)
+
 
 
   # IAM
