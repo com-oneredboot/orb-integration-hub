@@ -293,7 +293,6 @@ Resources:
                   - sns:Publish
                 Resource: '*'
 
-
   LambdaRole:
     Properties:
       AssumeRolePolicyDocument:
@@ -323,11 +322,25 @@ Resources:
       RoleName: !Sub "${CustomerId}-${ProjectId}-${Environment}-cognito-lambda-role"
     Type: AWS::IAM::Role
 
+  # SNS / SMS Verification Topic
   SMSVerificationCodeTopic:
     Properties:
-      TopicName: SMSVerificationCodeTopic
+      TopicName: !Sub "${CustomerId}-${ProjectId}-${Environment}-phone-number-verification"
       DisplayName: !Sub "${CustomerId}-${ProjectId}-${Environment}-phone-number-verification"
     Type: AWS::SNS::Topic
+
+  SMSVerificationCodeTopicParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-phone-number-verification-topic-arn"
+      Type: String
+      Value: !Ref SMSVerificationCodeTopic
+      Description: SMS Verification Code Topic ARN
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+    Type: AWS::SSM::Parameter
 
   # Parameter Store
   UserPoolIdParameter:
