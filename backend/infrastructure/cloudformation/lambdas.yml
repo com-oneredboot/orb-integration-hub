@@ -219,7 +219,7 @@ Resources:
   SMSVerificationLambdaArnParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub "/${CustomerId}/${ProjectId}/${Environment}/sms-verification/lambda/arn"
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-sms-verification-lambda-arn"
       Type: String
       Value: !GetAtt SMSVerificationFunction.Arn
       Description: ARN of the SMS Verification Lambda function

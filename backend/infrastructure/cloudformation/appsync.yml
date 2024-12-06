@@ -176,20 +176,14 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource:
-                  - !Sub '{{resolve:ssm:/${CustomerId}/${ProjectId}/${Environment}/payment-processor/lambda/arn}}'
-                  - !Sub '{{resolve:ssm:/${CustomerId}/${ProjectId}/${Environment}/contact-us/lambda/arn}}'
+                  - !Sub '{{resolve:ssm:/${CustomerId}-${ProjectId}-${Environment}-sms-verification-lambda-arn}}'
               - Effect: Allow
                 Action:
                   - dynamodb:GetItem
                   - dynamodb:Query
-                Resource:
-                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-payments-table-arn}}'
-                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-payments-table-arn}}/index/*'
-              - Effect: Allow
-                Action:
                   - dynamodb:PutItem
                 Resource:
-                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-registrations-table-arn}}'
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-user-profiles-table-arn}}'
   AppSyncLoggingServiceRole:
     Type: AWS::IAM::Role
     Properties:
