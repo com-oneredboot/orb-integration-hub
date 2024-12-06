@@ -80,7 +80,7 @@ export class SignUpComponent implements OnInit, OnDestroy {
     if (response.success) {
       this.username = username;
       // After successful registration, redirect to confirm-email
-      await this.router.navigate(['/confirm-signup'], {
+      await this.router.navigate(['/confirm-email'], {
         queryParams: { username: this.username }
       });
     } else {
