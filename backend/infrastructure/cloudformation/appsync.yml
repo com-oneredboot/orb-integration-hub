@@ -58,7 +58,7 @@ Resources:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       Definition: |
         
-        type SMSVerificationResponseSMSVerificationResponse {
+        type SMSVerificationResponse {
           status_code: Float!
           message: String
           code: Float
@@ -89,7 +89,7 @@ Resources:
         }
   
         type Query {
-            getUserProfile(input: UserProfileInput!): UserProfileResponse!
+          getUserProfile(input: UserProfileInput!): UserProfileResponse!
         }
     
         schema {
