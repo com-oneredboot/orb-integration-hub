@@ -64,44 +64,6 @@ Globals:
 # --------------------------------------------------- #
 Resources:
 
-  # Lambda Function for Payment Processing
-  PaymentProcessorFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub '${CustomerId}-${ProjectId}-${Environment}-payment-processor'
-      Role: !GetAtt LambdaExecutionRole.Arn
-      CodeUri: ../../src/lambdas/stripe
-      Environment:
-        Variables:
-          ENVIRONMENT: !Ref Environment
-          LOG_LEVEL: !Ref ApplicationLoggingLevel
-          PAYMENTS_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-payments-table-name}}'
-          STRIPE_SECRET_KEY_PATH: !Sub '/${CustomerId}/${ProjectId}/${Environment}/stripe/publishable/key'
-      Layers:
-        - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-stripe-layer-arn}}'
-  StripePublishableKeyFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub '${CustomerId}-${ProjectId}-${Environment}-stripe-publishable-key'
-      Role: !GetAtt LambdaExecutionRole.Arn
-      CodeUri: ../../src/lambdas/stripe_publishable_key
-      Environment:
-        Variables:
-          ENVIRONMENT: !Ref Environment
-          LOG_LEVEL: !Ref ApplicationLoggingLevel
-          STRIPE_PUBLISHABLE_KEY_SECRET: !Ref StripePublishableKeySecret
-
-  # Lambda Function for Contact Us Form
-  ContactFormFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub '${CustomerId}-${ProjectId}-${Environment}-contact-us'
-      CodeUri: ../../src/lambdas/contact_us
-      Role: !GetAtt LambdaExecutionRole.Arn
-      Environment:
-        Variables:
-          TO_EMAIL: !Ref ToEmail
-
   # SMS Verification Lambda Function
   SMSVerificationFunction:
     Type: AWS::Serverless::Function
@@ -113,7 +75,6 @@ Resources:
         Variables:
           ENVIRONMENT: !Ref Environment
           LOG_LEVEL: !Ref ApplicationLoggingLevel
-
 
   # IAM Roles
   LambdaExecutionRole:
@@ -256,36 +217,6 @@ Resources:
               - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:/${CustomerId}/${ProjectId}/${Environment}/*"
 
   # SSM Parameters
-  ContactUsLambdaArnParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub "/${CustomerId}/${ProjectId}/${Environment}/contact-us/lambda/arn"
-      Type: String
-      Value: !GetAtt ContactFormFunction.Arn
-      Description: ARN of the Contact Us Lambda function
-      Tags:
-        Billable: true
-        CustomerId: !Ref CustomerId
-        Environment: !Ref Environment
-        ProjectId: !Ref ProjectId
-  PaymentProcessorLambdaArnParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub "/${CustomerId}/${ProjectId}/${Environment}/payment-processor/lambda/arn"
-      Type: String
-      Value: !GetAtt PaymentProcessorFunction.Arn
-      Description: ARN of the Payment Processor Lambda function
-      Tags:
-        Billable: true
-        CustomerId: !Ref CustomerId
-        Environment: !Ref Environment
-        ProjectId: !Ref ProjectId
-  StripePublishableKeySecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Name: !Sub '/${CustomerId}/${ProjectId}/${Environment}/stripe/publishable/key'
-      Description: "AppSync API Key for unauthenticated access"
-      SecretString: "change-me"
   SMSVerificationLambdaArnParameter:
     Type: AWS::SSM::Parameter
     Properties:
@@ -301,12 +232,6 @@ Resources:
 
 # --------------------------------------------------- #
 Outputs:
-  PaymentProcessorFunctionArn:
-    Description: ARN of the Payment Processor Lambda function
-    Value: !GetAtt PaymentProcessorFunction.Arn
-  ContactFormFunctionArn:
-    Description: ARN of the Contact Us Lambda function
-    Value: !GetAtt ContactFormFunction.Arn
   SMSVerificationFunctionArn:
     Description: ARN of the SMS Verification Lambda function
     Value: !GetAtt SMSVerificationFunction.Arn
