@@ -269,7 +269,8 @@ Resources:
                   - dynamodb:Query
                   - dynamodb:PutItem
                 Resource:
-                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-*-table-arn}}'
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-table-arn}}'
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-user-profiles-table-arn}}'
   AppSyncLoggingServiceRole:
     Type: AWS::IAM::Role
     Properties:

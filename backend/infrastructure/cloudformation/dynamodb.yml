@@ -94,7 +94,7 @@ Resources:
               KeyType: HASH
           Projection:
             ProjectionType: ALL
-      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-user-profiles-1"
+      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-user-profiles"
       Tags:
         - Key: Billable
           Value: "true"
