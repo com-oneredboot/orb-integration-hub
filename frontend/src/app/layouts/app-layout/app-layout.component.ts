@@ -3,9 +3,10 @@ import {AuthService} from "../../core/services/auth.service";
 import {Router} from "@angular/router";
 
 @Component({
-  selector: 'app-home-layout',
-  templateUrl: './app-layout.component.html',
-  styleUrls: ['./app-layout.component.scss']
+    selector: 'app-home-layout',
+    templateUrl: './app-layout.component.html',
+    styleUrls: ['./app-layout.component.scss'],
+    standalone: false
 })
 export class AppLayoutComponent {
   title = 'OneRedBoot Integration Hub';

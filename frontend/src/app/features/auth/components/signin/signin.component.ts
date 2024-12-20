@@ -15,9 +15,10 @@ import {AuthService} from '../../../../core/services/auth.service';
 import {groupPriority, User, UserGroup} from "../../../../models/user.model";
 
 @Component({
-  selector: 'app-signin',
-  templateUrl: './signin.component.html',
-  styleUrls: ['./signin.component.scss']
+    selector: 'app-signin',
+    templateUrl: './signin.component.html',
+    styleUrls: ['./signin.component.scss'],
+    standalone: false
 })
 export class SignInComponent implements OnInit, OnDestroy {
   signInForm: FormGroup;

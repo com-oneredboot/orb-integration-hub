@@ -10,9 +10,10 @@ export enum MFAType {
 }
 
 @Component({
-  selector: 'app-mfa-setup',
-  templateUrl: './mfa-setup.component.html',
-  styleUrls: ['./mfa-setup.component.scss']
+    selector: 'app-mfa-setup',
+    templateUrl: './mfa-setup.component.html',
+    styleUrls: ['./mfa-setup.component.scss'],
+    standalone: false
 })
 export class MFASetupComponent implements OnInit {
   form: FormGroup;

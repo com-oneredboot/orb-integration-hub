@@ -13,9 +13,10 @@ enum AuthStep {
 }
 
 @Component({
-  selector: 'app-auth-flow',
-  templateUrl: './auth-flow.component.html',
-  styleUrls: ['./auth-flow.component.scss']
+    selector: 'app-auth-flow',
+    templateUrl: './auth-flow.component.html',
+    styleUrls: ['./auth-flow.component.scss'],
+    standalone: false
 })
 export class AuthFlowComponent implements OnInit {
   currentStep = AuthStep.EMAIL;

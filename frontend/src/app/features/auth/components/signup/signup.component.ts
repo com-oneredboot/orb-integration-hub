@@ -16,9 +16,10 @@ import { AuthService } from '../../../../core/services/auth.service';
 import {CreateUserInput, User} from "../../../../models/user.model";
 
 @Component({
-  selector: 'app-signup',
-  templateUrl: './signup.component.html',
-  styleUrls: ['./signup.component.scss']
+    selector: 'app-signup',
+    templateUrl: './signup.component.html',
+    styleUrls: ['./signup.component.scss'],
+    standalone: false
 })
 export class SignUpComponent implements OnInit, OnDestroy {
 

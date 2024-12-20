@@ -8,9 +8,10 @@ import {User} from "../../../../models/user.model";
 import {SMSVerificationInput} from "../../../../models/sms.model";
 
 @Component({
-  selector: 'app-confirm-email',
-  templateUrl: './confirm-phone.component.html',
-  styleUrls: ['./confirm-phone.component.scss']
+    selector: 'app-confirm-email',
+    templateUrl: './confirm-phone.component.html',
+    styleUrls: ['./confirm-phone.component.scss'],
+    standalone: false
 })
 export class ConfirmPhoneComponent implements OnInit, OnDestroy {
   confirmationForm: FormGroup;
