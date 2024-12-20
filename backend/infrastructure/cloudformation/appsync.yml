@@ -229,12 +229,13 @@ Resources:
   
         #set($response = {
           "status_code": 200,
-          "user": null
+          "user": {}
         })
   
         #if($ctx.result.items)
           #if($ctx.result.items.size() == 0)
             #set($response.status_code = 404)
+            $util.qr($response.put("user", null))
           #else
             #set($response.user = $ctx.result.items[0])
           #end
@@ -243,6 +244,7 @@ Resources:
             #set($response.user = $ctx.result)
           #else
             #set($response.status_code = 404)
+            $util.qr($response.put("user", null))
           #end
         #end
         
