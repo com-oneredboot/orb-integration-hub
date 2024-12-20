@@ -89,25 +89,15 @@ export const doesUserExistQuery = `
 
 export const getUserByIdQuery = /* GraphQL */ `
   query GetUserById($input: UserProfileInput!) {
-    getUserById(input: $input) {
       id
       cognito_id
-      username
       email
+      phone_number
+      first_name
+      last_name
       groups
       status
       created_at
-      updated_at
-      profile {
-        name_first,
-        name_last,
-        phone_number
-        language
-        preferences {
-          email_notifications
-          theme
-        }
-      }
     }
   }
 `;

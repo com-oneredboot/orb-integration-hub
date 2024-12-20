@@ -133,7 +133,7 @@ Resources:
     Type: AWS::SSM::Parameter
   UserProfilesTableNameParameter:
     Properties:
-      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-user-profiles-table-name"
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-user-profiles-table-name1"
       Type: String
       Value: !Ref UserProfilesTable
       Description: DynamoDB User Profiles Table Name
@@ -145,7 +145,7 @@ Resources:
     Type: AWS::SSM::Parameter
   UserProfilesTableArnParameter:
     Properties:
-      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-user-profiles-table-arn"
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-user-profiles-table-arn1"
       Type: String
       Value: !GetAtt UserProfilesTable.Arn
       Description: DynamoDB User Profiles Table Arn

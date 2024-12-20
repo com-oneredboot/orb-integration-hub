@@ -129,6 +129,7 @@ Resources:
           mutation: Mutation
         }
 
+
   # Data Sources
   SMSVerificationDataSource:
     Type: AWS::AppSync::DataSource
@@ -268,7 +269,7 @@ Resources:
                   - dynamodb:Query
                   - dynamodb:PutItem
                 Resource:
-                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-user-profiles-table-arn}}'
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-*-table-arn}}'
   AppSyncLoggingServiceRole:
     Type: AWS::IAM::Role
     Properties:
