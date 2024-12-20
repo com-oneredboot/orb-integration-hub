@@ -157,7 +157,7 @@ Resources:
     Type: AWS::AppSync::DataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
-      Name: UserProfilesDataSource
+      Name: UsersDataSource
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
