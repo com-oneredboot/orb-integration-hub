@@ -40,8 +40,11 @@ export class UserService extends ApiService {
     } catch (error) {
       console.error('Error creating user:', error);
       return {
-        status_code: 500,
-        message: 'Error creating user'
+        getUserById: {
+          status_code: 500,
+          user: null,
+          message: 'Error creating user'
+        }
       } as UserResponse;
     }
   }
@@ -55,13 +58,18 @@ export class UserService extends ApiService {
         'apiKey') as GraphQLResult<UserResponse>;
       console.debug('doesUserExist Response: ', response);
 
+      // if 404 return false
+      if (response.data?.getUserById?.status_code === 404) {
+        return false;
+      }
+
       // if not 200 throw error
-      if (response.data?.status_code !== 200) {
-        throw new Error(`Invalid response code: ${response.data?.status_code}`);
+      if (response.data?.getUserById?.status_code !== 200) {
+        throw new Error(`Invalid response code: ${response.data?.getUserById?.status_code}`);
       }
 
       // return result
-      return response.data?.user?.id !== null;
+      return response.data?.getUserById?.user?.id !== null;
 
     } catch (error) {
       console.error('Error getting user:', error);
@@ -97,8 +105,11 @@ export class UserService extends ApiService {
     } catch (error) {
       console.error('Error updating user profile:', error);
       return {
-        status_code: 500,
-        message: 'Error updating user profile'
+        getUserById: {
+          status_code: 500,
+          user: null,
+          message: 'Error updating user profile'
+        }
       } as UserResponse;
     }
   }

@@ -111,12 +111,12 @@ export class AuthService extends ApiService {
 
       const userResponse = await this.userApi.createUser(input);
 
-      if (userResponse.status_code !== 200 || !userResponse.user) {
+      if (userResponse.getUserById?.status_code !== 200 || !userResponse.getUserById?.user) {
         return userResponse;
       }
 
       // Set the Current user and authentication status
-      this.currentUserSubject.next(userResponse.user);
+      this.currentUserSubject.next(userResponse.getUserById?.user);
       await this.checkIsAuthenticated();
 
       return userResponse;
@@ -124,8 +124,11 @@ export class AuthService extends ApiService {
     } catch (error) {
       console.error('Registration error:', error);
       return {
-        status_code: 500,
-        message: error instanceof Error ? error.message : 'Registration failed'
+        getUserById: {
+          status_code: 500,
+          user: null,
+          message: error instanceof Error ? error.message : 'Registration failed'
+        }
       };
     }
   }

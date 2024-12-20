@@ -48,8 +48,12 @@ export const groupPriority: UserGroup[] = [
 // ------------------------------ //
 // Type Definitions
 // ------------------------------ //
-export type UserResponse = GenericResponse & {
-  user?: User;
+export type UserResponse = {
+  getUserById: {
+    status_code: number;
+    user: User | null;
+    message?: string;
+  };
 };
 
 export type UserExistResponse = GenericResponse & {
