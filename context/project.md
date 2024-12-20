@@ -204,25 +204,15 @@ Role-based UI organization:
 21. Set up CI/CD pipelines
 22. Split confirmation into separate email and phone components
 23. Initialize auth feature module structure
+24. Angular 19 upgraded
+25. Added Debugging information to page
+
 
 ## Next Steps
-24. Upgrade to Angular 19
-    - Run update command
-    - Test all components
-    - Fix any breaking changes
-    - Update dependencies
-
-25. Centralize CSS Architecture
-    - Create shared styles directory
-    - Set up variables and mixins
-    - Create component-specific stylesheets
-    - Implement BEM methodology
-    - Create style guide documentation
-
 26. Implement Wizard-Style Auth Flow
-    - Set up NgRx store
-    - Create auth state management
-    - Implement auth effects
+    x Set up NgRx store
+    x Create auth state management
+    x Implement auth effects
     - Create step components
     - Add transitions and animations
 
@@ -259,6 +249,13 @@ Role-based UI organization:
     - E2E testing
     - API documentation
     - User guide
+32. Centralize CSS Architecture
+    - Create shared styles directory
+    - Set up variables and mixins
+    - Create component-specific stylesheets
+    - Implement BEM methodology
+    - Create style guide documentation
+
 
 ## Current Issues
 1. Need to manage state during Angular upgrade
