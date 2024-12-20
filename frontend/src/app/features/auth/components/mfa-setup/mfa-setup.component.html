@@ -1,0 +1,121 @@
+<div class="mfa-setup-container">
+  <div class="logo-container">
+    <img src="../../../../../assets/onredboot-logo.jpg" alt="OneRedBoot Logo">
+  </div>
+
+  <form [formGroup]="form" class="mfa-setup-form">
+    <!-- MFA Type Selection -->
+    <ng-container *ngIf="currentStep === 'selection'">
+      <h2>Set Up Two-Factor Authentication</h2>
+      <p class="setup-description">Choose your preferred authentication method:</p>
+
+      <div class="mfa-options">
+        <div class="mfa-option">
+          <input
+            type="radio"
+            id="totp"
+            formControlName="mfaType"
+            [value]="MFAType.TOTP">
+          <label for="totp">
+            <span class="option-title">Authenticator App</span>
+            <span class="option-description">Use Google Authenticator, Authy, or similar apps</span>
+          </label>
+        </div>
+
+        <div class="mfa-option">
+          <input
+            type="radio"
+            id="sms"
+            formControlName="mfaType"
+            [value]="MFAType.SMS">
+          <label for="sms">
+            <span class="option-title">SMS Authentication</span>
+            <span class="option-description">Receive codes via text message</span>
+          </label>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="submit-button"
+        [disabled]="!form.get('mfaType')?.valid || isLoading"
+        (click)="onMFATypeSelect()">
+        <span *ngIf="!isLoading">Continue</span>
+        <div class="loader" *ngIf="isLoading"></div>
+      </button>
+    </ng-container>
+
+    <!-- TOTP Setup -->
+    <ng-container *ngIf="currentStep === 'setup' && qrCode">
+      <h2>Set Up Authenticator App</h2>
+      <div class="setup-instructions">
+        <p>1. Open your authenticator app</p>
+        <p>2. Scan this QR code or manually enter the secret key</p>
+      </div>
+
+      <div class="qr-container">
+        <img [src]="qrCode" alt="QR Code for authenticator setup">
+      </div>
+
+      <div class="secret-key-container">
+        <p>Manual entry code:</p>
+        <code class="secret-key">{{ secretKey }}</code>
+      </div>
+
+      <div class="verification-section">
+        <p>Enter the 6-digit code from your authenticator app:</p>
+        <input
+          type="text"
+          formControlName="verificationCode"
+          placeholder="Enter 6-digit code"
+          class="form-input"
+          maxlength="6">
+
+        <button
+          type="button"
+          class="submit-button"
+          [disabled]="!form.get('verificationCode')?.valid || isLoading"
+          (click)="onVerifyMFA()">
+          <span *ngIf="!isLoading">Verify</span>
+          <div class="loader" *ngIf="isLoading"></div>
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- SMS Verification -->
+    <ng-container *ngIf="currentStep === 'verification'">
+      <h2>Verify Phone Number</h2>
+      <p>Enter the verification code sent to your phone:</p>
+
+      <div class="verification-input">
+        <input
+          type="text"
+          formControlName="verificationCode"
+          placeholder="Enter 6-digit code"
+          class="form-input"
+          maxlength="6">
+      </div>
+
+      <button
+        type="button"
+        class="submit-button"
+        [disabled]="!form.get('verificationCode')?.valid || isLoading"
+        (click)="onVerifyMFA()">
+        <span *ngIf="!isLoading">Verify</span>
+        <div class="loader" *ngIf="isLoading"></div>
+      </button>
+
+      <button
+        type="button"
+        class="resend-button"
+        (click)="onResendCode()">
+        Resend Code
+      </button>
+    </ng-container>
+
+    <!-- Error Message -->
+    <div class="error-banner" *ngIf="error">
+      {{ error }}
+    </div>
+  </form>
+</div>

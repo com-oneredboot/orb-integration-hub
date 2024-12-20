@@ -2,14 +2,14 @@
 
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { SignInComponent } from './components/signin/signin.component';
-import { SignUpComponent } from './components/signup/signup.component';
+import { SignInComponent } from './features/auth/components/signin/signin.component';
+import { SignUpComponent } from './features/auth/components/signup/signup.component';
 import { HomeComponent } from "./components/home/home.component";
-import { ConfirmEmailComponent } from "./components/confirm-email/confirm-email.component";
+import { ConfirmEmailComponent } from "./features/auth/components/confirm-email/confirm-email.component";
 import { PageLayoutComponent } from "./layouts/page-layout/page-layout.comonent";
 import { AppLayoutComponent } from "./layouts/app-layout/app-layout.component";
-import { MFASetupComponent } from "./components/mfa-setup/mfa-setup.component";
-import {ConfirmPhoneComponent} from "./components/confirm-phone/confirm-phone.component";
+import { MFASetupComponent } from "./features/auth/components/mfa-setup/mfa-setup.component";
+import {ConfirmPhoneComponent} from "./features/auth/components/confirm-phone/confirm-phone.component";
 
 export const routes: Routes = [
   { path: '',
@@ -21,6 +21,7 @@ export const routes: Routes = [
   },
   { path: '',
     component: AppLayoutComponent,
+    loadChildren: () => import('./features/auth/auth.module').then(m => m.AuthModule),
     children: [
       { path: 'confirm-email', component: ConfirmEmailComponent },
       { path: 'confirm-phone', component: ConfirmPhoneComponent },

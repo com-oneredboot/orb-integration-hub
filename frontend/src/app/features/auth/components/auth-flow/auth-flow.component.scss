@@ -1,0 +1,11 @@
+// auth-flow.component.scss
+@import '../../../../variables';
+@import '../../../../mixins';
+
+.auth-flow-container {
+  @extend .signin-container;
+
+  .auth-flow-form {
+    @extend .signin-form;
+  }
+}
