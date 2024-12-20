@@ -5,10 +5,6 @@ import { RouterModule, Routes } from '@angular/router';
 // Components
 import { AuthFlowComponent } from './components/auth-flow/auth-flow.component';
 
-// Existing components (to be phased out later)
-import { SignInComponent } from './components/signin/signin.component';
-import { SignUpComponent } from './components/signup/signup.component';
-
 const routes: Routes = [
   {
     path: '',
@@ -17,16 +13,6 @@ const routes: Routes = [
       {
         path: 'auth',
         component: AuthFlowComponent
-      },
-
-      // Existing routes (to be phased out later)
-      {
-        path: 'signin',
-        component: SignInComponent
-      },
-      {
-        path: 'signup',
-        component: SignUpComponent
       },
 
       // Default redirect

@@ -108,3 +108,8 @@ export const selectLastActivity = createSelector(
   selectAuthState,
   (state) => state.lastActivity
 );
+
+export const selectDebugMode = createSelector(
+  selectAuthState,
+  (state) => state.debugMode
+);

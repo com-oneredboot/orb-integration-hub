@@ -1,1 +1,212 @@
-<p>auth-flow works!</p>
+<div class="auth-flow">
+  <ng-container *ngIf="{
+    currentStep: currentStep$ | async,
+    isLoading: isLoading$ | async,
+    error: error$ | async,
+    userExists: userExists$ | async,
+    phoneVerified: phoneVerified$ | async,
+    mfaSetupDetails: mfaSetupDetails$ | async,
+    buttonText: buttonText$ | async,
+    stepTitle: stepTitle$ | async
+  } as state">
+
+    <div class="auth-flow__header">
+      <img src="assets/onredboot-logo.jpg" alt="OneRedBoot Logo" class="auth-flow__header-logo">
+      <h1 class="auth-flow__header-title">{{ state.stepTitle }}</h1>
+    </div>
+
+    <div class="auth-flow__progress">
+      <div class="auth-flow__progress-step"
+           *ngFor="let step of [
+             authSteps.EMAIL,
+             authSteps.PASSWORD,
+             authSteps.PHONE_SETUP,
+             authSteps.PHONE_VERIFY,
+             authSteps.MFA_SETUP,
+             authSteps.MFA_VERIFY
+           ]"
+           [ngClass]="{
+             'auth-flow__progress-step--active': state.currentStep === step
+           }">
+      </div>
+    </div>
+
+    <form *ngIf="authForm" [formGroup]="authForm" (ngSubmit)="onSubmit()" class="auth-flow__form">
+      <!-- Error Banner -->
+      <div class="auth-flow__error" *ngIf="state.error">
+        {{ state.error }}
+      </div>
+
+      <!-- Email Step -->
+      <div class="auth-flow__form-step"
+           [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.EMAIL}">
+        <div class="auth-flow__input-group">
+          <div class="auth-flow__input-group-container">
+            <input type="email"
+                   formControlName="email"
+                   class="auth-flow__input-group-field"
+                   [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('email')}"
+                   placeholder="Email address">
+            <div *ngIf="isFieldInvalid('email')" class="auth-flow__input-error">
+              {{ getErrorMessage('email') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Password Step -->
+      <div class="auth-flow__form-step"
+           [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.PASSWORD}">
+        <div class="auth-flow__input-group">
+          <div class="auth-flow__input-group-container">
+            <input [type]="passwordVisible ? 'text' : 'password'"
+                   formControlName="password"
+                   class="auth-flow__input-group-field"
+                   [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('password')}"
+                   placeholder="Password">
+            <button type="button"
+                    class="auth-flow__input-group-toggle"
+                    (click)="togglePasswordVisibility()">
+              <i class="fa" [class.fa-eye]="!passwordVisible" [class.fa-eye-slash]="passwordVisible"></i>
+            </button>
+            <div *ngIf="isFieldInvalid('password')" class="auth-flow__input-error">
+              {{ getErrorMessage('password') }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Registration fields -->
+        <ng-container *ngIf="!state.userExists">
+          <div class="auth-flow__input-group">
+            <input type="text"
+                   formControlName="firstName"
+                   class="auth-flow__input-group-field"
+                   [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('firstName')}"
+                   placeholder="First Name">
+            <div *ngIf="isFieldInvalid('firstName')" class="auth-flow__input-error">
+              {{ getErrorMessage('firstName') }}
+            </div>
+          </div>
+          <div class="auth-flow__input-group">
+            <input type="text"
+                   formControlName="lastName"
+                   class="auth-flow__input-group-field"
+                   [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('lastName')}"
+                   placeholder="Last Name">
+            <div *ngIf="isFieldInvalid('lastName')" class="auth-flow__input-error">
+              {{ getErrorMessage('lastName') }}
+            </div>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- Phone Setup Step -->
+      <div class="auth-flow__form-step"
+           [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.PHONE_SETUP}">
+        <div class="auth-flow__input-group">
+          <input type="tel"
+                 formControlName="phoneNumber"
+                 class="auth-flow__input-group-field"
+                 [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('phoneNumber')}"
+                 placeholder="Phone Number">
+          <div *ngIf="isFieldInvalid('phoneNumber')" class="auth-flow__input-error">
+            {{ getErrorMessage('phoneNumber') }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Phone Verify Step -->
+      <div class="auth-flow__form-step"
+           [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.PHONE_VERIFY}">
+        <div class="auth-flow__input-group">
+          <input type="text"
+                 formControlName="verificationCode"
+                 class="auth-flow__input-group-field"
+                 [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('verificationCode')}"
+                 placeholder="Verification Code">
+          <div *ngIf="isFieldInvalid('verificationCode')" class="auth-flow__input-error">
+            {{ getErrorMessage('verificationCode') }}
+          </div>
+        </div>
+      </div>
+
+      <!-- MFA Setup Step -->
+<!--      <div class="auth-flow__form-step"-->
+<!--           [ngClass]="{'auth-flow__form-step&#45;&#45;active': state.currentStep === authSteps.MFA_SETUP}">-->
+<!--        <div class="auth-flow__mfa-options" *ngIf="state.mfaSetupDetails as mfaDetails">-->
+<!--          <div class="auth-flow__qr-container" *ngIf="mfaDetails.qrCode">-->
+<!--            <img [src]="mfaDetails.qrCode" alt="MFA QR Code">-->
+<!--          </div>-->
+<!--          <div class="auth-flow__secret-key" *ngIf="mfaDetails.secretKey">-->
+<!--            <p>Secret Key: {{ mfaDetails.secretKey }}</p>-->
+<!--          </div>-->
+<!--        </div>-->
+<!--      </div>-->
+
+      <!-- MFA Verification Step -->
+      <div class="auth-flow__form-step"
+           [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.MFA_VERIFY}">
+        <div class="auth-flow__input-group">
+          <input type="text"
+                 formControlName="mfaCode"
+                 class="auth-flow__input-group-field"
+                 [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('mfaCode')}"
+                 placeholder="Enter 6-digit code">
+          <div *ngIf="isFieldInvalid('mfaCode')" class="auth-flow__input-error">
+            {{ getErrorMessage('mfaCode') }}
+          </div>
+        </div>
+      </div>
+      <!-- Submit Button -->
+      <button type="submit"
+              class="auth-flow__button"
+              [disabled]="!authForm.valid || state.isLoading"
+              [ngClass]="{'auth-flow__button--loading': state.isLoading}">
+        {{ state.buttonText }}
+        <div class="auth-flow__button-loader" *ngIf="state.isLoading"></div>
+      </button>
+    </form>
+  </ng-container>
+</div>
+<!-- Add this after your form in auth-flow.component.html -->
+<ng-container *ngIf="debugMode$ | async">
+  <div class="auth-flow__debug">
+    <h3 class="auth-flow__debug-title">Debug Information</h3>
+
+    <div class="auth-flow__debug-section">
+      <h4>Form State</h4>
+      <pre>Form Valid: {{ authForm?.valid }}</pre>
+      <pre>Form Pristine: {{ authForm?.pristine }}</pre>
+      <pre>Form Touched: {{ authForm?.touched }}</pre>
+      <pre>Form Values: {{ authForm?.value | json }}</pre>
+      <pre>Form Errors: {{ authForm?.errors | json }}</pre>
+    </div>
+
+    <div class="auth-flow__debug-section">
+      <h4>Current Store State</h4>
+      <ng-container *ngIf="{
+        currentStep: currentStep$ | async,
+        isLoading: isLoading$ | async,
+        error: error$ | async,
+        userExists: userExists$ | async,
+        needsMFA: needsMFA$ | async,
+        phoneVerified: phoneVerified$ | async,
+        emailVerified: emailVerified$ | async
+      } as state">
+        <pre>Current Step: {{ state.currentStep }}</pre>
+        <pre>Is Loading: {{ state.isLoading }}</pre>
+        <pre>Error: {{ state.error }}</pre>
+        <pre>User Exists: {{ state.userExists }}</pre>
+        <pre>Needs MFA: {{ state.needsMFA }}</pre>
+        <pre>Phone Verified: {{ state.phoneVerified }}</pre>
+        <pre>Email Verified: {{ state.emailVerified }}</pre>
+      </ng-container>
+    </div>
+
+    <div class="auth-flow__debug-section">
+      <h4>Button State</h4>
+      <pre>Button Disabled: {{ !authForm?.valid }}</pre>
+      <pre>Is Loading: {{ isLoading$ | async }}</pre>
+    </div>
+  </div>
+</ng-container>

@@ -29,7 +29,6 @@ import {Router} from '@angular/router';
 
 // Application-specific imports
 import {CreateUserInput, createUserMutation, User, UserGroup, UserResponse} from '../models/user.model';
-import {MFAType} from "../../features/auth/components/mfa-setup/mfa-setup.component";
 import {ApiService} from "./api.service";
 import {sendSMSVerificationCodeMutation, SMSVerificationInput, SMSVerificationResponse} from "../models/sms.model";
 import {GraphQLResult} from "@aws-amplify/api-graphql";
@@ -429,45 +428,45 @@ export class AuthService extends ApiService {
     }
   }
 
-  async verifyMFASetup(code: string, mfaType: MFAType): Promise<AuthResponse> {
-    try {
-      // change to switch
-      switch (mfaType) {
-        case MFAType.TOTP:
-          // Verify TOTP setup
-          const answer: VerifyTOTPSetupInput = {
-            code,
-            options: {
-              friendlyDeviceName: 'OneRedBoot Integration Hub'
-            }
-          }
-          await verifyTOTPSetup( answer );
-          break;
-        case MFAType.SMS:
-          // Verify SMS MFA setup
-          // No verification required
-          break;
-        case MFAType.EMAIL:
-          // Verify EMAIL MFA setup
-          // No verification required
-          break;
-        default:
-          throw new Error('Invalid MFA type');
-      }
-
-      this.mfaSetupRequiredSubject.next(false);
-
-      return {
-        success: true
-      };
-    } catch (error) {
-      console.error('MFA verification error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'MFA verification failed'
-      };
-    }
-  }
+  // async verifyMFASetup(code: string, mfaType: MFAType): Promise<AuthResponse> {
+  //   try {
+  //     // change to switch
+  //     switch (mfaType) {
+  //       case MFAType.TOTP:
+  //         // Verify TOTP setup
+  //         const answer: VerifyTOTPSetupInput = {
+  //           code,
+  //           options: {
+  //             friendlyDeviceName: 'OneRedBoot Integration Hub'
+  //           }
+  //         }
+  //         await verifyTOTPSetup( answer );
+  //         break;
+  //       case MFAType.SMS:
+  //         // Verify SMS MFA setup
+  //         // No verification required
+  //         break;
+  //       case MFAType.EMAIL:
+  //         // Verify EMAIL MFA setup
+  //         // No verification required
+  //         break;
+  //       default:
+  //         throw new Error('Invalid MFA type');
+  //     }
+  //
+  //     this.mfaSetupRequiredSubject.next(false);
+  //
+  //     return {
+  //       success: true
+  //     };
+  //   } catch (error) {
+  //     console.error('MFA verification error:', error);
+  //     return {
+  //       success: false,
+  //       error: error instanceof Error ? error.message : 'MFA verification failed'
+  //     };
+  //   }
+  // }
 
   async signOut(): Promise<void> {
     try {

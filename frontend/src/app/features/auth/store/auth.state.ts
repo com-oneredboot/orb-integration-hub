@@ -1,12 +1,24 @@
 // auth.state.ts
 import {User, UserGroup} from "../../../core/models/user.model";
 
+export enum AuthSteps {
+  EMAIL,
+  EMAIL_VERIFY,
+  PASSWORD,
+  PHONE_SETUP,
+  PHONE_VERIFY,
+  MFA_SETUP,
+  MFA_VERIFY,
+  COMPLETE
+}
+
 export interface AuthState {
+  debugMode: boolean;
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  currentStep: 'email' | 'password' | 'phone' | 'mfa_setup' | 'mfa_verify' | 'complete';
+  currentStep: AuthSteps;
   userExists: boolean;
 
   // Phone validation
@@ -43,11 +55,12 @@ export interface AuthState {
 }
 
 export const initialState: AuthState = {
+  debugMode: true,
   user: null,
   isAuthenticated: false,
   isLoading: false,
   error: null,
-  currentStep: 'email',
+  currentStep: AuthSteps.EMAIL,
   userExists: false,
 
   phoneValidationId: null,

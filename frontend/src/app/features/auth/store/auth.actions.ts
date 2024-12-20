@@ -4,9 +4,9 @@ import { User } from '../../../core/models/user.model';
 export const AuthActions = createActionGroup({
   source: 'Auth',
   events: {
-    'Login': props<{ email: string; password: string }>(),
-    'Login Success': props<{ user: User }>(),
-    'Login Failure': props<{ error: string }>(),
+    'Signin': props<{ email: string; password: string }>(),
+    'Signin Success': props<{ user: User }>(),
+    'Signin Failure': props<{ error: string }>(),
 
     'Logout': emptyProps(),
     'Logout Success': emptyProps(),
@@ -15,6 +15,10 @@ export const AuthActions = createActionGroup({
     'Register': props<{ email: string; password: string; firstName: string; lastName: string }>(),
     'Register Success': props<{ user: User }>(),
     'Register Failure': props<{ error: string }>(),
+
+    'Check Email': props<{ email: string }>(),
+    'Check Email Success': props<{ exists: boolean }>(),
+    'Check Email Failure': props<{ error: string }>(),
 
     'Verify Email': props<{ code: string }>(),
     'Verify Email Success': emptyProps(),
@@ -27,6 +31,9 @@ export const AuthActions = createActionGroup({
     'Verify MFA': props<{ code: string }>(),
     'Verify MFA Success': emptyProps(),
     'Verify MFA Failure': props<{ error: string }>(),
+
+    'Send Phone Code Verification': props<{ phoneNumber: string }>(),
+    'Verify Phone Code': props<{ phoneNumber: string; code: string }>(),
 
     'Refresh Session': emptyProps(),
     'Refresh Session Success': props<{ user: User }>(),

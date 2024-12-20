@@ -6,6 +6,6 @@ import { Component } from '@angular/core';
     styleUrl: './mfa-step.component.scss',
     standalone: false
 })
-export class MfaStepComponent {
+export class MFAStepComponent {
 
 }

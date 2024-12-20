@@ -1,11 +1,274 @@
-// auth-flow.component.scss
 @import '../../../../variables';
 @import '../../../../mixins';
 
-.auth-flow-container {
-  @extend .signin-container;
+.auth-flow {
+  @include auth-container;
+  min-height: calc(100vh - 100px);
+  padding: $spacing-xl;
+  background-color: $bg-primary;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 
-  .auth-flow-form {
-    @extend .signin-form;
+  &__header {
+    text-align: center;
+    margin-bottom: $spacing-xl;
+
+    &-logo {
+      width: 600px;
+      height: auto;
+    }
+
+    &-title {
+      font-family: $font-family-base;
+      color: $text-primary;
+      margin-top: $spacing-md;
+    }
+  }
+
+  &__progress {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    justify-content: center;
+    gap: $spacing-sm;
+    margin-bottom: $spacing-lg;
+
+    &-step {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: $input-border-color;
+      margin: 0 4px;
+      transition: all 0.2s ease;
+
+      &--active {
+        background-color: $primary-color;
+        transform: scale(1.2);
+      }
+
+      &--completed {
+        background-color: $success-color;
+      }
+    }
+  }
+
+  &__form {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $spacing-md;
+  }
+
+  &__form-step {
+    width: 100%;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+
+    &--active {
+      display: block;
+      opacity: 1;
+    }
+  }
+
+  &__input-group {
+    width: 100%;
+    margin-bottom: $spacing-md;
+
+    &-container {
+      position: relative;
+      width: 100%;
+    }
+
+    &-field {
+      width: 100%;
+      padding: $spacing-sm $spacing-md;
+      font-family: $font-family-base;
+      font-size: $input-font-size;
+      color: $input-color;
+      border: 1px solid $input-border-color;
+      border-radius: $border-radius;
+      background-color: $input-bg;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+      &:focus {
+        outline: none;
+        border-color: $primary-color;
+        box-shadow: 0 0 0 2px rgba($primary-color, 0.2);
+      }
+
+      &--error {
+        border-color: $danger-color;
+      }
+
+      // Add padding for password input
+      &[type="password"] {
+        padding-right: 48px;
+      }
+    }
+
+    &-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      color: $text-secondary;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: $text-primary;
+      }
+
+      .eye-icon,
+      .eye-slash-icon {
+        width: 20px;
+        height: 20px;
+      }
+    }
+  }
+
+  &__input-error {
+    font-size: $font-size-sm;
+    color: $danger-color;
+    margin-top: $spacing-xs;
+  }
+
+  &__error {
+    width: 100%;
+    padding: $spacing-sm;
+    background-color: rgba($danger-color, 0.1);
+    color: $danger-color;
+    border-radius: $border-radius;
+    margin-bottom: $spacing-md;
+    text-align: center;
+  }
+
+  &__button {
+    width: 100%;
+    padding: $spacing-sm $spacing-lg;
+    font-family: $font-family-base;
+    font-size: $font-size-base;
+    font-weight: 600;
+    color: $white;
+    background-color: $primary-color;
+    border: none;
+    border-radius: $border-radius;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    position: relative;
+
+    &:hover:not(:disabled) {
+      background-color: darken($primary-color, 10%);
+      transform: translateY(-1px);
+    }
+
+    &:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    &--loading {
+      color: transparent;
+    }
+
+    &-loader {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba($white, 0.3);
+      border-radius: 50%;
+      border-top-color: $white;
+      animation: spin 0.8s linear infinite;
+    }
+  }
+
+  &__mfa-options {
+    width: 100%;
+    padding: $spacing-md;
+    background-color: $bg-secondary;
+    border-radius: $border-radius;
+    text-align: center;
+  }
+
+  &__debug {
+    margin-top: $spacing-xl;
+    padding: $spacing-md;
+    border: 2px dashed #666;
+    border-radius: $border-radius;
+    background: #f8f9fa;
+    width: 100%;
+    max-width: 800px;
+    font-family: monospace;
+
+    &-title {
+      margin: 0 0 $spacing-md;
+      color: #dc1e1e;
+      font-size: 1.2rem;
+    }
+
+    &-section {
+      margin-bottom: $spacing-md;
+      padding: $spacing-sm;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: $border-radius;
+
+      h4 {
+        margin: 0 0 $spacing-sm;
+        color: #333;
+        font-size: 1rem;
+      }
+
+      pre {
+        margin: $spacing-xs 0;
+        padding: $spacing-xs;
+        background: #f1f1f1;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        overflow-x: auto;
+      }
+    }
+  }
+
+}
+
+@keyframes spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@media (max-width: 768px) {
+  .auth-flow {
+    padding: $spacing-md;
+
+    &__header-logo {
+      width: 200px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-flow {
+    padding: $spacing-sm;
+
+    &__form {
+      max-width: 100%;
+    }
   }
 }

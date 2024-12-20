@@ -8,12 +8,12 @@ import { AuthRoutingModule } from './auth-routing.module';
 import { AuthFlowComponent } from './components/auth-flow/auth-flow.component';
 import { EmailStepComponent } from './components/steps/email-step/email-step.component';
 import { PasswordStepComponent } from './components/steps/password-step/password-step.component';
-import { MfaStepComponent } from './components/steps/mfa-step/mfa-step.component';
+import { MFAStepComponent } from './components/steps/mfa-step/mfa-step.component';
 import { CompletionStepComponent } from './components/steps/completion-step/completion-step.component';
-
-// Existing components (to be phased out later)
-import { SignInComponent } from './components/signin/signin.component';
-import { SignUpComponent } from './components/signup/signup.component';
+import {EffectsModule} from "@ngrx/effects";
+import {authReducer} from "./store/auth.reducer";
+import {StoreModule} from "@ngrx/store";
+import {AuthEffects} from "./store/auth.effects";
 
 @NgModule({
   declarations: [
@@ -21,17 +21,15 @@ import { SignUpComponent } from './components/signup/signup.component';
     AuthFlowComponent,
     EmailStepComponent,
     PasswordStepComponent,
-    MfaStepComponent,
+    MFAStepComponent,
     CompletionStepComponent,
-
-    // Existing Components
-    SignInComponent,
-    SignUpComponent,
   ],
   imports: [
     CommonModule,
     AuthRoutingModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    StoreModule.forFeature('auth', authReducer),
+    EffectsModule.forFeature([AuthEffects])
   ],
   providers: []
 })
