@@ -58,23 +58,23 @@ Resources:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       Definition: |
         
-        type SMSVerificationResponse {
+        type SMSVerificationResponse @aws_api_key @aws_cognito_user_pools{
           status_code: Float!
           message: String
           code: Float
         }
         
-        input SMSVerificationInput {
+        input SMSVerificationInput @aws_api_key @aws_cognito_user_pools{
           phone_number: String!
         }
         
-        enum UserStatus {
+        enum UserStatus @aws_api_key @aws_cognito_user_pools{
           ACTIVE
           PENDING
           SUSPENDED
           INACTIVE
         }
-        enum UserGroup {
+        enum UserGroup @aws_api_key @aws_cognito_user_pools{
           USER
           CUSTOMER
           CLIENT
@@ -82,7 +82,7 @@ Resources:
           OWNER
         }
 
-        type User {
+        type User @aws_api_key @aws_cognito_user_pools{
           id: String!
           cognito_id: String!
           email: String!
@@ -94,13 +94,13 @@ Resources:
           created_at: String!
         }
 
-        input UserQueryInput {
+        input UserQueryInput @aws_api_key @aws_cognito_user_pools{
           id: String
           cognito_id: String
           email: String
         }
         
-        input UserCreateInput {
+        input UserCreateInput @aws_api_key @aws_cognito_user_pools{
           id: String!
           cognito_id: String!
           email: String!
@@ -112,7 +112,7 @@ Resources:
           created_at: String!
         }
         
-        input UserUpdateInput {
+        input UserUpdateInput @aws_api_key @aws_cognito_user_pools{
           email: String
           phone_number: String
           first_name: String
@@ -121,7 +121,7 @@ Resources:
           status: UserStatus
         }
         
-        type UserResponse {
+        type UserResponse @aws_api_key @aws_cognito_user_pools{
           status_code: Float!
           message: String
           user: User
