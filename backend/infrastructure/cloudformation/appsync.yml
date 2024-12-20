@@ -275,7 +275,12 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource:
-                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-sms-verification-lambda-arn}}'
+                  # Add base table ARNs
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${CustomerId}-${ProjectId}-${Environment}-users'
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${CustomerId}-${ProjectId}-${Environment}-user-profiles'
+                  # Add GSI ARNs
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${CustomerId}-${ProjectId}-${Environment}-users/index/*'
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${CustomerId}-${ProjectId}-${Environment}-user-profiles/index/*'
               - Effect: Allow
                 Action:
                   - dynamodb:GetItem

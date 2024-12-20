@@ -77,7 +77,7 @@ export const createUserMutation = /* GraphQL */ `
 `;
 
 export const doesUserExistQuery = `
-  query DoesUserExist($input: UserProfileInput!) {
+  query DoesUserExist($input: UserQueryInput!) {
     getUserById(input: $input) {
       status_code
       user {
@@ -88,7 +88,7 @@ export const doesUserExistQuery = `
 `;
 
 export const getUserByIdQuery = /* GraphQL */ `
-  query GetUserById($input: UserProfileInput!) {
+  query GetUserById($input: UserQueryInput!) {
       id
       cognito_id
       email

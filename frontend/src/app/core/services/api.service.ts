@@ -13,22 +13,24 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export abstract class ApiService {
+  private apiKeyClient = generateClient({authMode: 'apiKey'});
+  private userPoolClient = generateClient({authMode: 'userPool'});
 
-  protected client: any
-
-  private authMode = 'userPool' as GraphQLOptions['authMode'];
-
-  protected constructor() {
-    this.client = generateClient({authMode: this.authMode});
-  }
-
-  protected async query(query: string, variables?: any, authMode: 'userPool' | 'apiKey' = 'userPool'): Promise<GraphQLResult> {
+  protected async query<T>(query: string, variables?: any, authMode: 'userPool' | 'apiKey' = 'userPool'): Promise<GraphQLResult<T>> {
     console.debug('query:', query, 'variables:', variables, 'authMode:', authMode);
-    return await this.client.graphql({query: query, variables: variables}, authMode);
+    const client = authMode === 'apiKey' ? this.apiKeyClient : this.userPoolClient;
+    return client.graphql({
+      query: query,
+      variables: variables
+    }) as Promise<GraphQLResult<T>>;
   }
 
-  protected async mutate(mutation: string, variables?: any, authMode: 'userPool' | 'apiKey' = 'userPool'): Promise<GraphQLResult> {
-    console.debug('mutation:', mutation, 'variables:', variables);
-    return await this.client.graphql({query: mutation, "variables": variables}, authMode);
+  protected async mutate<T>(mutation: string, variables?: any, authMode: 'userPool' | 'apiKey' = 'userPool'): Promise<GraphQLResult<T>> {
+    console.debug('mutation:', mutation, 'variables:', variables, 'authMode:', authMode);
+    const client = authMode === 'apiKey' ? this.apiKeyClient : this.userPoolClient;
+    return client.graphql({
+      query: mutation,
+      variables: variables
+    }) as Promise<GraphQLResult<T>>;
   }
 }
