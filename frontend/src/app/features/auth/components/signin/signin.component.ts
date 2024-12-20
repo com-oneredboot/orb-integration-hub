@@ -12,7 +12,7 @@ import {takeUntil} from 'rxjs/operators';
 
 // Application Imports
 import {AuthService} from '../../../../core/services/auth.service';
-import {groupPriority, User, UserGroup} from "../../../../models/user.model";
+import {groupPriority, User, UserGroup} from "../../../../core/models/user.model";
 
 @Component({
     selector: 'app-signin',
@@ -90,7 +90,7 @@ export class SignInComponent implements OnInit, OnDestroy {
           this.mfaType = response.mfaType || 'totp';
           this.errorMessage = '';
         } else if (response.success) {
-          console.info('Sign in successful, checking auth state...');
+          console.info('Sign in successful, checking auth store...');
           await this.navigateBasedOnGroup();
         } else {
           console.warn('Sign in unsuccessful:', response.error);

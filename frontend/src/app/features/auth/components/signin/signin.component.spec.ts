@@ -7,7 +7,7 @@ import { SignInComponent } from './signin.component';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { of } from 'rxjs';
-import {User, UserRole, UserStatus} from '../../../../models/user.model';
+import {User, UserRole, UserStatus} from '../../../../core/models/user.model';
 
 describe('SignInComponent', () => {
   let component: SignInComponent;
@@ -162,7 +162,7 @@ describe('SignInComponent', () => {
     );
   }));
 
-  it('should check initial authentication state', fakeAsync(() => {
+  it('should check initial authentication store', fakeAsync(() => {
     authService.checkIsAuthenticated.and.returnValue(Promise.resolve(true));
     authService.getUserRole.and.returnValue(Promise.resolve(UserRole.CUSTOMER));
     const navigateSpy = spyOn(router, 'navigate');

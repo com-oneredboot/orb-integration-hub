@@ -13,7 +13,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 // Application Imports
 import { AuthService } from '../../../../core/services/auth.service';
-import {CreateUserInput, User} from "../../../../models/user.model";
+import {CreateUserInput, User} from "../../../../core/models/user.model";
 
 @Component({
     selector: 'app-signup',

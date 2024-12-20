@@ -1,7 +1,7 @@
 # Project: org-integration-hub (Title: OneRedBoot.com Payment Gateway)
 
 ## Technology Stack
-- Frontend: Angular 18
+- Frontend: Angular 19 (upgraded from 18)
 - Backend: AWS services (AppSync, Cognito, DynamoDB, Lambda, Step Functions)
 - Monitoring and Logging: CloudWatch
 - Infrastructure as Code: CloudFormation
@@ -10,6 +10,7 @@
 - Backend language: Python 3.12
 - Version control: GitHub
 - CI/CD: GitHub Actions
+- State Management: NgRx
 
 ## Authentication and Authorization Structure
 
@@ -175,68 +176,113 @@ Role-based UI organization:
 - Separate development and production pipelines
 - Automated testing before deployment
 
-## Project Description
-A comprehensive integration hub providing:
-- Payment processing with multiple providers
-- Event management and registration
-- User authentication and authorization
-- Client and customer management
-- Analytical reporting
-
 ## Completed Tasks
-1. Set up Angular 18 project structure
+1. Set up Angular project structure
 2. Installed necessary dependencies including AWS Amplify
-3. Created basic components for signup, signin, and confirm-signup
+3. Created basic components for signup, signin
 4. Implemented AuthService with Cognito integration
 5. Set up basic routing
 6. Configured testing environment with Karma and Jasmine
-7. Implemented the auth service (AuthService) with:
-    - User registration (registerUser)
-    - Registration confirmation (confirmRegistration)
-    - User authentication (authenticateUser)
-    - User logout (logoutUser)
+7. Implemented the auth service with:
+    - User registration
+    - Registration confirmation
+    - User authentication
+    - User logout
 8. Integrated Amplify's GraphQL client for user profiles
 9. Implemented error handling and logging
 10. Created custom error types
 11. Project scope expansion evaluation
 12. Implement signin component logic
-13. Create and implement signup component
-14. Create and implement confirm-signup component
-15. Set up protected routes using AuthGuard
-16. Implemented context-generator
-17. Configure MFA in Cognito User Pool:
-    - Enable MFA settings
-    - Configure TOTP options
-    - Configure device tracking
-18. Update AuthService for MFA:
-    - Simplified implementation
-    - Setup and verification methods
-    - Device tracking
-19. Create MFA Registration Flow:
-    - Updated signup component
-    - MFA setup interface
-    - Verification flow
-20. Update sign-in for MFA verification
-21. Implement authentication error handling
-22. Begin Lambda integration
-23. Set up CI/CD pipelines
+13. Set up protected routes using AuthGuard
+14. Implemented context-generator
+15. Configure MFA in Cognito User Pool
+16. Update AuthService for MFA
+17. Create MFA Registration Flow
+18. Update sign-in for MFA verification
+19. Implement authentication error handling
+20. Begin Lambda integration
+21. Set up CI/CD pipelines
+22. Split confirmation into separate email and phone components
+23. Initialize auth feature module structure
 
 ## Next Steps
-24. Start Stripe payment processing
-25. Update AppSync API for user profiles
-26. Test authentication flow
-27. Implement profile management
-28. Add payment processors
-29. Enhance MFA Security:
+24. Upgrade to Angular 19
+    - Run update command
+    - Test all components
+    - Fix any breaking changes
+    - Update dependencies
+
+25. Centralize CSS Architecture
+    - Create shared styles directory
+    - Set up variables and mixins
+    - Create component-specific stylesheets
+    - Implement BEM methodology
+    - Create style guide documentation
+
+26. Implement Wizard-Style Auth Flow
+    - Set up NgRx store
+    - Create auth state management
+    - Implement auth effects
+    - Create step components
+    - Add transitions and animations
+
+27. Set up Auth Feature State Management
+    - Create auth actions
+    - Implement auth reducer
+    - Set up auth effects
+    - Create auth selectors
+    - Add unit tests
+
+28. Update Component Architecture
+    - Move components to feature module
+    - Implement smart/dumb component pattern
+    - Add component documentation
+    - Create shared components
+    - Update routing structure
+
+29. Begin Payment Processing Implementation
+    - Integrate Stripe SDK
+    - Create payment components
+    - Implement payment flow
+    - Add error handling
+    - Create success/failure pages
+
+30. Enhance MFA Security
     - Rate limiting
     - Bypass protection
     - Device token storage
     - Audit logging
-30. Test MFA Implementation:
+
+31. Testing and Documentation
     - Unit testing
     - Integration testing
-    - Device remembrance
-    - Documentation updates
+    - E2E testing
+    - API documentation
+    - User guide
 
 ## Current Issues
-No current issues reported.
+1. Need to manage state during Angular upgrade
+2. CSS organization needs improvement and centralization
+3. Auth flow needs to be refactored for better UX
+4. State management needs to be implemented with NgRx
+5. Need to maintain backward compatibility during auth flow transition
+
+## Project Structure
+```
+orb-integration-hub/
+├── frontend/
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── features/
+│   │   │   │   └── auth/
+│   │   │   ├── shared/
+│   │   │   ├── core/
+│   │   │   └── app.module.ts
+│   │   ├── assets/
+│   │   └── styles/
+├── backend/
+│   ├── src/
+│   │   └── lambdas/
+│   └── infrastructure/
+└── docs/
+```

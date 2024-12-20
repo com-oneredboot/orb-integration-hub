@@ -4,8 +4,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import {takeUntil} from "rxjs/operators";
 import {filter, Subject} from "rxjs";
-import {User} from "../../../../models/user.model";
-import {SMSVerificationInput} from "../../../../models/sms.model";
+import {User} from "../../../../core/models/user.model";
+import {SMSVerificationInput} from "../../../../core/models/sms.model";
 
 @Component({
     selector: 'app-confirm-email',

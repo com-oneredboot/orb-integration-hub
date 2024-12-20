@@ -28,10 +28,10 @@ import {Router} from '@angular/router';
 
 
 // Application-specific imports
-import {CreateUserInput, createUserMutation, User, UserGroup, UserResponse} from '../../models/user.model';
+import {CreateUserInput, createUserMutation, User, UserGroup, UserResponse} from '../models/user.model';
 import {MFAType} from "../../features/auth/components/mfa-setup/mfa-setup.component";
 import {ApiService} from "./api.service";
-import {sendSMSVerificationCodeMutation, SMSVerificationInput, SMSVerificationResponse} from "../../models/sms.model";
+import {sendSMSVerificationCodeMutation, SMSVerificationInput, SMSVerificationResponse} from "../models/sms.model";
 import {GraphQLResult} from "@aws-amplify/api-graphql";
 import {UserService} from "./user.service";
 

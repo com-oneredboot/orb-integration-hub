@@ -1,134 +1,158 @@
 // auth-flow.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthService } from '../../../../core/services/auth.service';
+import { Store } from '@ngrx/store';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { AuthActions } from '../../store/auth.actions';
+import * as fromAuth from '../../store/auth.selectors';
+import { User, UserGroup } from '../../../../core/models/user.model';
+import { AuthStep } from '../../store/auth.state';
+import { v4 as uuidv4 } from 'uuid';
 
-enum AuthStep {
-  EMAIL = 'EMAIL',
-  PASSWORD = 'PASSWORD',
-  CREATE_PASSWORD = 'CREATE_PASSWORD',
-  MFA = 'MFA',
-  COMPLETE = 'COMPLETE'
-}
 
 @Component({
-    selector: 'app-auth-flow',
-    templateUrl: './auth-flow.component.html',
-    styleUrls: ['./auth-flow.component.scss'],
-    standalone: false
+  selector: 'app-auth-flow',
+  templateUrl: './auth-flow.component.html',
+  styleUrls: ['./auth-flow.component.scss']
 })
-export class AuthFlowComponent implements OnInit {
-  currentStep = AuthStep.EMAIL;
-  authForm: FormGroup;
-  isLoading = false;
-  errorMessage = '';
+export class AuthFlowComponent implements OnInit, OnDestroy {
+  currentStep$ = this.store.select(fromAuth.selectCurrentStep);
+  isLoading$ = this.store.select(fromAuth.selectIsLoading);
+  error$ = this.store.select(fromAuth.selectAuthError);
+  userExists$ = this.store.select(fromAuth.selectUserExists);
+  needsMFA$ = this.store.select(fromAuth.selectNeedsMFA);
+  mfaType$ = this.store.select(fromAuth.selectMFAType);
+  mfaSetupDetails$ = this.store.select(fromAuth.selectMFASetupDetails);
+  phoneVerificationId$ = this.store.select(fromAuth.selectPhoneVerificationId);
+
+  authForm!: FormGroup;
   passwordVisible = false;
-  userExists = false;
+  AuthStep = AuthStep;
+  private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
-    private authService: AuthService,
+    private store: Store,
     private router: Router
   ) {
+    this.initializeForm();
+  }
+
+  private initializeForm(): void {
     this.authForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
+      firstName: ['', [Validators.required, Validators.pattern(/^[a-zA-Z]+$/)]],
+      lastName: ['', [Validators.required, Validators.pattern(/^[a-zA-Z]+$/)]],
+      phoneNumber: ['', [
+        Validators.required,
+        Validators.pattern(/^\+[1-9]\d{1,14}$/)
+      ]],
       password: ['', [
         Validators.required,
         Validators.minLength(8),
         Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
       ]],
-      mfaCode: ['', [Validators.pattern(/^\d{6}$/)]],
+      verificationCode: ['', [Validators.pattern(/^\d{6}$/)]],
+      mfaCode: ['', [Validators.pattern(/^\d{6}$/)]]
     });
   }
 
   ngOnInit(): void {
-    // Check if user is already authenticated
-    this.authService.isAuthenticated$()
-      .subscribe((isAuth: any) => {
+    // Check authentication store
+    this.store.select(fromAuth.selectIsAuthenticated)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(isAuth => {
         if (isAuth) {
           this.router.navigate(['/dashboard']);
         }
       });
+
+    // Start with email step
+    this.store.dispatch(AuthActions.resetAuthState());
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   async onSubmit(): Promise<void> {
-    if (this.isLoading || !this.authForm.valid) return;
+    if (!this.authForm.valid) return;
 
-    this.isLoading = true;
-    this.errorMessage = '';
+    let currentStep: string;
+    this.currentStep$.pipe(takeUntil(this.destroy$))
+      .subscribe(step => currentStep = step);
 
-    try {
-      switch (this.currentStep) {
-        case AuthStep.EMAIL:
-          await this.handleEmailStep();
-          break;
-        case AuthStep.PASSWORD:
-          await this.handlePasswordStep();
-          break;
-        case AuthStep.CREATE_PASSWORD:
-          await this.handleCreatePasswordStep();
-          break;
-        case AuthStep.MFA:
-          await this.handleMfaStep();
-          break;
-      }
-    } catch (error: any) {
-      this.errorMessage = error.message || 'An unexpected error occurred';
-    } finally {
-      this.isLoading = false;
-    }
-  }
+    switch (currentStep) {
+      case 'email':
+        this.store.dispatch(AuthActions.checkEmail({
+          email: this.authForm.get('email')?.value
+        }));
+        break;
 
-  private async handleEmailStep(): Promise<void> {
-    const email = this.authForm.get('email')?.value;
-    try {
-      // Check if user exists
-      const userExists = await this.authService.checkUserExists(email);
-      this.userExists = userExists;
-      this.currentStep = userExists ? AuthStep.PASSWORD : AuthStep.CREATE_PASSWORD;
-    } catch (error) {
-      throw new Error('Failed to verify email');
-    }
-  }
+      case 'password':
+        let userExists: boolean;
+        this.userExists$.pipe(takeUntil(this.destroy$))
+          .subscribe(exists => userExists = exists);
 
-  private async handlePasswordStep(): Promise<void> {
-    const { email, password } = this.authForm.value;
-    try {
-      const response = await this.authService.signIn(email, password);
-      if (response.needsMFA) {
-        this.currentStep = AuthStep.MFA;
-      } else if (response.success) {
-        this.currentStep = AuthStep.COMPLETE;
-        await this.router.navigate(['/dashboard']);
-      }
-    } catch (error) {
-      throw new Error('Invalid credentials');
-    }
-  }
+        if (userExists) {
+          this.store.dispatch(AuthActions.signIn({
+            email: this.authForm.get('email')?.value,
+            password: this.authForm.get('password')?.value
+          }));
+        } else {
+          const newUser = {
+            cognito_id: uuidv4(),
+            email: this.authForm.get('email')?.value,
+            first_name: this.authForm.get('firstName')?.value,
+            last_name: this.authForm.get('lastName')?.value,
+            phone_number: this.authForm.get('phoneNumber')?.value,
+            groups: [UserGroup.USER],
+            status: 'PENDING'
+          } as User;
 
-  private async handleCreatePasswordStep(): Promise<void> {
-    const { email, password } = this.authForm.value;
-    try {
-      const response = await this.authService.register(email, password, email);
-      if (response.success) {
-        this.currentStep = AuthStep.MFA;
-      }
-    } catch (error) {
-      throw new Error('Failed to create account');
-    }
-  }
+          this.store.dispatch(AuthActions.signUp({
+            user: newUser,
+            password: this.authForm.get('password')?.value
+          }));
+        }
+        break;
 
-  private async handleMfaStep(): Promise<void> {
-    const { mfaCode } = this.authForm.value;
-    try {
-      const response = await this.authService.verifyMFA(mfaCode, false);
-      if (response.success) {
-        this.currentStep = AuthStep.COMPLETE;
-        await this.router.navigate(['/dashboard']);
-      }
-    } catch (error) {
-      throw new Error('Invalid MFA code');
+      case 'phone':
+        let verificationId: string | null;
+        this.phoneVerificationId$.pipe(takeUntil(this.destroy$))
+          .subscribe(id => verificationId = id);
+
+        if (!verificationId) {
+          this.store.dispatch(AuthActions.sendPhoneCode({
+            phoneNumber: this.authForm.get('phoneNumber')?.value
+          }));
+        } else {
+          this.store.dispatch(AuthActions.verifyPhone({
+            code: this.authForm.get('verificationCode')?.value,
+            verificationId
+          }));
+        }
+        break;
+
+      case 'mfa_setup':
+        let mfaType: 'sms' | 'totp' | null;
+        this.mfaType$.pipe(takeUntil(this.destroy$))
+          .subscribe(type => mfaType = type);
+
+        this.store.dispatch(AuthActions.setupMFA({
+          type: mfaType || 'totp'
+        }));
+        break;
+
+      case 'mfa_verify':
+        this.store.dispatch(AuthActions.verifyMFA({
+          code: this.authForm.get('mfaCode')?.value,
+          rememberDevice: false
+        }));
+        break;
     }
   }
 
@@ -136,21 +160,22 @@ export class AuthFlowComponent implements OnInit {
     this.passwordVisible = !this.passwordVisible;
   }
 
-  getStepTitle(): string {
-    switch (this.currentStep) {
-      case AuthStep.EMAIL:
-        return 'Welcome';
-      case AuthStep.PASSWORD:
-        return 'Sign In';
-      case AuthStep.CREATE_PASSWORD:
-        return 'Create Account';
-      case AuthStep.MFA:
+  getStepTitle(step: string): string {
+    switch (step) {
+      case 'email':
+        return 'Sign In or Create Account';
+      case 'password':
+        return this.userExists$ ? 'Welcome Back' : 'Create Account';
+      case 'phone':
+        return 'Verify Your Phone';
+      case 'mfa_setup':
+        return 'Set Up Two-Factor Authentication';
+      case 'mfa_verify':
         return 'Verify Identity';
-      case AuthStep.COMPLETE:
+      case 'complete':
         return 'Success';
       default:
-        return '';
+        return 'Welcome';
     }
   }
 }
-

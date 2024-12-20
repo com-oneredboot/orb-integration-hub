@@ -16,7 +16,7 @@ import {
   UserResponse,
   getUserFromIdQuery,
   UpdateUserInput, updateUserMutation
-} from "../../models/user.model";
+} from "../models/user.model";
 import {GraphQLResult} from "@aws-amplify/api-graphql";
 
 
