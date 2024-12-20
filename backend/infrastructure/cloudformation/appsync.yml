@@ -82,30 +82,43 @@ Resources:
           OWNER
         }
 
-        input UserQueryInput {
-          id: String
-          cognito_id: String
-          email: String
-        }
-        
-        type UserCreateInput {
+        type User {
           id: String!
           cognito_id: String!
           email: String!
           phone_number: String
           first_name: String
           last_name: String
-          groups: [Group!]!
-          status: UserGroup!
+          groups: [UserGroup!]!
+          status: UserStatus!
           created_at: String!
         }
-        type UserUpdateInput {
+
+        input UserQueryInput {
+          id: String
+          cognito_id: String
+          email: String
+        }
+        
+        input UserCreateInput {
+          id: String!
+          cognito_id: String!
+          email: String!
+          phone_number: String
+          first_name: String
+          last_name: String
+          groups: [UserGroup!]!
+          status: UserStatus!
+          created_at: String!
+        }
+        
+        input UserUpdateInput {
           email: String
           phone_number: String
           first_name: String
           last_name: String
-          groups: [Group]
-          status: UserGroup
+          groups: [UserGroup!]
+          status: UserStatus
         }
         
         type UserResponse {
