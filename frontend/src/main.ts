@@ -10,6 +10,14 @@ Amplify.configure({
       userPoolClientId: environment.cognito.userPoolClientId,
       userPoolId: environment.cognito.userPoolId,
     }
+  },
+  API: {
+    GraphQL: {
+      apiKey: environment.graphql.apiKey,
+      endpoint: environment.graphql.url,
+      region: environment.graphql.region,
+      defaultAuthMode: 'userPool',
+    }
   }
 });
 

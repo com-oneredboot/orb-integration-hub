@@ -50,7 +50,7 @@ export class UserService extends ApiService {
     console.debug('doesUserExist:', input);
     try {
       const response = await this.query(
-        doesUserExistQuery, input) as GraphQLResult<UserResponse>;
+        doesUserExistQuery, input, 'apiKey') as GraphQLResult<UserResponse>;
       console.debug('doesUserExist Response: ', response);
 
       // if not 200 throw error

@@ -22,13 +22,13 @@ export abstract class ApiService {
     this.client = generateClient({authMode: this.authMode});
   }
 
-  protected async query(query: string, variables: any): Promise<GraphQLResult> {
-    console.debug('query:', query, 'variables:', variables);
-    return await this.client.graphql({query: query, variables: variables});
+  protected async query(query: string, variables?: any, authMode: 'userPool' | 'apiKey' = 'userPool'): Promise<GraphQLResult> {
+    console.debug('query:', query, 'variables:', variables, 'authMode:', authMode);
+    return await this.client.graphql({query: query, variables: variables}, authMode);
   }
 
-  protected async mutate(mutation: string, variables_arg: any): Promise<GraphQLResult> {
-    console.debug('mutation:', mutation, 'variables:', variables_arg);
-    return await this.client.graphql({query: mutation, "variables": variables_arg});
+  protected async mutate(mutation: string, variables?: any, authMode: 'userPool' | 'apiKey' = 'userPool'): Promise<GraphQLResult> {
+    console.debug('mutation:', mutation, 'variables:', variables);
+    return await this.client.graphql({query: mutation, "variables": variables}, authMode);
   }
 }

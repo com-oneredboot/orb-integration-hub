@@ -115,13 +115,13 @@ Resources:
         }
   
         type Mutation {
-          sendSMSVerificationCode(input: SMSVerificationInput!): SMSVerificationResponse!
-          createUser(input: UserCreateInput!): UserResponse!
-          updateUser(input: userUpdateInput!): UserResponse!
+          sendSMSVerificationCode(input: SMSVerificationInput!): SMSVerificationResponse! @aws_cognito_user_pools
+          createUser(input: UserCreateInput!): UserResponse! @aws_cognito_user_pools
+          updateUser(input: userUpdateInput!): UserResponse! @aws_cognito_user_pools
         }
   
         type Query {
-          getUserById(input: UserQueryInput!): UserResponse!
+          getUserById(input: UserQueryInput!): UserResponse! @aws_api_key
         }
     
         schema {
