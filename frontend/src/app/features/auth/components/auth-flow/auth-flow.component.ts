@@ -4,7 +4,7 @@ import {Router} from '@angular/router';
 import {Store} from '@ngrx/store';
 import {map, Observable, Subject, takeUntil} from 'rxjs';
 
-import {AuthActions} from '../../store/auth.actions';
+import {AuthActions, checkEmail} from '../../store/auth.actions';
 import {AuthSteps} from '../../store/auth.state';
 import * as fromAuth from '../../store/auth.selectors';
 
@@ -183,14 +183,15 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         if (step === AuthSteps.EMAIL) {
           const email = this.authForm.get('email')?.value;
           console.debug('Dispatching checkEmail action with:', email);
-          this.store.dispatch(AuthActions.checkEmail({ email }));
+          this.store.dispatch(checkEmail({ email }));
         }
       });
   }
+
   private handleEmailStep(): void {
     const email = this.authForm.get('email')?.value;
     if (email) {
-      this.store.dispatch(AuthActions.checkEmail({ email }));
+      this.store.dispatch(checkEmail(email));
     }
   }
 

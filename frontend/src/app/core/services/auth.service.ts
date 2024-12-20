@@ -21,14 +21,14 @@ import {
   verifyTOTPSetup,
   VerifyTOTPSetupInput
 } from 'aws-amplify/auth';
-import {BehaviorSubject, Observable} from 'rxjs';
+import {BehaviorSubject, from, Observable} from 'rxjs';
 
 
 import {Router} from '@angular/router';
 
 
 // Application-specific imports
-import {CreateUserInput, createUserMutation, User, UserGroup, UserResponse} from '../models/user.model';
+import {CreateUserInput, createUserMutation, User, UserGroup, UserQueryInput, UserResponse} from '../models/user.model';
 import {ApiService} from "./api.service";
 import {sendSMSVerificationCodeMutation, SMSVerificationInput, SMSVerificationResponse} from "../models/sms.model";
 import {GraphQLResult} from "@aws-amplify/api-graphql";

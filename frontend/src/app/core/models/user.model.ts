@@ -52,11 +52,18 @@ export type UserResponse = GenericResponse & {
   user?: User;
 };
 
+export type UserExistResponse = GenericResponse & {
+  user?: {
+    id: string | null;
+  } | null;
+}
+
 export type UserQueryInput = Partial<Pick<User, 'id' | 'cognito_id' | 'email'>>;
 
 export type CreateUserInput = Omit<User, 'id' | 'created_at'>;
 
 export type UpdateUserInput = Partial<Omit<User, 'id' | 'created_at' >> & { id: string };
+
 
 // ------------------------------ //
 // AppSync Mutations and Queries
@@ -69,9 +76,20 @@ export const createUserMutation = /* GraphQL */ `
   }
 `;
 
-export const getUserFromIdQuery = /* GraphQL */ `
-  query GetUserProfileFromId($input: UserProfileInput!) {
-    getUserProfileFromId(input: $input) {
+export const doesUserExistQuery = `
+  query DoesUserExist($input: UserProfileInput!) {
+    getUserById(input: $input) {
+      status_code
+      user {
+        id
+      }
+    }
+  }
+`;
+
+export const getUserByIdQuery = /* GraphQL */ `
+  query GetUserById($input: UserProfileInput!) {
+    getUserById(input: $input) {
       id
       cognito_id
       username

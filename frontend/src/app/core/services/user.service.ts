@@ -6,7 +6,6 @@
 // 3rd Party Imports
 import {Injectable} from "@angular/core";
 
-
 // Application Imports
 import {ApiService} from "./api.service";
 import {
@@ -14,8 +13,8 @@ import {
   createUserMutation,
   UserQueryInput,
   UserResponse,
-  getUserFromIdQuery,
-  UpdateUserInput, updateUserMutation
+  getUserByIdQuery,
+  UpdateUserInput, updateUserMutation, doesUserExistQuery
 } from "../models/user.model";
 import {GraphQLResult} from "@aws-amplify/api-graphql";
 
@@ -47,12 +46,33 @@ export class UserService extends ApiService {
     }
   }
 
-  public async getUserFromId(input: UserQueryInput): Promise<any> {
+  public async doesUserExist(input: UserQueryInput): Promise<boolean|undefined> {
+    console.debug('doesUserExist:', input);
+    try {
+      const response = await this.query(
+        doesUserExistQuery, input) as GraphQLResult<UserResponse>;
+      console.debug('doesUserExist Response: ', response);
+
+      // if not 200 throw error
+      if (response.data?.status_code !== 200) {
+        throw new Error(`Invalid response code: ${response.data?.status_code}`);
+      }
+
+      // return result
+      return response.data?.user?.id !== null;
+
+    } catch (error) {
+      console.error('Error getting user:', error);
+      return undefined;
+    }
+  }
+
+  public async getUserById(input: UserQueryInput): Promise<any> {
     console.debug('getUserFromId:', input);
     try {
 
       const response = await this.query(
-        getUserFromIdQuery, input) as GraphQLResult;
+        getUserByIdQuery, input) as GraphQLResult;
 
       console.debug('getUserFromId Response: ', response);
 

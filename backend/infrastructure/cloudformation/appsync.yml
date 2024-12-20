@@ -129,9 +129,6 @@ Resources:
           mutation: Mutation
         }
 
-
-
-
   # Data Sources
   SMSVerificationDataSource:
     Type: AWS::AppSync::DataSource

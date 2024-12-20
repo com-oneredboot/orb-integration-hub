@@ -1,12 +1,12 @@
 import { createReducer, on } from '@ngrx/store';
-import { AuthActions } from './auth.actions';
+import {AuthActions, checkEmail} from './auth.actions';
 import { initialState, AuthSteps } from './auth.state';
 
 export const authReducer = createReducer(
   initialState,
 
   // Check Email
-  on(AuthActions.checkEmail, (state) => ({
+  on(checkEmail, (state) => ({
     ...state,
     isLoading: true,
     error: null
