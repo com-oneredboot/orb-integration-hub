@@ -6,7 +6,7 @@
   @include m.auth-container;
   min-height: calc(100vh - 100px);
   padding: v.$spacing-xl;
-  background-color: color.adjust(v.$primary-color, $lightness: -10%);
+  background-color: v.$white;
   display: flex;
   flex-direction: column;
   align-items: center;
