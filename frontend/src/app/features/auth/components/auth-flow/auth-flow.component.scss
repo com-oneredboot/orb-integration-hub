@@ -75,6 +75,34 @@
     }
   }
 
+  &__password-requirements {
+    width: 100%;
+    padding: v.$spacing-sm;
+    border-radius: v.$border-radius;
+    margin-top: v.$spacing-xs;
+  }
+
+  &__requirement {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-sm;
+    padding: v.$spacing-xs 0;
+    color: v.$danger-color;
+    text-align: left;
+
+    &--valid {
+      color: v.$success-color;
+
+      .auth-flow__requirement-icon {
+        color: v.$success-color;
+      }
+    }
+
+    span {
+      font-size: v.$font-size-sm;
+    }
+  }
+
   &__input-group {
     width: 100%;
     margin-bottom: v.$spacing-md;

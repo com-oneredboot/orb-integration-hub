@@ -78,7 +78,6 @@
       </div>
 
       <!-- Password Setup Step -->
-      <!-- In auth-flow.component.html, inside the PASSWORD_SETUP step div -->
       <div class="auth-flow__form-step"
            [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.PASSWORD_SETUP}">
         <div class="auth-flow__input-group">
@@ -99,27 +98,37 @@
           <div class="auth-flow__password-requirements">
             <div class="auth-flow__requirement"
                  [ngClass]="{'auth-flow__requirement--valid': passwordValidations.minLength}">
-              <i class="fa" [class.fa-times]="!passwordValidations.minLength" [class.fa-check]="passwordValidations.minLength"></i>
+              <i class="fa fa-times auth-flow__requirement-icon"
+                 [class.fa-times]="!passwordValidations.minLength"
+                 [class.fa-check]="passwordValidations.minLength"></i>
               <span>At least 8 characters</span>
             </div>
             <div class="auth-flow__requirement"
                  [ngClass]="{'auth-flow__requirement--valid': passwordValidations.hasUppercase}">
-              <i class="fa" [class.fa-times]="!passwordValidations.hasUppercase" [class.fa-check]="passwordValidations.hasUppercase"></i>
+              <i class="fa fa-times auth-flow__requirement-icon"
+                 [class.fa-times]="!passwordValidations.hasUppercase"
+                 [class.fa-check]="passwordValidations.hasUppercase"></i>
               <span>One uppercase letter</span>
             </div>
             <div class="auth-flow__requirement"
                  [ngClass]="{'auth-flow__requirement--valid': passwordValidations.hasLowercase}">
-              <i class="fa" [class.fa-times]="!passwordValidations.hasLowercase" [class.fa-check]="passwordValidations.hasLowercase"></i>
+              <i class="fa fa-times auth-flow__requirement-icon"
+                 [class.fa-times]="!passwordValidations.hasLowercase"
+                 [class.fa-check]="passwordValidations.hasLowercase"></i>
               <span>One lowercase letter</span>
             </div>
             <div class="auth-flow__requirement"
                  [ngClass]="{'auth-flow__requirement--valid': passwordValidations.hasNumber}">
-              <i class="fa" [class.fa-times]="!passwordValidations.hasNumber" [class.fa-check]="passwordValidations.hasNumber"></i>
+              <i class="fa fa-times auth-flow__requirement-icon"
+                 [class.fa-times]="!passwordValidations.hasNumber"
+                 [class.fa-check]="passwordValidations.hasNumber"></i>
               <span>One number</span>
             </div>
             <div class="auth-flow__requirement"
                  [ngClass]="{'auth-flow__requirement--valid': passwordValidations.hasSpecial}">
-              <i class="fa" [class.fa-times]="!passwordValidations.hasSpecial" [class.fa-check]="passwordValidations.hasSpecial"></i>
+              <i class="fa fa-times auth-flow__requirement-icon"
+                 [class.fa-times]="!passwordValidations.hasSpecial"
+                 [class.fa-check]="passwordValidations.hasSpecial"></i>
               <span>One special character (!&#64;#$%^&*)</span>
             </div>
           </div>

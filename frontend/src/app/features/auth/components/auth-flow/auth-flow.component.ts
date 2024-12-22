@@ -271,6 +271,20 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           return 'Please enter valid input';
       }
     }
+    if (fieldName === 'password') {
+      return this.getPasswordErrorMessage(control.errors);
+    }
+    return '';
+  }
+
+  private getPasswordErrorMessage(errors: any): string {
+    if (errors?.pattern) {
+      const missing = [];
+      if (!this.passwordValidations.hasUppercase) missing.push('uppercase letter');
+      if (!this.passwordValidations.hasLowercase) missing.push('lowercase letter');
+      // etc...
+      return `Password must include: ${missing.join(', ')}`;
+    }
     return '';
   }
 
