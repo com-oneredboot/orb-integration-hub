@@ -1,5 +1,5 @@
 import { createReducer, on } from '@ngrx/store';
-import {AuthActions, checkEmail} from './auth.actions';
+import {AuthActions, checkEmail, checkEmailFailure, checkEmailSuccess} from './auth.actions';
 import { initialState, AuthSteps } from './auth.state';
 
 export const authReducer = createReducer(
@@ -11,6 +11,27 @@ export const authReducer = createReducer(
     isLoading: true,
     error: null
   })),
+  on(checkEmailSuccess, (state, { userExists }) => {
+    console.log('Reducer handling checkEmailSuccess:', {
+      currentState: state,
+      userExists,
+      // If user exists, go to PASSWORD for login, if not exist go to PASSWORD_SETUP for registration
+      newStep: userExists ? AuthSteps.PASSWORD : AuthSteps.PASSWORD_SETUP
+    });
+    return {
+      ...state,
+      userExists,
+      isLoading: false,
+      currentStep: userExists ? AuthSteps.PASSWORD : AuthSteps.PASSWORD_SETUP,
+      error: null
+    };
+  }),
+  on(checkEmailFailure, (state, { error }) => ({
+    ...state,
+    error,
+    isLoading: false
+  })),
+
 
   // Sign In
   on(AuthActions.signin, (state) => ({

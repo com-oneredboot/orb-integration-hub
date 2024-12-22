@@ -1,4 +1,4 @@
-// file: frontend/src/app/services/auth.service.ts
+// file: frontend/src/app/services/cognito.service.ts
 // author: Corey Peters
 // date: 2024-12-06
 // description: Service for handling user authentication
@@ -67,7 +67,7 @@ export interface MFASetupResponse {
 @Injectable({
   providedIn: 'root'
 })
-export class AuthService extends ApiService {
+export class CognitoService extends ApiService {
 
   public currentUser: Observable<User | null>;
   public isAuthenticated: Observable<boolean>;
@@ -254,12 +254,6 @@ export class AuthService extends ApiService {
     }
   }
 
-
-
-
-
-
-
   /**
    * Send a verification code to the phone number
    * @param input SMSVerificationInput
@@ -355,10 +349,6 @@ export class AuthService extends ApiService {
     }
   }
 
-
-
-
-
   async setupSMSMFA(phoneNumber: string): Promise<MFASetupResponse> {
     try {
       await updateMFAPreference({
@@ -398,7 +388,6 @@ export class AuthService extends ApiService {
       };
     }
   }
-
 
   async verifyMFA(code: string, rememberDevice = false): Promise<AuthResponse> {
     try {

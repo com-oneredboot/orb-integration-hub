@@ -3,8 +3,10 @@ import {User, UserGroup} from "../../../core/models/user.model";
 
 export enum AuthSteps {
   EMAIL,
+  PASSWORD,         // For existing users
+  PASSWORD_SETUP,   // For new users
   EMAIL_VERIFY,
-  PASSWORD,
+  REGISTER,
   PHONE_SETUP,
   PHONE_VERIFY,
   MFA_SETUP,

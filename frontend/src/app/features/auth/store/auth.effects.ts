@@ -21,21 +21,28 @@ export class AuthEffects {
   checkEmail$ = createEffect(() =>
     this.actions$.pipe(
       ofType(checkEmail),
-      tap(action => console.log('Check email effect:', action.email)),
+      tap(action => console.log('1. Check email effect started:', action.email)),
       switchMap(({ email }) =>
         from(this.userService.doesUserExist({ email } as UserQueryInput)).pipe(
+          tap(exists => console.log('2. User exists check result:', exists)),
           map((exists: boolean | undefined) => {
+            console.log('3. Mapping exists result to action:', exists);
             if (exists === undefined) {
-              // If we get undefined, treat it as an error case
+              console.log('4a. Undefined result - returning failure');
               return checkEmailFailure({
                 error: 'Unable to verify email status. Please try again.'
               });
             }
-            return checkEmailSuccess({ exists });
+            console.log('4b. Valid result - returning success with exists:', exists);
+            return checkEmailSuccess({ userExists: exists });
           }),
-          catchError((error: Error) => of(checkEmailFailure({
-            error: error.message || 'An error occurred while checking email'
-          })))
+          tap(action => console.log('5. Resulting action:', action.type)),
+          catchError((error: Error) => {
+            console.log('Error in checkEmail effect:', error);
+            return of(checkEmailFailure({
+              error: error.message || 'An error occurred while checking email'
+            }));
+          })
         )
       )
     )

@@ -1,9 +1,16 @@
+// file: frontend/src/app/features/auth/components/auth-flow/auth-flow.component.ts
+// author: Corey Dale Peters
+// date: 2022-12-20
+// description: This file contains the Angular component that handles the authentication flow
+
+// 3rd Party Imports
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {Router} from '@angular/router';
 import {Store} from '@ngrx/store';
 import {map, Observable, Subject, takeUntil} from 'rxjs';
 
+// App Imports
 import {AuthActions, checkEmail} from '../../store/auth.actions';
 import {AuthSteps} from '../../store/auth.state';
 import * as fromAuth from '../../store/auth.selectors';
@@ -15,6 +22,7 @@ import * as fromAuth from '../../store/auth.selectors';
   standalone: false
 })
 export class AuthFlowComponent implements OnInit, OnDestroy {
+
   // Store Selectors
   currentStep$: Observable<AuthSteps> = this.store.select(fromAuth.selectCurrentStep);
   isLoading$ = this.store.select(fromAuth.selectIsLoading);
@@ -35,13 +43,39 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   authForm!: FormGroup;
   authSteps = AuthSteps;
   passwordVisible = false;
+
   private destroy$ = new Subject<void>();
+
+  passwordValidations = {
+    minLength: false,
+    hasUppercase: false,
+    hasLowercase: false,
+    hasNumber: false,
+    hasSpecial: false
+  };
 
   constructor(
     private fb: FormBuilder,
     private store: Store,
     private router: Router
   ) {
+
+    // Initialize the form
+    this.authForm = this.fb.group({
+      email: ['', [
+        Validators.required,
+        Validators.email,
+        Validators.pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+      ]],
+      // Make other fields not required initially
+      firstName: [''],
+      lastName: [''],
+      phoneNumber: [''],
+      password: [''],
+      verificationCode: [''],
+      mfaCode: ['']
+    });
+
     this.initializeForm();
     this.initializeUIState();
   }
@@ -95,20 +129,17 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   }
 
   private initializeForm(): void {
-    this.authForm = this.fb.group({
-      email: ['', [
-        Validators.required,
-        Validators.email,
-        Validators.pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
-      ]],
-      // Make other fields not required initially
-      firstName: [''],
-      lastName: [''],
-      phoneNumber: [''],
-      password: [''],
-      verificationCode: [''],
-      mfaCode: ['']
-    });
+
+
+    this.authForm.get('password')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(password => {
+        if (password) {
+          this.checkPasswordValidations(password);
+        } else {
+          this.resetPasswordValidations();
+        }
+      });
   }
 
   private updateValidators(step: AuthSteps): void {
@@ -134,7 +165,13 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           Validators.pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
         ]);
         break;
-      // Add other cases for different steps
+      case AuthSteps.PASSWORD_SETUP:
+        passwordControl?.setValidators([
+          Validators.required,
+          Validators.minLength(8),
+          Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/)
+        ]);
+        break;
     }
 
     // Update form validation
@@ -163,10 +200,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   }
 
   onSubmit(): void {
-    console.debug('Form validity:', this.authForm.valid);
-    console.debug('Form errors:', this.authForm.errors);
-    console.debug('Email field validity:', this.authForm.get('email')?.valid);
-    console.debug('Email field errors:', this.authForm.get('email')?.errors);
 
     if (!this.authForm.valid) return;
 
@@ -179,13 +212,76 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     this.currentStep$
       .pipe(takeUntil(this.destroy$))
       .subscribe(step => {
-        console.debug('Current step:', step);
-        if (step === AuthSteps.EMAIL) {
-          const email = this.authForm.get('email')?.value;
-          console.debug('Dispatching checkEmail action with:', email);
-          this.store.dispatch(checkEmail({ email }));
+        switch (step) {
+          case AuthSteps.EMAIL:
+            const email = this.authForm.get('email')?.value;
+            this.store.dispatch(checkEmail({ email }));
+            break;
+          case AuthSteps.PASSWORD_SETUP:
+            const password = this.authForm.get('password')?.value;
+            this.store.dispatch(AuthActions.setupPassword({ password }));
+            break;
+          // ... other cases
         }
       });
+  }
+
+  checkPasswordValidations(password: string): void {
+    this.passwordValidations = {
+      minLength: password.length >= 8,
+      hasUppercase: /[A-Z]/.test(password),
+      hasLowercase: /[a-z]/.test(password),
+      hasNumber: /\d/.test(password),
+      hasSpecial: /[!@#$%^&*]/.test(password)
+    };
+  }
+
+  isFieldInvalid(fieldName: string): boolean {
+    const field = this.authForm.get(fieldName);
+    return field ? field.invalid && (field.dirty || field.touched) : false;
+  }
+
+  togglePasswordVisibility(): void {
+    this.passwordVisible = !this.passwordVisible;
+  }
+
+  getErrorMessage(fieldName: string): string {
+    const control = this.authForm.get(fieldName);
+    if (!control || !control.errors) return '';
+
+    if (control.errors['required']) {
+      return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is required`;
+    }
+    if (control.errors['email']) {
+      return 'Please enter a valid email address';
+    }
+    if (control.errors['minlength']) {
+      return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} must be at least ${control.errors['minlength'].requiredLength} characters`;
+    }
+    if (control.errors['pattern']) {
+      switch (fieldName) {
+        case 'password':
+          return 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character';
+        case 'phoneNumber':
+          return 'Please enter a valid phone number starting with + and country code';
+        case 'verificationCode':
+        case 'mfaCode':
+          return 'Please enter a valid 6-digit code';
+        default:
+          return 'Please enter valid input';
+      }
+    }
+    return '';
+  }
+
+  private resetPasswordValidations(): void {
+    this.passwordValidations = {
+      minLength: false,
+      hasUppercase: false,
+      hasLowercase: false,
+      hasNumber: false,
+      hasSpecial: false
+    };
   }
 
   private handleEmailStep(): void {
@@ -265,41 +361,4 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     }
   }
 
-  isFieldInvalid(fieldName: string): boolean {
-    const field = this.authForm.get(fieldName);
-    return field ? field.invalid && (field.dirty || field.touched) : false;
-  }
-
-  togglePasswordVisibility(): void {
-    this.passwordVisible = !this.passwordVisible;
-  }
-
-  getErrorMessage(fieldName: string): string {
-    const control = this.authForm.get(fieldName);
-    if (!control || !control.errors) return '';
-
-    if (control.errors['required']) {
-      return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is required`;
-    }
-    if (control.errors['email']) {
-      return 'Please enter a valid email address';
-    }
-    if (control.errors['minlength']) {
-      return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} must be at least ${control.errors['minlength'].requiredLength} characters`;
-    }
-    if (control.errors['pattern']) {
-      switch (fieldName) {
-        case 'password':
-          return 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character';
-        case 'phoneNumber':
-          return 'Please enter a valid phone number starting with + and country code';
-        case 'verificationCode':
-        case 'mfaCode':
-          return 'Please enter a valid 6-digit code';
-        default:
-          return 'Please enter valid input';
-      }
-    }
-    return '';
-  }
 }

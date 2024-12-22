@@ -20,6 +20,7 @@
            *ngFor="let step of [
              authSteps.EMAIL,
              authSteps.PASSWORD,
+             authSteps.PASSWORD_SETUP,
              authSteps.PHONE_SETUP,
              authSteps.PHONE_VERIFY,
              authSteps.MFA_SETUP,
@@ -74,10 +75,61 @@
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Registration fields -->
-        <ng-container *ngIf="!state.userExists">
-          <div class="auth-flow__input-group">
+      <!-- Password Setup Step -->
+      <!-- In auth-flow.component.html, inside the PASSWORD_SETUP step div -->
+      <div class="auth-flow__form-step"
+           [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.PASSWORD_SETUP}">
+        <div class="auth-flow__input-group">
+          <div class="auth-flow__input-group-container">
+            <input [type]="passwordVisible ? 'text' : 'password'"
+                   formControlName="password"
+                   class="auth-flow__input-group-field"
+                   [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('password')}"
+                   placeholder="Create Password">
+            <button type="button"
+                    class="auth-flow__input-group-toggle"
+                    (click)="togglePasswordVisibility()">
+              <i class="fa" [class.fa-eye]="!passwordVisible" [class.fa-eye-slash]="passwordVisible"></i>
+            </button>
+          </div>
+
+          <!-- Password Requirements Checklist -->
+          <div class="auth-flow__password-requirements">
+            <div class="auth-flow__requirement"
+                 [ngClass]="{'auth-flow__requirement--valid': passwordValidations.minLength}">
+              <i class="fa" [class.fa-times]="!passwordValidations.minLength" [class.fa-check]="passwordValidations.minLength"></i>
+              <span>At least 8 characters</span>
+            </div>
+            <div class="auth-flow__requirement"
+                 [ngClass]="{'auth-flow__requirement--valid': passwordValidations.hasUppercase}">
+              <i class="fa" [class.fa-times]="!passwordValidations.hasUppercase" [class.fa-check]="passwordValidations.hasUppercase"></i>
+              <span>One uppercase letter</span>
+            </div>
+            <div class="auth-flow__requirement"
+                 [ngClass]="{'auth-flow__requirement--valid': passwordValidations.hasLowercase}">
+              <i class="fa" [class.fa-times]="!passwordValidations.hasLowercase" [class.fa-check]="passwordValidations.hasLowercase"></i>
+              <span>One lowercase letter</span>
+            </div>
+            <div class="auth-flow__requirement"
+                 [ngClass]="{'auth-flow__requirement--valid': passwordValidations.hasNumber}">
+              <i class="fa" [class.fa-times]="!passwordValidations.hasNumber" [class.fa-check]="passwordValidations.hasNumber"></i>
+              <span>One number</span>
+            </div>
+            <div class="auth-flow__requirement"
+                 [ngClass]="{'auth-flow__requirement--valid': passwordValidations.hasSpecial}">
+              <i class="fa" [class.fa-times]="!passwordValidations.hasSpecial" [class.fa-check]="passwordValidations.hasSpecial"></i>
+              <span>One special character (!&#64;#$%^&*)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Register Step -->
+      <div class="auth-flow__form-step"
+           [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.REGISTER}">
+        <div class="auth-flow__input-group">
             <input type="text"
                    formControlName="firstName"
                    class="auth-flow__input-group-field"
@@ -97,7 +149,6 @@
               {{ getErrorMessage('lastName') }}
             </div>
           </div>
-        </ng-container>
       </div>
 
       <!-- Phone Setup Step -->
@@ -168,6 +219,7 @@
     </form>
   </ng-container>
 </div>
+
 <!-- Add this after your form in auth-flow.component.html -->
 <ng-container *ngIf="debugMode$ | async">
   <div class="auth-flow__debug">
@@ -175,11 +227,12 @@
 
     <div class="auth-flow__debug-section">
       <h4>Form State</h4>
-      <pre>Form Valid: {{ authForm?.valid }}</pre>
-      <pre>Form Pristine: {{ authForm?.pristine }}</pre>
-      <pre>Form Touched: {{ authForm?.touched }}</pre>
-      <pre>Form Values: {{ authForm?.value | json }}</pre>
-      <pre>Form Errors: {{ authForm?.errors | json }}</pre>
+      <pre>Form Valid: {{ authForm.valid }}</pre>
+      <pre>Form Pristine: {{ authForm.pristine }}</pre>
+      <pre>Form Touched: {{ authForm.touched }}</pre>
+      <pre>Form Values: {{ authForm.value | json }}</pre>
+      <pre>Form Errors: {{ authForm.errors | json }}</pre>
+      <pre>Button Disabled: {{ !authForm.valid }}</pre>
     </div>
 
     <div class="auth-flow__debug-section">
@@ -205,7 +258,7 @@
 
     <div class="auth-flow__debug-section">
       <h4>Button State</h4>
-      <pre>Button Disabled: {{ !authForm?.valid }}</pre>
+      <pre>Button Disabled: {{ !authForm.valid }}</pre>
       <pre>Is Loading: {{ isLoading$ | async }}</pre>
     </div>
   </div>

@@ -1,18 +1,19 @@
-@import '../../../../variables';
-@import '../../../../mixins';
+@use 'styles/variables' as v;
+@use 'styles/mixins' as m;
+@use 'sass:color';
 
 .auth-flow {
-  @include auth-container;
+  @include m.auth-container;
   min-height: calc(100vh - 100px);
-  padding: $spacing-xl;
-  background-color: $bg-primary;
+  padding: v.$spacing-xl;
+  background-color: color.adjust(v.$primary-color, $lightness: -10%);
   display: flex;
   flex-direction: column;
   align-items: center;
 
   &__header {
     text-align: center;
-    margin-bottom: $spacing-xl;
+    margin-bottom: v.$spacing-xl;
 
     &-logo {
       width: 600px;
@@ -20,9 +21,9 @@
     }
 
     &-title {
-      font-family: $font-family-base;
-      color: $text-primary;
-      margin-top: $spacing-md;
+      font-family: v.$font-family-base;
+      color: v.$text-primary;
+      margin-top: v.$spacing-md;
     }
   }
 
@@ -31,24 +32,24 @@
     max-width: 400px;
     display: flex;
     justify-content: center;
-    gap: $spacing-sm;
-    margin-bottom: $spacing-lg;
+    gap: v.$spacing-sm;
+    margin-bottom: v.$spacing-lg;
 
     &-step {
       width: 12px;
       height: 12px;
       border-radius: 50%;
-      background-color: $input-border-color;
+      background-color: v.$input-border-color;
       margin: 0 4px;
       transition: all 0.2s ease;
 
       &--active {
-        background-color: $primary-color;
+        background-color: v.$primary-color;
         transform: scale(1.2);
       }
 
       &--completed {
-        background-color: $success-color;
+        background-color: v.$success-color;
       }
     }
   }
@@ -59,7 +60,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: $spacing-md;
+    gap: v.$spacing-md;
   }
 
   &__form-step {
@@ -76,7 +77,7 @@
 
   &__input-group {
     width: 100%;
-    margin-bottom: $spacing-md;
+    margin-bottom: v.$spacing-md;
 
     &-container {
       position: relative;
@@ -85,23 +86,23 @@
 
     &-field {
       width: 100%;
-      padding: $spacing-sm $spacing-md;
-      font-family: $font-family-base;
-      font-size: $input-font-size;
-      color: $input-color;
-      border: 1px solid $input-border-color;
-      border-radius: $border-radius;
-      background-color: $input-bg;
+      padding: v.$spacing-sm v.$spacing-md;
+      font-family: v.$font-family-base;
+      font-size: v.$input-font-size;
+      color: v.$input-color;
+      border: 1px solid v.$input-border-color;
+      border-radius: v.$border-radius;
+      background-color: v.$input-bg;
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
       &:focus {
         outline: none;
-        border-color: $primary-color;
-        box-shadow: 0 0 0 2px rgba($primary-color, 0.2);
+        border-color: v.$primary-color;
+        box-shadow: 0 0 0 2px rgba(v.$primary-color, 0.2);
       }
 
       &--error {
-        border-color: $danger-color;
+        border-color: v.$danger-color;
       }
 
       // Add padding for password input
@@ -124,11 +125,11 @@
       border: none;
       cursor: pointer;
       padding: 0;
-      color: $text-secondary;
+      color: v.$text-secondary;
       transition: color 0.2s ease;
 
       &:hover {
-        color: $text-primary;
+        color: v.$text-primary;
       }
 
       .eye-icon,
@@ -140,37 +141,37 @@
   }
 
   &__input-error {
-    font-size: $font-size-sm;
-    color: $danger-color;
-    margin-top: $spacing-xs;
+    font-size: v.$font-size-sm;
+    color: v.$danger-color;
+    margin-top: v.$spacing-xs;
   }
 
   &__error {
     width: 100%;
-    padding: $spacing-sm;
-    background-color: rgba($danger-color, 0.1);
-    color: $danger-color;
-    border-radius: $border-radius;
-    margin-bottom: $spacing-md;
+    padding: v.$spacing-sm;
+    background-color: rgba(v.$danger-color, 0.1);
+    color: v.$danger-color;
+    border-radius: v.$border-radius;
+    margin-bottom: v.$spacing-md;
     text-align: center;
   }
 
   &__button {
     width: 100%;
-    padding: $spacing-sm $spacing-lg;
-    font-family: $font-family-base;
-    font-size: $font-size-base;
+    padding: v.$spacing-sm v.$spacing-lg;
+    font-family: v.$font-family-base;
+    font-size: v.$font-size-base;
     font-weight: 600;
-    color: $white;
-    background-color: $primary-color;
+    color: v.$white;
+    background-color: v.$primary-color;
     border: none;
-    border-radius: $border-radius;
+    border-radius: v.$border-radius;
     cursor: pointer;
     transition: background-color 0.2s ease, transform 0.2s ease;
     position: relative;
 
     &:hover:not(:disabled) {
-      background-color: darken($primary-color, 10%);
+      background-color: color.adjust(v.$primary-color, $lightness: -10%);
       transform: translateY(-1px);
     }
 
@@ -190,53 +191,53 @@
       transform: translate(-50%, -50%);
       width: 20px;
       height: 20px;
-      border: 2px solid rgba($white, 0.3);
+      border: 2px solid rgba(v.$white, 0.3);
       border-radius: 50%;
-      border-top-color: $white;
+      border-top-color: v.$white;
       animation: spin 0.8s linear infinite;
     }
   }
 
   &__mfa-options {
     width: 100%;
-    padding: $spacing-md;
-    background-color: $bg-secondary;
-    border-radius: $border-radius;
+    padding: v.$spacing-md;
+    background-color: v.$bg-secondary;
+    border-radius: v.$border-radius;
     text-align: center;
   }
 
   &__debug {
-    margin-top: $spacing-xl;
-    padding: $spacing-md;
+    margin-top: v.$spacing-xl;
+    padding: v.$spacing-md;
     border: 2px dashed #666;
-    border-radius: $border-radius;
+    border-radius: v.$border-radius;
     background: #f8f9fa;
     width: 100%;
     max-width: 800px;
     font-family: monospace;
 
     &-title {
-      margin: 0 0 $spacing-md;
+      margin: 0 0 v.$spacing-md;
       color: #dc1e1e;
       font-size: 1.2rem;
     }
 
     &-section {
-      margin-bottom: $spacing-md;
-      padding: $spacing-sm;
+      margin-bottom: v.$spacing-md;
+      padding: v.$spacing-sm;
       background: #fff;
       border: 1px solid #ddd;
-      border-radius: $border-radius;
+      border-radius: v.$border-radius;
 
       h4 {
-        margin: 0 0 $spacing-sm;
+        margin: 0 0 v.$spacing-sm;
         color: #333;
         font-size: 1rem;
       }
 
       pre {
-        margin: $spacing-xs 0;
-        padding: $spacing-xs;
+        margin: v.$spacing-xs 0;
+        padding: v.$spacing-xs;
         background: #f1f1f1;
         border-radius: 4px;
         font-size: 0.9rem;
@@ -244,7 +245,6 @@
       }
     }
   }
-
 }
 
 @keyframes spin {
@@ -255,7 +255,7 @@
 
 @media (max-width: 768px) {
   .auth-flow {
-    padding: $spacing-md;
+    padding: v.$spacing-md;
 
     &__header-logo {
       width: 200px;
@@ -265,7 +265,7 @@
 
 @media (max-width: 480px) {
   .auth-flow {
-    padding: $spacing-sm;
+    padding: v.$spacing-sm;
 
     &__form {
       max-width: 100%;

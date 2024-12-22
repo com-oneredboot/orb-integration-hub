@@ -1,7 +1,14 @@
+// file: frontend/src/styles/_variables.scss
+// author: Corey Dale Peters
+// date: 2021-04-20
+// description: This file contains the variables used throughout the application.
+
+@use 'sass:color';
+
 // Brand Colors
 $primary-color: #E31837;      // OneRedBoot Red
-$primary-light: lighten($primary-color, 10%);
-$primary-dark: darken($primary-color, 10%);
+$primary-light: color.adjust($primary-color, $lightness: 10%);
+$primary-dark: color.adjust($primary-color, $lightness: -10%);
 
 // Neutral Colors
 $black: #000000;

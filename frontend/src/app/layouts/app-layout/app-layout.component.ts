@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import {AuthService} from "../../core/services/auth.service";
+import {CognitoService} from "../../core/services/cognito.service";
 import {Router} from "@angular/router";
 
 @Component({
@@ -14,7 +14,7 @@ export class AppLayoutComponent {
   isAuthenticated$ = this.authService.isAuthenticated$();
 
   constructor(
-    private authService: AuthService,
+    private authService: CognitoService,
     public router: Router  // Make router public to use in template
   ) {}
 

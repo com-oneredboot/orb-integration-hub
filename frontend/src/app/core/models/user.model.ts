@@ -45,9 +45,6 @@ export const groupPriority: UserGroup[] = [
   UserGroup.USER
 ];
 
-// ------------------------------ //
-// Type Definitions
-// ------------------------------ //
 export type UserResponse = {
   getUserById: {
     status_code: number;
@@ -55,12 +52,6 @@ export type UserResponse = {
     message?: string;
   };
 };
-
-export type UserExistResponse = GenericResponse & {
-  user?: {
-    id: string | null;
-  } | null;
-}
 
 export type UserQueryInput = Partial<Pick<User, 'id' | 'cognito_id' | 'email'>>;
 

@@ -2,7 +2,7 @@
 
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from './core/services/auth.service';
+import { CognitoService } from './core/services/cognito.service';
 
 @Component({
     selector: 'app-root',

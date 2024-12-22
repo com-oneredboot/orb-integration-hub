@@ -70,4 +70,4 @@
 - user.model.ts
 
 ### frontend/src/app/services
-- auth.service.ts
+- cognito.service.ts

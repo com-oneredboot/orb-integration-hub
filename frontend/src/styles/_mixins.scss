@@ -1,0 +1,74 @@
+// file: frontend/src/styles/_mixins.scss
+@use 'variables' as v;
+@use 'sass:color';
+
+// First mixins are correct
+@mixin auth-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+// ... other correct mixins ...
+
+// These need to be fixed - adding the missing v. namespace
+@mixin error-message {
+  color: v.$error-color;
+  font-size: v.$font-size-xs;
+  margin-top: 0.25rem;
+  font-family: v.$font-family-base;
+}
+
+@mixin primary-button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: v.$primary-color;
+  color: v.$white;
+  border: none;
+  border-radius: v.$border-radius;
+  font-family: v.$font-family-heading;
+  font-size: v.$font-size-lg;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: color.adjust(v.$primary-color, $lightness: -10%);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+@mixin link-button {
+  color: v.$primary-color;
+  text-decoration: none;
+  font-size: v.$font-size-sm;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+@mixin form-links {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-family: v.$font-family-base;
+}
+
+@mixin loader {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  border: 2px solid v.$white;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
