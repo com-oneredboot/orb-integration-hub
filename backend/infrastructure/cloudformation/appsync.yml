@@ -104,9 +104,6 @@ Resources:
           id: String!
           cognito_id: String!
           email: String!
-          phone_number: String
-          first_name: String
-          last_name: String
           groups: [UserGroup!]!
           status: UserStatus!
           created_at: String!
@@ -178,20 +175,28 @@ Resources:
       FieldName: userCreate
       DataSourceName: !GetAtt UsersDataSource.Name
       RequestMappingTemplate: |
-        #set($id = $util.autoId())
         {
           "version": "2017-02-28",
           "operation": "PutItem",
           "key": {
-            "id": $util.dynamodb.toDynamoDBJson($id)
+            "id": $util.dynamodb.toDynamoDBJson($ctx.args.input.id)
           },
           "attributeValues": {
-            "id": $util.dynamodb.toDynamoDBJson($id),
+            "id": $util.dynamodb.toDynamoDBJson($ctx.args.input.id),
             "cognito_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.cognito_id),
             "email": $util.dynamodb.toDynamoDBJson($ctx.args.input.email),
             "groups": $util.dynamodb.toDynamoDBJson($ctx.args.input.groups),
             "status": $util.dynamodb.toDynamoDBJson($ctx.args.input.status),
-            "created_at": $util.dynamodb.toDynamoDBJson($util.time.nowISO8601())
+            "created_at": $util.dynamodb.toDynamoDBJson($ctx.args.input.created_at),
+            #if($ctx.args.input.phone_number)
+              "phone_number": $util.dynamodb.toDynamoDBJson($ctx.args.input.phone_number),
+            #end
+            #if($ctx.args.input.first_name)
+              "first_name": $util.dynamodb.toDynamoDBJson($ctx.args.input.first_name),
+            #end
+            #if($ctx.args.input.last_name)
+              "last_name": $util.dynamodb.toDynamoDBJson($ctx.args.input.last_name)
+            #end
           }
         }
       ResponseMappingTemplate: |
@@ -199,11 +204,10 @@ Resources:
           $util.error($ctx.error.message, $ctx.error.type)
         #end
         
-        ## Debug logging
-        $util.log.info($ctx.result)
-        
         {
-          "id": "$ctx.result.id.S"
+          "status_code": 200,
+          "message": "User created successfully",
+          "user": $ctx.result
         }
   UserQueryByIdResolver:
     Type: AWS::AppSync::Resolver

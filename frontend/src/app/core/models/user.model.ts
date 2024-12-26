@@ -55,7 +55,7 @@ export type UserResponse = {
 
 export type UserQueryInput = Partial<Pick<User, 'id' | 'cognito_id' | 'email'>>;
 
-export type UserCreateInput = Omit<User, 'id' | 'first_name' | 'last_name' | 'phone_number' | 'created_at'>;
+export type UserCreateInput = Omit<User, 'first_name' | 'last_name' | 'phone_number'>;
 
 export type UserUpdateInput = Partial<Omit<User, 'id' | 'created_at' >> & { id: string };
 
@@ -66,7 +66,11 @@ export type UserUpdateInput = Partial<Omit<User, 'id' | 'created_at' >> & { id: 
 export const userCreateMutation = /* GraphQL */ `
   mutation UserCreate($input: UserCreateInput!) {
     userCreate(input: $input) {
-      id
+      status_code
+      message
+      user {
+        id
+      }
     }
   }
 `;
