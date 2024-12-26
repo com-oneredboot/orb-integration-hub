@@ -181,36 +181,22 @@ Resources:
           "key": {
             "id": $util.dynamodb.toDynamoDBJson($ctx.args.input.id)
           },
-          "attributeValues": {
-            "id": $util.dynamodb.toDynamoDBJson($ctx.args.input.id),
-            "cognito_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.cognito_id),
-            "email": $util.dynamodb.toDynamoDBJson($ctx.args.input.email),
-            "groups": $util.dynamodb.toDynamoDBJson($ctx.args.input.groups),
-            "status": $util.dynamodb.toDynamoDBJson($ctx.args.input.status),
-            "created_at": $util.dynamodb.toDynamoDBJson($ctx.args.input.created_at),
-            #if($ctx.args.input.phone_number)
-              "phone_number": $util.dynamodb.toDynamoDBJson($ctx.args.input.phone_number),
-            #end
-            #if($ctx.args.input.first_name)
-              "first_name": $util.dynamodb.toDynamoDBJson($ctx.args.input.first_name),
-            #end
-            #if($ctx.args.input.last_name)
-              "last_name": $util.dynamodb.toDynamoDBJson($ctx.args.input.last_name)
-            #end
-          }
+          "attributeValues": $util.dynamodb.toMapValues($ctx.args.input)
         }
       ResponseMappingTemplate: |
         #if($ctx.error)
           $util.error($ctx.error.message, $ctx.error.type)
         #end
         
-        {
+        #set($user = {
+          "id": $ctx.result.id.S
+        })
+        
+        $util.toJson({
           "status_code": 200,
           "message": "User created successfully",
-          "user": {
-            "id": $ctx.result.id.S
-          }
-        }
+          "user": $user
+        })
   UserQueryByIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
