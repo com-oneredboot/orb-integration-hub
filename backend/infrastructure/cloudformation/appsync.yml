@@ -188,14 +188,13 @@ Resources:
           $util.error($ctx.error.message, $ctx.error.type)
         #end
         
-        #set($id = $ctx.result.get("id").get("S"))
-        $util.toJson({
+        #set($response = {
           "status_code": 200,
-          "message": "User created successfully",
-          "user": {
-            "id": $id
-          }
+          "message": "User updated successfully",
+          "user": $ctx.args.input
         })
+        
+        $util.toJson($response)
   UserQueryByIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
