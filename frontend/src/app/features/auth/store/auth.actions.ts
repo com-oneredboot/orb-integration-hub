@@ -1,5 +1,5 @@
 import {createAction, createActionGroup, emptyProps, props} from '@ngrx/store';
-import {User, UserResponse} from '../../../core/models/user.model';
+import {User, UserQueryInput, UserResponse} from '../../../core/models/user.model';
 
 // Check if email exists
 export const checkEmail = createAction(
@@ -40,7 +40,7 @@ export const AuthActions = createActionGroup({
     'Setup Password Success': emptyProps(),
     'Setup Password Failure': props<{ error: string }>(),
 
-    'Verify Email': props<{ code: string }>(),
+    'Verify Email': props<{ input: UserQueryInput, code: string }>(),
     'Verify Email Success': emptyProps(),
     'Verify Email Failure': props<{ error: string }>(),
 

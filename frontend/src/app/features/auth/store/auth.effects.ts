@@ -14,6 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { UserService } from "../../../core/services/user.service";
 import { UserCreateInput, UserGroup, UserQueryInput, UserStatus } from "../../../core/models/user.model";
 import { AuthActions, checkEmail, checkEmailFailure, checkEmailSuccess } from "./auth.actions";
+import {CognitoService} from "../../../core/services/cognito.service";
 
 @Injectable()
 export class AuthEffects {
@@ -66,6 +67,8 @@ export class AuthEffects {
         return from(this.userService.createUser(input, password)).pipe(
           map(response => {
             if (response.userQueryById?.status_code === 200) {
+              // set the new user
+              this.userService.setCurrentUser(response.userQueryById.user);
               return AuthActions.createUserSuccess();
             }
             return AuthActions.createUserFailure({
@@ -80,8 +83,27 @@ export class AuthEffects {
     )
   );
 
+  verifyEmail$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.verifyEmail),
+      switchMap(({ input, code }) =>
+        from(this.userService.verifyEmail(input, code)).pipe(
+          map(response => {
+            if (response) {
+              return AuthActions.verifyEmailSuccess();
+            }
+            return AuthActions.verifyEmailFailure({
+              error: 'Failed to verify email'
+            });
+          })
+        )
+      )
+    )
+  );
+
   constructor(
     private actions$: Actions,
-    private userService: UserService
+    private userService: UserService,
+    private cognitoService: CognitoService
   ) {}
 }

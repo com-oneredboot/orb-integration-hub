@@ -14,7 +14,7 @@ import {
   UserQueryInput,
   UserResponse,
   userQueryById,
-  UserUpdateInput, userUpdateMutation, userExistQuery
+  UserUpdateInput, userUpdateMutation, userExistQuery, UserCreateResponse
 } from "../models/user.model";
 import {GraphQLResult} from "@aws-amplify/api-graphql";
 import {CognitoService} from "./cognito.service";
@@ -40,20 +40,23 @@ export class UserService extends ApiService {
       await this.cognitoService.createCognitoUser(input, password);
 
       const response = await this.mutate(
-        userCreateMutation, {"input": input }, "apiKey") as GraphQLResult<UserResponse>;
+        userCreateMutation, {"input": input }, "apiKey") as GraphQLResult<UserCreateResponse>;
       console.debug('createUser Response: ', response);
 
       const userResponse = response.data;
-
-      if (userResponse.userQueryById?.status_code !== 200 || !userResponse.userQueryById?.user) {
-        return userResponse;
+      if (userResponse.userCreate?.status_code !== 200 || !userResponse.userCreate?.user) {
+        return {
+          userQueryById: response.data.userCreate
+        } as UserResponse;
       }
 
       // Set the Current user and authentication status
-      this.cognitoService.setCurrentUser(userResponse.userQueryById.user);
+      this.cognitoService.setCurrentUser(userResponse.userCreate.user);
       await this.cognitoService.checkIsAuthenticated();
 
-      return userResponse;
+      return {
+        userQueryById: response.data.userCreate
+      } as UserResponse;
 
 
     } catch (error) {
@@ -96,6 +99,25 @@ export class UserService extends ApiService {
     }
   }
 
+  public async verifyEmail(input: UserQueryInput, code: string): Promise<boolean> {
+    console.debug('verifyEmail:', input);
+    try {
+      // ensure id
+      if (!input?.id) {
+        console.error('Missing user id');
+        return false;
+      }
+      const response = await this.cognitoService.emailVerify(input?.id, code);
+      console.debug('verifyEmail Response: ', response);
+
+      return response.success;
+
+    } catch (error) {
+      console.error('Error verifying email:', error);
+      return false;
+    }
+  }
+
   public async getUserById(input: UserQueryInput): Promise<any> {
     console.debug('getUserFromId:', input);
     try {
@@ -130,6 +152,18 @@ export class UserService extends ApiService {
           message: 'Error updating user profile'
         }
       } as UserResponse;
+    }
+  }
+
+  public async setCurrentUser(user: any): Promise<boolean> {
+    console.debug('setCurrentUser:', user);
+    try {
+      // Set the Current user and authentication status
+      this.cognitoService.setCurrentUser(user);
+      return this.cognitoService.checkIsAuthenticated();
+    } catch (error) {
+      console.error('Error setting current user:', error);
+      return false;
     }
   }
 

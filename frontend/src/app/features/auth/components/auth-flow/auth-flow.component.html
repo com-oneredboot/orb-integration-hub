@@ -21,6 +21,7 @@
              authSteps.EMAIL,
              authSteps.PASSWORD,
              authSteps.PASSWORD_SETUP,
+             authSteps.EMAIL_VERIFY,
              authSteps.PHONE_SETUP,
              authSteps.PHONE_VERIFY,
              authSteps.MFA_SETUP,
@@ -131,6 +132,21 @@
                  [class.fa-check]="passwordValidations.hasSpecial"></i>
               <span>One special character (!&#64;#$%^&*)</span>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Email Confirm Step -->
+      <div class="auth-flow__form-step"
+           [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.EMAIL_VERIFY}">
+        <div class="auth-flow__input-group">
+          <input type="text"
+                 formControlName="emailCode"
+                 class="auth-flow__input-group-field"
+                 [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('emailCode')}"
+                 placeholder="Enter 6-digit code">
+          <div *ngIf="isFieldInvalid('emailCode')" class="auth-flow__input-error">
+            {{ getErrorMessage('emailCode') }}
           </div>
         </div>
       </div>
@@ -251,6 +267,7 @@
         isLoading: isLoading$ | async,
         error: error$ | async,
         userExists: userExists$ | async,
+        currentUser: currentUser$ | async,
         needsMFA: needsMFA$ | async,
         phoneVerified: phoneVerified$ | async,
         emailVerified: emailVerified$ | async
@@ -259,6 +276,7 @@
         <pre>Is Loading: {{ state.isLoading }}</pre>
         <pre>Error: {{ state.error }}</pre>
         <pre>User Exists: {{ state.userExists }}</pre>
+        <pre>Current User: {{ state.currentUser | json }}</pre>
         <pre>Needs MFA: {{ state.needsMFA }}</pre>
         <pre>Phone Verified: {{ state.phoneVerified }}</pre>
         <pre>Email Verified: {{ state.emailVerified }}</pre>

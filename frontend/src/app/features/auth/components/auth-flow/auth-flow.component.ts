@@ -8,13 +8,14 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {Router} from '@angular/router';
 import {Store} from '@ngrx/store';
-import {map, Observable, Subject, takeUntil} from 'rxjs';
+import {first, map, Observable, Subject, takeUntil} from 'rxjs';
 import {v4 as uuidv4} from 'uuid';
 
 // App Imports
 import {AuthActions, checkEmail} from '../../store/auth.actions';
 import {AuthSteps} from '../../store/auth.state';
 import * as fromAuth from '../../store/auth.selectors';
+import {tap} from "rxjs/operators";
 
 @Component({
   selector: 'app-auth-flow',
@@ -26,6 +27,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
 
   // Store Selectors
   currentStep$: Observable<AuthSteps> = this.store.select(fromAuth.selectCurrentStep);
+  currentUser$: Observable<any> = this.store.select(fromAuth.selectCurrentUser);
   isLoading$ = this.store.select(fromAuth.selectIsLoading);
   error$ = this.store.select(fromAuth.selectError);
   userExists$ = this.store.select(fromAuth.selectUserExists);
@@ -73,12 +75,143 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       lastName: [''],
       phoneNumber: [''],
       password: [''],
-      verificationCode: [''],
+      emailCode: [''],
       mfaCode: ['']
     });
 
     this.initializeForm();
     this.initializeUIState();
+  }
+
+  ngOnInit(): void {
+    // Redirect if session is active
+    this.store.select(fromAuth.selectSessionActive)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(active => {
+        if (active) {
+          this.router.navigate(['/dashboard']);
+        }
+      });
+    this.currentStep$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(step => {
+        this.updateValidators(step);
+      });
+
+    // current user
+    this.currentUser$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(user => {
+        console.log('current user:', user);
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  onSubmit(): void {
+
+    if (!this.authForm.valid) return;
+
+    console.debug('Form submitted', this.authForm.value);
+    if (!this.authForm.valid) {
+      console.debug('Form invalid:', this.authForm.errors);
+      return;
+    }
+
+    this.currentStep$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(step => {
+        switch (step) {
+          case AuthSteps.EMAIL:
+            const email = this.authForm.get('email')?.value;
+            this.store.dispatch(checkEmail({ email }));
+            break;
+          case AuthSteps.PASSWORD_SETUP:
+            const input = {
+              cognito_id: uuidv4(),
+              email: this.authForm.get('email')?.value,
+              password: this.authForm.get('password')?.value
+            }
+            console.debug('Creating user with input:', input);
+            this.store.dispatch(AuthActions.createUser(input));
+            break;
+          case AuthSteps.EMAIL_VERIFY:
+            const code = this.authForm.get('emailCode')?.value;
+            console.debug('Verifying email with code:', code);
+
+            // Use first() to get the single emission of current user
+            this.store.select(fromAuth.selectCurrentUser).pipe(
+              first(),  // Add this to complete the subscription after first emission
+              tap(user => {
+                if (user) {
+                  this.store.dispatch(AuthActions.verifyEmail({
+                    input: {
+                      cognito_id: user.cognito_id,
+                      email: user.email
+                    },
+                    code
+                  }));
+                }
+              })
+            ).subscribe();
+            break;
+          // ... other cases
+        }
+      });
+  }
+
+  checkPasswordValidations(password: string): void {
+    this.passwordValidations = {
+      minLength: password.length >= 8,
+      hasUppercase: /[A-Z]/.test(password),
+      hasLowercase: /[a-z]/.test(password),
+      hasNumber: /\d/.test(password),
+      hasSpecial: /[!@#$%^&*]/.test(password)
+    };
+  }
+
+  isFieldInvalid(fieldName: string): boolean {
+    const field = this.authForm.get(fieldName);
+    return field ? field.invalid && (field.dirty || field.touched) : false;
+  }
+
+  togglePasswordVisibility(): void {
+    this.passwordVisible = !this.passwordVisible;
+  }
+
+  getErrorMessage(fieldName: string): string {
+    const control = this.authForm.get(fieldName);
+    if (!control || !control.errors) return '';
+
+    if (control.errors['required']) {
+      return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is required`;
+    }
+    if (control.errors['email']) {
+      return 'Please enter a valid email address';
+    }
+    if (control.errors['minlength']) {
+      return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} must be at least ${control.errors['minlength'].requiredLength} characters`;
+    }
+    if (control.errors['pattern']) {
+      switch (fieldName) {
+        case 'password':
+          return 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character';
+        case 'phoneNumber':
+          return 'Please enter a valid phone number starting with + and country code';
+        case 'verificationCode':
+        case 'mfaCode':
+          return 'Please enter a valid 6-digit code';
+        default:
+          return 'Please enter valid input';
+      }
+    }
+    if (fieldName === 'password') {
+      return this.getPasswordErrorMessage(control.errors);
+    }
+    return '';
   }
 
   private initializeUIState(): void {
@@ -179,108 +312,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     this.authForm.updateValueAndValidity();
   }
 
-  ngOnInit(): void {
-    // Redirect if session is active
-    this.store.select(fromAuth.selectSessionActive)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(active => {
-        if (active) {
-          this.router.navigate(['/dashboard']);
-        }
-      });
-    this.currentStep$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(step => {
-        this.updateValidators(step);
-      });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  onSubmit(): void {
-
-    if (!this.authForm.valid) return;
-
-    console.debug('Form submitted', this.authForm.value);
-    if (!this.authForm.valid) {
-      console.debug('Form invalid:', this.authForm.errors);
-      return;
-    }
-
-    this.currentStep$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(step => {
-        switch (step) {
-          case AuthSteps.EMAIL:
-            const email = this.authForm.get('email')?.value;
-            this.store.dispatch(checkEmail({ email }));
-            break;
-          case AuthSteps.PASSWORD_SETUP:
-            const input = {
-              cognito_id: uuidv4(),
-              email: this.authForm.get('email')?.value,
-              password: this.authForm.get('password')?.value
-            }
-            this.store.dispatch(AuthActions.createUser(input));
-            break;
-          // ... other cases
-        }
-      });
-  }
-
-  checkPasswordValidations(password: string): void {
-    this.passwordValidations = {
-      minLength: password.length >= 8,
-      hasUppercase: /[A-Z]/.test(password),
-      hasLowercase: /[a-z]/.test(password),
-      hasNumber: /\d/.test(password),
-      hasSpecial: /[!@#$%^&*]/.test(password)
-    };
-  }
-
-  isFieldInvalid(fieldName: string): boolean {
-    const field = this.authForm.get(fieldName);
-    return field ? field.invalid && (field.dirty || field.touched) : false;
-  }
-
-  togglePasswordVisibility(): void {
-    this.passwordVisible = !this.passwordVisible;
-  }
-
-  getErrorMessage(fieldName: string): string {
-    const control = this.authForm.get(fieldName);
-    if (!control || !control.errors) return '';
-
-    if (control.errors['required']) {
-      return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is required`;
-    }
-    if (control.errors['email']) {
-      return 'Please enter a valid email address';
-    }
-    if (control.errors['minlength']) {
-      return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} must be at least ${control.errors['minlength'].requiredLength} characters`;
-    }
-    if (control.errors['pattern']) {
-      switch (fieldName) {
-        case 'password':
-          return 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character';
-        case 'phoneNumber':
-          return 'Please enter a valid phone number starting with + and country code';
-        case 'verificationCode':
-        case 'mfaCode':
-          return 'Please enter a valid 6-digit code';
-        default:
-          return 'Please enter valid input';
-      }
-    }
-    if (fieldName === 'password') {
-      return this.getPasswordErrorMessage(control.errors);
-    }
-    return '';
-  }
 
   private getPasswordErrorMessage(errors: any): string {
     if (errors?.pattern) {
@@ -301,83 +332,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       hasNumber: false,
       hasSpecial: false
     };
-  }
-
-  private handleEmailStep(): void {
-    const email = this.authForm.get('email')?.value;
-    if (email) {
-      this.store.dispatch(checkEmail(email));
-    }
-  }
-
-  private handlePasswordStep(): void {
-    const formValue = this.authForm.value;
-    this.userExists$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(exists => {
-        if (exists) {
-          this.store.dispatch(AuthActions.signin({
-            email: formValue.email,
-            password: formValue.password
-          }));
-        } else {
-          this.store.dispatch(AuthActions.register({
-            email: formValue.email,
-            password: formValue.password,
-            firstName: formValue.firstName,
-            lastName: formValue.lastName
-          }));
-        }
-      });
-  }
-
-  private handlePhoneSetupStep(): void {
-    const phoneNumber = this.authForm.get('phoneNumber')?.value;
-    const verificationCode = this.authForm.get('verificationCode')?.value;
-
-    if (phoneNumber) {
-      if (verificationCode) {
-        this.store.dispatch(AuthActions.verifyPhoneCode({
-          phoneNumber,
-          code: verificationCode
-        }));
-      } else {
-        this.store.dispatch(AuthActions.sendPhoneCodeVerification({
-          phoneNumber
-        }));
-      }
-    }
-  }
-
-  private handlePhoneVerifyStep(): void {
-    const phoneNumber = this.authForm.get('phoneNumber')?.value;
-    const verificationCode = this.authForm.get('verificationCode')?.value;
-
-    if (phoneNumber && verificationCode) {
-      this.store.dispatch(AuthActions.verifyPhoneCode({
-        phoneNumber,
-        code: verificationCode
-      }));
-    }
-  }
-
-  private handleMFASetupStep(): void {
-    this.mfaType$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(mfaType => {
-        if (mfaType) {
-          this.store.dispatch(AuthActions.setupMFA({
-            mfaType
-          }));
-        }
-      });
-  }
-
-  private handleMFAVerifyStep(): void {
-    const code = this.authForm.get('mfaCode')?.value;
-    if (code) {
-      this.store.dispatch(AuthActions.verifyMFA({ code }));
-    }
   }
 
 }

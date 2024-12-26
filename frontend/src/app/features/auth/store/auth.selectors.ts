@@ -24,6 +24,11 @@ export const selectUserExists = createSelector(
   (state) => state.userExists
 );
 
+export const selectCurrentUser = createSelector(
+  selectAuthState,
+  (state) => state.currentUser
+);
+
 export const selectNeedsMfa = createSelector(
   selectAuthState,
   (state) => state.needsMFA

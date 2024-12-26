@@ -53,6 +53,14 @@ export type UserResponse = {
   };
 };
 
+export type UserCreateResponse = GenericResponse & {
+  userCreate: {
+    status_code: number;
+    user: User | null;
+    message?: string;
+  };
+}
+
 export type UserQueryInput = Partial<Pick<User, 'id' | 'cognito_id' | 'email'>>;
 
 export type UserCreateInput = Omit<User, 'first_name' | 'last_name' | 'phone_number'>;

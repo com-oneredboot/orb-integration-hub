@@ -114,12 +114,13 @@ export class CognitoService {
 
   /**
    * Confirm the email using the verification code
-   * @param username
+   * @param cognito_id
    * @param code
    */
-  public async confirmEmail(username: string, code: string): Promise<AuthResponse> {
+  public async emailVerify(cognito_id: string, code: string): Promise<AuthResponse> {
+    console.debug('Verifying email:', cognito_id, code);
     try {
-      await confirmSignUp({ username, confirmationCode: code });
+      await confirmSignUp({ username: cognito_id, confirmationCode: code });
 
       return {
         success: true

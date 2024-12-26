@@ -21,6 +21,7 @@ export interface AuthState {
   isLoading: boolean;
   error: string | null;
   currentStep: AuthSteps;
+  currentUser: User | null;
   userExists: boolean;
 
   // Phone validation
@@ -62,6 +63,7 @@ export const initialState: AuthState = {
   isAuthenticated: false,
   isLoading: false,
   error: null,
+  currentUser: null,
   currentStep: AuthSteps.EMAIL,
   userExists: false,
 
