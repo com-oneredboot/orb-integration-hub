@@ -55,25 +55,25 @@ export type UserResponse = {
 
 export type UserQueryInput = Partial<Pick<User, 'id' | 'cognito_id' | 'email'>>;
 
-export type CreateUserInput = Omit<User, 'id' | 'first_name' | 'last_name' | 'phone_number' | 'created_at'>;
+export type UserCreateInput = Omit<User, 'id' | 'first_name' | 'last_name' | 'phone_number' | 'created_at'>;
 
-export type UpdateUserInput = Partial<Omit<User, 'id' | 'created_at' >> & { id: string };
+export type UserUpdateInput = Partial<Omit<User, 'id' | 'created_at' >> & { id: string };
 
 
 // ------------------------------ //
 // AppSync Mutations and Queries
 // ------------------------------ //
-export const createUserMutation = /* GraphQL */ `
-  mutation CreateUser($input: CreateUserInput!) {
-    createUser(input: $input) {
+export const userCreateMutation = /* GraphQL */ `
+  mutation UserCreate($input: UserCreateInput!) {
+    userCreate(input: $input) {
       id
     }
   }
 `;
 
-export const doesUserExistQuery = `
-  query DoesUserExist($input: UserQueryInput!) {
-    getUserById(input: $input) {
+export const userExistQuery = `
+  query UserExists($input: UserQueryInput!) {
+    userQueryById(input: $input) {
       status_code
       user {
         id
@@ -82,8 +82,8 @@ export const doesUserExistQuery = `
   }
 `;
 
-export const getUserByIdQuery = /* GraphQL */ `
-  query GetUserById($input: UserQueryInput!) {
+export const userQueryById = /* GraphQL */ `
+  query UserQueryById($input: UserQueryInput!) {
       id
       cognito_id
       email
@@ -97,9 +97,9 @@ export const getUserByIdQuery = /* GraphQL */ `
   }
 `;
 
-export const updateUserMutation = /* GraphQL */ `
-  mutation UpdateUser($input: UpdateUserInput!) {
-    updateUser(input: $input) {
+export const userUpdateMutation = /* GraphQL */ `
+  mutation UserUpdate($input: UpdateUserInput!) {
+    userUpdate(input: $input) {
       id
     }
   }

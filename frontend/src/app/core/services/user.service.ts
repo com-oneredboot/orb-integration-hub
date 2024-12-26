@@ -9,12 +9,12 @@ import {Injectable} from "@angular/core";
 // Application Imports
 import {ApiService} from "./api.service";
 import {
-  CreateUserInput,
-  createUserMutation,
+  UserCreateInput,
+  userCreateMutation,
   UserQueryInput,
   UserResponse,
-  getUserByIdQuery,
-  UpdateUserInput, updateUserMutation, doesUserExistQuery
+  userQueryById,
+  UserUpdateInput, userUpdateMutation, userExistQuery
 } from "../models/user.model";
 import {GraphQLResult} from "@aws-amplify/api-graphql";
 import {CognitoService} from "./cognito.service";
@@ -31,7 +31,7 @@ export class UserService extends ApiService {
     super();
   }
 
-  public async createUser(input: CreateUserInput, password: string): Promise<UserResponse> {
+  public async createUser(input: UserCreateInput, password: string): Promise<UserResponse> {
     console.debug('createUser:', input);
 
     try {
@@ -40,7 +40,7 @@ export class UserService extends ApiService {
       await this.cognitoService.createCognitoUser(input, password);
 
       const response = await this.mutate(
-        createUserMutation, input) as GraphQLResult<UserResponse>;
+        userCreateMutation, input, "apiKey") as GraphQLResult<UserResponse>;
       console.debug('createUser Response: ', response);
 
       const userResponse = response.data;
@@ -54,7 +54,6 @@ export class UserService extends ApiService {
       await this.cognitoService.checkIsAuthenticated();
 
       return userResponse;
-
 
 
     } catch (error) {
@@ -73,7 +72,7 @@ export class UserService extends ApiService {
     console.debug('doesUserExist:', input);
     try {
       const response = await this.query(
-        doesUserExistQuery,
+        userExistQuery,
         { input: input },
         'apiKey') as GraphQLResult<UserResponse>;
       console.debug('doesUserExist Response: ', response);
@@ -102,7 +101,7 @@ export class UserService extends ApiService {
     try {
 
       const response = await this.query(
-        getUserByIdQuery, input) as GraphQLResult;
+        userQueryById, input) as GraphQLResult;
 
       console.debug('getUserFromId Response: ', response);
 
@@ -113,11 +112,11 @@ export class UserService extends ApiService {
     }
   }
 
-  public async updateUser(input: UpdateUserInput): Promise<UserResponse> {
+  public async updateUser(input: UserUpdateInput): Promise<UserResponse> {
     console.debug('updateUser:', input);
     try {
       const response = await this.mutate(
-        updateUserMutation, input) as GraphQLResult<UserResponse>;
+        userUpdateMutation, input) as GraphQLResult<UserResponse>;
       console.debug('updateUserProfile Response: ', response);
 
       return response.data;

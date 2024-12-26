@@ -129,12 +129,12 @@ Resources:
   
         type Mutation {
           sendSMSVerificationCode(input: SMSVerificationInput!): SMSVerificationResponse! @aws_cognito_user_pools
-          createUser(input: UserCreateInput!): UserResponse! @aws_cognito_user_pools @aws_api_key
-          updateUser(input: UserUpdateInput!): UserResponse! @aws_cognito_user_pools
+          userCreate(input: UserCreateInput!): UserResponse! @aws_api_key @aws_cognito_user_pools 
+          userUpdate(input: UserUpdateInput!): UserResponse! @aws_cognito_user_pools
         }
   
         type Query {
-          getUserById(input: UserQueryInput!): UserResponse! @aws_api_key
+          userQueryById(input: UserQueryInput!): UserResponse! @aws_api_key
         }
     
         schema {
@@ -169,13 +169,13 @@ Resources:
   # --------------------------------------------------- #
 
   # User Resolvers
-  CreateUserResolver:
+  UserCreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: createUser
+      FieldName: userCreate
       DataSourceName: !GetAtt UsersDataSource.Name
       RequestMappingTemplate: |
         {
@@ -198,13 +198,13 @@ Resources:
         })
         
         $util.toJson($response)
-  GetUserByIdResolver:
+  UserQueryByIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: getUserById
+      FieldName: userQueryById
       DataSourceName: !GetAtt UsersDataSource.Name
       RequestMappingTemplate: |
         #set($ids = {})
@@ -283,13 +283,13 @@ Resources:
         
         $util.toJson($response)
 
-  UpdateUserResolver:
+  UserUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: updateUser
+      FieldName: userUpdate
       DataSourceName: !GetAtt UsersDataSource.Name
       RequestMappingTemplate: |
         {

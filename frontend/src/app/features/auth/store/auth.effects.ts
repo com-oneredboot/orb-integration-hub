@@ -11,7 +11,7 @@ import {from, of} from "rxjs";
 
 // Application Imports
 import {UserService} from "../../../core/services/user.service";
-import {CreateUserInput, UserGroup, UserQueryInput, UserStatus} from "../../../core/models/user.model";
+import {UserCreateInput, UserGroup, UserQueryInput, UserStatus} from "../../../core/models/user.model";
 import {AuthActions, checkEmail, checkEmailFailure, checkEmailSuccess,} from "./auth.actions";
 
 @Injectable()
@@ -52,7 +52,7 @@ export class AuthEffects {
       ofType(AuthActions.createUser),
       switchMap(({ cognito_id, email, password }) => {
         // create the user
-        const input: CreateUserInput = {
+        const input: UserCreateInput = {
           cognito_id: cognito_id,
           groups: [UserGroup.USER],
           status: UserStatus.PENDING,

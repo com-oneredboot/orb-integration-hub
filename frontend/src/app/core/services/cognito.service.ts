@@ -29,7 +29,7 @@ import {Router} from '@angular/router';
 
 
 // Application-specific imports
-import {CreateUserInput, User, } from '../models/user.model';
+import {UserCreateInput, User, } from '../models/user.model';
 import {ApiService} from "./api.service";
 import {sendSMSVerificationCodeMutation, SMSVerificationInput, SMSVerificationResponse} from "../models/sms.model";
 import {GraphQLResult} from "@aws-amplify/api-graphql";
@@ -96,7 +96,7 @@ export class CognitoService {
    * @param input
    * @param password
    */
-  public async createCognitoUser(input: CreateUserInput, password:string): Promise<SignUpOutput> {
+  public async createCognitoUser(input: UserCreateInput, password:string): Promise<SignUpOutput> {
 
       console.debug('Creating Cognito user:', input);
 
@@ -109,6 +109,7 @@ export class CognitoService {
           }
         }
       });
+
   }
 
   /**
