@@ -16,7 +16,6 @@ export enum AuthSteps {
 
 export interface AuthState {
   debugMode: boolean;
-  user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
@@ -59,7 +58,6 @@ export interface AuthState {
 
 export const initialState: AuthState = {
   debugMode: true,
-  user: null,
   isAuthenticated: false,
   isLoading: false,
   error: null,

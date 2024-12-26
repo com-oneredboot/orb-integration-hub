@@ -96,15 +96,20 @@ export const userExistQuery = `
 
 export const userQueryById = /* GraphQL */ `
   query UserQueryById($input: UserQueryInput!) {
-      id
-      cognito_id
-      email
-      phone_number
-      first_name
-      last_name
-      groups
-      status
-      created_at
+    userQueryById(input: $input) {
+      status_code
+      message
+      user {
+        id
+        cognito_id
+        email
+        phone_number
+        first_name
+        last_name
+        groups
+        status
+        created_at
+      }
     }
   }
 `;

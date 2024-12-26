@@ -14,7 +14,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { UserService } from "../../../core/services/user.service";
 import { UserCreateInput, UserGroup, UserQueryInput, UserStatus } from "../../../core/models/user.model";
 import { AuthActions, checkEmail, checkEmailFailure, checkEmailSuccess } from "./auth.actions";
-import {CognitoService} from "../../../core/services/cognito.service";
 
 @Injectable()
 export class AuthEffects {
@@ -22,24 +21,17 @@ export class AuthEffects {
   checkEmail$ = createEffect(() =>
     this.actions$.pipe(
       ofType(checkEmail),
-      tap(action => console.debug('Check email effect started:', action.email)),
       switchMap(({ email }) =>
         from(this.userService.userExists({ email } as UserQueryInput)).pipe(
-          tap(exists => console.debug('2. User exists check result:', exists)),
           map((exists: boolean | undefined) => {
-            console.debug('3. Mapping exists result to action:', exists);
             if (exists === undefined) {
-              console.debug('4a. Undefined result - returning failure');
               return checkEmailFailure({
                 error: 'Unable to verify email status. Please try again.'
               });
             }
-            console.debug('4b. Valid result - returning success with exists:', exists);
             return checkEmailSuccess({ userExists: exists });
           }),
-          tap(action => console.debug('5. Resulting action:', action.type)),
           catchError((error: Error) => {
-            console.debug('Error in checkEmail effect:', error);
             return of(checkEmailFailure({
               error: error.message || 'An error occurred while checking email'
             }));
@@ -52,23 +44,11 @@ export class AuthEffects {
   createUser$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.createUser),
-      switchMap(({ cognito_id, email, password }) => {
+      switchMap(({ input, password }) => {
         // create the user
-        const timestamp = new Date().toISOString();
-        const input: UserCreateInput = {
-          id: uuidv4(),
-          cognito_id: cognito_id,
-          groups: [UserGroup.USER],
-          status: UserStatus.PENDING,
-          email,
-          created_at: timestamp
-        };
-
-        return from(this.userService.createUser(input, password)).pipe(
+        return from(this.userService.userCreate(input, password)).pipe(
           map(response => {
             if (response.userQueryById?.status_code === 200) {
-              // set the new user
-              this.userService.setCurrentUser(response.userQueryById.user);
               return AuthActions.createUserSuccess();
             }
             return AuthActions.createUserFailure({
@@ -87,7 +67,7 @@ export class AuthEffects {
     this.actions$.pipe(
       ofType(AuthActions.verifyEmail),
       switchMap(({ input, code }) =>
-        from(this.userService.verifyEmail(input, code)).pipe(
+        from(this.userService.emailVerify(input, code)).pipe(
           map(response => {
             if (response) {
               return AuthActions.verifyEmailSuccess();
@@ -104,6 +84,5 @@ export class AuthEffects {
   constructor(
     private actions$: Actions,
     private userService: UserService,
-    private cognitoService: CognitoService
   ) {}
 }

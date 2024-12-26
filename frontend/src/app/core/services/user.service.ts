@@ -14,10 +14,11 @@ import {
   UserQueryInput,
   UserResponse,
   userQueryById,
-  UserUpdateInput, userUpdateMutation, userExistQuery, UserCreateResponse
+  UserUpdateInput, userUpdateMutation, userExistQuery, UserCreateResponse, UserGroup, UserStatus
 } from "../models/user.model";
 import {GraphQLResult} from "@aws-amplify/api-graphql";
 import {CognitoService} from "./cognito.service";
+import {v4 as uuidv4} from "uuid";
 
 
 @Injectable({
@@ -31,28 +32,27 @@ export class UserService extends ApiService {
     super();
   }
 
-  public async createUser(input: UserCreateInput, password: string): Promise<UserResponse> {
-    console.debug('createUser:', input);
+  public async userCreate(input: UserCreateInput, password: string): Promise<UserResponse> {
+    console.debug('createUser input:', input);
 
     try {
-
       // create the Cognito User
-      await this.cognitoService.createCognitoUser(input, password);
+      const cognitoResponse = await this.cognitoService.createCognitoUser(input, password);
+      console.debug('createCognitoUser Response: ', cognitoResponse);
+
+      const timestamp = new Date().toISOString();
+      const userCreateInput: UserCreateInput = {
+        id: uuidv4(),
+        cognito_id: input.cognito_id,
+        groups: [UserGroup.USER],
+        status: UserStatus.PENDING,
+        email: input.email,
+        created_at: timestamp
+      };
 
       const response = await this.mutate(
-        userCreateMutation, {"input": input }, "apiKey") as GraphQLResult<UserCreateResponse>;
+        userCreateMutation, {"input": userCreateInput }, "apiKey") as GraphQLResult<UserCreateResponse>;
       console.debug('createUser Response: ', response);
-
-      const userResponse = response.data;
-      if (userResponse.userCreate?.status_code !== 200 || !userResponse.userCreate?.user) {
-        return {
-          userQueryById: response.data.userCreate
-        } as UserResponse;
-      }
-
-      // Set the Current user and authentication status
-      this.cognitoService.setCurrentUser(userResponse.userCreate.user);
-      await this.cognitoService.checkIsAuthenticated();
 
       return {
         userQueryById: response.data.userCreate
@@ -60,12 +60,12 @@ export class UserService extends ApiService {
 
 
     } catch (error) {
-      console.error('Error creating user:', error);
+      console.error('Error creating User:', error);
       return {
         userQueryById: {
           status_code: 500,
           user: null,
-          message: 'Error creating user'
+          message: 'Error creating User'
         }
       } as UserResponse;
     }
@@ -99,15 +99,18 @@ export class UserService extends ApiService {
     }
   }
 
-  public async verifyEmail(input: UserQueryInput, code: string): Promise<boolean> {
+  public async emailVerify(input: UserQueryInput, code: string): Promise<boolean> {
     console.debug('verifyEmail:', input);
     try {
-      // ensure id
-      if (!input?.id) {
-        console.error('Missing user id');
+
+      // get the user
+      const userResponse = await this.userQueryById(input);
+      console.debug('User Response:', userResponse);
+      if (userResponse.userQueryById?.status_code !== 200 || !userResponse.userQueryById?.user) {
         return false;
       }
-      const response = await this.cognitoService.emailVerify(input?.id, code);
+
+      const response = await this.cognitoService.emailVerify(userResponse.userQueryById.user.cognito_id, code);
       console.debug('verifyEmail Response: ', response);
 
       return response.success;
@@ -118,52 +121,25 @@ export class UserService extends ApiService {
     }
   }
 
-  public async getUserById(input: UserQueryInput): Promise<any> {
-    console.debug('getUserFromId:', input);
+  public async userQueryById(input: UserQueryInput): Promise<UserResponse> {
+    console.debug('userQueryById:', input);
     try {
-
       const response = await this.query(
-        userQueryById, input) as GraphQLResult;
+        userQueryById,
+        {input: input},
+        'apiKey') as GraphQLResult<UserResponse>;
 
-      console.debug('getUserFromId Response: ', response);
-
+      console.debug('userQueryById Response: ', response);
       return response.data;
-
     } catch (error) {
       console.error('Error getting user:', error);
-    }
-  }
-
-  public async updateUser(input: UserUpdateInput): Promise<UserResponse> {
-    console.debug('updateUser:', input);
-    try {
-      const response = await this.mutate(
-        userUpdateMutation, input) as GraphQLResult<UserResponse>;
-      console.debug('updateUserProfile Response: ', response);
-
-      return response.data;
-
-    } catch (error) {
-      console.error('Error updating user profile:', error);
       return {
         userQueryById: {
           status_code: 500,
           user: null,
-          message: 'Error updating user profile'
+          message: 'Error getting user'
         }
       } as UserResponse;
-    }
-  }
-
-  public async setCurrentUser(user: any): Promise<boolean> {
-    console.debug('setCurrentUser:', user);
-    try {
-      // Set the Current user and authentication status
-      this.cognitoService.setCurrentUser(user);
-      return this.cognitoService.checkIsAuthenticated();
-    } catch (error) {
-      console.error('Error setting current user:', error);
-      return false;
     }
   }
 

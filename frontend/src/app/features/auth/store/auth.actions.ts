@@ -1,5 +1,5 @@
 import {createAction, createActionGroup, emptyProps, props} from '@ngrx/store';
-import {User, UserQueryInput, UserResponse} from '../../../core/models/user.model';
+import {User, UserCreateInput, UserQueryInput, UserResponse} from '../../../core/models/user.model';
 
 // Check if email exists
 export const checkEmail = createAction(
@@ -28,7 +28,7 @@ export const AuthActions = createActionGroup({
     'Signout Success': emptyProps(),
     'Signout Failure': props<{ error: string }>(),
 
-    'Create User': props<{ cognito_id: string; email: string; password: string }>(),
+    'Create User': props<{ input: UserCreateInput, password: string}>(),
     'Create User Success': emptyProps(),
     'Create User Failure': props<{ error: string }>(),
 

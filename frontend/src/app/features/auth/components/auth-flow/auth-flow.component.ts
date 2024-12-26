@@ -16,6 +16,7 @@ import {AuthActions, checkEmail} from '../../store/auth.actions';
 import {AuthSteps} from '../../store/auth.state';
 import * as fromAuth from '../../store/auth.selectors';
 import {tap} from "rxjs/operators";
+import {UserCreateInput} from "../../../../core/models/user.model";
 
 @Component({
   selector: 'app-auth-flow',
@@ -130,33 +131,18 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             this.store.dispatch(checkEmail({ email }));
             break;
           case AuthSteps.PASSWORD_SETUP:
-            const input = {
+            const userCreateInput = {
               cognito_id: uuidv4(),
-              email: this.authForm.get('email')?.value,
-              password: this.authForm.get('password')?.value
-            }
-            console.debug('Creating user with input:', input);
-            this.store.dispatch(AuthActions.createUser(input));
+              email: this.authForm.get('email')?.value
+            } as UserCreateInput;
+            const password = this.authForm.get('password')?.value;
+            if (!password) return;
+            this.store.dispatch(AuthActions.createUser({input: userCreateInput, password: password } ));
             break;
           case AuthSteps.EMAIL_VERIFY:
             const code = this.authForm.get('emailCode')?.value;
-            console.debug('Verifying email with code:', code);
-
-            // Use first() to get the single emission of current user
-            this.store.select(fromAuth.selectCurrentUser).pipe(
-              first(),  // Add this to complete the subscription after first emission
-              tap(user => {
-                if (user) {
-                  this.store.dispatch(AuthActions.verifyEmail({
-                    input: {
-                      cognito_id: user.cognito_id,
-                      email: user.email
-                    },
-                    code
-                  }));
-                }
-              })
-            ).subscribe();
+            if (!code) return;
+            this.store.dispatch(AuthActions.verifyEmail({input: { email: this.authForm.get('email')?.value }, code }));
             break;
           // ... other cases
         }

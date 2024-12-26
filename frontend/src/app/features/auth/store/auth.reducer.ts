@@ -12,7 +12,7 @@ export const authReducer = createReducer(
     error: null
   })),
   on(checkEmailSuccess, (state, { userExists }) => {
-    console.log('Reducer handling checkEmailSuccess:', {
+    console.debug('Reducer handling checkEmailSuccess:', {
       currentState: state,
       userExists,
       // If user exists, go to PASSWORD for login, if not exist go to PASSWORD_SETUP for registration
