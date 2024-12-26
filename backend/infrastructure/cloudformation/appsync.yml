@@ -204,17 +204,11 @@ Resources:
           $util.error($ctx.error.message, $ctx.error.type)
         #end
         
-        ## Convert DynamoDB response to proper JSON structure
         {
           "status_code": 200,
           "message": "User created successfully",
           "user": {
-            "id": "$ctx.result.id.S",
-            "cognito_id": "$ctx.result.cognito_id.S",
-            "email": "$ctx.result.email.S",
-            "groups": $util.toJson($ctx.result.groups.L),
-            "status": "$ctx.result.status.S",
-            "created_at": "$ctx.result.created_at.S"
+            "id": $ctx.result.id.S
           }
         }
   UserQueryByIdResolver:
