@@ -178,26 +178,22 @@ Resources:
       FieldName: userCreate
       DataSourceName: !GetAtt UsersDataSource.Name
       RequestMappingTemplate: |
+        #set($id = $util.autoId())
         {
           "version": "2017-02-28",
           "operation": "PutItem",
           "key": {
-            "id": $util.dynamodb.toDynamoDBJson($util.autoId())
+            "id": $util.dynamodb.toDynamoDBJson($id)
           },
-          "attributeValues": $util.toJson($ctx.args.input)
+          "attributeValues": $util.toJson($util.dynamodb.toMapValues($ctx.args.input))
         }
       ResponseMappingTemplate: |
         #if($ctx.error)
           $util.error($ctx.error.message, $ctx.error.type)
         #end
-        
-        #set($response = {
-          "status_code": 200,
-          "message": "User created successfully",
-          "user": $ctx.args.input
-        })
-        
-        $util.toJson($response)
+        {
+          "id": $util.toJson($ctx.result.id)
+        }
   UserQueryByIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema

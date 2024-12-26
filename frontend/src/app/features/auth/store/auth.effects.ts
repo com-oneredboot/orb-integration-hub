@@ -22,7 +22,7 @@ export class AuthEffects {
       ofType(checkEmail),
       tap(action => console.debug('Check email effect started:', action.email)),
       switchMap(({ email }) =>
-        from(this.userService.doesUserExist({ email } as UserQueryInput)).pipe(
+        from(this.userService.userExists({ email } as UserQueryInput)).pipe(
           tap(exists => console.debug('2. User exists check result:', exists)),
           map((exists: boolean | undefined) => {
             console.debug('3. Mapping exists result to action:', exists);
@@ -61,11 +61,11 @@ export class AuthEffects {
 
         return from(this.userService.createUser(input, password)).pipe(
           map(response => {
-            if (response.getUserById?.status_code === 200) {
+            if (response.userQueryById?.status_code === 200) {
               return AuthActions.createUserSuccess();
             }
             return AuthActions.createUserFailure({
-              error: response.getUserById?.message || 'Failed to create user'
+              error: response.userQueryById?.message || 'Failed to create user'
             });
           }),
           catchError(error => of(AuthActions.createUserFailure({

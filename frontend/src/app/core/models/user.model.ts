@@ -46,7 +46,7 @@ export const groupPriority: UserGroup[] = [
 ];
 
 export type UserResponse = {
-  getUserById: {
+  userQueryById: {
     status_code: number;
     user: User | null;
     message?: string;

@@ -45,12 +45,12 @@ export class UserService extends ApiService {
 
       const userResponse = response.data;
 
-      if (userResponse.getUserById?.status_code !== 200 || !userResponse.getUserById?.user) {
+      if (userResponse.userQueryById?.status_code !== 200 || !userResponse.userQueryById?.user) {
         return userResponse;
       }
 
       // Set the Current user and authentication status
-      this.cognitoService.setCurrentUser(userResponse.getUserById.user);
+      this.cognitoService.setCurrentUser(userResponse.userQueryById.user);
       await this.cognitoService.checkIsAuthenticated();
 
       return userResponse;
@@ -59,7 +59,7 @@ export class UserService extends ApiService {
     } catch (error) {
       console.error('Error creating user:', error);
       return {
-        getUserById: {
+        userQueryById: {
           status_code: 500,
           user: null,
           message: 'Error creating user'
@@ -68,7 +68,7 @@ export class UserService extends ApiService {
     }
   }
 
-  public async doesUserExist(input: UserQueryInput): Promise<boolean|undefined> {
+  public async userExists(input: UserQueryInput): Promise<boolean|undefined> {
     console.debug('doesUserExist:', input);
     try {
       const response = await this.query(
@@ -78,17 +78,17 @@ export class UserService extends ApiService {
       console.debug('doesUserExist Response: ', response);
 
       // if 404 return false
-      if (response.data?.getUserById?.status_code === 404) {
+      if (response.data?.userQueryById?.status_code === 404) {
         return false;
       }
 
       // if not 200 throw error
-      if (response.data?.getUserById?.status_code !== 200) {
-        throw new Error(`Invalid response code: ${response.data?.getUserById?.status_code}`);
+      if (response.data?.userQueryById?.status_code !== 200) {
+        throw new Error(`Invalid response code: ${response.data?.userQueryById?.status_code}`);
       }
 
       // return result
-      return response.data?.getUserById?.user?.id !== null;
+      return response.data?.userQueryById?.user?.id !== null;
 
     } catch (error) {
       console.error('Error getting user:', error);
@@ -124,7 +124,7 @@ export class UserService extends ApiService {
     } catch (error) {
       console.error('Error updating user profile:', error);
       return {
-        getUserById: {
+        userQueryById: {
           status_code: 500,
           user: null,
           message: 'Error updating user profile'
