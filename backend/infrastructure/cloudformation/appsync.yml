@@ -185,14 +185,25 @@ Resources:
           "key": {
             "id": $util.dynamodb.toDynamoDBJson($id)
           },
-          "attributeValues": $util.toJson($util.dynamodb.toMapValues($ctx.args.input))
+          "attributeValues": {
+            "id": $util.dynamodb.toDynamoDBJson($id),
+            "cognito_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.cognito_id),
+            "email": $util.dynamodb.toDynamoDBJson($ctx.args.input.email),
+            "groups": $util.dynamodb.toDynamoDBJson($ctx.args.input.groups),
+            "status": $util.dynamodb.toDynamoDBJson($ctx.args.input.status),
+            "created_at": $util.dynamodb.toDynamoDBJson($util.time.nowISO8601())
+          }
         }
       ResponseMappingTemplate: |
         #if($ctx.error)
           $util.error($ctx.error.message, $ctx.error.type)
         #end
+        
+        ## Debug logging
+        $util.log.info($ctx.result)
+        
         {
-          "id": $util.toJson($ctx.result.id)
+          "id": "$ctx.result.id.S"
         }
   UserQueryByIdResolver:
     Type: AWS::AppSync::Resolver
