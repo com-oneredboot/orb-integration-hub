@@ -40,7 +40,7 @@ export class UserService extends ApiService {
       await this.cognitoService.createCognitoUser(input, password);
 
       const response = await this.mutate(
-        userCreateMutation, input, "apiKey") as GraphQLResult<UserResponse>;
+        userCreateMutation, {"input": input }, "apiKey") as GraphQLResult<UserResponse>;
       console.debug('createUser Response: ', response);
 
       const userResponse = response.data;

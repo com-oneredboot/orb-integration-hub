@@ -4,15 +4,16 @@
 // description: Contains all GraphQL queries and mutations for the User service
 
 // 3rd Party Imports
-import {Injectable} from '@angular/core';
-import {Actions, createEffect, ofType} from '@ngrx/effects';
-import {catchError, map, switchMap, tap} from 'rxjs/operators';
-import {from, of} from "rxjs";
+import { Injectable } from '@angular/core';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { catchError, map, switchMap, tap } from 'rxjs/operators';
+import { from, of } from "rxjs";
+import { v4 as uuidv4 } from 'uuid';
 
 // Application Imports
-import {UserService} from "../../../core/services/user.service";
-import {UserCreateInput, UserGroup, UserQueryInput, UserStatus} from "../../../core/models/user.model";
-import {AuthActions, checkEmail, checkEmailFailure, checkEmailSuccess,} from "./auth.actions";
+import { UserService } from "../../../core/services/user.service";
+import { UserCreateInput, UserGroup, UserQueryInput, UserStatus } from "../../../core/models/user.model";
+import { AuthActions, checkEmail, checkEmailFailure, checkEmailSuccess } from "./auth.actions";
 
 @Injectable()
 export class AuthEffects {
@@ -52,11 +53,14 @@ export class AuthEffects {
       ofType(AuthActions.createUser),
       switchMap(({ cognito_id, email, password }) => {
         // create the user
+        const timestamp = new Date().toISOString();
         const input: UserCreateInput = {
+          id: uuidv4(),
           cognito_id: cognito_id,
           groups: [UserGroup.USER],
           status: UserStatus.PENDING,
           email,
+          created_at: timestamp
         };
 
         return from(this.userService.createUser(input, password)).pipe(
