@@ -17,6 +17,7 @@ import {
   UpdateUserInput, updateUserMutation, doesUserExistQuery
 } from "../models/user.model";
 import {GraphQLResult} from "@aws-amplify/api-graphql";
+import {CognitoService} from "./cognito.service";
 
 
 @Injectable({
@@ -24,18 +25,37 @@ import {GraphQLResult} from "@aws-amplify/api-graphql";
 })
 export class UserService extends ApiService {
 
-  constructor() {
+  constructor(
+    private cognitoService: CognitoService
+  ) {
     super();
   }
 
-  public async createUser(input: CreateUserInput): Promise<UserResponse> {
+  public async createUser(input: CreateUserInput, password: string): Promise<UserResponse> {
     console.debug('createUser:', input);
+
     try {
+
+      // create the Cognito User
+      await this.cognitoService.createCognitoUser(input, password);
+
       const response = await this.mutate(
         createUserMutation, input) as GraphQLResult<UserResponse>;
       console.debug('createUser Response: ', response);
 
-      return response.data;
+      const userResponse = response.data;
+
+      if (userResponse.getUserById?.status_code !== 200 || !userResponse.getUserById?.user) {
+        return userResponse;
+      }
+
+      // Set the Current user and authentication status
+      this.cognitoService.setCurrentUser(userResponse.getUserById.user);
+      await this.cognitoService.checkIsAuthenticated();
+
+      return userResponse;
+
+
 
     } catch (error) {
       console.error('Error creating user:', error);

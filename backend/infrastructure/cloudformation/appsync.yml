@@ -129,7 +129,7 @@ Resources:
   
         type Mutation {
           sendSMSVerificationCode(input: SMSVerificationInput!): SMSVerificationResponse! @aws_cognito_user_pools
-          createUser(input: UserCreateInput!): UserResponse! @aws_cognito_user_pools
+          createUser(input: UserCreateInput!): UserResponse! @aws_cognito_user_pools @aws_api_key
           updateUser(input: UserUpdateInput!): UserResponse! @aws_cognito_user_pools
         }
   
@@ -164,7 +164,40 @@ Resources:
           TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-table-name}}'
           AwsRegion: !Ref AWS::Region
 
-  # Resolvers
+  # --------------------------------------------------- #
+  # Resolvers                                           #
+  # --------------------------------------------------- #
+
+  # User Resolvers
+  CreateUserResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: createUser
+      DataSourceName: !GetAtt UsersDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2017-02-28",
+          "operation": "PutItem",
+          "key": {
+            "id": $util.dynamodb.toDynamoDBJson($util.autoId())
+          },
+          "attributeValues": $util.toJson($ctx.args.input)
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          $util.error($ctx.error.message, $ctx.error.type)
+        #end
+        
+        #set($response = {
+          "status_code": 200,
+          "message": "User created successfully",
+          "user": $ctx.args.input
+        })
+        
+        $util.toJson($response)
   GetUserByIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
@@ -250,6 +283,65 @@ Resources:
         
         $util.toJson($response)
 
+  UpdateUserResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: updateUser
+      DataSourceName: !GetAtt UsersDataSource.Name
+      RequestMappingTemplate: |
+        #set($update = {})
+        #set($expression = "")
+        #set($expressionValues = {})
+        #set($expressionNames = {})
+        #set($update.put("expression", "SET"))
+        
+        #if($ctx.args.input.email)
+          $util.qr($update.put("#email", "email"))
+          $util.qr($expressionValues.put(":email", $ctx.args.input.email))
+          $util.qr($expression.concat("#email = :email"))
+        #end
+        #if($ctx.args.input.phone_number)
+          $util.qr($update.put("#phone_number", "phone_number"))
+          $util.qr($expressionValues.put(":phone_number", $ctx.args.input.phone_number))
+          $util.qr($expression.concat(", #phone_number = :phone_number"))
+        #end
+        #if($ctx.args.input.first_name)
+          $util.qr($update.put("#first_name", "first_name"))
+          $util.qr($expressionValues.put(":first_name", $ctx.args.input.first_name))
+          $util.qr($expression.concat(", #first_name = :first_name"))
+        #end
+        #if($ctx.args.input.last_name)
+          $util.qr($update.put("#last_name", "last_name"))
+          $util.qr($expressionValues.put(":last_name", $ctx.args.input.last_name))
+          $util.qr($expression.concat(", #last_name = :last_name"))
+        #end
+        #if($ctx.args.input.groups)
+          $util.qr($update.put("#groups", "groups"))
+          $util.qr($expressionValues.put(":groups", $ctx.args.input.groups))
+          $util.qr($expression.concat(", #groups = :groups"))
+        #end
+        #if($ctx.args.input.status)
+          $util.qr($update.put("#status", "status"))
+          $util.qr($expressionValues.put(":status", $ctx.args.input.status))
+          $util.qr($expression.concat(", #status = :status"))
+        #end
+        
+        {
+          "version": "2017-02-28",
+            "operation": "UpdateItem",
+            "key": {
+              "id": $util.dynamodb.toDynamoDBJson($ctx.args.input.id)
+            },
+            "update": $util.toJson($update),
+            "condition": {
+              "expression": "attribute_exists(id)"
+            }
+        }
+
+  # SMS Verification Resolvers
   SendSMSVerificationCodeResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
@@ -266,6 +358,7 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($context.result)
+
 
 
 

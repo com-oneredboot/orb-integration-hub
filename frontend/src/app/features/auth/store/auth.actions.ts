@@ -24,9 +24,13 @@ export const AuthActions = createActionGroup({
     'Signin Success': props<{ user: User }>(),
     'Signin Failure': props<{ error: string }>(),
 
-    'Logout': emptyProps(),
-    'Logout Success': emptyProps(),
-    'Logout Failure': props<{ error: string }>(),
+    'Signout': emptyProps(),
+    'Signout Success': emptyProps(),
+    'Signout Failure': props<{ error: string }>(),
+
+    'Create User': props<{ cognito_id: string; email: string; password: string }>(),
+    'Create User Success': emptyProps(),
+    'Create User Failure': props<{ error: string }>(),
 
     'Register': props<{ email: string; password: string; firstName: string; lastName: string }>(),
     'Register Success': props<{ user: User }>(),

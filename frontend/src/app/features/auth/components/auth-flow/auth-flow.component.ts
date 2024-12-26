@@ -9,6 +9,7 @@ import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {Router} from '@angular/router';
 import {Store} from '@ngrx/store';
 import {map, Observable, Subject, takeUntil} from 'rxjs';
+import {v4 as uuidv4} from 'uuid';
 
 // App Imports
 import {AuthActions, checkEmail} from '../../store/auth.actions';
@@ -169,7 +170,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         passwordControl?.setValidators([
           Validators.required,
           Validators.minLength(8),
-          Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/)
+          Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[-_!@#$%^&*])[A-Za-z\d\-_!@#$%^&*]{8,}$/)
         ]);
         break;
     }
@@ -218,8 +219,12 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             this.store.dispatch(checkEmail({ email }));
             break;
           case AuthSteps.PASSWORD_SETUP:
-            const password = this.authForm.get('password')?.value;
-            this.store.dispatch(AuthActions.setupPassword({ password }));
+            const input = {
+              cognito_id: uuidv4(),
+              email: this.authForm.get('email')?.value,
+              password: this.authForm.get('password')?.value
+            }
+            this.store.dispatch(AuthActions.createUser(input));
             break;
           // ... other cases
         }

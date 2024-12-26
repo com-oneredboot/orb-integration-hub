@@ -225,7 +225,7 @@ Role-based UI organization:
     - [x] Set up NgRx store
     - [x] Create auth state management
     - [x] Implement auth effects
-    - [ ] Step 1: enter email and check if User exists
+    - [x] Step 1: enter email and check if User exists
     - [ ] Step 2: User Doesn't Exist - present password form, ensure meets complexity requirements, on submit create cognito user
     - [ ] Step 3: User Doesn't Exist - verify email, update cognito user, create entity in users table
     - [ ] Step 4: User Doesn't Exist - setup MFA, update cognito user

@@ -18,17 +18,18 @@ import {
   signUp,
   updateMFAPreference,
   updateUserAttributes,
+  SignUpOutput,
   verifyTOTPSetup,
   VerifyTOTPSetupInput
 } from 'aws-amplify/auth';
-import {BehaviorSubject, from, Observable} from 'rxjs';
+import {BehaviorSubject, Observable} from 'rxjs';
 
 
 import {Router} from '@angular/router';
 
 
 // Application-specific imports
-import {CreateUserInput, createUserMutation, User, UserGroup, UserQueryInput, UserResponse} from '../models/user.model';
+import {CreateUserInput, User, } from '../models/user.model';
 import {ApiService} from "./api.service";
 import {sendSMSVerificationCodeMutation, SMSVerificationInput, SMSVerificationResponse} from "../models/sms.model";
 import {GraphQLResult} from "@aws-amplify/api-graphql";
@@ -67,7 +68,7 @@ export interface MFASetupResponse {
 @Injectable({
   providedIn: 'root'
 })
-export class CognitoService extends ApiService {
+export class CognitoService {
 
   public currentUser: Observable<User | null>;
   public isAuthenticated: Observable<boolean>;
@@ -77,8 +78,7 @@ export class CognitoService extends ApiService {
   private isAuthenticatedSubject: BehaviorSubject<boolean>;
   private mfaSetupRequiredSubject: BehaviorSubject<boolean>;
 
-  constructor(private router: Router, private userApi: UserService) {
-    super();
+  constructor() {
 
     // Get BehaviorSubjects for current user, authentication status, and MFA setup
     this.currentUserSubject = new BehaviorSubject<User | null>(null);
@@ -96,41 +96,19 @@ export class CognitoService extends ApiService {
    * @param input
    * @param password
    */
-  public async register(input: CreateUserInput, password:string): Promise<UserResponse> {
-    try {
-      await signUp({
+  public async createCognitoUser(input: CreateUserInput, password:string): Promise<SignUpOutput> {
+
+      console.debug('Creating Cognito user:', input);
+
+      return await signUp({
         username: input.cognito_id,
         password,
         options: {
           userAttributes: {
             email: input.email,
-            phone_number: input.phone_number
           }
         }
       });
-
-      const userResponse = await this.userApi.createUser(input);
-
-      if (userResponse.getUserById?.status_code !== 200 || !userResponse.getUserById?.user) {
-        return userResponse;
-      }
-
-      // Set the Current user and authentication status
-      this.currentUserSubject.next(userResponse.getUserById?.user);
-      await this.checkIsAuthenticated();
-
-      return userResponse;
-
-    } catch (error) {
-      console.error('Registration error:', error);
-      return {
-        getUserById: {
-          status_code: 500,
-          user: null,
-          message: error instanceof Error ? error.message : 'Registration failed'
-        }
-      };
-    }
   }
 
   /**
@@ -233,6 +211,20 @@ export class CognitoService extends ApiService {
   }
 
   /**
+   * Set the current user
+   * @param user
+   */
+  public setCurrentUser(user: User | null): void {
+    console.debug('Setting current user:', user);
+    try {
+      this.currentUserSubject.next(user);
+    } catch (error) {
+      console.error('Error setting current user:', error);
+      throw new AuthError(error instanceof Error ? error.message : 'Error setting current user');
+    }
+  }
+
+  /**
    * Get the current user
    */
   public getCurrentUser$(): Observable<User | null> {
@@ -258,23 +250,23 @@ export class CognitoService extends ApiService {
    * Send a verification code to the phone number
    * @param input SMSVerificationInput
    */
-  public async sendVerificationCode(input: SMSVerificationInput): Promise<SMSVerificationResponse> {
-    console.debug('Sending verification code:', input);
-    try {
-      const response = await this.mutate(
-        sendSMSVerificationCodeMutation, input) as GraphQLResult<SMSVerificationResponse>;
-      console.debug('Verification code sent:', response);
-
-      return response.data;
-
-    } catch (error) {
-      console.error('Verification code error:', error);
-      return {
-        status_code: 500,
-        message: 'Error sending verification code'
-      };
-    }
-  }
+  // public async sendVerificationCode(input: SMSVerificationInput): Promise<SMSVerificationResponse> {
+  //   console.debug('Sending verification code:', input);
+  //   try {
+  //     const response = await this.mutate(
+  //       sendSMSVerificationCodeMutation, input) as GraphQLResult<SMSVerificationResponse>;
+  //     console.debug('Verification code sent:', response);
+  //
+  //     return response.data;
+  //
+  //   } catch (error) {
+  //     console.error('Verification code error:', error);
+  //     return {
+  //       status_code: 500,
+  //       message: 'Error sending verification code'
+  //     };
+  //   }
+  // }
 
   /**
    * Confirm the phone number using the verification code

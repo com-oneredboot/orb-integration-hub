@@ -32,6 +32,22 @@ export const authReducer = createReducer(
     isLoading: false
   })),
 
+  // Create User
+  on(AuthActions.createUser, (state) => ({
+    ...state,
+    isLoading: true,
+    error: null
+  })),
+  on(AuthActions.createUserSuccess, (state) => ({
+    ...state,
+    currentStep: AuthSteps.EMAIL_VERIFY,
+    isLoading: false
+  })),
+  on(AuthActions.createUserFailure, (state, { error }) => ({
+    ...state,
+    error,
+    isLoading: false
+  })),
 
   // Sign In
   on(AuthActions.signin, (state) => ({
@@ -152,14 +168,14 @@ export const authReducer = createReducer(
     isLoading: false
   })),
 
-  // Logout
-  on(AuthActions.logout, (state) => ({
+  // Signout
+  on(AuthActions.signout, (state) => ({
     ...state,
     isLoading: true,
     error: null
   })),
-  on(AuthActions.logoutSuccess, () => initialState),
-  on(AuthActions.logoutFailure, (state, { error }) => ({
+  on(AuthActions.signoutSuccess, () => initialState),
+  on(AuthActions.signoutFailure, (state, { error }) => ({
     ...state,
     error,
     isLoading: false

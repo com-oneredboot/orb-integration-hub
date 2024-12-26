@@ -55,7 +55,7 @@ export type UserResponse = {
 
 export type UserQueryInput = Partial<Pick<User, 'id' | 'cognito_id' | 'email'>>;
 
-export type CreateUserInput = Omit<User, 'id' | 'created_at'>;
+export type CreateUserInput = Omit<User, 'id' | 'first_name' | 'last_name' | 'phone_number' | 'created_at'>;
 
 export type UpdateUserInput = Partial<Omit<User, 'id' | 'created_at' >> & { id: string };
 
