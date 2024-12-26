@@ -188,14 +188,13 @@ Resources:
           $util.error($ctx.error.message, $ctx.error.type)
         #end
         
-        #set($user = {
-          "id": $ctx.result.id.S
-        })
-        
+        #set($id = $ctx.result.get("id").get("S"))
         $util.toJson({
           "status_code": 200,
           "message": "User created successfully",
-          "user": $user
+          "user": {
+            "id": $id
+          }
         })
   UserQueryByIdResolver:
     Type: AWS::AppSync::Resolver
