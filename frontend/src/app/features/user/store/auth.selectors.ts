@@ -31,7 +31,7 @@ export const selectCurrentUser = createSelector(
 
 export const selectNeedsMfa = createSelector(
   selectAuthState,
-  (state) => state.needsMFA
+  (state) => state.mfaRequired
 );
 
 export const selectMfaType = createSelector(
@@ -90,6 +90,11 @@ export const selectMFASetupRequired = createSelector(
 export const selectMFAPreferences = createSelector(
   selectAuthState,
   (state) => state.mfaPreferences
+);
+
+export const selectMFADetails = createSelector(
+  selectAuthState,
+  (state) => state.mfaSetupDetails
 );
 
 // User attribute selectors

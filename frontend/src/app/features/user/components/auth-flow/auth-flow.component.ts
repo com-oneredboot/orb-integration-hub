@@ -8,15 +8,16 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {Router} from '@angular/router';
 import {Store} from '@ngrx/store';
-import {first, map, Observable, Subject, takeUntil} from 'rxjs';
+import {map, Observable, Subject, takeUntil} from 'rxjs';
 import {v4 as uuidv4} from 'uuid';
 
 // App Imports
-import {AuthActions, checkEmail} from '../../store/auth.actions';
-import {AuthSteps} from '../../store/auth.state';
+import { AuthActions } from '../../store/auth.actions';
+import { AuthSteps } from '../../store/auth.state';
 import * as fromAuth from '../../store/auth.selectors';
-import {tap} from "rxjs/operators";
-import {UserCreateInput} from "../../../../core/models/user.model";
+import { UserCreateInput } from "../../../../core/models/user.model";
+import { QRCodeToDataURLOptions } from "qrcode";
+
 
 @Component({
   selector: 'app-auth-flow',
@@ -33,9 +34,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   error$ = this.store.select(fromAuth.selectError);
   userExists$ = this.store.select(fromAuth.selectUserExists);
   needsMFA$ = this.store.select(fromAuth.selectNeedsMfa);
-  mfaType$ = this.store.select(fromAuth.selectMfaType);
-  mfaSetupDetails$ = this.store.select(fromAuth.selectMFAPreferences);
-  mfaEnabled$ = this.store.select(fromAuth.selectMFAEnabled);
+  mfaSetupDetails$ = this.store.select(fromAuth.selectMFADetails);
   phoneVerified$ = this.store.select(fromAuth.selectPhoneVerified);
   emailVerified$ = this.store.select(fromAuth.selectEmailVerified);
   debugMode$ = this.store.select(fromAuth.selectDebugMode);
@@ -47,8 +46,10 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   authForm!: FormGroup;
   authSteps = AuthSteps;
   passwordVisible = false;
+  qrCodeDataUrl: string | null = null;
 
   private destroy$ = new Subject<void>();
+
 
   passwordValidations = {
     minLength: false,
@@ -103,8 +104,29 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     this.currentUser$
       .pipe(takeUntil(this.destroy$))
       .subscribe(user => {
-        console.log('current user:', user);
+        console.debug('current user:', user);
       });
+
+    this.mfaSetupDetails$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(async details => {
+        const issuer = 'OneRedBoot.com';
+        const QRCode = (await import('qrcode')).default;
+        if (!details?.secretKey || !details?.qrCode) {
+          return;
+        }
+        const qrUrl = details.setupUri?.toString() || '';
+        const options = {
+          width: 200,
+          margin: 2,
+          errorCorrectionLevel: 'M'
+        } as QRCodeToDataURLOptions
+        this.qrCodeDataUrl = await QRCode.toDataURL(qrUrl, options);
+      });
+
+    this.debugMode$.pipe().subscribe(debug => {
+      console.debug('debugMode:', debug);
+    });
   }
 
   ngOnDestroy(): void {
@@ -125,24 +147,37 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     this.currentStep$
       .pipe(takeUntil(this.destroy$))
       .subscribe(step => {
+        const email = this.authForm.get('email')?.value;
+        const password = this.authForm.get('password')?.value;
+        const emailCode = this.authForm.get('emailCode')?.value;
+        const mfaCode = this.authForm.get('mfaCode')?.value;
         switch (step) {
           case AuthSteps.EMAIL:
-            const email = this.authForm.get('email')?.value;
-            this.store.dispatch(checkEmail({ email }));
+            this.store.dispatch(AuthActions.checkEmail({ email }));
+            break;
+          case AuthSteps.PASSWORD:
+            if (!password) return;
+            this.store.dispatch(AuthActions.verifyCognitoPassword({ email: email, password }));
             break;
           case AuthSteps.PASSWORD_SETUP:
             const userCreateInput = {
               cognito_id: uuidv4(),
-              email: this.authForm.get('email')?.value
+              email: email
             } as UserCreateInput;
-            const password = this.authForm.get('password')?.value;
             if (!password) return;
             this.store.dispatch(AuthActions.createUser({input: userCreateInput, password: password } ));
             break;
           case AuthSteps.EMAIL_VERIFY:
-            const code = this.authForm.get('emailCode')?.value;
-            if (!code) return;
-            this.store.dispatch(AuthActions.verifyEmail({input: { email: this.authForm.get('email')?.value }, code }));
+            if (!emailCode) return;
+            this.store.dispatch(AuthActions.verifyEmail({input: { email: email }, code: emailCode }));
+            break;
+          case AuthSteps.MFA_SETUP:
+            //if(!mfaCode) return;
+            this.store.dispatch(AuthActions.needsMFASetup());
+            break;
+          case AuthSteps.MFA_VERIFY:
+            if(!mfaCode) return;
+            this.store.dispatch(AuthActions.needsMFA( {code: mfaCode, rememberDevice: false}));
             break;
           // ... other cases
         }
@@ -297,7 +332,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     // Update form validation
     this.authForm.updateValueAndValidity();
   }
-
 
   private getPasswordErrorMessage(errors: any): string {
     if (errors?.pattern) {

@@ -4,21 +4,24 @@
 // description: The API service provides a common interface for making GraphQL queries and mutations
 
 // 3rd Party Imports
-import {Injectable} from "@angular/core";
+import { GraphQLResult} from "@aws-amplify/api-graphql";
+import { Injectable } from "@angular/core";
+import { v4 as uuidv4 } from "uuid";
+import { Store } from '@ngrx/store';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 // Application Imports
 import {ApiService} from "./api.service";
 import {
-  UserCreateInput,
-  userCreateMutation,
-  UserQueryInput,
-  UserResponse,
-  userQueryById,
-  UserUpdateInput, userUpdateMutation, userExistQuery, UserCreateResponse, UserGroup, UserStatus
+  UserCreateInput, UserQueryInput,
+  UserCreateResponse, UserResponse,
+  userCreateMutation, userQueryById, userExistQuery,
+  UserGroup, UserStatus
 } from "../models/user.model";
-import {GraphQLResult} from "@aws-amplify/api-graphql";
-import {CognitoService} from "./cognito.service";
-import {v4 as uuidv4} from "uuid";
+import { CognitoService } from "./cognito.service";
+import { AuthResponse } from "../models/auth.model";
+import { AuthActions } from '../../features/user/store/auth.actions';
 
 
 @Injectable({
@@ -26,12 +29,34 @@ import {v4 as uuidv4} from "uuid";
 })
 export class UserService extends ApiService {
 
+  // Private Attributes
+  private currentUser = new BehaviorSubject<any>(null);
+
+  /**
+   * Constructor
+   * @param cognitoService
+   * @param store
+   */
   constructor(
-    private cognitoService: CognitoService
+    private cognitoService: CognitoService,
+    private store: Store,
   ) {
     super();
+
+    // Sync with Cognito's auth state
+    this.cognitoService.currentUser.subscribe(user => {
+      if (user) {
+        this.currentUser.next(user);
+        this.store.dispatch(AuthActions.signInSuccess({ user, message: 'User found' }));
+      }
+    });
   }
 
+  /**
+   * Create a new user
+   * @param input
+   * @param password
+   */
   public async userCreate(input: UserCreateInput, password: string): Promise<UserResponse> {
     console.debug('createUser input:', input);
 
@@ -51,7 +76,7 @@ export class UserService extends ApiService {
       };
 
       const response = await this.mutate(
-        userCreateMutation, {"input": userCreateInput }, "apiKey") as GraphQLResult<UserCreateResponse>;
+        userCreateMutation, {"input": userCreateInput}, "apiKey") as GraphQLResult<UserCreateResponse>;
       console.debug('createUser Response: ', response);
 
       return {
@@ -71,12 +96,16 @@ export class UserService extends ApiService {
     }
   }
 
-  public async userExists(input: UserQueryInput): Promise<boolean|undefined> {
+  /**
+   * Check if a user exists
+   * @param input
+   */
+  public async userExists(input: UserQueryInput): Promise<boolean | undefined> {
     console.debug('doesUserExist:', input);
     try {
       const response = await this.query(
         userExistQuery,
-        { input: input },
+        {input: input},
         'apiKey') as GraphQLResult<UserResponse>;
       console.debug('doesUserExist Response: ', response);
 
@@ -99,7 +128,12 @@ export class UserService extends ApiService {
     }
   }
 
-  public async emailVerify(input: UserQueryInput, code: string): Promise<boolean> {
+  /**
+   * Verify the email
+   * @param input
+   * @param code
+   */
+  public async emailVerify(input: UserQueryInput, code: string): Promise<AuthResponse> {
     console.debug('verifyEmail:', input);
     try {
 
@@ -107,20 +141,32 @@ export class UserService extends ApiService {
       const userResponse = await this.userQueryById(input);
       console.debug('User Response:', userResponse);
       if (userResponse.userQueryById?.status_code !== 200 || !userResponse.userQueryById?.user) {
-        return false;
+        return {
+          status_code: userResponse.userQueryById?.status_code,
+          isSignedIn: false,
+          message: 'Error getting user'
+        };
       }
 
-      const response = await this.cognitoService.emailVerify(userResponse.userQueryById.user.cognito_id, code);
-      console.debug('verifyEmail Response: ', response);
+      const emailVerifyResponse = await this.cognitoService.emailVerify(userResponse.userQueryById.user.cognito_id, code);
+      console.debug('verifyEmail Response: ', emailVerifyResponse);
 
-      return response.success;
+      return emailVerifyResponse;
 
     } catch (error) {
       console.error('Error verifying email:', error);
-      return false;
+      return {
+        status_code: 500,
+        isSignedIn: false,
+        message: 'Error verifying email'
+      };
     }
   }
 
+  /**
+   * Query a user by ID
+   * @param input
+   */
   public async userQueryById(input: UserQueryInput): Promise<UserResponse> {
     console.debug('userQueryById:', input);
     try {
@@ -140,6 +186,124 @@ export class UserService extends ApiService {
           message: 'Error getting user'
         }
       } as UserResponse;
+    }
+  }
+
+  /**
+   * Sign in a user
+   * @param email
+   * @param password
+   */
+  public async userSignIn(email: string, password: string): Promise<AuthResponse> {
+    console.debug('userSignIn:', email);
+    let user;
+
+    try {
+      const userQueryInput = {email: email} as UserQueryInput;
+      const userResponse = await this.userQueryById(userQueryInput);
+
+      user = userResponse.userQueryById?.user;
+      if (userResponse.userQueryById?.status_code !== 200 || !user) {
+        return {
+          status_code: userResponse.userQueryById?.status_code,
+          isSignedIn: false,
+          message: 'User Does Not Exist'
+        };
+      }
+
+      // Update store with user data before auth attempt
+      this.store.dispatch(AuthActions.signInSuccess({ user, message: 'User found' }));
+      this.currentUser.next(user);
+
+    } catch (error) {
+      console.error('Error getting user:', error);
+      return {
+        status_code: 500,
+        isSignedIn: false,
+        message: 'Error getting user'
+      } as AuthResponse;
+    }
+
+    try {
+      const userSignInResponse = await this.cognitoService.signIn(user.cognito_id, password);
+
+      // Handle already signed in case
+      if (userSignInResponse.status_code === 401 &&
+        userSignInResponse.message?.toLowerCase().includes('already signed in')) {
+        console.warn('User already signed in');
+        await this.cognitoService.checkIsAuthenticated();
+        return {
+          status_code: 200,
+          isSignedIn: true,
+          message: 'User already signed in',
+          user
+        };
+      }
+
+      return userSignInResponse;
+
+    } catch (error) {
+      const error_message = error instanceof Error ? error.message : 'Error signing in';
+      console.warn('Sign in error:', error_message);
+
+      if (error_message.toLowerCase().includes('already signed in')) {
+        await this.cognitoService.checkIsAuthenticated();
+        return {
+          status_code: 200,
+          isSignedIn: true,
+          message: 'User already signed in',
+          user
+        };
+      }
+
+      return {
+        status_code: 500,
+        isSignedIn: false,
+        message: 'Error signing in: ' + error_message
+      } as AuthResponse;
+
+    }
+  }
+
+  /**
+   * Setup MFA
+   * @returns AuthResponse
+   */
+  public async mfaSetup(): Promise<AuthResponse> {
+    try {
+      console.debug('mfaSetup');
+      return {
+        status_code: 200,
+      } as AuthResponse
+    } catch (error) {
+      console.error('Error setting up MFA:', error);
+      return {
+        status_code: 500,
+        isSignedIn: false,
+        message: 'Error setting up MFA'
+      } as AuthResponse
+    }
+  }
+
+  /**
+   * Verify MFA
+   * @param code
+   * @param rememberDevice
+   * @returns AuthResponse
+   */
+  public async mfaVerify(code: string, rememberDevice: boolean = false): Promise<AuthResponse> {
+    console.debug('mfaVerify:', code, rememberDevice);
+    try {
+      const response = await this.cognitoService.mfaVerify(code, rememberDevice);
+      console.debug('mfaVerify Response: ', response);
+      return response;
+    } catch (error) {
+      console.error('Error verifying MFA:', error);
+      return {
+        status_code: 500,
+        isSignedIn: false,
+        message: 'Error verifying MFA'
+      } as AuthResponse;
     }
   }
 

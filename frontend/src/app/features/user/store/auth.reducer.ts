@@ -1,21 +1,20 @@
-import { createReducer, on } from '@ngrx/store';
-import {AuthActions, checkEmail, checkEmailFailure, checkEmailSuccess} from './auth.actions';
-import { initialState, AuthSteps } from './auth.state';
+import {createReducer, on} from '@ngrx/store';
+import {AuthActions} from './auth.actions';
+import {AuthSteps, initialState} from './auth.state';
 
 export const authReducer = createReducer(
   initialState,
 
   // Check Email
-  on(checkEmail, (state) => ({
+  on(AuthActions.checkEmail, (state) => ({
     ...state,
     isLoading: true,
     error: null
   })),
-  on(checkEmailSuccess, (state, { userExists }) => {
+  on(AuthActions.checkEmailSuccess, (state, { userExists }) => {
     console.debug('Reducer handling checkEmailSuccess:', {
       currentState: state,
       userExists,
-      // If user exists, go to PASSWORD for login, if not exist go to PASSWORD_SETUP for registration
       newStep: userExists ? AuthSteps.PASSWORD : AuthSteps.PASSWORD_SETUP
     });
     return {
@@ -26,7 +25,7 @@ export const authReducer = createReducer(
       error: null
     };
   }),
-  on(checkEmailFailure, (state, { error }) => ({
+  on(AuthActions.checkEmailFailure, (state, { error }) => ({
     ...state,
     error,
     isLoading: false
@@ -49,21 +48,65 @@ export const authReducer = createReducer(
     isLoading: false
   })),
 
-
-  // Sign In
-  on(AuthActions.signin, (state) => ({
+  // Email Verification
+  on(AuthActions.verifyEmail, (state) => ({
     ...state,
     isLoading: true,
     error: null
   })),
-  on(AuthActions.signinSuccess, (state, { user }) => ({
+  on(AuthActions.verifyEmailSuccess, (state) => ({
+    ...state,
+    emailVerified: true,
+    currentStep: AuthSteps.SIGNIN,
+    isLoading: false
+  })),
+  on(AuthActions.verifyEmailFailure, (state, { error }) => ({
+    ...state,
+    error,
+    isLoading: false
+  })),
+
+  // Verify Cognito Password
+  on(AuthActions.verifyCognitoPassword, (state) => ({
+    ...state,
+    isLoading: true,
+    error: null
+  })),
+  on(AuthActions.verifyCognitoPasswordSuccess, (state, { message, needsMFA, needsMFASetup, mfaSetupDetails }) => {
+    console.debug('Reducer handling verifyCognitoPasswordSuccess:', { message, needsMFA, needsMFASetup });
+
+    // decide on next step.  NeedsMFASetup trumps all
+    let nextStep = (needsMFA)? AuthSteps.MFA_VERIFY: AuthSteps.SIGNIN;
+    nextStep = (needsMFASetup) ? AuthSteps.MFA_SETUP : nextStep;
+    console.debug('Reducer handling verifyCognitoPasswordSuccess:', { nextStep });
+
+    return {
+      ...state,
+      currentStep: nextStep,
+      mfaSetupDetails: mfaSetupDetails,
+      isLoading: false
+    }
+  }),
+  on(AuthActions.verifyCognitoPasswordFailure, (state, { error }) => ({
+    ...state,
+    error,
+    isLoading: false
+  })),
+
+  // Sign In
+  on(AuthActions.signIn, (state) => ({
+    ...state,
+    isLoading: true,
+    error: null
+  })),
+  on(AuthActions.signInSuccess, (state, { user }) => ({
     ...state,
     user,
     isAuthenticated: true,
     isLoading: false,
     error: null
   })),
-  on(AuthActions.signinFailure, (state, { error }) => ({
+  on(AuthActions.signInFailure, (state, { error }) => ({
     ...state,
     error,
     isLoading: false
@@ -87,65 +130,36 @@ export const authReducer = createReducer(
     isLoading: false
   })),
 
-  // Email Verification
-  on(AuthActions.verifyEmail, (state) => ({
-    ...state,
-    isLoading: true,
-    error: null
-  })),
-  on(AuthActions.verifyEmailSuccess, (state) => ({
-    ...state,
-    emailVerified: true,
-    currentStep: AuthSteps.PHONE_SETUP,
-    isLoading: false
-  })),
-  on(AuthActions.verifyEmailFailure, (state, { error }) => ({
-    ...state,
-    error,
-    isLoading: false
-  })),
-
-  // Phone Verification
-  on(AuthActions.sendPhoneCodeVerification, (state) => ({
-    ...state,
-    isLoading: true,
-    error: null
-  })),
-  on(AuthActions.verifyPhoneCode, (state) => ({
-    ...state,
-    isLoading: true,
-    error: null
-  })),
-
   // MFA
-  on(AuthActions.setupMFA, (state) => ({
+  on(AuthActions.needsMFA, (state) => ({
     ...state,
     isLoading: true,
     error: null
   })),
-  on(AuthActions.setupMFASuccess, (state) => ({
+  on(AuthActions.needsMFASuccess, (state) => ({
     ...state,
     mfaEnabled: true,
     currentStep: AuthSteps.MFA_VERIFY,
     isLoading: false
   })),
-  on(AuthActions.setupMFAFailure, (state, { error }) => ({
+  on(AuthActions.needsMFAFailure, (state, { error }) => ({
     ...state,
     error,
     isLoading: false
   })),
 
-  on(AuthActions.verifyMFA, (state) => ({
+  // MFA Setup
+  on(AuthActions.needsMFASetup, (state) => ({
     ...state,
     isLoading: true,
     error: null
   })),
-  on(AuthActions.verifyMFASuccess, (state) => ({
+  on(AuthActions.needsMFASetupSuccess, (state) => ({
     ...state,
-    currentStep: AuthSteps.COMPLETE,
+    currentStep: AuthSteps.MFA_VERIFY,
     isLoading: false
   })),
-  on(AuthActions.verifyMFAFailure, (state, { error }) => ({
+  on(AuthActions.needsMFASetupFailure, (state, { error }) => ({
     ...state,
     error,
     isLoading: false
@@ -161,7 +175,8 @@ export const authReducer = createReducer(
     ...state,
     user,
     isAuthenticated: true,
-    isLoading: false
+    isLoading: false,
+    currentStep: AuthSteps.COMPLETE
   })),
   on(AuthActions.refreshSessionFailure, (state, { error }) => ({
     ...state,

@@ -1,11 +1,17 @@
-// auth.state.ts
-import {User, UserGroup} from "../../../core/models/user.model";
+// file: frontend/src/app/features/auth/store/auth.reducer.ts
+// author: Corey Dale Peters
+// date: 2024-12-27
+// description: Contains the Auth reducer
+
+// Application Imports
+import { User, UserGroup } from "../../../core/models/user.model";
 
 export enum AuthSteps {
   EMAIL,
   PASSWORD,           // For existing users
   PASSWORD_SETUP,     // For new users
   EMAIL_VERIFY,       // Verifies the email code
+  SIGNIN,             // For users who have verified their email
   NAME_SETUP,         // for users without first_name, last_name
   PHONE_SETUP,        // for users without phone_number
   PHONE_VERIFY,       // verifies the phone number
@@ -30,18 +36,19 @@ export interface AuthState {
   phoneVerified: boolean;
 
   // MFA related
-  needsMFA: boolean;
   mfaType: 'sms' | 'totp' | null;
   mfaEnabled: boolean;
+  mfaRequired: boolean;
   mfaSetupRequired: boolean;
   mfaPreferences: {
     sms: boolean;
     totp: boolean;
   };
-  mfaSetupDetails: {
+  mfaSetupDetails?: {
     qrCode: string;
     secretKey: string;
-  } | null;
+    setupUri?: URL;
+  };
 
   // Group related
   currentGroup: UserGroup | null;
@@ -70,15 +77,15 @@ export const initialState: AuthState = {
   phoneValidationExpiration: null,
   phoneVerified: false,
 
-  needsMFA: false,
   mfaType: null,
   mfaEnabled: false,
+  mfaRequired: false,
   mfaSetupRequired: false,
   mfaPreferences: {
     sms: false,
     totp: false
   },
-  mfaSetupDetails: null,
+  mfaSetupDetails: undefined,
 
   currentGroup: null,
   availableGroups: [],

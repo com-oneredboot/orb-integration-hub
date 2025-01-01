@@ -7,11 +7,11 @@
     phoneVerified: phoneVerified$ | async,
     mfaSetupDetails: mfaSetupDetails$ | async,
     buttonText: buttonText$ | async,
-    stepTitle: stepTitle$ | async
+    stepTitle: stepTitle$ | async,
   } as state">
 
     <div class="auth-flow__header">
-      <img src="assets/onredboot-logo.jpg" alt="OneRedBoot Logo" class="auth-flow__header-logo">
+      <img src="../../../../../assets/onredboot-logo.jpg" alt="OneRedBoot Logo" class="auth-flow__header-logo">
       <h1 class="auth-flow__header-title">{{ state.stepTitle }}</h1>
     </div>
 
@@ -207,17 +207,30 @@
       </div>
 
       <!-- MFA Setup Step -->
-<!--      <div class="auth-flow__form-step"-->
-<!--           [ngClass]="{'auth-flow__form-step&#45;&#45;active': state.currentStep === authSteps.MFA_SETUP}">-->
-<!--        <div class="auth-flow__mfa-options" *ngIf="state.mfaSetupDetails as mfaDetails">-->
-<!--          <div class="auth-flow__qr-container" *ngIf="mfaDetails.qrCode">-->
-<!--            <img [src]="mfaDetails.qrCode" alt="MFA QR Code">-->
-<!--          </div>-->
-<!--          <div class="auth-flow__secret-key" *ngIf="mfaDetails.secretKey">-->
-<!--            <p>Secret Key: {{ mfaDetails.secretKey }}</p>-->
-<!--          </div>-->
-<!--        </div>-->
-<!--      </div>-->
+      <div class="auth-flow__form-step"
+           [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.MFA_SETUP}">
+        <div class="auth-flow__mfa-options" *ngIf="state.mfaSetupDetails">
+          <div class="auth-flow__qr-container" *ngIf="qrCodeDataUrl">
+            <img [src]="qrCodeDataUrl" alt="MFA QR Code" class="qr-code">
+          </div>
+          <div class="auth-flow__secret-key" *ngIf="state.mfaSetupDetails.secretKey">
+            <p class="secret-key">Secret Key: {{ state.mfaSetupDetails.secretKey }}</p>
+            <p class="instructions">
+              Enter this secret key into your authenticator app if you cannot scan the QR code.
+            </p>
+          </div>
+          <div class="auth-flow__input-group">
+            <input type="text"
+                   formControlName="mfaCode"
+                   class="auth-flow__input-group-field"
+                   [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('mfaCode')}"
+                   placeholder="Enter 6-digit code">
+            <div *ngIf="isFieldInvalid('mfaCode')" class="auth-flow__input-error">
+              {{ getErrorMessage('mfaCode') }}
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- MFA Verification Step -->
       <div class="auth-flow__form-step"
@@ -233,6 +246,7 @@
           </div>
         </div>
       </div>
+
       <!-- Submit Button -->
       <button type="submit"
               class="auth-flow__button"
@@ -270,7 +284,8 @@
         currentUser: currentUser$ | async,
         needsMFA: needsMFA$ | async,
         phoneVerified: phoneVerified$ | async,
-        emailVerified: emailVerified$ | async
+        emailVerified: emailVerified$ | async,
+        mfaSetupDetails: mfaSetupDetails$ | async
       } as state">
         <pre>Current Step: {{ state.currentStep }}</pre>
         <pre>Is Loading: {{ state.isLoading }}</pre>
@@ -278,6 +293,7 @@
         <pre>User Exists: {{ state.userExists }}</pre>
         <pre>Current User: {{ state.currentUser | json }}</pre>
         <pre>Needs MFA: {{ state.needsMFA }}</pre>
+        <pre>MFA Setup Details: {{ state.mfaSetupDetails | json }}</pre>
         <pre>Phone Verified: {{ state.phoneVerified }}</pre>
         <pre>Email Verified: {{ state.emailVerified }}</pre>
       </ng-container>

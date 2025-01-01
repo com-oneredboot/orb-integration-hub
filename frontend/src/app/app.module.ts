@@ -9,7 +9,7 @@ import { AppLayoutComponent } from "./layouts/app-layout/app-layout.component";
 import { PageLayoutComponent } from "./layouts/page-layout/page-layout.comonent";
 import { EffectsModule } from "@ngrx/effects";
 import { StoreModule } from "@ngrx/store";
-import { AuthModule } from "./features/auth/auth.module";
+import { UserModule } from "./features/user/user.module";
 
 @NgModule({
   declarations: [
@@ -22,7 +22,7 @@ import { AuthModule } from "./features/auth/auth.module";
     ReactiveFormsModule,
     AppRoutingModule,
     NgOptimizedImage,
-    AuthModule,
+    UserModule,
     StoreModule.forRoot({}),
     EffectsModule.forRoot([])
   ],

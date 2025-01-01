@@ -11,59 +11,20 @@ import {
   fetchAuthSession,
   getCurrentUser,
   fetchUserAttributes,
-  resendSignUpCode,
-  setUpTOTP,
   signIn,
   signOut,
   signUp,
-  updateMFAPreference,
-  updateUserAttributes,
   SignUpOutput,
-  verifyTOTPSetup,
-  VerifyTOTPSetupInput
 } from 'aws-amplify/auth';
 import {BehaviorSubject, Observable} from 'rxjs';
 
-
-import {Router} from '@angular/router';
-
-
 // Application-specific imports
 import {UserCreateInput, User, } from '../models/user.model';
-import {ApiService} from "./api.service";
-import {sendSMSVerificationCodeMutation, SMSVerificationInput, SMSVerificationResponse} from "../models/sms.model";
-import {GraphQLResult} from "@aws-amplify/api-graphql";
-import {UserService} from "./user.service";
+import {AuthResponse, AuthError } from "../models/auth.model";
+import { environment } from '../../../environments/environment';
 
-class AuthError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'AuthError';
-  }
-}
-
-export interface AuthResponse {
-  success: boolean;
-  user?: User;
-  error?: string;
-  needsMFA?: boolean;
-  needsMFASetup?: boolean;
-  mfaType?: 'sms' | 'totp';
-  setupDetails?: {
-    qrCode: string;
-    secretKey: string;
-  };
-}
-
-export interface MFASetupResponse {
-  success: boolean;
-  needsMFASetup?: boolean;
-  error?: string;
-  setupDetails?: {
-    qrCode: string;
-    secretKey: string;
-  };
-}
+// Settings
+const appName = environment.appName;
 
 @Injectable({
   providedIn: 'root'
@@ -73,22 +34,29 @@ export class CognitoService {
   public currentUser: Observable<User | null>;
   public isAuthenticated: Observable<boolean>;
   public mfaSetupRequired: Observable<boolean>;
+  public mfaRequired: Observable<boolean>;
 
   private currentUserSubject: BehaviorSubject<User | null>;
   private isAuthenticatedSubject: BehaviorSubject<boolean>;
   private mfaSetupRequiredSubject: BehaviorSubject<boolean>;
+  private mfaRequiredSubject: BehaviorSubject<boolean>;
 
+  /**
+   * Constructor
+   */
   constructor() {
 
     // Get BehaviorSubjects for current user, authentication status, and MFA setup
     this.currentUserSubject = new BehaviorSubject<User | null>(null);
     this.isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
     this.mfaSetupRequiredSubject = new BehaviorSubject<boolean>(false);
+    this.mfaRequiredSubject = new BehaviorSubject<boolean>(false);
 
     // Set Observables for current user, authentication status, and MFA setup
     this.currentUser = this.currentUserSubject.asObservable();
     this.isAuthenticated = this.isAuthenticatedSubject.asObservable();
     this.mfaSetupRequired = this.mfaSetupRequiredSubject.asObservable();
+    this.mfaRequired = this.mfaRequiredSubject.asObservable();
   }
 
   /**
@@ -123,84 +91,110 @@ export class CognitoService {
       await confirmSignUp({ username: cognito_id, confirmationCode: code });
 
       return {
-        success: true
+        status_code: 200,
+        isSignedIn: false,
+        message: 'Email verified'
       };
 
     } catch (error) {
       console.error('Confirmation error:', error);
       return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Confirmation failed'
+        status_code: 500,
+        isSignedIn: false,
+        message: error instanceof Error ? error.message : 'Confirmation failed'
       };
     }
   }
 
   /**
    * Sign in a user
-   * @param username
+   * @param username (cognito_id in users table)
    * @param password
    */
   public async signIn(username: string, password: string): Promise<AuthResponse> {
-    try {
-      console.info('Starting sign in process for:', username);
-      const signInResult = await signIn({ username, password });
-      console.debug('Sign in result:', signInResult);
-      const nextStep = signInResult.nextStep.signInStep;
-      console.debug('Next step:', nextStep);
+    console.info('Starting sign in process for:', username);
+    const signInResponse = await signIn({ username, password });
 
-      if (nextStep === 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP') {
-        console.info('TOTP setup required');
-        const totpSetupDetails = signInResult.nextStep.totpSetupDetails;
+    if (signInResponse.isSignedIn) {
+      console.info('Sign in successful for cognito_id:', username);
+      return {
+        status_code: 200,
+        isSignedIn: true,
+        message: 'Sign in successful',
+        user: this.currentUserSubject.value || undefined
+      };
+    }
 
-        const qrCodeUri = totpSetupDetails.getSetupUri(
-          'OneRedBoot Integration Hub',
-          username
-        ).toString();
+    const nextStep = signInResponse.nextStep;
+    console.debug('Sign in next step:', nextStep);
 
+    switch(nextStep.signInStep) {
+      case 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP':
+        const totpSetupDetails = nextStep.totpSetupDetails;
+        const setupUri = totpSetupDetails.getSetupUri(appName);
+        this.mfaSetupRequiredSubject.next(true);
         return {
-          success: false,
-          needsMFA: true,
+          status_code: 200,
+          isSignedIn: false,
+          needsMFASetup: true,
           mfaType: 'totp',
-          setupDetails: {
-            qrCode: qrCodeUri,
-            secretKey: totpSetupDetails.sharedSecret
+          mfaSetupDetails: {
+            qrCode: username,
+            secretKey: nextStep.totpSetupDetails?.sharedSecret,
+            setupUri: setupUri
           }
         };
-      }
+      case 'CONFIRM_SIGN_IN_WITH_TOTP_CODE':
+        this.mfaSetupRequiredSubject.next(true);
+        break;
+      default:
+        console.error('Sign in failed:', signInResponse);
+    }
 
-      if (nextStep === 'CONFIRM_SIGN_IN_WITH_TOTP_CODE') {
-        return {
-          success: false,
-          needsMFA: true,
-          mfaType: 'totp'
-        };
-      }
+    return {
+      status_code: 401,
+      isSignedIn: false,
+      message: 'Sign in failed'
+    }
+  }
 
-      if (nextStep === 'CONFIRM_SIGN_IN_WITH_SMS_CODE') {
-        return {
-          success: false,
-          needsMFA: true,
-          mfaType: 'sms'
-        };
-      }
+  /**
+   * Verify the MFA code
+   * @param code
+   * @param rememberDevice
+   */
+  async mfaVerify(code: string, rememberDevice = false): Promise<AuthResponse> {
+    try {
+      console.info('Verifying MFA code');
+      const result = await confirmSignIn({
+        challengeResponse: code,
+        options: { rememberDevice }
+      });
+      console.debug('MFA verification result:', result);
 
-      if (nextStep === 'DONE') {
-        console.info('Sign in completed');
+      if (result.isSignedIn) {
+        console.info('MFA verification successful');
+
         return {
-          success: true
+          status_code: 200,
+          isSignedIn: true,
+          message: 'MFA verification successful',
+          user: this.currentUserSubject.value || undefined
         };
       }
 
       return {
-        success: false,
-        error: `Authentication requires: ${nextStep}`
+        status_code: 401,
+        isSignedIn: false,
+        message: 'MFA verification failed'
       };
 
     } catch (error) {
-      console.error('Sign in error:', error);
+      console.error('MFA verification error:', error);
       return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Sign in failed'
+        status_code: 500,
+        isSignedIn: false,
+        message: error instanceof Error ? error.message : 'MFA verification failed'
       };
     }
   }
@@ -210,27 +204,6 @@ export class CognitoService {
    */
   public isAuthenticated$(): Observable<boolean> {
     return this.isAuthenticated;
-  }
-
-  /**
-   * Set the current user
-   * @param user
-   */
-  public setCurrentUser(user: User | null): void {
-    console.debug('Setting current user:', user);
-    try {
-      this.currentUserSubject.next(user);
-    } catch (error) {
-      console.error('Error setting current user:', error);
-      throw new AuthError(error instanceof Error ? error.message : 'Error setting current user');
-    }
-  }
-
-  /**
-   * Get the current user
-   */
-  public getCurrentUser$(): Observable<User | null> {
-    return this.currentUser;
   }
 
   /**
@@ -245,72 +218,6 @@ export class CognitoService {
     } catch {
       this.isAuthenticatedSubject.next(false);
       return false;
-    }
-  }
-
-  /**
-   * Send a verification code to the phone number
-   * @param input SMSVerificationInput
-   */
-  // public async sendVerificationCode(input: SMSVerificationInput): Promise<SMSVerificationResponse> {
-  //   console.debug('Sending verification code:', input);
-  //   try {
-  //     const response = await this.mutate(
-  //       sendSMSVerificationCodeMutation, input) as GraphQLResult<SMSVerificationResponse>;
-  //     console.debug('Verification code sent:', response);
-  //
-  //     return response.data;
-  //
-  //   } catch (error) {
-  //     console.error('Verification code error:', error);
-  //     return {
-  //       status_code: 500,
-  //       message: 'Error sending verification code'
-  //     };
-  //   }
-  // }
-
-  /**
-   * Confirm the phone number using the verification code
-   * @param generated_code
-   * @param entered_code
-   * @param expiration
-   */
-  public async confirmPhone(generated_code: number, entered_code: number, expiration: number): Promise<AuthResponse> {
-    try {
-
-      // check if the code has expired
-      if (new Date().getTime() > expiration) {
-        return {
-          success: false,
-          error: 'Verification code has expired'
-        };
-      }
-
-      // if the codes are not equal, then the phone number is verified
-      if (generated_code !== entered_code) {
-        return {
-          success: false
-        };
-      }
-
-      // Update the phone number attribute to mark it as verified in Cognito
-      await updateUserAttributes({
-        userAttributes: {
-          'phone_number_verified': 'true',
-        }
-      });
-
-      return {
-        success: true,
-      };
-
-    } catch (error) {
-      console.error('Error verifying phone number:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Phone verification failed',
-      };
     }
   }
 
@@ -343,117 +250,6 @@ export class CognitoService {
     }
   }
 
-  async setupSMSMFA(phoneNumber: string): Promise<MFASetupResponse> {
-    try {
-      await updateMFAPreference({
-        sms: "PREFERRED",
-        totp: "ENABLED"
-      });
-
-      return {
-        success: true
-      };
-    } catch (error) {
-      console.error('SMS MFA setup error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'SMS MFA setup failed'
-      };
-    }
-  }
-
-  async setupTOTP(): Promise<MFASetupResponse> {
-    try {
-      const totpSetup = await setUpTOTP();
-      const setupDetails = totpSetup as any;
-
-      return {
-        success: true,
-        setupDetails: {
-          qrCode: setupDetails.qrCode,
-          secretKey: setupDetails.secretKey
-        }
-      };
-    } catch (error) {
-      console.error('TOTP setup error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'MFA setup failed'
-      };
-    }
-  }
-
-  async verifyMFA(code: string, rememberDevice = false): Promise<AuthResponse> {
-    try {
-      console.info('Verifying MFA code');
-      const result = await confirmSignIn({
-        challengeResponse: code,
-        options: { rememberDevice }
-      });
-      console.debug('MFA verification result:', result);
-
-      if (result.isSignedIn) {
-        console.info('MFA verification successful');
-
-        return {
-          success: true,
-          user: this.currentUserSubject.value || undefined
-        };
-      }
-
-      return {
-        success: false,
-        error: 'MFA verification failed'
-      };
-    } catch (error) {
-      console.error('MFA verification error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'MFA verification failed'
-      };
-    }
-  }
-
-  // async verifyMFASetup(code: string, mfaType: MFAType): Promise<AuthResponse> {
-  //   try {
-  //     // change to switch
-  //     switch (mfaType) {
-  //       case MFAType.TOTP:
-  //         // Verify TOTP setup
-  //         const answer: VerifyTOTPSetupInput = {
-  //           code,
-  //           options: {
-  //             friendlyDeviceName: 'OneRedBoot Integration Hub'
-  //           }
-  //         }
-  //         await verifyTOTPSetup( answer );
-  //         break;
-  //       case MFAType.SMS:
-  //         // Verify SMS MFA setup
-  //         // No verification required
-  //         break;
-  //       case MFAType.EMAIL:
-  //         // Verify EMAIL MFA setup
-  //         // No verification required
-  //         break;
-  //       default:
-  //         throw new Error('Invalid MFA type');
-  //     }
-  //
-  //     this.mfaSetupRequiredSubject.next(false);
-  //
-  //     return {
-  //       success: true
-  //     };
-  //   } catch (error) {
-  //     console.error('MFA verification error:', error);
-  //     return {
-  //       success: false,
-  //       error: error instanceof Error ? error.message : 'MFA verification failed'
-  //     };
-  //   }
-  // }
-
   async signOut(): Promise<void> {
     try {
       await signOut();
@@ -462,21 +258,6 @@ export class CognitoService {
     } catch (error) {
       console.error('Sign out error:', error);
       throw new AuthError(error instanceof Error ? error.message : 'Sign out failed');
-    }
-  }
-
-  async resendConfirmationCode(username: string): Promise<AuthResponse> {
-    try {
-      await resendSignUpCode({ username });
-      return {
-        success: true
-      };
-    } catch (error) {
-      console.error('Code resend error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to resend code'
-      };
     }
   }
 
