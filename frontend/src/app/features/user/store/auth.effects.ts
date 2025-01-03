@@ -6,7 +6,7 @@
 // 3rd Party Imports
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { catchError, map, switchMap } from 'rxjs/operators';
+import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { from, of } from "rxjs";
 
 // Application Imports
@@ -20,23 +20,36 @@ export class AuthEffects {
   checkEmail$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.checkEmail),
-      switchMap(({ email }) =>
-        from(this.userService.userExists({ email } as UserQueryInput)).pipe(
+      tap(action => console.debug('Effect [CheckEmail]: Starting', action)),
+      switchMap(({ email }) => {
+        console.debug('Effect [CheckEmail]: Making service call');
+        return from(this.userService.userExists({ email } as UserQueryInput)).pipe(
+          tap(result => console.debug('Effect [CheckEmail]: Service returned', result)),
           map((exists: boolean | undefined) => {
             if (exists === undefined) {
+              console.debug('Effect [CheckEmail]: Undefined result, returning failure');
               return AuthActions.checkEmailFailure({
                 error: 'Unable to verify email status. Please try again.'
               });
             }
+            console.debug('Effect [CheckEmail]: Success, user exists:', exists);
             return AuthActions.checkEmailSuccess({ userExists: exists });
           }),
           catchError((error: Error) => {
+            console.error('Effect [CheckEmail]: Error caught', error);
             return of(AuthActions.checkEmailFailure({
               error: error.message || 'An error occurred while checking email'
             }));
-          })
-        )
-      )
+          }),
+          tap(resultAction => console.debug('Effect [CheckEmail]: Emitting action', resultAction))
+        );
+      }),
+      catchError(error => {
+        console.error('Effect [CheckEmail]: Outer error caught', error);
+        return of(AuthActions.checkEmailFailure({
+          error: 'An unexpected error occurred'
+        }));
+      })
     )
   );
 

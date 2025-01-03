@@ -101,29 +101,41 @@ export class UserService extends ApiService {
    * @param input
    */
   public async userExists(input: UserQueryInput): Promise<boolean | undefined> {
-    console.debug('doesUserExist:', input);
+    const startTime = Date.now();
+    console.debug('UserService [userExists]: Starting', { input, time: startTime });
+
     try {
+      console.debug('UserService [userExists]: Making API call');
       const response = await this.query(
         userExistQuery,
         {input: input},
-        'apiKey') as GraphQLResult<UserResponse>;
-      console.debug('doesUserExist Response: ', response);
+        'apiKey'
+      ) as GraphQLResult<UserResponse>;
 
-      // if 404 return false
+      console.debug('UserService [userExists]: API response received', {
+        response,
+        elapsed: Date.now() - startTime
+      });
+
       if (response.data?.userQueryById?.status_code === 404) {
+        console.debug('UserService [userExists]: User not found (404)');
         return false;
       }
 
-      // if not 200 throw error
       if (response.data?.userQueryById?.status_code !== 200) {
+        console.debug('UserService [userExists]: Invalid status code', response.data?.userQueryById?.status_code);
         throw new Error(`Invalid response code: ${response.data?.userQueryById?.status_code}`);
       }
 
-      // return result
-      return response.data?.userQueryById?.user?.id !== null;
+      const result = response.data?.userQueryById?.user?.id !== null;
+      console.debug('UserService [userExists]: Returning result', result);
+      return result;
 
     } catch (error) {
-      console.error('Error getting user:', error);
+      console.error('UserService [userExists]: Error caught', {
+        error,
+        elapsed: Date.now() - startTime
+      });
       return undefined;
     }
   }

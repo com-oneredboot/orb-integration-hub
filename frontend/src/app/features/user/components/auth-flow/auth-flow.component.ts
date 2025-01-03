@@ -1,4 +1,4 @@
-// file: frontend/src/app/features/auth/components/auth-flow/auth-flow.component.ts
+// file: frontend/src/app/features/user/components/auth-flow/auth-flow.component.ts
 // author: Corey Dale Peters
 // date: 2022-12-20
 // description: This file contains the Angular component that handles the authentication flow
@@ -8,12 +8,13 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {Router} from '@angular/router';
 import {Store} from '@ngrx/store';
-import {map, Observable, Subject, takeUntil} from 'rxjs';
+import {map, Observable, Subject, takeUntil, catchError, startWith, tap, of, take} from 'rxjs';
+
 import {v4 as uuidv4} from 'uuid';
 
 // App Imports
 import { AuthActions } from '../../store/auth.actions';
-import { AuthSteps } from '../../store/auth.state';
+import { AuthSteps, AuthState } from '../../store/auth.state';
 import * as fromAuth from '../../store/auth.selectors';
 import { UserCreateInput } from "../../../../core/models/user.model";
 import { QRCodeToDataURLOptions } from "qrcode";
@@ -61,9 +62,10 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
-    private store: Store,
+    private store: Store<{ auth: AuthState }>,
     private router: Router
   ) {
+    console.debug('AuthFlowComponent constructor');
 
     // Initialize the form
     this.authForm = this.fb.group({
@@ -78,7 +80,8 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       phoneNumber: [''],
       password: [''],
       emailCode: [''],
-      mfaCode: ['']
+      mfaCode: [''],
+      phoneCode: ['']
     });
 
     this.initializeForm();
@@ -136,23 +139,36 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
 
   onSubmit(): void {
 
-    if (!this.authForm.valid) return;
-
-    console.debug('Form submitted', this.authForm.value);
     if (!this.authForm.valid) {
       console.debug('Form invalid:', this.authForm.errors);
       return;
     }
 
+    console.debug('Form submitted', this.authForm.value);
+
+
     this.currentStep$
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        take(1), // Only take one value
+        tap(step => console.debug('Processing step:', step)),
+        takeUntil(this.destroy$))
       .subscribe(step => {
         const email = this.authForm.get('email')?.value;
         const password = this.authForm.get('password')?.value;
         const emailCode = this.authForm.get('emailCode')?.value;
         const mfaCode = this.authForm.get('mfaCode')?.value;
+
+        console.debug('Step processing values:', {
+          step,
+          email,
+          hasPassword: !!password,
+          hasEmailCode: !!emailCode,
+          hasMfaCode: !!mfaCode
+        });
+
         switch (step) {
           case AuthSteps.EMAIL:
+            console.debug('Dispatching checkEmail action:', { email });
             this.store.dispatch(AuthActions.checkEmail({ email }));
             break;
           case AuthSteps.PASSWORD:

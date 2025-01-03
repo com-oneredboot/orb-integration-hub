@@ -20,11 +20,12 @@ import { UserModule } from "./features/user/user.module";
   imports: [
     BrowserModule,
     ReactiveFormsModule,
+    StoreModule.forRoot({}), // order is important here
+    EffectsModule.forRoot([]), // order is important here
     AppRoutingModule,
     NgOptimizedImage,
-    UserModule,
-    StoreModule.forRoot({}),
-    EffectsModule.forRoot([])
+
+    UserModule
   ],
   providers: [],
   bootstrap: [AppComponent]

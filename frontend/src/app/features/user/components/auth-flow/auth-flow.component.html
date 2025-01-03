@@ -196,11 +196,11 @@
            [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.PHONE_VERIFY}">
         <div class="auth-flow__input-group">
           <input type="text"
-                 formControlName="verificationCode"
+                 formControlName="phoneCode"
                  class="auth-flow__input-group-field"
-                 [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('verificationCode')}"
+                 [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('phoneCode')}"
                  placeholder="Verification Code">
-          <div *ngIf="isFieldInvalid('verificationCode')" class="auth-flow__input-error">
+          <div *ngIf="isFieldInvalid('phoneCode')" class="auth-flow__input-error">
             {{ getErrorMessage('verificationCode') }}
           </div>
         </div>

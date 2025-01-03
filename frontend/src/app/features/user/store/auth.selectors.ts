@@ -1,4 +1,7 @@
-// auth.selectors.ts
+// file: frontend/src/app/features/user/store/auth.selectors.ts
+// author: Corey Dale Peters
+// date: 2025-01-03
+// description: Contains all selectors for the Auth feature
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { AuthState } from './auth.state';
 
