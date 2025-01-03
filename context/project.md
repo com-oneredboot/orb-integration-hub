@@ -285,8 +285,8 @@ orb-integration-hub/
 │   │   │   │   └── auth/
 │   │   │   │       ├── components/
 │   │   │   │       ├── store/
-│   │   │   │       ├── auth.module.ts
-│   │   │   │       └── auth.routes.ts
+│   │   │   │       ├── user.module.ts
+│   │   │   │       └── user.routes.ts
 │   │   │   ├── shared/
 │   │   │   ├── core/
 │   │   │   │   ├── models/
