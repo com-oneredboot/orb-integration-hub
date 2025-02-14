@@ -8,16 +8,16 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {Router} from '@angular/router';
 import {Store} from '@ngrx/store';
-import {map, Observable, Subject, takeUntil, catchError, startWith, tap, of, take} from 'rxjs';
+import {map, Observable, Subject, take, takeUntil, tap} from 'rxjs';
 
 import {v4 as uuidv4} from 'uuid';
 
 // App Imports
-import { AuthActions } from './store/auth.actions';
-import { AuthSteps, AuthState } from './store/auth.state';
+import {AuthActions} from './store/auth.actions';
+import {AuthState, AuthSteps} from './store/auth.state';
 import * as fromAuth from './store/auth.selectors';
-import { UserCreateInput } from "../../../../core/models/user.model";
-import { QRCodeToDataURLOptions } from "qrcode";
+import {UserCreateInput} from "../../../../core/models/user.model";
+import {QRCodeToDataURLOptions} from "qrcode";
 
 
 @Component({
@@ -50,7 +50,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   qrCodeDataUrl: string | null = null;
 
   private destroy$ = new Subject<void>();
-
 
   passwordValidations = {
     minLength: false,
@@ -101,6 +100,8 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(step => {
         this.updateValidators(step);
+        if (step !== AuthSteps.COMPLETE) return;
+        this.router.navigate(['/profile']);
       });
 
     // current user
@@ -300,7 +301,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   }
 
   private initializeForm(): void {
-
 
     this.authForm.get('password')?.valueChanges
       .pipe(takeUntil(this.destroy$))

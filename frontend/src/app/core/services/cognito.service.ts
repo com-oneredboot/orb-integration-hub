@@ -146,7 +146,13 @@ export class CognitoService {
         };
       case 'CONFIRM_SIGN_IN_WITH_TOTP_CODE':
         this.mfaSetupRequiredSubject.next(true);
-        break;
+        return {
+          status_code: 200,
+          isSignedIn: false,
+          needsMFASetup: false,
+          needsMFA: true,
+          mfaType: 'totp',
+        };
       default:
         console.error('Sign in failed:', signInResponse);
     }

@@ -9,7 +9,6 @@ import { Injectable } from "@angular/core";
 import { v4 as uuidv4 } from "uuid";
 import { Store } from '@ngrx/store';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
 
 // Application Imports
 import {ApiService} from "./api.service";

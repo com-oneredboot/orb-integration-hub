@@ -16,6 +16,8 @@ import { MfaSetupDetails } from '../../../../../core/models/auth.model';
 export const AuthActions = createActionGroup({
   source: 'Auth',
   events: {
+
+    // State 0 - Email
     'Check Email': props<{ email: string }>(),
     'Check Email Success': props<{ userExists: boolean }>(),
     'Check Email Failure': props<{ error: string }>(),

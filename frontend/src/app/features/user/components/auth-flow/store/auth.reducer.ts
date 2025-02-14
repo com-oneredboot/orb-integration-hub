@@ -145,7 +145,7 @@ export const authReducer = createReducer(
   on(AuthActions.needsMFASuccess, (state) => ({
     ...state,
     mfaEnabled: true,
-    currentStep: AuthSteps.MFA_VERIFY,
+    currentStep: AuthSteps.COMPLETE,
     isLoading: false
   })),
   on(AuthActions.needsMFAFailure, (state, { error }) => ({
