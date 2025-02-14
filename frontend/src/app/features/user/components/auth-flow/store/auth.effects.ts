@@ -10,8 +10,8 @@ import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { from, of } from "rxjs";
 
 // Application Imports
-import { UserService } from "../../../core/services/user.service";
-import { UserQueryInput } from "../../../core/models/user.model";
+import { UserService } from "../../../../../core/services/user.service";
+import { UserQueryInput } from "../../../../../core/models/user.model";
 import { AuthActions } from "./auth.actions";
 
 @Injectable()

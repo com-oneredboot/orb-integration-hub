@@ -15,8 +15,8 @@ import { HomeComponent } from './components/home/home.component';
 import { AuthFlowComponent} from "./components/auth-flow/auth-flow.component";
 import { ProfileComponent } from "./components/profile/profile.component";
 import { UserRoutes } from './user.routes';
-import { authReducer } from './store/auth.reducer';
-import { AuthEffects } from './store/auth.effects';
+import { authReducer } from './components/auth-flow/store/auth.reducer';
+import { AuthEffects } from './components/auth-flow/store/auth.effects';
 
 @NgModule({
   declarations: [

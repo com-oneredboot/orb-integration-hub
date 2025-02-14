@@ -1,4 +1,4 @@
-// file: frontend/src/app/features/auth/store/auth.actions.ts
+// file: frontend/src/app/features/auth/store/user.actions.ts
 // author: Corey Dale Peters
 // date: 2024-12-27
 // description: Contains all actions for the Auth feature
@@ -7,8 +7,8 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 
 // Application Imports
-import { User, UserCreateInput, UserQueryInput } from '../../../core/models/user.model';
-import { MfaSetupDetails } from '../../../core/models/auth.model';
+import { User, UserCreateInput, UserQueryInput } from '../../../../../core/models/user.model';
+import { MfaSetupDetails } from '../../../../../core/models/auth.model';
 
 /**
  * Auth Actions

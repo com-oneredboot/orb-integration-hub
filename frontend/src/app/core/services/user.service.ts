@@ -21,7 +21,7 @@ import {
 } from "../models/user.model";
 import { CognitoService } from "./cognito.service";
 import { AuthResponse } from "../models/auth.model";
-import { AuthActions } from '../../features/user/store/auth.actions';
+import { AuthActions } from '../../features/user/components/auth-flow/store/auth.actions';
 
 
 @Injectable({
@@ -317,6 +317,10 @@ export class UserService extends ApiService {
         message: 'Error verifying MFA'
       } as AuthResponse;
     }
+  }
+
+  public getCurrentUser$(): Observable<any> {
+    return this.currentUser.asObservable();
   }
 
 }

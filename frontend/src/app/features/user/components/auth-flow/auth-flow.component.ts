@@ -13,9 +13,9 @@ import {map, Observable, Subject, takeUntil, catchError, startWith, tap, of, tak
 import {v4 as uuidv4} from 'uuid';
 
 // App Imports
-import { AuthActions } from '../../store/auth.actions';
-import { AuthSteps, AuthState } from '../../store/auth.state';
-import * as fromAuth from '../../store/auth.selectors';
+import { AuthActions } from './store/auth.actions';
+import { AuthSteps, AuthState } from './store/auth.state';
+import * as fromAuth from './store/auth.selectors';
 import { UserCreateInput } from "../../../../core/models/user.model";
 import { QRCodeToDataURLOptions } from "qrcode";
 
