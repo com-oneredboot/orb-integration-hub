@@ -178,7 +178,7 @@ Resources:
           PRODUCTION: ApplicationSettingsInput
         }
 
-        type ApplicationUser   {
+        type ApplicationUser {
           application_id: String!
           user_id: String!
           roles: ApplicationEnvironmentRoles!
@@ -187,30 +187,30 @@ Resources:
           deleted_at: String
         }
         
-        type ApplicationUserResponse   {
+        type ApplicationUserResponse {
           status_code: Float!
           message: String
           application_user: ApplicationUser
         }
 
-        input ApplicationUserCreateInput   {
+        input ApplicationUserCreateInput {
           application_id: String!
           user_id: String!
-          roles: ApplicationEnvironmentRoles!
+          roles: ApplicationEnvironmentRolesInput!
           status: String!
           created_at: String!
         }
         
-        input ApplicationUserQueryInput   {
+        input ApplicationUserQueryInput {
           application_id: String
           user_id: String
         }
         
-        input ApplicationUserUpdateInput   {
+        input ApplicationUserUpdateInput {
           application_id: String!
           user_id: String!
           status: String
-          roles: ApplicationEnvironmentRoles
+          roles: ApplicationEnvironmentRolesInput
           deleted_at: String
         }
        
