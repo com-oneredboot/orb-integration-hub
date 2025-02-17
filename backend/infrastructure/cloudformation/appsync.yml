@@ -246,6 +246,7 @@ Resources:
         type Query {
           applicationQueryById(input: ApplicationQueryInput!): ApplicationResponse! @aws_api_key @aws_cognito_user_pools
           applicationUserQueryById(input: ApplicationUserQueryInput!): ApplicationUserResponse! @aws_api_key @aws_cognito_user_pools
+          applicationQueryByUserId(input: ApplicationQueryInput!): ApplicationResponse! @aws_api_key @aws_cognito_user_pools
           userQueryById(input: UserQueryInput!): UserResponse! @aws_api_key
         }
     
@@ -466,18 +467,18 @@ Resources:
           },
           "attributeValues": $util.toJson($ctx.args.input)
         }
-        ResponseMappingTemplate: |
-          #if($ctx.error)
-            $util.error($ctx.error.message, $ctx.error.type)
-          #end
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          $util.error($ctx.error.message, $ctx.error.type)
+        #end
             
-          #set($response = {
-            "status_code": 200,
-            "message": "Application User created successfully",
-            "application_user": $ctx.args.input
-          })
-            
-          $util.toJson($response)
+        #set($response = {
+          "status_code": 200,
+          "message": "Application User created successfully",
+          "application_user": $ctx.args.input
+        })
+          
+        $util.toJson($response)
 
   ApplicationUserQueryByIdResolver:
     Type: AWS::AppSync::Resolver
