@@ -232,13 +232,19 @@ Resources:
         }
 
         type Mutation {
+          applicationCreate(input: ApplicationCreateInput!): ApplicationResponse!  
+          applicationUpdate(input: ApplicationUpdateInput!): ApplicationResponse!  
+          applicationUserCreate(input: ApplicationUserCreateInput!): ApplicationUserResponse!  
+          applicationUserUpdate(input: ApplicationUserUpdateInput!): ApplicationUserResponse!  
           sendSMSVerificationCode(input: SMSVerificationInput!): SMSVerificationResponse! @aws_cognito_user_pools
           userCreate(input: UserCreateInput!): UserResponse! @aws_api_key @aws_cognito_user_pools 
           userUpdate(input: UserUpdateInput!): UserResponse! @aws_cognito_user_pools
         }
   
         type Query {
-          applicationQueryById(input: ApplicationQueryInput!): ApplicationResponse! @aws_api_key @aws_cognito_user_pools
+          applicationQueryById(input: ApplicationQueryInput!): ApplicationResponse!  
+          applicationUserQueryById(input: ApplicationUserQueryInput!): ApplicationUserResponse!  
+          applicationQueryByUserId(input: ApplicationQueryInput!): ApplicationsResponse!  
           userQueryById(input: UserQueryInput!): UserResponse! @aws_api_key
         }
     
