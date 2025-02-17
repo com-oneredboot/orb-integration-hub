@@ -58,6 +58,13 @@ Resources:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       Definition: |
 
+        enum ApplicationEnvironments @aws_api_key @aws_cognito_user_pools {
+          DEVELOPMENT
+          TESTING
+          STAGING
+          PRODUCTION
+        }
+
         enum Status @aws_api_key @aws_cognito_user_pools {
           ACTIVE
           PENDING
@@ -80,7 +87,34 @@ Resources:
           name: String!
           description: String
           created_at: String!
+          settings: ApplicationEnvironmentSettings!
+          roles: ApplicationEnvironmentRoles!
           deleted_at: String
+        }
+
+        type ApplicationRole @aws_api_key @aws_cognito_user_pools {
+          name: String!
+          description: String
+        }
+
+        type ApplicationEnvironmentRoles @aws_api_key @aws_cognito_user_pools {
+          DEFAULT: [ApplicationRole!]!
+          DEVELOPMENT: [ApplicationRole!]
+          TESTING: [ApplicationRole!]
+          STAGING: [ApplicationRole!]
+          PRODUCTION: [ApplicationRole!]
+        }
+        
+        type ApplicationSettings @aws_api_key @aws_cognito_user_pools {
+          debug_level: String
+        }
+
+        type ApplicationEnvironmentSettings @aws_api_key @aws_cognito_user_pools {
+          DEFAULT: ApplicationSettings!
+          DEVELOPMENT: ApplicationSettings
+          TESTING: ApplicationSettings
+          STAGING: ApplicationSettings
+          PRODUCTION: ApplicationSettings
         }
 
         type ApplicationResponse @aws_api_key @aws_cognito_user_pools {
@@ -88,12 +122,100 @@ Resources:
           message: String
           application: Application
         }
+
+        type ApplicationsResponse @aws_api_key @aws_cognito_user_pools {
+          status_code: Float!
+          message: String
+          applications: [Application]
+        }
+        
+        input ApplicationCreateInput @aws_api_key @aws_cognito_user_pools {
+          application_id: String!
+          user_id: String!
+          status: String!
+          name: String!
+          description: String
+          created_at: String!
+          settings: ApplicationSettingsInput!
+          roles: ApplicationEnvironmentRolesInput!
+        }
         
         input ApplicationQueryInput @aws_api_key @aws_cognito_user_pools {
           application_id: String
           user_id: String
         }
-       
+        
+        input ApplicationUpdateInput @aws_api_key @aws_cognito_user_pools {
+          application_id: String!
+          status: String
+          name: String
+          description: String
+          settings: ApplicationEnvironmentSettings
+          roles: ApplicationEnvironmentRoles
+          deleted_at: String
+        }
+        
+        input ApplicationRoleInput @aws_api_key @aws_cognito_user_pools {
+          name: String!
+          description: String
+        }
+        
+        type ApplicationEnvironmentRolesInput @aws_api_key @aws_cognito_user_pools {
+          DEFAULT: [ApplicationRoleInput!]!
+          DEVELOPMENT: [ApplicationRoleInput!]
+          TESTING: [ApplicationRoleInput!]
+          STAGING: [ApplicationRoleInput!]
+          PRODUCTION: [ApplicationRoleInput!]
+        }
+
+        input ApplicationSettingsInput @aws_api_key @aws_cognito_user_pools {
+          debug_level: String
+        }
+        
+        input ApplicationEnvironmentSettingsInput @aws_api_key @aws_cognito_user_pools {
+          DEFAULT: ApplicationSettingsInput!
+          DEVELOPMENT: ApplicationSettingsInput
+          TESTING: ApplicationSettingsInput
+          STAGING: ApplicationSettingsInput
+          PRODUCTION: ApplicationSettingsInput
+        }
+        
+        type ApplicationUser @aws_api_key @aws_cognito_user_pools {
+          application_id: String!
+          user_id: String!
+          roles: ApplicationEnvironmentRoles!
+          status: String!
+          created_at: String!
+          deleted_at: String
+        }
+
+        type ApplicationUserResponse @aws_api_key @aws_cognito_user_pools {
+          status_code: Float!
+          message: String
+          application_user: ApplicationUser
+        }
+        
+        input ApplicationUserCreateInput @aws_api_key @aws_cognito_user_pools {
+          application_id: String!
+          user_id: String!
+          roles: ApplicationEnvironmentRolesInput!
+          status: String!
+          created_at: String!
+        }
+        
+        input ApplicationUserQueryInput @aws_api_key @aws_cognito_user_pools {
+          application_id: String
+          user_id: String
+        }
+        
+        input ApplicationUserUpdateInput @aws_api_key @aws_cognito_user_pools {
+          application_id: String!
+          user_id: String!
+          status: String
+          roles: ApplicationEnvironmentRolesInput
+          deleted_at: String
+        }
+        
         type SMSVerificationResponse @aws_api_key @aws_cognito_user_pools {
           status_code: Float!
           message: String
