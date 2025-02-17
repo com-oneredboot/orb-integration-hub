@@ -148,8 +148,8 @@ Resources:
           status: String
           name: String
           description: String
-          settings: ApplicationEnvironmentSettings
-          roles: ApplicationEnvironmentRoles
+          settings: ApplicationEnvironmentSettingsInput
+          roles: ApplicationEnvironmentRolesInput
           deleted_at: String
         }
         
