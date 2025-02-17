@@ -6,13 +6,13 @@
 version: '1.0'
 table: users
 model:
-  partitionKey: userId
-  sortKey: applicationId
+  partitionKey: user_id
+  sortKey: application_id
   attributes:
-    userId:
+    user_id:
       type: string
       required: true
-    applicationId:
+    application_id:
       type: string
       required: true
     email:

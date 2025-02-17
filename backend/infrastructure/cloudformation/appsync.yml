@@ -57,8 +57,110 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       Definition: |
+        type Application @aws_api_key @aws_cognito_user_pools {
+          application_id: String!
+          user_id: String!
+          status: String!
+          environment: Environment!
+          name: String!
+          description: String
+          created_at: String!
+          settings: ApplicationSettings
+          roles: [ApplicationRole!]!
+          deleted_at: String
+        }
         
-        type SMSVerificationResponse @aws_api_key @aws_cognito_user_pools{
+        type ApplicationCreateInput @aws_api_key @aws_cognito_user_pools {
+          application_id: String!
+          user_id: String!
+          status: String!
+          environment: Environment!
+          name: String!
+          description: String
+          created_at: String!
+        }
+        
+        type ApplicationQueryInput @aws_api_key @aws_cognito_user_pools {
+          application_id: String
+          user_id: String
+          environment: Environment
+        }
+        
+        type ApplicationResponse @aws_api_key @aws_cognito_user_pools {
+          status_code: Float!
+          message: String
+          application: Application
+        }
+        
+        type ApplicationUpdateInput @aws_api_key @aws_cognito_user_pools {
+          status: String
+          name: String
+          description: String
+          settings: ApplicationSettings
+          roles: [ApplicationRole!]
+          deleted_at: String
+        }
+
+        enum ApplicationEnvironment @aws_api_key @aws_cognito_user_pools {
+          DEVELOPMENT
+          TESTING
+          STAGING
+          PRODUCTION
+        }
+        
+        type ApplicationRole @aws_api_key @aws_cognito_user_pools {
+          name: String!
+          description: String
+        }
+        
+        type ApplicationEnvironmentRoles @aws_api_key @aws_cognito_user_pools {
+          DEFAULT: [ApplicationRole!]!
+          DEVELOPMENT: [ApplicationRole!]
+          TESTING: [ApplicationRole!]
+          STAGING: [ApplicationRole!]
+          PRODUCTION: [ApplicationRole!]
+        }
+       
+        type ApplicationSettings @aws_api_key @aws_cognito_user_pools {
+          debug_level: String
+        }
+        
+        type ApplicationUser @aws_api_key @aws_cognito_user_pools {
+          application_id: String!
+          user_id: String!
+          roles: ApplicationEnvironmentRoles!
+          status: String!
+          created_at: String!
+          deleted_at: String
+        }
+        
+        type ApplicationUserCreateInput @aws_api_key @aws_cognito_user_pools {
+          application_id: String!
+          user_id: String!
+          environment: Environment!
+          roles: ApplicationEnvironmentRoles!
+          status: String!
+          created_at: String!
+        }
+        
+        type ApplicationUserQueryInput @aws_api_key @aws_cognito_user_pools {
+          application_id: String
+          user_id: String
+        }
+        
+        type ApplicationUserUpdateInput @aws_api_key @aws_cognito_user_pools {
+          status: String
+          roles: ApplicationEnvironmentRoles
+          deleted_at: String
+        }
+        
+        type ApplicationUserResponse @aws_api_key @aws_cognito_user_pools {
+          status_code: Float!
+          message: String
+          application_user: ApplicationUser
+        }
+        
+        type SMSVerificationResponse @aws_api_key @aws_cognito_user_pools {
           status_code: Float!
           message: String
           code: Float
@@ -68,12 +170,13 @@ Resources:
           phone_number: String!
         }
         
-        enum UserStatus @aws_api_key @aws_cognito_user_pools{
+        enum Status @aws_api_key @aws_cognito_user_pools {
           ACTIVE
           PENDING
           SUSPENDED
           INACTIVE
         }
+        
         enum UserGroup @aws_api_key @aws_cognito_user_pools{
           USER
           CUSTOMER
@@ -83,29 +186,29 @@ Resources:
         }
 
         type User @aws_api_key @aws_cognito_user_pools{
-          id: String!
+          user_id: String!
           cognito_id: String!
           email: String!
           phone_number: String
           first_name: String
           last_name: String
           groups: [UserGroup!]!
-          status: UserStatus!
+          status: Status!
           created_at: String!
         }
 
         input UserQueryInput @aws_api_key @aws_cognito_user_pools{
-          id: String
+          user_id: String
           cognito_id: String
           email: String
         }
         
         input UserCreateInput @aws_api_key @aws_cognito_user_pools{
-          id: String!
+          user_id: String!
           cognito_id: String!
           email: String!
           groups: [UserGroup!]!
-          status: UserStatus!
+          status: Status!
           created_at: String!
         }
         
@@ -115,7 +218,7 @@ Resources:
           first_name: String
           last_name: String
           groups: [UserGroup!]
-          status: UserStatus
+          status: Status
         }
         
         type UserResponse @aws_api_key @aws_cognito_user_pools{
@@ -123,14 +226,20 @@ Resources:
           message: String
           user: User
         }
-  
+
         type Mutation {
           sendSMSVerificationCode(input: SMSVerificationInput!): SMSVerificationResponse! @aws_cognito_user_pools
+          applicationCreate(input: ApplicationCreateInput!): ApplicationResponse! @aws_api_key @aws_cognito_user_pools
+          applicationUpdate(input: ApplicationUpdateInput!): ApplicationResponse! @aws_api_key @aws_cognito_user_pools
+          applicationUserCreate(input: ApplicationUserCreateInput!): ApplicationUserResponse! @aws_api_key @aws_cognito_user_pools
+          applicationUserUpdate(input: ApplicationUserUpdateInput!): ApplicationUserResponse! @aws_api_key @aws_cognito_user_pools
           userCreate(input: UserCreateInput!): UserResponse! @aws_api_key @aws_cognito_user_pools 
           userUpdate(input: UserUpdateInput!): UserResponse! @aws_cognito_user_pools
         }
   
         type Query {
+          applicationQueryById(input: ApplicationQueryInput!): ApplicationResponse! @aws_api_key @aws_cognito_user_pools
+          applicationUserQueryById(input: ApplicationUserQueryInput!): ApplicationUserResponse! @aws_api_key @aws_cognito_user_pools
           userQueryById(input: UserQueryInput!): UserResponse! @aws_api_key
         }
     
@@ -141,6 +250,26 @@ Resources:
 
 
   # Data Sources
+  ApplicationDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      Name: ApplicationDataSource
+      Type: AMAZON_DYNAMODB
+      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+      DynamoDBConfig:
+          TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-applications-table-name}}'
+          AwsRegion: !Ref AWS::Region
+  ApplicationUsersDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      Name: ApplicationUsersDataSource
+      Type: AMAZON_DYNAMODB
+      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+      DynamoDBConfig:
+          TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-application-users-table-name}}'
+          AwsRegion: !Ref AWS::Region
   SMSVerificationDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -165,6 +294,272 @@ Resources:
   # Resolvers                                           #
   # --------------------------------------------------- #
 
+  # Application Resolvers
+  ApplicationCreateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: applicationCreate
+      DataSourceName: !GetAtt ApplicationDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2017-02-28",
+          "operation": "PutItem",
+          "key": {
+            "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id)
+            "environment": $util.dynamodb.toDynamoDBJson($ctx.args.input.environment)
+          },
+          "attributeValues": {
+            "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id),
+            "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id),
+            "status": $util.dynamodb.toDynamoDBJson($ctx.args.input.status),
+            "environment": $util.dynamodb.toDynamoDBJson($ctx.args.input.environment),
+            "name": $util.dynamodb.toDynamoDBJson($ctx.args.input.name),
+            "description": $util.dynamodb.toDynamoDBJson($ctx.args.input.description),
+            "created_at": $util.dynamodb.toDynamoDBJson($ctx.args.input.created_at)
+          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          $util.error($ctx.error.message, $ctx.error.type)
+        #end
+        
+        #set($response = {
+          "status_code": 200,
+          "message": "Application created successfully",
+          "application": $ctx.args.input
+        })
+        
+        $util.toJson($response)
+
+  ApplicationQueryResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: applicationQueryById
+      DataSourceName: !GetAtt ApplicationDataSource.Name
+      RequestMappingTemplate: |
+        #set($ids = {})
+        #set($providedParams = 0)
+        
+        #if($ctx.args.input.application_id)
+          $util.qr($ids.put("application_id", $ctx.args.input.application_id))
+          #set($providedParams = $providedParams + 1)
+        #end
+        #if($ctx.args.input.user_id)
+          $util.qr($ids.put("user_id", $ctx.args.input.user_id))
+          #set($providedParams = $providedParams + 1)
+        #end
+        #if($ctx.args.input.environment)
+          $util.qr($ids.put("environment", $ctx.args.input.environment))
+          #set($providedParams = $providedParams + 1)
+        #end
+        
+        #if($providedParams != 2)
+          $util.error("Exactly two identifiers must be provided (choose from: application_id, user_id, environment)")
+        #end
+        
+        #if($ids.containsKey("application_id") && $ids.containsKey("environment"))
+          {
+            "version": "2017-02-28",
+            "operation": "GetItem",
+            "key": {
+              "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id),
+              "environment": $util.dynamodb.toDynamoDBJson($ctx.args.input.environment)
+            }
+          }
+        #elseif($ids.containsKey("user_id") && $ids.containsKey("application_id"))
+          {
+            "version": "2017-02-28",
+            "operation": "Query",
+            "index": "user-id-index",
+            "query": {
+              "expression": "user_id = :uid AND application_id = :aid",
+              "expressionValues": {
+                ":uid": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id),
+                ":aid": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id)
+              }
+            }
+          }
+        #else
+          $util.error("Invalid combination of identifiers. Must use either (application_id + environment) or (user_id + application_id)")
+        #end
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          $util.error($ctx.error.message, $ctx.error.type)
+        #end
+        
+        #set($response = {
+          "status_code": 200,
+          "application": {}
+        })
+        
+        #if($ctx.result)
+          #if($ctx.result.items)
+            #if($ctx.result.items.size() > 0)
+              #set($response.application = $ctx.result.items[0])
+            #end
+          #else
+            #set($response.application = $ctx.result)
+          #end
+        #end
+        
+        $util.toJson($response)
+
+  ApplicationUpdateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: applicationUpdate
+      DataSourceName: !GetAtt ApplicationDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2017-02-28",
+          "operation": "UpdateItem",
+          "key": {
+            "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id),
+            "environment": $util.dynamodb.toDynamoDBJson($ctx.args.input.environment)
+          },
+          "attributeValues": $util.toJson($ctx.args.input)
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          $util.error($ctx.error.message, $ctx.error.type)
+        #end
+        
+        #set($response = {
+          "status_code": 200,
+          "message": "Application updated successfully",
+          "application": $ctx.args.input
+        })
+        
+        $util.toJson($response)
+
+  # ApplicationUser Resolvers
+  ApplicationUserCreateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: applicationUserCreate
+      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2017-02-28",
+          "operation": "PutItem",
+          "key": {
+            "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id),
+            "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id)
+          },
+          "attributeValues": {
+            "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id),
+            "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id),
+            "environment": $util.dynamodb.toDynamoDBJson($ctx.args.input.environment),
+            "roles": $util.dynamodb.toListJson($ctx.args.input.roles),
+            "status": $util.dynamodb.toDynamoDBJson($ctx.args.input.status),
+            "created_at": $util.dynamodb.toDynamoDBJson($ctx.args.input.created_at)
+          }
+        }
+        ResponseMappingTemplate: |
+          #if($ctx.error)
+            $util.error($ctx.error.message, $ctx.error.type)
+          #end
+            
+          #set($response = {
+            "status_code": 200,
+            "message": "Application User created successfully",
+            "application_user": $ctx.args.input
+          })
+            
+          $util.toJson($response)
+
+  ApplicationUserQueryByIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: applicationUserQueryById
+      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
+      RequestMappingTemplate: |
+        #if($ctx.args.input.application_id && $ctx.args.input.user_id)
+          {
+            "version": "2017-02-28",
+            "operation": "GetItem",
+            "key": {
+              "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id),
+              "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id)
+            }
+          }
+        #else
+          $util.error("Invalid combination of identifiers. Must provide application_id and user_id")
+        #end
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          $util.error($ctx.error.message, $ctx.error.type)
+        #end
+        
+        #set($response = {
+          "status_code": 200,
+          "application_user": {}
+        })
+        
+        #if($ctx.result)
+          #if($ctx.result.items)
+            #if($ctx.result.items.size() == 0)
+              $util.qr($response.put("application_user", null))
+            #else
+              $util.qr($response.put("application_user", $ctx.result.items[0]))
+            #end
+          #else
+            $util.qr($response.put("application_user", $ctx.result))
+          #end
+        #else
+          $util.qr($response.put("application_user", null))
+        #end
+        
+        $util.toJson($response)
+
+  ApplicationUserUpdateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: applicationUserUpdate
+      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2017-02-28",
+          "operation": "UpdateItem",
+          "key": {
+            "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id),
+            "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id)
+          },
+          "attributeValues": $util.toJson($ctx.args.input)
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          $util.error($ctx.error.message, $ctx.error.type)
+        #end
+        
+        #set($response = {
+          "status_code": 200,
+          "message": "Application User updated successfully",
+          "application_user": $ctx.args.input
+        })
+        
+        $util.toJson($response)
+
+
+
   # User Resolvers
   UserCreateResolver:
     Type: AWS::AppSync::Resolver
@@ -179,16 +574,9 @@ Resources:
           "version": "2017-02-28",
           "operation": "PutItem",
           "key": {
-            "id": $util.dynamodb.toDynamoDBJson($ctx.args.input.id)
+            "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id)
           },
-          "attributeValues": {
-            "id": $util.dynamodb.toDynamoDBJson($ctx.args.input.id),
-            "cognito_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.cognito_id),
-            "email": $util.dynamodb.toDynamoDBJson($ctx.args.input.email),
-            "groups": $util.dynamodb.toListJson($ctx.args.input.groups),
-            "status": $util.dynamodb.toDynamoDBJson($ctx.args.input.status),
-            "created_at": $util.dynamodb.toDynamoDBJson($ctx.args.input.created_at)
-          }
+          "attributeValues": $util.toJson($ctx.args.input)
         }
       ResponseMappingTemplate: |
         #if($ctx.error)
@@ -212,8 +600,8 @@ Resources:
       DataSourceName: !GetAtt UsersDataSource.Name
       RequestMappingTemplate: |
         #set($ids = {})
-        #if($ctx.args.input.id)
-          $util.qr($ids.put("id", $ctx.args.input.id))
+        #if($ctx.args.input.user_id)
+          $util.qr($ids.put("user_id", $ctx.args.input.user_id))
         #end
         #if($ctx.args.input.cognito_id && !$ids.id)
           $util.qr($ids.put("cognito_id", $ctx.args.input.cognito_id))
@@ -223,15 +611,15 @@ Resources:
         #end
         
         #if($ids.isEmpty())
-          $util.error("At least one identifier (id, cognito_id, or email) must be provided")
+          $util.error("At least one identifier (user_id, cognito_id, or email) must be provided")
         #end
         
-        #if($ids.id)
+        #if($ids.user_id)
           {
             "version": "2017-02-28",
             "operation": "GetItem",
             "key": {
-              "id": $util.dynamodb.toDynamoDBJson($ids.id)
+              "user_id": $util.dynamodb.toDynamoDBJson($ids.user_id)
             }
           }
         #elseif($ids.cognito_id)
@@ -300,7 +688,7 @@ Resources:
           "version": "2017-02-28",
           "operation": "UpdateItem",
           "key": {
-            "id": $util.dynamodb.toDynamoDBJson($ctx.args.input.id)
+            "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id)
           },
           "attributeValues": $util.toJson($ctx.args.input)
         }
@@ -316,6 +704,7 @@ Resources:
         })
         
         $util.toJson($response)
+
 
   # SMS Verification Resolvers
   SendSMSVerificationCodeResolver:
@@ -334,9 +723,6 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($context.result)
-
-
-
 
   # IAM
   AppSyncServiceRole:

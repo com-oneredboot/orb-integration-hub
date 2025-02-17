@@ -71,7 +71,7 @@ Resources:
     Type: AWS::DynamoDB::Table
 
   # Application User Roles Table
-  ApplicationUserRolesTable:
+  ApplicationUsersTable:
     Properties:
       AttributeDefinitions:
         -
@@ -89,21 +89,9 @@ Resources:
           AttributeName: application_id
           KeyType: HASH
         -
-          AttributeName: environment
+          AttributeName: user_id
           KeyType: RANGE
-      GlobalSecondaryIndexes:
-        -
-          IndexName: user-id-index
-          KeySchema:
-            -
-              AttributeName: user_id
-              KeyType: HASH
-            -
-              AttributeName: application_id
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-application-user-roles"
+      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-application-users"
       Tags:
         - Key: Billable
           Value: "true"
