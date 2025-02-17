@@ -179,6 +179,54 @@ Resources:
     Type: AWS::DynamoDB::Table
 
   # Parameter Store
+  ApplicationsTableNameParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-applications-table-name"
+      Type: String
+      Value: !Ref ApplicationsTable
+      Description: DynamoDB Applications Table Name
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+    Type: AWS::SSM::Parameter
+  ApplicationsTableArnParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-applications-table-arn"
+      Type: String
+      Value: !GetAtt ApplicationsTable.Arn
+      Description: DynamoDB Applications Table Arn
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+    Type: AWS::SSM::Parameter
+  ApplicationUsersTableNameParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-application-users-table-name"
+      Type: String
+      Value: !Ref ApplicationUsersTable
+      Description: DynamoDB Application Users Table Name
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+    Type: AWS::SSM::Parameter
+  ApplicationUsersTableArnParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-application-users-table-arn"
+      Type: String
+      Value: !GetAtt ApplicationUsersTable.Arn
+      Description: DynamoDB Application Users Table Arn
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+    Type: AWS::SSM::Parameter
   UsersTableNameParameter:
     Properties:
       Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-users-table-name"
