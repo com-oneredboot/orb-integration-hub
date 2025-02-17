@@ -69,7 +69,7 @@ Resources:
           deleted_at: String
         }
         
-        type ApplicationCreateInput @aws_api_key @aws_cognito_user_pools {
+        input ApplicationCreateInput @aws_api_key @aws_cognito_user_pools {
           application_id: String!
           user_id: String!
           status: String!
@@ -80,7 +80,7 @@ Resources:
           created_at: String!
         }
         
-        type ApplicationQueryInput @aws_api_key @aws_cognito_user_pools {
+        input ApplicationQueryInput @aws_api_key @aws_cognito_user_pools {
           application_id: String
           user_id: String
         }
@@ -91,7 +91,14 @@ Resources:
           application: Application
         }
         
-        type ApplicationUpdateInput @aws_api_key @aws_cognito_user_pools {
+        type ApplicationsResponse @aws_api_key @aws_cognito_user_pools {
+          status_code: Float!
+          message: String
+          applications: [Application]
+        }
+        
+        input ApplicationUpdateInput @aws_api_key @aws_cognito_user_pools {
+          application_id: String!
           status: String
           name: String
           description: String
@@ -141,7 +148,7 @@ Resources:
           deleted_at: String
         }
         
-        type ApplicationUserCreateInput @aws_api_key @aws_cognito_user_pools {
+        input ApplicationUserCreateInput @aws_api_key @aws_cognito_user_pools {
           application_id: String!
           user_id: String!
           roles: ApplicationEnvironmentRoles!
@@ -149,12 +156,14 @@ Resources:
           created_at: String!
         }
         
-        type ApplicationUserQueryInput @aws_api_key @aws_cognito_user_pools {
+        input ApplicationUserQueryInput @aws_api_key @aws_cognito_user_pools {
           application_id: String
           user_id: String
         }
         
-        type ApplicationUserUpdateInput @aws_api_key @aws_cognito_user_pools {
+        input ApplicationUserUpdateInput @aws_api_key @aws_cognito_user_pools {
+          application_id: String!
+          user_id: String!
           status: String
           roles: ApplicationEnvironmentRoles
           deleted_at: String
@@ -172,7 +181,7 @@ Resources:
           code: Float
         }
         
-        input SMSVerificationInput @aws_api_key @aws_cognito_user_pools{
+        input SMSVerificationInput @aws_api_key @aws_cognito_user_pools {
           phone_number: String!
         }
         
@@ -183,7 +192,7 @@ Resources:
           INACTIVE
         }
         
-        enum UserGroup @aws_api_key @aws_cognito_user_pools{
+        enum UserGroup @aws_api_key @aws_cognito_user_pools {
           USER
           CUSTOMER
           CLIENT
@@ -191,7 +200,7 @@ Resources:
           OWNER
         }
 
-        type User @aws_api_key @aws_cognito_user_pools{
+        type User @aws_api_key @aws_cognito_user_pools {
           user_id: String!
           cognito_id: String!
           email: String!
@@ -203,13 +212,13 @@ Resources:
           created_at: String!
         }
 
-        input UserQueryInput @aws_api_key @aws_cognito_user_pools{
+        input UserQueryInput @aws_api_key @aws_cognito_user_pools {
           user_id: String
           cognito_id: String
           email: String
         }
         
-        input UserCreateInput @aws_api_key @aws_cognito_user_pools{
+        input UserCreateInput @aws_api_key @aws_cognito_user_pools {
           user_id: String!
           cognito_id: String!
           email: String!
@@ -218,7 +227,8 @@ Resources:
           created_at: String!
         }
         
-        input UserUpdateInput @aws_api_key @aws_cognito_user_pools{
+        input UserUpdateInput @aws_api_key @aws_cognito_user_pools {
+          user_id: String!
           email: String
           phone_number: String
           first_name: String
@@ -227,7 +237,7 @@ Resources:
           status: Status
         }
         
-        type UserResponse @aws_api_key @aws_cognito_user_pools{
+        type UserResponse @aws_api_key @aws_cognito_user_pools {
           status_code: Float!
           message: String
           user: User
@@ -246,7 +256,7 @@ Resources:
         type Query {
           applicationQueryById(input: ApplicationQueryInput!): ApplicationResponse! @aws_api_key @aws_cognito_user_pools
           applicationUserQueryById(input: ApplicationUserQueryInput!): ApplicationUserResponse! @aws_api_key @aws_cognito_user_pools
-          applicationQueryByUserId(input: ApplicationQueryInput!): ApplicationResponse! @aws_api_key @aws_cognito_user_pools
+          applicationQueryByUserId(input: ApplicationQueryInput!): ApplicationsResponse! @aws_api_key @aws_cognito_user_pools
           userQueryById(input: UserQueryInput!): UserResponse! @aws_api_key
         }
     
@@ -430,8 +440,7 @@ Resources:
           "version": "2017-02-28",
           "operation": "UpdateItem",
           "key": {
-            "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id),
-            "environment": $util.dynamodb.toDynamoDBJson($ctx.args.input.environment)
+            "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id)
           },
           "attributeValues": $util.toJson($ctx.args.input)
         }
