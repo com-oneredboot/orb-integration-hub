@@ -26,7 +26,7 @@ export enum UserStatus {
 }
 
 export interface User {
-  id: string;
+  user_id: string;
   cognito_id: string;
   email: string;
   first_name: string;
@@ -61,11 +61,11 @@ export type UserCreateResponse = GenericResponse & {
   };
 }
 
-export type UserQueryInput = Partial<Pick<User, 'id' | 'cognito_id' | 'email'>>;
+export type UserQueryInput = Partial<Pick<User, 'user_id' | 'cognito_id' | 'email'>>;
 
 export type UserCreateInput = Omit<User, 'first_name' | 'last_name' | 'phone_number'>;
 
-export type UserUpdateInput = Partial<Omit<User, 'id' | 'created_at' >> & { id: string };
+export type UserUpdateInput = Partial<Omit<User, 'user_id' | 'created_at' >> & { user_id: string };
 
 
 // ------------------------------ //
@@ -77,7 +77,7 @@ export const userCreateMutation = /* GraphQL */ `
       status_code
       message
       user {
-        id
+        user_id
       }
     }
   }
@@ -88,7 +88,7 @@ export const userExistQuery = `
     userQueryById(input: $input) {
       status_code
       user {
-        id
+        user_id
       }
     }
   }
@@ -100,7 +100,7 @@ export const userQueryById = /* GraphQL */ `
       status_code
       message
       user {
-        id
+        user_id
         cognito_id
         email
         phone_number

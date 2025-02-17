@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+boto3 = "1.34.29"
+python-json-logger = "2.0.7"
+pydantic = "2.6.1"
+tenacity = "8.2.3"
+
+[dev-packages]
+
+[requires]
+python_version = "3.12"
+
+
+
+

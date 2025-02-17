@@ -3,7 +3,6 @@
 // date: 2025-01-03
 // description: This file contains the cognito model.
 
-
 export interface CognitoUser {
   attributes : {
     email: string;

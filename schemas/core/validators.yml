@@ -1,0 +1,161 @@
+# file: schemas/common/validators.yaml
+# author: Corey Dale Peters
+# date: 2025-02-17
+# description: This file contains the core validators that can be used across multiple schemas
+
+version: '1.0'
+validators:
+  # User Data Validators
+  password:
+    rules:
+      - type: regex
+        pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$'
+        message: "Password must be at least 8 characters and contain uppercase, lowercase, number, and special character"
+
+  email:
+    rules:
+      - type: regex
+        pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        message: "Invalid email format"
+      - type: blacklist
+        values: ['example.com', 'test.com']
+        message: "Email domain not allowed"
+
+  phoneNumber:
+    rules:
+      - type: regex
+        pattern: '^\+?[1-9]\d{1,14}$'
+        message: "Invalid phone number format. Must follow E.164 format"
+      - type: length
+        min: 10
+        max: 15
+        message: "Phone number must be between 10 and 15 digits"
+
+  # Payment Validators
+  creditCard:
+    rules:
+      - type: luhn
+        message: "Invalid credit card number"
+      - type: supported_networks
+        values: ['visa', 'mastercard', 'amex']
+        message: "Unsupported card network"
+
+  currencyAmount:
+    rules:
+      - type: regex
+        pattern: '^\d+(\.\d{2})?$'
+        message: "Amount must be in format 0.00"
+      - type: range
+        min: 0.01
+        max: 999999.99
+        message: "Amount must be between 0.01 and 999999.99"
+
+  currencyCode:
+    rules:
+      - type: regex
+        pattern: '^[A-Z]{3}$'
+        message: "Currency code must be 3 uppercase letters"
+      - type: allowlist
+        values: ['USD', 'EUR', 'GBP', 'CAD', 'AUD']
+        message: "Unsupported currency code"
+
+  # Application Validators
+  apiKey:
+    rules:
+      - type: regex
+        pattern: '^[a-zA-Z0-9]{32}$'
+        message: "Invalid API key format"
+      - type: prefix
+        values: ['pk_', 'sk_']
+        message: "API key must start with pk_ or sk_"
+
+  applicationId:
+    rules:
+      - type: regex
+        pattern: '^[a-zA-Z0-9-]{36}$'
+        message: "Invalid application ID format"
+      - type: uuid
+        version: 4
+        message: "Application ID must be a valid UUID v4"
+
+  # Transaction Validators
+  transactionId:
+    rules:
+      - type: regex
+        pattern: '^tx_[a-zA-Z0-9]{24}$'
+        message: "Invalid transaction ID format"
+      - type: uniqueness
+        scope: 'global'
+        message: "Transaction ID must be unique"
+
+  # Role and Permission Validators
+  roleName:
+    rules:
+      - type: regex
+        pattern: '^[a-zA-Z][a-zA-Z0-9_]{2,31}$'
+        message: "Role name must start with letter and contain only alphanumeric characters and underscores"
+      - type: reserved_words
+        values: ['admin', 'root', 'system']
+        message: "Reserved role name not allowed"
+
+  permission:
+    rules:
+      - type: regex
+        pattern: '^[a-z]+:[a-z]+(:([a-z]+|\*))*$'
+        message: "Invalid permission format. Use format: resource:action[:qualifier]"
+      - type: max_depth
+        value: 4
+        message: "Permission hierarchy too deep"
+
+  # Composite Validators
+  composites:
+    paymentMethod:
+      rules:
+        - type: object
+          properties:
+            type:
+              validator: allowlist
+              values: ['credit_card', 'paypal', 'apple_pay', 'google_pay']
+            currency:
+              validator: currencyCode
+            amount:
+              validator: currencyAmount
+
+    userProfile:
+      rules:
+        - type: object
+          properties:
+            email:
+              validator: email
+            phone:
+              validator: phoneNumber
+            password:
+              validator: password
+
+  # Function Validators (for custom validation logic)
+  functions:
+    rateLimit:
+      type: function
+      parameters:
+        - name: maxAttempts
+          type: number
+        - name: timeWindow
+          type: number
+      implementation: |
+        async function rateLimit(value, { maxAttempts, timeWindow }) {
+          // Implementation details would be in the generator
+          return { valid: true, message: '' };
+        }
+
+    mfaValidation:
+      type: function
+      parameters:
+        - name: method
+          type: string
+        - name: code
+          type: string
+      implementation: |
+        async function validateMFA(value, { method, code }) {
+          // Implementation details would be in the generator
+          return { valid: true, message: '' };
+        }

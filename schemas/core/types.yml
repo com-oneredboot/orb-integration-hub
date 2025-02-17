@@ -1,0 +1,16 @@
+# file: schemas/common/types.yml
+# author: Corey Dale Peters
+# date: 2025-02-17
+# description: yaml file containing core types for the schema registry
+
+version: '1.0'
+types:
+  Email:
+    type: string
+    pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+  PhoneNumber:
+    type: string
+    pattern: '^\+?[1-9]\d{1,14}$'
+  Timestamp:
+    type: number
+    minimum: 0

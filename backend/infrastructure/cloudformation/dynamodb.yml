@@ -25,12 +25,102 @@ Parameters:
 # --------------------------------------------------- #
 Resources:
 
-  # Customers Table
+  # Applications Table
+  ApplicationsTable:
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: application_id
+          AttributeType: S
+        -
+          AttributeName: user_id
+          AttributeType: S
+        -
+          AttributeName: environment
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        -
+          AttributeName: application_id
+          KeyType: HASH
+        -
+          AttributeName: environment
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        -
+          IndexName: user-id-index
+          KeySchema:
+            -
+              AttributeName: user_id
+              KeyType: HASH
+            -
+              AttributeName: application_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-applications"
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
+    Type: AWS::DynamoDB::Table
+
+  # Application User Roles Table
+  ApplicationUserRolesTable:
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: application_id
+          AttributeType: S
+        -
+          AttributeName: user_id
+          AttributeType: S
+        -
+          AttributeName: environment
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        -
+          AttributeName: application_id
+          KeyType: HASH
+        -
+          AttributeName: environment
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        -
+          IndexName: user-id-index
+          KeySchema:
+            -
+              AttributeName: user_id
+              KeyType: HASH
+            -
+              AttributeName: application_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-application-user-roles"
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
+    Type: AWS::DynamoDB::Table
+
+  # Users Table
   UsersTable:
     Properties:
       AttributeDefinitions:
         -
-          AttributeName: id
+          AttributeName: user_id
           AttributeType: S
         -
           AttributeName: cognito_id
@@ -41,7 +131,7 @@ Resources:
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         -
-          AttributeName: id
+          AttributeName: user_id
           KeyType: HASH
       GlobalSecondaryIndexes:
         -
@@ -75,7 +165,7 @@ Resources:
     Properties:
       AttributeDefinitions:
         -
-          AttributeName: cognito_id
+          AttributeName: user_id
           AttributeType: S
         -
           AttributeName: email
@@ -83,8 +173,11 @@ Resources:
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         -
-          AttributeName: cognito_id
+          AttributeName: user_id
           KeyType: HASH
+        -
+          AttributeName: email
+          KeyType: RANGE
       GlobalSecondaryIndexes:
         -
           IndexName: email-index

@@ -1,7 +1,7 @@
 // file: frontend/src/app/services/api.service.ts
 // author: Corey Dale Peters
 // date: 2024-12-06
-// description: The API service provides a common interface for making GraphQL queries and mutations
+// description: The API service provides a core interface for making GraphQL queries and mutations
 
 // 3rd Party Imports
 import { generateClient } from 'aws-amplify/api';

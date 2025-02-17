@@ -1,0 +1,34 @@
+# file: schemas/tables/users.yml
+# author: Corey Dale Peters
+# date: 2025-02-17
+# description: yaml file containing the users table schema
+
+version: '1.0'
+table: users
+model:
+  partitionKey: userId
+  sortKey: applicationId
+  attributes:
+    userId:
+      type: string
+      required: true
+    applicationId:
+      type: string
+      required: true
+    email:
+      type: string
+      required: true
+    phoneNumber:
+      type: string
+      required: false
+    firstName:
+      type: string
+      required: true
+    lastName:
+      type: string
+      required: true
+    roles:
+      type: array
+      items:
+        type: string
+      required: true

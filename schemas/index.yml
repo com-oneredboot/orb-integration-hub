@@ -1,0 +1,16 @@
+# schemas/index.yml
+schemaRegistry:
+  version: '1.0'
+  tables:
+    - name: roles
+      currentVersion: '1.0'
+      path: ./tables/roles.yml
+    - name: users
+      currentVersion: '1.0'
+      path: ./tables/users.yml
+    - name: applications
+      currentVersion: '1.0'
+      path: ./tables/applications.yml
+  core:
+    types: ./core/types.yml
+    validators: ./core/validators.yml

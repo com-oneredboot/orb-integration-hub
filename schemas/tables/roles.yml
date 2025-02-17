@@ -1,0 +1,38 @@
+# file: schemas/tables/roles.yml
+# author: Corey Dale Peters
+# date: 2025-02-17
+# description: yaml file containing the roles table schema
+
+version: '1.0'
+table: roles
+model:
+  partitionKey: roleId
+  sortKey: applicationId
+  attributes:
+    roleId:
+      type: string
+      required: true
+    applicationId:
+      type: string
+      required: true
+    roleName:
+      type: string
+      required: true
+    roleType:
+      type: string
+      enum: [Employee, Client, Customer, Owner]
+      required: true
+    permissions:
+      type: array
+      items:
+        type: string
+      required: true
+    createdAt:
+      type: number
+      required: true
+    updatedAt:
+      type: number
+      required: true
+    active:
+      type: boolean
+      required: true
