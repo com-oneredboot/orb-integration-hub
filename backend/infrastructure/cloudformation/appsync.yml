@@ -45,7 +45,7 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       Description: "API Key for unauthenticated access"
-      Expires: 1735603200
+      Expires: 1767211838
   ApiKeySecret:
     Type: AWS::SecretsManager::Secret
     Properties:
