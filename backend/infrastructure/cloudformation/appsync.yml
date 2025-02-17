@@ -177,6 +177,42 @@ Resources:
           STAGING: ApplicationSettingsInput
           PRODUCTION: ApplicationSettingsInput
         }
+
+        type ApplicationUser   {
+          application_id: String!
+          user_id: String!
+          roles: ApplicationEnvironmentRoles!
+          status: String!
+          created_at: String!
+          deleted_at: String
+        }
+        
+        type ApplicationUserResponse   {
+          status_code: Float!
+          message: String
+          application_user: ApplicationUser
+        }
+
+        input ApplicationUserCreateInput   {
+          application_id: String!
+          user_id: String!
+          roles: ApplicationEnvironmentRoles!
+          status: String!
+          created_at: String!
+        }
+        
+        input ApplicationUserQueryInput   {
+          application_id: String
+          user_id: String
+        }
+        
+        input ApplicationUserUpdateInput   {
+          application_id: String!
+          user_id: String!
+          status: String
+          roles: ApplicationEnvironmentRoles
+          deleted_at: String
+        }
        
         type SMSVerificationResponse @aws_api_key @aws_cognito_user_pools {
           status_code: Float!
