@@ -95,6 +95,12 @@ Resources:
           message: String
           application: Application
         }
+        
+        type ApplicationsResponse @aws_api_key @aws_cognito_user_pools {
+          status_code: Float!
+          message: String
+          applications: [Application]
+        }
 
         type ApplicationRole @aws_api_key @aws_cognito_user_pools {
           name: String!
@@ -121,9 +127,55 @@ Resources:
           PRODUCTION: ApplicationSettings
         }
         
+        input ApplicationCreateInput @aws_api_key @aws_cognito_user_pools {
+          application_id: String!
+          user_id: String!
+          status: String!
+          name: String!
+          description: String
+          created_at: String!
+          settings: ApplicationSettingsInput!
+          roles: ApplicationEnvironmentRolesInput!
+        }
+        
         input ApplicationQueryInput @aws_api_key @aws_cognito_user_pools {
           application_id: String
           user_id: String
+        }
+        
+        input ApplicationUpdateInput @aws_api_key @aws_cognito_user_pools {
+          application_id: String!
+          status: String
+          name: String
+          description: String
+          settings: ApplicationEnvironmentSettings
+          roles: ApplicationEnvironmentRoles
+          deleted_at: String
+        }
+        
+        input ApplicationRoleInput @aws_api_key @aws_cognito_user_pools {
+          name: String!
+          description: String
+        }
+        
+        input ApplicationEnvironmentRolesInput @aws_api_key @aws_cognito_user_pools {
+          DEFAULT: [ApplicationRoleInput!]!
+          DEVELOPMENT: [ApplicationRoleInput!]
+          TESTING: [ApplicationRoleInput!]
+          STAGING: [ApplicationRoleInput!]
+          PRODUCTION: [ApplicationRoleInput!]
+        }
+
+        input ApplicationSettingsInput @aws_api_key @aws_cognito_user_pools {
+          debug_level: String
+        }
+        
+        input ApplicationEnvironmentSettingsInput @aws_api_key @aws_cognito_user_pools {
+          DEFAULT: ApplicationSettingsInput!
+          DEVELOPMENT: ApplicationSettingsInput
+          TESTING: ApplicationSettingsInput
+          STAGING: ApplicationSettingsInput
+          PRODUCTION: ApplicationSettingsInput
         }
        
         type SMSVerificationResponse @aws_api_key @aws_cognito_user_pools {
