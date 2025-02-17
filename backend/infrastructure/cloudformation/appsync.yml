@@ -61,12 +61,11 @@ Resources:
           application_id: String!
           user_id: String!
           status: String!
-          environment: Environment!
           name: String!
           description: String
           created_at: String!
-          settings: ApplicationSettings
-          roles: [ApplicationRole!]!
+          settings: ApplicationEnvironmentSettings!
+          roles: ApplicationEnvironmentRoles!
           deleted_at: String
         }
         
@@ -74,8 +73,9 @@ Resources:
           application_id: String!
           user_id: String!
           status: String!
-          environment: Environment!
           name: String!
+          settings: ApplicationSettings!
+          roles: ApplicationEnvironmentRoles!
           description: String
           created_at: String!
         }
@@ -83,7 +83,6 @@ Resources:
         type ApplicationQueryInput @aws_api_key @aws_cognito_user_pools {
           application_id: String
           user_id: String
-          environment: Environment
         }
         
         type ApplicationResponse @aws_api_key @aws_cognito_user_pools {
@@ -96,12 +95,12 @@ Resources:
           status: String
           name: String
           description: String
-          settings: ApplicationSettings
-          roles: [ApplicationRole!]
+          settings: ApplicationEnvironmentSettings
+          roles: ApplicationEnvironmentRoles
           deleted_at: String
         }
 
-        enum ApplicationEnvironment @aws_api_key @aws_cognito_user_pools {
+        enum ApplicationEnvironments @aws_api_key @aws_cognito_user_pools {
           DEVELOPMENT
           TESTING
           STAGING
@@ -120,6 +119,14 @@ Resources:
           STAGING: [ApplicationRole!]
           PRODUCTION: [ApplicationRole!]
         }
+        
+        type ApplicationEnvironmentSettings @aws_api_key @aws_cognito_user_pools {
+          DEFAULT: ApplicationSettings!
+          DEVELOPMENT: ApplicationSettings
+          TESTING: ApplicationSettings
+          STAGING: ApplicationSettings
+          PRODUCTION: ApplicationSettings
+        }
        
         type ApplicationSettings @aws_api_key @aws_cognito_user_pools {
           debug_level: String
@@ -137,7 +144,6 @@ Resources:
         type ApplicationUserCreateInput @aws_api_key @aws_cognito_user_pools {
           application_id: String!
           user_id: String!
-          environment: Environment!
           roles: ApplicationEnvironmentRoles!
           status: String!
           created_at: String!
@@ -309,17 +315,8 @@ Resources:
           "operation": "PutItem",
           "key": {
             "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id)
-            "environment": $util.dynamodb.toDynamoDBJson($ctx.args.input.environment)
           },
-          "attributeValues": {
-            "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id),
-            "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id),
-            "status": $util.dynamodb.toDynamoDBJson($ctx.args.input.status),
-            "environment": $util.dynamodb.toDynamoDBJson($ctx.args.input.environment),
-            "name": $util.dynamodb.toDynamoDBJson($ctx.args.input.name),
-            "description": $util.dynamodb.toDynamoDBJson($ctx.args.input.description),
-            "created_at": $util.dynamodb.toDynamoDBJson($ctx.args.input.created_at)
-          }
+          "attributeValues": $util.toJson($ctx.args.input)
         }
       ResponseMappingTemplate: |
         #if($ctx.error)
@@ -334,7 +331,7 @@ Resources:
         
         $util.toJson($response)
 
-  ApplicationQueryResolver:
+  ApplicationQueryByIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
@@ -343,50 +340,16 @@ Resources:
       FieldName: applicationQueryById
       DataSourceName: !GetAtt ApplicationDataSource.Name
       RequestMappingTemplate: |
-        #set($ids = {})
-        #set($providedParams = 0)
-        
         #if($ctx.args.input.application_id)
-          $util.qr($ids.put("application_id", $ctx.args.input.application_id))
-          #set($providedParams = $providedParams + 1)
-        #end
-        #if($ctx.args.input.user_id)
-          $util.qr($ids.put("user_id", $ctx.args.input.user_id))
-          #set($providedParams = $providedParams + 1)
-        #end
-        #if($ctx.args.input.environment)
-          $util.qr($ids.put("environment", $ctx.args.input.environment))
-          #set($providedParams = $providedParams + 1)
-        #end
-        
-        #if($providedParams != 2)
-          $util.error("Exactly two identifiers must be provided (choose from: application_id, user_id, environment)")
-        #end
-        
-        #if($ids.containsKey("application_id") && $ids.containsKey("environment"))
           {
             "version": "2017-02-28",
             "operation": "GetItem",
             "key": {
-              "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id),
-              "environment": $util.dynamodb.toDynamoDBJson($ctx.args.input.environment)
-            }
-          }
-        #elseif($ids.containsKey("user_id") && $ids.containsKey("application_id"))
-          {
-            "version": "2017-02-28",
-            "operation": "Query",
-            "index": "user-id-index",
-            "query": {
-              "expression": "user_id = :uid AND application_id = :aid",
-              "expressionValues": {
-                ":uid": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id),
-                ":aid": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id)
-              }
+              "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id)
             }
           }
         #else
-          $util.error("Invalid combination of identifiers. Must use either (application_id + environment) or (user_id + application_id)")
+          $util.error("Invalid identifier. Must provide application_id")
         #end
       ResponseMappingTemplate: |
         #if($ctx.error)
@@ -400,16 +363,59 @@ Resources:
         
         #if($ctx.result)
           #if($ctx.result.items)
-            #if($ctx.result.items.size() > 0)
-              #set($response.application = $ctx.result.items[0])
+            #if($ctx.result.items.size() == 0)
+              $util.qr($response.put("application", null))
+            #else
+              $util.qr($response.put("application", $ctx.result.items[0]))
             #end
           #else
-            #set($response.application = $ctx.result)
+            $util.qr($response.put("application", $ctx.result))
           #end
+        #else
+          $util.qr($response.put("application", null))
         #end
         
         $util.toJson($response)
 
+  ApplicationQueryByUserIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: applicationQueryByUserId
+      DataSourceName: !GetAtt ApplicationDataSource.Name
+      RequestMappingTemplate: |
+        #if($ctx.args.input.user_id)
+          {
+            "version": "2017-02-28",
+            "operation": "Query",
+            "index": "user_id-index",
+            "query": {
+              "expression": "user_id = :userId",
+              "expressionValues": {
+                ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id)
+              }
+            }
+          }
+        #else
+          $util.error("Invalid identifier. Must provide user_id")
+        #end
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          $util.error($ctx.error.message, $ctx.error.type)
+        #end
+        
+        #set($response = {
+          "status_code": 200,
+          "applications": []
+        })
+        
+        #if($ctx.result.items)
+          $util.qr($response.put("applications", $ctx.result.items))
+        #end
+        
+        $util.toJson($response)
   ApplicationUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
@@ -458,14 +464,7 @@ Resources:
             "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id),
             "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id)
           },
-          "attributeValues": {
-            "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id),
-            "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id),
-            "environment": $util.dynamodb.toDynamoDBJson($ctx.args.input.environment),
-            "roles": $util.dynamodb.toListJson($ctx.args.input.roles),
-            "status": $util.dynamodb.toDynamoDBJson($ctx.args.input.status),
-            "created_at": $util.dynamodb.toDynamoDBJson($ctx.args.input.created_at)
-          }
+          "attributeValues": $util.toJson($ctx.args.input)
         }
         ResponseMappingTemplate: |
           #if($ctx.error)

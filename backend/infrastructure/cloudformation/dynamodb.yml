@@ -35,20 +35,14 @@ Resources:
         -
           AttributeName: user_id
           AttributeType: S
-        -
-          AttributeName: environment
-          AttributeType: S
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         -
           AttributeName: application_id
           KeyType: HASH
-        -
-          AttributeName: environment
-          KeyType: RANGE
       GlobalSecondaryIndexes:
         -
-          IndexName: user-id-index
+          IndexName: user-id-index # gets all the applications owned by a given user
           KeySchema:
             -
               AttributeName: user_id
@@ -80,11 +74,8 @@ Resources:
         -
           AttributeName: user_id
           AttributeType: S
-        -
-          AttributeName: environment
-          AttributeType: S
       BillingMode: PAY_PER_REQUEST
-      KeySchema:
+      KeySchema: # for a given application, get all the users
         -
           AttributeName: application_id
           KeyType: HASH
