@@ -52,7 +52,7 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
-      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-applications"
+      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-applications1"
       Tags:
         - Key: Billable
           Value: "true"
@@ -82,7 +82,7 @@ Resources:
         -
           AttributeName: user_id
           KeyType: RANGE
-      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-application-users"
+      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-application-users1"
       Tags:
         - Key: Billable
           Value: "true"
