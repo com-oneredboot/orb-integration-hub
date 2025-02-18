@@ -127,7 +127,7 @@ Resources:
           PRODUCTION: ApplicationSettings
         }
         
-        input ApplicationCreateInput @aws_api_key @aws_cognito_user_pools {
+        input ApplicationCreateInput {
           application_id: String!
           user_id: String!
           status: String!
@@ -138,12 +138,12 @@ Resources:
           roles: ApplicationEnvironmentRolesInput!
         }
         
-        input ApplicationQueryInput @aws_api_key @aws_cognito_user_pools {
+        input ApplicationQueryInput {
           application_id: String
           user_id: String
         }
         
-        input ApplicationUpdateInput @aws_api_key @aws_cognito_user_pools {
+        input ApplicationUpdateInput {
           application_id: String!
           status: String
           name: String
@@ -153,12 +153,12 @@ Resources:
           deleted_at: String
         }
         
-        input ApplicationRoleInput @aws_api_key @aws_cognito_user_pools {
+        input ApplicationRoleInput {
           name: String!
           description: String
         }
         
-        input ApplicationEnvironmentRolesInput @aws_api_key @aws_cognito_user_pools {
+        input ApplicationEnvironmentRolesInput {
           DEFAULT: [ApplicationRoleInput!]!
           DEVELOPMENT: [ApplicationRoleInput!]
           TESTING: [ApplicationRoleInput!]
@@ -166,11 +166,11 @@ Resources:
           PRODUCTION: [ApplicationRoleInput!]
         }
 
-        input ApplicationSettingsInput @aws_api_key @aws_cognito_user_pools {
+        input ApplicationSettingsInput {
           debug_level: String
         }
         
-        input ApplicationEnvironmentSettingsInput @aws_api_key @aws_cognito_user_pools {
+        input ApplicationEnvironmentSettingsInput {
           DEFAULT: ApplicationSettingsInput!
           DEVELOPMENT: ApplicationSettingsInput
           TESTING: ApplicationSettingsInput
@@ -178,7 +178,7 @@ Resources:
           PRODUCTION: ApplicationSettingsInput
         }
 
-        type ApplicationUser {
+        type ApplicationUser @aws_api_key @aws_cognito_user_pools {
           application_id: String!
           user_id: String!
           roles: ApplicationEnvironmentRoles!
@@ -187,7 +187,7 @@ Resources:
           deleted_at: String
         }
         
-        type ApplicationUserResponse {
+        type ApplicationUserResponse @aws_api_key @aws_cognito_user_pools {
           status_code: Float!
           message: String
           application_user: ApplicationUser
@@ -220,7 +220,7 @@ Resources:
           code: Float
         }
         
-        input SMSVerificationInput @aws_api_key @aws_cognito_user_pools {
+        input SMSVerificationInput {
           phone_number: String!
         }
 
@@ -236,13 +236,13 @@ Resources:
           created_at: String!
         }
 
-        input UserQueryInput @aws_api_key @aws_cognito_user_pools {
+        input UserQueryInput {
           user_id: String
           cognito_id: String
           email: String
         }
         
-        input UserCreateInput @aws_api_key @aws_cognito_user_pools {
+        input UserCreateInput {
           user_id: String!
           cognito_id: String!
           email: String!
@@ -251,7 +251,7 @@ Resources:
           created_at: String!
         }
         
-        input UserUpdateInput @aws_api_key @aws_cognito_user_pools {
+        input UserUpdateInput {
           user_id: String!
           email: String
           phone_number: String
@@ -268,19 +268,19 @@ Resources:
         }
 
         type Mutation {
-          applicationCreate(input: ApplicationCreateInput!): ApplicationResponse!  
-          applicationUpdate(input: ApplicationUpdateInput!): ApplicationResponse!  
-          applicationUserCreate(input: ApplicationUserCreateInput!): ApplicationUserResponse!  
-          applicationUserUpdate(input: ApplicationUserUpdateInput!): ApplicationUserResponse!  
+          applicationCreate(input: ApplicationCreateInput!): ApplicationResponse! @aws_cognito_user_pools 
+          applicationUpdate(input: ApplicationUpdateInput!): ApplicationResponse! @aws_cognito_user_pools
+          applicationUserCreate(input: ApplicationUserCreateInput!): ApplicationUserResponse! @aws_cognito_user_pools 
+          applicationUserUpdate(input: ApplicationUserUpdateInput!): ApplicationUserResponse! @aws_cognito_user_pools  
           sendSMSVerificationCode(input: SMSVerificationInput!): SMSVerificationResponse! @aws_cognito_user_pools
           userCreate(input: UserCreateInput!): UserResponse! @aws_api_key @aws_cognito_user_pools 
           userUpdate(input: UserUpdateInput!): UserResponse! @aws_cognito_user_pools
         }
   
         type Query {
-          applicationQueryById(input: ApplicationQueryInput!): ApplicationResponse!  
-          applicationUserQueryById(input: ApplicationUserQueryInput!): ApplicationUserResponse!  
-          applicationQueryByUserId(input: ApplicationQueryInput!): ApplicationsResponse!  
+          applicationQueryById(input: ApplicationQueryInput!): ApplicationResponse! @aws_cognito_user_pools 
+          applicationUserQueryById(input: ApplicationUserQueryInput!): ApplicationUserResponse! @aws_cognito_user_pools
+          applicationQueryByUserId(input: ApplicationQueryInput!): ApplicationsResponse! @aws_cognito_user_pools
           userQueryById(input: UserQueryInput!): UserResponse! @aws_api_key
         }
     
