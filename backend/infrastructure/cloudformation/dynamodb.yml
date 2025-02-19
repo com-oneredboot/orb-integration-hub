@@ -140,43 +140,6 @@ Resources:
         - Key: ProjectId
           Value: !Ref ProjectId
     Type: AWS::DynamoDB::Table
-  UserProfilesTable:
-    Properties:
-      AttributeDefinitions:
-        -
-          AttributeName: user_id
-          AttributeType: S
-        -
-          AttributeName: email
-          AttributeType: S
-      BillingMode: PAY_PER_REQUEST
-      KeySchema:
-        -
-          AttributeName: user_id
-          KeyType: HASH
-        -
-          AttributeName: email
-          KeyType: RANGE
-      GlobalSecondaryIndexes:
-        -
-          IndexName: email-index
-          KeySchema:
-            -
-              AttributeName: email
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-user-profiles"
-      Tags:
-        - Key: Billable
-          Value: "true"
-        - Key: CustomerId
-          Value: !Ref CustomerId
-        - Key: Environment
-          Value: !Ref Environment
-        - Key: ProjectId
-          Value: !Ref ProjectId
-    Type: AWS::DynamoDB::Table
 
   # Parameter Store
   ApplicationsTableNameParameter:
@@ -245,30 +208,6 @@ Resources:
       Type: String
       Value: !GetAtt UsersTable.Arn
       Description: DynamoDB Users Table Arn
-      Tags:
-        Billable: true
-        CustomerId: !Ref CustomerId
-        Environment: !Ref Environment
-        ProjectId: !Ref ProjectId
-    Type: AWS::SSM::Parameter
-  UserProfilesTableNameParameter:
-    Properties:
-      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-user-profiles-table-name"
-      Type: String
-      Value: !Ref UserProfilesTable
-      Description: DynamoDB User Profiles Table Name
-      Tags:
-        Billable: true
-        CustomerId: !Ref CustomerId
-        Environment: !Ref Environment
-        ProjectId: !Ref ProjectId
-    Type: AWS::SSM::Parameter
-  UserProfilesTableArnParameter:
-    Properties:
-      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-user-profiles-table-arn"
-      Type: String
-      Value: !GetAtt UserProfilesTable.Arn
-      Description: DynamoDB User Profiles Table Arn
       Tags:
         Billable: true
         CustomerId: !Ref CustomerId

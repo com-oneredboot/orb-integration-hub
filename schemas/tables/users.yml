@@ -12,23 +12,30 @@ model:
     user_id:
       type: string
       required: true
-    application_id:
+    cognito_id:
       type: string
       required: true
     email:
       type: string
       required: true
-    phoneNumber:
+    phone_number:
       type: string
       required: false
-    firstName:
+    first_name:
       type: string
       required: true
-    lastName:
+    last_name:
       type: string
       required: true
-    roles:
+    groups:
       type: array
       items:
         type: string
       required: true
+    status:
+      type: string
+      enum: [ ACTIVE, PENDING, SUSPENDED, INACTIVE ]
+      required: true
+    created_at:
+        type: number
+        required: true
