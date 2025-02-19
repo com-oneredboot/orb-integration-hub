@@ -103,7 +103,7 @@ Resources:
                   - dynamodb:PutItem
                   - dynamodb:GetItem
                 Resource:
-                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-user-profiles-table-arn}}'
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-table-arn}}'
         - PolicyName: SecretsManagerAccess
           PolicyDocument:
             Version: '2012-10-17'

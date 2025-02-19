@@ -24,7 +24,6 @@ Parameters:
 
 # --------------------------------------------------- #
 Resources:
-
   # Applications Table
   ApplicationsTable:
     Properties:

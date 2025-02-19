@@ -1,0 +1,26 @@
+from dataclasses import dataclass
+from typing import List, Optional
+from datetime import datetime
+from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
+
+@dataclass
+class {{ model_name }}:
+    {%- for attr, details in attributes.items() %}
+    {{ attr }}: {% if details.type == 'array' %}List[{{ details.items.type }}]{% else %}{{ details.type }}{% endif %}
+    {%- endfor %}
+
+    @classmethod
+    def from_dynamodb(cls, item: dict) -> "{{ model_name }}":
+        deserializer = TypeDeserializer()
+        return cls(**{
+            k: deserializer.deserialize(v)
+            for k, v in item.items()
+        })
+
+    def to_dynamodb(self) -> dict:
+        serializer = TypeSerializer()
+        return {
+            k: serializer.serialize(v)
+            for k, v in self.__dict__.items()
+        }
+```
