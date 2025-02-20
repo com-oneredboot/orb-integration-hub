@@ -6,19 +6,19 @@
 version: '1.0'
 table: roles
 model:
-  partitionKey: roleId
-  sortKey: applicationId
+  partition_key: role_id
+  sort_key: application_id
   attributes:
-    roleId:
+    role_id:
       type: string
       required: true
-    applicationId:
+    application_id:
       type: string
       required: true
-    roleName:
+    role_name:
       type: string
       required: true
-    roleType:
+    role_type:
       type: string
       enum: [Employee, Client, Customer, Owner]
       required: true
@@ -27,10 +27,10 @@ model:
       items:
         type: string
       required: true
-    createdAt:
+    created_at:
       type: number
       required: true
-    updatedAt:
+    updated_at:
       type: number
       required: true
     active:

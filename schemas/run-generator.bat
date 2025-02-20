@@ -4,6 +4,11 @@
 
 echo Starting schema generator...
 
+:: Store current directory
+set CURRENT_DIR=%CD%
+set SCRIPT_DIR=%~dp0
+cd %SCRIPT_DIR%
+
 :: Check if pipenv is installed
 where pipenv >nul 2>&1
 if %ERRORLEVEL% neq 0 (
@@ -14,36 +19,21 @@ if %ERRORLEVEL% neq 0 (
 )
 
 :: Install dependencies if needed
-echo Checking dependencies...
-findstr /C:"pyyaml" Pipfile >nul 2>&1
-set YAML_MISSING=%ERRORLEVEL%
-findstr /C:"jinja2" Pipfile >nul 2>&1
-set JINJA_MISSING=%ERRORLEVEL%
-
-if %YAML_MISSING% neq 0 (
-    echo PyYAML not found in Pipfile
-    set INSTALL_DEPS=1
-)
-if %JINJA_MISSING% neq 0 (
-    echo Jinja2 not found in Pipfile
-    set INSTALL_DEPS=1
+echo Checking and installing dependencies if needed...
+pipenv install pyyaml jinja2
+if %ERRORLEVEL% geq 2 (
+    echo Critical error installing dependencies
+    pause
+    exit /b 1
 )
 
-if defined INSTALL_DEPS (
-    echo Installing required dependencies...
-    pipenv install pyyaml jinja2
-    if %ERRORLEVEL% neq 0 (
-        echo Failed to install dependencies
-        pause
-        exit /b 1
-    )
-    echo Dependencies installed.
-)
-
-:: Run the generator script
+:: Run the generator script - use the full path to index.yml
 echo Running schema generator...
-pipenv run python schemas/generate.py
+pipenv run python %SCRIPT_DIR%generate.py
 set RESULT=%ERRORLEVEL%
+
+:: Return to original directory
+cd %CURRENT_DIR%
 
 :: Check the exit status
 if %RESULT% equ 0 (

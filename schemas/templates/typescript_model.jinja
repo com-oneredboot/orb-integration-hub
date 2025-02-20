@@ -1,28 +1,38 @@
+/**
+ * {{ model_name }} Model
+ * Generated code - do not modify directly
+ */
+
 export interface {{ model_name }} {
 {%- for attr, details in attributes.items() %}
-  {{ attr }}: {% if details.type == 'array' %}{{ details.items.type }}[]{% else %}{{ details.type }}{% endif %};
+  {{ attr }}: {% if details.type == 'array' %}{% if details.items %}{{ details.items.type }}[]{% else %}any[]{% endif %}{% else %}{{ details.type }}{% endif %};
 {%- endfor %}
 }
 
 export class {{ model_name }}Model implements {{ model_name }} {
-  constructor(data: Partial<{{ model_name }}>) {
+{%- for attr, details in attributes.items() %}
+  {{ attr }}: {% if details.type == 'array' %}{% if details.items %}{{ details.items.type }}[]{% else %}any[]{% endif %}{% else %}{{ details.type }}{% endif %}{% if details.type == 'array' %} = []{% elif details.type == 'string' %} = ''{% elif details.type == 'number' %} = 0{% elif details.type == 'boolean' %} = false{% endif %};
+{%- endfor %}
+
+  constructor(data: Partial<{{ model_name }}> = {}) {
     Object.assign(this, data);
   }
 
-  static fromDynamoDB(item: AWS.DynamoDB.AttributeMap): {{ model_name }} {
+  static fromDynamoDB(item: Record<string, any>): {{ model_name }} {
+    if (!item) return new {{ model_name }}Model();
+
     return new {{ model_name }}Model({
       {%- for attr, details in attributes.items() %}
-      {{ attr }}: item.{{ attr }},
+      '{{ attr }}': item['{{ attr }}'],
       {%- endfor %}
     });
   }
 
-  toDynamoDB(): AWS.DynamoDB.AttributeMap {
+  toDynamoDB(): Record<string, any> {
     return {
       {%- for attr, details in attributes.items() %}
-      {{ attr }}: this.{{ attr }},
+      '{{ attr }}': this.{{ attr }},
       {%- endfor %}
     };
   }
 }
-```

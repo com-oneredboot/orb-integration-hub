@@ -1,6 +1,6 @@
 # files: schemas/generate.py
 # author: Corey Dale Peters
-# date: 2025-02-19
+# date: 2025-02-20
 # description: This file is used to generate the TypeScript and Python models from the schema files
 # defined in index.yml.
 
@@ -12,7 +12,7 @@ from pathlib import Path
 
 # 3rd party imports
 import yaml
-from jinja2 import Template
+from jinja2 import Template, Environment, FileSystemLoader
 
 # Set up logging
 logger = logging.getLogger('schema_generator')
@@ -31,26 +31,54 @@ file_handler.setFormatter(logging.Formatter(log_format))
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 
+# Get the directory where this script is located
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-def load_template(template_path):
+
+def setup_jinja_env():
+    """
+    Set up the Jinja environment.
+
+    :return: Configured Jinja environment
+    """
+    # Create Jinja environment
+    env = Environment(loader=FileSystemLoader(os.path.join(SCRIPT_DIR, 'templates')))
+    return env
+
+
+def load_template(template_path, jinja_env=None):
     """
     Load a template from the templates directory.
 
     :param template_path: Path to the template file
+    :param jinja_env: Optional Jinja environment to use
     :return: Template content as string
     :raises FileNotFoundError: If template file doesn't exist
     :raises Exception: For any other errors during file reading
     """
+    # If using a Jinja environment, use it to load the template
+    if jinja_env:
+        template_name = os.path.basename(template_path)
+        try:
+            template = jinja_env.get_template(template_name)
+            logger.debug("Successfully loaded template: %s using Jinja env", template_name)
+            return template
+        except Exception as e:
+            logger.error("Error loading template %s with Jinja env: %s", template_name, str(e))
+            raise
+
+    # Otherwise, load the template directly
+    full_path = os.path.join(SCRIPT_DIR, template_path)
     try:
-        with open(template_path, 'r') as file:
+        with open(full_path, 'r') as file:
             template_content = file.read()
-            logger.debug("Successfully loaded template: %s", template_path)
-            return template_content
+            logger.debug("Successfully loaded template: %s", full_path)
+            return Template(template_content)
     except FileNotFoundError:
-        logger.error("Template file not found: %s", template_path)
+        logger.error("Template file not found: %s", full_path)
         raise
     except Exception as e:
-        logger.error("Error loading template %s: %s", template_path, str(e))
+        logger.error("Error loading template %s: %s", full_path, str(e))
         raise
 
 
@@ -64,19 +92,21 @@ def load_schema(schema_path):
     :raises FileNotFoundError: If schema file doesn't exist
     :raises Exception: For any other errors during file reading or parsing
     """
+    # Resolve the schema path relative to script directory
+    full_path = os.path.join(SCRIPT_DIR, schema_path)
     try:
-        with open(schema_path, 'r') as file:
+        with open(full_path, 'r') as file:
             schema = yaml.safe_load(file)
-            logger.debug("Successfully loaded schema from %s", schema_path)
+            logger.debug("Successfully loaded schema from %s", full_path)
             return schema
     except FileNotFoundError:
-        logger.error("Schema file not found: %s", schema_path)
+        logger.error("Schema file not found: %s", full_path)
         raise
     except yaml.YAMLError as e:
-        logger.error("Invalid YAML in schema %s: %s", schema_path, str(e))
+        logger.error("Invalid YAML in schema %s: %s", full_path, str(e))
         raise
     except Exception as e:
-        logger.error("Error loading schema %s: %s", schema_path, str(e))
+        logger.error("Error loading schema %s: %s", full_path, str(e))
         raise
 
 
@@ -91,7 +121,7 @@ def load_index():
     return load_schema('index.yml')
 
 
-def generate_typescript_model(table_name, schema_path):
+def generate_typescript_model(table_name, schema_path, jinja_env):
     """
     Generate TypeScript model from schema.
 
@@ -100,6 +130,7 @@ def generate_typescript_model(table_name, schema_path):
 
     :param table_name: Name of the table/model to generate
     :param schema_path: Path to the schema file
+    :param jinja_env: Jinja environment
     :return: Boolean indicating success or failure
     """
     logger.info("Starting TypeScript model generation for '%s'", table_name)
@@ -107,33 +138,47 @@ def generate_typescript_model(table_name, schema_path):
     try:
         # Load the schema file
         schema = load_schema(schema_path)
-        logger.debug("Loaded schema with %d models", len(schema.get('models', {})))
+        logger.debug("Loaded schema from %s", schema_path)
 
-        # Convert table_name to proper model name (capitalize first letter)
-        model_name = table_name.capitalize()
+        # Convert table_name to proper model name - singular and capitalized
+        # 'roles' -> 'Role', 'users' -> 'User', etc.
+        if table_name.endswith('s'):
+            model_name = table_name[:-1].capitalize()
+            model_file_name = table_name[:-1]  # for filename, use singular but don't capitalize
+        else:
+            model_name = table_name.capitalize()
+            model_file_name = table_name  # for filename, use as-is if not plural
 
-        # Extract the model
-        if 'models' not in schema or model_name not in schema['models']:
-            logger.error("Schema missing required 'models.%s' section", model_name)
+        logger.debug("Using model name '%s' for table '%s'", model_name, table_name)
+
+        # Extract the model - check for new structure format
+        if 'model' in schema and 'attributes' in schema['model']:
+            # New structure with top-level 'model' key
+            model = schema['model']
+            logger.debug("Found model attributes using new schema structure")
+        elif 'models' in schema and model_name in schema['models']:
+            # Old structure with 'models.ModelName' format
+            model = schema['models'][model_name]
+            logger.debug("Found model attributes using old schema structure")
+        else:
+            logger.error("Schema missing required model definition. Checked both 'model' and 'models.%s'", model_name)
             return False
 
-        model = schema['models'][model_name]
-        logger.debug("%s model has %d attributes", model_name, len(model.get('attributes', {})))
+        logger.debug("Model has %d attributes", len(model.get('attributes', {})))
 
         # Load the TypeScript template
-        template_path = 'templates/typescript_model.jinja'
-        ts_template = load_template(template_path)
+        template = load_template('typescript_model.jinja', jinja_env)
 
         # Render the template with model data
-        ts_code = Template(ts_template).render(
+        ts_code = template.render(
             model_name=model_name,
             attributes=model['attributes']
         )
         logger.debug("Successfully rendered TypeScript template")
 
-        # Prepare output location - create file name based on table name
+        # Prepare output location - create file name based on singular form
         output_dir = Path('../frontend/src/app/core/models')
-        output_file = output_dir / f"{table_name}.model.ts"
+        output_file = output_dir / f"{model_file_name}.model.ts"
 
         # Ensure directory exists
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -154,7 +199,7 @@ def generate_typescript_model(table_name, schema_path):
         return False
 
 
-def generate_python_model(table_name, schema_path):
+def generate_python_model(table_name, schema_path, jinja_env):
     """
     Generate Python model from schema.
 
@@ -163,6 +208,7 @@ def generate_python_model(table_name, schema_path):
 
     :param table_name: Name of the table/model to generate
     :param schema_path: Path to the schema file
+    :param jinja_env: Jinja environment
     :return: Boolean indicating success or failure
     """
     logger.info("Starting Python model generation for '%s'", table_name)
@@ -170,33 +216,47 @@ def generate_python_model(table_name, schema_path):
     try:
         # Load the schema file
         schema = load_schema(schema_path)
-        logger.debug("Loaded schema with %d models", len(schema.get('models', {})))
+        logger.debug("Loaded schema from %s", schema_path)
 
-        # Convert table_name to proper model name (capitalize first letter)
-        model_name = table_name.capitalize()
+        # Convert table_name to proper model name - singular and capitalized
+        # 'roles' -> 'Role', 'users' -> 'User', etc.
+        if table_name.endswith('s'):
+            model_name = table_name[:-1].capitalize()
+            model_file_name = table_name[:-1]  # for filename, use singular but don't capitalize
+        else:
+            model_name = table_name.capitalize()
+            model_file_name = table_name  # for filename, use as-is if not plural
 
-        # Extract the model
-        if 'models' not in schema or model_name not in schema['models']:
-            logger.error("Schema missing required 'models.%s' section", model_name)
+        logger.debug("Using model name '%s' for table '%s'", model_name, table_name)
+
+        # Extract the model - check for new structure format
+        if 'model' in schema and 'attributes' in schema['model']:
+            # New structure with top-level 'model' key
+            model = schema['model']
+            logger.debug("Found model attributes using new schema structure")
+        elif 'models' in schema and model_name in schema['models']:
+            # Old structure with 'models.ModelName' format
+            model = schema['models'][model_name]
+            logger.debug("Found model attributes using old schema structure")
+        else:
+            logger.error("Schema missing required model definition. Checked both 'model' and 'models.%s'", model_name)
             return False
 
-        model = schema['models'][model_name]
-        logger.debug("%s model has %d attributes", model_name, len(model.get('attributes', {})))
+        logger.debug("Model has %d attributes", len(model.get('attributes', {})))
 
         # Load the Python template
-        template_path = 'templates/python_model.jinja'
-        py_template = load_template(template_path)
+        template = load_template('python_model.jinja', jinja_env)
 
         # Render the template with model data
-        py_code = Template(py_template).render(
+        py_code = template.render(
             model_name=model_name,
             attributes=model['attributes']
         )
         logger.debug("Successfully rendered Python template")
 
-        # Prepare output location
+        # Prepare output location - using singular form for file name
         output_dir = Path('../backend/src/models')
-        output_file = output_dir / f"{table_name}.py"
+        output_file = output_dir / f"{model_file_name}.model.py"
 
         # Ensure directory exists
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -226,14 +286,22 @@ def main():
     logger.info("=============== SCHEMA GENERATION STARTED ===============")
 
     try:
+        # Set up Jinja environment
+        jinja_env = setup_jinja_env()
+        logger.debug("Jinja environment set up")
+
         # Load the schema registry from index.yml
         index = load_index()
 
-        if 'schemaRegistry' not in index or 'tables' not in index['schemaRegistry']:
-            logger.error("Invalid index.yml: missing schemaRegistry.tables section")
+        if 'schema_registry' not in index and 'schemaRegistry' in index:
+            # Handle camelCase in index.yml
+            index['schema_registry'] = index['schemaRegistry']
+
+        if 'schema_registry' not in index or 'tables' not in index['schema_registry']:
+            logger.error("Invalid index.yml: missing schema_registry.tables section")
             sys.exit(1)
 
-        tables = index['schemaRegistry']['tables']
+        tables = index['schema_registry']['tables']
         logger.info("Found %d tables in schema registry", len(tables))
 
         # Track successful generations
@@ -253,12 +321,12 @@ def main():
             logger.info("Processing table: %s (schema: %s)", table_name, schema_path)
 
             # Generate TypeScript model
-            ts_success = generate_typescript_model(table_name, schema_path)
+            ts_success = generate_typescript_model(table_name, schema_path, jinja_env)
             if ts_success:
                 success_count_ts += 1
 
             # Generate Python model
-            py_success = generate_python_model(table_name, schema_path)
+            py_success = generate_python_model(table_name, schema_path, jinja_env)
             if py_success:
                 success_count_py += 1
 

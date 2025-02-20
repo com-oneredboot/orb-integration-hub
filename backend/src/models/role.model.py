@@ -4,13 +4,18 @@ from datetime import datetime
 from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
 
 @dataclass
-class {{ model_name }}:
-    {%- for attr, details in attributes.items() %}
-    {{ attr }}: {% if details.type == 'array' %}List[{{ details.items.type }}]{% else %}{{ details.type }}{% endif %}
-    {%- endfor %}
+class Role:
+    role_id: string
+    application_id: string
+    role_name: string
+    role_type: string
+    permissions: List[]
+    created_at: number
+    updated_at: number
+    active: boolean
 
     @classmethod
-    def from_dynamodb(cls, item: dict) -> "{{ model_name }}":
+    def from_dynamodb(cls, item: dict) -> "Role":
         deserializer = TypeDeserializer()
         return cls(**{
             k: deserializer.deserialize(v)
