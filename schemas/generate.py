@@ -1,7 +1,7 @@
 # files: schemas/generate.py
 # author: Corey Dale Peters
 # date: 2025-02-20
-# description: This file is used to generate the TypeScript and Python models from the schema files
+# description: This file is used to generate TypeScript, Python, and GraphQL schema models from schema files
 # defined in index.yml.
 
 # Standard library imports
@@ -256,7 +256,7 @@ def generate_python_model(table_name, schema_path, jinja_env):
 
         # Prepare output location - using singular form for file name
         output_dir = Path('../backend/src/models')
-        output_file = output_dir / f"{model_file_name}.model.py"
+        output_file = output_dir / f"{model_file_name}.py"
 
         # Ensure directory exists
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -274,6 +274,140 @@ def generate_python_model(table_name, schema_path, jinja_env):
         return False
     except Exception as e:
         logger.error("Error generating Python model for '%s': %s", table_name, str(e), exc_info=True)
+        return False
+
+
+def generate_graphql_schema(table_name, schema_path, jinja_env):
+    """
+    Generate GraphQL schema fragment from model definition.
+
+    :param table_name: Name of the table/model to generate
+    :param schema_path: Path to the schema file
+    :param jinja_env: Jinja environment
+    :return: Boolean indicating success or failure
+    """
+    logger.info("Starting GraphQL schema generation for '%s'", table_name)
+
+    try:
+        # Load the schema file
+        schema = load_schema(schema_path)
+        logger.debug("Loaded schema from %s", schema_path)
+
+        # Convert table_name to proper model name - singular and capitalized
+        # 'roles' -> 'Role', 'users' -> 'User', etc.
+        if table_name.endswith('s'):
+            model_name = table_name[:-1].capitalize()
+            model_file_name = table_name[:-1]  # for filename, use singular but don't capitalize
+        else:
+            model_name = table_name.capitalize()
+            model_file_name = table_name  # for filename, use as-is if not plural
+
+        logger.debug("Using model name '%s' for table '%s'", model_name, table_name)
+
+        # Extract the model - check for new structure format
+        if 'model' in schema and 'attributes' in schema['model']:
+            # New structure with top-level 'model' key
+            model = schema['model']
+            logger.debug("Found model attributes using new schema structure")
+        elif 'models' in schema and model_name in schema['models']:
+            # Old structure with 'models.ModelName' format
+            model = schema['models'][model_name]
+            logger.debug("Found model attributes using old schema structure")
+        else:
+            logger.error("Schema missing required model definition. Checked both 'model' and 'models.%s'", model_name)
+            return False
+
+        logger.debug("Model has %d attributes", len(model.get('attributes', {})))
+
+        # Load the GraphQL schema template
+        template = load_template('graphql_schema.jinja', jinja_env)
+
+        # Render the template with model data
+        gql_schema = template.render(
+            model_name=model_name,
+            model_name_lowercase=model_name.lower(),
+            attributes=model['attributes'],
+            partition_key=model.get('partition_key', ''),
+            sort_key=model.get('sort_key', '')
+        )
+        logger.debug("Successfully rendered GraphQL schema template")
+
+        # Prepare output location
+        output_dir = Path('../backend/infrastructure/cloudformation/schemas')
+        output_file = output_dir / f"{model_file_name}.graphql"
+
+        # Ensure directory exists
+        output_dir.mkdir(parents=True, exist_ok=True)
+        logger.debug("Ensured output directory exists: %s", output_dir)
+
+        # Write the generated schema to file
+        with open(output_file, 'w') as f:
+            f.write(gql_schema)
+
+        logger.info("GraphQL schema successfully generated: %s", output_file)
+        return True
+
+    except KeyError as e:
+        logger.error("Schema missing required key: %s", str(e))
+        return False
+    except Exception as e:
+        logger.error("Error generating GraphQL schema for '%s': %s", table_name, str(e), exc_info=True)
+        return False
+
+
+def generate_appsync_imports():
+    """
+    Generate the AppSync imports file that will be used by the main AppSync schema.
+
+    :return: Boolean indicating success or failure
+    """
+    logger.info("Generating AppSync imports file")
+
+    try:
+        # Load the index
+        index = load_index()
+
+        if 'schema_registry' not in index and 'schemaRegistry' in index:
+            # Handle camelCase in index.yml
+            index['schema_registry'] = index['schemaRegistry']
+
+        if 'schema_registry' not in index or 'tables' not in index['schema_registry']:
+            logger.error("Invalid index.yml: missing schema_registry.tables section")
+            return False
+
+        tables = index['schema_registry']['tables']
+
+        # Generate import statements
+        import_statements = []
+        for table in tables:
+            table_name = table.get('name')
+            if not table_name:
+                continue
+
+            # Convert to singular if plural
+            if table_name.endswith('s'):
+                model_name = table_name[:-1]
+            else:
+                model_name = table_name
+
+            import_statements.append(f'# import "schemas/{model_name}.graphql"')
+
+        # Prepare output location
+        output_dir = Path('../backend/infrastructure/cloudformation/')
+        output_file = output_dir / "imports.graphql"
+
+        # Ensure directory exists
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Write the imports file
+        with open(output_file, 'w') as f:
+            f.write('\n'.join(import_statements))
+
+        logger.info("AppSync imports file successfully generated: %s", output_file)
+        return True
+
+    except Exception as e:
+        logger.error("Error generating AppSync imports file: %s", str(e), exc_info=True)
         return False
 
 
@@ -307,6 +441,7 @@ def main():
         # Track successful generations
         success_count_ts = 0
         success_count_py = 0
+        success_count_gql = 0
         failed_tables = []
 
         # Process each table in the registry
@@ -330,9 +465,17 @@ def main():
             if py_success:
                 success_count_py += 1
 
+            # Generate GraphQL schema
+            gql_success = generate_graphql_schema(table_name, schema_path, jinja_env)
+            if gql_success:
+                success_count_gql += 1
+
             # Track failed generations
-            if not (ts_success and py_success):
+            if not (ts_success and py_success and gql_success):
                 failed_tables.append(table_name)
+
+        # Generate AppSync imports file
+        imports_success = generate_appsync_imports()
 
         # Report results
         total_tables = len(tables)
@@ -340,6 +483,8 @@ def main():
         logger.info("Total tables processed: %d", total_tables)
         logger.info("TypeScript models generated: %d of %d", success_count_ts, total_tables)
         logger.info("Python models generated: %d of %d", success_count_py, total_tables)
+        logger.info("GraphQL schemas generated: %d of %d", success_count_gql, total_tables)
+        logger.info("AppSync imports file generated: %s", "Yes" if imports_success else "No")
 
         if failed_tables:
             logger.error("Failed generations for tables: %s", ", ".join(failed_tables))

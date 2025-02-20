@@ -1,0 +1,95 @@
+# GraphQL schema for Role
+# Generated from database model
+# Do not modify directly
+
+enum RoleStatus @aws_api_key @aws_cognito_user_pools {
+  ACTIVE
+  PENDING
+  SUSPENDED
+  INACTIVE
+}
+
+# Main Role type
+type Role @aws_api_key @aws_cognito_user_pools {
+
+  role_id: String!
+
+  application_id: String!
+
+  role_name: String!
+
+  role_type: String!
+
+  permissions: [!]!
+
+  created_at: Float!
+
+  updated_at: Float!
+
+  active: Boolean!
+
+}
+
+# Response type for Role operations
+type RoleResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  role: Role
+}
+
+# Response type for multiple Role operations
+type RolesResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  roles: [Role]
+}
+
+# Input for Role creation
+input RoleCreateInput {
+
+  role_id: String!
+
+  application_id: String!
+
+  role_name: String!
+
+  role_type: String!
+
+  permissions: [!]!
+
+  created_at: Float!
+
+  updated_at: Float!
+
+  active: Boolean!
+
+}
+
+# Input for Role query operations
+input RoleQueryInput {
+  role_id: String
+  application_id: String
+}
+
+# Input for Role update operations
+input RoleUpdateInput {
+  role_id: String!
+  application_id: String!
+
+  role_name: String
+  role_type: String
+  permissions: []
+  created_at: Float
+  updated_at: Float
+  active: Boolean
+}
+
+# GraphQL operation extensions
+extend type Query {
+  roleQueryById(input: RoleQueryInput!): RoleResponse! @aws_cognito_user_pools
+}
+
+extend type Mutation {
+  roleCreate(input: RoleCreateInput!): RoleResponse! @aws_cognito_user_pools
+  roleUpdate(input: RoleUpdateInput!): RoleResponse! @aws_cognito_user_pools
+}
