@@ -294,30 +294,25 @@ def generate_graphql_schema(table_name, schema_path, jinja_env):
         logger.debug("Loaded schema from %s", schema_path)
 
         # Convert table_name to proper model name - singular and capitalized
-        # 'roles' -> 'Role', 'users' -> 'User', etc.
         if table_name.endswith('s'):
             model_name = table_name[:-1].capitalize()
-            model_file_name = table_name[:-1]  # for filename, use singular but don't capitalize
+            model_file_name = table_name[:-1]  # for filename, use singular
         else:
             model_name = table_name.capitalize()
-            model_file_name = table_name  # for filename, use as-is if not plural
+            model_file_name = table_name  # for filename, use as-is
 
         logger.debug("Using model name '%s' for table '%s'", model_name, table_name)
 
-        # Extract the model - check for new structure format
+        # Extract the model
         if 'model' in schema and 'attributes' in schema['model']:
-            # New structure with top-level 'model' key
             model = schema['model']
             logger.debug("Found model attributes using new schema structure")
         elif 'models' in schema and model_name in schema['models']:
-            # Old structure with 'models.ModelName' format
             model = schema['models'][model_name]
             logger.debug("Found model attributes using old schema structure")
         else:
-            logger.error("Schema missing required model definition. Checked both 'model' and 'models.%s'", model_name)
+            logger.error("Schema missing required model definition")
             return False
-
-        logger.debug("Model has %d attributes", len(model.get('attributes', {})))
 
         # Load the GraphQL schema template
         template = load_template('graphql_schema.jinja', jinja_env)
@@ -330,9 +325,8 @@ def generate_graphql_schema(table_name, schema_path, jinja_env):
             partition_key=model.get('partition_key', ''),
             sort_key=model.get('sort_key', '')
         )
-        logger.debug("Successfully rendered GraphQL schema template")
 
-        # Prepare output location
+        # Prepare output location matching your directory structure
         output_dir = Path('../backend/infrastructure/cloudformation/schemas')
         output_file = output_dir / f"{model_file_name}.graphql"
 
@@ -347,17 +341,14 @@ def generate_graphql_schema(table_name, schema_path, jinja_env):
         logger.info("GraphQL schema successfully generated: %s", output_file)
         return True
 
-    except KeyError as e:
-        logger.error("Schema missing required key: %s", str(e))
-        return False
     except Exception as e:
-        logger.error("Error generating GraphQL schema for '%s': %s", table_name, str(e), exc_info=True)
+        logger.error("Error generating GraphQL schema: %s", str(e), exc_info=True)
         return False
 
 
 def generate_appsync_imports():
     """
-    Generate the AppSync imports file that will be used by the main AppSync schema.
+    Generate the AppSync imports file for the main schema.
 
     :return: Boolean indicating success or failure
     """
@@ -368,7 +359,6 @@ def generate_appsync_imports():
         index = load_index()
 
         if 'schema_registry' not in index and 'schemaRegistry' in index:
-            # Handle camelCase in index.yml
             index['schema_registry'] = index['schemaRegistry']
 
         if 'schema_registry' not in index or 'tables' not in index['schema_registry']:
@@ -377,7 +367,7 @@ def generate_appsync_imports():
 
         tables = index['schema_registry']['tables']
 
-        # Generate import statements
+        # Generate import statements with no quotes, just as AppSync expects
         import_statements = []
         for table in tables:
             table_name = table.get('name')
@@ -390,10 +380,11 @@ def generate_appsync_imports():
             else:
                 model_name = table_name
 
-            import_statements.append(f'# import "schemas/{model_name}.graphql"')
+            # Use AppSync import syntax without quotes
+            import_statements.append(f'#import schemas/{model_name}.graphql')
 
         # Prepare output location
-        output_dir = Path('../backend/infrastructure/cloudformation/')
+        output_dir = Path('../backend/infrastructure/cloudformation')
         output_file = output_dir / "imports.graphql"
 
         # Ensure directory exists
@@ -409,7 +400,6 @@ def generate_appsync_imports():
     except Exception as e:
         logger.error("Error generating AppSync imports file: %s", str(e), exc_info=True)
         return False
-
 
 def main():
     """

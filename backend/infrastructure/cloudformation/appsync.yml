@@ -57,7 +57,7 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       Definition: |
-        # import imports.graphql
+        #import imports.graphql
 
         enum ApplicationEnvironments @aws_api_key @aws_cognito_user_pools {
           DEVELOPMENT
