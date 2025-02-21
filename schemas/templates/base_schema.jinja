@@ -1,7 +1,11 @@
-# Base AppSync GraphQL Schema
-# This schema includes all model definitions and operations
 
-# Common enums
+# Include model schemas
+{% for schema in model_schemas %}
+# Model: {{ schema.name }}
+{{ schema.content }}
+
+{% endfor %}
+
 enum ApplicationEnvironments @aws_api_key @aws_cognito_user_pools {
   DEVELOPMENT
   TESTING
@@ -24,7 +28,28 @@ enum UserGroup @aws_api_key @aws_cognito_user_pools {
   OWNER
 }
 
-# Nested complex types
+type Application @aws_api_key @aws_cognito_user_pools {
+  application_id: String!
+  user_id: String!
+  status: String!
+  name: String!
+  description: String
+  created_at: String!
+  deleted_at: String
+}
+
+type ApplicationResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  application: Application
+}
+
+type ApplicationsResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  applications: [Application]
+}
+
 type ApplicationRole @aws_api_key @aws_cognito_user_pools {
   name: String!
   description: String
@@ -50,7 +75,32 @@ type ApplicationEnvironmentSettings @aws_api_key @aws_cognito_user_pools {
   PRODUCTION: ApplicationSettings
 }
 
-# Input types for complex structures
+input ApplicationCreateInput {
+  application_id: String!
+  user_id: String!
+  status: String!
+  name: String!
+  description: String
+  created_at: String!
+  settings: ApplicationSettingsInput!
+  roles: ApplicationEnvironmentRolesInput!
+}
+
+input ApplicationQueryInput {
+  application_id: String
+  user_id: String
+}
+
+input ApplicationUpdateInput {
+  application_id: String!
+  status: String
+  name: String
+  description: String
+  settings: ApplicationEnvironmentSettingsInput
+  roles: ApplicationEnvironmentRolesInput
+  deleted_at: String
+}
+
 input ApplicationRoleInput {
   name: String!
   description: String
@@ -76,7 +126,42 @@ input ApplicationEnvironmentSettingsInput {
   PRODUCTION: ApplicationSettingsInput
 }
 
-# Utility types
+type ApplicationUser @aws_api_key @aws_cognito_user_pools {
+  application_id: String!
+  user_id: String!
+  roles: ApplicationEnvironmentRoles!
+  status: String!
+  created_at: String!
+  deleted_at: String
+}
+
+type ApplicationUserResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  application_user: ApplicationUser
+}
+
+input ApplicationUserCreateInput {
+  application_id: String!
+  user_id: String!
+  roles: ApplicationEnvironmentRolesInput!
+  status: String!
+  created_at: String!
+}
+
+input ApplicationUserQueryInput {
+  application_id: String
+  user_id: String
+}
+
+input ApplicationUserUpdateInput {
+  application_id: String!
+  user_id: String!
+  status: String
+  roles: ApplicationEnvironmentRolesInput
+  deleted_at: String
+}
+
 type SMSVerificationResponse @aws_api_key @aws_cognito_user_pools {
   status_code: Float!
   message: String
@@ -87,23 +172,64 @@ input SMSVerificationInput {
   phone_number: String!
 }
 
-# Include model schemas
-{% for schema in model_schemas %}
-# Model: {{ schema.name }}
-{{ schema.content }}
+type User @aws_api_key @aws_cognito_user_pools {
+  user_id: String!
+  cognito_id: String!
+  email: String!
+  phone_number: String
+  first_name: String
+  last_name: String
+  groups: [UserGroup!]!
+  status: Status!
+  created_at: String!
+}
 
-{% endfor %}
+input UserQueryInput {
+  user_id: String
+  cognito_id: String
+  email: String
+}
 
-# Root query and mutation types
-type Query {
-  _empty: String
+input UserCreateInput {
+  user_id: String!
+  cognito_id: String!
+  email: String!
+  groups: [UserGroup!]!
+  status: Status!
+  created_at: String!
+}
 
-  # SMS verification operations
-  sendSMSVerificationCode(input: SMSVerificationInput!): SMSVerificationResponse! @aws_cognito_user_pools
+input UserUpdateInput {
+  user_id: String!
+  email: String
+  phone_number: String
+  first_name: String
+  last_name: String
+  groups: [UserGroup!]
+  status: Status
+}
+
+type UserResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  user: User
 }
 
 type Mutation {
-  _empty: String
+  applicationCreate(input: ApplicationCreateInput!): ApplicationResponse! @aws_cognito_user_pools
+  applicationUpdate(input: ApplicationUpdateInput!): ApplicationResponse!
+  applicationUserCreate(input: ApplicationUserCreateInput!): ApplicationUserResponse!
+  applicationUserUpdate(input: ApplicationUserUpdateInput!): ApplicationUserResponse!
+  sendSMSVerificationCode(input: SMSVerificationInput!): SMSVerificationResponse! @aws_cognito_user_pools
+  userCreate(input: UserCreateInput!): UserResponse! @aws_api_key @aws_cognito_user_pools
+  userUpdate(input: UserUpdateInput!): UserResponse! @aws_cognito_user_pools
+}
+
+type Query {
+  applicationQueryById(input: ApplicationQueryInput!): ApplicationResponse!
+  applicationUserQueryById(input: ApplicationUserQueryInput!): ApplicationUserResponse!
+  applicationQueryByUserId(input: ApplicationQueryInput!): ApplicationsResponse!
+  userQueryById(input: UserQueryInput!): UserResponse! @aws_api_key
 }
 
 schema {
