@@ -45,7 +45,7 @@ jobs:
 
       - name: Generate schema files
         run: |
-          cd backend/schemas
+          cd schemas
           python generate.py
 
       - name: Upload schema to S3
