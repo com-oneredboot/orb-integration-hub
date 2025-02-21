@@ -18,6 +18,9 @@ model:
     role_id:
       type: string
       required: true
+    user_id:
+      type: string
+      required: true
     application_id:
       type: string
       required: true

@@ -1,25 +1,37 @@
   # DynamoDB table for {{ model_name }}
   {{ table_name|capitalize }}Table:
     Properties:
-      AttributeDefinitions:{%- set attributes = [] -%}
-        {%- if keys.primary.partition not in attributes -%}
-          {%- set attributes = attributes + [keys.primary.partition] -%}
-        {%- endif -%}
-        {%- if keys.primary.sort and keys.primary.sort not in attributes -%}
-          {%- set attributes = attributes + [keys.primary.sort] -%}
+      AttributeDefinitions:{%- set all_attrs = [keys.primary.partition] -%}
+        {%- if keys.primary.sort -%}
+          {%- set all_attrs = all_attrs + [keys.primary.sort] -%}
         {%- endif -%}
         {%- for gsi in keys.secondary -%}
-          {%- if gsi.partition not in attributes -%}
-            {%- set attributes = attributes + [gsi.partition] -%}
+          {%- if gsi.partition and gsi.partition not in all_attrs -%}
+            {%- set all_attrs = all_attrs + [gsi.partition] -%}
           {%- endif -%}
-          {%- if gsi.sort and gsi.sort not in attributes -%}
-            {%- set attributes = attributes + [gsi.sort] -%}
+          {%- if gsi.sort and gsi.sort not in all_attrs -%}
+            {%- set all_attrs = all_attrs + [gsi.sort] -%}
           {%- endif -%}
         {%- endfor %}
-        {%- for attr in attributes %}
         -
-          AttributeName: {{ attr }}
+          AttributeName: {{ keys.primary.partition }}
           AttributeType: S
+        {%- if keys.primary.sort %}
+        -
+          AttributeName: {{ keys.primary.sort }}
+          AttributeType: S
+        {%- endif -%}
+        {%- for gsi in keys.secondary -%}
+          {%- if gsi.partition and gsi.partition != keys.primary.partition and gsi.partition != keys.primary.sort %}
+        -
+          AttributeName: {{ gsi.partition }}
+          AttributeType: S
+          {%- endif -%}
+          {%- if gsi.sort and gsi.sort != keys.primary.partition and gsi.sort != keys.primary.sort and gsi.sort != gsi.partition %}
+        -
+          AttributeName: {{ gsi.sort }}
+          AttributeType: S
+          {%- endif -%}
         {%- endfor %}
       BillingMode: PAY_PER_REQUEST
       KeySchema:

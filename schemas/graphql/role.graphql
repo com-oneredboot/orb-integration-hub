@@ -5,6 +5,7 @@
 # Main Role type
 type Role @aws_api_key @aws_cognito_user_pools {
   role_id: String!
+  user_id: String!
   application_id: String!
   role_name: String!
   role_type: String!
@@ -31,6 +32,7 @@ type RolesResponse @aws_api_key @aws_cognito_user_pools {
 # Input for Role creation
 input RoleCreateInput {
   role_id: String!
+  user_id: String!
   application_id: String!
   role_name: String!
   role_type: String!
@@ -47,6 +49,7 @@ input RoleQueryInput {
 # Input for Role update operations
 input RoleUpdateInput {
   role_id: String
+  user_id: String
   application_id: String
   role_name: String
   role_type: String

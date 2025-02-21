@@ -6,6 +6,7 @@ from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
 @dataclass
 class Role:
     role_id: string
+    user_id: string
     application_id: string
     role_name: string
     role_type: string
