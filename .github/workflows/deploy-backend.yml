@@ -58,7 +58,7 @@ jobs:
       - name: Upload schema to S3
         run: |
           aws s3 cp ./schema.graphql \
-            s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-template/appsync.graphql
+            s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/appsync.graphql
 
         working-directory: ./backend/infrastructure/cloudformation
 
