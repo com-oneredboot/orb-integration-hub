@@ -214,30 +214,33 @@ Resources:
         ProjectId: !Ref ProjectId
     Type: AWS::SSM::Parameter
 
-# DynamoDB table for Role
+  # DynamoDB table for Role
   RolesTable:
     Properties:
       AttributeDefinitions:
-        - AttributeName: role_id
+        -
+          AttributeName: role_id
           AttributeType: S
-        - AttributeName: application_id
-          AttributeType: S
-        - AttributeName: user_id
-          AttributeType: S
-        - AttributeName: role_id
+        -
+          AttributeName: application_id
           AttributeType: S
       BillingMode: PAY_PER_REQUEST
       KeySchema:
-        - AttributeName: role_id
+        -
+          AttributeName: role_id
           KeyType: HASH
-        - AttributeName: application_id
+        -
+          AttributeName: application_id
           KeyType: RANGE
       GlobalSecondaryIndexes:
-        - IndexName: user-id-index
+        -
+          IndexName: user-id-index
           KeySchema:
-            - AttributeName: user_id
+            -
+              AttributeName: user_id
               KeyType: HASH
-            - AttributeName: role_id
+            -
+              AttributeName: role_id
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
@@ -258,7 +261,7 @@ Resources:
     Properties:
       Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-roles-table-name"
       Type: String
-      Value: !Ref rolesTable
+      Value: !Ref RolesTable
       Description: DynamoDB Role Table Name
       Tags:
         Billable: true
@@ -272,7 +275,7 @@ Resources:
     Properties:
       Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-roles-table-arn"
       Type: String
-      Value: !GetAtt rolesTable.Arn
+      Value: !GetAtt RolesTable.Arn
       Description: DynamoDB Role Table Arn
       Tags:
         Billable: true

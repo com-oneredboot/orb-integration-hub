@@ -1,44 +1,54 @@
-# DynamoDB table for {{ model_name }}
+  # DynamoDB table for {{ model_name }}
   {{ table_name|capitalize }}Table:
     Properties:
-      AttributeDefinitions:
-        - AttributeName: {{ keys.primary.partition }}
+      AttributeDefinitions:{%- set attributes = [] -%}
+        {%- if keys.primary.partition not in attributes -%}
+          {%- set attributes = attributes + [keys.primary.partition] -%}
+        {%- endif -%}
+        {%- if keys.primary.sort and keys.primary.sort not in attributes -%}
+          {%- set attributes = attributes + [keys.primary.sort] -%}
+        {%- endif -%}
+        {%- for gsi in keys.secondary -%}
+          {%- if gsi.partition not in attributes -%}
+            {%- set attributes = attributes + [gsi.partition] -%}
+          {%- endif -%}
+          {%- if gsi.sort and gsi.sort not in attributes -%}
+            {%- set attributes = attributes + [gsi.sort] -%}
+          {%- endif -%}
+        {%- endfor %}
+        {%- for attr in attributes %}
+        -
+          AttributeName: {{ attr }}
           AttributeType: S
-      {%- if keys.primary.sort %}
-        - AttributeName: {{ keys.primary.sort }}
-          AttributeType: S
-      {%- endif %}
-      {%- for gsi in keys.secondary %}
-        - AttributeName: {{ gsi.partition }}
-          AttributeType: S
-        {%- if gsi.sort %}
-        - AttributeName: {{ gsi.sort }}
-          AttributeType: S
-        {%- endif %}
-      {%- endfor %}
+        {%- endfor %}
       BillingMode: PAY_PER_REQUEST
       KeySchema:
-        - AttributeName: {{ keys.primary.partition }}
+        -
+          AttributeName: {{ keys.primary.partition }}
           KeyType: HASH
-      {%- if keys.primary.sort %}
-        - AttributeName: {{ keys.primary.sort }}
+        {%- if keys.primary.sort %}
+        -
+          AttributeName: {{ keys.primary.sort }}
           KeyType: RANGE
-      {%- endif %}
-      {%- if keys.secondary %}
+        {%- endif %}
+        {%- if keys.secondary %}
       GlobalSecondaryIndexes:
         {%- for gsi in keys.secondary %}
-        - IndexName: {{ gsi.name }}
+        -
+          IndexName: {{ gsi.name }}
           KeySchema:
-            - AttributeName: {{ gsi.partition }}
+            -
+              AttributeName: {{ gsi.partition }}
               KeyType: HASH
             {%- if gsi.sort %}
-            - AttributeName: {{ gsi.sort }}
+            -
+              AttributeName: {{ gsi.sort }}
               KeyType: RANGE
             {%- endif %}
           Projection:
             ProjectionType: ALL
         {%- endfor %}
-      {%- endif %}
+        {%- endif %}
       TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-{{ table_name }}"
       Tags:
         - Key: Billable
