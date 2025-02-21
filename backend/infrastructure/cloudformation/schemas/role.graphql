@@ -2,13 +2,6 @@
 # Generated from database model
 # Do not modify directly
 
-enum RoleStatus @aws_api_key @aws_cognito_user_pools {
-  ACTIVE
-  PENDING
-  SUSPENDED
-  INACTIVE
-}
-
 # Main Role type
 type Role @aws_api_key @aws_cognito_user_pools {
 
@@ -20,7 +13,7 @@ type Role @aws_api_key @aws_cognito_user_pools {
 
   role_type: String!
 
-  permissions: [!]!
+  permissions: [String!]!
 
   created_at: Float!
 
@@ -55,7 +48,7 @@ input RoleCreateInput {
 
   role_type: String!
 
-  permissions: [!]!
+  permissions: [String!]!
 
   created_at: Float!
 
@@ -78,17 +71,18 @@ input RoleUpdateInput {
 
   role_name: String
   role_type: String
-  permissions: []
+  permissions: [String]
   created_at: Float
   updated_at: Float
   active: Boolean
 }
 
-# GraphQL operation extensions
+# Add these operations to the Query type
 extend type Query {
   roleQueryById(input: RoleQueryInput!): RoleResponse! @aws_cognito_user_pools
 }
 
+# Add these operations to the Mutation type
 extend type Mutation {
   roleCreate(input: RoleCreateInput!): RoleResponse! @aws_cognito_user_pools
   roleUpdate(input: RoleUpdateInput!): RoleResponse! @aws_cognito_user_pools

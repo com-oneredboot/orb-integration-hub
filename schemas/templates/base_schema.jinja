@@ -1,11 +1,7 @@
+# AppSync GraphQL Schema - Generated Code
+# Do NOT modify directly
 
-# Include model schemas
-{% for schema in model_schemas %}
-# Model: {{ schema.name }}
-{{ schema.content }}
-
-{% endfor %}
-
+# Common enums
 enum ApplicationEnvironments @aws_api_key @aws_cognito_user_pools {
   DEVELOPMENT
   TESTING
@@ -28,28 +24,14 @@ enum UserGroup @aws_api_key @aws_cognito_user_pools {
   OWNER
 }
 
-type Application @aws_api_key @aws_cognito_user_pools {
-  application_id: String!
-  user_id: String!
-  status: String!
-  name: String!
-  description: String
-  created_at: String!
-  deleted_at: String
-}
+# Model definitions 
+{% for schema in model_schemas %}
+# Model: {{ schema.name }}
+{{ schema.content }}
 
-type ApplicationResponse @aws_api_key @aws_cognito_user_pools {
-  status_code: Float!
-  message: String
-  application: Application
-}
+{% endfor %}
 
-type ApplicationsResponse @aws_api_key @aws_cognito_user_pools {
-  status_code: Float!
-  message: String
-  applications: [Application]
-}
-
+# Nested complex types
 type ApplicationRole @aws_api_key @aws_cognito_user_pools {
   name: String!
   description: String
@@ -75,6 +57,69 @@ type ApplicationEnvironmentSettings @aws_api_key @aws_cognito_user_pools {
   PRODUCTION: ApplicationSettings
 }
 
+# Base types
+type Application @aws_api_key @aws_cognito_user_pools {
+  application_id: String!
+  user_id: String!
+  status: String!
+  name: String!
+  description: String
+  created_at: String!
+  deleted_at: String
+}
+
+type ApplicationResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  application: Application
+}
+
+type ApplicationsResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  applications: [Application]
+}
+
+type ApplicationUser @aws_api_key @aws_cognito_user_pools {
+  application_id: String!
+  user_id: String!
+  roles: ApplicationEnvironmentRoles!
+  status: String!
+  created_at: String!
+  deleted_at: String
+}
+
+type ApplicationUserResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  application_user: ApplicationUser
+}
+
+type User @aws_api_key @aws_cognito_user_pools {
+  user_id: String!
+  cognito_id: String!
+  email: String!
+  phone_number: String
+  first_name: String
+  last_name: String
+  groups: [UserGroup!]!
+  status: Status!
+  created_at: String!
+}
+
+type UserResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  user: User
+}
+
+type SMSVerificationResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  code: Float
+}
+
+# Input types
 input ApplicationCreateInput {
   application_id: String!
   user_id: String!
@@ -126,21 +171,6 @@ input ApplicationEnvironmentSettingsInput {
   PRODUCTION: ApplicationSettingsInput
 }
 
-type ApplicationUser @aws_api_key @aws_cognito_user_pools {
-  application_id: String!
-  user_id: String!
-  roles: ApplicationEnvironmentRoles!
-  status: String!
-  created_at: String!
-  deleted_at: String
-}
-
-type ApplicationUserResponse @aws_api_key @aws_cognito_user_pools {
-  status_code: Float!
-  message: String
-  application_user: ApplicationUser
-}
-
 input ApplicationUserCreateInput {
   application_id: String!
   user_id: String!
@@ -162,26 +192,8 @@ input ApplicationUserUpdateInput {
   deleted_at: String
 }
 
-type SMSVerificationResponse @aws_api_key @aws_cognito_user_pools {
-  status_code: Float!
-  message: String
-  code: Float
-}
-
 input SMSVerificationInput {
   phone_number: String!
-}
-
-type User @aws_api_key @aws_cognito_user_pools {
-  user_id: String!
-  cognito_id: String!
-  email: String!
-  phone_number: String
-  first_name: String
-  last_name: String
-  groups: [UserGroup!]!
-  status: Status!
-  created_at: String!
 }
 
 input UserQueryInput {
@@ -209,27 +221,24 @@ input UserUpdateInput {
   status: Status
 }
 
-type UserResponse @aws_api_key @aws_cognito_user_pools {
-  status_code: Float!
-  message: String
-  user: User
+# Root types
+type Query {
+  # Base queries
+  applicationQueryById(input: ApplicationQueryInput!): ApplicationResponse! @aws_cognito_user_pools
+  applicationUserQueryById(input: ApplicationUserQueryInput!): ApplicationUserResponse! @aws_cognito_user_pools
+  applicationQueryByUserId(input: ApplicationQueryInput!): ApplicationsResponse! @aws_cognito_user_pools
+  userQueryById(input: UserQueryInput!): UserResponse! @aws_api_key
 }
 
 type Mutation {
+  # Base mutations
   applicationCreate(input: ApplicationCreateInput!): ApplicationResponse! @aws_cognito_user_pools
-  applicationUpdate(input: ApplicationUpdateInput!): ApplicationResponse!
-  applicationUserCreate(input: ApplicationUserCreateInput!): ApplicationUserResponse!
-  applicationUserUpdate(input: ApplicationUserUpdateInput!): ApplicationUserResponse!
+  applicationUpdate(input: ApplicationUpdateInput!): ApplicationResponse! @aws_cognito_user_pools
+  applicationUserCreate(input: ApplicationUserCreateInput!): ApplicationUserResponse! @aws_cognito_user_pools
+  applicationUserUpdate(input: ApplicationUserUpdateInput!): ApplicationUserResponse! @aws_cognito_user_pools
   sendSMSVerificationCode(input: SMSVerificationInput!): SMSVerificationResponse! @aws_cognito_user_pools
   userCreate(input: UserCreateInput!): UserResponse! @aws_api_key @aws_cognito_user_pools
   userUpdate(input: UserUpdateInput!): UserResponse! @aws_cognito_user_pools
-}
-
-type Query {
-  applicationQueryById(input: ApplicationQueryInput!): ApplicationResponse!
-  applicationUserQueryById(input: ApplicationUserQueryInput!): ApplicationUserResponse!
-  applicationQueryByUserId(input: ApplicationQueryInput!): ApplicationsResponse!
-  userQueryById(input: UserQueryInput!): UserResponse! @aws_api_key
 }
 
 schema {

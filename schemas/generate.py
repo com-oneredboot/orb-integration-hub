@@ -37,14 +37,30 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def setup_jinja_env():
     """
-    Set up the Jinja environment.
+    Set up the Jinja environment with custom filters.
 
     :return: Configured Jinja environment
     """
+    import re
+
     # Create Jinja environment
     env = Environment(loader=FileSystemLoader(os.path.join(SCRIPT_DIR, 'templates')))
-    return env
 
+    # Define regex_search filter
+    def regex_search(value, pattern, group=0):
+        """Extract content using regex pattern"""
+        if value is None:
+            return ""
+        match = re.search(pattern, value, re.DOTALL)
+        if match and group in match.groups():
+            group_index = match.groups().index(group) + 1
+            return match.group(group_index)
+        return ""
+
+    # Add custom filters
+    env.filters['regex_search'] = regex_search
+
+    return env
 
 def load_template(template_path, jinja_env=None):
     """
