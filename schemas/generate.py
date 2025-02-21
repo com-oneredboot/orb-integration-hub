@@ -401,6 +401,55 @@ def generate_appsync_imports():
         logger.error("Error generating AppSync imports file: %s", str(e), exc_info=True)
         return False
 
+def combine_graphql_schemas(jinja_env):
+    """
+    Combine all generated GraphQL schema files into a single schema file.
+
+    :param jinja_env: Jinja environment for loading base schema template
+    :return: Path to the combined schema file
+    """
+    logger.info("Combining GraphQL schemas into a single file")
+
+    try:
+        # Directory containing model schema fragments
+        schemas_dir = Path('../backend/infrastructure/cloudformation/schemas')
+
+        # Output location for combined schema
+        output_dir = Path('../backend/infrastructure/cloudformation')
+        output_file = output_dir / "schema.graphql"
+
+        # Load base schema template
+        template = load_template('base_schema.jinja', jinja_env)
+
+        # Get a list of all model schema files
+        model_schemas = []
+        for schema_file in schemas_dir.glob('*.graphql'):
+            with open(schema_file, 'r') as f:
+                content = f.read()
+                model_schemas.append({
+                    'name': schema_file.stem,
+                    'content': content
+                })
+
+        # Render the base schema with all model schemas included
+        combined_schema = template.render(
+            model_schemas=model_schemas
+        )
+
+        # Create output directory if needed
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Write the combined schema
+        with open(output_file, 'w') as f:
+            f.write(combined_schema)
+
+        logger.info("Combined GraphQL schema generated: %s", output_file)
+        return output_file
+
+    except Exception as e:
+        logger.error("Error combining GraphQL schemas: %s", str(e), exc_info=True)
+        return None
+
 def main():
     """
     Main function - loads the index and generates models for all tables.
@@ -466,6 +515,16 @@ def main():
 
         # Generate AppSync imports file
         imports_success = generate_appsync_imports()
+
+        # After generating all schemas
+        if success_count_gql > 0:
+            # Combine all GraphQL schemas into a single file
+            combined_schema_path = combine_graphql_schemas(jinja_env)
+            if combined_schema_path:
+                logger.info("Combined schema ready for deployment: %s", combined_schema_path)
+            else:
+                logger.error("Failed to generate combined schema")
+                failed_tables.append("combined_schema")
 
         # Report results
         total_tables = len(tables)

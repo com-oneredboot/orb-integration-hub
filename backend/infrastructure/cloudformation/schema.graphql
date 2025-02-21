@@ -1,0 +1,206 @@
+# Base AppSync GraphQL Schema
+# This schema includes all model definitions and operations
+
+# Common enums
+enum ApplicationEnvironments @aws_api_key @aws_cognito_user_pools {
+  DEVELOPMENT
+  TESTING
+  STAGING
+  PRODUCTION
+}
+
+enum Status @aws_api_key @aws_cognito_user_pools {
+  ACTIVE
+  PENDING
+  SUSPENDED
+  INACTIVE
+}
+
+enum UserGroup @aws_api_key @aws_cognito_user_pools {
+  USER
+  CUSTOMER
+  CLIENT
+  EMPLOYEE
+  OWNER
+}
+
+# Nested complex types
+type ApplicationRole @aws_api_key @aws_cognito_user_pools {
+  name: String!
+  description: String
+}
+
+type ApplicationEnvironmentRoles @aws_api_key @aws_cognito_user_pools {
+  DEFAULT: [ApplicationRole!]!
+  DEVELOPMENT: [ApplicationRole!]
+  TESTING: [ApplicationRole!]
+  STAGING: [ApplicationRole!]
+  PRODUCTION: [ApplicationRole!]
+}
+
+type ApplicationSettings @aws_api_key @aws_cognito_user_pools {
+  debug_level: String
+}
+
+type ApplicationEnvironmentSettings @aws_api_key @aws_cognito_user_pools {
+  DEFAULT: ApplicationSettings!
+  DEVELOPMENT: ApplicationSettings
+  TESTING: ApplicationSettings
+  STAGING: ApplicationSettings
+  PRODUCTION: ApplicationSettings
+}
+
+# Input types for complex structures
+input ApplicationRoleInput {
+  name: String!
+  description: String
+}
+
+input ApplicationEnvironmentRolesInput {
+  DEFAULT: [ApplicationRoleInput!]!
+  DEVELOPMENT: [ApplicationRoleInput!]
+  TESTING: [ApplicationRoleInput!]
+  STAGING: [ApplicationRoleInput!]
+  PRODUCTION: [ApplicationRoleInput!]
+}
+
+input ApplicationSettingsInput {
+  debug_level: String
+}
+
+input ApplicationEnvironmentSettingsInput {
+  DEFAULT: ApplicationSettingsInput!
+  DEVELOPMENT: ApplicationSettingsInput
+  TESTING: ApplicationSettingsInput
+  STAGING: ApplicationSettingsInput
+  PRODUCTION: ApplicationSettingsInput
+}
+
+# Utility types
+type SMSVerificationResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  code: Float
+}
+
+input SMSVerificationInput {
+  phone_number: String!
+}
+
+# Include model schemas
+
+# Model: role
+# GraphQL schema for Role
+# Generated from database model
+# Do not modify directly
+
+enum RoleStatus @aws_api_key @aws_cognito_user_pools {
+  ACTIVE
+  PENDING
+  SUSPENDED
+  INACTIVE
+}
+
+# Main Role type
+type Role @aws_api_key @aws_cognito_user_pools {
+
+  role_id: String!
+
+  application_id: String!
+
+  role_name: String!
+
+  role_type: String!
+
+  permissions: [!]!
+
+  created_at: Float!
+
+  updated_at: Float!
+
+  active: Boolean!
+
+}
+
+# Response type for Role operations
+type RoleResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  role: Role
+}
+
+# Response type for multiple Role operations
+type RolesResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  roles: [Role]
+}
+
+# Input for Role creation
+input RoleCreateInput {
+
+  role_id: String!
+
+  application_id: String!
+
+  role_name: String!
+
+  role_type: String!
+
+  permissions: [!]!
+
+  created_at: Float!
+
+  updated_at: Float!
+
+  active: Boolean!
+
+}
+
+# Input for Role query operations
+input RoleQueryInput {
+  role_id: String
+  application_id: String
+}
+
+# Input for Role update operations
+input RoleUpdateInput {
+  role_id: String!
+  application_id: String!
+
+  role_name: String
+  role_type: String
+  permissions: []
+  created_at: Float
+  updated_at: Float
+  active: Boolean
+}
+
+# GraphQL operation extensions
+extend type Query {
+  roleQueryById(input: RoleQueryInput!): RoleResponse! @aws_cognito_user_pools
+}
+
+extend type Mutation {
+  roleCreate(input: RoleCreateInput!): RoleResponse! @aws_cognito_user_pools
+  roleUpdate(input: RoleUpdateInput!): RoleResponse! @aws_cognito_user_pools
+}
+
+
+
+# Root query and mutation types
+type Query {
+  _empty: String
+
+  # SMS verification operations
+  sendSMSVerificationCode(input: SMSVerificationInput!): SMSVerificationResponse! @aws_cognito_user_pools
+}
+
+type Mutation {
+  _empty: String
+}
+
+schema {
+  query: Query
+  mutation: Mutation
+}

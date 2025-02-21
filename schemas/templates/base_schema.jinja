@@ -1,0 +1,112 @@
+# Base AppSync GraphQL Schema
+# This schema includes all model definitions and operations
+
+# Common enums
+enum ApplicationEnvironments @aws_api_key @aws_cognito_user_pools {
+  DEVELOPMENT
+  TESTING
+  STAGING
+  PRODUCTION
+}
+
+enum Status @aws_api_key @aws_cognito_user_pools {
+  ACTIVE
+  PENDING
+  SUSPENDED
+  INACTIVE
+}
+
+enum UserGroup @aws_api_key @aws_cognito_user_pools {
+  USER
+  CUSTOMER
+  CLIENT
+  EMPLOYEE
+  OWNER
+}
+
+# Nested complex types
+type ApplicationRole @aws_api_key @aws_cognito_user_pools {
+  name: String!
+  description: String
+}
+
+type ApplicationEnvironmentRoles @aws_api_key @aws_cognito_user_pools {
+  DEFAULT: [ApplicationRole!]!
+  DEVELOPMENT: [ApplicationRole!]
+  TESTING: [ApplicationRole!]
+  STAGING: [ApplicationRole!]
+  PRODUCTION: [ApplicationRole!]
+}
+
+type ApplicationSettings @aws_api_key @aws_cognito_user_pools {
+  debug_level: String
+}
+
+type ApplicationEnvironmentSettings @aws_api_key @aws_cognito_user_pools {
+  DEFAULT: ApplicationSettings!
+  DEVELOPMENT: ApplicationSettings
+  TESTING: ApplicationSettings
+  STAGING: ApplicationSettings
+  PRODUCTION: ApplicationSettings
+}
+
+# Input types for complex structures
+input ApplicationRoleInput {
+  name: String!
+  description: String
+}
+
+input ApplicationEnvironmentRolesInput {
+  DEFAULT: [ApplicationRoleInput!]!
+  DEVELOPMENT: [ApplicationRoleInput!]
+  TESTING: [ApplicationRoleInput!]
+  STAGING: [ApplicationRoleInput!]
+  PRODUCTION: [ApplicationRoleInput!]
+}
+
+input ApplicationSettingsInput {
+  debug_level: String
+}
+
+input ApplicationEnvironmentSettingsInput {
+  DEFAULT: ApplicationSettingsInput!
+  DEVELOPMENT: ApplicationSettingsInput
+  TESTING: ApplicationSettingsInput
+  STAGING: ApplicationSettingsInput
+  PRODUCTION: ApplicationSettingsInput
+}
+
+# Utility types
+type SMSVerificationResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  code: Float
+}
+
+input SMSVerificationInput {
+  phone_number: String!
+}
+
+# Include model schemas
+{% for schema in model_schemas %}
+# Model: {{ schema.name }}
+{{ schema.content }}
+
+{% endfor %}
+
+# Root query and mutation types
+type Query {
+  _empty: String
+
+  # SMS verification operations
+  sendSMSVerificationCode(input: SMSVerificationInput!): SMSVerificationResponse! @aws_cognito_user_pools
+}
+
+type Mutation {
+  _empty: String
+}
+
+schema {
+  query: Query
+  mutation: Mutation
+}
