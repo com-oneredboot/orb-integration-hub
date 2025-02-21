@@ -6,8 +6,14 @@
 version: '1.0'
 table: roles
 model:
-  partition_key: role_id
-  sort_key: application_id
+  keys:
+    primary:
+      partition: role_id
+      sort: application_id
+    secondary:
+      - name: user-id-index
+        partition: user_id
+        sort: role_id
   attributes:
     role_id:
       type: string

@@ -1,0 +1,80 @@
+# DynamoDB table for {{ model_name }}
+  {{ table_name|capitalize }}Table:
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: {{ keys.primary.partition }}
+          AttributeType: S
+      {%- if keys.primary.sort %}
+        - AttributeName: {{ keys.primary.sort }}
+          AttributeType: S
+      {%- endif %}
+      {%- for gsi in keys.secondary %}
+        - AttributeName: {{ gsi.partition }}
+          AttributeType: S
+        {%- if gsi.sort %}
+        - AttributeName: {{ gsi.sort }}
+          AttributeType: S
+        {%- endif %}
+      {%- endfor %}
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: {{ keys.primary.partition }}
+          KeyType: HASH
+      {%- if keys.primary.sort %}
+        - AttributeName: {{ keys.primary.sort }}
+          KeyType: RANGE
+      {%- endif %}
+      {%- if keys.secondary %}
+      GlobalSecondaryIndexes:
+        {%- for gsi in keys.secondary %}
+        - IndexName: {{ gsi.name }}
+          KeySchema:
+            - AttributeName: {{ gsi.partition }}
+              KeyType: HASH
+            {%- if gsi.sort %}
+            - AttributeName: {{ gsi.sort }}
+              KeyType: RANGE
+            {%- endif %}
+          Projection:
+            ProjectionType: ALL
+        {%- endfor %}
+      {%- endif %}
+      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-{{ table_name }}"
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
+    Type: AWS::DynamoDB::Table
+
+  # Parameter Store for table name
+  {{ table_name|capitalize }}TableNameParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-{{ table_name }}-table-name"
+      Type: String
+      Value: !Ref {{ table_name }}Table
+      Description: DynamoDB {{ model_name }} Table Name
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+    Type: AWS::SSM::Parameter
+
+  # Parameter Store for table ARN
+  {{ table_name|capitalize }}TableArnParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-{{ table_name }}-table-arn"
+      Type: String
+      Value: !GetAtt {{ table_name }}Table.Arn
+      Description: DynamoDB {{ model_name }} Table Arn
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+    Type: AWS::SSM::Parameter
