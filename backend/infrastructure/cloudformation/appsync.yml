@@ -377,7 +377,15 @@ Resources:
           "key": {
             "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id)
           },
-          "attributeValues": $util.toJson($ctx.args.input)
+          "attributeValues": {
+            #foreach($entry in $ctx.args.input.entrySet())
+              #if($foreach.hasNext)
+                "$entry.key": $util.dynamodb.toDynamoDBJson($entry.value),
+              #else
+                "$entry.key": $util.dynamodb.toDynamoDBJson($entry.value)
+              #end
+            #end
+          }
         }
       ResponseMappingTemplate: |
         #if($ctx.error)

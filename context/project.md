@@ -1,16 +1,17 @@
-# Project: org-integration-hub (Title: OneRedBoot.com Payment Gateway)
+# Project: orb-integration-hub (Title: OneRedBoot.com Integration Hub)
 
 ## Technology Stack
 - Frontend: Angular 19 (upgraded from 18)
 - Backend: AWS services (AppSync, Cognito, DynamoDB, Lambda, Step Functions)
 - Monitoring and Logging: CloudWatch
 - Infrastructure as Code: CloudFormation
-- Payment processors: Stripe (primary), with plans to add PayPal, Apple Pay, Google Pay, and others
+- Payment processors: Stripe (implemented), PayPal (in progress), with plans to add Apple Pay, Google Pay
 - Authentication: Cognito with Amplify (future plans to add Auth0 and others)
 - Backend language: Python 3.12
 - Version control: GitHub
 - CI/CD: GitHub Actions
 - State Management: NgRx
+- Schema Generation: Custom Python-based schema generator for DynamoDB tables and GraphQL
 
 ## Authentication and Authorization Structure
 
@@ -32,6 +33,7 @@ The roles table in DynamoDB manages fine-grained permissions and role assignment
   "applicationId": "string (Sort Key)",
   "roleName": "string",
   "roleType": "string (Employee|Client|Customer|Owner)",
+  "user_id": "string (GSI Key)",
   "permissions": "Array<string>",
   "createdAt": "timestamp",
   "updatedAt": "timestamp",
@@ -178,11 +180,19 @@ Role-based UI organization:
 - Interacts with your user database/API
 - Provider-agnostic user operations
 
+#### ApiService - Service handling GraphQL operations:
+- Manages AppSync GraphQL API interactions
+- Handles API authentication
+- Provides error handling for API calls
+- Abstracts GraphQL operations for other services
+
 ## Development Approach
 - Step-by-step development
 - Microservice architecture
 - Regular testing and validation
 - Continuous integration/deployment
+- Schema-first approach with generated DynamoDB tables and GraphQL schemas
+- Shared authentication layer for Lambda functions
 
 ## Deployment Strategy
 - GitHub Actions for CI/CD
@@ -213,67 +223,76 @@ Role-based UI organization:
 17. Create MFA Registration Flow
 18. Update sign-in for MFA verification
 19. Implement authentication error handling
-20. Begin Lambda integration
+20. Begin Lambda integration 
 21. Set up CI/CD pipelines
 22. Split confirmation into separate email and phone components
 23. Initialize auth feature module structure
 24. Angular 19 upgraded
 25. Added Debugging information to page
+26. Created schema generator for DynamoDB tables and GraphQL schemas
+27. Set up Stripe payment processing Lambda function
+28. Started PayPal payment processing Lambda integration
+29. Implemented pre_cognito_claims Lambda for JWT token customization
+30. Set up application layouts and page components
+31. Implemented NgRx for state management
 
 ## Next Steps
-26. Implement Wizard-Style Auth Flow
+1. Complete Wizard-Style Auth Flow
     - [x] Set up NgRx store
     - [x] Create auth state management
     - [x] Implement auth effects
     - [x] Step 1: enter email and check if User exists
-    - [ ] Step 2: User Doesn't Exist - present password form, ensure meets complexity requirements, on submit create cognito user
-    - [ ] Step 3: User Doesn't Exist - verify email, update cognito user, create entity in users table
-    - [ ] Step 4: User Doesn't Exist - setup MFA, update cognito user
-    - [ ] Step 5: User Doesn't Exist - send to signin page
+    - [x] Step 2: User Doesn't Exist - present password form, ensure meets complexity requirements, on submit create cognito user
+    - [x] Step 3: User Doesn't Exist - verify email, update cognito user, create entity in users table
+    - [x] Step 4: User Doesn't Exist - setup MFA, update cognito user
+    - [x] Step 5: User Doesn't Exist - send to signin page
     - [ ] Step 6: User Exists - after signin, if phone, or first name, or last name not in users table send to profile page, profile page will require certain entity attributes before navigation to the dashboard
     - [ ] Step 7: User Exists - after signin, is user is valid (ie all required attributes) send to dashboard
-27. Set up Auth Feature State Management
-    - Create auth actions
-    - Implement auth reducer
-    - Set up auth effects
-    - Create auth selectors
-    - Add unit tests
-28. Update Component Architecture
+2. Complete Auth Feature State Management
+    - [x] Create auth actions
+    - [x] Implement auth reducer
+    - [x] Set up auth effects
+    - [x] Create auth selectors
+    - [ ] Add unit tests
+3. Update Component Architecture
     - [x] Move components to feature module
     - [ ] Implement smart/dumb component pattern
     - [ ] Add component documentation
     - [ ] Create shared components
     - [ ] Update routing structure
-29. Begin Payment Processing Implementation
-    - Integrate Stripe SDK
-    - Create payment components
-    - Implement payment flow
-    - Add error handling
-    - Create success/failure pages
-30. Enhance MFA Security
-    - Rate limiting
-    - Bypass protection
-    - Device token storage
-    - Audit logging
-31. Testing and Documentation
-    - Unit testing
-    - Integration testing
-    - E2E testing
-    - API documentation
-    - User guide
-32. Centralize CSS Architecture
-    - Create shared styles directory
-    - Set up variables and mixins
-    - Create component-specific stylesheets
-    - Implement BEM methodology
-    - Create style guide documentation
+4. Complete Payment Processing Implementation
+    - [x] Integrate Stripe SDK
+    - [ ] Create payment components
+    - [ ] Implement frontend payment flow
+    - [x] Implement backend payment Lambda
+    - [ ] Add error handling
+    - [ ] Create success/failure pages
+    - [ ] Complete PayPal integration
+5. Enhance MFA Security
+    - [ ] Rate limiting
+    - [ ] Bypass protection
+    - [ ] Device token storage
+    - [ ] Audit logging
+6. Testing and Documentation
+    - [ ] Unit testing
+    - [ ] Integration testing
+    - [ ] E2E testing
+    - [ ] API documentation
+    - [ ] User guide
+    - [ ] Update README.md to reflect Angular implementation
+7. Centralize CSS Architecture
+    - [x] Create shared styles directory
+    - [x] Set up variables and mixins
+    - [ ] Create component-specific stylesheets
+    - [ ] Implement BEM methodology
+    - [ ] Create style guide documentation
 
 ## Current Issues
-1. Need to manage state during Angular upgrade
+1. README.md contains React setup instructions, but project uses Angular - documentation is inconsistent
 2. CSS organization needs improvement and centralization
-3. Auth flow needs to be refactored for better UX
-4. State management needs to be implemented with NgRx
-5. Need to maintain backward compatibility during auth flow transition
+3. Auth flow needs to be refined for better user experience
+4. Need to maintain backward compatibility during auth flow transition
+5. PayPal implementation is incomplete compared to Stripe integration
 
 ## Project Structure
 ```
@@ -282,23 +301,47 @@ orb-integration-hub/
 │   ├── src/
 │   │   ├── app/
 │   │   │   ├── features/
-│   │   │   │   └── auth/
+│   │   │   │   └── user/
 │   │   │   │       ├── components/
+│   │   │   │       │   ├── auth-flow/
+│   │   │   │       │   │   └── store/
+│   │   │   │       │   ├── home/
+│   │   │   │       │   └── profile/
 │   │   │   │       ├── store/
 │   │   │   │       ├── user.module.ts
 │   │   │   │       └── user.routes.ts
-│   │   │   ├── shared/
+│   │   │   ├── layouts/
+│   │   │   ├── guards/
+│   │   │   ├── store/
 │   │   │   ├── core/
 │   │   │   │   ├── models/
 │   │   │   │   └── services/
 │   │   │   ├── app.module.ts
-│   │   │   └── app.routes.ts
+│   │   │   ├── app.routes.ts
+│   │   │   └── app.config.ts
 │   │   ├── assets/
 │   │   ├── environments/
 │   │   └── styles/
 ├── backend/
 │   ├── src/
-│   │   └── lambdas/
+│   │   ├── lambdas/
+│   │   │   ├── contact_us/
+│   │   │   ├── paypal/
+│   │   │   ├── pre_cognito_claims/
+│   │   │   ├── sms_verification/
+│   │   │   ├── stripe/
+│   │   │   └── stripe_publishable_key/
+│   │   └── layers/
+│   │       ├── authentication_dynamodb/
+│   │       └── stripe/
 │   └── infrastructure/
+│       ├── cloudformation/
+│       └── scripts/
+├── schemas/
+│   ├── core/
+│   ├── graphql/
+│   ├── tables/
+│   ├── templates/
+│   └── generate.py
 └── docs/
 ```

@@ -18,6 +18,7 @@ import {AuthState, AuthSteps} from './store/auth.state';
 import * as fromAuth from './store/auth.selectors';
 import {UserCreateInput} from "../../../../core/models/user.model";
 import {QRCodeToDataURLOptions} from "qrcode";
+import {UserService} from "../../../../core/services/user.service";
 
 
 @Component({
@@ -62,7 +63,8 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private store: Store<{ auth: AuthState }>,
-    private router: Router
+    private router: Router,
+    private userService: UserService
   ) {
     console.debug('AuthFlowComponent constructor');
 
@@ -96,12 +98,17 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           this.router.navigate(['/dashboard']);
         }
       });
+    
     this.currentStep$
       .pipe(takeUntil(this.destroy$))
       .subscribe(step => {
         this.updateValidators(step);
         if (step !== AuthSteps.COMPLETE) return;
-        this.router.navigate(['/profile']);
+        
+        // If we reached the COMPLETE step, check if the user is valid
+        // If all attributes are present, go to dashboard
+        // Otherwise, go to profile page to complete required fields
+        this.handleAuthComplete();
       });
 
     // current user
@@ -368,6 +375,39 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       hasNumber: false,
       hasSpecial: false
     };
+  }
+  
+  /**
+   * Handle the authentication complete step
+   * If user has all required attributes, redirect to dashboard
+   * Otherwise, redirect to profile page to complete required info
+   */
+  private handleAuthComplete(): void {
+    console.debug('Handling auth complete');
+    
+    this.currentUser$
+      .pipe(take(1))
+      .subscribe(user => {
+        if (!user) {
+          console.warn('No user found, redirecting to profile');
+          this.router.navigate(['/profile']);
+          return;
+        }
+        
+        // Step 7: Check if user has all required attributes
+        const isValid = this.userService.isUserValid(user);
+        console.debug('User validation:', { isValid, user });
+        
+        if (isValid) {
+          // User is valid (has all required attributes), go to dashboard
+          console.debug('User is valid, redirecting to dashboard');
+          this.router.navigate(['/dashboard']);
+        } else {
+          // User is missing required attributes, go to profile
+          console.debug('User is missing required attributes, redirecting to profile');
+          this.router.navigate(['/profile']);
+        }
+      });
   }
 
 }
