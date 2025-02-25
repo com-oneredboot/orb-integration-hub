@@ -107,7 +107,7 @@ export const authReducer = createReducer(
   })),
   on(AuthActions.signInSuccess, (state, { user }) => ({
     ...state,
-    user,
+    currentUser: user,
     isAuthenticated: true,
     isLoading: false,
     error: null
@@ -126,7 +126,7 @@ export const authReducer = createReducer(
   })),
   on(AuthActions.registerSuccess, (state, { user }) => ({
     ...state,
-    user,
+    currentUser: user,
     currentStep: AuthSteps.EMAIL_VERIFY,
     isLoading: false
   })),
@@ -179,7 +179,7 @@ export const authReducer = createReducer(
   })),
   on(AuthActions.refreshSessionSuccess, (state, { user }) => ({
     ...state,
-    user,
+    currentUser: user,
     isAuthenticated: true,
     isLoading: false,
     currentStep: AuthSteps.COMPLETE

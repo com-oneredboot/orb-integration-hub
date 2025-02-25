@@ -2,17 +2,127 @@
 @use 'variables' as v;
 @use 'sass:color';
 
-// First mixins are correct
-@mixin auth-container {
+// Main layout containers
+@mixin page-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
+  min-height: calc(100vh - 100px);
+  padding: v.$spacing-xl;
+  background-color: v.$white;
+  width: 100%;
+  
+  @media (max-width: 768px) {
+    padding: v.$spacing-md;
+  }
+  
+  @media (max-width: 480px) {
+    padding: v.$spacing-sm;
+  }
 }
 
-// ... other correct mixins ...
+@mixin auth-container {
+  @include page-container;
+}
 
-// These need to be fixed - adding the missing v. namespace
+// Form elements and inputs 
+@mixin form-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  
+  &__title {
+    font-size: v.$font-size-2xl;
+    color: v.$text-primary;
+    margin-bottom: v.$spacing-lg;
+    text-align: center;
+  }
+  
+  &__section {
+    background-color: v.$bg-secondary;
+    border-radius: v.$border-radius;
+    padding: v.$spacing-md;
+    margin-bottom: v.$spacing-lg;
+    box-shadow: v.$shadow-sm;
+    
+    &-title {
+      font-size: v.$font-size-lg;
+      color: v.$text-primary;
+      margin-bottom: v.$spacing-md;
+      padding-bottom: v.$spacing-sm;
+      border-bottom: 1px solid v.$border-color;
+    }
+  }
+  
+  &__row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: v.$spacing-md;
+    margin-bottom: v.$spacing-md;
+    
+    @media (max-width: 576px) {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  &__field {
+    margin-bottom: v.$spacing-md;
+    
+    &-label {
+      display: block;
+      margin-bottom: v.$spacing-xs;
+      font-size: v.$font-size-sm;
+      color: v.$text-secondary;
+    }
+    
+    &-input {
+      width: 100%;
+      padding: v.$spacing-sm v.$spacing-md;
+      font-family: v.$font-family-base;
+      font-size: v.$input-font-size;
+      color: v.$input-color;
+      border: 1px solid v.$input-border-color;
+      border-radius: v.$border-radius;
+      background-color: v.$input-bg;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      
+      &:focus {
+        outline: none;
+        border-color: v.$primary-color;
+        box-shadow: 0 0 0 2px rgba(v.$primary-color, 0.2);
+      }
+      
+      &--error {
+        border-color: v.$danger-color;
+      }
+      
+      &:disabled {
+        background-color: v.$gray-200;
+        cursor: not-allowed;
+      }
+    }
+    
+    &-error {
+      color: v.$danger-color;
+      font-size: v.$font-size-xs;
+      margin-top: v.$spacing-xs;
+    }
+  }
+  
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: v.$spacing-md;
+    margin-top: v.$spacing-lg;
+    
+    @media (max-width: 576px) {
+      flex-direction: column;
+    }
+  }
+}
+
+// Form controls
 @mixin error-message {
   color: v.$error-color;
   font-size: v.$font-size-xs;
@@ -71,4 +181,44 @@
   border-radius: 50%;
   border-top-color: transparent;
   animation: spin 1s linear infinite;
+}
+
+@mixin debug-container {
+  margin-top: v.$spacing-xl;
+  padding: v.$spacing-md;
+  border: 2px dashed #666;
+  border-radius: v.$border-radius;
+  background: #f8f9fa;
+  width: 100%;
+  max-width: 800px;
+  font-family: monospace;
+
+  &-title {
+    margin: 0 0 v.$spacing-md;
+    color: #dc1e1e;
+    font-size: 1.2rem;
+  }
+
+  &-section {
+    margin-bottom: v.$spacing-md;
+    padding: v.$spacing-sm;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: v.$border-radius;
+
+    h4 {
+      margin: 0 0 v.$spacing-sm;
+      color: #333;
+      font-size: 1rem;
+    }
+
+    pre {
+      margin: v.$spacing-xs 0;
+      padding: v.$spacing-xs;
+      background: #f1f1f1;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      overflow-x: auto;
+    }
+  }
 }

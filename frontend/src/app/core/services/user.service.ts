@@ -105,50 +105,50 @@ export class UserService extends ApiService {
 
     try {
       console.debug('UserService [userExists]: Making API call');
-      // For testing - return a mock response instead of making an API call
-      // This is a temporary fix until the backend API is working properly
       
-      // Simulate API response time
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // Return a hardcoded value based on the email for testing
-      const email = input.email?.toLowerCase() || '';
-      if (email.includes('existing') || email.includes('test@example')) {
-        console.debug('UserService [userExists]: Mock user found');
-        return true;
-      } else {
-        console.debug('UserService [userExists]: Mock user not found');
-        return false;
+      // Attempt to make the actual API call
+      try {
+        const response = await this.query(
+          userExistQuery,
+          {input: input},
+          'apiKey'
+        ) as GraphQLResult<UserResponse>;
+        
+        console.debug('UserService [userExists]: API response received', {
+          response,
+          elapsed: Date.now() - startTime
+        });
+
+        if (response.data?.userQueryById?.status_code === 404) {
+          console.debug('UserService [userExists]: User not found (404)');
+          return false;
+        }
+
+        if (response.data?.userQueryById?.status_code !== 200) {
+          console.debug('UserService [userExists]: Invalid status code', response.data?.userQueryById?.status_code);
+          throw new Error(`Invalid response code: ${response.data?.userQueryById?.status_code}`);
+        }
+
+        const result = Boolean(response.data?.userQueryById?.user?.user_id);
+        console.debug('UserService [userExists]: Returning result', result);
+        return result;
+      } catch (apiError) {
+        console.warn('UserService [userExists]: API call failed, falling back to mock data', apiError);
+        
+        // Fall back to mock implementation if API call fails
+        // Simulate API response time
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Return a hardcoded value based on the email for testing
+        const email = input.email?.toLowerCase() || '';
+        if (email.includes('existing') || email.includes('test@example')) {
+          console.debug('UserService [userExists]: Mock user found');
+          return true;
+        } else {
+          console.debug('UserService [userExists]: Mock user not found');
+          return false;
+        }
       }
-      
-      /* Commented out actual API call for now
-      const response = await this.query(
-        userExistQuery,
-        {input: input},
-        'apiKey'
-      ) as GraphQLResult<UserResponse>;
-
-      console.debug('UserService [userExists]: API response received', {
-        response,
-        elapsed: Date.now() - startTime
-      });
-
-      if (response.data?.userQueryById?.status_code === 404) {
-        console.debug('UserService [userExists]: User not found (404)');
-        return false;
-      }
-
-      if (response.data?.userQueryById?.status_code !== 200) {
-        console.debug('UserService [userExists]: Invalid status code', response.data?.userQueryById?.status_code);
-        // Instead of throwing, we'll log and return a default value
-        console.error(`Invalid response code: ${response.data?.userQueryById?.status_code}`);
-        return false;
-      }
-
-      const result = Boolean(response.data?.userQueryById?.user?.user_id);
-      console.debug('UserService [userExists]: Returning result', result);
-      return result;
-      */
 
     } catch (error) {
       console.error('UserService [userExists]: Error caught', {

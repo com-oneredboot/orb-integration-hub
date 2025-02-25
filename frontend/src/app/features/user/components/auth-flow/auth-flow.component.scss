@@ -4,12 +4,6 @@
 
 .auth-flow {
   @include m.auth-container;
-  min-height: calc(100vh - 100px);
-  padding: v.$spacing-xl;
-  background-color: v.$white;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 
   &__header {
     text-align: center;
@@ -235,43 +229,7 @@
   }
 
   &__debug {
-    margin-top: v.$spacing-xl;
-    padding: v.$spacing-md;
-    border: 2px dashed #666;
-    border-radius: v.$border-radius;
-    background: #f8f9fa;
-    width: 100%;
-    max-width: 800px;
-    font-family: monospace;
-
-    &-title {
-      margin: 0 0 v.$spacing-md;
-      color: #dc1e1e;
-      font-size: 1.2rem;
-    }
-
-    &-section {
-      margin-bottom: v.$spacing-md;
-      padding: v.$spacing-sm;
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: v.$border-radius;
-
-      h4 {
-        margin: 0 0 v.$spacing-sm;
-        color: #333;
-        font-size: 1rem;
-      }
-
-      pre {
-        margin: v.$spacing-xs 0;
-        padding: v.$spacing-xs;
-        background: #f1f1f1;
-        border-radius: 4px;
-        font-size: 0.9rem;
-        overflow-x: auto;
-      }
-    }
+    @include m.debug-container;
   }
 }
 
