@@ -545,8 +545,11 @@ Resources:
         #set($needComma = false)
         
         #if($ctx.args.input.email)
+          #if($needComma)
+            #set($updateExpression = "${updateExpression},")
+          #end
           #set($updateExpression = "${updateExpression} email = :email")
-          $util.qr($expressionValues.put(":email", $util.dynamodb.toDynamoDB($ctx.args.input.email)))
+          $util.qr($expressionValues.put(":email", $util.dynamodb.toDynamoDBJson($ctx.args.input.email)))
           #set($needComma = true)
         #end
         
@@ -555,7 +558,7 @@ Resources:
             #set($updateExpression = "${updateExpression},")
           #end
           #set($updateExpression = "${updateExpression} first_name = :first_name")
-          $util.qr($expressionValues.put(":first_name", $util.dynamodb.toDynamoDB($ctx.args.input.first_name)))
+          $util.qr($expressionValues.put(":first_name", $util.dynamodb.toDynamoDBJson($ctx.args.input.first_name)))
           #set($needComma = true)
         #end
         
@@ -564,7 +567,7 @@ Resources:
             #set($updateExpression = "${updateExpression},")
           #end
           #set($updateExpression = "${updateExpression} last_name = :last_name")
-          $util.qr($expressionValues.put(":last_name", $util.dynamodb.toDynamoDB($ctx.args.input.last_name)))
+          $util.qr($expressionValues.put(":last_name", $util.dynamodb.toDynamoDBJson($ctx.args.input.last_name)))
           #set($needComma = true)
         #end
         
@@ -573,7 +576,7 @@ Resources:
             #set($updateExpression = "${updateExpression},")
           #end
           #set($updateExpression = "${updateExpression} phone_number = :phone_number")
-          $util.qr($expressionValues.put(":phone_number", $util.dynamodb.toDynamoDB($ctx.args.input.phone_number)))
+          $util.qr($expressionValues.put(":phone_number", $util.dynamodb.toDynamoDBJson($ctx.args.input.phone_number)))
           #set($needComma = true)
         #end
         
@@ -582,7 +585,7 @@ Resources:
             #set($updateExpression = "${updateExpression},")
           #end
           #set($updateExpression = "${updateExpression} groups = :groups")
-          $util.qr($expressionValues.put(":groups", $util.dynamodb.toDynamoDB($ctx.args.input.groups)))
+          $util.qr($expressionValues.put(":groups", $util.dynamodb.toDynamoDBJson($ctx.args.input.groups)))
           #set($needComma = true)
         #end
         
@@ -591,7 +594,7 @@ Resources:
             #set($updateExpression = "${updateExpression},")
           #end
           #set($updateExpression = "${updateExpression} status = :status")
-          $util.qr($expressionValues.put(":status", $util.dynamodb.toDynamoDB($ctx.args.input.status)))
+          $util.qr($expressionValues.put(":status", $util.dynamodb.toDynamoDBJson($ctx.args.input.status)))
           #set($needComma = true)
         #end
         
@@ -609,7 +612,7 @@ Resources:
           "version": "2017-02-28",
           "operation": "UpdateItem",
           "key": {
-            "user_id": $util.dynamodb.toDynamoDB($ctx.args.input.user_id)
+            "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id)
           },
           "update": {
             "expression": "$updateExpression",
