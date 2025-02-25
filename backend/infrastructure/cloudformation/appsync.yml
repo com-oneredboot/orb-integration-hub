@@ -362,15 +362,14 @@ Resources:
         $util.toJson($response)
 
   # User Resolvers
-# User Create Resolver
-UserCreateResolver:
-  Type: AWS::AppSync::Resolver
-  DependsOn: IntegrationHubSchema
-  Properties:
-    ApiId: !GetAtt IntegrationHubApi.ApiId
-    TypeName: Mutation
-    FieldName: userCreate
-    DataSourceName: !GetAtt UsersDataSource.Name
+  UserCreateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: userCreate
+      DataSourceName: !GetAtt UsersDataSource.Name
     RequestMappingTemplate: |
       {
         "version": "2017-02-28",
@@ -408,6 +407,7 @@ UserCreateResolver:
       })
       
       $util.toJson($response)
+
 
   UserQueryByIdResolver:
     Type: AWS::AppSync::Resolver
@@ -494,14 +494,15 @@ UserCreateResolver:
         
         $util.toJson($response)
 
-UserUpdateResolver:
-  Type: AWS::AppSync::Resolver
-  DependsOn: IntegrationHubSchema
-  Properties:
-    ApiId: !GetAtt IntegrationHubApi.ApiId
-    TypeName: Mutation
-    FieldName: userUpdate
-    DataSourceName: !GetAtt UsersDataSource.Name
+
+  UserUpdateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: userUpdate
+      DataSourceName: !GetAtt UsersDataSource.Name
     RequestMappingTemplate: |
       ## Initialize expression components
       #set($expressionNames = {})
@@ -605,80 +606,6 @@ UserUpdateResolver:
       })
       
       $util.toJson($response)
-
-  # SMS Verification Resolvers
-  SendSMSVerificationCodeResolver:
-    Type: AWS::AppSync::Resolver
-    DependsOn: IntegrationHubSchema
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: sendSMSVerificationCode
-      DataSourceName: !GetAtt SMSVerificationDataSource.Name
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "Invoke",
-          "payload": $util.toJson($context.arguments)
-        }
-      ResponseMappingTemplate: |
-        $util.toJson($context.result)
-
-  # IAM
-  AppSyncServiceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: appsync.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: AppSyncServicePolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - lambda:InvokeFunction
-                Resource:
-                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-sms-verification-lambda-arn}}'
-              - Effect: Allow
-                Action:
-                  - dynamodb:GetItem
-                  - dynamodb:Query
-                  - dynamodb:PutItem
-                Resource:
-                  # Add base table ARNs
-                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${CustomerId}-${ProjectId}-${Environment}-users'
-                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${CustomerId}-${ProjectId}-${Environment}-user-profiles'
-                  # Add GSI ARNs
-                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${CustomerId}-${ProjectId}-${Environment}-users/index/*'
-                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${CustomerId}-${ProjectId}-${Environment}-user-profiles/index/*'
-  AppSyncLoggingServiceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: appsync.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: AppSyncLoggingServicePolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                Resource:
-                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/appsync/apis/*:*'
 
 # --------------------------------------------------- #
 Outputs:
