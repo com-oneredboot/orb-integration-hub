@@ -548,25 +548,25 @@ Resources:
         ## Dynamically check each field and add it to the update expression
         #if($ctx.args.input.first_name)
           #set($expSet = "${expSet}${comma} first_name = :first_name")
-          $util.qr($expValues.put(":first_name", {"S": $ctx.args.input.first_name}))
+          $util.qr($expValues.put(":first_name", $util.dynamodb.toDynamoDBJson($ctx.args.input.first_name))
           #set($comma = ",")
         #end
         
         #if($ctx.args.input.last_name)
           #set($expSet = "${expSet}${comma} last_name = :last_name")
-          $util.qr($expValues.put(":last_name", {"S": $ctx.args.input.last_name}))
+          $util.qr($expValues.put(":last_name", $util.dynamodb.toDynamoDBJson($ctx.args.input.last_name))
           #set($comma = ",")
         #end
         
         #if($ctx.args.input.email)
           #set($expSet = "${expSet}${comma} email = :email")
-          $util.qr($expValues.put(":email", {"S": $ctx.args.input.email}))
+          $util.qr($expValues.put(":email", $util.dynamodb.toDynamoDBJson($ctx.args.input.email))
           #set($comma = ",")
         #end
         
         #if($ctx.args.input.phone_number)
           #set($expSet = "${expSet}${comma} phone_number = :phone_number")
-          $util.qr($expValues.put(":phone_number", {"S": $ctx.args.input.phone_number}))
+          $util.qr($expValues.put(":phone_number", $util.dynamodb.toDynamoDBJson($ctx.args.input.phone_number))
           #set($comma = ",")
         #end
         
@@ -578,7 +578,7 @@ Resources:
         
         #if($ctx.args.input.status)
           #set($expSet = "${expSet}${comma} status = :status")
-          $util.qr($expValues.put(":status", {"S": $ctx.args.input.status}))
+          $util.qr($expValues.put(":status", $util.dynamodb.toDynamoDBJson($ctx.args.input.status))
           #set($comma = ",")
         #end
         
@@ -600,7 +600,7 @@ Resources:
           "version": "2018-05-29",
           "operation": "UpdateItem",
           "key": {
-            "user_id": {"S": $ctx.args.input.user_id}
+            "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id)
           },
           "update": {
             "expression": "${expression}",
