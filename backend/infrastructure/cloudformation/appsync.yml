@@ -548,7 +548,7 @@ Resources:
         ## Dynamically check each field and add it to the update expression
         #if($ctx.args.input.first_name)
           #set($expSet = "${expSet}${comma} first_name = :first_name")
-          $util.qr($expValues.put(":first_name", $util.parseJson($util.dynamodb.toDynamoDBJson($ctx.args.input.first_name))))
+          $util.qr($expValues.put(":first_name",($util.dynamodb.toDynamoDBJson($ctx.args.input.first_name))))
           #set($comma = ",")
         #end
         
@@ -604,7 +604,7 @@ Resources:
           },
           "update": {
             "expression": "${expression}",
-            "expressionValues": $expValues
+            "expressionValues": $util.toJSON($expValues)
           }
         }
 
