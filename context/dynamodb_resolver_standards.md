@@ -6,6 +6,8 @@ When working with DynamoDB resolvers in AppSync, follow these standards to ensur
 
 ## Update Operation Standards
 
+### Static Update Approach (Recommended)
+
 The standard pattern for DynamoDB update operations in AppSync resolvers:
 
 ```graphql
@@ -37,6 +39,7 @@ The standard pattern for DynamoDB update operations in AppSync resolvers:
 - Always use `$util.dynamodb.toDynamoDBJson()` for all values
 - Do not use naked string values - always wrap with DynamoDB JSON conversion
 - Use a static update expression rather than dynamic expression building
+- Avoid dynamic map building with bracket notation as it can cause type errors
 
 ### Response Templates
 
@@ -49,8 +52,7 @@ Standard response template:
 
 {
   "status_code": 200,
-  "message": "Resource updated successfully",
-  "user": $util.toJson($ctx.result)
+  "message": "Resource updated successfully"
 }
 ```
 
@@ -73,10 +75,11 @@ The standard pattern for DynamoDB get operations:
 1. **Expression Building**: Avoid dynamically building expressions as this can lead to format errors
 2. **Parameter Formats**: Always use the same parameter format throughout the resolver
 3. **Complex Logic**: Keep resolvers simple and focused - business logic should be in a Lambda function
+4. **String vs Object Errors**: The most common error is "Expected JSON object for attribute value but got STRING instead" which occurs when trying to build dynamic expressionValues
 
-## Example Implementation
+## Working Example: Static Update Expression
 
-For a user update operation:
+This approach is simple and reliable, with predictable results:
 
 ```graphql
 {
@@ -95,6 +98,23 @@ For a user update operation:
 }
 ```
 
+## For Advanced Cases: Lambda-Enhanced Resolvers
+
+For cases that require dynamic expressions or complex logic, use a Lambda function:
+
+```graphql
+{
+  "version": "2018-05-29",
+  "operation": "Invoke",
+  "payload": {
+    "field": "updateUser",
+    "arguments": $utils.toJson($ctx.arguments)
+  }
+}
+```
+
+The Lambda function can then build the proper DynamoDB expressions with full access to language features for complex logic.
+
 ## Testing Update Operations
 
 When testing update operations:
@@ -102,3 +122,4 @@ When testing update operations:
 1. Always include all fields in the input, even if they don't change
 2. Verify the operation by fetching the item after update
 3. Check the logs for any expression or type errors
+4. If you get STRING vs OBJECT errors, switch to the static approach
