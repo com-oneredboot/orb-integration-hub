@@ -540,86 +540,66 @@ Resources:
       FieldName: userUpdate
       DataSourceName: !GetAtt UsersDataSource.Name
       RequestMappingTemplate: |
-        #set($updateExpression = "SET")
+        #set($input = $ctx.args.input)
+        #set($expressionNames = {})
         #set($expressionValues = {})
-        #set($needComma = false)
+        #set($expressionSet = [])
         
-        #if($ctx.args.input.email)
-          #if($needComma)
-            #set($updateExpression = "${updateExpression},")
-          #end
-          #set($updateExpression = "${updateExpression} email = :email")
-          $util.qr($expressionValues.put(":email", $util.dynamodb.toDynamoDBJson($ctx.args.input.email)))
-          #set($needComma = true)
+        ## Handle all potential input fields
+        #if($util.isString($input.email))
+          $util.qr($expressionSet.add("email = :email"))
+          $util.qr($expressionValues.put(":email", {"S": $input.email}))
         #end
         
-        #if($ctx.args.input.first_name)
-          #if($needComma)
-            #set($updateExpression = "${updateExpression},")
-          #end
-          #set($updateExpression = "${updateExpression} first_name = :first_name")
-          $util.qr($expressionValues.put(":first_name", $util.dynamodb.toDynamoDBJson($ctx.args.input.first_name)))
-          #set($needComma = true)
+        #if($util.isString($input.first_name))
+          $util.qr($expressionSet.add("first_name = :firstName"))
+          $util.qr($expressionValues.put(":firstName", {"S": $input.first_name}))
         #end
         
-        #if($ctx.args.input.last_name)
-          #if($needComma)
-            #set($updateExpression = "${updateExpression},")
-          #end
-          #set($updateExpression = "${updateExpression} last_name = :last_name")
-          $util.qr($expressionValues.put(":last_name", $util.dynamodb.toDynamoDBJson($ctx.args.input.last_name)))
-          #set($needComma = true)
+        #if($util.isString($input.last_name))
+          $util.qr($expressionSet.add("last_name = :lastName"))
+          $util.qr($expressionValues.put(":lastName", {"S": $input.last_name}))
         #end
         
-        #if($ctx.args.input.phone_number)
-          #if($needComma)
-            #set($updateExpression = "${updateExpression},")
-          #end
-          #set($updateExpression = "${updateExpression} phone_number = :phone_number")
-          $util.qr($expressionValues.put(":phone_number", $util.dynamodb.toDynamoDBJson($ctx.args.input.phone_number)))
-          #set($needComma = true)
+        #if($util.isString($input.phone_number))
+          $util.qr($expressionSet.add("phone_number = :phoneNumber"))
+          $util.qr($expressionValues.put(":phoneNumber", {"S": $input.phone_number}))
         #end
         
-        #if($ctx.args.input.groups)
-          #if($needComma)
-            #set($updateExpression = "${updateExpression},")
-          #end
-          #set($updateExpression = "${updateExpression} groups = :groups")
-          $util.qr($expressionValues.put(":groups", $util.dynamodb.toDynamoDBJson($ctx.args.input.groups)))
-          #set($needComma = true)
+        #if($input.groups)
+          $util.qr($expressionSet.add("groups = :groups"))
+          $util.qr($expressionValues.put(":groups", {"L": $util.dynamodb.toMapValues($input.groups).L}))
         #end
         
-        #if($ctx.args.input.status)
-          #if($needComma)
-            #set($updateExpression = "${updateExpression},")
-          #end
-          #set($updateExpression = "${updateExpression} status = :status")
-          $util.qr($expressionValues.put(":status", $util.dynamodb.toDynamoDBJson($ctx.args.input.status)))
-          #set($needComma = true)
+        #if($util.isString($input.status))
+          $util.qr($expressionSet.add("status = :status"))
+          $util.qr($expressionValues.put(":status", {"S": $input.status}))
         #end
         
-        #if(!$needComma)
+        ## If nothing to update, return early
+        #if($expressionSet.isEmpty())
           #return($util.toJson({
             "status_code": 200,
             "message": "No changes to update",
-            "user": {
-              "user_id": $ctx.args.input.user_id
-            }
+            "user": { "user_id": $input.user_id }
           }))
         #end
         
+        ## Build the update expression
+        #set($expression = "SET " + $util.join(", ", $expressionSet))
+        
+        ## Create a properly structured request
         {
           "version": "2017-02-28",
           "operation": "UpdateItem",
           "key": {
-            "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id)
+            "user_id": { "S": "$input.user_id" }
           },
           "update": {
-            "expression": "$updateExpression",
-            "expressionValues": $expressionValues
+            "expression": "$expression",
+            "expressionValues": $util.toJson($expressionValues)
           }
         }
-
       ResponseMappingTemplate: |
         #if($ctx.error)
           $util.error($ctx.error.message, $ctx.error.type)
