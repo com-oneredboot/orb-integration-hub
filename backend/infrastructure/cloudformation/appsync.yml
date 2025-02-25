@@ -25,13 +25,41 @@ Parameters:
 
 # --------------------------------------------------- #
 Resources:
+  # IAM Roles for AppSync
+  AppSyncServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: appsync.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+        - arn:aws:iam::aws:policy/AWSLambda_FullAccess
+  
+  AppSyncLoggingServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: appsync.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSAppSyncPushToCloudWatchLogs
+
   IntegrationHubApi:
     Type: AWS::AppSync::GraphQLApi
     Properties:
       Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-appsync'
       AuthenticationType: AMAZON_COGNITO_USER_POOLS
       UserPoolConfig:
-        UserPoolId: !Sub "${CustomerId}-${ProjectId}-${Environment}-cognito-user-pool-id"
+        UserPoolId: !Sub "{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-cognito-user-pool-id}}"
         AwsRegion: !Ref AWS::Region
         DefaultAction: ALLOW
       AdditionalAuthenticationProviders:
@@ -503,95 +531,95 @@ Resources:
       TypeName: Mutation
       FieldName: userUpdate
       DataSourceName: !GetAtt UsersDataSource.Name
-    RequestMappingTemplate: |
-      ## Initialize expression components
-      #set($expressionNames = {})
-      #set($expressionValues = {})
-      #set($expression = "SET")
-      #set($needComma = false)
+      RequestMappingTemplate: |
+        ## Initialize expression components
+        #set($expressionNames = {})
+        #set($expressionValues = {})
+        #set($expression = "SET")
+        #set($needComma = false)
 
-      ## Check each field and add to expression if present
-      #if($ctx.args.input.email)
-        #set($expression = "${expression} #email = :email")
-        #set($expressionNames.email = "email")
-        #set($expressionValues.email = $util.dynamodb.toDynamoDBJson($ctx.args.input.email))
-        #set($needComma = true)
-      #end
-
-      #if($ctx.args.input.first_name)
-        #if($needComma)
-          #set($expression = "${expression},")
+        ## Check each field and add to expression if present
+        #if($ctx.args.input.email)
+          #set($expression = "${expression} #email = :email")
+          #set($expressionNames.email = "email")
+          #set($expressionValues.email = $util.dynamodb.toDynamoDBJson($ctx.args.input.email))
+          #set($needComma = true)
         #end
-        #set($expression = "${expression} #first_name = :first_name")
-        #set($expressionNames.first_name = "first_name")
-        #set($expressionValues.first_name = $util.dynamodb.toDynamoDBJson($ctx.args.input.first_name))
-        #set($needComma = true)
-      #end
 
-      #if($ctx.args.input.last_name)
-        #if($needComma)
-          #set($expression = "${expression},")
+        #if($ctx.args.input.first_name)
+          #if($needComma)
+            #set($expression = "${expression},")
+          #end
+          #set($expression = "${expression} #first_name = :first_name")
+          #set($expressionNames.first_name = "first_name")
+          #set($expressionValues.first_name = $util.dynamodb.toDynamoDBJson($ctx.args.input.first_name))
+          #set($needComma = true)
         #end
-        #set($expression = "${expression} #last_name = :last_name")
-        #set($expressionNames.last_name = "last_name")
-        #set($expressionValues.last_name = $util.dynamodb.toDynamoDBJson($ctx.args.input.last_name))
-        #set($needComma = true)
-      #end
 
-      #if($ctx.args.input.phone_number)
-        #if($needComma)
-          #set($expression = "${expression},")
+        #if($ctx.args.input.last_name)
+          #if($needComma)
+            #set($expression = "${expression},")
+          #end
+          #set($expression = "${expression} #last_name = :last_name")
+          #set($expressionNames.last_name = "last_name")
+          #set($expressionValues.last_name = $util.dynamodb.toDynamoDBJson($ctx.args.input.last_name))
+          #set($needComma = true)
         #end
-        #set($expression = "${expression} #phone_number = :phone_number")
-        #set($expressionNames.phone_number = "phone_number")
-        #set($expressionValues.phone_number = $util.dynamodb.toDynamoDBJson($ctx.args.input.phone_number))
-        #set($needComma = true)
-      #end
 
-      #if($ctx.args.input.groups)
-        #if($needComma)
-          #set($expression = "${expression},")
+        #if($ctx.args.input.phone_number)
+          #if($needComma)
+            #set($expression = "${expression},")
+          #end
+          #set($expression = "${expression} #phone_number = :phone_number")
+          #set($expressionNames.phone_number = "phone_number")
+          #set($expressionValues.phone_number = $util.dynamodb.toDynamoDBJson($ctx.args.input.phone_number))
+          #set($needComma = true)
         #end
-        #set($expression = "${expression} #groups = :groups")
-        #set($expressionNames.groups = "groups")
-        #set($expressionValues.groups = $util.dynamodb.toDynamoDBJson($ctx.args.input.groups))
-        #set($needComma = true)
-      #end
 
-      #if($ctx.args.input.status)
-        #if($needComma)
-          #set($expression = "${expression},")
+        #if($ctx.args.input.groups)
+          #if($needComma)
+            #set($expression = "${expression},")
+          #end
+          #set($expression = "${expression} #groups = :groups")
+          #set($expressionNames.groups = "groups")
+          #set($expressionValues.groups = $util.dynamodb.toDynamoDBJson($ctx.args.input.groups))
+          #set($needComma = true)
         #end
-        #set($expression = "${expression} #status = :status")
-        #set($expressionNames.status = "status")
-        #set($expressionValues.status = $util.dynamodb.toDynamoDBJson($ctx.args.input.status))
-        #set($needComma = true)
-      #end
 
-      ## If nothing to update, return the current item
-      #if(!$needComma)
-        #set($response = {
-          "status_code": 200,
-          "message": "No changes to update",
-          "user": {
-            "user_id": $ctx.args.input.user_id
+        #if($ctx.args.input.status)
+          #if($needComma)
+            #set($expression = "${expression},")
+          #end
+          #set($expression = "${expression} #status = :status")
+          #set($expressionNames.status = "status")
+          #set($expressionValues.status = $util.dynamodb.toDynamoDBJson($ctx.args.input.status))
+          #set($needComma = true)
+        #end
+
+        ## If nothing to update, return the current item
+        #if(!$needComma)
+          #set($response = {
+            "status_code": 200,
+            "message": "No changes to update",
+            "user": {
+              "user_id": $ctx.args.input.user_id
+            }
+          })
+          #return($util.toJson($response))
+        #end
+
+        {
+          "version": "2017-02-28",
+          "operation": "UpdateItem",
+          "key": {
+            "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id)
+          },
+          "update": {
+            "expression": "$expression",
+            "expressionNames": $util.toJson($expressionNames),
+            "expressionValues": $util.toJson($expressionValues)
           }
-        })
-        #return($util.toJson($response))
-      #end
-
-      {
-        "version": "2017-02-28",
-        "operation": "UpdateItem",
-        "key": {
-          "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id)
-        },
-        "update": {
-          "expression": "$expression",
-          "expressionNames": $util.toJson($expressionNames),
-          "expressionValues": $util.toJson($expressionValues)
         }
-      }
     ResponseMappingTemplate: |
       #if($ctx.error)
         $util.error($ctx.error.message, $ctx.error.type)
