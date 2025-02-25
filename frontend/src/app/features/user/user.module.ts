@@ -14,6 +14,7 @@ import {EffectsModule} from "@ngrx/effects";
 import { HomeComponent } from './components/home/home.component';
 import { AuthFlowComponent} from "./components/auth-flow/auth-flow.component";
 import { ProfileComponent } from "./components/profile/profile.component";
+import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { UserRoutes } from './user.routes';
 import { authReducer } from './components/auth-flow/store/auth.reducer';
 import { AuthEffects } from './components/auth-flow/store/auth.effects';
@@ -22,7 +23,8 @@ import { AuthEffects } from './components/auth-flow/store/auth.effects';
   declarations: [
     AuthFlowComponent,
     HomeComponent,
-    ProfileComponent
+    ProfileComponent,
+    DashboardComponent
   ],
   imports: [
     CommonModule,

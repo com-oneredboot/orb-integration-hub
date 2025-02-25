@@ -25,13 +25,7 @@ export class AuthEffects {
         console.debug('Effect [CheckEmail]: Making service call');
         return from(this.userService.userExists({ email } as UserQueryInput)).pipe(
           tap(result => console.debug('Effect [CheckEmail]: Service returned', result)),
-          map((exists: boolean | undefined) => {
-            if (exists === undefined) {
-              console.debug('Effect [CheckEmail]: Undefined result, returning failure');
-              return AuthActions.checkEmailFailure({
-                error: 'Unable to verify email status. Please try again.'
-              });
-            }
+          map((exists: boolean) => {
             console.debug('Effect [CheckEmail]: Success, user exists:', exists);
             return AuthActions.checkEmailSuccess({ userExists: exists });
           }),

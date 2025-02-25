@@ -10,6 +10,7 @@ import { RouterModule, Routes } from '@angular/router';
 // Application Imports
 import { HomeComponent } from './components/home/home.component';
 import { ProfileComponent } from "./components/profile/profile.component";
+import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { AuthGuard } from '../../guards/auth.guard';
 import {AuthFlowComponent} from "./components/auth-flow/auth-flow.component";
 
@@ -30,6 +31,12 @@ const routes: Routes = [
       {
         path: 'profile',
         component: ProfileComponent,
+        canActivate: [AuthGuard],
+        data: { requiresAuth: true }
+      },
+      {
+        path: 'dashboard',
+        component: DashboardComponent,
         canActivate: [AuthGuard],
         data: { requiresAuth: true }
       },

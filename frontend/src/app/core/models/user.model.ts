@@ -115,7 +115,7 @@ export const userQueryById = /* GraphQL */ `
 `;
 
 export const userUpdateMutation = /* GraphQL */ `
-  mutation UserUpdate($input: UpdateUserInput!) {
+  mutation UserUpdate($input: UserUpdateInput!) {
     userUpdate(input: $input) {
       id
     }
