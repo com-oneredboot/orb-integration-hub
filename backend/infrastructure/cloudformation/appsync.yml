@@ -540,6 +540,76 @@ Resources:
       FieldName: userUpdate
       DataSourceName: !GetAtt UsersDataSource.Name
       RequestMappingTemplate: |
+        ## Build update expression and values dynamically
+        #set($expression = "SET")
+        #set($expressionValues = {})
+        #set($needComma = false)
+        
+        ## Check each field and add to expression if present
+        #if($ctx.args.input.first_name)
+          #set($expression = "${expression} first_name = :first_name")
+          #set($expressionValues[":first_name"] = $util.dynamodb.toDynamoDBJson($ctx.args.input.first_name))
+          #set($needComma = true)
+        #end
+        
+        #if($ctx.args.input.last_name)
+          #if($needComma)
+            #set($expression = "${expression},")
+          #end
+          #set($expression = "${expression} last_name = :last_name")
+          #set($expressionValues[":last_name"] = $util.dynamodb.toDynamoDBJson($ctx.args.input.last_name))
+          #set($needComma = true)
+        #end
+        
+        #if($ctx.args.input.email)
+          #if($needComma)
+            #set($expression = "${expression},")
+          #end
+          #set($expression = "${expression} email = :email")
+          #set($expressionValues[":email"] = $util.dynamodb.toDynamoDBJson($ctx.args.input.email))
+          #set($needComma = true)
+        #end
+        
+        #if($ctx.args.input.phone_number)
+          #if($needComma)
+            #set($expression = "${expression},")
+          #end
+          #set($expression = "${expression} phone_number = :phone_number")
+          #set($expressionValues[":phone_number"] = $util.dynamodb.toDynamoDBJson($ctx.args.input.phone_number))
+          #set($needComma = true)
+        #end
+        
+        #if($ctx.args.input.groups)
+          #if($needComma)
+            #set($expression = "${expression},")
+          #end
+          #set($expression = "${expression} groups = :groups")
+          #set($expressionValues[":groups"] = $util.dynamodb.toDynamoDBJson($ctx.args.input.groups))
+          #set($needComma = true)
+        #end
+        
+        #if($ctx.args.input.status)
+          #if($needComma)
+            #set($expression = "${expression},")
+          #end
+          #set($expression = "${expression} status = :status")
+          #set($expressionValues[":status"] = $util.dynamodb.toDynamoDBJson($ctx.args.input.status))
+          #set($needComma = true)
+        #end
+        
+        ## If nothing to update, return the current item
+        #if(!$needComma)
+          #set($response = {
+            "status_code": 200,
+            "message": "No changes to update",
+            "user": {
+              "user_id": $ctx.args.input.user_id
+            }
+          })
+          #return($util.toJson($response))
+        #end
+        
+        ## Return DynamoDB update operation with the built expression
         {
           "version" : "2018-05-29",
           "operation" : "UpdateItem",
@@ -547,11 +617,8 @@ Resources:
             "user_id" : $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id)
           },
           "update" : {
-            "expression" : "set first_name = :first_name, last_name = :last_name",
-            "expressionValues" : {
-              ":first_name" : $util.dynamodb.toDynamoDBJson($ctx.args.input.first_name),
-              ":last_name" : $util.dynamodb.toDynamoDBJson($ctx.args.input.last_name)
-            }
+            "expression" : "$expression",
+            "expressionValues" : $util.toJson($expressionValues)
           }
         }
 
