@@ -26,7 +26,6 @@ enum UserGroup @aws_api_key @aws_cognito_user_pools {
 
 # Model definitions 
 
-
 # Nested complex types
 type ApplicationRole @aws_api_key @aws_cognito_user_pools {
   name: String!
