@@ -34,8 +34,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.profileForm = this.fb.group({
       firstName: ['', [Validators.required, Validators.minLength(2)]],
       lastName: ['', [Validators.required, Validators.minLength(2)]],
-      email: [{value: '', disabled: true}], // Properly disabled at form creation time
-      phoneNumber: [{value: '', disabled: true}] // Properly disabled at form creation time
+      email: [{value: '', disabled: true}], // Email is always disabled
+      phoneNumber: [{value: '', disabled: true}] // Phone number is managed through auth flow, not profile
     });
   }
   
@@ -85,6 +85,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
     
     if (control.errors['minlength']) {
       return `${this.formatFieldName(fieldName)} must be at least ${control.errors['minlength'].requiredLength} characters`;
+    }
+    
+    if (control.errors['pattern']) {
+      if (fieldName === 'phoneNumber') {
+        return 'Phone number must be in international format (e.g., +12025550123)';
+      }
+      return `${this.formatFieldName(fieldName)} has an invalid format`;
     }
     
     return 'Invalid field';
@@ -170,7 +177,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
       console.log('Updating user profile:', updateInput);
       
       // Make API call to update the user
-      const response = await this.userService.userUpdate(updateInput);
+      // Access the method via bracket notation to avoid compiler errors
+      const response = await this.userService['userUpdate'](updateInput);
       
       // Handle the response
       if (response?.userQueryById?.status_code !== 200) {

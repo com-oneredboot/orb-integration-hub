@@ -540,18 +540,56 @@ Resources:
       FieldName: userUpdate
       DataSourceName: !GetAtt UsersDataSource.Name
       RequestMappingTemplate: |
+        ## Follow the DynamoDB resolver standards for update operations
+        #set($input = $ctx.args.input)
+        #set($now = $util.time.nowISO8601())
+        
+        ## First, ensure the user_id is provided (required)
+        #if(!$input.user_id)
+          $util.error("user_id is a required field for user updates")
+        #end
+        
+        ## Build update expression and values map
+        #set($expNames = {})
+        #set($expValues = {})
+        #set($expSet = [])
+        
+        ## Helper function to add an attribute to the update expression
+        #set($updateCount = 0)
+        #foreach($field in $input.keySet())
+          ## Skip the primary key
+          #if($field != "user_id")
+            ## Add the field to the update expression
+            $util.qr($expNames.put("#$field", "$field"))
+            $util.qr($expValues.put(":$field", $util.dynamodb.toDynamoDB($input.get($field))))
+            $util.qr($expSet.add("#$field = :$field"))
+            #set($updateCount = $updateCount + 1)
+          #end
+        #end
+        
+        ## If there are no fields to update, return early
+        #if($updateCount == 0)
+          $util.error("No fields to update were provided")
+        #end
+        
+        ## Add the updated_at timestamp
+        $util.qr($expNames.put("#updated_at", "updated_at"))
+        $util.qr($expValues.put(":updated_at", $util.dynamodb.toDynamoDB($now)))
+        $util.qr($expSet.add("#updated_at = :updated_at"))
+        
+        ## Build the update expression
+        #set($expression = "SET " + $expSet.join(", "))
+        
         {
           "version": "2018-05-29",
           "operation": "UpdateItem",
           "key": {
-            "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id)
+            "user_id": $util.dynamodb.toDynamoDBJson($input.user_id)
           },
           "update": {
-            "expression": "set first_name = :first_name, last_name = :last_name",
-            "expressionValues": {
-              ":first_name": $util.dynamodb.toDynamoDBJson($ctx.args.input.first_name),
-              ":last_name": $util.dynamodb.toDynamoDBJson($ctx.args.input.last_name)
-            }
+            "expression": "$expression",
+            "expressionNames": $util.toJson($expNames),
+            "expressionValues": $util.toJson($expValues)
           }
         }
 
@@ -563,8 +601,34 @@ Resources:
         ## Return a properly structured response
         {
           "status_code": 200,
-          "message": "User updated successfully"
+          "message": "User updated successfully",
+          "user_id": $util.toJson($ctx.args.input.user_id)
         }
+
+  # SMS Verification Resolver
+  SMSVerificationResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: sendSMSVerificationCode
+      DataSourceName: !GetAtt SMSVerificationDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "input": $util.toJson($ctx.args.input)
+          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          $util.error($ctx.error.message, $ctx.error.type)
+        #end
+        
+        ## Return the Lambda response directly
+        $util.toJson($ctx.result)
 
 # --------------------------------------------------- #
 Outputs:

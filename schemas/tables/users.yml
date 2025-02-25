@@ -21,6 +21,9 @@ model:
     phone_number:
       type: string
       required: false
+    phone_verified:
+      type: boolean
+      required: false
     first_name:
       type: string
       required: true

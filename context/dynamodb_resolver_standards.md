@@ -77,9 +77,9 @@ The standard pattern for DynamoDB get operations:
 3. **Complex Logic**: Keep resolvers simple and focused - business logic should be in a Lambda function
 4. **String vs Object Errors**: The most common error is "Expected JSON object for attribute value but got STRING instead" which occurs when trying to build dynamic expressionValues
 
-## Working Example: Static Update Expression
+## Working Example: Static Update Expression (REQUIRED STANDARD)
 
-This approach is simple and reliable, with predictable results:
+This is the **required standard approach** for all update resolvers in this project:
 
 ```graphql
 {
@@ -97,6 +97,13 @@ This approach is simple and reliable, with predictable results:
   }
 }
 ```
+
+### IMPORTANT REQUIREMENTS:
+
+1. All update resolvers MUST use this static expression pattern
+2. The client MUST provide ALL attributes referenced in the update expression
+3. Do NOT attempt to build dynamic expressions - use this fixed format only
+4. If only certain fields need updating, the Lambda or client code should fetch the existing item first, then send a complete object with all required fields
 
 ## For Advanced Cases: Lambda-Enhanced Resolvers
 

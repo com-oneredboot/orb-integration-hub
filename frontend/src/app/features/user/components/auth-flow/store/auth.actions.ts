@@ -34,6 +34,15 @@ export const AuthActions = createActionGroup({
     'Setup Password Success': emptyProps(),
     'Setup Password Failure': props<{ error: string }>(),
 
+    // Phone verification
+    'Setup Phone': props<{ phoneNumber: string }>(),
+    'Setup Phone Success': props<{ validationId: string, expiresAt: number }>(),
+    'Setup Phone Failure': props<{ error: string }>(),
+
+    'Verify Phone': props<{ code: string }>(),
+    'Verify Phone Success': emptyProps(),
+    'Verify Phone Failure': props<{ error: string }>(),
+
     'Needs MFA': props<{ code: string, rememberDevice:boolean }>(),
     'Needs MFA Success': emptyProps(),
     'Needs MFA Failure': props<{ error: string }>(),
@@ -60,7 +69,10 @@ export const AuthActions = createActionGroup({
 
     'Refresh Session': emptyProps(),
     'Refresh Session Success': props<{ user: User }>(),
-    'Refresh Session Failure': props<{ error: string }>()
+    'Refresh Session Failure': props<{ error: string }>(),
 
+    'Check Phone Required': emptyProps(),
+    'Check Phone Required Success': props<{ required: boolean }>(),
+    'Check Phone Required Failure': props<{ error: string }>()
   }
 });

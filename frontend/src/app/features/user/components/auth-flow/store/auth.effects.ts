@@ -6,13 +6,15 @@
 // 3rd Party Imports
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { catchError, map, switchMap, tap } from 'rxjs/operators';
+import { catchError, map, switchMap, tap, withLatestFrom } from 'rxjs/operators';
 import { from, of } from "rxjs";
+import { Store } from '@ngrx/store';
 
 // Application Imports
 import { UserService } from "../../../../../core/services/user.service";
 import { UserQueryInput } from "../../../../../core/models/user.model";
 import { AuthActions } from "./auth.actions";
+import * as fromAuth from "./auth.selectors";
 import { CognitoService } from "../../../../../core/services/cognito.service";
 
 @Injectable()
@@ -186,9 +188,82 @@ export class AuthEffects {
     )
   );
 
+  // Check phone required
+  checkPhoneRequired$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.checkPhoneRequired),
+      tap(() => console.debug('Effect: Checking if phone setup is required')),
+      switchMap(() => {
+        return of(AuthActions.checkPhoneRequiredSuccess({ required: true }))
+          .pipe(
+            catchError(error => of(AuthActions.checkPhoneRequiredFailure({ 
+              error: error instanceof Error ? error.message : 'Failed to check phone requirement'
+            })))
+          );
+      })
+    )
+  );
+  
+  // Setup phone number
+  setupPhone$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.setupPhone),
+      tap(action => console.debug('Effect: Setting up phone', action)),
+      switchMap(({ phoneNumber }) => {
+        return from(this.userService.sendSMSVerificationCode(phoneNumber)).pipe(
+          map(response => {
+            if (response.status_code === 200) {
+              return AuthActions.setupPhoneSuccess({ 
+                validationId: phoneNumber, // Store the phone number as validation ID for reference
+                expiresAt: Date.now() + 10 * 60 * 1000 // 10 minutes
+              });
+            }
+            return AuthActions.setupPhoneFailure({
+              error: response.message || 'Failed to send verification code'
+            });
+          }),
+          catchError(error => of(AuthActions.setupPhoneFailure({ 
+            error: error instanceof Error ? error.message : 'Failed to set up phone verification'
+          })))
+        );
+      })
+    )
+  );
+  
+  // Verify phone number
+  verifyPhone$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.verifyPhone),
+      tap(action => console.debug('Effect: Verifying phone code', action)),
+      withLatestFrom(this.store.select(fromAuth.selectPhoneValidationId)),
+      switchMap(([{ code }, phoneNumber]) => {
+        if (!phoneNumber) {
+          return of(AuthActions.verifyPhoneFailure({ 
+            error: 'No phone number found for verification'
+          }));
+        }
+        
+        return from(this.userService.verifySMSCode(phoneNumber, code)).pipe(
+          map(isValid => {
+            if (isValid) {
+              return AuthActions.verifyPhoneSuccess();
+            }
+            return AuthActions.verifyPhoneFailure({
+              error: 'Invalid verification code'
+            });
+          }),
+          catchError(error => of(AuthActions.verifyPhoneFailure({ 
+            error: error instanceof Error ? error.message : 'Failed to verify phone code'
+          })))
+        );
+      })
+    )
+  );
+
   constructor(
     private actions$: Actions,
     private userService: UserService,
-    private cognitoService: CognitoService
+    private cognitoService: CognitoService,
+    private store: Store
   ) {}
 }

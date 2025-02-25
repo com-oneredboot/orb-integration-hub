@@ -194,6 +194,10 @@
       <!-- Phone Verify Step -->
       <div class="auth-flow__form-step"
            [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.PHONE_VERIFY}">
+        <div class="auth-flow__verification-info">
+          <p>A verification code has been sent to your phone number.</p>
+          <p>Please enter the 6-digit code below to verify your phone.</p>
+        </div>
         <div class="auth-flow__input-group">
           <input type="text"
                  formControlName="phoneCode"
@@ -203,6 +207,11 @@
           <div *ngIf="isFieldInvalid('phoneCode')" class="auth-flow__input-error">
             {{ getErrorMessage('verificationCode') }}
           </div>
+        </div>
+        <div class="auth-flow__resend-code">
+          <button type="button" class="auth-flow__text-button" (click)="resendVerificationCode()">
+            Didn't receive a code? Send again
+          </button>
         </div>
       </div>
 

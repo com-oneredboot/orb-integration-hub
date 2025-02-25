@@ -1,10 +1,12 @@
-# file:
+# file: /home/corey/Infrastructure/src/orb-integration-hub/backend/src/lambdas/sms_verification/index.py
 # author: Corey Dale Peters
 # created: 2024-12-5
 # description: This is the lambda function that will send a verification code to the user's phone number.
 
 import json
 import boto3
+import os
+import logging
 from botocore.exceptions import ClientError
 from random import randint
 
@@ -23,7 +25,7 @@ logger.setLevel(ENV_LOG_LEVEL)
 
 
 def lambda_handler(event, context):
-    logger.debug("Event received:", json.dumps(event))
+    logger.debug(f"Event received: {json.dumps(event)}")
 
     # Get data
     input_data = event['input']
@@ -33,19 +35,31 @@ def lambda_handler(event, context):
         # create a code of 6 numbers from 0-9
         code = randint(100000, 999999)
 
-        sns_parameter = {
-          topicArn: ENV_TOPIC_ARN,
-          message: f"Your verification code is {code}"
+        # SMS can be sent directly to a phone number
+        sns_parameters = {
+            'PhoneNumber': phone_number,
+            'Message': f"Your verification code is {code}",
+            'MessageAttributes': {
+                'AWS.SNS.SMS.SenderID': {
+                    'DataType': 'String',
+                    'StringValue': 'ORBPAYMENT'
+                },
+                'AWS.SNS.SMS.SMSType': {
+                    'DataType': 'String',
+                    'StringValue': 'Transactional'
+                }
+            }
         }
-        logger.info(f"sns_parameter: {sns_parameter}")
+        
+        logger.info(f"sns_parameters: {sns_parameters}")
 
-        response = client.publish(**sns_parameter)
-
+        response = client.publish(**sns_parameters)
+        logger.info(f"SNS response: {response}")
         logger.info(f"Verification code sent to {phone_number}")
 
         return {
             'status_code': 200,
-            'message': "Verification code sent successfully"
+            'message': "Verification code sent successfully",
             'code': code
         }
 
@@ -53,5 +67,5 @@ def lambda_handler(event, context):
         logger.error(f"AWS service error: {str(e)}")
         return {
             'status_code': 400,
-            'message': json.dumps({'error': 'Internal server error'})
+            'message': f"Error sending verification code: {str(e)}"
         }

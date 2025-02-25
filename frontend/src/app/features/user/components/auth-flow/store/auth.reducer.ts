@@ -105,13 +105,18 @@ export const authReducer = createReducer(
     isLoading: true,
     error: null
   })),
-  on(AuthActions.signInSuccess, (state, { user }) => ({
-    ...state,
-    currentUser: user,
-    isAuthenticated: true,
-    isLoading: false,
-    error: null
-  })),
+  on(AuthActions.signInSuccess, (state, { user }) => {
+    // Check if phone verification is needed
+    const phoneVerificationNeeded = !user.phone_number;
+    
+    return {
+      ...state,
+      currentUser: user,
+      isAuthenticated: true,
+      isLoading: false,
+      error: null
+    };
+  }),
   on(AuthActions.signInFailure, (state, { error }) => ({
     ...state,
     error,
@@ -183,6 +188,63 @@ export const authReducer = createReducer(
     isAuthenticated: true,
     isLoading: false,
     currentStep: AuthSteps.COMPLETE
+  })),
+  
+  // Phone verification actions
+  on(AuthActions.checkPhoneRequired, (state) => ({
+    ...state,
+    isLoading: true,
+    error: null
+  })),
+  on(AuthActions.checkPhoneRequiredSuccess, (state, { required }) => ({
+    ...state,
+    isLoading: false,
+    error: null,
+    currentStep: required ? AuthSteps.PHONE_SETUP : AuthSteps.COMPLETE
+  })),
+  on(AuthActions.checkPhoneRequiredFailure, (state, { error }) => ({
+    ...state,
+    error,
+    isLoading: false
+  })),
+  
+  on(AuthActions.setupPhone, (state) => ({
+    ...state,
+    isLoading: true,
+    error: null
+  })),
+  on(AuthActions.setupPhoneSuccess, (state, { validationId, expiresAt }) => ({
+    ...state, 
+    isLoading: false,
+    error: null,
+    phoneValidationId: validationId,
+    phoneValidationExpiration: expiresAt,
+    currentStep: AuthSteps.PHONE_VERIFY
+  })),
+  on(AuthActions.setupPhoneFailure, (state, { error }) => ({
+    ...state,
+    error,
+    isLoading: false,
+    // Keep the current step to allow retry
+  })),
+  
+  on(AuthActions.verifyPhone, (state) => ({
+    ...state,
+    isLoading: true,
+    error: null
+  })),
+  on(AuthActions.verifyPhoneSuccess, (state) => ({
+    ...state,
+    isLoading: false,
+    error: null,
+    phoneVerified: true,
+    currentStep: AuthSteps.COMPLETE
+  })),
+  on(AuthActions.verifyPhoneFailure, (state, { error }) => ({
+    ...state,
+    error,
+    isLoading: false,
+    // Stay on the verification step to allow retry
   })),
   on(AuthActions.refreshSessionFailure, (state, { error }) => ({
     ...state,

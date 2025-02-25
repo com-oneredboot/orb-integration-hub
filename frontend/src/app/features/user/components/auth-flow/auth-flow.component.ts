@@ -195,6 +195,16 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             if (!emailCode) return;
             this.store.dispatch(AuthActions.verifyEmail({input: { email: email }, code: emailCode }));
             break;
+          case AuthSteps.PHONE_SETUP:
+            const phoneNumber = this.authForm.get('phoneNumber')?.value;
+            if (!phoneNumber) return;
+            this.store.dispatch(AuthActions.setupPhone({ phoneNumber }));
+            break;
+          case AuthSteps.PHONE_VERIFY:
+            const phoneCode = this.authForm.get('phoneCode')?.value;
+            if (!phoneCode) return;
+            this.store.dispatch(AuthActions.verifyPhone({ code: phoneCode }));
+            break;
           case AuthSteps.MFA_SETUP:
             //if(!mfaCode) return;
             this.store.dispatch(AuthActions.needsMFASetup());
@@ -326,6 +336,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     const firstNameControl = this.authForm.get('firstName');
     const lastNameControl = this.authForm.get('lastName');
     const phoneNumberControl = this.authForm.get('phoneNumber');
+    const phoneCodeControl = this.authForm.get('phoneCode');
 
     // Reset all validators first
     emailControl?.clearValidators();
@@ -333,6 +344,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     firstNameControl?.clearValidators();
     lastNameControl?.clearValidators();
     phoneNumberControl?.clearValidators();
+    phoneCodeControl?.clearValidators();
 
     // Set validators based on current step
     switch (step) {
@@ -348,6 +360,18 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           Validators.required,
           Validators.minLength(8),
           Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[-_!@#$%^&*])[A-Za-z\d\-_!@#$%^&*]{8,}$/)
+        ]);
+        break;
+      case AuthSteps.PHONE_SETUP:
+        phoneNumberControl?.setValidators([
+          Validators.required,
+          Validators.pattern(/^\+?[1-9]\d{1,14}$/) // E.164 format validation
+        ]);
+        break;
+      case AuthSteps.PHONE_VERIFY:
+        phoneCodeControl?.setValidators([
+          Validators.required,
+          Validators.pattern(/^\d{6}$/) // 6-digit code
         ]);
         break;
     }
@@ -394,6 +418,14 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           return;
         }
         
+        // Check if phone verification is needed
+        if (!user.phone_number) {
+          console.debug('User is missing phone number, redirecting to phone setup');
+          // Update the current step to phone setup
+          this.store.dispatch(AuthActions.checkPhoneRequired());
+          return;
+        }
+        
         // Step 7: Check if user has all required attributes
         const isValid = this.userService.isUserValid(user);
         console.debug('User validation:', { isValid, user });
@@ -417,6 +449,33 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
    */
   public isUserValid(user: any): boolean {
     return this.userService.isUserValid(user);
+  }
+  
+  /**
+   * Resend the verification code to the user's phone
+   */
+  public resendVerificationCode(): void {
+    // Get the phone number from the form
+    const phoneNumber = this.authForm.get('phoneNumber')?.value;
+    
+    if (!phoneNumber) {
+      // We need to get the phone number from the current user
+      this.currentUser$
+        .pipe(take(1))
+        .subscribe(user => {
+          if (user?.phone_number) {
+            this.store.dispatch(AuthActions.setupPhone({ phoneNumber: user.phone_number }));
+          } else {
+            // Display error
+            this.store.dispatch(AuthActions.setupPhoneFailure({
+              error: 'No phone number found. Please go back and enter your phone number.'
+            }));
+          }
+        });
+    } else {
+      // Use the phone number from the form
+      this.store.dispatch(AuthActions.setupPhone({ phoneNumber }));
+    }
   }
 
 }

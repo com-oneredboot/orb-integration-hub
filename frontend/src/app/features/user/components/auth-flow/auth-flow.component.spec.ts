@@ -121,4 +121,70 @@ describe('AuthFlowComponent', () => {
     // Verify the navigation occurred correctly
     expect(mockRouter.navigate).toHaveBeenCalledWith(['/profile']);
   });
+  
+  it('should handle phone verification flow correctly', () => {
+    // Prepare the component for phone setup
+    mockStore.setState({
+      auth: {
+        ...initialState.auth,
+        currentStep: AuthSteps.PHONE_SETUP
+      }
+    });
+    fixture.detectChanges();
+    
+    // Set a valid phone number
+    component.authForm.get('phoneNumber')?.setValue('+12345678901');
+    
+    // Spy on store dispatch
+    spyOn(mockStore, 'dispatch');
+    
+    // Submit the form
+    component.onSubmit();
+    
+    // Check that the proper action was dispatched
+    expect(mockStore.dispatch).toHaveBeenCalled();
+    
+    // Now test the phone verification step
+    mockStore.setState({
+      auth: {
+        ...initialState.auth,
+        currentStep: AuthSteps.PHONE_VERIFY,
+        phoneValidationId: '+12345678901'
+      }
+    });
+    fixture.detectChanges();
+    
+    // Reset spy
+    (mockStore.dispatch as jasmine.Spy).calls.reset();
+    
+    // Enter verification code
+    component.authForm.get('phoneCode')?.setValue('123456');
+    
+    // Submit again to verify code
+    component.onSubmit();
+    
+    // Verify code verification action was dispatched
+    expect(mockStore.dispatch).toHaveBeenCalled();
+  });
+  
+  it('should allow resending verification code', () => {
+    // Set up component for phone verification step
+    mockStore.setState({
+      auth: {
+        ...initialState.auth,
+        currentStep: AuthSteps.PHONE_VERIFY,
+        currentUser: { ...mockUser }
+      }
+    });
+    fixture.detectChanges();
+    
+    // Spy on store dispatch
+    spyOn(mockStore, 'dispatch');
+    
+    // Call the resend method
+    component.resendVerificationCode();
+    
+    // Verify the resend action was dispatched
+    expect(mockStore.dispatch).toHaveBeenCalled();
+  });
 });

@@ -50,9 +50,28 @@ describe('ProfileComponent', () => {
   };
 
   beforeEach(async () => {
-    mockUserService = jasmine.createSpyObj('UserService', ['isUserValid', 'updateUser']);
+    mockUserService = jasmine.createSpyObj('UserService', ['isUserValid', 'userUpdate']);
     mockUserService.isUserValid.and.callFake(user => {
       return !!(user?.first_name && user?.last_name && user?.email && user?.phone_number);
+    });
+    
+    // Mock the userUpdate method
+    mockUserService.userUpdate.and.callFake(async (input) => {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Return a mock response
+      return {
+        userQueryById: {
+          status_code: 200,
+          user: {
+            ...mockUser,
+            first_name: input.first_name || mockUser.first_name,
+            last_name: input.last_name || mockUser.last_name
+          },
+          message: 'Profile updated successfully'
+        }
+      };
     });
 
     await TestBed.configureTestingModule({

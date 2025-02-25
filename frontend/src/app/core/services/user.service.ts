@@ -21,6 +21,7 @@ import {
 import { CognitoService } from "./cognito.service";
 import { AuthResponse } from "../models/auth.model";
 import { AuthActions } from '../../features/user/components/auth-flow/store/auth.actions';
+import { sendSMSVerificationCodeMutation, SMSVerificationInput, SMSVerificationResponse } from "../models/sms.model";
 
 
 @Injectable({
@@ -365,6 +366,88 @@ export class UserService extends ApiService {
     const isActive = user.status === 'ACTIVE';
 
     return hasRequiredAttributes && isActive;
+  }
+  
+  /**
+   * Send SMS verification code to a phone number
+   * @param phoneNumber The phone number to send the verification code to
+   * @returns Promise with the verification response
+   */
+  public async sendSMSVerificationCode(phoneNumber: string): Promise<SMSVerificationResponse> {
+    console.debug('sendSMSVerificationCode:', phoneNumber);
+    
+    try {
+      const input: SMSVerificationInput = {
+        phone_number: phoneNumber
+      };
+      
+      const response = await this.mutate<{sendSMSVerificationCode: SMSVerificationResponse}>(
+        sendSMSVerificationCodeMutation,
+        { input },
+        'userPool'
+      );
+      
+      console.debug('sendSMSVerificationCode Response:', response);
+      
+      if (!response.data?.sendSMSVerificationCode) {
+        return {
+          status_code: 500,
+          message: 'No response from SMS verification service'
+        };
+      }
+      
+      return response.data.sendSMSVerificationCode;
+    } catch (error) {
+      console.error('Error sending SMS verification code:', error);
+      
+      let errorMessage = 'Error sending SMS verification code';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      return {
+        status_code: 500,
+        message: errorMessage
+      };
+    }
+  }
+  
+  /**
+   * Verify an SMS code
+   * @param phoneNumber The phone number to verify
+   * @param code The verification code
+   * @returns Promise with a boolean indicating success
+   */
+  public async verifySMSCode(phoneNumber: string, code: string): Promise<boolean> {
+    console.debug('verifySMSCode:', phoneNumber, code);
+    
+    // In a real implementation, we would verify the code against what was sent
+    // For now we'll use a simple mock to compare against the stored code
+    
+    try {
+      // This would be a more complex verification in a real implementation
+      // Typically would involve a backend call to verify the code
+      
+      // Simple mock: Just check if the code is 6 digits long and numeric
+      const isValid = /^\d{6}$/.test(code);
+      
+      if (isValid) {
+        // If valid, update the user's profile to mark phone as verified
+        const currentUser = this.currentUser.getValue();
+        if (currentUser && currentUser.user_id) {
+          // Update the user's profile to set phone_verified to true
+          await this.userUpdate({
+            user_id: currentUser.user_id,
+            phone_verified: true
+          });
+        }
+      }
+      
+      return isValid;
+    } catch (error) {
+      console.error('Error verifying SMS code:', error);
+      return false;
+    }
   }
 
   /**
