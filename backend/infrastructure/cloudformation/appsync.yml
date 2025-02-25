@@ -399,42 +399,50 @@ Resources:
       FieldName: userCreate
       DataSourceName: !GetAtt UsersDataSource.Name
       RequestMappingTemplate: |
+        ## Simplified UserCreateResolver
+        #set($input = $ctx.args.input)
+        #set($now = $util.time.nowISO8601())
+        
+        ## Create a clean map of attributes
+        #set($attributeValues = {
+          "user_id": $input.user_id,
+          "cognito_id": $input.cognito_id,
+          "email": $input.email,
+          "groups": $input.groups,
+          "status": $input.status,
+          "created_at": $now
+        })
+        
+        ## Conditionally add optional attributes if present
+        #if($util.isString($input.first_name)) 
+          $util.qr($attributeValues.put("first_name", $input.first_name))
+        #end
+        #if($util.isString($input.last_name))
+          $util.qr($attributeValues.put("last_name", $input.last_name))
+        #end
+        #if($util.isString($input.phone_number))
+          $util.qr($attributeValues.put("phone_number", $input.phone_number))
+        #end
+        
         {
           "version": "2017-02-28",
           "operation": "PutItem",
           "key": {
-            "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id)
+            "user_id": $util.dynamodb.toDynamoDBJson($input.user_id)
           },
-          "attributeValues": {
-            "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id),
-            "cognito_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.cognito_id),
-            "email": $util.dynamodb.toDynamoDBJson($ctx.args.input.email),
-            "groups": $util.dynamodb.toDynamoDBJson($ctx.args.input.groups),
-            "status": $util.dynamodb.toDynamoDBJson($ctx.args.input.status),
-            "created_at": $util.dynamodb.toDynamoDBJson($util.time.nowISO8601())
-            #if($ctx.args.input.first_name)
-              ,"first_name": $util.dynamodb.toDynamoDBJson($ctx.args.input.first_name)
-            #end
-            #if($ctx.args.input.last_name)
-              ,"last_name": $util.dynamodb.toDynamoDBJson($ctx.args.input.last_name)
-            #end
-            #if($ctx.args.input.phone_number)
-              ,"phone_number": $util.dynamodb.toDynamoDBJson($ctx.args.input.phone_number)
-            #end
-          }
+          "attributeValues": $util.dynamodb.toMapValuesJson($attributeValues)
         }
       ResponseMappingTemplate: |
         #if($ctx.error)
           $util.error($ctx.error.message, $ctx.error.type)
         #end
         
-        #set($response = {
+        ## Return a properly structured response
+        {
           "status_code": 200,
           "message": "User created successfully",
-          "user": $ctx.args.input
-        })
-        
-        $util.toJson($response)
+          "user": $util.toJson($ctx.args.input)
+        }
 
 
   UserQueryByIdResolver:
@@ -521,7 +529,6 @@ Resources:
         #end
         
         $util.toJson($response)
-
 
   UserUpdateResolver:
     Type: AWS::AppSync::Resolver
