@@ -540,62 +540,6 @@ Resources:
       FieldName: userUpdate
       DataSourceName: !GetAtt UsersDataSource.Name
       RequestMappingTemplate: |
-        ## Initialize the DynamoDB update expression and empty maps
-        #set($expSet = "")
-        #set($expValues = {})
-        #set($comma = "")
-        
-        ## Dynamically check each field and add it to the update expression
-        #if($ctx.args.input.first_name)
-          #set($expSet = "${expSet}${comma} first_name = :first_name")
-          $util.qr($expValues.put(":first_name",($util.dynamodb.toDynamoDBJson($ctx.args.input.first_name))))
-          #set($comma = ",")
-        #end
-        
-        #if($ctx.args.input.last_name)
-          #set($expSet = "${expSet}${comma} last_name = :last_name")
-          $util.qr($expValues.put(":last_name", $util.dynamodb.toDynamoDBJson($ctx.args.input.last_name)))
-          #set($comma = ",")
-        #end
-        
-        #if($ctx.args.input.email)
-          #set($expSet = "${expSet}${comma} email = :email")
-          $util.qr($expValues.put(":email", $util.dynamodb.toDynamoDBJson($ctx.args.input.email)))
-          #set($comma = ",")
-        #end
-        
-        #if($ctx.args.input.phone_number)
-          #set($expSet = "${expSet}${comma} phone_number = :phone_number")
-          $util.qr($expValues.put(":phone_number", $util.dynamodb.toDynamoDBJson($ctx.args.input.phone_number)))
-          #set($comma = ",")
-        #end
-        
-        #if($ctx.args.input.groups)
-          #set($expSet = "${expSet}${comma} groups = :groups")
-          $util.qr($expValues.put(":groups", $util.dynamodb.toMapValues($ctx.args.input.groups)))
-          #set($comma = ",")
-        #end
-        
-        #if($ctx.args.input.status)
-          #set($expSet = "${expSet}${comma} status = :status")
-          $util.qr($expValues.put(":status", $util.dynamodb.toDynamoDBJson($ctx.args.input.status)))
-          #set($comma = ",")
-        #end
-        
-        ## If nothing to update, return early
-        #if($expSet == "")
-          #return({
-            "statusCode": 200,
-            "body": {
-              "status_code": 200,
-              "message": "No fields to update"
-            }
-          })
-        #end
-        
-        ## Construct the final update expression with the SET keyword
-        #set($expression = "set${expSet}")
-        
         {
           "version": "2018-05-29",
           "operation": "UpdateItem",
@@ -603,8 +547,11 @@ Resources:
             "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id)
           },
           "update": {
-            "expression": "${expression}",
-            "expressionValues": $util.toJSON($expValues)
+            "expression": "set first_name = :first_name, last_name = :last_name",
+            "expressionValues": {
+              ":first_name": $util.dynamodb.toDynamoDBJson($ctx.args.input.first_name),
+              ":last_name": $util.dynamodb.toDynamoDBJson($ctx.args.input.last_name)
+            }
           }
         }
 
