@@ -14,7 +14,43 @@
       font-family: v.$font-family-heading;
       color: v.$text-primary;
       margin-top: v.$spacing-md;
+      margin-bottom: v.$spacing-md;
       font-weight: v.$font-weight-semibold;
+    }
+    
+    &__welcome {
+      background-color: v.$bg-secondary;
+      border-radius: v.$border-radius;
+      padding: v.$spacing-md;
+      max-width: 600px;
+      margin: 0 auto;
+      border-left: 4px solid v.$primary-color;
+      text-align: left;
+    }
+    
+    &__welcome-text {
+      font-size: v.$font-size-lg;
+      margin-bottom: v.$spacing-sm;
+      color: v.$text-primary;
+      line-height: 1.4;
+    }
+    
+    &__icon {
+      font-style: normal;
+      margin-right: v.$spacing-xs;
+      display: inline-block;
+      transform: rotate(15deg);
+    }
+    
+    &__tagline {
+      color: v.$text-secondary;
+      font-size: v.$font-size-sm;
+      margin: 0;
+      
+      strong {
+        color: v.$primary-color;
+        font-weight: v.$font-weight-semibold;
+      }
     }
   }
 
@@ -218,9 +254,18 @@
       cursor: pointer;
       font-family: v.$font-family-base;
       font-size: v.$font-size-sm;
+      transition: all 0.2s ease;
       
       &:hover {
         background-color: v.$gray-900;
+      }
+      
+      &:first-child {
+        background-color: v.$danger-color;
+        
+        &:hover {
+          background-color: color.adjust(v.$danger-color, $lightness: -10%);
+        }
       }
     }
   }

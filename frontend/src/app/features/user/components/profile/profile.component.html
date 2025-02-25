@@ -1,7 +1,15 @@
 <div class="profile-container">
   <div class="profile-header">
     <h1>Profile</h1>
-    <p *ngIf="currentUser$ | async as user">Welcome, {{ user.first_name || 'New User' }}!</p>
+    <div class="profile-header__welcome" *ngIf="currentUser$ | async as user">
+      <p class="profile-header__welcome-text">
+        <i class="profile-header__icon">⚙️</i> 
+        Ready to build, {{ user.first_name || 'Engineer' }}? Your integration hub is operational.
+      </p>
+      <p class="profile-header__tagline">
+        <strong>OneRedBoot</strong> — Software that works
+      </p>
+    </div>
   </div>
 
   <div class="profile-content" *ngIf="(currentUser$ | async) as user">
