@@ -544,9 +544,6 @@ Resources:
         #set($expressionValues = {})
         #set($isFirst = true)
         
-        ## User ID is required for the key
-        #set($userId = $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id))
-        
         ## Process first_name if present
         #if($util.isString($ctx.args.input.first_name))
           #set($updateExpression = "${updateExpression} first_name = :first_name")
@@ -618,11 +615,11 @@ Resources:
           "version": "2018-05-29",
           "operation": "UpdateItem",
           "key": {
-            "user_id": $userId
+            "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id)
           },
           "update": {
             "expression": "$updateExpression",
-            "expressionValues": $util.toJson($expressionValues)
+            "expressionValues": $expressionValues
           }
         }
       ResponseMappingTemplate: |
