@@ -596,7 +596,6 @@ Resources:
         ## Construct the final update expression with the SET keyword
         #set($expression = "set${expSet}")
         
-        ## Return the update operation in exactly the same format as the working solution
         {
           "version": "2018-05-29",
           "operation": "UpdateItem",
@@ -605,10 +604,9 @@ Resources:
           },
           "update": {
             "expression": "${expression}",
-            "expressionValues": $expValues
+            "expressionValues": $util.toJson($expValues)
           }
         }
-
       ResponseMappingTemplate: |
         #if($ctx.error)
           $util.error($ctx.error.message, $ctx.error.type)
