@@ -96,7 +96,7 @@ type User @aws_api_key @aws_cognito_user_pools {
   cognito_id: String!
   email: String!
   phone_number: String
-  phone_verified: Boolean
+  phone_verified: Boolean!
   first_name: String
   last_name: String
   groups: [UserGroup!]!
@@ -203,6 +203,7 @@ input UserCreateInput {
   user_id: String!
   cognito_id: String!
   email: String!
+  phone_verified: Boolean!
   groups: [UserGroup!]!
   status: Status!
   created_at: String!
@@ -212,7 +213,7 @@ input UserUpdateInput {
   user_id: String!
   email: String
   phone_number: String
-  phone_verified: Boolean
+  phone_verified: Boolean!
   first_name: String
   last_name: String
   groups: [UserGroup!]

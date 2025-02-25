@@ -32,8 +32,7 @@ export interface User {
   first_name: string;
   last_name: string;
   phone_number: string;
-  // The phone_verified field is part of our model but may not exist in backend yet
-  phone_verified?: boolean;
+  phone_verified: boolean;
   groups: [UserGroup];
   status: UserStatus;
   created_at: string;
@@ -67,7 +66,7 @@ export type UserQueryInput = Partial<Pick<User, 'user_id' | 'cognito_id' | 'emai
 
 export type UserCreateInput = Omit<User, 'first_name' | 'last_name' | 'phone_number'>;
 
-// Now include phone_verified in the UserUpdateInput since the backend schema has been updated
+// Include phone_verified now that the backend schema has been updated
 export type UserUpdateInput = Partial<Omit<User, 'user_id' | 'created_at' >> & { user_id: string };
 
 export type UserUpdateResponse = GenericResponse & {

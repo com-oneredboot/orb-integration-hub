@@ -71,6 +71,7 @@ export class UserService extends ApiService {
         cognito_id: input.cognito_id,
         groups: [UserGroup.USER],
         status: UserStatus.PENDING,
+        phone_verified: false,
         email: input.email,
         created_at: timestamp
       };
@@ -367,7 +368,7 @@ export class UserService extends ApiService {
 
     return hasRequiredAttributes && isActive;
   }
-  
+
   /**
    * Send SMS verification code to a phone number
    * @param phoneNumber The phone number to send the verification code to
@@ -375,43 +376,43 @@ export class UserService extends ApiService {
    */
   public async sendSMSVerificationCode(phoneNumber: string): Promise<SMSVerificationResponse> {
     console.debug('sendSMSVerificationCode:', phoneNumber);
-    
+
     try {
       const input: SMSVerificationInput = {
         phone_number: phoneNumber
       };
-      
+
       const response = await this.mutate<{sendSMSVerificationCode: SMSVerificationResponse}>(
         sendSMSVerificationCodeMutation,
         { input },
         'userPool'
       );
-      
+
       console.debug('sendSMSVerificationCode Response:', response);
-      
+
       if (!response.data?.sendSMSVerificationCode) {
         return {
           status_code: 500,
           message: 'No response from SMS verification service'
         };
       }
-      
+
       return response.data.sendSMSVerificationCode;
     } catch (error) {
       console.error('Error sending SMS verification code:', error);
-      
+
       let errorMessage = 'Error sending SMS verification code';
       if (error instanceof Error) {
         errorMessage = error.message;
       }
-      
+
       return {
         status_code: 500,
         message: errorMessage
       };
     }
   }
-  
+
   /**
    * Verify an SMS code
    * @param phoneNumber The phone number to verify
@@ -420,29 +421,29 @@ export class UserService extends ApiService {
    */
   public async verifySMSCode(phoneNumber: string, code: string): Promise<boolean> {
     console.debug('verifySMSCode:', phoneNumber, code);
-    
+
     // In a real implementation, we would verify the code against what was sent
     // For now we'll use a simple mock to compare against the stored code
-    
+
     try {
       // This would be a more complex verification in a real implementation
       // Typically would involve a backend call to verify the code
-      
+
       // Simple mock: Just check if the code is 6 digits long and numeric
       const isValid = /^\d{6}$/.test(code);
-      
+
       if (isValid) {
         // If valid, update the user's profile to mark phone as verified
         const currentUser = this.currentUser.getValue();
         if (currentUser && currentUser.user_id) {
-          // Update the user's profile to set phone_verified to true
+          // Update the database with phone verification status
           await this.userUpdate({
             user_id: currentUser.user_id,
             phone_verified: true
           });
         }
       }
-      
+
       return isValid;
     } catch (error) {
       console.error('Error verifying SMS code:', error);
@@ -482,17 +483,17 @@ export class UserService extends ApiService {
         updateInput.first_name = input.first_name;
         hasUpdates = true;
       }
-      
+
       if (input.last_name) {
         updateInput.last_name = input.last_name;
         hasUpdates = true;
       }
-      
+
       if (input.email) {
         updateInput.email = input.email;
         hasUpdates = true;
       }
-      
+
       if (input.phone_number) {
         updateInput.phone_number = input.phone_number;
         hasUpdates = true;
@@ -504,7 +505,7 @@ export class UserService extends ApiService {
         const currentUser = await this.userQueryById({ user_id: input.user_id });
         return currentUser;
       }
-      
+
       console.debug('Update input:', updateInput);
 
       // Make the API call with the standard mutation
