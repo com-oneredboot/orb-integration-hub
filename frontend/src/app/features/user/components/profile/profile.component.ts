@@ -2,10 +2,10 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Observable, Subject, takeUntil } from 'rxjs';
-import { User, UserUpdateInput, UserStatus, UserGroup } from '../../../../core/models/user.model';
+import { User, UserUpdateInput } from '../../../../core/models/user.model';
 import * as fromAuth from '../../components/auth-flow/store/auth.selectors';
 import { UserService } from '../../../../core/services/user.service';
-import { AuthActions } from '../../components/auth-flow/store/auth.actions';
+import { TestDataService } from '../../../../core/services/test-data.service';
 
 @Component({
   selector: 'app-profile',
@@ -23,6 +23,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   constructor(
     private store: Store,
     private userService: UserService,
+    private testDataService: TestDataService,
     private fb: FormBuilder
   ) {
     this.currentUser$ = this.store.select(fromAuth.selectCurrentUser);
@@ -52,34 +53,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
           });
         } else {
           // No user, add a test user to the store for development
-          this.addTestUser();
+          this.testDataService.addTestUserIfNeeded();
         }
       });
-  }
-  
-  /**
-   * Adds a test user to the store for development purposes
-   * This lets us test the profile component without authentication
-   */
-  private addTestUser(): void {
-    console.log('Adding test user to store');
-    const testUser: User = {
-      user_id: 'test-user-123',
-      cognito_id: 'test-cognito-id',
-      email: 'test@example.com',
-      first_name: 'Test',
-      last_name: 'User',
-      phone_number: '+1234567890',
-      groups: [UserGroup.USER],
-      status: UserStatus.ACTIVE,
-      created_at: new Date().toISOString()
-    };
-    
-    // Dispatch the action to add the user to the store
-    this.store.dispatch(AuthActions.signInSuccess({
-      user: testUser,
-      message: 'Test user added'
-    }));
   }
   
   ngOnDestroy(): void {
@@ -234,34 +210,27 @@ export class ProfileComponent implements OnInit, OnDestroy {
    * This is used for development to reset to a clean state
    */
   public clearTestUserData(): void {
-    console.log('Clearing test user data');
-    localStorage.removeItem('auth');
-    this.store.dispatch(AuthActions.signout());
-    window.location.reload(); // Force reload to ensure clean state
+    this.testDataService.clearTestData();
   }
   
   /**
    * Sign out the current user
    */
   public signOut(): void {
-    console.log('Signing out user');
-    this.store.dispatch(AuthActions.signout());
-    // For test users, also remove from localStorage
-    if (localStorage.getItem('auth')) {
-      const authState = JSON.parse(localStorage.getItem('auth') || '{}');
-      if (authState.currentUser?.user_id === 'test-user-123') {
-        localStorage.removeItem('auth');
-      }
-    }
-    window.location.href = '/authenticate'; // Redirect to auth page
+    this.testDataService.signOut();
   }
   
   /**
-   * Check if we're using test data - this method is only used in the template
-   * and will be evaluated in the context of the current user
+   * Check if a user is a test user - for use in templates with async pipe
    */
-  public isUsingTestData(user?: User): boolean {
-    // In the template, this will be called with the current user from the async pipe
-    return user?.user_id === 'test-user-123';
+  public isTestUser(user: User): boolean {
+    return this.testDataService.isTestUser(user);
+  }
+  
+  /**
+   * Check if we're using test data at all
+   */
+  public isUsingTestData(): boolean {
+    return this.testDataService.isUsingTestData();
   }
 }

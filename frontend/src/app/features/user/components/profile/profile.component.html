@@ -114,29 +114,35 @@
     </form>
   </div>
   
-  <!-- Temporary debug section -->
+  <!-- User debug panel - Only visible in debug mode -->
   <div class="profile__debug" *ngIf="debugMode$ | async">
     <h3 class="profile__debug-title">User Debug Info</h3>
     
     <div class="profile__debug-section">
       <h4>Test Data Controls</h4>
-      <div class="profile__debug-actions">
-        <button 
-          class="profile__debug-button"
-          (click)="clearTestUserData()"
-          *ngIf="currentUser$ | async as user; let u"
-          [style.display]="isUsingTestData(user) ? 'inline-block' : 'none'"
-        >
-          Clear Test User Data
-        </button>
+      <ng-container *ngIf="currentUser$ | async as user">
+        <div class="profile__debug-status">
+          <div>Using Test Data: <span [class.highlight]="isTestUser(user)">{{ isTestUser(user) ? 'Yes' : 'No' }}</span></div>
+          <div>User ID: <code>{{ user.user_id }}</code></div>
+        </div>
         
-        <button 
-          class="profile__debug-button"
-          (click)="signOut()"
-        >
-          Sign Out
-        </button>
-      </div>
+        <div class="profile__debug-actions">
+          <button 
+            class="profile__debug-button"
+            (click)="clearTestUserData()"
+            *ngIf="isTestUser(user)"
+          >
+            Clear Test User Data
+          </button>
+          
+          <button 
+            class="profile__debug-button"
+            (click)="signOut()"
+          >
+            Sign Out
+          </button>
+        </div>
+      </ng-container>
     </div>
   </div>
   

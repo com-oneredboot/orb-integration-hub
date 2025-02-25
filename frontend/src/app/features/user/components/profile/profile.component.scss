@@ -186,6 +186,22 @@
     margin-top: v.$spacing-xl;
     font-family: v.$font-family-monospace;
     
+    &-status {
+      margin-bottom: v.$spacing-md;
+      font-family: monospace;
+      
+      code {
+        background-color: v.$gray-200;
+        padding: 2px 4px;
+        border-radius: v.$border-radius-sm;
+      }
+      
+      .highlight {
+        color: v.$danger-color;
+        font-weight: bold;
+      }
+    }
+    
     &-actions {
       display: flex;
       gap: v.$spacing-md;
