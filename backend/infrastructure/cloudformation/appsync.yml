@@ -530,6 +530,7 @@ Resources:
         
         $util.toJson($response)
 
+
   UserUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
@@ -539,39 +540,62 @@ Resources:
       FieldName: userUpdate
       DataSourceName: !GetAtt UsersDataSource.Name
       RequestMappingTemplate: |
-        ## Initialize update expression components
-        #set($updateExpressions = [])
-        #set($expNames = {})
-        #set($expValues = {})
+        #set($updateExpression = "SET")
+        #set($expressionValues = {})
+        #set($needComma = false)
         
-        ## Build update expressions for each field in input
         #if($ctx.args.input.email)
-          $util.qr($updateExpressions.add("email = :email"))
-          $util.qr($expValues.put(":email", $util.dynamodb.toDynamoDBJson($ctx.args.input.email)))
-        #end
-        #if($ctx.args.input.first_name)
-          $util.qr($updateExpressions.add("first_name = :first_name"))
-          $util.qr($expValues.put(":first_name", $util.dynamodb.toDynamoDBJson($ctx.args.input.first_name)))
-        #end
-        #if($ctx.args.input.last_name)
-          $util.qr($updateExpressions.add("last_name = :last_name"))
-          $util.qr($expValues.put(":last_name", $util.dynamodb.toDynamoDBJson($ctx.args.input.last_name)))
-        #end
-        #if($ctx.args.input.phone_number)
-          $util.qr($updateExpressions.add("phone_number = :phone_number"))
-          $util.qr($expValues.put(":phone_number", $util.dynamodb.toDynamoDBJson($ctx.args.input.phone_number)))
-        #end
-        #if($ctx.args.input.groups)
-          $util.qr($updateExpressions.add("groups = :groups"))
-          $util.qr($expValues.put(":groups", $util.dynamodb.toDynamoDBJson($ctx.args.input.groups)))
-        #end
-        #if($ctx.args.input.status)
-          $util.qr($updateExpressions.add("status = :status"))
-          $util.qr($expValues.put(":status", $util.dynamodb.toDynamoDBJson($ctx.args.input.status)))
+          #set($updateExpression = "${updateExpression} email = :email")
+          #set($expressionValues = $util.dynamodb.toMapValues({"email": $ctx.args.input.email}))
+          #set($needComma = true)
         #end
         
-        ## If nothing to update, return early
-        #if($updateExpressions.isEmpty())
+        #if($ctx.args.input.first_name)
+          #if($needComma)
+            #set($updateExpression = "${updateExpression},")
+          #end
+          #set($updateExpression = "${updateExpression} first_name = :first_name")
+          #set($util.qr($expressionValues.put(":first_name", $util.dynamodb.toDynamoDB($ctx.args.input.first_name))))
+          #set($needComma = true)
+        #end
+        
+        #if($ctx.args.input.last_name)
+          #if($needComma)
+            #set($updateExpression = "${updateExpression},")
+          #end
+          #set($updateExpression = "${updateExpression} last_name = :last_name")
+          #set($util.qr($expressionValues.put(":last_name", $util.dynamodb.toDynamoDB($ctx.args.input.last_name))))
+          #set($needComma = true)
+        #end
+        
+        #if($ctx.args.input.phone_number)
+          #if($needComma)
+            #set($updateExpression = "${updateExpression},")
+          #end
+          #set($updateExpression = "${updateExpression} phone_number = :phone_number")
+          #set($util.qr($expressionValues.put(":phone_number", $util.dynamodb.toDynamoDB($ctx.args.input.phone_number))))
+          #set($needComma = true)
+        #end
+        
+        #if($ctx.args.input.groups)
+          #if($needComma)
+            #set($updateExpression = "${updateExpression},")
+          #end
+          #set($updateExpression = "${updateExpression} groups = :groups")
+          #set($util.qr($expressionValues.put(":groups", $util.dynamodb.toDynamoDB($ctx.args.input.groups))))
+          #set($needComma = true)
+        #end
+        
+        #if($ctx.args.input.status)
+          #if($needComma)
+            #set($updateExpression = "${updateExpression},")
+          #end
+          #set($updateExpression = "${updateExpression} status = :status")
+          #set($util.qr($expressionValues.put(":status", $util.dynamodb.toDynamoDB($ctx.args.input.status))))
+          #set($needComma = true)
+        #end
+        
+        #if(!$needComma)
           #return($util.toJson({
             "status_code": 200,
             "message": "No changes to update",
@@ -581,18 +605,15 @@ Resources:
           }))
         #end
         
-        ## Combine expressions
-        #set($updateExpression = "SET " + $util.join(", ", $updateExpressions))
-        
         {
           "version": "2017-02-28",
           "operation": "UpdateItem",
           "key": {
-            "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id)
+            "user_id": $util.dynamodb.toDynamoDB($ctx.args.input.user_id)
           },
           "update": {
             "expression": "$updateExpression",
-            "expressionValues": $util.toJson($expValues)
+            "expressionValues": $expressionValues
           }
         }
       ResponseMappingTemplate: |
@@ -600,13 +621,31 @@ Resources:
           $util.error($ctx.error.message, $ctx.error.type)
         #end
         
-        $util.toJson({
+        {
           "status_code": 200,
           "message": "User updated successfully",
           "user": {
-            "user_id": $ctx.args.input.user_id
+            "user_id": "$ctx.args.input.user_id"
+            #if($ctx.args.input.email)
+              ,"email": "$ctx.args.input.email"
+            #end
+            #if($ctx.args.input.first_name)
+              ,"first_name": "$ctx.args.input.first_name"
+            #end
+            #if($ctx.args.input.last_name)
+              ,"last_name": "$ctx.args.input.last_name"
+            #end
+            #if($ctx.args.input.phone_number)
+              ,"phone_number": "$ctx.args.input.phone_number"
+            #end
+            #if($ctx.args.input.groups)
+              ,"groups": $util.toJson($ctx.args.input.groups)
+            #end
+            #if($ctx.args.input.status)
+              ,"status": "$ctx.args.input.status"
+            #end
           }
-        })
+        }
 
 # --------------------------------------------------- #
 Outputs:
