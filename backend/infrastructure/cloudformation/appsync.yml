@@ -563,8 +563,7 @@ Resources:
         ## Return a properly structured response
         {
           "status_code": 200,
-          "message": "User created successfully",
-          "user": $util.toJson($ctx.args.input)
+          "message": "User updated successfully"
         }
 
 # --------------------------------------------------- #
