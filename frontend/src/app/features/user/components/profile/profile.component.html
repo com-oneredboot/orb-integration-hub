@@ -1,1 +1,184 @@
-<p>profile works!</p>
+<div class="profile-container">
+  <div class="profile-header">
+    <h1>Profile</h1>
+    <div class="profile-header__welcome" *ngIf="currentUser$ | async as user">
+      <p class="profile-header__welcome-text">
+        <i class="profile-header__icon">⚙️</i> 
+        Ready to build, {{ user.first_name || 'Engineer' }}? Your integration hub is operational.
+      </p>
+      <p class="profile-header__tagline">
+        <strong>OneRedBoot</strong> — Software that works
+      </p>
+    </div>
+  </div>
+
+  <div class="profile-content" *ngIf="(currentUser$ | async) as user">
+    <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="profile-form">
+      <!-- Personal Information Section -->
+      <div class="profile-form__section">
+        <h2 class="profile-form__section-title">Personal Information</h2>
+        
+        <div class="profile-form__row">
+          <!-- First Name -->
+          <div class="profile-form__field">
+            <label for="firstName" class="profile-form__field-label">First Name</label>
+            <input 
+              type="text" 
+              id="firstName" 
+              formControlName="firstName" 
+              class="profile-form__field-input"
+              [ngClass]="{'profile-form__field-input--error': isFieldInvalid('firstName')}"
+            >
+            <div *ngIf="isFieldInvalid('firstName')" class="profile-form__field-error">
+              {{ getErrorMessage('firstName') }}
+            </div>
+          </div>
+          
+          <!-- Last Name -->
+          <div class="profile-form__field">
+            <label for="lastName" class="profile-form__field-label">Last Name</label>
+            <input 
+              type="text" 
+              id="lastName" 
+              formControlName="lastName" 
+              class="profile-form__field-input"
+              [ngClass]="{'profile-form__field-input--error': isFieldInvalid('lastName')}"
+            >
+            <div *ngIf="isFieldInvalid('lastName')" class="profile-form__field-error">
+              {{ getErrorMessage('lastName') }}
+            </div>
+          </div>
+        </div>
+        
+        <!-- Email -->
+        <div class="profile-form__field">
+          <label for="email" class="profile-form__field-label">Email Address</label>
+          <input 
+            type="email" 
+            id="email" 
+            formControlName="email" 
+            class="profile-form__field-input"
+          >
+          <div class="profile-form__field-hint">Email address cannot be changed</div>
+        </div>
+        
+        <!-- Phone Number -->
+        <div class="profile-form__field">
+          <label for="phoneNumber" class="profile-form__field-label">Phone Number</label>
+          <input 
+            type="tel" 
+            id="phoneNumber" 
+            formControlName="phoneNumber" 
+            class="profile-form__field-input"
+          >
+          <div class="profile-form__field-hint">Phone number cannot be changed</div>
+        </div>
+      </div>
+      
+      <!-- Account Information Section (Read-only) -->
+      <div class="profile-form__section">
+        <h2 class="profile-form__section-title">Account Information</h2>
+        
+        <div class="profile-form__row">
+          <!-- Account Status -->
+          <div class="profile-form__field">
+            <label class="profile-form__field-label">Account Status</label>
+            <div class="profile-form__field-value">{{ user.status }}</div>
+          </div>
+          
+          <!-- Member Since -->
+          <div class="profile-form__field">
+            <label class="profile-form__field-label">Member Since</label>
+            <div class="profile-form__field-value">{{ formatDate(user.created_at) }}</div>
+          </div>
+        </div>
+        
+        <!-- User Groups -->
+        <div class="profile-form__field">
+          <label class="profile-form__field-label">Account Type</label>
+          <div class="profile-form__field-value">
+            <span *ngFor="let group of user.groups" class="profile-form__badge">{{ group }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Form Actions -->
+      <div class="profile-form__actions">
+        <button 
+          type="button" 
+          class="profile-form__button profile-form__button--secondary"
+          (click)="resetForm()"
+        >
+          Cancel
+        </button>
+        <button 
+          type="submit" 
+          class="profile-form__button profile-form__button--primary"
+          [disabled]="!profileForm.valid || profileForm.pristine || isLoading"
+        >
+          {{ isLoading ? 'Saving...' : 'Save Changes' }}
+        </button>
+      </div>
+    </form>
+  </div>
+  
+  <!-- User debug panel - Only visible in debug mode -->
+  <div class="profile__debug" *ngIf="debugMode$ | async">
+    <h3 class="profile__debug-title">User Debug Info</h3>
+    
+    <div class="profile__debug-section">
+      <h4>Test Data Controls</h4>
+      <ng-container *ngIf="currentUser$ | async as user">
+        <div class="profile__debug-status">
+          <div>Using Test Data: <span [class.highlight]="isTestUser(user)">{{ isTestUser(user) ? 'Yes' : 'No' }}</span></div>
+          <div>User ID: <code>{{ user.user_id }}</code></div>
+        </div>
+        
+        <div class="profile__debug-actions">
+          <button 
+            class="profile__debug-button"
+            (click)="clearTestUserData()"
+            *ngIf="isTestUser(user)"
+          >
+            Clear Test User Data
+          </button>
+          
+          <button 
+            class="profile__debug-button"
+            (click)="signOut()"
+          >
+            Sign Out
+          </button>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+  
+  <!-- Debug section for Form - Only visible in debug mode -->
+  <ng-container *ngIf="debugMode$ | async">
+    <div class="profile__debug">
+      <h3 class="profile__debug-title">Form Debug Information</h3>
+      
+      <div class="profile__debug-section">
+        <h4>Form State</h4>
+        <pre>Form Valid: {{ profileForm.valid }}</pre>
+        <pre>Form Pristine: {{ profileForm.pristine }}</pre>
+        <pre>Form Touched: {{ profileForm.touched }}</pre>
+        <pre>Form Values: {{ profileForm.value | json }}</pre>
+        <pre>Form Errors: {{ profileForm.errors | json }}</pre>
+      </div>
+      
+      <div class="profile__debug-section" *ngIf="currentUser$ | async as user">
+        <h4>User Data</h4>
+        <pre>User Object: {{ user | json }}</pre>
+        <pre>User Is Valid: {{ isUserValid(user) | json }}</pre>
+        <pre>Required Attributes Check:
+  - Email: {{ !!user.email }}
+  - First Name: {{ !!user.first_name }}
+  - Last Name: {{ !!user.last_name }}
+  - Phone Number: {{ !!user.phone_number }}
+  - Status Is Active: {{ user.status === 'ACTIVE' }}</pre>
+      </div>
+    </div>
+  </ng-container>
+</div>

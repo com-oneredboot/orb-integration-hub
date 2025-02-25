@@ -48,6 +48,10 @@
   }
 
   .nav-menu {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+
     .nav-link {
       font-family: 'Roboto', sans-serif;
       font-weight: 400;
@@ -57,7 +61,7 @@
       padding: 0.5rem 1rem;
       position: relative;
       transition: all 0.2s ease;
-      border-radius: 4px; // Added for hover background
+      border-radius: 4px;
 
       &:hover {
         background-color: rgba(227, 24, 55, 0.1); // Light red background on hover
@@ -79,6 +83,16 @@
       &.active::after {
         transform: scaleX(1);
         opacity: 1;
+      }
+      
+      // Sign out specific styling
+      &--signout {
+        color: var(--orb-red);
+        font-weight: 500;
+        
+        &:hover {
+          background-color: rgba(227, 24, 55, 0.15); // Slightly darker on hover
+        }
       }
     }
   }

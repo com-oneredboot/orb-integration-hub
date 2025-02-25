@@ -1,0 +1,288 @@
+@use '../../../../../styles/variables' as v;
+@use '../../../../../styles/mixins' as m;
+@use 'sass:color';
+
+.profile-container {
+  @include m.page-container;
+  font-family: v.$font-family-base;
+
+  .profile-header {
+    text-align: center;
+    margin-bottom: v.$spacing-xl;
+
+    h1 {
+      font-family: v.$font-family-heading;
+      color: v.$text-primary;
+      margin-top: v.$spacing-md;
+      margin-bottom: v.$spacing-md;
+      font-weight: v.$font-weight-semibold;
+    }
+    
+    &__welcome {
+      background-color: v.$bg-secondary;
+      border-radius: v.$border-radius;
+      padding: v.$spacing-md;
+      max-width: 600px;
+      margin: 0 auto;
+      border-left: 4px solid v.$primary-color;
+      text-align: left;
+    }
+    
+    &__welcome-text {
+      font-size: v.$font-size-lg;
+      margin-bottom: v.$spacing-sm;
+      color: v.$text-primary;
+      line-height: 1.4;
+    }
+    
+    &__icon {
+      font-style: normal;
+      margin-right: v.$spacing-xs;
+      display: inline-block;
+      transform: rotate(15deg);
+    }
+    
+    &__tagline {
+      color: v.$text-secondary;
+      font-size: v.$font-size-sm;
+      margin: 0;
+      
+      strong {
+        color: v.$primary-color;
+        font-weight: v.$font-weight-semibold;
+      }
+    }
+  }
+
+  .profile-content {
+    width: 100%;
+    max-width: 600px;
+  }
+  
+  .profile-form {
+    @include m.form-container;
+    
+    &__section {
+      background-color: v.$bg-secondary;
+      border-radius: v.$border-radius;
+      padding: v.$spacing-md;
+      margin-bottom: v.$spacing-lg;
+      box-shadow: v.$shadow-sm;
+      width: 100%;
+      box-sizing: border-box;
+      
+      &-title {
+        font-family: v.$font-family-heading;
+        font-size: v.$font-size-lg;
+        color: v.$text-primary;
+        margin-bottom: v.$spacing-md;
+        padding-bottom: v.$spacing-sm;
+        border-bottom: 1px solid v.$border-color;
+      }
+    }
+    
+    &__field {
+      margin-bottom: v.$spacing-md;
+      width: 100%;
+      
+      &-label {
+        display: block;
+        margin-bottom: v.$spacing-xs;
+        font-size: v.$font-size-sm;
+        color: v.$text-secondary;
+        font-family: v.$font-family-base;
+      }
+      
+      &-input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: v.$spacing-sm v.$spacing-md;
+        font-family: v.$font-family-base;
+        font-size: v.$input-font-size;
+        color: v.$input-color;
+        border: 1px solid v.$input-border-color;
+        border-radius: v.$border-radius;
+        background-color: v.$input-bg;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        
+        &:focus {
+          outline: none;
+          border-color: v.$primary-color;
+          box-shadow: 0 0 0 2px rgba(v.$primary-color, 0.2);
+        }
+        
+        &--error {
+          border-color: v.$danger-color;
+        }
+        
+        &:disabled {
+          background-color: v.$gray-200;
+          cursor: not-allowed;
+        }
+      }
+      
+      &-error {
+        color: v.$danger-color;
+        font-size: v.$font-size-xs;
+        margin-top: v.$spacing-xs;
+      }
+      
+      &-hint {
+        font-size: v.$font-size-xs;
+        color: v.$text-secondary;
+        margin-top: v.$spacing-xs;
+      }
+      
+      &-value {
+        padding: v.$spacing-sm;
+        background-color: v.$gray-100;
+        border: 1px solid v.$border-color;
+        border-radius: v.$border-radius;
+        font-size: v.$font-size-base;
+        min-height: 38px;
+        box-sizing: border-box;
+        width: 100%;
+      }
+    }
+    
+    &__row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: v.$spacing-md;
+      margin-bottom: v.$spacing-md;
+      width: 100%;
+      
+      @media (max-width: 576px) {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    &__badge {
+      display: inline-block;
+      padding: v.$spacing-xs v.$spacing-sm;
+      background-color: v.$primary-color;
+      color: v.$white;
+      border-radius: v.$border-radius;
+      font-size: v.$font-size-xs;
+      margin-right: v.$spacing-xs;
+      margin-bottom: v.$spacing-xs;
+      font-family: v.$font-family-base;
+    }
+    
+    &__actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: v.$spacing-md;
+      margin-top: v.$spacing-lg;
+      
+      @media (max-width: 576px) {
+        flex-direction: column;
+      }
+    }
+    
+    &__button {
+      padding: v.$spacing-sm v.$spacing-md;
+      border-radius: v.$border-radius;
+      font-weight: v.$font-weight-medium;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: v.$font-family-base;
+      
+      &--primary {
+        background-color: v.$primary-color;
+        color: v.$white;
+        border: none;
+        
+        &:hover:not(:disabled) {
+          background-color: color.adjust(v.$primary-color, $lightness: -10%);
+        }
+        
+        &:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+      }
+      
+      &--secondary {
+        background-color: transparent;
+        color: v.$text-primary;
+        border: 1px solid v.$border-color;
+        
+        &:hover {
+          background-color: v.$gray-100;
+        }
+      }
+    }
+  }
+  
+  .profile__debug {
+    @include m.debug-container;
+    width: 100%;
+    max-width: 600px;
+    margin-top: v.$spacing-xl;
+    font-family: v.$font-family-monospace;
+    
+    &-status {
+      margin-bottom: v.$spacing-md;
+      font-family: monospace;
+      
+      code {
+        background-color: v.$gray-200;
+        padding: 2px 4px;
+        border-radius: v.$border-radius-sm;
+      }
+      
+      .highlight {
+        color: v.$danger-color;
+        font-weight: bold;
+      }
+    }
+    
+    &-actions {
+      display: flex;
+      gap: v.$spacing-md;
+      margin-top: v.$spacing-md;
+      flex-wrap: wrap;
+    }
+    
+    &-button {
+      background-color: v.$gray-800;
+      color: v.$white;
+      border: none;
+      padding: v.$spacing-xs v.$spacing-md;
+      border-radius: v.$border-radius;
+      cursor: pointer;
+      font-family: v.$font-family-base;
+      font-size: v.$font-size-sm;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background-color: v.$gray-900;
+      }
+      
+      &:first-child {
+        background-color: v.$danger-color;
+        
+        &:hover {
+          background-color: color.adjust(v.$danger-color, $lightness: -10%);
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-container {
+    padding: v.$spacing-md;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-container {
+    padding: v.$spacing-sm;
+    
+    .profile-content {
+      max-width: 100%;
+    }
+  }
+}

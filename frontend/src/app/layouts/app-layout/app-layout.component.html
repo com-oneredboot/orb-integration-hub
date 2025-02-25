@@ -7,11 +7,12 @@
     <nav class="nav-menu">
       <ng-container *ngIf="!(isAuthenticated$ | async)">
         <a routerLink="/home" routerLinkActive="active" class="nav-link">Home</a>
-        <a routerLink="/signin" routerLinkActive="active" class="nav-link">Sign In</a>
-        <a routerLink="/signup" routerLinkActive="active" class="nav-link">Sign Up</a>
+        <a routerLink="/authenticate" routerLinkActive="active" class="nav-link">Sign In</a>
       </ng-container>
       <ng-container *ngIf="isAuthenticated$ | async">
-        <button (click)="signOut()" class="signout-button">Sign Out</button>
+        <a routerLink="/profile" routerLinkActive="active" class="nav-link">Profile</a>
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">Dashboard</a>
+        <a href="#" (click)="signOut(); $event.preventDefault()" class="nav-link nav-link--signout">Sign Out</a>
       </ng-container>
     </nav>
   </header>

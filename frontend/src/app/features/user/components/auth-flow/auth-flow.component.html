@@ -292,6 +292,7 @@
         <pre>Error: {{ state.error }}</pre>
         <pre>User Exists: {{ state.userExists }}</pre>
         <pre>Current User: {{ state.currentUser | json }}</pre>
+        <pre>User Is Valid: {{ state.currentUser ? (isUserValid(state.currentUser) | json) : 'N/A' }}</pre>
         <pre>Needs MFA: {{ state.needsMFA }}</pre>
         <pre>MFA Setup Details: {{ state.mfaSetupDetails | json }}</pre>
         <pre>Phone Verified: {{ state.phoneVerified }}</pre>

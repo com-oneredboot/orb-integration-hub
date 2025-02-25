@@ -1,89 +1,117 @@
+@use '../../../../../styles/variables' as v;
+@use '../../../../../styles/mixins' as m;
+@use 'sass:color';
+
 .dashboard-container {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
+  @include m.page-container;
 
-.dashboard-header {
-  margin-bottom: 2rem;
-  
-  h1 {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
+  .dashboard-header {
+    text-align: center;
+    margin-bottom: v.$spacing-xl;
+
+    h1 {
+      font-family: v.$font-family-base;
+      color: v.$text-primary;
+      margin-top: v.$spacing-md;
+    }
   }
-}
 
-.dashboard-content {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-}
-
-.user-profile-summary, 
-.dashboard-actions, 
-.recent-activity {
-  background-color: #fff;
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-h2 {
-  margin-top: 0;
-  font-size: 1.25rem;
-  margin-bottom: 1.25rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid #eee;
-}
-
-.profile-info {
-  .info-item {
+  .dashboard-content {
+    width: 100%;
+    max-width: 800px;
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.75rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid #f5f5f5;
+    flex-direction: column;
+    gap: v.$spacing-xl;
     
-    &:last-child {
-      border-bottom: none;
-      margin-bottom: 0;
-      padding-bottom: 0;
+    .user-profile-summary,
+    .dashboard-actions,
+    .recent-activity {
+      width: 100%;
+      padding: v.$spacing-md;
+      background-color: v.$bg-secondary;
+      border-radius: v.$border-radius;
+      box-shadow: v.$shadow-sm;
+      
+      h2 {
+        font-size: v.$font-size-xl;
+        color: v.$text-primary;
+        margin-bottom: v.$spacing-md;
+        border-bottom: 1px solid v.$border-color;
+        padding-bottom: v.$spacing-sm;
+      }
+    }
+    
+    .profile-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: v.$spacing-md;
+      
+      .info-item {
+        display: flex;
+        flex-direction: column;
+        
+        .label {
+          font-size: v.$font-size-sm;
+          color: v.$text-secondary;
+          margin-bottom: v.$spacing-xs;
+        }
+        
+        .value {
+          font-size: v.$font-size-base;
+          color: v.$text-primary;
+          font-weight: v.$font-weight-medium;
+        }
+      }
+    }
+    
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: v.$spacing-md;
+      
+      .action-button {
+        padding: v.$spacing-sm v.$spacing-md;
+        background-color: v.$primary-color;
+        color: v.$white;
+        border: none;
+        border-radius: v.$border-radius;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        
+        &:hover {
+          background-color: color.adjust(v.$primary-color, $lightness: -10%);
+        }
+      }
     }
   }
   
-  .label {
-    font-weight: 500;
-    color: #555;
-  }
-  
-  .value {
-    color: #333;
+  .dashboard__debug {
+    @include m.debug-container;
   }
 }
 
-.action-buttons {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.75rem;
-}
-
-.action-button {
-  padding: 0.75rem 1rem;
-  background-color: #f5f5f5;
-  border: none;
-  border-radius: 4px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  
-  &:hover {
-    background-color: #e0e0e0;
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: v.$spacing-md;
+    
+    .dashboard-content {
+      .action-buttons {
+        flex-direction: column;
+        
+        .action-button {
+          width: 100%;
+        }
+      }
+    }
   }
 }
 
-.recent-activity {
-  p {
-    color: #777;
-    font-style: italic;
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: v.$spacing-sm;
+    
+    .dashboard-content {
+      max-width: 100%;
+    }
   }
 }

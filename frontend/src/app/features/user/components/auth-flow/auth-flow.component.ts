@@ -409,5 +409,14 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         }
       });
   }
+  
+  /**
+   * Public method to check if a user is valid for templates
+   * @param user The user to check
+   * @returns True if the user has all required attributes, false otherwise
+   */
+  public isUserValid(user: any): boolean {
+    return this.userService.isUserValid(user);
+  }
 
 }

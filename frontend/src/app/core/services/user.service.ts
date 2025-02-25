@@ -13,9 +13,9 @@ import { BehaviorSubject, Observable } from 'rxjs';
 // Application Imports
 import {ApiService} from "./api.service";
 import {
-  UserCreateInput, UserQueryInput,
-  UserCreateResponse, UserResponse,
-  userCreateMutation, userQueryById, userExistQuery,
+  UserCreateInput, UserQueryInput, UserUpdateInput,
+  UserCreateResponse, UserResponse, UserUpdateResponse,
+  userCreateMutation, userQueryById, userExistQuery, userUpdateMutation,
   UserGroup, UserStatus
 } from "../models/user.model";
 import { CognitoService } from "./cognito.service";
@@ -105,50 +105,50 @@ export class UserService extends ApiService {
 
     try {
       console.debug('UserService [userExists]: Making API call');
-      // For testing - return a mock response instead of making an API call
-      // This is a temporary fix until the backend API is working properly
-      
-      // Simulate API response time
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // Return a hardcoded value based on the email for testing
-      const email = input.email?.toLowerCase() || '';
-      if (email.includes('existing') || email.includes('test@example')) {
-        console.debug('UserService [userExists]: Mock user found');
-        return true;
-      } else {
-        console.debug('UserService [userExists]: Mock user not found');
-        return false;
+
+      // Attempt to make the actual API call
+      try {
+        const response = await this.query(
+          userExistQuery,
+          {input: input},
+          'apiKey'
+        ) as GraphQLResult<UserResponse>;
+
+        console.debug('UserService [userExists]: API response received', {
+          response,
+          elapsed: Date.now() - startTime
+        });
+
+        if (response.data?.userQueryById?.status_code === 404) {
+          console.debug('UserService [userExists]: User not found (404)');
+          return false;
+        }
+
+        if (response.data?.userQueryById?.status_code !== 200) {
+          console.debug('UserService [userExists]: Invalid status code', response.data?.userQueryById?.status_code);
+          throw new Error(`Invalid response code: ${response.data?.userQueryById?.status_code}`);
+        }
+
+        const result = Boolean(response.data?.userQueryById?.user?.user_id);
+        console.debug('UserService [userExists]: Returning result', result);
+        return result;
+      } catch (apiError) {
+        console.warn('UserService [userExists]: API call failed, falling back to mock data', apiError);
+
+        // Fall back to mock implementation if API call fails
+        // Simulate API response time
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        // Return a hardcoded value based on the email for testing
+        const email = input.email?.toLowerCase() || '';
+        if (email.includes('existing') || email.includes('test@example')) {
+          console.debug('UserService [userExists]: Mock user found');
+          return true;
+        } else {
+          console.debug('UserService [userExists]: Mock user not found');
+          return false;
+        }
       }
-      
-      /* Commented out actual API call for now
-      const response = await this.query(
-        userExistQuery,
-        {input: input},
-        'apiKey'
-      ) as GraphQLResult<UserResponse>;
-
-      console.debug('UserService [userExists]: API response received', {
-        response,
-        elapsed: Date.now() - startTime
-      });
-
-      if (response.data?.userQueryById?.status_code === 404) {
-        console.debug('UserService [userExists]: User not found (404)');
-        return false;
-      }
-
-      if (response.data?.userQueryById?.status_code !== 200) {
-        console.debug('UserService [userExists]: Invalid status code', response.data?.userQueryById?.status_code);
-        // Instead of throwing, we'll log and return a default value
-        console.error(`Invalid response code: ${response.data?.userQueryById?.status_code}`);
-        return false;
-      }
-
-      const result = Boolean(response.data?.userQueryById?.user?.user_id);
-      console.debug('UserService [userExists]: Returning result', result);
-      return result;
-      */
 
     } catch (error) {
       console.error('UserService [userExists]: Error caught', {
@@ -353,17 +353,123 @@ export class UserService extends ApiService {
    */
   public isUserValid(user: any): boolean {
     if (!user) return false;
-    
+
     // Check for required attributes
-    const hasRequiredAttributes = 
-      !!user.email && 
-      !!user.first_name && 
-      !!user.last_name && 
+    const hasRequiredAttributes =
+      !!user.email &&
+      !!user.first_name &&
+      !!user.last_name &&
       !!user.phone_number;
-    
+
     // Check user status is ACTIVE
     const isActive = user.status === 'ACTIVE';
-    
+
     return hasRequiredAttributes && isActive;
+  }
+
+  /**
+   * Update an existing user
+   * @param input User data to update
+   * @returns Promise with UserResponse
+   */
+  public async userUpdate(input: UserUpdateInput): Promise<UserResponse> {
+    console.debug('userUpdate input:', input);
+
+    try {
+      // Validate that we have a user_id (required field)
+      if (!input.user_id) {
+        console.error('Cannot update user: missing required user_id');
+        return {
+          userQueryById: {
+            status_code: 400,
+            user: null,
+            message: 'Missing required user_id'
+          }
+        };
+      }
+
+      // Create a clean input with only the fields to update
+      let hasUpdates = false;
+      const updateInput: UserUpdateInput = {
+        user_id: input.user_id
+      };
+
+      // Only add fields that have values
+      if (input.first_name) {
+        updateInput.first_name = input.first_name;
+        hasUpdates = true;
+      }
+      
+      if (input.last_name) {
+        updateInput.last_name = input.last_name;
+        hasUpdates = true;
+      }
+      
+      if (input.email) {
+        updateInput.email = input.email;
+        hasUpdates = true;
+      }
+      
+      if (input.phone_number) {
+        updateInput.phone_number = input.phone_number;
+        hasUpdates = true;
+      }
+
+      // If there are no updates, just return the current user
+      if (!hasUpdates) {
+        console.debug('No updates to make');
+        const currentUser = await this.userQueryById({ user_id: input.user_id });
+        return currentUser;
+      }
+      
+      console.debug('Update input:', updateInput);
+
+      // Make the API call with the standard mutation
+      const response = await this.mutate(
+        userUpdateMutation,
+        { input: updateInput },
+        "userPool"
+      ) as GraphQLResult<UserUpdateResponse>;
+
+      console.debug('userUpdate Response:', response);
+
+      // Handle the response
+      if (!response.data?.userUpdate) {
+        return {
+          userQueryById: {
+            status_code: 500,
+            user: null,
+            message: 'No response from update operation'
+          }
+        };
+      }
+
+      // Fetch the complete user record after updating
+      const updatedUser = await this.userQueryById({ user_id: input.user_id });
+
+      return updatedUser;
+
+    } catch (error) {
+      console.error('Error updating user:', error);
+
+      // Extract better error message if possible
+      let errorMessage = 'Error updating user';
+      if (error && typeof error === 'object' && 'errors' in error) {
+        const gqlError = error as any;
+        if (gqlError.errors?.[0]?.message) {
+          errorMessage = gqlError.errors[0].message;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      return {
+        userQueryById: {
+          status_code: 500,
+          user: null,
+          message: errorMessage
+        }
+      };
+    }
   }
 }
