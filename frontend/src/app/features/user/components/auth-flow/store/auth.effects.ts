@@ -1,4 +1,4 @@
-// file: frontend/src/app/core/models/user.model.ts
+// file: frontend/src/app/features/user/components/auth-flow/store/auth.effects.ts
 // author: Corey Dale Peters
 // date: 2024-12-20
 // description: Contains all GraphQL queries and mutations for the User service
@@ -13,6 +13,7 @@ import { from, of } from "rxjs";
 import { UserService } from "../../../../../core/services/user.service";
 import { UserQueryInput } from "../../../../../core/models/user.model";
 import { AuthActions } from "./auth.actions";
+import { CognitoService } from "../../../../../core/services/cognito.service";
 
 @Injectable()
 export class AuthEffects {
@@ -161,8 +162,33 @@ export class AuthEffects {
     )
   ));
 
+  // Add signout effect
+  signout$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.signout),
+      switchMap(() => {
+        // First clear local storage to ensure test user data is removed
+        localStorage.removeItem('auth');
+        
+        // Then attempt to sign out from Cognito service
+        return from(this.cognitoService.signOut()).pipe(
+          map(() => {
+            console.debug('Signout successful, returning success action');
+            return AuthActions.signoutSuccess();
+          }),
+          catchError(error => {
+            console.error('Error during signout:', error);
+            // Even on error, we return success to ensure state is reset
+            return of(AuthActions.signoutSuccess());
+          })
+        );
+      })
+    )
+  );
+
   constructor(
     private actions$: Actions,
-    private userService: UserService
+    private userService: UserService,
+    private cognitoService: CognitoService
   ) {}
 }

@@ -125,11 +125,16 @@ export class TestDataService {
    */
   public clearTestData(): void {
     console.debug('Clearing test user data');
-    localStorage.removeItem('auth');
-    this.store.dispatch(AuthActions.signout());
     
-    // Refresh the page to ensure clean state
-    window.location.reload();
+    // First remove from localStorage before dispatching signout
+    localStorage.removeItem('auth');
+    
+    // Then dispatch signout action - this will reset the store
+    this.store.dispatch(AuthActions.signoutSuccess());
+    
+    // Redirect to authentication page instead of reloading
+    // This ensures a full reset of the application state
+    window.location.href = '/authenticate';
   }
 
   /**
@@ -137,20 +142,12 @@ export class TestDataService {
    */
   public signOut(): void {
     console.debug('Signing out user');
-    this.store.dispatch(AuthActions.signout());
     
-    // For test users, also remove from localStorage
-    const authData = localStorage.getItem('auth');
-    if (authData) {
-      try {
-        const authState = JSON.parse(authData);
-        if (authState.currentUser?.user_id === 'test-user-123') {
-          localStorage.removeItem('auth');
-        }
-      } catch (e) {
-        // Ignore parsing errors
-      }
-    }
+    // Always remove auth data from localStorage first
+    localStorage.removeItem('auth');
+    
+    // Then dispatch signout action
+    this.store.dispatch(AuthActions.signoutSuccess());
     
     // Redirect to authentication page
     window.location.href = '/authenticate';

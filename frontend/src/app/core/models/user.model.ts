@@ -67,6 +67,13 @@ export type UserCreateInput = Omit<User, 'first_name' | 'last_name' | 'phone_num
 
 export type UserUpdateInput = Partial<Omit<User, 'user_id' | 'created_at' >> & { user_id: string };
 
+export type UserUpdateResponse = GenericResponse & {
+  userUpdate: {
+    status_code: number;
+    user: User | null;
+    message?: string;
+  };
+}
 
 // ------------------------------ //
 // AppSync Mutations and Queries
@@ -117,7 +124,19 @@ export const userQueryById = /* GraphQL */ `
 export const userUpdateMutation = /* GraphQL */ `
   mutation UserUpdate($input: UserUpdateInput!) {
     userUpdate(input: $input) {
-      id
+      status_code
+      message
+      user {
+        user_id
+        cognito_id
+        email
+        phone_number
+        first_name
+        last_name
+        groups
+        status
+        created_at
+      }
     }
   }
 `;

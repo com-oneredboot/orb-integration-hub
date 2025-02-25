@@ -4,6 +4,7 @@ import { Store } from '@ngrx/store';
 import { Observable, Subject, takeUntil } from 'rxjs';
 import { User, UserUpdateInput } from '../../../../core/models/user.model';
 import * as fromAuth from '../../components/auth-flow/store/auth.selectors';
+import { AuthActions } from '../../components/auth-flow/store/auth.actions';
 import { UserService } from '../../../../core/services/user.service';
 import { TestDataService } from '../../../../core/services/test-data.service';
 
@@ -168,11 +169,23 @@ export class ProfileComponent implements OnInit, OnDestroy {
       // Call the userService to update the profile
       console.log('Updating user profile:', updateInput);
       
-      // TODO: Uncomment this when the actual update method is implemented
-      // await this.userService.updateUser(updateInput);
+      // Make API call to update the user
+      const response = await this.userService.userUpdate(updateInput);
       
-      // Simulating API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Handle the response
+      if (response?.userQueryById?.status_code !== 200) {
+        const errorMessage = response?.userQueryById?.message || 'Failed to update profile';
+        console.error('Profile update error:', errorMessage);
+        throw new Error(errorMessage);
+      }
+      
+      // Update the store with the updated user data
+      if (response?.userQueryById?.user) {
+        this.store.dispatch(AuthActions.signInSuccess({
+          user: response.userQueryById.user,
+          message: 'Profile updated successfully'
+        }));
+      }
       
       // Mark form as pristine after successful update
       this.profileForm.markAsPristine();
@@ -210,14 +223,16 @@ export class ProfileComponent implements OnInit, OnDestroy {
    * This is used for development to reset to a clean state
    */
   public clearTestUserData(): void {
-    this.testDataService.clearTestData();
+    // Directly dispatch signout action instead of using test service
+    this.store.dispatch(AuthActions.signout());
   }
   
   /**
    * Sign out the current user
    */
   public signOut(): void {
-    this.testDataService.signOut();
+    // Directly dispatch signout action instead of using test service
+    this.store.dispatch(AuthActions.signout());
   }
   
   /**

@@ -196,7 +196,10 @@ export const authReducer = createReducer(
     isLoading: true,
     error: null
   })),
-  on(AuthActions.signoutSuccess, () => initialState),
+  on(AuthActions.signoutSuccess, () => {
+    // Ensure complete reset to initial state with a new object reference
+    return {...initialState};
+  }),
   on(AuthActions.signoutFailure, (state, { error }) => ({
     ...state,
     error,
