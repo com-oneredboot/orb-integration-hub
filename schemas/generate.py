@@ -540,7 +540,7 @@ def combine_graphql_schemas(jinja_env):
 
     try:
         # Directory containing model schema fragments
-        schemas_dir = Path('../backend/infrastructure/cloudformation/schemas')
+        schemas_dir = Path('../schemas/graphql')
 
         # Output location for combined schema
         output_dir = Path('../backend/infrastructure/cloudformation')

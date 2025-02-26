@@ -35,7 +35,7 @@ fi
 
 # Run the generator script
 echo "Running schema generator..."
-pipenv run python schemas/generate.py
+pipenv run python generate.py
 RESULT=$?
 
 # Check the exit status

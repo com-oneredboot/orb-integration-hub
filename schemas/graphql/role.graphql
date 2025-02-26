@@ -59,13 +59,5 @@ input RoleUpdateInput {
   active: Boolean
 }
 
-# Add these operations to the Query type
-extend type Query {
-  roleQueryById(input: RoleQueryInput!): RoleResponse! @aws_cognito_user_pools
-}
-
-# Add these operations to the Mutation type
-extend type Mutation {
-  roleCreate(input: RoleCreateInput!): RoleResponse! @aws_cognito_user_pools
-  roleUpdate(input: RoleUpdateInput!): RoleResponse! @aws_cognito_user_pools
-}
+# Operations for Role
+# These will be merged with the root Query and Mutation types in the base schema

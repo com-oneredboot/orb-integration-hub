@@ -5,6 +5,9 @@ schemaRegistry:
     - name: roles
       currentVersion: '1.0'
       path: ./tables/roles.yml
+    - name: users
+      currentVersion: '1.0'
+      path: ./tables/users.yml
   core:
     types: ./core/types.yml
     validators: ./core/validators.yml

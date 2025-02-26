@@ -55,13 +55,5 @@ input {{ model_name }}UpdateInput {
 {%- endfor %}
 }
 
-# Add these operations to the Query type
-extend type Query {
-  {{ model_name_lowercase }}QueryById(input: {{ model_name }}QueryInput!): {{ model_name }}Response! @aws_cognito_user_pools
-}
-
-# Add these operations to the Mutation type
-extend type Mutation {
-  {{ model_name_lowercase }}Create(input: {{ model_name }}CreateInput!): {{ model_name }}Response! @aws_cognito_user_pools
-  {{ model_name_lowercase }}Update(input: {{ model_name }}UpdateInput!): {{ model_name }}Response! @aws_cognito_user_pools
-}
+# Operations for {{ model_name }}
+# These will be merged with the root Query and Mutation types in the base schema

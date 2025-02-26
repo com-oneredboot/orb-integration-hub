@@ -1,0 +1,66 @@
+# GraphQL schema for User
+# Generated from database model
+# Do not modify directly
+
+# Main User type
+type User @aws_api_key @aws_cognito_user_pools {
+  user_id: String!
+  cognito_id: String!
+  email: String!
+  phone_number: String
+  phone_verified: Boolean
+  first_name: String!
+  last_name: String!
+  groups: [String!]!
+  status: String!
+  created_at: Float!
+}
+
+# Response type for User operations
+type UserResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  user: User
+}
+
+# Response type for multiple User operations
+type UsersResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  users: [User]
+}
+
+# Input for User creation
+input UserCreateInput {
+  user_id: String!
+  cognito_id: String!
+  email: String!
+  phone_number: String
+  phone_verified: Boolean
+  first_name: String!
+  last_name: String!
+  groups: [String!]!
+  status: String!
+  created_at: Float!
+}
+
+# Input for User query operations
+input UserQueryInput {
+}
+
+# Input for User update operations
+input UserUpdateInput {
+  user_id: String
+  cognito_id: String
+  email: String
+  phone_number: String
+  phone_verified: Boolean
+  first_name: String
+  last_name: String
+  groups: [String]
+  status: String
+  created_at: Float
+}
+
+# Operations for User
+# These will be merged with the root Query and Mutation types in the base schema

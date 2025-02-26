@@ -6,8 +6,11 @@
 version: '1.0'
 table: users
 model:
-  partitionKey: user_id
-  sortKey: application_id
+  keys:
+    primary:
+      partition: user_id
+      sort: application_id
+    secondary: []
   attributes:
     user_id:
       type: string
