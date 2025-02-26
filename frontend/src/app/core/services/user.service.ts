@@ -65,7 +65,7 @@ export class UserService extends ApiService {
       const cognitoResponse = await this.cognitoService.createCognitoUser(input, password);
       console.debug('createCognitoUser Response: ', cognitoResponse);
 
-      const timestamp = new Date().toISOString();
+      const timestamp = Date.now(); // Use timestamp instead of ISO string
       const userCreateInput: UserCreateInput = {
         user_id: uuidv4(), // Use string format as expected by the GraphQL schema
         cognito_id: input.cognito_id,
@@ -73,7 +73,9 @@ export class UserService extends ApiService {
         status: UserStatus.PENDING,
         phone_verified: false,
         email: input.email,
-        created_at: timestamp
+        created_at: timestamp,
+        first_name: input.first_name || '',
+        last_name: input.last_name || ''
       };
 
       const response = await this.mutate(

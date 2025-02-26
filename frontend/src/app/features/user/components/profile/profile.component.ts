@@ -108,20 +108,29 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
   
   /**
-   * Format a date string
+   * Format a date string or timestamp
    */
-  formatDate(dateString: string): string {
-    if (!dateString) return 'N/A';
+  formatDate(dateValue: string | number): string {
+    if (!dateValue) return 'N/A';
     
     try {
-      const date = new Date(dateString);
+      let date: Date;
+      if (typeof dateValue === 'number') {
+        // If it's a timestamp (number), convert to Date
+        date = new Date(dateValue);
+      } else {
+        // If it's a string, parse it as a Date
+        date = new Date(dateValue);
+      }
+      
       return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
       });
     } catch (e) {
-      return dateString;
+      // If all else fails, return the original value as a string
+      return String(dateValue);
     }
   }
   

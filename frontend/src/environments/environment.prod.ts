@@ -7,5 +7,10 @@ export const environment = {
     userPoolId: 'orb-integration-hub-prod-user-pool-id',
     userPoolClientId: 'orb-integration-hub-prod-user-pool-client-id',
     qrCodeIssuer: 'OneRedBoot.com'
+  },
+  graphql: {
+    url: 'https://jtl26ovh4vf27ehd5kslhsmyxy.appsync-api.us-east-1.amazonaws.com/graphql', // Replace with production URL
+    region: 'us-east-1',
+    apiKey: 'da2-p5p56xpjibahvn22tuvx2aihtm' // Replace with production API key
   }
 };

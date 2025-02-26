@@ -1,8 +1,8 @@
 // user.actions.ts
 
 import { createAction, props } from '@ngrx/store';
-import {ICognitoUser} from "../../../core/services/cognito.service";
-import {IUser} from "../../shared/components/user/user.model";
+import { CognitoUser } from "../../../core/models/cognito.model"
+import { User } from "../../../core/models/user.model"
 
 export const signIn = createAction(
     '[Auth] Sign In',
@@ -11,7 +11,7 @@ export const signIn = createAction(
 
 export const signInSuccess = createAction(
     '[Auth] Sign In Success',
-    props<{ cognitoUser: ICognitoUser, user: IUser }>()
+    props<{ cognitoUser: CognitoUser, user: User }>()
 );
 
 export const signInFailure = createAction(
@@ -21,12 +21,12 @@ export const signInFailure = createAction(
 
 export const updateCognitoUser = createAction(
     '[Auth] Update Cognito User',
-    props<{ cognitoUser: ICognitoUser }>()
+    props<{ cognitoUser: CognitoUser }>()
 );
 
 export const updateUser = createAction(
     '[Auth] Update User',
-    props<{ user: IUser }>()
+    props<{ user: User }>()
 );
 
 

@@ -80,7 +80,7 @@ export class TestDataService {
       phone_verified: true,
       groups: [UserGroup.USER],
       status: UserStatus.ACTIVE,
-      created_at: new Date().toISOString()
+      created_at: Date.now() // Use a timestamp instead of string
     };
 
     // Dispatch the action to add the user to the store
