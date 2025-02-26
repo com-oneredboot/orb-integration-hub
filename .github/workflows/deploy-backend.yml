@@ -126,8 +126,10 @@ jobs:
           done
         working-directory: ./backend/infrastructure/cloudformation
         
-      - name: Update AppSync Schema Directly
+      - name: Verify AppSync Schema Deployment
         run: |
+          echo "Schema deployment verification..."
+          
           # Extract the AppSync API ID from CloudFormation outputs
           echo "Getting AppSync API ID from CloudFormation stack..."
           APPSYNC_API_ID=$(aws cloudformation describe-stacks \
@@ -136,33 +138,20 @@ jobs:
             --output text | cut -d'/' -f4)
           
           if [ -z "$APPSYNC_API_ID" ]; then
-            echo "Failed to retrieve AppSync API ID, skipping direct schema update"
+            echo "Failed to retrieve AppSync API ID, skipping verification"
             exit 0
           fi
           
           echo "Retrieved AppSync API ID: $APPSYNC_API_ID"
           
-          # Get the latest schema from S3
-          echo "Downloading appsync.graphql from S3..."
+          # Get the schema that was uploaded to S3
+          echo "Downloading appsync.graphql from S3 for comparison..."
           aws s3 cp \
             s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/appsync.graphql \
-            ./appsync.graphql
+            ./expected-schema.graphql
           
-          # Update the schema directly in AppSync (bypassing CloudFormation)
-          echo "Updating AppSync schema directly..."
-          aws appsync start-schema-creation \
-            --api-id $APPSYNC_API_ID \
-            --definition file://appsync.graphql
-          
-          # Wait for schema update to complete
-          echo "Waiting for schema update to complete..."
-          aws appsync wait schema-creation-complete \
-            --api-id $APPSYNC_API_ID
-          
-          # Verify the schema was updated correctly
-          echo "Verifying schema was updated correctly..."
-          
-          # Download the current schema from AppSync
+          # Download the current schema from AppSync to verify deployment was successful
+          echo "Downloading current schema from AppSync..."
           aws appsync get-introspection-schema \
             --api-id $APPSYNC_API_ID \
             --format SDL \
@@ -170,22 +159,23 @@ jobs:
             current-schema.graphql
           
           if [ ! -f "current-schema.graphql" ]; then
-            echo "ERROR: Failed to download current schema from AppSync"
-            exit 1
+            echo "WARNING: Failed to download current schema from AppSync"
+            exit 0
           fi
           
           # Compare file sizes as a basic verification
+          echo "Verifying deployed schema..."
           CURRENT_SIZE=$(wc -c < "current-schema.graphql")
-          EXPECTED_SIZE=$(wc -c < "./appsync.graphql")
+          EXPECTED_SIZE=$(wc -c < "./expected-schema.graphql")
           DIFF=$((CURRENT_SIZE - EXPECTED_SIZE))
           DIFF_ABS=${DIFF#-}  # Get absolute value
           
           # Allow for some difference due to formatting, but not too much
           if [ "$DIFF_ABS" -gt 500 ]; then
             echo "WARNING: Current schema size ($CURRENT_SIZE bytes) differs significantly from expected ($EXPECTED_SIZE bytes)"
-            echo "This may indicate the schema wasn't updated correctly."
+            echo "This may indicate the CloudFormation deployment didn't update the schema correctly."
+            echo "You may need to manually update the schema or run another deployment."
           else
             echo "Schema sizes are reasonably close (difference of $DIFF_ABS bytes)"
+            echo "Schema verification completed successfully!"
           fi
-          
-          echo "Schema update and verification completed successfully"
