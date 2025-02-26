@@ -261,7 +261,8 @@ export class UserService extends ApiService {
     }
 
     try {
-      const userSignInResponse = await this.cognitoService.signIn(user.cognito_id, password);
+      // Pass the user's email as the third parameter for MFA setup
+      const userSignInResponse = await this.cognitoService.signIn(user.cognito_id, password, user.email);
 
       // Handle already signed in case
       if (userSignInResponse.status_code === 401 &&

@@ -110,8 +110,9 @@ export class CognitoService {
    * Sign in a user
    * @param username (cognito_id in users table)
    * @param password
+   * @param email (optional) User's email for better MFA labeling
    */
-  public async signIn(username: string, password: string): Promise<AuthResponse> {
+  public async signIn(username: string, password: string, email?: string): Promise<AuthResponse> {
     console.info('Starting sign in process for:', username);
     const signInResponse = await signIn({ username, password });
 
@@ -131,7 +132,9 @@ export class CognitoService {
     switch(nextStep.signInStep) {
       case 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP':
         const totpSetupDetails = nextStep.totpSetupDetails;
-        const setupUri = totpSetupDetails.getSetupUri(appName);
+        // Use the custom issuer format with email if available
+        const issuer = email ? `${appName}:${email}` : appName;
+        const setupUri = totpSetupDetails.getSetupUri(issuer);
         this.mfaSetupRequiredSubject.next(true);
         return {
           status_code: 200,
@@ -139,7 +142,7 @@ export class CognitoService {
           needsMFASetup: true,
           mfaType: 'totp',
           mfaSetupDetails: {
-            qrCode: username,
+            qrCode: email || username, // Use email if available
             secretKey: nextStep.totpSetupDetails?.sharedSecret,
             setupUri: setupUri
           }

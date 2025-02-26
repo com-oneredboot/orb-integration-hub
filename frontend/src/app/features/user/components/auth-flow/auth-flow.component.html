@@ -219,6 +219,10 @@
       <div class="auth-flow__form-step"
            [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.MFA_SETUP}">
         <div class="auth-flow__mfa-options" *ngIf="state.mfaSetupDetails">
+          <div class="auth-flow__instructions">
+            <p>Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)</p>
+            <p>This will be registered using your email address in your authenticator app.</p>
+          </div>
           <div class="auth-flow__qr-container" *ngIf="qrCodeDataUrl">
             <img [src]="qrCodeDataUrl" alt="MFA QR Code" class="qr-code">
           </div>

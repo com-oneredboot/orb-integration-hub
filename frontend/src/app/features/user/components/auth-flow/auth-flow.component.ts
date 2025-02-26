@@ -121,7 +121,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     this.mfaSetupDetails$
       .pipe(takeUntil(this.destroy$))
       .subscribe(async details => {
-        const issuer = 'OneRedBoot.com';
+        // No need to define issuer here as it's now set in the CognitoService
         const QRCode = (await import('qrcode')).default;
         if (!details?.secretKey || !details?.qrCode) {
           return;

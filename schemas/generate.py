@@ -544,7 +544,7 @@ def combine_graphql_schemas(jinja_env):
 
         # Output location for combined schema
         output_dir = Path('../backend/infrastructure/cloudformation')
-        output_file = output_dir / "schema.graphql"
+        output_file = output_dir / "appsync.graphql"
 
         # Load base schema template
         template = load_template('graphql_schema_base.jinja', jinja_env)
@@ -649,10 +649,10 @@ def main():
             # Combine all GraphQL schemas into a single file
             combined_schema_path = combine_graphql_schemas(jinja_env)
             if combined_schema_path:
-                logger.info("Combined schema ready for deployment: %s", combined_schema_path)
+                logger.info("Combined AppSync schema ready for deployment: %s", combined_schema_path)
             else:
-                logger.error("Failed to generate combined schema")
-                failed_tables.append("combined_schema")
+                logger.error("Failed to generate combined AppSync schema")
+                failed_tables.append("appsync_schema")
 
             # Generate DynamoDB CloudFormation template
             dynamodb_template_path = generate_dynamodb_template(jinja_env)

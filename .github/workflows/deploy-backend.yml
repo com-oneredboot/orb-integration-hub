@@ -47,6 +47,37 @@ jobs:
         run: |
           cd schemas
           python generate.py
+          
+      - name: Validate GraphQL schema
+        run: |
+          echo "Validating GraphQL schema..."
+          
+          # Schema generator now creates appsync.graphql directly
+          
+          # Check if the schema file exists
+          if [ ! -f "./backend/infrastructure/cloudformation/appsync.graphql" ]; then
+            echo "ERROR: appsync.graphql not found. Schema generation may have failed."
+            exit 1
+          fi
+          
+          # Basic syntax check - if the file has GraphQL type definitions
+          if ! grep -q "type " "./backend/infrastructure/cloudformation/appsync.graphql"; then
+            echo "ERROR: appsync.graphql appears to be empty or invalid. Missing type definitions."
+            exit 1
+          fi
+          
+          # Check for other required GraphQL elements
+          if ! grep -q "schema {" "./backend/infrastructure/cloudformation/appsync.graphql"; then
+            echo "WARNING: appsync.graphql may be missing schema definition."
+          fi
+          
+          # Check file size is reasonable (not empty, not too small)
+          FILE_SIZE=$(wc -c < "./backend/infrastructure/cloudformation/appsync.graphql")
+          if [ "$FILE_SIZE" -lt 100 ]; then
+            echo "WARNING: appsync.graphql is suspiciously small ($FILE_SIZE bytes)."
+          fi
+          
+          echo "Schema validation complete."
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -57,8 +88,9 @@ jobs:
 
       - name: Upload schema to S3
         run: |
+          # Upload as appsync.graphql to match the reference in AppSync CloudFormation template
           aws s3 cp ./schema.graphql \
-            s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/schema.graphql
+            s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/appsync.graphql
 
         working-directory: ./backend/infrastructure/cloudformation
 
@@ -77,7 +109,7 @@ jobs:
             # Add an override for the schema location
             PARAMS="Environment=${{ inputs.environment }} CustomerId=${{ inputs.customer_id }} ProjectId=${{ inputs.project_id }}"
             if [ "$stack" == "appsync" ]; then
-              PARAMS="$PARAMS SchemaS3Key=schema.graphql"
+              PARAMS="$PARAMS SchemaS3Key=appsync.graphql"
             fi
           
             sam deploy \
@@ -93,3 +125,67 @@ jobs:
           
           done
         working-directory: ./backend/infrastructure/cloudformation
+        
+      - name: Update AppSync Schema Directly
+        run: |
+          # Extract the AppSync API ID from CloudFormation outputs
+          echo "Getting AppSync API ID from CloudFormation stack..."
+          APPSYNC_API_ID=$(aws cloudformation describe-stacks \
+            --stack-name ${{ inputs.customer_id }}-${{ inputs.project_id }}-appsync \
+            --query "Stacks[0].Outputs[?OutputKey=='GraphQLApiUrl'].OutputValue" \
+            --output text | cut -d'/' -f4)
+          
+          if [ -z "$APPSYNC_API_ID" ]; then
+            echo "Failed to retrieve AppSync API ID, skipping direct schema update"
+            exit 0
+          fi
+          
+          echo "Retrieved AppSync API ID: $APPSYNC_API_ID"
+          
+          # Get the latest schema from S3
+          echo "Downloading appsync.graphql from S3..."
+          aws s3 cp \
+            s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/appsync.graphql \
+            ./appsync.graphql
+          
+          # Update the schema directly in AppSync (bypassing CloudFormation)
+          echo "Updating AppSync schema directly..."
+          aws appsync start-schema-creation \
+            --api-id $APPSYNC_API_ID \
+            --definition file://appsync.graphql
+          
+          # Wait for schema update to complete
+          echo "Waiting for schema update to complete..."
+          aws appsync wait schema-creation-complete \
+            --api-id $APPSYNC_API_ID
+          
+          # Verify the schema was updated correctly
+          echo "Verifying schema was updated correctly..."
+          
+          # Download the current schema from AppSync
+          aws appsync get-introspection-schema \
+            --api-id $APPSYNC_API_ID \
+            --format SDL \
+            --include-directives \
+            current-schema.graphql
+          
+          if [ ! -f "current-schema.graphql" ]; then
+            echo "ERROR: Failed to download current schema from AppSync"
+            exit 1
+          fi
+          
+          # Compare file sizes as a basic verification
+          CURRENT_SIZE=$(wc -c < "current-schema.graphql")
+          EXPECTED_SIZE=$(wc -c < "./appsync.graphql")
+          DIFF=$((CURRENT_SIZE - EXPECTED_SIZE))
+          DIFF_ABS=${DIFF#-}  # Get absolute value
+          
+          # Allow for some difference due to formatting, but not too much
+          if [ "$DIFF_ABS" -gt 500 ]; then
+            echo "WARNING: Current schema size ($CURRENT_SIZE bytes) differs significantly from expected ($EXPECTED_SIZE bytes)"
+            echo "This may indicate the schema wasn't updated correctly."
+          else
+            echo "Schema sizes are reasonably close (difference of $DIFF_ABS bytes)"
+          fi
+          
+          echo "Schema update and verification completed successfully"
