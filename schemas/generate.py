@@ -441,6 +441,23 @@ def generate_graphql_schema(table_name, schema_path, jinja_env):
         else:
             logger.error("Schema missing required model definition")
             return False
+            
+        # Extract the partition key and sort key (supporting both old and new formats)
+        partition_key = ""
+        sort_key = ""
+        
+        # Check for new key format (nested under keys.primary)
+        if 'keys' in model and 'primary' in model['keys']:
+            partition_key = model['keys']['primary'].get('partition', '')
+            sort_key = model['keys']['primary'].get('sort', '')
+            logger.debug("Found keys using new schema structure: partition=%s, sort=%s", 
+                        partition_key, sort_key)
+        # Fall back to old key format (direct properties)
+        else:
+            partition_key = model.get('partition_key', '')
+            sort_key = model.get('sort_key', '')
+            logger.debug("Using legacy key structure: partition=%s, sort=%s", 
+                        partition_key, sort_key)
 
         # Load the GraphQL schema template
         template = load_template('graphql_schema.jinja', jinja_env)
@@ -450,8 +467,8 @@ def generate_graphql_schema(table_name, schema_path, jinja_env):
             model_name=model_name,
             model_name_lowercase=model_name.lower(),
             attributes=model['attributes'],
-            partition_key=model.get('partition_key', ''),
-            sort_key=model.get('sort_key', '')
+            partition_key=partition_key,
+            sort_key=sort_key
         )
 
         # Prepare output location matching your directory structure

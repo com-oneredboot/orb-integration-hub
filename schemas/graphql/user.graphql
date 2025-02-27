@@ -46,11 +46,14 @@ input UserCreateInput {
 
 # Input for User query operations
 input UserQueryInput {
+  user_id: String
+  application_id: String
 }
 
 # Input for User update operations
 input UserUpdateInput {
-  user_id: String
+  user_id: String!
+  application_id: String!
   cognito_id: String
   email: String
   phone_number: String

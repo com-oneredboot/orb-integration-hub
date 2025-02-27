@@ -75,11 +75,14 @@ input UserCreateInput {
 
 # Input for User query operations
 input UserQueryInput {
+  user_id: String
+  application_id: String
 }
 
 # Input for User update operations
 input UserUpdateInput {
-  user_id: String
+  user_id: String!
+  application_id: String!
   cognito_id: String
   email: String
   phone_number: String
@@ -142,13 +145,15 @@ input RoleCreateInput {
 
 # Input for Role query operations
 input RoleQueryInput {
+  role_id: String
+  application_id: String
 }
 
 # Input for Role update operations
 input RoleUpdateInput {
-  role_id: String
+  role_id: String!
+  application_id: String!
   user_id: String
-  application_id: String
   role_name: String
   role_type: String
   permissions: [String]
