@@ -529,9 +529,54 @@ def generate_appsync_imports():
         logger.error("Error generating AppSync imports file: %s", str(e), exc_info=True)
         return False
 
+def cleanup_old_schema_files(output_dir, pattern="appsync_*.graphql", keep_count=5):
+    """
+    Cleanup old schema files, keeping only the most recent ones.
+    Also remove any non-timestamped schema files.
+    
+    :param output_dir: Directory containing schema files
+    :param pattern: Pattern to match files for cleanup
+    :param keep_count: Number of most recent files to keep
+    :return: None
+    """
+    logger.info("Cleaning up old schema files, keeping %d most recent", keep_count)
+    
+    try:
+        # Get all timestamped schema files matching the pattern
+        schema_files = list(output_dir.glob(pattern))
+        
+        # Sort by modification time (newest first)
+        schema_files.sort(key=lambda x: x.stat().st_mtime, reverse=True)
+        
+        # If we have more files than we want to keep
+        if len(schema_files) > keep_count:
+            # Delete the oldest files (keeping the most recent ones)
+            for old_file in schema_files[keep_count:]:
+                try:
+                    old_file.unlink()
+                    logger.info("Deleted old schema file: %s", old_file)
+                except Exception as e:
+                    logger.warning("Failed to delete old schema file %s: %s", old_file, str(e))
+            
+            logger.info("Deleted %d old schema files", max(0, len(schema_files) - keep_count))
+        
+        # Also delete any non-timestamped schema files
+        for legacy_file in ['appsync.graphql', 'schema.graphql']:
+            legacy_path = output_dir / legacy_file
+            if legacy_path.exists():
+                try:
+                    legacy_path.unlink()
+                    logger.info("Deleted legacy schema file: %s", legacy_path)
+                except Exception as e:
+                    logger.warning("Failed to delete legacy schema file %s: %s", legacy_path, str(e))
+    
+    except Exception as e:
+        logger.error("Error during cleanup of old schema files: %s", str(e))
+
+
 def combine_graphql_schemas(jinja_env):
     """
-    Combine all generated GraphQL schema files into a single schema file.
+    Combine all generated GraphQL schema files into a single schema file with timestamp.
 
     :param jinja_env: Jinja environment for loading base schema template
     :return: Path to the combined schema file
@@ -539,12 +584,20 @@ def combine_graphql_schemas(jinja_env):
     logger.info("Combining GraphQL schemas into a single file")
 
     try:
+        import datetime
+
         # Directory containing model schema fragments
         schemas_dir = Path('../schemas/graphql')
 
         # Output location for combined schema
         output_dir = Path('../backend/infrastructure/cloudformation')
-        output_file = output_dir / "appsync.graphql"
+        
+        # Create timestamped filename
+        timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%H%M%S")
+        schema_filename = f"appsync_{timestamp}.graphql"
+        
+        # Only create the timestamped file - no more non-timestamped files
+        timestamped_output_file = output_dir / schema_filename
 
         # Load base schema template
         template = load_template('graphql_schema_base.jinja', jinja_env)
@@ -567,12 +620,20 @@ def combine_graphql_schemas(jinja_env):
         # Create output directory if needed
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        # Write the combined schema
-        with open(output_file, 'w') as f:
+        # Write the combined schema only to the timestamped file
+        with open(timestamped_output_file, 'w') as f:
             f.write(combined_schema)
 
-        logger.info("Combined GraphQL schema generated: %s", output_file)
-        return output_file
+        logger.info("Combined GraphQL schema generated: %s", timestamped_output_file)
+        
+        # Clean up old schema files, keeping only the most recent 5
+        cleanup_old_schema_files(output_dir)
+        
+        # The timestamped filename can be used by the GitHub workflow
+        # The GitHub workflow will automatically find and use the latest schema file
+        # And pass it as the SchemaS3Key parameter to the CloudFormation template
+        
+        return timestamped_output_file
 
     except Exception as e:
         logger.error("Error combining GraphQL schemas: %s", str(e), exc_info=True)

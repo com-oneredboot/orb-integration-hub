@@ -22,6 +22,10 @@ Parameters:
   TracingIs:
     Default: Active
     Type: String
+  SchemaS3Key:
+    Default: appsync.graphql
+    Type: String
+    Description: Name of the GraphQL schema file in S3
 
 # --------------------------------------------------- #
 Resources:
@@ -85,8 +89,9 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       DefinitionS3Location: !Sub
-        - 's3://${ArtifactBucket}/appsync.graphql'
+        - 's3://${ArtifactBucket}/${SchemaKey}'
         - ArtifactBucket: !Sub '${CustomerId}-${ProjectId}-build-templates'
+          SchemaKey: !Ref SchemaS3Key
   # Data Sources
   ApplicationDataSource:
     Type: AWS::AppSync::DataSource

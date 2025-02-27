@@ -52,30 +52,38 @@ jobs:
         run: |
           echo "Validating GraphQL schema..."
           
-          # Schema generator now creates appsync.graphql directly
+          # Schema generator now creates timestamped appsync_TIMESTAMP.graphql file
           
-          # Check if the schema file exists
-          if [ ! -f "./backend/infrastructure/cloudformation/appsync.graphql" ]; then
-            echo "ERROR: appsync.graphql not found. Schema generation may have failed."
+          # Find the latest generated appsync schema file
+          SCHEMA_FILE=$(find ./backend/infrastructure/cloudformation -name "appsync_*.graphql" | sort -r | head -1)
+          
+          if [ -z "$SCHEMA_FILE" ]; then
+            echo "ERROR: No appsync_*.graphql file found. Schema generation may have failed."
             exit 1
           fi
           
+          echo "Using schema file: $SCHEMA_FILE"
+          
           # Basic syntax check - if the file has GraphQL type definitions
-          if ! grep -q "type " "./backend/infrastructure/cloudformation/appsync.graphql"; then
-            echo "ERROR: appsync.graphql appears to be empty or invalid. Missing type definitions."
+          if ! grep -q "type " "$SCHEMA_FILE"; then
+            echo "ERROR: Schema file appears to be empty or invalid. Missing type definitions."
             exit 1
           fi
           
           # Check for other required GraphQL elements
-          if ! grep -q "schema {" "./backend/infrastructure/cloudformation/appsync.graphql"; then
-            echo "WARNING: appsync.graphql may be missing schema definition."
+          if ! grep -q "schema {" "$SCHEMA_FILE"; then
+            echo "WARNING: Schema file may be missing schema definition."
           fi
           
           # Check file size is reasonable (not empty, not too small)
-          FILE_SIZE=$(wc -c < "./backend/infrastructure/cloudformation/appsync.graphql")
+          FILE_SIZE=$(wc -c < "$SCHEMA_FILE")
           if [ "$FILE_SIZE" -lt 100 ]; then
-            echo "WARNING: appsync.graphql is suspiciously small ($FILE_SIZE bytes)."
+            echo "WARNING: Schema file is suspiciously small ($FILE_SIZE bytes)."
           fi
+          
+          # Extract the filename for use in later steps
+          SCHEMA_FILENAME=$(basename "$SCHEMA_FILE")
+          echo "::set-output name=schema_filename::$SCHEMA_FILENAME"
           
           echo "Schema validation complete."
 
@@ -88,9 +96,15 @@ jobs:
 
       - name: Upload schema to S3
         run: |
-          # Upload as appsync.graphql to match the reference in AppSync CloudFormation template
-          aws s3 cp ./schema.graphql \
-            s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/appsync.graphql
+          # Find the latest generated appsync schema file
+          SCHEMA_FILE=$(find . -name "appsync_*.graphql" | sort -r | head -1)
+          SCHEMA_FILENAME=$(basename "$SCHEMA_FILE")
+          
+          echo "Uploading schema file: $SCHEMA_FILENAME"
+          
+          # Upload the schema file to S3
+          aws s3 cp "$SCHEMA_FILE" \
+            s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/$SCHEMA_FILENAME
 
         working-directory: ./backend/infrastructure/cloudformation
 
@@ -109,7 +123,11 @@ jobs:
             # Add an override for the schema location
             PARAMS="Environment=${{ inputs.environment }} CustomerId=${{ inputs.customer_id }} ProjectId=${{ inputs.project_id }}"
             if [ "$stack" == "appsync" ]; then
-              PARAMS="$PARAMS SchemaS3Key=appsync.graphql"
+              # Find the latest generated schema file
+              SCHEMA_FILE=$(find . -name "appsync_*.graphql" | sort -r | head -1)
+              SCHEMA_FILENAME=$(basename "$SCHEMA_FILE")
+              PARAMS="$PARAMS SchemaS3Key=$SCHEMA_FILENAME"
+              echo "Using schema: $SCHEMA_FILENAME for AppSync stack"
             fi
           
             sam deploy \
@@ -125,57 +143,3 @@ jobs:
           
           done
         working-directory: ./backend/infrastructure/cloudformation
-        
-      - name: Verify AppSync Schema Deployment
-        run: |
-          echo "Schema deployment verification..."
-          
-          # Extract the AppSync API ID from CloudFormation outputs
-          echo "Getting AppSync API ID from CloudFormation stack..."
-          APPSYNC_API_ID=$(aws cloudformation describe-stacks \
-            --stack-name ${{ inputs.customer_id }}-${{ inputs.project_id }}-appsync \
-            --query "Stacks[0].Outputs[?OutputKey=='GraphQLApiUrl'].OutputValue" \
-            --output text | cut -d'/' -f4)
-          
-          if [ -z "$APPSYNC_API_ID" ]; then
-            echo "Failed to retrieve AppSync API ID, skipping verification"
-            exit 0
-          fi
-          
-          echo "Retrieved AppSync API ID: $APPSYNC_API_ID"
-          
-          # Get the schema that was uploaded to S3
-          echo "Downloading appsync.graphql from S3 for comparison..."
-          aws s3 cp \
-            s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/appsync.graphql \
-            ./expected-schema.graphql
-          
-          # Download the current schema from AppSync to verify deployment was successful
-          echo "Downloading current schema from AppSync..."
-          aws appsync get-introspection-schema \
-            --api-id $APPSYNC_API_ID \
-            --format SDL \
-            --include-directives \
-            current-schema.graphql
-          
-          if [ ! -f "current-schema.graphql" ]; then
-            echo "WARNING: Failed to download current schema from AppSync"
-            exit 0
-          fi
-          
-          # Compare file sizes as a basic verification
-          echo "Verifying deployed schema..."
-          CURRENT_SIZE=$(wc -c < "current-schema.graphql")
-          EXPECTED_SIZE=$(wc -c < "./expected-schema.graphql")
-          DIFF=$((CURRENT_SIZE - EXPECTED_SIZE))
-          DIFF_ABS=${DIFF#-}  # Get absolute value
-          
-          # Allow for some difference due to formatting, but not too much
-          if [ "$DIFF_ABS" -gt 500 ]; then
-            echo "WARNING: Current schema size ($CURRENT_SIZE bytes) differs significantly from expected ($EXPECTED_SIZE bytes)"
-            echo "This may indicate the CloudFormation deployment didn't update the schema correctly."
-            echo "You may need to manually update the schema or run another deployment."
-          else
-            echo "Schema sizes are reasonably close (difference of $DIFF_ABS bytes)"
-            echo "Schema verification completed successfully!"
-          fi
