@@ -2,11 +2,12 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Observable, Subject, takeUntil } from 'rxjs';
-import { User, UserUpdateInput } from '../../../../core/models/user.model';
+import { User } from '../../../../core/models/user.model';
+import { UserUpdateInput } from '../../../../core/graphql/user.graphql';
 import * as fromAuth from '../../components/auth-flow/store/auth.selectors';
 import { AuthActions } from '../../components/auth-flow/store/auth.actions';
 import { UserService } from '../../../../core/services/user.service';
-import { TestDataService } from '../../../../core/services/test-data.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-profile',
@@ -24,8 +25,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
   constructor(
     private store: Store,
     private userService: UserService,
-    private testDataService: TestDataService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private router: Router
   ) {
     this.currentUser$ = this.store.select(fromAuth.selectCurrentUser);
     this.debugMode$ = this.store.select(fromAuth.selectDebugMode);
@@ -40,7 +41,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
   
   ngOnInit(): void {
-    // Check if we have a user in the store, if not, add a mock user
+    // Check if we have a user in the store
     this.currentUser$
       .pipe(takeUntil(this.destroy$))
       .subscribe(user => {
@@ -53,8 +54,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
             phoneNumber: user.phone_number || ''
           });
         } else {
-          // No user, add a test user to the store for development
-          this.testDataService.addTestUserIfNeeded();
+          // No user, redirect to authentication page
+          this.router.navigate(['/authenticate']);
         }
       });
   }
@@ -236,33 +237,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
   
   /**
-   * Clear test user data from localStorage and store
-   * This is used for development to reset to a clean state
-   */
-  public clearTestUserData(): void {
-    // Directly dispatch signout action instead of using test service
-    this.store.dispatch(AuthActions.signout());
-  }
-  
-  /**
    * Sign out the current user
    */
   public signOut(): void {
-    // Directly dispatch signout action instead of using test service
     this.store.dispatch(AuthActions.signout());
-  }
-  
-  /**
-   * Check if a user is a test user - for use in templates with async pipe
-   */
-  public isTestUser(user: User): boolean {
-    return this.testDataService.isTestUser(user);
-  }
-  
-  /**
-   * Check if we're using test data at all
-   */
-  public isUsingTestData(): boolean {
-    return this.testDataService.isUsingTestData();
   }
 }

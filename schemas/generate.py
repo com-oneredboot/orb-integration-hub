@@ -190,11 +190,38 @@ def generate_python_model(table_name, schema_path, jinja_env):
             model_name=model_name,
             attributes=model['attributes']
         )
-        logger.debug("Successfully rendered Python template")
+        
+        # Fix any List[] syntax in the Python code
+        py_code = py_code.replace("List[]", "List[Any]")
+        
+        # Check for specific attributes that need to be fixed
+        for attr, details in model['attributes'].items():
+            if attr == 'groups' and details.get('type') == 'array' and 'items' in details and 'enum_type' in details['items']:
+                # Fix groups: List[] with proper UserGroups type
+                py_code = py_code.replace("groups: List[Any]", f"groups: List[{details['items']['enum_type']}]")
+                py_code = py_code.replace("from .user_enum import UserStatus", "from .user_enum import UserStatus, UserGroups")
+        
+        # Clean up the rendered template by removing empty lines with spaces
+        # First remove leading/trailing empty lines
+        py_lines = [line.rstrip() for line in py_code.splitlines()]
+        
+        # Remove multiple consecutive empty lines, preserving single empty lines for readability
+        cleaned_lines = []
+        prev_empty = False
+        for line in py_lines:
+            is_empty = not line.strip()
+            if not is_empty or not prev_empty:
+                cleaned_lines.append(line)
+            prev_empty = is_empty
+        
+        py_code = '\n'.join(cleaned_lines)
+        
+        logger.debug("Successfully rendered and cleaned Python template")
 
         # Prepare output location - using singular form for file name
         output_dir = Path('../backend/src/models')
-        output_file = output_dir / f"{model_file_name}.py"
+        output_file = output_dir / f"{model_file_name}.model.py"
+        enum_file = output_dir / f"{model_file_name}_enum.py"
 
         # Ensure directory exists
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -203,6 +230,28 @@ def generate_python_model(table_name, schema_path, jinja_env):
         # Write the generated code to file
         with open(output_file, 'w') as f:
             f.write(py_code)
+            
+        # Check if enum file exists, if not create it as an empty commented file
+        if not enum_file.exists():
+            logger.info("Creating Python enum file: %s", enum_file)
+            with open(enum_file, 'w') as f:
+                f.write(f"""# {model_name} Enums
+#
+# This file contains enums for the {model_name} model.
+# This file is not auto-generated and should be maintained manually.
+
+from enum import Enum
+
+# Add your enums here
+# Example:
+# class {model_name}Status(Enum):
+#     UNKNOWN = "UNKNOWN"
+#     ACTIVE = "ACTIVE"
+#     INACTIVE = "INACTIVE"
+""")
+            logger.info("Python enum file created: %s", enum_file)
+        else:
+            logger.debug("Python enum file already exists: %s", enum_file)
 
         logger.info("Python model successfully generated: %s", output_file)
         return True
@@ -267,11 +316,34 @@ def generate_typescript_model(table_name, schema_path, jinja_env):
             model_name=model_name,
             attributes=model['attributes']
         )
-        logger.debug("Successfully rendered TypeScript template")
+        
+        # Check for specific attributes that need to be fixed in TypeScript code
+        for attr, details in model['attributes'].items():
+            if attr == 'groups' and details.get('type') == 'array' and 'items' in details and 'enum_type' in details['items']:
+                # Ensure UserGroups is imported but we use string[] for the type
+                ts_code = ts_code.replace("import { UserStatus } from './user.enum';", "import { UserStatus, UserGroups } from './user.enum';")
+        
+        # Clean up the rendered template by removing empty lines with spaces
+        # First remove leading/trailing empty lines
+        ts_lines = [line.rstrip() for line in ts_code.splitlines()]
+        
+        # Remove multiple consecutive empty lines, preserving single empty lines for readability
+        cleaned_lines = []
+        prev_empty = False
+        for line in ts_lines:
+            is_empty = not line.strip()
+            if not is_empty or not prev_empty:
+                cleaned_lines.append(line)
+            prev_empty = is_empty
+        
+        ts_code = '\n'.join(cleaned_lines)
+        
+        logger.debug("Successfully rendered and cleaned TypeScript template")
 
         # Prepare output location - create file name based on singular form
         output_dir = Path('../frontend/src/app/core/models')
         output_file = output_dir / f"{model_file_name}.model.ts"
+        enum_file = output_dir / f"{model_file_name}.enum.ts"
 
         # Ensure directory exists
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -280,6 +352,29 @@ def generate_typescript_model(table_name, schema_path, jinja_env):
         # Write the generated code to file
         with open(output_file, 'w') as f:
             f.write(ts_code)
+            
+        # Check if enum file exists, if not create it as an empty commented file
+        if not enum_file.exists():
+            logger.info("Creating TypeScript enum file: %s", enum_file)
+            with open(enum_file, 'w') as f:
+                f.write(f"""/**
+ * {model_name} Enums
+ * 
+ * This file contains enums for the {model_name} model.
+ * This file is not auto-generated and should be maintained manually.
+ */
+
+// Add your enums here
+// Example:
+// export enum {model_name}Status {{
+//   UNKNOWN = 'UNKNOWN',
+//   ACTIVE = 'ACTIVE',
+//   INACTIVE = 'INACTIVE'
+// }}
+""")
+            logger.info("TypeScript enum file created: %s", enum_file)
+        else:
+            logger.debug("TypeScript enum file already exists: %s", enum_file)
 
         logger.info("TypeScript model successfully generated: %s", output_file)
         return True

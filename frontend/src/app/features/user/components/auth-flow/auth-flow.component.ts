@@ -16,7 +16,7 @@ import {v4 as uuidv4} from 'uuid';
 import {AuthActions} from './store/auth.actions';
 import {AuthState, AuthSteps} from './store/auth.state';
 import * as fromAuth from './store/auth.selectors';
-import {UserCreateInput} from "../../../../core/models/user.model";
+import {UserCreateInput} from "../../../../core/graphql/user.graphql";
 import {QRCodeToDataURLOptions} from "qrcode";
 import {UserService} from "../../../../core/services/user.service";
 

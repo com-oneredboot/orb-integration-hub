@@ -15,9 +15,9 @@ import {ApiService} from "./api.service";
 import {
   UserCreateInput, UserQueryInput, UserUpdateInput,
   UserCreateResponse, UserResponse, UserUpdateResponse,
-  userCreateMutation, userQueryById, userExistQuery, userUpdateMutation,
-  UserGroup, UserStatus
-} from "../models/user.model";
+  userCreateMutation, userQueryById, userExistQuery, userUpdateMutation
+} from "../graphql/user.graphql";
+import { UserGroups, UserStatus } from "../models/user.enum";
 import { CognitoService } from "./cognito.service";
 import { AuthResponse } from "../models/auth.model";
 import { AuthActions } from '../../features/user/components/auth-flow/store/auth.actions';
@@ -69,13 +69,11 @@ export class UserService extends ApiService {
       const userCreateInput: UserCreateInput = {
         user_id: uuidv4(), // Use string format as expected by the GraphQL schema
         cognito_id: input.cognito_id,
-        groups: [UserGroup.USER],
+        groups: [UserGroups.USER] as UserGroups[],
         status: UserStatus.PENDING,
         phone_verified: false,
         email: input.email,
-        created_at: timestamp,
-        first_name: input.first_name || '',
-        last_name: input.last_name || ''
+        created_at: timestamp
       };
 
       const response = await this.mutate(
@@ -109,58 +107,38 @@ export class UserService extends ApiService {
 
     try {
       console.debug('UserService [userExists]: Making API call');
+      
+      const response = await this.query(
+        userExistQuery,
+        {input: input},
+        'apiKey'
+      ) as GraphQLResult<UserResponse>;
 
-      // Attempt to make the actual API call
-      try {
-        const response = await this.query(
-          userExistQuery,
-          {input: input},
-          'apiKey'
-        ) as GraphQLResult<UserResponse>;
+      console.debug('UserService [userExists]: API response received', {
+        response,
+        elapsed: Date.now() - startTime
+      });
 
-        console.debug('UserService [userExists]: API response received', {
-          response,
-          elapsed: Date.now() - startTime
-        });
-
-        if (response.data?.userQueryById?.status_code === 404) {
-          console.debug('UserService [userExists]: User not found (404)');
-          return false;
-        }
-
-        if (response.data?.userQueryById?.status_code !== 200) {
-          console.debug('UserService [userExists]: Invalid status code', response.data?.userQueryById?.status_code);
-          throw new Error(`Invalid response code: ${response.data?.userQueryById?.status_code}`);
-        }
-
-        const result = Boolean(response.data?.userQueryById?.user?.user_id);
-        console.debug('UserService [userExists]: Returning result', result);
-        return result;
-      } catch (apiError) {
-        console.warn('UserService [userExists]: API call failed, falling back to mock data', apiError);
-
-        // Fall back to mock implementation if API call fails
-        // Simulate API response time
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        // Return a hardcoded value based on the email for testing
-        const email = input.email?.toLowerCase() || '';
-        if (email.includes('existing') || email.includes('test@example')) {
-          console.debug('UserService [userExists]: Mock user found');
-          return true;
-        } else {
-          console.debug('UserService [userExists]: Mock user not found');
-          return false;
-        }
+      if (response.data?.userQueryById?.status_code === 404) {
+        console.debug('UserService [userExists]: User not found (404)');
+        return false;
       }
+
+      if (response.data?.userQueryById?.status_code !== 200) {
+        console.debug('UserService [userExists]: Invalid status code', response.data?.userQueryById?.status_code);
+        throw new Error(`Invalid response code: ${response.data?.userQueryById?.status_code}`);
+      }
+
+      const result = Boolean(response.data?.userQueryById?.user?.user_id);
+      console.debug('UserService [userExists]: Returning result', result);
+      return result;
 
     } catch (error) {
       console.error('UserService [userExists]: Error caught', {
         error,
         elapsed: Date.now() - startTime
       });
-      // For better UX, return false instead of undefined when an error occurs
-      return false;
+      throw error;
     }
   }
 
@@ -425,32 +403,16 @@ export class UserService extends ApiService {
   public async verifySMSCode(phoneNumber: string, code: string): Promise<boolean> {
     console.debug('verifySMSCode:', phoneNumber, code);
 
-    // In a real implementation, we would verify the code against what was sent
-    // For now we'll use a simple mock to compare against the stored code
-
     try {
-      // This would be a more complex verification in a real implementation
-      // Typically would involve a backend call to verify the code
-
-      // Simple mock: Just check if the code is 6 digits long and numeric
-      const isValid = /^\d{6}$/.test(code);
-
-      if (isValid) {
-        // If valid, update the user's profile to mark phone as verified
-        const currentUser = this.currentUser.getValue();
-        if (currentUser && currentUser.user_id) {
-          // Update the database with phone verification status
-          await this.userUpdate({
-            user_id: currentUser.user_id,
-            phone_verified: true
-          });
-        }
-      }
-
-      return isValid;
+      // TODO: Implement actual code verification against backend
+      // This should be replaced with a real API call to a verification endpoint
+      
+      // For now we'll return false until the real implementation is complete
+      console.error('SMS verification not yet implemented with backend');
+      return false;
     } catch (error) {
       console.error('Error verifying SMS code:', error);
-      return false;
+      throw error;
     }
   }
 

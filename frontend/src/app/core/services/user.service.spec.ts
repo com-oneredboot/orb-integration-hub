@@ -7,7 +7,9 @@ import { TestBed } from '@angular/core/testing';
 import { provideMockStore } from '@ngrx/store/testing';
 import { UserService } from './user.service';
 import { CognitoService } from './cognito.service';
-import { User, UserGroup, UserStatus, UserQueryInput } from '../models/user.model';
+import { User } from '../models/user.model';
+import { UserGroups, UserStatus } from '../models/user.enum';
+import { UserQueryInput } from '../graphql/user.graphql';
 
 describe('UserService', () => {
   let service: UserService;
@@ -67,9 +69,9 @@ describe('UserService', () => {
         first_name: 'Test',
         last_name: 'User',
         phone_number: '+12345678901',
-        groups: [UserGroup.USER],
+        groups: [UserGroups.USER] as UserGroups[],
         status: UserStatus.ACTIVE,
-        created_at: '2023-01-01T00:00:00Z'
+        created_at: Date.now()
       };
 
       expect(service.isUserValid(validUser)).toBeTrue();
@@ -83,9 +85,9 @@ describe('UserService', () => {
         first_name: '',
         last_name: 'User',
         phone_number: '+12345678901',
-        groups: [UserGroup.USER],
+        groups: [UserGroups.USER] as UserGroups[],
         status: UserStatus.ACTIVE,
-        created_at: '2023-01-01T00:00:00Z'
+        created_at: Date.now()
       };
 
       const userMissingLastName: User = {
@@ -95,9 +97,9 @@ describe('UserService', () => {
         first_name: 'Test',
         last_name: '',
         phone_number: '+12345678901',
-        groups: [UserGroup.USER],
+        groups: [UserGroups.USER] as UserGroups[],
         status: UserStatus.ACTIVE,
-        created_at: '2023-01-01T00:00:00Z'
+        created_at: Date.now()
       };
 
       const userMissingPhone: User = {
@@ -107,9 +109,9 @@ describe('UserService', () => {
         first_name: 'Test',
         last_name: 'User',
         phone_number: '',
-        groups: [UserGroup.USER],
+        groups: [UserGroups.USER] as UserGroups[],
         status: UserStatus.ACTIVE,
-        created_at: '2023-01-01T00:00:00Z'
+        created_at: Date.now()
       };
 
       const userMissingEmail: User = {
@@ -119,9 +121,9 @@ describe('UserService', () => {
         first_name: 'Test',
         last_name: 'User',
         phone_number: '+12345678901',
-        groups: [UserGroup.USER],
+        groups: [UserGroups.USER] as UserGroups[],
         status: UserStatus.ACTIVE,
-        created_at: '2023-01-01T00:00:00Z'
+        created_at: Date.now()
       };
 
       expect(service.isUserValid(userMissingFirstName)).toBeFalse();
@@ -138,9 +140,9 @@ describe('UserService', () => {
         first_name: 'Test',
         last_name: 'User',
         phone_number: '+12345678901',
-        groups: [UserGroup.USER],
+        groups: [UserGroups.USER] as UserGroups[],
         status: UserStatus.INACTIVE,
-        created_at: '2023-01-01T00:00:00Z'
+        created_at: Date.now()
       };
 
       const pendingUser: User = {
@@ -150,9 +152,9 @@ describe('UserService', () => {
         first_name: 'Test',
         last_name: 'User',
         phone_number: '+12345678901',
-        groups: [UserGroup.USER],
+        groups: [UserGroups.USER] as UserGroups[],
         status: UserStatus.PENDING,
-        created_at: '2023-01-01T00:00:00Z'
+        created_at: Date.now()
       };
 
       const suspendedUser: User = {
@@ -162,9 +164,9 @@ describe('UserService', () => {
         first_name: 'Test',
         last_name: 'User',
         phone_number: '+12345678901',
-        groups: [UserGroup.USER],
+        groups: [UserGroups.USER] as UserGroups[],
         status: UserStatus.SUSPENDED,
-        created_at: '2023-01-01T00:00:00Z'
+        created_at: Date.now()
       };
 
       expect(service.isUserValid(inactiveUser)).toBeFalse();

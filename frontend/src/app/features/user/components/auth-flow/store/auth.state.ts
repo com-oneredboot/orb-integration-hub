@@ -4,7 +4,8 @@
 // description: Contains the Auth reducer
 
 // Application Imports
-import { User, UserGroup } from "../../../../../core/models/user.model";
+import { User } from "../../../../../core/models/user.model";
+import { UserGroups } from "../../../../../core/models/user.enum";
 
 export enum AuthSteps {
   EMAIL,
@@ -51,9 +52,9 @@ export interface AuthState {
   };
 
   // Group related
-  currentGroup: UserGroup | null;
-  availableGroups: UserGroup[];
-  groupPriority: UserGroup[];
+  currentGroup: UserGroups | null;
+  availableGroups: UserGroups[];
+  groupPriority: UserGroups[];
 
   // Email
   emailVerified: boolean;

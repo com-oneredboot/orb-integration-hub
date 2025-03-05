@@ -6,7 +6,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { DashboardComponent } from './dashboard.component';
-import { User, UserGroup, UserStatus } from '../../../../core/models/user.model';
+import { User } from '../../../../core/models/user.model';
+import { UserGroups, UserStatus } from '../../../../core/models/user.enum';
 
 describe('DashboardComponent', () => {
   let component: DashboardComponent;
@@ -20,9 +21,9 @@ describe('DashboardComponent', () => {
     first_name: 'Test',
     last_name: 'User',
     phone_number: '+12345678901',
-    groups: [UserGroup.USER],
+    groups: [UserGroups.USER] as UserGroups[],
     status: UserStatus.ACTIVE,
-    created_at: '2023-01-01T00:00:00Z'
+    created_at: Date.now()
   };
 
   const initialState = {

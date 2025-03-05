@@ -10,7 +10,8 @@ import { of } from 'rxjs';
 
 import { ProfileComponent } from './profile.component';
 import { UserService } from '../../../../core/services/user.service';
-import { User, UserStatus, UserGroup } from '../../../../core/models/user.model';
+import { User } from '../../../../core/models/user.model';
+import { UserStatus, UserGroups } from '../../../../core/models/user.enum';
 
 describe('ProfileComponent', () => {
   let component: ProfileComponent;
@@ -32,9 +33,9 @@ describe('ProfileComponent', () => {
     first_name: 'Test',
     last_name: 'User',
     phone_number: '+12345678901',
-    groups: [UserGroup.USER],
+    groups: [UserGroups.USER] as UserGroups[],
     status: UserStatus.ACTIVE,
-    created_at: '2023-01-01T00:00:00Z'
+    created_at: Date.now()
   };
 
   const mockIncompleteUser: User = {
@@ -44,9 +45,9 @@ describe('ProfileComponent', () => {
     first_name: '',
     last_name: '',
     phone_number: '',
-    groups: [UserGroup.USER],
+    groups: [UserGroups.USER] as UserGroups[],
     status: UserStatus.ACTIVE,
-    created_at: '2023-01-01T00:00:00Z'
+    created_at: Date.now()
   };
 
   beforeEach(async () => {

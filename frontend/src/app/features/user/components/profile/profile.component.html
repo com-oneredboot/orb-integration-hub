@@ -127,22 +127,13 @@
     <h3 class="profile__debug-title">User Debug Info</h3>
     
     <div class="profile__debug-section">
-      <h4>Test Data Controls</h4>
+      <h4>User Controls</h4>
       <ng-container *ngIf="currentUser$ | async as user">
         <div class="profile__debug-status">
-          <div>Using Test Data: <span [class.highlight]="isTestUser(user)">{{ isTestUser(user) ? 'Yes' : 'No' }}</span></div>
           <div>User ID: <code>{{ user.user_id }}</code></div>
         </div>
         
         <div class="profile__debug-actions">
-          <button 
-            class="profile__debug-button"
-            (click)="clearTestUserData()"
-            *ngIf="isTestUser(user)"
-          >
-            Clear Test User Data
-          </button>
-          
           <button 
             class="profile__debug-button"
             (click)="signOut()"

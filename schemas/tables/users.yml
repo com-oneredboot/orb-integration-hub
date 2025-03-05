@@ -37,10 +37,11 @@ model:
       type: array
       items:
         type: string
+        enum_type: UserGroups
       required: true
     status:
       type: string
-      enum: [ ACTIVE, PENDING, SUSPENDED, INACTIVE ]
+      enum_type: UserStatus
       required: true
     created_at:
         type: number

@@ -12,7 +12,7 @@ import { Store } from '@ngrx/store';
 
 // Application Imports
 import { UserService } from "../../../../../core/services/user.service";
-import { UserQueryInput } from "../../../../../core/models/user.model";
+import { UserQueryInput } from "../../../../../core/graphql/user.graphql";
 import { AuthActions } from "./auth.actions";
 import * as fromAuth from "./auth.selectors";
 import { CognitoService } from "../../../../../core/services/cognito.service";
@@ -169,9 +169,6 @@ export class AuthEffects {
     this.actions$.pipe(
       ofType(AuthActions.signout),
       switchMap(() => {
-        // First clear local storage to ensure test user data is removed
-        localStorage.removeItem('auth');
-        
         // Then attempt to sign out from Cognito service
         return from(this.cognitoService.signOut()).pipe(
           map(() => {

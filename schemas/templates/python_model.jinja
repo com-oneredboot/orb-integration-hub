@@ -1,25 +1,34 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Any
 from datetime import datetime
-from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
+
+{# Collect enum types to import #}
+{% set enum_types = [] %}
+
+{# Check for enum fields #}
+{% for attr, details in attributes.items() %}
+  {% if details.enum_type and details.enum_type not in enum_types %}
+    {% set _ = enum_types.append(details.enum_type) %}
+  {% endif %}
+  {% if details.type == 'array' and details.items and details.items.enum_type and details.items.enum_type not in enum_types %}
+    {% set _ = enum_types.append(details.items.enum_type) %}
+  {% endif %}
+{% endfor %}
+
+{% if enum_types %}
+# Import enum types from enum file
+from .{{ model_name|lower }}_enum import {{ enum_types|join(', ') }}
+{% endif %}
 
 @dataclass
 class {{ model_name }}:
     {%- for attr, details in attributes.items() %}
-    {{ attr }}: {% if details.type == 'array' %}List[{{ details.items.type }}]{% else %}{{ details.type }}{% endif %}
+    {{ attr }}: {% if details.enum_type %}{{ details.enum_type }}
+    {%- elif details.type == 'array' and details.items and details.items.enum_type %}List[str]
+    {%- elif details.type == 'array' and details.items %}List[{% if details.items.type == 'string' %}str{% elif details.items.type == 'number' %}int{% elif details.items.type == 'boolean' %}bool{% else %}{{ details.items.type }}{% endif %}]
+    {%- elif details.type == 'array' %}List[Any]
+    {%- elif details.type == 'string' %}str
+    {%- elif details.type == 'boolean' %}bool
+    {%- elif details.type == 'number' %}int
+    {%- else %}{{ details.type }}{% endif %}
     {%- endfor %}
-
-    @classmethod
-    def from_dynamodb(cls, item: dict) -> "{{ model_name }}":
-        deserializer = TypeDeserializer()
-        return cls(**{
-            k: deserializer.deserialize(v)
-            for k, v in item.items()
-        })
-
-    def to_dynamodb(self) -> dict:
-        serializer = TypeSerializer()
-        return {
-            k: serializer.serialize(v)
-            for k, v in self.__dict__.items()
-        }

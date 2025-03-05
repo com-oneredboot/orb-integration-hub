@@ -26,11 +26,147 @@ enum UserGroup @aws_api_key @aws_cognito_user_pools {
 }
 
 # Model definitions 
-{% for schema in model_schemas %}
-# Model: {{ schema.name }}
-{{ schema.content }}
 
-{% endfor %}
+# Model: user
+# GraphQL schema for User
+# Generated from database model
+# Do not modify directly
+
+# Main User type
+type User @aws_api_key @aws_cognito_user_pools {
+  user_id: String!
+  cognito_id: String!
+  email: String!
+  phone_number: String
+  phone_verified: Boolean
+  first_name: String!
+  last_name: String!
+  groups: [String!]!
+  status: String!
+  created_at: Float!
+}
+
+# Response type for User operations
+type UserResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  user: User
+}
+
+# Response type for multiple User operations
+type UsersResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  users: [User]
+}
+
+# Input for User creation
+input UserCreateInput {
+  user_id: String!
+  cognito_id: String!
+  email: String!
+  phone_number: String
+  phone_verified: Boolean
+  first_name: String!
+  last_name: String!
+  groups: [String!]!
+  status: String!
+  created_at: Float!
+}
+
+# Input for User query operations
+input UserQueryInput {
+  user_id: String
+  application_id: String
+}
+
+# Input for User update operations
+input UserUpdateInput {
+  user_id: String!
+  application_id: String!
+  cognito_id: String
+  email: String
+  phone_number: String
+  phone_verified: Boolean
+  first_name: String
+  last_name: String
+  groups: [String]
+  status: String
+  created_at: Float
+}
+
+# Operations for User
+# These will be merged with the root Query and Mutation types in the base schema
+
+
+# Model: role
+# GraphQL schema for Role
+# Generated from database model
+# Do not modify directly
+
+# Main Role type
+type Role @aws_api_key @aws_cognito_user_pools {
+  role_id: String!
+  user_id: String!
+  application_id: String!
+  role_name: String!
+  role_type: String!
+  permissions: [String!]!
+  created_at: Float!
+  updated_at: Float!
+  active: Boolean!
+}
+
+# Response type for Role operations
+type RoleResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  role: Role
+}
+
+# Response type for multiple Role operations
+type RolesResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  roles: [Role]
+}
+
+# Input for Role creation
+input RoleCreateInput {
+  role_id: String!
+  user_id: String!
+  application_id: String!
+  role_name: String!
+  role_type: String!
+  permissions: [String!]!
+  created_at: Float!
+  updated_at: Float!
+  active: Boolean!
+}
+
+# Input for Role query operations
+input RoleQueryInput {
+  role_id: String
+  application_id: String
+}
+
+# Input for Role update operations
+input RoleUpdateInput {
+  role_id: String!
+  application_id: String!
+  user_id: String
+  role_name: String
+  role_type: String
+  permissions: [String]
+  created_at: Float
+  updated_at: Float
+  active: Boolean
+}
+
+# Operations for Role
+# These will be merged with the root Query and Mutation types in the base schema
+
+
 
 # Nested complex types
 type ApplicationRole @aws_api_key @aws_cognito_user_pools {
@@ -190,9 +326,11 @@ type Query {
   applicationQueryByUserId(input: ApplicationQueryInput!): ApplicationsResponse! @aws_cognito_user_pools
   
   # Generated model queries
-  {% for schema in model_schemas %}
-  {{ schema.name }}QueryById(input: {{ schema.name|capitalize }}QueryInput!): {{ schema.name|capitalize }}Response! @aws_cognito_user_pools
-  {% endfor %}
+  
+  userQueryById(input: UserQueryInput!): UserResponse! @aws_cognito_user_pools
+  
+  roleQueryById(input: RoleQueryInput!): RoleResponse! @aws_cognito_user_pools
+  
 }
 
 type Mutation {
@@ -204,10 +342,13 @@ type Mutation {
   sendSMSVerificationCode(input: SMSVerificationInput!): SMSVerificationResponse! @aws_cognito_user_pools
   
   # Generated model mutations
-  {% for schema in model_schemas %}
-  {{ schema.name }}Create(input: {{ schema.name|capitalize }}CreateInput!): {{ schema.name|capitalize }}Response! @aws_cognito_user_pools
-  {{ schema.name }}Update(input: {{ schema.name|capitalize }}UpdateInput!): {{ schema.name|capitalize }}Response! @aws_cognito_user_pools
-  {% endfor %}
+  
+  userCreate(input: UserCreateInput!): UserResponse! @aws_cognito_user_pools
+  userUpdate(input: UserUpdateInput!): UserResponse! @aws_cognito_user_pools
+  
+  roleCreate(input: RoleCreateInput!): RoleResponse! @aws_cognito_user_pools
+  roleUpdate(input: RoleUpdateInput!): RoleResponse! @aws_cognito_user_pools
+  
 }
 
 schema {

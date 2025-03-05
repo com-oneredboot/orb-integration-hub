@@ -2,37 +2,36 @@
  * {{ model_name }} Model
  * Generated code - do not modify directly
  */
+{# Collect enum types to import #}
+{% set enum_types = [] %}
 
-export interface {{ model_name }} {
+{# Check for enum fields #}
+{% for attr, details in attributes.items() %}
+  {% if details.enum_type and details.enum_type not in enum_types %}
+    {% set _ = enum_types.append(details.enum_type) %}
+  {% endif %}
+  {% if details.type == 'array' and details.items and details.items.enum_type and details.items.enum_type not in enum_types %}
+    {% set _ = enum_types.append(details.items.enum_type) %}
+  {% endif %}
+{% endfor %}
+
+{% if enum_types %}
+// Import enum types
+import { {{ enum_types|join(', ') }} } from './{{ model_name|lower }}.enum';
+{% endif %}
+
+export interface I{{ model_name }} {
 {%- for attr, details in attributes.items() %}
-  {{ attr }}: {% if details.type == 'array' %}{% if details.items %}{{ details.items.type }}[]{% else %}any[]{% endif %}{% else %}{{ details.type }}{% endif %};
+  {{ attr }}: {% if details.enum_type %}{{ details.enum_type }}{% elif attr == 'groups' and details.type == 'array' and details.items %}{{ details.items.enum_type }}[]{% elif details.type == 'array' and details.items and details.items.enum_type %}{{ details.items.enum_type }}[]{% elif details.type == 'array' and details.items %}{{ details.items.type }}[]{% elif details.type == 'array' %}any[]{% else %}{{ details.type }}{% endif %};
 {%- endfor %}
 }
 
-export class {{ model_name }}Model implements {{ model_name }} {
+export class {{ model_name }} implements I{{ model_name }} {
 {%- for attr, details in attributes.items() %}
-  {{ attr }}: {% if details.type == 'array' %}{% if details.items %}{{ details.items.type }}[]{% else %}any[]{% endif %}{% else %}{{ details.type }}{% endif %}{% if details.type == 'array' %} = []{% elif details.type == 'string' %} = ''{% elif details.type == 'number' %} = 0{% elif details.type == 'boolean' %} = false{% endif %};
+  {{ attr }}: {% if details.enum_type %}{{ details.enum_type }}{% elif attr == 'groups' and details.type == 'array' and details.items %}{{ details.items.enum_type }}[]{% elif details.type == 'array' and details.items and details.items.enum_type %}{{ details.items.enum_type }}[]{% elif details.type == 'array' and details.items %}{{ details.items.type }}[]{% elif details.type == 'array' %}any[]{% else %}{{ details.type }}{% endif %}{% if details.type == 'array' %} = []{% elif details.enum_type %} = {{ details.enum_type }}.UNKNOWN{% elif details.type == 'string' %} = ''{% elif details.type == 'number' %} = 0{% elif details.type == 'boolean' %} = false{% endif %};
 {%- endfor %}
 
-  constructor(data: Partial<{{ model_name }}> = {}) {
+  constructor(data: Partial<I{{ model_name }}> = {}) {
     Object.assign(this, data);
-  }
-
-  static fromDynamoDB(item: Record<string, any>): {{ model_name }} {
-    if (!item) return new {{ model_name }}Model();
-
-    return new {{ model_name }}Model({
-      {%- for attr, details in attributes.items() %}
-      '{{ attr }}': item['{{ attr }}'],
-      {%- endfor %}
-    });
-  }
-
-  toDynamoDB(): Record<string, any> {
-    return {
-      {%- for attr, details in attributes.items() %}
-      '{{ attr }}': this.{{ attr }},
-      {%- endfor %}
-    };
   }
 }

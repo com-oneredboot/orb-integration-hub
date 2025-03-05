@@ -19,7 +19,8 @@ import {
 import {BehaviorSubject, Observable} from 'rxjs';
 
 // Application-specific imports
-import {UserCreateInput, User, } from '../models/user.model';
+import { User } from '../models/user.model'; 
+import { UserCreateInput } from '../graphql/user.graphql';
 import {AuthResponse, AuthError } from "../models/auth.model";
 import { environment } from '../../../environments/environment';
 

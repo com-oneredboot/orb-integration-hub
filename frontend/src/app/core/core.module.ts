@@ -11,7 +11,6 @@ import { EffectsModule } from '@ngrx/effects';
 
 // Services
 import { CognitoService } from './services/cognito.service';
-import { TestDataService } from './services/test-data.service';
 
 // Reducers
 import { reducers } from '../store/app.reducer';
@@ -28,7 +27,6 @@ import { reducers } from '../store/app.reducer';
     ],
     providers: [
         CognitoService,
-        TestDataService,
         // Other singleton services and interceptors
     ]
 })
