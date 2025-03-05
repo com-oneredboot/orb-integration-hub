@@ -129,10 +129,7 @@ jobs:
               PARAMS="$PARAMS SchemaS3Key=$SCHEMA_FILENAME"
               echo "Using schema: $SCHEMA_FILENAME for AppSync stack"
             fi
-          
-            cat ${stack}.yml
-            cat ${stack}-packaged.yml
-          
+                    
             sam deploy \
               --template-file ${stack}-packaged.yml \
               --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
