@@ -87,9 +87,21 @@ export const userQueryById = /* GraphQL */ `
 `;
 
 export const userUpdateMutation = /* GraphQL */ `
-  mutation UserUpdate($input: UpdateUserInput!) {
+  mutation UserUpdate($input: UserUpdateInput!) {
     userUpdate(input: $input) {
-      id
+      status_code
+      message
+      user {
+        user_id
+        email
+        first_name
+        last_name
+        phone_number
+        phone_verified
+        groups
+        status
+        created_at
+      }
     }
   }
 `;

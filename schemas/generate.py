@@ -323,6 +323,13 @@ def generate_typescript_model(table_name, schema_path, jinja_env):
                 # Ensure UserGroups is imported but we use string[] for the type
                 ts_code = ts_code.replace("import { UserStatus } from './user.enum';", "import { UserStatus, UserGroups } from './user.enum';")
         
+        # Check for specific attributes that need to be fixed in TypeScript code
+        for attr, details in model['attributes'].items():
+            if attr == 'groups' and details.get('type') == 'array' and 'items' in details and 'enum_type' in details['items']:
+                # Fix groups array to use UserGroups[] instead of empty array []
+                ts_code = ts_code.replace("  groups: [];", "  groups: UserGroups[];")
+                ts_code = ts_code.replace("  groups: [] = [];", "  groups: UserGroups[] = [];")
+        
         # Clean up the rendered template by removing empty lines with spaces
         # First remove leading/trailing empty lines
         ts_lines = [line.rstrip() for line in ts_code.splitlines()]
@@ -537,6 +544,19 @@ def generate_graphql_schema(table_name, schema_path, jinja_env):
             logger.error("Schema missing required model definition")
             return False
             
+        # Special handling for groups attribute to use UserGroups in GraphQL
+        for attr, details in model['attributes'].items():
+            if attr == 'groups' and details.get('type') == 'array' and 'items' in details and 'enum_type' in details['items']:
+                # Set a graphql_type attribute to be used in templates
+                details['graphql_type'] = details['items']['enum_type']
+                logger.debug(f"Set graphql_type for groups to {details['graphql_type']}")
+        
+        # Extract auth config if available
+        auth_config = None
+        if 'auth_config' in model:
+            auth_config = model['auth_config']
+            logger.debug(f"Found auth_config for {model_name}: {auth_config}")
+            
         # Extract the partition key and sort key (supporting both old and new formats)
         partition_key = ""
         sort_key = ""
@@ -563,7 +583,8 @@ def generate_graphql_schema(table_name, schema_path, jinja_env):
             model_name_lowercase=model_name.lower(),
             attributes=model['attributes'],
             partition_key=partition_key,
-            sort_key=sort_key
+            sort_key=sort_key,
+            auth_config=auth_config
         )
 
         # Prepare output location matching your directory structure
@@ -714,15 +735,55 @@ def combine_graphql_schemas(jinja_env):
         # Load base schema template
         template = load_template('graphql_schema_base.jinja', jinja_env)
 
-        # Get a list of all model schema files
+        # Load the index to get schema auth configs
+        index_data = load_index()
+        
+        if 'schema_registry' not in index_data and 'schemaRegistry' in index_data:
+            index_data['schema_registry'] = index_data['schemaRegistry']
+            
+        # First build a lookup of table names to auth configurations
+        auth_configs = {}
+        for table in index_data['schema_registry']['tables']:
+            table_name = table.get('name')
+            schema_path = table.get('path')
+            
+            if not table_name or not schema_path:
+                continue
+                
+            # Load the schema to get auth config
+            table_schema = load_schema(schema_path)
+            
+            # Extract the model - check for new structure format
+            if 'model' in table_schema and 'auth_config' in table_schema['model']:
+                # Get the model name in singular form
+                if table_name.endswith('s'):
+                    model_name = table_name[:-1]
+                else:
+                    model_name = table_name
+                
+                # Store the auth config for this model
+                auth_configs[model_name] = table_schema['model']['auth_config']
+                logger.debug(f"Found auth config for {model_name}: {auth_configs[model_name]}")
+        
+        # Get a list of all model schema files with their auth configs
         model_schemas = []
+        
+        # Now load all graphql files with their auth configs
         for schema_file in schemas_dir.glob('*.graphql'):
+            model_name = schema_file.stem
             with open(schema_file, 'r') as f:
                 content = f.read()
-                model_schemas.append({
-                    'name': schema_file.stem,
+                
+                # Add auth config if available
+                schema_entry = {
+                    'name': model_name,
                     'content': content
-                })
+                }
+                
+                if model_name in auth_configs:
+                    schema_entry['auth'] = auth_configs[model_name]
+                
+                model_schemas.append(schema_entry)
 
         # Render the base schema with all model schemas included
         combined_schema = template.render(

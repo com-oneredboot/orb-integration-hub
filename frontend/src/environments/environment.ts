@@ -9,7 +9,7 @@ export const environment = {
     qrCodeIssuer: 'OneRedBoot.com'
   },
   graphql: {
-    url: 'https://jtl26ovh4vf27ehd5kslhsmyxy.appsync-api.us-east-1.amazonaws.com/graphql',
+    url: 'https://yolw2em6xjeodcgupkav3ler54.appsync-api.us-east-1.amazonaws.com/graphql',
     region: 'us-east-1',
     apiKey: 'da2-p5p56xpjibahvn22tuvx2aihtm'
   }

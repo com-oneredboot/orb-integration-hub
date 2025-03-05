@@ -3,7 +3,9 @@
 # Do not modify directly
 
 # Main User type
+
 type User @aws_api_key @aws_cognito_user_pools {
+
   user_id: String!
   cognito_id: String!
   email: String!
@@ -11,27 +13,33 @@ type User @aws_api_key @aws_cognito_user_pools {
   phone_verified: Boolean
   first_name: String!
   last_name: String!
-  groups: [String!]!
+  groups: [UserGroups!]!
   status: String!
   created_at: Float!
 }
 
 # Response type for User operations
+
 type UserResponse @aws_api_key @aws_cognito_user_pools {
+
   status_code: Float!
   message: String
   user: User
 }
 
 # Response type for multiple User operations
+
 type UsersResponse @aws_api_key @aws_cognito_user_pools {
+
   status_code: Float!
   message: String
   users: [User]
 }
 
 # Input for User creation
-input UserCreateInput {
+
+input UserCreateInput @aws_api_key @aws_cognito_user_pools {
+
   user_id: String!
   cognito_id: String!
   email: String!
@@ -39,19 +47,23 @@ input UserCreateInput {
   phone_verified: Boolean
   first_name: String!
   last_name: String!
-  groups: [String!]!
+  groups: [UserGroups!]!
   status: String!
   created_at: Float!
 }
 
 # Input for User query operations
-input UserQueryInput {
+
+input UserQueryInput @aws_api_key @aws_cognito_user_pools {
+
   user_id: String
   application_id: String
 }
 
 # Input for User update operations
-input UserUpdateInput {
+
+input UserUpdateInput @aws_api_key @aws_cognito_user_pools {
+
   user_id: String!
   application_id: String!
   cognito_id: String
@@ -60,7 +72,7 @@ input UserUpdateInput {
   phone_verified: Boolean
   first_name: String
   last_name: String
-  groups: [String]
+  groups: [UserGroups]
   status: String
   created_at: Float
 }

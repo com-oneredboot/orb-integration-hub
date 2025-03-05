@@ -1,5 +1,12 @@
 # ORB Integration Hub Code Guidelines
 
+## Model Generation Guidelines
+CRITICAL: Never directly edit model files (.model.ts, .model.py)! 
+- Always modify schema templates (`schemas/templates/*.jinja`) or the generator (`schemas/generate.py`)
+- After template changes, run `cd schemas && ./run-generator.sh` to regenerate all models
+- Custom type fixes should be applied to the generator script, not individual model files
+- For GraphQL schema changes, modify auth configurations in table YAML files under `schemas/tables/`
+
 ## Build Commands
 - Frontend: `cd frontend && npm run build` - Build Angular app
 - Dev server: `cd frontend && npm run start` - Run development server
@@ -24,6 +31,8 @@
   - Validation: Validate input before processing
 
 - **Models**: Generated via the schema generator for consistency
+  - **IMPORTANT**: Never modify generated model files directly, always update templates in `schemas/templates` or make modifications to `schemas/generate.py`
+  - When fixing type issues, apply fixes in the generator script or templates, then regenerate models with `cd schemas && ./run-generator.sh`
 
 ## Project Context
 - Primary reference: `/context/project.md` - Core project information

@@ -16,7 +16,7 @@ enum Status @aws_api_key @aws_cognito_user_pools {
   INACTIVE
 }
 
-enum UserGroup @aws_api_key @aws_cognito_user_pools {
+enum UserGroups @aws_api_key @aws_cognito_user_pools {
   UNKNOWN
   USER
   CUSTOMER
@@ -191,7 +191,7 @@ type Query {
   
   # Generated model queries
   {% for schema in model_schemas %}
-  {{ schema.name }}QueryById(input: {{ schema.name|capitalize }}QueryInput!): {{ schema.name|capitalize }}Response! @aws_cognito_user_pools
+  {{ schema.name }}QueryById(input: {{ schema.name|capitalize }}QueryInput!): {{ schema.name|capitalize }}Response! {% if schema.auth and schema.name+'QueryById' in schema.auth.api_key_operations %}@aws_api_key @aws_cognito_user_pools{% else %}@aws_cognito_user_pools{% endif %}
   {% endfor %}
 }
 
@@ -205,8 +205,8 @@ type Mutation {
   
   # Generated model mutations
   {% for schema in model_schemas %}
-  {{ schema.name }}Create(input: {{ schema.name|capitalize }}CreateInput!): {{ schema.name|capitalize }}Response! @aws_cognito_user_pools
-  {{ schema.name }}Update(input: {{ schema.name|capitalize }}UpdateInput!): {{ schema.name|capitalize }}Response! @aws_cognito_user_pools
+  {{ schema.name }}Create(input: {{ schema.name|capitalize }}CreateInput!): {{ schema.name|capitalize }}Response! {% if schema.auth and schema.name+'Create' in schema.auth.api_key_operations %}@aws_api_key @aws_cognito_user_pools{% else %}@aws_cognito_user_pools{% endif %}
+  {{ schema.name }}Update(input: {{ schema.name|capitalize }}UpdateInput!): {{ schema.name|capitalize }}Response! {% if schema.auth and schema.name+'Update' in schema.auth.api_key_operations %}@aws_api_key @aws_cognito_user_pools{% else %}@aws_cognito_user_pools{% endif %}
   {% endfor %}
 }
 

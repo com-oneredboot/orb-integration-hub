@@ -6,6 +6,24 @@
 version: '1.0'
 table: users
 model:
+  auth_config:
+    # Operations that should allow API key access
+    api_key_operations:
+      # Types that need API key access (for schema definitions)
+      - User               # Main User type 
+      - UserResponse       # Response wrapper for single user operations
+      - UsersResponse      # Response wrapper for multiple user operations
+      - UserQueryInput     # Input type for queries
+      - UserCreateInput    # Input type for create operations
+      - UserUpdateInput    # Input type for update operations
+      
+      # Operations that need API key access (for query/mutation resolvers)
+      - userQueryById      # For userExists checks during sign-up
+      - userCreate         # For creating new users during registration
+      - userUpdate         # For updating users during registration process
+    
+    # Default auth is user pools only
+    default_auth: user_pools
   keys:
     primary:
       partition: user_id
