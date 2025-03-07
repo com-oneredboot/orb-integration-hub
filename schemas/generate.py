@@ -18,30 +18,52 @@ from jinja2 import Template, Environment, FileSystemLoader
 def clean_consecutive_blank_lines(text):
     """
     Remove consecutive blank lines from text.
+    Also handles specific GraphQL formatting issues.
     
     :param text: Text to clean
-    :return: Cleaned text with no consecutive blank lines
+    :return: Cleaned text with no consecutive blank lines and proper GraphQL formatting
     """
     # Split the text into lines
     lines = text.splitlines()
     
-    # Process lines to remove excessive blank lines
+    # Process lines to remove excessive blank lines and fix formatting
     cleaned_lines = []
     prev_blank = False
+    in_query_input = False  # Track if we're inside a QueryInput block
     
     for line in lines:
+        # Check if we're entering a QueryInput definition
+        if "input" in line and "QueryInput" in line and "{" in line:
+            in_query_input = True
+        
+        # Check if we're exiting a QueryInput definition
+        if in_query_input and "}" in line:
+            in_query_input = False
+        
         is_blank = not line.strip()
         
         # Skip consecutive blank lines
         if is_blank and prev_blank:
             continue
+        
+        # Skip blank lines inside QueryInput sections to improve formatting
+        if is_blank and in_query_input:
+            continue
             
-        # Add the line if it's not a consecutive blank line
+        # Add the line if it passes all checks
         cleaned_lines.append(line)
         prev_blank = is_blank
     
     # Join lines back together
-    return '\n'.join(cleaned_lines)
+    output = '\n'.join(cleaned_lines)
+    
+    # Additional cleanup specifically for QueryInput sections
+    # Find QueryInput blocks and ensure proper formatting
+    import re
+    query_input_pattern = r'(input \w+QueryInput[^{]*{)\s*\n\s*\n'
+    output = re.sub(query_input_pattern, r'\1\n', output)
+    
+    return output
 
 # Set up logging
 logger = logging.getLogger('schema_generator')

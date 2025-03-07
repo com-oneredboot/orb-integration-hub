@@ -222,25 +222,33 @@ Resources:
           AttributeName: role_id
           AttributeType: S
         -
-          AttributeName: application_id
+          AttributeName: user_id
           AttributeType: S
         -
-          AttributeName: user_id
+          AttributeName: application_id
           AttributeType: S
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         -
           AttributeName: role_id
           KeyType: HASH
-        -
-          AttributeName: application_id
-          KeyType: RANGE
       GlobalSecondaryIndexes:
         -
           IndexName: user-id-index
           KeySchema:
             -
               AttributeName: user_id
+              KeyType: HASH
+            -
+              AttributeName: role_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        -
+          IndexName: application-id-index
+          KeySchema:
+            -
+              AttributeName: application_id
               KeyType: HASH
             -
               AttributeName: role_id

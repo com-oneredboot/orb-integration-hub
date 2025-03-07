@@ -45,26 +45,15 @@ input {{ model_name }}CreateInput {
 }
 
 # Input for {{ model_name }} query operations
-{% if auth_config and model_name+'QueryInput' in auth_config.api_key_operations -%}
+{% if auth_config and model_name+'QueryInput' in auth_config.api_key_operations %}
 input {{ model_name }}QueryInput @aws_api_key @aws_cognito_user_pools {
-{%- else -%}
+{% else %}
 input {{ model_name }}QueryInput {
-{%- endif -%}
-{%- if partition_key %}
-  {{ partition_key }}: String
-{%- endif -%}
-{%- if sort_key %}
-  {{ sort_key }}: String
-{%- endif -%}
-{# Check if model has keys and secondary keys #}
-{%- if model.get('keys') and model.get('keys').get('secondary') -%}
-{%- for index in model.get('keys').get('secondary') %}
-  {{ index.partition }}: String
-{%- if index.sort %}
-  {{ index.sort }}: String
-{%- endif -%}
-{%- endfor -%}
-{%- endif %}
+{% endif %}{% set fields_added = [] %}{% if partition_key %}{% set _ = fields_added.append(partition_key) %}
+  {{ partition_key }}: String{% endif %}{% if sort_key and sort_key not in fields_added %}{% set _ = fields_added.append(sort_key) %}
+  {{ sort_key }}: String{% endif %}{% if model.get('keys') and model.get('keys').get('secondary') %}{% for index in model.get('keys').get('secondary') %}{% if index.partition and index.partition not in fields_added %}{% set _ = fields_added.append(index.partition) %}
+  {{ index.partition }}: String{% endif %}{% if index.sort and index.sort not in fields_added %}{% set _ = fields_added.append(index.sort) %}
+  {{ index.sort }}: String{% endif %}{% endfor %}{% endif %}
 }
 
 # Input for {{ model_name }} update operations

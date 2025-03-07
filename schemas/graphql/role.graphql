@@ -43,18 +43,18 @@ input RoleCreateInput {
 }
 
 # Input for Role query operations
+
 input RoleQueryInput {
   role_id: String
-  application_id: String
   user_id: String
-  role_id: String
+  application_id: String
 }
 
 # Input for Role update operations
 input RoleUpdateInput {
   role_id: String!
-  application_id: String!
   user_id: String
+  application_id: String
   role_name: String
   role_type: String
   permissions: [String]

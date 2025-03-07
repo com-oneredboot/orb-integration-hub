@@ -9,10 +9,12 @@ model:
   keys:
     primary:
       partition: role_id
-      sort: application_id
     secondary:
       - name: user-id-index
         partition: user_id
+        sort: role_id
+      - name: application-id-index
+        partition: application_id
         sort: role_id
   attributes:
     role_id:

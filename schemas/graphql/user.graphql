@@ -45,6 +45,7 @@ input UserCreateInput @aws_api_key @aws_cognito_user_pools {
 }
 
 # Input for User query operations
+
 input UserQueryInput @aws_api_key @aws_cognito_user_pools {
   user_id: String
   email: String
