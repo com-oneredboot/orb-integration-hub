@@ -65,6 +65,27 @@ def clean_consecutive_blank_lines(text):
     
     return output
 
+def process_field_type(field_name, field_info):
+    """
+    Process field type based on field name and configuration.
+    This allows special handling for specific field types like timestamps.
+    
+    :param field_name: The name of the field
+    :param field_info: The field's configuration info
+    :return: Modified field info with the correct GraphQL type
+    """
+    # Create a copy to avoid modifying the original dict
+    result = field_info.copy()
+    
+    # Special handling for timestamp fields to ensure consistency
+    timestamp_fields = ['created_at', 'updated_at', 'deleted_at', 'last_modified']
+    if field_name in timestamp_fields:
+        # Instead of using graphql_type, we'll override the 'type' directly for timestamps
+        # This is safer as it works with the existing template logic
+        result['type'] = 'timestamp'
+    
+    return result
+
 # Set up logging
 logger = logging.getLogger('schema_generator')
 logger.setLevel(logging.INFO)
@@ -595,12 +616,19 @@ def generate_graphql_schema(table_name, schema_path, jinja_env):
             logger.error("Schema missing required model definition")
             return False
             
-        # Special handling for groups attribute to use UserGroups in GraphQL
+        # Process attribute types for GraphQL
+        processed_attributes = {}
         for attr, details in model['attributes'].items():
+            # Apply special processing for specific field types
+            processed_details = process_field_type(attr, details)
+            
+            # Special handling for groups attribute to use UserGroups in GraphQL
             if attr == 'groups' and details.get('type') == 'array' and 'items' in details and 'enum_type' in details['items']:
                 # Set a graphql_type attribute to be used in templates
-                details['graphql_type'] = details['items']['enum_type']
-                logger.debug(f"Set graphql_type for groups to {details['graphql_type']}")
+                processed_details['graphql_type'] = details['items']['enum_type']
+                logger.debug(f"Set graphql_type for groups to {processed_details['graphql_type']}")
+                
+            processed_attributes[attr] = processed_details
         
         # Extract auth config if available
         auth_config = None
@@ -632,7 +660,7 @@ def generate_graphql_schema(table_name, schema_path, jinja_env):
         gql_schema = template.render(
             model_name=model_name,
             model_name_lowercase=model_name.lower(),
-            attributes=model['attributes'],
+            attributes=processed_attributes,  # Use processed attributes with type overrides
             model=model,  # Pass the entire model to access keys.secondary
             partition_key=partition_key,
             sort_key=sort_key,

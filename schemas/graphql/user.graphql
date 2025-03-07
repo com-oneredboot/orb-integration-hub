@@ -13,8 +13,8 @@ type User @aws_api_key @aws_cognito_user_pools {
   last_name: String
   groups: [UserGroups!]!
   status: String!
-  created_at: Float!
-  updated_at: Float
+  created_at: String!
+  updated_at: String
 }
 
 # Response type for User operations
@@ -42,8 +42,8 @@ input UserCreateInput @aws_api_key @aws_cognito_user_pools {
   last_name: String
   groups: [UserGroups!]!
   status: String!
-  created_at: Float!
-  updated_at: Float
+  created_at: String!
+  updated_at: String
 }
 
 # Input for User query operations
@@ -65,8 +65,8 @@ input UserUpdateInput @aws_api_key @aws_cognito_user_pools {
   last_name: String
   groups: [UserGroups]
   status: String
-  created_at: Float
-  updated_at: Float
+  created_at: String
+  updated_at: String
 }
 
 # Operations for User
