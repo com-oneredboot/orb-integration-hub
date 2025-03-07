@@ -11,6 +11,6 @@ export const environment = {
   graphql: {
     url: 'https://yolw2em6xjeodcgupkav3ler54.appsync-api.us-east-1.amazonaws.com/graphql',
     region: 'us-east-1',
-    apiKey: 'da2-p5p56xpjibahvn22tuvx2aihtm'
+    apiKey: 'da2-5dj3hg3ym5exbdmcjnht3bpara'
   }
 };

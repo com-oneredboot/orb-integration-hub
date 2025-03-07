@@ -27,8 +27,11 @@ model:
   keys:
     primary:
       partition: user_id
-      sort: application_id
-    secondary: []
+    secondary:
+      - name: email-index
+        partition: email
+      - name: cognito_id-index
+        partition: cognito_id
   attributes:
     user_id:
       type: string
