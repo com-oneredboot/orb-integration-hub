@@ -1,3 +1,8 @@
+// file: frontend/src/app/layouts/app-layout/app-layout.component.ts
+// author: Corey Dale Peters
+// date: 2024-12-04
+// description: Angular component
+
 import { Component } from '@angular/core';
 import {CognitoService} from "../../core/services/cognito.service";
 import {Router} from "@angular/router";

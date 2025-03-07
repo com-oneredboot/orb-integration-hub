@@ -1,3 +1,8 @@
+// file: frontend/src/app/core/models/role.enum.ts
+// author: Corey Dale Peters
+// date: 2025-03-07
+// description: TypeScript file
+
 /**
  * Role Enums
  * 

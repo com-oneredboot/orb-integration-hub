@@ -1,3 +1,8 @@
+// file: frontend/src/app/app.module.ts
+// author: Corey Dale Peters
+// date: 2025-03-07
+// description: TypeScript file
+
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { ReactiveFormsModule} from "@angular/forms";

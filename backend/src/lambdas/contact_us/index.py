@@ -1,3 +1,8 @@
+# file: backend/src/lambdas/contact_us/index.py
+# author: Corey Dale Peters
+# date: 2024-11-15
+# description: AWS Lambda function for handling contact form submissions
+
 import json
 import boto3
 import os

@@ -1,3 +1,8 @@
+// file: frontend/src/environments/environment.prod.ts
+// author: Corey Dale Peters
+// date: 2025-03-07
+// description: TypeScript file
+
 
 // src/environments/environment.prod.ts
 export const environment = {

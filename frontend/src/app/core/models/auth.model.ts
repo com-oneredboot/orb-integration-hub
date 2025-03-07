@@ -1,3 +1,8 @@
+// file: frontend/src/app/core/models/auth.model.ts
+// author: Corey Dale Peters
+// date: 2025-03-07
+// description: TypeScript file
+
 // src/app/models/auth.models.ts
 import {User} from "./user.model";
 

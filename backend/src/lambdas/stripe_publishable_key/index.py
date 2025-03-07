@@ -1,3 +1,8 @@
+# file: backend/src/lambdas/stripe_publishable_key/index.py
+# author: Corey Dale Peters
+# date: 2025-03-07
+# description: Python file
+
 import os
 import json
 import boto3

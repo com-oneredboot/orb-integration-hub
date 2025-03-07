@@ -1,3 +1,8 @@
+// file: frontend/src/app/features/user/store/user.reducer.ts
+// author: Corey Dale Peters
+// date: 2025-03-07
+// description: TypeScript file
+
 // users.reducer.ts
 // author: Corey Peters
 // created date: 2023-12-14

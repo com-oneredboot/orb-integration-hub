@@ -1,3 +1,8 @@
+// file: frontend/src/app/features/user/store/user.selector.ts
+// author: Corey Dale Peters
+// date: 2025-03-07
+// description: TypeScript file
+
 // user.selector.ts
 import { createSelector } from '@ngrx/store';
 import {AppState} from "../../../store/app.reducer";

@@ -1,3 +1,8 @@
+// file: frontend/src/main.ts
+// author: Corey Dale Peters
+// date: 2025-03-07
+// description: TypeScript file
+
 // src/main.ts
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { AppModule } from './app/app.module';

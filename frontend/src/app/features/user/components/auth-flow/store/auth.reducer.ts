@@ -1,3 +1,8 @@
+// file: frontend/src/app/features/user/components/auth-flow/store/auth.reducer.ts
+// author: Corey Dale Peters
+// date: 2025-03-07
+// description: TypeScript file
+
 import {createReducer, on} from '@ngrx/store';
 import {AuthActions} from './auth.actions';
 import {AuthSteps, initialState} from './auth.state';

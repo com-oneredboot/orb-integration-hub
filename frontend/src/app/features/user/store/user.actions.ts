@@ -1,3 +1,8 @@
+// file: frontend/src/app/features/user/store/user.actions.ts
+// author: Corey Dale Peters
+// date: 2025-03-07
+// description: TypeScript file
+
 // user.actions.ts
 
 import { createAction, props } from '@ngrx/store';

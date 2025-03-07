@@ -1,3 +1,8 @@
+// file: frontend/src/app/features/user/components/home/home.component.spec.ts
+// author: Corey Dale Peters
+// date: 2025-03-07
+// description: TypeScript file
+
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { HomeComponent } from './home.component';

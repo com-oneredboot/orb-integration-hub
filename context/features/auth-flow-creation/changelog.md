@@ -64,3 +64,34 @@
 - Authentication UI will follow Angular Material design patterns
 - Will implement lazy loading for auth module components
 - Will adopt a container/presentational component pattern for better testability
+## 2025-03-07
+
+### Changes Since Last Update
+
+```
+88dd7c2 - Implement auth flow refactoring and password reset functionality (Corey Dale Peters)
+```
+
+### Files Changed
+
+```
+ context/features/REGISTRY.md                       |   1 +
+ .../auth-flow-creation/auth-flow-creation.md       |  61 +++++++++
+ context/features/auth-flow-creation/changelog.md   |  66 +++++++++
+ frontend/src/app/core/services/cognito.service.ts  |  57 ++++++++
+ .../components/login/login.component.html          |  48 +++++++
+ .../components/login/login.component.scss          | 116 ++++++++++++++++
+ .../auth-flow/components/login/login.component.ts  |  78 +++++++++++
+ .../components/password/password.component.html    |  77 +++++++++++
+ .../components/password/password.component.scss    | 152 +++++++++++++++++++++
+ .../components/password/password.component.ts      | 145 ++++++++++++++++++++
+ .../containers/auth-container.component.scss       |  71 ++++++++++
+ .../containers/auth-container.component.ts         | 108 +++++++++++++++
+ .../components/auth-flow/store/auth.actions.ts     |  15 +-
+ .../components/auth-flow/store/auth.selectors.ts   |  43 +++++-
+ .../user/components/auth-flow/store/auth.state.ts  |   5 +
+ 15 files changed, 1041 insertions(+), 2 deletions(-)
+```
+
+### Last commit: 88dd7c21c45559f26409070ffa7f9638e56a79ac
+

@@ -1,3 +1,8 @@
+// file: frontend/src/app/features/user/components/this-is-not-the-page/this-is-not-the-page.component.ts
+// author: Corey Dale Peters
+// date: 2025-03-07
+// description: TypeScript file
+
 import { Component } from '@angular/core';
 
 @Component({

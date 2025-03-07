@@ -1,3 +1,8 @@
+# file: backend/src/models/user_enum.py
+# author: Corey Dale Peters
+# date: 2025-03-07
+# description: Python file
+
 # User Enums
 #
 # This file contains enums for the User model.
