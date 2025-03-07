@@ -294,16 +294,33 @@ Resources:
           AttributeName: user_id
           AttributeType: S
         -
-          AttributeName: application_id
+          AttributeName: email
+          AttributeType: S
+        -
+          AttributeName: cognito_id
           AttributeType: S
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         -
           AttributeName: user_id
           KeyType: HASH
+      GlobalSecondaryIndexes:
         -
-          AttributeName: application_id
-          KeyType: RANGE
+          IndexName: email-index
+          KeySchema:
+            -
+              AttributeName: email
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        -
+          IndexName: cognito_id-index
+          KeySchema:
+            -
+              AttributeName: cognito_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
       TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-users"
       Tags:
         - Key: Billable

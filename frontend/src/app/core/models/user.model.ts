@@ -1,8 +1,3 @@
-// file: frontend/src/app/core/models/user.model.ts
-// author: Corey Dale Peters
-// date: 2025-03-07
-// description: TypeScript file
-
 /**
  * User Model
  * Generated code - do not modify directly

@@ -166,3 +166,6 @@ node_modules/
 # Environment files
 /src/environments/environment.ts
 /src/environments/environment.prod.ts
+
+# Generated GraphQL schema files
+backend/infrastructure/cloudformation/appsync_*.graphql

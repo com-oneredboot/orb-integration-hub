@@ -3,9 +3,7 @@
 # Do not modify directly
 
 # Main Role type
-
 type Role @aws_cognito_user_pools {
-
   role_id: String!
   user_id: String!
   application_id: String!
@@ -18,27 +16,21 @@ type Role @aws_cognito_user_pools {
 }
 
 # Response type for Role operations
-
 type RoleResponse @aws_cognito_user_pools {
-
   status_code: Float!
   message: String
   role: Role
 }
 
 # Response type for multiple Role operations
-
 type RolesResponse @aws_cognito_user_pools {
-
   status_code: Float!
   message: String
   roles: [Role]
 }
 
 # Input for Role creation
-
 input RoleCreateInput {
-
   role_id: String!
   user_id: String!
   application_id: String!
@@ -51,17 +43,15 @@ input RoleCreateInput {
 }
 
 # Input for Role query operations
-
 input RoleQueryInput {
-
   role_id: String
   application_id: String
+  user_id: String
+  role_id: String
 }
 
 # Input for Role update operations
-
 input RoleUpdateInput {
-
   role_id: String!
   application_id: String!
   user_id: String

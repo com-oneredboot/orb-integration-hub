@@ -14,8 +14,8 @@ CRITICAL: Never directly edit model files (.model.ts, .model.py)!
 - Tests: `cd frontend && npm run test` - Run Angular tests 
 - Single test: `cd frontend && npm test -- --include=src/path/to/file.spec.ts`
 - Schema generation: `cd schemas && ./run-generator.sh` - Generate models and schemas
-- Schema deployment: `cd schemas && ./deploy.sh` - Generate and deploy schemas
-- CloudFormation: `cd backend/infrastructure/scripts && ./deploy_schema.sh` - Deploy CF templates
+- Schema deployment: Uses GitHub Actions workflows for deployment - do not use local deploy scripts
+- CloudFormation: Uses GitHub Actions workflows for deployment - do not use local deploy scripts
 
 ## Code Style
 - **TypeScript**: 

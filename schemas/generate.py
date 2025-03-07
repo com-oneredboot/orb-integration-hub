@@ -14,6 +14,35 @@ from pathlib import Path
 import yaml
 from jinja2 import Template, Environment, FileSystemLoader
 
+# Utility functions
+def clean_consecutive_blank_lines(text):
+    """
+    Remove consecutive blank lines from text.
+    
+    :param text: Text to clean
+    :return: Cleaned text with no consecutive blank lines
+    """
+    # Split the text into lines
+    lines = text.splitlines()
+    
+    # Process lines to remove excessive blank lines
+    cleaned_lines = []
+    prev_blank = False
+    
+    for line in lines:
+        is_blank = not line.strip()
+        
+        # Skip consecutive blank lines
+        if is_blank and prev_blank:
+            continue
+            
+        # Add the line if it's not a consecutive blank line
+        cleaned_lines.append(line)
+        prev_blank = is_blank
+    
+    # Join lines back together
+    return '\n'.join(cleaned_lines)
+
 # Set up logging
 logger = logging.getLogger('schema_generator')
 logger.setLevel(logging.INFO)
@@ -582,10 +611,14 @@ def generate_graphql_schema(table_name, schema_path, jinja_env):
             model_name=model_name,
             model_name_lowercase=model_name.lower(),
             attributes=model['attributes'],
+            model=model,  # Pass the entire model to access keys.secondary
             partition_key=partition_key,
             sort_key=sort_key,
             auth_config=auth_config
         )
+        
+        # Clean up multiple consecutive blank lines
+        gql_schema = clean_consecutive_blank_lines(gql_schema)
 
         # Prepare output location matching your directory structure
         output_dir = Path('../schemas/graphql')
@@ -793,14 +826,18 @@ def combine_graphql_schemas(jinja_env):
         # Create output directory if needed
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        # Write the combined schema only to the timestamped file
+        # Clean up multiple consecutive blank lines in the combined schema
+        cleaned_schema = clean_consecutive_blank_lines(combined_schema)
+        
+        # Write the cleaned schema to the timestamped file
         with open(timestamped_output_file, 'w') as f:
-            f.write(combined_schema)
+            f.write(cleaned_schema)
 
         logger.info("Combined GraphQL schema generated: %s", timestamped_output_file)
         
-        # Clean up old schema files, keeping only the most recent 5
-        cleanup_old_schema_files(output_dir)
+        # We don't need to clean up old schema files since we now remove them at startup
+        # and they're also ignored in .gitignore
+        # cleanup_old_schema_files(output_dir)
         
         # The timestamped filename can be used by the GitHub workflow
         # The GitHub workflow will automatically find and use the latest schema file
@@ -812,6 +849,29 @@ def combine_graphql_schemas(jinja_env):
         logger.error("Error combining GraphQL schemas: %s", str(e), exc_info=True)
         return None
 
+def cleanup_appsync_files():
+    """
+    Cleanup all appsync_*.graphql files at startup to avoid accumulation
+    
+    :return: None
+    """
+    logger.info("Cleaning up old appsync_*.graphql files")
+    try:
+        # Path to directory containing appsync files
+        output_dir = Path('../backend/infrastructure/cloudformation')
+        
+        # Delete all appsync_*.graphql files
+        for appsync_file in output_dir.glob('appsync_*.graphql'):
+            try:
+                appsync_file.unlink()
+                logger.debug("Deleted appsync file: %s", appsync_file)
+            except Exception as e:
+                logger.warning("Failed to delete appsync file %s: %s", appsync_file, str(e))
+                
+    except Exception as e:
+        logger.error("Error during cleanup of appsync files: %s", str(e))
+
+
 def main():
     """
     Main function - loads the index and generates models for all tables.
@@ -819,6 +879,9 @@ def main():
     :return: None
     """
     logger.info("=============== SCHEMA GENERATION STARTED ===============")
+    
+    # Clean up all appsync files at startup
+    cleanup_appsync_files()
 
     try:
         # Set up Jinja environment

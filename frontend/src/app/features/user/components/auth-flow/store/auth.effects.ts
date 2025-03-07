@@ -28,10 +28,11 @@ export class AuthEffects {
       switchMap(({ email }) => {
         console.debug('Effect [CheckEmail]: Making service call');
         
-        // Create a proper UserQueryInput object with only the email field
-        const userInput: UserQueryInput = { email };
+        // Query by application_id since we can't query by email directly
+        // We'll need to filter results by email in the service
+        const userInput: UserQueryInput = { application_id: 'default' };
         
-        return from(this.userService.userExists(userInput)).pipe(
+        return from(this.userService.userExists(userInput, email)).pipe(
           tap(result => console.debug('Effect [CheckEmail]: Service returned', result)),
           map((exists: boolean) => {
             console.debug('Effect [CheckEmail]: Success, user exists:', exists);
@@ -85,8 +86,9 @@ export class AuthEffects {
   verifyEmail$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.verifyEmail),
-      switchMap(({ input, code }) =>
-        from(this.userService.emailVerify(input, code)).pipe(
+      switchMap(({ input, code, email }) => {
+        // Use the email directly if provided in the action
+        return from(this.userService.emailVerify(input, code, email)).pipe(
           map(response => {
             if (response) {
               return AuthActions.verifyEmailSuccess();
@@ -100,7 +102,7 @@ export class AuthEffects {
     )
   );
 
-  verifyCognitoPassword = createEffect(() =>
+  verifyCognitoPassword$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.verifyCognitoPassword),
       switchMap(({ email, password }) =>

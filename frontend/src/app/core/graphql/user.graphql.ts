@@ -33,7 +33,10 @@ export type UserUpdateResponse = GenericResponse & {
   }
 }
 
-export type UserQueryInput = Partial<Pick<User, 'user_id' | 'cognito_id' | 'email'>>;
+export type UserQueryInput = {
+  user_id?: string;
+  application_id?: string;
+};
 
 export type UserCreateInput = Omit<User, 'first_name' | 'last_name' | 'phone_number' | 'toDynamoDB' | 'fromDynamoDB'>;
 

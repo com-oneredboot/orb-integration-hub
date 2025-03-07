@@ -1,8 +1,3 @@
-// file: frontend/src/app/core/models/role.model.ts
-// author: Corey Dale Peters
-// date: 2025-03-07
-// description: TypeScript file
-
 /**
  * Role Model
  * Generated code - do not modify directly

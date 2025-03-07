@@ -99,11 +99,12 @@ export class UserService extends ApiService {
 
   /**
    * Check if a user exists
-   * @param input
+   * @param input UserQueryInput with backend-compatible fields
+   * @param email Optional email to filter results client-side
    */
-  public async userExists(input: UserQueryInput): Promise<boolean> {
+  public async userExists(input: UserQueryInput, email?: string): Promise<boolean> {
     const startTime = Date.now();
-    console.debug('UserService [userExists]: Starting', { input, time: startTime });
+    console.debug('UserService [userExists]: Starting', { input, email, time: startTime });
 
     try {
       console.debug('UserService [userExists]: Making API call');
@@ -129,6 +130,14 @@ export class UserService extends ApiService {
         throw new Error(`Invalid response code: ${response.data?.userQueryById?.status_code}`);
       }
 
+      // If email is provided, check if the user has the specified email
+      if (email && response.data?.userQueryById?.user) {
+        const user = response.data.userQueryById.user;
+        const result = user.email === email;
+        console.debug('UserService [userExists]: Checking email match', { email, userEmail: user.email, result });
+        return result;
+      }
+
       const result = Boolean(response.data?.userQueryById?.user?.user_id);
       console.debug('UserService [userExists]: Returning result', result);
       return result;
@@ -144,15 +153,16 @@ export class UserService extends ApiService {
 
   /**
    * Verify the email
-   * @param input
-   * @param code
+   * @param input UserQueryInput with backend-compatible fields
+   * @param code Verification code
+   * @param email Optional email to filter results client-side
    */
-  public async emailVerify(input: UserQueryInput, code: string): Promise<AuthResponse> {
-    console.debug('verifyEmail:', input);
+  public async emailVerify(input: UserQueryInput, code: string, email?: string): Promise<AuthResponse> {
+    console.debug('verifyEmail:', input, email ? { email } : '');
     try {
 
       // get the user
-      const userResponse = await this.userQueryById(input);
+      const userResponse = await this.userQueryById(input, email);
       console.debug('User Response:', userResponse);
       if (userResponse.userQueryById?.status_code !== 200 || !userResponse.userQueryById?.user) {
         return {
@@ -179,10 +189,11 @@ export class UserService extends ApiService {
 
   /**
    * Query a user by ID
-   * @param input
+   * @param input UserQueryInput with backend-compatible fields
+   * @param email Optional email to filter results client-side
    */
-  public async userQueryById(input: UserQueryInput): Promise<UserResponse> {
-    console.debug('userQueryById:', input);
+  public async userQueryById(input: UserQueryInput, email?: string): Promise<UserResponse> {
+    console.debug('userQueryById:', input, email ? { email } : '');
     try {
       const response = await this.query(
         userQueryById,
@@ -190,6 +201,23 @@ export class UserService extends ApiService {
         'apiKey') as GraphQLResult<UserResponse>;
 
       console.debug('userQueryById Response: ', response);
+      
+      // If email is specified and we have user data, filter by email
+      if (email && response.data?.userQueryById?.user && 
+          response.data.userQueryById.user.email !== email) {
+        
+        console.debug('userQueryById: Email mismatch, returning 404');
+        
+        // Return a 404 if email doesn't match
+        return {
+          userQueryById: {
+            status_code: 404,
+            user: null,
+            message: 'User not found'
+          }
+        } as UserResponse;
+      }
+      
       return response.data;
     } catch (error) {
       console.error('Error getting user:', error);
@@ -213,8 +241,9 @@ export class UserService extends ApiService {
     let user;
 
     try {
-      const userQueryInput = {email: email} as UserQueryInput;
-      const userResponse = await this.userQueryById(userQueryInput);
+      // We need to query all users since we can't query by email directly
+      const userQueryInput = {application_id: 'default'} as UserQueryInput;
+      const userResponse = await this.userQueryById(userQueryInput, email);
 
       user = userResponse.userQueryById?.user;
       if (userResponse.userQueryById?.status_code !== 200 || !user) {
