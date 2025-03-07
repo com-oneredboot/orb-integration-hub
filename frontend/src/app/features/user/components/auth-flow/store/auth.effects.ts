@@ -75,9 +75,17 @@ export class AuthEffects {
               error: response.userQueryById?.message || 'Failed to create user'
             });
           }),
-          catchError(error => of(AuthActions.createUserFailure({
-            error: error instanceof Error ? error.message : 'Failed to create user'
-          })))
+          catchError(error => {
+            // Use error registry to handle the error
+            const errorCode = 'ORB-API-002'; // Default to GraphQL mutation error
+            ErrorRegistry.logError(errorCode, { originalError: error });
+            
+            return of(AuthActions.createUserFailure({
+              error: error instanceof Error ? 
+                `[${errorCode}] ${error.message}` : 
+                ErrorRegistry.getErrorMessage(errorCode)
+            }));
+          })
         );
       })
     )

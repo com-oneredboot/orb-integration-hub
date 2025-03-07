@@ -50,10 +50,10 @@ model:
       required: false
     first_name:
       type: string
-      required: true
+      required: false
     last_name:
       type: string
-      required: true
+      required: false
     groups:
       type: array
       items:
@@ -67,3 +67,6 @@ model:
     created_at:
         type: number
         required: true
+    updated_at:
+      type: number
+      required: false

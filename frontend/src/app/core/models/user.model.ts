@@ -17,6 +17,7 @@ export interface IUser {
   groups: UserGroups[];
   status: UserStatus;
   created_at: number;
+  updated_at: number;
 }
 
 export class User implements IUser {
@@ -30,6 +31,7 @@ export class User implements IUser {
   groups: UserGroups[] = [];
   status: UserStatus = UserStatus.UNKNOWN;
   created_at: number = 0;
+  updated_at: number = 0;
 
   constructor(data: Partial<IUser> = {}) {
     Object.assign(this, data);

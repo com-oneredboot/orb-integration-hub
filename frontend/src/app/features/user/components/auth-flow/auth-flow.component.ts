@@ -184,9 +184,22 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             this.store.dispatch(AuthActions.verifyCognitoPassword({ email: email, password }));
             break;
           case AuthSteps.PASSWORD_SETUP:
+            // Create a complete UserCreateInput with all required fields
+            const timestamp = Date.now();
             const userCreateInput = {
+              user_id: uuidv4(),
               cognito_id: uuidv4(),
-              email: email
+              email: email,
+              // Optional fields
+              first_name: this.authForm.get('firstName')?.value || '',
+              last_name: this.authForm.get('lastName')?.value || '',
+              phone_number: '',
+              phone_verified: false,
+              // Required fields
+              groups: ['USER'],
+              status: 'PENDING',
+              created_at: timestamp,
+              updated_at: timestamp
             } as UserCreateInput;
             if (!password) return;
             this.store.dispatch(AuthActions.createUser({input: userCreateInput, password: password } ));

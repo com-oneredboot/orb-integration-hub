@@ -22,6 +22,7 @@ import { CognitoService } from "./cognito.service";
 import { AuthResponse } from "../models/auth.model";
 import { AuthActions } from '../../features/user/components/auth-flow/store/auth.actions';
 import { sendSMSVerificationCodeMutation, SMSVerificationInput, SMSVerificationResponse } from "../models/sms.model";
+import { ErrorRegistry } from "../models/error-registry.model";
 
 
 @Injectable({
@@ -67,13 +68,20 @@ export class UserService extends ApiService {
 
       const timestamp = Date.now(); // Use timestamp instead of ISO string
       const userCreateInput: UserCreateInput = {
+        // Required fields
         user_id: uuidv4(), // Use string format as expected by the GraphQL schema
         cognito_id: input.cognito_id,
+        email: input.email,
         groups: [UserGroups.USER] as UserGroups[],
         status: UserStatus.PENDING,
+        created_at: timestamp,
+        
+        // Optional fields with defaults
         phone_verified: false,
-        email: input.email,
-        created_at: timestamp
+        first_name: input.first_name || '',
+        last_name: input.last_name || '',
+        phone_number: input.phone_number || '',
+        updated_at: timestamp
       };
 
       const response = await this.mutate(
@@ -87,11 +95,43 @@ export class UserService extends ApiService {
 
     } catch (error) {
       console.error('Error creating User:', error);
+      
+      // Extract GraphQL error information if available
+      let errorCode = 'ORB-API-002'; // Default to GraphQL mutation error
+      let errorMessage = 'Error creating user';
+      
+      if (error && typeof error === 'object' && 'errors' in error) {
+        const gqlError = error as any;
+        if (gqlError.errors?.[0]?.message) {
+          // Check for specific error types and assign appropriate codes
+          const errorMsg = gqlError.errors[0].message;
+          
+          if (errorMsg.includes('NonNull type')) {
+            errorCode = 'ORB-API-003'; // Invalid input error
+            errorMessage = `[${errorCode}] Invalid input for user creation: Missing required field`;
+          } else if (errorMsg.includes('already exists')) {
+            errorCode = 'ORB-AUTH-004'; // User already exists
+            errorMessage = ErrorRegistry.getErrorMessage(errorCode);
+          } else {
+            errorMessage = `[${errorCode}] ${errorMsg}`;
+          }
+          
+          // Log the error
+          ErrorRegistry.logError(errorCode, { 
+            originalError: error,
+            graphqlError: gqlError.errors[0]
+          });
+        }
+      } else if (error instanceof Error) {
+        errorMessage = `[${errorCode}] ${error.message}`;
+        ErrorRegistry.logError(errorCode, { originalError: error });
+      }
+      
       return {
         userQueryById: {
           status_code: 500,
           user: null,
-          message: 'Error creating User'
+          message: errorMessage
         }
       } as UserResponse;
     }
@@ -469,10 +509,13 @@ export class UserService extends ApiService {
       // Create a clean input with only the fields to update
       let hasUpdates = false;
       const updateInput: UserUpdateInput = {
-        user_id: input.user_id
+        user_id: input.user_id,
+        // Always include updated_at with current timestamp for any update
+        updated_at: Date.now()
       };
+      hasUpdates = true; // Set to true because we're always updating updated_at
 
-      // Only add fields that have values
+      // Only add other fields that have values
       if (input.first_name) {
         updateInput.first_name = input.first_name;
         hasUpdates = true;
@@ -493,11 +536,9 @@ export class UserService extends ApiService {
         hasUpdates = true;
       }
 
-      // If there are no updates, just return the current user
-      if (!hasUpdates) {
-        console.debug('No updates to make');
-        const currentUser = await this.userQueryById({ user_id: input.user_id });
-        return currentUser;
+      // We always have updates because of updated_at, but log if no other fields changed
+      if (Object.keys(updateInput).length <= 2) { // Just user_id and updated_at
+        console.debug('Only updating timestamp, no other field changes');
       }
 
       console.debug('Update input:', updateInput);

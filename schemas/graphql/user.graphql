@@ -9,11 +9,12 @@ type User @aws_api_key @aws_cognito_user_pools {
   email: String!
   phone_number: String
   phone_verified: Boolean
-  first_name: String!
-  last_name: String!
+  first_name: String
+  last_name: String
   groups: [UserGroups!]!
   status: String!
   created_at: Float!
+  updated_at: Float
 }
 
 # Response type for User operations
@@ -37,11 +38,12 @@ input UserCreateInput @aws_api_key @aws_cognito_user_pools {
   email: String!
   phone_number: String
   phone_verified: Boolean
-  first_name: String!
-  last_name: String!
+  first_name: String
+  last_name: String
   groups: [UserGroups!]!
   status: String!
   created_at: Float!
+  updated_at: Float
 }
 
 # Input for User query operations
@@ -64,6 +66,7 @@ input UserUpdateInput @aws_api_key @aws_cognito_user_pools {
   groups: [UserGroups]
   status: String
   created_at: Float
+  updated_at: Float
 }
 
 # Operations for User

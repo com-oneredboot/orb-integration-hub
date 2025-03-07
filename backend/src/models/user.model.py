@@ -17,3 +17,4 @@ class User:
     groups: List[UserGroups]
     status: UserStatus
     created_at: int
+    updated_at: int
