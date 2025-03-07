@@ -78,11 +78,16 @@ def process_field_type(field_name, field_info):
     result = field_info.copy()
     
     # Special handling for timestamp fields to ensure consistency
-    timestamp_fields = ['created_at', 'updated_at', 'deleted_at', 'last_modified']
-    if field_name in timestamp_fields:
-        # Instead of using graphql_type, we'll override the 'type' directly for timestamps
-        # This is safer as it works with the existing template logic
+    # ORB standard: Timestamps are stored as ISO 8601 strings (e.g., 2025-03-07T16:23:17.488Z)
+    timestamp_fields = ['created_at', 'updated_at', 'deleted_at', 'last_modified', 'timestamp']
+    if field_name in timestamp_fields or field_name.endswith('_at') or field_name.endswith('_date'):
+        # Override the 'type' directly for timestamps to ensure proper GraphQL schema generation
+        # This will ensure the field is rendered as a String type in the GraphQL schema
         result['type'] = 'timestamp'
+        
+        # Add a comment to the field info for documentation
+        if 'description' not in result:
+            result['description'] = 'ISO 8601 formatted timestamp (e.g., 2025-03-07T16:23:17.488Z)'
     
     return result
 

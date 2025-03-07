@@ -35,6 +35,9 @@ CRITICAL: Never directly edit model files (.model.ts, .model.py)!
 - **Models**: Generated via the schema generator for consistency
   - **IMPORTANT**: Never modify generated model files directly, always update templates in `schemas/templates` or make modifications to `schemas/generate.py`
   - When fixing type issues, apply fixes in the generator script or templates, then regenerate models with `cd schemas && ./run-generator.sh`
+  - **Data Types**:
+    - **Timestamps**: Always use ISO 8601 strings (e.g., `2025-03-07T16:23:17.488Z`) for dates/times in GraphQL and storage
+    - In the schema generator, timestamp fields (`created_at`, `updated_at`, etc.) are automatically handled as String types
 
 ## Project Context
 - Primary reference: `/context/project.md` - Core project information

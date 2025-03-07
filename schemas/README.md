@@ -36,3 +36,15 @@ A convenient script that:
 - `tables/`: Contains table definitions (users, roles, etc.)
 - `core/`: Core types and validators
 - `templates/`: Jinja2 templates for code generation
+
+## Data Type Standards
+
+### Timestamps
+All timestamp fields (`created_at`, `updated_at`, etc.) must use ISO 8601 strings:
+- Format: `YYYY-MM-DDTHH:mm:ss.sssZ` (e.g., `2025-03-07T16:23:17.488Z`)
+- GraphQL Type: `String`
+- Database Storage: String type containing ISO 8601 formatted value
+
+The schema generator automatically handles timestamp fields to ensure consistency. Fields that are treated as timestamps include:
+- `created_at`, `updated_at`, `deleted_at`, `last_modified`
+- Any field ending with `_at` or `_date`
