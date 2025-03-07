@@ -12,10 +12,13 @@
  * Error Code Format: ORB-[Category]-[3-digit number]
  * Example: ORB-AUTH-001
  */
+/**
+ * Interface defining the structure of error information objects
+ */
 export interface ErrorInfo {
-  message: string;
-  description: string;
-  solution: string;
+  readonly message: string;
+  readonly description: string;
+  readonly solution: string;
 }
 
 export type ErrorCode = 
@@ -135,9 +138,10 @@ export class ErrorRegistry {
       return `Unknown error: ${code}`;
     }
 
+    const message = error.message;
     return includeCode
-      ? `[${code}] ${error.message}`
-      : error.message;
+      ? `[${code}] ${message}`
+      : message;
   }
 
   /**
@@ -160,7 +164,9 @@ export class ErrorRegistry {
 
     return {
       code,
-      ...error,
+      message: error.message,
+      description: error.description,
+      solution: error.solution,
       ...additionalDetails
     };
   }
@@ -172,7 +178,7 @@ export class ErrorRegistry {
    */
   public static logError(code: string, additionalDetails: Record<string, any> = {}): void {
     const error = this.createError(code, additionalDetails);
-    console.error(`[${code}] ${error.message}`, error);
+    console.error(`[${code}] ${error['message']}`, error);
   }
 }
 
@@ -192,11 +198,16 @@ export class OrbitError extends Error {
       solution: 'Please try again later'
     };
 
-    super(errorInfo.message);
+    // Access properties safely by storing them in local variables
+    const message = errorInfo.message;
+    const description = errorInfo.description;
+    const solution = errorInfo.solution;
+
+    super(message);
     this.name = 'OrbitError';
     this.code = errorCode;
-    this.description = errorInfo.description;
-    this.solution = errorInfo.solution;
+    this.description = description;
+    this.solution = solution;
     this.details = additionalDetails;
   }
 }
