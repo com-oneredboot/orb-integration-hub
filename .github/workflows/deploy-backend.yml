@@ -1,4 +1,7 @@
 name: deploy-backend
+# Description: Deploys backend resources to the selected environment. 
+# Allows selection of branch for deployment - choose 'main' for production deployments 
+# or a feature branch for testing.
 
 on:
   workflow_dispatch:
@@ -23,6 +26,11 @@ on:
         required: true
         type: string
         default: 'integration-hub'
+      branch:
+        description: 'Git branch to deploy (default: main)'
+        required: false
+        type: string
+        default: 'main'
 
 jobs:
   deploy-backend-stacks:
@@ -30,11 +38,34 @@ jobs:
     environment: ${{ inputs.environment }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout repo for branch listing
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: List available branches
+        run: |
+          echo "Available branches for deployment:"
+          git branch -r | grep -v '\->' | sed 's/origin\//- /'
+          echo ""
+          echo "Selected branch for deployment: ${{ inputs.branch }}"
+          echo ""
+          
+          # Verify branch exists
+          if ! git branch -r | grep -q "origin/${{ inputs.branch }}$"; then
+            echo "::error::Branch '${{ inputs.branch }}' does not exist in the repository!"
+            echo "Please choose from one of the branches listed above."
+            exit 1
+          fi
+          echo "Branch validation successful."
+
+      - name: Checkout selected branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.branch }}
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
@@ -83,7 +114,7 @@ jobs:
           
           # Extract the filename for use in later steps
           SCHEMA_FILENAME=$(basename "$SCHEMA_FILE")
-          echo "::set-output name=schema_filename::$SCHEMA_FILENAME"
+          echo "schema_filename=$SCHEMA_FILENAME" >> $GITHUB_OUTPUT
           
           echo "Schema validation complete."
 
