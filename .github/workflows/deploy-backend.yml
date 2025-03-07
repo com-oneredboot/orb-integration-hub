@@ -26,11 +26,6 @@ on:
         required: true
         type: string
         default: 'integration-hub'
-      branch:
-        description: 'Git branch to deploy (default: main)'
-        required: false
-        type: string
-        default: 'main'
 
 jobs:
   deploy-backend-stacks:
@@ -42,27 +37,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-
-      - name: List available branches
-        run: |
-          echo "Available branches for deployment:"
-          git branch -r | grep -v '\->' | sed 's/origin\//- /'
-          echo ""
-          echo "Selected branch for deployment: ${{ inputs.branch }}"
-          echo ""
-          
-          # Verify branch exists
-          if ! git branch -r | grep -q "origin/${{ inputs.branch }}$"; then
-            echo "::error::Branch '${{ inputs.branch }}' does not exist in the repository!"
-            echo "Please choose from one of the branches listed above."
-            exit 1
-          fi
-          echo "Branch validation successful."
-
-      - name: Checkout selected branch
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ inputs.branch }}
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
