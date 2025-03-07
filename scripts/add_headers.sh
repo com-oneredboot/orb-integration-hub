@@ -24,8 +24,11 @@ FILE_EXT="${FILE_PATH##*.}"
 TEMPLATE=""
 
 case "$FILE_EXT" in
-  ts|tsx|scss|html)
+  ts|tsx|scss)
     TEMPLATE="/home/corey/Infrastructure/src/orb-integration-hub/templates/ts_header.txt"
+    ;;
+  html)
+    TEMPLATE="/home/corey/Infrastructure/src/orb-integration-hub/templates/html_header.txt"
     ;;
   py)
     TEMPLATE="/home/corey/Infrastructure/src/orb-integration-hub/templates/py_header.txt"
