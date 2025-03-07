@@ -1,0 +1,71 @@
+@import '../../../../../../../styles/variables';
+@import '../../../../../../../styles/mixins';
+
+.auth-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: $background-color-light;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2rem;
+    width: 100%;
+    text-align: center;
+
+    &-logo {
+      width: 120px;
+      height: auto;
+      margin-bottom: 1rem;
+    }
+
+    &-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: $text-color-primary;
+    }
+  }
+
+  &__progress {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 2rem;
+
+    &-step {
+      width: 12px;
+      height: 12px;
+      margin: 0 4px;
+      border-radius: 50%;
+      background-color: $gray-light;
+      transition: background-color 0.3s ease;
+
+      &--active {
+        background-color: $primary-color;
+      }
+    }
+  }
+
+  &__content {
+    width: 100%;
+  }
+
+  &__error {
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    color: $error-color;
+    background-color: rgba($error-color, 0.1);
+    border-radius: $border-radius;
+    text-align: center;
+  }
+}

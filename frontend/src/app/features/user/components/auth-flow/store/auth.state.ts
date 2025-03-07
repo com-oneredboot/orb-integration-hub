@@ -18,6 +18,9 @@ export enum AuthSteps {
   PHONE_VERIFY,       // verifies the phone number
   MFA_SETUP,          // for users without MFA
   MFA_VERIFY,         // verifies the MFA code
+  PASSWORD_RESET,     // initiates password reset
+  PASSWORD_RESET_VERIFY, // verifies password reset code
+  PASSWORD_RESET_CONFIRM, // confirms new password
   COMPLETE            // User setup is complete
 }
 
@@ -29,6 +32,7 @@ export interface AuthState {
   currentStep: AuthSteps;
   currentUser: User | null;
   userExists: boolean;
+  currentEmail: string | null;
 
   // Phone validation
   phoneValidationId: string | null;
@@ -72,6 +76,7 @@ export const initialState: AuthState = {
   currentUser: null,
   currentStep: AuthSteps.EMAIL,
   userExists: false,
+  currentEmail: null,
 
   phoneValidationId: null,
   phoneValidationCode: null,

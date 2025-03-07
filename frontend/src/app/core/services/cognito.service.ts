@@ -15,6 +15,8 @@ import {
   signOut,
   signUp,
   SignUpOutput,
+  resetPassword,
+  confirmResetPassword,
 } from 'aws-amplify/auth';
 import {BehaviorSubject, Observable} from 'rxjs';
 
@@ -271,4 +273,59 @@ export class CognitoService {
     }
   }
 
+  /**
+   * Initiate the password reset process
+   * @param username The user's cognito ID or email
+   * @returns AuthResponse with status of the request
+   */
+  async initiatePasswordReset(username: string): Promise<AuthResponse> {
+    try {
+      console.info('Initiating password reset for:', username);
+      await resetPassword({ username });
+      
+      return {
+        status_code: 200,
+        isSignedIn: false,
+        message: 'Password reset initiated successfully'
+      };
+    } catch (error) {
+      console.error('Password reset initiation error:', error);
+      return {
+        status_code: 500,
+        isSignedIn: false,
+        message: error instanceof Error ? error.message : 'Password reset failed'
+      };
+    }
+  }
+
+  /**
+   * Confirm password reset with the verification code
+   * @param username The user's cognito ID or email
+   * @param code The verification code sent to the user
+   * @param newPassword The new password
+   * @returns AuthResponse with status of the request
+   */
+  async confirmPasswordReset(username: string, code: string, newPassword: string): Promise<AuthResponse> {
+    try {
+      console.info('Confirming password reset for:', username);
+      await confirmResetPassword({ 
+        username, 
+        confirmationCode: code,
+        newPassword
+      });
+      
+      return {
+        status_code: 200,
+        isSignedIn: false,
+        message: 'Password reset successfully'
+      };
+    } catch (error) {
+      console.error('Password reset confirmation error:', error);
+      return {
+        status_code: 500,
+        isSignedIn: false,
+        message: error instanceof Error ? error.message : 'Password reset confirmation failed'
+      };
+    }
+  }
 }

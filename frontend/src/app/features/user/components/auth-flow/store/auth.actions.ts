@@ -74,6 +74,19 @@ export const AuthActions = createActionGroup({
 
     'Check Phone Required': emptyProps(),
     'Check Phone Required Success': props<{ required: boolean }>(),
-    'Check Phone Required Failure': props<{ error: string }>()
+    'Check Phone Required Failure': props<{ error: string }>(),
+
+    // Password Reset
+    'Initiate Password Reset': props<{ email: string }>(),
+    'Initiate Password Reset Success': props<{ message: string }>(),
+    'Initiate Password Reset Failure': props<{ error: string }>(),
+
+    'Verify Password Reset Code': props<{ email: string, code: string }>(),
+    'Verify Password Reset Code Success': emptyProps(),
+    'Verify Password Reset Code Failure': props<{ error: string }>(),
+
+    'Confirm Password Reset': props<{ email: string, code: string, newPassword: string }>(),
+    'Confirm Password Reset Success': props<{ message: string }>(),
+    'Confirm Password Reset Failure': props<{ error: string }>()
   }
 });

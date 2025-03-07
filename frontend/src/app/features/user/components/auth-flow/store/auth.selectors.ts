@@ -3,7 +3,7 @@
 // date: 2025-01-03
 // description: Contains all selectors for the Auth feature
 import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { AuthState } from './auth.state';
+import { AuthState, AuthSteps } from './auth.state';
 
 export const selectAuthState = createFeatureSelector<AuthState>('auth');
 
@@ -125,4 +125,45 @@ export const selectLastActivity = createSelector(
 export const selectDebugMode = createSelector(
   selectAuthState,
   (state) => state.debugMode
+);
+
+export const selectCurrentEmail = createSelector(
+  selectAuthState,
+  (state) => state.currentEmail || ''
+);
+
+// Derived selector for step title
+export const selectStepTitle = createSelector(
+  selectCurrentStep,
+  selectUserExists,
+  (step, userExists) => {
+    switch (step) {
+      case AuthSteps.EMAIL:
+        return 'Sign In or Create Account';
+      case AuthSteps.PASSWORD:
+        return userExists ? 'Enter Password' : 'Create Account';
+      case AuthSteps.PASSWORD_SETUP:
+        return 'Create a Password';
+      case AuthSteps.EMAIL_VERIFY:
+        return 'Verify Email';
+      case AuthSteps.NAME_SETUP:
+        return 'Complete Your Profile';
+      case AuthSteps.PHONE_SETUP:
+        return 'Add Phone Number';
+      case AuthSteps.PHONE_VERIFY:
+        return 'Verify Phone Number';
+      case AuthSteps.MFA_SETUP:
+        return 'Set Up Two-Factor Authentication';
+      case AuthSteps.MFA_VERIFY:
+        return 'Enter Verification Code';
+      case AuthSteps.PASSWORD_RESET:
+        return 'Reset Password';
+      case AuthSteps.PASSWORD_RESET_VERIFY:
+        return 'Enter Reset Code';
+      case AuthSteps.PASSWORD_RESET_CONFIRM:
+        return 'Create New Password';
+      default:
+        return 'Authentication';
+    }
+  }
 );
