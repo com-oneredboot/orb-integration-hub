@@ -11,13 +11,15 @@ export const authReducer = createReducer(
   initialState,
 
   // Check Email
-  on(AuthActions.checkEmail, (state) => {
+  on(AuthActions.checkEmail, (state, { email }) => {
     console.debug('Reducer: checkEmail', {
       currentState: state,
-      action: 'checkEmail'
+      action: 'checkEmail',
+      email
     });
     return {
       ...state,
+      currentEmail: email,
       isLoading: true,
       error: null
     };

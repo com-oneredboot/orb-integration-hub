@@ -16,6 +16,7 @@ import { UserQueryInput } from "../../../../../core/graphql/user.graphql";
 import { AuthActions } from "./auth.actions";
 import * as fromAuth from "./auth.selectors";
 import { CognitoService } from "../../../../../core/services/cognito.service";
+import { ErrorRegistry, OrbitError } from "../../../../../core/models/error-registry.model";
 
 @Injectable()
 export class AuthEffects {
@@ -26,16 +27,23 @@ export class AuthEffects {
       tap(action => console.debug('Effect [CheckEmail]: Starting', action)),
       switchMap(({ email }) => {
         console.debug('Effect [CheckEmail]: Making service call');
-        return from(this.userService.userExists({ email } as UserQueryInput)).pipe(
+        
+        // Create a proper UserQueryInput object with only the email field
+        const userInput: UserQueryInput = { email };
+        
+        return from(this.userService.userExists(userInput)).pipe(
           tap(result => console.debug('Effect [CheckEmail]: Service returned', result)),
           map((exists: boolean) => {
             console.debug('Effect [CheckEmail]: Success, user exists:', exists);
             return AuthActions.checkEmailSuccess({ userExists: exists });
           }),
           catchError((error: Error) => {
-            console.error('Effect [CheckEmail]: Error caught', error);
+            // Use error registry to log and format error
+            const errorCode = 'ORB-API-003'; // Invalid input for GraphQL operation
+            ErrorRegistry.logError(errorCode, { originalError: error });
+            
             return of(AuthActions.checkEmailFailure({
-              error: error.message || 'An error occurred while checking email'
+              error: ErrorRegistry.getErrorMessage(errorCode)
             }));
           }),
           tap(resultAction => console.debug('Effect [CheckEmail]: Emitting action', resultAction))
@@ -43,8 +51,10 @@ export class AuthEffects {
       }),
       catchError(error => {
         console.error('Effect [CheckEmail]: Outer error caught', error);
+        const errorCode = 'ORB-SYS-001'; // Unexpected error
+        ErrorRegistry.logError(errorCode, { originalError: error });
         return of(AuthActions.checkEmailFailure({
-          error: 'An unexpected error occurred'
+          error: ErrorRegistry.getErrorMessage(errorCode)
         }));
       })
     )
