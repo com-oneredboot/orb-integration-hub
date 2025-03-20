@@ -1,6 +1,13 @@
-from dataclasses import dataclass
-from typing import List, Optional, Any
+"""
+{{ model_name }} Model
+Generated code - do not modify directly
+"""
+
+from dataclasses import dataclass, field
+from typing import List, Optional, Any, Dict, ClassVar
 from datetime import datetime
+from pydantic import BaseModel, Field, validator
+import uuid
 
 {# Collect enum types to import #}
 {% set enum_types = [] %}
@@ -21,14 +28,78 @@ from .{{ model_name|lower }}_enum import {{ enum_types|join(', ') }}
 {% endif %}
 
 @dataclass
-class {{ model_name }}:
-    {%- for attr, details in attributes.items() %}
-    {{ attr }}: {% if details.enum_type %}{{ details.enum_type }}
-    {%- elif details.type == 'array' and details.items and details.items.enum_type %}List[str]
-    {%- elif details.type == 'array' and details.items %}List[{% if details.items.type == 'string' %}str{% elif details.items.type == 'number' %}int{% elif details.items.type == 'boolean' %}bool{% else %}{{ details.items.type }}{% endif %}]
-    {%- elif details.type == 'array' %}List[Any]
-    {%- elif details.type == 'string' %}str
-    {%- elif details.type == 'boolean' %}bool
-    {%- elif details.type == 'number' %}int
-    {%- else %}{{ details.type }}{% endif %}
-    {%- endfor %}
+class {{ model_name }}Base:
+    """Base class for {{ model_name }} model"""
+    
+    # Class variables
+    SCHEMA_VERSION: ClassVar[str] = "{{ version }}"
+    
+    # Instance variables with type hints and default values
+{%- for attr, details in attributes.items() %}
+    {{ attr }}: {% if details.enum_type %}{{ details.enum_type }}{% elif details.type == 'array' and details.items and details.items.enum_type %}List[{{ details.items.enum_type }}]{% elif details.type == 'array' and details.items %}List[{% if details.items.type == 'string' %}str{% elif details.items.type == 'number' %}int{% elif details.items.type == 'boolean' %}bool{% else %}{{ details.items.type }}{% endif %}]{% elif details.type == 'array' %}List[Any]{% elif details.type == 'string' %}str{% elif details.type == 'boolean' %}bool{% elif details.type == 'number' %}int{% else %}{{ details.type }}{% endif %} = field(
+        default={% if details.type == 'array' %}list{% elif details.enum_type %}{{ details.enum_type }}.UNKNOWN{% elif details.type == 'string' %}''{% elif details.type == 'number' %}0{% elif details.type == 'boolean' %}False{% else %}None{% endif %},
+        metadata={
+            "description": "{{ details.description if details.description else '' }}",
+            "required": {{ details.required|lower }},
+            {% if details.validation %}
+            "validation": {
+                {% for key, value in details.validation.items() %}
+                "{{ key }}": {{ value|tojson }},
+                {% endfor %}
+            }
+            {% endif %}
+        }
+    )
+{%- endfor %}
+
+class {{ model_name }}Pydantic(BaseModel):
+    """Pydantic model for validation"""
+    
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {
+            datetime: lambda v: v.isoformat(),
+            uuid.UUID: lambda v: str(v)
+        }
+    
+    # Add fields with validation
+{%- for attr, details in attributes.items() %}
+    {{ attr }}: {% if details.enum_type %}{{ details.enum_type }}{% elif details.type == 'array' and details.items and details.items.enum_type %}List[{{ details.items.enum_type }}]{% elif details.type == 'array' and details.items %}List[{% if details.items.type == 'string' %}str{% elif details.items.type == 'number' %}int{% elif details.items.type == 'boolean' %}bool{% else %}{{ details.items.type }}{% endif %}]{% elif details.type == 'array' %}List[Any]{% elif details.type == 'string' %}str{% elif details.type == 'boolean' %}bool{% elif details.type == 'number' %}int{% else %}{{ details.type }}{% endif %} = Field(
+        default={% if details.type == 'array' %}list{% elif details.enum_type %}{{ details.enum_type }}.UNKNOWN{% elif details.type == 'string' %}''{% elif details.type == 'number' %}0{% elif details.type == 'boolean' %}False{% else %}None{% endif %},
+        description="{{ details.description if details.description else '' }}",
+        {% if details.required %}required=True{% else %}required=False{% endif %}
+    )
+{%- endfor %}
+
+@dataclass
+class {{ model_name }}({{ model_name }}Base):
+    """{{ model_name }} model with validation"""
+    
+    def __post_init__(self):
+        """Validate the model after initialization"""
+        try:
+            # Convert to Pydantic model for validation
+            pydantic_model = {{ model_name }}Pydantic(**self.__dict__)
+            # Update instance with validated data
+            for field_name, value in pydantic_model.dict().items():
+                setattr(self, field_name, value)
+        except Exception as e:
+            raise ValueError(f"Validation error: {str(e)}")
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert model to dictionary"""
+        return {
+            "schema_version": self.SCHEMA_VERSION,
+            {% for attr, details in attributes.items() %}
+            "{{ attr }}": self.{{ attr }},
+            {% endfor %}
+        }
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> '{{ model_name }}':
+        """Create model instance from dictionary"""
+        return cls(**data)
+    
+    def __str__(self) -> str:
+        """String representation of the model"""
+        return f"{{ model_name }}({', '.join(f'{k}={v}' for k, v in self.to_dict().items())})"

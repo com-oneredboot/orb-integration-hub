@@ -1,7 +1,9 @@
 /**
  * {{ model_name }} Model
  * Generated code - do not modify directly
+ * @generated
  */
+
 {# Collect enum types to import #}
 {% set enum_types = [] %}
 
@@ -20,12 +22,14 @@
 import { {{ enum_types|join(', ') }} } from './{{ model_name|lower }}.enum';
 {% endif %}
 
+// Interface
 export interface I{{ model_name }} {
 {%- for attr, details in attributes.items() %}
-  {{ attr }}: {% if details.enum_type %}{{ details.enum_type }}{% elif details.type == 'array' and details.items and details.items.enum_type %}{{ details.items.enum_type }}[]{% elif details.type == 'array' and details.items %}{{ details.items.type }}[]{% elif details.type == 'array' %}any[]{% else %}{{ details.type }}{% endif %};
+  {{ attr }}: {% if details.enum_type %}{{ details.enum_type }}{% elif details.type == 'array' and details.items and details.items.enum_type %}{{ details.items.enum_type }}[]{% elif details.type == 'array' and details.items %}{{ details.items.type }}[]{% elif details.type == 'array' %}any[]{% else %}{{ details.type }}{% endif %}{% if not details.required %}?{% endif %};
 {%- endfor %}
 }
 
+// Model Class
 export class {{ model_name }} implements I{{ model_name }} {
 {%- for attr, details in attributes.items() %}
   {{ attr }}: {% if details.enum_type %}{{ details.enum_type }}{% elif details.type == 'array' and details.items and details.items.enum_type %}{{ details.items.enum_type }}[]{% elif details.type == 'array' and details.items %}{{ details.items.type }}[]{% elif details.type == 'array' %}any[]{% else %}{{ details.type }}{% endif %}{% if details.type == 'array' %} = []{% elif details.enum_type %} = {{ details.enum_type }}.UNKNOWN{% elif details.type == 'string' %} = ''{% elif details.type == 'number' %} = 0{% elif details.type == 'boolean' %} = false{% endif %};

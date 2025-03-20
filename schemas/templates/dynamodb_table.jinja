@@ -1,0 +1,62 @@
+{# DynamoDB table definition template #}
+Resources:
+  {{ table_name }}Table:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: {{ table_name }}
+      AttributeDefinitions:
+        - AttributeName: {{ model.keys.primary.partition }}
+          AttributeType: S
+        {% if model.keys.primary.sort %}
+        - AttributeName: {{ model.keys.primary.sort }}
+          AttributeType: S
+        {% endif %}
+        {% for idx in model.keys.secondary %}
+        - AttributeName: {{ idx.partition }}
+          AttributeType: S
+        {% if idx.sort %}
+        - AttributeName: {{ idx.sort }}
+          AttributeType: S
+        {% endif %}
+        {% endfor %}
+      KeySchema:
+        - AttributeName: {{ model.keys.primary.partition }}
+          KeyType: HASH
+        {% if model.keys.primary.sort %}
+        - AttributeName: {{ model.keys.primary.sort }}
+          KeyType: RANGE
+        {% endif %}
+      {% if model.keys.secondary %}
+      GlobalSecondaryIndexes:
+        {% for idx in model.keys.secondary %}
+        - IndexName: {{ idx.name }}
+          KeySchema:
+            - AttributeName: {{ idx.partition }}
+              KeyType: HASH
+            {% if idx.sort %}
+            - AttributeName: {{ idx.sort }}
+              KeyType: RANGE
+            {% endif %}
+          Projection:
+            ProjectionType: {{ idx.projection_type }}
+            {% if idx.projection_type == 'INCLUDE' and idx.projected_attributes %}
+            NonKeyAttributes:
+              {% for attr in idx.projected_attributes %}
+              - {{ attr }}
+              {% endfor %}
+            {% endif %}
+          ProvisionedThroughput:
+            ReadCapacityUnits: 5
+            WriteCapacityUnits: 5
+        {% endfor %}
+      {% endif %}
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      Tags:
+        - Key: Environment
+          Value: ${env}
+        - Key: Project
+          Value: orb-integration-hub
+        - Key: ManagedBy
+          Value: schema-generator 

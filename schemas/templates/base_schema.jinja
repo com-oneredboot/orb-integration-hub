@@ -1,0 +1,144 @@
+{# Base schema template with common types and validations #}
+
+{# Common Types #}
+{% macro common_types() %}
+types:
+  timestamp:
+    type: string
+    format: date-time
+    description: ISO 8601 formatted timestamp
+    validation:
+      pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:?\d{2})?$'
+  
+  uuid:
+    type: string
+    format: uuid
+    description: Universally unique identifier
+    validation:
+      pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+  
+  email:
+    type: string
+    format: email
+    description: Valid email address
+    validation:
+      pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+  
+  phone:
+    type: string
+    format: phone
+    description: E.164 formatted phone number
+    validation:
+      pattern: '^\+[1-9]\d{1,14}$'
+{% endmacro %}
+
+{# Common Validations #}
+{% macro common_validations() %}
+validations:
+  required:
+    type: boolean
+    default: false
+    description: Whether the field is required
+  
+  unique:
+    type: boolean
+    default: false
+    description: Whether the field must be unique
+  
+  min_length:
+    type: integer
+    description: Minimum length for string or array
+  
+  max_length:
+    type: integer
+    description: Maximum length for string or array
+  
+  pattern:
+    type: string
+    description: Regular expression pattern for validation
+  
+  enum:
+    type: array
+    items:
+      type: string
+    description: List of allowed values
+  
+  default:
+    type: any
+    description: Default value for the field
+{% endmacro %}
+
+{# Common Indexes #}
+{% macro common_indexes() %}
+indexes:
+  # Example of a GSI with ALL projection
+  created_at:
+    type: GSI
+    name: created_at_index
+    partition: created_at
+    sort: id
+    projection_type: ALL
+    description: Index for time-based queries with all attributes projected
+
+  # Example of a GSI with KEYS_ONLY projection
+  status:
+    type: GSI
+    name: status_index
+    partition: status
+    sort: id
+    projection_type: KEYS_ONLY
+    description: Index for status-based queries with only key attributes projected
+
+  # Example of a GSI with INCLUDE projection
+  user_status:
+    type: GSI
+    name: user_status_index
+    partition: user_id
+    sort: status
+    projection_type: INCLUDE
+    projected_attributes:
+      - email
+      - first_name
+      - last_name
+    description: Index for user status queries with specific attributes projected
+
+  # Example of an LSI
+  updated_at:
+    type: LSI
+    name: updated_at_index
+    partition: id
+    sort: updated_at
+    projection_type: ALL
+    description: Local secondary index for tracking updates
+{% endmacro %}
+
+{# Common Fields #}
+{% macro common_fields() %}
+fields:
+  id:
+    type: uuid
+    required: true
+    unique: true
+    description: Unique identifier
+  
+  created_at:
+    type: timestamp
+    required: true
+    description: Creation timestamp
+  
+  updated_at:
+    type: timestamp
+    required: true
+    description: Last update timestamp
+  
+  deleted_at:
+    type: timestamp
+    required: false
+    description: Soft delete timestamp
+  
+  version:
+    type: integer
+    required: true
+    default: 1
+    description: Schema version
+{% endmacro %} 

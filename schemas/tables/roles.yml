@@ -10,12 +10,30 @@ model:
     primary:
       partition: role_id
     secondary:
-      - name: user-id-index
+      - name: user-role-index
+        type: GSI
         partition: user_id
         sort: role_id
-      - name: application-id-index
+        projection_type: INCLUDE
+        projected_attributes:
+          - role_name
+          - role_type
+          - permissions
+        description: Index for querying roles by user with essential role attributes projected
+      
+      - name: application-role-index
+        type: GSI
         partition: application_id
         sort: role_id
+        projection_type: KEYS_ONLY
+        description: Index for querying roles by application with minimal projection
+      
+      - name: role-type-index
+        type: LSI
+        partition: role_id
+        sort: role_type
+        projection_type: ALL
+        description: Local secondary index for filtering roles by type
   attributes:
     role_id:
       type: string

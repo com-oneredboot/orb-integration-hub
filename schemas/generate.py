@@ -9,87 +9,14 @@ import os
 import sys
 import logging
 from pathlib import Path
+from typing import Dict, Any, List, Optional
+from datetime import datetime
 
 # 3rd party imports
 import yaml
-from jinja2 import Template, Environment, FileSystemLoader
-
-# Utility functions
-def clean_consecutive_blank_lines(text):
-    """
-    Remove consecutive blank lines from text.
-    Also handles specific GraphQL formatting issues.
-    
-    :param text: Text to clean
-    :return: Cleaned text with no consecutive blank lines and proper GraphQL formatting
-    """
-    # Split the text into lines
-    lines = text.splitlines()
-    
-    # Process lines to remove excessive blank lines and fix formatting
-    cleaned_lines = []
-    prev_blank = False
-    in_query_input = False  # Track if we're inside a QueryInput block
-    
-    for line in lines:
-        # Check if we're entering a QueryInput definition
-        if "input" in line and "QueryInput" in line and "{" in line:
-            in_query_input = True
-        
-        # Check if we're exiting a QueryInput definition
-        if in_query_input and "}" in line:
-            in_query_input = False
-        
-        is_blank = not line.strip()
-        
-        # Skip consecutive blank lines
-        if is_blank and prev_blank:
-            continue
-        
-        # Skip blank lines inside QueryInput sections to improve formatting
-        if is_blank and in_query_input:
-            continue
-            
-        # Add the line if it passes all checks
-        cleaned_lines.append(line)
-        prev_blank = is_blank
-    
-    # Join lines back together
-    output = '\n'.join(cleaned_lines)
-    
-    # Additional cleanup specifically for QueryInput sections
-    # Find QueryInput blocks and ensure proper formatting
-    import re
-    query_input_pattern = r'(input \w+QueryInput[^{]*{)\s*\n\s*\n'
-    output = re.sub(query_input_pattern, r'\1\n', output)
-    
-    return output
-
-def process_field_type(field_name, field_info):
-    """
-    Process field type based on field name and configuration.
-    This allows special handling for specific field types like timestamps.
-    
-    :param field_name: The name of the field
-    :param field_info: The field's configuration info
-    :return: Modified field info with the correct GraphQL type
-    """
-    # Create a copy to avoid modifying the original dict
-    result = field_info.copy()
-    
-    # Special handling for timestamp fields to ensure consistency
-    # ORB standard: Timestamps are stored as ISO 8601 strings (e.g., 2025-03-07T16:23:17.488Z)
-    timestamp_fields = ['created_at', 'updated_at', 'deleted_at', 'last_modified', 'timestamp']
-    if field_name in timestamp_fields or field_name.endswith('_at') or field_name.endswith('_date'):
-        # Override the 'type' directly for timestamps to ensure proper GraphQL schema generation
-        # This will ensure the field is rendered as a String type in the GraphQL schema
-        result['type'] = 'timestamp'
-        
-        # Add a comment to the field info for documentation
-        if 'description' not in result:
-            result['description'] = 'ISO 8601 formatted timestamp (e.g., 2025-03-07T16:23:17.488Z)'
-    
-    return result
+from jinja2 import Template, Environment, FileSystemLoader, select_autoescape
+from pydantic import BaseModel, Field
+from pydantic import validator
 
 # Set up logging
 logger = logging.getLogger('schema_generator')
@@ -111,21 +38,85 @@ logger.addHandler(file_handler)
 # Get the directory where this script is located
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
+class SchemaValidationError(Exception):
+    """Raised when schema validation fails"""
+    pass
 
-def setup_jinja_env():
+class SchemaField(BaseModel):
+    """Schema field definition"""
+    type: str
+    required: bool = False
+    description: Optional[str] = None
+    validation: Optional[Dict[str, Any]] = None
+    enum_type: Optional[str] = None
+    items: Optional[Dict[str, Any]] = None
+
+class SchemaIndex(BaseModel):
+    """Schema index definition"""
+    type: str = Field(..., description="Type of index (GSI or LSI)")
+    partition: str = Field(..., description="Partition key for the index")
+    sort: Optional[str] = Field(None, description="Sort key for the index")
+    name: Optional[str] = Field(None, description="Name of the index")
+    description: Optional[str] = Field(None, description="Description of the index")
+    projection_type: str = Field("ALL", description="Projection type: ALL, KEYS_ONLY, or INCLUDE")
+    projected_attributes: Optional[List[str]] = Field(None, description="List of attributes to project when projection_type is INCLUDE")
+
+    @validator('type')
+    def validate_index_type(cls, v):
+        if v not in ['GSI', 'LSI']:
+            raise ValueError('Index type must be either GSI or LSI')
+        return v
+
+    @validator('projection_type')
+    def validate_projection_type(cls, v):
+        if v not in ['ALL', 'KEYS_ONLY', 'INCLUDE']:
+            raise ValueError('Projection type must be ALL, KEYS_ONLY, or INCLUDE')
+        return v
+
+    @validator('projected_attributes')
+    def validate_projected_attributes(cls, v, values):
+        if 'projection_type' in values and values['projection_type'] == 'INCLUDE' and not v:
+            raise ValueError('projected_attributes is required when projection_type is INCLUDE')
+        return v
+
+    @validator('name')
+    def validate_index_name(cls, v):
+        if v:
+            # DynamoDB index name requirements:
+            # - 3-255 characters long
+            # - Only alphanumeric characters, underscores, and hyphens
+            # - Must start with a letter
+            if not (3 <= len(v) <= 255):
+                raise ValueError('Index name must be between 3 and 255 characters')
+            if not v[0].isalpha():
+                raise ValueError('Index name must start with a letter')
+            if not all(c.isalnum() or c in ['_', '-'] for c in v):
+                raise ValueError('Index name can only contain alphanumeric characters, underscores, and hyphens')
+        return v
+
+class SchemaModel(BaseModel):
+    """Schema model definition"""
+    version: str
+    keys: Dict[str, Any]
+    attributes: Dict[str, SchemaField]
+    indexes: Optional[List[SchemaIndex]] = None
+
+def setup_jinja_env() -> Environment:
     """
-    Set up the Jinja environment with custom filters.
-
-    :return: Configured Jinja environment
+    Set up the Jinja environment with custom filters and globals.
+    
+    Returns:
+        Configured Jinja environment
     """
-    import re
-
-    # Create Jinja environment
-    env = Environment(loader=FileSystemLoader(os.path.join(SCRIPT_DIR, 'templates')))
-
-    # Define regex_search filter
-    def regex_search(value, pattern, group=0):
+    env = Environment(
+        loader=FileSystemLoader(os.path.join(SCRIPT_DIR, 'templates')),
+        autoescape=select_autoescape(['html', 'xml'])
+    )
+    
+    # Add custom filters
+    def regex_search(value: str, pattern: str, group: int = 0) -> str:
         """Extract content using regex pattern"""
+        import re
         if value is None:
             return ""
         match = re.search(pattern, value, re.DOTALL)
@@ -133,909 +124,513 @@ def setup_jinja_env():
             group_index = match.groups().index(group) + 1
             return match.group(group_index)
         return ""
-
-    # Add custom filters
+    
     env.filters['regex_search'] = regex_search
-
+    
+    # Add custom globals
+    env.globals['now'] = lambda: datetime.now().isoformat()
+    
     return env
 
-def load_template(template_path, jinja_env=None):
+def validate_schema(schema: Dict[str, Any]) -> None:
     """
-    Load a template from the templates directory.
-
-    :param template_path: Path to the template file
-    :param jinja_env: Optional Jinja environment to use
-    :return: Template content as string
-    :raises FileNotFoundError: If template file doesn't exist
-    :raises Exception: For any other errors during file reading
+    Validate schema structure and content.
+    
+    Args:
+        schema: Schema dictionary to validate
+        
+    Raises:
+        SchemaValidationError: If validation fails
     """
-    # If using a Jinja environment, use it to load the template
-    if jinja_env:
-        template_name = os.path.basename(template_path)
-        try:
-            template = jinja_env.get_template(template_name)
-            logger.debug("Successfully loaded template: %s using Jinja env", template_name)
-            return template
-        except Exception as e:
-            logger.error("Error loading template %s with Jinja env: %s", template_name, str(e))
-            raise
-
-    # Otherwise, load the template directly
-    full_path = os.path.join(SCRIPT_DIR, template_path)
     try:
-        with open(full_path, 'r') as file:
-            template_content = file.read()
-            logger.debug("Successfully loaded template: %s", full_path)
-            return Template(template_content)
-    except FileNotFoundError:
-        logger.error("Template file not found: %s", full_path)
-        raise
+        # Validate required top-level keys
+        required_keys = ['version', 'table', 'model']
+        for key in required_keys:
+            if key not in schema:
+                raise SchemaValidationError(f"Missing required key: {key}")
+        
+        # Validate model structure
+        model = schema['model']
+        if 'keys' not in model:
+            raise SchemaValidationError("Model missing required 'keys' section")
+        
+        # Validate primary key
+        if 'primary' not in model['keys']:
+            raise SchemaValidationError("Model missing required 'primary' key")
+        
+        # Validate attributes
+        if 'attributes' not in model:
+            raise SchemaValidationError("Model missing required 'attributes' section")
+        
+        # Get all attribute names
+        attribute_names = set(model['attributes'].keys())
+        
+        # Validate primary key fields exist in attributes
+        primary_key = model['keys']['primary']
+        if 'partition' in primary_key and primary_key['partition'] not in attribute_names:
+            raise SchemaValidationError(f"Primary partition key '{primary_key['partition']}' not found in attributes")
+        if 'sort' in primary_key and primary_key['sort'] not in attribute_names:
+            raise SchemaValidationError(f"Primary sort key '{primary_key['sort']}' not found in attributes")
+        
+        # Validate secondary indexes
+        if 'secondary' in model['keys']:
+            for idx in model['keys']['secondary']:
+                # Validate index name
+                if 'name' not in idx:
+                    raise SchemaValidationError("Secondary index missing required 'name' field")
+                
+                # Validate partition key exists in attributes
+                if 'partition' not in idx or idx['partition'] not in attribute_names:
+                    raise SchemaValidationError(f"Index '{idx['name']}' partition key '{idx.get('partition', '')}' not found in attributes")
+                
+                # Validate sort key exists in attributes if specified
+                if 'sort' in idx and idx['sort'] not in attribute_names:
+                    raise SchemaValidationError(f"Index '{idx['name']}' sort key '{idx['sort']}' not found in attributes")
+                
+                # Validate projected attributes exist if specified
+                if 'projection_type' in idx and idx['projection_type'] == 'INCLUDE':
+                    if 'projected_attributes' not in idx:
+                        raise SchemaValidationError(f"Index '{idx['name']}' missing projected_attributes for INCLUDE projection")
+                    for attr in idx['projected_attributes']:
+                        if attr not in attribute_names:
+                            raise SchemaValidationError(f"Index '{idx['name']}' projected attribute '{attr}' not found in attributes")
+        
+        # Validate each attribute
+        for attr_name, attr_info in model['attributes'].items():
+            if 'type' not in attr_info:
+                raise SchemaValidationError(f"Attribute '{attr_name}' missing required 'type'")
+            
+            # Validate array items if present
+            if attr_info['type'] == 'array' and 'items' in attr_info:
+                if 'type' not in attr_info['items']:
+                    raise SchemaValidationError(f"Array attribute '{attr_name}' items missing required 'type'")
+    
     except Exception as e:
-        logger.error("Error loading template %s: %s", full_path, str(e))
-        raise
+        raise SchemaValidationError(f"Schema validation failed: {str(e)}")
 
-
-def load_schema(schema_path):
+def process_field_type(field_name: str, field_info: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Load and parse a YAML schema file.
-
-    :param schema_path: Path to the schema file
-    :return: Parsed schema as dictionary
-    :raises yaml.YAMLError: If schema contains invalid YAML
-    :raises FileNotFoundError: If schema file doesn't exist
-    :raises Exception: For any other errors during file reading or parsing
+    Process field type based on field name and configuration.
+    
+    Args:
+        field_name: The name of the field
+        field_info: The field's configuration info
+        
+    Returns:
+        Modified field info with the correct type
     """
-    # Resolve the schema path relative to script directory
-    full_path = os.path.join(SCRIPT_DIR, schema_path)
+    result = field_info.copy()
+    
+    # Special handling for timestamp fields
+    timestamp_fields = ['created_at', 'updated_at', 'deleted_at', 'last_modified', 'timestamp']
+    if field_name in timestamp_fields or field_name.endswith('_at') or field_name.endswith('_date'):
+        result['type'] = 'timestamp'
+        if 'description' not in result:
+            result['description'] = 'ISO 8601 formatted timestamp (e.g., 2025-03-07T16:23:17.488Z)'
+    
+    return result
+
+def load_schema(schema_path: str) -> Dict[str, Any]:
+    """
+    Load and parse a schema file.
+    
+    Args:
+        schema_path: Path to the schema file
+        
+    Returns:
+        Parsed schema dictionary
+        
+    Raises:
+        SchemaValidationError: If schema file cannot be loaded or parsed
+    """
     try:
-        with open(full_path, 'r') as file:
-            schema = yaml.safe_load(file)
-            logger.debug("Successfully loaded schema from %s", full_path)
-            return schema
-    except FileNotFoundError:
-        logger.error("Schema file not found: %s", full_path)
-        raise
-    except yaml.YAMLError as e:
-        logger.error("Invalid YAML in schema %s: %s", full_path, str(e))
-        raise
+        full_path = os.path.join(SCRIPT_DIR, schema_path)
+        with open(full_path, 'r') as f:
+            schema = yaml.safe_load(f)
+        return schema
     except Exception as e:
-        logger.error("Error loading schema %s: %s", full_path, str(e))
-        raise
+        raise SchemaValidationError(f"Failed to load schema file {schema_path}: {str(e)}")
 
-
-def load_index():
+def load_index() -> Dict[str, Any]:
     """
-    Load the index.yml file which contains the registry of all schemas.
-
-    :return: Parsed index as dictionary
-    :raises: Various exceptions handled by load_schema()
+    Load and parse the index.yml file.
+    
+    Returns:
+        Parsed index dictionary
+        
+    Raises:
+        SchemaValidationError: If index file cannot be loaded or parsed
     """
-    logger.info("Loading schema registry from index.yml")
-    return load_schema('index.yml')
+    try:
+        index_path = os.path.join(SCRIPT_DIR, 'index.yml')
+        with open(index_path, 'r') as f:
+            index = yaml.safe_load(f)
+        return index
+    except Exception as e:
+        raise SchemaValidationError(f"Failed to load index file: {str(e)}")
 
-
-def generate_python_model(table_name, schema_path, jinja_env):
+def generate_python_model(table_name: str, schema_path: str, jinja_env: Environment) -> bool:
     """
     Generate Python model from schema.
-
-    Reads the schema, applies the Python template, and writes
-    the result to the appropriate location in the backend directory.
-
-    :param table_name: Name of the table/model to generate
-    :param schema_path: Path to the schema file
-    :param jinja_env: Jinja environment
-    :return: Boolean indicating success or failure
+    
+    Args:
+        table_name: Name of the table/model to generate
+        schema_path: Path to the schema file
+        jinja_env: Jinja environment
+        
+    Returns:
+        Boolean indicating success or failure
     """
-    logger.info("Starting Python model generation for '%s'", table_name)
-
     try:
-        # Load the schema file
+        # Load and validate schema
         schema = load_schema(schema_path)
-        logger.debug("Loaded schema from %s", schema_path)
-
-        # Convert table_name to proper model name - singular and capitalized
-        # 'roles' -> 'Role', 'users' -> 'User', etc.
-        if table_name.endswith('s'):
-            model_name = table_name[:-1].capitalize()
-            model_file_name = table_name[:-1]  # for filename, use singular but don't capitalize
-        else:
-            model_name = table_name.capitalize()
-            model_file_name = table_name  # for filename, use as-is if not plural
-
-        logger.debug("Using model name '%s' for table '%s'", model_name, table_name)
-
-        # Extract the model - check for new structure format
-        if 'model' in schema and 'attributes' in schema['model']:
-            # New structure with top-level 'model' key
-            model = schema['model']
-            logger.debug("Found model attributes using new schema structure")
-        elif 'models' in schema and model_name in schema['models']:
-            # Old structure with 'models.ModelName' format
-            model = schema['models'][model_name]
-            logger.debug("Found model attributes using old schema structure")
-        else:
-            logger.error("Schema missing required model definition. Checked both 'model' and 'models.%s'", model_name)
-            return False
-
-        logger.debug("Model has %d attributes", len(model.get('attributes', {})))
-
-        # Load the Python template
-        template = load_template('python_model.jinja', jinja_env)
-
-        # Render the template with model data
-        py_code = template.render(
+        validate_schema(schema)
+        
+        # Process field types
+        for field_name, field_info in schema['model']['attributes'].items():
+            schema['model']['attributes'][field_name] = process_field_type(field_name, field_info)
+        
+        # Generate model name
+        model_name = table_name[:-1].capitalize() if table_name.endswith('s') else table_name.capitalize()
+        
+        # Load template and render
+        template = jinja_env.get_template('python_model.jinja')
+        output = template.render(
             model_name=model_name,
-            attributes=model['attributes']
+            version=schema['version'],
+            attributes=schema['model']['attributes']
         )
         
-        # Fix any List[] syntax in the Python code
-        py_code = py_code.replace("List[]", "List[Any]")
+        # Write output
+        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'src', 'models', f'{table_name}.py')
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
-        # Check for specific attributes that need to be fixed
-        for attr, details in model['attributes'].items():
-            if attr == 'groups' and details.get('type') == 'array' and 'items' in details and 'enum_type' in details['items']:
-                # Fix groups: List[] with proper UserGroups type
-                py_code = py_code.replace("groups: List[Any]", f"groups: List[{details['items']['enum_type']}]")
-                py_code = py_code.replace("from .user_enum import UserStatus", "from .user_enum import UserStatus, UserGroups")
+        with open(output_path, 'w') as f:
+            f.write(output)
         
-        # Clean up the rendered template by removing empty lines with spaces
-        # First remove leading/trailing empty lines
-        py_lines = [line.rstrip() for line in py_code.splitlines()]
-        
-        # Remove multiple consecutive empty lines, preserving single empty lines for readability
-        cleaned_lines = []
-        prev_empty = False
-        for line in py_lines:
-            is_empty = not line.strip()
-            if not is_empty or not prev_empty:
-                cleaned_lines.append(line)
-            prev_empty = is_empty
-        
-        py_code = '\n'.join(cleaned_lines)
-        
-        logger.debug("Successfully rendered and cleaned Python template")
-
-        # Prepare output location - using singular form for file name
-        output_dir = Path('../backend/src/models')
-        output_file = output_dir / f"{model_file_name}.model.py"
-        enum_file = output_dir / f"{model_file_name}_enum.py"
-
-        # Ensure directory exists
-        output_dir.mkdir(parents=True, exist_ok=True)
-        logger.debug("Ensured output directory exists: %s", output_dir)
-
-        # Write the generated code to file
-        with open(output_file, 'w') as f:
-            f.write(py_code)
-            
-        # Check if enum file exists, if not create it as an empty commented file
-        if not enum_file.exists():
-            logger.info("Creating Python enum file: %s", enum_file)
-            with open(enum_file, 'w') as f:
-                f.write(f"""# {model_name} Enums
-#
-# This file contains enums for the {model_name} model.
-# This file is not auto-generated and should be maintained manually.
-
-from enum import Enum
-
-# Add your enums here
-# Example:
-# class {model_name}Status(Enum):
-#     UNKNOWN = "UNKNOWN"
-#     ACTIVE = "ACTIVE"
-#     INACTIVE = "INACTIVE"
-""")
-            logger.info("Python enum file created: %s", enum_file)
-        else:
-            logger.debug("Python enum file already exists: %s", enum_file)
-
-        logger.info("Python model successfully generated: %s", output_file)
+        logger.info(f"Generated Python model for {table_name}")
         return True
-
-    except KeyError as e:
-        logger.error("Schema missing required key: %s", str(e))
-        return False
+        
     except Exception as e:
-        logger.error("Error generating Python model for '%s': %s", table_name, str(e), exc_info=True)
+        logger.error(f"Error generating Python model for {table_name}: {str(e)}")
         return False
 
-def generate_typescript_model(table_name, schema_path, jinja_env):
+def generate_typescript_model(table_name: str, schema_path: str, jinja_env: Environment) -> bool:
     """
     Generate TypeScript model from schema.
-
-    Reads the schema, applies the TypeScript template, and writes
-    the result to the appropriate location in the frontend directory.
-
-    :param table_name: Name of the table/model to generate
-    :param schema_path: Path to the schema file
-    :param jinja_env: Jinja environment
-    :return: Boolean indicating success or failure
+    
+    Args:
+        table_name: Name of the table/model to generate
+        schema_path: Path to the schema file
+        jinja_env: Jinja environment
+        
+    Returns:
+        Boolean indicating success or failure
     """
-    logger.info("Starting TypeScript model generation for '%s'", table_name)
-
     try:
-        # Load the schema file
+        # Load and validate schema
         schema = load_schema(schema_path)
-        logger.debug("Loaded schema from %s", schema_path)
-
-        # Convert table_name to proper model name - singular and capitalized
-        # 'roles' -> 'Role', 'users' -> 'User', etc.
-        if table_name.endswith('s'):
-            model_name = table_name[:-1].capitalize()
-            model_file_name = table_name[:-1]  # for filename, use singular but don't capitalize
-        else:
-            model_name = table_name.capitalize()
-            model_file_name = table_name  # for filename, use as-is if not plural
-
-        logger.debug("Using model name '%s' for table '%s'", model_name, table_name)
-
-        # Extract the model - check for new structure format
-        if 'model' in schema and 'attributes' in schema['model']:
-            # New structure with top-level 'model' key
-            model = schema['model']
-            logger.debug("Found model attributes using new schema structure")
-        elif 'models' in schema and model_name in schema['models']:
-            # Old structure with 'models.ModelName' format
-            model = schema['models'][model_name]
-            logger.debug("Found model attributes using old schema structure")
-        else:
-            logger.error("Schema missing required model definition. Checked both 'model' and 'models.%s'", model_name)
-            return False
-
-        logger.debug("Model has %d attributes", len(model.get('attributes', {})))
-
-        # Load the TypeScript template
-        template = load_template('typescript_model.jinja', jinja_env)
-
-        # Render the template with model data
-        ts_code = template.render(
+        validate_schema(schema)
+        
+        # Process field types
+        for field_name, field_info in schema['model']['attributes'].items():
+            schema['model']['attributes'][field_name] = process_field_type(field_name, field_info)
+        
+        # Generate model name
+        model_name = table_name[:-1].capitalize() if table_name.endswith('s') else table_name.capitalize()
+        
+        # Load template and render
+        template = jinja_env.get_template('typescript_model.jinja')
+        output = template.render(
             model_name=model_name,
-            attributes=model['attributes']
+            version=schema['version'],
+            attributes=schema['model']['attributes']
         )
         
-        # Check for specific attributes that need to be fixed in TypeScript code
-        for attr, details in model['attributes'].items():
-            if attr == 'groups' and details.get('type') == 'array' and 'items' in details and 'enum_type' in details['items']:
-                # Ensure UserGroups is imported but we use string[] for the type
-                ts_code = ts_code.replace("import { UserStatus } from './user.enum';", "import { UserStatus, UserGroups } from './user.enum';")
+        # Write output
+        output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models', f'{table_name}.model.ts')
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
-        # Check for specific attributes that need to be fixed in TypeScript code
-        for attr, details in model['attributes'].items():
-            if attr == 'groups' and details.get('type') == 'array' and 'items' in details and 'enum_type' in details['items']:
-                # Fix groups array to use UserGroups[] instead of empty array []
-                ts_code = ts_code.replace("  groups: [];", "  groups: UserGroups[];")
-                ts_code = ts_code.replace("  groups: [] = [];", "  groups: UserGroups[] = [];")
+        with open(output_path, 'w') as f:
+            f.write(output)
         
-        # Clean up the rendered template by removing empty lines with spaces
-        # First remove leading/trailing empty lines
-        ts_lines = [line.rstrip() for line in ts_code.splitlines()]
-        
-        # Remove multiple consecutive empty lines, preserving single empty lines for readability
-        cleaned_lines = []
-        prev_empty = False
-        for line in ts_lines:
-            is_empty = not line.strip()
-            if not is_empty or not prev_empty:
-                cleaned_lines.append(line)
-            prev_empty = is_empty
-        
-        ts_code = '\n'.join(cleaned_lines)
-        
-        logger.debug("Successfully rendered and cleaned TypeScript template")
-
-        # Prepare output location - create file name based on singular form
-        output_dir = Path('../frontend/src/app/core/models')
-        output_file = output_dir / f"{model_file_name}.model.ts"
-        enum_file = output_dir / f"{model_file_name}.enum.ts"
-
-        # Ensure directory exists
-        output_dir.mkdir(parents=True, exist_ok=True)
-        logger.debug("Ensured output directory exists: %s", output_dir)
-
-        # Write the generated code to file
-        with open(output_file, 'w') as f:
-            f.write(ts_code)
-            
-        # Check if enum file exists, if not create it as an empty commented file
-        if not enum_file.exists():
-            logger.info("Creating TypeScript enum file: %s", enum_file)
-            with open(enum_file, 'w') as f:
-                f.write(f"""/**
- * {model_name} Enums
- * 
- * This file contains enums for the {model_name} model.
- * This file is not auto-generated and should be maintained manually.
- */
-
-// Add your enums here
-// Example:
-// export enum {model_name}Status {{
-//   UNKNOWN = 'UNKNOWN',
-//   ACTIVE = 'ACTIVE',
-//   INACTIVE = 'INACTIVE'
-// }}
-""")
-            logger.info("TypeScript enum file created: %s", enum_file)
-        else:
-            logger.debug("TypeScript enum file already exists: %s", enum_file)
-
-        logger.info("TypeScript model successfully generated: %s", output_file)
+        logger.info(f"Generated TypeScript model for {table_name}")
         return True
-
-    except KeyError as e:
-        logger.error("Schema missing required key: %s", str(e))
-        return False
+        
     except Exception as e:
-        logger.error("Error generating TypeScript model for '%s': %s", table_name, str(e), exc_info=True)
+        logger.error(f"Error generating TypeScript model for {table_name}: {str(e)}")
         return False
 
-def generate_dynamodb_template(jinja_env):
+def generate_dynamodb_table(table_name: str, schema_path: str, jinja_env: Environment) -> bool:
     """
-    Generate DynamoDB CloudFormation template from schemas
-
-    :param jinja_env: Jinja environment
-    :return: Path to the generated template file
+    Generate DynamoDB table definition from schema.
+    
+    Args:
+        table_name: Name of the table/model to generate
+        schema_path: Path to the schema file
+        jinja_env: Jinja environment
+        
+    Returns:
+        Boolean indicating success or failure
     """
-    logger.info("Generating DynamoDB CloudFormation template")
-
     try:
-        # Load the index
-        index = load_index()
-
-        if 'schema_registry' not in index and 'schemaRegistry' in index:
-            index['schema_registry'] = index['schemaRegistry']
-
-        if 'schema_registry' not in index or 'tables' not in index['schema_registry']:
-            logger.error("Invalid index.yml: missing schema_registry.tables section")
-            return None
-
-        tables = index['schema_registry']['tables']
-
-        # Load the base CloudFormation template
-        base_template = load_template('dynamodb_cloudformation_base.jinja', jinja_env)
-
-        # Load the DynamoDB table template
-        table_template = load_template('dynamodb_cloudformation.jinja', jinja_env)
-
-        # Generate table definitions for all tables
-        table_definitions = ""
-
-        # Process each table
-        for table in tables:
-            table_name = table.get('name')
-            schema_path = table.get('path')
-
-            if not table_name or not schema_path:
-                continue
-
-            # Load the schema
-            schema = load_schema(schema_path)
-
-            # Convert table_name to proper model name
-            if table_name.endswith('s'):
-                model_name = table_name[:-1].capitalize()
-            else:
-                model_name = table_name.capitalize()
-
-            # Extract model and keys
-            if 'model' in schema and 'attributes' in schema['model']:
-                model = schema['model']
-            elif 'models' in schema and model_name in schema['models']:
-                model = schema['models'][model_name]
-            else:
-                logger.warning(f"Skipping table {table_name}: model definition not found")
-                continue
-
-            # Check for new keys structure
-            if 'keys' in model:
-                # Use new keys structure
-                keys = model['keys']
-            else:
-                # Try to use legacy partition_key and sort_key
-                keys = {
-                    'primary': {
-                        'partition': model.get('partition_key', ''),
-                        'sort': model.get('sort_key', '')
-                    },
-                    'secondary': []
-                }
-
-                # Convert legacy indexes to new format if they exist
-                if 'indexes' in model:
-                    for idx_name, idx_def in model['indexes'].items():
-                        gsi = {
-                            'name': idx_name,
-                            'partition': idx_def.get('key', ''),
-                            'sort': idx_def.get('sort_key', '')
-                        }
-                        keys['secondary'].append(gsi)
-
-            # Render the table template
-            table_cf = table_template.render(
-                model_name=model_name,
-                table_name=table_name,
-                keys=keys
-            )
-
-            # Add to the table definitions
-            table_definitions += table_cf + "\n"
-
-        # Render the base template with the table definitions
-        cf_template = base_template.render(
-            table_definitions=table_definitions
-        )
-
-        # Output location
-        output_dir = Path('../backend/infrastructure/cloudformation')
-        output_file = output_dir / "dynamodb.yml"
-
-        # Ensure directory exists
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        # Write the CF template
-        with open(output_file, 'w') as f:
-            f.write(cf_template)
-
-        logger.info("DynamoDB CloudFormation template generated: %s", output_file)
-        return output_file
-
-    except Exception as e:
-        logger.error("Error generating DynamoDB template: %s", str(e), exc_info=True)
-        return None
-
-def generate_graphql_schema(table_name, schema_path, jinja_env):
-    """
-    Generate GraphQL schema fragment from model definition.
-
-    :param table_name: Name of the table/model to generate
-    :param schema_path: Path to the schema file
-    :param jinja_env: Jinja environment
-    :return: Boolean indicating success or failure
-    """
-    logger.info("Starting GraphQL schema generation for '%s'", table_name)
-
-    try:
-        # Load the schema file
+        # Load and validate schema
         schema = load_schema(schema_path)
-        logger.debug("Loaded schema from %s", schema_path)
-
-        # Convert table_name to proper model name - singular and capitalized
-        if table_name.endswith('s'):
-            model_name = table_name[:-1].capitalize()
-            model_file_name = table_name[:-1]  # for filename, use singular
-        else:
-            model_name = table_name.capitalize()
-            model_file_name = table_name  # for filename, use as-is
-
-        logger.debug("Using model name '%s' for table '%s'", model_name, table_name)
-
-        # Extract the model
-        if 'model' in schema and 'attributes' in schema['model']:
-            model = schema['model']
-            logger.debug("Found model attributes using new schema structure")
-        elif 'models' in schema and model_name in schema['models']:
-            model = schema['models'][model_name]
-            logger.debug("Found model attributes using old schema structure")
-        else:
-            logger.error("Schema missing required model definition")
-            return False
-            
-        # Process attribute types for GraphQL
-        processed_attributes = {}
-        for attr, details in model['attributes'].items():
-            # Apply special processing for specific field types
-            processed_details = process_field_type(attr, details)
-            
-            # Special handling for groups attribute to use UserGroups in GraphQL
-            if attr == 'groups' and details.get('type') == 'array' and 'items' in details and 'enum_type' in details['items']:
-                # Set a graphql_type attribute to be used in templates
-                processed_details['graphql_type'] = details['items']['enum_type']
-                logger.debug(f"Set graphql_type for groups to {processed_details['graphql_type']}")
-                
-            processed_attributes[attr] = processed_details
+        validate_schema(schema)
         
-        # Extract auth config if available
-        auth_config = None
-        if 'auth_config' in model:
-            auth_config = model['auth_config']
-            logger.debug(f"Found auth_config for {model_name}: {auth_config}")
-            
-        # Extract the partition key and sort key (supporting both old and new formats)
-        partition_key = ""
-        sort_key = ""
-        
-        # Check for new key format (nested under keys.primary)
-        if 'keys' in model and 'primary' in model['keys']:
-            partition_key = model['keys']['primary'].get('partition', '')
-            sort_key = model['keys']['primary'].get('sort', '')
-            logger.debug("Found keys using new schema structure: partition=%s, sort=%s", 
-                        partition_key, sort_key)
-        # Fall back to old key format (direct properties)
-        else:
-            partition_key = model.get('partition_key', '')
-            sort_key = model.get('sort_key', '')
-            logger.debug("Using legacy key structure: partition=%s, sort=%s", 
-                        partition_key, sort_key)
-
-        # Load the GraphQL schema template
-        template = load_template('graphql_schema.jinja', jinja_env)
-
-        # Render the template with model data
-        gql_schema = template.render(
-            model_name=model_name,
-            model_name_lowercase=model_name.lower(),
-            attributes=processed_attributes,  # Use processed attributes with type overrides
-            model=model,  # Pass the entire model to access keys.secondary
-            partition_key=partition_key,
-            sort_key=sort_key,
-            auth_config=auth_config
+        # Load template and render
+        template = jinja_env.get_template('dynamodb_cloudformation.jinja')
+        output = template.render(
+            table_name=table_name,
+            model_name=table_name[:-1].capitalize() if table_name.endswith('s') else table_name.capitalize(),
+            keys=schema['model']['keys']
         )
         
-        # Clean up multiple consecutive blank lines
-        gql_schema = clean_consecutive_blank_lines(gql_schema)
-
-        # Prepare output location matching your directory structure
-        output_dir = Path('../schemas/graphql')
-        output_file = output_dir / f"{model_file_name}.graphql"
-
-        # Ensure directory exists
-        output_dir.mkdir(parents=True, exist_ok=True)
-        logger.debug("Ensured output directory exists: %s", output_dir)
-
-        # Write the generated schema to file
-        with open(output_file, 'w') as f:
-            f.write(gql_schema)
-
-        logger.info("GraphQL schema successfully generated: %s", output_file)
+        # Write output
+        output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'dynamodb', f'{table_name}_table.yml')
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        
+        with open(output_path, 'w') as f:
+            f.write(output)
+        
+        logger.info(f"Generated DynamoDB table definition for {table_name}")
         return True
-
+        
     except Exception as e:
-        logger.error("Error generating GraphQL schema: %s", str(e), exc_info=True)
+        logger.error(f"Error generating DynamoDB table definition for {table_name}: {str(e)}")
         return False
 
-
-def generate_appsync_imports():
+def generate_graphql_schema(table_name: str, schema_path: str, jinja_env: Environment) -> bool:
     """
-    Generate the AppSync imports file for the main schema.
-
-    :return: Boolean indicating success or failure
+    Generate GraphQL schema from schema.
+    
+    Args:
+        table_name: Name of the table/model to generate
+        schema_path: Path to the schema file
+        jinja_env: Jinja environment
+        
+    Returns:
+        Boolean indicating success or failure
     """
-    logger.info("Generating AppSync imports file")
-
     try:
-        # Load the index
-        index = load_index()
-
-        if 'schema_registry' not in index and 'schemaRegistry' in index:
-            index['schema_registry'] = index['schemaRegistry']
-
-        if 'schema_registry' not in index or 'tables' not in index['schema_registry']:
-            logger.error("Invalid index.yml: missing schema_registry.tables section")
-            return False
-
-        tables = index['schema_registry']['tables']
-
-        # Generate import statements with no quotes, just as AppSync expects
-        import_statements = []
-        for table in tables:
-            table_name = table.get('name')
-            if not table_name:
-                continue
-
-            # Convert to singular if plural
-            if table_name.endswith('s'):
-                model_name = table_name[:-1]
-            else:
-                model_name = table_name
-
-            # Use AppSync import syntax without quotes
-            import_statements.append(f'#import schemas/{model_name}.graphql')
-
-        # Prepare output location
-        output_dir = Path('../backend/infrastructure/cloudformation')
-        output_file = output_dir / "imports.graphql"
-
-        # Ensure directory exists
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        # Write the imports file
-        with open(output_file, 'w') as f:
-            f.write('\n'.join(import_statements))
-
-        logger.info("AppSync imports file successfully generated: %s", output_file)
+        # Load and validate schema
+        schema = load_schema(schema_path)
+        validate_schema(schema)
+        
+        # Generate model name
+        model_name = table_name[:-1].capitalize() if table_name.endswith('s') else table_name.capitalize()
+        model_name_lowercase = model_name.lower()
+        
+        # Load template and render
+        template = jinja_env.get_template('graphql_schema.jinja')
+        output = template.render(
+            model_name=model_name,
+            model_name_lowercase=model_name_lowercase,
+            attributes=schema['model']['attributes'],
+            partition_key=schema['model']['keys']['primary']['partition'],
+            sort_key=schema['model']['keys']['primary'].get('sort'),
+            model=schema['model'],
+            auth_config=schema['model'].get('auth_config')
+        )
+        
+        # Write output
+        output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'graphql', f'{table_name}_schema.graphql')
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        
+        with open(output_path, 'w') as f:
+            f.write(output)
+        
+        logger.info(f"Generated GraphQL schema for {table_name}")
         return True
-
+        
     except Exception as e:
-        logger.error("Error generating AppSync imports file: %s", str(e), exc_info=True)
+        logger.error(f"Error generating GraphQL schema for {table_name}: {str(e)}")
         return False
 
-def cleanup_old_schema_files(output_dir, pattern="appsync_*.graphql", keep_count=5):
+def generate_graphql_base_schema(schemas: List[Dict[str, Any]], jinja_env: Environment) -> bool:
     """
-    Cleanup old schema files, keeping only the most recent ones.
-    Also remove any non-timestamped schema files.
+    Generate base GraphQL schema that includes all model schemas.
     
-    :param output_dir: Directory containing schema files
-    :param pattern: Pattern to match files for cleanup
-    :param keep_count: Number of most recent files to keep
-    :return: None
+    Args:
+        schemas: List of schema dictionaries
+        jinja_env: Jinja environment
+        
+    Returns:
+        Boolean indicating success or failure
     """
-    logger.info("Cleaning up old schema files, keeping %d most recent", keep_count)
-    
     try:
-        # Get all timestamped schema files matching the pattern
-        schema_files = list(output_dir.glob(pattern))
+        # Load template and render
+        template = jinja_env.get_template('graphql_schema_base.jinja')
         
-        # Sort by modification time (newest first)
-        schema_files.sort(key=lambda x: x.stat().st_mtime, reverse=True)
-        
-        # If we have more files than we want to keep
-        if len(schema_files) > keep_count:
-            # Delete the oldest files (keeping the most recent ones)
-            for old_file in schema_files[keep_count:]:
-                try:
-                    old_file.unlink()
-                    logger.info("Deleted old schema file: %s", old_file)
-                except Exception as e:
-                    logger.warning("Failed to delete old schema file %s: %s", old_file, str(e))
-            
-            logger.info("Deleted %d old schema files", max(0, len(schema_files) - keep_count))
-        
-        # Also delete any non-timestamped schema files
-        for legacy_file in ['appsync.graphql', 'schema.graphql']:
-            legacy_path = output_dir / legacy_file
-            if legacy_path.exists():
-                try:
-                    legacy_path.unlink()
-                    logger.info("Deleted legacy schema file: %s", legacy_path)
-                except Exception as e:
-                    logger.warning("Failed to delete legacy schema file %s: %s", legacy_path, str(e))
-    
-    except Exception as e:
-        logger.error("Error during cleanup of old schema files: %s", str(e))
-
-
-def combine_graphql_schemas(jinja_env):
-    """
-    Combine all generated GraphQL schema files into a single schema file with timestamp.
-
-    :param jinja_env: Jinja environment for loading base schema template
-    :return: Path to the combined schema file
-    """
-    logger.info("Combining GraphQL schemas into a single file")
-
-    try:
-        import datetime
-
-        # Directory containing model schema fragments
-        schemas_dir = Path('../schemas/graphql')
-
-        # Output location for combined schema
-        output_dir = Path('../backend/infrastructure/cloudformation')
-        
-        # Create timestamped filename
-        timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%H%M%S")
-        schema_filename = f"appsync_{timestamp}.graphql"
-        
-        # Only create the timestamped file - no more non-timestamped files
-        timestamped_output_file = output_dir / schema_filename
-
-        # Load base schema template
-        template = load_template('graphql_schema_base.jinja', jinja_env)
-
-        # Load the index to get schema auth configs
-        index_data = load_index()
-        
-        if 'schema_registry' not in index_data and 'schemaRegistry' in index_data:
-            index_data['schema_registry'] = index_data['schemaRegistry']
-            
-        # First build a lookup of table names to auth configurations
-        auth_configs = {}
-        for table in index_data['schema_registry']['tables']:
-            table_name = table.get('name')
-            schema_path = table.get('path')
-            
-            if not table_name or not schema_path:
-                continue
-                
-            # Load the schema to get auth config
-            table_schema = load_schema(schema_path)
-            
-            # Extract the model - check for new structure format
-            if 'model' in table_schema and 'auth_config' in table_schema['model']:
-                # Get the model name in singular form
-                if table_name.endswith('s'):
-                    model_name = table_name[:-1]
-                else:
-                    model_name = table_name
-                
-                # Store the auth config for this model
-                auth_configs[model_name] = table_schema['model']['auth_config']
-                logger.debug(f"Found auth config for {model_name}: {auth_configs[model_name]}")
-        
-        # Get a list of all model schema files with their auth configs
+        # Prepare model schemas
         model_schemas = []
-        
-        # Now load all graphql files with their auth configs
-        for schema_file in schemas_dir.glob('*.graphql'):
-            model_name = schema_file.stem
-            with open(schema_file, 'r') as f:
+        for schema in schemas:
+            table_name = schema['table']
+            model_name = table_name[:-1].capitalize() if table_name.endswith('s') else table_name.capitalize()
+            
+            # Read the generated schema file
+            schema_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'graphql', f'{table_name}_schema.graphql')
+            with open(schema_path, 'r') as f:
                 content = f.read()
-                
-                # Add auth config if available
-                schema_entry = {
-                    'name': model_name,
-                    'content': content
-                }
-                
-                if model_name in auth_configs:
-                    schema_entry['auth'] = auth_configs[model_name]
-                
-                model_schemas.append(schema_entry)
-
-        # Render the base schema with all model schemas included
-        combined_schema = template.render(
-            model_schemas=model_schemas
-        )
-
-        # Create output directory if needed
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        # Clean up multiple consecutive blank lines in the combined schema
-        cleaned_schema = clean_consecutive_blank_lines(combined_schema)
+            
+            model_schemas.append({
+                'name': model_name,
+                'content': content,
+                'auth': schema['model'].get('auth_config')
+            })
         
-        # Write the cleaned schema to the timestamped file
-        with open(timestamped_output_file, 'w') as f:
-            f.write(cleaned_schema)
-
-        logger.info("Combined GraphQL schema generated: %s", timestamped_output_file)
+        output = template.render(model_schemas=model_schemas)
         
-        # We don't need to clean up old schema files since we now remove them at startup
-        # and they're also ignored in .gitignore
-        # cleanup_old_schema_files(output_dir)
+        # Write output
+        output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'graphql', 'schema.graphql')
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
-        # The timestamped filename can be used by the GitHub workflow
-        # The GitHub workflow will automatically find and use the latest schema file
-        # And pass it as the SchemaS3Key parameter to the CloudFormation template
+        with open(output_path, 'w') as f:
+            f.write(output)
         
-        return timestamped_output_file
-
+        logger.info("Generated base GraphQL schema")
+        return True
+        
     except Exception as e:
-        logger.error("Error combining GraphQL schemas: %s", str(e), exc_info=True)
-        return None
+        logger.error(f"Error generating base GraphQL schema: {str(e)}")
+        return False
 
-def cleanup_appsync_files():
+def generate_cloudformation_template(schemas: List[Dict[str, Any]], jinja_env: Environment) -> bool:
     """
-    Cleanup all appsync_*.graphql files at startup to avoid accumulation
+    Generate final CloudFormation template that includes all DynamoDB tables.
     
-    :return: None
-    """
-    logger.info("Cleaning up old appsync_*.graphql files")
-    try:
-        # Path to directory containing appsync files
-        output_dir = Path('../backend/infrastructure/cloudformation')
+    Args:
+        schemas: List of schema dictionaries
+        jinja_env: Jinja environment
         
-        # Delete all appsync_*.graphql files
-        for appsync_file in output_dir.glob('appsync_*.graphql'):
-            try:
-                appsync_file.unlink()
-                logger.debug("Deleted appsync file: %s", appsync_file)
-            except Exception as e:
-                logger.warning("Failed to delete appsync file %s: %s", appsync_file, str(e))
-                
+    Returns:
+        Boolean indicating success or failure
+    """
+    try:
+        # Load template and render
+        template = jinja_env.get_template('dynamodb_cloudformation_base.jinja')
+        
+        # Prepare table definitions
+        table_definitions = []
+        for schema in schemas:
+            table_name = schema['table']
+            
+            # Read the generated table definition file
+            table_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'dynamodb', f'{table_name}_table.yml')
+            with open(table_path, 'r') as f:
+                content = f.read()
+            
+            # Extract the table definition from the content
+            # Remove the Resources: line and the first level of indentation
+            content_lines = content.split('\n')
+            if content_lines[0].strip() == 'Resources:':
+                content_lines = content_lines[1:]
+            content = '\n'.join(line[2:] if line.startswith('  ') else line for line in content_lines)
+            
+            table_definitions.append(content)
+        
+        output = template.render(table_definitions='\n\n'.join(table_definitions))
+        
+        # Write output
+        output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'dynamodb', 'dynamodb.yml')
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        
+        with open(output_path, 'w') as f:
+            f.write(output)
+        
+        logger.info("Generated CloudFormation template")
+        return True
+        
     except Exception as e:
-        logger.error("Error during cleanup of appsync files: %s", str(e))
+        logger.error(f"Error generating CloudFormation template: {str(e)}")
+        return False
 
+def generate_timestamped_schema(schema_content: str) -> str:
+    """
+    Generate a timestamped schema file name and write the content.
+    
+    Args:
+        schema_content: The content of the schema to write
+        
+    Returns:
+        The filename of the generated schema
+    """
+    try:
+        # Generate timestamp in format YYYYMMDD_HHMMSS
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"appsync_{timestamp}.graphql"
+        
+        # Write the schema file
+        output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'graphql', filename)
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        
+        with open(output_path, 'w') as f:
+            f.write(schema_content)
+        
+        logger.info(f"Generated timestamped schema file: {filename}")
+        return filename
+        
+    except Exception as e:
+        logger.error(f"Error generating timestamped schema: {str(e)}")
+        return None
 
 def main():
-    """
-    Main function - loads the index and generates models for all tables.
-
-    :return: None
-    """
-    logger.info("=============== SCHEMA GENERATION STARTED ===============")
-    
-    # Clean up all appsync files at startup
-    cleanup_appsync_files()
-
+    """Main entry point for schema generation"""
     try:
         # Set up Jinja environment
         jinja_env = setup_jinja_env()
-        logger.debug("Jinja environment set up")
-
-        # Load the schema registry from index.yml
+        
+        # Load schema registry
         index = load_index()
-
-        if 'schema_registry' not in index and 'schemaRegistry' in index:
-            # Handle camelCase in index.yml
-            index['schema_registry'] = index['schemaRegistry']
-
-        if 'schema_registry' not in index or 'tables' not in index['schema_registry']:
-            logger.error("Invalid index.yml: missing schema_registry.tables section")
+        
+        # Process each table
+        schemas = []
+        for table in index['schemaRegistry']['tables']:
+            table_name = table['name']
+            schema_path = table['path']
+            
+            logger.info(f"Processing table: {table_name}")
+            
+            # Load schema for later use
+            schema = load_schema(schema_path)
+            schemas.append(schema)
+            
+            # Generate models and infrastructure
+            python_success = generate_python_model(table_name, schema_path, jinja_env)
+            typescript_success = generate_typescript_model(table_name, schema_path, jinja_env)
+            dynamodb_success = generate_dynamodb_table(table_name, schema_path, jinja_env)
+            graphql_success = generate_graphql_schema(table_name, schema_path, jinja_env)
+            
+            if not python_success or not typescript_success or not dynamodb_success or not graphql_success:
+                logger.error(f"Failed to generate files for table: {table_name}")
+                sys.exit(1)
+        
+        # Generate base GraphQL schema
+        if not generate_graphql_base_schema(schemas, jinja_env):
+            logger.error("Failed to generate base GraphQL schema")
             sys.exit(1)
-
-        tables = index['schema_registry']['tables']
-        logger.info("Found %d tables in schema registry", len(tables))
-
-        # Track successful generations
-        success_count_ts = 0
-        success_count_py = 0
-        success_count_gql = 0
-        failed_tables = []
-
-        # Process each table in the registry
-        for table in tables:
-            table_name = table.get('name')
-            schema_path = table.get('path')
-
-            if not table_name or not schema_path:
-                logger.warning("Skipping invalid table entry: %s", table)
-                continue
-
-            logger.info("Processing table: %s (schema: %s)", table_name, schema_path)
-
-            # Generate TypeScript model
-            ts_success = generate_typescript_model(table_name, schema_path, jinja_env)
-            if ts_success:
-                success_count_ts += 1
-
-            # Generate Python model
-            py_success = generate_python_model(table_name, schema_path, jinja_env)
-            if py_success:
-                success_count_py += 1
-
-            # Generate GraphQL schema
-            gql_success = generate_graphql_schema(table_name, schema_path, jinja_env)
-            if gql_success:
-                success_count_gql += 1
-
-            # Track failed generations
-            if not (ts_success and py_success and gql_success):
-                failed_tables.append(table_name)
-
-        # Generate AppSync imports file
-        imports_success = generate_appsync_imports()
-
-        # After generating all schemas
-        if success_count_gql > 0:
-            # Combine all GraphQL schemas into a single file
-            combined_schema_path = combine_graphql_schemas(jinja_env)
-            if combined_schema_path:
-                logger.info("Combined AppSync schema ready for deployment: %s", combined_schema_path)
-            else:
-                logger.error("Failed to generate combined AppSync schema")
-                failed_tables.append("appsync_schema")
-
-            # Generate DynamoDB CloudFormation template
-            dynamodb_template_path = generate_dynamodb_template(jinja_env)
-            if dynamodb_template_path:
-                logger.info("DynamoDB template ready for deployment: %s", dynamodb_template_path)
-            else:
-                logger.error("Failed to generate DynamoDB template")
-                failed_tables.append("dynamodb_template")
-
-        # Report results
-        total_tables = len(tables)
-        logger.info("=============== GENERATION SUMMARY ===============")
-        logger.info("Total tables processed: %d", total_tables)
-        logger.info("TypeScript models generated: %d of %d", success_count_ts, total_tables)
-        logger.info("Python models generated: %d of %d", success_count_py, total_tables)
-        logger.info("GraphQL schemas generated: %d of %d", success_count_gql, total_tables)
-        logger.info("AppSync imports file generated: %s", "Yes" if imports_success else "No")
-
-        if failed_tables:
-            logger.error("Failed generations for tables: %s", ", ".join(failed_tables))
-            logger.error("=============== SCHEMA GENERATION COMPLETED WITH ERRORS ===============")
+            
+        # Read the generated schema
+        schema_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'graphql', 'schema.graphql')
+        with open(schema_path, 'r') as f:
+            schema_content = f.read()
+            
+        # Generate timestamped schema
+        timestamped_filename = generate_timestamped_schema(schema_content)
+        if not timestamped_filename:
+            logger.error("Failed to generate timestamped schema")
             sys.exit(1)
-        else:
-            logger.info("=============== SCHEMA GENERATION COMPLETED SUCCESSFULLY ===============")
-            sys.exit(0)
-
+            
+        # Generate CloudFormation template
+        if not generate_cloudformation_template(schemas, jinja_env):
+            logger.error("Failed to generate CloudFormation template")
+            sys.exit(1)
+        
+        logger.info("Schema generation completed successfully")
+        
     except Exception as e:
-        logger.error("Unexpected error during schema generation: %s", str(e), exc_info=True)
-        logger.error("=============== SCHEMA GENERATION FAILED ===============")
+        logger.error(f"Schema generation failed: {str(e)}")
         sys.exit(1)
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

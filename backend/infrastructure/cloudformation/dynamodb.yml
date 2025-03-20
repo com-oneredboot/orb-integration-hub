@@ -227,6 +227,9 @@ Resources:
         -
           AttributeName: application_id
           AttributeType: S
+        -
+          AttributeName: role_type
+          AttributeType: S
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         -
@@ -234,7 +237,7 @@ Resources:
           KeyType: HASH
       GlobalSecondaryIndexes:
         -
-          IndexName: user-id-index
+          IndexName: user-role-index
           KeySchema:
             -
               AttributeName: user_id
@@ -243,9 +246,16 @@ Resources:
               AttributeName: role_id
               KeyType: RANGE
           Projection:
-            ProjectionType: ALL
+            ProjectionType: INCLUDE
+            NonKeyAttributes:
+              - role_name
+              - role_type
+              - permissions
+          ProvisionedThroughput:
+            ReadCapacityUnits: 5
+            WriteCapacityUnits: 5
         -
-          IndexName: application-id-index
+          IndexName: application-role-index
           KeySchema:
             -
               AttributeName: application_id
@@ -254,7 +264,25 @@ Resources:
               AttributeName: role_id
               KeyType: RANGE
           Projection:
+            ProjectionType: KEYS_ONLY
+          ProvisionedThroughput:
+            ReadCapacityUnits: 5
+            WriteCapacityUnits: 5
+      LocalSecondaryIndexes:
+        -
+          IndexName: role-type-index
+          KeySchema:
+            -
+              AttributeName: role_id
+              KeyType: HASH
+            -
+              AttributeName: role_type
+              KeyType: RANGE
+          Projection:
             ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 5
+            WriteCapacityUnits: 5
       TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-roles"
       Tags:
         - Key: Billable
@@ -288,80 +316,6 @@ Resources:
       Type: String
       Value: !GetAtt RolesTable.Arn
       Description: DynamoDB Role Table Arn
-      Tags:
-        Billable: true
-        CustomerId: !Ref CustomerId
-        Environment: !Ref Environment
-        ProjectId: !Ref ProjectId
-    Type: AWS::SSM::Parameter
-  # DynamoDB table for User
-  UsersTable:
-    Properties:
-      AttributeDefinitions:
-        -
-          AttributeName: user_id
-          AttributeType: S
-        -
-          AttributeName: email
-          AttributeType: S
-        -
-          AttributeName: cognito_id
-          AttributeType: S
-      BillingMode: PAY_PER_REQUEST
-      KeySchema:
-        -
-          AttributeName: user_id
-          KeyType: HASH
-      GlobalSecondaryIndexes:
-        -
-          IndexName: email-index
-          KeySchema:
-            -
-              AttributeName: email
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-        -
-          IndexName: cognito_id-index
-          KeySchema:
-            -
-              AttributeName: cognito_id
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-users"
-      Tags:
-        - Key: Billable
-          Value: "true"
-        - Key: CustomerId
-          Value: !Ref CustomerId
-        - Key: Environment
-          Value: !Ref Environment
-        - Key: ProjectId
-          Value: !Ref ProjectId
-    Type: AWS::DynamoDB::Table
-
-  # Parameter Store for table name
-  UsersTableNameParameter:
-    Properties:
-      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-users-table-name"
-      Type: String
-      Value: !Ref UsersTable
-      Description: DynamoDB User Table Name
-      Tags:
-        Billable: true
-        CustomerId: !Ref CustomerId
-        Environment: !Ref Environment
-        ProjectId: !Ref ProjectId
-    Type: AWS::SSM::Parameter
-
-  # Parameter Store for table ARN
-  UsersTableArnParameter:
-    Properties:
-      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-users-table-arn"
-      Type: String
-      Value: !GetAtt UsersTable.Arn
-      Description: DynamoDB User Table Arn
       Tags:
         Billable: true
         CustomerId: !Ref CustomerId
