@@ -1,15 +1,33 @@
 name: deploy-frontend
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'ui/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: environment
+      region:
+        description: 'AWS Region'
+        required: true
+        type: choice
+        options:
+          - 'us-east-1'
+      customer_id:
+        description: 'Customer ID'
+        required: true
+        type: string
+        default: 'orb'
+      project_id:
+        description: 'Project ID'
+        required: true
+        type: string
+        default: 'integration-hub'
 
 jobs:
   deploy-ui-stack:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -38,21 +56,21 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+        aws-region: ${{ inputs.region }}
 
     # Queues
     - name: Deploy UI Stack
       run: |
         sam build --template cloudfront.yml
-        sam package --template-file cloudfront.yml --s3-bucket orb-integration-hub-build-artifacts --output-template-file cloudfront-packaged.yml
-        sam deploy --template-file cloudfront-packaged.yml --s3-bucket orb-integration-hub-build-artifacts --stack-name orb-integration-hub-ui-cloudfront --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
-        aws s3 cp cloudfront-packaged.yml s3://orb-integration-hub-build-templates/cloudfront-packaged.yml
+        sam package --template-file cloudfront.yml --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts --output-template-file cloudfront-packaged.yml
+        sam deploy --template-file cloudfront-packaged.yml --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts --stack-name ${{ inputs.customer_id }}-${{ inputs.project_id }}-ui-cloudfront --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
+        aws s3 cp cloudfront-packaged.yml s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/cloudfront-packaged.yml
       working-directory: ./ui
 
     # Deploy to S3
     - name: Deploy to S3
       run: |
-        aws s3 sync dist/sog-ai-repository-ui/browser s3://sog-ai-repository-development-ui-cloudfront --delete
+        aws s3 sync dist/sog-ai-repository-ui/browser s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-${{ inputs.environment }}-ui-cloudfront --delete
       working-directory: ./ui
 
     # Invalidate CloudFront Distribution
