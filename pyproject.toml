@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "orb-integration-hub"
+version = "0.1.0"
+description = "OneRedBoot.com Integration Hub"
+requires-python = ">=3.12"
+dependencies = [
+    "boto3>=1.34.0",
+    "aws-lambda-powertools>=2.30.0",
+    "pydantic>=2.6.0",
+    "graphql-core>=3.2.0",
+    "stripe>=7.0.0",
+    "python-jose>=3.3.0",
+]
+
+[tool.setuptools]
+packages = ["backend"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+multi_line_output = 3
