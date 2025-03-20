@@ -78,9 +78,6 @@ export class UserService extends ApiService {
         
         // Optional fields with defaults
         phone_verified: false,
-        first_name: input.first_name || '',
-        last_name: input.last_name || '',
-        phone_number: input.phone_number || '',
         updated_at: timestamp
       };
 
@@ -170,13 +167,6 @@ export class UserService extends ApiService {
         throw new Error(`Invalid response code: ${response.data?.userQueryById?.status_code}`);
       }
 
-      // If email is provided, check if the user has the specified email
-      if (email && response.data?.userQueryById?.user) {
-        const user = response.data.userQueryById.user;
-        const result = user.email === email;
-        console.debug('UserService [userExists]: Checking email match', { email, userEmail: user.email, result });
-        return result;
-      }
 
       const result = Boolean(response.data?.userQueryById?.user?.user_id);
       console.debug('UserService [userExists]: Returning result', result);
@@ -281,8 +271,7 @@ export class UserService extends ApiService {
     let user;
 
     try {
-      // We need to query all users since we can't query by email directly
-      const userQueryInput = {application_id: 'default'} as UserQueryInput;
+      const userQueryInput = { email: email } as UserQueryInput;
       const userResponse = await this.userQueryById(userQueryInput, email);
 
       user = userResponse.userQueryById?.user;

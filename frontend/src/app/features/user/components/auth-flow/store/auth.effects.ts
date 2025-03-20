@@ -27,10 +27,7 @@ export class AuthEffects {
       tap(action => console.debug('Effect [CheckEmail]: Starting', action)),
       switchMap(({ email }) => {
         console.debug('Effect [CheckEmail]: Making service call');
-        
-        // Query by application_id since we can't query by email directly
-        // We'll need to filter results by email in the service
-        const userInput: UserQueryInput = { application_id: 'default' };
+        const userInput: UserQueryInput = { email: email };
         
         return from(this.userService.userExists(userInput, email)).pipe(
           tap(result => console.debug('Effect [CheckEmail]: Service returned', result)),
@@ -106,7 +103,7 @@ export class AuthEffects {
             });
           })
         )
-      )
+      })
     )
   );
 

@@ -206,10 +206,8 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             break;
           case AuthSteps.EMAIL_VERIFY:
             if (!emailCode) return;
-            // Create a properly typed input with application_id instead of email
-            // The email will be passed separately to the service
             this.store.dispatch(AuthActions.verifyEmail({
-              input: { application_id: 'default' }, 
+              input: { email: email }, 
               code: emailCode,
               email: email  // Pass email as a separate property
             }));

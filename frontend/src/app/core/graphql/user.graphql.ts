@@ -35,10 +35,11 @@ export type UserUpdateResponse = GenericResponse & {
 
 export type UserQueryInput = {
   user_id?: string;
-  application_id?: string;
+  cognito_id?: string;
+  email?: string;
 };
 
-export type UserCreateInput = Omit<User, 'first_name' | 'last_name' | 'phone_number' | 'toDynamoDB' | 'fromDynamoDB'>;
+export type UserCreateInput = Omit<User, 'first_name' | 'last_name' | 'phone_number' >;
 
 export type UserUpdateInput = Partial<Omit<User, 'user_id' | 'created_at' >> & { user_id: string };
 
