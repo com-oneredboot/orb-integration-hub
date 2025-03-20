@@ -1,5 +1,30 @@
 # Unit Test Implementation Plan
 
+## Checkpoint Management
+
+A checkpoint has been created at the start of test implementation to allow for safe rollback if needed:
+
+- Tag name: `checkpoint-pre-testing`
+- Purpose: Safe point to return to if test improvements cause issues
+- Location: Available in both local and remote repositories
+
+### Checkpoint Usage
+
+1. View the checkpoint:
+```bash
+git checkout checkpoint-pre-testing
+```
+
+2. Revert to checkpoint:
+```bash
+git reset --hard checkpoint-pre-testing
+```
+
+3. Create new branch from checkpoint:
+```bash
+git checkout -b new-branch checkpoint-pre-testing
+```
+
 ## 1. Fix the User Model Issues
 
 The current user.model.ts has issues with groups type compatibility. The GraphQL schema uses [String] but TypeScript is using UserGroups[].
