@@ -499,26 +499,32 @@ def generate_graphql_base_schema(schemas: List[Dict[str, Any]], jinja_env: Envir
             model_name = table_name[:-1].capitalize() if table_name.endswith('s') else table_name.capitalize()
             
             # Read the generated schema file
-            schema_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation', f'{table_name}_schema.graphql')
-            with open(schema_path, 'r') as f:
-                content = f.read()
-            
-            model_schemas.append({
-                'name': model_name,
-                'content': content,
-                'auth': schema['model'].get('auth_config')
-            })
+            schema_file = os.path.join(SCRIPT_DIR, '../backend/infrastructure/cloudformation', f"{table_name.replace('_', '')}_schema.graphql")
+            try:
+                with open(schema_file, 'r') as f:
+                    model_schemas.append(f.read())
+            except FileNotFoundError:
+                logger.error(f"Error generating base GraphQL schema: [Errno 2] No such file or directory: '{schema_file}'")
+                return False
         
-        output = template.render(model_schemas=model_schemas)
+        # Generate base schema
+        base_schema = template.render(
+            model_schemas=model_schemas,
+            timestamp=datetime.now().strftime('%Y%m%d_%H%M%S')
+        )
         
-        # Write output to backend/infrastructure/cloudformation
-        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation', 'schema.graphql')
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        # Write base schema to file
+        output_dir = os.path.join(SCRIPT_DIR, '../backend/infrastructure/cloudformation')
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Generate timestamped schema file
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        output_path = os.path.join(output_dir, f'appsync_{timestamp}.graphql')
         
         with open(output_path, 'w') as f:
-            f.write(output)
-        
-        logger.info("Generated base GraphQL schema")
+            f.write(base_schema)
+            
+        logger.info(f"Generated timestamped schema file: appsync_{timestamp}.graphql")
         return True
         
     except Exception as e:
