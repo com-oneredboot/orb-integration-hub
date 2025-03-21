@@ -104,10 +104,13 @@ jobs:
 
       - name: Install AWS SAM CLI
         run: |
+          # Add AWS SAM CLI repository
           curl -L https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-x86_64.zip -o aws-sam-cli-linux-x86_64.zip
           unzip aws-sam-cli-linux-x86_64.zip -d sam-installation
-          sudo ./sam-installation/install
+          sudo ./sam-installation/install --update
           sam --version
+          # Clean up
+          rm -rf aws-sam-cli-linux-x86_64.zip sam-installation
 
       - name: Upload schema to S3
         run: |
