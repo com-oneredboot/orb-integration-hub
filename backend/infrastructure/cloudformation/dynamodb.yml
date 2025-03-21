@@ -1,11 +1,20 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Description: Application Infrastructure
+# --------------------------------------------------- #
+AWSTemplateFormatVersion: 2010-09-09
+
+# --------------------------------------------------- #
+Transform: AWS::Serverless-2016-10-31
+
+# --------------------------------------------------- #
+Description: >
+  Application Infrastructure - DynamoDB Stack
+
+# --------------------------------------------------- #
 Parameters:
-  CustomerId:
-    Default: orb
-    Type: String
   Environment:
     Default: dev
+    Type: String
+  CustomerId:
+    Default: orb
     Type: String
   ProjectId:
     Default: integration-hub
@@ -13,167 +22,158 @@ Parameters:
   TracingIs:
     Default: Active
     Type: String
+
+# --------------------------------------------------- #
 Resources:
+  # DynamoDB Tables
   RolesTable:
+    Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
-      - AttributeName: role_id
-        AttributeType: S
-      - AttributeName: application_id
-        AttributeType: S
-      - AttributeName: user_id
-        AttributeType: S
-      - AttributeName: role_type
-        AttributeType: S
-      BillingMode: PAY_PER_REQUEST
-      GlobalSecondaryIndexes:
-      - IndexName: user-role-index
-        KeySchema:
-        - AttributeName: user_id
-          KeyType: HASH
         - AttributeName: role_id
-          KeyType: RANGE
-        Projection:
-          NonKeyAttributes:
-          - role_name
-          - role_type
-          - permissions
-          ProjectionType: INCLUDE
-      - IndexName: application-role-index
-        KeySchema:
+          AttributeType: S
         - AttributeName: application_id
-          KeyType: HASH
-        - AttributeName: role_id
-          KeyType: RANGE
-        Projection:
-          ProjectionType: KEYS_ONLY
-      KeySchema:
-      - AttributeName: role_id
-        KeyType: HASH
-      - AttributeName: application_id
-        KeyType: RANGE
-      LocalSecondaryIndexes:
-      - IndexName: role-type-index
-        KeySchema:
-        - AttributeName: role_id
-          KeyType: HASH
+          AttributeType: S
+        - AttributeName: user_id
+          AttributeType: S
         - AttributeName: role_type
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: role_id
+          KeyType: HASH
+        - AttributeName: application_id
           KeyType: RANGE
-        Projection:
-          ProjectionType: ALL
-      TableName:
-        Fn::Sub: ${CustomerId}-${ProjectId}-${Environment}-roles
+      GlobalSecondaryIndexes:
+        - IndexName: user-role-index
+          KeySchema:
+            - AttributeName: user_id
+              KeyType: HASH
+            - AttributeName: role_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: INCLUDE
+            NonKeyAttributes:
+              - role_name
+              - role_type
+              - permissions
+        - IndexName: application-role-index
+          KeySchema:
+            - AttributeName: application_id
+              KeyType: HASH
+            - AttributeName: role_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: KEYS_ONLY
+      LocalSecondaryIndexes:
+        - IndexName: role-type-index
+          KeySchema:
+            - AttributeName: role_id
+              KeyType: HASH
+            - AttributeName: role_type
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-roles'
       Tags:
-      - Key: Billable
-        Value: 'true'
-      - Key: CustomerId
-        Value:
-          Ref: CustomerId
-      - Key: Environment
-        Value:
-          Ref: Environment
-      - Key: ProjectId
-        Value:
-          Ref: ProjectId
-    Type: AWS::DynamoDB::Table
-  RolesTableArnParameter:
-    Properties:
-      Description: DynamoDB Roles Table Arn
-      Name:
-        Fn::Sub: ${CustomerId}-${ProjectId}-${Environment}-roles-table-arn
-      Tags:
-        Billable: 'true'
-        CustomerId:
-          Ref: CustomerId
-        Environment:
-          Ref: Environment
-        ProjectId:
-          Ref: ProjectId
-      Type: String
-      Value:
-        Fn::GetAtt:
-        - RolesTable
-        - Arn
-    Type: AWS::SSM::Parameter
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
+
+  # SSM Parameters for RolesTable
   RolesTableNameParameter:
+    Type: AWS::SSM::Parameter
     Properties:
       Description: DynamoDB Roles Table Name
-      Name:
-        Fn::Sub: ${CustomerId}-${ProjectId}-${Environment}-roles-table-name
-      Tags:
-        Billable: 'true'
-        CustomerId:
-          Ref: CustomerId
-        Environment:
-          Ref: Environment
-        ProjectId:
-          Ref: ProjectId
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-roles-table-name'
       Type: String
-      Value:
-        Ref: RolesTable
+      Value: !Ref RolesTable
+      Tags:
+        Billable: "true"
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+
+  RolesTableArnParameter:
     Type: AWS::SSM::Parameter
+    Properties:
+      Description: DynamoDB Roles Table Arn
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-roles-table-arn'
+      Type: String
+      Value: !GetAtt RolesTable.Arn
+      Tags:
+        Billable: "true"
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+
+  # Users Table
   UsersTable:
+    Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
-      - AttributeName: user_id
-        AttributeType: S
-      - AttributeName: email
-        AttributeType: S
-      - AttributeName: cognito_id
-        AttributeType: S
+        - AttributeName: user_id
+          AttributeType: S
+        - AttributeName: email
+          AttributeType: S
+        - AttributeName: cognito_id
+          AttributeType: S
       BillingMode: PAY_PER_REQUEST
       KeySchema:
-      - AttributeName: user_id
-        KeyType: HASH
-      TableName:
-        Fn::Sub: ${CustomerId}-${ProjectId}-${Environment}-users
+        - AttributeName: user_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: email-index
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: cognito_id-index
+          KeySchema:
+            - AttributeName: cognito_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-users'
       Tags:
-      - Key: Billable
-        Value: 'true'
-      - Key: CustomerId
-        Value:
-          Ref: CustomerId
-      - Key: Environment
-        Value:
-          Ref: Environment
-      - Key: ProjectId
-        Value:
-          Ref: ProjectId
-    Type: AWS::DynamoDB::Table
-  UsersTableArnParameter:
-    Properties:
-      Description: DynamoDB Users Table Arn
-      Name:
-        Fn::Sub: ${CustomerId}-${ProjectId}-${Environment}-users-table-arn
-      Tags:
-        Billable: 'true'
-        CustomerId:
-          Ref: CustomerId
-        Environment:
-          Ref: Environment
-        ProjectId:
-          Ref: ProjectId
-      Type: String
-      Value:
-        Fn::GetAtt:
-        - UsersTable
-        - Arn
-    Type: AWS::SSM::Parameter
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
+
+  # SSM Parameters for UsersTable
   UsersTableNameParameter:
+    Type: AWS::SSM::Parameter
     Properties:
       Description: DynamoDB Users Table Name
-      Name:
-        Fn::Sub: ${CustomerId}-${ProjectId}-${Environment}-users-table-name
-      Tags:
-        Billable: 'true'
-        CustomerId:
-          Ref: CustomerId
-        Environment:
-          Ref: Environment
-        ProjectId:
-          Ref: ProjectId
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-users-table-name'
       Type: String
-      Value:
-        Ref: UsersTable
+      Value: !Ref UsersTable
+      Tags:
+        Billable: "true"
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+
+  UsersTableArnParameter:
     Type: AWS::SSM::Parameter
-Transform: AWS::Serverless-2016-10-31
+    Properties:
+      Description: DynamoDB Users Table Arn
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-users-table-arn'
+      Type: String
+      Value: !GetAtt UsersTable.Arn
+      Tags:
+        Billable: "true"
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
