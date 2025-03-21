@@ -129,8 +129,6 @@ Resources:
       KeySchema:
         - AttributeName: user_id
           KeyType: HASH
-      GlobalSecondaryIndexes:
-      LocalSecondaryIndexes:
       TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-users'
       Tags:
         - Key: Billable
