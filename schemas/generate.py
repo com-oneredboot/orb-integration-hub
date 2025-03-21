@@ -386,6 +386,17 @@ def generate_typescript_model(table_name: str, schema_path: str, jinja_env: Envi
         logger.error(f"Error generating TypeScript model for {table_name}: {str(e)}")
         return False
 
+def map_to_graphql_type(schema_type: str) -> str:
+    """Map schema types to GraphQL types."""
+    type_mapping = {
+        'string': 'String',
+        'number': 'Float',
+        'boolean': 'Boolean',
+        'array': '[String]',
+        'object': 'AWSJSON'
+    }
+    return type_mapping.get(schema_type.lower(), 'String')
+
 def generate_graphql_schema(table_name: str, schema_path: str, jinja_env: Environment) -> Optional[str]:
     """
     Generate GraphQL schema for a table.
@@ -405,11 +416,19 @@ def generate_graphql_schema(table_name: str, schema_path: str, jinja_env: Enviro
         # Get template
         template = jinja_env.get_template('graphql_schema.jinja')
         
+        # Convert attribute types to GraphQL types
+        attributes = {}
+        for attr_name, attr in schema['model']['attributes'].items():
+            attributes[attr_name] = {
+                'type': map_to_graphql_type(attr['type']),
+                'required': attr.get('required', False)
+            }
+        
         # Generate schema - use the original table name for model name
         schema_content = template.render(
             table_name=table_name,
             model_name=table_name,  # Use the original table name without modification
-            attributes=schema['model']['attributes'],
+            attributes=attributes,
             partition_key=schema['model']['keys']['primary']['partition'],
             sort_key=schema['model']['keys']['primary'].get('sort'),
             auth_config=schema['model'].get('auth_config', {})
