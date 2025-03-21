@@ -632,8 +632,17 @@ def main():
             logger.error("Failed to generate base GraphQL schema")
             sys.exit(1)
             
-        # Read the generated schema
-        schema_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation', 'schema.graphql')
+        # Find the latest generated schema file
+        cloudformation_dir = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation')
+        schema_files = [f for f in os.listdir(cloudformation_dir) if f.startswith('appsync_') and f.endswith('.graphql')]
+        if not schema_files:
+            logger.error("No generated schema files found")
+            sys.exit(1)
+            
+        latest_schema = max(schema_files, key=lambda x: os.path.getctime(os.path.join(cloudformation_dir, x)))
+        schema_path = os.path.join(cloudformation_dir, latest_schema)
+        
+        # Read the latest schema
         with open(schema_path, 'r') as f:
             schema_content = f.read()
             
