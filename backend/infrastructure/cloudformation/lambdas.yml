@@ -231,7 +231,7 @@ Resources:
     Properties:
       Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-sms-origination-number"
       Type: String
-      Value: !GetAtt SMSOriginationNumber.PhoneNumber
+      Value: !Ref SMSOriginationNumber
 
 # --------------------------------------------------- #
 Outputs:
