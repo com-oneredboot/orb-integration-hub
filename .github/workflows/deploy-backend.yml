@@ -26,11 +26,6 @@ on:
         required: true
         type: string
         default: 'integration-hub'
-      sms_origination_number:
-        description: 'AWS SNS origination number for sending SMS messages'
-        required: true
-        type: string
-        default: ''
 
 jobs:
   deploy-backend-stacks:
@@ -140,10 +135,6 @@ jobs:
               SCHEMA_FILENAME=$(basename "$SCHEMA_FILE")
               PARAMS="$PARAMS SchemaS3Key=$SCHEMA_FILENAME"
               echo "Using schema: $SCHEMA_FILENAME for AppSync stack"
-            fi
-            if [ "$stack" == "lambdas" ]; then
-              PARAMS="$PARAMS SMSOriginationNumber=${{ inputs.sms_origination_number }}"
-              echo "Using SMS origination number for Lambdas stack"
             fi
                     
             sam deploy \
