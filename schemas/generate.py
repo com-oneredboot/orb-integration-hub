@@ -434,7 +434,7 @@ def generate_graphql_schema(table_name: str, schema_path: str, jinja_env: Enviro
         )
         
         # Write output
-        output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'graphql', f'{table_name}_schema.graphql')
+        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation', f'{table_name}_schema.graphql')
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
         with open(output_path, 'w') as f:
@@ -469,7 +469,7 @@ def generate_graphql_base_schema(schemas: List[Dict[str, Any]], jinja_env: Envir
             model_name = table_name[:-1].capitalize() if table_name.endswith('s') else table_name.capitalize()
             
             # Read the generated schema file
-            schema_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'graphql', f'{table_name}_schema.graphql')
+            schema_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation', f'{table_name}_schema.graphql')
             with open(schema_path, 'r') as f:
                 content = f.read()
             
@@ -482,7 +482,7 @@ def generate_graphql_base_schema(schemas: List[Dict[str, Any]], jinja_env: Envir
         output = template.render(model_schemas=model_schemas)
         
         # Write output
-        output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'graphql', 'schema.graphql')
+        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation', 'schema.graphql')
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
         with open(output_path, 'w') as f:
@@ -560,8 +560,8 @@ def generate_timestamped_schema(schema_content: str) -> str:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"appsync_{timestamp}.graphql"
         
-        # Write the schema file
-        output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'graphql', filename)
+        # Write the schema file to cloudformation directory
+        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation', filename)
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
         with open(output_path, 'w') as f:
