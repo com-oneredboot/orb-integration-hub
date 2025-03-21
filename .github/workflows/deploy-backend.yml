@@ -26,6 +26,11 @@ on:
         required: true
         type: string
         default: 'integration-hub'
+      sms_origination_number:
+        description: 'AWS SNS origination number for sending SMS messages'
+        required: true
+        type: string
+        default: ''
 
 jobs:
   deploy-backend-stacks:
@@ -46,12 +51,14 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyyaml jinja2
+          pip install pipenv
+          cd schemas
+          pipenv install
 
       - name: Generate schema files
         run: |
           cd schemas
-          python generate.py
+          pipenv run python generate.py
           
       - name: Validate GraphQL schema
         run: |
@@ -133,6 +140,10 @@ jobs:
               SCHEMA_FILENAME=$(basename "$SCHEMA_FILE")
               PARAMS="$PARAMS SchemaS3Key=$SCHEMA_FILENAME"
               echo "Using schema: $SCHEMA_FILENAME for AppSync stack"
+            fi
+            if [ "$stack" == "lambdas" ]; then
+              PARAMS="$PARAMS SMSOriginationNumber=${{ inputs.sms_origination_number }}"
+              echo "Using SMS origination number for Lambdas stack"
             fi
                     
             sam deploy \
