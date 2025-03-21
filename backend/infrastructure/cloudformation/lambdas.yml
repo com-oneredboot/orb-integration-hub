@@ -39,6 +39,10 @@ Parameters:
     Default: corey@shabot.ca
     Description: The email address to send contact form submissions to
     Type: String
+  SMSOriginationNumber:
+    Type: String
+    Description: The AWS SNS origination number for sending SMS messages
+    NoEcho: true
 
 # --------------------------------------------------- #
 Globals:
@@ -64,6 +68,14 @@ Globals:
 # --------------------------------------------------- #
 Resources:
 
+  # SMS Origination Number
+  SMSOriginationNumber:
+    Type: AWS::SNS::OriginationNumber
+    Properties:
+      PhoneNumber: !Ref SMSOriginationNumber
+      IsoCountryCode: US
+      MessageType: TRANSACTIONAL
+
   # SMS Verification Lambda Function
   SMSVerificationFunction:
     Type: AWS::Serverless::Function
@@ -75,6 +87,7 @@ Resources:
         Variables:
           ENVIRONMENT: !Ref Environment
           LOG_LEVEL: !Ref ApplicationLoggingLevel
+          ORIGINATION_NUMBER: !Ref SMSOriginationNumber
 
   # IAM Roles
   LambdaExecutionRole:
@@ -152,6 +165,8 @@ Resources:
                 Resource:
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-alerts-queue-arn}}'
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-dead-letter-queue-arn}}'
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-phone-number-verification-topic-arn}}'
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-sms-origination-number-arn}}'
         - PolicyName: SESAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -223,6 +238,19 @@ Resources:
       Type: String
       Value: !GetAtt SMSVerificationFunction.Arn
       Description: ARN of the SMS Verification Lambda function
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+
+  SMSOriginationNumberArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-sms-origination-number-arn"
+      Type: String
+      Value: !GetAtt SMSOriginationNumber.Arn
+      Description: ARN of the SMS origination number
       Tags:
         Billable: true
         CustomerId: !Ref CustomerId
