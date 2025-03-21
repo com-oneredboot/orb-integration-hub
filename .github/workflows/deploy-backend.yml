@@ -65,10 +65,8 @@ jobs:
         run: |
           echo "Validating GraphQL schema..."
           
-          # Schema generator now creates timestamped appsync_TIMESTAMP.graphql file
-          
           # Find the latest generated appsync schema file
-          SCHEMA_FILE=$(find ./schemas/generated -name "appsync_*.graphql" | sort -r | head -1)
+          SCHEMA_FILE=$(find ./backend/infrastructure/cloudformation -name "appsync_*.graphql" | sort -r | head -1)
           
           if [ -z "$SCHEMA_FILE" ]; then
             echo "ERROR: No appsync_*.graphql file found. Schema generation may have failed."
