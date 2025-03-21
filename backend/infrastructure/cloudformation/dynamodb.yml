@@ -1,12 +1,11 @@
 # --------------------------------------------------- #
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: 2010-09-09
 
 # --------------------------------------------------- #
 Transform: AWS::Serverless-2016-10-31
 
 # --------------------------------------------------- #
-Description: >
-  Application Infrastructure - DynamoDB Stack
+Description: >Application Infrastructure
 
 # --------------------------------------------------- #
 Parameters:
@@ -39,7 +38,7 @@ Resources:
         - AttributeName: application_id
           KeyType: HASH
       GlobalSecondaryIndexes:
-        - IndexName: user-id-index
+        - IndexName: user-id-index # gets all the applications owned by a given user
           KeySchema:
             - AttributeName: user_id
               KeyType: HASH
@@ -47,7 +46,7 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
-      TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-applications'
+      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-applications"
       Tags:
         - Key: Billable
           Value: "true"
