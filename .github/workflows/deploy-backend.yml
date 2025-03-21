@@ -137,21 +137,30 @@ jobs:
           for stack in bootstrap cognito dynamodb lambdas appsync; do
             echo "Deploying $stack stack..."
             
-            if [ "$stack" == "appsync" ]; then
-              # Find and verify schema file
-              SCHEMA_FILE=$(find . -name "appsync_*.graphql" | sort -r | head -1)
-              if [ -z "$SCHEMA_FILE" ]; then
-                echo "ERROR: No schema file found for AppSync deployment"
-                exit 1
-              fi
-              echo "Schema file: $SCHEMA_FILE"
-              
-              SCHEMA_FILENAME=$(basename "$SCHEMA_FILE")
-              echo "Using schema file: $SCHEMA_FILENAME for AppSync deployment"
-            fi
+            # Set up parameters for both build and deploy
+            PARAMS="Environment=${{ inputs.environment }} CustomerId=${{ inputs.customer_id }} ProjectId=${{ inputs.project_id }}"
             
+            # Add stack-specific parameters
+            case "$stack" in
+              "appsync")
+                SCHEMA_FILE=$(find . -name "appsync_*.graphql" | sort -r | head -1)
+                if [ -z "$SCHEMA_FILE" ]; then
+                  echo "ERROR: No schema file found for AppSync deployment"
+                  exit 1
+                fi
+                SCHEMA_FILENAME=$(basename "$SCHEMA_FILE")
+                PARAMS="$PARAMS SchemaS3Key=$SCHEMA_FILENAME"
+                echo "Using schema: $SCHEMA_FILENAME for AppSync stack"
+                ;;
+              "lambdas")
+                PARAMS="$PARAMS SMSOriginationNumber=${{ inputs.sms_origination_number }}"
+                echo "Using SMS Origination Number: ${{ inputs.sms_origination_number }} for Lambdas stack"
+                ;;
+            esac
+            
+            # Build with parameters
             echo "Building ${stack} stack..."
-            sam build --template ${stack}.yml || {
+            sam build --template ${stack}.yml --parameter-overrides $PARAMS || {
               echo "ERROR: Failed to build ${stack} stack"
               exit 1
             }
@@ -165,17 +174,6 @@ jobs:
                 exit 1
               }
           
-            # Set up deployment parameters
-            PARAMS="Environment=${{ inputs.environment }} CustomerId=${{ inputs.customer_id }} ProjectId=${{ inputs.project_id }}"
-            if [ "$stack" == "appsync" ]; then
-              PARAMS="$PARAMS SchemaS3Key=$SCHEMA_FILENAME"
-              echo "Using schema: $SCHEMA_FILENAME for AppSync stack"
-            fi
-            if [ "$stack" == "lambdas" ]; then
-              PARAMS="$PARAMS SMSOriginationNumber=${{ inputs.sms_origination_number }}"
-              echo "Using SMS Origination Number: ${{ inputs.sms_origination_number }} for Lambdas stack"
-            fi
-                    
             echo "Deploying ${stack} stack with parameters: $PARAMS"
             sam deploy \
               --template-file ${stack}-packaged.yml \
