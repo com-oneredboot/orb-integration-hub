@@ -144,22 +144,6 @@ jobs:
           for stack in bootstrap cognito dynamodb lambdas appsync; do
             echo "Deploying $stack stack..."
             
-            # Special handling for AppSync stack
-            if [ "$stack" == "appsync" ]; then
-              # Find the latest generated schema file
-              SCHEMA_FILE=$(find . -name "appsync_*.graphql" | sort -r | head -1)
-              SCHEMA_FILENAME=$(basename "$SCHEMA_FILE")
-              
-              # Create a clean copy for deployment
-              echo "Preparing schema file for AppSync deployment..."
-              DEPLOY_FILE="${SCHEMA_FILE}.deploy"
-              cat "$SCHEMA_FILE" | tr -d '\r' | sed 's/^\xEF\xBB\xBF//' > "$DEPLOY_FILE"
-              mv "$DEPLOY_FILE" "$SCHEMA_FILE"
-              
-              # Set the schema filename for deployment
-              PARAMS="$PARAMS SchemaS3Key=$SCHEMA_FILENAME"
-            fi
-            
             echo "Building ${stack} stack..."
             sam build --template ${stack}.yml || {
               echo "ERROR: Failed to build ${stack} stack"
@@ -180,9 +164,16 @@ jobs:
             if [ "$stack" == "appsync" ]; then
               # Find the latest generated schema file
               SCHEMA_FILE=$(find . -name "appsync_*.graphql" | sort -r | head -1)
-              SCHEMA_FILENAME=$(basename "$SCHEMA_FILE")
+
+              # print the schema file
+              echo "Schema file: $SCHEMA_FILE"
+              
+              # Set the schema filename for deployment
               PARAMS="$PARAMS SchemaS3Key=$SCHEMA_FILENAME"
               echo "Using schema: $SCHEMA_FILENAME for AppSync stack"
+
+              # print the appsync stack.yml file
+              echo "Appsync stack: $(cat appsync.yml)"
             fi
             if [ "$stack" == "lambdas" ]; then
               PARAMS="$PARAMS SMSOriginationNumber=${{ inputs.sms_origination_number }}"
