@@ -17,7 +17,7 @@ client = boto3.client('sns')
 ENV_LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
 ENV_REGION = os.getenv('AWS_REGION', 'us-east-1')
 ENV_ENVIRONMENT = os.getenv('ENVIRONMENT', 'dev')
-ENV_TOPIC_ARN = os.getenv('TopicArn')
+ENV_ORIGINATION_NUMBER = os.getenv('ORIGINATION_NUMBER')
 
 # Setting up logging
 logger = logging.getLogger()
@@ -35,10 +35,11 @@ def lambda_handler(event, context):
         # create a code of 6 numbers from 0-9
         code = randint(100000, 999999)
 
-        # SMS can be sent directly to a phone number
+        # SMS using origination number
         sns_parameters = {
             'PhoneNumber': phone_number,
             'Message': f"Your verification code is {code}",
+            'OriginationNumber': ENV_ORIGINATION_NUMBER,
             'MessageAttributes': {
                 'AWS.SNS.SMS.SenderID': {
                     'DataType': 'String',

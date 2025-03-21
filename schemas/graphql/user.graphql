@@ -2,6 +2,21 @@
 # Generated from database model
 # Do not modify directly
 
+# Enum types
+enum UserStatus @aws_api_key @aws_cognito_user_pools {
+  ACTIVE
+  PENDING
+  SUSPENDED
+  INACTIVE
+  UNKNOWN
+}
+
+enum UserGroups @aws_api_key @aws_cognito_user_pools {
+  USER
+  ADMIN
+  DEVELOPER
+}
+
 # Main User type
 type User @aws_api_key @aws_cognito_user_pools {
   user_id: String!
@@ -12,7 +27,7 @@ type User @aws_api_key @aws_cognito_user_pools {
   first_name: String
   last_name: String
   groups: [UserGroups!]!
-  status: String!
+  status: UserStatus!
   created_at: String!
   updated_at: String
 }
@@ -41,13 +56,12 @@ input UserCreateInput @aws_api_key @aws_cognito_user_pools {
   first_name: String
   last_name: String
   groups: [UserGroups!]!
-  status: String!
+  status: UserStatus!
   created_at: String!
   updated_at: String
 }
 
 # Input for User query operations
-
 input UserQueryInput @aws_api_key @aws_cognito_user_pools {
   user_id: String
   email: String
@@ -64,7 +78,7 @@ input UserUpdateInput @aws_api_key @aws_cognito_user_pools {
   first_name: String
   last_name: String
   groups: [UserGroups]
-  status: String
+  status: UserStatus
   created_at: String
   updated_at: String
 }

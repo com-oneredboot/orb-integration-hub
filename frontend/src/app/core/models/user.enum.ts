@@ -12,11 +12,9 @@
 
 export enum UserGroups {
   UNKNOWN = 'UNKNOWN',     // Default value for initialization
-  USER = 'USER',           // Base group
-  CUSTOMER = 'CUSTOMER',   // End-users making purchases
-  CLIENT = 'CLIENT',       // Customers using the service
-  EMPLOYEE = 'EMPLOYEE',   // Internal staff
-  OWNER = 'OWNER'         // Root-level access
+  USER = 'USER',           // Base user group
+  ADMIN = 'ADMIN',         // Administrative access
+  DEVELOPER = 'DEVELOPER'  // Developer access
 }
 
 export enum UserStatus {

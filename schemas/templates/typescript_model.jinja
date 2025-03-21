@@ -36,6 +36,55 @@ export class {{ model_name }} implements I{{ model_name }} {
 {%- endfor %}
 
   constructor(data: Partial<I{{ model_name }}> = {}) {
-    Object.assign(this, data);
+    // Validate and assign data
+    Object.entries(data).forEach(([key, value]) => {
+      if (key in this) {
+        // Handle enum arrays
+        if (Array.isArray(value) && this[key] instanceof Array && this[key].length === 0) {
+          this[key] = value as typeof this[key];
+        }
+        // Handle single enums
+        else if (typeof value === 'string' && this[key] instanceof Object && 'UNKNOWN' in this[key]) {
+          this[key] = (this[key] as any)[value] || (this[key] as any).UNKNOWN;
+        }
+        // Handle other types
+        else {
+          this[key] = value as any;
+        }
+      }
+    });
+  }
+
+  /**
+   * Validates if the model has all required fields
+   * @returns boolean indicating if the model is valid
+   */
+  isValid(): boolean {
+    {% for attr, details in attributes.items() %}
+    {% if details.required %}
+    if (this.{{ attr }} === undefined || this.{{ attr }} === null) {
+      return false;
+    }
+    {% if details.type == 'array' %}
+    if (!Array.isArray(this.{{ attr }})) {
+      return false;
+    }
+    {% endif %}
+    {% if details.enum_type %}
+    if (!Object.values({{ details.enum_type }}).includes(this.{{ attr }})) {
+      return false;
+    }
+    {% endif %}
+    {% endif %}
+    {% endfor %}
+    return true;
+  }
+
+  /**
+   * Creates a copy of the model
+   * @returns A new instance of the model with the same values
+   */
+  clone(): {{ model_name }} {
+    return new {{ model_name }}({...this});
   }
 }
