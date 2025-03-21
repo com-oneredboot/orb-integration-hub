@@ -430,7 +430,7 @@ def generate_dynamodb_table(table_name: str, schema_path: str, jinja_env: Enviro
         logger.error(f"Error generating DynamoDB table definition for {table_name}: {str(e)}")
         return False
 
-def generate_graphql_schema(table_name: str, schema_path: str, jinja_env: Environment) -> bool:
+def generate_graphql_schema(table_name: str, schema_path: str, jinja_env: Environment) -> Optional[str]:
     """
     Generate GraphQL schema for a table.
     
@@ -440,7 +440,7 @@ def generate_graphql_schema(table_name: str, schema_path: str, jinja_env: Enviro
         jinja_env: Jinja environment
         
     Returns:
-        True if successful, False otherwise
+        The generated schema content if successful, None otherwise
     """
     try:
         schema = load_schema(schema_path)
@@ -458,24 +458,13 @@ def generate_graphql_schema(table_name: str, schema_path: str, jinja_env: Enviro
             sort_key=schema['model']['keys']['primary'].get('sort'),
             auth_config=schema['model'].get('auth_config', {})
         )
-        
-        # Write schema to file in the schemas directory
-        output_dir = os.path.join(SCRIPT_DIR, 'generated')
-        os.makedirs(output_dir, exist_ok=True)
-        
-        # Use snake_case for file name
-        file_name = f"{table_name}_schema.graphql"
-        output_path = os.path.join(output_dir, file_name)
-        
-        with open(output_path, 'w') as f:
-            f.write(schema_content)
             
         logger.info(f"Generated GraphQL schema for {table_name}")
-        return True
+        return schema_content
         
     except Exception as e:
         logger.error(f"Error generating GraphQL schema for {table_name}: {str(e)}")
-        return False
+        return None
 
 def generate_graphql_base_schema(schemas: List[Dict[str, Any]], table_names: List[str], jinja_env: Environment) -> bool:
     """
@@ -496,16 +485,12 @@ def generate_graphql_base_schema(schemas: List[Dict[str, Any]], table_names: Lis
         # Prepare model schemas
         model_schemas = []
         for schema, table_name in zip(schemas, table_names):
-            model_name = table_name[:-1].capitalize() if table_name.endswith('s') else table_name.capitalize()
-            
-            # Read the generated schema file from the generated directory
-            schema_file = os.path.join(SCRIPT_DIR, 'generated', f"{table_name}_schema.graphql")
-            try:
-                with open(schema_file, 'r') as f:
-                    model_schemas.append(f.read())
-            except FileNotFoundError:
-                logger.error(f"Error generating base GraphQL schema: [Errno 2] No such file or directory: '{schema_file}'")
+            # Generate schema content directly
+            schema_content = generate_graphql_schema(table_name, schema['path'], jinja_env)
+            if schema_content is None:
+                logger.error(f"Failed to generate schema for table: {table_name}")
                 return False
+            model_schemas.append(schema_content)
         
         # Generate base schema
         base_schema = template.render(
@@ -514,8 +499,8 @@ def generate_graphql_base_schema(schemas: List[Dict[str, Any]], table_names: Lis
             timestamp=datetime.now().strftime('%Y%m%d_%H%M%S')
         )
         
-        # Write base schema to file in the generated directory
-        output_dir = os.path.join(SCRIPT_DIR, 'generated')
+        # Write base schema to file in the graphql directory
+        output_dir = os.path.join(SCRIPT_DIR, 'graphql')
         os.makedirs(output_dir, exist_ok=True)
         
         # Generate timestamped schema file
@@ -579,8 +564,8 @@ def generate_timestamped_schema(schema_content: str) -> str:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"appsync_{timestamp}.graphql"
         
-        # Write the schema file to the generated directory
-        output_path = os.path.join(SCRIPT_DIR, 'generated', filename)
+        # Write the schema file to the graphql directory
+        output_path = os.path.join(SCRIPT_DIR, 'graphql', filename)
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
         with open(output_path, 'w') as f:
@@ -621,16 +606,9 @@ def main():
                 python_success = generate_python_model(table_name, schema_path, jinja_env)
                 typescript_success = generate_typescript_model(table_name, schema_path, jinja_env)
                 dynamodb_success = generate_dynamodb_table(table_name, schema_path, jinja_env)
-                graphql_success = generate_graphql_schema(table_name, schema_path, jinja_env)
                 
-                if not python_success or not typescript_success or not dynamodb_success or not graphql_success:
+                if not python_success or not typescript_success or not dynamodb_success:
                     logger.error(f"Failed to generate files for table: {table_name}")
-                    sys.exit(1)
-                    
-                # Verify the schema file was created
-                schema_file = os.path.join(SCRIPT_DIR, 'generated', f"{table_name}_schema.graphql")
-                if not os.path.exists(schema_file):
-                    logger.error(f"Schema file not created for table: {table_name}")
                     sys.exit(1)
                     
             except Exception as e:
@@ -643,14 +621,14 @@ def main():
             sys.exit(1)
             
         # Find the latest generated schema file
-        generated_dir = os.path.join(SCRIPT_DIR, 'generated')
-        schema_files = [f for f in os.listdir(generated_dir) if f.startswith('appsync_') and f.endswith('.graphql')]
+        graphql_dir = os.path.join(SCRIPT_DIR, 'graphql')
+        schema_files = [f for f in os.listdir(graphql_dir) if f.startswith('appsync_') and f.endswith('.graphql')]
         if not schema_files:
             logger.error("No generated schema files found")
             sys.exit(1)
             
-        latest_schema = max(schema_files, key=lambda x: os.path.getctime(os.path.join(generated_dir, x)))
-        schema_path = os.path.join(generated_dir, latest_schema)
+        latest_schema = max(schema_files, key=lambda x: os.path.getctime(os.path.join(graphql_dir, x)))
+        schema_path = os.path.join(graphql_dir, latest_schema)
         
         # Read the latest schema
         with open(schema_path, 'r') as f:
