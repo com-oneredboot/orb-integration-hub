@@ -242,8 +242,8 @@ Resources:
         Environment: !Ref Environment
         ProjectId: !Ref ProjectId
   
-  # Applicationusers Table
-  ApplicationusersTable:
+  # Application Users Table
+  ApplicationUsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
@@ -257,7 +257,7 @@ Resources:
           KeyType: HASH
         - AttributeName: user_id
           KeyType: RANGE
-      TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-applicationUsers'
+      TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-application-users'
       Tags:
         - Key: Billable
           Value: "true"
@@ -268,28 +268,28 @@ Resources:
         - Key: ProjectId
           Value: !Ref ProjectId
 
-  # Parameter Store for Applicationusers table name
-  ApplicationusersTableNameParameter:
+  # Parameter Store for Application Users table name
+  ApplicationUsersTableNameParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-applicationUsers-table-name'
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-application-users-table-name'
       Type: String
-      Value: !Ref ApplicationusersTable
-      Description: DynamoDB Applicationusers Table Name
+      Value: !Ref ApplicationUsersTable
+      Description: DynamoDB Application Users Table Name
       Tags:
         Billable: true
         CustomerId: !Ref CustomerId
         Environment: !Ref Environment
         ProjectId: !Ref ProjectId
 
-  # Parameter Store for Applicationusers table ARN
-  ApplicationusersTableArnParameter:
+  # Parameter Store for Application Users table ARN
+  ApplicationUsersTableArnParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-applicationUsers-table-arn'
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-application-users-table-arn'
       Type: String
-      Value: !GetAtt ApplicationusersTable.Arn
-      Description: DynamoDB Applicationusers Table Arn
+      Value: !GetAtt ApplicationUsersTable.Arn
+      Description: DynamoDB Application Users Table Arn
       Tags:
         Billable: true
         CustomerId: !Ref CustomerId
