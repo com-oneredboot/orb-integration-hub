@@ -4,7 +4,7 @@
 # description: yaml file containing the application users table schema
 
 version: '1.0'
-table: applicationUsers
+table: applicationUsers  # DynamoDB table name in camelCase
 model:
   auth_config:
     # Operations that should allow API key access

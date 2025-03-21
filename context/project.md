@@ -165,6 +165,16 @@ Role-based UI organization:
 - Angular Components: PascalCase (e.g., SignupComponent)
 - TypeScript files: camelCase
 - Python files and functions: snake_case
+- AWS Resources:
+  - DynamoDB table names: camelCase (e.g., `applicationUsers`)
+  - DynamoDB column names: snake_case (e.g., `application_id`)
+  - CloudFormation resource names: PascalCase (e.g., `ApplicationUsersTable`)
+- GraphQL/AppSync:
+  - Type names: PascalCase (e.g., `ApplicationUser`)
+  - Field names: camelCase (e.g., `applicationId`)
+  - Operation names: camelCase (e.g., `applicationUserQueryById`)
+  - Response types: PascalCase with "Response" suffix (e.g., `ApplicationUserResponse`)
+  - Input types: PascalCase with "Input" suffix (e.g., `ApplicationUserCreateInput`)
 
 ### Frontend Services
 
