@@ -459,8 +459,8 @@ def generate_graphql_schema(table_name: str, schema_path: str, jinja_env: Enviro
             auth_config=schema['model'].get('auth_config', {})
         )
         
-        # Write schema to file
-        output_dir = os.path.join(SCRIPT_DIR, '../backend/infrastructure/cloudformation')
+        # Write schema to file in the schemas directory
+        output_dir = os.path.join(SCRIPT_DIR, 'generated')
         os.makedirs(output_dir, exist_ok=True)
         
         # Use snake_case for file name
@@ -498,8 +498,8 @@ def generate_graphql_base_schema(schemas: List[Dict[str, Any]], table_names: Lis
         for schema, table_name in zip(schemas, table_names):
             model_name = table_name[:-1].capitalize() if table_name.endswith('s') else table_name.capitalize()
             
-            # Read the generated schema file - use snake_case for file name
-            schema_file = os.path.join(SCRIPT_DIR, '../backend/infrastructure/cloudformation', f"{table_name}_schema.graphql")
+            # Read the generated schema file from the generated directory
+            schema_file = os.path.join(SCRIPT_DIR, 'generated', f"{table_name}_schema.graphql")
             try:
                 with open(schema_file, 'r') as f:
                     model_schemas.append(f.read())
@@ -514,8 +514,8 @@ def generate_graphql_base_schema(schemas: List[Dict[str, Any]], table_names: Lis
             timestamp=datetime.now().strftime('%Y%m%d_%H%M%S')
         )
         
-        # Write base schema to file
-        output_dir = os.path.join(SCRIPT_DIR, '../backend/infrastructure/cloudformation')
+        # Write base schema to file in the generated directory
+        output_dir = os.path.join(SCRIPT_DIR, 'generated')
         os.makedirs(output_dir, exist_ok=True)
         
         # Generate timestamped schema file
@@ -579,8 +579,8 @@ def generate_timestamped_schema(schema_content: str) -> str:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"appsync_{timestamp}.graphql"
         
-        # Write the schema file to backend/infrastructure/cloudformation directory
-        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation', filename)
+        # Write the schema file to the generated directory
+        output_path = os.path.join(SCRIPT_DIR, 'generated', filename)
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
         with open(output_path, 'w') as f:
@@ -628,7 +628,7 @@ def main():
                     sys.exit(1)
                     
                 # Verify the schema file was created
-                schema_file = os.path.join(SCRIPT_DIR, '../backend/infrastructure/cloudformation', f"{table_name}_schema.graphql")
+                schema_file = os.path.join(SCRIPT_DIR, 'generated', f"{table_name}_schema.graphql")
                 if not os.path.exists(schema_file):
                     logger.error(f"Schema file not created for table: {table_name}")
                     sys.exit(1)
@@ -643,14 +643,14 @@ def main():
             sys.exit(1)
             
         # Find the latest generated schema file
-        cloudformation_dir = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation')
-        schema_files = [f for f in os.listdir(cloudformation_dir) if f.startswith('appsync_') and f.endswith('.graphql')]
+        generated_dir = os.path.join(SCRIPT_DIR, 'generated')
+        schema_files = [f for f in os.listdir(generated_dir) if f.startswith('appsync_') and f.endswith('.graphql')]
         if not schema_files:
             logger.error("No generated schema files found")
             sys.exit(1)
             
-        latest_schema = max(schema_files, key=lambda x: os.path.getctime(os.path.join(cloudformation_dir, x)))
-        schema_path = os.path.join(cloudformation_dir, latest_schema)
+        latest_schema = max(schema_files, key=lambda x: os.path.getctime(os.path.join(generated_dir, x)))
+        schema_path = os.path.join(generated_dir, latest_schema)
         
         # Read the latest schema
         with open(schema_path, 'r') as f:
