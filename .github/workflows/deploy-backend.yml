@@ -30,6 +30,7 @@ on:
         description: 'SMS Origination Number'
         required: true
         type: string
+        default: '+12898190331'
 
 jobs:
 
