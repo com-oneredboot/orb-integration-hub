@@ -162,8 +162,8 @@ jobs:
               echo "Using schema: $SCHEMA_FILENAME for AppSync stack"
             fi
             if [ "$stack" == "lambdas" ]; then
-              PARAMS="$PARAMS SMSOriginationNumber=$SMS_ORIGINATION_NUMBER"
-              echo "Using SMS Origination Number: $SMS_ORIGINATION_NUMBER for Lambdas stack"
+              PARAMS="$PARAMS SMSOriginationNumber=${{ inputs.sms_origination_number }}"
+              echo "Using SMS Origination Number: ${{ inputs.sms_origination_number }} for Lambdas stack"
             fi
                     
             echo "Deploying ${stack} stack with parameters: $PARAMS"
