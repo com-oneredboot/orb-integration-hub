@@ -140,7 +140,7 @@ jobs:
             if [ -f "${stack}.yml" ]; then
               echo "File exists"
               echo "First few lines of ${stack}.yml:"
-              head -n 10 "${stack}.yml"
+              head -n 10000 "${stack}.yml"
             else
               echo "ERROR: ${stack}.yml not found!"
               exit 1
