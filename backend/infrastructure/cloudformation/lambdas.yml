@@ -39,6 +39,10 @@ Parameters:
     Default: corey@shabot.ca
     Description: The email address to send contact form submissions to
     Type: String
+  SMSOriginationNumber:
+    Type: String
+    Description: The AWS SNS origination number for sending SMS messages
+
 
 # --------------------------------------------------- #
 Globals:
@@ -64,17 +68,8 @@ Globals:
 # --------------------------------------------------- #
 Resources:
 
-  # SMS Origination Number
-  SMSOriginationNumber:
-    Type: AWS::SNS::OriginationNumber
-    Properties:
-      IsoCountryCode: US
-      MessageType: TRANSACTIONAL
-
   # SMS Verification Lambda Function
   SMSVerificationFunction:
-    DependsOn:
-      - SMSOriginationNumber
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub '${CustomerId}-${ProjectId}-${Environment}-sms-verification'
@@ -84,7 +79,7 @@ Resources:
         Variables:
           ENVIRONMENT: !Ref Environment
           LOG_LEVEL: !Ref ApplicationLoggingLevel
-          ORIGINATION_NUMBER: !GetAtt SMSOriginationNumber.PhoneNumber
+          ORIGINATION_NUMBER: !Ref SMSOriginationNumber
 
   # IAM Roles
   LambdaExecutionRole:
@@ -203,7 +198,7 @@ Resources:
               - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-dead-letter-queue-arn}}'
               - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-alerts-queue-arn}}'
               - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-phone-number-verification-topic-arn}}'
-              - !GetAtt SMSOriginationNumber.Arn
+
   SecretsManagerPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -219,8 +214,6 @@ Resources:
 
   # SSM Parameters
   SMSVerificationLambdaArnParameter:
-    DependsOn:
-      - SMSVerificationFunction
     Type: AWS::SSM::Parameter
     Properties:
       Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-sms-verification-lambda-arn"
@@ -233,29 +226,15 @@ Resources:
         Environment: !Ref Environment
         ProjectId: !Ref ProjectId
 
-  SMSOriginationNumberArnParameter:
-    DependsOn:
-      - SMSOriginationNumber
+  SMSOriginationNumberParemeter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-sms-origination-number-arn"
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-sms-origination-number"
       Type: String
-      Value: !GetAtt SMSOriginationNumber.Arn
-      Description: ARN of the SMS origination number
-      Tags:
-        Billable: true
-        CustomerId: !Ref CustomerId
-        Environment: !Ref Environment
-        ProjectId: !Ref ProjectId
+      Value: !GetAtt SMSOriginationNumber.PhoneNumber
 
 # --------------------------------------------------- #
 Outputs:
   SMSVerificationFunctionArn:
     Description: ARN of the SMS Verification Lambda function
     Value: !GetAtt SMSVerificationFunction.Arn
-  SMSOriginationNumberArn:
-    Description: ARN of the SMS Origination Number
-    Value: !GetAtt SMSOriginationNumber.Arn
-  SMSOriginationNumber:
-    Description: The SMS Origination Number
-    Value: !GetAtt SMSOriginationNumber.PhoneNumber

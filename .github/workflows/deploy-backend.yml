@@ -26,6 +26,10 @@ on:
         required: true
         type: string
         default: 'integration-hub'
+      sms_origination_number:
+        description: 'SMS Origination Number'
+        required: true
+        type: string
 
 jobs:
 
@@ -155,6 +159,10 @@ jobs:
               SCHEMA_FILENAME=$(basename "$SCHEMA_FILE")
               PARAMS="$PARAMS SchemaS3Key=$SCHEMA_FILENAME"
               echo "Using schema: $SCHEMA_FILENAME for AppSync stack"
+            fi
+            if [ "$stack" == "lambdas" ]; then
+              PARAMS="$PARAMS SMSOriginationNumber=$SMS_ORIGINATION_NUMBER"
+              echo "Using SMS Origination Number: $SMS_ORIGINATION_NUMBER for Lambdas stack"
             fi
                     
             echo "Deploying ${stack} stack with parameters: $PARAMS"
