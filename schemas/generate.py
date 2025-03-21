@@ -601,7 +601,7 @@ def main():
         # Load schema registry
         index = load_index()
         
-        # Process each table
+        # First, generate all individual schemas
         schemas = []
         for table in index['schemaRegistry']['tables']:
             table_name = table['name']
@@ -623,11 +623,18 @@ def main():
                 if not python_success or not typescript_success or not dynamodb_success or not graphql_success:
                     logger.error(f"Failed to generate files for table: {table_name}")
                     sys.exit(1)
+                    
+                # Verify the schema file was created
+                schema_file = os.path.join(SCRIPT_DIR, '../backend/infrastructure/cloudformation', f"{table_name}_schema.graphql")
+                if not os.path.exists(schema_file):
+                    logger.error(f"Schema file not created for table: {table_name}")
+                    sys.exit(1)
+                    
             except Exception as e:
                 logger.error(f"Failed to process table {table_name}: {str(e)}")
                 sys.exit(1)
         
-        # Generate base GraphQL schema
+        # Now that all individual schemas are generated, create the base schema
         if not generate_graphql_base_schema(schemas, jinja_env):
             logger.error("Failed to generate base GraphQL schema")
             sys.exit(1)
