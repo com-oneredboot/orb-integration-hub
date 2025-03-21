@@ -40,6 +40,7 @@ Parameters:
     Description: The email address to send contact form submissions to
     Type: String
   SMSOriginationNumber:
+    Default: "+12898190331"
     Type: String
     Description: The AWS SNS origination number for sending SMS messages
 
