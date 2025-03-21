@@ -123,25 +123,18 @@ jobs:
           
           echo "Uploading schema file: $SCHEMA_FILENAME"
           
-          # Verify the file is UTF-8 encoded and has no BOM
-          echo "Verifying schema file encoding..."
-          file -i "$SCHEMA_FILE"
+          # Create a clean copy without BOM
+          echo "Creating clean UTF-8 copy without BOM..."
+          CLEAN_FILE="${SCHEMA_FILE}.clean"
           
-          # Convert to UTF-8 without BOM if needed
-          echo "Ensuring UTF-8 encoding without BOM..."
-          TMP_FILE="${SCHEMA_FILE}.tmp"
-          iconv -f UTF-8 -t UTF-8 -o "$TMP_FILE" "$SCHEMA_FILE" || {
-            echo "ERROR: Failed to convert schema file encoding"
-            exit 1
-          }
-          mv "$TMP_FILE" "$SCHEMA_FILE"
+          # Read the file and write it back as clean UTF-8 without BOM
+          cat "$SCHEMA_FILE" | tr -d '\r' | sed 's/^\xEF\xBB\xBF//' > "$CLEAN_FILE"
+          mv "$CLEAN_FILE" "$SCHEMA_FILE"
           
-          # Upload the schema file to S3 with explicit content encoding
+          # Upload the schema file to S3 with explicit content type
           aws s3 cp "$SCHEMA_FILE" \
             s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/$SCHEMA_FILENAME \
-            --content-encoding utf-8 \
-            --content-type "text/plain; charset=utf-8" \
-            --metadata "ContentEncoding=utf-8"
+            --content-type "text/plain; charset=utf-8"
 
         working-directory: ./backend/infrastructure/cloudformation
 
@@ -157,11 +150,14 @@ jobs:
               SCHEMA_FILE=$(find . -name "appsync_*.graphql" | sort -r | head -1)
               SCHEMA_FILENAME=$(basename "$SCHEMA_FILE")
               
-              # Create a copy of the schema with verified UTF-8 encoding
+              # Create a clean copy for deployment
               echo "Preparing schema file for AppSync deployment..."
-              DEPLOY_SCHEMA="${SCHEMA_FILE}.deploy"
-              iconv -f UTF-8 -t UTF-8 -o "$DEPLOY_SCHEMA" "$SCHEMA_FILE"
-              mv "$DEPLOY_SCHEMA" "$SCHEMA_FILE"
+              DEPLOY_FILE="${SCHEMA_FILE}.deploy"
+              cat "$SCHEMA_FILE" | tr -d '\r' | sed 's/^\xEF\xBB\xBF//' > "$DEPLOY_FILE"
+              mv "$DEPLOY_FILE" "$SCHEMA_FILE"
+              
+              # Set the schema filename for deployment
+              PARAMS="$PARAMS SchemaS3Key=$SCHEMA_FILENAME"
             fi
             
             echo "Building ${stack} stack..."
