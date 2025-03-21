@@ -19,9 +19,9 @@ Resources:
       AttributeDefinitions:
       - AttributeName: role_id
         AttributeType: S
-      - AttributeName: user_id
-        AttributeType: S
       - AttributeName: application_id
+        AttributeType: S
+      - AttributeName: user_id
         AttributeType: S
       - AttributeName: role_type
         AttributeType: S
@@ -50,6 +50,8 @@ Resources:
       KeySchema:
       - AttributeName: role_id
         KeyType: HASH
+      - AttributeName: application_id
+        KeyType: RANGE
       LocalSecondaryIndexes:
       - IndexName: role-type-index
         KeySchema:

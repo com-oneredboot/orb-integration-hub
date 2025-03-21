@@ -9,6 +9,7 @@ model:
   keys:
     primary:
       partition: role_id
+      sort: application_id
     secondary:
       - name: user-role-index
         type: GSI
