@@ -9,6 +9,9 @@ Resources:
         - AttributeName: role_id
           AttributeType: S
         
+        - AttributeName: application_id
+          AttributeType: S
+        
         
         - AttributeName: user_id
           AttributeType: S
@@ -34,6 +37,9 @@ Resources:
       KeySchema:
         - AttributeName: role_id
           KeyType: HASH
+        
+        - AttributeName: application_id
+          KeyType: RANGE
         
       
       

@@ -614,6 +614,15 @@ def generate_cloudformation_template(schemas: List[Dict[str, Any]], jinja_env: E
                 'AttributeType': 'S'
             })
             
+            # Add primary sort key if it exists
+            primary_sort = schema['model']['keys']['primary'].get('sort')
+            if primary_sort and primary_sort not in all_attrs:
+                all_attrs.add(primary_sort)
+                attribute_definitions.append({
+                    'AttributeName': primary_sort,
+                    'AttributeType': 'S'
+                })
+            
             # Add secondary indexes
             if 'secondary' in schema['model']['keys']:
                 for idx in schema['model']['keys']['secondary']:
@@ -637,6 +646,13 @@ def generate_cloudformation_template(schemas: List[Dict[str, Any]], jinja_env: E
                     'KeyType': 'HASH'
                 }
             ]
+            
+            # Add sort key to primary key schema if it exists
+            if primary_sort:
+                key_schema.append({
+                    'AttributeName': primary_sort,
+                    'KeyType': 'RANGE'
+                })
             
             # Build global secondary indexes
             global_secondary_indexes = []
@@ -672,6 +688,7 @@ def generate_cloudformation_template(schemas: List[Dict[str, Any]], jinja_env: E
             if 'secondary' in schema['model']['keys']:
                 for idx in schema['model']['keys']['secondary']:
                     if idx.get('type') == 'LSI':
+                        # For LSI, we need to use the same partition key as the primary key
                         lsi = {
                             'IndexName': idx['name'],
                             'KeySchema': [
