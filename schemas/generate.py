@@ -379,15 +379,15 @@ def generate_dynamodb_table(table_name: str, schema_path: str, jinja_env: Enviro
         validate_schema(schema)
         
         # Load template and render
-        template = jinja_env.get_template('dynamodb_cloudformation.jinja')
+        template = jinja_env.get_template('dynamodb_table.jinja')
         output = template.render(
             table_name=table_name,
-            model_name=table_name[:-1].capitalize() if table_name.endswith('s') else table_name.capitalize(),
+            model=schema['model'],
             keys=schema['model']['keys']
         )
         
         # Write output
-        output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'dynamodb', f'{table_name}_table.yml')
+        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation', f'{table_name}_table.yml')
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
         with open(output_path, 'w') as f:
@@ -481,7 +481,7 @@ def generate_graphql_base_schema(schemas: List[Dict[str, Any]], jinja_env: Envir
         
         output = template.render(model_schemas=model_schemas)
         
-        # Write output
+        # Write output to backend/infrastructure/cloudformation
         output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation', 'schema.graphql')
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
@@ -516,7 +516,7 @@ def generate_cloudformation_template(schemas: List[Dict[str, Any]], jinja_env: E
             table_name = schema['table']
             
             # Read the generated table definition file
-            table_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'dynamodb', f'{table_name}_table.yml')
+            table_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation', f'{table_name}_table.yml')
             with open(table_path, 'r') as f:
                 content = f.read()
             
@@ -531,8 +531,8 @@ def generate_cloudformation_template(schemas: List[Dict[str, Any]], jinja_env: E
         
         output = template.render(table_definitions='\n\n'.join(table_definitions))
         
-        # Write output
-        output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'dynamodb', 'dynamodb.yml')
+        # Write output to backend/infrastructure/cloudformation
+        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation', 'dynamodb.yml')
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
         with open(output_path, 'w') as f:
@@ -560,7 +560,7 @@ def generate_timestamped_schema(schema_content: str) -> str:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"appsync_{timestamp}.graphql"
         
-        # Write the schema file to cloudformation directory
+        # Write the schema file to backend/infrastructure/cloudformation directory
         output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation', filename)
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
@@ -611,7 +611,7 @@ def main():
             sys.exit(1)
             
         # Read the generated schema
-        schema_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'graphql', 'schema.graphql')
+        schema_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation', 'schema.graphql')
         with open(schema_path, 'r') as f:
             schema_content = f.read()
             

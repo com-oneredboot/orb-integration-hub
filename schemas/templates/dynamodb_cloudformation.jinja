@@ -5,12 +5,12 @@
         {%- if keys.primary.sort -%}
           {%- set all_attrs = all_attrs + [keys.primary.sort] -%}
         {%- endif -%}
-        {%- for gsi in keys.secondary -%}
-          {%- if gsi.partition and gsi.partition not in all_attrs -%}
-            {%- set all_attrs = all_attrs + [gsi.partition] -%}
+        {%- for idx in keys.secondary -%}
+          {%- if idx.partition and idx.partition not in all_attrs -%}
+            {%- set all_attrs = all_attrs + [idx.partition] -%}
           {%- endif -%}
-          {%- if gsi.sort and gsi.sort not in all_attrs -%}
-            {%- set all_attrs = all_attrs + [gsi.sort] -%}
+          {%- if idx.sort and idx.sort not in all_attrs -%}
+            {%- set all_attrs = all_attrs + [idx.sort] -%}
           {%- endif -%}
         {%- endfor %}
         -
@@ -21,15 +21,15 @@
           AttributeName: {{ keys.primary.sort }}
           AttributeType: S
         {%- endif -%}
-        {%- for gsi in keys.secondary -%}
-          {%- if gsi.partition and gsi.partition != keys.primary.partition and gsi.partition != keys.primary.sort %}
+        {%- for idx in keys.secondary -%}
+          {%- if idx.partition and idx.partition != keys.primary.partition and idx.partition != keys.primary.sort %}
         -
-          AttributeName: {{ gsi.partition }}
+          AttributeName: {{ idx.partition }}
           AttributeType: S
           {%- endif -%}
-          {%- if gsi.sort and gsi.sort != keys.primary.partition and gsi.sort != keys.primary.sort and gsi.sort != gsi.partition %}
+          {%- if idx.sort and idx.sort != keys.primary.partition and idx.sort != keys.primary.sort and idx.sort != idx.partition %}
         -
-          AttributeName: {{ gsi.sort }}
+          AttributeName: {{ idx.sort }}
           AttributeType: S
           {%- endif -%}
         {%- endfor %}
@@ -45,20 +45,48 @@
         {%- endif %}
         {%- if keys.secondary %}
       GlobalSecondaryIndexes:
-        {%- for gsi in keys.secondary %}
+        {%- for idx in keys.secondary if idx.type == 'GSI' %}
         -
-          IndexName: {{ gsi.name }}
+          IndexName: {{ idx.name }}
           KeySchema:
             -
-              AttributeName: {{ gsi.partition }}
+              AttributeName: {{ idx.partition }}
               KeyType: HASH
-            {%- if gsi.sort %}
+            {%- if idx.sort %}
             -
-              AttributeName: {{ gsi.sort }}
+              AttributeName: {{ idx.sort }}
               KeyType: RANGE
             {%- endif %}
           Projection:
-            ProjectionType: ALL
+            ProjectionType: {{ idx.projection_type }}
+            {%- if idx.projection_type == 'INCLUDE' and idx.projected_attributes %}
+            NonKeyAttributes:
+              {%- for attr in idx.projected_attributes %}
+              - {{ attr }}
+              {%- endfor %}
+            {%- endif %}
+        {%- endfor %}
+      LocalSecondaryIndexes:
+        {%- for idx in keys.secondary if idx.type == 'LSI' %}
+        -
+          IndexName: {{ idx.name }}
+          KeySchema:
+            -
+              AttributeName: {{ keys.primary.partition }}
+              KeyType: HASH
+            {%- if idx.sort %}
+            -
+              AttributeName: {{ idx.sort }}
+              KeyType: RANGE
+            {%- endif %}
+          Projection:
+            ProjectionType: {{ idx.projection_type }}
+            {%- if idx.projection_type == 'INCLUDE' and idx.projected_attributes %}
+            NonKeyAttributes:
+              {%- for attr in idx.projected_attributes %}
+              - {{ attr }}
+              {%- endfor %}
+            {%- endif %}
         {%- endfor %}
         {%- endif %}
       TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-{{ table_name }}"
