@@ -61,8 +61,18 @@ Resources:
           KeyType: RANGE
         {%- endif %}
       {%- if schema['model']['keys'].get('secondary') %}
+        {%- set gsis = [] -%}
+        {%- set lsis = [] -%}
+        {%- for idx in schema['model']['keys']['secondary'] -%}
+          {%- if idx['type'] == 'GSI' -%}
+            {%- set _ = gsis.append(idx) -%}
+          {%- elif idx['type'] == 'LSI' -%}
+            {%- set _ = lsis.append(idx) -%}
+          {%- endif -%}
+        {%- endfor -%}
+        {%- if gsis %}
       GlobalSecondaryIndexes:
-        {%- for idx in schema['model']['keys']['secondary'] if idx['type'] == 'GSI' %}
+        {%- for idx in gsis %}
         - IndexName: {{ idx['name'] }}
           KeySchema:
             - AttributeName: {{ idx['partition'] }}
@@ -80,10 +90,10 @@ Resources:
               {%- endfor %}
             {%- endif %}
         {%- endfor %}
-      {%- endif %}
-      {%- if schema['model']['keys'].get('secondary') %}
+        {%- endif %}
+        {%- if lsis %}
       LocalSecondaryIndexes:
-        {%- for idx in schema['model']['keys']['secondary'] if idx['type'] == 'LSI' %}
+        {%- for idx in lsis %}
         - IndexName: {{ idx['name'] }}
           KeySchema:
             - AttributeName: {{ schema['model']['keys']['primary']['partition'] }}
@@ -101,6 +111,7 @@ Resources:
               {%- endfor %}
             {%- endif %}
         {%- endfor %}
+        {%- endif %}
       {%- endif %}
       TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}'
       Tags:
