@@ -146,12 +146,21 @@ jobs:
               exit 1
             fi
           
-            sam build --template ${stack}.yml
+            echo "Building ${stack} stack..."
+            sam build --template ${stack}.yml --debug || {
+              echo "ERROR: Failed to build ${stack} stack"
+              exit 1
+            }
           
+            echo "Packaging ${stack} stack..."
             sam package \
               --template-file ${stack}.yml \
               --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
-              --output-template-file ${stack}-packaged.yml
+              --output-template-file ${stack}-packaged.yml \
+              --debug || {
+                echo "ERROR: Failed to package ${stack} stack"
+                exit 1
+              }
           
             # Add an override for the schema location
             PARAMS="Environment=${{ inputs.environment }} CustomerId=${{ inputs.customer_id }} ProjectId=${{ inputs.project_id }}"
@@ -163,16 +172,25 @@ jobs:
               echo "Using schema: $SCHEMA_FILENAME for AppSync stack"
             fi
                     
+            echo "Deploying ${stack} stack with parameters: $PARAMS"
             sam deploy \
               --template-file ${stack}-packaged.yml \
               --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
               --stack-name ${{ inputs.customer_id }}-${{ inputs.project_id }}-${stack} \
               --capabilities CAPABILITY_NAMED_IAM \
               --no-fail-on-empty-changeset \
-              --parameter-overrides $PARAMS
+              --parameter-overrides $PARAMS \
+              --debug || {
+                echo "ERROR: Failed to deploy ${stack} stack"
+                exit 1
+              }
           
+            echo "Uploading packaged template to S3..."
             aws s3 cp ${stack}-packaged.yml \
-              s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/${stack}-packaged.yml
+              s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/${stack}-packaged.yml || {
+                echo "ERROR: Failed to upload packaged template for ${stack} stack"
+                exit 1
+              }
           
           done
         working-directory: ./backend/infrastructure/cloudformation
