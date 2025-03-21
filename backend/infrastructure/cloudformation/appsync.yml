@@ -121,7 +121,7 @@ Resources:
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-application-users-table-name}}'
+        TableName: !Sub '{{resolve:aws:ssm:${CustomerId}-${ProjectId}-${Environment}-application-users-table-name}}'
         AwsRegion: !Ref AWS::Region
   SMSVerificationDataSource:
     Type: AWS::AppSync::DataSource
