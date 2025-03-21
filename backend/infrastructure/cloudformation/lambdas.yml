@@ -39,10 +39,6 @@ Parameters:
     Default: corey@shabot.ca
     Description: The email address to send contact form submissions to
     Type: String
-  SMSOriginationNumber:
-    Type: String
-    Description: The AWS SNS origination number for sending SMS messages
-    NoEcho: true
 
 # --------------------------------------------------- #
 Globals:

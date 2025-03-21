@@ -128,9 +128,6 @@ jobs:
 
       - name: Deploy All Stacks
         run: |
-          # Debug: List files in the current directory
-          echo "Current directory contents:"
-          ls -la
           
           for stack in bootstrap cognito dynamodb lambdas appsync; do
             echo "Deploying $stack stack..."
@@ -145,8 +142,7 @@ jobs:
             sam package \
               --template-file ${stack}.yml \
               --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
-              --output-template-file ${stack}-packaged.yml \
-              --debug || {
+              --output-template-file ${stack}-packaged.yml || {
                 echo "ERROR: Failed to package ${stack} stack"
                 exit 1
               }
@@ -168,8 +164,7 @@ jobs:
               --stack-name ${{ inputs.customer_id }}-${{ inputs.project_id }}-${stack} \
               --capabilities CAPABILITY_NAMED_IAM \
               --no-fail-on-empty-changeset \
-              --parameter-overrides $PARAMS \
-              --debug || {
+              --parameter-overrides $PARAMS || {
                 echo "ERROR: Failed to deploy ${stack} stack"
                 exit 1
               }
