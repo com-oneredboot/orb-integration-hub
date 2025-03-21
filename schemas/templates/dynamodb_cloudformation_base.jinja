@@ -24,111 +24,77 @@ Parameters:
 
 # --------------------------------------------------- #
 Resources:
-  # Applications Table
-  ApplicationsTable:
+  {% for schema in schemas %}
+  # {{ schema.table|capitalize }} Table
+  {{ schema.table|capitalize }}Table:
+    Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
-        -
-          AttributeName: application_id
+        {%- set all_attrs = [] -%}
+        {%- if schema.model.keys.primary.partition -%}
+          {%- set _ = all_attrs.append(schema.model.keys.primary.partition) -%}
+        {%- endif -%}
+        {%- if schema.model.keys.secondary -%}
+          {%- for idx in schema.model.keys.secondary -%}
+            {%- if idx.partition and idx.partition not in all_attrs -%}
+              {%- set _ = all_attrs.append(idx.partition) -%}
+            {%- endif -%}
+            {%- if idx.sort and idx.sort not in all_attrs -%}
+              {%- set _ = all_attrs.append(idx.sort) -%}
+            {%- endif -%}
+          {%- endfor -%}
+        {%- endif -%}
+        {%- for attr in all_attrs %}
+        - AttributeName: {{ attr }}
           AttributeType: S
-        -
-          AttributeName: user_id
-          AttributeType: S
+        {%- endfor %}
       BillingMode: PAY_PER_REQUEST
       KeySchema:
-        -
-          AttributeName: application_id
+        - AttributeName: {{ schema.model.keys.primary.partition }}
           KeyType: HASH
+      {%- if schema.model.keys.secondary %}
       GlobalSecondaryIndexes:
-        -
-          IndexName: user-id-index # gets all the applications owned by a given user
+        {%- for idx in schema.model.keys.secondary if idx.type == 'GSI' %}
+        - IndexName: {{ idx.name }}
           KeySchema:
-            -
-              AttributeName: user_id
+            - AttributeName: {{ idx.partition }}
               KeyType: HASH
-            -
-              AttributeName: application_id
+            {%- if idx.sort %}
+            - AttributeName: {{ idx.sort }}
               KeyType: RANGE
+            {%- endif %}
           Projection:
-            ProjectionType: ALL
-      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-applications"
-      Tags:
-        - Key: Billable
-          Value: "true"
-        - Key: CustomerId
-          Value: !Ref CustomerId
-        - Key: Environment
-          Value: !Ref Environment
-        - Key: ProjectId
-          Value: !Ref ProjectId
-    Type: AWS::DynamoDB::Table
-
-  # Application User Roles Table
-  ApplicationUsersTable:
-    Properties:
-      AttributeDefinitions:
-        -
-          AttributeName: application_id
-          AttributeType: S
-        -
-          AttributeName: user_id
-          AttributeType: S
-      BillingMode: PAY_PER_REQUEST
-      KeySchema: # for a given application, get all the users
-        -
-          AttributeName: application_id
-          KeyType: HASH
-        -
-          AttributeName: user_id
-          KeyType: RANGE
-      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-application-users"
-      Tags:
-        - Key: Billable
-          Value: "true"
-        - Key: CustomerId
-          Value: !Ref CustomerId
-        - Key: Environment
-          Value: !Ref Environment
-        - Key: ProjectId
-          Value: !Ref ProjectId
-    Type: AWS::DynamoDB::Table
-
-  # Users Table
-  UsersTable:
-    Properties:
-      AttributeDefinitions:
-        -
-          AttributeName: user_id
-          AttributeType: S
-        -
-          AttributeName: cognito_id
-          AttributeType: S
-        -
-          AttributeName: email
-          AttributeType: S
-      BillingMode: PAY_PER_REQUEST
-      KeySchema:
-        -
-          AttributeName: user_id
-          KeyType: HASH
-      GlobalSecondaryIndexes:
-        -
-          IndexName: cognito-id-index
+            ProjectionType: {{ idx.projection_type }}
+            {%- if idx.projection_type == 'INCLUDE' and idx.projected_attributes %}
+            NonKeyAttributes:
+              {%- for attr in idx.projected_attributes %}
+              - {{ attr }}
+              {%- endfor %}
+            {%- endif %}
+        {%- endfor %}
+      {%- endif %}
+      {%- if schema.model.keys.secondary %}
+      LocalSecondaryIndexes:
+        {%- for idx in schema.model.keys.secondary if idx.type == 'LSI' %}
+        - IndexName: {{ idx.name }}
           KeySchema:
-            -
-              AttributeName: cognito_id
+            - AttributeName: {{ schema.model.keys.primary.partition }}
               KeyType: HASH
+            {%- if idx.sort %}
+            - AttributeName: {{ idx.sort }}
+              KeyType: RANGE
+            {%- endif %}
           Projection:
-            ProjectionType: ALL
-        -
-          IndexName: email-index
-          KeySchema:
-            -
-              AttributeName: email
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-users"
+            ProjectionType: {{ idx.projection_type }}
+            {%- if idx.projection_type == 'INCLUDE' and idx.projected_attributes %}
+            NonKeyAttributes:
+              {%- for attr in idx.projected_attributes %}
+              - {{ attr }}
+              {%- endfor %}
+            {%- endif %}
+        {%- endfor %}
+      {%- endif %}
+      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}"
       Tags:
         - Key: Billable
           Value: "true"
@@ -138,80 +104,32 @@ Resources:
           Value: !Ref Environment
         - Key: ProjectId
           Value: !Ref ProjectId
-    Type: AWS::DynamoDB::Table
 
-  # Parameter Store
-  ApplicationsTableNameParameter:
+  # Parameter Store for {{ schema.table|capitalize }} table name
+  {{ schema.table|capitalize }}TableNameParameter:
+    Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-applications-table-name"
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}-table-name"
       Type: String
-      Value: !Ref ApplicationsTable
-      Description: DynamoDB Applications Table Name
+      Value: !Ref {{ schema.table|capitalize }}Table
+      Description: DynamoDB {{ schema.table|capitalize }} Table Name
       Tags:
         Billable: true
         CustomerId: !Ref CustomerId
         Environment: !Ref Environment
         ProjectId: !Ref ProjectId
-    Type: AWS::SSM::Parameter
-  ApplicationsTableArnParameter:
-    Properties:
-      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-applications-table-arn"
-      Type: String
-      Value: !GetAtt ApplicationsTable.Arn
-      Description: DynamoDB Applications Table Arn
-      Tags:
-        Billable: true
-        CustomerId: !Ref CustomerId
-        Environment: !Ref Environment
-        ProjectId: !Ref ProjectId
-    Type: AWS::SSM::Parameter
-  ApplicationUsersTableNameParameter:
-    Properties:
-      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-application-users-table-name"
-      Type: String
-      Value: !Ref ApplicationUsersTable
-      Description: DynamoDB Application Users Table Name
-      Tags:
-        Billable: true
-        CustomerId: !Ref CustomerId
-        Environment: !Ref Environment
-        ProjectId: !Ref ProjectId
-    Type: AWS::SSM::Parameter
-  ApplicationUsersTableArnParameter:
-    Properties:
-      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-application-users-table-arn"
-      Type: String
-      Value: !GetAtt ApplicationUsersTable.Arn
-      Description: DynamoDB Application Users Table Arn
-      Tags:
-        Billable: true
-        CustomerId: !Ref CustomerId
-        Environment: !Ref Environment
-        ProjectId: !Ref ProjectId
-    Type: AWS::SSM::Parameter
-  UsersTableNameParameter:
-    Properties:
-      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-users-table-name"
-      Type: String
-      Value: !Ref UsersTable
-      Description: DynamoDB Users Table Name
-      Tags:
-        Billable: true
-        CustomerId: !Ref CustomerId
-        Environment: !Ref Environment
-        ProjectId: !Ref ProjectId
-    Type: AWS::SSM::Parameter
-  UsersTableArnParameter:
-    Properties:
-      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-users-table-arn"
-      Type: String
-      Value: !GetAtt UsersTable.Arn
-      Description: DynamoDB Users Table Arn
-      Tags:
-        Billable: true
-        CustomerId: !Ref CustomerId
-        Environment: !Ref Environment
-        ProjectId: !Ref ProjectId
-    Type: AWS::SSM::Parameter
 
-{{ table_definitions }}
+  # Parameter Store for {{ schema.table|capitalize }} table ARN
+  {{ schema.table|capitalize }}TableArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}-table-arn"
+      Type: String
+      Value: !GetAtt {{ schema.table|capitalize }}Table.Arn
+      Description: DynamoDB {{ schema.table|capitalize }} Table Arn
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+  {% endfor %}

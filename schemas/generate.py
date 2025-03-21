@@ -247,6 +247,31 @@ def load_schema(schema_path: str) -> Dict[str, Any]:
         full_path = os.path.join(SCRIPT_DIR, schema_path)
         with open(full_path, 'r') as f:
             schema = yaml.safe_load(f)
+            
+        # Ensure we have a dictionary
+        if not isinstance(schema, dict):
+            raise SchemaValidationError(f"Schema file {schema_path} did not load as a dictionary")
+            
+        # Ensure required top-level keys
+        if 'version' not in schema or 'table' not in schema or 'model' not in schema:
+            raise SchemaValidationError(f"Schema file {schema_path} missing required top-level keys")
+            
+        # Ensure model is a dictionary
+        if not isinstance(schema['model'], dict):
+            raise SchemaValidationError(f"Schema file {schema_path} model is not a dictionary")
+            
+        # Ensure keys section exists and is a dictionary
+        if 'keys' not in schema['model'] or not isinstance(schema['model']['keys'], dict):
+            raise SchemaValidationError(f"Schema file {schema_path} missing or invalid keys section")
+            
+        # Ensure primary key exists and is a dictionary
+        if 'primary' not in schema['model']['keys'] or not isinstance(schema['model']['keys']['primary'], dict):
+            raise SchemaValidationError(f"Schema file {schema_path} missing or invalid primary key")
+            
+        # Ensure partition key exists
+        if 'partition' not in schema['model']['keys']['primary']:
+            raise SchemaValidationError(f"Schema file {schema_path} missing partition key")
+            
         return schema
     except Exception as e:
         raise SchemaValidationError(f"Failed to load schema file {schema_path}: {str(e)}")
@@ -497,52 +522,252 @@ def generate_graphql_base_schema(schemas: List[Dict[str, Any]], jinja_env: Envir
 
 def generate_cloudformation_template(schemas: List[Dict[str, Any]], jinja_env: Environment) -> bool:
     """
-    Generate final CloudFormation template that includes all DynamoDB tables.
+    Generate the main CloudFormation template that combines all table definitions.
     
     Args:
         schemas: List of schema dictionaries
         jinja_env: Jinja environment
         
     Returns:
-        Boolean indicating success or failure
+        bool: True if successful, False otherwise
     """
     try:
-        # Load template and render
-        template = jinja_env.get_template('dynamodb_cloudformation_base.jinja')
+        # Start building the template
+        template = {
+            'AWSTemplateFormatVersion': '2010-09-09',
+            'Transform': 'AWS::Serverless-2016-10-31',
+            'Description': 'Application Infrastructure',
+            'Parameters': {
+                'Environment': {
+                    'Default': 'dev',
+                    'Type': 'String'
+                },
+                'CustomerId': {
+                    'Default': 'orb',
+                    'Type': 'String'
+                },
+                'ProjectId': {
+                    'Default': 'integration-hub',
+                    'Type': 'String'
+                },
+                'TracingIs': {
+                    'Default': 'Active',
+                    'Type': 'String'
+                }
+            },
+            'Resources': {}
+        }
         
-        # Prepare table definitions
-        table_definitions = []
+        # Process each schema
         for schema in schemas:
+            logger.info(f"Processing schema: {schema}")
+            # Ensure the schema has the required structure
+            if not isinstance(schema, dict):
+                logger.error(f"Schema is not a dictionary: {schema}")
+                continue
+                
+            if 'model' not in schema:
+                logger.error(f"Schema missing 'model' section: {schema}")
+                continue
+                
+            if not isinstance(schema['model'], dict):
+                logger.error(f"Schema model is not a dictionary: {schema}")
+                continue
+                
+            if 'keys' not in schema['model']:
+                logger.error(f"Schema missing 'keys' section: {schema}")
+                continue
+                
+            if not isinstance(schema['model']['keys'], dict):
+                logger.error(f"Schema keys is not a dictionary: {schema}")
+                continue
+                
+            if 'primary' not in schema['model']['keys']:
+                logger.error(f"Schema missing 'primary' key: {schema}")
+                continue
+                
+            if not isinstance(schema['model']['keys']['primary'], dict):
+                logger.error(f"Schema primary key is not a dictionary: {schema}")
+                continue
+                
+            if 'partition' not in schema['model']['keys']['primary']:
+                logger.error(f"Schema missing primary partition key: {schema}")
+                continue
+                
+            # Add the table name to the schema for the template
+            if 'table' not in schema:
+                logger.error(f"Schema missing table name: {schema}")
+                continue
+            
             table_name = schema['table']
+            table_resource_name = f"{table_name.capitalize()}Table"
             
-            # Read the generated table definition file
-            table_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation', f'{table_name}_table.yml')
-            with open(table_path, 'r') as f:
-                content = f.read()
+            # Build attribute definitions
+            attribute_definitions = []
+            all_attrs = set()
             
-            # Extract the table definition from the content
-            # Remove the Resources: line and the first level of indentation
-            content_lines = content.split('\n')
-            if content_lines[0].strip() == 'Resources:':
-                content_lines = content_lines[1:]
-            content = '\n'.join(line[2:] if line.startswith('  ') else line for line in content_lines)
+            # Add primary key
+            primary_partition = schema['model']['keys']['primary']['partition']
+            all_attrs.add(primary_partition)
+            attribute_definitions.append({
+                'AttributeName': primary_partition,
+                'AttributeType': 'S'
+            })
             
-            table_definitions.append(content)
+            # Add secondary indexes
+            if 'secondary' in schema['model']['keys']:
+                for idx in schema['model']['keys']['secondary']:
+                    if 'partition' in idx and idx['partition'] not in all_attrs:
+                        all_attrs.add(idx['partition'])
+                        attribute_definitions.append({
+                            'AttributeName': idx['partition'],
+                            'AttributeType': 'S'
+                        })
+                    if 'sort' in idx and idx['sort'] not in all_attrs:
+                        all_attrs.add(idx['sort'])
+                        attribute_definitions.append({
+                            'AttributeName': idx['sort'],
+                            'AttributeType': 'S'
+                        })
+            
+            # Build key schema
+            key_schema = [
+                {
+                    'AttributeName': primary_partition,
+                    'KeyType': 'HASH'
+                }
+            ]
+            
+            # Build global secondary indexes
+            global_secondary_indexes = []
+            if 'secondary' in schema['model']['keys']:
+                for idx in schema['model']['keys']['secondary']:
+                    if idx.get('type') == 'GSI':
+                        gsi = {
+                            'IndexName': idx['name'],
+                            'KeySchema': [
+                                {
+                                    'AttributeName': idx['partition'],
+                                    'KeyType': 'HASH'
+                                }
+                            ],
+                            'Projection': {
+                                'ProjectionType': idx.get('projection_type', 'ALL')
+                            }
+                        }
+                        
+                        if 'sort' in idx:
+                            gsi['KeySchema'].append({
+                                'AttributeName': idx['sort'],
+                                'KeyType': 'RANGE'
+                            })
+                        
+                        if idx.get('projection_type') == 'INCLUDE' and 'projected_attributes' in idx:
+                            gsi['Projection']['NonKeyAttributes'] = idx['projected_attributes']
+                        
+                        global_secondary_indexes.append(gsi)
+            
+            # Build local secondary indexes
+            local_secondary_indexes = []
+            if 'secondary' in schema['model']['keys']:
+                for idx in schema['model']['keys']['secondary']:
+                    if idx.get('type') == 'LSI':
+                        lsi = {
+                            'IndexName': idx['name'],
+                            'KeySchema': [
+                                {
+                                    'AttributeName': primary_partition,
+                                    'KeyType': 'HASH'
+                                }
+                            ],
+                            'Projection': {
+                                'ProjectionType': idx.get('projection_type', 'ALL')
+                            }
+                        }
+                        
+                        if 'sort' in idx:
+                            lsi['KeySchema'].append({
+                                'AttributeName': idx['sort'],
+                                'KeyType': 'RANGE'
+                            })
+                        
+                        if idx.get('projection_type') == 'INCLUDE' and 'projected_attributes' in idx:
+                            lsi['Projection']['NonKeyAttributes'] = idx['projected_attributes']
+                        
+                        local_secondary_indexes.append(lsi)
+            
+            # Build table properties
+            table_properties = {
+                'AttributeDefinitions': attribute_definitions,
+                'BillingMode': 'PAY_PER_REQUEST',
+                'KeySchema': key_schema,
+                'TableName': {'Fn::Sub': f"${{CustomerId}}-${{ProjectId}}-${{Environment}}-{table_name}"},
+                'Tags': [
+                    {'Key': 'Billable', 'Value': 'true'},
+                    {'Key': 'CustomerId', 'Value': {'Ref': 'CustomerId'}},
+                    {'Key': 'Environment', 'Value': {'Ref': 'Environment'}},
+                    {'Key': 'ProjectId', 'Value': {'Ref': 'ProjectId'}}
+                ]
+            }
+            
+            if global_secondary_indexes:
+                table_properties['GlobalSecondaryIndexes'] = global_secondary_indexes
+            
+            if local_secondary_indexes:
+                table_properties['LocalSecondaryIndexes'] = local_secondary_indexes
+            
+            # Add table resource
+            template['Resources'][table_resource_name] = {
+                'Type': 'AWS::DynamoDB::Table',
+                'Properties': table_properties
+            }
+            
+            # Add table name parameter
+            template['Resources'][f"{table_resource_name}NameParameter"] = {
+                'Type': 'AWS::SSM::Parameter',
+                'Properties': {
+                    'Name': {'Fn::Sub': f"${{CustomerId}}-${{ProjectId}}-${{Environment}}-{table_name}-table-name"},
+                    'Type': 'String',
+                    'Value': {'Ref': table_resource_name},
+                    'Description': f"DynamoDB {table_name.capitalize()} Table Name",
+                    'Tags': {
+                        'Billable': 'true',
+                        'CustomerId': {'Ref': 'CustomerId'},
+                        'Environment': {'Ref': 'Environment'},
+                        'ProjectId': {'Ref': 'ProjectId'}
+                    }
+                }
+            }
+            
+            # Add table ARN parameter
+            template['Resources'][f"{table_resource_name}ArnParameter"] = {
+                'Type': 'AWS::SSM::Parameter',
+                'Properties': {
+                    'Name': {'Fn::Sub': f"${{CustomerId}}-${{ProjectId}}-${{Environment}}-{table_name}-table-arn"},
+                    'Type': 'String',
+                    'Value': {'Fn::GetAtt': [table_resource_name, 'Arn']},
+                    'Description': f"DynamoDB {table_name.capitalize()} Table Arn",
+                    'Tags': {
+                        'Billable': 'true',
+                        'CustomerId': {'Ref': 'CustomerId'},
+                        'Environment': {'Ref': 'Environment'},
+                        'ProjectId': {'Ref': 'ProjectId'}
+                    }
+                }
+            }
         
-        output = template.render(table_definitions='\n\n'.join(table_definitions))
-        
-        # Write output to backend/infrastructure/cloudformation
+        # Write the template to the output file
         output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation', 'dynamodb.yml')
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
         with open(output_path, 'w') as f:
-            f.write(output)
-        
-        logger.info("Generated CloudFormation template")
+            yaml.dump(template, f, default_flow_style=False)
+            
+        logger.info('Generated CloudFormation template')
         return True
         
     except Exception as e:
-        logger.error(f"Error generating CloudFormation template: {str(e)}")
+        logger.error(f'Failed to generate CloudFormation template: {str(e)}')
         return False
 
 def generate_timestamped_schema(schema_content: str) -> str:
@@ -591,18 +816,22 @@ def main():
             
             logger.info(f"Processing table: {table_name}")
             
-            # Load schema for later use
-            schema = load_schema(schema_path)
-            schemas.append(schema)
-            
-            # Generate models and infrastructure
-            python_success = generate_python_model(table_name, schema_path, jinja_env)
-            typescript_success = generate_typescript_model(table_name, schema_path, jinja_env)
-            dynamodb_success = generate_dynamodb_table(table_name, schema_path, jinja_env)
-            graphql_success = generate_graphql_schema(table_name, schema_path, jinja_env)
-            
-            if not python_success or not typescript_success or not dynamodb_success or not graphql_success:
-                logger.error(f"Failed to generate files for table: {table_name}")
+            try:
+                # Load schema for later use
+                schema = load_schema(schema_path)
+                schemas.append(schema)
+                
+                # Generate models and infrastructure
+                python_success = generate_python_model(table_name, schema_path, jinja_env)
+                typescript_success = generate_typescript_model(table_name, schema_path, jinja_env)
+                dynamodb_success = generate_dynamodb_table(table_name, schema_path, jinja_env)
+                graphql_success = generate_graphql_schema(table_name, schema_path, jinja_env)
+                
+                if not python_success or not typescript_success or not dynamodb_success or not graphql_success:
+                    logger.error(f"Failed to generate files for table: {table_name}")
+                    sys.exit(1)
+            except Exception as e:
+                logger.error(f"Failed to process table {table_name}: {str(e)}")
                 sys.exit(1)
         
         # Generate base GraphQL schema
