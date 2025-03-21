@@ -118,7 +118,7 @@ jobs:
       - name: Upload schema to S3
         run: |
           # Find the latest generated appsync schema file
-          SCHEMA_FILE=$(find ./schemas/generated -name "appsync_*.graphql" | sort -r | head -1)
+          SCHEMA_FILE=$(find . -name "appsync_*.graphql" | sort -r | head -1)
           SCHEMA_FILENAME=$(basename "$SCHEMA_FILE")
           
           echo "Uploading schema file: $SCHEMA_FILENAME"
