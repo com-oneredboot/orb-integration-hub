@@ -388,36 +388,41 @@ def generate_typescript_model(table_name: str, schema_path: str, jinja_env: Envi
 
 def generate_dynamodb_table(table_name: str, schema_path: str, jinja_env: Environment) -> bool:
     """
-    Generate DynamoDB table definition from schema.
+    Generate DynamoDB table definition.
     
     Args:
-        table_name: Name of the table/model to generate
+        table_name: Name of the table
         schema_path: Path to the schema file
         jinja_env: Jinja environment
         
     Returns:
-        Boolean indicating success or failure
+        True if successful, False otherwise
     """
     try:
-        # Load and validate schema
         schema = load_schema(schema_path)
         validate_schema(schema)
         
-        # Load template and render
+        # Get template
         template = jinja_env.get_template('dynamodb_table.jinja')
-        output = template.render(
+        
+        # Generate table definition
+        table_content = template.render(
             table_name=table_name,
-            model=schema['model'],
-            keys=schema['model']['keys']
+            model_name=table_name.replace('_', ' ').title(),
+            **schema['model']
         )
         
-        # Write output
-        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation', f'{table_name}_table.yml')
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        # Write table definition to file
+        output_dir = os.path.join(SCRIPT_DIR, '../backend/infrastructure/cloudformation')
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Use table name without underscores for file name
+        file_name = f"{table_name.replace('_', '')}_table.yml"
+        output_path = os.path.join(output_dir, file_name)
         
         with open(output_path, 'w') as f:
-            f.write(output)
-        
+            f.write(table_content)
+            
         logger.info(f"Generated DynamoDB table definition for {table_name}")
         return True
         
@@ -427,44 +432,44 @@ def generate_dynamodb_table(table_name: str, schema_path: str, jinja_env: Enviro
 
 def generate_graphql_schema(table_name: str, schema_path: str, jinja_env: Environment) -> bool:
     """
-    Generate GraphQL schema from schema.
+    Generate GraphQL schema for a table.
     
     Args:
-        table_name: Name of the table/model to generate
+        table_name: Name of the table
         schema_path: Path to the schema file
         jinja_env: Jinja environment
         
     Returns:
-        Boolean indicating success or failure
+        True if successful, False otherwise
     """
     try:
-        # Load and validate schema
         schema = load_schema(schema_path)
         validate_schema(schema)
         
-        # Generate model name
-        model_name = table_name[:-1].capitalize() if table_name.endswith('s') else table_name.capitalize()
-        model_name_lowercase = model_name.lower()
-        
-        # Load template and render
+        # Get template
         template = jinja_env.get_template('graphql_schema.jinja')
-        output = template.render(
-            model_name=model_name,
-            model_name_lowercase=model_name_lowercase,
+        
+        # Generate schema
+        schema_content = template.render(
+            table_name=table_name,
+            model_name=table_name.replace('_', ' ').title().replace(' ', ''),
             attributes=schema['model']['attributes'],
             partition_key=schema['model']['keys']['primary']['partition'],
             sort_key=schema['model']['keys']['primary'].get('sort'),
-            model=schema['model'],
-            auth_config=schema['model'].get('auth_config')
+            auth_config=schema['model'].get('auth_config', {})
         )
         
-        # Write output
-        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation', f'{table_name}_schema.graphql')
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        # Write schema to file
+        output_dir = os.path.join(SCRIPT_DIR, '../backend/infrastructure/cloudformation')
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Use table name without underscores for file name
+        file_name = f"{table_name.replace('_', '')}_schema.graphql"
+        output_path = os.path.join(output_dir, file_name)
         
         with open(output_path, 'w') as f:
-            f.write(output)
-        
+            f.write(schema_content)
+            
         logger.info(f"Generated GraphQL schema for {table_name}")
         return True
         

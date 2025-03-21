@@ -1,61 +1,84 @@
-# GraphQL schema for Application
+# GraphQL schema for Applications
 # Generated from database model
 # Do not modify directly
 
-# Main Application type
-type Application @aws_api_key @aws_cognito_user_pools {
-  application_id: String!
-  name: String!
-  description: String
-  status: String!
-  created_at: Float!
-  updated_at: Float
-  user_id: String!
+# Main Applications type
+type Applications @aws_cognito_user_pools {
+  application_id: string!
+  name: string!
+  description: string
+  status: string!
+  created_at: number!
+  updated_at: number
+  user_id: string!
 }
 
-# Response type for Application operations
-type ApplicationResponse @aws_api_key @aws_cognito_user_pools {
-  status_code: Float!
-  message: String
-  application: Application
-}
-
-# Response type for multiple Application operations
+# Response type for Applications operations
 type ApplicationsResponse @aws_api_key @aws_cognito_user_pools {
   status_code: Float!
   message: String
-  applications: [Application]
+  item: Applications
 }
 
-# Input for Application creation
-input ApplicationCreateInput @aws_api_key @aws_cognito_user_pools {
-  application_id: String!
-  name: String!
-  description: String
-  status: String!
-  created_at: Float!
-  updated_at: Float
-  user_id: String!
+# Response type for multiple Applications operations
+type ApplicationssResponse @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  items: [Applications]
 }
 
-# Input for Application query operations
+# Input for Applications creation
+input ApplicationsCreateInput {
+  name: string!
+  description: string
+  status: string!
+  created_at: number!
+  updated_at: number
+  user_id: string!
+}
 
-input ApplicationQueryInput @aws_api_key @aws_cognito_user_pools {
+# Input for Applications query operations
+
+input ApplicationsQueryInput {
 
   application_id: String
-  user_id: String
+  name: string
+  description: string
+  status: string
+  created_at: number
+  updated_at: number
+  user_id: string
 }
 
-# Input for Application update operations
-input ApplicationUpdateInput @aws_api_key @aws_cognito_user_pools {
+# Input for Applications update operations
+input ApplicationsUpdateInput {
   application_id: String!
-  name: String
-  description: String
-  status: String
-  created_at: Float
-  updated_at: Float
-  user_id: String
+  name: string
+  description: string
+  status: string
+  created_at: number
+  updated_at: number
+  user_id: string
 }
 
-# Operations for Application
+# Operations for Applications
 # These will be merged with the root Query and Mutation types in the base schema
+
+extend type Query {
+  applicationsQueryById(id: ID!): ApplicationsResponse
+    @aws_auth(cognito_groups: ["admin"])
+  
+  applicationsQuery(input: ApplicationsQueryInput): ApplicationssResponse
+    @aws_auth(cognito_groups: ["admin"])
+}
+
+extend type Mutation {
+  applicationsCreate(input: ApplicationsCreateInput!): ApplicationsResponse
+    @aws_auth(cognito_groups: ["admin"])
+  
+  applicationsUpdate(id: ID!, input: ApplicationsUpdateInput!): ApplicationsResponse
+    @aws_auth(cognito_groups: ["admin"])
+  
+  applicationsDelete(id: ID!): ApplicationsResponse
+    @aws_auth(cognito_groups: ["admin"])
+}

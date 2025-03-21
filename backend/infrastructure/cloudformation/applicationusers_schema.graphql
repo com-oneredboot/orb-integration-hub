@@ -1,0 +1,75 @@
+# GraphQL schema for ApplicationUsers
+# Generated from database model
+# Do not modify directly
+
+# Main ApplicationUsers type
+type ApplicationUsers @aws_cognito_user_pools {
+  application_id: string!
+  user_id: string!
+  status: string!
+  created_at: number!
+  updated_at: number
+}
+
+# Response type for ApplicationUsers operations
+type ApplicationUsersResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  item: ApplicationUsers
+}
+
+# Response type for multiple ApplicationUsers operations
+type ApplicationUserssResponse @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  items: [ApplicationUsers]
+}
+
+# Input for ApplicationUsers creation
+input ApplicationUsersCreateInput {
+  status: string!
+  created_at: number!
+  updated_at: number
+}
+
+# Input for ApplicationUsers query operations
+
+input ApplicationUsersQueryInput {
+
+  application_id: String
+  user_id: String
+  status: string
+  created_at: number
+  updated_at: number
+}
+
+# Input for ApplicationUsers update operations
+input ApplicationUsersUpdateInput {
+  application_id: String!
+  user_id: String!
+  status: string
+  created_at: number
+  updated_at: number
+}
+
+# Operations for ApplicationUsers
+# These will be merged with the root Query and Mutation types in the base schema
+
+extend type Query {
+  application_usersQueryById(id: ID!): ApplicationUsersResponse
+    @aws_auth(cognito_groups: ["admin"])
+  
+  application_usersQuery(input: ApplicationUsersQueryInput): ApplicationUserssResponse
+    @aws_auth(cognito_groups: ["admin"])
+}
+
+extend type Mutation {
+  application_usersCreate(input: ApplicationUsersCreateInput!): ApplicationUsersResponse
+    @aws_auth(cognito_groups: ["admin"])
+  
+  application_usersUpdate(id: ID!, input: ApplicationUsersUpdateInput!): ApplicationUsersResponse
+    @aws_auth(cognito_groups: ["admin"])
+  
+  application_usersDelete(id: ID!): ApplicationUsersResponse
+    @aws_auth(cognito_groups: ["admin"])
+}

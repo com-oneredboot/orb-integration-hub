@@ -1,69 +1,91 @@
-# GraphQL schema for Role
+# GraphQL schema for Roles
 # Generated from database model
 # Do not modify directly
 
-# Main Role type
-type Role @aws_cognito_user_pools {
-  role_id: String!
-  user_id: String!
-  application_id: String!
-  role_name: String!
-  role_type: String!
-  permissions: [String!]!
-  created_at: Float!
-  updated_at: Float!
-  active: Boolean!
+# Main Roles type
+type Roles @aws_cognito_user_pools {
+  role_id: string!
+  user_id: string!
+  application_id: string!
+  role_name: string!
+  role_type: string!
+  permissions: array!
+  created_at: number!
+  updated_at: number!
+  active: boolean!
 }
 
-# Response type for Role operations
-type RoleResponse @aws_cognito_user_pools {
-  status_code: Float!
-  message: String
-  role: Role
-}
-
-# Response type for multiple Role operations
+# Response type for Roles operations
 type RolesResponse @aws_cognito_user_pools {
   status_code: Float!
   message: String
-  roles: [Role]
+  item: Roles
 }
 
-# Input for Role creation
-input RoleCreateInput {
-  role_id: String!
-  user_id: String!
-  application_id: String!
-  role_name: String!
-  role_type: String!
-  permissions: [String!]!
-  created_at: Float!
-  updated_at: Float!
-  active: Boolean!
+# Response type for multiple Roles operations
+type RolessResponse @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  items: [Roles]
 }
 
-# Input for Role query operations
+# Input for Roles creation
+input RolesCreateInput {
+  user_id: string!
+  role_name: string!
+  role_type: string!
+  permissions: array!
+  created_at: number!
+  updated_at: number!
+  active: boolean!
+}
 
-input RoleQueryInput {
+# Input for Roles query operations
+
+input RolesQueryInput {
 
   role_id: String
   application_id: String
-  user_id: String
-  role_type: String
+  user_id: string
+  role_name: string
+  role_type: string
+  permissions: array
+  created_at: number
+  updated_at: number
+  active: boolean
 }
 
-# Input for Role update operations
-input RoleUpdateInput {
+# Input for Roles update operations
+input RolesUpdateInput {
   role_id: String!
   application_id: String!
-  user_id: String
-  role_name: String
-  role_type: String
-  permissions: [String]
-  created_at: Float
-  updated_at: Float
-  active: Boolean
+  user_id: string
+  role_name: string
+  role_type: string
+  permissions: array
+  created_at: number
+  updated_at: number
+  active: boolean
 }
 
-# Operations for Role
+# Operations for Roles
 # These will be merged with the root Query and Mutation types in the base schema
+
+extend type Query {
+  rolesQueryById(id: ID!): RolesResponse
+    @aws_auth(cognito_groups: ["admin"])
+  
+  rolesQuery(input: RolesQueryInput): RolessResponse
+    @aws_auth(cognito_groups: ["admin"])
+}
+
+extend type Mutation {
+  rolesCreate(input: RolesCreateInput!): RolesResponse
+    @aws_auth(cognito_groups: ["admin"])
+  
+  rolesUpdate(id: ID!, input: RolesUpdateInput!): RolesResponse
+    @aws_auth(cognito_groups: ["admin"])
+  
+  rolesDelete(id: ID!): RolesResponse
+    @aws_auth(cognito_groups: ["admin"])
+}

@@ -1,5 +1,5 @@
   # DynamoDB table for {{ model_name }}
-  {{ table_name|capitalize }}Table:
+  {{ table_name|replace('_', '')|capitalize }}Table:
     Properties:
       AttributeDefinitions:{%- set all_attrs = [keys.primary.partition] -%}
         {%- if keys.primary.sort -%}
@@ -102,11 +102,11 @@
     Type: AWS::DynamoDB::Table
 
   # Parameter Store for table name
-  {{ table_name|capitalize }}TableNameParameter:
+  {{ table_name|replace('_', '')|capitalize }}TableNameParameter:
     Properties:
       Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-{{ table_name }}-table-name"
       Type: String
-      Value: !Ref {{ table_name|capitalize }}Table
+      Value: !Ref {{ table_name|replace('_', '')|capitalize }}Table
       Description: DynamoDB {{ model_name }} Table Name
       Tags:
         Billable: true
@@ -116,11 +116,11 @@
     Type: AWS::SSM::Parameter
 
   # Parameter Store for table ARN
-  {{ table_name|capitalize }}TableArnParameter:
+  {{ table_name|replace('_', '')|capitalize }}TableArnParameter:
     Properties:
       Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-{{ table_name }}-table-arn"
       Type: String
-      Value: !GetAtt {{ table_name|capitalize }}Table.Arn
+      Value: !GetAtt {{ table_name|replace('_', '')|capitalize }}Table.Arn
       Description: DynamoDB {{ model_name }} Table Arn
       Tags:
         Billable: true

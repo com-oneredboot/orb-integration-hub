@@ -28,274 +28,365 @@ enum UserGroups @aws_api_key @aws_cognito_user_pools {
 # Model definitions 
 
 # Model: Role
-# GraphQL schema for Role
+# GraphQL schema for Roles
 # Generated from database model
 # Do not modify directly
 
-# Main Role type
-type Role @aws_cognito_user_pools {
-  role_id: String!
-  user_id: String!
-  application_id: String!
-  role_name: String!
-  role_type: String!
-  permissions: [String!]!
-  created_at: Float!
-  updated_at: Float!
-  active: Boolean!
+# Main Roles type
+type Roles @aws_cognito_user_pools {
+  role_id: string!
+  user_id: string!
+  application_id: string!
+  role_name: string!
+  role_type: string!
+  permissions: array!
+  created_at: number!
+  updated_at: number!
+  active: boolean!
 }
 
-# Response type for Role operations
-type RoleResponse @aws_cognito_user_pools {
-  status_code: Float!
-  message: String
-  role: Role
-}
-
-# Response type for multiple Role operations
+# Response type for Roles operations
 type RolesResponse @aws_cognito_user_pools {
   status_code: Float!
   message: String
-  roles: [Role]
+  item: Roles
 }
 
-# Input for Role creation
-input RoleCreateInput {
-  role_id: String!
-  user_id: String!
-  application_id: String!
-  role_name: String!
-  role_type: String!
-  permissions: [String!]!
-  created_at: Float!
-  updated_at: Float!
-  active: Boolean!
+# Response type for multiple Roles operations
+type RolessResponse @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  items: [Roles]
 }
 
-# Input for Role query operations
+# Input for Roles creation
+input RolesCreateInput {
+  user_id: string!
+  role_name: string!
+  role_type: string!
+  permissions: array!
+  created_at: number!
+  updated_at: number!
+  active: boolean!
+}
 
-input RoleQueryInput {
+# Input for Roles query operations
+
+input RolesQueryInput {
 
   role_id: String
   application_id: String
-  user_id: String
-  role_type: String
+  user_id: string
+  role_name: string
+  role_type: string
+  permissions: array
+  created_at: number
+  updated_at: number
+  active: boolean
 }
 
-# Input for Role update operations
-input RoleUpdateInput {
+# Input for Roles update operations
+input RolesUpdateInput {
   role_id: String!
   application_id: String!
-  user_id: String
-  role_name: String
-  role_type: String
-  permissions: [String]
-  created_at: Float
-  updated_at: Float
-  active: Boolean
+  user_id: string
+  role_name: string
+  role_type: string
+  permissions: array
+  created_at: number
+  updated_at: number
+  active: boolean
 }
 
-# Operations for Role
+# Operations for Roles
 # These will be merged with the root Query and Mutation types in the base schema
+
+extend type Query {
+  rolesQueryById(id: ID!): RolesResponse
+    @aws_auth(cognito_groups: ["admin"])
+  
+  rolesQuery(input: RolesQueryInput): RolessResponse
+    @aws_auth(cognito_groups: ["admin"])
+}
+
+extend type Mutation {
+  rolesCreate(input: RolesCreateInput!): RolesResponse
+    @aws_auth(cognito_groups: ["admin"])
+  
+  rolesUpdate(id: ID!, input: RolesUpdateInput!): RolesResponse
+    @aws_auth(cognito_groups: ["admin"])
+  
+  rolesDelete(id: ID!): RolesResponse
+    @aws_auth(cognito_groups: ["admin"])
+}
 
 
 # Model: User
-# GraphQL schema for User
+# GraphQL schema for Users
 # Generated from database model
 # Do not modify directly
 
-# Main User type
-type User @aws_api_key @aws_cognito_user_pools {
-  user_id: String!
-  cognito_id: String!
-  email: String!
-  phone_number: String
-  phone_verified: Boolean
-  first_name: String
-  last_name: String
-  groups: [String!]!
-  status: String!
-  created_at: Float!
-  updated_at: Float
+# Main Users type
+type Users @aws_cognito_user_pools {
+  user_id: string!
+  cognito_id: string!
+  email: string!
+  phone_number: string
+  phone_verified: boolean
+  first_name: string
+  last_name: string
+  groups: array!
+  status: string!
+  created_at: number!
+  updated_at: number
 }
 
-# Response type for User operations
-type UserResponse @aws_api_key @aws_cognito_user_pools {
-  status_code: Float!
-  message: String
-  user: User
-}
-
-# Response type for multiple User operations
+# Response type for Users operations
 type UsersResponse @aws_api_key @aws_cognito_user_pools {
   status_code: Float!
   message: String
-  users: [User]
+  item: Users
 }
 
-# Input for User creation
-input UserCreateInput @aws_api_key @aws_cognito_user_pools {
-  user_id: String!
-  cognito_id: String!
-  email: String!
-  phone_number: String
-  phone_verified: Boolean
-  first_name: String
-  last_name: String
-  groups: [String!]!
-  status: String!
-  created_at: Float!
-  updated_at: Float
+# Response type for multiple Users operations
+type UserssResponse @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  items: [Users]
 }
 
-# Input for User query operations
+# Input for Users creation
+input UsersCreateInput {
+  cognito_id: string!
+  email: string!
+  phone_number: string
+  phone_verified: boolean
+  first_name: string
+  last_name: string
+  groups: array!
+  status: string!
+  created_at: number!
+  updated_at: number
+}
 
-input UserQueryInput @aws_api_key @aws_cognito_user_pools {
+# Input for Users query operations
+
+input UsersQueryInput {
 
   user_id: String
-  email: String
-  cognito_id: String
+  cognito_id: string
+  email: string
+  phone_number: string
+  phone_verified: boolean
+  first_name: string
+  last_name: string
+  groups: array
+  status: string
+  created_at: number
+  updated_at: number
 }
 
-# Input for User update operations
-input UserUpdateInput @aws_api_key @aws_cognito_user_pools {
+# Input for Users update operations
+input UsersUpdateInput {
   user_id: String!
-  cognito_id: String
-  email: String
-  phone_number: String
-  phone_verified: Boolean
-  first_name: String
-  last_name: String
-  groups: [String]
-  status: String
-  created_at: Float
-  updated_at: Float
+  cognito_id: string
+  email: string
+  phone_number: string
+  phone_verified: boolean
+  first_name: string
+  last_name: string
+  groups: array
+  status: string
+  created_at: number
+  updated_at: number
 }
 
-# Operations for User
+# Operations for Users
 # These will be merged with the root Query and Mutation types in the base schema
+
+extend type Query {
+  usersQueryById(id: ID!): UsersResponse
+    @aws_auth(cognito_groups: ["admin"])
+  
+  usersQuery(input: UsersQueryInput): UserssResponse
+    @aws_auth(cognito_groups: ["admin"])
+}
+
+extend type Mutation {
+  usersCreate(input: UsersCreateInput!): UsersResponse
+    @aws_auth(cognito_groups: ["admin"])
+  
+  usersUpdate(id: ID!, input: UsersUpdateInput!): UsersResponse
+    @aws_auth(cognito_groups: ["admin"])
+  
+  usersDelete(id: ID!): UsersResponse
+    @aws_auth(cognito_groups: ["admin"])
+}
 
 
 # Model: Application
-# GraphQL schema for Application
+# GraphQL schema for Applications
 # Generated from database model
 # Do not modify directly
 
-# Main Application type
-type Application @aws_api_key @aws_cognito_user_pools {
-  application_id: String!
-  name: String!
-  description: String
-  status: String!
-  created_at: Float!
-  updated_at: Float
-  user_id: String!
+# Main Applications type
+type Applications @aws_cognito_user_pools {
+  application_id: string!
+  name: string!
+  description: string
+  status: string!
+  created_at: number!
+  updated_at: number
+  user_id: string!
 }
 
-# Response type for Application operations
-type ApplicationResponse @aws_api_key @aws_cognito_user_pools {
-  status_code: Float!
-  message: String
-  application: Application
-}
-
-# Response type for multiple Application operations
+# Response type for Applications operations
 type ApplicationsResponse @aws_api_key @aws_cognito_user_pools {
   status_code: Float!
   message: String
-  applications: [Application]
+  item: Applications
 }
 
-# Input for Application creation
-input ApplicationCreateInput @aws_api_key @aws_cognito_user_pools {
-  application_id: String!
-  name: String!
-  description: String
-  status: String!
-  created_at: Float!
-  updated_at: Float
-  user_id: String!
+# Response type for multiple Applications operations
+type ApplicationssResponse @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  items: [Applications]
 }
 
-# Input for Application query operations
+# Input for Applications creation
+input ApplicationsCreateInput {
+  name: string!
+  description: string
+  status: string!
+  created_at: number!
+  updated_at: number
+  user_id: string!
+}
 
-input ApplicationQueryInput @aws_api_key @aws_cognito_user_pools {
+# Input for Applications query operations
+
+input ApplicationsQueryInput {
 
   application_id: String
-  user_id: String
+  name: string
+  description: string
+  status: string
+  created_at: number
+  updated_at: number
+  user_id: string
 }
 
-# Input for Application update operations
-input ApplicationUpdateInput @aws_api_key @aws_cognito_user_pools {
+# Input for Applications update operations
+input ApplicationsUpdateInput {
   application_id: String!
-  name: String
-  description: String
-  status: String
-  created_at: Float
-  updated_at: Float
-  user_id: String
+  name: string
+  description: string
+  status: string
+  created_at: number
+  updated_at: number
+  user_id: string
 }
 
-# Operations for Application
+# Operations for Applications
 # These will be merged with the root Query and Mutation types in the base schema
 
+extend type Query {
+  applicationsQueryById(id: ID!): ApplicationsResponse
+    @aws_auth(cognito_groups: ["admin"])
+  
+  applicationsQuery(input: ApplicationsQueryInput): ApplicationssResponse
+    @aws_auth(cognito_groups: ["admin"])
+}
 
-# Model: Application_user
-# GraphQL schema for Application_user
+extend type Mutation {
+  applicationsCreate(input: ApplicationsCreateInput!): ApplicationsResponse
+    @aws_auth(cognito_groups: ["admin"])
+  
+  applicationsUpdate(id: ID!, input: ApplicationsUpdateInput!): ApplicationsResponse
+    @aws_auth(cognito_groups: ["admin"])
+  
+  applicationsDelete(id: ID!): ApplicationsResponse
+    @aws_auth(cognito_groups: ["admin"])
+}
+
+
+# Model: Applicationuser
+# GraphQL schema for ApplicationUsers
 # Generated from database model
 # Do not modify directly
 
-# Main Application_user type
-type Application_user @aws_cognito_user_pools {
-  application_id: String!
-  user_id: String!
-  status: String!
-  created_at: Float!
-  updated_at: Float
+# Main ApplicationUsers type
+type ApplicationUsers @aws_cognito_user_pools {
+  application_id: string!
+  user_id: string!
+  status: string!
+  created_at: number!
+  updated_at: number
 }
 
-# Response type for Application_user operations
-type Application_userResponse @aws_cognito_user_pools {
+# Response type for ApplicationUsers operations
+type ApplicationUsersResponse @aws_api_key @aws_cognito_user_pools {
   status_code: Float!
   message: String
-  application_user: Application_user
+  item: ApplicationUsers
 }
 
-# Response type for multiple Application_user operations
-type Application_usersResponse @aws_cognito_user_pools {
+# Response type for multiple ApplicationUsers operations
+type ApplicationUserssResponse @aws_cognito_user_pools {
   status_code: Float!
   message: String
-  application_users: [Application_user]
+  items: [ApplicationUsers]
 }
 
-# Input for Application_user creation
-input Application_userCreateInput {
-  application_id: String!
-  user_id: String!
-  status: String!
-  created_at: Float!
-  updated_at: Float
+# Input for ApplicationUsers creation
+input ApplicationUsersCreateInput {
+  status: string!
+  created_at: number!
+  updated_at: number
 }
 
-# Input for Application_user query operations
+# Input for ApplicationUsers query operations
 
-input Application_userQueryInput {
+input ApplicationUsersQueryInput {
 
   application_id: String
   user_id: String
+  status: string
+  created_at: number
+  updated_at: number
 }
 
-# Input for Application_user update operations
-input Application_userUpdateInput {
+# Input for ApplicationUsers update operations
+input ApplicationUsersUpdateInput {
   application_id: String!
   user_id: String!
-  status: String
-  created_at: Float
-  updated_at: Float
+  status: string
+  created_at: number
+  updated_at: number
 }
 
-# Operations for Application_user
+# Operations for ApplicationUsers
 # These will be merged with the root Query and Mutation types in the base schema
+
+extend type Query {
+  application_usersQueryById(id: ID!): ApplicationUsersResponse
+    @aws_auth(cognito_groups: ["admin"])
+  
+  application_usersQuery(input: ApplicationUsersQueryInput): ApplicationUserssResponse
+    @aws_auth(cognito_groups: ["admin"])
+}
+
+extend type Mutation {
+  application_usersCreate(input: ApplicationUsersCreateInput!): ApplicationUsersResponse
+    @aws_auth(cognito_groups: ["admin"])
+  
+  application_usersUpdate(id: ID!, input: ApplicationUsersUpdateInput!): ApplicationUsersResponse
+    @aws_auth(cognito_groups: ["admin"])
+  
+  application_usersDelete(id: ID!): ApplicationUsersResponse
+    @aws_auth(cognito_groups: ["admin"])
+}
 
 
 
@@ -464,7 +555,7 @@ type Query {
   
   ApplicationQueryById(input: ApplicationQueryInput!): ApplicationResponse! @aws_cognito_user_pools
   
-  Application_userQueryById(input: Application_userQueryInput!): Application_userResponse! @aws_cognito_user_pools
+  ApplicationuserQueryById(input: ApplicationuserQueryInput!): ApplicationuserResponse! @aws_cognito_user_pools
   
 }
 
@@ -487,8 +578,8 @@ type Mutation {
   ApplicationCreate(input: ApplicationCreateInput!): ApplicationResponse! @aws_cognito_user_pools
   ApplicationUpdate(input: ApplicationUpdateInput!): ApplicationResponse! @aws_cognito_user_pools
   
-  Application_userCreate(input: Application_userCreateInput!): Application_userResponse! @aws_cognito_user_pools
-  Application_userUpdate(input: Application_userUpdateInput!): Application_userResponse! @aws_cognito_user_pools
+  ApplicationuserCreate(input: ApplicationuserCreateInput!): ApplicationuserResponse! @aws_cognito_user_pools
+  ApplicationuserUpdate(input: ApplicationuserUpdateInput!): ApplicationuserResponse! @aws_cognito_user_pools
   
 }
 
