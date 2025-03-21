@@ -1,0 +1,59 @@
+# file: schemas/tables/applications.yml
+# author: AI Assistant
+# date: 2024-03-21
+# description: yaml file containing the applications table schema
+
+version: '1.0'
+table: applications
+model:
+  auth_config:
+    # Operations that should allow API key access
+    api_key_operations:
+      # Types that need API key access (for schema definitions)
+      - Application               # Main Application type 
+      - ApplicationResponse      # Response wrapper for single application operations
+      - ApplicationsResponse     # Response wrapper for multiple application operations
+      - ApplicationQueryInput    # Input type for queries
+      - ApplicationCreateInput   # Input type for create operations
+      - ApplicationUpdateInput   # Input type for update operations
+      
+      # Operations that need API key access (for query/mutation resolvers)
+      - applicationQueryById     # For application existence checks
+      - applicationCreate        # For creating new applications
+      - applicationUpdate        # For updating applications
+      - applicationQueryByUserId # For querying user's applications
+    
+    # Default auth is user pools only
+    default_auth: user_pools
+  keys:
+    primary:
+      partition: application_id
+    secondary:
+      - name: user_id-index
+        type: GSI
+        partition: user_id
+        sort: application_id
+        projection_type: ALL
+  attributes:
+    application_id:
+      type: string
+      required: true
+    name:
+      type: string
+      required: true
+    description:
+      type: string
+      required: false
+    status:
+      type: string
+      enum_type: ApplicationStatus
+      required: true
+    created_at:
+      type: number
+      required: true
+    updated_at:
+      type: number
+      required: false
+    user_id:
+      type: string
+      required: true 

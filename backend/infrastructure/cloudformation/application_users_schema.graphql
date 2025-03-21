@@ -1,0 +1,55 @@
+# GraphQL schema for Application_user
+# Generated from database model
+# Do not modify directly
+
+# Main Application_user type
+type Application_user @aws_cognito_user_pools {
+  application_id: String!
+  user_id: String!
+  status: String!
+  created_at: Float!
+  updated_at: Float
+}
+
+# Response type for Application_user operations
+type Application_userResponse @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  application_user: Application_user
+}
+
+# Response type for multiple Application_user operations
+type Application_usersResponse @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  application_users: [Application_user]
+}
+
+# Input for Application_user creation
+input Application_userCreateInput {
+  application_id: String!
+  user_id: String!
+  status: String!
+  created_at: Float!
+  updated_at: Float
+}
+
+# Input for Application_user query operations
+
+input Application_userQueryInput {
+
+  application_id: String
+  user_id: String
+}
+
+# Input for Application_user update operations
+input Application_userUpdateInput {
+  application_id: String!
+  user_id: String!
+  status: String
+  created_at: Float
+  updated_at: Float
+}
+
+# Operations for Application_user
+# These will be merged with the root Query and Mutation types in the base schema

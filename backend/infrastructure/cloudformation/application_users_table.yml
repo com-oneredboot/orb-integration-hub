@@ -1,0 +1,30 @@
+
+Resources:
+  application_usersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: application_users
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: application_id
+          AttributeType: S
+        
+        - AttributeName: user_id
+          AttributeType: S
+        
+        
+      KeySchema:
+        - AttributeName: application_id
+          KeyType: HASH
+        
+        - AttributeName: user_id
+          KeyType: RANGE
+        
+      
+      Tags:
+        - Key: Environment
+          Value: ${env}
+        - Key: Project
+          Value: orb-integration-hub
+        - Key: ManagedBy
+          Value: schema-generator 

@@ -176,6 +176,128 @@ input UserUpdateInput @aws_api_key @aws_cognito_user_pools {
 # These will be merged with the root Query and Mutation types in the base schema
 
 
+# Model: Application
+# GraphQL schema for Application
+# Generated from database model
+# Do not modify directly
+
+# Main Application type
+type Application @aws_api_key @aws_cognito_user_pools {
+  application_id: String!
+  name: String!
+  description: String
+  status: String!
+  created_at: Float!
+  updated_at: Float
+  user_id: String!
+}
+
+# Response type for Application operations
+type ApplicationResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  application: Application
+}
+
+# Response type for multiple Application operations
+type ApplicationsResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  applications: [Application]
+}
+
+# Input for Application creation
+input ApplicationCreateInput @aws_api_key @aws_cognito_user_pools {
+  application_id: String!
+  name: String!
+  description: String
+  status: String!
+  created_at: Float!
+  updated_at: Float
+  user_id: String!
+}
+
+# Input for Application query operations
+
+input ApplicationQueryInput @aws_api_key @aws_cognito_user_pools {
+
+  application_id: String
+  user_id: String
+}
+
+# Input for Application update operations
+input ApplicationUpdateInput @aws_api_key @aws_cognito_user_pools {
+  application_id: String!
+  name: String
+  description: String
+  status: String
+  created_at: Float
+  updated_at: Float
+  user_id: String
+}
+
+# Operations for Application
+# These will be merged with the root Query and Mutation types in the base schema
+
+
+# Model: Application_user
+# GraphQL schema for Application_user
+# Generated from database model
+# Do not modify directly
+
+# Main Application_user type
+type Application_user @aws_cognito_user_pools {
+  application_id: String!
+  user_id: String!
+  status: String!
+  created_at: Float!
+  updated_at: Float
+}
+
+# Response type for Application_user operations
+type Application_userResponse @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  application_user: Application_user
+}
+
+# Response type for multiple Application_user operations
+type Application_usersResponse @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  application_users: [Application_user]
+}
+
+# Input for Application_user creation
+input Application_userCreateInput {
+  application_id: String!
+  user_id: String!
+  status: String!
+  created_at: Float!
+  updated_at: Float
+}
+
+# Input for Application_user query operations
+
+input Application_userQueryInput {
+
+  application_id: String
+  user_id: String
+}
+
+# Input for Application_user update operations
+input Application_userUpdateInput {
+  application_id: String!
+  user_id: String!
+  status: String
+  created_at: Float
+  updated_at: Float
+}
+
+# Operations for Application_user
+# These will be merged with the root Query and Mutation types in the base schema
+
+
 
 # Nested complex types
 type ApplicationRole @aws_api_key @aws_cognito_user_pools {
@@ -340,6 +462,10 @@ type Query {
   
   UserQueryById(input: UserQueryInput!): UserResponse! @aws_cognito_user_pools
   
+  ApplicationQueryById(input: ApplicationQueryInput!): ApplicationResponse! @aws_cognito_user_pools
+  
+  Application_userQueryById(input: Application_userQueryInput!): Application_userResponse! @aws_cognito_user_pools
+  
 }
 
 type Mutation {
@@ -357,6 +483,12 @@ type Mutation {
   
   UserCreate(input: UserCreateInput!): UserResponse! @aws_cognito_user_pools
   UserUpdate(input: UserUpdateInput!): UserResponse! @aws_cognito_user_pools
+  
+  ApplicationCreate(input: ApplicationCreateInput!): ApplicationResponse! @aws_cognito_user_pools
+  ApplicationUpdate(input: ApplicationUpdateInput!): ApplicationResponse! @aws_cognito_user_pools
+  
+  Application_userCreate(input: Application_userCreateInput!): Application_userResponse! @aws_cognito_user_pools
+  Application_userUpdate(input: Application_userUpdateInput!): Application_userResponse! @aws_cognito_user_pools
   
 }
 

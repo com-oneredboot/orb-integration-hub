@@ -1,0 +1,52 @@
+# file: schemas/tables/application_users.yml
+# author: AI Assistant
+# date: 2024-03-21
+# description: yaml file containing the application users table schema
+
+version: '1.0'
+table: application_users
+model:
+  auth_config:
+    # Operations that should allow API key access
+    api_key_operations:
+      # Types that need API key access (for schema definitions)
+      - ApplicationUser               # Main ApplicationUser type 
+      - ApplicationUserResponse      # Response wrapper for single application user operations
+      - ApplicationUsersResponse     # Response wrapper for multiple application user operations
+      - ApplicationUserQueryInput    # Input type for queries
+      - ApplicationUserCreateInput   # Input type for create operations
+      - ApplicationUserUpdateInput   # Input type for update operations
+      
+      # Operations that need API key access (for query/mutation resolvers)
+      - applicationUserQueryById     # For application user existence checks
+      - applicationUserCreate        # For creating new application user relationships
+      - applicationUserUpdate        # For updating application user relationships
+    
+    # Default auth is user pools only
+    default_auth: user_pools
+  keys:
+    primary:
+      partition: application_id
+      sort: user_id
+  attributes:
+    application_id:
+      type: string
+      required: true
+    user_id:
+      type: string
+      required: true
+    status:
+      type: string
+      enum_type: ApplicationUserStatus
+      required: true
+    created_at:
+      type: number
+      required: true
+    updated_at:
+      type: number
+      required: false
+
+indexes:
+  primary:
+    partition_key: application_id
+    sort_key: user_id 

@@ -1,0 +1,61 @@
+# GraphQL schema for Application
+# Generated from database model
+# Do not modify directly
+
+# Main Application type
+type Application @aws_api_key @aws_cognito_user_pools {
+  application_id: String!
+  name: String!
+  description: String
+  status: String!
+  created_at: Float!
+  updated_at: Float
+  user_id: String!
+}
+
+# Response type for Application operations
+type ApplicationResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  application: Application
+}
+
+# Response type for multiple Application operations
+type ApplicationsResponse @aws_api_key @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  applications: [Application]
+}
+
+# Input for Application creation
+input ApplicationCreateInput @aws_api_key @aws_cognito_user_pools {
+  application_id: String!
+  name: String!
+  description: String
+  status: String!
+  created_at: Float!
+  updated_at: Float
+  user_id: String!
+}
+
+# Input for Application query operations
+
+input ApplicationQueryInput @aws_api_key @aws_cognito_user_pools {
+
+  application_id: String
+  user_id: String
+}
+
+# Input for Application update operations
+input ApplicationUpdateInput @aws_api_key @aws_cognito_user_pools {
+  application_id: String!
+  name: String
+  description: String
+  status: String
+  created_at: Float
+  updated_at: Float
+  user_id: String
+}
+
+# Operations for Application
+# These will be merged with the root Query and Mutation types in the base schema

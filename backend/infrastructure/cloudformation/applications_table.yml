@@ -1,0 +1,56 @@
+
+Resources:
+  applicationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: applications
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: application_id
+          AttributeType: S
+        
+        
+        - AttributeName: user_id
+          AttributeType: S
+        
+        - AttributeName: application_id
+          AttributeType: S
+        
+        
+      KeySchema:
+        - AttributeName: application_id
+          KeyType: HASH
+        
+      
+      
+      
+      
+        
+          
+        
+      
+      
+      GlobalSecondaryIndexes:
+        
+        - IndexName: user_id-index
+          KeySchema:
+            - AttributeName: user_id
+              KeyType: HASH
+            
+            - AttributeName: application_id
+              KeyType: RANGE
+            
+          Projection:
+            ProjectionType: ALL
+            
+        
+      
+      
+      
+      Tags:
+        - Key: Environment
+          Value: ${env}
+        - Key: Project
+          Value: orb-integration-hub
+        - Key: ManagedBy
+          Value: schema-generator 
