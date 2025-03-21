@@ -28,7 +28,6 @@ Resources:
   # S3 Buckets
   BuildArtifactBucket:
     Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
     Properties:
       BucketName: !Sub '${CustomerId}-${ProjectId}-build-artifacts'
       Tags:
@@ -42,7 +41,6 @@ Resources:
           Value: !Ref ProjectId
   BuildTemplatesBucket:
     Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
     Properties:
       BucketName: !Sub '${CustomerId}-${ProjectId}-build-templates'
       VersioningConfiguration:
