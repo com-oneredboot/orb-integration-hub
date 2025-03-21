@@ -1,0 +1,120 @@
+
+Resources:
+  rolesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: roles
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: role_id
+          AttributeType: S
+        
+        - AttributeName: application_id
+          AttributeType: S
+        
+        
+        - AttributeName: user_id
+          AttributeType: S
+        
+        - AttributeName: role_id
+          AttributeType: S
+        
+        
+        - AttributeName: application_id
+          AttributeType: S
+        
+        - AttributeName: role_id
+          AttributeType: S
+        
+        
+        - AttributeName: role_id
+          AttributeType: S
+        
+        - AttributeName: role_type
+          AttributeType: S
+        
+        
+      KeySchema:
+        - AttributeName: role_id
+          KeyType: HASH
+        
+        - AttributeName: application_id
+          KeyType: RANGE
+        
+      
+      
+      
+      
+        
+          
+        
+      
+        
+          
+        
+      
+        
+          
+        
+      
+      
+      GlobalSecondaryIndexes:
+        
+        - IndexName: user-role-index
+          KeySchema:
+            - AttributeName: user_id
+              KeyType: HASH
+            
+            - AttributeName: role_id
+              KeyType: RANGE
+            
+          Projection:
+            ProjectionType: INCLUDE
+            
+            NonKeyAttributes:
+              
+              - role_name
+              
+              - role_type
+              
+              - permissions
+              
+            
+        
+        - IndexName: application-role-index
+          KeySchema:
+            - AttributeName: application_id
+              KeyType: HASH
+            
+            - AttributeName: role_id
+              KeyType: RANGE
+            
+          Projection:
+            ProjectionType: KEYS_ONLY
+            
+        
+      
+      
+      LocalSecondaryIndexes:
+        
+        - IndexName: role-type-index
+          KeySchema:
+            - AttributeName: role_id
+              KeyType: HASH
+            
+            - AttributeName: role_type
+              KeyType: RANGE
+            
+          Projection:
+            ProjectionType: ALL
+            
+        
+      
+      
+      Tags:
+        - Key: Environment
+          Value: ${env}
+        - Key: Project
+          Value: orb-integration-hub
+        - Key: ManagedBy
+          Value: schema-generator 

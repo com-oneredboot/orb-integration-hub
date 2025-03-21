@@ -29,9 +29,13 @@ model:
       partition: user_id
     secondary:
       - name: email-index
+        type: GSI
         partition: email
+        projection_type: ALL
       - name: cognito_id-index
+        type: GSI
         partition: cognito_id
+        projection_type: ALL
   attributes:
     user_id:
       type: string

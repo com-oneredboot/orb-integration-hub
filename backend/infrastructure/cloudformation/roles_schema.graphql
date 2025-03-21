@@ -1,0 +1,69 @@
+# GraphQL schema for Role
+# Generated from database model
+# Do not modify directly
+
+# Main Role type
+type Role @aws_cognito_user_pools {
+  role_id: String!
+  user_id: String!
+  application_id: String!
+  role_name: String!
+  role_type: String!
+  permissions: [String!]!
+  created_at: Float!
+  updated_at: Float!
+  active: Boolean!
+}
+
+# Response type for Role operations
+type RoleResponse @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  role: Role
+}
+
+# Response type for multiple Role operations
+type RolesResponse @aws_cognito_user_pools {
+  status_code: Float!
+  message: String
+  roles: [Role]
+}
+
+# Input for Role creation
+input RoleCreateInput {
+  role_id: String!
+  user_id: String!
+  application_id: String!
+  role_name: String!
+  role_type: String!
+  permissions: [String!]!
+  created_at: Float!
+  updated_at: Float!
+  active: Boolean!
+}
+
+# Input for Role query operations
+
+input RoleQueryInput {
+
+  role_id: String
+  application_id: String
+  user_id: String
+  role_type: String
+}
+
+# Input for Role update operations
+input RoleUpdateInput {
+  role_id: String!
+  application_id: String!
+  user_id: String
+  role_name: String
+  role_type: String
+  permissions: [String]
+  created_at: Float
+  updated_at: Float
+  active: Boolean
+}
+
+# Operations for Role
+# These will be merged with the root Query and Mutation types in the base schema

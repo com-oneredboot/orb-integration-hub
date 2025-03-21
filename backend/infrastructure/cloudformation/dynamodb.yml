@@ -129,6 +129,19 @@ Resources:
       KeySchema:
         - AttributeName: user_id
           KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: email-index
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: cognito_id-index
+          KeySchema:
+            - AttributeName: cognito_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
       TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-users'
       Tags:
         - Key: Billable

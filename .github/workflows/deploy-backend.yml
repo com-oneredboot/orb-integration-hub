@@ -135,17 +135,6 @@ jobs:
           for stack in bootstrap cognito dynamodb lambdas appsync; do
             echo "Deploying $stack stack..."
             
-            # Debug: Check if template file exists and show its contents
-            echo "Checking ${stack}.yml:"
-            if [ -f "${stack}.yml" ]; then
-              echo "File exists"
-              echo "First few lines of ${stack}.yml:"
-              head -n 10 "${stack}.yml"
-            else
-              echo "ERROR: ${stack}.yml not found!"
-              exit 1
-            fi
-          
             echo "Building ${stack} stack..."
             sam build --template ${stack}.yml --debug || {
               echo "ERROR: Failed to build ${stack} stack"
