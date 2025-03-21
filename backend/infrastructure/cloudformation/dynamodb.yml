@@ -272,7 +272,7 @@ Resources:
   ApplicationUsersTableNameParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-application-users-table-name'
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-application-users-table-name1'
       Type: String
       Value: !Ref ApplicationUsersTable
       Description: DynamoDB Application Users Table Name
@@ -286,7 +286,7 @@ Resources:
   ApplicationUsersTableArnParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-application-users-table-arn'
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-application-users-table-arn1'
       Type: String
       Value: !GetAtt ApplicationUsersTable.Arn
       Description: DynamoDB Application Users Table Arn
