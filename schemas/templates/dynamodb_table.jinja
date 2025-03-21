@@ -27,8 +27,18 @@ Resources:
           KeyType: RANGE
         {% endif %}
       {% if model.keys.secondary %}
+      {% set gsis = [] %}
+      {% set lsis = [] %}
+      {% for idx in model.keys.secondary %}
+        {% if idx.type == 'GSI' %}
+          {% set _ = gsis.append(idx) %}
+        {% elif idx.type == 'LSI' %}
+          {% set _ = lsis.append(idx) %}
+        {% endif %}
+      {% endfor %}
+      {% if gsis %}
       GlobalSecondaryIndexes:
-        {% for idx in model.keys.secondary %}
+        {% for idx in gsis %}
         - IndexName: {{ idx.name }}
           KeySchema:
             - AttributeName: {{ idx.partition }}
@@ -49,6 +59,28 @@ Resources:
             ReadCapacityUnits: 5
             WriteCapacityUnits: 5
         {% endfor %}
+      {% endif %}
+      {% if lsis %}
+      LocalSecondaryIndexes:
+        {% for idx in lsis %}
+        - IndexName: {{ idx.name }}
+          KeySchema:
+            - AttributeName: {{ idx.partition }}
+              KeyType: HASH
+            {% if idx.sort %}
+            - AttributeName: {{ idx.sort }}
+              KeyType: RANGE
+            {% endif %}
+          Projection:
+            ProjectionType: {{ idx.projection_type }}
+            {% if idx.projection_type == 'INCLUDE' and idx.projected_attributes %}
+            NonKeyAttributes:
+              {% for attr in idx.projected_attributes %}
+              - {{ attr }}
+              {% endfor %}
+            {% endif %}
+        {% endfor %}
+      {% endif %}
       {% endif %}
       ProvisionedThroughput:
         ReadCapacityUnits: 5
