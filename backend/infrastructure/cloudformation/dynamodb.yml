@@ -5,12 +5,8 @@ AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 
 # --------------------------------------------------- #
-<<<<<<< HEAD
 Description: >
   Application Infrastructure - DynamoDB Stack
-=======
-Description: >Application Infrastructure
->>>>>>> 8b4f93aa9295ca6eeba4f319208bf537f644ecba
 
 # --------------------------------------------------- #
 Parameters:
@@ -34,20 +30,25 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
-        - AttributeName: application_id
+        - 
+          AttributeName: application_id
           AttributeType: S
-        - AttributeName: user_id
+        - 
+          AttributeName: user_id
           AttributeType: S
       BillingMode: PAY_PER_REQUEST
       KeySchema:
-        - AttributeName: application_id
+        - 
+          AttributeName: application_id
           KeyType: HASH
       GlobalSecondaryIndexes:
-        - IndexName: user-id-index # gets all the applications owned by a given user
+        - IndexName: user-id-index
           KeySchema:
-            - AttributeName: user_id
+            - 
+              AttributeName: user_id
               KeyType: HASH
-            - AttributeName: application_id
+            - 
+              AttributeName: application_id
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
@@ -67,15 +68,19 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
-        - AttributeName: application_id
+        - 
+          AttributeName: application_id
           AttributeType: S
-        - AttributeName: user_id
+        - 
+          AttributeName: user_id
           AttributeType: S
       BillingMode: PAY_PER_REQUEST
       KeySchema:
-        - AttributeName: application_id
+        - 
+          AttributeName: application_id
           KeyType: HASH
-        - AttributeName: user_id
+        - 
+          AttributeName: user_id
           KeyType: RANGE
       TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-application-users"
       Tags:
@@ -93,26 +98,34 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
-        - AttributeName: user_id
+        - 
+          AttributeName: user_id
           AttributeType: S
-        - AttributeName: cognito_id
+        - 
+          AttributeName: cognito_id
           AttributeType: S
-        - AttributeName: email
+        - 
+          AttributeName: email
           AttributeType: S
       BillingMode: PAY_PER_REQUEST
       KeySchema:
-        - AttributeName: user_id
+        - 
+          AttributeName: user_id
           KeyType: HASH
       GlobalSecondaryIndexes:
-        - IndexName: cognito-id-index
+        - 
+          IndexName: cognito-id-index
           KeySchema:
-            - AttributeName: cognito_id
+            - 
+              AttributeName: cognito_id
               KeyType: HASH
           Projection:
             ProjectionType: ALL
-        - IndexName: email-index
+        - 
+          IndexName: email-index
           KeySchema:
-            - AttributeName: email
+            - 
+              AttributeName: email
               KeyType: HASH
           Projection:
             ProjectionType: ALL
@@ -132,24 +145,31 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
-        - AttributeName: role_id
+        - 
+          AttributeName: role_id
           AttributeType: S
-        - AttributeName: application_id
+        - 
+          AttributeName: application_id
           AttributeType: S
-        - AttributeName: user_id
+        - 
+          AttributeName: user_id
           AttributeType: S
       BillingMode: PAY_PER_REQUEST
       KeySchema:
-        - AttributeName: role_id
+        - 
+          AttributeName: role_id
           KeyType: HASH
-        - AttributeName: application_id
+        - 
+          AttributeName: application_id
           KeyType: RANGE
       GlobalSecondaryIndexes:
         - IndexName: user-id-index
           KeySchema:
-            - AttributeName: user_id
+            - 
+              AttributeName: user_id
               KeyType: HASH
-            - AttributeName: role_id
+            - 
+              AttributeName: role_id
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
