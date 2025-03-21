@@ -477,12 +477,13 @@ def generate_graphql_schema(table_name: str, schema_path: str, jinja_env: Enviro
         logger.error(f"Error generating GraphQL schema for {table_name}: {str(e)}")
         return False
 
-def generate_graphql_base_schema(schemas: List[Dict[str, Any]], jinja_env: Environment) -> bool:
+def generate_graphql_base_schema(schemas: List[Dict[str, Any]], table_names: List[str], jinja_env: Environment) -> bool:
     """
     Generate base GraphQL schema that includes all model schemas.
     
     Args:
         schemas: List of schema dictionaries
+        table_names: List of original table names
         jinja_env: Jinja environment
         
     Returns:
@@ -494,8 +495,7 @@ def generate_graphql_base_schema(schemas: List[Dict[str, Any]], jinja_env: Envir
         
         # Prepare model schemas
         model_schemas = []
-        for schema in schemas:
-            table_name = schema['table']
+        for schema, table_name in zip(schemas, table_names):
             model_name = table_name[:-1].capitalize() if table_name.endswith('s') else table_name.capitalize()
             
             # Read the generated schema file - use snake_case for file name
@@ -510,6 +510,7 @@ def generate_graphql_base_schema(schemas: List[Dict[str, Any]], jinja_env: Envir
         # Generate base schema
         base_schema = template.render(
             model_schemas=model_schemas,
+            table_names=table_names,
             timestamp=datetime.now().strftime('%Y%m%d_%H%M%S')
         )
         
@@ -603,6 +604,7 @@ def main():
         
         # First, generate all individual schemas
         schemas = []
+        table_names = []  # Keep track of original table names
         for table in index['schemaRegistry']['tables']:
             table_name = table['name']
             schema_path = table['path']
@@ -613,6 +615,7 @@ def main():
                 # Load schema for later use
                 schema = load_schema(schema_path)
                 schemas.append(schema)
+                table_names.append(table_name)  # Store the original table name
                 
                 # Generate models and infrastructure
                 python_success = generate_python_model(table_name, schema_path, jinja_env)
@@ -635,7 +638,7 @@ def main():
                 sys.exit(1)
         
         # Now that all individual schemas are generated, create the base schema
-        if not generate_graphql_base_schema(schemas, jinja_env):
+        if not generate_graphql_base_schema(schemas, table_names, jinja_env):
             logger.error("Failed to generate base GraphQL schema")
             sys.exit(1)
             
