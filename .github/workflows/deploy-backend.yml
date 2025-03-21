@@ -136,7 +136,7 @@ jobs:
             echo "Deploying $stack stack..."
             
             echo "Building ${stack} stack..."
-            sam build --template ${stack}.yml --debug || {
+            sam build --template ${stack}.yml || {
               echo "ERROR: Failed to build ${stack} stack"
               exit 1
             }
