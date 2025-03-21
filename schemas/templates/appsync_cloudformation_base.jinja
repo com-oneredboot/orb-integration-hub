@@ -1,0 +1,198 @@
+# --------------------------------------------------- #
+AWSTemplateFormatVersion: 2010-09-09
+
+# --------------------------------------------------- #
+Transform: AWS::Serverless-2016-10-31
+
+# --------------------------------------------------- #
+Description: >
+  Application Infrastructure - AppSync API
+
+# --------------------------------------------------- #
+Parameters:
+  Environment:
+    Default: dev
+    Type: String
+  CustomerId:
+    Default: orb
+    Type: String
+  ProjectId:
+    Default: integration-hub
+    Type: String
+  TracingIs:
+    Default: Active
+    Type: String
+  SchemaS3Key:
+    Type: String
+    Description: S3 key for the GraphQL schema file
+
+# --------------------------------------------------- #
+Resources:
+  # AppSync API
+  GraphQLApi:
+    Type: AWS::AppSync::GraphQLApi
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-api"
+      AuthenticationType: AMAZON_COGNITO_USER_POOLS
+      UserPoolConfig:
+        UserPoolId: !ImportValue 
+          !Sub "${CustomerId}-${ProjectId}-${Environment}-user-pool-id"
+        DefaultAction: ALLOW
+        AwsRegion: !Ref AWS::Region
+      XrayEnabled: true
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
+
+  # AppSync Schema
+  GraphQLSchema:
+    Type: AWS::AppSync::GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      Definition: 
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: !Sub "s3://${CustomerId}-${ProjectId}-build-templates/${SchemaS3Key}"
+
+  # AppSync Service Role
+  AppSyncServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${CustomerId}-${ProjectId}-${Environment}-appsync-service-role"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: appsync.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !ImportValue 
+          !Sub "${CustomerId}-${ProjectId}-${Environment}-cloudwatch-logging-policy-arn"
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
+
+  # DynamoDB Data Source Role
+  DynamoDBServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${CustomerId}-${ProjectId}-${Environment}-dynamodb-service-role"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: appsync.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                  - dynamodb:BatchGetItem
+                  - dynamodb:BatchWriteItem
+                Resource:
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${CustomerId}-${ProjectId}-${Environment}-*"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${CustomerId}-${ProjectId}-${Environment}-*/index/*"
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
+
+  {% for schema in schemas %}
+  # Data Source for {{ schema.table|capitalize }}
+  {{ schema.table|capitalize }}DataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      Name: {{ schema.table|capitalize }}Table
+      Type: AMAZON_DYNAMODB
+      ServiceRoleArn: !GetAtt DynamoDBServiceRole.Arn
+      DynamoDBConfig:
+        TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}"
+        AwsRegion: !Ref AWS::Region
+  {% endfor %}
+
+  # Lambda Data Source Role
+  LambdaServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${CustomerId}-${ProjectId}-${Environment}-lambda-service-role"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: appsync.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaInvoke
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${CustomerId}-${ProjectId}-${Environment}-*"
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
+
+  # SMS Verification Lambda Data Source
+  SMSVerificationDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      Name: SMSVerification
+      Type: AWS_LAMBDA
+      ServiceRoleArn: !GetAtt LambdaServiceRole.Arn
+      LambdaConfig:
+        LambdaFunctionArn: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${CustomerId}-${ProjectId}-${Environment}-sms-verification"
+
+# --------------------------------------------------- #
+Outputs:
+  GraphQLApiId:
+    Description: The ID of the AppSync GraphQL API
+    Value: !GetAtt GraphQLApi.ApiId
+    Export:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-appsync-api-id"
+
+  GraphQLApiEndpoint:
+    Description: The endpoint URL of the AppSync GraphQL API
+    Value: !GetAtt GraphQLApi.GraphQLUrl
+    Export:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-appsync-api-endpoint"
