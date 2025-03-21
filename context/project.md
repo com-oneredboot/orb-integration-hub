@@ -355,3 +355,94 @@ orb-integration-hub/
 │   └── generate.py
 └── docs/
 ```
+
+## Project Context
+
+## Overview
+This project is an integration hub that provides a unified interface for managing various integrations and services. It includes both frontend and backend components, with a focus on scalability, maintainability, and user experience.
+
+## Architecture
+
+### Frontend
+- Built with Angular 17
+- Uses standalone components
+- Implements lazy loading for better performance
+- Follows Angular best practices and patterns
+
+### Backend
+- Python-based API
+- AWS infrastructure using SAM/CloudFormation
+- DynamoDB for data storage
+- AppSync for GraphQL API
+- Cognito for authentication
+
+## Naming Conventions
+
+### Frontend
+- Angular components: PascalCase (e.g., `UserProfileComponent`)
+- TypeScript files: kebab-case (e.g., `user-profile.component.ts`)
+- CSS files: kebab-case (e.g., `user-profile.component.css`)
+- Services: PascalCase with 'Service' suffix (e.g., `UserService`)
+- Models: PascalCase with 'Model' suffix (e.g., `UserModel`)
+- Enums: PascalCase (e.g., `UserStatus`)
+- Interfaces: PascalCase with 'I' prefix (e.g., `IUser`)
+
+### Backend
+- Python files: snake_case (e.g., `user_service.py`)
+- Python classes: PascalCase (e.g., `UserService`)
+- Python functions: snake_case (e.g., `get_user_by_id`)
+- Python variables: snake_case (e.g., `user_id`)
+- Python constants: UPPER_SNAKE_CASE (e.g., `MAX_RETRIES`)
+
+### AWS Resources
+- DynamoDB tables: camelCase (e.g., `applicationUsers`)
+- AppSync/GraphQL types: PascalCase (e.g., `ApplicationUser`)
+- AppSync/GraphQL fields: camelCase (e.g., `applicationId`)
+- CloudFormation resources: PascalCase (e.g., `ApplicationUsersTable`)
+- S3 buckets: kebab-case (e.g., `orb-integration-hub-build-artifacts`)
+
+### Generated Files
+- Python models: snake_case (e.g., `application_users.py`)
+- TypeScript models: kebab-case (e.g., `application-users.model.ts`)
+- DynamoDB table definitions: snake_case (e.g., `application_users_table.yml`)
+- GraphQL schema files: snake_case (e.g., `application_users_schema.graphql`)
+- Base GraphQL schema: snake_case with timestamp (e.g., `appsync_20250321_170633.graphql`)
+
+## Development Workflow
+1. Create feature branch from main
+2. Make changes following naming conventions
+3. Run tests and linting
+4. Create pull request
+5. Get code review
+6. Merge to main
+7. Deploy to staging
+8. Deploy to production
+
+## Deployment
+- Frontend: Deployed to S3 and served through CloudFront
+- Backend: Deployed using AWS SAM/CloudFormation
+- Infrastructure: Managed through CloudFormation templates
+- CI/CD: GitHub Actions for automated deployment
+
+## Testing
+- Frontend: Unit tests with Jasmine, E2E tests with Cypress
+- Backend: Unit tests with pytest, integration tests with AWS SAM local
+- Infrastructure: CloudFormation template validation
+
+## Monitoring
+- AWS CloudWatch for logs and metrics
+- AWS X-Ray for tracing
+- Custom dashboards for key metrics
+
+## Security
+- AWS Cognito for authentication
+- IAM roles and policies for authorization
+- AWS KMS for encryption
+- AWS Secrets Manager for secrets
+- AWS WAF for web application firewall
+
+## Documentation
+- API documentation using OpenAPI/Swagger
+- Infrastructure documentation using AWS CDK
+- Code documentation using JSDoc and Python docstrings
+- Architecture diagrams using C4 model

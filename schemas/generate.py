@@ -416,8 +416,8 @@ def generate_dynamodb_table(table_name: str, schema_path: str, jinja_env: Enviro
         output_dir = os.path.join(SCRIPT_DIR, '../backend/infrastructure/cloudformation')
         os.makedirs(output_dir, exist_ok=True)
         
-        # Use table name without underscores for file name
-        file_name = f"{table_name.replace('_', '')}_table.yml"
+        # Use snake_case for file name
+        file_name = f"{table_name}_table.yml"
         output_path = os.path.join(output_dir, file_name)
         
         with open(output_path, 'w') as f:
@@ -463,8 +463,8 @@ def generate_graphql_schema(table_name: str, schema_path: str, jinja_env: Enviro
         output_dir = os.path.join(SCRIPT_DIR, '../backend/infrastructure/cloudformation')
         os.makedirs(output_dir, exist_ok=True)
         
-        # Use table name without underscores for file name
-        file_name = f"{table_name.replace('_', '')}_schema.graphql"
+        # Use snake_case for file name
+        file_name = f"{table_name}_schema.graphql"
         output_path = os.path.join(output_dir, file_name)
         
         with open(output_path, 'w') as f:
@@ -499,7 +499,7 @@ def generate_graphql_base_schema(schemas: List[Dict[str, Any]], jinja_env: Envir
             model_name = table_name[:-1].capitalize() if table_name.endswith('s') else table_name.capitalize()
             
             # Read the generated schema file
-            schema_file = os.path.join(SCRIPT_DIR, '../backend/infrastructure/cloudformation', f"{table_name.replace('_', '')}_schema.graphql")
+            schema_file = os.path.join(SCRIPT_DIR, '../backend/infrastructure/cloudformation', f"{table_name}_schema.graphql")
             try:
                 with open(schema_file, 'r') as f:
                     model_schemas.append(f.read())
