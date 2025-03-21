@@ -203,7 +203,7 @@ Resources:
               - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-dead-letter-queue-arn}}'
               - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-alerts-queue-arn}}'
               - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-phone-number-verification-topic-arn}}'
-              - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-sms-origination-number-arn}}'
+              - !GetAtt SMSOriginationNumber.Arn
   SecretsManagerPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
