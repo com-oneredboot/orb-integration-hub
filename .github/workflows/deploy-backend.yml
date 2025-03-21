@@ -123,9 +123,25 @@ jobs:
           
           echo "Uploading schema file: $SCHEMA_FILENAME"
           
-          # Upload the schema file to S3
+          # Verify the file is UTF-8 encoded and has no BOM
+          echo "Verifying schema file encoding..."
+          file -i "$SCHEMA_FILE"
+          
+          # Convert to UTF-8 without BOM if needed
+          echo "Ensuring UTF-8 encoding without BOM..."
+          TMP_FILE="${SCHEMA_FILE}.tmp"
+          iconv -f UTF-8 -t UTF-8 -o "$TMP_FILE" "$SCHEMA_FILE" || {
+            echo "ERROR: Failed to convert schema file encoding"
+            exit 1
+          }
+          mv "$TMP_FILE" "$SCHEMA_FILE"
+          
+          # Upload the schema file to S3 with explicit content encoding
           aws s3 cp "$SCHEMA_FILE" \
-            s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/$SCHEMA_FILENAME
+            s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/$SCHEMA_FILENAME \
+            --content-encoding utf-8 \
+            --content-type "text/plain; charset=utf-8" \
+            --metadata "ContentEncoding=utf-8"
 
         working-directory: ./backend/infrastructure/cloudformation
 
@@ -134,6 +150,19 @@ jobs:
           
           for stack in bootstrap cognito dynamodb lambdas appsync; do
             echo "Deploying $stack stack..."
+            
+            # Special handling for AppSync stack
+            if [ "$stack" == "appsync" ]; then
+              # Find the latest generated schema file
+              SCHEMA_FILE=$(find . -name "appsync_*.graphql" | sort -r | head -1)
+              SCHEMA_FILENAME=$(basename "$SCHEMA_FILE")
+              
+              # Create a copy of the schema with verified UTF-8 encoding
+              echo "Preparing schema file for AppSync deployment..."
+              DEPLOY_SCHEMA="${SCHEMA_FILE}.deploy"
+              iconv -f UTF-8 -t UTF-8 -o "$DEPLOY_SCHEMA" "$SCHEMA_FILE"
+              mv "$DEPLOY_SCHEMA" "$SCHEMA_FILE"
+            fi
             
             echo "Building ${stack} stack..."
             sam build --template ${stack}.yml || {

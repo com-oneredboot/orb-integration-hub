@@ -446,7 +446,11 @@ def generate_graphql_base_schema(schemas: List[Dict[str, Any]], table_names: Lis
             if schema_content is None:
                 logger.error(f"Failed to generate schema for table: {table_name}")
                 return False
-            model_schemas.append(schema_content)
+            # Create a dictionary with name and content for the template
+            model_schemas.append({
+                'name': table_name,
+                'content': schema_content
+            })
         
         # Generate base schema
         base_schema = template.render(
@@ -463,7 +467,7 @@ def generate_graphql_base_schema(schemas: List[Dict[str, Any]], table_names: Lis
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         output_path = os.path.join(output_dir, f'appsync_{timestamp}.graphql')
         
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8', newline='\n') as f:
             f.write(base_schema)
             
         logger.info(f"Generated timestamped schema file: appsync_{timestamp}.graphql")
@@ -507,32 +511,25 @@ def generate_cloudformation_template(schemas: List[Dict[str, Any]], jinja_env: E
 
 def generate_timestamped_schema(schema_content: str) -> str:
     """
-    Generate a timestamped schema file name and write the content.
+    Generate a timestamped schema file.
     
     Args:
-        schema_content: The content of the schema to write
+        schema_content: The schema content to write
         
     Returns:
-        The filename of the generated schema
+        The path to the generated schema file
     """
-    try:
-        # Generate timestamp in format YYYYMMDD_HHMMSS
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"appsync_{timestamp}.graphql"
-        
-        # Write the schema file to the backend/infrastructure/cloudformation directory
-        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation', filename)
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        
-        with open(output_path, 'w') as f:
-            f.write(schema_content)
-        
-        logger.info(f"Generated timestamped schema file: {filename}")
-        return filename
-        
-    except Exception as e:
-        logger.error(f"Error generating timestamped schema: {str(e)}")
-        return None
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_dir = Path(SCRIPT_DIR) / ".." / "backend" / "infrastructure" / "cloudformation"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    output_file = output_dir / f"appsync_{timestamp}.graphql"
+    
+    # Write with explicit UTF-8 encoding and no BOM
+    with open(output_file, 'w', encoding='utf-8', newline='\n') as f:
+        f.write(schema_content)
+    
+    return str(output_file)
 
 def main():
     """Main entry point for schema generation"""
