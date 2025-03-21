@@ -6,7 +6,7 @@ Transform: AWS::Serverless-2016-10-31
 
 # --------------------------------------------------- #
 Description: >
-  Application Infrastructure - DynamoDB Stack
+ Application Infrastructure - DynamoDB Tables
 
 # --------------------------------------------------- #
 Parameters:
@@ -25,7 +25,8 @@ Parameters:
 
 # --------------------------------------------------- #
 Resources:
-  # DynamoDB Tables
+  
+  # Roles Table
   RolesTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -85,33 +86,34 @@ Resources:
         - Key: ProjectId
           Value: !Ref ProjectId
 
-  # SSM Parameters for RolesTable
+  # Parameter Store for Roles table name
   RolesTableNameParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Description: DynamoDB Roles Table Name
       Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-roles-table-name'
       Type: String
       Value: !Ref RolesTable
+      Description: DynamoDB Roles Table Name
       Tags:
-        Billable: "true"
+        Billable: true
         CustomerId: !Ref CustomerId
         Environment: !Ref Environment
         ProjectId: !Ref ProjectId
 
+  # Parameter Store for Roles table ARN
   RolesTableArnParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Description: DynamoDB Roles Table Arn
       Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-roles-table-arn'
       Type: String
       Value: !GetAtt RolesTable.Arn
+      Description: DynamoDB Roles Table Arn
       Tags:
-        Billable: "true"
+        Billable: true
         CustomerId: !Ref CustomerId
         Environment: !Ref Environment
         ProjectId: !Ref ProjectId
-
+  
   # Users Table
   UsersTable:
     Type: AWS::DynamoDB::Table
@@ -128,18 +130,7 @@ Resources:
         - AttributeName: user_id
           KeyType: HASH
       GlobalSecondaryIndexes:
-        - IndexName: email-index
-          KeySchema:
-            - AttributeName: email
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-        - IndexName: cognito_id-index
-          KeySchema:
-            - AttributeName: cognito_id
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
+      LocalSecondaryIndexes:
       TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-users'
       Tags:
         - Key: Billable
@@ -151,29 +142,31 @@ Resources:
         - Key: ProjectId
           Value: !Ref ProjectId
 
-  # SSM Parameters for UsersTable
+  # Parameter Store for Users table name
   UsersTableNameParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Description: DynamoDB Users Table Name
       Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-users-table-name'
       Type: String
       Value: !Ref UsersTable
+      Description: DynamoDB Users Table Name
       Tags:
-        Billable: "true"
+        Billable: true
         CustomerId: !Ref CustomerId
         Environment: !Ref Environment
         ProjectId: !Ref ProjectId
 
+  # Parameter Store for Users table ARN
   UsersTableArnParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Description: DynamoDB Users Table Arn
       Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-users-table-arn'
       Type: String
       Value: !GetAtt UsersTable.Arn
+      Description: DynamoDB Users Table Arn
       Tags:
-        Billable: "true"
+        Billable: true
         CustomerId: !Ref CustomerId
         Environment: !Ref Environment
         ProjectId: !Ref ProjectId
+  

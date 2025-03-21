@@ -5,7 +5,8 @@ AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 
 # --------------------------------------------------- #
-Description: Application Infrastructure
+Description: >
+ Application Infrastructure - DynamoDB Tables
 
 # --------------------------------------------------- #
 Parameters:
@@ -31,16 +32,19 @@ Resources:
     Properties:
       AttributeDefinitions:
         {%- set all_attrs = [] -%}
-        {%- if schema.model.keys.primary.partition -%}
-          {%- set _ = all_attrs.append(schema.model.keys.primary.partition) -%}
+        {%- if schema['model']['keys']['primary']['partition'] -%}
+          {%- set _ = all_attrs.append(schema['model']['keys']['primary']['partition']) -%}
         {%- endif -%}
-        {%- if schema.model.keys.secondary -%}
-          {%- for idx in schema.model.keys.secondary -%}
-            {%- if idx.partition and idx.partition not in all_attrs -%}
-              {%- set _ = all_attrs.append(idx.partition) -%}
+        {%- if schema['model']['keys']['primary'].get('sort') -%}
+          {%- set _ = all_attrs.append(schema['model']['keys']['primary']['sort']) -%}
+        {%- endif -%}
+        {%- if schema['model']['keys'].get('secondary') -%}
+          {%- for idx in schema['model']['keys']['secondary'] -%}
+            {%- if idx['partition'] and idx['partition'] not in all_attrs -%}
+              {%- set _ = all_attrs.append(idx['partition']) -%}
             {%- endif -%}
-            {%- if idx.sort and idx.sort not in all_attrs -%}
-              {%- set _ = all_attrs.append(idx.sort) -%}
+            {%- if idx.get('sort') and idx['sort'] not in all_attrs -%}
+              {%- set _ = all_attrs.append(idx['sort']) -%}
             {%- endif -%}
           {%- endfor -%}
         {%- endif -%}
@@ -50,51 +54,55 @@ Resources:
         {%- endfor %}
       BillingMode: PAY_PER_REQUEST
       KeySchema:
-        - AttributeName: {{ schema.model.keys.primary.partition }}
+        - AttributeName: {{ schema['model']['keys']['primary']['partition'] }}
           KeyType: HASH
-      {%- if schema.model.keys.secondary %}
+        {%- if schema['model']['keys']['primary'].get('sort') %}
+        - AttributeName: {{ schema['model']['keys']['primary']['sort'] }}
+          KeyType: RANGE
+        {%- endif %}
+      {%- if schema['model']['keys'].get('secondary') %}
       GlobalSecondaryIndexes:
-        {%- for idx in schema.model.keys.secondary if idx.type == 'GSI' %}
-        - IndexName: {{ idx.name }}
+        {%- for idx in schema['model']['keys']['secondary'] if idx['type'] == 'GSI' %}
+        - IndexName: {{ idx['name'] }}
           KeySchema:
-            - AttributeName: {{ idx.partition }}
+            - AttributeName: {{ idx['partition'] }}
               KeyType: HASH
-            {%- if idx.sort %}
-            - AttributeName: {{ idx.sort }}
+            {%- if idx.get('sort') %}
+            - AttributeName: {{ idx['sort'] }}
               KeyType: RANGE
             {%- endif %}
           Projection:
-            ProjectionType: {{ idx.projection_type }}
-            {%- if idx.projection_type == 'INCLUDE' and idx.projected_attributes %}
+            ProjectionType: {{ idx['projection_type'] }}
+            {%- if idx['projection_type'] == 'INCLUDE' and idx.get('projected_attributes') %}
             NonKeyAttributes:
-              {%- for attr in idx.projected_attributes %}
+              {%- for attr in idx['projected_attributes'] %}
               - {{ attr }}
               {%- endfor %}
             {%- endif %}
         {%- endfor %}
       {%- endif %}
-      {%- if schema.model.keys.secondary %}
+      {%- if schema['model']['keys'].get('secondary') %}
       LocalSecondaryIndexes:
-        {%- for idx in schema.model.keys.secondary if idx.type == 'LSI' %}
-        - IndexName: {{ idx.name }}
+        {%- for idx in schema['model']['keys']['secondary'] if idx['type'] == 'LSI' %}
+        - IndexName: {{ idx['name'] }}
           KeySchema:
-            - AttributeName: {{ schema.model.keys.primary.partition }}
+            - AttributeName: {{ schema['model']['keys']['primary']['partition'] }}
               KeyType: HASH
-            {%- if idx.sort %}
-            - AttributeName: {{ idx.sort }}
+            {%- if idx.get('sort') %}
+            - AttributeName: {{ idx['sort'] }}
               KeyType: RANGE
             {%- endif %}
           Projection:
-            ProjectionType: {{ idx.projection_type }}
-            {%- if idx.projection_type == 'INCLUDE' and idx.projected_attributes %}
+            ProjectionType: {{ idx['projection_type'] }}
+            {%- if idx['projection_type'] == 'INCLUDE' and idx.get('projected_attributes') %}
             NonKeyAttributes:
-              {%- for attr in idx.projected_attributes %}
+              {%- for attr in idx['projected_attributes'] %}
               - {{ attr }}
               {%- endfor %}
             {%- endif %}
         {%- endfor %}
       {%- endif %}
-      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}"
+      TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}'
       Tags:
         - Key: Billable
           Value: "true"
@@ -109,7 +117,7 @@ Resources:
   {{ schema.table|capitalize }}TableNameParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}-table-name"
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}-table-name'
       Type: String
       Value: !Ref {{ schema.table|capitalize }}Table
       Description: DynamoDB {{ schema.table|capitalize }} Table Name
@@ -123,7 +131,7 @@ Resources:
   {{ schema.table|capitalize }}TableArnParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}-table-arn"
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}-table-arn'
       Type: String
       Value: !GetAtt {{ schema.table|capitalize }}Table.Arn
       Description: DynamoDB {{ schema.table|capitalize }} Table Arn
