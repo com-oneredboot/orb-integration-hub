@@ -68,12 +68,13 @@ Resources:
   SMSOriginationNumber:
     Type: AWS::SNS::OriginationNumber
     Properties:
-      PhoneNumber: !Ref SMSOriginationNumber
       IsoCountryCode: US
       MessageType: TRANSACTIONAL
 
   # SMS Verification Lambda Function
   SMSVerificationFunction:
+    DependsOn:
+      - SMSOriginationNumber
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub '${CustomerId}-${ProjectId}-${Environment}-sms-verification'
@@ -83,7 +84,7 @@ Resources:
         Variables:
           ENVIRONMENT: !Ref Environment
           LOG_LEVEL: !Ref ApplicationLoggingLevel
-          ORIGINATION_NUMBER: !Ref SMSOriginationNumber
+          ORIGINATION_NUMBER: !GetAtt SMSOriginationNumber.PhoneNumber
 
   # IAM Roles
   LambdaExecutionRole:
@@ -218,6 +219,8 @@ Resources:
 
   # SSM Parameters
   SMSVerificationLambdaArnParameter:
+    DependsOn:
+      - SMSVerificationFunction
     Type: AWS::SSM::Parameter
     Properties:
       Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-sms-verification-lambda-arn"
@@ -231,6 +234,8 @@ Resources:
         ProjectId: !Ref ProjectId
 
   SMSOriginationNumberArnParameter:
+    DependsOn:
+      - SMSOriginationNumber
     Type: AWS::SSM::Parameter
     Properties:
       Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-sms-origination-number-arn"
@@ -248,3 +253,9 @@ Outputs:
   SMSVerificationFunctionArn:
     Description: ARN of the SMS Verification Lambda function
     Value: !GetAtt SMSVerificationFunction.Arn
+  SMSOriginationNumberArn:
+    Description: ARN of the SMS Origination Number
+    Value: !GetAtt SMSOriginationNumber.Arn
+  SMSOriginationNumber:
+    Description: The SMS Origination Number
+    Value: !GetAtt SMSOriginationNumber.PhoneNumber
