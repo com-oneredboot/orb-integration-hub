@@ -5,8 +5,12 @@ AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 
 # --------------------------------------------------- #
+<<<<<<< HEAD
 Description: >
   Application Infrastructure - DynamoDB Stack
+=======
+Description: >Application Infrastructure
+>>>>>>> 8b4f93aa9295ca6eeba4f319208bf537f644ecba
 
 # --------------------------------------------------- #
 Parameters:
