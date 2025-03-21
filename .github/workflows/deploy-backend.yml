@@ -144,6 +144,8 @@ jobs:
                 echo "ERROR: No schema file found for AppSync deployment"
                 exit 1
               fi
+              echo "Schema file: $SCHEMA_FILE"
+              
               SCHEMA_FILENAME=$(basename "$SCHEMA_FILE")
               echo "Using schema file: $SCHEMA_FILENAME for AppSync deployment"
             fi
