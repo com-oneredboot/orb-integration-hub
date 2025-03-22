@@ -157,7 +157,7 @@ jobs:
 
                 # print the .yml file for the stack
                 echo "Stack: $stack"
-                echo "Template: $(cat ${stack}.yml)"
+                echo "Template: $(cat ${stack}.yml)" 
                 ;;
               "lambdas")
                 PARAMS="$PARAMS SMSOriginationNumber=${{ inputs.sms_origination_number }}"

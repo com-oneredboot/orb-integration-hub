@@ -110,10 +110,7 @@ def setup_jinja_env() -> Environment:
     """
     env = Environment(
         loader=FileSystemLoader(os.path.join(SCRIPT_DIR, 'templates')),
-        autoescape=select_autoescape(['html', 'xml']),
-        keep_trailing_newline=True,
-        trim_blocks=True,
-        lstrip_blocks=True
+        autoescape=select_autoescape(['html', 'xml'])
     )
     
     # Add custom filters
