@@ -302,7 +302,7 @@ def write_file(output_path: str, content: str) -> None:
         output_path: Path to write the file to
         content: Content to write
     """
-    with open(output_path, 'w', encoding='utf-8-sig', newline='\n') as f:
+    with open(output_path, 'w', encoding='utf-8', newline='\n') as f:
         f.write(content)
 
 def generate_python_model(table_name: str, schema_path: str, jinja_env: Environment) -> bool:
