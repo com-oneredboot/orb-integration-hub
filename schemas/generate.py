@@ -294,6 +294,17 @@ def load_index() -> Dict[str, Any]:
     except Exception as e:
         raise SchemaValidationError(f"Failed to load index file: {str(e)}")
 
+def write_file(output_path: str, content: str) -> None:
+    """
+    Write content to file with consistent UTF-8 encoding without BOM.
+    
+    Args:
+        output_path: Path to write the file to
+        content: Content to write
+    """
+    with open(output_path, 'w', encoding='utf-8-sig', newline='\n') as f:
+        f.write(content)
+
 def generate_python_model(table_name: str, schema_path: str, jinja_env: Environment) -> bool:
     """
     Generate Python model from schema.
@@ -328,10 +339,7 @@ def generate_python_model(table_name: str, schema_path: str, jinja_env: Environm
         
         # Write output
         output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'src', 'models', f'{table_name}.py')
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        
-        with open(output_path, 'w') as f:
-            f.write(output)
+        write_file(output_path, output)
         
         logger.info(f"Generated Python model for {table_name}")
         return True
@@ -374,10 +382,7 @@ def generate_typescript_model(table_name: str, schema_path: str, jinja_env: Envi
         
         # Write output
         output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models', f'{table_name}.model.ts')
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        
-        with open(output_path, 'w') as f:
-            f.write(output)
+        write_file(output_path, output)
         
         logger.info(f"Generated TypeScript model for {table_name}")
         return True
@@ -486,8 +491,7 @@ def generate_graphql_base_schema(schemas: List[Dict[str, Any]], table_names: Lis
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         output_path = os.path.join(output_dir, f'appsync_{timestamp}.graphql')
         
-        with open(output_path, 'w', encoding='utf-8', newline='\n') as f:
-            f.write(base_schema)
+        write_file(output_path, base_schema)
             
         logger.info(f"Generated timestamped schema file: appsync_{timestamp}.graphql")
         return True
@@ -516,10 +520,7 @@ def generate_cloudformation_template(schemas: List[Dict[str, Any]], jinja_env: E
         
         # Write the template to the output file
         output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation', 'dynamodb.yml')
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        
-        with open(output_path, 'w') as f:
-            f.write(template_content)
+        write_file(output_path, template_content)
             
         logger.info("Generated DynamoDB CloudFormation template")
         return True
@@ -545,8 +546,7 @@ def generate_timestamped_schema(schema_content: str) -> str:
     output_file = output_dir / f"appsync_{timestamp}.graphql"
     
     # Write with explicit UTF-8 encoding and no BOM
-    with open(output_file, 'w', encoding='utf-8', newline='\n') as f:
-        f.write(schema_content)
+    write_file(output_file, schema_content)
     
     return str(output_file)
 
