@@ -110,7 +110,10 @@ def setup_jinja_env() -> Environment:
     """
     env = Environment(
         loader=FileSystemLoader(os.path.join(SCRIPT_DIR, 'templates')),
-        autoescape=select_autoescape(['html', 'xml'])
+        autoescape=select_autoescape(['html', 'xml']),
+        keep_trailing_newline=True,
+        trim_blocks=True,
+        lstrip_blocks=True
     )
     
     # Add custom filters
@@ -302,6 +305,13 @@ def write_file(output_path: str, content: str) -> None:
         output_path: Path to write the file to
         content: Content to write
     """
+    # Ensure content starts with no BOM and no extra whitespace
+    content = content.lstrip('\ufeff').lstrip()
+    
+    # Create directory if it doesn't exist
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    
+    # Write with explicit UTF-8 encoding
     with open(output_path, 'w', encoding='utf-8', newline='\n') as f:
         f.write(content)
 
