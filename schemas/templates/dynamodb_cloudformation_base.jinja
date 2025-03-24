@@ -26,8 +26,8 @@ Parameters:
 # --------------------------------------------------- #
 Resources:
   {% for schema in schemas %}
-  # {{ schema.table|capitalize }} Table
-  {{ schema.table|capitalize }}Table:
+  # {{ schema.table|replace('_', ' ')|title|replace(' ', '') }} Table
+  {{ schema.table|replace('_', ' ')|title|replace(' ', '') }}Table:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
@@ -124,28 +124,28 @@ Resources:
         - Key: ProjectId
           Value: !Ref ProjectId
 
-  # Parameter Store for {{ schema.table|capitalize }} table name
-  {{ schema.table|capitalize }}TableNameParameter:
+  # Parameter Store for {{ schema.table|replace('_', ' ')|title|replace(' ', '') }} table name
+  {{ schema.table|replace('_', ' ')|title|replace(' ', '') }}TableNameParameter:
     Type: AWS::SSM::Parameter
     Properties:
       Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}-table-name'
       Type: String
-      Value: !Ref {{ schema.table|capitalize }}Table
-      Description: DynamoDB {{ schema.table|capitalize }} Table Name
+      Value: !Ref {{ schema.table|replace('_', ' ')|title|replace(' ', '') }}Table
+      Description: DynamoDB {{ schema.table|replace('_', ' ')|title|replace(' ', '') }} Table Name
       Tags:
         Billable: true
         CustomerId: !Ref CustomerId
         Environment: !Ref Environment
         ProjectId: !Ref ProjectId
 
-  # Parameter Store for {{ schema.table|capitalize }} table ARN
-  {{ schema.table|capitalize }}TableArnParameter:
+  # Parameter Store for {{ schema.table|replace('_', ' ')|title|replace(' ', '') }} table ARN
+  {{ schema.table|replace('_', ' ')|title|replace(' ', '') }}TableArnParameter:
     Type: AWS::SSM::Parameter
     Properties:
       Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}-table-arn'
       Type: String
-      Value: !GetAtt {{ schema.table|capitalize }}Table.Arn
-      Description: DynamoDB {{ schema.table|capitalize }} Table Arn
+      Value: !GetAtt {{ schema.table|replace('_', ' ')|title|replace(' ', '') }}Table.Arn
+      Description: DynamoDB {{ schema.table|replace('_', ' ')|title|replace(' ', '') }} Table Arn
       Tags:
         Billable: true
         CustomerId: !Ref CustomerId
