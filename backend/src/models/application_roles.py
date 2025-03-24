@@ -1,5 +1,5 @@
 """
-Application_user Model
+Application_role Model
 Generated code - do not modify directly
 """
 
@@ -37,12 +37,12 @@ import uuid
 
 
 # Import enum types from enum file
-from .application_user_enum import ApplicationUserStatus
+from .application_role_enum import ApplicationRoleStatus
 
 
 @dataclass
-class Application_userBase:
-    """Base class for Application_user model"""
+class Application_roleBase:
+    """Base class for Application_role model"""
     
     # Class variables
     SCHEMA_VERSION: ClassVar[str] = "1.0"
@@ -56,7 +56,7 @@ class Application_userBase:
             
         }
     )
-    user_id: str = field(
+    role_id: str = field(
         default='',
         metadata={
             "description": "",
@@ -64,19 +64,19 @@ class Application_userBase:
             
         }
     )
-    application_role_id: str = field(
+    description: str = field(
         default='',
         metadata={
             "description": "",
-            "required": true,
+            "required": false,
             
         }
     )
-    status: ApplicationUserStatus = field(
-        default=ApplicationUserStatus.UNKNOWN,
+    status: ApplicationRoleStatus = field(
+        default=ApplicationRoleStatus.UNKNOWN,
         metadata={
             "description": "",
-            "required": true,
+            "required": ,
             
         }
     )
@@ -92,12 +92,12 @@ class Application_userBase:
         default=None,
         metadata={
             "description": "ISO 8601 formatted timestamp (e.g., 2025-03-07T16:23:17.488Z)",
-            "required": false,
+            "required": true,
             
         }
     )
 
-class Application_userPydantic(BaseModel):
+class Application_rolePydantic(BaseModel):
     """Pydantic model for validation"""
     
     class Config:
@@ -113,20 +113,20 @@ class Application_userPydantic(BaseModel):
         description="",
         required=True
     )
-    user_id: str = Field(
+    role_id: str = Field(
         default='',
         description="",
         required=True
     )
-    application_role_id: str = Field(
+    description: str = Field(
         default='',
         description="",
-        required=True
+        required=False
     )
-    status: ApplicationUserStatus = Field(
-        default=ApplicationUserStatus.UNKNOWN,
+    status: ApplicationRoleStatus = Field(
+        default=ApplicationRoleStatus.UNKNOWN,
         description="",
-        required=True
+        required=False
     )
     created_at: timestamp = Field(
         default=None,
@@ -136,18 +136,18 @@ class Application_userPydantic(BaseModel):
     updated_at: timestamp = Field(
         default=None,
         description="ISO 8601 formatted timestamp (e.g., 2025-03-07T16:23:17.488Z)",
-        required=False
+        required=True
     )
 
 @dataclass
-class Application_user(Application_userBase):
-    """Application_user model with validation"""
+class Application_role(Application_roleBase):
+    """Application_role model with validation"""
     
     def __post_init__(self):
         """Validate the model after initialization"""
         try:
             # Convert to Pydantic model for validation
-            pydantic_model = Application_userPydantic(**self.__dict__)
+            pydantic_model = Application_rolePydantic(**self.__dict__)
             # Update instance with validated data
             for field_name, value in pydantic_model.dict().items():
                 setattr(self, field_name, value)
@@ -161,9 +161,9 @@ class Application_user(Application_userBase):
             
             "application_id": self.application_id,
             
-            "user_id": self.user_id,
+            "role_id": self.role_id,
             
-            "application_role_id": self.application_role_id,
+            "description": self.description,
             
             "status": self.status,
             
@@ -174,10 +174,10 @@ class Application_user(Application_userBase):
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Application_user':
+    def from_dict(cls, data: Dict[str, Any]) -> 'Application_role':
         """Create model instance from dictionary"""
         return cls(**data)
     
     def __str__(self) -> str:
         """String representation of the model"""
-        return f"Application_user({', '.join(f'{k}={v}' for k, v in self.to_dict().items())})"
+        return f"Application_role({', '.join(f'{k}={v}' for k, v in self.to_dict().items())})"

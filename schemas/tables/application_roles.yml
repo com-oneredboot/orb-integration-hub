@@ -13,6 +13,15 @@ model:
     primary:
       partition: application_id
       sort: role_id
+      projection_type: ALL
+      description: Primary key for application roles
+    secondary:
+      - name: role-status-index
+        type: GSI
+        partition: application_id
+        sort: status
+        projection_type: ALL
+        description: Index for querying roles by status within an application
   attributes:
     application_id:
       type: string
@@ -26,14 +35,11 @@ model:
     status:
       type: string
       enum_type: ApplicationRoleStatus
+      required: true
     created_at:
       type: number
       required: true
     updated_at:
       type: number
       required: true
-  indexes:
-    primary:
-      partition_key: application_id
-      sort_key: role_id
 

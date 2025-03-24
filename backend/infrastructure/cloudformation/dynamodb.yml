@@ -296,3 +296,57 @@ Resources:
         Environment: !Ref Environment
         ProjectId: !Ref ProjectId
   
+  # Applicationroles Table
+  ApplicationrolesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: application_id
+          AttributeType: S
+        - AttributeName: role_id
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: application_id
+          KeyType: HASH
+        - AttributeName: role_id
+          KeyType: RANGE
+      TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-applicationRoles'
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
+
+  # Parameter Store for Applicationroles table name
+  ApplicationrolesTableNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-applicationRoles-table-name'
+      Type: String
+      Value: !Ref ApplicationrolesTable
+      Description: DynamoDB Applicationroles Table Name
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+
+  # Parameter Store for Applicationroles table ARN
+  ApplicationrolesTableArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-applicationRoles-table-arn'
+      Type: String
+      Value: !GetAtt ApplicationrolesTable.Arn
+      Description: DynamoDB Applicationroles Table Arn
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+  

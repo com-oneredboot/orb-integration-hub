@@ -1,5 +1,5 @@
 /**
- * Application_user Model
+ * Application_role Model
  * Generated code - do not modify directly
  * @generated
  */
@@ -32,29 +32,29 @@
 
 
 // Import enum types
-import { ApplicationUserStatus } from './application_user.enum';
+import { ApplicationRoleStatus } from './application_role.enum';
 
 
 // Interface
-export interface IApplication_user {
+export interface IApplication_role {
   application_id: string;
-  user_id: string;
-  application_role_id: string;
-  status: ApplicationUserStatus;
+  role_id: string;
+  description: string?;
+  status: ApplicationRoleStatus?;
   created_at: timestamp;
-  updated_at: timestamp?;
+  updated_at: timestamp;
 }
 
 // Model Class
-export class Application_user implements IApplication_user {
+export class Application_role implements IApplication_role {
   application_id: string = '';
-  user_id: string = '';
-  application_role_id: string = '';
-  status: ApplicationUserStatus = ApplicationUserStatus.UNKNOWN;
+  role_id: string = '';
+  description: string = '';
+  status: ApplicationRoleStatus = ApplicationRoleStatus.UNKNOWN;
   created_at: timestamp;
   updated_at: timestamp;
 
-  constructor(data: Partial<IApplication_user> = {}) {
+  constructor(data: Partial<IApplication_role> = {}) {
     // Validate and assign data
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
@@ -89,7 +89,7 @@ export class Application_user implements IApplication_user {
     
     
     
-    if (this.user_id === undefined || this.user_id === null) {
+    if (this.role_id === undefined || this.role_id === null) {
       return false;
     }
     
@@ -97,22 +97,6 @@ export class Application_user implements IApplication_user {
     
     
     
-    if (this.application_role_id === undefined || this.application_role_id === null) {
-      return false;
-    }
-    
-    
-    
-    
-    
-    if (this.status === undefined || this.status === null) {
-      return false;
-    }
-    
-    
-    if (!Object.values(ApplicationUserStatus).includes(this.status)) {
-      return false;
-    }
     
     
     
@@ -125,6 +109,12 @@ export class Application_user implements IApplication_user {
     
     
     
+    if (this.updated_at === undefined || this.updated_at === null) {
+      return false;
+    }
+    
+    
+    
     
     return true;
   }
@@ -133,7 +123,7 @@ export class Application_user implements IApplication_user {
    * Creates a copy of the model
    * @returns A new instance of the model with the same values
    */
-  clone(): Application_user {
-    return new Application_user({...this});
+  clone(): Application_role {
+    return new Application_role({...this});
   }
 }

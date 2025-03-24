@@ -28,6 +28,21 @@ model:
     primary:
       partition: application_id
       sort: user_id
+      projection_type: ALL
+      description: Primary key for application users
+    secondary:
+      - name: user-applications-index
+        type: GSI
+        partition: user_id
+        sort: application_id
+        projection_type: ALL
+        description: Index for querying applications by user
+      - name: application-role-index
+        type: GSI
+        partition: application_id
+        sort: application_role_id
+        projection_type: ALL
+        description: Index for querying users by role within an application
   attributes:
     application_id:
       type: string
@@ -47,9 +62,4 @@ model:
       required: true
     updated_at:
       type: number
-      required: false
-
-indexes:
-  primary:
-    partition_key: application_id
-    sort_key: user_id 
+      required: false 
