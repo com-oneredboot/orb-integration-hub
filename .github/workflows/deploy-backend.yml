@@ -139,7 +139,15 @@ jobs:
             
             # Set up parameters for both build and deploy
             PARAMS="Environment=${{ inputs.environment }} CustomerId=${{ inputs.customer_id }} ProjectId=${{ inputs.project_id }}"
-            
+
+
+            echo "Schema file: $SCHEMA_FILE"
+            echo "Schema file: $(cat $SCHEMA_FILE)"
+
+            # print the .yml file for the stack
+            echo "Stack: $stack"
+            echo "Template: $(cat ${stack}.yml)"             
+
             # Add stack-specific parameters
             case "$stack" in
               "appsync")
@@ -151,13 +159,6 @@ jobs:
                 SCHEMA_FILENAME=$(basename "$SCHEMA_FILE")
                 PARAMS="$PARAMS SchemaS3Key=$SCHEMA_FILENAME"
                 echo "Using schema: $SCHEMA_FILENAME for AppSync stack"
-
-                echo "Schema file: $SCHEMA_FILE"
-                echo "Schema file: $(cat $SCHEMA_FILE)"
-
-                # print the .yml file for the stack
-                echo "Stack: $stack"
-                echo "Template: $(cat ${stack}.yml)" 
                 ;;
               "lambdas")
                 PARAMS="$PARAMS SMSOriginationNumber=${{ inputs.sms_origination_number }}"
