@@ -11,49 +11,8 @@ import uuid
 
 
 
-
-
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-    
-  
-  
-
-  
-  
-
-  
-  
-
-
-
 # Import enum types from enum file
 from .user_enum import UserStatus
-
 
 @dataclass
 class UserBase:
@@ -62,96 +21,73 @@ class UserBase:
     # Class variables
     SCHEMA_VERSION: ClassVar[str] = "1.0"
     
-    # Instance variables with type hints and default values
-    user_id: str = field(
+    # Instance variables with type hints and default values    user_id: str = field(
         default='',
         metadata={
             "description": "",
             "required": true,
-            
         }
-    )
-    cognito_id: str = field(
+    )    cognito_id: str = field(
         default='',
         metadata={
             "description": "",
             "required": true,
-            
         }
-    )
-    email: str = field(
+    )    email: str = field(
         default='',
         metadata={
             "description": "",
             "required": true,
-            
         }
-    )
-    phone_number: str = field(
+    )    phone_number: str = field(
         default='',
         metadata={
             "description": "",
             "required": false,
-            
         }
-    )
-    phone_verified: bool = field(
+    )    phone_verified: bool = field(
         default=False,
         metadata={
             "description": "",
             "required": false,
-            
         }
-    )
-    first_name: str = field(
+    )    first_name: str = field(
         default='',
         metadata={
             "description": "",
             "required": false,
-            
         }
-    )
-    last_name: str = field(
+    )    last_name: str = field(
         default='',
         metadata={
             "description": "",
             "required": false,
-            
         }
-    )
-    groups: List[] = field(
+    )    groups: List[] = field(
         default=list,
         metadata={
             "description": "",
             "required": true,
-            
         }
-    )
-    status: UserStatus = field(
+    )    status: UserStatus = field(
         default=UserStatus.UNKNOWN,
         metadata={
             "description": "",
             "required": true,
-            
         }
-    )
-    created_at: timestamp = field(
+    )    created_at: timestamp = field(
         default=None,
         metadata={
             "description": "ISO 8601 formatted timestamp (e.g., 2025-03-07T16:23:17.488Z)",
             "required": true,
-            
         }
-    )
-    updated_at: timestamp = field(
+    )    updated_at: timestamp = field(
         default=None,
         metadata={
             "description": "ISO 8601 formatted timestamp (e.g., 2025-03-07T16:23:17.488Z)",
             "required": false,
-            
         }
     )
-
 class UserPydantic(BaseModel):
     """Pydantic model for validation"""
     
@@ -162,63 +98,40 @@ class UserPydantic(BaseModel):
             uuid.UUID: lambda v: str(v)
         }
     
-    # Add fields with validation
-    user_id: str = Field(
+    # Add fields with validation    user_id: str = Field(
         default='',
         description="",
-        required=True
-    )
-    cognito_id: str = Field(
+required=True    )    cognito_id: str = Field(
         default='',
         description="",
-        required=True
-    )
-    email: str = Field(
+required=True    )    email: str = Field(
         default='',
         description="",
-        required=True
-    )
-    phone_number: str = Field(
+required=True    )    phone_number: str = Field(
         default='',
         description="",
-        required=False
-    )
-    phone_verified: bool = Field(
+required=False    )    phone_verified: bool = Field(
         default=False,
         description="",
-        required=False
-    )
-    first_name: str = Field(
+required=False    )    first_name: str = Field(
         default='',
         description="",
-        required=False
-    )
-    last_name: str = Field(
+required=False    )    last_name: str = Field(
         default='',
         description="",
-        required=False
-    )
-    groups: List[] = Field(
+required=False    )    groups: List[] = Field(
         default=list,
         description="",
-        required=True
-    )
-    status: UserStatus = Field(
+required=True    )    status: UserStatus = Field(
         default=UserStatus.UNKNOWN,
         description="",
-        required=True
-    )
-    created_at: timestamp = Field(
+required=True    )    created_at: timestamp = Field(
         default=None,
         description="ISO 8601 formatted timestamp (e.g., 2025-03-07T16:23:17.488Z)",
-        required=True
-    )
-    updated_at: timestamp = Field(
+required=True    )    updated_at: timestamp = Field(
         default=None,
         description="ISO 8601 formatted timestamp (e.g., 2025-03-07T16:23:17.488Z)",
-        required=False
-    )
-
+required=False    )
 @dataclass
 class User(UserBase):
     """User model with validation"""
@@ -238,29 +151,17 @@ class User(UserBase):
         """Convert model to dictionary"""
         return {
             "schema_version": self.SCHEMA_VERSION,
-            
             "user_id": self.user_id,
-            
             "cognito_id": self.cognito_id,
-            
             "email": self.email,
-            
             "phone_number": self.phone_number,
-            
             "phone_verified": self.phone_verified,
-            
             "first_name": self.first_name,
-            
             "last_name": self.last_name,
-            
             "groups": self.groups,
-            
             "status": self.status,
-            
             "created_at": self.created_at,
-            
             "updated_at": self.updated_at,
-            
         }
     
     @classmethod

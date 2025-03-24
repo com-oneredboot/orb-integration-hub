@@ -8,7 +8,7 @@ type {{ model_name }} @aws_api_key @aws_cognito_user_pools {
 {%- else -%}
 type {{ model_name }} @aws_cognito_user_pools {
 {%- endif -%}{%- for attr_name, attr in attributes.items() %}
-  {{ attr_name }}: {{ attr.type }}{% if attr.required %}!{% endif %}
+  {{ attr.graphql_name }}: {{ attr.type }}{% if attr.required %}!{% endif %}
 {%- endfor %}
 }
 
@@ -18,7 +18,7 @@ type {{ model_name }}Response @aws_api_key @aws_cognito_user_pools {
 {%- else -%}
 type {{ model_name }}Response @aws_cognito_user_pools {
 {%- endif %}
-  status_code: Float!
+  statusCode: Float!
   message: String
   item: {{ model_name }}
 }
@@ -29,7 +29,7 @@ type {{ model_name }}sResponse @aws_api_key @aws_cognito_user_pools {
 {%- else -%}
 type {{ model_name }}sResponse @aws_cognito_user_pools {
 {%- endif %}
-  status_code: Float!
+  statusCode: Float!
   message: String
   items: [{{ model_name }}]
 }
@@ -41,7 +41,7 @@ input {{ model_name }}CreateInput @aws_api_key @aws_cognito_user_pools {
 input {{ model_name }}CreateInput {
 {%- endif -%}{%- for attr_name, attr in attributes.items() %}
   {%- if attr_name != partition_key and attr_name != sort_key %}
-  {{ attr_name }}: {{ attr.type }}{% if attr.required %}!{% endif %}
+  {{ attr.graphql_name }}: {{ attr.type }}{% if attr.required %}!{% endif %}
   {%- endif %}
 {%- endfor %}
 }
@@ -53,14 +53,14 @@ input {{ model_name }}QueryInput @aws_api_key @aws_cognito_user_pools {
 input {{ model_name }}QueryInput {
 {% endif %}
   {%- if partition_key %}
-  {{ partition_key }}: String
+  {{ partition_key | to_camel_case }}: {{ attributes[partition_key].type }}
   {%- endif %}
   {%- if sort_key %}
-  {{ sort_key }}: String
+  {{ sort_key | to_camel_case }}: {{ attributes[sort_key].type }}
   {%- endif %}
   {%- for attr_name, attr in attributes.items() %}
   {%- if attr_name != partition_key and attr_name != sort_key %}
-  {{ attr_name }}: {{ attr.type }}
+  {{ attr.graphql_name }}: {{ attr.type }}
   {%- endif %}
   {%- endfor %}
 }
@@ -71,14 +71,14 @@ input {{ model_name }}UpdateInput @aws_api_key @aws_cognito_user_pools {
 {%- else -%}
 input {{ model_name }}UpdateInput {
 {%- endif -%}{%- if partition_key %}
-  {{ partition_key }}: String!
+  {{ partition_key | to_camel_case }}: {{ attributes[partition_key].type }}!
 {%- endif %}
 {%- if sort_key %}
-  {{ sort_key }}: String!
+  {{ sort_key | to_camel_case }}: {{ attributes[sort_key].type }}!
 {%- endif %}
 {%- for attr_name, attr in attributes.items() %}
 {%- if attr_name != partition_key and attr_name != sort_key %}
-  {{ attr_name }}: {{ attr.type }}
+  {{ attr.graphql_name }}: {{ attr.type }}
 {%- endif %}
 {%- endfor %}
 }
@@ -87,13 +87,13 @@ input {{ model_name }}UpdateInput {
 # These will be merged with the root Query and Mutation types in the base schema
 
 extend type Query {
-  {{ table_name }}QueryById(id: ID!): {{ model_name }}Response
+  {{ table_name | to_camel_case }}QueryById(id: ID!): {{ model_name }}Response
     @aws_auth(cognito_groups: ["admin"])
     {%- if auth_config and auth_config.api_key_operations and "{{ table_name }}QueryById" in auth_config.api_key_operations %}
     @aws_api_key
     {%- endif %}
   
-  {{ table_name }}Query(input: {{ model_name }}QueryInput): {{ model_name }}sResponse
+  {{ table_name | to_camel_case }}Query(input: {{ model_name }}QueryInput): {{ model_name }}sResponse
     @aws_auth(cognito_groups: ["admin"])
     {%- if auth_config and auth_config.api_key_operations and "{{ table_name }}Query" in auth_config.api_key_operations %}
     @aws_api_key
@@ -101,19 +101,19 @@ extend type Query {
 }
 
 extend type Mutation {
-  {{ table_name }}Create(input: {{ model_name }}CreateInput!): {{ model_name }}Response
+  {{ table_name | to_camel_case }}Create(input: {{ model_name }}CreateInput!): {{ model_name }}Response
     @aws_auth(cognito_groups: ["admin"])
     {%- if auth_config and auth_config.api_key_operations and "{{ table_name }}Create" in auth_config.api_key_operations %}
     @aws_api_key
     {%- endif %}
   
-  {{ table_name }}Update(id: ID!, input: {{ model_name }}UpdateInput!): {{ model_name }}Response
+  {{ table_name | to_camel_case }}Update(id: ID!, input: {{ model_name }}UpdateInput!): {{ model_name }}Response
     @aws_auth(cognito_groups: ["admin"])
     {%- if auth_config and auth_config.api_key_operations and "{{ table_name }}Update" in auth_config.api_key_operations %}
     @aws_api_key
     {%- endif %}
   
-  {{ table_name }}Delete(id: ID!): {{ model_name }}Response
+  {{ table_name | to_camel_case }}Delete(id: ID!): {{ model_name }}Response
     @aws_auth(cognito_groups: ["admin"])
     {%- if auth_config and auth_config.api_key_operations and "{{ table_name }}Delete" in auth_config.api_key_operations %}
     @aws_api_key

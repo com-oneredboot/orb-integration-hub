@@ -11,34 +11,8 @@ import uuid
 
 
 
-
-
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-    
-  
-  
-
-  
-  
-
-  
-  
-
-
-
 # Import enum types from enum file
 from .application_role_enum import ApplicationRoleStatus
-
 
 @dataclass
 class Application_roleBase:
@@ -47,56 +21,43 @@ class Application_roleBase:
     # Class variables
     SCHEMA_VERSION: ClassVar[str] = "1.0"
     
-    # Instance variables with type hints and default values
-    application_id: str = field(
+    # Instance variables with type hints and default values    application_id: str = field(
         default='',
         metadata={
             "description": "",
             "required": true,
-            
         }
-    )
-    role_id: str = field(
+    )    role_id: str = field(
         default='',
         metadata={
             "description": "",
             "required": true,
-            
         }
-    )
-    description: str = field(
+    )    description: str = field(
         default='',
         metadata={
             "description": "",
             "required": false,
-            
         }
-    )
-    status: ApplicationRoleStatus = field(
+    )    status: ApplicationRoleStatus = field(
         default=ApplicationRoleStatus.UNKNOWN,
         metadata={
             "description": "",
             "required": true,
-            
         }
-    )
-    created_at: timestamp = field(
+    )    created_at: timestamp = field(
         default=None,
         metadata={
             "description": "ISO 8601 formatted timestamp (e.g., 2025-03-07T16:23:17.488Z)",
             "required": true,
-            
         }
-    )
-    updated_at: timestamp = field(
+    )    updated_at: timestamp = field(
         default=None,
         metadata={
             "description": "ISO 8601 formatted timestamp (e.g., 2025-03-07T16:23:17.488Z)",
             "required": true,
-            
         }
     )
-
 class Application_rolePydantic(BaseModel):
     """Pydantic model for validation"""
     
@@ -107,38 +68,25 @@ class Application_rolePydantic(BaseModel):
             uuid.UUID: lambda v: str(v)
         }
     
-    # Add fields with validation
-    application_id: str = Field(
+    # Add fields with validation    application_id: str = Field(
         default='',
         description="",
-        required=True
-    )
-    role_id: str = Field(
+required=True    )    role_id: str = Field(
         default='',
         description="",
-        required=True
-    )
-    description: str = Field(
+required=True    )    description: str = Field(
         default='',
         description="",
-        required=False
-    )
-    status: ApplicationRoleStatus = Field(
+required=False    )    status: ApplicationRoleStatus = Field(
         default=ApplicationRoleStatus.UNKNOWN,
         description="",
-        required=True
-    )
-    created_at: timestamp = Field(
+required=True    )    created_at: timestamp = Field(
         default=None,
         description="ISO 8601 formatted timestamp (e.g., 2025-03-07T16:23:17.488Z)",
-        required=True
-    )
-    updated_at: timestamp = Field(
+required=True    )    updated_at: timestamp = Field(
         default=None,
         description="ISO 8601 formatted timestamp (e.g., 2025-03-07T16:23:17.488Z)",
-        required=True
-    )
-
+required=True    )
 @dataclass
 class Application_role(Application_roleBase):
     """Application_role model with validation"""
@@ -158,19 +106,12 @@ class Application_role(Application_roleBase):
         """Convert model to dictionary"""
         return {
             "schema_version": self.SCHEMA_VERSION,
-            
             "application_id": self.application_id,
-            
             "role_id": self.role_id,
-            
             "description": self.description,
-            
             "status": self.status,
-            
             "created_at": self.created_at,
-            
             "updated_at": self.updated_at,
-            
         }
     
     @classmethod

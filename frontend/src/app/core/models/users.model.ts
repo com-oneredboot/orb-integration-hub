@@ -6,79 +6,14 @@
 
 
 
-
-
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-    
-  
-  
-
-  
-  
-
-  
-  
-
-
-
 // Import enum types
 import { UserStatus } from './user.enum';
 
-
 // Interface
-export interface IUser {
-  user_id: string;
-  cognito_id: string;
-  email: string;
-  phone_number: string?;
-  phone_verified: boolean?;
-  first_name: string?;
-  last_name: string?;
-  groups: [];
-  status: UserStatus;
-  created_at: timestamp;
-  updated_at: timestamp?;
-}
+export interface IUser {  user_id: string;  cognito_id: string;  email: string;  phone_number: string?;  phone_verified: boolean?;  first_name: string?;  last_name: string?;  groups: [];  status: UserStatus;  created_at: timestamp;  updated_at: timestamp?;}
 
 // Model Class
-export class User implements IUser {
-  user_id: string = '';
-  cognito_id: string = '';
-  email: string = '';
-  phone_number: string = '';
-  phone_verified: boolean = false;
-  first_name: string = '';
-  last_name: string = '';
-  groups: [] = [];
-  status: UserStatus = UserStatus.UNKNOWN;
-  created_at: timestamp;
-  updated_at: timestamp;
-
+export class User implements IUser {  user_id: string = '';  cognito_id: string = '';  email: string = '';  phone_number: string = '';  phone_verified: boolean = false;  first_name: string = '';  last_name: string = '';  groups: [] = [];  status: UserStatus = UserStatus.UNKNOWN;  created_at: timestamp;  updated_at: timestamp;
   constructor(data: Partial<IUser> = {}) {
     // Validate and assign data
     Object.entries(data).forEach(([key, value]) => {
@@ -104,73 +39,30 @@ export class User implements IUser {
    * @returns boolean indicating if the model is valid
    */
   isValid(): boolean {
-    
-    
     if (this.user_id === undefined || this.user_id === null) {
       return false;
     }
-    
-    
-    
-    
-    
     if (this.cognito_id === undefined || this.cognito_id === null) {
       return false;
     }
-    
-    
-    
-    
-    
     if (this.email === undefined || this.email === null) {
       return false;
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     if (this.groups === undefined || this.groups === null) {
       return false;
     }
-    
     if (!Array.isArray(this.groups)) {
       return false;
     }
-    
-    
-    
-    
-    
     if (this.status === undefined || this.status === null) {
       return false;
     }
-    
-    
     if (!Object.values(UserStatus).includes(this.status)) {
       return false;
     }
-    
-    
-    
-    
     if (this.created_at === undefined || this.created_at === null) {
       return false;
     }
-    
-    
-    
-    
-    
-    
     return true;
   }
 

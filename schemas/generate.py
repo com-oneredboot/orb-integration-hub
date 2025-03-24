@@ -110,7 +110,9 @@ def setup_jinja_env() -> Environment:
     """
     env = Environment(
         loader=FileSystemLoader(os.path.join(SCRIPT_DIR, 'templates')),
-        autoescape=select_autoescape(['html', 'xml'])
+        autoescape=select_autoescape(['html', 'xml']),
+        trim_blocks=True,
+        lstrip_blocks=True
     )
     
     # Add custom filters
@@ -129,6 +131,9 @@ def setup_jinja_env() -> Environment:
     
     # Add custom globals
     env.globals['now'] = lambda: datetime.now().isoformat()
+    
+    env.filters['to_camel_case'] = to_camel_case
+    env.filters['to_pascal_case'] = to_pascal_case
     
     return env
 
@@ -411,9 +416,19 @@ def map_to_graphql_type(schema_type: str) -> str:
         'number': 'Float',
         'boolean': 'Boolean',
         'array': '[String]',
-        'object': 'AWSJSON'
+        'object': 'AWSJSON',
+        'timestamp': 'AWSDateTime'
     }
     return type_mapping.get(schema_type.lower(), 'String')
+
+def to_camel_case(s: str) -> str:
+    """Convert snake_case to camelCase."""
+    components = s.split('_')
+    return components[0] + ''.join(x.title() for x in components[1:])
+
+def to_pascal_case(s: str) -> str:
+    """Convert snake_case to PascalCase."""
+    return ''.join(x.title() for x in s.split('_'))
 
 def generate_graphql_schema(table_name: str, schema_path: str, jinja_env: Environment) -> Optional[str]:
     """
@@ -434,18 +449,19 @@ def generate_graphql_schema(table_name: str, schema_path: str, jinja_env: Enviro
         # Get template
         template = jinja_env.get_template('graphql_schema.jinja')
         
-        # Convert attribute types to GraphQL types
+        # Convert attribute types to GraphQL types and field names to camelCase
         attributes = {}
         for attr_name, attr in schema['model']['attributes'].items():
-            attributes[attr_name] = {
-                'type': map_to_graphql_type(attr['type']),
-                'required': attr.get('required', False)
-            }
+            attr_copy = attr.copy()
+            attr_copy['graphql_name'] = to_camel_case(attr_name)
+            attr_copy['type'] = map_to_graphql_type(attr['type'])
+            attributes[attr_name] = attr_copy
         
-        # Generate schema - use the original table name for model name
+        # Generate schema - use PascalCase for model name
+        model_name = to_pascal_case(table_name)
         schema_content = template.render(
             table_name=table_name,
-            model_name=table_name,  # Use the original table name without modification
+            model_name=model_name,
             attributes=attributes,
             partition_key=schema['model']['keys']['primary']['partition'],
             sort_key=schema['model']['keys']['primary'].get('sort'),
@@ -486,7 +502,8 @@ def generate_graphql_base_schema(schemas: List[Dict[str, Any]], table_names: Lis
             # Create a dictionary with name and content for the template
             model_schemas.append({
                 'name': table_name,
-                'content': schema_content
+                'content': schema_content,
+                'pascal_name': to_pascal_case(table_name)
             })
         
         # Generate base schema
@@ -512,19 +529,6 @@ def generate_graphql_base_schema(schemas: List[Dict[str, Any]], table_names: Lis
     except Exception as e:
         logger.error(f"Error generating base GraphQL schema: {str(e)}")
         return False
-
-def to_pascal_case(name: str) -> str:
-    """
-    Convert a string to PascalCase.
-    Handles both snake_case and camelCase input.
-    """
-    # First handle snake_case
-    if '_' in name:
-        words = name.split('_')
-        return ''.join(word.capitalize() for word in words)
-    
-    # If already in camelCase or PascalCase, just capitalize the first letter
-    return name[0].upper() + name[1:]
 
 def generate_cloudformation_template(schemas: List[Dict[str, Any]], jinja_env: Environment) -> bool:
     """

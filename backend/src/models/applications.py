@@ -11,37 +11,8 @@ import uuid
 
 
 
-
-
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-    
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-
-
 # Import enum types from enum file
 from .application_enum import ApplicationStatus
-
 
 @dataclass
 class ApplicationBase:
@@ -50,64 +21,49 @@ class ApplicationBase:
     # Class variables
     SCHEMA_VERSION: ClassVar[str] = "1.0"
     
-    # Instance variables with type hints and default values
-    application_id: str = field(
+    # Instance variables with type hints and default values    application_id: str = field(
         default='',
         metadata={
             "description": "",
             "required": true,
-            
         }
-    )
-    name: str = field(
+    )    name: str = field(
         default='',
         metadata={
             "description": "",
             "required": true,
-            
         }
-    )
-    description: str = field(
+    )    description: str = field(
         default='',
         metadata={
             "description": "",
             "required": false,
-            
         }
-    )
-    status: ApplicationStatus = field(
+    )    status: ApplicationStatus = field(
         default=ApplicationStatus.UNKNOWN,
         metadata={
             "description": "",
             "required": true,
-            
         }
-    )
-    created_at: timestamp = field(
+    )    created_at: timestamp = field(
         default=None,
         metadata={
             "description": "ISO 8601 formatted timestamp (e.g., 2025-03-07T16:23:17.488Z)",
             "required": true,
-            
         }
-    )
-    updated_at: timestamp = field(
+    )    updated_at: timestamp = field(
         default=None,
         metadata={
             "description": "ISO 8601 formatted timestamp (e.g., 2025-03-07T16:23:17.488Z)",
             "required": false,
-            
         }
-    )
-    user_id: str = field(
+    )    user_id: str = field(
         default='',
         metadata={
             "description": "",
             "required": true,
-            
         }
     )
-
 class ApplicationPydantic(BaseModel):
     """Pydantic model for validation"""
     
@@ -118,43 +74,28 @@ class ApplicationPydantic(BaseModel):
             uuid.UUID: lambda v: str(v)
         }
     
-    # Add fields with validation
-    application_id: str = Field(
+    # Add fields with validation    application_id: str = Field(
         default='',
         description="",
-        required=True
-    )
-    name: str = Field(
+required=True    )    name: str = Field(
         default='',
         description="",
-        required=True
-    )
-    description: str = Field(
+required=True    )    description: str = Field(
         default='',
         description="",
-        required=False
-    )
-    status: ApplicationStatus = Field(
+required=False    )    status: ApplicationStatus = Field(
         default=ApplicationStatus.UNKNOWN,
         description="",
-        required=True
-    )
-    created_at: timestamp = Field(
+required=True    )    created_at: timestamp = Field(
         default=None,
         description="ISO 8601 formatted timestamp (e.g., 2025-03-07T16:23:17.488Z)",
-        required=True
-    )
-    updated_at: timestamp = Field(
+required=True    )    updated_at: timestamp = Field(
         default=None,
         description="ISO 8601 formatted timestamp (e.g., 2025-03-07T16:23:17.488Z)",
-        required=False
-    )
-    user_id: str = Field(
+required=False    )    user_id: str = Field(
         default='',
         description="",
-        required=True
-    )
-
+required=True    )
 @dataclass
 class Application(ApplicationBase):
     """Application model with validation"""
@@ -174,21 +115,13 @@ class Application(ApplicationBase):
         """Convert model to dictionary"""
         return {
             "schema_version": self.SCHEMA_VERSION,
-            
             "application_id": self.application_id,
-            
             "name": self.name,
-            
             "description": self.description,
-            
             "status": self.status,
-            
             "created_at": self.created_at,
-            
             "updated_at": self.updated_at,
-            
             "user_id": self.user_id,
-            
         }
     
     @classmethod

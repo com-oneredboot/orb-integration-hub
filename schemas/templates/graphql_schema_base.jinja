@@ -47,7 +47,7 @@ type ApplicationEnvironmentRoles @aws_api_key @aws_cognito_user_pools {
 }
 
 type ApplicationSettings @aws_api_key @aws_cognito_user_pools {
-  debug_level: String
+  debugLevel: String
 }
 
 type ApplicationEnvironmentSettings @aws_api_key @aws_cognito_user_pools {
@@ -60,73 +60,73 @@ type ApplicationEnvironmentSettings @aws_api_key @aws_cognito_user_pools {
 
 # Base types
 type Application @aws_api_key @aws_cognito_user_pools {
-  application_id: String!
-  user_id: String!
+  applicationId: String!
+  userId: String!
   status: String!
   name: String!
   description: String
-  created_at: String!
-  deleted_at: String
+  createdAt: String!
+  deletedAt: String
 }
 
 type ApplicationResponse @aws_api_key @aws_cognito_user_pools {
-  status_code: Float!
+  statusCode: Float!
   message: String
   application: Application
 }
 
 type ApplicationsResponse @aws_api_key @aws_cognito_user_pools {
-  status_code: Float!
+  statusCode: Float!
   message: String
   applications: [Application]
 }
 
 type ApplicationUser @aws_api_key @aws_cognito_user_pools {
-  application_id: String!
-  user_id: String!
+  applicationId: String!
+  userId: String!
   roles: ApplicationEnvironmentRoles!
   status: String!
-  created_at: String!
-  deleted_at: String
+  createdAt: String!
+  deletedAt: String
 }
 
 type ApplicationUserResponse @aws_api_key @aws_cognito_user_pools {
-  status_code: Float!
+  statusCode: Float!
   message: String
-  application_user: ApplicationUser
+  applicationUser: ApplicationUser
 }
 
 type SMSVerificationResponse @aws_api_key @aws_cognito_user_pools {
-  status_code: Float!
+  statusCode: Float!
   message: String
   code: Float
 }
 
 # Input types
 input ApplicationCreateInput {
-  application_id: String!
-  user_id: String!
+  applicationId: String!
+  userId: String!
   status: String!
   name: String!
   description: String
-  created_at: String!
+  createdAt: String!
   settings: ApplicationSettingsInput!
   roles: ApplicationEnvironmentRolesInput!
 }
 
 input ApplicationQueryInput {
-  application_id: String
-  user_id: String
+  applicationId: String
+  userId: String
 }
 
 input ApplicationUpdateInput {
-  application_id: String!
+  applicationId: String!
   status: String
   name: String
   description: String
   settings: ApplicationEnvironmentSettingsInput
   roles: ApplicationEnvironmentRolesInput
-  deleted_at: String
+  deletedAt: String
 }
 
 input ApplicationRoleInput {
@@ -143,7 +143,7 @@ input ApplicationEnvironmentRolesInput {
 }
 
 input ApplicationSettingsInput {
-  debug_level: String
+  debugLevel: String
 }
 
 input ApplicationEnvironmentSettingsInput {
@@ -155,28 +155,28 @@ input ApplicationEnvironmentSettingsInput {
 }
 
 input ApplicationUserCreateInput {
-  application_id: String!
-  user_id: String!
+  applicationId: String!
+  userId: String!
   roles: ApplicationEnvironmentRolesInput!
   status: String!
-  created_at: String!
+  createdAt: String!
 }
 
 input ApplicationUserQueryInput {
-  application_id: String
-  user_id: String
+  applicationId: String
+  userId: String
 }
 
 input ApplicationUserUpdateInput {
-  application_id: String!
-  user_id: String!
+  applicationId: String!
+  userId: String!
   status: String
   roles: ApplicationEnvironmentRolesInput
-  deleted_at: String
+  deletedAt: String
 }
 
 input SMSVerificationInput {
-  phone_number: String!
+  phoneNumber: String!
 }
 
 # Additional input types for legacy compatibility
@@ -191,7 +191,7 @@ type Query {
   
   # Generated model queries
   {% for schema in model_schemas %}
-  {{ schema.name }}QueryById(input: {{ schema.name|capitalize }}QueryInput!): {{ schema.name|capitalize }}Response! {% if schema.auth and schema.name+'QueryById' in schema.auth.api_key_operations %}@aws_api_key @aws_cognito_user_pools{% else %}@aws_cognito_user_pools{% endif %}
+  {{ schema.name | to_camel_case }}QueryById(input: {{ schema.pascal_name }}QueryInput!): {{ schema.pascal_name }}Response! @aws_cognito_user_pools
   {% endfor %}
 }
 
@@ -205,8 +205,8 @@ type Mutation {
   
   # Generated model mutations
   {% for schema in model_schemas %}
-  {{ schema.name }}Create(input: {{ schema.name|capitalize }}CreateInput!): {{ schema.name|capitalize }}Response! {% if schema.auth and schema.name+'Create' in schema.auth.api_key_operations %}@aws_api_key @aws_cognito_user_pools{% else %}@aws_cognito_user_pools{% endif %}
-  {{ schema.name }}Update(input: {{ schema.name|capitalize }}UpdateInput!): {{ schema.name|capitalize }}Response! {% if schema.auth and schema.name+'Update' in schema.auth.api_key_operations %}@aws_api_key @aws_cognito_user_pools{% else %}@aws_cognito_user_pools{% endif %}
+  {{ schema.name | to_camel_case }}Create(input: {{ schema.pascal_name }}CreateInput!): {{ schema.pascal_name }}Response! @aws_cognito_user_pools
+  {{ schema.name | to_camel_case }}Update(input: {{ schema.pascal_name }}UpdateInput!): {{ schema.pascal_name }}Response! @aws_cognito_user_pools
   {% endfor %}
 }
 
