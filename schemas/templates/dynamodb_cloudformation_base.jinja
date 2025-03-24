@@ -26,8 +26,8 @@ Parameters:
 # --------------------------------------------------- #
 Resources:
   {% for schema in schemas %}
-  # {{ schema.table|replace('_', ' ')|title|replace(' ', '') }} Table
-  {{ schema.table|replace('_', ' ')|title|replace(' ', '') }}Table:
+  # {{ schema.table }} Table
+  {{ schema.table }}Table:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
@@ -113,7 +113,7 @@ Resources:
         {%- endfor %}
         {%- endif %}
       {%- endif %}
-      TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}'
+      TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-{{ schema.table_name }}'
       Tags:
         - Key: Billable
           Value: "true"
@@ -124,28 +124,28 @@ Resources:
         - Key: ProjectId
           Value: !Ref ProjectId
 
-  # Parameter Store for {{ schema.table|replace('_', ' ')|title|replace(' ', '') }} table name
-  {{ schema.table|replace('_', ' ')|title|replace(' ', '') }}TableNameParameter:
+  # Parameter Store for {{ schema.table }} table name
+  {{ schema.table }}TableNameParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}-table-name'
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-{{ schema.table_name }}-table-name'
       Type: String
-      Value: !Ref {{ schema.table|replace('_', ' ')|title|replace(' ', '') }}Table
-      Description: DynamoDB {{ schema.table|replace('_', ' ')|title|replace(' ', '') }} Table Name
+      Value: !Ref {{ schema.table }}Table
+      Description: DynamoDB {{ schema.table }} Table Name
       Tags:
         Billable: true
         CustomerId: !Ref CustomerId
         Environment: !Ref Environment
         ProjectId: !Ref ProjectId
 
-  # Parameter Store for {{ schema.table|replace('_', ' ')|title|replace(' ', '') }} table ARN
-  {{ schema.table|replace('_', ' ')|title|replace(' ', '') }}TableArnParameter:
+  # Parameter Store for {{ schema.table }} table ARN
+  {{ schema.table }}TableArnParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}-table-arn'
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-{{ schema.table_name }}-table-arn'
       Type: String
-      Value: !GetAtt {{ schema.table|replace('_', ' ')|title|replace(' ', '') }}Table.Arn
-      Description: DynamoDB {{ schema.table|replace('_', ' ')|title|replace(' ', '') }} Table Arn
+      Value: !GetAtt {{ schema.table }}Table.Arn
+      Description: DynamoDB {{ schema.table }} Table Arn
       Tags:
         Billable: true
         CustomerId: !Ref CustomerId

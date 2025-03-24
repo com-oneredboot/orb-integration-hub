@@ -76,7 +76,7 @@ class Application_roleBase:
         default=ApplicationRoleStatus.UNKNOWN,
         metadata={
             "description": "",
-            "required": ,
+            "required": true,
             
         }
     )
@@ -126,7 +126,7 @@ class Application_rolePydantic(BaseModel):
     status: ApplicationRoleStatus = Field(
         default=ApplicationRoleStatus.UNKNOWN,
         description="",
-        required=False
+        required=True
     )
     created_at: timestamp = Field(
         default=None,

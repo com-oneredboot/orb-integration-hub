@@ -242,8 +242,8 @@ Resources:
         Environment: !Ref Environment
         ProjectId: !Ref ProjectId
   
-  # Applicationusers Table
-  ApplicationusersTable:
+  # ApplicationUsers Table
+  ApplicationUsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
@@ -251,13 +251,32 @@ Resources:
           AttributeType: S
         - AttributeName: user_id
           AttributeType: S
+        - AttributeName: application_role_id
+          AttributeType: S
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         - AttributeName: application_id
           KeyType: HASH
         - AttributeName: user_id
           KeyType: RANGE
-      TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-applicationUsers'
+      GlobalSecondaryIndexes:
+        - IndexName: user-applications-index
+          KeySchema:
+            - AttributeName: user_id
+              KeyType: HASH
+            - AttributeName: application_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: application-role-index
+          KeySchema:
+            - AttributeName: application_id
+              KeyType: HASH
+            - AttributeName: application_role_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-application_users'
       Tags:
         - Key: Billable
           Value: "true"
@@ -268,36 +287,36 @@ Resources:
         - Key: ProjectId
           Value: !Ref ProjectId
 
-  # Parameter Store for Applicationusers table name
-  ApplicationusersTableNameParameter:
+  # Parameter Store for ApplicationUsers table name
+  ApplicationUsersTableNameParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-applicationUsers-table-name'
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-application_users-table-name'
       Type: String
-      Value: !Ref ApplicationusersTable
-      Description: DynamoDB Applicationusers Table Name
+      Value: !Ref ApplicationUsersTable
+      Description: DynamoDB ApplicationUsers Table Name
       Tags:
         Billable: true
         CustomerId: !Ref CustomerId
         Environment: !Ref Environment
         ProjectId: !Ref ProjectId
 
-  # Parameter Store for Applicationusers table ARN
-  ApplicationusersTableArnParameter:
+  # Parameter Store for ApplicationUsers table ARN
+  ApplicationUsersTableArnParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-applicationUsers-table-arn'
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-application_users-table-arn'
       Type: String
-      Value: !GetAtt ApplicationusersTable.Arn
-      Description: DynamoDB Applicationusers Table Arn
+      Value: !GetAtt ApplicationUsersTable.Arn
+      Description: DynamoDB ApplicationUsers Table Arn
       Tags:
         Billable: true
         CustomerId: !Ref CustomerId
         Environment: !Ref Environment
         ProjectId: !Ref ProjectId
   
-  # Applicationroles Table
-  ApplicationrolesTable:
+  # ApplicationRoles Table
+  ApplicationRolesTable:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
@@ -305,13 +324,24 @@ Resources:
           AttributeType: S
         - AttributeName: role_id
           AttributeType: S
+        - AttributeName: status
+          AttributeType: S
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         - AttributeName: application_id
           KeyType: HASH
         - AttributeName: role_id
           KeyType: RANGE
-      TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-applicationRoles'
+      GlobalSecondaryIndexes:
+        - IndexName: role-status-index
+          KeySchema:
+            - AttributeName: application_id
+              KeyType: HASH
+            - AttributeName: status
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-application_roles'
       Tags:
         - Key: Billable
           Value: "true"
@@ -322,28 +352,28 @@ Resources:
         - Key: ProjectId
           Value: !Ref ProjectId
 
-  # Parameter Store for Applicationroles table name
-  ApplicationrolesTableNameParameter:
+  # Parameter Store for ApplicationRoles table name
+  ApplicationRolesTableNameParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-applicationRoles-table-name'
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-application_roles-table-name'
       Type: String
-      Value: !Ref ApplicationrolesTable
-      Description: DynamoDB Applicationroles Table Name
+      Value: !Ref ApplicationRolesTable
+      Description: DynamoDB ApplicationRoles Table Name
       Tags:
         Billable: true
         CustomerId: !Ref CustomerId
         Environment: !Ref Environment
         ProjectId: !Ref ProjectId
 
-  # Parameter Store for Applicationroles table ARN
-  ApplicationrolesTableArnParameter:
+  # Parameter Store for ApplicationRoles table ARN
+  ApplicationRolesTableArnParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-applicationRoles-table-arn'
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-application_roles-table-arn'
       Type: String
-      Value: !GetAtt ApplicationrolesTable.Arn
-      Description: DynamoDB Applicationroles Table Arn
+      Value: !GetAtt ApplicationRolesTable.Arn
+      Description: DynamoDB ApplicationRoles Table Arn
       Tags:
         Billable: true
         CustomerId: !Ref CustomerId

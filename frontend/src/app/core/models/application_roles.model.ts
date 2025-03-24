@@ -40,7 +40,7 @@ export interface IApplication_role {
   application_id: string;
   role_id: string;
   description: string?;
-  status: ApplicationRoleStatus?;
+  status: ApplicationRoleStatus;
   created_at: timestamp;
   updated_at: timestamp;
 }
@@ -97,6 +97,16 @@ export class Application_role implements IApplication_role {
     
     
     
+    
+    
+    if (this.status === undefined || this.status === null) {
+      return false;
+    }
+    
+    
+    if (!Object.values(ApplicationRoleStatus).includes(this.status)) {
+      return false;
+    }
     
     
     

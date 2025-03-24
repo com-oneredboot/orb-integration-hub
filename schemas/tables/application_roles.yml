@@ -4,7 +4,7 @@
 # description: yaml file containing the application roles table schema
 
 version: '1.0'
-table: applicationRoles  # DynamoDB table name in camelCase
+table: application_roles  # DynamoDB table name in snake_case
 model:
   auth_config:
     # Operations that should allow API key access

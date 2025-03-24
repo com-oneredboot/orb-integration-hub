@@ -230,12 +230,13 @@ def process_field_type(field_name: str, field_info: Dict[str, Any]) -> Dict[str,
     
     return result
 
-def load_schema(schema_path: str) -> Dict[str, Any]:
+def load_schema(schema_path: str, table_name: str = None) -> Dict[str, Any]:
     """
     Load and parse a schema file.
     
     Args:
         schema_path: Path to the schema file
+        table_name: Optional table name from index.yml to override the one in the schema file
         
     Returns:
         Parsed schema dictionary
@@ -271,6 +272,11 @@ def load_schema(schema_path: str) -> Dict[str, Any]:
         # Ensure partition key exists
         if 'partition' not in schema['model']['keys']['primary']:
             raise SchemaValidationError(f"Schema file {schema_path} missing partition key")
+            
+        # Store the original table name for DynamoDB table names
+        schema['table_name'] = table_name if table_name else schema['table']
+        # Transform the table name for CloudFormation resource names
+        schema['table'] = to_pascal_case(schema['table_name'])
             
         return schema
     except Exception as e:
@@ -507,6 +513,19 @@ def generate_graphql_base_schema(schemas: List[Dict[str, Any]], table_names: Lis
         logger.error(f"Error generating base GraphQL schema: {str(e)}")
         return False
 
+def to_pascal_case(name: str) -> str:
+    """
+    Convert a string to PascalCase.
+    Handles both snake_case and camelCase input.
+    """
+    # First handle snake_case
+    if '_' in name:
+        words = name.split('_')
+        return ''.join(word.capitalize() for word in words)
+    
+    # If already in camelCase or PascalCase, just capitalize the first letter
+    return name[0].upper() + name[1:]
+
 def generate_cloudformation_template(schemas: List[Dict[str, Any]], jinja_env: Environment) -> bool:
     """
     Generate the DynamoDB CloudFormation template that defines all table definitions.
@@ -577,7 +596,7 @@ def main():
             
             try:
                 # Load schema for later use
-                schema = load_schema(schema_path)
+                schema = load_schema(schema_path, table_name)  # Pass the table name from index.yml
                 schema['path'] = schema_path  # Store the path in the schema dictionary
                 schemas.append(schema)
                 table_names.append(table_name)  # Store the original table name
