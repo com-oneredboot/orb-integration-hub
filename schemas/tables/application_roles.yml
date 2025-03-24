@@ -1,0 +1,39 @@
+# file: schemas/tables/application_roles.yml
+# author: AI Assistant
+# date: 2024-03-21
+# description: yaml file containing the application roles table schema
+
+version: '1.0'
+table: applicationRoles  # DynamoDB table name in camelCase
+model:
+  auth_config:
+    # Operations that should allow API key access
+    default_auth: user_pools
+  keys:
+    primary:
+      partition: application_id
+      sort: role_id
+  attributes:
+    application_id:
+      type: string
+      required: true
+    role_id:
+      type: string
+      required: true
+    description:
+      type: string
+      required: false
+    status:
+      type: string
+      enum_type: ApplicationRoleStatus
+    created_at:
+      type: number
+      required: true
+    updated_at:
+      type: number
+      required: true
+  indexes:
+    primary:
+      partition_key: application_id
+      sort_key: role_id
+

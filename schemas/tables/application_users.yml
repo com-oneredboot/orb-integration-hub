@@ -35,6 +35,9 @@ model:
     user_id:
       type: string
       required: true
+    application_role_id:
+      type: string
+      required: true
     status:
       type: string
       enum_type: ApplicationUserStatus
