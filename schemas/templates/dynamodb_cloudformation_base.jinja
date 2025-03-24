@@ -128,7 +128,7 @@ Resources:
   {{ schema.table }}TableNameParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-{{ schema.table_name }}-table-name'
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-{{ schema.table_name | replace('_', '-') }}-table-name'
       Type: String
       Value: !Ref {{ schema.table }}Table
       Description: DynamoDB {{ schema.table }} Table Name
@@ -142,7 +142,7 @@ Resources:
   {{ schema.table }}TableArnParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-{{ schema.table_name }}-table-arn'
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-{{ schema.table_name | replace('_', '-') }}-table-arn'
       Type: String
       Value: !GetAtt {{ schema.table }}Table.Arn
       Description: DynamoDB {{ schema.table }} Table Arn

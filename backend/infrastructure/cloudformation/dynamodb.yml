@@ -291,7 +291,7 @@ Resources:
   ApplicationUsersTableNameParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-application_users-table-name'
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-application-users-table-name'
       Type: String
       Value: !Ref ApplicationUsersTable
       Description: DynamoDB ApplicationUsers Table Name
@@ -305,7 +305,7 @@ Resources:
   ApplicationUsersTableArnParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-application_users-table-arn'
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-application-users-table-arn'
       Type: String
       Value: !GetAtt ApplicationUsersTable.Arn
       Description: DynamoDB ApplicationUsers Table Arn
@@ -356,7 +356,7 @@ Resources:
   ApplicationRolesTableNameParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-application_roles-table-name'
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-application-roles-table-name'
       Type: String
       Value: !Ref ApplicationRolesTable
       Description: DynamoDB ApplicationRoles Table Name
@@ -370,7 +370,7 @@ Resources:
   ApplicationRolesTableArnParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-application_roles-table-arn'
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-application-roles-table-arn'
       Type: String
       Value: !GetAtt ApplicationRolesTable.Arn
       Description: DynamoDB ApplicationRoles Table Arn
