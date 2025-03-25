@@ -1,130 +1,85 @@
-  # DynamoDB table for {{ model_name }}
-  {{ table_name|replace('_', '')|capitalize }}Table:
+# --------------------------------------------------- #
+AWSTemplateFormatVersion: 2010-09-09
+
+# --------------------------------------------------- #
+Transform: AWS::Serverless-2016-10-31
+
+# --------------------------------------------------- #
+Description: >
+ Application Infrastructure - DynamoDB Tables
+
+# --------------------------------------------------- #
+Parameters:
+  Environment:
+    Default: dev
+    Type: String
+    Description: Environment name (dev, staging, prod)
+  CustomerId:
+    Default: orb
+    Type: String
+    Description: Customer identifier
+  ProjectId:
+    Default: integration-hub
+    Type: String
+    Description: Project identifier
+  TracingIs:
+    Default: Active
+    Type: String
+    Description: Whether tracing is enabled
+
+# --------------------------------------------------- #
+Resources:
+  {% for schema, table in schemas.items() %}
+  {{ table }}Table:
+    Type: AWS::DynamoDB::Table
     Properties:
-      AttributeDefinitions:{%- set all_attrs = [keys.primary.partition] -%}
-        {%- if keys.primary.sort -%}
-          {%- set all_attrs = all_attrs + [keys.primary.sort] -%}
-        {%- endif -%}
-        {%- for idx in keys.secondary -%}
-          {%- if idx.partition and idx.partition not in all_attrs -%}
-            {%- set all_attrs = all_attrs + [idx.partition] -%}
-          {%- endif -%}
-          {%- if idx.sort and idx.sort not in all_attrs -%}
-            {%- set all_attrs = all_attrs + [idx.sort] -%}
-          {%- endif -%}
-        {%- endfor %}
-        -
-          AttributeName: {{ keys.primary.partition }}
-          AttributeType: S
-        {%- if keys.primary.sort %}
-        -
-          AttributeName: {{ keys.primary.sort }}
-          AttributeType: S
-        {%- endif -%}
-        {%- for idx in keys.secondary -%}
-          {%- if idx.partition and idx.partition != keys.primary.partition and idx.partition != keys.primary.sort %}
-        -
-          AttributeName: {{ idx.partition }}
-          AttributeType: S
-          {%- endif -%}
-          {%- if idx.sort and idx.sort != keys.primary.partition and idx.sort != keys.primary.sort and idx.sort != idx.partition %}
-        -
-          AttributeName: {{ idx.sort }}
-          AttributeType: S
-          {%- endif -%}
-        {%- endfor %}
-      BillingMode: PAY_PER_REQUEST
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ table }}
+      AttributeDefinitions:
+        {% for attr in schema.attributes %}
+        - AttributeName: {{ attr.name }}
+          AttributeType: {{ attr.type }}
+        {% endfor %}
       KeySchema:
-        -
-          AttributeName: {{ keys.primary.partition }}
+        - AttributeName: {{ schema.partition_key }}
           KeyType: HASH
-        {%- if keys.primary.sort %}
-        -
-          AttributeName: {{ keys.primary.sort }}
+        {% if schema.sort_key %}
+        - AttributeName: {{ schema.sort_key }}
           KeyType: RANGE
-        {%- endif %}
-        {%- if keys.secondary %}
-      GlobalSecondaryIndexes:
-        {%- for idx in keys.secondary if idx.type == 'GSI' %}
-        -
-          IndexName: {{ idx.name }}
-          KeySchema:
-            -
-              AttributeName: {{ idx.partition }}
-              KeyType: HASH
-            {%- if idx.sort %}
-            -
-              AttributeName: {{ idx.sort }}
-              KeyType: RANGE
-            {%- endif %}
-          Projection:
-            ProjectionType: {{ idx.projection_type }}
-            {%- if idx.projection_type == 'INCLUDE' and idx.projected_attributes %}
-            NonKeyAttributes:
-              {%- for attr in idx.projected_attributes %}
-              - {{ attr }}
-              {%- endfor %}
-            {%- endif %}
-        {%- endfor %}
-      LocalSecondaryIndexes:
-        {%- for idx in keys.secondary if idx.type == 'LSI' %}
-        -
-          IndexName: {{ idx.name }}
-          KeySchema:
-            -
-              AttributeName: {{ keys.primary.partition }}
-              KeyType: HASH
-            {%- if idx.sort %}
-            -
-              AttributeName: {{ idx.sort }}
-              KeyType: RANGE
-            {%- endif %}
-          Projection:
-            ProjectionType: {{ idx.projection_type }}
-            {%- if idx.projection_type == 'INCLUDE' and idx.projected_attributes %}
-            NonKeyAttributes:
-              {%- for attr in idx.projected_attributes %}
-              - {{ attr }}
-              {%- endfor %}
-            {%- endif %}
-        {%- endfor %}
-        {%- endif %}
-      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-{{ table_name }}"
+        {% endif %}
+      BillingMode: PAY_PER_REQUEST
       Tags:
         - Key: Billable
-          Value: "true"
+          Value: !Sub ${Environment}-${CustomerId}-${ProjectId}
         - Key: CustomerId
           Value: !Ref CustomerId
         - Key: Environment
           Value: !Ref Environment
         - Key: ProjectId
           Value: !Ref ProjectId
-    Type: AWS::DynamoDB::Table
 
-  # Parameter Store for table name
-  {{ table_name|replace('_', '')|capitalize }}TableNameParameter:
-    Properties:
-      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-{{ table_name }}-table-name"
-      Type: String
-      Value: !Ref {{ table_name|replace('_', '')|capitalize }}Table
-      Description: DynamoDB {{ model_name }} Table Name
-      Tags:
-        Billable: true
-        CustomerId: !Ref CustomerId
-        Environment: !Ref Environment
-        ProjectId: !Ref ProjectId
+  {{ table }}TableName:
     Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-{{ table }}-table-name
+      Type: String
+      Value: !Ref {{ table }}Table
 
-  # Parameter Store for table ARN
-  {{ table_name|replace('_', '')|capitalize }}TableArnParameter:
-    Properties:
-      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-{{ table_name }}-table-arn"
-      Type: String
-      Value: !GetAtt {{ table_name|replace('_', '')|capitalize }}Table.Arn
-      Description: DynamoDB {{ model_name }} Table Arn
-      Tags:
-        Billable: true
-        CustomerId: !Ref CustomerId
-        Environment: !Ref Environment
-        ProjectId: !Ref ProjectId
+  {{ table }}TableArn:
     Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-{{ table }}-table-arn
+      Type: String
+      Value: !GetAtt {{ table }}Table.Arn
+  {% endfor %}
+
+# --------------------------------------------------- #
+Outputs:
+  {% for table, schema in schemas.items() %}
+  {{ table }}TableName:
+    Description: {{ table }} Table Name
+    Value: !Ref {{ table }}Table
+
+  {{ table }}TableArn:
+    Description: {{ table }} Table ARN
+    Value: !GetAtt {{ table }}Table.Arn
+  {% endfor %}

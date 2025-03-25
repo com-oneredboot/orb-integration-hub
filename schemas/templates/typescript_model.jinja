@@ -1,7 +1,7 @@
 /**
- * {{ table_name | to_pascal_case }} model.
+ * {{ table }} model.
  */
-export interface {{ table_name | to_pascal_case }} {
+export interface {{ table }} {
   {% for attr in attributes %}
   {{ attr.name }}: {% if attr.type == 'N' %}number{% else %}string{% endif %};
   {% endfor %}

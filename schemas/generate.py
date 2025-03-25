@@ -147,114 +147,67 @@ def setup_jinja_env() -> Environment:
     
     env.filters['to_camel_case'] = to_camel_case
     env.filters['to_pascal_case'] = to_pascal_case
-    
+    env.filters['to_snake_case'] = to_snake_case
     return env
 
-def validate_schema(schema: Dict[str, Any]) -> None:
-    """
-    Validate schema structure and content.
-    
-    Args:
-        schema: Schema dictionary to validate
-        
-    Raises:
-        SchemaValidationError: If validation fails
-    """
+def to_camel_case(s: str) -> str:
+    """Convert string to camelCase."""
+    words = s.split('_')
+    return words[0] + ''.join(word.title() for word in words[1:])
+
+def to_pascal_case(s: str) -> str:
+    """Convert string to PascalCase."""
+    return ''.join(word.title() for word in s.split('_'))
+
+def to_snake_case(s: str) -> str:
+    """Convert string to snake_case."""
+    return ''.join(word.lower() for word in s.split('_'))
+
+def load_schemas() -> Dict[str, TableSchema]:
+    """Load all schemas from index.yml."""
     try:
-        # Validate required top-level keys
-        required_keys = ['version', 'table_name', 'model', 'resource_name']
-        for key in required_keys:
-            if key not in schema:
-                raise SchemaValidationError(f"Missing required key: {key}")
-        
-        # Validate model structure
-        model = schema['model']
-        if 'keys' not in model:
-            raise SchemaValidationError("Model missing required 'keys' section")
-        
-        # Validate primary key
-        if 'primary' not in model['keys']:
-            raise SchemaValidationError("Model missing required 'primary' key")
-        
-        # Validate attributes
-        if 'attributes' not in model:
-            raise SchemaValidationError("Model missing required 'attributes' section")
-        
-        # Get all attribute names
-        attribute_names = set(model['attributes'].keys())
-        
-        # Validate primary key fields exist in attributes
-        primary_key = model['keys']['primary']
-        if 'partition' in primary_key and primary_key['partition'] not in attribute_names:
-            raise SchemaValidationError(f"Primary partition key '{primary_key['partition']}' not found in attributes")
-        if 'sort' in primary_key and primary_key['sort'] not in attribute_names:
-            raise SchemaValidationError(f"Primary sort key '{primary_key['sort']}' not found in attributes")
-        
-        # Validate secondary indexes
-        if 'secondary' in model['keys']:
-            for idx in model['keys']['secondary']:
-                # Validate index name
-                if 'name' not in idx:
-                    raise SchemaValidationError("Secondary index missing required 'name' field")
-                
-                # Validate partition key exists in attributes
-                if 'partition' not in idx or idx['partition'] not in attribute_names:
-                    raise SchemaValidationError(f"Index '{idx['name']}' partition key '{idx.get('partition', '')}' not found in attributes")
-                
-                # Validate sort key exists in attributes if specified
-                if 'sort' in idx and idx['sort'] not in attribute_names:
-                    raise SchemaValidationError(f"Index '{idx['name']}' sort key '{idx['sort']}' not found in attributes")
-                
-                # Validate projected attributes exist if specified
-                if 'projection_type' in idx and idx['projection_type'] == 'INCLUDE':
-                    if 'projected_attributes' not in idx:
-                        raise SchemaValidationError(f"Index '{idx['name']}' missing projected_attributes for INCLUDE projection")
-                    for attr in idx['projected_attributes']:
-                        if attr not in attribute_names:
-                            raise SchemaValidationError(f"Index '{idx['name']}' projected attribute '{attr}' not found in attributes")
-        
-        # Validate each attribute
-        for attr_name, attr_info in model['attributes'].items():
-            if 'type' not in attr_info:
-                raise SchemaValidationError(f"Attribute '{attr_name}' missing required 'type'")
+        # List all files in the schemas/enitites directory
+        entities = [f for f in os.listdir(os.path.join(SCRIPT_DIR, 'entities')) if f.endswith('.yml')]
             
-            # Validate array items if present
-            if attr_info['type'] == 'array' and 'items' in attr_info:
-                if 'type' not in attr_info['items']:
-                    raise SchemaValidationError(f"Array attribute '{attr_name}' items missing required 'type'")
-    
-    except Exception as e:
-        raise SchemaValidationError(f"Schema validation failed: {str(e)}")
+        schemas = {}
+        for entity in entities:
+            # Load the schema file
+            with open(os.path.join(SCRIPT_DIR, 'entities', entity), 'r') as f:
+                schema_data = yaml.safe_load(f)
 
-def process_field_type(field_name: str, field_info: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Process field type based on field name and configuration.
-    
-    Args:
-        field_name: The name of the field
-        field_info: The field's configuration info
+            # extract table name from entity file name
+            table = entity[table]
+                
+            # Extract attributes and keys
+            attributes = []
+            for attr_name, attr_data in schema_data['model']['attributes'].items():
+                attr_type = 'N' if attr_data['type'] == 'number' else 'S'
+                attributes.append(Attribute(name=attr_name, type=attr_type))
+                
+            # Get partition and sort keys
+            partition_key = schema_data['model']['keys']['primary']['partition']
+            sort_key = schema_data['model']['keys']['primary'].get('sort')
+            
+            # Create TableSchema with original snake_case table name
+            schemas[table] = TableSchema(
+                table=table,
+                attributes=attributes,
+                partition_key=partition_key,
+                sort_key=sort_key
+            )
+            
+        return schemas
         
-    Returns:
-        Modified field info with the correct type
-    """
-    result = field_info.copy()
-    
-    # Special handling for timestamp fields
-    timestamp_fields = ['created_at', 'updated_at', 'deleted_at', 'last_modified', 'timestamp']
-    if field_name in timestamp_fields or field_name.endswith('_at') or field_name.endswith('_date'):
-        result['type'] = 'timestamp'
-        if 'description' not in result:
-            result['description'] = 'ISO 8601 formatted timestamp (e.g., 2025-03-07T16:23:17.488Z)'
-    
-    return result
+    except Exception as e:
+        logger.error(f'Failed to load schemas: {str(e)}')
+        raise
 
-def load_schema(schema_path: str, table_name: str = None) -> Dict[str, Any]:
+def load_schema(schema_path: str) -> Dict[str, Any]:
     """
     Load and parse a schema file.
     
     Args:
         schema_path: Path to the schema file
-        table_name: Optional table name from index.yml to override the one in the schema file
         
     Returns:
         Parsed schema dictionary
@@ -291,52 +244,11 @@ def load_schema(schema_path: str, table_name: str = None) -> Dict[str, Any]:
         if 'partition' not in schema['model']['keys']['primary']:
             raise SchemaValidationError(f"Schema file {schema_path} missing partition key")
             
-        # Store the original table name for DynamoDB table names
-        schema['table_name'] = table_name if table_name else schema['table']
-        # Transform the table name for CloudFormation resource names
-        schema['table'] = to_pascal_case(schema['table_name'])
-            
         return schema
     except Exception as e:
         raise SchemaValidationError(f"Failed to load schema file {schema_path}: {str(e)}")
 
-def load_index() -> Dict[str, Any]:
-    """
-    Load and parse the index.yml file.
-    
-    Returns:
-        Parsed index dictionary
-        
-    Raises:
-        SchemaValidationError: If index file cannot be loaded or parsed
-    """
-    try:
-        index_path = os.path.join(SCRIPT_DIR, 'index.yml')
-        with open(index_path, 'r') as f:
-            index = yaml.safe_load(f)
-        return index
-    except Exception as e:
-        raise SchemaValidationError(f"Failed to load index file: {str(e)}")
-
-def write_file(output_path: str, content: str) -> None:
-    """
-    Write content to file with consistent UTF-8 encoding without BOM.
-    
-    Args:
-        output_path: Path to write the file to
-        content: Content to write
-    """
-    # Ensure content starts with no BOM and no extra whitespace
-    content = content.lstrip('\ufeff').lstrip()
-    
-    # Create directory if it doesn't exist
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    
-    # Write with explicit UTF-8 encoding
-    with open(output_path, 'w', encoding='utf-8', newline='\n') as f:
-        f.write(content)
-
-def generate_python_model(table_name: str, schema: TableSchema) -> None:
+def generate_python_model(table: str, schema: TableSchema) -> None:
     """Generate Python model for a table."""
     try:
         # Get Jinja environment
@@ -345,22 +257,22 @@ def generate_python_model(table_name: str, schema: TableSchema) -> None:
         
         # Generate model
         model_content = template.render(
-            table_name=table_name,
+            table=table,
             attributes=schema.attributes,
             partition_key=schema.partition_key,
             sort_key=schema.sort_key
         )
         
         # Write to file
-        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'models', f'{table_name}.py')
+        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'src','models', f'{table}.py')
         write_file(output_path, model_content)
-        logger.info(f'Generated Python model for {table_name}')
+        logger.info(f'Generated Python model for {table}')
         
     except Exception as e:
-        logger.error(f'Failed to generate Python model for {table_name}: {str(e)}')
+        logger.error(f'Failed to generate Python model for {table}: {str(e)}')
         raise
 
-def generate_typescript_model(table_name: str, schema: TableSchema) -> None:
+def generate_typescript_model(table: str, schema: TableSchema) -> None:
     """Generate TypeScript model for a table."""
     try:
         # Get Jinja environment
@@ -369,20 +281,42 @@ def generate_typescript_model(table_name: str, schema: TableSchema) -> None:
         
         # Generate model
         model_content = template.render(
-            table_name=table_name,
+            table=table,
             attributes=schema.attributes,
             partition_key=schema.partition_key,
             sort_key=schema.sort_key
         )
         
         # Write to file
-        output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'models', f'{table_name}.ts')
+        output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'models', f'{table}.ts')
         write_file(output_path, model_content)
-        logger.info(f'Generated TypeScript model for {table_name}')
+        logger.info(f'Generated TypeScript model for {table}')
         
     except Exception as e:
-        logger.error(f'Failed to generate TypeScript model for {table_name}: {str(e)}')
+        logger.error(f'Failed to generate TypeScript model for {table}: {str(e)}')
         raise
+
+def process_field_type(field_name: str, field_info: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Process field type based on field name and configuration.
+    
+    Args:
+        field_name: The name of the field
+        field_info: The field's configuration info
+        
+    Returns:
+        Modified field info with the correct type
+    """
+    result = field_info.copy()
+    
+    # Special handling for timestamp fields
+    timestamp_fields = ['created_at', 'updated_at', 'deleted_at', 'last_modified', 'timestamp']
+    if field_name in timestamp_fields or field_name.endswith('_at') or field_name.endswith('_date'):
+        result['type'] = 'timestamp'
+        if 'description' not in result:
+            result['description'] = 'ISO 8601 formatted timestamp (e.g., 2025-03-07T16:23:17.488Z)'
+    
+    return result
 
 def map_to_graphql_type(schema_type: str) -> str:
     """Map schema types to GraphQL types."""
@@ -395,15 +329,6 @@ def map_to_graphql_type(schema_type: str) -> str:
         'timestamp': 'AWSDateTime'
     }
     return type_mapping.get(schema_type.lower(), 'String')
-
-def to_camel_case(s: str) -> str:
-    """Convert string to camelCase."""
-    words = s.split('_')
-    return words[0] + ''.join(word.title() for word in words[1:])
-
-def to_pascal_case(s: str) -> str:
-    """Convert string to PascalCase."""
-    return ''.join(word.title() for word in s.split('_'))
 
 def generate_graphql_schema(schemas: Dict[str, TableSchema], template_path: str) -> str:
     """Generate GraphQL schema from table schemas."""
@@ -424,48 +349,6 @@ def generate_timestamped_schema(schema_content: str) -> str:
     """Generate a timestamped schema file name."""
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     return f'appsync_{timestamp}.graphql'
-
-def load_schemas() -> Dict[str, TableSchema]:
-    """Load all schemas from index.yml."""
-    try:
-        # Load index.yml
-        with open(os.path.join(SCRIPT_DIR, 'index.yml'), 'r') as f:
-            index = yaml.safe_load(f)
-            
-        schemas = {}
-        for table in index['schemaRegistry']['tables']:
-            table_name = table['name']
-            schema_path = table['path']
-            
-            logger.info(f'Processing table: {table_name}')
-            
-            # Load schema file
-            with open(os.path.join(SCRIPT_DIR, schema_path), 'r') as f:
-                schema_data = yaml.safe_load(f)
-                
-            # Extract attributes and keys
-            attributes = []
-            for attr_name, attr_data in schema_data['model']['attributes'].items():
-                attr_type = 'N' if attr_data['type'] == 'number' else 'S'
-                attributes.append(Attribute(name=attr_name, type=attr_type))
-                
-            # Get partition and sort keys
-            partition_key = schema_data['model']['keys']['primary']['partition']
-            sort_key = schema_data['model']['keys']['primary'].get('sort')
-            
-            # Create TableSchema with original snake_case table name
-            schemas[table_name] = TableSchema(
-                table_name=table_name,  # Keep original snake_case for DynamoDB table name
-                attributes=attributes,
-                partition_key=partition_key,
-                sort_key=sort_key
-            )
-            
-        return schemas
-        
-    except Exception as e:
-        logger.error(f'Failed to load schemas: {str(e)}')
-        raise
 
 def generate_cloudformation_template(schemas: Dict[str, TableSchema], template_path: str, output_path: str) -> None:
     """Generate a CloudFormation template for DynamoDB tables."""
@@ -540,19 +423,33 @@ def generate_cloudformation_template(schemas: Dict[str, TableSchema], template_p
         logger.error(f'Failed to generate CloudFormation template: {str(e)}')
         raise
 
+def write_file(output_path: str, content: str) -> None:
+    """
+    Write content to file with consistent UTF-8 encoding without BOM.
+    
+    Args:
+        output_path: Path to write the file to
+        content: Content to write
+    """
+   
+    # Write with explicit UTF-8 encoding
+    with open(output_path, 'w', encoding='utf-8', newline='\n') as f:
+        f.write(content)
+
+
 def main():
     """Main entry point for the schema generator."""
     try:
         # Set up Jinja environment
         jinja_env = setup_jinja_env()
         
-        # Load schemas from index.yml
+        # Load schemas
         schemas = load_schemas()
-        
+
         # Generate Python and TypeScript models
-        for table_name, schema in schemas.items():
-            generate_python_model(table_name, schema)
-            generate_typescript_model(table_name, schema)
+        for table, schema in schemas.items():
+            generate_python_model(table, schema)
+            generate_typescript_model(table, schema)
             
         # Generate base GraphQL schema
         graphql_template_path = os.path.join(SCRIPT_DIR, 'templates', 'graphql_schema.jinja')
@@ -565,7 +462,7 @@ def main():
         logger.info(f'Generated timestamped schema file: {timestamped_schema}')
         
         # Generate DynamoDB CloudFormation template
-        dynamodb_template_path = os.path.join(SCRIPT_DIR, 'templates', 'dynamodb_cloudformation_base.jinja')
+        dynamodb_template_path = os.path.join(SCRIPT_DIR, 'templates', 'dynamodb_cloudformation.jinja')
         dynamodb_output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation', 'dynamodb.yml')
         generate_cloudformation_template(schemas, dynamodb_template_path, dynamodb_output_path)
         

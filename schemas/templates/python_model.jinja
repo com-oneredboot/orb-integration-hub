@@ -1,11 +1,11 @@
 """
-{{ table_name | to_pascal_case }} model.
+{{ table }} model.
 """
 from typing import Optional
 from pydantic import BaseModel
 
-class {{ table_name | to_pascal_case }}(BaseModel):
-    """{{ table_name | to_pascal_case }} model."""
+class {{ table }}(BaseModel):
+    """{{ table}} model."""
     {% for attr in attributes %}
     {{ attr.name }}: {% if attr.type == 'N' %}int{% else %}str{% endif %}
     {% endfor %}
