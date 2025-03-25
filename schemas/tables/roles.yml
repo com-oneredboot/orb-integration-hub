@@ -4,7 +4,7 @@
 # description: yaml file containing the roles table schema
 
 version: '1.0'
-table: roles
+table: Roles
 model:
   keys:
     primary:

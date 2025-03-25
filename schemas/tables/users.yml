@@ -1,76 +1,80 @@
 # file: schemas/tables/users.yml
-# author: Corey Dale Peters
-# date: 2025-02-17
+# author: AI Assistant
+# date: 2024-03-21
 # description: yaml file containing the users table schema
 
 version: '1.0'
-table: users
+table: Users
 model:
   auth_config:
-    # Operations that should allow API key access
     api_key_operations:
-      # Types that need API key access (for schema definitions)
-      - User               # Main User type 
-      - UserResponse       # Response wrapper for single user operations
-      - UsersResponse      # Response wrapper for multiple user operations
-      - UserQueryInput     # Input type for queries
-      - UserCreateInput    # Input type for create operations
-      - UserUpdateInput    # Input type for update operations
-      
-      # Operations that need API key access (for query/mutation resolvers)
-      - userQueryById      # For userExists checks during sign-up
-      - userCreate         # For creating new users during registration
-      - userUpdate         # For updating users during registration process
-    
+      - User
+      - UserResponse
+      - UserQueryInput
+      - UserCreateInput
+      - UserUpdateInput
+      - userQueryById
+      - userCreate
+      - userUpdate
     # Default auth is user pools only
     default_auth: user_pools
   keys:
     primary:
-      partition: user_id
+      partition: user_id  # Partition key for the table
+      projection_type: ALL     # Project all attributes in indexes
+      description: Primary key for users
     secondary:
-      - name: email-index
+      - name: user-status-index
         type: GSI
-        partition: email
+        partition: user_id
+        sort: status
         projection_type: ALL
-      - name: cognito_id-index
-        type: GSI
-        partition: cognito_id
-        projection_type: ALL
+        description: Index for querying users by status
   attributes:
     user_id:
       type: string
       required: true
+      description: Unique identifier for the user
     cognito_id:
       type: string
       required: true
+      description: Unique identifier from Cognito
     email:
       type: string
       required: true
+      description: User's email address
     phone_number:
       type: string
       required: false
+      description: User's phone number
     phone_verified:
       type: boolean
       required: false
+      description: Whether the phone number is verified
     first_name:
       type: string
-      required: false
+      required: true
+      description: User's first name
     last_name:
       type: string
-      required: false
+      required: true
+      description: User's last name
     groups:
       type: array
+      required: true
+      description: List of Cognito groups the user belongs to
       items:
         type: string
-        enum_type: UserGroups
-      required: true
     status:
       type: string
       enum_type: UserStatus
       required: true
+      description: Current status of the user (ACTIVE, INACTIVE, DELETED)
     created_at:
-        type: number
-        required: true
+      type: number
+      required: true
+      description: Unix timestamp when the user was created
     updated_at:
       type: number
-      required: false
+      required: true
+      description: Unix timestamp when the user was last updated

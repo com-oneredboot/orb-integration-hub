@@ -1,121 +1,108 @@
-# GraphQL schema for {{ model_name }}
-# Generated from database model
-# Do not modify directly
+"""
+Base GraphQL schema.
+Generated at {{ timestamp }}.
 
-# Main {{ model_name }} type
-{% if auth_config and model_name in auth_config.api_key_operations -%}
-type {{ model_name }} @aws_api_key @aws_cognito_user_pools {
-{%- else -%}
-type {{ model_name }} @aws_cognito_user_pools {
-{%- endif -%}{%- for attr_name, attr in attributes.items() %}
-  {{ attr.graphql_name }}: {{ attr.type }}{% if attr.required %}!{% endif %}
-{%- endfor %}
+This schema follows these conventions:
+- Type names: PascalCase (e.g., ApplicationRole)
+- Field names: camelCase (e.g., applicationId)
+- Input types: PascalCase with Input suffix (e.g., ApplicationRoleInput)
+- Response types: PascalCase with Response suffix (e.g., ApplicationRoleResponse)
+- List response types: PascalCase with ListResponse suffix (e.g., ApplicationRoleListResponse)
+- Query operations: camelCase with Query suffix (e.g., applicationRoleQuery)
+- Mutation operations: camelCase with action suffix (e.g., applicationRoleCreate)
+
+All operations are secured with AWS Cognito user pool authentication for the admin group.
+"""
+
+# Enums
+enum Status {
+  ACTIVE
+  INACTIVE
+  DELETED
 }
 
-# Response type for {{ model_name }} operations
-{% if auth_config and model_name+'Response' in auth_config.api_key_operations -%}
-type {{ model_name }}Response @aws_api_key @aws_cognito_user_pools {
-{%- else -%}
-type {{ model_name }}Response @aws_cognito_user_pools {
-{%- endif %}
-  statusCode: Float!
-  message: String
-  item: {{ model_name }}
+enum UserGroups {
+  ADMIN
+  USER
 }
 
-# Response type for multiple {{ model_name }} operations
-{% if auth_config and model_name+'sResponse' in auth_config.api_key_operations -%}
-type {{ model_name }}sResponse @aws_api_key @aws_cognito_user_pools {
-{%- else -%}
-type {{ model_name }}sResponse @aws_cognito_user_pools {
-{%- endif %}
-  statusCode: Float!
-  message: String
-  items: [{{ model_name }}]
+enum ApplicationEnvironments {
+  DEV
+  STAGING
+  PROD
 }
 
-# Input for {{ model_name }} creation
-{% if auth_config and model_name+'CreateInput' in auth_config.api_key_operations -%}
-input {{ model_name }}CreateInput @aws_api_key @aws_cognito_user_pools {
-{%- else -%}
-input {{ model_name }}CreateInput {
-{%- endif -%}{%- for attr_name, attr in attributes.items() %}
-  {%- if attr_name != partition_key and attr_name != sort_key %}
-  {{ attr.graphql_name }}: {{ attr.type }}{% if attr.required %}!{% endif %}
-  {%- endif %}
-{%- endfor %}
+# Base types
+type Query {
+  ping: String
 }
 
-# Input for {{ model_name }} query operations
-{% if auth_config and model_name+'QueryInput' in auth_config.api_key_operations %}
-input {{ model_name }}QueryInput @aws_api_key @aws_cognito_user_pools {
-{% else %}
-input {{ model_name }}QueryInput {
-{% endif %}
-  {%- if partition_key %}
-  {{ partition_key | to_camel_case }}: {{ attributes[partition_key].type }}
-  {%- endif %}
-  {%- if sort_key %}
-  {{ sort_key | to_camel_case }}: {{ attributes[sort_key].type }}
-  {%- endif %}
-  {%- for attr_name, attr in attributes.items() %}
-  {%- if attr_name != partition_key and attr_name != sort_key %}
-  {{ attr.graphql_name }}: {{ attr.type }}
-  {%- endif %}
-  {%- endfor %}
+type Mutation {
+  ping: String
 }
 
-# Input for {{ model_name }} update operations
-{% if auth_config and model_name+'UpdateInput' in auth_config.api_key_operations -%}
-input {{ model_name }}UpdateInput @aws_api_key @aws_cognito_user_pools {
-{%- else -%}
-input {{ model_name }}UpdateInput {
-{%- endif -%}{%- if partition_key %}
-  {{ partition_key | to_camel_case }}: {{ attributes[partition_key].type }}!
-{%- endif %}
-{%- if sort_key %}
-  {{ sort_key | to_camel_case }}: {{ attributes[sort_key].type }}!
-{%- endif %}
-{%- for attr_name, attr in attributes.items() %}
-{%- if attr_name != partition_key and attr_name != sort_key %}
-  {{ attr.graphql_name }}: {{ attr.type }}
-{%- endif %}
-{%- endfor %}
+# Model types
+{% for table_name, schema in schemas.items() %}
+type {{ table_name | to_pascal_case }} {
+  {% for attr in schema.attributes %}
+  {{ attr.name | to_camel_case }}: {% if attr.type == 'N' %}Int{% else %}String{% endif %}!
+  {% endfor %}
 }
 
-# Operations for {{ model_name }}
-# These will be merged with the root Query and Mutation types in the base schema
+input {{ table_name | to_pascal_case }}CreateInput {
+  {% for attr in schema.attributes %}
+  {{ attr.name | to_camel_case }}: {% if attr.type == 'N' %}Int{% else %}String{% endif %}!
+  {% endfor %}
+}
 
+input {{ table_name | to_pascal_case }}UpdateInput {
+  {% for attr in schema.attributes %}
+  {{ attr.name | to_camel_case }}: {% if attr.type == 'N' %}Int{% else %}String{% endif %}
+  {% endfor %}
+}
+
+input {{ table_name | to_pascal_case }}QueryInput {
+  {{ schema.partition_key | to_camel_case }}: String!
+  {% if schema.sort_key %}
+  {{ schema.sort_key | to_camel_case }}: String
+  {% endif %}
+}
+
+type {{ table_name | to_pascal_case }}Response {
+  statusCode: Int!
+  message: String!
+  data: {{ table_name | to_pascal_case }}
+}
+
+type {{ table_name | to_pascal_case }}ListResponse {
+  statusCode: Int!
+  message: String!
+  data: [{{ table_name | to_pascal_case }}]
+}
+
+{% endfor %}
+
+# Query operations
 extend type Query {
-  {{ table_name | to_camel_case }}QueryById(id: ID!): {{ model_name }}Response
+  {% for table_name, schema in schemas.items() %}
+  {{ table_name | to_camel_case }}QueryById(id: ID!): {{ table_name | to_pascal_case }}Response
     @aws_auth(cognito_groups: ["admin"])
-    {%- if auth_config and auth_config.api_key_operations and "{{ table_name }}QueryById" in auth_config.api_key_operations %}
-    @aws_api_key
-    {%- endif %}
   
-  {{ table_name | to_camel_case }}Query(input: {{ model_name }}QueryInput): {{ model_name }}sResponse
+  {{ table_name | to_camel_case }}Query(input: {{ table_name | to_pascal_case }}QueryInput): {{ table_name | to_pascal_case }}ListResponse
     @aws_auth(cognito_groups: ["admin"])
-    {%- if auth_config and auth_config.api_key_operations and "{{ table_name }}Query" in auth_config.api_key_operations %}
-    @aws_api_key
-    {%- endif %}
+  {% endfor %}
 }
 
+# Mutation operations
 extend type Mutation {
-  {{ table_name | to_camel_case }}Create(input: {{ model_name }}CreateInput!): {{ model_name }}Response
+  {% for table_name, schema in schemas.items() %}
+  {{ table_name | to_camel_case }}Create(input: {{ table_name | to_pascal_case }}CreateInput!): {{ table_name | to_pascal_case }}Response
     @aws_auth(cognito_groups: ["admin"])
-    {%- if auth_config and auth_config.api_key_operations and "{{ table_name }}Create" in auth_config.api_key_operations %}
-    @aws_api_key
-    {%- endif %}
   
-  {{ table_name | to_camel_case }}Update(id: ID!, input: {{ model_name }}UpdateInput!): {{ model_name }}Response
+  {{ table_name | to_camel_case }}Update(id: ID!, input: {{ table_name | to_pascal_case }}UpdateInput!): {{ table_name | to_pascal_case }}Response
     @aws_auth(cognito_groups: ["admin"])
-    {%- if auth_config and auth_config.api_key_operations and "{{ table_name }}Update" in auth_config.api_key_operations %}
-    @aws_api_key
-    {%- endif %}
   
-  {{ table_name | to_camel_case }}Delete(id: ID!): {{ model_name }}Response
+  {{ table_name | to_camel_case }}Delete(id: ID!): {{ table_name | to_pascal_case }}Response
     @aws_auth(cognito_groups: ["admin"])
-    {%- if auth_config and auth_config.api_key_operations and "{{ table_name }}Delete" in auth_config.api_key_operations %}
-    @aws_api_key
-    {%- endif %}
+  {% endfor %}
 }

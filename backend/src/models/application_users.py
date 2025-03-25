@@ -33,11 +33,11 @@ class Application_userBase:
             "description": "",
             "required": true,
         }
-    )    application_role_id: str = field(
+    )    role_id: str = field(
         default='',
         metadata={
             "description": "",
-            "required": true,
+            "required": false,
         }
     )    status: ApplicationUserStatus = field(
         default=ApplicationUserStatus.UNKNOWN,
@@ -74,10 +74,10 @@ class Application_userPydantic(BaseModel):
 required=True    )    user_id: str = Field(
         default='',
         description="",
-required=True    )    application_role_id: str = Field(
+required=True    )    role_id: str = Field(
         default='',
         description="",
-required=True    )    status: ApplicationUserStatus = Field(
+required=False    )    status: ApplicationUserStatus = Field(
         default=ApplicationUserStatus.UNKNOWN,
         description="",
 required=True    )    created_at: timestamp = Field(
@@ -108,7 +108,7 @@ class Application_user(Application_userBase):
             "schema_version": self.SCHEMA_VERSION,
             "application_id": self.application_id,
             "user_id": self.user_id,
-            "application_role_id": self.application_role_id,
+            "role_id": self.role_id,
             "status": self.status,
             "created_at": self.created_at,
             "updated_at": self.updated_at,

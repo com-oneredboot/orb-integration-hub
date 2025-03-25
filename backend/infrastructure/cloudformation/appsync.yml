@@ -51,7 +51,7 @@ Resources:
                 Action:
                   - ssm:GetParameter
                   - ssm:GetParameters
-                Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${CustomerId}-${ProjectId}-${Environment}-*'
+                Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Environment}/${CustomerId}/${ProjectId}/*'
   
   AppSyncLoggingServiceRole:
     Type: AWS::IAM::Role
@@ -110,7 +110,7 @@ Resources:
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-applications-table-name}}'
+        TableName: !Sub '{{resolve:ssm:/${Environment}/${CustomerId}/${ProjectId}/dynamodb/applications/table-name}}'
         AwsRegion: !Ref AWS::Region
   ApplicationUsersDataSource:
     Type: AWS::AppSync::DataSource
@@ -120,7 +120,7 @@ Resources:
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-application-users-table-name}}'
+        TableName: !Sub '{{resolve:ssm:/${Environment}/${CustomerId}/${ProjectId}/dynamodb/application_users/table-name}}'
         AwsRegion: !Ref AWS::Region
   SMSVerificationDataSource:
     Type: AWS::AppSync::DataSource
@@ -139,7 +139,7 @@ Resources:
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-table-name}}'
+        TableName: !Sub '{{resolve:ssm:/${Environment}/${CustomerId}/${ProjectId}/dynamodb/users/table-name}}'
         AwsRegion: !Ref AWS::Region
 
   # Roles Data Source
@@ -151,7 +151,7 @@ Resources:
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-roles-table-name}}'
+        TableName: !Sub '{{resolve:ssm:/${Environment}/${CustomerId}/${ProjectId}/dynamodb/roles/table-name}}'
         AwsRegion: !Ref AWS::Region
 
   # --------------------------------------------------- #

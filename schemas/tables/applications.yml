@@ -4,56 +4,49 @@
 # description: yaml file containing the applications table schema
 
 version: '1.0'
-table: applications
+table: Applications
 model:
   auth_config:
-    # Operations that should allow API key access
-    api_key_operations:
-      # Types that need API key access (for schema definitions)
-      - Application               # Main Application type 
-      - ApplicationResponse      # Response wrapper for single application operations
-      - ApplicationsResponse     # Response wrapper for multiple application operations
-      - ApplicationQueryInput    # Input type for queries
-      - ApplicationCreateInput   # Input type for create operations
-      - ApplicationUpdateInput   # Input type for update operations
-      
-      # Operations that need API key access (for query/mutation resolvers)
-      - applicationQueryById     # For application existence checks
-      - applicationCreate        # For creating new applications
-      - applicationUpdate        # For updating applications
-      - applicationQueryByUserId # For querying user's applications
-    
-    # Default auth is user pools only
     default_auth: user_pools
   keys:
     primary:
       partition: application_id
+      projection_type: ALL
+      description: Primary key for applications
     secondary:
-      - name: user_id-index
+      - name: application-status-index
         type: GSI
-        partition: user_id
-        sort: application_id
+        partition: application_id
+        sort: status
         projection_type: ALL
+        description: Index for querying applications by status
   attributes:
     application_id:
       type: string
       required: true
+      description: Unique identifier for the application
     name:
       type: string
       required: true
+      description: Human-readable name of the application
     description:
       type: string
       required: false
+      description: Human-readable description of the application
     status:
       type: string
       enum_type: ApplicationStatus
       required: true
+      description: Current status of the application (ACTIVE, INACTIVE, DELETED)
     created_at:
       type: number
       required: true
+      description: Unix timestamp when the application was created
     updated_at:
       type: number
-      required: false
+      required: true
+      description: Unix timestamp when the application was last updated
     user_id:
       type: string
-      required: true 
+      required: true
+      description: Unique identifier for the user who created the application 

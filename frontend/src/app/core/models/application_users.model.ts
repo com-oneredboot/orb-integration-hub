@@ -10,10 +10,10 @@
 import { ApplicationUserStatus } from './application_user.enum';
 
 // Interface
-export interface IApplication_user {  application_id: string;  user_id: string;  application_role_id: string;  status: ApplicationUserStatus;  created_at: timestamp;  updated_at: timestamp?;}
+export interface IApplication_user {  application_id: string;  user_id: string;  role_id: string?;  status: ApplicationUserStatus;  created_at: timestamp;  updated_at: timestamp?;}
 
 // Model Class
-export class Application_user implements IApplication_user {  application_id: string = '';  user_id: string = '';  application_role_id: string = '';  status: ApplicationUserStatus = ApplicationUserStatus.UNKNOWN;  created_at: timestamp;  updated_at: timestamp;
+export class Application_user implements IApplication_user {  application_id: string = '';  user_id: string = '';  role_id: string = '';  status: ApplicationUserStatus = ApplicationUserStatus.UNKNOWN;  created_at: timestamp;  updated_at: timestamp;
   constructor(data: Partial<IApplication_user> = {}) {
     // Validate and assign data
     Object.entries(data).forEach(([key, value]) => {
@@ -43,9 +43,6 @@ export class Application_user implements IApplication_user {  application_id: st
       return false;
     }
     if (this.user_id === undefined || this.user_id === null) {
-      return false;
-    }
-    if (this.application_role_id === undefined || this.application_role_id === null) {
       return false;
     }
     if (this.status === undefined || this.status === null) {

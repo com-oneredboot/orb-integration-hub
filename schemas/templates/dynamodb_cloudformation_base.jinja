@@ -1,4 +1,19 @@
 # --------------------------------------------------- #
+# DynamoDB CloudFormation Template
+# Generated at {{ timestamp }}
+#
+# This template follows these conventions:
+# - Table names: snake_case (e.g., application_users)
+# - Resource names: PascalCase (e.g., ApplicationRolesTable)
+# - Parameter names: PascalCase with Name/Arn suffix (e.g., ApplicationRolesTableName)
+# - Export names: PascalCase with TableName/TableArn suffix (e.g., ApplicationRolesTableName)
+#
+# All tables use:
+# - PAY_PER_REQUEST billing mode
+# - Standard environment tags
+# - SSM parameters for table names and ARNs
+# --------------------------------------------------- #
+
 AWSTemplateFormatVersion: 2010-09-09
 
 # --------------------------------------------------- #
@@ -13,110 +28,43 @@ Parameters:
   Environment:
     Default: dev
     Type: String
+    Description: Environment name (dev, staging, prod)
   CustomerId:
     Default: orb
     Type: String
+    Description: Customer identifier
   ProjectId:
     Default: integration-hub
     Type: String
+    Description: Project identifier
   TracingIs:
     Default: Active
     Type: String
+    Description: Whether tracing is enabled
 
 # --------------------------------------------------- #
 Resources:
-  {% for schema in schemas %}
-  # {{ schema.table }} Table
-  {{ schema.table }}Table:
+  {% for resource_name, schema, table_name in schemas.items() %}
+  {{ resource_name}}:
     Type: AWS::DynamoDB::Table
     Properties:
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ table_name }}
       AttributeDefinitions:
-        {%- set all_attrs = [] -%}
-        {%- if schema['model']['keys']['primary']['partition'] -%}
-          {%- set _ = all_attrs.append(schema['model']['keys']['primary']['partition']) -%}
-        {%- endif -%}
-        {%- if schema['model']['keys']['primary'].get('sort') -%}
-          {%- set _ = all_attrs.append(schema['model']['keys']['primary']['sort']) -%}
-        {%- endif -%}
-        {%- if schema['model']['keys'].get('secondary') -%}
-          {%- for idx in schema['model']['keys']['secondary'] -%}
-            {%- if idx['partition'] and idx['partition'] not in all_attrs -%}
-              {%- set _ = all_attrs.append(idx['partition']) -%}
-            {%- endif -%}
-            {%- if idx.get('sort') and idx['sort'] not in all_attrs -%}
-              {%- set _ = all_attrs.append(idx['sort']) -%}
-            {%- endif -%}
-          {%- endfor -%}
-        {%- endif -%}
-        {%- for attr in all_attrs %}
-        - AttributeName: {{ attr }}
-          AttributeType: S
-        {%- endfor %}
-      BillingMode: PAY_PER_REQUEST
+        {% for attr in schema.attributes %}
+        - AttributeName: {{ attr.name }}
+          AttributeType: {{ attr.type }}
+        {% endfor %}
       KeySchema:
-        - AttributeName: {{ schema['model']['keys']['primary']['partition'] }}
+        - AttributeName: {{ schema.partition_key }}
           KeyType: HASH
-        {%- if schema['model']['keys']['primary'].get('sort') %}
-        - AttributeName: {{ schema['model']['keys']['primary']['sort'] }}
+        {% if schema.sort_key %}
+        - AttributeName: {{ schema.sort_key }}
           KeyType: RANGE
-        {%- endif %}
-      {%- if schema['model']['keys'].get('secondary') %}
-        {%- set gsis = [] -%}
-        {%- set lsis = [] -%}
-        {%- for idx in schema['model']['keys']['secondary'] -%}
-          {%- if idx['type'] == 'GSI' -%}
-            {%- set _ = gsis.append(idx) -%}
-          {%- elif idx['type'] == 'LSI' -%}
-            {%- set _ = lsis.append(idx) -%}
-          {%- endif -%}
-        {%- endfor -%}
-        {%- if gsis %}
-      GlobalSecondaryIndexes:
-        {%- for idx in gsis %}
-        - IndexName: {{ idx['name'] }}
-          KeySchema:
-            - AttributeName: {{ idx['partition'] }}
-              KeyType: HASH
-            {%- if idx.get('sort') %}
-            - AttributeName: {{ idx['sort'] }}
-              KeyType: RANGE
-            {%- endif %}
-          Projection:
-            ProjectionType: {{ idx['projection_type'] }}
-            {%- if idx['projection_type'] == 'INCLUDE' and idx.get('projected_attributes') %}
-            NonKeyAttributes:
-              {%- for attr in idx['projected_attributes'] %}
-              - {{ attr }}
-              {%- endfor %}
-            {%- endif %}
-        {%- endfor %}
-        {%- endif %}
-        {%- if lsis %}
-      LocalSecondaryIndexes:
-        {%- for idx in lsis %}
-        - IndexName: {{ idx['name'] }}
-          KeySchema:
-            - AttributeName: {{ schema['model']['keys']['primary']['partition'] }}
-              KeyType: HASH
-            {%- if idx.get('sort') %}
-            - AttributeName: {{ idx['sort'] }}
-              KeyType: RANGE
-            {%- endif %}
-          Projection:
-            ProjectionType: {{ idx['projection_type'] }}
-            {%- if idx['projection_type'] == 'INCLUDE' and idx.get('projected_attributes') %}
-            NonKeyAttributes:
-              {%- for attr in idx['projected_attributes'] %}
-              - {{ attr }}
-              {%- endfor %}
-            {%- endif %}
-        {%- endfor %}
-        {%- endif %}
-      {%- endif %}
-      TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-{{ schema.table_name }}'
+        {% endif %}
+      BillingMode: PAY_PER_REQUEST
       Tags:
         - Key: Billable
-          Value: "true"
+          Value: !Sub ${Environment}-${CustomerId}-${ProjectId}
         - Key: CustomerId
           Value: !Ref CustomerId
         - Key: Environment
@@ -124,31 +72,33 @@ Resources:
         - Key: ProjectId
           Value: !Ref ProjectId
 
-  # Parameter Store for {{ schema.table }} table name
-  {{ schema.table }}TableNameParameter:
+  {{ table_name | to_pascal_case }}TableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-{{ schema.table_name | replace('_', '-') }}-table-name'
+      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-{{ table_name }}-table-name
       Type: String
-      Value: !Ref {{ schema.table }}Table
-      Description: DynamoDB {{ schema.table }} Table Name
-      Tags:
-        Billable: true
-        CustomerId: !Ref CustomerId
-        Environment: !Ref Environment
-        ProjectId: !Ref ProjectId
+      Value: !Ref {{ table_name | to_pascal_case }}Table
 
-  # Parameter Store for {{ schema.table }} table ARN
-  {{ schema.table }}TableArnParameter:
+  {{ table_name | to_pascal_case }}TableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-{{ schema.table_name | replace('_', '-') }}-table-arn'
+      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-{{ table_name }}-table-arn
       Type: String
-      Value: !GetAtt {{ schema.table }}Table.Arn
-      Description: DynamoDB {{ schema.table }} Table Arn
-      Tags:
-        Billable: true
-        CustomerId: !Ref CustomerId
-        Environment: !Ref Environment
-        ProjectId: !Ref ProjectId
+      Value: !GetAtt {{ table_name | to_pascal_case }}Table.Arn
+  {% endfor %}
+
+# --------------------------------------------------- #
+Outputs:
+  {% for table_name, schema in schemas.items() %}
+  {{ table_name | to_pascal_case }}TableName:
+    Description: {{ table_name }} Table Name
+    Value: !Ref {{ table_name | to_pascal_case }}Table
+    Export:
+      Name: !Sub ${AWS::StackName}-{{ table_name }}-table-name
+
+  {{ table_name | to_pascal_case }}TableArn:
+    Description: {{ table_name }} Table ARN
+    Value: !GetAtt {{ table_name | to_pascal_case }}Table.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-{{ table_name }}-table-arn
   {% endfor %}

@@ -1,216 +1,97 @@
-# AppSync GraphQL Schema - Generated Code
-# Do NOT modify directly
+"""
+Base GraphQL schema.
+Generated at {{ timestamp }}.
+"""
 
-# Common enums
-enum ApplicationEnvironments @aws_api_key @aws_cognito_user_pools {
-  DEVELOPMENT
-  TESTING
-  STAGING
-  PRODUCTION
-}
-
-enum Status @aws_api_key @aws_cognito_user_pools {
+# Enums
+enum Status {
   ACTIVE
-  PENDING
-  SUSPENDED
   INACTIVE
+  DELETED
 }
 
-enum UserGroups @aws_api_key @aws_cognito_user_pools {
-  UNKNOWN
+enum UserGroups {
+  ADMIN
   USER
-  CUSTOMER
-  CLIENT
-  EMPLOYEE
-  OWNER
 }
 
-# Model definitions 
-{% for schema in model_schemas %}
-# Model: {{ schema.name }}
-{{ schema.content }}
-
-{% endfor %}
-
-# Nested complex types
-type ApplicationRole @aws_api_key @aws_cognito_user_pools {
-  name: String!
-  description: String
-}
-
-type ApplicationEnvironmentRoles @aws_api_key @aws_cognito_user_pools {
-  DEFAULT: [ApplicationRole!]!
-  DEVELOPMENT: [ApplicationRole!]
-  TESTING: [ApplicationRole!]
-  STAGING: [ApplicationRole!]
-  PRODUCTION: [ApplicationRole!]
-}
-
-type ApplicationSettings @aws_api_key @aws_cognito_user_pools {
-  debugLevel: String
-}
-
-type ApplicationEnvironmentSettings @aws_api_key @aws_cognito_user_pools {
-  DEFAULT: ApplicationSettings!
-  DEVELOPMENT: ApplicationSettings
-  TESTING: ApplicationSettings
-  STAGING: ApplicationSettings
-  PRODUCTION: ApplicationSettings
+enum ApplicationEnvironments {
+  DEV
+  STAGING
+  PROD
 }
 
 # Base types
-type Application @aws_api_key @aws_cognito_user_pools {
-  applicationId: String!
-  userId: String!
-  status: String!
-  name: String!
-  description: String
-  createdAt: String!
-  deletedAt: String
-}
-
-type ApplicationResponse @aws_api_key @aws_cognito_user_pools {
-  statusCode: Float!
-  message: String
-  application: Application
-}
-
-type ApplicationsResponse @aws_api_key @aws_cognito_user_pools {
-  statusCode: Float!
-  message: String
-  applications: [Application]
-}
-
-type ApplicationUser @aws_api_key @aws_cognito_user_pools {
-  applicationId: String!
-  userId: String!
-  roles: ApplicationEnvironmentRoles!
-  status: String!
-  createdAt: String!
-  deletedAt: String
-}
-
-type ApplicationUserResponse @aws_api_key @aws_cognito_user_pools {
-  statusCode: Float!
-  message: String
-  applicationUser: ApplicationUser
-}
-
-type SMSVerificationResponse @aws_api_key @aws_cognito_user_pools {
-  statusCode: Float!
-  message: String
-  code: Float
-}
-
-# Input types
-input ApplicationCreateInput {
-  applicationId: String!
-  userId: String!
-  status: String!
-  name: String!
-  description: String
-  createdAt: String!
-  settings: ApplicationSettingsInput!
-  roles: ApplicationEnvironmentRolesInput!
-}
-
-input ApplicationQueryInput {
-  applicationId: String
-  userId: String
-}
-
-input ApplicationUpdateInput {
-  applicationId: String!
-  status: String
-  name: String
-  description: String
-  settings: ApplicationEnvironmentSettingsInput
-  roles: ApplicationEnvironmentRolesInput
-  deletedAt: String
-}
-
-input ApplicationRoleInput {
-  name: String!
-  description: String
-}
-
-input ApplicationEnvironmentRolesInput {
-  DEFAULT: [ApplicationRoleInput!]!
-  DEVELOPMENT: [ApplicationRoleInput!]
-  TESTING: [ApplicationRoleInput!]
-  STAGING: [ApplicationRoleInput!]
-  PRODUCTION: [ApplicationRoleInput!]
-}
-
-input ApplicationSettingsInput {
-  debugLevel: String
-}
-
-input ApplicationEnvironmentSettingsInput {
-  DEFAULT: ApplicationSettingsInput!
-  DEVELOPMENT: ApplicationSettingsInput
-  TESTING: ApplicationSettingsInput
-  STAGING: ApplicationSettingsInput
-  PRODUCTION: ApplicationSettingsInput
-}
-
-input ApplicationUserCreateInput {
-  applicationId: String!
-  userId: String!
-  roles: ApplicationEnvironmentRolesInput!
-  status: String!
-  createdAt: String!
-}
-
-input ApplicationUserQueryInput {
-  applicationId: String
-  userId: String
-}
-
-input ApplicationUserUpdateInput {
-  applicationId: String!
-  userId: String!
-  status: String
-  roles: ApplicationEnvironmentRolesInput
-  deletedAt: String
-}
-
-input SMSVerificationInput {
-  phoneNumber: String!
-}
-
-# Additional input types for legacy compatibility
-# Note: These may be replaced by the model-generated types above
-
-# Root types
 type Query {
-  # Base queries
-  applicationQueryById(input: ApplicationQueryInput!): ApplicationResponse! @aws_cognito_user_pools
-  applicationUserQueryById(input: ApplicationUserQueryInput!): ApplicationUserResponse! @aws_cognito_user_pools
-  applicationQueryByUserId(input: ApplicationQueryInput!): ApplicationsResponse! @aws_cognito_user_pools
-  
-  # Generated model queries
-  {% for schema in model_schemas %}
-  {{ schema.name | to_camel_case }}QueryById(input: {{ schema.pascal_name }}QueryInput!): {{ schema.pascal_name }}Response! @aws_cognito_user_pools
-  {% endfor %}
+  ping: String
 }
 
 type Mutation {
-  # Base mutations
-  applicationCreate(input: ApplicationCreateInput!): ApplicationResponse! @aws_cognito_user_pools
-  applicationUpdate(input: ApplicationUpdateInput!): ApplicationResponse! @aws_cognito_user_pools
-  applicationUserCreate(input: ApplicationUserCreateInput!): ApplicationUserResponse! @aws_cognito_user_pools
-  applicationUserUpdate(input: ApplicationUserUpdateInput!): ApplicationUserResponse! @aws_cognito_user_pools
-  sendSMSVerificationCode(input: SMSVerificationInput!): SMSVerificationResponse! @aws_cognito_user_pools
-  
-  # Generated model mutations
-  {% for schema in model_schemas %}
-  {{ schema.name | to_camel_case }}Create(input: {{ schema.pascal_name }}CreateInput!): {{ schema.pascal_name }}Response! @aws_cognito_user_pools
-  {{ schema.name | to_camel_case }}Update(input: {{ schema.pascal_name }}UpdateInput!): {{ schema.pascal_name }}Response! @aws_cognito_user_pools
+  ping: String
+}
+
+# Model types
+{% for table_name, schema in schemas.items() %}
+type {{ table_name | to_pascal_case }} {
+  {% for attr in schema.attributes %}
+  {{ attr.name | to_camel_case }}: {% if attr.type == 'N' %}Int{% else %}String{% endif %}!
   {% endfor %}
 }
 
-schema {
-  query: Query
-  mutation: Mutation
+input {{ table_name | to_pascal_case }}CreateInput {
+  {% for attr in schema.attributes %}
+  {{ attr.name | to_camel_case }}: {% if attr.type == 'N' %}Int{% else %}String{% endif %}!
+  {% endfor %}
+}
+
+input {{ table_name | to_pascal_case }}UpdateInput {
+  {% for attr in schema.attributes %}
+  {{ attr.name | to_camel_case }}: {% if attr.type == 'N' %}Int{% else %}String{% endif %}
+  {% endfor %}
+}
+
+input {{ table_name | to_pascal_case }}QueryInput {
+  {{ schema.partition_key | to_camel_case }}: String!
+  {% if schema.sort_key %}
+  {{ schema.sort_key | to_camel_case }}: String
+  {% endif %}
+}
+
+type {{ table_name | to_pascal_case }}Response {
+  statusCode: Int!
+  message: String!
+  data: {{ table_name | to_pascal_case }}
+}
+
+type {{ table_name | to_pascal_case }}ListResponse {
+  statusCode: Int!
+  message: String!
+  data: [{{ table_name | to_pascal_case }}]
+}
+
+{% endfor %}
+
+# Query operations
+extend type Query {
+  {% for table_name, schema in schemas.items() %}
+  {{ table_name | to_camel_case }}QueryById(id: ID!): {{ table_name | to_pascal_case }}Response
+    @aws_auth(cognito_groups: ["admin"])
+  
+  {{ table_name | to_camel_case }}Query(input: {{ table_name | to_pascal_case }}QueryInput): {{ table_name | to_pascal_case }}ListResponse
+    @aws_auth(cognito_groups: ["admin"])
+  {% endfor %}
+}
+
+# Mutation operations
+extend type Mutation {
+  {% for table_name, schema in schemas.items() %}
+  {{ table_name | to_camel_case }}Create(input: {{ table_name | to_pascal_case }}CreateInput!): {{ table_name | to_pascal_case }}Response
+    @aws_auth(cognito_groups: ["admin"])
+  
+  {{ table_name | to_camel_case }}Update(id: ID!, input: {{ table_name | to_pascal_case }}UpdateInput!): {{ table_name | to_pascal_case }}Response
+    @aws_auth(cognito_groups: ["admin"])
+  
+  {{ table_name | to_camel_case }}Delete(id: ID!): {{ table_name | to_pascal_case }}Response
+    @aws_auth(cognito_groups: ["admin"])
+  {% endfor %}
 }
