@@ -10,6 +10,10 @@ Orb Integration Hub is a serverless application that provides a unified API for 
 
 - [Architecture Documentation](docs/architecture.md) - System design and component interactions
 - [Development Guide](docs/development.md) - Setup and development workflow
+- [Feature Registry](docs/features/REGISTRY.md) - List of active and completed features
+- [Frontend Design Plan](docs/frontend-design.md) - Frontend architecture, UI/UX, and features
+- [Frontend Implementation Plan](docs/frontend-implementation-plan.md) - Frontend development phases and tasks (feature-based)
+- [Frontend Todo List](docs/frontend-todo.md) - Frontend development checklist (feature-based)
 - [API Documentation](docs/api.md) - GraphQL API reference and examples
 - [Schema Documentation](docs/schema.md) - Data models and schema definitions
 

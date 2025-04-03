@@ -31,6 +31,22 @@
     {
       "query": "How do I run frontend tests?",
       "response": "Frontend tests are located in `frontend/src/`. Navigate to the `frontend/` directory and run `npm run test`. See `docs/development.md` for details."
+    },
+    {
+      "query": "How is development work organized?",
+      "response": "Development is organized by features, listed in `docs/features/REGISTRY.md`. Each feature should have its own documentation (using `docs/features/feature-template.md`). The `frontend-implementation-plan.md` and `frontend-todo.md` are structured with an initial setup phase followed by sections for each active feature."
+    },
+    {
+      "query": "Where is the frontend design plan?",
+      "response": "The frontend design plan, outlining architecture, UI/UX principles, key views, and technology stack, is located in `docs/frontend-design.md`. See also the [Development Guide](docs/development.md) for workflow details."
+    },
+    {
+      "query": "Where is the frontend implementation plan?",
+      "response": "The frontend implementation plan, outlining development phases, tasks, and milestones based on the design plan, is located in `docs/frontend-implementation-plan.md`."
+    },
+    {
+      "query": "Where is the frontend todo list?",
+      "response": "The frontend development checklist/todo list, derived from the implementation plan, is located in `docs/frontend-todo.md`."
     }
   ],
   "priorityDirectories": [
