@@ -47,6 +47,14 @@
     {
       "query": "Where is the frontend todo list?",
       "response": "The frontend development checklist/todo list, derived from the implementation plan, is located in `docs/frontend-todo.md`."
+    },
+    {
+      "query": "How is the application deployed?",
+      "response": "Deployment is managed via GitHub Actions. The workflow files are located in the `.github/workflows/` directory. Key files include `deploy-backend.yml` and `deploy-frontend.yml`. Check the `README.md` for a quick summary."
+    },
+    {
+      "query": "How do I set up the development environment?",
+      "response": "Refer to the `docs/development.md` guide for prerequisites, initial setup steps, running the application locally, testing, and other development workflows."
     }
   ],
   "priorityDirectories": [

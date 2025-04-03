@@ -19,12 +19,13 @@ This document outlines the design principles, architecture, and key features for
 
 ## 3. Technology Stack
 
-*   **Framework:** Angular (Specify Version, e.g., v17+)
+*   **Framework:** Angular (v19 indicated by dependencies)
 *   **Language:** TypeScript
-*   **UI Component Library:** [To Be Decided/Evaluated - e.g., Angular Material, PrimeNG, None]
-*   **State Management:** [To Be Decided/Evaluated - e.g., NgRx, NGXS, Simple Services with RxJS]
-*   **GraphQL Client:** Apollo Angular
-*   **Styling:** SCSS
+*   **UI Component Library:** PrimeNG
+*   **State Management:** NgRx (v19 indicated by dependencies)
+*   **GraphQL Client:** AWS Amplify API Client
+*   **Styling:** SCSS (Standard Angular setup)
+*   **Other Key Libs:** AWS Amplify
 
 ## 4. High-Level Architecture
 
@@ -54,13 +55,14 @@ This document outlines the design principles, architecture, and key features for
 
 ## 7. State Management Strategy
 
-*   [Detail the chosen strategy here once decided. e.g., "Utilize NgRx for centralized state management, defining actions, reducers, effects, and selectors for core features."] or ["Use Angular services with RxJS BehaviorSubjects for managing local component state and simple shared state."]
+*   Utilize NgRx for centralized state management, defining actions, reducers, effects, and selectors for relevant features.
 
 ## 8. API Integration Strategy
 
-*   Configure Apollo Angular client in `CoreModule`.
-*   Define GraphQL queries/mutations/subscriptions in `.graphql` files or tagged template literals within services.
-*   Implement robust error handling for API requests (e.g., using Apollo Link error handling, displaying user-friendly messages).
+*   Configure AWS Amplify API client (likely in `main.ts` or `app.module.ts`).
+*   Define GraphQL queries/mutations/subscriptions using Amplify conventions.
+*   Implement robust error handling for Amplify API calls.
+*   Leverage generated models with Amplify API results.
 
 ## 9. Styling Approach
 

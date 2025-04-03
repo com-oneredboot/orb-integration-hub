@@ -18,13 +18,15 @@ This document outlines the phases, tasks, and milestones for building the Orb In
 ## 3. Foundational Phase: Project Setup & Core Structure
 
 *   **Goal:** Establish the basic Angular application structure, routing, and core layout components necessary for feature implementation.
-*   [ ] Initialize Angular project (`ng new orb-integration-hub-frontend`).
-*   [ ] Install core dependencies (Apollo Angular, chosen UI library, state management library if applicable).
-*   [ ] Configure base project settings (proxy, environments, linting).
-*   [ ] Create `CoreModule` (for singleton services, guards).
-*   [ ] Create `SharedModule` (for common components, pipes, directives).
-*   [ ] Define base application routing (`AppRoutingModule`).
-*   [ ] Implement main layout components (e.g., `LayoutComponent`, `HeaderComponent`, `FooterComponent`, `NavComponent`).
+*   **Tasks:**
+    *   [x] Initialize Angular project (`ng new orb-integration-hub-frontend`).
+    *   [ ] Install core dependencies (PrimeNG, primeicons).
+    *   [ ] Configure base project settings (proxy, environments, linting).
+    *   [ ] Configure AWS Amplify in the Angular application (initial setup).
+    *   [ ] Create `CoreModule` (for singleton services, guards).
+    *   [ ] Create `SharedModule` (for common components, pipes, directives).
+    *   [ ] Define base application routing (`AppRoutingModule`).
+    *   [ ] Implement main layout components (e.g., `LayoutComponent`, `HeaderComponent`, `FooterComponent`, `NavComponent`).
 
 ## 4. Feature Implementation
 
@@ -38,11 +40,10 @@ This document outlines the phases, tasks, and milestones for building the Orb In
     *   [ ] Implement `LoginComponent` within `AuthModule` (UI + Logic).
     *   [ ] Implement Registration Component (if applicable within this feature).
     *   [ ] Implement Password Reset / Forgot Password Component (if applicable).
-    *   [ ] Implement `AuthService` for handling authentication logic (login, logout, registration calls, token management).
-    *   [ ] Implement `AuthGuard` for protecting routes.
-    *   [ ] Configure Apollo Angular client for authentication headers/token handling.
-    *   [ ] Integrate `AuthService` with backend authentication endpoints (GraphQL Mutations/Queries).
-    *   [ ] Implement state management for user authentication status (using chosen approach).
+    *   [ ] Implement `AuthService` for handling authentication logic (using Amplify Auth).
+    *   [ ] Implement `AuthGuard` for protecting routes (using Amplify Auth state).
+    *   [ ] Integrate `AuthService` with backend (Amplify Auth handles Cognito interaction).
+    *   [ ] Implement state management for user authentication status (using NgRx, fed by Amplify Auth state).
     *   [ ] Set up unit tests for `AuthService`, `AuthGuard`, and Auth components.
     *   [ ] Add integration tests for login/registration flow.
 
@@ -52,8 +53,8 @@ This document outlines the phases, tasks, and milestones for building the Orb In
 *   **Frontend Tasks:**
     *   [ ] Create an `ApiExplorerModule` (lazy-loaded).
     *   [ ] Implement `ApiExplorerComponent`.
-    *   [ ] Integrate a GraphQL IDE component (e.g., `graphql-playground-angular`) or build a custom interface.
-    *   [ ] Ensure generated models are usable within this module.
+    *   [ ] Integrate a GraphQL IDE component or build a custom interface (using Amplify API client to execute queries).
+    *   [ ] Ensure generated models are usable with Amplify API results.
     *   [ ] Add tests for API interaction service (if applicable).
 
 ### Feature: Schema Viewer (`schema-viewer` - *Example Placeholder*)
@@ -77,8 +78,8 @@ This document outlines the phases, tasks, and milestones for building the Orb In
 
 ## 6. Technology Decisions (Confirmation)
 
-*   **UI Component Library:** [Confirm Chosen Library Here]
-*   **State Management:** [Confirm Chosen Approach Here]
+*   **UI Component Library:** PrimeNG
+*   **State Management:** NgRx
 
 ## 7. Testing Implementation
 
@@ -88,9 +89,9 @@ This document outlines the phases, tasks, and milestones for building the Orb In
 
 ## 8. Deployment Strategy (Initial)
 
-*   Target Platform: [e.g., AWS S3 + CloudFront]
+*   Target Platform: [e.g., AWS S3 + CloudFront] (Verify from `.github/workflows/deploy-frontend.yml`)
 *   Build Process: `ng build --configuration production`.
-*   CI/CD: [To Be Determined].
+*   CI/CD: GitHub Actions (`.github/workflows/deploy-frontend.yml` and potentially `deploy-backend.yml`).
 
 ## 9. Timeline & Estimation (Optional)
 

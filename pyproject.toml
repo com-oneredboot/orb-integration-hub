@@ -32,3 +32,7 @@ target-version = ["py312"]
 profile = "black"
 line_length = 100
 multi_line_output = 3
+
+[tool.flake8]
+max-line-length = 100
+extend-ignore = "E203" # Ignored by Black

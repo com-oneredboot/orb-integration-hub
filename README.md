@@ -70,6 +70,12 @@ This will:
 - **Backend Tests:** `cd backend && pytest` (Requires pytest)
 - **Frontend Tests:** `cd frontend && npm run test`
 
+## Deployment
+
+Deployment is handled via GitHub Actions. See the workflow files in `.github/workflows/` for details, specifically:
+- Backend: `.github/workflows/deploy-backend.yml`
+- Frontend: `.github/workflows/deploy-frontend.yml`
+
 ## License
 
 [Add your license information here]

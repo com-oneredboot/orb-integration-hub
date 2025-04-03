@@ -4,16 +4,16 @@ This checklist is derived from the [Frontend Implementation Plan](frontend-imple
 
 ## Prerequisites
 
-*   [ ] Backend GraphQL API endpoint accessible.
-*   [ ] Final decisions made on UI Component Library (from `frontend-design.md`).
-*   [ ] Final decisions made on State Management approach (from `frontend-design.md`).
-*   [ ] Basic wireframes/mockups available (Optional but recommended).
-*   [ ] Development environment set up as per [Development Guide](development.md).
+*   [x] Backend GraphQL API endpoint accessible.
+*   [x] Final decisions made on UI Component Library (from `frontend-design.md`). => Status: PrimeNG
+*   [x] Final decisions made on State Management approach (from `frontend-design.md`). => Status: NgRx
+*   [ ] Basic wireframes/mockups available (Optional but recommended). => Status: None planned currently
+*   [/] Development environment set up as per [Development Guide](development.md). => Status: Guide created, needs details
 
 ## Foundational Phase: Project Setup & Core Structure
 
-*   [ ] Initialize Angular project (`ng new orb-integration-hub-frontend`).
-*   [ ] Install core dependencies (Apollo Angular, chosen UI library, state management library if applicable).
+*   [x] Initialize Angular project (`ng new orb-integration-hub-frontend`).
+*   [ ] Install core dependencies (chosen UI library, state management library if applicable).
 *   [ ] Configure base project settings (proxy, environments, linting).
 *   [ ] Create `CoreModule` (for singleton services, guards).
 *   [ ] Create `SharedModule` (for common components, pipes, directives).
