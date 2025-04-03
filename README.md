@@ -55,10 +55,16 @@ This will:
 
 ### Important Context
 
-- Schema changes require regeneration of code
+- **Schema changes require regeneration of code.** Do not edit generated files directly. See [Schema Documentation](docs/schema.md) for the correct workflow.
 - GraphQL schema is timestamped in `backend/infrastructure/cloudformation/`
 - DynamoDB templates are in `backend/infrastructure/cloudformation/dynamodb.yml`
 - Generated models are placed in respective frontend/backend directories
+
+## Key Commands
+
+- **Regenerate code:** `python schemas/generate.py` (Run from root)
+- **Backend Tests:** `cd backend && pytest` (Requires pytest)
+- **Frontend Tests:** `cd frontend && npm run test`
 
 ## License
 

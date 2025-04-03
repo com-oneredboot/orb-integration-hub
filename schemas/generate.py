@@ -109,7 +109,7 @@ class Attribute:
 
 @dataclass
 class TableSchema:
-    table_name: str
+    table: str
     attributes: List[Attribute]
     partition_key: str
     sort_key: Optional[str] = None
@@ -171,12 +171,14 @@ def load_schemas() -> Dict[str, TableSchema]:
             
         schemas = {}
         for entity in entities:
+            print(f"Reading entity: {entity}")
             # Load the schema file
             with open(os.path.join(SCRIPT_DIR, 'entities', entity), 'r') as f:
                 schema_data = yaml.safe_load(f)
 
-            # extract table name from entity file name
-            table = entity[table]
+                # extract table name from entity file name
+                table = schema_data['table']
+                print(f"table: {table}")
                 
             # Extract attributes and keys
             attributes = []
