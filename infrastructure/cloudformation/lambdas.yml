@@ -82,6 +82,8 @@ Resources:
           ORIGINATION_NUMBER: !Ref SMSOriginationNumber
 
   # IAM Roles
+  # The LambdaExecutionRole is used by the SMSVerificationFunction to execute and access necessary AWS services.
+  # It includes managed policies for basic execution and custom policies for accessing DynamoDB, Secrets Manager, SSM, CloudWatch, SQS, and SES.
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -147,6 +149,14 @@ Resources:
                 Resource:
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-alerts-queue-arn}}'
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-dead-letter-queue-arn}}'
+        - PolicyName: SNSAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: '*'
         - PolicyName: SESAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -157,6 +167,7 @@ Resources:
                 Resource: '*'
 
   # IAM Policies
+  # CloudWatchLoggingPolicy: Allows logging to CloudWatch for monitoring and debugging.
   CloudWatchLoggingPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -171,6 +182,7 @@ Resources:
               - "logs:PutLogEvents"
             Resource:
               - "arn:aws:logs:*:*:*"
+  # ParameterStorePolicy: Grants access to SSM Parameter Store for configuration management.
   ParameterStorePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -183,6 +195,7 @@ Resources:
               - "ssm:GetParameter"
             Resource:
               - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter//${CustomerId}/${ProjectId}/${Environment}/*"
+  # QueueStorePolicy: Provides access to SQS and SNS for message queuing and notifications.
   QueueStorePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:

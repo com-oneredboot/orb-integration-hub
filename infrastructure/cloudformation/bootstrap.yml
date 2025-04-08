@@ -26,6 +26,7 @@ Parameters:
 # --------------------------------------------------- #
 Resources:
   # S3 Buckets
+  # BuildArtifactBucket: Stores build artifacts for deployment.
   BuildArtifactBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -39,6 +40,7 @@ Resources:
           Value: !Ref Environment
         - Key: ProjectId
           Value: !Ref ProjectId
+  # BuildTemplatesBucket: Stores build templates with versioning enabled for tracking changes.
   BuildTemplatesBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -56,6 +58,7 @@ Resources:
           Value: !Ref ProjectId
 
   # IAM User for GitHub Actions
+  # GitHubActionsUser: IAM user for GitHub Actions to interact with AWS resources.
   GitHubActionsUser:
     Properties:
       UserName: !Sub "${CustomerId}-${ProjectId}-${Environment}-github-actions"
@@ -71,6 +74,7 @@ Resources:
     Type: AWS::IAM::User
 
   # IAM Policy for GitHub Actions User
+  # GitHubActionsUserPolicy: Grants necessary permissions to the GitHubActionsUser for deployment tasks.
   GitHubActionsUserPolicy:
     Properties:
       PolicyName: !Sub "${CustomerId}-${ProjectId}-${Environment}-github-actions-user"
@@ -86,6 +90,7 @@ Resources:
     Type: AWS::IAM::Policy
 
   # Access Keys for GitHub Actions User
+  # GitHubActionsAccessKey: Access keys for the GitHubActionsUser to authenticate API requests.
   GitHubActionsAccessKey:
     Properties:
       UserName: !Ref GitHubActionsUser
@@ -104,6 +109,7 @@ Resources:
     Type: AWS::SSM::Parameter
 
   # IAM Group for GitHub Actions Deployment
+  # GitHubActionsDeploymentGroup: IAM group for managing deployment permissions for GitHub Actions.
   GitHubActionsDeploymentGroup:
     Type: AWS::IAM::Group
     Properties:
@@ -112,6 +118,7 @@ Resources:
         - !Ref CloudWatchLoggingPolicy
         - !Ref CloudWatchDashboardPolicy
         - !Ref DeployPolicy
+  # DeployPolicy: Managed policy granting permissions for deployment-related actions across various AWS services.
   DeployPolicy:
     Properties:
       ManagedPolicyName: !Sub "${CustomerId}-${ProjectId}-${Environment}-deploy"

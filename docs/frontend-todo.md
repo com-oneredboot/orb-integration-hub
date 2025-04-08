@@ -1,6 +1,14 @@
 # Frontend Todo List - Orb Integration Hub
 
-This checklist is derived from the [Frontend Implementation Plan](frontend-implementation-plan.md) and tracks the progress of frontend development tasks, organized by features.
+## Completed Tasks
+
+* [x] Moved infrastructure directory from backend to root.
+* [x] Updated documentation to reflect new directory structure.
+
+## Next Steps
+
+* [ ] Enhance MFA security.
+* [ ] Complete payment processing implementation.
 
 ## Prerequisites
 
@@ -13,51 +21,12 @@ This checklist is derived from the [Frontend Implementation Plan](frontend-imple
 ## Foundational Phase: Project Setup & Core Structure
 
 *   [x] Initialize Angular project (`ng new orb-integration-hub-frontend`).
-*   [ ] Install core dependencies (chosen UI library, state management library if applicable).
+*   [x] Install core dependencies (PrimeNG, primeicons). AWS Amplify, NgRx already present.
 *   [ ] Configure base project settings (proxy, environments, linting).
-*   [ ] Create `CoreModule` (for singleton services, guards).
-*   [ ] Create `SharedModule` (for common components, pipes, directives).
-*   [ ] Define base application routing (`AppRoutingModule`).
-*   [ ] Implement main layout components (e.g., `LayoutComponent`, `HeaderComponent`, `FooterComponent`, `NavComponent`).
+*   [x] Configure AWS Amplify in the Angular application (initial setup). (User confirmed done)
+*   [x] Create `CoreModule` (for singleton services, guards). (Verified exists)
+*   [/] Create `SharedModule` (for common components, pipes, directives). (Directory exists, needs module file if components are shared)
+*   [x] Define base application routing (`AppRoutingModule`). (Exists as `app.routes.ts`)
+*   [/] Implement main layout components (e.g., `LayoutComponent`, `HeaderComponent`, `FooterComponent`, `NavComponent`). (AppLayout exists, review complete, Footer missing)
 
 ## Feature: Authentication Flow Creation (`auth-flow-creation`)
-
-*   [ ] Create `AuthModule` (lazy-loaded potentially).
-*   [ ] Implement `LoginComponent` within `AuthModule` (UI + Logic).
-*   [ ] Implement Registration Component (if applicable within this feature).
-*   [ ] Implement Password Reset / Forgot Password Component (if applicable).
-*   [ ] Implement `AuthService` for handling authentication logic (login, logout, registration calls, token management).
-*   [ ] Implement `AuthGuard` for protecting routes.
-*   [ ] Configure Apollo Angular client for authentication headers/token handling.
-*   [ ] Integrate `AuthService` with backend authentication endpoints (GraphQL Mutations/Queries).
-*   [ ] Implement state management for user authentication status (using chosen approach).
-*   [ ] Set up unit tests for `AuthService`, `AuthGuard`, and Auth components.
-*   [ ] Add integration tests for login/registration flow.
-
-## Feature: API Explorer (`api-explorer` - *Example Placeholder*)
-
-*   [ ] Create an `ApiExplorerModule` (lazy-loaded).
-*   [ ] Implement `ApiExplorerComponent`.
-*   [ ] Integrate a GraphQL IDE component (e.g., `graphql-playground-angular`) or build a custom interface.
-*   [ ] Ensure generated models are usable within this module.
-*   [ ] Add tests for API interaction service (if applicable).
-
-## Feature: Schema Viewer (`schema-viewer` - *Example Placeholder*)
-
-*   [ ] Create a `SchemaViewerModule` (lazy-loaded).
-*   [ ] Implement `SchemaViewerComponent`.
-*   [ ] Develop service/logic to fetch/process schema information (or potentially read from generated TS models).
-*   [ ] Design UI to display model structures clearly (e.g., tree view, tables).
-*   [ ] Add tests for schema display components/logic.
-
-*(Add sections for other features as they become active in REGISTRY.md)*
-
-## Cross-Cutting Concerns (Tracked Iteratively)
-
-*   [ ] Apply global styling.
-*   [ ] Ensure UI library consistency.
-*   [ ] Refine component-specific styles.
-*   [ ] Review UI/UX consistency.
-*   [ ] Perform accessibility checks.
-*   [ ] Maintain/increase test coverage.
-*   [ ] Implement E2E tests (optional). 

@@ -60,8 +60,8 @@ This will:
 ### Important Context
 
 - **Schema changes require regeneration of code.** Do not edit generated files directly. See [Schema Documentation](docs/schema.md) for the correct workflow.
-- GraphQL schema is timestamped in `backend/infrastructure/cloudformation/`
-- DynamoDB templates are in `backend/infrastructure/cloudformation/dynamodb.yml`
+- GraphQL schema is timestamped in `infrastructure/cloudformation/`
+- DynamoDB templates are in `infrastructure/cloudformation/dynamodb.yml`
 - Generated models are placed in respective frontend/backend directories
 
 ## Key Commands
@@ -75,6 +75,40 @@ This will:
 Deployment is handled via GitHub Actions. See the workflow files in `.github/workflows/` for details, specifically:
 - Backend: `.github/workflows/deploy-backend.yml`
 - Frontend: `.github/workflows/deploy-frontend.yml`
+
+## ORB Master Plan Integration
+
+This project is part of the ORB ecosystem, which is managed through the [orb-master-plan](https://github.com/com-oneredboot/orb-master-plan) repository. The orb-master-plan serves as the central documentation and planning hub for all ORB ecosystem projects.
+
+### Documentation Structure
+
+To ensure compatibility with the orb-master-plan, this project follows a standardized documentation structure:
+
+```
+docs/
+├── core/                  # Core project documentation
+│   ├── DESIGN_PLAN.md     # Overall design plan
+│   ├── IMPLEMENTATION_PLAN.md # Implementation timeline
+│   └── TODO.md            # Current tasks and action items
+├── features/              # Feature-specific documentation
+│   └── [feature-name]/    # Documentation for each feature
+│       ├── feature-plan.md # Feature design and implementation plan
+│       └── summary.md      # Feature completion summary
+├── architecture.md        # System architecture documentation
+├── development.md         # Development setup and workflow
+└── api.md                 # API documentation
+```
+
+### Keeping Documentation Up-to-Date
+
+When working on this project:
+
+1. **Update Feature Documentation**: When implementing new features, create or update the corresponding feature documentation in `docs/features/[feature-name]/`.
+2. **Update Core Documentation**: Keep the core documentation files (`DESIGN_PLAN.md`, `IMPLEMENTATION_PLAN.md`, `TODO.md`) up-to-date with the latest project status.
+3. **Follow Standards**: Adhere to the development standards defined in the orb-master-plan.
+4. **Report Progress**: Update the orb-master-plan's task tracking when completing significant milestones.
+
+The orb-master-plan will periodically scan project repositories to update its documentation and ensure all projects are aligned with the overall ecosystem vision.
 
 ## License
 

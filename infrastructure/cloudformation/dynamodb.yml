@@ -29,6 +29,8 @@ Parameters:
 
 # --------------------------------------------------- #
 Resources:
+  # DynamoDB Tables
+  # ApplicationsTable: Stores application details including ID, name, description, status, and timestamps.
   TableSchema(table='Applications', attributes=[Attribute(name='application_id', type='S'), Attribute(name='name', type='S'), Attribute(name='description', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N'), Attribute(name='user_id', type='S')], partition_key='application_id', sort_key=None)Table:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -51,6 +53,7 @@ Resources:
       Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-TableSchema(table='Applications', attributes=[Attribute(name='application_id', type='S'), Attribute(name='name', type='S'), Attribute(name='description', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N'), Attribute(name='user_id', type='S')], partition_key='application_id', sort_key=None)-table-arn
       Type: String
       Value: !GetAtt TableSchema(table='Applications', attributes=[Attribute(name='application_id', type='S'), Attribute(name='name', type='S'), Attribute(name='description', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N'), Attribute(name='user_id', type='S')], partition_key='application_id', sort_key=None)Table.Arn
+  # ApplicationRolesTable: Stores roles associated with applications, including role ID, description, and status.
   TableSchema(table='ApplicationRoles', attributes=[Attribute(name='application_id', type='S'), Attribute(name='role_id', type='S'), Attribute(name='description', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='application_id', sort_key='role_id')Table:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -73,6 +76,7 @@ Resources:
       Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-TableSchema(table='ApplicationRoles', attributes=[Attribute(name='application_id', type='S'), Attribute(name='role_id', type='S'), Attribute(name='description', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='application_id', sort_key='role_id')-table-arn
       Type: String
       Value: !GetAtt TableSchema(table='ApplicationRoles', attributes=[Attribute(name='application_id', type='S'), Attribute(name='role_id', type='S'), Attribute(name='description', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='application_id', sort_key='role_id')Table.Arn
+  # ApplicationUsersTable: Stores user associations with applications, including user ID, role ID, and status.
   TableSchema(table='ApplicationUsers', attributes=[Attribute(name='application_id', type='S'), Attribute(name='user_id', type='S'), Attribute(name='role_id', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='application_id', sort_key='user_id')Table:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -95,6 +99,7 @@ Resources:
       Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-TableSchema(table='ApplicationUsers', attributes=[Attribute(name='application_id', type='S'), Attribute(name='user_id', type='S'), Attribute(name='role_id', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='application_id', sort_key='user_id')-table-arn
       Type: String
       Value: !GetAtt TableSchema(table='ApplicationUsers', attributes=[Attribute(name='application_id', type='S'), Attribute(name='user_id', type='S'), Attribute(name='role_id', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='application_id', sort_key='user_id')Table.Arn
+  # RolesTable: Stores role details including role ID, name, type, permissions, and timestamps.
   TableSchema(table='Roles', attributes=[Attribute(name='role_id', type='S'), Attribute(name='user_id', type='S'), Attribute(name='application_id', type='S'), Attribute(name='role_name', type='S'), Attribute(name='role_type', type='S'), Attribute(name='permissions', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N'), Attribute(name='active', type='S')], partition_key='role_id', sort_key='application_id')Table:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -117,6 +122,7 @@ Resources:
       Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-TableSchema(table='Roles', attributes=[Attribute(name='role_id', type='S'), Attribute(name='user_id', type='S'), Attribute(name='application_id', type='S'), Attribute(name='role_name', type='S'), Attribute(name='role_type', type='S'), Attribute(name='permissions', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N'), Attribute(name='active', type='S')], partition_key='role_id', sort_key='application_id')-table-arn
       Type: String
       Value: !GetAtt TableSchema(table='Roles', attributes=[Attribute(name='role_id', type='S'), Attribute(name='user_id', type='S'), Attribute(name='application_id', type='S'), Attribute(name='role_name', type='S'), Attribute(name='role_type', type='S'), Attribute(name='permissions', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N'), Attribute(name='active', type='S')], partition_key='role_id', sort_key='application_id')Table.Arn
+  # UsersTable: Stores user details including user ID, cognito ID, email, phone number, and status.
   TableSchema(table='Users', attributes=[Attribute(name='user_id', type='S'), Attribute(name='cognito_id', type='S'), Attribute(name='email', type='S'), Attribute(name='phone_number', type='S'), Attribute(name='phone_verified', type='S'), Attribute(name='first_name', type='S'), Attribute(name='last_name', type='S'), Attribute(name='groups', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='user_id', sort_key=None)Table:
     Type: AWS::DynamoDB::Table
     Properties:

@@ -24,6 +24,7 @@ Parameters:
     Description: The project ID for the website
 
 Resources:
+  # S3Bucket: Stores the static files for the website and serves them via CloudFront.
   S3Bucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -33,6 +34,7 @@ Resources:
         IndexDocument: index.html
         ErrorDocument: index.html
 
+  # S3BucketPolicy: Grants CloudFront access to the S3 bucket for serving content.
   S3BucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -46,12 +48,14 @@ Resources:
             Action: 's3:GetObject'
             Resource: !Sub '${S3Bucket.Arn}/*'
 
+  # CloudFrontOAI: Configures the CloudFront Origin Access Identity for secure access to the S3 bucket.
   CloudFrontOAI:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
     Properties:
       CloudFrontOriginAccessIdentityConfig:
         Comment: OAI for within-the-veil.ca
 
+  # CloudFrontDistribution: Distributes the website content globally with caching and SSL support.
   CloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
     Properties:
@@ -82,12 +86,14 @@ Resources:
             ResponseCode: 200
             ResponsePagePath: /index.html
 
+  # Certificate: Manages the SSL certificate for the website domain.
   Certificate:
     Type: AWS::CertificateManager::Certificate
     Properties:
       DomainName: !Ref DomainName
       ValidationMethod: DNS
 
+  # Route53RecordSet: Configures DNS settings for the website domain to point to the CloudFront distribution.
   Route53RecordSet:
     Type: AWS::Route53::RecordSet
     Properties:

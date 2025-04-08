@@ -11,7 +11,6 @@ import { AppComponent } from './app.component';
 import { AppRoutingModule } from "./app.routes";
 import { NgOptimizedImage } from "@angular/common";
 import { AppLayoutComponent } from "./layouts/app-layout/app-layout.component";
-import { PageLayoutComponent } from "./layouts/page-layout/page-layout.comonent";
 import { EffectsModule } from "@ngrx/effects";
 import { StoreModule } from "@ngrx/store";
 import { UserModule } from "./features/user/user.module";
@@ -20,7 +19,6 @@ import { UserModule } from "./features/user/user.module";
   declarations: [
     AppComponent,
     AppLayoutComponent,
-    PageLayoutComponent,
   ],
   imports: [
     BrowserModule,

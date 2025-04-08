@@ -220,6 +220,12 @@ Resources:
     Type: AWS::Lambda::Permission
 
   # IAM Roles
+  # The CognitoLambdaRole is used by Lambda functions associated with Cognito for executing and accessing necessary AWS services.
+  # It includes managed policies for basic execution and custom policies for accessing SNS for sending SMS notifications.
+
+  # IAM Policies
+  # CognitoSMSPolicy: Allows publishing messages to SNS for sending SMS notifications.
+
   AuthorizedRole:
     Properties:
       AssumeRolePolicyDocument:
@@ -284,14 +290,6 @@ Resources:
                   - xray:PutTelemetryRecords
                   - xray:PutTraceSegments
                 Resource: "*"
-        - PolicyName: CognitoSMSPolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - sns:Publish
-                Resource: '*'
 
   LambdaRole:
     Properties:
@@ -317,6 +315,10 @@ Resources:
                   - codepipeline:PutJobSuccessResult
                   - codepipeline:PutJobFailureResult
                   - cloudformation:DescribeStacks
+                Effect: Allow
+                Resource: '*'
+              - Action:
+                  - sns:Publish
                 Effect: Allow
                 Resource: '*'
       RoleName: !Sub "${CustomerId}-${ProjectId}-${Environment}-cognito-lambda-role"

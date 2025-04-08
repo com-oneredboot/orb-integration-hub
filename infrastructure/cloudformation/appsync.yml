@@ -29,6 +29,7 @@ Parameters:
 # --------------------------------------------------- #
 Resources:
   # IAM Roles for AppSync
+  # AppSyncServiceRole: Allows AppSync to interact with AWS services like DynamoDB and Lambda.
   AppSyncServiceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -53,6 +54,7 @@ Resources:
                   - ssm:GetParameters
                 Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Environment}/${CustomerId}/${ProjectId}/*'
   
+  # AppSyncLoggingServiceRole: Enables logging of AppSync activities to CloudWatch for monitoring and debugging.
   AppSyncLoggingServiceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -102,6 +104,7 @@ Resources:
         - ArtifactBucket: !Sub '${CustomerId}-${ProjectId}-build-templates'
           SchemaKey: !Ref SchemaS3Key
   # Data Sources
+  # ApplicationDataSource: Connects AppSync to the DynamoDB table for applications.
   ApplicationDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -112,6 +115,7 @@ Resources:
       DynamoDBConfig:
         TableName: !Sub '{{resolve:ssm:/${Environment}/${CustomerId}/${ProjectId}/dynamodb/applications/table-name}}'
         AwsRegion: !Ref AWS::Region
+  # ApplicationUsersDataSource: Connects AppSync to the DynamoDB table for application users.
   ApplicationUsersDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -122,6 +126,7 @@ Resources:
       DynamoDBConfig:
         TableName: !Sub '{{resolve:ssm:/${Environment}/${CustomerId}/${ProjectId}/dynamodb/application_users/table-name}}'
         AwsRegion: !Ref AWS::Region
+  # SMSVerificationDataSource: Connects AppSync to the Lambda function for SMS verification.
   SMSVerificationDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -131,6 +136,7 @@ Resources:
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       LambdaConfig:
         LambdaFunctionArn: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-sms-verification-lambda-arn}}'
+  # UsersDataSource: Connects AppSync to the DynamoDB table for users.
   UsersDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -143,6 +149,7 @@ Resources:
         AwsRegion: !Ref AWS::Region
 
   # Roles Data Source
+  # RolesDataSource: Connects AppSync to the DynamoDB table for roles.
   RolesDataSource:
     Type: AWS::AppSync::DataSource
     Properties:

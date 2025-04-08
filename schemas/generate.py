@@ -459,13 +459,13 @@ def main():
         
         # Generate timestamped schema file
         timestamped_schema = generate_timestamped_schema(graphql_schema)
-        schema_output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation', timestamped_schema)
+        schema_output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'cloudformation', timestamped_schema)
         write_file(schema_output_path, graphql_schema)
         logger.info(f'Generated timestamped schema file: {timestamped_schema}')
         
         # Generate DynamoDB CloudFormation template
         dynamodb_template_path = os.path.join(SCRIPT_DIR, 'templates', 'dynamodb_cloudformation.jinja')
-        dynamodb_output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'infrastructure', 'cloudformation', 'dynamodb.yml')
+        dynamodb_output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'cloudformation', 'dynamodb.yml')
         generate_cloudformation_template(schemas, dynamodb_template_path, dynamodb_output_path)
         
         logger.info('Schema generation completed successfully')

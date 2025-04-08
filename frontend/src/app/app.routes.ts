@@ -6,11 +6,13 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AppLayoutComponent } from "./layouts/app-layout/app-layout.component";
+import { AuthGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
     path: '',
     component: AppLayoutComponent,
+    canActivate: [AuthGuard],
     children: [
       {
         path: '',
@@ -19,14 +21,14 @@ export const routes: Routes = [
       },
       {
         path: '',
-        loadChildren: () => import('./features/user/user.module').then(m => m.UserModule),
-        data: { requiresAuth: false, group: 'USER' }
+        loadChildren: () => import('./features/user/user.module').then(m => m.UserModule)
       }
     ]
-  }
+  },
 ];
 
 @NgModule({
+  providers: [AuthGuard],
   imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule]
 })

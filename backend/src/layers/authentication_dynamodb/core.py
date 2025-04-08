@@ -1,4 +1,4 @@
-# file: backend/infrastructure/layers/database/python/database/core.py
+# file: infrastructure/layers/database/python/database/core.py
 # author: Corey Dale Peters
 # created: 2025-02-17
 # description: Service class for database operations
