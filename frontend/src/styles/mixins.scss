@@ -1,0 +1,44 @@
+// Common Mixins
+
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin box-shadow($color, $blur) {
+  -webkit-box-shadow: 0px 0px $blur $color;
+  -moz-box-shadow: 0px 0px $blur $color;
+  box-shadow: 0px 0px $blur $color;
+}
+
+@mixin debug-container {
+  border: 1px dashed #ff0000;
+  background-color: rgba(255, 0, 0, 0.1);
+}
+
+@mixin auth-container {
+  // Define styles for auth-container
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+@mixin form-container {
+  width: 100%;
+  max-width: 600px;
+  padding: 2rem;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+@mixin page-container {
+  // Define styles for page-container
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+} 

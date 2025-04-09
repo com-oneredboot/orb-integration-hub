@@ -5,7 +5,7 @@
 
 import { Injectable } from '@angular/core';
 import { Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
-import { CognitoService } from '../core/services/cognito.service';
+import { CognitoService } from '../services/cognito.service';
 
 @Injectable({
   providedIn: 'root'
