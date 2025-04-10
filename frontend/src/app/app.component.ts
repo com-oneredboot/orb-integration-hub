@@ -4,13 +4,12 @@
 // description: Main application component
 
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
-import { CognitoService } from './core/services/cognito.service';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
     selector: 'app-root',
     template: '<router-outlet></router-outlet>',
-    standalone: false
+    standalone: true,
+    imports: [RouterOutlet]
 })
-
 export class AppComponent {}

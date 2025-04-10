@@ -5,26 +5,29 @@
 
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { AppLayoutComponent } from "./layouts/app-layout/app-layout.component";
+import { PlatformLayoutComponent } from "./layouts/platform-layout/platform-layout.component";
 import { AuthGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
     path: '',
-    component: AppLayoutComponent,
-    canActivate: [AuthGuard],
+    component: PlatformLayoutComponent,
     children: [
       {
         path: '',
-        redirectTo: 'home',
+        redirectTo: 'platform',
         pathMatch: 'full'
       },
       {
-        path: '',
-        loadChildren: () => import('./features/user/user.module').then(m => m.UserModule)
+        path: 'platform',
+        loadChildren: () => import('./features/platform/platform.module').then(m => m.PlatformModule)
       }
     ]
   },
+  {
+    path: '',
+    loadChildren: () => import('./features/user/user.module').then(m => m.UserModule)
+  }
 ];
 
 @NgModule({

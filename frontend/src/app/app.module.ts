@@ -6,20 +6,19 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { ReactiveFormsModule} from "@angular/forms";
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from "./app.routes";
 import { NgOptimizedImage } from "@angular/common";
-import { AppLayoutComponent } from "./layouts/app-layout/app-layout.component";
+import { PlatformLayoutComponent } from "./layouts/platform-layout/platform-layout.component";
+import { UserLayoutComponent } from "./layouts/user-layout/user-layout.component";
 import { EffectsModule } from "@ngrx/effects";
 import { StoreModule } from "@ngrx/store";
 import { UserModule } from "./features/user/user.module";
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    AppLayoutComponent,
-  ],
+  declarations: [],
   imports: [
     BrowserModule,
     ReactiveFormsModule,
@@ -27,7 +26,10 @@ import { UserModule } from "./features/user/user.module";
     EffectsModule.forRoot([]), // order is important here
     AppRoutingModule,
     NgOptimizedImage,
-
+    FontAwesomeModule,
+    UserLayoutComponent,
+    AppComponent,
+    PlatformLayoutComponent,
     UserModule
   ],
   providers: [],

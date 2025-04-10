@@ -52,21 +52,21 @@ $orb-slate: #334155;
 $orb-paper: #F8FAFC;
 
 // Additional Common Colors
-$primary-color: #0066cc;
-$secondary-color: #333;
-$background-color: #f5f5f5;
+$primary-color: $orb-red;
+$secondary-color: $orb-gray;
+$background-color: $orb-paper;
 
 // Semantic Colors
-$success-color: #28a745;
-$danger-color: #dc3545;
-$text-primary: #333333;
-$text-secondary: #666666;
-$white: #FFFFFF;
+$success-color: #2B8A3E;
+$danger-color: $orb-red;
+$text-primary: $orb-black;
+$text-secondary: $orb-gray;
+$white: $orb-white;
 
 // Input styles
-$input-color: #333333;
-$input-bg: #FFFFFF;
-$input-border-color: #ced4da;
+$input-color: $orb-black;
+$input-bg: $orb-white;
+$input-border-color: $orb-light-gray;
 $input-font-size: 1rem;
 
 // Border styles

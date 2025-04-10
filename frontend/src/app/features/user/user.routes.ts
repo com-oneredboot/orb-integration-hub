@@ -8,21 +8,17 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
 // Application Imports
-import { HomeComponent } from './components/home/home.component';
 import { ProfileComponent } from "./components/profile/profile.component";
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { AuthGuard } from '../../core/guards/auth.guard';
-import {AuthFlowComponent} from "./components/auth-flow/auth-flow.component";
+import { AuthFlowComponent } from "./components/auth-flow/auth-flow.component";
+import { UserLayoutComponent } from '../../layouts/user-layout/user-layout.component';
 
 const routes: Routes = [
   {
     path: '',
+    component: UserLayoutComponent,
     children: [
-      {
-        path: 'home',
-        component: HomeComponent,
-        data: { requiresAuth: false }
-      },
       {
         path: 'authenticate',
         component: AuthFlowComponent,
@@ -39,13 +35,13 @@ const routes: Routes = [
         component: DashboardComponent,
         canActivate: [AuthGuard],
         data: { requiresAuth: true }
-      },
-      {
-        path: '',
-        redirectTo: 'home',
-        pathMatch: 'full'
       }
     ]
+  },
+  {
+    path: '',
+    redirectTo: 'authenticate',
+    pathMatch: 'full'
   }
 ];
 

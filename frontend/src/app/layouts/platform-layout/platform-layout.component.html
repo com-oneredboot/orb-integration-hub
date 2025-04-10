@@ -1,0 +1,19 @@
+<!-- 
+file: frontend/src/app/layouts/platform-layout/platform-layout.component.html
+author: Corey Dale Peters
+date: 2025-03-07
+description: HTML template file
+-->
+
+<div class="app-container">
+  <header class="header">
+    <nav class="nav-menu">
+      <a routerLink="platform" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">Platform</a>
+      <a routerLink="authenticate" routerLinkActive="active" class="nav-link">Sign In</a>
+    </nav>
+  </header>
+
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

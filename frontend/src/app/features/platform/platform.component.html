@@ -1,0 +1,226 @@
+<div class="home-container">
+  <div class="hero-section">
+    <div class="hero-content">
+      <div class="hero-flex-container">
+        <div class="logo-section">
+          <img src="assets/onredboot-logo.jpg" alt="OneRedBoot Logo">
+        </div>
+        <div class="content-section">
+          <div class="logo-container">
+            <img src="assets/hardhat.jpg" alt="hardhat">
+            <h1>Integration Hub</h1>
+          </div>
+          <p class="hero-subtitle">A comprehensive solution for payment processing, event management, and user authentication</p>
+          <div class="cta-buttons">
+            <button class="primary-button" (click)="navigateToSignup()">
+              <fa-icon [icon]="faRocket"></fa-icon>
+              Get Started
+            </button>
+            <button class="secondary-button">
+              <fa-icon [icon]="faBook"></fa-icon>
+              Documentation
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="features-section">
+    <div class="section-header">
+      <h2>Why use Integration Hub?</h2>
+      <p class="section-subtitle">Powerful features to streamline your business operations</p>
+    </div>
+    
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <fa-icon [icon]="faCreditCard"></fa-icon>
+        </div>
+        <h3>Multiple Payment Options</h3>
+        <p>Accept payments through Stripe, PayPal, Apple Pay, Google Pay, and more. Give your customers the flexibility they deserve.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <fa-icon [icon]="faShieldHalved"></fa-icon>
+        </div>
+        <h3>Secure Authentication</h3>
+        <p>Enterprise-grade security with AWS Cognito, ensuring your data and transactions are always protected.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <fa-icon [icon]="faCalendarCheck"></fa-icon>
+        </div>
+        <h3>Event Management</h3>
+        <p>Create, manage, and monetize events effortlessly. Handle registrations and payments in one place.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <fa-icon [icon]="faChartLine"></fa-icon>
+        </div>
+        <h3>Analytics Dashboard</h3>
+        <p>Track transactions, monitor revenue, and gain insights with comprehensive reporting tools.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="integration-section">
+    <div class="section-header">
+      <h2>Easy Integration</h2>
+      <p class="section-subtitle">Simple to integrate, powerful to use</p>
+    </div>
+    <div class="integration-content">
+      <div class="integration-text">
+        <ul class="integration-list">
+          <li>
+            <fa-icon [icon]="faCheckCircle"></fa-icon>
+            Quick setup with your existing website
+          </li>
+          <li>
+            <fa-icon [icon]="faBook"></fa-icon>
+            Comprehensive documentation
+          </li>
+          <li>
+            <fa-icon [icon]="faCode"></fa-icon>
+            Developer-friendly APIs
+          </li>
+          <li>
+            <fa-icon [icon]="faSliders"></fa-icon>
+            Flexible configuration options
+          </li>
+        </ul>
+      </div>
+      <div class="integration-code">
+        <div class="code-preview">
+          <div class="code-header">
+            <fa-icon [icon]="faTerminal"></fa-icon>
+            <span>Example Integration</span>
+          </div>
+          <pre><code>// Initialize OneRedBoot
+const payment = await oneRedBoot.createPayment({{ '{' }}
+  amount: 1000,
+  currency: 'USD',
+  description: 'Event Registration'
+{{ '}' }})</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pricing-section">
+    <div class="section-header">
+      <h2>Transparent Pricing</h2>
+      <p class="section-subtitle">Simple, predictable pricing for businesses of all sizes</p>
+    </div>
+    <div class="pricing-cards">
+      <div class="pricing-card">
+        <div class="pricing-header">
+          <h3>Starter</h3>
+          <div class="price">
+            <span class="amount">2.9%</span>
+            <span class="detail">+ $0.30</span>
+          </div>
+          <p class="price-description">per successful transaction</p>
+        </div>
+        <ul class="pricing-features">
+          <li>
+            <fa-icon [icon]="faCheck"></fa-icon>
+            Basic payment processing
+          </li>
+          <li>
+            <fa-icon [icon]="faCheck"></fa-icon>
+            Standard support
+          </li>
+          <li>
+            <fa-icon [icon]="faCheck"></fa-icon>
+            Basic analytics
+          </li>
+        </ul>
+        <button class="pricing-cta">Get Started</button>
+      </div>
+
+      <div class="pricing-card featured">
+        <div class="featured-badge">
+          <fa-icon [icon]="faStar"></fa-icon>
+          Popular
+        </div>
+        <div class="pricing-header">
+          <h3>Business</h3>
+          <div class="price">
+            <span class="amount">2.5%</span>
+            <span class="detail">+ $0.25</span>
+          </div>
+          <p class="price-description">per successful transaction</p>
+        </div>
+        <ul class="pricing-features">
+          <li>
+            <fa-icon [icon]="faCheck"></fa-icon>
+            Advanced payment options
+          </li>
+          <li>
+            <fa-icon [icon]="faCheck"></fa-icon>
+            Priority support
+          </li>
+          <li>
+            <fa-icon [icon]="faCheck"></fa-icon>
+            Detailed analytics
+          </li>
+          <li>
+            <fa-icon [icon]="faCheck"></fa-icon>
+            Event management tools
+          </li>
+        </ul>
+        <button class="pricing-cta featured">Get Started</button>
+      </div>
+
+      <div class="pricing-card">
+        <div class="pricing-header">
+          <h3>Enterprise</h3>
+          <div class="price">
+            <span class="amount">Custom</span>
+          </div>
+          <p class="price-description">tailored to your needs</p>
+        </div>
+        <ul class="pricing-features">
+          <li>
+            <fa-icon [icon]="faCheck"></fa-icon>
+            Custom integration
+          </li>
+          <li>
+            <fa-icon [icon]="faCheck"></fa-icon>
+            24/7 dedicated support
+          </li>
+          <li>
+            <fa-icon [icon]="faCheck"></fa-icon>
+            Advanced reporting
+          </li>
+          <li>
+            <fa-icon [icon]="faCheck"></fa-icon>
+            Custom features
+          </li>
+        </ul>
+        <button class="pricing-cta">Contact Sales</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section">
+    <div class="cta-content">
+      <h2>Ready to Get Started?</h2>
+      <p>Join thousands of businesses that trust OneRedBoot for their payment needs</p>
+      <div class="cta-buttons">
+        <button class="primary-button">
+          <fa-icon [icon]="faRocket"></fa-icon>
+          Start Now
+        </button>
+        <button class="secondary-button">
+          <fa-icon [icon]="faMessage"></fa-icon>
+          Talk to Sales
+        </button>
+      </div>
+    </div>
+  </section>
+</div> 

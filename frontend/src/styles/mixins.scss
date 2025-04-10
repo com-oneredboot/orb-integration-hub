@@ -1,3 +1,29 @@
+@use 'variables' as v;
+@use "sass:color";
+
+@mixin button-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: v.$spacing-sm;
+  padding: v.$spacing-md v.$spacing-lg;
+  border-radius: v.$border-radius;
+  font-weight: v.$font-weight-medium;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: v.$orb-red;
+  color: v.$orb-white;
+  border: none;
+  text-decoration: none;
+
+  &:hover {
+    background: color.adjust(v.$orb-red, $lightness: -10%);
+  }
+
+  fa-icon {
+    font-size: v.$font-size-lg;
+  }
+}
+
 // Common Mixins
 
 @mixin flex-center {
@@ -13,8 +39,28 @@
 }
 
 @mixin debug-container {
-  border: 1px dashed #ff0000;
-  background-color: rgba(255, 0, 0, 0.1);
+  border: 2px dashed v.$orb-gray;
+  background-color: rgba(v.$orb-light-gray, 0.1);
+  padding: v.$spacing-md;
+  margin: v.$spacing-sm 0;
+  border-radius: v.$border-radius;
+  font-family: v.$font-family-monospace;
+  font-size: v.$font-size-sm;
+  color: v.$text-primary;
+
+  // Title styling for debug area
+  h3, h4, h5, h6 {
+    color: v.$orb-red;
+    font-weight: v.$font-weight-semibold;
+    margin-bottom: v.$spacing-sm;
+  }
+
+  // Debug section headers
+  .debug-section {
+    color: v.$orb-slate;
+    font-weight: v.$font-weight-medium;
+    margin-top: v.$spacing-sm;
+  }
 }
 
 @mixin auth-container {
@@ -22,7 +68,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2rem;
+  padding: v.$spacing-xl;
   max-width: 800px;
   margin: 0 auto;
 }
@@ -30,15 +76,15 @@
 @mixin form-container {
   width: 100%;
   max-width: 600px;
-  padding: 2rem;
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: v.$spacing-xl;
+  background-color: v.$orb-white;
+  border-radius: v.$border-radius-lg;
+  box-shadow: v.$shadow-md;
 }
 
 @mixin page-container {
   // Define styles for page-container
-  padding: 1.5rem;
-  max-width: 1200px;
+  padding: v.$spacing-lg;
+  max-width: 960px;
   margin: 0 auto;
 } 

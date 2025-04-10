@@ -1,4 +1,4 @@
-// file: frontend/src/app/layouts/app-layout/app-layout.component.ts
+// file: frontend/src/app/layouts/platform-layout/platform-layout.component.ts
 // author: Corey Dale Peters
 // date: 2024-12-04
 // description: Angular component
@@ -6,14 +6,17 @@
 import { Component } from '@angular/core';
 import {CognitoService} from "../../core/services/cognito.service";
 import {Router} from "@angular/router";
+import { RouterModule } from '@angular/router';
+import { CommonModule } from '@angular/common';
 
 @Component({
-    selector: 'app-home-layout',
-    templateUrl: './app-layout.component.html',
-    styleUrls: ['./app-layout.component.scss'],
-    standalone: false
+    selector: 'app-platform-layout',
+    templateUrl: './platform-layout.component.html',
+    styleUrls: ['./platform-layout.component.scss'],
+    standalone: true,
+    imports: [RouterModule, CommonModule]
 })
-export class AppLayoutComponent {
+export class PlatformLayoutComponent {
   title = 'OneRedBoot Integration Hub';
   currentYear: number = new Date().getFullYear();
   isAuthenticated$ = this.authService.isAuthenticated$();
@@ -26,7 +29,7 @@ export class AppLayoutComponent {
   async signOut(): Promise<void> {
     try {
       await this.authService.signOut();
-      await this.router.navigate(['/home']);
+      await this.router.navigate(['/platform']);
     } catch (error) {
       console.error('Sign out error:', error);
     }
