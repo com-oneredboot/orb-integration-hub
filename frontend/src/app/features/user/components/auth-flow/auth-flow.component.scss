@@ -9,6 +9,9 @@
 
 .auth-flow {
   @include m.auth-container;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 
   &__header {
     text-align: center;
@@ -235,6 +238,32 @@
 
   &__debug {
     @include m.debug-container;
+    width: 100%;
+    max-width: 800px;
+    margin: 2rem auto 0;
+
+    &-title {
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+      color: v.$orb-dark-blue;
+    }
+
+    &-section {
+      margin-bottom: 1.5rem;
+
+      h4 {
+        margin-bottom: 0.5rem;
+        color: v.$orb-dark-blue;
+      }
+
+      pre {
+        padding: 0.5rem;
+        background-color: v.$orb-light-gray;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        overflow-x: auto;
+      }
+    }
   }
 }
 

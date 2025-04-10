@@ -26,14 +26,13 @@
 .header {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   padding: 1rem 2rem;
   background-color: v.$orb-white;
-  border-bottom: 1px solid v.$orb-light-gray;
 
   .nav-menu {
     display: flex;
     gap: 2rem;
-    margin-left: 2rem;
 
     .nav-link {
       color: v.$orb-dark-blue;
@@ -88,7 +87,6 @@
 
     .nav-menu {
       gap: 1rem;
-      margin-left: 1rem;
     }
   }
 } 
