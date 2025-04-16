@@ -95,9 +95,16 @@
 - Added SnsRegion configuration to UserPool
 - Updated CloudFormation template with optimized role structure
 
+### SNS Permissions Fix
+- Added missing SNS permissions to CognitoSMSRole:
+  - CreateTopic, SetTopicAttributes, GetTopicAttributes
+  - Subscribe, ConfirmSubscription
+- Added broader SNS resource permissions for subscription operations
+- Fixed CloudFormation deployment error with SNS permissions
+
 ### Changes Since Last Update
 ```
-[Add commit hash after deployment] - Update SMS configuration and streamline IAM roles
+[Add commit hash after deployment] - Fix SNS permissions for Cognito SMS functionality
 ```
 
 ### Files Changed
@@ -110,3 +117,4 @@ infrastructure/cloudformation/cognito.yml
 - Scoped SNS permissions to specific verification topic
 - Removed redundant permissions from LambdaRole
 - Added region specification for SMS operations
+- Added comprehensive SNS permissions for topic management and subscriptions

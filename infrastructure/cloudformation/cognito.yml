@@ -289,7 +289,15 @@ Resources:
               - Effect: Allow
                 Action:
                   - sns:Publish
+                  - sns:CreateTopic
+                  - sns:SetTopicAttributes
+                  - sns:GetTopicAttributes
                 Resource: !Ref SMSVerificationCodeTopic
+              - Effect: Allow
+                Action:
+                  - sns:Subscribe
+                  - sns:ConfirmSubscription
+                Resource: !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*"
         - PolicyName: AWSXrayWriteOnlyAccess
           PolicyDocument:
             Version: '2012-10-17'
