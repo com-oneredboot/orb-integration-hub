@@ -113,7 +113,7 @@ Resources:
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub '{{resolve:ssm:/${Environment}/${CustomerId}/${ProjectId}/dynamodb/applications/table-name}}'
+        TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-applications-table-name}}'
         AwsRegion: !Ref AWS::Region
   # ApplicationUsersDataSource: Connects AppSync to the DynamoDB table for application users.
   ApplicationUsersDataSource:
@@ -124,7 +124,7 @@ Resources:
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub '{{resolve:ssm:/${Environment}/${CustomerId}/${ProjectId}/dynamodb/application_users/table-name}}'
+        TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-applicationusers-table-name}}'
         AwsRegion: !Ref AWS::Region
   # UsersDataSource: Connects AppSync to the DynamoDB table for users.
   UsersDataSource:
@@ -135,7 +135,7 @@ Resources:
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub '{{resolve:ssm:/${Environment}/${CustomerId}/${ProjectId}/dynamodb/users/table-name}}'
+        TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-table-name}}'
         AwsRegion: !Ref AWS::Region
 
   # Roles Data Source
@@ -148,7 +148,7 @@ Resources:
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub '{{resolve:ssm:/${Environment}/${CustomerId}/${ProjectId}/dynamodb/roles/table-name}}'
+        TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-roles-table-name}}'
         AwsRegion: !Ref AWS::Region
 
   # --------------------------------------------------- #
