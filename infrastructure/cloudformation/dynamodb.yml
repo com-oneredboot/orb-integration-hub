@@ -29,122 +29,188 @@ Parameters:
 
 # --------------------------------------------------- #
 Resources:
-  # DynamoDB Tables
-  # ApplicationsTable: Stores application details including ID, name, description, status, and timestamps.
-  TableSchema(table='Applications', attributes=[Attribute(name='application_id', type='S'), Attribute(name='name', type='S'), Attribute(name='description', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N'), Attribute(name='user_id', type='S')], partition_key='application_id', sort_key=None)Table:
+  ApplicationsTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-TableSchema(table='Applications', attributes=[Attribute(name='application_id', type='S'), Attribute(name='name', type='S'), Attribute(name='description', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N'), Attribute(name='user_id', type='S')], partition_key='application_id', sort_key=None)
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications
       AttributeDefinitions:
+        - AttributeName: application_id
+          AttributeType: S
       KeySchema:
-        - AttributeName: 
+        - AttributeName: application_id
           KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
 
-  TableSchema(table='Applications', attributes=[Attribute(name='application_id', type='S'), Attribute(name='name', type='S'), Attribute(name='description', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N'), Attribute(name='user_id', type='S')], partition_key='application_id', sort_key=None)TableName:
+  ApplicationsTableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-TableSchema(table='Applications', attributes=[Attribute(name='application_id', type='S'), Attribute(name='name', type='S'), Attribute(name='description', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N'), Attribute(name='user_id', type='S')], partition_key='application_id', sort_key=None)-table-name
+      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-applications-table-name
       Type: String
-      Value: !Ref TableSchema(table='Applications', attributes=[Attribute(name='application_id', type='S'), Attribute(name='name', type='S'), Attribute(name='description', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N'), Attribute(name='user_id', type='S')], partition_key='application_id', sort_key=None)Table
+      Value: !Ref ApplicationsTable
 
-  TableSchema(table='Applications', attributes=[Attribute(name='application_id', type='S'), Attribute(name='name', type='S'), Attribute(name='description', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N'), Attribute(name='user_id', type='S')], partition_key='application_id', sort_key=None)TableArn:
+  ApplicationsTableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-TableSchema(table='Applications', attributes=[Attribute(name='application_id', type='S'), Attribute(name='name', type='S'), Attribute(name='description', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N'), Attribute(name='user_id', type='S')], partition_key='application_id', sort_key=None)-table-arn
+      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-applications-table-arn
       Type: String
-      Value: !GetAtt TableSchema(table='Applications', attributes=[Attribute(name='application_id', type='S'), Attribute(name='name', type='S'), Attribute(name='description', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N'), Attribute(name='user_id', type='S')], partition_key='application_id', sort_key=None)Table.Arn
-  # ApplicationRolesTable: Stores roles associated with applications, including role ID, description, and status.
-  TableSchema(table='ApplicationRoles', attributes=[Attribute(name='application_id', type='S'), Attribute(name='role_id', type='S'), Attribute(name='description', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='application_id', sort_key='role_id')Table:
+      Value: !GetAtt ApplicationsTable.Arn
+  ApplicationrolesTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-TableSchema(table='ApplicationRoles', attributes=[Attribute(name='application_id', type='S'), Attribute(name='role_id', type='S'), Attribute(name='description', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='application_id', sort_key='role_id')
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-applicationroles
       AttributeDefinitions:
+        - AttributeName: application_id
+          AttributeType: S
+        - AttributeName: role_id
+          AttributeType: S
       KeySchema:
-        - AttributeName: 
+        - AttributeName: application_id
           KeyType: HASH
+        - AttributeName: role_id
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
 
-  TableSchema(table='ApplicationRoles', attributes=[Attribute(name='application_id', type='S'), Attribute(name='role_id', type='S'), Attribute(name='description', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='application_id', sort_key='role_id')TableName:
+  ApplicationrolesTableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-TableSchema(table='ApplicationRoles', attributes=[Attribute(name='application_id', type='S'), Attribute(name='role_id', type='S'), Attribute(name='description', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='application_id', sort_key='role_id')-table-name
+      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-applicationroles-table-name
       Type: String
-      Value: !Ref TableSchema(table='ApplicationRoles', attributes=[Attribute(name='application_id', type='S'), Attribute(name='role_id', type='S'), Attribute(name='description', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='application_id', sort_key='role_id')Table
+      Value: !Ref ApplicationrolesTable
 
-  TableSchema(table='ApplicationRoles', attributes=[Attribute(name='application_id', type='S'), Attribute(name='role_id', type='S'), Attribute(name='description', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='application_id', sort_key='role_id')TableArn:
+  ApplicationrolesTableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-TableSchema(table='ApplicationRoles', attributes=[Attribute(name='application_id', type='S'), Attribute(name='role_id', type='S'), Attribute(name='description', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='application_id', sort_key='role_id')-table-arn
+      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-applicationroles-table-arn
       Type: String
-      Value: !GetAtt TableSchema(table='ApplicationRoles', attributes=[Attribute(name='application_id', type='S'), Attribute(name='role_id', type='S'), Attribute(name='description', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='application_id', sort_key='role_id')Table.Arn
-  # ApplicationUsersTable: Stores user associations with applications, including user ID, role ID, and status.
-  TableSchema(table='ApplicationUsers', attributes=[Attribute(name='application_id', type='S'), Attribute(name='user_id', type='S'), Attribute(name='role_id', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='application_id', sort_key='user_id')Table:
+      Value: !GetAtt ApplicationrolesTable.Arn
+  ApplicationusersTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-TableSchema(table='ApplicationUsers', attributes=[Attribute(name='application_id', type='S'), Attribute(name='user_id', type='S'), Attribute(name='role_id', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='application_id', sort_key='user_id')
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-applicationusers
       AttributeDefinitions:
+        - AttributeName: application_id
+          AttributeType: S
+        - AttributeName: user_id
+          AttributeType: S
       KeySchema:
-        - AttributeName: 
+        - AttributeName: application_id
           KeyType: HASH
+        - AttributeName: user_id
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
 
-  TableSchema(table='ApplicationUsers', attributes=[Attribute(name='application_id', type='S'), Attribute(name='user_id', type='S'), Attribute(name='role_id', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='application_id', sort_key='user_id')TableName:
+  ApplicationusersTableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-TableSchema(table='ApplicationUsers', attributes=[Attribute(name='application_id', type='S'), Attribute(name='user_id', type='S'), Attribute(name='role_id', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='application_id', sort_key='user_id')-table-name
+      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-applicationusers-table-name
       Type: String
-      Value: !Ref TableSchema(table='ApplicationUsers', attributes=[Attribute(name='application_id', type='S'), Attribute(name='user_id', type='S'), Attribute(name='role_id', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='application_id', sort_key='user_id')Table
+      Value: !Ref ApplicationusersTable
 
-  TableSchema(table='ApplicationUsers', attributes=[Attribute(name='application_id', type='S'), Attribute(name='user_id', type='S'), Attribute(name='role_id', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='application_id', sort_key='user_id')TableArn:
+  ApplicationusersTableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-TableSchema(table='ApplicationUsers', attributes=[Attribute(name='application_id', type='S'), Attribute(name='user_id', type='S'), Attribute(name='role_id', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='application_id', sort_key='user_id')-table-arn
+      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-applicationusers-table-arn
       Type: String
-      Value: !GetAtt TableSchema(table='ApplicationUsers', attributes=[Attribute(name='application_id', type='S'), Attribute(name='user_id', type='S'), Attribute(name='role_id', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='application_id', sort_key='user_id')Table.Arn
-  # RolesTable: Stores role details including role ID, name, type, permissions, and timestamps.
-  TableSchema(table='Roles', attributes=[Attribute(name='role_id', type='S'), Attribute(name='user_id', type='S'), Attribute(name='application_id', type='S'), Attribute(name='role_name', type='S'), Attribute(name='role_type', type='S'), Attribute(name='permissions', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N'), Attribute(name='active', type='S')], partition_key='role_id', sort_key='application_id')Table:
+      Value: !GetAtt ApplicationusersTable.Arn
+  RolesTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-TableSchema(table='Roles', attributes=[Attribute(name='role_id', type='S'), Attribute(name='user_id', type='S'), Attribute(name='application_id', type='S'), Attribute(name='role_name', type='S'), Attribute(name='role_type', type='S'), Attribute(name='permissions', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N'), Attribute(name='active', type='S')], partition_key='role_id', sort_key='application_id')
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-roles
       AttributeDefinitions:
+        - AttributeName: role_id
+          AttributeType: S
+        - AttributeName: application_id
+          AttributeType: S
       KeySchema:
-        - AttributeName: 
+        - AttributeName: role_id
           KeyType: HASH
+        - AttributeName: application_id
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
 
-  TableSchema(table='Roles', attributes=[Attribute(name='role_id', type='S'), Attribute(name='user_id', type='S'), Attribute(name='application_id', type='S'), Attribute(name='role_name', type='S'), Attribute(name='role_type', type='S'), Attribute(name='permissions', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N'), Attribute(name='active', type='S')], partition_key='role_id', sort_key='application_id')TableName:
+  RolesTableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-TableSchema(table='Roles', attributes=[Attribute(name='role_id', type='S'), Attribute(name='user_id', type='S'), Attribute(name='application_id', type='S'), Attribute(name='role_name', type='S'), Attribute(name='role_type', type='S'), Attribute(name='permissions', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N'), Attribute(name='active', type='S')], partition_key='role_id', sort_key='application_id')-table-name
+      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-roles-table-name
       Type: String
-      Value: !Ref TableSchema(table='Roles', attributes=[Attribute(name='role_id', type='S'), Attribute(name='user_id', type='S'), Attribute(name='application_id', type='S'), Attribute(name='role_name', type='S'), Attribute(name='role_type', type='S'), Attribute(name='permissions', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N'), Attribute(name='active', type='S')], partition_key='role_id', sort_key='application_id')Table
+      Value: !Ref RolesTable
 
-  TableSchema(table='Roles', attributes=[Attribute(name='role_id', type='S'), Attribute(name='user_id', type='S'), Attribute(name='application_id', type='S'), Attribute(name='role_name', type='S'), Attribute(name='role_type', type='S'), Attribute(name='permissions', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N'), Attribute(name='active', type='S')], partition_key='role_id', sort_key='application_id')TableArn:
+  RolesTableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-TableSchema(table='Roles', attributes=[Attribute(name='role_id', type='S'), Attribute(name='user_id', type='S'), Attribute(name='application_id', type='S'), Attribute(name='role_name', type='S'), Attribute(name='role_type', type='S'), Attribute(name='permissions', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N'), Attribute(name='active', type='S')], partition_key='role_id', sort_key='application_id')-table-arn
+      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-roles-table-arn
       Type: String
-      Value: !GetAtt TableSchema(table='Roles', attributes=[Attribute(name='role_id', type='S'), Attribute(name='user_id', type='S'), Attribute(name='application_id', type='S'), Attribute(name='role_name', type='S'), Attribute(name='role_type', type='S'), Attribute(name='permissions', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N'), Attribute(name='active', type='S')], partition_key='role_id', sort_key='application_id')Table.Arn
-  # UsersTable: Stores user details including user ID, cognito ID, email, phone number, and status.
-  TableSchema(table='Users', attributes=[Attribute(name='user_id', type='S'), Attribute(name='cognito_id', type='S'), Attribute(name='email', type='S'), Attribute(name='phone_number', type='S'), Attribute(name='phone_verified', type='S'), Attribute(name='first_name', type='S'), Attribute(name='last_name', type='S'), Attribute(name='groups', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='user_id', sort_key=None)Table:
+      Value: !GetAtt RolesTable.Arn
+  UsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-TableSchema(table='Users', attributes=[Attribute(name='user_id', type='S'), Attribute(name='cognito_id', type='S'), Attribute(name='email', type='S'), Attribute(name='phone_number', type='S'), Attribute(name='phone_verified', type='S'), Attribute(name='first_name', type='S'), Attribute(name='last_name', type='S'), Attribute(name='groups', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='user_id', sort_key=None)
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-users
       AttributeDefinitions:
+        - AttributeName: user_id
+          AttributeType: S
       KeySchema:
-        - AttributeName: 
+        - AttributeName: user_id
           KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
 
-  TableSchema(table='Users', attributes=[Attribute(name='user_id', type='S'), Attribute(name='cognito_id', type='S'), Attribute(name='email', type='S'), Attribute(name='phone_number', type='S'), Attribute(name='phone_verified', type='S'), Attribute(name='first_name', type='S'), Attribute(name='last_name', type='S'), Attribute(name='groups', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='user_id', sort_key=None)TableName:
+  UsersTableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-TableSchema(table='Users', attributes=[Attribute(name='user_id', type='S'), Attribute(name='cognito_id', type='S'), Attribute(name='email', type='S'), Attribute(name='phone_number', type='S'), Attribute(name='phone_verified', type='S'), Attribute(name='first_name', type='S'), Attribute(name='last_name', type='S'), Attribute(name='groups', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='user_id', sort_key=None)-table-name
+      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-users-table-name
       Type: String
-      Value: !Ref TableSchema(table='Users', attributes=[Attribute(name='user_id', type='S'), Attribute(name='cognito_id', type='S'), Attribute(name='email', type='S'), Attribute(name='phone_number', type='S'), Attribute(name='phone_verified', type='S'), Attribute(name='first_name', type='S'), Attribute(name='last_name', type='S'), Attribute(name='groups', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='user_id', sort_key=None)Table
+      Value: !Ref UsersTable
 
-  TableSchema(table='Users', attributes=[Attribute(name='user_id', type='S'), Attribute(name='cognito_id', type='S'), Attribute(name='email', type='S'), Attribute(name='phone_number', type='S'), Attribute(name='phone_verified', type='S'), Attribute(name='first_name', type='S'), Attribute(name='last_name', type='S'), Attribute(name='groups', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='user_id', sort_key=None)TableArn:
+  UsersTableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-TableSchema(table='Users', attributes=[Attribute(name='user_id', type='S'), Attribute(name='cognito_id', type='S'), Attribute(name='email', type='S'), Attribute(name='phone_number', type='S'), Attribute(name='phone_verified', type='S'), Attribute(name='first_name', type='S'), Attribute(name='last_name', type='S'), Attribute(name='groups', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='user_id', sort_key=None)-table-arn
+      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-users-table-arn
       Type: String
-      Value: !GetAtt TableSchema(table='Users', attributes=[Attribute(name='user_id', type='S'), Attribute(name='cognito_id', type='S'), Attribute(name='email', type='S'), Attribute(name='phone_number', type='S'), Attribute(name='phone_verified', type='S'), Attribute(name='first_name', type='S'), Attribute(name='last_name', type='S'), Attribute(name='groups', type='S'), Attribute(name='status', type='S'), Attribute(name='created_at', type='N'), Attribute(name='updated_at', type='N')], partition_key='user_id', sort_key=None)Table.Arn
+      Value: !GetAtt UsersTable.Arn
 
 # --------------------------------------------------- #
 Outputs:
@@ -155,20 +221,20 @@ Outputs:
   ApplicationsTableArn:
     Description: Applications Table ARN
     Value: !GetAtt ApplicationsTable.Arn
-  ApplicationRolesTableName:
-    Description: ApplicationRoles Table Name
-    Value: !Ref ApplicationRolesTable
+  ApplicationrolesTableName:
+    Description: Applicationroles Table Name
+    Value: !Ref ApplicationrolesTable
 
-  ApplicationRolesTableArn:
-    Description: ApplicationRoles Table ARN
-    Value: !GetAtt ApplicationRolesTable.Arn
-  ApplicationUsersTableName:
-    Description: ApplicationUsers Table Name
-    Value: !Ref ApplicationUsersTable
+  ApplicationrolesTableArn:
+    Description: Applicationroles Table ARN
+    Value: !GetAtt ApplicationrolesTable.Arn
+  ApplicationusersTableName:
+    Description: Applicationusers Table Name
+    Value: !Ref ApplicationusersTable
 
-  ApplicationUsersTableArn:
-    Description: ApplicationUsers Table ARN
-    Value: !GetAtt ApplicationUsersTable.Arn
+  ApplicationusersTableArn:
+    Description: Applicationusers Table ARN
+    Value: !GetAtt ApplicationusersTable.Arn
   RolesTableName:
     Description: Roles Table Name
     Value: !Ref RolesTable

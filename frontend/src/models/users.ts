@@ -1,7 +1,7 @@
 /**
- * Users model.
+ * users model.
  */
-export interface Users {
+export interface users {
   user_id: string;
   cognito_id: string;
   email: string;

@@ -177,7 +177,7 @@ def load_schemas() -> Dict[str, TableSchema]:
                 schema_data = yaml.safe_load(f)
 
                 # extract table name from entity file name
-                table = schema_data['table']
+                table = schema_data['table'].lower()  # Convert to lowercase for consistency
                 print(f"table: {table}")
                 
             # Extract attributes and keys
@@ -190,7 +190,7 @@ def load_schemas() -> Dict[str, TableSchema]:
             partition_key = schema_data['model']['keys']['primary']['partition']
             sort_key = schema_data['model']['keys']['primary'].get('sort')
             
-            # Create TableSchema with original snake_case table name
+            # Create TableSchema with lowercase table name
             schemas[table] = TableSchema(
                 table=table,
                 attributes=attributes,
@@ -359,65 +359,37 @@ def generate_cloudformation_template(schemas: Dict[str, TableSchema], template_p
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template(os.path.basename(template_path))
         
-        # Generate the template content
-        template_content = template.render(schemas=schemas)
-        
-        # Process the template to fix formatting
-        fixed_lines = []
-        current_table = None
-        in_attributes = False
-        in_key_schema = False
-        
-        for line in template_content.split('\n'):
-            stripped = line.strip()
+        # Process schemas into the format expected by the template
+        processed_schemas = {}
+        for table_name, schema in schemas.items():
+            # Get all attributes that are part of keys (primary and secondary)
+            key_attributes = set()
+            key_attributes.add(schema.partition_key)
+            if schema.sort_key:
+                key_attributes.add(schema.sort_key)
+                
+            # Process attributes that are part of keys
+            attributes = []
+            for attr in schema.attributes:
+                if attr.name in key_attributes:
+                    attributes.append({
+                        'name': attr.name,
+                        'type': attr.type.upper()  # DynamoDB expects uppercase type
+                    })
             
-            # Track when we enter a new table definition
-            if 'Type: AWS::DynamoDB::Table' in line:
-                current_table = True
-                in_attributes = False
-                in_key_schema = False
-                fixed_lines.append(line)
-                continue
-                
-            # Track attribute definitions section
-            if current_table and 'AttributeDefinitions:' in stripped:
-                in_attributes = True
-                fixed_lines.append('      AttributeDefinitions:')
-                continue
-                
-            # Track key schema section    
-            if current_table and 'KeySchema:' in stripped:
-                in_key_schema = True
-                in_attributes = False
-                fixed_lines.append('      KeySchema:')
-                continue
-                
-            # Handle attribute definition entries
-            if in_attributes and 'AttributeName:' in stripped:
-                name = stripped.split(':')[1].strip()
-                fixed_lines.append(f'        - AttributeName: {name}')
-                fixed_lines.append('          AttributeType: S')
-                continue
-                
-            # Handle key schema entries    
-            if in_key_schema and 'AttributeName:' in stripped:
-                name = stripped.split(':')[1].strip()
-                fixed_lines.append(f'        - AttributeName: {name}')
-                fixed_lines.append('          KeyType: HASH')
-                continue
-                
-            # Reset tracking when we exit a section
-            if stripped == '':
-                in_attributes = False
-                in_key_schema = False
-                
-            # Add other lines as is
-            if not (in_attributes or in_key_schema) or 'Properties:' in line:
-                fixed_lines.append(line)
-                
-        # Write the fixed content
+            processed_schemas[table_name] = {
+                'table': table_name,  # Keep original table name
+                'attributes': attributes,
+                'partition_key': schema.partition_key,
+                'sort_key': schema.sort_key
+            }
+        
+        # Generate the template content
+        template_content = template.render(schemas=processed_schemas)
+        
+        # Write the content
         with open(output_path, 'w') as f:
-            f.write('\n'.join(fixed_lines))
+            f.write(template_content)
             
         logger.info('Generated DynamoDB CloudFormation template')
         

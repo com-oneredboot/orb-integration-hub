@@ -169,3 +169,4 @@ node_modules/
 
 # Generated GraphQL schema files
 backend/infrastructure/cloudformation/appsync_*.graphql
+infrastructure/cloudformation/appsync_*.graphql

@@ -29,11 +29,11 @@ Parameters:
 
 # --------------------------------------------------- #
 Resources:
-  {% for schema, table in schemas.items() %}
-  {{ table }}Table:
+  {% for table_name, schema in schemas.items() %}
+  {{ schema.table|title }}Table:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ table }}
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}
       AttributeDefinitions:
         {% for attr in schema.attributes %}
         - AttributeName: {{ attr.name }}
@@ -49,7 +49,7 @@ Resources:
       BillingMode: PAY_PER_REQUEST
       Tags:
         - Key: Billable
-          Value: !Sub ${Environment}-${CustomerId}-${ProjectId}
+          Value: "true"
         - Key: CustomerId
           Value: !Ref CustomerId
         - Key: Environment
@@ -57,29 +57,29 @@ Resources:
         - Key: ProjectId
           Value: !Ref ProjectId
 
-  {{ table }}TableName:
+  {{ schema.table|title }}TableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-{{ table }}-table-name
+      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-{{ schema.table }}-table-name
       Type: String
-      Value: !Ref {{ table }}Table
+      Value: !Ref {{ schema.table|title }}Table
 
-  {{ table }}TableArn:
+  {{ schema.table|title }}TableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-{{ table }}-table-arn
+      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-{{ schema.table }}-table-arn
       Type: String
-      Value: !GetAtt {{ table }}Table.Arn
+      Value: !GetAtt {{ schema.table|title }}Table.Arn
   {% endfor %}
 
 # --------------------------------------------------- #
 Outputs:
-  {% for table, schema in schemas.items() %}
-  {{ table }}TableName:
-    Description: {{ table }} Table Name
-    Value: !Ref {{ table }}Table
+  {% for table_name, schema in schemas.items() %}
+  {{ schema.table|title }}TableName:
+    Description: {{ schema.table|title }} Table Name
+    Value: !Ref {{ schema.table|title }}Table
 
-  {{ table }}TableArn:
-    Description: {{ table }} Table ARN
-    Value: !GetAtt {{ table }}Table.Arn
+  {{ schema.table|title }}TableArn:
+    Description: {{ schema.table|title }} Table ARN
+    Value: !GetAtt {{ schema.table|title }}Table.Arn
   {% endfor %}

@@ -1,7 +1,7 @@
 /**
- * Applications model.
+ * applications model.
  */
-export interface Applications {
+export interface applications {
   application_id: string;
   name: string;
   description: string;
