@@ -295,6 +295,7 @@ Resources:
                 Resource: !Ref SMSVerificationCodeTopic
               - Effect: Allow
                 Action:
+                  - sns:Publish
                   - sns:Subscribe
                   - sns:ConfirmSubscription
                 Resource: !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*"

@@ -102,9 +102,14 @@
 - Added broader SNS resource permissions for subscription operations
 - Fixed CloudFormation deployment error with SNS permissions
 
+### SNS Publish Permissions Update
+- Added sns:Publish permission to all SNS resources
+- Fixed remaining SNS permission error in CloudFormation deployment
+- Updated IAM role policy to allow publishing to any SNS topic
+
 ### Changes Since Last Update
 ```
-[Add commit hash after deployment] - Fix SNS permissions for Cognito SMS functionality
+[Add commit hash after deployment] - Fix SNS publish permissions for Cognito SMS functionality
 ```
 
 ### Files Changed
@@ -118,3 +123,4 @@ infrastructure/cloudformation/cognito.yml
 - Removed redundant permissions from LambdaRole
 - Added region specification for SMS operations
 - Added comprehensive SNS permissions for topic management and subscriptions
+- Added broad sns:Publish permission to support SMS functionality
