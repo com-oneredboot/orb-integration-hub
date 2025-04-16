@@ -126,16 +126,6 @@ Resources:
       DynamoDBConfig:
         TableName: !Sub '{{resolve:ssm:/${Environment}/${CustomerId}/${ProjectId}/dynamodb/application_users/table-name}}'
         AwsRegion: !Ref AWS::Region
-  # SMSVerificationDataSource: Connects AppSync to the Lambda function for SMS verification.
-  SMSVerificationDataSource:
-    Type: AWS::AppSync::DataSource
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      Name: SMSVerificationDataSource
-      Type: AWS_LAMBDA
-      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
-      LambdaConfig:
-        LambdaFunctionArn: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-sms-verification-lambda-arn}}'
   # UsersDataSource: Connects AppSync to the DynamoDB table for users.
   UsersDataSource:
     Type: AWS::AppSync::DataSource
@@ -857,31 +847,6 @@ Resources:
           "message": "Role updated successfully",
           "role_id": $util.toJson($ctx.args.input.role_id)
         }
-
-  # SMS Verification Resolver
-  SMSVerificationResolver:
-    Type: AWS::AppSync::Resolver
-    DependsOn: IntegrationHubSchema
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: sendSMSVerificationCode
-      DataSourceName: !GetAtt SMSVerificationDataSource.Name
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "Invoke",
-          "payload": {
-            "input": $util.toJson($ctx.args.input)
-          }
-        }
-      ResponseMappingTemplate: |
-        #if($ctx.error)
-          $util.error($ctx.error.message, $ctx.error.type)
-        #end
-        
-        ## Return the Lambda response directly
-        $util.toJson($ctx.result)
 
 # --------------------------------------------------- #
 Outputs:

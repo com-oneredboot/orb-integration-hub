@@ -68,21 +68,8 @@ Globals:
 # --------------------------------------------------- #
 Resources:
 
-  # SMS Verification Lambda Function
-  SMSVerificationFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub '${CustomerId}-${ProjectId}-${Environment}-sms-verification'
-      Role: !GetAtt LambdaExecutionRole.Arn
-      CodeUri: ../../src/lambdas/sms_verification
-      Environment:
-        Variables:
-          ENVIRONMENT: !Ref Environment
-          LOG_LEVEL: !Ref ApplicationLoggingLevel
-          ORIGINATION_NUMBER: !Ref SMSOriginationNumber
-
   # IAM Roles
-  # The LambdaExecutionRole is used by the SMSVerificationFunction to execute and access necessary AWS services.
+  # The LambdaExecutionRole is used by Lambda functions to execute and access necessary AWS services.
   # It includes managed policies for basic execution and custom policies for accessing DynamoDB, Secrets Manager, SSM, CloudWatch, SQS, and SES.
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -226,19 +213,6 @@ Resources:
               - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:/${CustomerId}/${ProjectId}/${Environment}/*"
 
   # SSM Parameters
-  SMSVerificationLambdaArnParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-sms-verification-lambda-arn"
-      Type: String
-      Value: !GetAtt SMSVerificationFunction.Arn
-      Description: ARN of the SMS Verification Lambda function
-      Tags:
-        Billable: true
-        CustomerId: !Ref CustomerId
-        Environment: !Ref Environment
-        ProjectId: !Ref ProjectId
-
   SMSOriginationNumberParemeter:
     Type: AWS::SSM::Parameter
     Properties:
@@ -248,6 +222,6 @@ Resources:
 
 # --------------------------------------------------- #
 Outputs:
-  SMSVerificationFunctionArn:
-    Description: ARN of the SMS Verification Lambda function
-    Value: !GetAtt SMSVerificationFunction.Arn
+  LambdaExecutionRoleArn:
+    Description: ARN of the Lambda execution role
+    Value: !GetAtt LambdaExecutionRole.Arn
