@@ -95,6 +95,7 @@ Resources:
       SmsConfiguration:
         ExternalId: !Sub "${CustomerId}-${ProjectId}-${Environment}-cognito-sms"
         SnsCallerArn: !GetAtt CognitoSMSRole.Arn
+        SnsRegion: !Ref AWS::Region
 
   # Define Cognito Groups
   UserGroup:
@@ -194,7 +195,7 @@ Resources:
                 client.admin_add_user_to_group(
                     UserPoolId=event['userPoolId'],
                     Username=event['userName'],
-                    GroupName='User'  # Changed from 'AcpUserGroup' to 'User'
+                    GroupName='User'
                 )
                 print(f"User {event['userName']} added to User group")
                 return event
@@ -281,6 +282,14 @@ Resources:
               StringEquals:
                 'sts:ExternalId': !Sub "${CustomerId}-${ProjectId}-${Environment}-cognito-sms"
       Policies:
+        - PolicyName: !Sub "${CustomerId}-${ProjectId}-${Environment}-cognito-sms-policy"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !Ref SMSVerificationCodeTopic
         - PolicyName: AWSXrayWriteOnlyAccess
           PolicyDocument:
             Version: '2012-10-17'
