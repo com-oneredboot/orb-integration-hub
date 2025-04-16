@@ -166,7 +166,7 @@ def to_snake_case(s: str) -> str:
 def load_schemas() -> Dict[str, TableSchema]:
     """Load all schemas from index.yml."""
     try:
-        # List all files in the schemas/enitites directory
+        # List all files in the schemas/entities directory
         entities = [f for f in os.listdir(os.path.join(SCRIPT_DIR, 'entities')) if f.endswith('.yml')]
             
         schemas = {}

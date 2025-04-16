@@ -60,14 +60,14 @@ Resources:
   {{ schema.table|title }}TableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-{{ schema.table }}-table-name
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}-table-name
       Type: String
       Value: !Ref {{ schema.table|title }}Table
 
   {{ schema.table|title }}TableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${Environment}-${CustomerId}-${ProjectId}-{{ schema.table }}-table-arn
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}-table-arn
       Type: String
       Value: !GetAtt {{ schema.table|title }}Table.Arn
   {% endfor %}
