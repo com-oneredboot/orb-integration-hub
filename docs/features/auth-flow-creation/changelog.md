@@ -102,6 +102,11 @@
 - Added broader SNS resource permissions for subscription operations
 - Fixed CloudFormation deployment error with SNS permissions
 
+### Explicit SNS Publish Permissions
+- Added dedicated statement for sns:Publish on verification topic
+- Separated SNS permissions into distinct statements for better clarity
+- Fixed remaining SNS permission error in CloudFormation deployment
+
 ### Comprehensive SNS Permissions Update
 - Added all required SNS permissions for Cognito SMS functionality:
   - ListTopics, DeleteTopic, AddPermission, RemovePermission
@@ -112,7 +117,7 @@
 
 ### Changes Since Last Update
 ```
-[Add commit hash after deployment] - Add comprehensive SNS permissions for Cognito SMS functionality
+[Add commit hash after deployment] - Add explicit SNS publish permissions for Cognito SMS functionality
 ```
 
 ### Files Changed
@@ -127,4 +132,4 @@ infrastructure/cloudformation/cognito.yml
 - Added region specification for SMS operations
 - Added comprehensive SNS permissions for topic management and subscriptions
 - Added separate ListTopics permission with wildcard resource
-- Added endpoint and subscription management permissions
+- Added explicit sns:Publish permission on verification topic
