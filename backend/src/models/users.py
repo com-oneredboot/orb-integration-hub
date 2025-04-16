@@ -1,12 +1,24 @@
 """
-users model.
+Users model.
 """
-from typing import Optional
-from pydantic import BaseModel
+from typing import Optional, List
+from pydantic import BaseModel, Field
+from datetime import datetime
 
-class users(BaseModel):
-    """users model."""
-    user_id: str    cognito_id: str    email: str    phone_number: str    phone_verified: str    first_name: str    last_name: str    groups: str    status: str    created_at: int    updated_at: int
+class Users(BaseModel):
+    """Users model."""
+    user_id: str = Field(..., description="user_id")
+    cognito_id: str = Field(..., description="cognito_id")
+    email: str = Field(..., description="email")
+    phone_number: str = Field(..., description="phone_number")
+    phone_verified: str = Field(..., description="phone_verified")
+    first_name: str = Field(..., description="first_name")
+    last_name: str = Field(..., description="last_name")
+    groups: str = Field(..., description="groups")
+    status: str = Field(..., description="status")
+    created_at: int = Field(..., description="created_at")
+    updated_at: int = Field(..., description="updated_at")
+
     class Config:
         """Model configuration."""
         from_attributes = True

@@ -1,13 +1,14 @@
 """
 {{ table }} model.
 """
-from typing import Optional
-from pydantic import BaseModel
+from typing import Optional, List
+from pydantic import BaseModel, Field
+from datetime import datetime
 
 class {{ table }}(BaseModel):
-    """{{ table}} model."""
+    """{{ table }} model."""
     {% for attr in attributes %}
-    {{ attr.name }}: {% if attr.type == 'N' %}int{% else %}str{% endif %}
+    {{ attr.name }}: {% if attr.type == 'N' %}int{% else %}str{% endif %} = Field(..., description="{{ attr.name }}")
     {% endfor %}
 
     class Config:

@@ -85,24 +85,67 @@ type {{ table_name | to_pascal_case }}ListResponse {
 # Query operations
 extend type Query {
   {% for table_name, schema in schemas.items() %}
-  {{ table_name | to_camel_case }}QueryById(id: ID!): {{ table_name | to_pascal_case }}Response
+  {% if table_name == 'applications' %}
+  applicationQueryById(id: ID!): {{ table_name | to_pascal_case }}Response
     @aws_auth(cognito_groups: ["admin"])
-  
-  {{ table_name | to_camel_case }}Query(input: {{ table_name | to_pascal_case }}QueryInput): {{ table_name | to_pascal_case }}ListResponse
+  {% elif table_name == 'applicationroles' %}
+  roleQueryById(id: ID!): {{ table_name | to_pascal_case }}Response
     @aws_auth(cognito_groups: ["admin"])
+  roleQueryByApplicationId(application_id: String!): {{ table_name | to_pascal_case }}ListResponse
+    @aws_auth(cognito_groups: ["admin"])
+  {% elif table_name == 'applicationusers' %}
+  applicationUserQueryById(id: ID!): {{ table_name | to_pascal_case }}Response
+    @aws_auth(cognito_groups: ["admin"])
+  {% elif table_name == 'roles' %}
+  roleQueryById(id: ID!): {{ table_name | to_pascal_case }}Response
+    @aws_auth(cognito_groups: ["admin"])
+  roleQueryByApplicationId(application_id: String!): {{ table_name | to_pascal_case }}ListResponse
+    @aws_auth(cognito_groups: ["admin"])
+  {% elif table_name == 'users' %}
+  userQueryById(id: ID!): {{ table_name | to_pascal_case }}Response
+    @aws_auth(cognito_groups: ["admin"])
+  {% endif %}
   {% endfor %}
 }
 
 # Mutation operations
 extend type Mutation {
   {% for table_name, schema in schemas.items() %}
-  {{ table_name | to_camel_case }}Create(input: {{ table_name | to_pascal_case }}CreateInput!): {{ table_name | to_pascal_case }}Response
+  {% if table_name == 'applications' %}
+  applicationCreate(input: {{ table_name | to_pascal_case }}CreateInput!): {{ table_name | to_pascal_case }}Response
     @aws_auth(cognito_groups: ["admin"])
-  
-  {{ table_name | to_camel_case }}Update(id: ID!, input: {{ table_name | to_pascal_case }}UpdateInput!): {{ table_name | to_pascal_case }}Response
+  applicationUpdate(id: ID!, input: {{ table_name | to_pascal_case }}UpdateInput!): {{ table_name | to_pascal_case }}Response
     @aws_auth(cognito_groups: ["admin"])
-  
-  {{ table_name | to_camel_case }}Delete(id: ID!): {{ table_name | to_pascal_case }}Response
+  applicationDelete(id: ID!): {{ table_name | to_pascal_case }}Response
     @aws_auth(cognito_groups: ["admin"])
+  {% elif table_name == 'applicationroles' %}
+  roleCreate(input: {{ table_name | to_pascal_case }}CreateInput!): {{ table_name | to_pascal_case }}Response
+    @aws_auth(cognito_groups: ["admin"])
+  roleUpdate(id: ID!, input: {{ table_name | to_pascal_case }}UpdateInput!): {{ table_name | to_pascal_case }}Response
+    @aws_auth(cognito_groups: ["admin"])
+  roleDelete(id: ID!): {{ table_name | to_pascal_case }}Response
+    @aws_auth(cognito_groups: ["admin"])
+  {% elif table_name == 'applicationusers' %}
+  applicationUserCreate(input: {{ table_name | to_pascal_case }}CreateInput!): {{ table_name | to_pascal_case }}Response
+    @aws_auth(cognito_groups: ["admin"])
+  applicationUserUpdate(id: ID!, input: {{ table_name | to_pascal_case }}UpdateInput!): {{ table_name | to_pascal_case }}Response
+    @aws_auth(cognito_groups: ["admin"])
+  applicationUserDelete(id: ID!): {{ table_name | to_pascal_case }}Response
+    @aws_auth(cognito_groups: ["admin"])
+  {% elif table_name == 'roles' %}
+  roleCreate(input: {{ table_name | to_pascal_case }}CreateInput!): {{ table_name | to_pascal_case }}Response
+    @aws_auth(cognito_groups: ["admin"])
+  roleUpdate(id: ID!, input: {{ table_name | to_pascal_case }}UpdateInput!): {{ table_name | to_pascal_case }}Response
+    @aws_auth(cognito_groups: ["admin"])
+  roleDelete(id: ID!): {{ table_name | to_pascal_case }}Response
+    @aws_auth(cognito_groups: ["admin"])
+  {% elif table_name == 'users' %}
+  userCreate(input: {{ table_name | to_pascal_case }}CreateInput!): {{ table_name | to_pascal_case }}Response
+    @aws_auth(cognito_groups: ["admin"])
+  userUpdate(id: ID!, input: {{ table_name | to_pascal_case }}UpdateInput!): {{ table_name | to_pascal_case }}Response
+    @aws_auth(cognito_groups: ["admin"])
+  userDelete(id: ID!): {{ table_name | to_pascal_case }}Response
+    @aws_auth(cognito_groups: ["admin"])
+  {% endif %}
   {% endfor %}
 }

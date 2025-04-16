@@ -1,7 +1,7 @@
 /**
- * applicationroles model.
+ * ApplicationRoles model.
  */
-export interface applicationroles {
+export interface ApplicationRoles {
   application_id: string;
   role_id: string;
   description: string;

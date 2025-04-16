@@ -1,0 +1,278 @@
+# --------------------------------------------------- #
+AWSTemplateFormatVersion: 2010-09-09
+
+# --------------------------------------------------- #
+Transform: AWS::Serverless-2016-10-31
+
+# --------------------------------------------------- #
+Description: >
+  Application Infrastructure - AppSync Stack
+
+# --------------------------------------------------- #
+Parameters:
+  Environment:
+    Default: dev
+    Type: String
+  CustomerId:
+    Default: orb
+    Type: String
+  ProjectId:
+    Default: integration-hub
+    Type: String
+  TracingIs:
+    Default: Active
+    Type: String
+  SchemaS3Key:
+    Type: String
+    Description: Name of the GraphQL schema file in S3
+
+# --------------------------------------------------- #
+Resources:
+  # IAM Roles for AppSync
+  AppSyncServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: appsync.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+        - arn:aws:iam::aws:policy/AWSLambda_FullAccess
+      Policies:
+        - PolicyName: SSMParameterAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Environment}/${CustomerId}/${ProjectId}/*'
+  
+  AppSyncLoggingServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: appsync.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSAppSyncPushToCloudWatchLogs
+
+  IntegrationHubApi:
+    Type: AWS::AppSync::GraphQLApi
+    Properties:
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-appsync'
+      AuthenticationType: AMAZON_COGNITO_USER_POOLS
+      UserPoolConfig:
+        UserPoolId: !Sub "{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-cognito-user-pool-id}}"
+        AwsRegion: !Ref AWS::Region
+        DefaultAction: ALLOW
+      AdditionalAuthenticationProviders:
+        - AuthenticationType: API_KEY
+      LogConfig:
+        CloudWatchLogsRoleArn: !GetAtt AppSyncLoggingServiceRole.Arn
+        FieldLogLevel: ALL
+        ExcludeVerboseContent: false
+
+  IntegrationHubApiKey:
+    Type: AWS::AppSync::ApiKey
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      Description: "API Key for unauthenticated access"
+      Expires: 1767211838
+
+  ApiKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-appsync-graphql-key'
+      Description: "AppSync API Key for unauthenticated access"
+      SecretString: !GetAtt IntegrationHubApiKey.ApiKey
+
+  IntegrationHubSchema:
+    Type: AWS::AppSync::GraphQLSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      DefinitionS3Location: !Sub
+        - 's3://${ArtifactBucket}/${SchemaKey}'
+        - ArtifactBucket: !Sub '${CustomerId}-${ProjectId}-build-templates'
+          SchemaKey: !Ref SchemaS3Key
+
+  # Data Sources
+  {%- for table_name, schema in schemas.items() %}
+  [[table_name | to_pascal_case]]DataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      Name: [[table_name | to_pascal_case]]DataSource
+      Type: AMAZON_DYNAMODB
+      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+      DynamoDBConfig:
+        TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-[[table_name]]-table-name}}'
+        AwsRegion: !Ref AWS::Region
+
+  # [[table_name | to_pascal_case]] Resolvers
+  [[table_name | to_pascal_case]]CreateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: [[table_name | to_camel_case]]Create
+      DataSourceName: !GetAtt [[table_name | to_pascal_case]]DataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2017-02-28",
+          "operation": "PutItem",
+          "key": {
+            "[[schema.partition_key]]": $util.dynamodb.toDynamoDBJson($ctx.args.input.[[schema.partition_key]])
+            {%- if schema.sort_key %}
+            ,"[[schema.sort_key]]": $util.dynamodb.toDynamoDBJson($ctx.args.input.[[schema.sort_key]])
+            {%- endif %}
+          },
+          "attributeValues": $util.toJson($ctx.args.input)
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          $util.error($ctx.error.message, $ctx.error.type)
+        #end
+        
+        #set($response = {
+          "status_code": 200,
+          "message": "[[table_name | to_pascal_case]] created successfully",
+          "data": $ctx.args.input
+        })
+        
+        $util.toJson($response)
+
+  [[table_name | to_pascal_case]]QueryByIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: [[table_name | to_camel_case]]QueryById
+      DataSourceName: !GetAtt [[table_name | to_pascal_case]]DataSource.Name
+      RequestMappingTemplate: |
+        #if($ctx.args.input.[[schema.partition_key]])
+          {
+            "version": "2017-02-28",
+            "operation": "GetItem",
+            "key": {
+              "[[schema.partition_key]]": $util.dynamodb.toDynamoDBJson($ctx.args.input.[[schema.partition_key]])
+              {%- if schema.sort_key %}
+              ,"[[schema.sort_key]]": $util.dynamodb.toDynamoDBJson($ctx.args.input.[[schema.sort_key]])
+              {%- endif %}
+            }
+          }
+        #else
+          $util.error("Invalid identifier. Must provide [[schema.partition_key]]")
+        #end
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          $util.error($ctx.error.message, $ctx.error.type)
+        #end
+        
+        #set($response = {
+          "status_code": 200,
+          "data": {}
+        })
+        
+        #if($ctx.result)
+          #if($ctx.result.items)
+            #if($ctx.result.items.size() == 0)
+              $util.qr($response.put("data", null))
+            #else
+              $util.qr($response.put("data", $ctx.result.items[0]))
+            #end
+          #else
+            $util.qr($response.put("data", $ctx.result))
+          #end
+        #else
+          $util.qr($response.put("data", null))
+        #end
+        
+        $util.toJson($response)
+
+  [[table_name | to_pascal_case]]UpdateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: [[table_name | to_camel_case]]Update
+      DataSourceName: !GetAtt [[table_name | to_pascal_case]]DataSource.Name
+      RequestMappingTemplate: |
+        #set($input = $ctx.args.input)
+        #set($now = $util.time.nowISO8601())
+        
+        #if(!$input.[[schema.partition_key]])
+          $util.error("[[schema.partition_key]] is a required field for updates")
+        #end
+        
+        #set($expNames = {})
+        #set($expValues = {})
+        #set($expSet = [])
+        
+        #set($updateCount = 0)
+        #foreach($field in $input.keySet())
+          #if($field != "[[schema.partition_key]]" && $field != "[[schema.sort_key]]")
+            $util.qr($expNames.put("#$field", "$field"))
+            $util.qr($expValues.put(":$field", $util.dynamodb.toDynamoDB($input.get($field))))
+            $util.qr($expSet.add("#$field = :$field"))
+            #set($updateCount = $updateCount + 1)
+          #end
+        #end
+        
+        #if($updateCount == 0)
+          $util.error("No fields to update were provided")
+        #end
+        
+        $util.qr($expNames.put("#updated_at", "updated_at"))
+        $util.qr($expValues.put(":updated_at", $util.dynamodb.toDynamoDB($now)))
+        $util.qr($expSet.add("#updated_at = :updated_at"))
+        
+        #set($expression = "SET " + $expSet.join(", "))
+        
+        {
+          "version": "2018-05-29",
+          "operation": "UpdateItem",
+          "key": {
+            "[[schema.partition_key]]": $util.dynamodb.toDynamoDBJson($input.[[schema.partition_key]])
+            {%- if schema.sort_key %}
+            ,"[[schema.sort_key]]": $util.dynamodb.toDynamoDBJson($input.[[schema.sort_key]])
+            {%- endif %}
+          },
+          "update": {
+            "expression": "$expression",
+            "expressionNames": $util.toJson($expNames),
+            "expressionValues": $util.toJson($expValues)
+          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          $util.error($ctx.error.message, $ctx.error.type)
+        #end
+        
+        {
+          "status_code": 200,
+          "message": "[[table_name | to_pascal_case]] updated successfully",
+          "[[schema.partition_key]]": $util.toJson($ctx.args.input.[[schema.partition_key]])
+        }
+  {%- endfor %}
+
+# --------------------------------------------------- #
+Outputs:
+  GraphQLApiUrl:
+    Description: 'URL of the AppSync GraphQL API'
+    Value: !GetAtt IntegrationHubApi.GraphQLUrl
+  GraphQLApiKeySecretName:
+    Description: 'Name of the Secret containing the AppSync API Key'
+    Value: !Ref ApiKeySecret 

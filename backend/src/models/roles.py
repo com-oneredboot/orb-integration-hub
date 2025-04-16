@@ -1,12 +1,22 @@
 """
-roles model.
+Roles model.
 """
-from typing import Optional
-from pydantic import BaseModel
+from typing import Optional, List
+from pydantic import BaseModel, Field
+from datetime import datetime
 
-class roles(BaseModel):
-    """roles model."""
-    role_id: str    user_id: str    application_id: str    role_name: str    role_type: str    permissions: str    created_at: int    updated_at: int    active: str
+class Roles(BaseModel):
+    """Roles model."""
+    role_id: str = Field(..., description="role_id")
+    user_id: str = Field(..., description="user_id")
+    application_id: str = Field(..., description="application_id")
+    role_name: str = Field(..., description="role_name")
+    role_type: str = Field(..., description="role_type")
+    permissions: str = Field(..., description="permissions")
+    created_at: int = Field(..., description="created_at")
+    updated_at: int = Field(..., description="updated_at")
+    active: str = Field(..., description="active")
+
     class Config:
         """Model configuration."""
         from_attributes = True

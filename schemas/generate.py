@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 from dataclasses import dataclass
+import re
 
 # 3rd party imports
 import yaml
@@ -131,7 +132,6 @@ def setup_jinja_env() -> Environment:
     # Add custom filters
     def regex_search(value: str, pattern: str, group: int = 0) -> str:
         """Extract content using regex pattern"""
-        import re
         if value is None:
             return ""
         match = re.search(pattern, value, re.DOTALL)
@@ -161,7 +161,11 @@ def to_pascal_case(s: str) -> str:
 
 def to_snake_case(s: str) -> str:
     """Convert string to snake_case."""
-    return ''.join(word.lower() for word in s.split('_'))
+    # Handle camelCase and PascalCase
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', s)
+    s2 = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1)
+    # Convert to lowercase and replace any remaining spaces with underscores
+    return re.sub(r'[-\s]', '_', s2).lower()
 
 def load_schemas() -> Dict[str, TableSchema]:
     """Load all schemas from index.yml."""
@@ -177,7 +181,7 @@ def load_schemas() -> Dict[str, TableSchema]:
                 schema_data = yaml.safe_load(f)
 
                 # extract table name from entity file name
-                table = schema_data['table'].lower()  # Convert to lowercase for consistency
+                table = schema_data['table']  # Preserve original case
                 print(f"table: {table}")
                 
             # Extract attributes and keys
@@ -259,14 +263,17 @@ def generate_python_model(table: str, schema: TableSchema) -> None:
         
         # Generate model
         model_content = template.render(
-            table=table,
+            table=table,  # Keep PascalCase for class name
             attributes=schema.attributes,
             partition_key=schema.partition_key,
             sort_key=schema.sort_key
         )
         
+        # Convert table name to snake_case for file name
+        file_name = to_snake_case(table)
+        
         # Write to file
-        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'src','models', f'{table}.py')
+        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'src', 'models', f'{file_name}.py')
         write_file(output_path, model_content)
         logger.info(f'Generated Python model for {table}')
         
@@ -397,6 +404,53 @@ def generate_cloudformation_template(schemas: Dict[str, TableSchema], template_p
         logger.error(f'Failed to generate CloudFormation template: {str(e)}')
         raise
 
+def generate_appsync_template(schemas: Dict[str, TableSchema], template_path: str, output_path: str) -> None:
+    """Generate a CloudFormation template for AppSync resources."""
+    try:
+        # Get Jinja environment with custom configuration for AppSync template
+        env = Environment(
+            loader=FileSystemLoader(os.path.dirname(template_path)),
+            autoescape=select_autoescape(['html', 'xml']),
+            trim_blocks=True,
+            lstrip_blocks=True,
+            variable_start_string='[[',  # Use different delimiters for Jinja variables
+            variable_end_string=']]',
+            block_start_string='{%',
+            block_end_string='%}',
+            comment_start_string='{#',
+            comment_end_string='#}'
+        )
+        
+        # Add custom filters
+        env.filters['to_camel_case'] = to_camel_case
+        env.filters['to_pascal_case'] = to_pascal_case
+        env.filters['to_snake_case'] = to_snake_case
+        
+        template = env.get_template(os.path.basename(template_path))
+        
+        # Process schemas into the format expected by the template
+        processed_schemas = {}
+        for table_name, schema in schemas.items():
+            processed_schemas[table_name] = {
+                'table': table_name,
+                'partition_key': schema.partition_key,
+                'sort_key': schema.sort_key,
+                'attributes': schema.attributes
+            }
+        
+        # Generate the template content
+        template_content = template.render(schemas=processed_schemas)
+        
+        # Write the content
+        with open(output_path, 'w') as f:
+            f.write(template_content)
+            
+        logger.info('Generated AppSync CloudFormation template')
+        
+    except Exception as e:
+        logger.error(f'Failed to generate AppSync CloudFormation template: {str(e)}')
+        raise
+
 def write_file(output_path: str, content: str) -> None:
     """
     Write content to file with consistent UTF-8 encoding without BOM.
@@ -439,6 +493,11 @@ def main():
         dynamodb_template_path = os.path.join(SCRIPT_DIR, 'templates', 'dynamodb_cloudformation.jinja')
         dynamodb_output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'cloudformation', 'dynamodb.yml')
         generate_cloudformation_template(schemas, dynamodb_template_path, dynamodb_output_path)
+        
+        # Generate AppSync CloudFormation template
+        appsync_template_path = os.path.join(SCRIPT_DIR, 'templates', 'appsync_cloudformation.jinja')
+        appsync_output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'cloudformation', 'appsync.yml')
+        generate_appsync_template(schemas, appsync_template_path, appsync_output_path)
         
         logger.info('Schema generation completed successfully')
         
