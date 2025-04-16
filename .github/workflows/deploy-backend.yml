@@ -113,6 +113,7 @@ jobs:
           unzip aws-sam-cli-linux-x86_64.zip -d sam-installation
           sudo ./sam-installation/install --update
           sam --version
+          
           # Clean up
           rm -rf aws-sam-cli-linux-x86_64.zip sam-installation
 
@@ -130,7 +131,7 @@ jobs:
           # Upload the schema file to S3
           aws s3 cp "$SCHEMA_FILE" \
             s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/$(basename "$SCHEMA_FILE")
-        working-directory: ./backend/infrastructure/cloudformation
+        working-directory: ./infrastructure/cloudformation
 
       - name: Deploy All Stacks
         run: |
@@ -202,4 +203,4 @@ jobs:
               }
           
           done
-        working-directory: ./backend/infrastructure/cloudformation
+        working-directory: ./infrastructure/cloudformation
