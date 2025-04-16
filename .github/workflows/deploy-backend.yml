@@ -65,7 +65,7 @@ jobs:
       - name: Validate GraphQL schema
         run: |
           echo "Validating GraphQL schema..."
-          cd backend/infrastructure/cloudformation
+          cd infrastructure/cloudformation
           
           # Find the latest generated schema file
           SCHEMA_FILE=$(find . -name "appsync_*.graphql" | sort -r | head -1)
