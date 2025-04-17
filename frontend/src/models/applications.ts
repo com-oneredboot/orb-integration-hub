@@ -5,7 +5,7 @@
 export enum ApplicationStatus {
   ACTIVE = 'ACTIVE',  INACTIVE = 'INACTIVE',  PENDING = 'PENDING',  DELETED = 'DELETED'}
 
-export interface Applications {
+export interface IApplications {
   application_id: string;
   name: string;
   description: string;

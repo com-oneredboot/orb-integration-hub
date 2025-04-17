@@ -64,20 +64,20 @@ Resources:
   ApplicationsTableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-Applications-table-name
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-name
       Type: String
       Value: !Ref ApplicationsTable
 
   ApplicationsTableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-Applications-table-arn
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-arn
       Type: String
       Value: !GetAtt ApplicationsTable.Arn
-  ApplicationrolesTable:
+  ApplicationRolesTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-Applicationroles
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-ApplicationRoles
       AttributeDefinitions:
         - AttributeName: application_id
           AttributeType: S
@@ -108,23 +108,23 @@ Resources:
         - Key: ProjectId
           Value: !Ref ProjectId
 
-  ApplicationrolesTableName:
+  ApplicationRolesTableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-Applicationroles-table-name
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles-table-name
       Type: String
-      Value: !Ref ApplicationrolesTable
+      Value: !Ref ApplicationRolesTable
 
-  ApplicationrolesTableArn:
+  ApplicationRolesTableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-Applicationroles-table-arn
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles-table-arn
       Type: String
-      Value: !GetAtt ApplicationrolesTable.Arn
-  ApplicationusersTable:
+      Value: !GetAtt ApplicationRolesTable.Arn
+  ApplicationUsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-Applicationusers
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-ApplicationUsers
       AttributeDefinitions:
         - AttributeName: application_id
           AttributeType: S
@@ -175,19 +175,19 @@ Resources:
         - Key: ProjectId
           Value: !Ref ProjectId
 
-  ApplicationusersTableName:
+  ApplicationUsersTableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-Applicationusers-table-name
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users-table-name
       Type: String
-      Value: !Ref ApplicationusersTable
+      Value: !Ref ApplicationUsersTable
 
-  ApplicationusersTableArn:
+  ApplicationUsersTableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-Applicationusers-table-arn
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users-table-arn
       Type: String
-      Value: !GetAtt ApplicationusersTable.Arn
+      Value: !GetAtt ApplicationUsersTable.Arn
   RolesTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -249,14 +249,14 @@ Resources:
   RolesTableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-Roles-table-name
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-roles-table-name
       Type: String
       Value: !Ref RolesTable
 
   RolesTableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-Roles-table-arn
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-roles-table-arn
       Type: String
       Value: !GetAtt RolesTable.Arn
   UsersTable:
@@ -304,14 +304,14 @@ Resources:
   UsersTableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-Users-table-name
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-users-table-name
       Type: String
       Value: !Ref UsersTable
 
   UsersTableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-Users-table-arn
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-users-table-arn
       Type: String
       Value: !GetAtt UsersTable.Arn
 
@@ -324,20 +324,20 @@ Outputs:
   ApplicationsTableArn:
     Description: Applications Table ARN
     Value: !GetAtt ApplicationsTable.Arn
-  ApplicationrolesTableName:
-    Description: Applicationroles Table Name
-    Value: !Ref ApplicationrolesTable
+  ApplicationRolesTableName:
+    Description: ApplicationRoles Table Name
+    Value: !Ref ApplicationRolesTable
 
-  ApplicationrolesTableArn:
-    Description: Applicationroles Table ARN
-    Value: !GetAtt ApplicationrolesTable.Arn
-  ApplicationusersTableName:
-    Description: Applicationusers Table Name
-    Value: !Ref ApplicationusersTable
+  ApplicationRolesTableArn:
+    Description: ApplicationRoles Table ARN
+    Value: !GetAtt ApplicationRolesTable.Arn
+  ApplicationUsersTableName:
+    Description: ApplicationUsers Table Name
+    Value: !Ref ApplicationUsersTable
 
-  ApplicationusersTableArn:
-    Description: Applicationusers Table ARN
-    Value: !GetAtt ApplicationusersTable.Arn
+  ApplicationUsersTableArn:
+    Description: ApplicationUsers Table ARN
+    Value: !GetAtt ApplicationUsersTable.Arn
   RolesTableName:
     Description: Roles Table Name
     Value: !Ref RolesTable

@@ -5,7 +5,7 @@
 export enum ApplicationUserStatus {
   ACTIVE = 'ACTIVE',  INACTIVE = 'INACTIVE',  PENDING = 'PENDING',  REJECTED = 'REJECTED',  DELETED = 'DELETED'}
 
-export interface ApplicationUsers {
+export interface IApplicationUsers {
   application_id: string;
   user_id: string;
   role_id: string;

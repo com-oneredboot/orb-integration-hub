@@ -95,14 +95,14 @@ Resources:
   {{ schema.table }}TableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}-table-name
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ table_name | to_kebab_case }}-table-name
       Type: String
       Value: !Ref {{ schema.table }}Table
 
   {{ schema.table }}TableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}-table-arn
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ table_name | to_kebab_case }}-table-arn
       Type: String
       Value: !GetAtt {{ schema.table }}Table.Arn
   {% endfor %}

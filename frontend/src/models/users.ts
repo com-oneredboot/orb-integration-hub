@@ -5,7 +5,7 @@
 export enum UserStatus {
   UNKNOWN = 'UNKNOWN',  ACTIVE = 'ACTIVE',  INACTIVE = 'INACTIVE',  PENDING = 'PENDING',  REJECTED = 'REJECTED',  DELETED = 'DELETED'}
 
-export interface Users {
+export interface IUsers {
   user_id: string;
   cognito_id: string;
   email: string;

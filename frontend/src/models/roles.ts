@@ -7,7 +7,7 @@ export enum RoleType {
 export enum RoleStatus {
   ACTIVE = 'ACTIVE',  INACTIVE = 'INACTIVE',  DELETED = 'DELETED'}
 
-export interface Roles {
+export interface IRoles {
   role_id: string;
   user_id: string;
   application_id: string;

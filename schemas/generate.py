@@ -226,6 +226,29 @@ def to_kebab_case(s: str) -> str:
     # Then replace underscores with hyphens
     return snake.replace('_', '-')
 
+def validate_case_conventions(schema: Dict[str, Any], file_path: str) -> None:
+    """Validate case conventions in schema files."""
+    # Validate file name is snake_case
+    file_name = os.path.basename(file_path)
+    if not re.match(r'^[a-z][a-z0-9_]*(_[a-z0-9]+)*\.yml$', file_name):
+        raise SchemaValidationError(f"Schema file name '{file_name}' must be in snake_case")
+
+    # Validate table name is PascalCase
+    if not re.match(r'^[A-Z][a-zA-Z0-9]*$', schema['table']):
+        raise SchemaValidationError(f"Table name '{schema['table']}' must be in PascalCase")
+
+    # Validate index names are kebab-case
+    if 'model' in schema and 'keys' in schema['model'] and 'secondary' in schema['model']['keys']:
+        for index in schema['model']['keys']['secondary']:
+            if not re.match(r'^[a-z][a-z0-9]*(-[a-z0-9]+)*$', index['name']):
+                raise SchemaValidationError(f"Index name '{index['name']}' must be in kebab-case")
+
+    # Validate attribute names are snake_case
+    if 'model' in schema and 'attributes' in schema['model']:
+        for attr_name in schema['model']['attributes']:
+            if not re.match(r'^[a-z][a-z0-9]*(_[a-z0-9]+)*$', attr_name):
+                raise SchemaValidationError(f"Attribute name '{attr_name}' must be in snake_case")
+
 def load_schemas() -> Dict[str, TableSchema]:
     """Load all schemas from index.yml."""
     try:
@@ -297,50 +320,17 @@ def load_schemas() -> Dict[str, TableSchema]:
         raise
 
 def load_schema(schema_path: str) -> Dict[str, Any]:
-    """
-    Load and parse a schema file.
-    
-    Args:
-        schema_path: Path to the schema file
-        
-    Returns:
-        Parsed schema dictionary
-        
-    Raises:
-        SchemaValidationError: If schema file cannot be loaded or parsed
-    """
+    """Load and validate a schema file."""
     try:
-        full_path = os.path.join(SCRIPT_DIR, schema_path)
-        with open(full_path, 'r') as f:
+        with open(schema_path, 'r') as f:
             schema = yaml.safe_load(f)
-            
-        # Ensure we have a dictionary
-        if not isinstance(schema, dict):
-            raise SchemaValidationError(f"Schema file {schema_path} did not load as a dictionary")
-            
-        # Ensure required top-level keys
-        if 'version' not in schema or 'table' not in schema or 'model' not in schema:
-            raise SchemaValidationError(f"Schema file {schema_path} missing required top-level keys")
-            
-        # Ensure model is a dictionary
-        if not isinstance(schema['model'], dict):
-            raise SchemaValidationError(f"Schema file {schema_path} model is not a dictionary")
-            
-        # Ensure keys section exists and is a dictionary
-        if 'keys' not in schema['model'] or not isinstance(schema['model']['keys'], dict):
-            raise SchemaValidationError(f"Schema file {schema_path} missing or invalid keys section")
-            
-        # Ensure primary key exists and is a dictionary
-        if 'primary' not in schema['model']['keys'] or not isinstance(schema['model']['keys']['primary'], dict):
-            raise SchemaValidationError(f"Schema file {schema_path} missing or invalid primary key")
-            
-        # Ensure partition key exists
-        if 'partition' not in schema['model']['keys']['primary']:
-            raise SchemaValidationError(f"Schema file {schema_path} missing partition key")
-            
+        
+        # Validate case conventions
+        validate_case_conventions(schema, schema_path)
+        
         return schema
     except Exception as e:
-        raise SchemaValidationError(f"Failed to load schema file {schema_path}: {str(e)}")
+        raise SchemaValidationError(f"Failed to load schema {schema_path}: {str(e)}")
 
 def generate_python_model(table: str, schema: TableSchema) -> None:
     """Generate Python model for a table."""

@@ -12,7 +12,7 @@ export enum {{ attr.enum_type }} {
 {% endif %}
 {% endfor %}
 
-export interface {{ schema.table }} {
+export interface I{{ schema.table }} {
   {% for attr in schema.attributes %}
   {{ attr.name | to_snake_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{{ attr.type | to_typescript_type }}{% endif %};
   {% endfor %}
