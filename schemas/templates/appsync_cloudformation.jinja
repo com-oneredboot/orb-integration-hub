@@ -113,7 +113,7 @@ Resources:
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-{{ schema.table | to_kebab_case }}-table-name'
+        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}-table-name'
         AwsRegion: !Ref AWS::Region
 
   # {{ schema.table }} Resolvers
@@ -154,25 +154,25 @@ Resources:
           "Data": $ctx.args.input
         }
 
-  {{ schema.table }}QueryBy{{ schema.partition_key | to_pascal_case }}Resolver:
+  {{ schema.table }}QueryBy{{ schema.partition_key }}Resolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: {{ schema.table }}QueryBy{{ schema.partition_key | to_pascal_case }}
+      FieldName: {{ schema.table }}QueryBy{{ schema.partition_key }}
       DataSourceName: !GetAtt {{ schema.table }}DataSource.Name
       RequestMappingTemplate: |
-        #if($ctx.args.input.{{ schema.partition_key | to_camel_case }})
+        #if($ctx.args.input.{{ schema.partition_key }})
           {
             "version": "2017-02-28",
             "operation": "GetItem",
             "key": {
-              "{{ schema.partition_key }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ schema.partition_key | to_camel_case }})
+              "{{ schema.partition_key }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ schema.partition_key }})
             }
           }
         #else
-          $util.error("Invalid identifier. Must provide {{ schema.partition_key | to_camel_case }}")
+          $util.error("Invalid identifier. Must provide {{ schema.partition_key }}")
         #end
       ResponseMappingTemplate: |
         #if($ctx.error)
@@ -198,16 +198,16 @@ Resources:
         $util.toJson($response)
 
   {%- if schema.sort_key and schema.sort_key != 'None' %}
-  {{ schema.table }}QueryBy{{ schema.sort_key | to_pascal_case }}Resolver:
+  {{ schema.table }}QueryBy{{ schema.sort_key }}Resolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: {{ schema.table }}QueryBy{{ schema.sort_key | to_pascal_case }}
+      FieldName: {{ schema.table }}QueryBy{{ schema.sort_key }}
       DataSourceName: !GetAtt {{ schema.table }}DataSource.Name
       RequestMappingTemplate: |
-        #if($ctx.args.input.{{ schema.sort_key | to_camel_case }})
+        #if($ctx.args.input.{{ schema.sort_key }})
           {
             "version": "2017-02-28",
             "operation": "Query",
@@ -218,12 +218,12 @@ Resources:
                 "#{{ schema.sort_key | to_snake_case }}": "{{ schema.sort_key | to_snake_case }}"
               },
               "expressionValues": {
-                ":${{ schema.sort_key | to_snake_case }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ schema.sort_key | to_camel_case }})
+                ":${{ schema.sort_key | to_snake_case }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ schema.sort_key }})
               }
             }
           }
         #else
-          $util.error("Invalid identifier. Must provide {{ schema.sort_key | to_camel_case }}")
+          $util.error("Invalid identifier. Must provide {{ schema.sort_key }}")
         #end
       ResponseMappingTemplate: |
         #if($ctx.error)
@@ -259,17 +259,17 @@ Resources:
       FieldName: {{ schema.table }}QueryByBoth
       DataSourceName: !GetAtt {{ schema.table }}DataSource.Name
       RequestMappingTemplate: |
-        #if($ctx.args.input.{{ schema.partition_key | to_camel_case }} && $ctx.args.input.{{ schema.sort_key | to_camel_case }})
+        #if($ctx.args.input.{{ schema.partition_key }} && $ctx.args.input.{{ schema.sort_key }})
           {
             "version": "2017-02-28",
             "operation": "GetItem",
             "key": {
-              "{{ schema.partition_key }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ schema.partition_key | to_camel_case }})
-              ,"{{ schema.sort_key }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ schema.sort_key | to_camel_case }})
+              "{{ schema.partition_key }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ schema.partition_key }})
+              ,"{{ schema.sort_key }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ schema.sort_key }})
             }
           }
         #else
-          $util.error("Invalid identifiers. Must provide both {{ schema.partition_key | to_camel_case }} and {{ schema.sort_key | to_camel_case }}")
+          $util.error("Invalid identifiers. Must provide both {{ schema.partition_key }} and {{ schema.sort_key }}")
         #end
       ResponseMappingTemplate: |
         #if($ctx.error)
@@ -311,7 +311,7 @@ Resources:
         #end
 
         #if(!$input.{{ schema.partition_key }})
-          $util.error("{{ schema.partition_key | to_camel_case }} is a required field for updates")
+          $util.error("{{ schema.partition_key }} is a required field for updates")
         #end
         
         #set($expNames = {})

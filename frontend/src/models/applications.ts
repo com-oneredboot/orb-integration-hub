@@ -1,5 +1,5 @@
 /**
- * applications model.
+ * Applications model.
  */
 
 export enum ApplicationStatus {

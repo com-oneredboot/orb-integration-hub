@@ -239,8 +239,8 @@ def load_schemas() -> Dict[str, TableSchema]:
             with open(os.path.join(SCRIPT_DIR, 'entities', entity), 'r') as f:
                 schema_data = yaml.safe_load(f)
 
-                # extract table name from entity file name without extension
-                table = os.path.splitext(entity)[0]  # Use filename instead of schema_data['table']
+                # Use the table name from the schema file
+                table = schema_data['table']
                 print(f"table: {table}")
                 
             # Extract attributes and keys
@@ -489,31 +489,11 @@ def generate_cloudformation_template(schemas: Dict[str, TableSchema], template_p
         # Process schemas into the format expected by the template
         processed_schemas = {}
         for table_name, schema in schemas.items():
-            # Get all attributes that are part of keys (primary and secondary)
-            key_attributes = set()
-            key_attributes.add(schema.partition_key)
-            if schema.sort_key:
-                key_attributes.add(schema.sort_key)
-                
-            # Add attributes from secondary indexes
-            if schema.secondary_indexes:
-                for index in schema.secondary_indexes:
-                    key_attributes.add(index['partition'])
-                    if 'sort' in index and index['sort']:
-                        key_attributes.add(index['sort'])
-                
-            # Process attributes that are part of keys
-            attributes = []
-            for attr in schema.attributes:
-                if attr.name in key_attributes:
-                    attributes.append({
-                        'name': attr.name,
-                        'type': to_dynamodb_type(attr.type)
-                    })
-            
+            # Convert table name to PascalCase for resource names
+            resource_name = to_pascal_case(table_name)
             processed_schemas[table_name] = {
-                'table': table_name,  # Keep original table name
-                'attributes': attributes,
+                'table': resource_name,  # Use PascalCase for resource names
+                'attributes': schema.attributes,
                 'partition_key': schema.partition_key,
                 'sort_key': schema.sort_key,
                 'secondary_indexes': schema.secondary_indexes

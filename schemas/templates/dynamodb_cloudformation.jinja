@@ -33,7 +33,7 @@ Resources:
   {{ schema.table }}Table:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ table_name | to_kebab_case }}
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}
       AttributeDefinitions:
         {% for attr in schema.attributes %}
         - AttributeName: {{ attr.name }}

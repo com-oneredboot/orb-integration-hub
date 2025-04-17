@@ -1,5 +1,5 @@
 /**
- * users model.
+ * Users model.
  */
 
 export enum UserStatus {

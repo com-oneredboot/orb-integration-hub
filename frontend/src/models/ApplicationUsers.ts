@@ -1,5 +1,5 @@
 /**
- * application_users model.
+ * ApplicationUsers model.
  */
 
 export enum ApplicationUserStatus {

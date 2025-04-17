@@ -1,5 +1,5 @@
 /**
- * application_roles model.
+ * ApplicationRoles model.
  */
 
 export enum ApplicationRoleStatus {

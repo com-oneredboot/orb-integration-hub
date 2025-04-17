@@ -1,5 +1,5 @@
 /**
- * roles model.
+ * Roles model.
  */
 
 export enum RoleType {

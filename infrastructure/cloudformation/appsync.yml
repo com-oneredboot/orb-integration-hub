@@ -260,26 +260,26 @@ Resources:
           "Message": "[[ schema.table ]] updated successfully",
           "Data": $ctx.args.input
         }
-  ApplicationRolesDataSource:
+  ApplicationrolesDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
-      Name: ApplicationRolesDataSource
+      Name: ApplicationrolesDataSource
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-application-roles-table-name'
+        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-applicationroles-table-name'
         AwsRegion: !Ref AWS::Region
 
-  # ApplicationRoles Resolvers
-  ApplicationRolesCreateResolver:
+  # Applicationroles Resolvers
+  ApplicationrolesCreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: ApplicationRolesCreate
-      DataSourceName: !GetAtt ApplicationRolesDataSource.Name
+      FieldName: ApplicationrolesCreate
+      DataSourceName: !GetAtt ApplicationrolesDataSource.Name
       RequestMappingTemplate: |
         #set($input = {})
         #foreach($field in $ctx.args.input.keySet())
@@ -301,19 +301,19 @@ Resources:
         
         {
           "StatusCode": 200,
-          "Message": "ApplicationRoles created successfully",
+          "Message": "Applicationroles created successfully",
           "Data": $ctx.args.input
         }
 
 
-  ApplicationRolesQueryByApplicationIdResolver:
+  ApplicationrolesQueryByApplicationIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: ApplicationRolesQueryByApplicationId
-      DataSourceName: !GetAtt ApplicationRolesDataSource.Name
+      FieldName: ApplicationrolesQueryByApplicationId
+      DataSourceName: !GetAtt ApplicationrolesDataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.applicationId)
           {
@@ -348,14 +348,14 @@ Resources:
         #end
         
 
-        $util.toJson($response)  ApplicationRolesQueryByRoleIdResolver:
+        $util.toJson($response)  ApplicationrolesQueryByRoleIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: ApplicationRolesQueryByRoleId
-      DataSourceName: !GetAtt ApplicationRolesDataSource.Name
+      FieldName: ApplicationrolesQueryByRoleId
+      DataSourceName: !GetAtt ApplicationrolesDataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.roleId)
           {
@@ -401,14 +401,14 @@ Resources:
         $util.toJson($response)
 
 
-  ApplicationRolesQueryByBothResolver:
+  ApplicationrolesQueryByBothResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: ApplicationRolesQueryByBoth
-      DataSourceName: !GetAtt ApplicationRolesDataSource.Name
+      FieldName: ApplicationrolesQueryByBoth
+      DataSourceName: !GetAtt ApplicationrolesDataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.applicationId && $ctx.args.input.roleId)
           {
@@ -444,14 +444,14 @@ Resources:
         #end
         
         $util.toJson($response)
-  ApplicationRolesUpdateResolver:
+  ApplicationrolesUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: ApplicationRolesUpdate
-      DataSourceName: !GetAtt ApplicationRolesDataSource.Name
+      FieldName: ApplicationrolesUpdate
+      DataSourceName: !GetAtt ApplicationrolesDataSource.Name
       RequestMappingTemplate: |
         #set($input = {})
         #foreach($field in $ctx.args.input.keySet())
@@ -508,26 +508,26 @@ Resources:
           "Message": "[[ schema.table ]] updated successfully",
           "Data": $ctx.args.input
         }
-  ApplicationUsersDataSource:
+  ApplicationusersDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
-      Name: ApplicationUsersDataSource
+      Name: ApplicationusersDataSource
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-application-users-table-name'
+        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-applicationusers-table-name'
         AwsRegion: !Ref AWS::Region
 
-  # ApplicationUsers Resolvers
-  ApplicationUsersCreateResolver:
+  # Applicationusers Resolvers
+  ApplicationusersCreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: ApplicationUsersCreate
-      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
+      FieldName: ApplicationusersCreate
+      DataSourceName: !GetAtt ApplicationusersDataSource.Name
       RequestMappingTemplate: |
         #set($input = {})
         #foreach($field in $ctx.args.input.keySet())
@@ -549,19 +549,19 @@ Resources:
         
         {
           "StatusCode": 200,
-          "Message": "ApplicationUsers created successfully",
+          "Message": "Applicationusers created successfully",
           "Data": $ctx.args.input
         }
 
 
-  ApplicationUsersQueryByApplicationIdResolver:
+  ApplicationusersQueryByApplicationIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: ApplicationUsersQueryByApplicationId
-      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
+      FieldName: ApplicationusersQueryByApplicationId
+      DataSourceName: !GetAtt ApplicationusersDataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.applicationId)
           {
@@ -596,14 +596,14 @@ Resources:
         #end
         
 
-        $util.toJson($response)  ApplicationUsersQueryByUserIdResolver:
+        $util.toJson($response)  ApplicationusersQueryByUserIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: ApplicationUsersQueryByUserId
-      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
+      FieldName: ApplicationusersQueryByUserId
+      DataSourceName: !GetAtt ApplicationusersDataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.userId)
           {
@@ -649,14 +649,14 @@ Resources:
         $util.toJson($response)
 
 
-  ApplicationUsersQueryByBothResolver:
+  ApplicationusersQueryByBothResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: ApplicationUsersQueryByBoth
-      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
+      FieldName: ApplicationusersQueryByBoth
+      DataSourceName: !GetAtt ApplicationusersDataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.applicationId && $ctx.args.input.userId)
           {
@@ -692,14 +692,14 @@ Resources:
         #end
         
         $util.toJson($response)
-  ApplicationUsersUpdateResolver:
+  ApplicationusersUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: ApplicationUsersUpdate
-      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
+      FieldName: ApplicationusersUpdate
+      DataSourceName: !GetAtt ApplicationusersDataSource.Name
       RequestMappingTemplate: |
         #set($input = {})
         #foreach($field in $ctx.args.input.keySet())
