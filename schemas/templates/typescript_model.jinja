@@ -1,19 +1,19 @@
 /**
- * [[ schema.table ]] model.
+ * {{ schema.table }} model.
  */
 
 {% for attr in schema.attributes %}
 {% if attr.enum_type %}
-export enum [[ attr.enum_type ]] {
+export enum {{ attr.enum_type }} {
   {% for value in attr.enum_values %}
-  [[ value ]] = '[[ value ]]'{% if not loop.last %},{% endif %}
+  {{ value }} = '{{ value }}'{% if not loop.last %},{% endif %}
   {% endfor %}
 }
 {% endif %}
 {% endfor %}
 
-export interface [[ schema.table | to_pascal_case ]] {
+export interface {{ schema.table | to_pascal_case }} {
   {% for attr in schema.attributes %}
-  [[ attr.name | to_snake_case ]]: {% if attr.enum_type %}[[ attr.enum_type ]]{% else %}[[ attr.type | to_typescript_type ]]{% endif %};
+  {{ attr.name | to_snake_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{{ attr.type | to_typescript_type }}{% endif %};
   {% endfor %}
 }

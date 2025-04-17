@@ -1,18 +1,15 @@
 /**
- * [[ schema.table ]] model.
+ * application_roles model.
  */
 
-export enum [[ attr.enum_type ]] {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  DELETED = 'DELETED'
-}
+export enum ApplicationRoleStatus {
+  ACTIVE = 'ACTIVE',  INACTIVE = 'INACTIVE',  PENDING = 'PENDING',  REJECTED = 'REJECTED',  DELETED = 'DELETED'}
 
-export interface [[ schema.table | to_pascal_case ]] {
-  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
-  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
-  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
-  [[ attr.name | to_snake_case ]]: [[ attr.enum_type ]];
-  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
-  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+export interface ApplicationRoles {
+  application_id: string;
+  role_id: string;
+  description: string;
+  status: ApplicationRoleStatus;
+  created_at: number;
+  updated_at: number;
 }

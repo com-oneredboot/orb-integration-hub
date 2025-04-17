@@ -1,26 +1,20 @@
 /**
- * [[ schema.table ]] model.
+ * roles model.
  */
 
-export enum [[ attr.enum_type ]] {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  DELETED = 'DELETED'
-}
-export enum [[ attr.enum_type ]] {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  DELETED = 'DELETED'
-}
+export enum RoleType {
+  ADMIN = 'ADMIN',  USER = 'USER',  GUEST = 'GUEST',  CUSTOM = 'CUSTOM'}
+export enum RoleStatus {
+  ACTIVE = 'ACTIVE',  INACTIVE = 'INACTIVE',  DELETED = 'DELETED'}
 
-export interface [[ schema.table | to_pascal_case ]] {
-  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
-  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
-  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
-  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
-  [[ attr.name | to_snake_case ]]: [[ attr.enum_type ]];
-  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
-  [[ attr.name | to_snake_case ]]: [[ attr.enum_type ]];
-  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
-  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+export interface Roles {
+  role_id: string;
+  user_id: string;
+  application_id: string;
+  role_name: string;
+  role_type: RoleType;
+  permissions: string[];
+  status: RoleStatus;
+  created_at: number;
+  updated_at: number;
 }

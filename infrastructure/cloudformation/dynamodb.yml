@@ -29,27 +29,27 @@ Parameters:
 
 # --------------------------------------------------- #
 Resources:
-  [[ table_name | to_pascal_case ]]Table:
+  applicationsTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-[[ table_name | to_kebab_case ]]
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications
       AttributeDefinitions:
-        - AttributeName: [[ attr.name ]]
-          AttributeType: [[ attr.type | to_dynamodb_type ]]
-        - AttributeName: [[ attr.name ]]
-          AttributeType: [[ attr.type | to_dynamodb_type ]]
+        - AttributeName: application_id
+          AttributeType: S
+        - AttributeName: name
+          AttributeType: S
       KeySchema:
-        - AttributeName: [[ schema.partition_key ]]
+        - AttributeName: application_id
           KeyType: HASH
       GlobalSecondaryIndexes:
-        - IndexName: [[ index.name ]]
+        - IndexName: application-name-index
           KeySchema:
-            - AttributeName: [[ index.partition ]]
+            - AttributeName: name
               KeyType: HASH
-            - AttributeName: [[ index.sort ]]
+            - AttributeName: application_id
               KeyType: RANGE
           Projection:
-            ProjectionType: [[ index.projection_type ]]
+            ProjectionType: ALL
       BillingMode: PAY_PER_REQUEST
       Tags:
         - Key: Billable
@@ -61,42 +61,42 @@ Resources:
         - Key: ProjectId
           Value: !Ref ProjectId
 
-  [[ table_name | to_pascal_case ]]TableName:
+  applicationsTableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-[[ table_name | to_kebab_case ]]-table-name
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-name
       Type: String
-      Value: !Ref [[ table_name | to_pascal_case ]]Table
+      Value: !Ref applicationsTable
 
-  [[ table_name | to_pascal_case ]]TableArn:
+  applicationsTableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-[[ table_name | to_kebab_case ]]-table-arn
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-arn
       Type: String
-      Value: !GetAtt [[ table_name | to_pascal_case ]]Table.Arn
-  [[ table_name | to_pascal_case ]]Table:
+      Value: !GetAtt applicationsTable.Arn
+  application_rolesTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-[[ table_name | to_kebab_case ]]
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles
       AttributeDefinitions:
-        - AttributeName: [[ attr.name ]]
-          AttributeType: [[ attr.type | to_dynamodb_type ]]
-        - AttributeName: [[ attr.name ]]
-          AttributeType: [[ attr.type | to_dynamodb_type ]]
+        - AttributeName: application_id
+          AttributeType: S
+        - AttributeName: role_id
+          AttributeType: S
       KeySchema:
-        - AttributeName: [[ schema.partition_key ]]
+        - AttributeName: application_id
           KeyType: HASH
-        - AttributeName: [[ schema.sort_key ]]
+        - AttributeName: role_id
           KeyType: RANGE
       GlobalSecondaryIndexes:
-        - IndexName: [[ index.name ]]
+        - IndexName: role-applications-index
           KeySchema:
-            - AttributeName: [[ index.partition ]]
+            - AttributeName: role_id
               KeyType: HASH
-            - AttributeName: [[ index.sort ]]
+            - AttributeName: application_id
               KeyType: RANGE
           Projection:
-            ProjectionType: [[ index.projection_type ]]
+            ProjectionType: ALL
       BillingMode: PAY_PER_REQUEST
       Tags:
         - Key: Billable
@@ -108,62 +108,62 @@ Resources:
         - Key: ProjectId
           Value: !Ref ProjectId
 
-  [[ table_name | to_pascal_case ]]TableName:
+  application_rolesTableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-[[ table_name | to_kebab_case ]]-table-name
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles-table-name
       Type: String
-      Value: !Ref [[ table_name | to_pascal_case ]]Table
+      Value: !Ref application_rolesTable
 
-  [[ table_name | to_pascal_case ]]TableArn:
+  application_rolesTableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-[[ table_name | to_kebab_case ]]-table-arn
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles-table-arn
       Type: String
-      Value: !GetAtt [[ table_name | to_pascal_case ]]Table.Arn
-  [[ table_name | to_pascal_case ]]Table:
+      Value: !GetAtt application_rolesTable.Arn
+  application_usersTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-[[ table_name | to_kebab_case ]]
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users
       AttributeDefinitions:
-        - AttributeName: [[ attr.name ]]
-          AttributeType: [[ attr.type | to_dynamodb_type ]]
-        - AttributeName: [[ attr.name ]]
-          AttributeType: [[ attr.type | to_dynamodb_type ]]
-        - AttributeName: [[ attr.name ]]
-          AttributeType: [[ attr.type | to_dynamodb_type ]]
-        - AttributeName: [[ attr.name ]]
-          AttributeType: [[ attr.type | to_dynamodb_type ]]
+        - AttributeName: application_id
+          AttributeType: S
+        - AttributeName: user_id
+          AttributeType: S
+        - AttributeName: role_id
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
       KeySchema:
-        - AttributeName: [[ schema.partition_key ]]
+        - AttributeName: application_id
           KeyType: HASH
-        - AttributeName: [[ schema.sort_key ]]
+        - AttributeName: user_id
           KeyType: RANGE
       GlobalSecondaryIndexes:
-        - IndexName: [[ index.name ]]
+        - IndexName: user-applications-index
           KeySchema:
-            - AttributeName: [[ index.partition ]]
+            - AttributeName: user_id
               KeyType: HASH
-            - AttributeName: [[ index.sort ]]
+            - AttributeName: application_id
               KeyType: RANGE
           Projection:
-            ProjectionType: [[ index.projection_type ]]
-        - IndexName: [[ index.name ]]
+            ProjectionType: ALL
+        - IndexName: application-role-index
           KeySchema:
-            - AttributeName: [[ index.partition ]]
+            - AttributeName: application_id
               KeyType: HASH
-            - AttributeName: [[ index.sort ]]
+            - AttributeName: role_id
               KeyType: RANGE
           Projection:
-            ProjectionType: [[ index.projection_type ]]
-        - IndexName: [[ index.name ]]
+            ProjectionType: ALL
+        - IndexName: user-status-index
           KeySchema:
-            - AttributeName: [[ index.partition ]]
+            - AttributeName: application_id
               KeyType: HASH
-            - AttributeName: [[ index.sort ]]
+            - AttributeName: status
               KeyType: RANGE
           Projection:
-            ProjectionType: [[ index.projection_type ]]
+            ProjectionType: ALL
       BillingMode: PAY_PER_REQUEST
       Tags:
         - Key: Billable
@@ -175,66 +175,66 @@ Resources:
         - Key: ProjectId
           Value: !Ref ProjectId
 
-  [[ table_name | to_pascal_case ]]TableName:
+  application_usersTableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-[[ table_name | to_kebab_case ]]-table-name
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users-table-name
       Type: String
-      Value: !Ref [[ table_name | to_pascal_case ]]Table
+      Value: !Ref application_usersTable
 
-  [[ table_name | to_pascal_case ]]TableArn:
+  application_usersTableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-[[ table_name | to_kebab_case ]]-table-arn
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users-table-arn
       Type: String
-      Value: !GetAtt [[ table_name | to_pascal_case ]]Table.Arn
-  [[ table_name | to_pascal_case ]]Table:
+      Value: !GetAtt application_usersTable.Arn
+  rolesTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-[[ table_name | to_kebab_case ]]
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-roles
       AttributeDefinitions:
-        - AttributeName: [[ attr.name ]]
-          AttributeType: [[ attr.type | to_dynamodb_type ]]
-        - AttributeName: [[ attr.name ]]
-          AttributeType: [[ attr.type | to_dynamodb_type ]]
-        - AttributeName: [[ attr.name ]]
-          AttributeType: [[ attr.type | to_dynamodb_type ]]
-        - AttributeName: [[ attr.name ]]
-          AttributeType: [[ attr.type | to_dynamodb_type ]]
+        - AttributeName: role_id
+          AttributeType: S
+        - AttributeName: user_id
+          AttributeType: S
+        - AttributeName: application_id
+          AttributeType: S
+        - AttributeName: role_type
+          AttributeType: S
       KeySchema:
-        - AttributeName: [[ schema.partition_key ]]
+        - AttributeName: role_id
           KeyType: HASH
-        - AttributeName: [[ schema.sort_key ]]
+        - AttributeName: application_id
           KeyType: RANGE
       GlobalSecondaryIndexes:
-        - IndexName: [[ index.name ]]
+        - IndexName: user-role-index
           KeySchema:
-            - AttributeName: [[ index.partition ]]
+            - AttributeName: user_id
               KeyType: HASH
-            - AttributeName: [[ index.sort ]]
+            - AttributeName: role_id
               KeyType: RANGE
           Projection:
-            ProjectionType: [[ index.projection_type ]]
+            ProjectionType: INCLUDE
             NonKeyAttributes:
-              - [[ attr ]]
-              - [[ attr ]]
-              - [[ attr ]]
-        - IndexName: [[ index.name ]]
+              - role_name
+              - role_type
+              - permissions
+        - IndexName: application-role-index
           KeySchema:
-            - AttributeName: [[ index.partition ]]
+            - AttributeName: application_id
               KeyType: HASH
-            - AttributeName: [[ index.sort ]]
+            - AttributeName: role_id
               KeyType: RANGE
           Projection:
-            ProjectionType: [[ index.projection_type ]]
-        - IndexName: [[ index.name ]]
+            ProjectionType: KEYS_ONLY
+        - IndexName: role-type-index
           KeySchema:
-            - AttributeName: [[ index.partition ]]
+            - AttributeName: role_id
               KeyType: HASH
-            - AttributeName: [[ index.sort ]]
+            - AttributeName: role_type
               KeyType: RANGE
           Projection:
-            ProjectionType: [[ index.projection_type ]]
+            ProjectionType: ALL
       BillingMode: PAY_PER_REQUEST
       Tags:
         - Key: Billable
@@ -246,50 +246,50 @@ Resources:
         - Key: ProjectId
           Value: !Ref ProjectId
 
-  [[ table_name | to_pascal_case ]]TableName:
+  rolesTableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-[[ table_name | to_kebab_case ]]-table-name
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-roles-table-name
       Type: String
-      Value: !Ref [[ table_name | to_pascal_case ]]Table
+      Value: !Ref rolesTable
 
-  [[ table_name | to_pascal_case ]]TableArn:
+  rolesTableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-[[ table_name | to_kebab_case ]]-table-arn
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-roles-table-arn
       Type: String
-      Value: !GetAtt [[ table_name | to_pascal_case ]]Table.Arn
-  [[ table_name | to_pascal_case ]]Table:
+      Value: !GetAtt rolesTable.Arn
+  usersTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-[[ table_name | to_kebab_case ]]
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-users
       AttributeDefinitions:
-        - AttributeName: [[ attr.name ]]
-          AttributeType: [[ attr.type | to_dynamodb_type ]]
-        - AttributeName: [[ attr.name ]]
-          AttributeType: [[ attr.type | to_dynamodb_type ]]
-        - AttributeName: [[ attr.name ]]
-          AttributeType: [[ attr.type | to_dynamodb_type ]]
+        - AttributeName: user_id
+          AttributeType: S
+        - AttributeName: email
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
       KeySchema:
-        - AttributeName: [[ schema.partition_key ]]
+        - AttributeName: user_id
           KeyType: HASH
       GlobalSecondaryIndexes:
-        - IndexName: [[ index.name ]]
+        - IndexName: user-status-index
           KeySchema:
-            - AttributeName: [[ index.partition ]]
+            - AttributeName: user_id
               KeyType: HASH
-            - AttributeName: [[ index.sort ]]
+            - AttributeName: status
               KeyType: RANGE
           Projection:
-            ProjectionType: [[ index.projection_type ]]
-        - IndexName: [[ index.name ]]
+            ProjectionType: ALL
+        - IndexName: user-email-index
           KeySchema:
-            - AttributeName: [[ index.partition ]]
+            - AttributeName: email
               KeyType: HASH
-            - AttributeName: [[ index.sort ]]
+            - AttributeName: user_id
               KeyType: RANGE
           Projection:
-            ProjectionType: [[ index.projection_type ]]
+            ProjectionType: ALL
       BillingMode: PAY_PER_REQUEST
       Tags:
         - Key: Billable
@@ -301,54 +301,54 @@ Resources:
         - Key: ProjectId
           Value: !Ref ProjectId
 
-  [[ table_name | to_pascal_case ]]TableName:
+  usersTableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-[[ table_name | to_kebab_case ]]-table-name
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-users-table-name
       Type: String
-      Value: !Ref [[ table_name | to_pascal_case ]]Table
+      Value: !Ref usersTable
 
-  [[ table_name | to_pascal_case ]]TableArn:
+  usersTableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-[[ table_name | to_kebab_case ]]-table-arn
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-users-table-arn
       Type: String
-      Value: !GetAtt [[ table_name | to_pascal_case ]]Table.Arn
+      Value: !GetAtt usersTable.Arn
 
 # --------------------------------------------------- #
 Outputs:
-  [[ table_name | to_pascal_case ]]TableName:
-    Description: [[ table_name | to_pascal_case ]] Table Name
-    Value: !Ref [[ table_name | to_pascal_case ]]Table
+  applicationsTableName:
+    Description: applications Table Name
+    Value: !Ref applicationsTable
 
-  [[ table_name | to_pascal_case ]]TableArn:
-    Description: [[ table_name | to_pascal_case ]] Table ARN
-    Value: !GetAtt [[ table_name | to_pascal_case ]]Table.Arn
-  [[ table_name | to_pascal_case ]]TableName:
-    Description: [[ table_name | to_pascal_case ]] Table Name
-    Value: !Ref [[ table_name | to_pascal_case ]]Table
+  applicationsTableArn:
+    Description: applications Table ARN
+    Value: !GetAtt applicationsTable.Arn
+  application_rolesTableName:
+    Description: application_roles Table Name
+    Value: !Ref application_rolesTable
 
-  [[ table_name | to_pascal_case ]]TableArn:
-    Description: [[ table_name | to_pascal_case ]] Table ARN
-    Value: !GetAtt [[ table_name | to_pascal_case ]]Table.Arn
-  [[ table_name | to_pascal_case ]]TableName:
-    Description: [[ table_name | to_pascal_case ]] Table Name
-    Value: !Ref [[ table_name | to_pascal_case ]]Table
+  application_rolesTableArn:
+    Description: application_roles Table ARN
+    Value: !GetAtt application_rolesTable.Arn
+  application_usersTableName:
+    Description: application_users Table Name
+    Value: !Ref application_usersTable
 
-  [[ table_name | to_pascal_case ]]TableArn:
-    Description: [[ table_name | to_pascal_case ]] Table ARN
-    Value: !GetAtt [[ table_name | to_pascal_case ]]Table.Arn
-  [[ table_name | to_pascal_case ]]TableName:
-    Description: [[ table_name | to_pascal_case ]] Table Name
-    Value: !Ref [[ table_name | to_pascal_case ]]Table
+  application_usersTableArn:
+    Description: application_users Table ARN
+    Value: !GetAtt application_usersTable.Arn
+  rolesTableName:
+    Description: roles Table Name
+    Value: !Ref rolesTable
 
-  [[ table_name | to_pascal_case ]]TableArn:
-    Description: [[ table_name | to_pascal_case ]] Table ARN
-    Value: !GetAtt [[ table_name | to_pascal_case ]]Table.Arn
-  [[ table_name | to_pascal_case ]]TableName:
-    Description: [[ table_name | to_pascal_case ]] Table Name
-    Value: !Ref [[ table_name | to_pascal_case ]]Table
+  rolesTableArn:
+    Description: roles Table ARN
+    Value: !GetAtt rolesTable.Arn
+  usersTableName:
+    Description: users Table Name
+    Value: !Ref usersTable
 
-  [[ table_name | to_pascal_case ]]TableArn:
-    Description: [[ table_name | to_pascal_case ]] Table ARN
-    Value: !GetAtt [[ table_name | to_pascal_case ]]Table.Arn
+  usersTableArn:
+    Description: users Table ARN
+    Value: !GetAtt usersTable.Arn

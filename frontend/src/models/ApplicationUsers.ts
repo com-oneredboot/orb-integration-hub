@@ -1,18 +1,15 @@
 /**
- * [[ schema.table ]] model.
+ * application_users model.
  */
 
-export enum [[ attr.enum_type ]] {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  DELETED = 'DELETED'
-}
+export enum ApplicationUserStatus {
+  ACTIVE = 'ACTIVE',  INACTIVE = 'INACTIVE',  PENDING = 'PENDING',  REJECTED = 'REJECTED',  DELETED = 'DELETED'}
 
-export interface [[ schema.table | to_pascal_case ]] {
-  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
-  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
-  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
-  [[ attr.name | to_snake_case ]]: [[ attr.enum_type ]];
-  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
-  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+export interface ApplicationUsers {
+  application_id: string;
+  user_id: string;
+  role_id: string;
+  status: ApplicationUserStatus;
+  created_at: number;
+  updated_at: number;
 }
