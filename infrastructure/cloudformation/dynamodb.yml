@@ -32,21 +32,11 @@ Resources:
   ApplicationsTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-Applications
       AttributeDefinitions:
         - AttributeName: application_id
           AttributeType: S
         - AttributeName: name
-          AttributeType: S
-        - AttributeName: description
-          AttributeType: S
-        - AttributeName: status
-          AttributeType: S
-        - AttributeName: created_at
-          AttributeType: N
-        - AttributeName: updated_at
-          AttributeType: N
-        - AttributeName: user_id
           AttributeType: S
       KeySchema:
         - AttributeName: application_id
@@ -74,33 +64,25 @@ Resources:
   ApplicationsTableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-name
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-Applications-table-name
       Type: String
       Value: !Ref ApplicationsTable
 
   ApplicationsTableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-arn
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-Applications-table-arn
       Type: String
       Value: !GetAtt ApplicationsTable.Arn
   ApplicationrolesTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-Applicationroles
       AttributeDefinitions:
         - AttributeName: application_id
           AttributeType: S
         - AttributeName: role_id
           AttributeType: S
-        - AttributeName: description
-          AttributeType: S
-        - AttributeName: status
-          AttributeType: S
-        - AttributeName: created_at
-          AttributeType: N
-        - AttributeName: updated_at
-          AttributeType: N
       KeySchema:
         - AttributeName: application_id
           KeyType: HASH
@@ -129,20 +111,20 @@ Resources:
   ApplicationrolesTableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles-table-name
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-Applicationroles-table-name
       Type: String
       Value: !Ref ApplicationrolesTable
 
   ApplicationrolesTableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles-table-arn
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-Applicationroles-table-arn
       Type: String
       Value: !GetAtt ApplicationrolesTable.Arn
   ApplicationusersTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-Applicationusers
       AttributeDefinitions:
         - AttributeName: application_id
           AttributeType: S
@@ -152,10 +134,6 @@ Resources:
           AttributeType: S
         - AttributeName: status
           AttributeType: S
-        - AttributeName: created_at
-          AttributeType: N
-        - AttributeName: updated_at
-          AttributeType: N
       KeySchema:
         - AttributeName: application_id
           KeyType: HASH
@@ -200,39 +178,29 @@ Resources:
   ApplicationusersTableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users-table-name
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-Applicationusers-table-name
       Type: String
       Value: !Ref ApplicationusersTable
 
   ApplicationusersTableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users-table-arn
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-Applicationusers-table-arn
       Type: String
       Value: !GetAtt ApplicationusersTable.Arn
   RolesTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-roles
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-Roles
       AttributeDefinitions:
         - AttributeName: role_id
           AttributeType: S
-        - AttributeName: user_id
-          AttributeType: S
         - AttributeName: application_id
           AttributeType: S
-        - AttributeName: role_name
+        - AttributeName: user_id
           AttributeType: S
         - AttributeName: role_type
           AttributeType: S
-        - AttributeName: permissions
-          AttributeType: S
-        - AttributeName: status
-          AttributeType: S
-        - AttributeName: created_at
-          AttributeType: N
-        - AttributeName: updated_at
-          AttributeType: N
       KeySchema:
         - AttributeName: role_id
           KeyType: HASH
@@ -281,43 +249,27 @@ Resources:
   RolesTableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-roles-table-name
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-Roles-table-name
       Type: String
       Value: !Ref RolesTable
 
   RolesTableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-roles-table-arn
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-Roles-table-arn
       Type: String
       Value: !GetAtt RolesTable.Arn
   UsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-users
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-Users
       AttributeDefinitions:
         - AttributeName: user_id
           AttributeType: S
-        - AttributeName: cognito_id
+        - AttributeName: status
           AttributeType: S
         - AttributeName: email
           AttributeType: S
-        - AttributeName: phone_number
-          AttributeType: S
-        - AttributeName: phone_verified
-          AttributeType: S
-        - AttributeName: first_name
-          AttributeType: S
-        - AttributeName: last_name
-          AttributeType: S
-        - AttributeName: groups
-          AttributeType: S
-        - AttributeName: status
-          AttributeType: S
-        - AttributeName: created_at
-          AttributeType: N
-        - AttributeName: updated_at
-          AttributeType: N
       KeySchema:
         - AttributeName: user_id
           KeyType: HASH
@@ -352,14 +304,14 @@ Resources:
   UsersTableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-users-table-name
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-Users-table-name
       Type: String
       Value: !Ref UsersTable
 
   UsersTableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-users-table-arn
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-Users-table-arn
       Type: String
       Value: !GetAtt UsersTable.Arn
 

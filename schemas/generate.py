@@ -381,7 +381,7 @@ def generate_python_model(table: str, schema: TableSchema) -> None:
         )
         
         # Write to file
-        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'src', 'models', f'{table.lower()}.py')
+        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'src', 'models', f'{to_snake_case(table)}.py')
         write_file(output_path, model_content)
         logger.info(f'Generated Python model for {table}')
         

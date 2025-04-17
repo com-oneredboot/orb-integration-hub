@@ -116,7 +116,7 @@ Resources:
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-applications-table-name'
+        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-Applications-table-name'
         AwsRegion: !Ref AWS::Region
 
   # Applications Resolvers
@@ -154,25 +154,25 @@ Resources:
         }
 
 
-  ApplicationsQueryByApplicationIdResolver:
+  ApplicationsQueryByapplication_idResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: ApplicationsQueryByApplicationId
+      FieldName: ApplicationsQueryByapplication_id
       DataSourceName: !GetAtt ApplicationsDataSource.Name
       RequestMappingTemplate: |
-        #if($ctx.args.input.applicationId)
+        #if($ctx.args.input.application_id)
           {
             "version": "2017-02-28",
             "operation": "GetItem",
             "key": {
-              "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+              "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id)
             }
           }
         #else
-          $util.error("Invalid identifier. Must provide applicationId")
+          $util.error("Invalid identifier. Must provide application_id")
         #end
       ResponseMappingTemplate: |
         #if($ctx.error)
@@ -212,7 +212,7 @@ Resources:
         #end
 
         #if(!$input.application_id)
-          $util.error("applicationId is a required field for updates")
+          $util.error("application_id is a required field for updates")
         #end
         
         #set($expNames = {})
@@ -268,7 +268,7 @@ Resources:
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-applicationroles-table-name'
+        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-Applicationroles-table-name'
         AwsRegion: !Ref AWS::Region
 
   # Applicationroles Resolvers
@@ -306,25 +306,25 @@ Resources:
         }
 
 
-  ApplicationrolesQueryByApplicationIdResolver:
+  ApplicationrolesQueryByapplication_idResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: ApplicationrolesQueryByApplicationId
+      FieldName: ApplicationrolesQueryByapplication_id
       DataSourceName: !GetAtt ApplicationrolesDataSource.Name
       RequestMappingTemplate: |
-        #if($ctx.args.input.applicationId)
+        #if($ctx.args.input.application_id)
           {
             "version": "2017-02-28",
             "operation": "GetItem",
             "key": {
-              "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+              "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id)
             }
           }
         #else
-          $util.error("Invalid identifier. Must provide applicationId")
+          $util.error("Invalid identifier. Must provide application_id")
         #end
       ResponseMappingTemplate: |
         #if($ctx.error)
@@ -348,16 +348,16 @@ Resources:
         #end
         
 
-        $util.toJson($response)  ApplicationrolesQueryByRoleIdResolver:
+        $util.toJson($response)  ApplicationrolesQueryByrole_idResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: ApplicationrolesQueryByRoleId
+      FieldName: ApplicationrolesQueryByrole_id
       DataSourceName: !GetAtt ApplicationrolesDataSource.Name
       RequestMappingTemplate: |
-        #if($ctx.args.input.roleId)
+        #if($ctx.args.input.role_id)
           {
             "version": "2017-02-28",
             "operation": "Query",
@@ -368,12 +368,12 @@ Resources:
                 "#role_id": "role_id"
               },
               "expressionValues": {
-                ":$role_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
+                ":$role_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.role_id)
               }
             }
           }
         #else
-          $util.error("Invalid identifier. Must provide roleId")
+          $util.error("Invalid identifier. Must provide role_id")
         #end
       ResponseMappingTemplate: |
         #if($ctx.error)
@@ -410,17 +410,17 @@ Resources:
       FieldName: ApplicationrolesQueryByBoth
       DataSourceName: !GetAtt ApplicationrolesDataSource.Name
       RequestMappingTemplate: |
-        #if($ctx.args.input.applicationId && $ctx.args.input.roleId)
+        #if($ctx.args.input.application_id && $ctx.args.input.role_id)
           {
             "version": "2017-02-28",
             "operation": "GetItem",
             "key": {
-              "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
-              ,"role_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
+              "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id)
+              ,"role_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.role_id)
             }
           }
         #else
-          $util.error("Invalid identifiers. Must provide both applicationId and roleId")
+          $util.error("Invalid identifiers. Must provide both application_id and role_id")
         #end
       ResponseMappingTemplate: |
         #if($ctx.error)
@@ -460,7 +460,7 @@ Resources:
         #end
 
         #if(!$input.application_id)
-          $util.error("applicationId is a required field for updates")
+          $util.error("application_id is a required field for updates")
         #end
         
         #set($expNames = {})
@@ -516,7 +516,7 @@ Resources:
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-applicationusers-table-name'
+        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-Applicationusers-table-name'
         AwsRegion: !Ref AWS::Region
 
   # Applicationusers Resolvers
@@ -554,25 +554,25 @@ Resources:
         }
 
 
-  ApplicationusersQueryByApplicationIdResolver:
+  ApplicationusersQueryByapplication_idResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: ApplicationusersQueryByApplicationId
+      FieldName: ApplicationusersQueryByapplication_id
       DataSourceName: !GetAtt ApplicationusersDataSource.Name
       RequestMappingTemplate: |
-        #if($ctx.args.input.applicationId)
+        #if($ctx.args.input.application_id)
           {
             "version": "2017-02-28",
             "operation": "GetItem",
             "key": {
-              "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+              "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id)
             }
           }
         #else
-          $util.error("Invalid identifier. Must provide applicationId")
+          $util.error("Invalid identifier. Must provide application_id")
         #end
       ResponseMappingTemplate: |
         #if($ctx.error)
@@ -596,16 +596,16 @@ Resources:
         #end
         
 
-        $util.toJson($response)  ApplicationusersQueryByUserIdResolver:
+        $util.toJson($response)  ApplicationusersQueryByuser_idResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: ApplicationusersQueryByUserId
+      FieldName: ApplicationusersQueryByuser_id
       DataSourceName: !GetAtt ApplicationusersDataSource.Name
       RequestMappingTemplate: |
-        #if($ctx.args.input.userId)
+        #if($ctx.args.input.user_id)
           {
             "version": "2017-02-28",
             "operation": "Query",
@@ -616,12 +616,12 @@ Resources:
                 "#user_id": "user_id"
               },
               "expressionValues": {
-                ":$user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+                ":$user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id)
               }
             }
           }
         #else
-          $util.error("Invalid identifier. Must provide userId")
+          $util.error("Invalid identifier. Must provide user_id")
         #end
       ResponseMappingTemplate: |
         #if($ctx.error)
@@ -658,17 +658,17 @@ Resources:
       FieldName: ApplicationusersQueryByBoth
       DataSourceName: !GetAtt ApplicationusersDataSource.Name
       RequestMappingTemplate: |
-        #if($ctx.args.input.applicationId && $ctx.args.input.userId)
+        #if($ctx.args.input.application_id && $ctx.args.input.user_id)
           {
             "version": "2017-02-28",
             "operation": "GetItem",
             "key": {
-              "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
-              ,"user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+              "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id)
+              ,"user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id)
             }
           }
         #else
-          $util.error("Invalid identifiers. Must provide both applicationId and userId")
+          $util.error("Invalid identifiers. Must provide both application_id and user_id")
         #end
       ResponseMappingTemplate: |
         #if($ctx.error)
@@ -708,7 +708,7 @@ Resources:
         #end
 
         #if(!$input.application_id)
-          $util.error("applicationId is a required field for updates")
+          $util.error("application_id is a required field for updates")
         #end
         
         #set($expNames = {})
@@ -764,7 +764,7 @@ Resources:
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-roles-table-name'
+        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-Roles-table-name'
         AwsRegion: !Ref AWS::Region
 
   # Roles Resolvers
@@ -802,25 +802,25 @@ Resources:
         }
 
 
-  RolesQueryByRoleIdResolver:
+  RolesQueryByrole_idResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: RolesQueryByRoleId
+      FieldName: RolesQueryByrole_id
       DataSourceName: !GetAtt RolesDataSource.Name
       RequestMappingTemplate: |
-        #if($ctx.args.input.roleId)
+        #if($ctx.args.input.role_id)
           {
             "version": "2017-02-28",
             "operation": "GetItem",
             "key": {
-              "role_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
+              "role_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.role_id)
             }
           }
         #else
-          $util.error("Invalid identifier. Must provide roleId")
+          $util.error("Invalid identifier. Must provide role_id")
         #end
       ResponseMappingTemplate: |
         #if($ctx.error)
@@ -844,16 +844,16 @@ Resources:
         #end
         
 
-        $util.toJson($response)  RolesQueryByApplicationIdResolver:
+        $util.toJson($response)  RolesQueryByapplication_idResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: RolesQueryByApplicationId
+      FieldName: RolesQueryByapplication_id
       DataSourceName: !GetAtt RolesDataSource.Name
       RequestMappingTemplate: |
-        #if($ctx.args.input.applicationId)
+        #if($ctx.args.input.application_id)
           {
             "version": "2017-02-28",
             "operation": "Query",
@@ -864,12 +864,12 @@ Resources:
                 "#application_id": "application_id"
               },
               "expressionValues": {
-                ":$application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+                ":$application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id)
               }
             }
           }
         #else
-          $util.error("Invalid identifier. Must provide applicationId")
+          $util.error("Invalid identifier. Must provide application_id")
         #end
       ResponseMappingTemplate: |
         #if($ctx.error)
@@ -906,17 +906,17 @@ Resources:
       FieldName: RolesQueryByBoth
       DataSourceName: !GetAtt RolesDataSource.Name
       RequestMappingTemplate: |
-        #if($ctx.args.input.roleId && $ctx.args.input.applicationId)
+        #if($ctx.args.input.role_id && $ctx.args.input.application_id)
           {
             "version": "2017-02-28",
             "operation": "GetItem",
             "key": {
-              "role_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
-              ,"application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+              "role_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.role_id)
+              ,"application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.application_id)
             }
           }
         #else
-          $util.error("Invalid identifiers. Must provide both roleId and applicationId")
+          $util.error("Invalid identifiers. Must provide both role_id and application_id")
         #end
       ResponseMappingTemplate: |
         #if($ctx.error)
@@ -956,7 +956,7 @@ Resources:
         #end
 
         #if(!$input.role_id)
-          $util.error("roleId is a required field for updates")
+          $util.error("role_id is a required field for updates")
         #end
         
         #set($expNames = {})
@@ -1012,7 +1012,7 @@ Resources:
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-table-name'
+        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-Users-table-name'
         AwsRegion: !Ref AWS::Region
 
   # Users Resolvers
@@ -1050,25 +1050,25 @@ Resources:
         }
 
 
-  UsersQueryByUserIdResolver:
+  UsersQueryByuser_idResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: UsersQueryByUserId
+      FieldName: UsersQueryByuser_id
       DataSourceName: !GetAtt UsersDataSource.Name
       RequestMappingTemplate: |
-        #if($ctx.args.input.userId)
+        #if($ctx.args.input.user_id)
           {
             "version": "2017-02-28",
             "operation": "GetItem",
             "key": {
-              "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+              "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.user_id)
             }
           }
         #else
-          $util.error("Invalid identifier. Must provide userId")
+          $util.error("Invalid identifier. Must provide user_id")
         #end
       ResponseMappingTemplate: |
         #if($ctx.error)
@@ -1108,7 +1108,7 @@ Resources:
         #end
 
         #if(!$input.user_id)
-          $util.error("userId is a required field for updates")
+          $util.error("user_id is a required field for updates")
         #end
         
         #set($expNames = {})

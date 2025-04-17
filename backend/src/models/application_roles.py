@@ -1,12 +1,12 @@
-"""ApplicationRoles model."""
+"""Applicationroles model."""
 from typing import Optional, List
 from pydantic import BaseModel, Field
 from datetime import datetime
 from enum import Enum
 
 
-class ApplicationRoles(BaseModel):
-    """ApplicationRoles model."""
+class Applicationroles(BaseModel):
+    """Applicationroles model."""
     application_id: str = Field(..., description="ID of the application")
     role_id: str = Field(..., description="ID of the role")
     description: Optional[str] = Field(None, description="Human-readable description of the role")

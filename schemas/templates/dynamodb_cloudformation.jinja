@@ -35,14 +35,28 @@ Resources:
     Properties:
       TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}
       AttributeDefinitions:
-        {% for attr in schema.attributes %}
-        - AttributeName: {{ attr.name }}
-          AttributeType: {{ attr.type | to_dynamodb_type }}
+        - AttributeName: {{ schema.partition_key }}
+          AttributeType: {{ schema.attributes | selectattr("name", "equalto", schema.partition_key) | map(attribute="type") | first | to_dynamodb_type }}
+        {% if schema.sort_key and schema.sort_key != 'None' %}
+        - AttributeName: {{ schema.sort_key }}
+          AttributeType: {{ schema.attributes | selectattr("name", "equalto", schema.sort_key) | map(attribute="type") | first | to_dynamodb_type }}
+        {% endif %}
+        {% if schema.secondary_indexes %}
+        {% for index in schema.secondary_indexes %}
+        {% if index.partition not in [schema.partition_key, schema.sort_key] %}
+        - AttributeName: {{ index.partition }}
+          AttributeType: {{ schema.attributes | selectattr("name", "equalto", index.partition) | map(attribute="type") | first | to_dynamodb_type }}
+        {% endif %}
+        {% if index.sort and index.sort not in [schema.partition_key, schema.sort_key, index.partition] %}
+        - AttributeName: {{ index.sort }}
+          AttributeType: {{ schema.attributes | selectattr("name", "equalto", index.sort) | map(attribute="type") | first | to_dynamodb_type }}
+        {% endif %}
         {% endfor %}
+        {% endif %}
       KeySchema:
         - AttributeName: {{ schema.partition_key }}
           KeyType: HASH
-        {% if schema.sort_key %}
+        {% if schema.sort_key and schema.sort_key != 'None' %}
         - AttributeName: {{ schema.sort_key }}
           KeyType: RANGE
         {% endif %}
@@ -65,7 +79,7 @@ Resources:
               - {{ attr }}
               {% endfor %}
             {% endif %}
-      {% endfor %}
+        {% endfor %}
       {% endif %}
       BillingMode: PAY_PER_REQUEST
       Tags:
@@ -81,14 +95,14 @@ Resources:
   {{ schema.table }}TableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ table_name | to_kebab_case }}-table-name
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}-table-name
       Type: String
       Value: !Ref {{ schema.table }}Table
 
   {{ schema.table }}TableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ table_name | to_kebab_case }}-table-arn
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}-table-arn
       Type: String
       Value: !GetAtt {{ schema.table }}Table.Arn
   {% endfor %}
