@@ -46,6 +46,21 @@ Resources:
         - AttributeName: [[ schema.sort_key ]]
           KeyType: RANGE
         {% endif %}
+      {% if schema.secondary_indexes %}
+      GlobalSecondaryIndexes:
+        {% for index in schema.secondary_indexes %}
+        - IndexName: [[ index.name ]]
+          KeySchema:
+            - AttributeName: [[ index.partition ]]
+              KeyType: HASH
+            {% if index.sort %}
+            - AttributeName: [[ index.sort ]]
+              KeyType: RANGE
+            {% endif %}
+          Projection:
+            ProjectionType: [[ index.projection_type ]]
+      {% endfor %}
+      {% endif %}
       BillingMode: PAY_PER_REQUEST
       Tags:
         - Key: Billable

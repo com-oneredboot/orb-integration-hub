@@ -14,8 +14,8 @@ class Users(BaseModel):
     last_name: str = Field(..., description="last_name")
     groups: str = Field(..., description="groups")
     status: str = Field(..., description="status")
-    created_at: float = Field(..., description="created_at")
-    updated_at: float = Field(..., description="updated_at")
+    created_at: str = Field(..., description="created_at")
+    updated_at: str = Field(..., description="updated_at")
 
     class Config:
         """Model configuration."""

@@ -8,8 +8,8 @@ This schema follows these conventions:
 - Input types: PascalCase with Input suffix (e.g., ApplicationRoleInput)
 - Response types: PascalCase with Response suffix (e.g., ApplicationRoleResponse)
 - List response types: PascalCase with ListResponse suffix (e.g., ApplicationRoleListResponse)
-- Query operations: camelCase with Query suffix (e.g., applicationRoleQuery)
-- Mutation operations: camelCase with action suffix (e.g., applicationRoleCreate)
+- Query operations: PascalCase with Query suffix (e.g., ApplicationRoleQuery)
+- Mutation operations: PascalCase with action suffix (e.g., ApplicationRoleCreate)
 
 All operations are secured with AWS Cognito user pool authentication for the admin group.
 """
@@ -36,7 +36,7 @@ enum ApplicationEnvironments {
 type Query {
   ping: String
   {% for table_name, schema in schemas.items() %}
-  [[ table_name | to_camel_case ]]QueryById(input: [[ table_name | to_pascal_case ]]QueryInput!): [[ table_name | to_pascal_case ]]Response
+  [[ table_name | to_pascal_case ]]QueryById(input: [[ table_name | to_pascal_case ]]QueryInput!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
   {% endfor %}
 }
@@ -44,11 +44,11 @@ type Query {
 type Mutation {
   ping: String
   {% for table_name, schema in schemas.items() %}
-  [[ table_name | to_camel_case ]]Create(input: [[ table_name | to_pascal_case ]]CreateInput!): [[ table_name | to_pascal_case ]]Response
+  [[ table_name | to_pascal_case ]]Create(input: [[ table_name | to_pascal_case ]]CreateInput!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
-  [[ table_name | to_camel_case ]]Update(input: [[ table_name | to_pascal_case ]]UpdateInput!): [[ table_name | to_pascal_case ]]Response
+  [[ table_name | to_pascal_case ]]Update(input: [[ table_name | to_pascal_case ]]UpdateInput!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
-  [[ table_name | to_camel_case ]]Delete(id: ID!): [[ table_name | to_pascal_case ]]Response
+  [[ table_name | to_pascal_case ]]Delete(id: ID!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
   {% endfor %}
 }

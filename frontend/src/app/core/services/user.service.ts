@@ -13,9 +13,9 @@ import { BehaviorSubject, Observable } from 'rxjs';
 // Application Imports
 import {ApiService} from "./api.service";
 import {
-  UserCreateInput, UserQueryInput, UserUpdateInput,
-  UserCreateResponse, UserResponse, UserUpdateResponse,
-  userCreateMutation, userQueryById, userExistQuery, userUpdateMutation
+  UsersCreateInput, UsersQueryInput, UsersUpdateInput,
+  UsersCreateResponse, UsersResponse, UsersUpdateResponse,
+  usersCreateMutation, usersQueryById, usersExistQuery, usersUpdateMutation
 } from "../graphql/user.graphql";
 import { UserGroups, UserStatus } from "../models/user.enum";
 import { CognitoService } from "./cognito.service";
@@ -58,7 +58,7 @@ export class UserService extends ApiService {
    * @param input
    * @param password
    */
-  public async userCreate(input: UserCreateInput, password: string): Promise<UserResponse> {
+  public async userCreate(input: UsersCreateInput, password: string): Promise<UsersResponse> {
     console.debug('createUser input:', input);
 
     try {
@@ -66,54 +66,47 @@ export class UserService extends ApiService {
       const cognitoResponse = await this.cognitoService.createCognitoUser(input, password);
       console.debug('createCognitoUser Response: ', cognitoResponse);
 
-      const timestamp = Date.now(); // Use timestamp instead of ISO string
-      const userCreateInput: UserCreateInput = {
-        // Required fields
-        user_id: uuidv4(), // Use string format as expected by the GraphQL schema
+      const timestamp = Date.now();
+      const userCreateInput: UsersCreateInput = {
+        user_id: uuidv4(),
         cognito_id: input.cognito_id,
         email: input.email,
         groups: [UserGroups.USER] as UserGroups[],
         status: UserStatus.PENDING,
         created_at: timestamp,
-        
-        // Optional fields with defaults
         phone_verified: false,
         updated_at: timestamp
       };
 
       const response = await this.mutate(
-        userCreateMutation, {"input": userCreateInput}, "apiKey") as GraphQLResult<UserCreateResponse>;
+        usersCreateMutation, {"input": userCreateInput}, "apiKey") as GraphQLResult<UsersCreateResponse>;
       console.debug('createUser Response: ', response);
 
       return {
-        userQueryById: response.data.userCreate
-      } as UserResponse;
-
+        usersQueryById: response.data.usersCreate
+      } as UsersResponse;
 
     } catch (error) {
       console.error('Error creating User:', error);
       
-      // Extract GraphQL error information if available
-      let errorCode = 'ORB-API-002'; // Default to GraphQL mutation error
+      let errorCode = 'ORB-API-002';
       let errorMessage = 'Error creating user';
       
       if (error && typeof error === 'object' && 'errors' in error) {
         const gqlError = error as any;
         if (gqlError.errors?.[0]?.message) {
-          // Check for specific error types and assign appropriate codes
           const errorMsg = gqlError.errors[0].message;
           
           if (errorMsg.includes('NonNull type')) {
-            errorCode = 'ORB-API-003'; // Invalid input error
+            errorCode = 'ORB-API-003';
             errorMessage = `[${errorCode}] Invalid input for user creation: Missing required field`;
           } else if (errorMsg.includes('already exists')) {
-            errorCode = 'ORB-AUTH-004'; // User already exists
+            errorCode = 'ORB-AUTH-004';
             errorMessage = ErrorRegistry.getErrorMessage(errorCode);
           } else {
             errorMessage = `[${errorCode}] ${errorMsg}`;
           }
           
-          // Log the error
           ErrorRegistry.logError(errorCode, { 
             originalError: error,
             graphqlError: gqlError.errors[0]
@@ -125,12 +118,12 @@ export class UserService extends ApiService {
       }
       
       return {
-        userQueryById: {
+        usersQueryById: {
           status_code: 500,
-          user: null,
-          message: errorMessage
+          message: errorMessage,
+          data: null
         }
-      } as UserResponse;
+      } as UsersResponse;
     }
   }
 
@@ -139,7 +132,7 @@ export class UserService extends ApiService {
    * @param input UserQueryInput with backend-compatible fields
    * @param email Optional email to filter results client-side
    */
-  public async userExists(input: UserQueryInput, email?: string): Promise<boolean> {
+  public async userExists(input: UsersQueryInput, email?: string): Promise<boolean> {
     const startTime = Date.now();
     console.debug('UserService [userExists]: Starting', { input, email, time: startTime });
 
@@ -147,28 +140,27 @@ export class UserService extends ApiService {
       console.debug('UserService [userExists]: Making API call');
       
       const response = await this.query(
-        userExistQuery,
+        usersExistQuery,
         {input: input},
         'apiKey'
-      ) as GraphQLResult<UserResponse>;
+      ) as GraphQLResult<UsersResponse>;
 
       console.debug('UserService [userExists]: API response received', {
         response,
         elapsed: Date.now() - startTime
       });
 
-      if (response.data?.userQueryById?.status_code === 404) {
+      if (response.data?.usersQueryById?.status_code === 404) {
         console.debug('UserService [userExists]: User not found (404)');
         return false;
       }
 
-      if (response.data?.userQueryById?.status_code !== 200) {
-        console.debug('UserService [userExists]: Invalid status code', response.data?.userQueryById?.status_code);
-        throw new Error(`Invalid response code: ${response.data?.userQueryById?.status_code}`);
+      if (response.data?.usersQueryById?.status_code !== 200) {
+        console.debug('UserService [userExists]: Invalid status code', response.data?.usersQueryById?.status_code);
+        throw new Error(`Invalid response code: ${response.data?.usersQueryById?.status_code}`);
       }
 
-
-      const result = Boolean(response.data?.userQueryById?.user?.user_id);
+      const result = Boolean(response.data?.usersQueryById?.data?.user_id);
       console.debug('UserService [userExists]: Returning result', result);
       return result;
 
@@ -187,22 +179,22 @@ export class UserService extends ApiService {
    * @param code Verification code
    * @param email Optional email to filter results client-side
    */
-  public async emailVerify(input: UserQueryInput, code: string, email?: string): Promise<AuthResponse> {
+  public async emailVerify(input: UsersQueryInput, code: string, email?: string): Promise<AuthResponse> {
     console.debug('verifyEmail:', input, email ? { email } : '');
     try {
 
       // get the user
       const userResponse = await this.userQueryById(input, email);
       console.debug('User Response:', userResponse);
-      if (userResponse.userQueryById?.status_code !== 200 || !userResponse.userQueryById?.user) {
+      if (userResponse.usersQueryById?.status_code !== 200 || !userResponse.usersQueryById?.data) {
         return {
-          status_code: userResponse.userQueryById?.status_code,
+          status_code: userResponse.usersQueryById?.status_code,
           isSignedIn: false,
           message: 'Error getting user'
         };
       }
 
-      const emailVerifyResponse = await this.cognitoService.emailVerify(userResponse.userQueryById.user.cognito_id, code);
+      const emailVerifyResponse = await this.cognitoService.emailVerify(userResponse.usersQueryById.data.cognito_id, code);
       console.debug('verifyEmail Response: ', emailVerifyResponse);
 
       return emailVerifyResponse;
@@ -222,42 +214,40 @@ export class UserService extends ApiService {
    * @param input UserQueryInput with backend-compatible fields
    * @param email Optional email to filter results client-side
    */
-  public async userQueryById(input: UserQueryInput, email?: string): Promise<UserResponse> {
+  public async userQueryById(input: UsersQueryInput, email?: string): Promise<UsersResponse> {
     console.debug('userQueryById:', input, email ? { email } : '');
     try {
       const response = await this.query(
-        userQueryById,
+        usersQueryById,
         {input: input},
-        'apiKey') as GraphQLResult<UserResponse>;
+        'apiKey') as GraphQLResult<UsersResponse>;
 
       console.debug('userQueryById Response: ', response);
       
-      // If email is specified and we have user data, filter by email
-      if (email && response.data?.userQueryById?.user && 
-          response.data.userQueryById.user.email !== email) {
+      if (email && response.data?.usersQueryById?.data && 
+          response.data.usersQueryById.data.email !== email) {
         
         console.debug('userQueryById: Email mismatch, returning 404');
         
-        // Return a 404 if email doesn't match
         return {
-          userQueryById: {
+          usersQueryById: {
             status_code: 404,
-            user: null,
-            message: 'User not found'
+            message: 'User not found',
+            data: null
           }
-        } as UserResponse;
+        } as UsersResponse;
       }
       
       return response.data;
     } catch (error) {
       console.error('Error getting user:', error);
       return {
-        userQueryById: {
+        usersQueryById: {
           status_code: 500,
-          user: null,
-          message: 'Error getting user'
+          message: 'Error getting user',
+          data: null
         }
-      } as UserResponse;
+      } as UsersResponse;
     }
   }
 
@@ -271,13 +261,13 @@ export class UserService extends ApiService {
     let user;
 
     try {
-      const userQueryInput = { email: email } as UserQueryInput;
+      const userQueryInput = { email: email } as UsersQueryInput;
       const userResponse = await this.userQueryById(userQueryInput, email);
 
-      user = userResponse.userQueryById?.user;
-      if (userResponse.userQueryById?.status_code !== 200 || !user) {
+      user = userResponse.usersQueryById?.data;
+      if (userResponse.usersQueryById?.status_code !== 200 || !user) {
         return {
-          status_code: userResponse.userQueryById?.status_code,
+          status_code: userResponse.usersQueryById?.status_code,
           isSignedIn: false,
           message: 'User Does Not Exist'
         };
@@ -479,32 +469,28 @@ export class UserService extends ApiService {
    * @param input User data to update
    * @returns Promise with UserResponse
    */
-  public async userUpdate(input: UserUpdateInput): Promise<UserResponse> {
+  public async userUpdate(input: UsersUpdateInput): Promise<UsersResponse> {
     console.debug('userUpdate input:', input);
 
     try {
-      // Validate that we have a user_id (required field)
       if (!input.user_id) {
         console.error('Cannot update user: missing required user_id');
         return {
-          userQueryById: {
+          usersQueryById: {
             status_code: 400,
-            user: null,
-            message: 'Missing required user_id'
+            message: 'Missing required user_id',
+            data: null
           }
         };
       }
 
-      // Create a clean input with only the fields to update
       let hasUpdates = false;
-      const updateInput: UserUpdateInput = {
+      const updateInput: UsersUpdateInput = {
         user_id: input.user_id,
-        // Always include updated_at with current timestamp for any update
         updated_at: Date.now()
       };
-      hasUpdates = true; // Set to true because we're always updating updated_at
+      hasUpdates = true;
 
-      // Only add other fields that have values
       if (input.first_name) {
         updateInput.first_name = input.first_name;
         hasUpdates = true;
@@ -525,34 +511,30 @@ export class UserService extends ApiService {
         hasUpdates = true;
       }
 
-      // We always have updates because of updated_at, but log if no other fields changed
-      if (Object.keys(updateInput).length <= 2) { // Just user_id and updated_at
+      if (Object.keys(updateInput).length <= 2) {
         console.debug('Only updating timestamp, no other field changes');
       }
 
       console.debug('Update input:', updateInput);
 
-      // Make the API call with the standard mutation
       const response = await this.mutate(
-        userUpdateMutation,
+        usersUpdateMutation,
         { input: updateInput },
         "userPool"
-      ) as GraphQLResult<UserUpdateResponse>;
+      ) as GraphQLResult<UsersUpdateResponse>;
 
       console.debug('userUpdate Response:', response);
 
-      // Handle the response
-      if (!response.data?.userUpdate) {
+      if (!response.data?.usersUpdate) {
         return {
-          userQueryById: {
+          usersQueryById: {
             status_code: 500,
-            user: null,
-            message: 'No response from update operation'
+            message: 'No response from update operation',
+            data: null
           }
         };
       }
 
-      // Fetch the complete user record after updating
       const updatedUser = await this.userQueryById({ user_id: input.user_id });
 
       return updatedUser;
@@ -560,7 +542,6 @@ export class UserService extends ApiService {
     } catch (error) {
       console.error('Error updating user:', error);
 
-      // Extract better error message if possible
       let errorMessage = 'Error updating user';
       if (error && typeof error === 'object' && 'errors' in error) {
         const gqlError = error as any;
@@ -572,10 +553,10 @@ export class UserService extends ApiService {
       }
 
       return {
-        userQueryById: {
+        usersQueryById: {
           status_code: 500,
-          user: null,
-          message: errorMessage
+          message: errorMessage,
+          data: null
         }
       };
     }

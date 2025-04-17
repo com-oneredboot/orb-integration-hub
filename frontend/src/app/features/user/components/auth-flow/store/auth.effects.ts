@@ -12,7 +12,7 @@ import { Store } from '@ngrx/store';
 
 // Application Imports
 import { UserService } from "../../../../../core/services/user.service";
-import { UserQueryInput } from "../../../../../core/graphql/user.graphql";
+import { UsersQueryInput } from "../../../../../core/graphql/user.graphql";
 import { AuthActions } from "./auth.actions";
 import * as fromAuth from "./auth.selectors";
 import { CognitoService } from "../../../../../core/services/cognito.service";
@@ -27,7 +27,7 @@ export class AuthEffects {
       tap(action => console.debug('Effect [CheckEmail]: Starting', action)),
       switchMap(({ email }) => {
         console.debug('Effect [CheckEmail]: Making service call');
-        const userInput: UserQueryInput = { email: email };
+        const userInput: UsersQueryInput = { email: email };
         
         return from(this.userService.userExists(userInput, email)).pipe(
           tap(result => console.debug('Effect [CheckEmail]: Service returned', result)),
@@ -65,11 +65,11 @@ export class AuthEffects {
         // create the user
         return from(this.userService.userCreate(input, password)).pipe(
           map(response => {
-            if (response.userQueryById?.status_code === 200) {
+            if (response.usersQueryById?.status_code === 200) {
               return AuthActions.createUserSuccess();
             }
             return AuthActions.createUserFailure({
-              error: response.userQueryById?.message || 'Failed to create user'
+              error: response.usersQueryById?.message || 'Failed to create user'
             });
           }),
           catchError(error => {

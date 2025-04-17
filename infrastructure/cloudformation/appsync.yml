@@ -126,7 +126,7 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: applicationsCreate
+      FieldName: ApplicationsCreate
       DataSourceName: !GetAtt ApplicationsDataSource.Name
       RequestMappingTemplate: |
         #set($input = {})
@@ -162,7 +162,7 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: applicationsQueryById
+      FieldName: ApplicationsQueryById
       DataSourceName: !GetAtt ApplicationsDataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.applicationId)
@@ -205,7 +205,7 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: applicationsUpdate
+      FieldName: ApplicationsUpdate
       DataSourceName: !GetAtt ApplicationsDataSource.Name
       RequestMappingTemplate: |
         #set($input = {})
@@ -263,26 +263,26 @@ Resources:
           "message": "Applications updated successfully",
           "applicationId": $util.toJson($ctx.args.input.applicationId)
         }
-  ApplicationRolesDataSource:
+  ApplicationrolesDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
-      Name: ApplicationRolesDataSource
+      Name: ApplicationrolesDataSource
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
         TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-application-roles-table-name'
         AwsRegion: !Ref AWS::Region
 
-  # ApplicationRoles Resolvers
-  ApplicationRolesCreateResolver:
+  # Applicationroles Resolvers
+  ApplicationrolesCreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: applicationRolesCreate
-      DataSourceName: !GetAtt ApplicationRolesDataSource.Name
+      FieldName: ApplicationrolesCreate
+      DataSourceName: !GetAtt ApplicationrolesDataSource.Name
       RequestMappingTemplate: |
         #set($input = {})
         #foreach($field in $ctx.args.input.keySet())
@@ -304,21 +304,21 @@ Resources:
         
         #set($response = {
           "status_code": 200,
-          "message": "ApplicationRoles created successfully",
+          "message": "Applicationroles created successfully",
           "data": $ctx.args.input
         })
         
         $util.toJson($response)
 
 
-  ApplicationRolesQueryByIdResolver:
+  ApplicationrolesQueryByIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: applicationRolesQueryById
-      DataSourceName: !GetAtt ApplicationRolesDataSource.Name
+      FieldName: ApplicationrolesQueryById
+      DataSourceName: !GetAtt ApplicationrolesDataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.applicationId)
           {
@@ -354,14 +354,14 @@ Resources:
         $util.toJson($response)
 
 
-  ApplicationRolesUpdateResolver:
+  ApplicationrolesUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: applicationRolesUpdate
-      DataSourceName: !GetAtt ApplicationRolesDataSource.Name
+      FieldName: ApplicationRolesUpdate
+      DataSourceName: !GetAtt ApplicationrolesDataSource.Name
       RequestMappingTemplate: |
         #set($input = {})
         #foreach($field in $ctx.args.input.keySet())
@@ -415,29 +415,29 @@ Resources:
         
         {
           "status_code": 200,
-          "message": "ApplicationRoles updated successfully",
+          "message": "Applicationroles updated successfully",
           "applicationId": $util.toJson($ctx.args.input.applicationId)
         }
-  ApplicationUsersDataSource:
+  ApplicationusersDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
-      Name: ApplicationUsersDataSource
+      Name: ApplicationusersDataSource
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
         TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-application-users-table-name'
         AwsRegion: !Ref AWS::Region
 
-  # ApplicationUsers Resolvers
-  ApplicationUsersCreateResolver:
+  # Applicationusers Resolvers
+  ApplicationusersCreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: applicationUsersCreate
-      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
+      FieldName: ApplicationusersCreate
+      DataSourceName: !GetAtt ApplicationusersDataSource.Name
       RequestMappingTemplate: |
         #set($input = {})
         #foreach($field in $ctx.args.input.keySet())
@@ -459,21 +459,21 @@ Resources:
         
         #set($response = {
           "status_code": 200,
-          "message": "ApplicationUsers created successfully",
+          "message": "Applicationusers created successfully",
           "data": $ctx.args.input
         })
         
         $util.toJson($response)
 
 
-  ApplicationUsersQueryByIdResolver:
+  ApplicationusersQueryByIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: applicationUsersQueryById
-      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
+      FieldName: ApplicationusersQueryById
+      DataSourceName: !GetAtt ApplicationusersDataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.applicationId)
           {
@@ -509,14 +509,14 @@ Resources:
         $util.toJson($response)
 
 
-  ApplicationUsersUpdateResolver:
+  ApplicationusersUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: applicationUsersUpdate
-      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
+      FieldName: ApplicationUsersUpdate
+      DataSourceName: !GetAtt ApplicationusersDataSource.Name
       RequestMappingTemplate: |
         #set($input = {})
         #foreach($field in $ctx.args.input.keySet())
@@ -570,7 +570,7 @@ Resources:
         
         {
           "status_code": 200,
-          "message": "ApplicationUsers updated successfully",
+          "message": "Applicationusers updated successfully",
           "applicationId": $util.toJson($ctx.args.input.applicationId)
         }
   RolesDataSource:
@@ -591,7 +591,7 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: rolesCreate
+      FieldName: RolesCreate
       DataSourceName: !GetAtt RolesDataSource.Name
       RequestMappingTemplate: |
         #set($input = {})
@@ -627,7 +627,7 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: rolesQueryById
+      FieldName: RolesQueryById
       DataSourceName: !GetAtt RolesDataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.roleId)
@@ -670,7 +670,7 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: rolesUpdate
+      FieldName: RolesUpdate
       DataSourceName: !GetAtt RolesDataSource.Name
       RequestMappingTemplate: |
         #set($input = {})
@@ -746,7 +746,7 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: usersCreate
+      FieldName: UsersCreate
       DataSourceName: !GetAtt UsersDataSource.Name
       RequestMappingTemplate: |
         #set($input = {})
@@ -782,7 +782,7 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: usersQueryById
+      FieldName: UsersQueryById
       DataSourceName: !GetAtt UsersDataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.userId)
@@ -825,7 +825,7 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: usersUpdate
+      FieldName: UsersUpdate
       DataSourceName: !GetAtt UsersDataSource.Name
       RequestMappingTemplate: |
         #set($input = {})

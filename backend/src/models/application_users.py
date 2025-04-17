@@ -9,8 +9,8 @@ class ApplicationUsers(BaseModel):
     user_id: str = Field(..., description="user_id")
     role_id: str = Field(..., description="role_id")
     status: str = Field(..., description="status")
-    created_at: float = Field(..., description="created_at")
-    updated_at: float = Field(..., description="updated_at")
+    created_at: str = Field(..., description="created_at")
+    updated_at: str = Field(..., description="updated_at")
 
     class Config:
         """Model configuration."""

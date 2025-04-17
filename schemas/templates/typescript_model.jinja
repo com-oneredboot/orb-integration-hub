@@ -1,8 +1,19 @@
 /**
  * [[ schema.table ]] model.
  */
+
+{% for attr in schema.attributes %}
+{% if attr.enum_type %}
+export enum [[ attr.enum_type ]] {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  DELETED = 'DELETED'
+}
+{% endif %}
+{% endfor %}
+
 export interface [[ schema.table | to_pascal_case ]] {
   {% for attr in schema.attributes %}
-  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+  [[ attr.name | to_snake_case ]]: {% if attr.enum_type %}[[ attr.enum_type ]]{% else %}[[ attr.type | to_typescript_type ]]{% endif %};
   {% endfor %}
 }

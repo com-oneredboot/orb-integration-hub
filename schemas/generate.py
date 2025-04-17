@@ -107,6 +107,7 @@ class SchemaModel(BaseModel):
 class Attribute:
     name: str
     type: str  # 'S' for string, 'N' for number
+    enum_type: Optional[str] = None
 
 @dataclass
 class TableSchema:
@@ -114,6 +115,7 @@ class TableSchema:
     attributes: List[Attribute]
     partition_key: str
     sort_key: Optional[str] = None
+    secondary_indexes: Optional[List[Dict[str, Any]]] = None
 
 def to_python_type(attr_type: str) -> str:
     """Convert schema type to Python type."""
@@ -131,15 +133,14 @@ def to_python_type(attr_type: str) -> str:
 def to_typescript_type(attr_type: str) -> str:
     """Convert schema type to TypeScript type."""
     type_mapping = {
-        'S': 'string',
-        'N': 'number',
-        'BOOL': 'boolean',
-        'L': 'string[]',
-        'M': 'Record<string, any>',
-        'NULL': 'null',
-        'B': 'string'  # Base64 encoded string
+        'string': 'string',
+        'number': 'number',
+        'boolean': 'boolean',
+        'array': 'string[]',
+        'object': 'Record<string, any>',
+        'timestamp': 'number'
     }
-    return type_mapping.get(attr_type, 'string')
+    return type_mapping.get(attr_type.lower(), 'string')
 
 def setup_jinja_env() -> Environment:
     """
@@ -229,19 +230,35 @@ def load_schemas() -> Dict[str, TableSchema]:
             # Extract attributes and keys
             attributes = []
             for attr_name, attr_data in schema_data['model']['attributes'].items():
-                attr_type = 'N' if attr_data['type'] == 'number' else 'S'
-                attributes.append(Attribute(name=attr_name, type=attr_type))
+                # Preserve the original type from the schema
+                attr_type = attr_data['type']
+                # Get enum type if present
+                enum_type = attr_data.get('enum_type')
+                attributes.append(Attribute(name=attr_name, type=attr_type, enum_type=enum_type))
                 
             # Get partition and sort keys
             partition_key = schema_data['model']['keys']['primary']['partition']
             sort_key = schema_data['model']['keys']['primary'].get('sort')
+            
+            # Get secondary indexes
+            secondary_indexes = []
+            if 'secondary' in schema_data['model']['keys']:
+                for index in schema_data['model']['keys']['secondary']:
+                    secondary_indexes.append({
+                        'name': index['name'],
+                        'type': index['type'],
+                        'partition': index['partition'],
+                        'sort': index.get('sort'),
+                        'projection_type': index['projection_type']
+                    })
             
             # Create TableSchema
             schemas[table] = TableSchema(
                 table=table,
                 attributes=attributes,
                 partition_key=partition_key,
-                sort_key=sort_key
+                sort_key=sort_key,
+                secondary_indexes=secondary_indexes
             )
             
         return schemas
@@ -450,7 +467,7 @@ def generate_appsync_template(schemas: Dict[str, TableSchema], output_path: str)
         processed_schemas = {}
         for table_name, schema in schemas.items():
             processed_schemas[table_name] = {
-                'table': table_name,  # Keep original table name
+                'table': to_pascal_case(table_name),  # Convert table name to PascalCase
                 'attributes': schema.attributes,
                 'partition_key': schema.partition_key,
                 'sort_key': schema.sort_key

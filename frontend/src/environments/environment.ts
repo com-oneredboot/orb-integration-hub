@@ -5,7 +5,7 @@
 
 // src/environments/environment.ts
 export const environment = {
-  appName: 'OneRedBoot.com (Development)',
+  appName: 'Integration Hub',
   production: false,
   loggingLevel: 'debug',
   cognito: {
@@ -14,8 +14,8 @@ export const environment = {
     qrCodeIssuer: 'OneRedBoot.com'
   },
   graphql: {
-    url: 'https://yolw2em6xjeodcgupkav3ler54.appsync-api.us-east-1.amazonaws.com/graphql',
+    url: 'https://ohh6hgzvzvbchp7pkzy675ec2i.appsync-api.us-east-1.amazonaws.com/graphql',
     region: 'us-east-1',
-    apiKey: 'da2-5dj3hg3ym5exbdmcjnht3bpara'
+    apiKey: 'da2-33l2upnfdrecpoaerbvlujab4u'
   }
 };

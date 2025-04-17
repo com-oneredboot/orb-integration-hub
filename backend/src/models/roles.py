@@ -11,8 +11,8 @@ class Roles(BaseModel):
     role_name: str = Field(..., description="role_name")
     role_type: str = Field(..., description="role_type")
     permissions: str = Field(..., description="permissions")
-    created_at: float = Field(..., description="created_at")
-    updated_at: float = Field(..., description="updated_at")
+    created_at: str = Field(..., description="created_at")
+    updated_at: str = Field(..., description="updated_at")
     active: str = Field(..., description="active")
 
     class Config:

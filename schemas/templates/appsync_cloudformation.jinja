@@ -123,7 +123,7 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: [[ schema.table | to_camel_case ]]Create
+      FieldName: [[ schema.table | to_pascal_case ]]Create
       DataSourceName: !GetAtt [[ schema.table | to_pascal_case ]]DataSource.Name
       RequestMappingTemplate: |
         #set($input = {})
@@ -162,7 +162,7 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: [[ schema.table | to_camel_case ]]QueryById
+      FieldName: [[ schema.table | to_pascal_case ]]QueryById
       DataSourceName: !GetAtt [[ schema.table | to_pascal_case ]]DataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.[[ schema.partition_key | to_camel_case ]])

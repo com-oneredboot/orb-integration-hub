@@ -13,9 +13,9 @@ model:
       - UserQueryInput
       - UserCreateInput
       - UserUpdateInput
-      - userQueryById
-      - userCreate
-      - userUpdate
+      - UserQueryById
+      - UserCreate
+      - UserUpdate
     # Default auth is user pools only
     default_auth: user_pools
   keys:
@@ -30,6 +30,12 @@ model:
         sort: status
         projection_type: ALL
         description: Index for querying users by status
+      - name: user-email-index
+        type: GSI
+        partition: email
+        sort: user_id
+        projection_type: ALL
+        description: Index for querying users by email
   attributes:
     user_id:
       type: string

@@ -8,74 +8,72 @@ import { GenericResponse } from "../models/appsync.model";
 import { User } from  "../models/user.model";
 import { UserGroups } from "../models/user.enum";
 
-
-export type UserResponse = {
-  userQueryById: {
+export type UsersResponse = {
+  usersQueryById: {
     status_code: number;
-    user: User | null;
-    message?: string;
+    message: string;
+    data: User | null;
   };
 };
 
-export type UserCreateResponse = GenericResponse & {
-  userCreate: {
+export type UsersCreateResponse = GenericResponse & {
+  usersCreate: {
     status_code: number;
-    user: User | null;
-    message?: string;
+    message: string;
+    data: User | null;
   };
 }
 
-export type UserUpdateResponse = GenericResponse & {
-  userUpdate: {
+export type UsersUpdateResponse = GenericResponse & {
+  usersUpdate: {
     status_code: number;
-    user?: User;
-    message?: string;
+    message: string;
+    data: User | null;
   }
 }
 
-export type UserQueryInput = {
-  user_id?: string;
-  cognito_id?: string;
-  email?: string;
+export type UsersQueryInput = {
+  user_id: string;
+  email: string;
 };
 
-export type UserCreateInput = Omit<User, 'first_name' | 'last_name' | 'phone_number' >;
+export type UsersCreateInput = Omit<User, 'first_name' | 'last_name' | 'phone_number' >;
 
-export type UserUpdateInput = Partial<Omit<User, 'user_id' | 'created_at' >> & { user_id: string };
-
+export type UsersUpdateInput = Partial<Omit<User, 'user_id' | 'created_at' >> & { user_id: string };
 
 // ------------------------------ //
 // AppSync Mutations and Queries
 // ------------------------------ //
-export const userCreateMutation = /* GraphQL */ `
-  mutation UserCreate($input: UserCreateInput!) {
-    userCreate(input: $input) {
+export const usersCreateMutation = /* GraphQL */ `
+  mutation UsersCreate($input: UsersCreateInput!) {
+    usersCreate(input: $input) {
       status_code
       message
-      user {
+      data {
         user_id
       }
     }
   }
 `;
 
-export const userExistQuery = `
-  query UserExists($input: UserQueryInput!) {
-    userQueryById(input: $input) {
+export const usersExistQuery = `
+  query UsersExists($input: UsersQueryInput!) {
+    usersQueryById(input: $input) {
       status_code
-      user {
+      message
+      data {
         user_id
       }
     }
   }
 `;
 
-export const userQueryById = /* GraphQL */ `
-  query UserQueryById($input: UserQueryInput!) {
-    userQueryById(input: $input) {
+export const usersQueryById = /* GraphQL */ `
+  query UsersQueryById($input: UsersQueryInput!) {
+    usersQueryById(input: $input) {
       status_code
       message
-      user {
+      data {
         user_id
         cognito_id
         email
@@ -90,12 +88,12 @@ export const userQueryById = /* GraphQL */ `
   }
 `;
 
-export const userUpdateMutation = /* GraphQL */ `
-  mutation UserUpdate($input: UserUpdateInput!) {
-    userUpdate(input: $input) {
+export const usersUpdateMutation = /* GraphQL */ `
+  mutation UsersUpdate($input: UsersUpdateInput!) {
+    usersUpdate(input: $input) {
       status_code
       message
-      user {
+      data {
         user_id
         email
         first_name

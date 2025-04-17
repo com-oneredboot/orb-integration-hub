@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Observable, Subject, takeUntil } from 'rxjs';
 import { User } from '../../../../core/models/user.model';
-import { UserUpdateInput } from '../../../../core/graphql/user.graphql';
+import { UsersUpdateInput } from '../../../../core/graphql/user.graphql';
 import * as fromAuth from '../../components/auth-flow/store/auth.selectors';
 import { AuthActions } from '../../components/auth-flow/store/auth.actions';
 import { UserService } from '../../../../core/services/user.service';
@@ -177,7 +177,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       }
       
       // Create update input from form values
-      const updateInput: UserUpdateInput = {
+      const updateInput: UsersUpdateInput = {
         user_id: user.user_id,
         first_name: this.profileForm.get('firstName')?.value,
         last_name: this.profileForm.get('lastName')?.value
@@ -191,16 +191,16 @@ export class ProfileComponent implements OnInit, OnDestroy {
       const response = await this.userService['userUpdate'](updateInput);
       
       // Handle the response
-      if (response?.userQueryById?.status_code !== 200) {
-        const errorMessage = response?.userQueryById?.message || 'Failed to update profile';
+      if (response?.usersQueryById?.status_code !== 200) {
+        const errorMessage = response?.usersQueryById?.message || 'Failed to update profile';
         console.error('Profile update error:', errorMessage);
         throw new Error(errorMessage);
       }
       
       // Update the store with the updated user data
-      if (response?.userQueryById?.user) {
+      if (response?.usersQueryById?.data) {
         this.store.dispatch(AuthActions.signInSuccess({
-          user: response.userQueryById.user,
+          user: response.usersQueryById.data,
           message: 'Profile updated successfully'
         }));
       }
