@@ -201,12 +201,17 @@ def setup_jinja_env() -> Environment:
 
 def to_camel_case(s: str) -> str:
     """Convert string to camelCase."""
-    words = s.split('_')
-    return words[0] + ''.join(word.title() for word in words[1:])
+    # First convert to PascalCase
+    pascal = to_pascal_case(s)
+    # Then lowercase the first character
+    return pascal[0].lower() + pascal[1:]
 
 def to_pascal_case(s: str) -> str:
     """Convert string to PascalCase."""
-    return ''.join(word.title() for word in s.split('_'))
+    # First split by underscores and hyphens
+    words = re.split(r'[_-]', s)
+    # Then capitalize each word
+    return ''.join(word.title() for word in words)
 
 def to_snake_case(s: str) -> str:
     """Convert string to snake_case."""
@@ -488,11 +493,17 @@ def generate_appsync_template(schemas: Dict[str, TableSchema], output_path: str)
         # Process schemas into the format expected by the template
         processed_schemas = {}
         for table_name, schema in schemas.items():
+            # Convert table name to PascalCase for all uses
+            pascal_table_name = to_pascal_case(table_name)
+            # For compound names like application_roles, ensure each part is properly capitalized
+            if '_' in table_name:
+                pascal_table_name = ''.join(word.title() for word in table_name.split('_'))
             processed_schemas[table_name] = {
-                'table': to_pascal_case(table_name),  # Convert table name to PascalCase
+                'table': pascal_table_name,
                 'attributes': schema.attributes,
                 'partition_key': schema.partition_key,
-                'sort_key': schema.sort_key
+                'sort_key': schema.sort_key,
+                'table_name': table_name  # Add original table name for reference
             }
 
         # Generate template

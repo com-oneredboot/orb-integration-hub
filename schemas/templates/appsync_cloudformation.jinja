@@ -148,21 +148,19 @@ Resources:
           $util.error($ctx.error.message, $ctx.error.type)
         #end
         
-        #set($response = {
-          "status_code": 200,
-          "message": "[[ schema.table | to_pascal_case ]] created successfully",
-          "data": $ctx.args.input
-        })
-        
-        $util.toJson($response)
+        {
+          "StatusCode": 200,
+          "Message": "[[ schema.table | to_pascal_case ]] created successfully",
+          "Data": $ctx.args.input
+        }
 
-  [[ schema.table | to_pascal_case ]]QueryByIdResolver:
+  [[ schema.table | to_pascal_case ]]QueryResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: [[ schema.table | to_pascal_case ]]QueryById
+      FieldName: [[ schema.table | to_pascal_case ]]Query
       DataSourceName: !GetAtt [[ schema.table | to_pascal_case ]]DataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.[[ schema.partition_key | to_camel_case ]])
@@ -185,8 +183,8 @@ Resources:
         #end
         
         #set($response = {
-          "status_code": 200,
-          "data": {}
+          "StatusCode": 200,
+          "Data": {}
         })
         
         #if($ctx.result)
@@ -195,9 +193,9 @@ Resources:
             #set($camelField = $util.str.toCamelCase($field))
             $util.qr($result.put($camelField, $ctx.result.get($field)))
           #end
-          $util.qr($response.put("data", $result))
+          $util.qr($response.put("Data", $result))
         #else
-          $util.qr($response.put("data", null))
+          $util.qr($response.put("Data", null))
         #end
         
         $util.toJson($response)
@@ -208,7 +206,7 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: [[ schema.table | to_camel_case ]]Update
+      FieldName: [[ schema.table | to_pascal_case ]]Update
       DataSourceName: !GetAtt [[ schema.table | to_pascal_case ]]DataSource.Name
       RequestMappingTemplate: |
         #set($input = {})
@@ -266,9 +264,9 @@ Resources:
         #end
         
         {
-          "status_code": 200,
-          "message": "[[ schema.table | to_pascal_case ]] updated successfully",
-          "[[ schema.partition_key | to_camel_case ]]": $util.toJson($ctx.args.input.[[ schema.partition_key | to_camel_case ]])
+          "StatusCode": 200,
+          "Message": "[[ schema.table | to_pascal_case ]] updated successfully",
+          "Data": $ctx.args.input
         }
 
   {%- endfor %}

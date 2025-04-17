@@ -10,6 +10,7 @@ This schema follows these conventions:
 - List response types: PascalCase with ListResponse suffix (e.g., ApplicationRoleListResponse)
 - Query operations: PascalCase with Query suffix (e.g., ApplicationRoleQuery)
 - Mutation operations: PascalCase with action suffix (e.g., ApplicationRoleCreate)
+- Response fields: PascalCase (e.g., StatusCode, Message, Data)
 
 All operations are secured with AWS Cognito user pool authentication for the admin group.
 """
@@ -34,15 +35,15 @@ enum ApplicationEnvironments {
 
 # Base types
 type Query {
-  ping: String
+  Ping: String
   {% for table_name, schema in schemas.items() %}
-  [[ table_name | to_pascal_case ]]QueryById(input: [[ table_name | to_pascal_case ]]QueryInput!): [[ table_name | to_pascal_case ]]Response
+  [[ table_name | to_pascal_case ]]Query(input: [[ table_name | to_pascal_case ]]QueryInput!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
   {% endfor %}
 }
 
 type Mutation {
-  ping: String
+  Ping: String
   {% for table_name, schema in schemas.items() %}
   [[ table_name | to_pascal_case ]]Create(input: [[ table_name | to_pascal_case ]]CreateInput!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
@@ -81,15 +82,15 @@ input [[ table_name | to_pascal_case ]]QueryInput {
 }
 
 type [[ table_name | to_pascal_case ]]Response {
-  statusCode: Int!
-  message: String!
-  data: [[ table_name | to_pascal_case ]]
+  StatusCode: Int!
+  Message: String!
+  Data: [[ table_name | to_pascal_case ]]
 }
 
 type [[ table_name | to_pascal_case ]]ListResponse {
-  statusCode: Int!
-  message: String!
-  data: [[[ table_name | to_pascal_case ]]]
+  StatusCode: Int!
+  Message: String!
+  Data: [[[ table_name | to_pascal_case ]]]
 }
 
 {% endfor %}

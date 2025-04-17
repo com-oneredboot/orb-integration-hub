@@ -147,22 +147,20 @@ Resources:
           $util.error($ctx.error.message, $ctx.error.type)
         #end
         
-        #set($response = {
-          "status_code": 200,
-          "message": "Applications created successfully",
-          "data": $ctx.args.input
-        })
-        
-        $util.toJson($response)
+        {
+          "StatusCode": 200,
+          "Message": "Applications created successfully",
+          "Data": $ctx.args.input
+        }
 
 
-  ApplicationsQueryByIdResolver:
+  ApplicationsQueryResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: ApplicationsQueryById
+      FieldName: ApplicationsQuery
       DataSourceName: !GetAtt ApplicationsDataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.applicationId)
@@ -181,8 +179,8 @@ Resources:
         #end
         
         #set($response = {
-          "status_code": 200,
-          "data": {}
+          "StatusCode": 200,
+          "Data": {}
         })
         
         #if($ctx.result)
@@ -191,9 +189,9 @@ Resources:
             #set($camelField = $util.str.toCamelCase($field))
             $util.qr($result.put($camelField, $ctx.result.get($field)))
           #end
-          $util.qr($response.put("data", $result))
+          $util.qr($response.put("Data", $result))
         #else
-          $util.qr($response.put("data", null))
+          $util.qr($response.put("Data", null))
         #end
         
         $util.toJson($response)
@@ -259,9 +257,9 @@ Resources:
         #end
         
         {
-          "status_code": 200,
-          "message": "Applications updated successfully",
-          "applicationId": $util.toJson($ctx.args.input.applicationId)
+          "StatusCode": 200,
+          "Message": "Applications updated successfully",
+          "Data": $ctx.args.input
         }
   ApplicationrolesDataSource:
     Type: AWS::AppSync::DataSource
@@ -302,22 +300,20 @@ Resources:
           $util.error($ctx.error.message, $ctx.error.type)
         #end
         
-        #set($response = {
-          "status_code": 200,
-          "message": "Applicationroles created successfully",
-          "data": $ctx.args.input
-        })
-        
-        $util.toJson($response)
+        {
+          "StatusCode": 200,
+          "Message": "Applicationroles created successfully",
+          "Data": $ctx.args.input
+        }
 
 
-  ApplicationrolesQueryByIdResolver:
+  ApplicationrolesQueryResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: ApplicationrolesQueryById
+      FieldName: ApplicationrolesQuery
       DataSourceName: !GetAtt ApplicationrolesDataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.applicationId)
@@ -336,8 +332,8 @@ Resources:
         #end
         
         #set($response = {
-          "status_code": 200,
-          "data": {}
+          "StatusCode": 200,
+          "Data": {}
         })
         
         #if($ctx.result)
@@ -346,9 +342,9 @@ Resources:
             #set($camelField = $util.str.toCamelCase($field))
             $util.qr($result.put($camelField, $ctx.result.get($field)))
           #end
-          $util.qr($response.put("data", $result))
+          $util.qr($response.put("Data", $result))
         #else
-          $util.qr($response.put("data", null))
+          $util.qr($response.put("Data", null))
         #end
         
         $util.toJson($response)
@@ -360,7 +356,7 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: ApplicationRolesUpdate
+      FieldName: ApplicationrolesUpdate
       DataSourceName: !GetAtt ApplicationrolesDataSource.Name
       RequestMappingTemplate: |
         #set($input = {})
@@ -414,9 +410,9 @@ Resources:
         #end
         
         {
-          "status_code": 200,
-          "message": "Applicationroles updated successfully",
-          "applicationId": $util.toJson($ctx.args.input.applicationId)
+          "StatusCode": 200,
+          "Message": "Applicationroles updated successfully",
+          "Data": $ctx.args.input
         }
   ApplicationusersDataSource:
     Type: AWS::AppSync::DataSource
@@ -457,22 +453,20 @@ Resources:
           $util.error($ctx.error.message, $ctx.error.type)
         #end
         
-        #set($response = {
-          "status_code": 200,
-          "message": "Applicationusers created successfully",
-          "data": $ctx.args.input
-        })
-        
-        $util.toJson($response)
+        {
+          "StatusCode": 200,
+          "Message": "Applicationusers created successfully",
+          "Data": $ctx.args.input
+        }
 
 
-  ApplicationusersQueryByIdResolver:
+  ApplicationusersQueryResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: ApplicationusersQueryById
+      FieldName: ApplicationusersQuery
       DataSourceName: !GetAtt ApplicationusersDataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.applicationId)
@@ -491,8 +485,8 @@ Resources:
         #end
         
         #set($response = {
-          "status_code": 200,
-          "data": {}
+          "StatusCode": 200,
+          "Data": {}
         })
         
         #if($ctx.result)
@@ -501,9 +495,9 @@ Resources:
             #set($camelField = $util.str.toCamelCase($field))
             $util.qr($result.put($camelField, $ctx.result.get($field)))
           #end
-          $util.qr($response.put("data", $result))
+          $util.qr($response.put("Data", $result))
         #else
-          $util.qr($response.put("data", null))
+          $util.qr($response.put("Data", null))
         #end
         
         $util.toJson($response)
@@ -515,7 +509,7 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: ApplicationUsersUpdate
+      FieldName: ApplicationusersUpdate
       DataSourceName: !GetAtt ApplicationusersDataSource.Name
       RequestMappingTemplate: |
         #set($input = {})
@@ -569,9 +563,9 @@ Resources:
         #end
         
         {
-          "status_code": 200,
-          "message": "Applicationusers updated successfully",
-          "applicationId": $util.toJson($ctx.args.input.applicationId)
+          "StatusCode": 200,
+          "Message": "Applicationusers updated successfully",
+          "Data": $ctx.args.input
         }
   RolesDataSource:
     Type: AWS::AppSync::DataSource
@@ -612,22 +606,20 @@ Resources:
           $util.error($ctx.error.message, $ctx.error.type)
         #end
         
-        #set($response = {
-          "status_code": 200,
-          "message": "Roles created successfully",
-          "data": $ctx.args.input
-        })
-        
-        $util.toJson($response)
+        {
+          "StatusCode": 200,
+          "Message": "Roles created successfully",
+          "Data": $ctx.args.input
+        }
 
 
-  RolesQueryByIdResolver:
+  RolesQueryResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: RolesQueryById
+      FieldName: RolesQuery
       DataSourceName: !GetAtt RolesDataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.roleId)
@@ -646,8 +638,8 @@ Resources:
         #end
         
         #set($response = {
-          "status_code": 200,
-          "data": {}
+          "StatusCode": 200,
+          "Data": {}
         })
         
         #if($ctx.result)
@@ -656,9 +648,9 @@ Resources:
             #set($camelField = $util.str.toCamelCase($field))
             $util.qr($result.put($camelField, $ctx.result.get($field)))
           #end
-          $util.qr($response.put("data", $result))
+          $util.qr($response.put("Data", $result))
         #else
-          $util.qr($response.put("data", null))
+          $util.qr($response.put("Data", null))
         #end
         
         $util.toJson($response)
@@ -724,9 +716,9 @@ Resources:
         #end
         
         {
-          "status_code": 200,
-          "message": "Roles updated successfully",
-          "roleId": $util.toJson($ctx.args.input.roleId)
+          "StatusCode": 200,
+          "Message": "Roles updated successfully",
+          "Data": $ctx.args.input
         }
   UsersDataSource:
     Type: AWS::AppSync::DataSource
@@ -767,22 +759,20 @@ Resources:
           $util.error($ctx.error.message, $ctx.error.type)
         #end
         
-        #set($response = {
-          "status_code": 200,
-          "message": "Users created successfully",
-          "data": $ctx.args.input
-        })
-        
-        $util.toJson($response)
+        {
+          "StatusCode": 200,
+          "Message": "Users created successfully",
+          "Data": $ctx.args.input
+        }
 
 
-  UsersQueryByIdResolver:
+  UsersQueryResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: UsersQueryById
+      FieldName: UsersQuery
       DataSourceName: !GetAtt UsersDataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.userId)
@@ -801,8 +791,8 @@ Resources:
         #end
         
         #set($response = {
-          "status_code": 200,
-          "data": {}
+          "StatusCode": 200,
+          "Data": {}
         })
         
         #if($ctx.result)
@@ -811,9 +801,9 @@ Resources:
             #set($camelField = $util.str.toCamelCase($field))
             $util.qr($result.put($camelField, $ctx.result.get($field)))
           #end
-          $util.qr($response.put("data", $result))
+          $util.qr($response.put("Data", $result))
         #else
-          $util.qr($response.put("data", null))
+          $util.qr($response.put("Data", null))
         #end
         
         $util.toJson($response)
@@ -879,9 +869,9 @@ Resources:
         #end
         
         {
-          "status_code": 200,
-          "message": "Users updated successfully",
-          "userId": $util.toJson($ctx.args.input.userId)
+          "StatusCode": 200,
+          "Message": "Users updated successfully",
+          "Data": $ctx.args.input
         }
 # --------------------------------------------------- #
 Outputs:
