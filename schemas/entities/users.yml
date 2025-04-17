@@ -51,11 +51,11 @@ model:
       description: User's email address
     phone_number:
       type: string
-      required: false
+      required: true
       description: User's phone number
     phone_verified:
       type: boolean
-      required: false
+      required: true
       description: Whether the phone number is verified
     first_name:
       type: string
@@ -67,20 +67,27 @@ model:
       description: User's last name
     groups:
       type: array
-      required: true
-      description: List of Cognito groups the user belongs to
       items:
         type: string
+      required: true
+      description: User's groups
     status:
       type: string
+      required: true
       enum_type: UserStatus
-      required: true
-      description: Current status of the user (ACTIVE, INACTIVE, DELETED)
+      enum_values:
+        - UNKNOWN
+        - ACTIVE
+        - INACTIVE
+        - PENDING
+        - REJECTED
+        - DELETED
+      description: User's status
     created_at:
-      type: number
+      type: timestamp
       required: true
-      description: Unix timestamp when the user was created
+      description: When the user was created
     updated_at:
-      type: number
+      type: timestamp
       required: true
-      description: Unix timestamp when the user was last updated
+      description: When the user was last updated

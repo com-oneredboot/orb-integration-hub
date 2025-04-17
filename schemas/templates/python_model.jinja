@@ -1,12 +1,24 @@
-"""[[ schema.table ]] model."""
+"""{{ table | to_pascal_case }} model."""
 from typing import Optional, List
 from pydantic import BaseModel, Field
 from datetime import datetime
+from enum import Enum
 
-class [[ schema.table | to_pascal_case ]](BaseModel):
-    """[[ schema.table ]] model."""
-    {% for attr in schema.attributes %}
-    [[ attr.name | to_snake_case ]]: [[ attr.type | to_python_type ]] = Field(..., description="[[ attr.name | to_snake_case ]]")
+{% for attr in attributes %}
+{% if attr.enum_type %}
+class {{ attr.enum_type }}(str, Enum):
+    """{{ attr.enum_type }} enum."""
+    {% for value in attr.enum_values %}
+    {{ value }} = "{{ value }}"
+    {% endfor %}
+
+{% endif %}
+{% endfor %}
+
+class {{ table | to_pascal_case }}(BaseModel):
+    """{{ table | to_pascal_case }} model."""
+    {% for attr in attributes %}
+    {{ attr.name }}: {% if attr.required %}{{ attr.type }}{% else %}Optional[{{ attr.type }}]{% endif %} = Field({% if attr.required %}...{% else %}None{% endif %}, description="{{ attr.description }}")
     {% endfor %}
 
     class Config:

@@ -5,9 +5,9 @@
 {% for attr in schema.attributes %}
 {% if attr.enum_type %}
 export enum [[ attr.enum_type ]] {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  DELETED = 'DELETED'
+  {% for value in attr.enum_values %}
+  [[ value ]] = '[[ value ]]'{% if not loop.last %},{% endif %}
+  {% endfor %}
 }
 {% endif %}
 {% endfor %}

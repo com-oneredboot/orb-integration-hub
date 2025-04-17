@@ -1,6 +1,6 @@
 # file: schemas/tables/applications.yml
-# author: AI Assistant
-# date: 2024-03-21
+# author: Corey Dale Peters
+# date: 2025-02-17
 # description: yaml file containing the applications table schema
 
 version: '1.0'
@@ -14,12 +14,12 @@ model:
       projection_type: ALL
       description: Primary key for applications
     secondary:
-      - name: application-status-index
+      - name: application-name-index
         type: GSI
-        partition: application_id
-        sort: status
+        partition: name
+        sort: application_id
         projection_type: ALL
-        description: Index for querying applications by status
+        description: Index for querying applications by name
   attributes:
     application_id:
       type: string
@@ -28,24 +28,29 @@ model:
     name:
       type: string
       required: true
-      description: Human-readable name of the application
+      description: Name of the application
     description:
       type: string
-      required: false
-      description: Human-readable description of the application
+      required: true
+      description: Description of the application
     status:
       type: string
+      required: true
       enum_type: ApplicationStatus
-      required: true
-      description: Current status of the application (ACTIVE, INACTIVE, DELETED)
+      enum_values:
+        - ACTIVE
+        - INACTIVE
+        - PENDING
+        - DELETED
+      description: Current status of the application
     created_at:
-      type: number
+      type: timestamp
       required: true
-      description: Unix timestamp when the application was created
+      description: When the application was created
     updated_at:
-      type: number
+      type: timestamp
       required: true
-      description: Unix timestamp when the application was last updated
+      description: When the application was last updated
     user_id:
       type: string
       required: true

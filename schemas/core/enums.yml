@@ -1,0 +1,48 @@
+# file: schemas/core/enums.yml
+# author: AI Assistant
+# date: 2024-03-21
+# description: Centralized enum definitions for the schema generator
+
+# User status enums
+UserStatus:
+  - UNKNOWN
+  - ACTIVE
+  - INACTIVE
+  - PENDING
+  - REJECTED
+  - DELETED
+
+# Role type and status enums
+RoleType:
+  - ADMIN
+  - USER
+  - GUEST
+  - CUSTOM
+
+RoleStatus:
+  - ACTIVE
+  - INACTIVE
+  - DELETED
+
+# Application status enums
+ApplicationStatus:
+  - ACTIVE
+  - INACTIVE
+  - PENDING
+  - DELETED
+
+# Application user status enums
+ApplicationUserStatus:
+  - ACTIVE
+  - INACTIVE
+  - PENDING
+  - REJECTED
+  - DELETED
+
+# Application role status enums
+ApplicationRoleStatus:
+  - ACTIVE
+  - INACTIVE
+  - PENDING
+  - REJECTED
+  - DELETED 

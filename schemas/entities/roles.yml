@@ -39,30 +39,49 @@ model:
     role_id:
       type: string
       required: true
+      description: Unique identifier for the role
     user_id:
       type: string
       required: true
+      description: ID of the user this role belongs to
     application_id:
       type: string
       required: true
+      description: ID of the application this role belongs to
     role_name:
       type: string
       required: true
+      description: Name of the role
     role_type:
       type: string
-      enum: [Employee, Client, Customer, Owner]
       required: true
+      enum_type: RoleType
+      enum_values:
+        - ADMIN
+        - USER
+        - GUEST
+        - CUSTOM
+      description: Type of the role
     permissions:
       type: array
       items:
         type: string
       required: true
+      description: List of permissions granted to this role
+    status:
+      type: string
+      required: true
+      enum_type: RoleStatus
+      enum_values:
+        - ACTIVE
+        - INACTIVE
+        - DELETED
+      description: Current status of the role
     created_at:
-      type: number
+      type: timestamp
       required: true
+      description: When the role was created
     updated_at:
-      type: number
+      type: timestamp
       required: true
-    active:
-      type: boolean
-      required: true
+      description: When the role was last updated

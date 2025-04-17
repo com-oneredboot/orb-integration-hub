@@ -13,6 +13,7 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 from dataclasses import dataclass
 import re
+import copy
 
 # 3rd party imports
 import yaml
@@ -106,8 +107,11 @@ class SchemaModel(BaseModel):
 @dataclass
 class Attribute:
     name: str
-    type: str  # 'S' for string, 'N' for number
+    type: str
+    description: str = ""
+    required: bool = True
     enum_type: Optional[str] = None
+    enum_values: Optional[List[str]] = None
 
 @dataclass
 class TableSchema:
@@ -165,13 +169,7 @@ def setup_jinja_env() -> Environment:
         loader=FileSystemLoader(os.path.join(SCRIPT_DIR, 'templates')),
         autoescape=select_autoescape(['html', 'xml']),
         trim_blocks=True,
-        lstrip_blocks=True,
-        variable_start_string='[[',
-        variable_end_string=']]',
-        block_start_string='{%',
-        block_end_string='%}',
-        comment_start_string='{#',
-        comment_end_string='#}'
+        lstrip_blocks=True
     )
     
     # Add custom filters
@@ -248,11 +246,23 @@ def load_schemas() -> Dict[str, TableSchema]:
             # Extract attributes and keys
             attributes = []
             for attr_name, attr_data in schema_data['model']['attributes'].items():
-                # Preserve the original type from the schema
+                # Get basic attribute info
                 attr_type = attr_data['type']
-                # Get enum type if present
+                description = attr_data.get('description', '')
+                required = attr_data.get('required', True)
+                
+                # Get enum info if present
                 enum_type = attr_data.get('enum_type')
-                attributes.append(Attribute(name=attr_name, type=attr_type, enum_type=enum_type))
+                enum_values = attr_data.get('enum_values', []) if enum_type else None
+                
+                attributes.append(Attribute(
+                    name=attr_name,
+                    type=attr_type,
+                    description=description,
+                    required=required,
+                    enum_type=enum_type,
+                    enum_values=enum_values
+                ))
                 
             # Get partition and sort keys
             partition_key = schema_data['model']['keys']['primary']['partition']
@@ -339,14 +349,39 @@ def generate_python_model(table: str, schema: TableSchema) -> None:
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('python_model.jinja')
         
-        # Generate model
-        model_content = template.render(schema=schema)
+        # Process attributes to include enum types and proper Python types
+        processed_attributes = []
+        for attr in schema.attributes:
+            # Determine Python type
+            python_type = 'str'  # default
+            if attr.type == 'boolean':
+                python_type = 'bool'
+            elif attr.type == 'number':
+                python_type = 'float'
+            elif attr.type == 'array':
+                python_type = 'List[str]'
+            elif attr.type == 'timestamp':
+                python_type = 'datetime'
+            
+            # If it's an enum, use the enum type
+            if attr.enum_type:
+                python_type = attr.enum_type
+            
+            processed_attributes.append({
+                'name': attr.name,
+                'type': python_type,
+                'description': attr.description,
+                'required': attr.required
+            })
         
-        # Convert table name to snake_case for file name
-        file_name = to_snake_case(table)
+        # Generate model
+        model_content = template.render(
+            table=table,
+            attributes=processed_attributes
+        )
         
         # Write to file
-        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'src', 'models', f'{file_name}.py')
+        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'src', 'models', f'{table.lower()}.py')
         write_file(output_path, model_content)
         logger.info(f'Generated Python model for {table}')
         
@@ -361,8 +396,22 @@ def generate_typescript_model(table: str, schema: TableSchema) -> None:
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('typescript_model.jinja')
         
+        # Process attributes to include enum values
+        processed_schema = copy.deepcopy(schema)
+        for attr in processed_schema.attributes:
+            if attr.enum_type and not attr.enum_values:
+                # If enum type is specified but no values, try to get them from enums.yml
+                enums_path = os.path.join(SCRIPT_DIR, 'core', 'enums.yml')
+                if os.path.exists(enums_path):
+                    with open(enums_path, 'r') as f:
+                        enums_data = yaml.safe_load(f)
+                        if attr.enum_type in enums_data:
+                            attr.enum_values = enums_data[attr.enum_type]
+                        else:
+                            logger.warning(f"Enum type {attr.enum_type} not found in enums.yml")
+        
         # Generate model
-        model_content = template.render(schema=schema)
+        model_content = template.render(schema=processed_schema)
         
         # Convert table name to PascalCase for TypeScript file name
         file_name = to_pascal_case(table)

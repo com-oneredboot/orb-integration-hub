@@ -1,19 +1,19 @@
 /**
- * applications model.
+ * [[ schema.table ]] model.
  */
 
-export enum ApplicationStatus {
+export enum [[ attr.enum_type ]] {
   ACTIVE = 'ACTIVE',
   INACTIVE = 'INACTIVE',
   DELETED = 'DELETED'
 }
 
-export interface Applications {
-  application_id: string;
-  name: string;
-  description: string;
-  status: ApplicationStatus;
-  created_at: number;
-  updated_at: number;
-  user_id: string;
+export interface [[ schema.table | to_pascal_case ]] {
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.enum_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
 }

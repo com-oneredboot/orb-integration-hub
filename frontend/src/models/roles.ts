@@ -1,16 +1,26 @@
 /**
- * roles model.
+ * [[ schema.table ]] model.
  */
 
+export enum [[ attr.enum_type ]] {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  DELETED = 'DELETED'
+}
+export enum [[ attr.enum_type ]] {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  DELETED = 'DELETED'
+}
 
-export interface Roles {
-  role_id: string;
-  user_id: string;
-  application_id: string;
-  role_name: string;
-  role_type: string;
-  permissions: string[];
-  created_at: number;
-  updated_at: number;
-  active: boolean;
+export interface [[ schema.table | to_pascal_case ]] {
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.enum_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.enum_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
 }

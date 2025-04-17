@@ -1,23 +1,23 @@
 /**
- * users model.
+ * [[ schema.table ]] model.
  */
 
-export enum UserStatus {
+export enum [[ attr.enum_type ]] {
   ACTIVE = 'ACTIVE',
   INACTIVE = 'INACTIVE',
   DELETED = 'DELETED'
 }
 
-export interface Users {
-  user_id: string;
-  cognito_id: string;
-  email: string;
-  phone_number: string;
-  phone_verified: boolean;
-  first_name: string;
-  last_name: string;
-  groups: string[];
-  status: UserStatus;
-  created_at: number;
-  updated_at: number;
+export interface [[ schema.table | to_pascal_case ]] {
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.enum_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
 }

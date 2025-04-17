@@ -1,7 +1,7 @@
 # file: schemas/tables/application_roles.yml
 # author: Corey Dale Peters
-# date: 2024-03-21
-# description: yaml file containing the application roles table schema
+# date: 2025-02-17
+# description: yaml file containing the application_roles table schema
 
 version: '1.0'
 table: ApplicationRoles
@@ -15,35 +15,41 @@ model:
       projection_type: ALL     
       description: Primary key for application roles
     secondary:
-      - name: role-status-index
+      - name: role-applications-index
         type: GSI
-        partition: application_id
-        sort: status
+        partition: role_id
+        sort: application_id
         projection_type: ALL
-        description: Index for querying roles by status within an application
+        description: Index for querying applications by role
   attributes:
     application_id:
       type: string
       required: true
-      description: Unique identifier for the application
+      description: ID of the application
     role_id:
       type: string
       required: true
-      description: Unique identifier for the role
+      description: ID of the role
     description:
       type: string
       required: false
       description: Human-readable description of the role
     status:
       type: string
+      required: true
       enum_type: ApplicationRoleStatus
-      required: true
-      description: Current status of the role (ACTIVE, INACTIVE, DELETED)
+      enum_values:
+        - ACTIVE
+        - INACTIVE
+        - PENDING
+        - REJECTED
+        - DELETED
+      description: Status of the role in the application
     created_at:
-      type: number
+      type: timestamp
       required: true
-      description: Unix timestamp when the role was created
+      description: When the role was added to the application
     updated_at:
-      type: number
+      type: timestamp
       required: true
-      description: Unix timestamp when the role was last updated
+      description: When the role's application status was last updated

@@ -1,21 +1,23 @@
-"""users model."""
+"""Users model."""
 from typing import Optional, List
 from pydantic import BaseModel, Field
 from datetime import datetime
+from enum import Enum
+
 
 class Users(BaseModel):
-    """users model."""
-    user_id: str = Field(..., description="user_id")
-    cognito_id: str = Field(..., description="cognito_id")
-    email: str = Field(..., description="email")
-    phone_number: str = Field(..., description="phone_number")
-    phone_verified: str = Field(..., description="phone_verified")
-    first_name: str = Field(..., description="first_name")
-    last_name: str = Field(..., description="last_name")
-    groups: str = Field(..., description="groups")
-    status: str = Field(..., description="status")
-    created_at: str = Field(..., description="created_at")
-    updated_at: str = Field(..., description="updated_at")
+    """Users model."""
+    user_id: str = Field(..., description="Unique identifier for the user")
+    cognito_id: str = Field(..., description="Unique identifier from Cognito")
+    email: str = Field(..., description="User's email address")
+    phone_number: str = Field(..., description="User's phone number")
+    phone_verified: bool = Field(..., description="Whether the phone number is verified")
+    first_name: str = Field(..., description="User's first name")
+    last_name: str = Field(..., description="User's last name")
+    groups: List[str] = Field(..., description="User's groups")
+    status: UserStatus = Field(..., description="User's status")
+    created_at: datetime = Field(..., description="When the user was created")
+    updated_at: datetime = Field(..., description="When the user was last updated")
 
     class Config:
         """Model configuration."""
