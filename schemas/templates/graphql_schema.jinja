@@ -37,60 +37,74 @@ enum ApplicationEnvironments {
 type Query {
   Ping: String
   {% for table_name, schema in schemas.items() %}
-  [[ table_name | to_pascal_case ]]Query(input: [[ table_name | to_pascal_case ]]QueryInput!): [[ table_name | to_pascal_case ]]Response
+  [[ schema.table ]]QueryBy[[ schema.partition_key | to_pascal_case ]](input: [[ schema.table ]]QueryBy[[ schema.partition_key | to_pascal_case ]]Input!): [[ schema.table ]]Response
     @aws_auth(cognito_groups: ["admin"])
+  {% if schema.sort_key and schema.sort_key != 'None' %}
+  [[ schema.table ]]QueryBy[[ schema.sort_key | to_pascal_case ]](input: [[ schema.table ]]QueryBy[[ schema.sort_key | to_pascal_case ]]Input!): [[ schema.table ]]Response
+    @aws_auth(cognito_groups: ["admin"])
+  [[ schema.table ]]QueryByBoth(input: [[ schema.table ]]QueryByBothInput!): [[ schema.table ]]Response
+    @aws_auth(cognito_groups: ["admin"])
+  {% endif %}
   {% endfor %}
 }
 
 type Mutation {
   Ping: String
   {% for table_name, schema in schemas.items() %}
-  [[ table_name | to_pascal_case ]]Create(input: [[ table_name | to_pascal_case ]]CreateInput!): [[ table_name | to_pascal_case ]]Response
+  [[ schema.table ]]Create(input: [[ schema.table ]]CreateInput!): [[ schema.table ]]Response
     @aws_auth(cognito_groups: ["admin"])
-  [[ table_name | to_pascal_case ]]Update(input: [[ table_name | to_pascal_case ]]UpdateInput!): [[ table_name | to_pascal_case ]]Response
+  [[ schema.table ]]Update(input: [[ schema.table ]]UpdateInput!): [[ schema.table ]]Response
     @aws_auth(cognito_groups: ["admin"])
-  [[ table_name | to_pascal_case ]]Delete(id: ID!): [[ table_name | to_pascal_case ]]Response
+  [[ schema.table ]]Delete(id: ID!): [[ schema.table ]]Response
     @aws_auth(cognito_groups: ["admin"])
   {% endfor %}
 }
 
 # Model types
 {% for table_name, schema in schemas.items() %}
-type [[ table_name | to_pascal_case ]] {
+type [[ schema.table ]] {
   {% for attr in schema.attributes %}
-  [[ attr.name | to_camel_case ]]: {% if attr.type == 'N' %}Int{% else %}String{% endif %}!
+  [[ attr.name | to_camel_case ]]: {% if attr.enum_type %}[[ attr.enum_type ]]{% else %}{% if attr.type == 'N' %}Int{% elif attr.type == 'B' %}Boolean{% elif attr.type == 'S' %}String{% elif attr.type == 'L' %}AWSJSON{% elif attr.type == 'M' %}AWSJSON{% elif attr.type == 'NS' %}AWSJSON{% elif attr.type == 'SS' %}AWSJSON{% elif attr.type == 'BS' %}AWSJSON{% else %}String{% endif %}{% endif %}!
   {% endfor %}
 }
 
-input [[ table_name | to_pascal_case ]]CreateInput {
+input [[ schema.table ]]CreateInput {
   {% for attr in schema.attributes %}
-  [[ attr.name | to_camel_case ]]: {% if attr.type == 'N' %}Int{% else %}String{% endif %}!
+  [[ attr.name | to_camel_case ]]: {% if attr.enum_type %}[[ attr.enum_type ]]{% else %}{% if attr.type == 'N' %}Int{% elif attr.type == 'B' %}Boolean{% elif attr.type == 'S' %}String{% elif attr.type == 'L' %}AWSJSON{% elif attr.type == 'M' %}AWSJSON{% elif attr.type == 'NS' %}AWSJSON{% elif attr.type == 'SS' %}AWSJSON{% elif attr.type == 'BS' %}AWSJSON{% else %}String{% endif %}{% endif %}!
   {% endfor %}
 }
 
-input [[ table_name | to_pascal_case ]]UpdateInput {
+input [[ schema.table ]]UpdateInput {
   {% for attr in schema.attributes %}
-  [[ attr.name | to_camel_case ]]: {% if attr.type == 'N' %}Int{% else %}String{% endif %}
+  [[ attr.name | to_camel_case ]]: {% if attr.enum_type %}[[ attr.enum_type ]]{% else %}{% if attr.type == 'N' %}Int{% elif attr.type == 'B' %}Boolean{% elif attr.type == 'S' %}String{% elif attr.type == 'L' %}AWSJSON{% elif attr.type == 'M' %}AWSJSON{% elif attr.type == 'NS' %}AWSJSON{% elif attr.type == 'SS' %}AWSJSON{% elif attr.type == 'BS' %}AWSJSON{% else %}String{% endif %}{% endif %}
   {% endfor %}
 }
 
-input [[ table_name | to_pascal_case ]]QueryInput {
-  [[ schema.partition_key | to_camel_case ]]: String!
-  {% if schema.sort_key %}
-  [[ schema.sort_key | to_camel_case ]]: String
-  {% endif %}
+input [[ schema.table ]]QueryBy[[ schema.partition_key | to_pascal_case ]]Input {
+  [[ schema.partition_key | to_camel_case ]]: {% if schema.attributes | selectattr('name', 'equalto', schema.partition_key) | map(attribute='type') | first == 'N' %}Int{% else %}String{% endif %}!
 }
 
-type [[ table_name | to_pascal_case ]]Response {
+{% if schema.sort_key and schema.sort_key != 'None' %}
+input [[ schema.table ]]QueryBy[[ schema.sort_key | to_pascal_case ]]Input {
+  [[ schema.sort_key | to_camel_case ]]: {% if schema.attributes | selectattr('name', 'equalto', schema.sort_key) | map(attribute='type') | first == 'N' %}Int{% else %}String{% endif %}!
+}
+
+input [[ schema.table ]]QueryByBothInput {
+  [[ schema.partition_key | to_camel_case ]]: {% if schema.attributes | selectattr('name', 'equalto', schema.partition_key) | map(attribute='type') | first == 'N' %}Int{% else %}String{% endif %}!
+  [[ schema.sort_key | to_camel_case ]]: {% if schema.attributes | selectattr('name', 'equalto', schema.sort_key) | map(attribute='type') | first == 'N' %}Int{% else %}String{% endif %}!
+}
+{% endif %}
+
+type [[ schema.table ]]Response {
   StatusCode: Int!
   Message: String!
-  Data: [[ table_name | to_pascal_case ]]
+  Data: [[ schema.table ]]
 }
 
-type [[ table_name | to_pascal_case ]]ListResponse {
+type [[ schema.table ]]ListResponse {
   StatusCode: Int!
   Message: String!
-  Data: [[[ table_name | to_pascal_case ]]]
+  Data: [[[ schema.table ]]]
 }
 
 {% endfor %}

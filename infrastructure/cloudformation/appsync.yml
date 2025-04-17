@@ -154,13 +154,13 @@ Resources:
         }
 
 
-  ApplicationsQueryResolver:
+  ApplicationsQueryByApplicationIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: ApplicationsQuery
+      FieldName: ApplicationsQueryByApplicationId
       DataSourceName: !GetAtt ApplicationsDataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.applicationId)
@@ -168,7 +168,8 @@ Resources:
             "version": "2017-02-28",
             "operation": "GetItem",
             "key": {
-              "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)            }
+              "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+            }
           }
         #else
           $util.error("Invalid identifier. Must provide applicationId")
@@ -195,8 +196,6 @@ Resources:
         #end
         
         $util.toJson($response)
-
-
   ApplicationsUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
@@ -307,13 +306,13 @@ Resources:
         }
 
 
-  ApplicationRolesQueryResolver:
+  ApplicationRolesQueryByApplicationIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: ApplicationRolesQuery
+      FieldName: ApplicationRolesQueryByApplicationId
       DataSourceName: !GetAtt ApplicationRolesDataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.applicationId)
@@ -321,7 +320,8 @@ Resources:
             "version": "2017-02-28",
             "operation": "GetItem",
             "key": {
-              "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)              ,"role_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)            }
+              "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+            }
           }
         #else
           $util.error("Invalid identifier. Must provide applicationId")
@@ -347,9 +347,103 @@ Resources:
           $util.qr($response.put("Data", null))
         #end
         
+
+        $util.toJson($response)  ApplicationRolesQueryByRoleIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationRolesQueryByRoleId
+      DataSourceName: !GetAtt ApplicationRolesDataSource.Name
+      RequestMappingTemplate: |
+        #if($ctx.args.input.roleId)
+          {
+            "version": "2017-02-28",
+            "operation": "Query",
+            "index": "role_id-index",
+            "query": {
+              "expression": "#role_id = :role_id",
+              "expressionNames": {
+                "#role_id": "role_id"
+              },
+              "expressionValues": {
+                ":role_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
+              }
+            }
+          }
+        #else
+          $util.error("Invalid identifier. Must provide roleId")
+        #end
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          $util.error($ctx.error.message, $ctx.error.type)
+        #end
+        
+        #set($response = {
+          "StatusCode": 200,
+          "Data": []
+        })
+        
+        #if($ctx.result.items)
+          #set($items = [])
+          #foreach($item in $ctx.result.items)
+            #set($result = {})
+            #foreach($field in $item.keySet())
+              #set($camelField = $util.str.toCamelCase($field))
+              $util.qr($result.put($camelField, $item.get($field)))
+            #end
+            $util.qr($items.add($result))
+          #end
+          $util.qr($response.put("Data", $items))
+        #end
+        
         $util.toJson($response)
 
 
+  ApplicationRolesQueryByBothResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationRolesQueryByBoth
+      DataSourceName: !GetAtt ApplicationRolesDataSource.Name
+      RequestMappingTemplate: |
+        #if($ctx.args.input.applicationId && $ctx.args.input.roleId)
+          {
+            "version": "2017-02-28",
+            "operation": "GetItem",
+            "key": {
+              "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+              ,"role_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
+            }
+          }
+        #else
+          $util.error("Invalid identifiers. Must provide both applicationId and roleId")
+        #end
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          $util.error($ctx.error.message, $ctx.error.type)
+        #end
+        
+        #set($response = {
+          "StatusCode": 200,
+          "Data": {}
+        })
+        
+        #if($ctx.result)
+          #set($result = {})
+          #foreach($field in $ctx.result.keySet())
+            #set($camelField = $util.str.toCamelCase($field))
+            $util.qr($result.put($camelField, $ctx.result.get($field)))
+          #end
+          $util.qr($response.put("Data", $result))
+        #else
+          $util.qr($response.put("Data", null))
+        #end
+        
+        $util.toJson($response)
   ApplicationRolesUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
@@ -460,13 +554,13 @@ Resources:
         }
 
 
-  ApplicationUsersQueryResolver:
+  ApplicationUsersQueryByApplicationIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: ApplicationUsersQuery
+      FieldName: ApplicationUsersQueryByApplicationId
       DataSourceName: !GetAtt ApplicationUsersDataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.applicationId)
@@ -474,7 +568,8 @@ Resources:
             "version": "2017-02-28",
             "operation": "GetItem",
             "key": {
-              "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)              ,"user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)            }
+              "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+            }
           }
         #else
           $util.error("Invalid identifier. Must provide applicationId")
@@ -500,9 +595,103 @@ Resources:
           $util.qr($response.put("Data", null))
         #end
         
+
+        $util.toJson($response)  ApplicationUsersQueryByUserIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationUsersQueryByUserId
+      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
+      RequestMappingTemplate: |
+        #if($ctx.args.input.userId)
+          {
+            "version": "2017-02-28",
+            "operation": "Query",
+            "index": "user_id-index",
+            "query": {
+              "expression": "#user_id = :user_id",
+              "expressionNames": {
+                "#user_id": "user_id"
+              },
+              "expressionValues": {
+                ":user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+              }
+            }
+          }
+        #else
+          $util.error("Invalid identifier. Must provide userId")
+        #end
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          $util.error($ctx.error.message, $ctx.error.type)
+        #end
+        
+        #set($response = {
+          "StatusCode": 200,
+          "Data": []
+        })
+        
+        #if($ctx.result.items)
+          #set($items = [])
+          #foreach($item in $ctx.result.items)
+            #set($result = {})
+            #foreach($field in $item.keySet())
+              #set($camelField = $util.str.toCamelCase($field))
+              $util.qr($result.put($camelField, $item.get($field)))
+            #end
+            $util.qr($items.add($result))
+          #end
+          $util.qr($response.put("Data", $items))
+        #end
+        
         $util.toJson($response)
 
 
+  ApplicationUsersQueryByBothResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationUsersQueryByBoth
+      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
+      RequestMappingTemplate: |
+        #if($ctx.args.input.applicationId && $ctx.args.input.userId)
+          {
+            "version": "2017-02-28",
+            "operation": "GetItem",
+            "key": {
+              "application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+              ,"user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+            }
+          }
+        #else
+          $util.error("Invalid identifiers. Must provide both applicationId and userId")
+        #end
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          $util.error($ctx.error.message, $ctx.error.type)
+        #end
+        
+        #set($response = {
+          "StatusCode": 200,
+          "Data": {}
+        })
+        
+        #if($ctx.result)
+          #set($result = {})
+          #foreach($field in $ctx.result.keySet())
+            #set($camelField = $util.str.toCamelCase($field))
+            $util.qr($result.put($camelField, $ctx.result.get($field)))
+          #end
+          $util.qr($response.put("Data", $result))
+        #else
+          $util.qr($response.put("Data", null))
+        #end
+        
+        $util.toJson($response)
   ApplicationUsersUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
@@ -613,13 +802,13 @@ Resources:
         }
 
 
-  RolesQueryResolver:
+  RolesQueryByRoleIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: RolesQuery
+      FieldName: RolesQueryByRoleId
       DataSourceName: !GetAtt RolesDataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.roleId)
@@ -627,7 +816,8 @@ Resources:
             "version": "2017-02-28",
             "operation": "GetItem",
             "key": {
-              "role_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)              ,"application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)            }
+              "role_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
+            }
           }
         #else
           $util.error("Invalid identifier. Must provide roleId")
@@ -653,9 +843,103 @@ Resources:
           $util.qr($response.put("Data", null))
         #end
         
+
+        $util.toJson($response)  RolesQueryByApplicationIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: RolesQueryByApplicationId
+      DataSourceName: !GetAtt RolesDataSource.Name
+      RequestMappingTemplate: |
+        #if($ctx.args.input.applicationId)
+          {
+            "version": "2017-02-28",
+            "operation": "Query",
+            "index": "application_id-index",
+            "query": {
+              "expression": "#application_id = :application_id",
+              "expressionNames": {
+                "#application_id": "application_id"
+              },
+              "expressionValues": {
+                ":application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+              }
+            }
+          }
+        #else
+          $util.error("Invalid identifier. Must provide applicationId")
+        #end
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          $util.error($ctx.error.message, $ctx.error.type)
+        #end
+        
+        #set($response = {
+          "StatusCode": 200,
+          "Data": []
+        })
+        
+        #if($ctx.result.items)
+          #set($items = [])
+          #foreach($item in $ctx.result.items)
+            #set($result = {})
+            #foreach($field in $item.keySet())
+              #set($camelField = $util.str.toCamelCase($field))
+              $util.qr($result.put($camelField, $item.get($field)))
+            #end
+            $util.qr($items.add($result))
+          #end
+          $util.qr($response.put("Data", $items))
+        #end
+        
         $util.toJson($response)
 
 
+  RolesQueryByBothResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: RolesQueryByBoth
+      DataSourceName: !GetAtt RolesDataSource.Name
+      RequestMappingTemplate: |
+        #if($ctx.args.input.roleId && $ctx.args.input.applicationId)
+          {
+            "version": "2017-02-28",
+            "operation": "GetItem",
+            "key": {
+              "role_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
+              ,"application_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+            }
+          }
+        #else
+          $util.error("Invalid identifiers. Must provide both roleId and applicationId")
+        #end
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          $util.error($ctx.error.message, $ctx.error.type)
+        #end
+        
+        #set($response = {
+          "StatusCode": 200,
+          "Data": {}
+        })
+        
+        #if($ctx.result)
+          #set($result = {})
+          #foreach($field in $ctx.result.keySet())
+            #set($camelField = $util.str.toCamelCase($field))
+            $util.qr($result.put($camelField, $ctx.result.get($field)))
+          #end
+          $util.qr($response.put("Data", $result))
+        #else
+          $util.qr($response.put("Data", null))
+        #end
+        
+        $util.toJson($response)
   RolesUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
@@ -766,13 +1050,13 @@ Resources:
         }
 
 
-  UsersQueryResolver:
+  UsersQueryByUserIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: UsersQuery
+      FieldName: UsersQueryByUserId
       DataSourceName: !GetAtt UsersDataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.userId)
@@ -780,7 +1064,8 @@ Resources:
             "version": "2017-02-28",
             "operation": "GetItem",
             "key": {
-              "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)            }
+              "user_id": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+            }
           }
         #else
           $util.error("Invalid identifier. Must provide userId")
@@ -807,8 +1092,6 @@ Resources:
         #end
         
         $util.toJson($response)
-
-
   UsersUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema

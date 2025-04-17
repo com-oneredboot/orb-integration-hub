@@ -9,31 +9,39 @@ import { User } from  "../models/user.model";
 import { UserGroups } from "../models/user.enum";
 
 export type UsersResponse = {
-  usersQueryById: {
-    status_code: number;
-    message: string;
-    data: User | null;
+  usersQueryByUserId: {
+    StatusCode: number;
+    Message: string;
+    Data: User | null;
+  };
+  usersQueryByEmail: {
+    StatusCode: number;
+    Message: string;
+    Data: User | null;
   };
 };
 
 export type UsersCreateResponse = GenericResponse & {
   usersCreate: {
-    status_code: number;
-    message: string;
-    data: User | null;
+    StatusCode: number;
+    Message: string;
+    Data: User | null;
   };
 }
 
 export type UsersUpdateResponse = GenericResponse & {
   usersUpdate: {
-    status_code: number;
-    message: string;
-    data: User | null;
+    StatusCode: number;
+    Message: string;
+    Data: User | null;
   }
 }
 
-export type UsersQueryInput = {
+export type UsersQueryByUserIdInput = {
   user_id: string;
+};
+
+export type UsersQueryByEmailInput = {
   email: string;
 };
 
@@ -47,33 +55,41 @@ export type UsersUpdateInput = Partial<Omit<User, 'user_id' | 'created_at' >> & 
 export const usersCreateMutation = /* GraphQL */ `
   mutation UsersCreate($input: UsersCreateInput!) {
     usersCreate(input: $input) {
-      status_code
-      message
-      data {
+      StatusCode
+      Message
+      Data {
         user_id
       }
     }
   }
 `;
 
-export const usersExistQuery = `
-  query UsersExists($input: UsersQueryInput!) {
-    usersQueryById(input: $input) {
-      status_code
-      message
-      data {
+export const usersQueryByUserId = /* GraphQL */ `
+  query UsersQueryByUserId($input: UsersQueryByUserIdInput!) {
+    usersQueryByUserId(input: $input) {
+      StatusCode
+      Message
+      Data {
         user_id
+        cognito_id
+        email
+        phone_number
+        first_name
+        last_name
+        groups
+        status
+        created_at
       }
     }
   }
 `;
 
-export const usersQueryById = /* GraphQL */ `
-  query UsersQueryById($input: UsersQueryInput!) {
-    usersQueryById(input: $input) {
-      status_code
-      message
-      data {
+export const usersQueryByEmail = /* GraphQL */ `
+  query UsersQueryByEmail($input: UsersQueryByEmailInput!) {
+    usersQueryByEmail(input: $input) {
+      StatusCode
+      Message
+      Data {
         user_id
         cognito_id
         email
@@ -91,18 +107,16 @@ export const usersQueryById = /* GraphQL */ `
 export const usersUpdateMutation = /* GraphQL */ `
   mutation UsersUpdate($input: UsersUpdateInput!) {
     usersUpdate(input: $input) {
-      status_code
-      message
-      data {
+      StatusCode
+      Message
+      Data {
         user_id
         email
         first_name
         last_name
         phone_number
-        phone_verified
         groups
         status
-        created_at
       }
     }
   }
