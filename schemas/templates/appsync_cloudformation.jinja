@@ -123,7 +123,7 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: [[ schema.table | to_camel_case ]]Create
+      FieldName: {% if schema.table == 'applications' %}applicationCreate{% elif schema.table == 'applicationroles' %}roleCreate{% elif schema.table == 'applicationusers' %}applicationUserCreate{% elif schema.table == 'roles' %}roleCreate{% elif schema.table == 'users' %}userCreate{% endif %}
       DataSourceName: !GetAtt [[ schema.table | to_pascal_case ]]DataSource.Name
       RequestMappingTemplate: |
         {
@@ -156,7 +156,7 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: [[ schema.table | to_camel_case ]]QueryById
+      FieldName: {% if schema.table == 'applications' %}applicationQueryById{% elif schema.table == 'applicationroles' %}roleQueryById{% elif schema.table == 'applicationusers' %}applicationUserQueryById{% elif schema.table == 'roles' %}roleQueryById{% elif schema.table == 'users' %}userQueryById{% endif %}
       DataSourceName: !GetAtt [[ schema.table | to_pascal_case ]]DataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.[[ schema.partition_key ]])
@@ -205,7 +205,7 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: [[ schema.table | to_camel_case ]]Update
+      FieldName: {% if schema.table == 'applications' %}applicationUpdate{% elif schema.table == 'applicationroles' %}roleUpdate{% elif schema.table == 'applicationusers' %}applicationUserUpdate{% elif schema.table == 'roles' %}roleUpdate{% elif schema.table == 'users' %}userUpdate{% endif %}
       DataSourceName: !GetAtt [[ schema.table | to_pascal_case ]]DataSource.Name
       RequestMappingTemplate: |
         #set($input = $ctx.args.input)
