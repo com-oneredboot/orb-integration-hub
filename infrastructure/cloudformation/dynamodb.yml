@@ -217,6 +217,10 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: INCLUDE
+            NonKeyAttributes:
+              - role_name
+              - role_type
+              - permissions
         - IndexName: application-role-index
           KeySchema:
             - AttributeName: application_id

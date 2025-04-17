@@ -59,6 +59,12 @@ Resources:
             {% endif %}
           Projection:
             ProjectionType: [[ index.projection_type ]]
+            {% if index.projection_type == 'INCLUDE' and index.projected_attributes %}
+            NonKeyAttributes:
+              {% for attr in index.projected_attributes %}
+              - [[ attr ]]
+              {% endfor %}
+            {% endif %}
       {% endfor %}
       {% endif %}
       BillingMode: PAY_PER_REQUEST
