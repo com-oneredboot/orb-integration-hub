@@ -1,5 +1,5 @@
 /**
- * ApplicationUsers model.
+ * application_users model.
  */
 export interface ApplicationUsers {
   application_id: string;

@@ -72,7 +72,7 @@ Resources:
       Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-appsync'
       AuthenticationType: AMAZON_COGNITO_USER_POOLS
       UserPoolConfig:
-        UserPoolId: !Sub "{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-cognito-user-pool-id}}"
+        UserPoolId: !Sub "resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-cognito-user-pool-id"
         AwsRegion: !Ref AWS::Region
         DefaultAction: ALLOW
       AdditionalAuthenticationProviders:
@@ -100,41 +100,39 @@ Resources:
     Type: AWS::AppSync::GraphQLSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
-      DefinitionS3Location: !Sub
-        - 's3://${ArtifactBucket}/${SchemaKey}'
-        - ArtifactBucket: !Sub '${CustomerId}-${ProjectId}-build-templates'
-          SchemaKey: !Ref SchemaS3Key
+      DefinitionS3Location: !Sub 's3://${CustomerId}-${ProjectId}-build-templates/${SchemaS3Key}'
 
   # Data Sources
   {%- for table_name, schema in schemas.items() %}
-  [[table_name | to_pascal_case]]DataSource:
+
+  [[ schema.table | to_pascal_case ]]DataSource:
     Type: AWS::AppSync::DataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
-      Name: [[table_name | to_pascal_case]]DataSource
+      Name: [[ schema.table | to_pascal_case ]]DataSource
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-[[table_name]]-table-name}}'
+        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-[[ schema.table | to_kebab_case ]]-table-name'
         AwsRegion: !Ref AWS::Region
 
-  # [[table_name | to_pascal_case]] Resolvers
-  [[table_name | to_pascal_case]]CreateResolver:
+  # [[ schema.table | to_pascal_case ]] Resolvers
+  [[ schema.table | to_pascal_case ]]CreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: [[table_name | to_camel_case]]Create
-      DataSourceName: !GetAtt [[table_name | to_pascal_case]]DataSource.Name
+      FieldName: [[ schema.table | to_camel_case ]]Create
+      DataSourceName: !GetAtt [[ schema.table | to_pascal_case ]]DataSource.Name
       RequestMappingTemplate: |
         {
           "version": "2017-02-28",
           "operation": "PutItem",
           "key": {
-            "[[schema.partition_key]]": $util.dynamodb.toDynamoDBJson($ctx.args.input.[[schema.partition_key]])
+            "[[ schema.partition_key ]]": $util.dynamodb.toDynamoDBJson($ctx.args.input.[[ schema.partition_key ]])
             {%- if schema.sort_key %}
-            ,"[[schema.sort_key]]": $util.dynamodb.toDynamoDBJson($ctx.args.input.[[schema.sort_key]])
+            ,"[[ schema.sort_key ]]": $util.dynamodb.toDynamoDBJson($ctx.args.input.[[ schema.sort_key ]])
             {%- endif %}
           },
           "attributeValues": $util.toJson($ctx.args.input)
@@ -146,34 +144,34 @@ Resources:
         
         #set($response = {
           "status_code": 200,
-          "message": "[[table_name | to_pascal_case]] created successfully",
+          "message": "[[ schema.table | to_pascal_case ]] created successfully",
           "data": $ctx.args.input
         })
         
         $util.toJson($response)
 
-  [[table_name | to_pascal_case]]QueryByIdResolver:
+  [[ schema.table | to_pascal_case ]]QueryByIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: [[table_name | to_camel_case]]QueryById
-      DataSourceName: !GetAtt [[table_name | to_pascal_case]]DataSource.Name
+      FieldName: [[ schema.table | to_camel_case ]]QueryById
+      DataSourceName: !GetAtt [[ schema.table | to_pascal_case ]]DataSource.Name
       RequestMappingTemplate: |
-        #if($ctx.args.input.[[schema.partition_key]])
+        #if($ctx.args.input.[[ schema.partition_key ]])
           {
             "version": "2017-02-28",
             "operation": "GetItem",
             "key": {
-              "[[schema.partition_key]]": $util.dynamodb.toDynamoDBJson($ctx.args.input.[[schema.partition_key]])
+              "[[ schema.partition_key ]]": $util.dynamodb.toDynamoDBJson($ctx.args.input.[[ schema.partition_key ]])
               {%- if schema.sort_key %}
-              ,"[[schema.sort_key]]": $util.dynamodb.toDynamoDBJson($ctx.args.input.[[schema.sort_key]])
+              ,"[[ schema.sort_key ]]": $util.dynamodb.toDynamoDBJson($ctx.args.input.[[ schema.sort_key ]])
               {%- endif %}
             }
           }
         #else
-          $util.error("Invalid identifier. Must provide [[schema.partition_key]]")
+          $util.error("Invalid identifier. Must provide [[ schema.partition_key ]]")
         #end
       ResponseMappingTemplate: |
         #if($ctx.error)
@@ -201,20 +199,20 @@ Resources:
         
         $util.toJson($response)
 
-  [[table_name | to_pascal_case]]UpdateResolver:
+  [[ schema.table | to_pascal_case ]]UpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: [[table_name | to_camel_case]]Update
-      DataSourceName: !GetAtt [[table_name | to_pascal_case]]DataSource.Name
+      FieldName: [[ schema.table | to_camel_case ]]Update
+      DataSourceName: !GetAtt [[ schema.table | to_pascal_case ]]DataSource.Name
       RequestMappingTemplate: |
         #set($input = $ctx.args.input)
         #set($now = $util.time.nowISO8601())
         
-        #if(!$input.[[schema.partition_key]])
-          $util.error("[[schema.partition_key]] is a required field for updates")
+        #if(!$input.[[ schema.partition_key ]])
+          $util.error("[[ schema.partition_key ]] is a required field for updates")
         #end
         
         #set($expNames = {})
@@ -223,7 +221,7 @@ Resources:
         
         #set($updateCount = 0)
         #foreach($field in $input.keySet())
-          #if($field != "[[schema.partition_key]]" && $field != "[[schema.sort_key]]")
+          #if($field != "[[ schema.partition_key ]]" && $field != "[[ schema.sort_key ]]")
             $util.qr($expNames.put("#$field", "$field"))
             $util.qr($expValues.put(":$field", $util.dynamodb.toDynamoDB($input.get($field))))
             $util.qr($expSet.add("#$field = :$field"))
@@ -245,9 +243,9 @@ Resources:
           "version": "2018-05-29",
           "operation": "UpdateItem",
           "key": {
-            "[[schema.partition_key]]": $util.dynamodb.toDynamoDBJson($input.[[schema.partition_key]])
+            "[[ schema.partition_key ]]": $util.dynamodb.toDynamoDBJson($input.[[ schema.partition_key ]])
             {%- if schema.sort_key %}
-            ,"[[schema.sort_key]]": $util.dynamodb.toDynamoDBJson($input.[[schema.sort_key]])
+            ,"[[ schema.sort_key ]]": $util.dynamodb.toDynamoDBJson($input.[[ schema.sort_key ]])
             {%- endif %}
           },
           "update": {
@@ -263,9 +261,10 @@ Resources:
         
         {
           "status_code": 200,
-          "message": "[[table_name | to_pascal_case]] updated successfully",
-          "[[schema.partition_key]]": $util.toJson($ctx.args.input.[[schema.partition_key]])
+          "message": "[[ schema.table | to_pascal_case ]] updated successfully",
+          "[[ schema.partition_key ]]": $util.toJson($ctx.args.input.[[ schema.partition_key ]])
         }
+
   {%- endfor %}
 
 # --------------------------------------------------- #

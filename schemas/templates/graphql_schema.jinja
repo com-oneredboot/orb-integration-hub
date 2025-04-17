@@ -1,6 +1,6 @@
 """
 Base GraphQL schema.
-Generated at {{ timestamp }}.
+Generated at [[ timestamp ]].
 
 This schema follows these conventions:
 - Type names: PascalCase (e.g., ApplicationRole)
@@ -43,41 +43,41 @@ type Mutation {
 
 # Model types
 {% for table_name, schema in schemas.items() %}
-type {{ table_name | to_pascal_case }} {
+type [[ table_name | to_pascal_case ]] {
   {% for attr in schema.attributes %}
-  {{ attr.name | to_camel_case }}: {% if attr.type == 'N' %}Int{% else %}String{% endif %}!
+  [[ attr.name | to_camel_case ]]: {% if attr.type == 'N' %}Int{% else %}String{% endif %}!
   {% endfor %}
 }
 
-input {{ table_name | to_pascal_case }}CreateInput {
+input [[ table_name | to_pascal_case ]]CreateInput {
   {% for attr in schema.attributes %}
-  {{ attr.name | to_camel_case }}: {% if attr.type == 'N' %}Int{% else %}String{% endif %}!
+  [[ attr.name | to_camel_case ]]: {% if attr.type == 'N' %}Int{% else %}String{% endif %}!
   {% endfor %}
 }
 
-input {{ table_name | to_pascal_case }}UpdateInput {
+input [[ table_name | to_pascal_case ]]UpdateInput {
   {% for attr in schema.attributes %}
-  {{ attr.name | to_camel_case }}: {% if attr.type == 'N' %}Int{% else %}String{% endif %}
+  [[ attr.name | to_camel_case ]]: {% if attr.type == 'N' %}Int{% else %}String{% endif %}
   {% endfor %}
 }
 
-input {{ table_name | to_pascal_case }}QueryInput {
-  {{ schema.partition_key | to_camel_case }}: String!
+input [[ table_name | to_pascal_case ]]QueryInput {
+  [[ schema.partition_key | to_camel_case ]]: String!
   {% if schema.sort_key %}
-  {{ schema.sort_key | to_camel_case }}: String
+  [[ schema.sort_key | to_camel_case ]]: String
   {% endif %}
 }
 
-type {{ table_name | to_pascal_case }}Response {
+type [[ table_name | to_pascal_case ]]Response {
   statusCode: Int!
   message: String!
-  data: {{ table_name | to_pascal_case }}
+  data: [[ table_name | to_pascal_case ]]
 }
 
-type {{ table_name | to_pascal_case }}ListResponse {
+type [[ table_name | to_pascal_case ]]ListResponse {
   statusCode: Int!
   message: String!
-  data: [{{ table_name | to_pascal_case }}]
+  data: [[[ table_name | to_pascal_case ]]]
 }
 
 {% endfor %}
@@ -86,23 +86,23 @@ type {{ table_name | to_pascal_case }}ListResponse {
 extend type Query {
   {% for table_name, schema in schemas.items() %}
   {% if table_name == 'applications' %}
-  applicationQueryById(id: ID!): {{ table_name | to_pascal_case }}Response
+  applicationQueryById(id: ID!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
   {% elif table_name == 'applicationroles' %}
-  roleQueryById(id: ID!): {{ table_name | to_pascal_case }}Response
+  roleQueryById(id: ID!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
-  roleQueryByApplicationId(application_id: String!): {{ table_name | to_pascal_case }}ListResponse
+  roleQueryByApplicationId(application_id: String!): [[ table_name | to_pascal_case ]]ListResponse
     @aws_auth(cognito_groups: ["admin"])
   {% elif table_name == 'applicationusers' %}
-  applicationUserQueryById(id: ID!): {{ table_name | to_pascal_case }}Response
+  applicationUserQueryById(id: ID!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
   {% elif table_name == 'roles' %}
-  roleQueryById(id: ID!): {{ table_name | to_pascal_case }}Response
+  roleQueryById(id: ID!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
-  roleQueryByApplicationId(application_id: String!): {{ table_name | to_pascal_case }}ListResponse
+  roleQueryByApplicationId(application_id: String!): [[ table_name | to_pascal_case ]]ListResponse
     @aws_auth(cognito_groups: ["admin"])
   {% elif table_name == 'users' %}
-  userQueryById(id: ID!): {{ table_name | to_pascal_case }}Response
+  userQueryById(id: ID!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
   {% endif %}
   {% endfor %}
@@ -112,39 +112,39 @@ extend type Query {
 extend type Mutation {
   {% for table_name, schema in schemas.items() %}
   {% if table_name == 'applications' %}
-  applicationCreate(input: {{ table_name | to_pascal_case }}CreateInput!): {{ table_name | to_pascal_case }}Response
+  applicationCreate(input: [[ table_name | to_pascal_case ]]CreateInput!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
-  applicationUpdate(id: ID!, input: {{ table_name | to_pascal_case }}UpdateInput!): {{ table_name | to_pascal_case }}Response
+  applicationUpdate(id: ID!, input: [[ table_name | to_pascal_case ]]UpdateInput!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
-  applicationDelete(id: ID!): {{ table_name | to_pascal_case }}Response
+  applicationDelete(id: ID!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
   {% elif table_name == 'applicationroles' %}
-  roleCreate(input: {{ table_name | to_pascal_case }}CreateInput!): {{ table_name | to_pascal_case }}Response
+  roleCreate(input: [[ table_name | to_pascal_case ]]CreateInput!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
-  roleUpdate(id: ID!, input: {{ table_name | to_pascal_case }}UpdateInput!): {{ table_name | to_pascal_case }}Response
+  roleUpdate(id: ID!, input: [[ table_name | to_pascal_case ]]UpdateInput!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
-  roleDelete(id: ID!): {{ table_name | to_pascal_case }}Response
+  roleDelete(id: ID!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
   {% elif table_name == 'applicationusers' %}
-  applicationUserCreate(input: {{ table_name | to_pascal_case }}CreateInput!): {{ table_name | to_pascal_case }}Response
+  applicationUserCreate(input: [[ table_name | to_pascal_case ]]CreateInput!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
-  applicationUserUpdate(id: ID!, input: {{ table_name | to_pascal_case }}UpdateInput!): {{ table_name | to_pascal_case }}Response
+  applicationUserUpdate(id: ID!, input: [[ table_name | to_pascal_case ]]UpdateInput!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
-  applicationUserDelete(id: ID!): {{ table_name | to_pascal_case }}Response
+  applicationUserDelete(id: ID!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
   {% elif table_name == 'roles' %}
-  roleCreate(input: {{ table_name | to_pascal_case }}CreateInput!): {{ table_name | to_pascal_case }}Response
+  roleCreate(input: [[ table_name | to_pascal_case ]]CreateInput!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
-  roleUpdate(id: ID!, input: {{ table_name | to_pascal_case }}UpdateInput!): {{ table_name | to_pascal_case }}Response
+  roleUpdate(id: ID!, input: [[ table_name | to_pascal_case ]]UpdateInput!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
-  roleDelete(id: ID!): {{ table_name | to_pascal_case }}Response
+  roleDelete(id: ID!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
   {% elif table_name == 'users' %}
-  userCreate(input: {{ table_name | to_pascal_case }}CreateInput!): {{ table_name | to_pascal_case }}Response
+  userCreate(input: [[ table_name | to_pascal_case ]]CreateInput!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
-  userUpdate(id: ID!, input: {{ table_name | to_pascal_case }}UpdateInput!): {{ table_name | to_pascal_case }}Response
+  userUpdate(id: ID!, input: [[ table_name | to_pascal_case ]]UpdateInput!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
-  userDelete(id: ID!): {{ table_name | to_pascal_case }}Response
+  userDelete(id: ID!): [[ table_name | to_pascal_case ]]Response
     @aws_auth(cognito_groups: ["admin"])
   {% endif %}
   {% endfor %}

@@ -115,6 +115,32 @@ class TableSchema:
     partition_key: str
     sort_key: Optional[str] = None
 
+def to_python_type(attr_type: str) -> str:
+    """Convert schema type to Python type."""
+    type_mapping = {
+        'S': 'str',
+        'N': 'float',
+        'BOOL': 'bool',
+        'L': 'List[str]',
+        'M': 'Dict[str, Any]',
+        'NULL': 'None',
+        'B': 'bytes'
+    }
+    return type_mapping.get(attr_type, 'str')
+
+def to_typescript_type(attr_type: str) -> str:
+    """Convert schema type to TypeScript type."""
+    type_mapping = {
+        'S': 'string',
+        'N': 'number',
+        'BOOL': 'boolean',
+        'L': 'string[]',
+        'M': 'Record<string, any>',
+        'NULL': 'null',
+        'B': 'string'  # Base64 encoded string
+    }
+    return type_mapping.get(attr_type, 'string')
+
 def setup_jinja_env() -> Environment:
     """
     Set up the Jinja environment with custom filters and globals.
@@ -126,7 +152,13 @@ def setup_jinja_env() -> Environment:
         loader=FileSystemLoader(os.path.join(SCRIPT_DIR, 'templates')),
         autoescape=select_autoescape(['html', 'xml']),
         trim_blocks=True,
-        lstrip_blocks=True
+        lstrip_blocks=True,
+        variable_start_string='[[',
+        variable_end_string=']]',
+        block_start_string='{%',
+        block_end_string='%}',
+        comment_start_string='{#',
+        comment_end_string='#}'
     )
     
     # Add custom filters
@@ -148,6 +180,9 @@ def setup_jinja_env() -> Environment:
     env.filters['to_camel_case'] = to_camel_case
     env.filters['to_pascal_case'] = to_pascal_case
     env.filters['to_snake_case'] = to_snake_case
+    env.filters['to_kebab_case'] = to_kebab_case
+    env.filters['to_python_type'] = to_python_type
+    env.filters['to_typescript_type'] = to_typescript_type
     return env
 
 def to_camel_case(s: str) -> str:
@@ -167,6 +202,13 @@ def to_snake_case(s: str) -> str:
     # Convert to lowercase and replace any remaining spaces with underscores
     return re.sub(r'[-\s]', '_', s2).lower()
 
+def to_kebab_case(s: str) -> str:
+    """Convert string to kebab-case."""
+    # First convert to snake_case
+    snake = to_snake_case(s)
+    # Then replace underscores with hyphens
+    return snake.replace('_', '-')
+
 def load_schemas() -> Dict[str, TableSchema]:
     """Load all schemas from index.yml."""
     try:
@@ -180,8 +222,8 @@ def load_schemas() -> Dict[str, TableSchema]:
             with open(os.path.join(SCRIPT_DIR, 'entities', entity), 'r') as f:
                 schema_data = yaml.safe_load(f)
 
-                # extract table name from entity file name
-                table = schema_data['table']  # Preserve original case
+                # extract table name from entity file name without extension
+                table = os.path.splitext(entity)[0]  # Use filename instead of schema_data['table']
                 print(f"table: {table}")
                 
             # Extract attributes and keys
@@ -194,7 +236,7 @@ def load_schemas() -> Dict[str, TableSchema]:
             partition_key = schema_data['model']['keys']['primary']['partition']
             sort_key = schema_data['model']['keys']['primary'].get('sort')
             
-            # Create TableSchema with lowercase table name
+            # Create TableSchema
             schemas[table] = TableSchema(
                 table=table,
                 attributes=attributes,
@@ -262,12 +304,7 @@ def generate_python_model(table: str, schema: TableSchema) -> None:
         template = jinja_env.get_template('python_model.jinja')
         
         # Generate model
-        model_content = template.render(
-            table=table,  # Keep PascalCase for class name
-            attributes=schema.attributes,
-            partition_key=schema.partition_key,
-            sort_key=schema.sort_key
-        )
+        model_content = template.render(schema=schema)
         
         # Convert table name to snake_case for file name
         file_name = to_snake_case(table)
@@ -289,15 +326,13 @@ def generate_typescript_model(table: str, schema: TableSchema) -> None:
         template = jinja_env.get_template('typescript_model.jinja')
         
         # Generate model
-        model_content = template.render(
-            table=table,
-            attributes=schema.attributes,
-            partition_key=schema.partition_key,
-            sort_key=schema.sort_key
-        )
+        model_content = template.render(schema=schema)
+        
+        # Convert table name to PascalCase for TypeScript file name
+        file_name = to_pascal_case(table)
         
         # Write to file
-        output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'models', f'{table}.ts')
+        output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'models', f'{file_name}.ts')
         write_file(output_path, model_content)
         logger.info(f'Generated TypeScript model for {table}')
         
@@ -404,49 +439,41 @@ def generate_cloudformation_template(schemas: Dict[str, TableSchema], template_p
         logger.error(f'Failed to generate CloudFormation template: {str(e)}')
         raise
 
-def generate_appsync_template(schemas: Dict[str, TableSchema], template_path: str, output_path: str) -> None:
-    """Generate a CloudFormation template for AppSync resources."""
+def generate_appsync_template(schemas: Dict[str, TableSchema], output_path: str) -> None:
+    """Generate AppSync CloudFormation template."""
     try:
-        # Get Jinja environment with custom configuration for AppSync template
-        env = Environment(
-            loader=FileSystemLoader(os.path.dirname(template_path)),
-            autoescape=select_autoescape(['html', 'xml']),
-            trim_blocks=True,
-            lstrip_blocks=True,
-            variable_start_string='[[',  # Use different delimiters for Jinja variables
-            variable_end_string=']]',
-            block_start_string='{%',
-            block_end_string='%}',
-            comment_start_string='{#',
-            comment_end_string='#}'
-        )
-        
-        # Add custom filters
-        env.filters['to_camel_case'] = to_camel_case
-        env.filters['to_pascal_case'] = to_pascal_case
-        env.filters['to_snake_case'] = to_snake_case
-        
-        template = env.get_template(os.path.basename(template_path))
-        
+        # Get Jinja environment
+        jinja_env = setup_jinja_env()
+        template = jinja_env.get_template('appsync_cloudformation.jinja')
+
         # Process schemas into the format expected by the template
         processed_schemas = {}
         for table_name, schema in schemas.items():
             processed_schemas[table_name] = {
-                'table': table_name,
+                'table': table_name,  # Keep original table name
+                'attributes': schema.attributes,
                 'partition_key': schema.partition_key,
-                'sort_key': schema.sort_key,
-                'attributes': schema.attributes
+                'sort_key': schema.sort_key
             }
-        
-        # Generate the template content
-        template_content = template.render(schemas=processed_schemas)
-        
-        # Write the content
-        with open(output_path, 'w') as f:
-            f.write(template_content)
-            
+
+        # Generate template
+        rendered = template.render(schemas=processed_schemas)
+
+        # Post-process the rendered template to fix formatting
+        lines = rendered.split('\n')
+        processed_lines = []
+        for i, line in enumerate(lines):
+            # Skip empty lines at the start of a resource
+            if line.strip() and line.strip().endswith(':'):
+                if i > 0 and not lines[i-1].strip():
+                    processed_lines.append('')
+            processed_lines.append(line)
+
+        # Write the processed template
+        with open(output_path, 'w', newline='\n', encoding='utf-8') as f:
+            f.write('\n'.join(processed_lines))
+
         logger.info('Generated AppSync CloudFormation template')
-        
     except Exception as e:
         logger.error(f'Failed to generate AppSync CloudFormation template: {str(e)}')
         raise
@@ -495,9 +522,8 @@ def main():
         generate_cloudformation_template(schemas, dynamodb_template_path, dynamodb_output_path)
         
         # Generate AppSync CloudFormation template
-        appsync_template_path = os.path.join(SCRIPT_DIR, 'templates', 'appsync_cloudformation.jinja')
         appsync_output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'cloudformation', 'appsync.yml')
-        generate_appsync_template(schemas, appsync_template_path, appsync_output_path)
+        generate_appsync_template(schemas, appsync_output_path)
         
         logger.info('Schema generation completed successfully')
         

@@ -1,20 +1,18 @@
-"""
-Roles model.
-"""
+"""roles model."""
 from typing import Optional, List
 from pydantic import BaseModel, Field
 from datetime import datetime
 
 class Roles(BaseModel):
-    """Roles model."""
+    """roles model."""
     role_id: str = Field(..., description="role_id")
     user_id: str = Field(..., description="user_id")
     application_id: str = Field(..., description="application_id")
     role_name: str = Field(..., description="role_name")
     role_type: str = Field(..., description="role_type")
     permissions: str = Field(..., description="permissions")
-    created_at: int = Field(..., description="created_at")
-    updated_at: int = Field(..., description="updated_at")
+    created_at: float = Field(..., description="created_at")
+    updated_at: float = Field(..., description="updated_at")
     active: str = Field(..., description="active")
 
     class Config:

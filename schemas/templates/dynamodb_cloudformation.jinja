@@ -30,20 +30,20 @@ Parameters:
 # --------------------------------------------------- #
 Resources:
   {% for table_name, schema in schemas.items() %}
-  {{ schema.table|title }}Table:
+  [[ table_name | to_pascal_case ]]Table:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-[[ table_name | to_kebab_case ]]
       AttributeDefinitions:
         {% for attr in schema.attributes %}
-        - AttributeName: {{ attr.name }}
-          AttributeType: {{ attr.type }}
+        - AttributeName: [[ attr.name ]]
+          AttributeType: [[ attr.type ]]
         {% endfor %}
       KeySchema:
-        - AttributeName: {{ schema.partition_key }}
+        - AttributeName: [[ schema.partition_key ]]
           KeyType: HASH
         {% if schema.sort_key %}
-        - AttributeName: {{ schema.sort_key }}
+        - AttributeName: [[ schema.sort_key ]]
           KeyType: RANGE
         {% endif %}
       BillingMode: PAY_PER_REQUEST
@@ -57,29 +57,29 @@ Resources:
         - Key: ProjectId
           Value: !Ref ProjectId
 
-  {{ schema.table|title }}TableName:
+  [[ table_name | to_pascal_case ]]TableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}-table-name
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-[[ table_name | to_kebab_case ]]-table-name
       Type: String
-      Value: !Ref {{ schema.table|title }}Table
+      Value: !Ref [[ table_name | to_pascal_case ]]Table
 
-  {{ schema.table|title }}TableArn:
+  [[ table_name | to_pascal_case ]]TableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}-table-arn
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-[[ table_name | to_kebab_case ]]-table-arn
       Type: String
-      Value: !GetAtt {{ schema.table|title }}Table.Arn
+      Value: !GetAtt [[ table_name | to_pascal_case ]]Table.Arn
   {% endfor %}
 
 # --------------------------------------------------- #
 Outputs:
   {% for table_name, schema in schemas.items() %}
-  {{ schema.table|title }}TableName:
-    Description: {{ schema.table|title }} Table Name
-    Value: !Ref {{ schema.table|title }}Table
+  [[ table_name | to_pascal_case ]]TableName:
+    Description: [[ table_name | to_pascal_case ]] Table Name
+    Value: !Ref [[ table_name | to_pascal_case ]]Table
 
-  {{ schema.table|title }}TableArn:
-    Description: {{ schema.table|title }} Table ARN
-    Value: !GetAtt {{ schema.table|title }}Table.Arn
+  [[ table_name | to_pascal_case ]]TableArn:
+    Description: [[ table_name | to_pascal_case ]] Table ARN
+    Value: !GetAtt [[ table_name | to_pascal_case ]]Table.Arn
   {% endfor %}

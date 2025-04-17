@@ -1,5 +1,5 @@
 /**
- * ApplicationRoles model.
+ * application_roles model.
  */
 export interface ApplicationRoles {
   application_id: string;

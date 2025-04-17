@@ -1,5 +1,5 @@
 /**
- * Users model.
+ * users model.
  */
 export interface Users {
   user_id: string;

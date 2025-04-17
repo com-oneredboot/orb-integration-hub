@@ -1,14 +1,12 @@
-"""
-{{ table }} model.
-"""
+"""[[ schema.table ]] model."""
 from typing import Optional, List
 from pydantic import BaseModel, Field
 from datetime import datetime
 
-class {{ table }}(BaseModel):
-    """{{ table }} model."""
-    {% for attr in attributes %}
-    {{ attr.name }}: {% if attr.type == 'N' %}int{% else %}str{% endif %} = Field(..., description="{{ attr.name }}")
+class [[ schema.table | to_pascal_case ]](BaseModel):
+    """[[ schema.table ]] model."""
+    {% for attr in schema.attributes %}
+    [[ attr.name | to_snake_case ]]: [[ attr.type | to_python_type ]] = Field(..., description="[[ attr.name | to_snake_case ]]")
     {% endfor %}
 
     class Config:

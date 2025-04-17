@@ -1,12 +1,10 @@
-"""
-Users model.
-"""
+"""users model."""
 from typing import Optional, List
 from pydantic import BaseModel, Field
 from datetime import datetime
 
 class Users(BaseModel):
-    """Users model."""
+    """users model."""
     user_id: str = Field(..., description="user_id")
     cognito_id: str = Field(..., description="cognito_id")
     email: str = Field(..., description="email")
@@ -16,8 +14,8 @@ class Users(BaseModel):
     last_name: str = Field(..., description="last_name")
     groups: str = Field(..., description="groups")
     status: str = Field(..., description="status")
-    created_at: int = Field(..., description="created_at")
-    updated_at: int = Field(..., description="updated_at")
+    created_at: float = Field(..., description="created_at")
+    updated_at: float = Field(..., description="updated_at")
 
     class Config:
         """Model configuration."""

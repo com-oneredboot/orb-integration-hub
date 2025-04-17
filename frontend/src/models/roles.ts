@@ -1,5 +1,5 @@
 /**
- * Roles model.
+ * roles model.
  */
 export interface Roles {
   role_id: string;

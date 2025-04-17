@@ -1,8 +1,8 @@
 /**
- * {{ table }} model.
+ * [[ schema.table ]] model.
  */
-export interface {{ table }} {
-  {% for attr in attributes %}
-  {{ attr.name }}: {% if attr.type == 'N' %}number{% else %}string{% endif %};
+export interface [[ schema.table | to_pascal_case ]] {
+  {% for attr in schema.attributes %}
+  [[ attr.name | to_snake_case ]]: [[ attr.type | to_typescript_type ]];
   {% endfor %}
 }

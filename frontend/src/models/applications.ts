@@ -1,5 +1,5 @@
 /**
- * Applications model.
+ * applications model.
  */
 export interface Applications {
   application_id: string;
