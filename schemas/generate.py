@@ -489,10 +489,8 @@ def generate_cloudformation_template(schemas: Dict[str, TableSchema], template_p
         # Process schemas into the format expected by the template
         processed_schemas = {}
         for table_name, schema in schemas.items():
-            # Convert table name to PascalCase for resource names
-            resource_name = to_pascal_case(table_name)
             processed_schemas[table_name] = {
-                'table': resource_name,  # Use PascalCase for resource names
+                'table': schema.table,  # Use table name directly from schema
                 'attributes': schema.attributes,
                 'partition_key': schema.partition_key,
                 'sort_key': schema.sort_key,
