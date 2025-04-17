@@ -104,7 +104,6 @@ Resources:
 
   # Data Sources
   {%- for table_name, schema in schemas.items() %}
-
   {{ schema.table }}DataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -113,7 +112,7 @@ Resources:
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}-table-name'
+        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-{{ schema.table | to_kebab_case }}-table-name'
         AwsRegion: !Ref AWS::Region
 
   # {{ schema.table }} Resolvers
@@ -160,7 +159,7 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: {{ schema.table }}QueryBy{{ schema.partition_key }}
+      FieldName: {{ schema.table }}QueryBy{{ schema.partition_key | to_pascal_case }}
       DataSourceName: !GetAtt {{ schema.table }}DataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.{{ schema.partition_key }})
@@ -204,7 +203,7 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: {{ schema.table }}QueryBy{{ schema.sort_key }}
+      FieldName: {{ schema.table }}QueryBy{{ schema.sort_key | to_pascal_case }}
       DataSourceName: !GetAtt {{ schema.table }}DataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.{{ schema.sort_key }})
@@ -344,7 +343,7 @@ Resources:
           "key": {
             "{{ schema.partition_key }}": $util.dynamodb.toDynamoDBJson($input.{{ schema.partition_key }})
             {%- if schema.sort_key and schema.sort_key != 'None' %}
-            ,"[[ schema.sort_key ]]": $util.dynamodb.toDynamoDBJson($input.[[ schema.sort_key ]])
+            ,"{{ schema.sort_key }}": $util.dynamodb.toDynamoDBJson($input.{{ schema.sort_key }})
             {%- endif %}
           },
           "update": {
@@ -360,7 +359,7 @@ Resources:
         
         {
           "StatusCode": 200,
-          "Message": "[[ schema.table ]] updated successfully",
+          "Message": "{{ schema.table }} updated successfully",
           "Data": $ctx.args.input
         }
 

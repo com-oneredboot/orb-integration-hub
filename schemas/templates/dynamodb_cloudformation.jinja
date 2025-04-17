@@ -29,87 +29,55 @@ Parameters:
 
 # --------------------------------------------------- #
 Resources:
-  {% for table_name, schema in schemas.items() %}
+  {% for schema in schemas %}
   {{ schema.table }}Table:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table }}
-      AttributeDefinitions:
-        - AttributeName: {{ schema.partition_key }}
-          AttributeType: {{ schema.attributes | selectattr("name", "equalto", schema.partition_key) | map(attribute="type") | first | to_dynamodb_type }}
-        {% if schema.sort_key and schema.sort_key != 'None' %}
-        - AttributeName: {{ schema.sort_key }}
-          AttributeType: {{ schema.attributes | selectattr("name", "equalto", schema.sort_key) | map(attribute="type") | first | to_dynamodb_type }}
-        {% endif %}
-        {% if schema.secondary_indexes %}
-        {% for index in schema.secondary_indexes %}
-        {% if index.partition not in [schema.partition_key, schema.sort_key] %}
-        - AttributeName: {{ index.partition }}
-          AttributeType: {{ schema.attributes | selectattr("name", "equalto", index.partition) | map(attribute="type") | first | to_dynamodb_type }}
-        {% endif %}
-        {% if index.sort and index.sort not in [schema.partition_key, schema.sort_key, index.partition] %}
-        - AttributeName: {{ index.sort }}
-          AttributeType: {{ schema.attributes | selectattr("name", "equalto", index.sort) | map(attribute="type") | first | to_dynamodb_type }}
-        {% endif %}
-        {% endfor %}
-        {% endif %}
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table | to_kebab_case }}
+      BillingMode: PAY_PER_REQUEST
       KeySchema:
-        - AttributeName: {{ schema.partition_key }}
-          KeyType: HASH
-        {% if schema.sort_key and schema.sort_key != 'None' %}
-        - AttributeName: {{ schema.sort_key }}
-          KeyType: RANGE
-        {% endif %}
-      {% if schema.secondary_indexes %}
+        {% for key in schema.keys %}
+        - AttributeName: {{ key.name }}
+          KeyType: {{ key.type }}
+        {% endfor %}
+      AttributeDefinitions:
+        {% for key in schema.keys %}
+        - AttributeName: {{ key.name }}
+          AttributeType: {{ key.attr_type }}
+        {% endfor %}
+      {% if schema.indexes %}
       GlobalSecondaryIndexes:
-        {% for index in schema.secondary_indexes %}
-        - IndexName: {{ index.name }}
+        {% for index in schema.indexes %}
+        - IndexName: {{ index.name | to_kebab_case }}
           KeySchema:
-            - AttributeName: {{ index.partition }}
-              KeyType: HASH
-            {% if index.sort %}
-            - AttributeName: {{ index.sort }}
-              KeyType: RANGE
-            {% endif %}
+            {% for key in index.keys %}
+            - AttributeName: {{ key.name }}
+              KeyType: {{ key.type }}
+            {% endfor %}
           Projection:
-            ProjectionType: {{ index.projection_type }}
-            {% if index.projection_type == 'INCLUDE' %}
-            NonKeyAttributes:
-              {% for attr in index.projected_attributes %}
-              - {{ attr }}
-              {% endfor %}
-            {% endif %}
+            ProjectionType: ALL
         {% endfor %}
       {% endif %}
-      BillingMode: PAY_PER_REQUEST
-      Tags:
-        - Key: Billable
-          Value: "true"
-        - Key: CustomerId
-          Value: !Ref CustomerId
-        - Key: Environment
-          Value: !Ref Environment
-        - Key: ProjectId
-          Value: !Ref ProjectId
 
-  {{ schema.table }}TableName:
+  # SSM Parameters for {{ schema.table }} Table
+  {{ schema.table }}TableNameParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ table_name | to_kebab_case }}-table-name
+      Name: !Sub /${CustomerId}/${ProjectId}/${Environment}/dynamodb/{{ schema.table | to_kebab_case }}/table-name
       Type: String
       Value: !Ref {{ schema.table }}Table
 
-  {{ schema.table }}TableArn:
+  {{ schema.table }}TableArnParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ table_name | to_kebab_case }}-table-arn
+      Name: !Sub /${CustomerId}/${ProjectId}/${Environment}/dynamodb/{{ schema.table | to_kebab_case }}/table-arn
       Type: String
       Value: !GetAtt {{ schema.table }}Table.Arn
   {% endfor %}
 
 # --------------------------------------------------- #
 Outputs:
-  {% for table_name, schema in schemas.items() %}
+  {% for schema in schemas %}
   {{ schema.table }}TableName:
     Description: {{ schema.table }} Table Name
     Value: !Ref {{ schema.table }}Table
