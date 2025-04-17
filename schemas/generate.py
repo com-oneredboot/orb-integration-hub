@@ -543,7 +543,7 @@ def generate_appsync_template(schemas: Dict[str, TableSchema], output_path: str)
         # Process schemas into the format expected by the template
         processed_schemas = {}
         for table_name, schema in schemas.items():
-            logger.info(f"Processing schema for table: {table_name}")
+            logger.info(f"Processing schema for table: {schema.table}")
             logger.info(f"Schema data: table={schema.table}, partition_key={schema.partition_key}, sort_key={schema.sort_key}")
             processed_schemas[schema.table] = {
                 'table': schema.table,

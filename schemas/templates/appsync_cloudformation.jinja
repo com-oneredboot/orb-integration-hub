@@ -103,7 +103,10 @@ Resources:
       DefinitionS3Location: !Sub 's3://${CustomerId}-${ProjectId}-build-templates/${SchemaS3Key}'
 
   # Data Sources
+  # --------------------------------------------------- #
   {%- for table_name, schema in schemas.items() %}
+
+  # {{ schema.table }} Data Source
   {{ schema.table }}DataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -116,260 +119,33 @@ Resources:
         AwsRegion: !Ref AWS::Region
 
   # {{ schema.table }} Resolvers
-  {{ schema.table }}CreateResolver:
+  # --------------------------------------------------- #
+  {% for operation in schema.operations %}
+  {{ schema.table }}{{ operation.name }}Resolver:
     Type: AWS::AppSync::Resolver
-    DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: {{ schema.table }}Create
+      TypeName: {{ operation.type }}
+      FieldName: {{ operation.field }}
       DataSourceName: !GetAtt {{ schema.table }}DataSource.Name
       RequestMappingTemplate: |
-        #set($input = {})
-        #foreach($field in $ctx.args.input.keySet())
-          #set($dynamoField = $util.str.toSnakeCase($field))
-          $util.qr($input.put($dynamoField, $ctx.args.input.get($field)))
-        #end
-
-        {
-          "version": "2017-02-28",
-          "operation": "PutItem",
-          "key": {
-            "{{ schema.partition_key }}": $util.dynamodb.toDynamoDBJson($input.{{ schema.partition_key }})
-            {%- if schema.sort_key and schema.sort_key != 'None' %}
-            ,"{{ schema.sort_key }}": $util.dynamodb.toDynamoDBJson($input.{{ schema.sort_key }})
-            {%- endif %}
-          },
-          "attributeValues": $util.toJson($input)
-        }
+        {{ operation.request_template | indent(8) }}
       ResponseMappingTemplate: |
-        #if($ctx.error)
-          $util.error($ctx.error.message, $ctx.error.type)
-        #end
-        
-        {
-          "StatusCode": 200,
-          "Message": "{{ schema.table }} created successfully",
-          "Data": $ctx.args.input
-        }
-
-  {{ schema.table }}QueryBy{{ schema.partition_key | to_pascal_case }}Resolver:
-    Type: AWS::AppSync::Resolver
-    DependsOn: IntegrationHubSchema
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Query
-      FieldName: {{ schema.table }}QueryBy{{ schema.partition_key | to_pascal_case }}
-      DataSourceName: !GetAtt {{ schema.table }}DataSource.Name
-      RequestMappingTemplate: |
-        #if($ctx.args.input.{{ schema.partition_key }})
-          {
-            "version": "2017-02-28",
-            "operation": "GetItem",
-            "key": {
-              "{{ schema.partition_key }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ schema.partition_key }})
-            }
-          }
-        #else
-          $util.error("Invalid identifier. Must provide {{ schema.partition_key }}")
-        #end
-      ResponseMappingTemplate: |
-        #if($ctx.error)
-          $util.error($ctx.error.message, $ctx.error.type)
-        #end
-        
-        #set($response = {
-          "StatusCode": 200,
-          "Data": {}
-        })
-        
-        #if($ctx.result)
-          #set($result = {})
-          #foreach($field in $ctx.result.keySet())
-            #set($camelField = $util.str.toCamelCase($field))
-            $util.qr($result.put($camelField, $ctx.result.get($field)))
-          #end
-          $util.qr($response.put("Data", $result))
-        #else
-          $util.qr($response.put("Data", null))
-        #end
-        
-        $util.toJson($response)
-
-  {%- if schema.sort_key and schema.sort_key != 'None' %}
-  {{ schema.table }}QueryBy{{ schema.sort_key | to_pascal_case }}Resolver:
-    Type: AWS::AppSync::Resolver
-    DependsOn: IntegrationHubSchema
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Query
-      FieldName: {{ schema.table }}QueryBy{{ schema.sort_key | to_pascal_case }}
-      DataSourceName: !GetAtt {{ schema.table }}DataSource.Name
-      RequestMappingTemplate: |
-        #if($ctx.args.input.{{ schema.sort_key }})
-          {
-            "version": "2017-02-28",
-            "operation": "Query",
-            "index": "{{ schema.sort_key | to_snake_case }}-index",
-            "query": {
-              "expression": "#{{ schema.sort_key | to_snake_case }} = :{{ schema.sort_key | to_snake_case }}",
-              "expressionNames": {
-                "#{{ schema.sort_key | to_snake_case }}": "{{ schema.sort_key | to_snake_case }}"
-              },
-              "expressionValues": {
-                ":${{ schema.sort_key | to_snake_case }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ schema.sort_key }})
-              }
-            }
-          }
-        #else
-          $util.error("Invalid identifier. Must provide {{ schema.sort_key }}")
-        #end
-      ResponseMappingTemplate: |
-        #if($ctx.error)
-          $util.error($ctx.error.message, $ctx.error.type)
-        #end
-        
-        #set($response = {
-          "StatusCode": 200,
-          "Data": []
-        })
-        
-        #if($ctx.result.items)
-          #set($items = [])
-          #foreach($item in $ctx.result.items)
-            #set($result = {})
-            #foreach($field in $item.keySet())
-              #set($camelField = $util.str.toCamelCase($field))
-              $util.qr($result.put($camelField, $item.get($field)))
-            #end
-            $util.qr($items.add($result))
-          #end
-          $util.qr($response.put("Data", $items))
-        #end
-        
-        $util.toJson($response)
-
-  {{ schema.table }}QueryByBothResolver:
-    Type: AWS::AppSync::Resolver
-    DependsOn: IntegrationHubSchema
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Query
-      FieldName: {{ schema.table }}QueryByBoth
-      DataSourceName: !GetAtt {{ schema.table }}DataSource.Name
-      RequestMappingTemplate: |
-        #if($ctx.args.input.{{ schema.partition_key }} && $ctx.args.input.{{ schema.sort_key }})
-          {
-            "version": "2017-02-28",
-            "operation": "GetItem",
-            "key": {
-              "{{ schema.partition_key }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ schema.partition_key }})
-              ,"{{ schema.sort_key }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ schema.sort_key }})
-            }
-          }
-        #else
-          $util.error("Invalid identifiers. Must provide both {{ schema.partition_key }} and {{ schema.sort_key }}")
-        #end
-      ResponseMappingTemplate: |
-        #if($ctx.error)
-          $util.error($ctx.error.message, $ctx.error.type)
-        #end
-        
-        #set($response = {
-          "StatusCode": 200,
-          "Data": {}
-        })
-        
-        #if($ctx.result)
-          #set($result = {})
-          #foreach($field in $ctx.result.keySet())
-            #set($camelField = $util.str.toCamelCase($field))
-            $util.qr($result.put($camelField, $ctx.result.get($field)))
-          #end
-          $util.qr($response.put("Data", $result))
-        #else
-          $util.qr($response.put("Data", null))
-        #end
-        
-        $util.toJson($response)
-  {%- endif %}
-
-  {{ schema.table }}UpdateResolver:
-    Type: AWS::AppSync::Resolver
-    DependsOn: IntegrationHubSchema
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: {{ schema.table }}Update
-      DataSourceName: !GetAtt {{ schema.table }}DataSource.Name
-      RequestMappingTemplate: |
-        #set($input = {})
-        #foreach($field in $ctx.args.input.keySet())
-          #set($dynamoField = $util.str.toSnakeCase($field))
-          $util.qr($input.put($dynamoField, $ctx.args.input.get($field)))
-        #end
-
-        #if(!$input.{{ schema.partition_key }})
-          $util.error("{{ schema.partition_key }} is a required field for updates")
-        #end
-        
-        #set($expNames = {})
-        #set($expValues = {})
-        #set($expSet = [])
-        
-        #set($updateCount = 0)
-        #foreach($field in $input.keySet())
-          #if($field != "{{ schema.partition_key }}" {% if schema.sort_key and schema.sort_key != 'None' %} && $field != "{{ schema.sort_key }}" {% endif %})
-            $util.qr($expNames.put("#$field", "$field"))
-            $util.qr($expValues.put(":$field", $util.dynamodb.toDynamoDB($input.get($field))))
-            $util.qr($expSet.add("#$field = :$field"))
-            #set($updateCount = $updateCount + 1)
-          #end
-        #end
-        
-        #if($updateCount == 0)
-          $util.error("No fields to update were provided")
-        #end
-        
-        $util.qr($expNames.put("#updated_at", "updated_at"))
-        $util.qr($expValues.put(":updated_at", $util.dynamodb.toDynamoDB($now)))
-        $util.qr($expSet.add("#updated_at = :updated_at"))
-        
-        #set($expression = "SET " + $expSet.join(", "))
-        
-        {
-          "version": "2018-05-29",
-          "operation": "UpdateItem",
-          "key": {
-            "{{ schema.partition_key }}": $util.dynamodb.toDynamoDBJson($input.{{ schema.partition_key }})
-            {%- if schema.sort_key and schema.sort_key != 'None' %}
-            ,"{{ schema.sort_key }}": $util.dynamodb.toDynamoDBJson($input.{{ schema.sort_key }})
-            {%- endif %}
-          },
-          "update": {
-            "expression": "$expression",
-            "expressionNames": $util.toJson($expNames),
-            "expressionValues": $util.toJson($expValues)
-          }
-        }
-      ResponseMappingTemplate: |
-        #if($ctx.error)
-          $util.error($ctx.error.message, $ctx.error.type)
-        #end
-        
-        {
-          "StatusCode": 200,
-          "Message": "{{ schema.table }} updated successfully",
-          "Data": $ctx.args.input
-        }
+        {{ operation.response_template | indent(8) }}
+  {% endfor %}
 
   {%- endfor %}
 
 # --------------------------------------------------- #
 Outputs:
-  GraphQLApiUrl:
-    Description: 'URL of the AppSync GraphQL API'
+  IntegrationHubApiId:
+    Description: The ID of the AppSync API
+    Value: !GetAtt IntegrationHubApi.ApiId
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-appsync-api-id
+
+  IntegrationHubApiEndpoint:
+    Description: The endpoint URL of the AppSync API
     Value: !GetAtt IntegrationHubApi.GraphQLUrl
-  GraphQLApiKeySecretName:
-    Description: 'Name of the Secret containing the AppSync API Key'
-    Value: !Ref ApiKeySecret 
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-appsync-api-endpoint 
