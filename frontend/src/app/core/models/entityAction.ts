@@ -1,4 +1,4 @@
-// file: frontend/src/app/core/models/entity-action.ts
+// file: frontend/src/app/core/models/entityAction.ts
 // author: Corey Dale Peters
 // date: 2025-03-07
 // description: TypeScript file
@@ -14,4 +14,4 @@ export enum EntityActionEnum {
 export interface IEntityAction {
     action: EntityActionEnum;
     entity: any;
-}
+} 

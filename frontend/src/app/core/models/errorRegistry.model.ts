@@ -1,4 +1,4 @@
-// file: frontend/src/app/core/models/error-registry.model.ts
+// file: frontend/src/app/core/models/errorRegistry.model.ts
 // author: Corey Dale Peters
 // date: 2025-03-07
 // description: Error registry system for tracking and identifying errors
@@ -210,4 +210,4 @@ export class OrbitError extends Error {
     this.solution = solution;
     this.details = additionalDetails;
   }
-}
+} 

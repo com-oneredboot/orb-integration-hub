@@ -1,4 +1,4 @@
-// file: frontend/src/app/core/models/entity-list-action.ts
+// file: frontend/src/app/core/models/entityListAction.ts
 // author: Corey Dale Peters
 // date: 2025-03-07
 // description: TypeScript file
@@ -12,9 +12,7 @@ export enum EntityListActionEnum {
     NONE
 }
 
-
-
 export interface IEntityListAction {
     action: EntityListActionEnum;
     entity: any;
-}
+} 
