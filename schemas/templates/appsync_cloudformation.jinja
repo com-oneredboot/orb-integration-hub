@@ -126,16 +126,22 @@ Resources:
       FieldName: [[ schema.table | to_camel_case ]]Create
       DataSourceName: !GetAtt [[ schema.table | to_pascal_case ]]DataSource.Name
       RequestMappingTemplate: |
+        #set($input = {})
+        #foreach($field in $ctx.args.input.keySet())
+          #set($dynamoField = $util.str.toSnakeCase($field))
+          $util.qr($input.put($dynamoField, $ctx.args.input.get($field)))
+        #end
+
         {
           "version": "2017-02-28",
           "operation": "PutItem",
           "key": {
-            "[[ schema.partition_key ]]": $util.dynamodb.toDynamoDBJson($ctx.args.input.[[ schema.partition_key ]])
-            {%- if schema.sort_key %}
-            ,"[[ schema.sort_key ]]": $util.dynamodb.toDynamoDBJson($ctx.args.input.[[ schema.sort_key ]])
+            "[[ schema.partition_key ]]": $util.dynamodb.toDynamoDBJson($input.[[ schema.partition_key ]])
+            {%- if schema.sort_key and schema.sort_key != 'None' %}
+            ,"[[ schema.sort_key ]]": $util.dynamodb.toDynamoDBJson($input.[[ schema.sort_key ]])
             {%- endif %}
           },
-          "attributeValues": $util.toJson($ctx.args.input)
+          "attributeValues": $util.toJson($input)
         }
       ResponseMappingTemplate: |
         #if($ctx.error)
@@ -159,19 +165,19 @@ Resources:
       FieldName: [[ schema.table | to_camel_case ]]QueryById
       DataSourceName: !GetAtt [[ schema.table | to_pascal_case ]]DataSource.Name
       RequestMappingTemplate: |
-        #if($ctx.args.input.[[ schema.partition_key ]])
+        #if($ctx.args.input.[[ schema.partition_key | to_camel_case ]])
           {
             "version": "2017-02-28",
             "operation": "GetItem",
             "key": {
-              "[[ schema.partition_key ]]": $util.dynamodb.toDynamoDBJson($ctx.args.input.[[ schema.partition_key ]])
-              {%- if schema.sort_key %}
-              ,"[[ schema.sort_key ]]": $util.dynamodb.toDynamoDBJson($ctx.args.input.[[ schema.sort_key ]])
+              "[[ schema.partition_key ]]": $util.dynamodb.toDynamoDBJson($ctx.args.input.[[ schema.partition_key | to_camel_case ]])
+              {%- if schema.sort_key and schema.sort_key != 'None' %}
+              ,"[[ schema.sort_key ]]": $util.dynamodb.toDynamoDBJson($ctx.args.input.[[ schema.sort_key | to_camel_case ]])
               {%- endif %}
             }
           }
         #else
-          $util.error("Invalid identifier. Must provide [[ schema.partition_key ]]")
+          $util.error("Invalid identifier. Must provide [[ schema.partition_key | to_camel_case ]]")
         #end
       ResponseMappingTemplate: |
         #if($ctx.error)
@@ -184,15 +190,12 @@ Resources:
         })
         
         #if($ctx.result)
-          #if($ctx.result.items)
-            #if($ctx.result.items.size() == 0)
-              $util.qr($response.put("data", null))
-            #else
-              $util.qr($response.put("data", $ctx.result.items[0]))
-            #end
-          #else
-            $util.qr($response.put("data", $ctx.result))
+          #set($result = {})
+          #foreach($field in $ctx.result.keySet())
+            #set($camelField = $util.str.toCamelCase($field))
+            $util.qr($result.put($camelField, $ctx.result.get($field)))
           #end
+          $util.qr($response.put("data", $result))
         #else
           $util.qr($response.put("data", null))
         #end
@@ -208,11 +211,14 @@ Resources:
       FieldName: [[ schema.table | to_camel_case ]]Update
       DataSourceName: !GetAtt [[ schema.table | to_pascal_case ]]DataSource.Name
       RequestMappingTemplate: |
-        #set($input = $ctx.args.input)
-        #set($now = $util.time.nowISO8601())
-        
+        #set($input = {})
+        #foreach($field in $ctx.args.input.keySet())
+          #set($dynamoField = $util.str.toSnakeCase($field))
+          $util.qr($input.put($dynamoField, $ctx.args.input.get($field)))
+        #end
+
         #if(!$input.[[ schema.partition_key ]])
-          $util.error("[[ schema.partition_key ]] is a required field for updates")
+          $util.error("[[ schema.partition_key | to_camel_case ]] is a required field for updates")
         #end
         
         #set($expNames = {})
@@ -221,7 +227,7 @@ Resources:
         
         #set($updateCount = 0)
         #foreach($field in $input.keySet())
-          #if($field != "[[ schema.partition_key ]]" && $field != "[[ schema.sort_key ]]")
+          #if($field != "[[ schema.partition_key ]]" {% if schema.sort_key and schema.sort_key != 'None' %} && $field != "[[ schema.sort_key ]]" {% endif %})
             $util.qr($expNames.put("#$field", "$field"))
             $util.qr($expValues.put(":$field", $util.dynamodb.toDynamoDB($input.get($field))))
             $util.qr($expSet.add("#$field = :$field"))
@@ -244,7 +250,7 @@ Resources:
           "operation": "UpdateItem",
           "key": {
             "[[ schema.partition_key ]]": $util.dynamodb.toDynamoDBJson($input.[[ schema.partition_key ]])
-            {%- if schema.sort_key %}
+            {%- if schema.sort_key and schema.sort_key != 'None' %}
             ,"[[ schema.sort_key ]]": $util.dynamodb.toDynamoDBJson($input.[[ schema.sort_key ]])
             {%- endif %}
           },
@@ -262,7 +268,7 @@ Resources:
         {
           "status_code": 200,
           "message": "[[ schema.table | to_pascal_case ]] updated successfully",
-          "[[ schema.partition_key ]]": $util.toJson($ctx.args.input.[[ schema.partition_key ]])
+          "[[ schema.partition_key | to_camel_case ]]": $util.toJson($ctx.args.input.[[ schema.partition_key | to_camel_case ]])
         }
 
   {%- endfor %}

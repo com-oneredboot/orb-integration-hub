@@ -35,10 +35,22 @@ enum ApplicationEnvironments {
 # Base types
 type Query {
   ping: String
+  {% for table_name, schema in schemas.items() %}
+  [[ table_name | to_camel_case ]]QueryById(input: [[ table_name | to_pascal_case ]]QueryInput!): [[ table_name | to_pascal_case ]]Response
+    @aws_auth(cognito_groups: ["admin"])
+  {% endfor %}
 }
 
 type Mutation {
   ping: String
+  {% for table_name, schema in schemas.items() %}
+  [[ table_name | to_camel_case ]]Create(input: [[ table_name | to_pascal_case ]]CreateInput!): [[ table_name | to_pascal_case ]]Response
+    @aws_auth(cognito_groups: ["admin"])
+  [[ table_name | to_camel_case ]]Update(input: [[ table_name | to_pascal_case ]]UpdateInput!): [[ table_name | to_pascal_case ]]Response
+    @aws_auth(cognito_groups: ["admin"])
+  [[ table_name | to_camel_case ]]Delete(id: ID!): [[ table_name | to_pascal_case ]]Response
+    @aws_auth(cognito_groups: ["admin"])
+  {% endfor %}
 }
 
 # Model types
@@ -81,23 +93,3 @@ type [[ table_name | to_pascal_case ]]ListResponse {
 }
 
 {% endfor %}
-
-# Query operations
-extend type Query {
-  {% for table_name, schema in schemas.items() %}
-  [[ table_name | to_camel_case ]]QueryById(input: [[ table_name | to_pascal_case ]]QueryInput!): [[ table_name | to_pascal_case ]]Response
-    @aws_auth(cognito_groups: ["admin"])
-  {% endfor %}
-}
-
-# Mutation operations
-extend type Mutation {
-  {% for table_name, schema in schemas.items() %}
-  [[ table_name | to_camel_case ]]Create(input: [[ table_name | to_pascal_case ]]CreateInput!): [[ table_name | to_pascal_case ]]Response
-    @aws_auth(cognito_groups: ["admin"])
-  [[ table_name | to_camel_case ]]Update(input: [[ table_name | to_pascal_case ]]UpdateInput!): [[ table_name | to_pascal_case ]]Response
-    @aws_auth(cognito_groups: ["admin"])
-  [[ table_name | to_camel_case ]]Delete(id: ID!): [[ table_name | to_pascal_case ]]Response
-    @aws_auth(cognito_groups: ["admin"])
-  {% endfor %}
-}
