@@ -210,8 +210,8 @@ def to_pascal_case(s: str) -> str:
     """Convert string to PascalCase."""
     # First split by underscores and hyphens
     words = re.split(r'[_-]', s)
-    # Then capitalize each word
-    return ''.join(word.title() for word in words)
+    # Then capitalize each word and join them
+    return ''.join(word.capitalize() for word in words)
 
 def to_snake_case(s: str) -> str:
     """Convert string to snake_case."""

@@ -105,26 +105,26 @@ Resources:
   # Data Sources
   {%- for table_name, schema in schemas.items() %}
 
-  [[ schema.table | to_pascal_case ]]DataSource:
+  [[ schema.table ]]DataSource:
     Type: AWS::AppSync::DataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
-      Name: [[ schema.table | to_pascal_case ]]DataSource
+      Name: [[ schema.table ]]DataSource
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
         TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-[[ schema.table | to_kebab_case ]]-table-name'
         AwsRegion: !Ref AWS::Region
 
-  # [[ schema.table | to_pascal_case ]] Resolvers
-  [[ schema.table | to_pascal_case ]]CreateResolver:
+  # [[ schema.table ]] Resolvers
+  [[ schema.table ]]CreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: [[ schema.table | to_pascal_case ]]Create
-      DataSourceName: !GetAtt [[ schema.table | to_pascal_case ]]DataSource.Name
+      FieldName: [[ schema.table ]]Create
+      DataSourceName: !GetAtt [[ schema.table ]]DataSource.Name
       RequestMappingTemplate: |
         #set($input = {})
         #foreach($field in $ctx.args.input.keySet())
@@ -150,18 +150,18 @@ Resources:
         
         {
           "StatusCode": 200,
-          "Message": "[[ schema.table | to_pascal_case ]] created successfully",
+          "Message": "[[ schema.table ]] created successfully",
           "Data": $ctx.args.input
         }
 
-  [[ schema.table | to_pascal_case ]]QueryResolver:
+  [[ schema.table ]]QueryResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: [[ schema.table | to_pascal_case ]]Query
-      DataSourceName: !GetAtt [[ schema.table | to_pascal_case ]]DataSource.Name
+      FieldName: [[ schema.table ]]Query
+      DataSourceName: !GetAtt [[ schema.table ]]DataSource.Name
       RequestMappingTemplate: |
         #if($ctx.args.input.[[ schema.partition_key | to_camel_case ]])
           {
@@ -200,14 +200,14 @@ Resources:
         
         $util.toJson($response)
 
-  [[ schema.table | to_pascal_case ]]UpdateResolver:
+  [[ schema.table ]]UpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
-      FieldName: [[ schema.table | to_pascal_case ]]Update
-      DataSourceName: !GetAtt [[ schema.table | to_pascal_case ]]DataSource.Name
+      FieldName: [[ schema.table ]]Update
+      DataSourceName: !GetAtt [[ schema.table ]]DataSource.Name
       RequestMappingTemplate: |
         #set($input = {})
         #foreach($field in $ctx.args.input.keySet())
@@ -265,7 +265,7 @@ Resources:
         
         {
           "StatusCode": 200,
-          "Message": "[[ schema.table | to_pascal_case ]] updated successfully",
+          "Message": "[[ schema.table ]] updated successfully",
           "Data": $ctx.args.input
         }
 

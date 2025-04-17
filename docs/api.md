@@ -22,70 +22,70 @@ The API supports two authentication methods:
 
 1. Query Operations:
    ```graphql
-   applicationsQueryById(input: ApplicationsQueryInput!): ApplicationsResponse
+   ApplicationsQuery(input: ApplicationsQueryInput!): ApplicationsResponse
    ```
 
 2. Mutation Operations:
    ```graphql
-   applicationsCreate(input: ApplicationsCreateInput!): ApplicationsResponse
-   applicationsUpdate(input: ApplicationsUpdateInput!): ApplicationsResponse
-   applicationsDelete(id: ID!): ApplicationsResponse
+   ApplicationsCreate(input: ApplicationsCreateInput!): ApplicationsResponse
+   ApplicationsUpdate(input: ApplicationsUpdateInput!): ApplicationsResponse
+   ApplicationsDelete(id: ID!): ApplicationsResponse
    ```
 
 ### Application Roles
 
 1. Query Operations:
    ```graphql
-   applicationRolesQueryById(input: ApplicationRolesQueryInput!): ApplicationRolesResponse
+   ApplicationRolesQuery(input: ApplicationRolesQueryInput!): ApplicationRolesResponse
    ```
 
 2. Mutation Operations:
    ```graphql
-   applicationRolesCreate(input: ApplicationRolesCreateInput!): ApplicationRolesResponse
-   applicationRolesUpdate(input: ApplicationRolesUpdateInput!): ApplicationRolesResponse
-   applicationRolesDelete(id: ID!): ApplicationRolesResponse
+   ApplicationRolesCreate(input: ApplicationRolesCreateInput!): ApplicationRolesResponse
+   ApplicationRolesUpdate(input: ApplicationRolesUpdateInput!): ApplicationRolesResponse
+   ApplicationRolesDelete(id: ID!): ApplicationRolesResponse
    ```
 
 ### Application Users
 
 1. Query Operations:
    ```graphql
-   applicationUsersQueryById(input: ApplicationUsersQueryInput!): ApplicationUsersResponse
+   ApplicationUsersQuery(input: ApplicationUsersQueryInput!): ApplicationUsersResponse
    ```
 
 2. Mutation Operations:
    ```graphql
-   applicationUsersCreate(input: ApplicationUsersCreateInput!): ApplicationUsersResponse
-   applicationUsersUpdate(input: ApplicationUsersUpdateInput!): ApplicationUsersResponse
-   applicationUsersDelete(id: ID!): ApplicationUsersResponse
+   ApplicationUsersCreate(input: ApplicationUsersCreateInput!): ApplicationUsersResponse
+   ApplicationUsersUpdate(input: ApplicationUsersUpdateInput!): ApplicationUsersResponse
+   ApplicationUsersDelete(id: ID!): ApplicationUsersResponse
    ```
 
 ### Roles
 
 1. Query Operations:
    ```graphql
-   rolesQueryById(input: RolesQueryInput!): RolesResponse
+   RolesQuery(input: RolesQueryInput!): RolesResponse
    ```
 
 2. Mutation Operations:
    ```graphql
-   rolesCreate(input: RolesCreateInput!): RolesResponse
-   rolesUpdate(input: RolesUpdateInput!): RolesResponse
-   rolesDelete(id: ID!): RolesResponse
+   RolesCreate(input: RolesCreateInput!): RolesResponse
+   RolesUpdate(input: RolesUpdateInput!): RolesResponse
+   RolesDelete(id: ID!): RolesResponse
    ```
 
 ### Users
 
 1. Query Operations:
    ```graphql
-   usersQueryById(input: UsersQueryInput!): UsersResponse
+   UsersQuery(input: UsersQueryInput!): UsersResponse
    ```
 
 2. Mutation Operations:
    ```graphql
-   usersCreate(input: UsersCreateInput!): UsersResponse
-   usersUpdate(input: UsersUpdateInput!): UsersResponse
-   usersDelete(id: ID!): UsersResponse
+   UsersCreate(input: UsersCreateInput!): UsersResponse
+   UsersUpdate(input: UsersUpdateInput!): UsersResponse
+   UsersDelete(id: ID!): UsersResponse
    ```
 
 ## Response Types
@@ -94,15 +94,15 @@ All operations return a standard response type:
 
 ```graphql
 type ApplicationsResponse {
-  statusCode: Int!
-  message: String!
-  data: Applications
+  StatusCode: Int!
+  Message: String!
+  Data: Applications
 }
 
 type ApplicationsListResponse {
-  statusCode: Int!
-  message: String!
-  data: [Applications]
+  StatusCode: Int!
+  Message: String!
+  Data: [Applications]
 }
 ```
 
@@ -129,7 +129,7 @@ Example error:
     {
       "message": "Not authorized to access this resource",
       "errorType": "UnauthorizedException",
-      "path": ["applicationsCreate"]
+      "path": ["ApplicationsCreate"]
     }
   ]
 }
