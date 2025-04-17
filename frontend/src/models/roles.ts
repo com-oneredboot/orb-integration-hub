@@ -3,9 +3,18 @@
  */
 
 export enum RoleType {
-  ADMIN = 'ADMIN',  USER = 'USER',  GUEST = 'GUEST',  CUSTOM = 'CUSTOM'}
+  ADMIN = 'ADMIN',
+  USER = 'USER',
+  GUEST = 'GUEST',
+  CUSTOM = 'CUSTOM'
+}
+
 export enum RoleStatus {
-  ACTIVE = 'ACTIVE',  INACTIVE = 'INACTIVE',  DELETED = 'DELETED'}
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  DELETED = 'DELETED'
+}
+
 
 export interface IRoles {
   role_id: string;

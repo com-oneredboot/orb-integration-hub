@@ -2,7 +2,7 @@
 from typing import Optional, List
 from pydantic import BaseModel, Field
 from datetime import datetime
-from enum import Enum
+from .user_status import UserStatus
 
 
 class Users(BaseModel):

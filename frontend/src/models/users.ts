@@ -3,7 +3,14 @@
  */
 
 export enum UserStatus {
-  UNKNOWN = 'UNKNOWN',  ACTIVE = 'ACTIVE',  INACTIVE = 'INACTIVE',  PENDING = 'PENDING',  REJECTED = 'REJECTED',  DELETED = 'DELETED'}
+  UNKNOWN = 'UNKNOWN',
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  PENDING = 'PENDING',
+  REJECTED = 'REJECTED',
+  DELETED = 'DELETED'
+}
+
 
 export interface IUsers {
   user_id: string;

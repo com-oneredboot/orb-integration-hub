@@ -2,7 +2,8 @@
 from typing import Optional, List
 from pydantic import BaseModel, Field
 from datetime import datetime
-from enum import Enum
+from .role_type import RoleType
+from .role_status import RoleStatus
 
 
 class Roles(BaseModel):

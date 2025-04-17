@@ -1,24 +1,18 @@
-"""{{ table | to_pascal_case }} model."""
+"""{{ schema.table }} model."""
 from typing import Optional, List
 from pydantic import BaseModel, Field
 from datetime import datetime
-from enum import Enum
-
-{% for attr in attributes %}
+{% for attr in schema.attributes %}
 {% if attr.enum_type %}
-class {{ attr.enum_type }}(str, Enum):
-    """{{ attr.enum_type }} enum."""
-    {% for value in attr.enum_values %}
-    {{ value }} = "{{ value }}"
-    {% endfor %}
-
+from .{{ attr.enum_type | to_snake_case }} import {{ attr.enum_type }}
 {% endif %}
 {% endfor %}
 
-class {{ table | to_pascal_case }}(BaseModel):
-    """{{ table | to_pascal_case }} model."""
-    {% for attr in attributes %}
-    {{ attr.name }}: {% if attr.required %}{{ attr.type }}{% else %}Optional[{{ attr.type }}]{% endif %} = Field({% if attr.required %}...{% else %}None{% endif %}, description="{{ attr.description }}")
+
+class {{ schema.table }}(BaseModel):
+    """{{ schema.table }} model."""
+    {% for attr in schema.attributes %}
+    {{ attr.name }}: {% if attr.type == 'timestamp' %}datetime{% elif attr.type == 'array' %}List[str]{% elif attr.type == 'boolean' %}bool{% elif attr.type == 'number' %}float{% elif attr.enum_type %}{{ attr.enum_type }}{% else %}str{% endif %}{% if not attr.required %} | None{% endif %} = Field({% if attr.required %}...{% else %}None{% endif %}, description="{{ attr.description }}")
     {% endfor %}
 
     class Config:

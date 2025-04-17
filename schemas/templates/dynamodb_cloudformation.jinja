@@ -29,60 +29,85 @@ Parameters:
 
 # --------------------------------------------------- #
 Resources:
-  {% for schema in schemas %}
+  {% for schema in schemas.values() %}
   {{ schema.table }}Table:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table | to_kebab_case }}
       BillingMode: PAY_PER_REQUEST
       KeySchema:
-        {% for key in schema.keys %}
-        - AttributeName: {{ key.name }}
-          KeyType: {{ key.type }}
-        {% endfor %}
+        - AttributeName: {{ schema.partition_key }}
+          KeyType: HASH
+        {% if schema.sort_key and schema.sort_key != 'None' %}
+        - AttributeName: {{ schema.sort_key }}
+          KeyType: RANGE
+        {% endif %}
       AttributeDefinitions:
-        {% for key in schema.keys %}
-        - AttributeName: {{ key.name }}
-          AttributeType: {{ key.attr_type }}
+        - AttributeName: {{ schema.partition_key }}
+          AttributeType: S
+        {% if schema.sort_key and schema.sort_key != 'None' %}
+        - AttributeName: {{ schema.sort_key }}
+          AttributeType: S
+        {% endif %}
+        {% if schema.secondary_indexes %}
+        {% for index in schema.secondary_indexes %}
+        - AttributeName: {{ index.partition }}
+          AttributeType: S
+        {% if index.sort and index.sort != 'None' %}
+        - AttributeName: {{ index.sort }}
+          AttributeType: S
+        {% endif %}
         {% endfor %}
-      {% if schema.indexes %}
+        {% endif %}
+      {% if schema.secondary_indexes %}
       GlobalSecondaryIndexes:
-        {% for index in schema.indexes %}
-        - IndexName: {{ index.name | to_kebab_case }}
+        {% for index in schema.secondary_indexes %}
+        - IndexName: {{ index.name }}
           KeySchema:
-            {% for key in index.keys %}
-            - AttributeName: {{ key.name }}
-              KeyType: {{ key.type }}
-            {% endfor %}
+            - AttributeName: {{ index.partition }}
+              KeyType: HASH
+            {% if index.sort and index.sort != 'None' %}
+            - AttributeName: {{ index.sort }}
+              KeyType: RANGE
+            {% endif %}
           Projection:
-            ProjectionType: ALL
+            ProjectionType: {{ index.projection_type }}
+            {% if index.projection_type == 'INCLUDE' and index.projected_attributes %}
+            NonKeyAttributes:
+              {% for attr in index.projected_attributes %}
+              - {{ attr }}
+              {% endfor %}
+            {% endif %}
         {% endfor %}
       {% endif %}
 
-  # SSM Parameters for {{ schema.table }} Table
-  {{ schema.table }}TableNameParameter:
+  {{ schema.table }}TableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub /${CustomerId}/${ProjectId}/${Environment}/dynamodb/{{ schema.table | to_kebab_case }}/table-name
-      Type: String
-      Value: !Ref {{ schema.table }}Table
-
-  {{ schema.table }}TableArnParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub /${CustomerId}/${ProjectId}/${Environment}/dynamodb/{{ schema.table | to_kebab_case }}/table-arn
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table | to_kebab_case }}-table-arn
       Type: String
       Value: !GetAtt {{ schema.table }}Table.Arn
+
+  {{ schema.table }}TableName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table | to_kebab_case }}-table-name
+      Type: String
+      Value: !Ref {{ schema.table }}Table
   {% endfor %}
 
 # --------------------------------------------------- #
 Outputs:
-  {% for schema in schemas %}
-  {{ schema.table }}TableName:
-    Description: {{ schema.table }} Table Name
-    Value: !Ref {{ schema.table }}Table
-
+  {% for schema in schemas.values() %}
   {{ schema.table }}TableArn:
-    Description: {{ schema.table }} Table ARN
+    Description: The ARN of the {{ schema.table }} table
     Value: !GetAtt {{ schema.table }}Table.Arn
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table | to_kebab_case }}-table-arn
+
+  {{ schema.table }}TableName:
+    Description: The name of the {{ schema.table }} table
+    Value: !Ref {{ schema.table }}Table
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table | to_kebab_case }}-table-name
   {% endfor %}

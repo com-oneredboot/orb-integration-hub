@@ -120,11 +120,19 @@ class Attribute:
 
 @dataclass
 class TableSchema:
+    """Table schema definition."""
     table: str
     attributes: List[Attribute]
     partition_key: str
-    sort_key: Optional[str] = None
+    sort_key: str = 'None'  # Default to 'None' string
     secondary_indexes: Optional[List[Dict[str, Any]]] = None
+
+    def __post_init__(self):
+        """Post-initialization validation and defaults."""
+        if self.sort_key is None:
+            self.sort_key = 'None'
+        if self.secondary_indexes is None:
+            self.secondary_indexes = []
 
 def to_python_type(attr_type: str) -> str:
     """Convert schema type to Python type."""
@@ -193,6 +201,7 @@ def setup_jinja_env() -> Environment:
     # Add custom globals
     env.globals['now'] = lambda: datetime.now().isoformat()
     
+    # Add case conversion filters
     env.filters['to_camel_case'] = to_camel_case
     env.filters['to_pascal_case'] = to_pascal_case
     env.filters['to_snake_case'] = to_snake_case
@@ -294,7 +303,7 @@ def load_schemas() -> Dict[str, TableSchema]:
                 
             # Get partition and sort keys
             partition_key = schema_data['model']['keys']['primary']['partition']
-            sort_key = schema_data['model']['keys']['primary'].get('sort')
+            sort_key = schema_data['model']['keys'].get('sort', 'None')  # Default to 'None' string
             
             # Get secondary indexes
             secondary_indexes = []
@@ -304,8 +313,8 @@ def load_schemas() -> Dict[str, TableSchema]:
                         'name': index['name'],
                         'type': index['type'],
                         'partition': index['partition'],
-                        'sort': index.get('sort'),
-                        'projection_type': index['projection_type'],
+                        'sort': index.get('sort', 'None'),  # Default to 'None' string
+                        'projection_type': index.get('projection_type', 'ALL'),
                         'projected_attributes': index.get('projected_attributes')
                     })
             
@@ -344,36 +353,8 @@ def generate_python_model(table: str, schema: TableSchema) -> None:
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('python_model.jinja')
         
-        # Process attributes to include enum types and proper Python types
-        processed_attributes = []
-        for attr in schema.attributes:
-            # Determine Python type
-            python_type = 'str'  # default
-            if attr.type == 'boolean':
-                python_type = 'bool'
-            elif attr.type == 'number':
-                python_type = 'float'
-            elif attr.type == 'array':
-                python_type = 'List[str]'
-            elif attr.type == 'timestamp':
-                python_type = 'datetime'
-            
-            # If it's an enum, use the enum type
-            if attr.enum_type:
-                python_type = attr.enum_type
-            
-            processed_attributes.append({
-                'name': attr.name,
-                'type': python_type,
-                'description': attr.description,
-                'required': attr.required
-            })
-        
         # Generate model
-        model_content = template.render(
-            table=table,
-            attributes=processed_attributes
-        )
+        model_content = template.render(schema=schema)
         
         # Write to file
         output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'src', 'models', f'{to_snake_case(table)}.py')
@@ -477,6 +458,7 @@ def generate_timestamped_schema(schema_content: str) -> str:
 def generate_cloudformation_template(schemas: Dict[str, TableSchema], template_path: str, output_path: str) -> None:
     """Generate a CloudFormation template for DynamoDB tables."""
     try:
+        logger.info(f"Starting CloudFormation template generation with template: {template_path}")
         # Get Jinja environment
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template(os.path.basename(template_path))
@@ -484,16 +466,58 @@ def generate_cloudformation_template(schemas: Dict[str, TableSchema], template_p
         # Process schemas into the format expected by the template
         processed_schemas = {}
         for table_name, schema in schemas.items():
-            processed_schemas[table_name] = {
-                'table': schema.table,  # Use table name directly from schema
-                'attributes': schema.attributes,
+            logger.info(f"Processing schema for table: {table_name}")
+            logger.info(f"Schema data: table={schema.table}, partition_key={schema.partition_key}, sort_key={schema.sort_key}")
+            
+            # Process keys
+            keys = [
+                {
+                    'name': schema.partition_key,
+                    'type': 'HASH',
+                    'attr_type': 'S'  # Default to string type
+                }
+            ]
+            if schema.sort_key and schema.sort_key != 'None':
+                keys.append({
+                    'name': schema.sort_key,
+                    'type': 'RANGE',
+                    'attr_type': 'S'  # Default to string type
+                })
+            
+            # Process indexes
+            indexes = []
+            if schema.secondary_indexes:
+                for index in schema.secondary_indexes:
+                    index_keys = [
+                        {
+                            'name': index['partition'],
+                            'type': 'HASH'
+                        }
+                    ]
+                    if index.get('sort'):
+                        index_keys.append({
+                            'name': index['sort'],
+                            'type': 'RANGE'
+                        })
+                    indexes.append({
+                        'name': index['name'],
+                        'keys': index_keys,
+                        'projection_type': index.get('projection_type', 'ALL'),
+                        'projected_attributes': index.get('projected_attributes')
+                    })
+            
+            processed_schemas[schema.table] = {
+                'table': schema.table,
                 'partition_key': schema.partition_key,
                 'sort_key': schema.sort_key,
-                'secondary_indexes': schema.secondary_indexes
+                'indexes': indexes
             }
+            logger.info(f"Processed schema: {processed_schemas[schema.table]}")
         
         # Generate the template content
+        logger.info("Rendering template...")
         template_content = template.render(schemas=processed_schemas)
+        logger.info("Template rendered successfully")
         
         # Write the content
         with open(output_path, 'w') as f:
@@ -503,11 +527,15 @@ def generate_cloudformation_template(schemas: Dict[str, TableSchema], template_p
         
     except Exception as e:
         logger.error(f'Failed to generate CloudFormation template: {str(e)}')
+        logger.error(f'Exception type: {type(e)}')
+        import traceback
+        logger.error(f'Traceback: {traceback.format_exc()}')
         raise
 
 def generate_appsync_template(schemas: Dict[str, TableSchema], output_path: str) -> None:
     """Generate AppSync CloudFormation template."""
     try:
+        logger.info("Starting AppSync template generation")
         # Get Jinja environment
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('appsync_cloudformation.jinja')
@@ -515,39 +543,31 @@ def generate_appsync_template(schemas: Dict[str, TableSchema], output_path: str)
         # Process schemas into the format expected by the template
         processed_schemas = {}
         for table_name, schema in schemas.items():
-            # Convert table name to PascalCase for all uses
-            pascal_table_name = to_pascal_case(table_name)
-            # For compound names like application_roles, ensure each part is properly capitalized
-            if '_' in table_name:
-                pascal_table_name = ''.join(word.title() for word in table_name.split('_'))
-            processed_schemas[table_name] = {
-                'table': pascal_table_name,
+            logger.info(f"Processing schema for table: {table_name}")
+            logger.info(f"Schema data: table={schema.table}, partition_key={schema.partition_key}, sort_key={schema.sort_key}")
+            processed_schemas[schema.table] = {
+                'table': schema.table,
                 'attributes': schema.attributes,
                 'partition_key': schema.partition_key,
-                'sort_key': schema.sort_key,
-                'table_name': table_name  # Add original table name for reference
+                'sort_key': schema.sort_key
             }
+            logger.info(f"Processed schema: {processed_schemas[schema.table]}")
 
         # Generate template
+        logger.info("Rendering template...")
         rendered = template.render(schemas=processed_schemas)
-
-        # Post-process the rendered template to fix formatting
-        lines = rendered.split('\n')
-        processed_lines = []
-        for i, line in enumerate(lines):
-            # Skip empty lines at the start of a resource
-            if line.strip() and line.strip().endswith(':'):
-                if i > 0 and not lines[i-1].strip():
-                    processed_lines.append('')
-            processed_lines.append(line)
+        logger.info("Template rendered successfully")
 
         # Write the processed template
         with open(output_path, 'w', newline='\n', encoding='utf-8') as f:
-            f.write('\n'.join(processed_lines))
+            f.write(rendered)
 
         logger.info('Generated AppSync CloudFormation template')
     except Exception as e:
         logger.error(f'Failed to generate AppSync CloudFormation template: {str(e)}')
+        logger.error(f'Exception type: {type(e)}')
+        import traceback
+        logger.error(f'Traceback: {traceback.format_exc()}')
         raise
 
 def write_file(output_path: str, content: str) -> None:

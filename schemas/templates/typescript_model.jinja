@@ -5,15 +5,17 @@
 {% for attr in schema.attributes %}
 {% if attr.enum_type %}
 export enum {{ attr.enum_type }} {
-  {% for value in attr.enum_values %}
-  {{ value }} = '{{ value }}'{% if not loop.last %},{% endif %}
-  {% endfor %}
+{% for value in attr.enum_values %}
+  {{ value }} = '{{ value }}'{% if not loop.last %},
+{% endif %}{% endfor %}
+
 }
+
 {% endif %}
 {% endfor %}
 
 export interface I{{ schema.table }} {
-  {% for attr in schema.attributes %}
-  {{ attr.name | to_snake_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{{ attr.type | to_typescript_type }}{% endif %};
-  {% endfor %}
+{% for attr in schema.attributes %}
+  {{ attr.name }}: {% if attr.type == 'timestamp' %}number{% elif attr.type == 'array' %}string[]{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'number' %}number{% elif attr.enum_type %}{{ attr.enum_type }}{% else %}string{% endif %};
+{% endfor %}
 }
