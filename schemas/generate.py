@@ -20,6 +20,7 @@ import yaml
 from jinja2 import Template, Environment, FileSystemLoader, select_autoescape
 from pydantic import BaseModel, Field
 from pydantic import validator
+from pydantic import field_validator
 
 # Set up logging
 logger = logging.getLogger('schema_generator')
@@ -64,25 +65,29 @@ class SchemaIndex(BaseModel):
     projection_type: str = Field("ALL", description="Projection type: ALL, KEYS_ONLY, or INCLUDE")
     projected_attributes: Optional[List[str]] = Field(None, description="List of attributes to project when projection_type is INCLUDE")
 
-    @validator('type')
+    @field_validator('type')
+    @classmethod
     def validate_index_type(cls, v):
         if v not in ['GSI', 'LSI']:
             raise ValueError('Index type must be either GSI or LSI')
         return v
 
-    @validator('projection_type')
+    @field_validator('projection_type')
+    @classmethod
     def validate_projection_type(cls, v):
         if v not in ['ALL', 'KEYS_ONLY', 'INCLUDE']:
             raise ValueError('Projection type must be ALL, KEYS_ONLY, or INCLUDE')
         return v
 
-    @validator('projected_attributes')
-    def validate_projected_attributes(cls, v, values):
-        if 'projection_type' in values and values['projection_type'] == 'INCLUDE' and not v:
+    @field_validator('projected_attributes')
+    @classmethod
+    def validate_projected_attributes(cls, v, info):
+        if info.data.get('projection_type') == 'INCLUDE' and not v:
             raise ValueError('projected_attributes is required when projection_type is INCLUDE')
         return v
 
-    @validator('name')
+    @field_validator('name')
+    @classmethod
     def validate_index_name(cls, v):
         if v:
             # DynamoDB index name requirements:
