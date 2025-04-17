@@ -142,6 +142,18 @@ def to_typescript_type(attr_type: str) -> str:
     }
     return type_mapping.get(attr_type.lower(), 'string')
 
+def to_dynamodb_type(attr_type: str) -> str:
+    """Convert schema type to DynamoDB attribute type."""
+    type_mapping = {
+        'string': 'S',
+        'number': 'N',
+        'boolean': 'S',  # DynamoDB doesn't have a boolean type
+        'array': 'S',    # DynamoDB doesn't have an array type
+        'object': 'S',   # DynamoDB doesn't have an object type
+        'timestamp': 'N' # Timestamps are stored as numbers
+    }
+    return type_mapping.get(attr_type.lower(), 'S')
+
 def setup_jinja_env() -> Environment:
     """
     Set up the Jinja environment with custom filters and globals.
@@ -184,6 +196,7 @@ def setup_jinja_env() -> Environment:
     env.filters['to_kebab_case'] = to_kebab_case
     env.filters['to_python_type'] = to_python_type
     env.filters['to_typescript_type'] = to_typescript_type
+    env.filters['to_dynamodb_type'] = to_dynamodb_type
     return env
 
 def to_camel_case(s: str) -> str:
@@ -427,20 +440,28 @@ def generate_cloudformation_template(schemas: Dict[str, TableSchema], template_p
             if schema.sort_key:
                 key_attributes.add(schema.sort_key)
                 
+            # Add attributes from secondary indexes
+            if schema.secondary_indexes:
+                for index in schema.secondary_indexes:
+                    key_attributes.add(index['partition'])
+                    if 'sort' in index and index['sort']:
+                        key_attributes.add(index['sort'])
+                
             # Process attributes that are part of keys
             attributes = []
             for attr in schema.attributes:
                 if attr.name in key_attributes:
                     attributes.append({
                         'name': attr.name,
-                        'type': attr.type.upper()  # DynamoDB expects uppercase type
+                        'type': to_dynamodb_type(attr.type)
                     })
             
             processed_schemas[table_name] = {
                 'table': table_name,  # Keep original table name
                 'attributes': attributes,
                 'partition_key': schema.partition_key,
-                'sort_key': schema.sort_key
+                'sort_key': schema.sort_key,
+                'secondary_indexes': schema.secondary_indexes
             }
         
         # Generate the template content

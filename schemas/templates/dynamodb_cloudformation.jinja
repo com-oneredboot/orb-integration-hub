@@ -37,7 +37,7 @@ Resources:
       AttributeDefinitions:
         {% for attr in schema.attributes %}
         - AttributeName: [[ attr.name ]]
-          AttributeType: [[ attr.type ]]
+          AttributeType: [[ attr.type | to_dynamodb_type ]]
         {% endfor %}
       KeySchema:
         - AttributeName: [[ schema.partition_key ]]

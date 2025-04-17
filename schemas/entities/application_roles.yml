@@ -7,16 +7,6 @@ version: '1.0'
 table: ApplicationRoles
 model:
   auth_config:
-    api_key_operations:
-      - ApplicationRole
-      - ApplicationRoleResponse
-      - ApplicationRoleQueryInput
-      - ApplicationRoleCreateInput
-      - ApplicationRoleUpdateInput
-      - ApplicationRoleQueryById
-      - ApplicationRoleCreate
-      - ApplicationRoleUpdate
-      - ApplicationRoleDelete
     default_auth: user_pools
   keys:
     primary:
