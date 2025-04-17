@@ -154,7 +154,7 @@ Resources:
           "Data": $ctx.args.input
         }
 
-  {{ schema.table }}QueryBy{{ schema.partition_key }}Resolver:
+  {{ schema.table }}QueryBy{{ schema.partition_key | to_pascal_case }}Resolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
@@ -198,7 +198,7 @@ Resources:
         $util.toJson($response)
 
   {%- if schema.sort_key and schema.sort_key != 'None' %}
-  {{ schema.table }}QueryBy{{ schema.sort_key }}Resolver:
+  {{ schema.table }}QueryBy{{ schema.sort_key | to_pascal_case }}Resolver:
     Type: AWS::AppSync::Resolver
     DependsOn: IntegrationHubSchema
     Properties:
