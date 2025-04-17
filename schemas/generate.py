@@ -262,7 +262,8 @@ def load_schemas() -> Dict[str, TableSchema]:
                         'type': index['type'],
                         'partition': index['partition'],
                         'sort': index.get('sort'),
-                        'projection_type': index['projection_type']
+                        'projection_type': index['projection_type'],
+                        'projected_attributes': index.get('projected_attributes')
                     })
             
             # Create TableSchema
