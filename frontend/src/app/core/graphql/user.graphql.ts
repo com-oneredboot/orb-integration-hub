@@ -5,7 +5,7 @@
 
 // Application Imports
 import { GenericResponse } from "../models/appsync.model";
-import { User } from  "../models/user.model";
+import { User } from "../models/users.model";
 import { UserGroups } from "../models/user.enum";
 
 export type UsersResponse = {
@@ -13,12 +13,7 @@ export type UsersResponse = {
     StatusCode: number;
     Message: string;
     Data: User | null;
-  };
-  usersQueryByEmail: {
-    StatusCode: number;
-    Message: string;
-    Data: User | null;
-  };
+  }
 };
 
 export type UsersCreateResponse = GenericResponse & {

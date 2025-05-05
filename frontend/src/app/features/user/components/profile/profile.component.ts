@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Observable, Subject, takeUntil } from 'rxjs';
-import { User } from '../../../../core/models/user.model';
+import { IUser } from '../../../../core/models/users.model';
 import { UsersUpdateInput } from '../../../../core/graphql/user.graphql';
 import * as fromAuth from '../../components/auth-flow/store/auth.selectors';
 import { AuthActions } from '../../components/auth-flow/store/auth.actions';
@@ -16,7 +16,7 @@ import { Router } from '@angular/router';
   standalone: false
 })
 export class ProfileComponent implements OnInit, OnDestroy {
-  currentUser$: Observable<User | null>;
+  currentUser$: Observable<IUser | null>;
   debugMode$: Observable<boolean>;
   profileForm: FormGroup;
   isLoading = false;
@@ -187,20 +187,24 @@ export class ProfileComponent implements OnInit, OnDestroy {
       console.log('Updating user profile:', updateInput);
       
       // Make API call to update the user
-      // Access the method via bracket notation to avoid compiler errors
-      const response = await this.userService['userUpdate'](updateInput);
+      const response = await this.userService.userQueryById(updateInput);
       
-      // Handle the response
-      if (response?.usersQueryById?.status_code !== 200) {
-        const errorMessage = response?.usersQueryById?.message || 'Failed to update profile';
-        console.error('Profile update error:', errorMessage);
-        throw new Error(errorMessage);
+      if (response.usersQueryByUserId?.StatusCode === 200) {
+        const updatedUser = response.usersQueryByUserId.Data;
+        if (updatedUser) {
+          this.profileForm.patchValue({
+            firstName: updatedUser.first_name,
+            lastName: updatedUser.last_name,
+            email: updatedUser.email,
+            phoneNumber: updatedUser.phone_number
+          });
+        }
       }
       
       // Update the store with the updated user data
-      if (response?.usersQueryById?.data) {
+      if (response?.usersQueryByUserId?.Data) {
         this.store.dispatch(AuthActions.signInSuccess({
-          user: response.usersQueryById.data,
+          user: response.usersQueryByUserId.Data,
           message: 'Profile updated successfully'
         }));
       }
@@ -219,7 +223,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   /**
    * Get the current user as a promise
    */
-  private async getCurrentUser(): Promise<User | null> {
+  private async getCurrentUser(): Promise<IUser | null> {
     return new Promise((resolve) => {
       this.currentUser$
         .pipe(takeUntil(this.destroy$))

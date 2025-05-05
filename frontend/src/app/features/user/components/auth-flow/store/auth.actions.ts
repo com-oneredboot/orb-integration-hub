@@ -7,8 +7,8 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 
 // Application Imports
-import { User } from '../../../../../core/models/user.model';
-import { UserCreateInput, UserQueryInput } from '../../../../../core/graphql/user.graphql';
+import { IUser } from '../../../../../core/models/users.model';
+import { UsersCreateInput, UsersQueryByEmailInput } from '../../../../../core/graphql/user.graphql';
 import { MfaSetupDetails } from '../../../../../core/models/auth.model';
 
 /**
@@ -28,7 +28,7 @@ export const AuthActions = createActionGroup({
     'Verify Cognito Password Failure': props<{ error: string }>(),
 
     'SignIn': props<{ email: string; password: string }>(),
-    'SignIn Success': props<{ user: User, message: string,  }>(),
+    'SignIn Success': props<{ user: IUser, message: string }>(),
     'SignIn Failure': props<{ error: string }>(),
 
     'Setup Password': props<{ password: string }>(),
@@ -56,20 +56,20 @@ export const AuthActions = createActionGroup({
     'Signout Success': emptyProps(),
     'Signout Failure': props<{ error: string }>(),
 
-    'Create User': props<{ input: UserCreateInput, password: string}>(),
+    'Create User': props<{ input: UsersCreateInput, password: string}>(),
     'Create User Success': emptyProps(),
     'Create User Failure': props<{ error: string }>(),
 
     'Register': props<{ email: string; password: string; firstName: string; lastName: string }>(),
-    'Register Success': props<{ user: User }>(),
+    'Register Success': props<{ user: IUser }>(),
     'Register Failure': props<{ error: string }>(),
 
-    'Verify Email': props<{ input: UserQueryInput, code: string, email?: string }>(),
+    'Verify Email': props<{ input: UsersQueryByEmailInput, code: string, email?: string }>(),
     'Verify Email Success': emptyProps(),
     'Verify Email Failure': props<{ error: string }>(),
 
     'Refresh Session': emptyProps(),
-    'Refresh Session Success': props<{ user: User }>(),
+    'Refresh Session Success': props<{ user: IUser }>(),
     'Refresh Session Failure': props<{ error: string }>(),
 
     'Check Phone Required': emptyProps(),

@@ -476,10 +476,10 @@ export class UserService extends ApiService {
       if (!input.user_id) {
         console.error('Cannot update user: missing required user_id');
         return {
-          usersQueryById: {
-            status_code: 400,
-            message: 'Missing required user_id',
-            data: null
+          usersQueryByUserId: {
+            StatusCode: 400,
+            Message: 'Missing required user_id',
+            Data: null
           }
         };
       }

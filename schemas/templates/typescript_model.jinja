@@ -8,14 +8,32 @@ export enum {{ attr.enum_type }} {
 {% for value in attr.enum_values %}
   {{ value }} = '{{ value }}'{% if not loop.last %},
 {% endif %}{% endfor %}
-
 }
-
 {% endif %}
 {% endfor %}
 
 export interface I{{ schema.table }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }}: {% if attr.type == 'timestamp' %}number{% elif attr.type == 'array' %}string[]{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'number' %}number{% elif attr.enum_type %}{{ attr.enum_type }}{% else %}string{% endif %};
+  {{ attr.name }}: {% if attr.type == 'timestamp' %}number{% elif attr.type == 'array' %}string[]{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'number' %}number{% elif attr.enum_type %}{{ attr.enum_type }}{% else %}string{% endif %}{% if attr.optional %}?{% endif %};
 {% endfor %}
+}
+
+export class {{ schema.table }} implements I{{ schema.table }} {
+{% for attr in schema.attributes %}
+  {{ attr.name }}: {% if attr.type == 'timestamp' %}number{% elif attr.type == 'array' %}string[]{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'number' %}number{% elif attr.enum_type %}{{ attr.enum_type }}{% else %}string{% endif %} = {% if attr.type == 'array' %}[]{% elif attr.type == 'boolean' %}false{% elif attr.type == 'number' %}0{% elif attr.enum_type %}{{ attr.enum_type }}.UNKNOWN{% else %}''{% endif %};
+{% endfor %}
+
+  constructor(data: Partial<I{{ schema.table }}> = {}) {
+    Object.entries(data).forEach(([key, value]) => {
+      if (key in this) {
+        if (Array.isArray(value) && this[key] instanceof Array && this[key].length === 0) {
+          this[key] = value as typeof this[key];
+        } else if (typeof value === 'string' && this[key] instanceof Object && 'UNKNOWN' in this[key]) {
+          this[key] = (this[key] as any)[value] || (this[key] as any).UNKNOWN;
+        } else {
+          this[key] = value as any;
+        }
+      }
+    });
+  }
 }

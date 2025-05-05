@@ -4,8 +4,9 @@
 // description: Contains the Auth reducer
 
 // Application Imports
-import { User } from "../../../../../core/models/user.model";
+import { IUser } from "../../../../../core/models/users.model";
 import { UserGroups } from "../../../../../core/models/user.enum";
+import { User } from "../../../../../core/models/users.model";
 
 export enum AuthSteps {
   EMAIL,
@@ -30,7 +31,7 @@ export interface AuthState {
   isLoading: boolean;
   error: string | null;
   currentStep: AuthSteps;
-  currentUser: User | null;
+  currentUser: IUser | null;
   userExists: boolean;
   currentEmail: string | null;
 
@@ -66,6 +67,9 @@ export interface AuthState {
   // Session
   sessionActive: boolean;
   lastActivity: number | null;
+
+  userGroups: UserGroups[];
+  phoneValidationExpiresAt: number | null;
 }
 
 export const initialState: AuthState = {
@@ -100,5 +104,8 @@ export const initialState: AuthState = {
   emailVerified: false,
 
   sessionActive: false,
-  lastActivity: null
+  lastActivity: null,
+
+  userGroups: [],
+  phoneValidationExpiresAt: null
 };

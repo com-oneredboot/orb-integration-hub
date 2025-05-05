@@ -15,3 +15,25 @@ from enum import Enum
 # class RoleStatus(Enum):
 #     ACTIVE = "ACTIVE"
 #     INACTIVE = "INACTIVE"
+
+class RoleStatus(Enum):
+    """Role status enum."""
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    SUSPENDED = "SUSPENDED"
+    DELETED = "DELETED"
+
+
+class RoleType(Enum):
+    """Role type enum."""
+    SYSTEM = "SYSTEM"
+    CUSTOM = "CUSTOM"
+    TEMPORARY = "TEMPORARY"
+
+
+class RolePermission(Enum):
+    """Role permission enum."""
+    READ = "READ"
+    WRITE = "WRITE"
+    DELETE = "DELETE"
+    ADMIN = "ADMIN"

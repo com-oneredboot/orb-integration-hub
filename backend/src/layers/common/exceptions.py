@@ -7,6 +7,7 @@ across the backend services.
 
 from typing import Any, Dict, Optional
 
+
 class OrbError(Exception):
     """Base exception for all ORB Integration Hub errors."""
     
@@ -23,6 +24,7 @@ class OrbError(Exception):
         self.details = details or {}
         super().__init__(message)
 
+
 class ValidationError(OrbError):
     """Raised when input validation fails."""
     
@@ -37,6 +39,7 @@ class ValidationError(OrbError):
             status_code=400,
             details=details
         )
+
 
 class AuthenticationError(OrbError):
     """Raised when authentication fails."""
@@ -53,6 +56,7 @@ class AuthenticationError(OrbError):
             details=details
         )
 
+
 class AuthorizationError(OrbError):
     """Raised when authorization fails."""
     
@@ -67,6 +71,7 @@ class AuthorizationError(OrbError):
             status_code=403,
             details=details
         )
+
 
 class ResourceNotFoundError(OrbError):
     """Raised when a requested resource is not found."""
@@ -83,6 +88,7 @@ class ResourceNotFoundError(OrbError):
             details=details
         )
 
+
 class DatabaseError(OrbError):
     """Raised when database operations fail."""
     
@@ -97,6 +103,7 @@ class DatabaseError(OrbError):
             status_code=500,
             details=details
         )
+
 
 class ExternalServiceError(OrbError):
     """Raised when external service calls fail."""
@@ -113,6 +120,7 @@ class ExternalServiceError(OrbError):
             status_code=502,
             details={"service": service, **(details or {})}
         )
+
 
 def format_error_response(error: OrbError) -> Dict[str, Any]:
     """
