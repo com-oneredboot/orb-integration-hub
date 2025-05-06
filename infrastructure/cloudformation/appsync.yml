@@ -179,6 +179,119 @@ Resources:
   # Users Resolvers
   # --------------------------------------------------- #
 
+  # Index-based Resolvers
+  # --------------------------------------------------- #
+  Applicationsapplication-name-indexResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationsQueryByName
+      DataSourceName: !GetAtt ApplicationsDataSource.Name
+      RequestMappingTemplate: |
+        # DynamoDB Query request mapping template
+      ResponseMappingTemplate: |
+        # DynamoDB Query response mapping template
+  ApplicationRolesrole-applications-indexResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationRolesQueryByRole_id
+      DataSourceName: !GetAtt ApplicationRolesDataSource.Name
+      RequestMappingTemplate: |
+        # DynamoDB Query request mapping template
+      ResponseMappingTemplate: |
+        # DynamoDB Query response mapping template
+  ApplicationUsersuser-applications-indexResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationUsersQueryByUser_id
+      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
+      RequestMappingTemplate: |
+        # DynamoDB Query request mapping template
+      ResponseMappingTemplate: |
+        # DynamoDB Query response mapping template
+  ApplicationUsersapplication-role-indexResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationUsersQueryByApplication_id
+      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
+      RequestMappingTemplate: |
+        # DynamoDB Query request mapping template
+      ResponseMappingTemplate: |
+        # DynamoDB Query response mapping template
+  ApplicationUsersuser-status-indexResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationUsersQueryByApplication_id
+      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
+      RequestMappingTemplate: |
+        # DynamoDB Query request mapping template
+      ResponseMappingTemplate: |
+        # DynamoDB Query response mapping template
+  Rolesuser-role-indexResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: RolesQueryByUser_id
+      DataSourceName: !GetAtt RolesDataSource.Name
+      RequestMappingTemplate: |
+        # DynamoDB Query request mapping template
+      ResponseMappingTemplate: |
+        # DynamoDB Query response mapping template
+  Rolesapplication-role-indexResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: RolesQueryByApplication_id
+      DataSourceName: !GetAtt RolesDataSource.Name
+      RequestMappingTemplate: |
+        # DynamoDB Query request mapping template
+      ResponseMappingTemplate: |
+        # DynamoDB Query response mapping template
+  Rolesrole-type-indexResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: RolesQueryByRole_id
+      DataSourceName: !GetAtt RolesDataSource.Name
+      RequestMappingTemplate: |
+        # DynamoDB Query request mapping template
+      ResponseMappingTemplate: |
+        # DynamoDB Query response mapping template
+  Usersuser-status-indexResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: UsersQueryByUser_id
+      DataSourceName: !GetAtt UsersDataSource.Name
+      RequestMappingTemplate: |
+        # DynamoDB Query request mapping template
+      ResponseMappingTemplate: |
+        # DynamoDB Query response mapping template
+  Usersuser-email-indexResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: UsersQueryByEmail
+      DataSourceName: !GetAtt UsersDataSource.Name
+      RequestMappingTemplate: |
+        # DynamoDB Query request mapping template
+      ResponseMappingTemplate: |
+        # DynamoDB Query response mapping template
+
 # --------------------------------------------------- #
 Outputs:
   IntegrationHubApiId:

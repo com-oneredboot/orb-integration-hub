@@ -14,13 +14,13 @@ export enum {{ attr.enum_type }} {
 
 export interface I{{ schema.table }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }}: {% if attr.type == 'timestamp' %}number{% elif attr.type == 'array' %}string[]{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'number' %}number{% elif attr.enum_type %}{{ attr.enum_type }}{% else %}string{% endif %}{% if attr.optional %}?{% endif %};
+  {{ attr.name }}: {% if attr.type == 'timestamp' %}number{% elif attr.type == 'array' or attr.name in ['groups', 'permissions'] %}string[]{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'number' %}number{% elif attr.enum_type %}{{ attr.enum_type }}{% else %}string{% endif %}{% if not attr.required %}?{% endif %};
 {% endfor %}
 }
 
 export class {{ schema.table }} implements I{{ schema.table }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }}: {% if attr.type == 'timestamp' %}number{% elif attr.type == 'array' %}string[]{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'number' %}number{% elif attr.enum_type %}{{ attr.enum_type }}{% else %}string{% endif %} = {% if attr.type == 'array' %}[]{% elif attr.type == 'boolean' %}false{% elif attr.type == 'number' %}0{% elif attr.enum_type %}{{ attr.enum_type }}.UNKNOWN{% else %}''{% endif %};
+  {{ attr.name }}: {{ attr.type }} = {% if attr.type == 'string[]' %}[]{% elif attr.type == 'boolean' %}false{% elif attr.type == 'number' %}0{% elif attr.enum_type %}{{ attr.enum_type }}.UNKNOWN{% elif not attr.required %}undefined{% else %}''{% endif %};
 {% endfor %}
 
   constructor(data: Partial<I{{ schema.table }}> = {}) {

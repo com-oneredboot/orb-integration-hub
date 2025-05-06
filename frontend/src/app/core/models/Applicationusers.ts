@@ -12,7 +12,7 @@ export enum ApplicationUserStatus {
 export interface IApplicationUsers {
   application_id: string;
   user_id: string;
-  role_id: string;
+  role_id: string?;
   status: ApplicationUserStatus;
   created_at: number;
   updated_at: number;
@@ -21,10 +21,10 @@ export interface IApplicationUsers {
 export class ApplicationUsers implements IApplicationUsers {
   application_id: string = '';
   user_id: string = '';
-  role_id: string = '';
-  status: ApplicationUserStatus = ApplicationUserStatus.UNKNOWN;
-  created_at: number = '';
-  updated_at: number = '';
+  role_id: string = undefined;
+  status: string = ApplicationUserStatus.UNKNOWN;
+  created_at: number = 0;
+  updated_at: number = 0;
 
   constructor(data: Partial<IApplicationUsers> = {}) {
     Object.entries(data).forEach(([key, value]) => {

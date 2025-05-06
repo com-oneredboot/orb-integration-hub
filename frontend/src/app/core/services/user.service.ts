@@ -13,10 +13,10 @@ import { BehaviorSubject, Observable } from 'rxjs';
 // Application Imports
 import {ApiService} from "./api.service";
 import {
-  UsersCreateInput, UsersQueryInput, UsersUpdateInput,
+  UsersCreateInput, UsersUpdateInput,
   UsersCreateResponse, UsersResponse, UsersUpdateResponse,
-  usersCreateMutation, usersQueryById, usersExistQuery, usersUpdateMutation
-} from "../graphql/user.graphql";
+  UsersCreateMutation, UsersQueryByUserId, UsersUpdateMutation
+} from "../graphql/Users.graphql";
 import { UserGroups, UserStatus } from "../models/user.enum";
 import { CognitoService } from "./cognito.service";
 import { AuthResponse } from "../models/auth.model";
@@ -71,7 +71,7 @@ export class UserService extends ApiService {
         user_id: uuidv4(),
         cognito_id: input.cognito_id,
         email: input.email,
-        groups: [UserGroups.USER] as UserGroups[],
+        groups: [UserGroups.USER] as string[],
         status: UserStatus.PENDING,
         created_at: timestamp,
         phone_verified: false,
@@ -79,11 +79,11 @@ export class UserService extends ApiService {
       };
 
       const response = await this.mutate(
-        usersCreateMutation, {"input": userCreateInput}, "apiKey") as GraphQLResult<UsersCreateResponse>;
+        UsersCreateMutation, {"input": userCreateInput}, "apiKey") as GraphQLResult<UsersCreateResponse>;
       console.debug('createUser Response: ', response);
 
       return {
-        usersQueryById: response.data.usersCreate
+        UsersQueryByUserId: response.data.UsersCreate
       } as UsersResponse;
 
     } catch (error) {
@@ -118,10 +118,10 @@ export class UserService extends ApiService {
       }
       
       return {
-        usersQueryById: {
-          status_code: 500,
-          message: errorMessage,
-          data: null
+        UsersQueryByUserId: {
+          StatusCode: 500,
+          Message: errorMessage,
+          Data: null
         }
       } as UsersResponse;
     }
@@ -132,7 +132,7 @@ export class UserService extends ApiService {
    * @param input UserQueryInput with backend-compatible fields
    * @param email Optional email to filter results client-side
    */
-  public async userExists(input: UsersQueryInput, email?: string): Promise<boolean> {
+  public async userExists(input: UsersQueryByUserId, email?: string): Promise<boolean> {
     const startTime = Date.now();
     console.debug('UserService [userExists]: Starting', { input, email, time: startTime });
 
@@ -150,17 +150,17 @@ export class UserService extends ApiService {
         elapsed: Date.now() - startTime
       });
 
-      if (response.data?.usersQueryById?.status_code === 404) {
+      if (response.data?.UsersQueryByUserId?.StatusCode === 404) {
         console.debug('UserService [userExists]: User not found (404)');
         return false;
       }
 
-      if (response.data?.usersQueryById?.status_code !== 200) {
-        console.debug('UserService [userExists]: Invalid status code', response.data?.usersQueryById?.status_code);
-        throw new Error(`Invalid response code: ${response.data?.usersQueryById?.status_code}`);
+      if (response.data?.UsersQueryByUserId?.StatusCode !== 200) {
+        console.debug('UserService [userExists]: Invalid status code', response.data?.UsersQueryByUserId?.StatusCode);
+        throw new Error(`Invalid response code: ${response.data?.UsersQueryByUserId?.StatusCode}`);
       }
 
-      const result = Boolean(response.data?.usersQueryById?.data?.user_id);
+      const result = Boolean(response.data?.UsersQueryByUserId?.Data?.user_id);
       console.debug('UserService [userExists]: Returning result', result);
       return result;
 
@@ -179,22 +179,22 @@ export class UserService extends ApiService {
    * @param code Verification code
    * @param email Optional email to filter results client-side
    */
-  public async emailVerify(input: UsersQueryInput, code: string, email?: string): Promise<AuthResponse> {
+  public async emailVerify(input: UsersQueryByUserIdInput, code: string, email?: string): Promise<AuthResponse> {
     console.debug('verifyEmail:', input, email ? { email } : '');
     try {
 
       // get the user
-      const userResponse = await this.userQueryById(input, email);
+      const userResponse = await this.userQueryByUserId(input, email);
       console.debug('User Response:', userResponse);
-      if (userResponse.usersQueryById?.status_code !== 200 || !userResponse.usersQueryById?.data) {
+      if (userResponse.UsersQueryByUserId?.StatusCode !== 200 || !userResponse.UsersQueryByUserId?.Data) {
         return {
-          status_code: userResponse.usersQueryById?.status_code,
+          status_code: userResponse.UsersQueryByUserId?.StatusCode,
           isSignedIn: false,
           message: 'Error getting user'
         };
       }
 
-      const emailVerifyResponse = await this.cognitoService.emailVerify(userResponse.usersQueryById.data.cognito_id, code);
+      const emailVerifyResponse = await this.cognitoService.emailVerify(userResponse.UsersQueryByUserId.Data.cognito_id, code);
       console.debug('verifyEmail Response: ', emailVerifyResponse);
 
       return emailVerifyResponse;
@@ -214,26 +214,26 @@ export class UserService extends ApiService {
    * @param input UserQueryInput with backend-compatible fields
    * @param email Optional email to filter results client-side
    */
-  public async userQueryById(input: UsersQueryInput, email?: string): Promise<UsersResponse> {
-    console.debug('userQueryById:', input, email ? { email } : '');
+  public async userQueryByUserId(input: UsersQueryInput, email?: string): Promise<UsersResponse> {
+    console.debug('userQueryByUserId:', input, email ? { email } : '');
     try {
       const response = await this.query(
-        usersQueryById,
+        UsersQueryByUserId,
         {input: input},
         'apiKey') as GraphQLResult<UsersResponse>;
 
-      console.debug('userQueryById Response: ', response);
+      console.debug('userQueryByUserId Response: ', response);
       
-      if (email && response.data?.usersQueryById?.data && 
-          response.data.usersQueryById.data.email !== email) {
+      if (email && response.data?.UsersQueryByUserId?.Data && 
+          response.data.UsersQueryByUserId.Data.email !== email) {
         
-        console.debug('userQueryById: Email mismatch, returning 404');
+        console.debug('userQueryByUserId: Email mismatch, returning 404');
         
         return {
-          usersQueryById: {
-            status_code: 404,
-            message: 'User not found',
-            data: null
+          UsersQueryByUserId: {
+            StatusCode: 404,
+            Message: 'User not found',
+            Data: null
           }
         } as UsersResponse;
       }
@@ -242,10 +242,10 @@ export class UserService extends ApiService {
     } catch (error) {
       console.error('Error getting user:', error);
       return {
-        usersQueryById: {
-          status_code: 500,
-          message: 'Error getting user',
-          data: null
+        UsersQueryByUserId: {
+          StatusCode: 500,
+          Message: 'Error getting user',
+          Data: null
         }
       } as UsersResponse;
     }
@@ -262,12 +262,12 @@ export class UserService extends ApiService {
 
     try {
       const userQueryInput = { email: email } as UsersQueryInput;
-      const userResponse = await this.userQueryById(userQueryInput, email);
+      const userResponse = await this.userQueryByUserId(userQueryInput, email);
 
-      user = userResponse.usersQueryById?.data;
-      if (userResponse.usersQueryById?.status_code !== 200 || !user) {
+      user = userResponse.UsersQueryByUserId?.Data;
+      if (userResponse.UsersQueryByUserId?.StatusCode !== 200 || !user) {
         return {
-          status_code: userResponse.usersQueryById?.status_code,
+          status_code: userResponse.UsersQueryByUserId?.StatusCode,
           isSignedIn: false,
           message: 'User Does Not Exist'
         };
@@ -476,7 +476,7 @@ export class UserService extends ApiService {
       if (!input.user_id) {
         console.error('Cannot update user: missing required user_id');
         return {
-          usersQueryByUserId: {
+          UsersQueryByUserId: {
             StatusCode: 400,
             Message: 'Missing required user_id',
             Data: null
@@ -518,24 +518,24 @@ export class UserService extends ApiService {
       console.debug('Update input:', updateInput);
 
       const response = await this.mutate(
-        usersUpdateMutation,
+        UsersUpdateMutation,
         { input: updateInput },
         "userPool"
       ) as GraphQLResult<UsersUpdateResponse>;
 
       console.debug('userUpdate Response:', response);
 
-      if (!response.data?.usersUpdate) {
+      if (!response.data?.UsersUpdate) {
         return {
-          usersQueryById: {
-            status_code: 500,
-            message: 'No response from update operation',
-            data: null
+          UsersQueryByUserId: {
+            StatusCode: 500,
+            Message: 'No response from update operation',
+            Data: null
           }
         };
       }
 
-      const updatedUser = await this.userQueryById({ user_id: input.user_id });
+      const updatedUser = await this.userQueryByUserId({ user_id: input.user_id });
 
       return updatedUser;
 
@@ -553,10 +553,10 @@ export class UserService extends ApiService {
       }
 
       return {
-        usersQueryById: {
-          status_code: 500,
-          message: errorMessage,
-          data: null
+        UsersQueryByUserId: {
+          StatusCode: 500,
+          Message: errorMessage,
+          Data: null
         }
       };
     }

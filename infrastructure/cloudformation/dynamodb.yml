@@ -40,6 +40,17 @@ Resources:
       AttributeDefinitions:
         - AttributeName: application_id
           AttributeType: S
+        - AttributeName: name
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: application-name-index
+          KeySchema:
+            - AttributeName: name
+              KeyType: HASH
+            - AttributeName: application_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
 
   ApplicationsTableArn:
     Type: AWS::SSM::Parameter
@@ -63,8 +74,19 @@ Resources:
         - AttributeName: application_id
           KeyType: HASH
       AttributeDefinitions:
+        - AttributeName: role_id
+          AttributeType: S
         - AttributeName: application_id
           AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: role-applications-index
+          KeySchema:
+            - AttributeName: role_id
+              KeyType: HASH
+            - AttributeName: application_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
 
   ApplicationRolesTableArn:
     Type: AWS::SSM::Parameter
@@ -88,8 +110,39 @@ Resources:
         - AttributeName: application_id
           KeyType: HASH
       AttributeDefinitions:
+        - AttributeName: user_id
+          AttributeType: S
+        - AttributeName: role_id
+          AttributeType: S
         - AttributeName: application_id
           AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: user-applications-index
+          KeySchema:
+            - AttributeName: user_id
+              KeyType: HASH
+            - AttributeName: application_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: application-role-index
+          KeySchema:
+            - AttributeName: application_id
+              KeyType: HASH
+            - AttributeName: role_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: user-status-index
+          KeySchema:
+            - AttributeName: application_id
+              KeyType: HASH
+            - AttributeName: status
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
 
   ApplicationUsersTableArn:
     Type: AWS::SSM::Parameter
@@ -113,8 +166,44 @@ Resources:
         - AttributeName: role_id
           KeyType: HASH
       AttributeDefinitions:
+        - AttributeName: role_type
+          AttributeType: S
         - AttributeName: role_id
           AttributeType: S
+        - AttributeName: application_id
+          AttributeType: S
+        - AttributeName: user_id
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: user-role-index
+          KeySchema:
+            - AttributeName: user_id
+              KeyType: HASH
+            - AttributeName: role_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: INCLUDE
+            NonKeyAttributes:
+              - role_name
+              - role_type
+              - permissions
+        - IndexName: application-role-index
+          KeySchema:
+            - AttributeName: application_id
+              KeyType: HASH
+            - AttributeName: role_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: KEYS_ONLY
+      LocalSecondaryIndexes:
+        - IndexName: role-type-index
+          KeySchema:
+            - AttributeName: role_id
+              KeyType: HASH
+            - AttributeName: role_type
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
 
   RolesTableArn:
     Type: AWS::SSM::Parameter
@@ -140,6 +229,27 @@ Resources:
       AttributeDefinitions:
         - AttributeName: user_id
           AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+        - AttributeName: email
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: user-status-index
+          KeySchema:
+            - AttributeName: user_id
+              KeyType: HASH
+            - AttributeName: status
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: user-email-index
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+            - AttributeName: user_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
 
   UsersTableArn:
     Type: AWS::SSM::Parameter

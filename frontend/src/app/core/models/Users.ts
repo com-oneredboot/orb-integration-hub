@@ -33,9 +33,9 @@ export class Users implements IUsers {
   first_name: string = '';
   last_name: string = '';
   groups: string[] = [];
-  status: UserStatus = UserStatus.UNKNOWN;
-  created_at: number = '';
-  updated_at: number = '';
+  status: string = UserStatus.UNKNOWN;
+  created_at: number = 0;
+  updated_at: number = 0;
 
   constructor(data: Partial<IUsers> = {}) {
     Object.entries(data).forEach(([key, value]) => {

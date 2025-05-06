@@ -29,11 +29,11 @@ export class Roles implements IRoles {
   user_id: string = '';
   application_id: string = '';
   role_name: string = '';
-  role_type: RoleType = RoleType.UNKNOWN;
+  role_type: string = RoleType.UNKNOWN;
   permissions: string[] = [];
-  status: RoleStatus = RoleStatus.UNKNOWN;
-  created_at: number = '';
-  updated_at: number = '';
+  status: string = RoleStatus.UNKNOWN;
+  created_at: number = 0;
+  updated_at: number = 0;
 
   constructor(data: Partial<IRoles> = {}) {
     Object.entries(data).forEach(([key, value]) => {

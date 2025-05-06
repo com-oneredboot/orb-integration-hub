@@ -136,6 +136,22 @@ Resources:
 
   {%- endfor %}
 
+  # Index-based Resolvers
+  # --------------------------------------------------- #
+  {% for resolver in resolver_resources %}
+  {{ resolver.table }}{{ resolver.index.name }}Resolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: {{ resolver.type }}
+      FieldName: {{ resolver.field }}
+      DataSourceName: !GetAtt {{ resolver.data_source }}.Name
+      RequestMappingTemplate: |
+        {{ resolver.request_template | indent(8) }}
+      ResponseMappingTemplate: |
+        {{ resolver.response_template | indent(8) }}
+  {% endfor %}
+
 # --------------------------------------------------- #
 Outputs:
   IntegrationHubApiId:

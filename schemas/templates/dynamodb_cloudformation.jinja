@@ -36,45 +36,48 @@ Resources:
       TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table | to_kebab_case }}
       BillingMode: PAY_PER_REQUEST
       KeySchema:
-        - AttributeName: {{ schema.partition_key }}
-          KeyType: HASH
-        {% if schema.sort_key and schema.sort_key != 'None' %}
-        - AttributeName: {{ schema.sort_key }}
-          KeyType: RANGE
-        {% endif %}
-      AttributeDefinitions:
-        - AttributeName: {{ schema.partition_key }}
-          AttributeType: S
-        {% if schema.sort_key and schema.sort_key != 'None' %}
-        - AttributeName: {{ schema.sort_key }}
-          AttributeType: S
-        {% endif %}
-        {% if schema.secondary_indexes %}
-        {% for index in schema.secondary_indexes %}
-        - AttributeName: {{ index.partition }}
-          AttributeType: S
-        {% if index.sort and index.sort != 'None' %}
-        - AttributeName: {{ index.sort }}
-          AttributeType: S
-        {% endif %}
+        {% for key in schema.key_schema %}
+        - AttributeName: {{ key.name }}
+          KeyType: {{ key.type }}
         {% endfor %}
-        {% endif %}
-      {% if schema.secondary_indexes %}
+      AttributeDefinitions:
+        {% for attr in schema.attribute_definitions %}
+        - AttributeName: {{ attr.AttributeName }}
+          AttributeType: {{ attr.AttributeType }}
+        {% endfor %}
+      {% if schema.global_secondary_indexes %}
       GlobalSecondaryIndexes:
-        {% for index in schema.secondary_indexes %}
-        - IndexName: {{ index.name }}
+        {% for gsi in schema.global_secondary_indexes %}
+        - IndexName: {{ gsi.IndexName }}
           KeySchema:
-            - AttributeName: {{ index.partition }}
-              KeyType: HASH
-            {% if index.sort and index.sort != 'None' %}
-            - AttributeName: {{ index.sort }}
-              KeyType: RANGE
-            {% endif %}
+            {% for key in gsi.KeySchema %}
+            - AttributeName: {{ key.AttributeName }}
+              KeyType: {{ key.KeyType }}
+            {% endfor %}
           Projection:
-            ProjectionType: {{ index.projection_type }}
-            {% if index.projection_type == 'INCLUDE' and index.projected_attributes %}
+            ProjectionType: {{ gsi.Projection.ProjectionType }}
+            {% if gsi.Projection.NonKeyAttributes %}
             NonKeyAttributes:
-              {% for attr in index.projected_attributes %}
+              {% for attr in gsi.Projection.NonKeyAttributes %}
+              - {{ attr }}
+              {% endfor %}
+            {% endif %}
+        {% endfor %}
+      {% endif %}
+      {% if schema.local_secondary_indexes %}
+      LocalSecondaryIndexes:
+        {% for lsi in schema.local_secondary_indexes %}
+        - IndexName: {{ lsi.IndexName }}
+          KeySchema:
+            {% for key in lsi.KeySchema %}
+            - AttributeName: {{ key.AttributeName }}
+              KeyType: {{ key.KeyType }}
+            {% endfor %}
+          Projection:
+            ProjectionType: {{ lsi.Projection.ProjectionType }}
+            {% if lsi.Projection.NonKeyAttributes %}
+            NonKeyAttributes:
+              {% for attr in lsi.Projection.NonKeyAttributes %}
               - {{ attr }}
               {% endfor %}
             {% endif %}

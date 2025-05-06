@@ -373,9 +373,11 @@ def generate_typescript_model(table: str, schema: TableSchema) -> None:
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('typescript_model.jinja')
         
-        # Process attributes to include enum values
+        # Process attributes to include enum values and map types to TypeScript
         processed_schema = copy.deepcopy(schema)
         for attr in processed_schema.attributes:
+            # Map type to TypeScript type
+            attr.type = to_typescript_type(attr.type)
             if attr.enum_type and not attr.enum_values:
                 # If enum type is specified but no values, try to get them from enums.yml
                 enums_path = os.path.join(SCRIPT_DIR, 'core', 'enums.yml')
@@ -469,9 +471,8 @@ def generate_cloudformation_template(schemas: Dict[str, TableSchema], template_p
         for table_name, schema in schemas.items():
             logger.info(f"Processing schema for table: {table_name}")
             logger.info(f"Schema data: table={schema.table}, partition_key={schema.partition_key}, sort_key={schema.sort_key}")
-            
             # Process keys
-            keys = [
+            key_schema = [
                 {
                     'name': schema.partition_key,
                     'type': 'HASH',
@@ -479,39 +480,55 @@ def generate_cloudformation_template(schemas: Dict[str, TableSchema], template_p
                 }
             ]
             if schema.sort_key and schema.sort_key != 'None':
-                keys.append({
+                key_schema.append({
                     'name': schema.sort_key,
                     'type': 'RANGE',
                     'attr_type': 'S'  # Default to string type
                 })
-            
+
             # Process indexes
-            indexes = []
+            global_secondary_indexes = []
+            local_secondary_indexes = []
+            attribute_names = set([schema.partition_key])
+            if schema.sort_key and schema.sort_key != 'None':
+                attribute_names.add(schema.sort_key)
             if schema.secondary_indexes:
                 for index in schema.secondary_indexes:
-                    index_keys = [
-                        {
-                            'name': index['partition'],
-                            'type': 'HASH'
-                        }
-                    ]
-                    if index.get('sort'):
-                        index_keys.append({
-                            'name': index['sort'],
-                            'type': 'RANGE'
-                        })
-                    indexes.append({
-                        'name': index['name'],
-                        'keys': index_keys,
-                        'projection_type': index.get('projection_type', 'ALL'),
-                        'projected_attributes': index.get('projected_attributes')
-                    })
-            
+                    # Add index attribute names
+                    attribute_names.add(index['partition'])
+                    if index.get('sort') and index['sort'] != 'None':
+                        attribute_names.add(index['sort'])
+                    proj_type = index.get('projection_type', 'ALL')
+                    proj_attrs = index.get('projected_attributes')
+                    index_def = {
+                        'IndexName': index['name'],
+                        'KeySchema': [
+                            {'AttributeName': index['partition'], 'KeyType': 'HASH'}
+                        ],
+                        'Projection': {'ProjectionType': proj_type}
+                    }
+                    if index.get('sort') and index['sort'] != 'None':
+                        index_def['KeySchema'].append({'AttributeName': index['sort'], 'KeyType': 'RANGE'})
+                    if proj_type == 'INCLUDE' and proj_attrs:
+                        index_def['Projection']['NonKeyAttributes'] = proj_attrs
+                    if index['type'] == 'GSI':
+                        global_secondary_indexes.append(index_def)
+                    elif index['type'] == 'LSI':
+                        local_secondary_indexes.append(index_def)
+
+            # Build AttributeDefinitions
+            attribute_definitions = [
+                {'AttributeName': name, 'AttributeType': 'S'} for name in attribute_names
+            ]
+
             processed_schemas[schema.table] = {
                 'table': schema.table,
                 'partition_key': schema.partition_key,
                 'sort_key': schema.sort_key,
-                'indexes': indexes
+                'key_schema': key_schema,
+                'attribute_definitions': attribute_definitions,
+                'global_secondary_indexes': global_secondary_indexes,
+                'local_secondary_indexes': local_secondary_indexes
             }
             logger.info(f"Processed schema: {processed_schemas[schema.table]}")
         
@@ -543,6 +560,7 @@ def generate_appsync_template(schemas: Dict[str, TableSchema], output_path: str)
 
         # Process schemas into the format expected by the template
         processed_schemas = {}
+        resolver_resources = []
         for table_name, schema in schemas.items():
             logger.info(f"Processing schema for table: {schema.table}")
             logger.info(f"Schema data: table={schema.table}, partition_key={schema.partition_key}, sort_key={schema.sort_key}")
@@ -550,13 +568,25 @@ def generate_appsync_template(schemas: Dict[str, TableSchema], output_path: str)
                 'table': schema.table,
                 'attributes': schema.attributes,
                 'partition_key': schema.partition_key,
-                'sort_key': schema.sort_key
+                'sort_key': schema.sort_key,
+                'secondary_indexes': schema.secondary_indexes or []
             }
-            logger.info(f"Processed schema: {processed_schemas[schema.table]}")
+            # Generate resolvers for each secondary index
+            if schema.secondary_indexes:
+                for index in schema.secondary_indexes:
+                    resolver_resources.append({
+                        'table': schema.table,
+                        'index': index,
+                        'field': f"{schema.table}QueryBy{index['partition'][0].upper() + index['partition'][1:]}" if index.get('partition') else '',
+                        'type': 'Query',
+                        'data_source': f"{schema.table}DataSource",
+                        'request_template': '# DynamoDB Query request mapping template',
+                        'response_template': '# DynamoDB Query response mapping template'
+                    })
 
         # Generate template
         logger.info("Rendering template...")
-        rendered = template.render(schemas=processed_schemas)
+        rendered = template.render(schemas=processed_schemas, resolver_resources=resolver_resources)
         logger.info("Template rendered successfully")
 
         # Write the processed template
@@ -600,6 +630,38 @@ def move_enum_files():
             shutil.move(src_path, dst_path)
             logger.info(f"Moved and renamed {src_name} to {dst_path}")
 
+def generate_typescript_graphql_ops(table: str, schema: TableSchema) -> None:
+    """Generate TypeScript GraphQL operation file for a table."""
+    try:
+        jinja_env = setup_jinja_env()
+        template = jinja_env.get_template('typescript_graphql_ops.jinja')
+
+        # Define operations (example: you may want to expand this based on your schema)
+        operations = []
+        # Query by partition key
+        op_name = f'{to_pascal_case(table)}QueryBy{to_pascal_case(schema.partition_key)}'
+        gql = f"""
+query {op_name}($input: {to_pascal_case(table)}QueryBy{to_pascal_case(schema.partition_key)}Input!) {{
+  {op_name}(input: $input) {{
+    StatusCode
+    Message
+    Data {{
+      ...fields
+    }}
+  }}
+}}
+"""
+        operations.append({'name': op_name, 'gql': gql})
+        # You can add more operations (mutations, etc.) here as needed
+
+        content = template.render(schema=schema, operations=operations)
+        output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'graphql', f'{table.lower()}.graphql.ts')
+        write_file(output_path, content)
+        logger.info(f'Generated TypeScript GraphQL ops for {table}')
+    except Exception as e:
+        logger.error(f'Failed to generate TypeScript GraphQL ops for {table}: {str(e)}')
+        raise
+
 def main():
     """Main entry point for the schema generator."""
     try:
@@ -613,6 +675,7 @@ def main():
         for table, schema in schemas.items():
             generate_python_model(table, schema)
             generate_typescript_model(table, schema)
+            generate_typescript_graphql_ops(table, schema)
         
         # Move/rename enum files for consistency
         move_enum_files()

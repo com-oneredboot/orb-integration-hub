@@ -187,7 +187,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       console.log('Updating user profile:', updateInput);
       
       // Make API call to update the user
-      const response = await this.userService.userQueryById(updateInput);
+      const response = await this.userService.userQueryByUserId(updateInput);
       
       if (response.usersQueryByUserId?.StatusCode === 200) {
         const updatedUser = response.usersQueryByUserId.Data;

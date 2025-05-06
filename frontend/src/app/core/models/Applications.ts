@@ -22,9 +22,9 @@ export class Applications implements IApplications {
   application_id: string = '';
   name: string = '';
   description: string = '';
-  status: ApplicationStatus = ApplicationStatus.UNKNOWN;
-  created_at: number = '';
-  updated_at: number = '';
+  status: string = ApplicationStatus.UNKNOWN;
+  created_at: number = 0;
+  updated_at: number = 0;
   user_id: string = '';
 
   constructor(data: Partial<IApplications> = {}) {
