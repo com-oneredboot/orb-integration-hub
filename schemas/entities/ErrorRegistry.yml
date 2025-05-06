@@ -1,0 +1,23 @@
+type: static
+name: ErrorRegistry
+attributes:
+  code:
+    type: string
+    required: true
+    description: Error code (e.g., ORB-AUTH-001)
+  message:
+    type: string
+    required: true
+    description: User-friendly error message
+  description:
+    type: string
+    required: true
+    description: Technical error description
+  solution:
+    type: string
+    required: true
+    description: Suggested solution for the error
+  details:
+    type: object
+    required: false
+    description: Additional context or metadata for the error 

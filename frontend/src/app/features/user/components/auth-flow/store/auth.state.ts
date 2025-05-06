@@ -5,7 +5,7 @@
 
 // Application Imports
 import { IUsers } from '../../../../../core/models/Users.model';
-import { UserGroups } from "../../../../../core/models/Users.enum";
+import { UserGroup } from "../../../../../core/models/UserGroup.enum";
 
 export enum AuthSteps {
   EMAIL,
@@ -56,9 +56,9 @@ export interface AuthState {
   };
 
   // Group related
-  currentGroup: UserGroups | null;
-  availableGroups: UserGroups[];
-  groupPriority: UserGroups[];
+  currentGroup: UserGroup | null;
+  availableGroups: UserGroup[];
+  groupPriority: UserGroup[];
 
   // Email
   emailVerified: boolean;
@@ -67,7 +67,7 @@ export interface AuthState {
   sessionActive: boolean;
   lastActivity: number | null;
 
-  userGroups: UserGroups[];
+  userGroups: UserGroup[];
   phoneValidationExpiresAt: number | null;
 }
 

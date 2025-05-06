@@ -20,8 +20,8 @@ mutation ApplicationsUpdate($input: ApplicationsUpdateInput!) {
 }
 `;
 export const ApplicationsDeleteMutation = /* GraphQL */ `
-mutation ApplicationsDelete($input: ApplicationsDeleteInput!) {
-  ApplicationsDelete(input: $input) {
+mutation ApplicationsDelete($id: ID!) {
+  ApplicationsDelete(id: $id) {
     StatusCode
     Message
     Data { ...fields }
@@ -34,6 +34,28 @@ query ApplicationsQueryByApplicationId($input: ApplicationsQueryByApplicationIdI
     StatusCode
     Message
     Data { ...fields }
+  }
+}
+`;
+export const ApplicationsQueryByName = /* GraphQL */ `
+query ApplicationsQueryByName($input: ApplicationsQueryByNameInput!) {
+  ApplicationsQueryByName(input: $input) {
+    StatusCode
+    Message
+    Data { ...fields }
+  }
+}
+`;
+
+// For each secondary index, generate a query operation
+export const ApplicationsQueryByName = /* GraphQL */ `
+query ApplicationsQueryByName($input: ApplicationsQueryByNameInput!) {
+  ApplicationsQueryByName(input: $input) {
+    StatusCode
+    Message
+    Data {
+      // ...fields
+    }
   }
 }
 `;

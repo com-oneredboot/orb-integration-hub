@@ -5,4 +5,19 @@
 export const {{ op.name }} = /* GraphQL */ `
 {{ op.gql.strip() }}
 `;
+{% endfor %}
+
+// For each secondary index, generate a query operation
+{% for index in schema.secondary_indexes %}
+export const {{ schema.table }}QueryBy{{ index.partition|to_pascal_case }} = /* GraphQL */ `
+query {{ schema.table }}QueryBy{{ index.partition|to_pascal_case }}($input: {{ schema.table }}QueryBy{{ index.partition|to_pascal_case }}Input!) {
+  {{ schema.table }}QueryBy{{ index.partition|to_pascal_case }}(input: $input) {
+    StatusCode
+    Message
+    Data {
+      // ...fields
+    }
+  }
+}
+`;
 {% endfor %} 

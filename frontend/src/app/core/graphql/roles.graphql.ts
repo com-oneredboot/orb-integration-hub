@@ -20,8 +20,8 @@ mutation RolesUpdate($input: RolesUpdateInput!) {
 }
 `;
 export const RolesDeleteMutation = /* GraphQL */ `
-mutation RolesDelete($input: RolesDeleteInput!) {
-  RolesDelete(input: $input) {
+mutation RolesDelete($id: ID!) {
+  RolesDelete(id: $id) {
     StatusCode
     Message
     Data { ...fields }
@@ -34,6 +34,68 @@ query RolesQueryByRoleId($input: RolesQueryByRoleIdInput!) {
     StatusCode
     Message
     Data { ...fields }
+  }
+}
+`;
+export const RolesQueryByUserId = /* GraphQL */ `
+query RolesQueryByUserId($input: RolesQueryByUserIdInput!) {
+  RolesQueryByUserId(input: $input) {
+    StatusCode
+    Message
+    Data { ...fields }
+  }
+}
+`;
+export const RolesQueryByApplicationId = /* GraphQL */ `
+query RolesQueryByApplicationId($input: RolesQueryByApplicationIdInput!) {
+  RolesQueryByApplicationId(input: $input) {
+    StatusCode
+    Message
+    Data { ...fields }
+  }
+}
+`;
+export const RolesQueryByRoleId = /* GraphQL */ `
+query RolesQueryByRoleId($input: RolesQueryByRoleIdInput!) {
+  RolesQueryByRoleId(input: $input) {
+    StatusCode
+    Message
+    Data { ...fields }
+  }
+}
+`;
+
+// For each secondary index, generate a query operation
+export const RolesQueryByUserId = /* GraphQL */ `
+query RolesQueryByUserId($input: RolesQueryByUserIdInput!) {
+  RolesQueryByUserId(input: $input) {
+    StatusCode
+    Message
+    Data {
+      // ...fields
+    }
+  }
+}
+`;
+export const RolesQueryByApplicationId = /* GraphQL */ `
+query RolesQueryByApplicationId($input: RolesQueryByApplicationIdInput!) {
+  RolesQueryByApplicationId(input: $input) {
+    StatusCode
+    Message
+    Data {
+      // ...fields
+    }
+  }
+}
+`;
+export const RolesQueryByRoleId = /* GraphQL */ `
+query RolesQueryByRoleId($input: RolesQueryByRoleIdInput!) {
+  RolesQueryByRoleId(input: $input) {
+    StatusCode
+    Message
+    Data {
+      // ...fields
+    }
   }
 }
 `;

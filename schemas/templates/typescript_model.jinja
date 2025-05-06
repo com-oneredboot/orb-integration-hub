@@ -11,49 +11,16 @@ import { {{ attr.enum_type }} } from './{{ attr.enum_type }}.enum';
 {% endif %}
 {% endfor %}
 
+{% if is_static %}
 export interface I{{ schema.table }} {
 {% for attr in schema.attributes %}
   {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}{% elif attr.type == 'timestamp' %}number{% elif attr.type == 'array' or attr.name in ['groups', 'permissions'] %}string[]{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'number' %}number{% else %}string{% endif %};
 {% endfor %}
 }
 
-// CreateInput
-export type {{ schema.table }}CreateInput = {
-{% for attr in schema.attributes if attr.name != schema.partition_key %}
-  {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}{% elif attr.type == 'timestamp' %}number{% elif attr.type == 'array' or attr.name in ['groups', 'permissions'] %}string[]{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'number' %}number{% else %}string{% endif %};
-{% endfor %}
-};
-
-// UpdateInput
-export type {{ schema.table }}UpdateInput = Partial<I{{ schema.table }}>;
-
-// QueryBy<PartitionKey>Input
-export type {{ schema.table }}QueryBy{{ schema.partition_key|to_pascal_case }}Input = {
-  {{ schema.partition_key }}: string;
-};
-
-// Response types
-export type {{ schema.table }}CreateResponse = {
-  StatusCode: number;
-  Message: string;
-  Data: I{{ schema.table }};
-};
-export type {{ schema.table }}UpdateResponse = {
-  StatusCode: number;
-  Message: string;
-  Data: I{{ schema.table }};
-};
-export type {{ schema.table }}Response = {
-  {{ schema.table }}QueryBy{{ schema.partition_key|to_pascal_case }}: {
-    StatusCode: number;
-    Message: string;
-    Data: I{{ schema.table }};
-  };
-};
-
 export class {{ schema.table }} implements I{{ schema.table }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}{% elif attr.type == 'timestamp' %}number{% elif attr.type == 'array' or attr.name in ['groups', 'permissions'] %}string[]{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'number' %}number{% else %}string{% endif %} = {% if attr.enum_type %}{{ attr.enum_type }}.UNKNOWN{% elif attr.type == 'string[]' %}[]{% elif attr.type == 'boolean' %}false{% elif attr.type == 'number' %}0{% elif not attr.required %}undefined{% else %}''{% endif %};
+  {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}{% elif attr.type == 'timestamp' %}number{% elif attr.type == 'array' or attr.name in ['groups', 'permissions'] %}string[]{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'number' %}number{% else %}string{% endif %} = {% if attr.enum_type %}{{ attr.enum_type }}.UNKNOWN{% elif attr.type == 'string[]' %}[]{% elif attr.type == 'boolean' %}false{% elif attr.type == 'number' %}0{% elif attr.type == 'string' %}''{% elif not attr.required %}''{% else %}''{% endif %};
 {% endfor %}
 
   constructor(data: Partial<I{{ schema.table }}> = {}) {
@@ -70,3 +37,72 @@ export class {{ schema.table }} implements I{{ schema.table }} {
     });
   }
 }
+{% else %}
+// CreateInput
+export type {{ schema.table }}CreateInput = {
+{% for attr in schema.attributes if attr.name != schema.partition_key %}
+  {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}{% elif attr.type == 'timestamp' %}number{% elif attr.type == 'array' or attr.name in ['groups', 'permissions'] %}string[]{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'number' %}number{% else %}string{% endif %};
+{% endfor %}
+};
+
+// UpdateInput
+export type {{ schema.table }}UpdateInput = Partial<I{{ schema.table }}>;
+
+// QueryBy<PartitionKey>Input
+export type {{ schema.table }}QueryBy{{ schema.partition_key|to_pascal_case }}Input = {
+  {{ schema.partition_key }}: string;
+};
+
+// QueryBy<SecondaryIndex>Input types
+{% for index in schema.secondary_indexes %}
+export type {{ schema.table }}QueryBy{{ index.partition|to_pascal_case }}Input = {
+  {{ index.partition }}: string;{% if index.sort and index.sort != 'None' %}
+  {{ index.sort }}: string;{% endif %}
+};
+{% endfor %}
+
+// Response types
+export type {{ schema.table }}CreateResponse = {
+  StatusCode: number;
+  Message: string;
+  Data: I{{ schema.table }} | null;
+};
+export type {{ schema.table }}UpdateResponse = {
+  StatusCode: number;
+  Message: string;
+  Data: I{{ schema.table }} | null;
+};
+export type {{ schema.table }}Response = {
+  {{ schema.table }}QueryBy{{ schema.partition_key|to_pascal_case }}: {
+    StatusCode: number;
+    Message: string;
+    Data: I{{ schema.table }} | null;
+  };
+};
+
+export interface I{{ schema.table }} {
+{% for attr in schema.attributes %}
+  {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}{% elif attr.type == 'timestamp' %}number{% elif attr.type == 'array' or attr.name in ['groups', 'permissions'] %}string[]{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'number' %}number{% else %}string{% endif %};
+{% endfor %}
+}
+
+export class {{ schema.table }} implements I{{ schema.table }} {
+{% for attr in schema.attributes %}
+  {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}{% elif attr.type == 'timestamp' %}number{% elif attr.type == 'array' or attr.name in ['groups', 'permissions'] %}string[]{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'number' %}number{% else %}string{% endif %} = {% if attr.enum_type %}{{ attr.enum_type }}.UNKNOWN{% elif attr.type == 'string[]' %}[]{% elif attr.type == 'boolean' %}false{% elif attr.type == 'number' %}0{% elif attr.type == 'string' %}''{% elif not attr.required %}''{% else %}''{% endif %};
+{% endfor %}
+
+  constructor(data: Partial<I{{ schema.table }}> = {}) {
+    Object.entries(data).forEach(([key, value]) => {
+      if (key in this) {
+        if (Array.isArray(value) && this[key] instanceof Array && this[key].length === 0) {
+          this[key] = value as typeof this[key];
+        } else if (typeof value === 'string' && this[key] instanceof Object && 'UNKNOWN' in this[key]) {
+          this[key] = (this[key] as any)[value] || (this[key] as any).UNKNOWN;
+        } else {
+          this[key] = value as any;
+        }
+      }
+    });
+  }
+}
+{% endif %}

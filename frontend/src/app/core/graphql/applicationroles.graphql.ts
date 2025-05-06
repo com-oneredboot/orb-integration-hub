@@ -20,8 +20,8 @@ mutation ApplicationRolesUpdate($input: ApplicationRolesUpdateInput!) {
 }
 `;
 export const ApplicationRolesDeleteMutation = /* GraphQL */ `
-mutation ApplicationRolesDelete($input: ApplicationRolesDeleteInput!) {
-  ApplicationRolesDelete(input: $input) {
+mutation ApplicationRolesDelete($id: ID!) {
+  ApplicationRolesDelete(id: $id) {
     StatusCode
     Message
     Data { ...fields }
@@ -34,6 +34,28 @@ query ApplicationRolesQueryByApplicationId($input: ApplicationRolesQueryByApplic
     StatusCode
     Message
     Data { ...fields }
+  }
+}
+`;
+export const ApplicationRolesQueryByRoleId = /* GraphQL */ `
+query ApplicationRolesQueryByRoleId($input: ApplicationRolesQueryByRoleIdInput!) {
+  ApplicationRolesQueryByRoleId(input: $input) {
+    StatusCode
+    Message
+    Data { ...fields }
+  }
+}
+`;
+
+// For each secondary index, generate a query operation
+export const ApplicationRolesQueryByRoleId = /* GraphQL */ `
+query ApplicationRolesQueryByRoleId($input: ApplicationRolesQueryByRoleIdInput!) {
+  ApplicationRolesQueryByRoleId(input: $input) {
+    StatusCode
+    Message
+    Data {
+      // ...fields
+    }
   }
 }
 `;

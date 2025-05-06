@@ -5,15 +5,6 @@
 // Import enums used in this model
 import { ApplicationRoleStatus } from './ApplicationRoleStatus.enum';
 
-export interface IApplicationRoles {
-  application_id: string;
-  role_id: string;
-  description: string;
-  status: ApplicationRoleStatus;
-  created_at: number;
-  updated_at: number;
-}
-
 // CreateInput
 export type ApplicationRolesCreateInput = {
   role_id: string;
@@ -31,29 +22,42 @@ export type ApplicationRolesQueryByApplicationIdInput = {
   application_id: string;
 };
 
+// QueryBy<SecondaryIndex>Input types
+export type ApplicationRolesQueryByRoleIdInput = {
+  role_id: string;  application_id: string;};
+
 // Response types
 export type ApplicationRolesCreateResponse = {
   StatusCode: number;
   Message: string;
-  Data: IApplicationRoles;
+  Data: IApplicationRoles | null;
 };
 export type ApplicationRolesUpdateResponse = {
   StatusCode: number;
   Message: string;
-  Data: IApplicationRoles;
+  Data: IApplicationRoles | null;
 };
 export type ApplicationRolesResponse = {
   ApplicationRolesQueryByApplicationId: {
     StatusCode: number;
     Message: string;
-    Data: IApplicationRoles;
+    Data: IApplicationRoles | null;
   };
 };
+
+export interface IApplicationRoles {
+  application_id: string;
+  role_id: string;
+  description: string;
+  status: ApplicationRoleStatus;
+  created_at: number;
+  updated_at: number;
+}
 
 export class ApplicationRoles implements IApplicationRoles {
   application_id: string = '';
   role_id: string = '';
-  description: string = undefined;
+  description: string = '';
   status: ApplicationRoleStatus = ApplicationRoleStatus.UNKNOWN;
   created_at: number = 0;
   updated_at: number = 0;

@@ -6,18 +6,6 @@
 import { RoleType } from './RoleType.enum';
 import { RoleStatus } from './RoleStatus.enum';
 
-export interface IRoles {
-  role_id: string;
-  user_id: string;
-  application_id: string;
-  role_name: string;
-  role_type: RoleType;
-  permissions: string[];
-  status: RoleStatus;
-  created_at: number;
-  updated_at: number;
-}
-
 // CreateInput
 export type RolesCreateInput = {
   user_id: string;
@@ -38,24 +26,44 @@ export type RolesQueryByRoleIdInput = {
   role_id: string;
 };
 
+// QueryBy<SecondaryIndex>Input types
+export type RolesQueryByUserIdInput = {
+  user_id: string;  role_id: string;};
+export type RolesQueryByApplicationIdInput = {
+  application_id: string;  role_id: string;};
+export type RolesQueryByRoleIdInput = {
+  role_id: string;  role_type: string;};
+
 // Response types
 export type RolesCreateResponse = {
   StatusCode: number;
   Message: string;
-  Data: IRoles;
+  Data: IRoles | null;
 };
 export type RolesUpdateResponse = {
   StatusCode: number;
   Message: string;
-  Data: IRoles;
+  Data: IRoles | null;
 };
 export type RolesResponse = {
   RolesQueryByRoleId: {
     StatusCode: number;
     Message: string;
-    Data: IRoles;
+    Data: IRoles | null;
   };
 };
+
+export interface IRoles {
+  role_id: string;
+  user_id: string;
+  application_id: string;
+  role_name: string;
+  role_type: RoleType;
+  permissions: string[];
+  status: RoleStatus;
+  created_at: number;
+  updated_at: number;
+}
 
 export class Roles implements IRoles {
   role_id: string = '';

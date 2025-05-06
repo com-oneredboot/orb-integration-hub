@@ -12,11 +12,12 @@ import { Store } from '@ngrx/store';
 
 // Application Imports
 import { UserService } from "../../../../../core/services/user.service";
-import { UsersQueryByEmailInput } from "../../../../../core/graphql/Users.graphql";
+import { UsersQueryByEmail } from "../../../../../core/graphql/Users.graphql";
 import { AuthActions } from "./auth.actions";
 import * as fromAuth from "./auth.selectors";
 import { CognitoService } from "../../../../../core/services/cognito.service";
-import { ErrorRegistry, OrbitError } from "../../../../../core/models/error-registry.model";
+import { ErrorRegistryUtil } from "../../../../../core/models/ErrorRegistry.util";
+import { UsersQueryByEmailInput } from "../../../../../core/models/Users.model";
 
 @Injectable()
 export class AuthEffects {
@@ -27,7 +28,7 @@ export class AuthEffects {
       tap(action => console.debug('Effect [CheckEmail]: Starting', action)),
       switchMap(({ email }) => {
         console.debug('Effect [CheckEmail]: Making service call');
-        const userInput: UsersQueryByEmailInput = { email: email };
+        const userInput: UsersQueryByEmailInput = { email: email, user_id: '' };
         
         return from(this.userService.userExists(userInput, email)).pipe(
           tap(result => console.debug('Effect [CheckEmail]: Service returned', result)),
@@ -38,10 +39,10 @@ export class AuthEffects {
           catchError((error: Error) => {
             // Use error registry to log and format error
             const errorCode = 'ORB-API-003'; // Invalid input for GraphQL operation
-            ErrorRegistry.logError(errorCode, { originalError: error });
+            ErrorRegistryUtil.logError(errorCode, { originalError: error });
             
             return of(AuthActions.checkEmailFailure({
-              error: ErrorRegistry.getErrorMessage(errorCode)
+              error: ErrorRegistryUtil.getErrorMessage(errorCode)
             }));
           }),
           tap(resultAction => console.debug('Effect [CheckEmail]: Emitting action', resultAction))
@@ -50,9 +51,9 @@ export class AuthEffects {
       catchError(error => {
         console.error('Effect [CheckEmail]: Outer error caught', error);
         const errorCode = 'ORB-SYS-001'; // Unexpected error
-        ErrorRegistry.logError(errorCode, { originalError: error });
+        ErrorRegistryUtil.logError(errorCode, { originalError: error });
         return of(AuthActions.checkEmailFailure({
-          error: ErrorRegistry.getErrorMessage(errorCode)
+          error: ErrorRegistryUtil.getErrorMessage(errorCode)
         }));
       })
     )
@@ -75,12 +76,12 @@ export class AuthEffects {
           catchError(error => {
             // Use error registry to handle the error
             const errorCode = 'ORB-API-002'; // Default to GraphQL mutation error
-            ErrorRegistry.logError(errorCode, { originalError: error });
+            ErrorRegistryUtil.logError(errorCode, { originalError: error });
             
             return of(AuthActions.createUserFailure({
               error: error instanceof Error ? 
                 `[${errorCode}] ${error.message}` : 
-                ErrorRegistry.getErrorMessage(errorCode)
+                ErrorRegistryUtil.getErrorMessage(errorCode)
             }));
           })
         );

@@ -269,30 +269,54 @@ def load_schemas() -> Dict[str, TableSchema]:
     try:
         # List all files in the schemas/entities directory
         entities = [f for f in os.listdir(os.path.join(SCRIPT_DIR, 'entities')) if f.endswith('.yml')]
-            
+        
         schemas = {}
+        static_schemas = {}
         for entity in entities:
             print(f"Reading entity: {entity}")
             # Load the schema file
             with open(os.path.join(SCRIPT_DIR, 'entities', entity), 'r') as f:
                 schema_data = yaml.safe_load(f)
 
-                # Use the table name from the schema file
-                table = schema_data['table']
-                print(f"table: {table}")
-                
+            # Determine model type
+            model_type = schema_data.get('type', 'table')
+            if model_type == 'static':
+                # For static models, use 'name' instead of 'table'
+                name = schema_data['name']
+                attributes = []
+                for attr_name, attr_data in schema_data['attributes'].items():
+                    attr_type = attr_data['type']
+                    description = attr_data.get('description', '')
+                    required = attr_data.get('required', True)
+                    enum_type = attr_data.get('enum_type')
+                    enum_values = attr_data.get('enum_values', []) if enum_type else None
+                    attributes.append(Attribute(
+                        name=attr_name,
+                        type=attr_type,
+                        description=description,
+                        required=required,
+                        enum_type=enum_type,
+                        enum_values=enum_values
+                    ))
+                static_schemas[name] = TableSchema(
+                    table=name,
+                    attributes=attributes,
+                    partition_key='',
+                    sort_key='None',
+                    secondary_indexes=[]
+                )
+                continue
+            # Use the table name from the schema file
+            table = schema_data['table']
+            print(f"table: {table}")
             # Extract attributes and keys
             attributes = []
             for attr_name, attr_data in schema_data['model']['attributes'].items():
-                # Get basic attribute info
                 attr_type = attr_data['type']
                 description = attr_data.get('description', '')
                 required = attr_data.get('required', True)
-                
-                # Get enum info if present
                 enum_type = attr_data.get('enum_type')
                 enum_values = attr_data.get('enum_values', []) if enum_type else None
-                
                 attributes.append(Attribute(
                     name=attr_name,
                     type=attr_type,
@@ -301,12 +325,8 @@ def load_schemas() -> Dict[str, TableSchema]:
                     enum_type=enum_type,
                     enum_values=enum_values
                 ))
-                
-            # Get partition and sort keys
             partition_key = schema_data['model']['keys']['primary']['partition']
-            sort_key = schema_data['model']['keys'].get('sort', 'None')  # Default to 'None' string
-            
-            # Get secondary indexes
+            sort_key = schema_data['model']['keys'].get('sort', 'None')
             secondary_indexes = []
             if 'secondary' in schema_data['model']['keys']:
                 for index in schema_data['model']['keys']['secondary']:
@@ -314,12 +334,10 @@ def load_schemas() -> Dict[str, TableSchema]:
                         'name': index['name'],
                         'type': index['type'],
                         'partition': index['partition'],
-                        'sort': index.get('sort', 'None'),  # Default to 'None' string
+                        'sort': index.get('sort', 'None'),
                         'projection_type': index.get('projection_type', 'ALL'),
                         'projected_attributes': index.get('projected_attributes')
                     })
-            
-            # Create TableSchema
             schemas[table] = TableSchema(
                 table=table,
                 attributes=attributes,
@@ -327,9 +345,7 @@ def load_schemas() -> Dict[str, TableSchema]:
                 sort_key=sort_key,
                 secondary_indexes=secondary_indexes
             )
-            
-        return schemas
-        
+        return schemas, static_schemas
     except Exception as e:
         logger.error(f'Failed to load schemas: {str(e)}')
         raise
@@ -360,7 +376,7 @@ def generate_python_model(table: str, schema: TableSchema) -> None:
         logger.error(f'Failed to generate Python model for {table}: {str(e)}')
         raise
 
-def generate_typescript_model(table: str, schema: TableSchema) -> None:
+def generate_typescript_model(table: str, schema: TableSchema, is_static=False) -> None:
     try:
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('typescript_model.jinja')
@@ -376,7 +392,10 @@ def generate_typescript_model(table: str, schema: TableSchema) -> None:
                             attr.enum_values = enums_data[attr.enum_type]
                         else:
                             logger.warning(f"Enum type {attr.enum_type} not found in enums.yml")
-        model_content = template.render(schema=processed_schema)
+        # Ensure secondary_indexes is always present
+        if not hasattr(processed_schema, 'secondary_indexes') or processed_schema.secondary_indexes is None:
+            processed_schema.secondary_indexes = []
+        model_content = template.render(schema=processed_schema, is_static=is_static)
         file_name = f'{table}.model.ts'
         output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models', file_name)
         write_file(output_path, model_content)
@@ -599,71 +618,104 @@ def generate_typescript_graphql_ops(table: str, schema: TableSchema) -> None:
     try:
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('typescript_graphql_ops.jinja')
-        operations = []
-        # Partition key in PascalCase
+        processed_schema = copy.deepcopy(schema)
+        if not hasattr(processed_schema, 'secondary_indexes') or processed_schema.secondary_indexes is None:
+            processed_schema.secondary_indexes = []
         pk_pascal = to_pascal_case(schema.partition_key)
-        # CRUD operation names
-        op_names = {
-            'create': f'{table}Create',
-            'update': f'{table}Update',
-            'delete': f'{table}Delete',
-            'query_by_pk': f'{table}QueryBy{pk_pascal}'
-        }
+        sk_pascal = to_pascal_case(schema.sort_key) if schema.sort_key and schema.sort_key != 'None' else None
+        # Build CRUD operations
+        operations = []
         # Create
         operations.append({
-            'name': op_names['create'] + 'Mutation',
-            'gql': f"""
-mutation {op_names['create']}($input: {op_names['create']}Input!) {{
-  {op_names['create']}(input: $input) {{
+            'name': f'{table}CreateMutation',
+            'gql': f'''
+mutation {table}Create($input: {table}CreateInput!) {{
+  {table}Create(input: $input) {{
     StatusCode
     Message
     Data {{ ...fields }}
   }}
-}}
-"""
+}}'''
         })
         # Update
         operations.append({
-            'name': op_names['update'] + 'Mutation',
-            'gql': f"""
-mutation {op_names['update']}($input: {op_names['update']}Input!) {{
-  {op_names['update']}(input: $input) {{
+            'name': f'{table}UpdateMutation',
+            'gql': f'''
+mutation {table}Update($input: {table}UpdateInput!) {{
+  {table}Update(input: $input) {{
     StatusCode
     Message
     Data {{ ...fields }}
   }}
-}}
-"""
+}}'''
         })
         # Delete
         operations.append({
-            'name': op_names['delete'] + 'Mutation',
-            'gql': f"""
-mutation {op_names['delete']}($input: {op_names['delete']}Input!) {{
-  {op_names['delete']}(input: $input) {{
+            'name': f'{table}DeleteMutation',
+            'gql': f'''
+mutation {table}Delete($id: ID!) {{
+  {table}Delete(id: $id) {{
     StatusCode
     Message
     Data {{ ...fields }}
   }}
-}}
-"""
+}}'''
         })
-        # Query by partition key
+        # Query by primary key
         operations.append({
-            'name': op_names['query_by_pk'],
-            'gql': f"""
-query {op_names['query_by_pk']}($input: {op_names['query_by_pk']}Input!) {{
-  {op_names['query_by_pk']}(input: $input) {{
+            'name': f'{table}QueryBy{pk_pascal}',
+            'gql': f'''
+query {table}QueryBy{pk_pascal}($input: {table}QueryBy{pk_pascal}Input!) {{
+  {table}QueryBy{pk_pascal}(input: $input) {{
     StatusCode
     Message
     Data {{ ...fields }}
   }}
-}}
-"""
+}}'''
         })
-        content = template.render(schema=schema, operations=operations)
-        output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'graphql', f'{table}.graphql.ts')
-        write_file(output_path, content)
+        # Query by sort key (if present)
+        if sk_pascal:
+            operations.append({
+                'name': f'{table}QueryBy{sk_pascal}',
+                'gql': f'''
+query {table}QueryBy{sk_pascal}($input: {table}QueryBy{sk_pascal}Input!) {{
+  {table}QueryBy{sk_pascal}(input: $input) {{
+    StatusCode
+    Message
+    Data {{ ...fields }}
+  }}
+}}'''
+            })
+            # Query by both
+            operations.append({
+                'name': f'{table}QueryByBoth',
+                'gql': f'''
+query {table}QueryByBoth($input: {table}QueryByBothInput!) {{
+  {table}QueryByBoth(input: $input) {{
+    StatusCode
+    Message
+    Data {{ ...fields }}
+  }}
+}}'''
+            })
+        # Query by secondary indexes
+        for index in processed_schema.secondary_indexes:
+            idx_pascal = to_pascal_case(index['partition'])
+            operations.append({
+                'name': f'{table}QueryBy{idx_pascal}',
+                'gql': f'''
+query {table}QueryBy{idx_pascal}($input: {table}QueryBy{idx_pascal}Input!) {{
+  {table}QueryBy{idx_pascal}(input: $input) {{
+    StatusCode
+    Message
+    Data {{ ...fields }}
+  }}
+}}'''
+            })
+        ops_content = template.render(schema=processed_schema, operations=operations)
+        file_name = f'{table}.graphql.ts'
+        output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'graphql', file_name)
+        write_file(output_path, ops_content)
         logger.info(f'Generated TypeScript GraphQL ops for {table}')
     except Exception as e:
         logger.error(f'Failed to generate TypeScript GraphQL ops for {table}: {str(e)}')
@@ -757,7 +809,7 @@ def main():
     """Main entry point for the schema generator."""
     try:
         jinja_env = setup_jinja_env()
-        schemas = load_schemas()
+        schemas, static_schemas = load_schemas()
         # Build valid file name sets
         valid_model_names = set()
         valid_enum_names = set()
@@ -766,6 +818,9 @@ def main():
             valid_model_names.add(f'{table}.model.ts')
             valid_model_names.add(f'{table}.model.py')
             valid_graphql_names.add(f'{table}.graphql.ts')
+        for name in static_schemas:
+            valid_model_names.add(f'{name}.model.ts')
+            valid_model_names.add(f'{name}.model.py')
         enums_path = os.path.join(SCRIPT_DIR, 'core', 'enums.yml')
         if os.path.exists(enums_path):
             with open(enums_path, 'r') as f:
@@ -776,11 +831,15 @@ def main():
                     valid_enum_names.add(f'{enum_name}.enum.py')
         # Cleanup old files before generation
         cleanup_old_files(valid_model_names, valid_enum_names, valid_graphql_names)
-        # Generate models and GraphQL ops
+        # Generate models and GraphQL ops for table-backed schemas
         for table, schema in schemas.items():
             generate_python_model(table, schema)
-            generate_typescript_model(table, schema)
+            generate_typescript_model(table, schema, is_static=False)
             generate_typescript_graphql_ops(table, schema)
+        # Generate models for static schemas
+        for name, schema in static_schemas.items():
+            generate_python_model(name, schema)
+            generate_typescript_model(name, schema, is_static=True)
         # Generate all enums from enums.yml
         generate_all_enums()
         # Generate base GraphQL schema

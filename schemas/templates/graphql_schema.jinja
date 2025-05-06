@@ -40,6 +40,10 @@ type Query {
   {{ schema.table | to_pascal_case }}QueryByBoth(input: {{ schema.table | to_pascal_case }}QueryByBothInput!): {{ schema.table | to_pascal_case }}Response
     @aws_auth(cognito_groups: ["admin"])
   {% endif %}
+  {% for index in schema.secondary_indexes %}
+  {{ schema.table | to_pascal_case }}QueryBy{{ index.partition | to_pascal_case }}(input: {{ schema.table | to_pascal_case }}QueryBy{{ index.partition | to_pascal_case }}Input!): {{ schema.table | to_pascal_case }}ListResponse
+    @aws_auth(cognito_groups: ["admin"])
+  {% endfor %}
   {% endfor %}
 }
 
@@ -89,6 +93,12 @@ input {{ schema.table | to_pascal_case }}QueryByBothInput {
   {{ schema.sort_key | to_camel_case }}: String!
 }
 {% endif %}
+{% for index in schema.secondary_indexes %}
+input {{ schema.table | to_pascal_case }}QueryBy{{ index.partition | to_pascal_case }}Input {
+  {{ index.partition | to_camel_case }}: String!{% if index.sort and index.sort != 'None' %}
+  {{ index.sort | to_camel_case }}: String!{% endif %}
+}
+{% endfor %}
 
 type {{ schema.table | to_pascal_case }}Response {
   StatusCode: Int!

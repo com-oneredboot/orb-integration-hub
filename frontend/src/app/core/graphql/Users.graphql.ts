@@ -20,8 +20,8 @@ mutation UsersUpdate($input: UsersUpdateInput!) {
 }
 `;
 export const UsersDeleteMutation = /* GraphQL */ `
-mutation UsersDelete($input: UsersDeleteInput!) {
-  UsersDelete(input: $input) {
+mutation UsersDelete($id: ID!) {
+  UsersDelete(id: $id) {
     StatusCode
     Message
     Data { ...fields }
@@ -34,6 +34,48 @@ query UsersQueryByUserId($input: UsersQueryByUserIdInput!) {
     StatusCode
     Message
     Data { ...fields }
+  }
+}
+`;
+export const UsersQueryByUserId = /* GraphQL */ `
+query UsersQueryByUserId($input: UsersQueryByUserIdInput!) {
+  UsersQueryByUserId(input: $input) {
+    StatusCode
+    Message
+    Data { ...fields }
+  }
+}
+`;
+export const UsersQueryByEmail = /* GraphQL */ `
+query UsersQueryByEmail($input: UsersQueryByEmailInput!) {
+  UsersQueryByEmail(input: $input) {
+    StatusCode
+    Message
+    Data { ...fields }
+  }
+}
+`;
+
+// For each secondary index, generate a query operation
+export const UsersQueryByUserId = /* GraphQL */ `
+query UsersQueryByUserId($input: UsersQueryByUserIdInput!) {
+  UsersQueryByUserId(input: $input) {
+    StatusCode
+    Message
+    Data {
+      // ...fields
+    }
+  }
+}
+`;
+export const UsersQueryByEmail = /* GraphQL */ `
+query UsersQueryByEmail($input: UsersQueryByEmailInput!) {
+  UsersQueryByEmail(input: $input) {
+    StatusCode
+    Message
+    Data {
+      // ...fields
+    }
   }
 }
 `;

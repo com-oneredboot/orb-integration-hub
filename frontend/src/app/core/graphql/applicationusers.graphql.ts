@@ -20,8 +20,8 @@ mutation ApplicationUsersUpdate($input: ApplicationUsersUpdateInput!) {
 }
 `;
 export const ApplicationUsersDeleteMutation = /* GraphQL */ `
-mutation ApplicationUsersDelete($input: ApplicationUsersDeleteInput!) {
-  ApplicationUsersDelete(input: $input) {
+mutation ApplicationUsersDelete($id: ID!) {
+  ApplicationUsersDelete(id: $id) {
     StatusCode
     Message
     Data { ...fields }
@@ -34,6 +34,68 @@ query ApplicationUsersQueryByApplicationId($input: ApplicationUsersQueryByApplic
     StatusCode
     Message
     Data { ...fields }
+  }
+}
+`;
+export const ApplicationUsersQueryByUserId = /* GraphQL */ `
+query ApplicationUsersQueryByUserId($input: ApplicationUsersQueryByUserIdInput!) {
+  ApplicationUsersQueryByUserId(input: $input) {
+    StatusCode
+    Message
+    Data { ...fields }
+  }
+}
+`;
+export const ApplicationUsersQueryByApplicationId = /* GraphQL */ `
+query ApplicationUsersQueryByApplicationId($input: ApplicationUsersQueryByApplicationIdInput!) {
+  ApplicationUsersQueryByApplicationId(input: $input) {
+    StatusCode
+    Message
+    Data { ...fields }
+  }
+}
+`;
+export const ApplicationUsersQueryByApplicationId = /* GraphQL */ `
+query ApplicationUsersQueryByApplicationId($input: ApplicationUsersQueryByApplicationIdInput!) {
+  ApplicationUsersQueryByApplicationId(input: $input) {
+    StatusCode
+    Message
+    Data { ...fields }
+  }
+}
+`;
+
+// For each secondary index, generate a query operation
+export const ApplicationUsersQueryByUserId = /* GraphQL */ `
+query ApplicationUsersQueryByUserId($input: ApplicationUsersQueryByUserIdInput!) {
+  ApplicationUsersQueryByUserId(input: $input) {
+    StatusCode
+    Message
+    Data {
+      // ...fields
+    }
+  }
+}
+`;
+export const ApplicationUsersQueryByApplicationId = /* GraphQL */ `
+query ApplicationUsersQueryByApplicationId($input: ApplicationUsersQueryByApplicationIdInput!) {
+  ApplicationUsersQueryByApplicationId(input: $input) {
+    StatusCode
+    Message
+    Data {
+      // ...fields
+    }
+  }
+}
+`;
+export const ApplicationUsersQueryByApplicationId = /* GraphQL */ `
+query ApplicationUsersQueryByApplicationId($input: ApplicationUsersQueryByApplicationIdInput!) {
+  ApplicationUsersQueryByApplicationId(input: $input) {
+    StatusCode
+    Message
+    Data {
+      // ...fields
+    }
   }
 }
 `;
