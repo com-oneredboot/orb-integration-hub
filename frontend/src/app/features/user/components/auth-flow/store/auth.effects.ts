@@ -12,7 +12,7 @@ import { Store } from '@ngrx/store';
 
 // Application Imports
 import { UserService } from "../../../../../core/services/user.service";
-import { UsersQueryByEmailInput } from "../../../../../core/graphql/user.graphql";
+import { UsersQueryByEmailInput } from "../../../../../core/graphql/Users.graphql";
 import { AuthActions } from "./auth.actions";
 import * as fromAuth from "./auth.selectors";
 import { CognitoService } from "../../../../../core/services/cognito.service";

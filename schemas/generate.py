@@ -348,38 +348,26 @@ def load_schema(schema_path: str) -> Dict[str, Any]:
         raise SchemaValidationError(f"Failed to load schema {schema_path}: {str(e)}")
 
 def generate_python_model(table: str, schema: TableSchema) -> None:
-    """Generate Python model for a table."""
     try:
-        # Get Jinja environment
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('python_model.jinja')
-        
-        # Generate model
         model_content = template.render(schema=schema)
-        
-        # Write to file (use .model.py extension)
-        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'src', 'core', 'models', f'{to_snake_case(table)}.model.py')
+        file_name = to_pascal_case(table) + '.model.py'
+        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'src', 'core', 'models', file_name)
         write_file(output_path, model_content)
         logger.info(f'Generated Python model for {table}')
-        
     except Exception as e:
         logger.error(f'Failed to generate Python model for {table}: {str(e)}')
         raise
 
 def generate_typescript_model(table: str, schema: TableSchema) -> None:
-    """Generate TypeScript model for a table."""
     try:
-        # Get Jinja environment
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('typescript_model.jinja')
-        
-        # Process attributes to include enum values and map types to TypeScript
         processed_schema = copy.deepcopy(schema)
         for attr in processed_schema.attributes:
-            # Map type to TypeScript type
             attr.type = to_typescript_type(attr.type)
             if attr.enum_type and not attr.enum_values:
-                # If enum type is specified but no values, try to get them from enums.yml
                 enums_path = os.path.join(SCRIPT_DIR, 'core', 'enums.yml')
                 if os.path.exists(enums_path):
                     with open(enums_path, 'r') as f:
@@ -388,18 +376,11 @@ def generate_typescript_model(table: str, schema: TableSchema) -> None:
                             attr.enum_values = enums_data[attr.enum_type]
                         else:
                             logger.warning(f"Enum type {attr.enum_type} not found in enums.yml")
-        
-        # Generate model
         model_content = template.render(schema=processed_schema)
-        
-        # Convert table name to PascalCase for TypeScript file name
-        file_name = to_pascal_case(table)
-        
-        # Write to file
-        output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models', f'{file_name}.ts')
+        file_name = to_pascal_case(table) + '.model.ts'
+        output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models', file_name)
         write_file(output_path, model_content)
         logger.info(f'Generated TypeScript model for {table}')
-        
     except Exception as e:
         logger.error(f'Failed to generate TypeScript model for {table}: {str(e)}')
         raise
@@ -631,14 +612,10 @@ def move_enum_files():
             logger.info(f"Moved and renamed {src_name} to {dst_path}")
 
 def generate_typescript_graphql_ops(table: str, schema: TableSchema) -> None:
-    """Generate TypeScript GraphQL operation file for a table."""
     try:
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('typescript_graphql_ops.jinja')
-
-        # Define operations (example: you may want to expand this based on your schema)
         operations = []
-        # Query by partition key
         op_name = f'{to_pascal_case(table)}QueryBy{to_pascal_case(schema.partition_key)}'
         gql = f"""
 query {op_name}($input: {to_pascal_case(table)}QueryBy{to_pascal_case(schema.partition_key)}Input!) {{
@@ -652,15 +629,79 @@ query {op_name}($input: {to_pascal_case(table)}QueryBy{to_pascal_case(schema.par
 }}
 """
         operations.append({'name': op_name, 'gql': gql})
-        # You can add more operations (mutations, etc.) here as needed
-
         content = template.render(schema=schema, operations=operations)
-        output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'graphql', f'{table.lower()}.graphql.ts')
+        pascal_table = to_pascal_case(table)
+        output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'graphql', f'{pascal_table}.graphql.ts')
         write_file(output_path, content)
         logger.info(f'Generated TypeScript GraphQL ops for {table}')
     except Exception as e:
         logger.error(f'Failed to generate TypeScript GraphQL ops for {table}: {str(e)}')
         raise
+
+def generate_typescript_model_file(table: str, schema: TableSchema) -> None:
+    try:
+        jinja_env = setup_jinja_env()
+        template = jinja_env.get_template('typescript_model.jinja')
+        processed_schema = copy.deepcopy(schema)
+        for attr in processed_schema.attributes:
+            attr.type = to_typescript_type(attr.type)
+        model_content = template.render(schema=processed_schema)
+        file_name = to_pascal_case(table) + '.model.ts'
+        output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models', file_name)
+        write_file(output_path, model_content)
+        logger.info(f'Generated TypeScript .model.ts for {table}')
+    except Exception as e:
+        logger.error(f'Failed to generate TypeScript .model.ts for {table}: {str(e)}')
+        raise
+
+def generate_typescript_enum(table: str, schema: TableSchema) -> None:
+    try:
+        jinja_env = setup_jinja_env()
+        template = jinja_env.get_template('typescript_enum.jinja')
+        for attr in schema.attributes:
+            if attr.enum_type and attr.enum_values:
+                enum_name = to_pascal_case(attr.enum_type)
+                enum_content = template.render(enum_name=enum_name, enum_values=attr.enum_values)
+                file_name = enum_name + '.enum.ts'
+                output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models', file_name)
+                write_file(output_path, enum_content)
+                logger.info(f'Generated TypeScript enum for {enum_name}')
+    except Exception as e:
+        logger.error(f'Failed to generate TypeScript enum for {table}: {str(e)}')
+        raise
+
+def generate_python_enum(table: str, schema: TableSchema) -> None:
+    try:
+        jinja_env = setup_jinja_env()
+        template = jinja_env.get_template('python_enum.jinja')
+        for attr in schema.attributes:
+            if attr.enum_type and attr.enum_values:
+                enum_name = to_pascal_case(attr.enum_type)
+                enum_content = template.render(enum_name=enum_name, enum_values=attr.enum_values)
+                file_name = enum_name + '.enum.py'
+                output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'src', 'core', 'models', file_name)
+                write_file(output_path, enum_content)
+                logger.info(f'Generated Python enum for {enum_name}')
+    except Exception as e:
+        logger.error(f'Failed to generate Python enum for {table}: {str(e)}')
+        raise
+
+def cleanup_old_files():
+    """Remove old files that are not PascalCase for all generated files in both TS and Python."""
+    ts_model_dir = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models')
+    ts_graphql_dir = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'graphql')
+    for dir_path in [ts_model_dir, ts_graphql_dir]:
+        for fname in os.listdir(dir_path):
+            # Remove files that are not PascalCase for .model.ts, .enum.ts, .graphql.ts
+            if not re.match(r'^[A-Z][A-Za-z0-9]+\.(model|enum|graphql)\.ts$', fname):
+                os.remove(os.path.join(dir_path, fname))
+                logger.info(f'Removed old/incorrectly cased TS file: {fname}')
+    py_model_dir = os.path.join(SCRIPT_DIR, '..', 'backend', 'src', 'core', 'models')
+    for fname in os.listdir(py_model_dir):
+        # Remove files that are not PascalCase for .model.py or .enum.py
+        if not re.match(r'^[A-Z][A-Za-z0-9]+\.(model|enum)\.py$', fname):
+            os.remove(os.path.join(py_model_dir, fname))
+            logger.info(f'Removed old/incorrectly cased Python file: {fname}')
 
 def main():
     """Main entry point for the schema generator."""
@@ -676,6 +717,9 @@ def main():
             generate_python_model(table, schema)
             generate_typescript_model(table, schema)
             generate_typescript_graphql_ops(table, schema)
+            generate_typescript_model_file(table, schema)
+            generate_typescript_enum(table, schema)
+            generate_python_enum(table, schema)
         
         # Move/rename enum files for consistency
         move_enum_files()
@@ -698,6 +742,9 @@ def main():
         # Generate AppSync CloudFormation template
         appsync_output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'cloudformation', 'appsync.yml')
         generate_appsync_template(schemas, appsync_output_path)
+        
+        # Cleanup old files
+        cleanup_old_files()
         
         logger.info('Schema generation completed successfully')
         

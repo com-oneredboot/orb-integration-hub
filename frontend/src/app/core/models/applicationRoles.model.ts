@@ -1,83 +1,42 @@
 /**
- * ApplicationRole Model
- * Generated code - do not modify directly
- * @generated
+ * ApplicationRoles model.
  */
 
-// Import enum types
-import { ApplicationRoleStatus } from './applicationRole.enum';
+export enum ApplicationRoleStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  PENDING = 'PENDING',
+  REJECTED = 'REJECTED',
+  DELETED = 'DELETED'}
 
-// Interface
-export interface IApplicationRole {
-  applicationId: string;
-  roleId: string;
-  description?: string;
+export interface IApplicationRoles {
+  application_id: string;
+  role_id: string;
+  description: string?;
   status: ApplicationRoleStatus;
-  createdAt: number;
-  updatedAt: number;
+  created_at: number;
+  updated_at: number;
 }
 
-// Model Class
-export class ApplicationRole implements IApplicationRole {
-  applicationId: string = '';
-  roleId: string = '';
-  description: string = '';
-  status: ApplicationRoleStatus = ApplicationRoleStatus.UNKNOWN;
-  createdAt: number = 0;
-  updatedAt: number = 0;
+export class ApplicationRoles implements IApplicationRoles {
+  application_id: string = '';
+  role_id: string = '';
+  description: string = undefined;
+  status: string = ApplicationRoleStatus.UNKNOWN;
+  created_at: number = 0;
+  updated_at: number = 0;
 
-  constructor(data: Partial<IApplicationRole> = {}) {
-    // Validate and assign data
+  constructor(data: Partial<IApplicationRoles> = {}) {
     Object.entries(data).forEach(([key, value]) => {
-      const typedKey = key as keyof IApplicationRole;
-      if (typedKey in this) {
-        // Handle enum arrays
-        if (Array.isArray(value) && Array.isArray(this[typedKey]) && this[typedKey].length === 0) {
-          (this[typedKey] as any) = value;
-        }
-        // Handle single enums
-        else if (typeof value === 'string' && typeof this[typedKey] === 'object' && this[typedKey] !== null && 'UNKNOWN' in (this[typedKey] as any)) {
-          (this[typedKey] as any) = (this[typedKey] as any)[value] || (this[typedKey] as any).UNKNOWN;
-        }
-        // Handle other types
-        else {
-          (this[typedKey] as any) = value;
+      if (key in this) {
+        if (Array.isArray(value) && this[key] instanceof Array && this[key].length === 0) {
+          this[key] = value as typeof this[key];
+        } else if (typeof value === 'string' && this[key] instanceof Object && 'UNKNOWN' in this[key]) {
+          this[key] = (this[key] as any)[value] || (this[key] as any).UNKNOWN;
+        } else {
+          this[key] = value as any;
         }
       }
     });
   }
-
-  /**
-   * Validates if the model has all required fields
-   * @returns boolean indicating if the model is valid
-   */
-  isValid(): boolean {
-    if (this.applicationId === undefined || this.applicationId === null) {
-      return false;
-    }
-    if (this.roleId === undefined || this.roleId === null) {
-      return false;
-    }
-    if (this.status === undefined || this.status === null) {
-      return false;
-    }
-    if (!Object.values(ApplicationRoleStatus).includes(this.status)) {
-      return false;
-    }
-    if (this.createdAt === undefined || this.createdAt === null) {
-      return false;
-    }
-    if (this.updatedAt === undefined || this.updatedAt === null) {
-      return false;
-    }
-    return true;
-  }
-
-  /**
-   * Creates a copy of the model
-   * @returns A new instance of the model with the same values
-   */
-  clone(): ApplicationRole {
-    return new ApplicationRole({...this});
-  }
-} 
+}

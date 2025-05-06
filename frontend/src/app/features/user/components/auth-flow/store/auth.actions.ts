@@ -8,7 +8,7 @@ import { createActionGroup, emptyProps, props } from '@ngrx/store';
 
 // Application Imports
 import { IUser } from '../../../../../core/models/users.model';
-import { UsersCreateInput, UsersQueryByEmailInput } from '../../../../../core/graphql/user.graphql';
+import { UsersCreateInput, UsersQueryByEmailInput } from '../../../../../core/graphql/Users.graphql';
 import { MfaSetupDetails } from '../../../../../core/models/auth.model';
 
 /**

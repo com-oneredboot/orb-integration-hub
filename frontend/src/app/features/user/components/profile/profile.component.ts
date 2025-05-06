@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Observable, Subject, takeUntil } from 'rxjs';
 import { IUser } from '../../../../core/models/users.model';
-import { UsersUpdateInput } from '../../../../core/graphql/user.graphql';
+import { UsersUpdateInput } from '../../../../core/graphql/Users.graphql';
 import * as fromAuth from '../../components/auth-flow/store/auth.selectors';
 import { AuthActions } from '../../components/auth-flow/store/auth.actions';
 import { UserService } from '../../../../core/services/user.service';

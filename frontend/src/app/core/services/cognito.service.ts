@@ -22,7 +22,7 @@ import {BehaviorSubject, Observable} from 'rxjs';
 
 // Application-specific imports
 import { User } from '../models/user.model'; 
-import { UserCreateInput } from '../graphql/user.graphql';
+import { UsersCreateInput } from '../graphql/Users.graphql';
 import {AuthResponse, AuthError } from "../models/auth.model";
 import { environment } from '../../../environments/environment';
 
@@ -67,7 +67,7 @@ export class CognitoService {
    * @param input
    * @param password
    */
-  public async createCognitoUser(input: UserCreateInput, password:string): Promise<SignUpOutput> {
+  public async createCognitoUser(input: UsersCreateInput, password:string): Promise<SignUpOutput> {
 
       console.debug('Creating Cognito user:', input);
 
