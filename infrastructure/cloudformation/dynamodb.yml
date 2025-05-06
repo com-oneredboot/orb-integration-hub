@@ -29,42 +29,6 @@ Parameters:
 
 # --------------------------------------------------- #
 Resources:
-  ApplicationsTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications
-      BillingMode: PAY_PER_REQUEST
-      KeySchema:
-        - AttributeName: application_id
-          KeyType: HASH
-      AttributeDefinitions:
-        - AttributeName: name
-          AttributeType: S
-        - AttributeName: application_id
-          AttributeType: S
-      GlobalSecondaryIndexes:
-        - IndexName: application-name-index
-          KeySchema:
-            - AttributeName: name
-              KeyType: HASH
-            - AttributeName: application_id
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-
-  ApplicationsTableArn:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-arn
-      Type: String
-      Value: !GetAtt ApplicationsTable.Arn
-
-  ApplicationsTableName:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-name
-      Type: String
-      Value: !Ref ApplicationsTable
   ApplicationRolesTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -101,6 +65,42 @@ Resources:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles-table-name
       Type: String
       Value: !Ref ApplicationRolesTable
+  ApplicationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: application_id
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: name
+          AttributeType: S
+        - AttributeName: application_id
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: application-name-index
+          KeySchema:
+            - AttributeName: name
+              KeyType: HASH
+            - AttributeName: application_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  ApplicationsTableArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-arn
+      Type: String
+      Value: !GetAtt ApplicationsTable.Arn
+
+  ApplicationsTableName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-name
+      Type: String
+      Value: !Ref ApplicationsTable
   ApplicationUsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -114,9 +114,9 @@ Resources:
           AttributeType: S
         - AttributeName: role_id
           AttributeType: S
-        - AttributeName: application_id
-          AttributeType: S
         - AttributeName: status
+          AttributeType: S
+        - AttributeName: application_id
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: user-applications-index
@@ -168,11 +168,11 @@ Resources:
       AttributeDefinitions:
         - AttributeName: user_id
           AttributeType: S
+        - AttributeName: application_id
+          AttributeType: S
         - AttributeName: role_type
           AttributeType: S
         - AttributeName: role_id
-          AttributeType: S
-        - AttributeName: application_id
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: user-role-index
@@ -227,9 +227,9 @@ Resources:
         - AttributeName: user_id
           KeyType: HASH
       AttributeDefinitions:
-        - AttributeName: email
-          AttributeType: S
         - AttributeName: user_id
+          AttributeType: S
+        - AttributeName: email
           AttributeType: S
         - AttributeName: status
           AttributeType: S
@@ -267,17 +267,6 @@ Resources:
 
 # --------------------------------------------------- #
 Outputs:
-  ApplicationsTableArn:
-    Description: The ARN of the Applications table
-    Value: !GetAtt ApplicationsTable.Arn
-    Export:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-arn
-
-  ApplicationsTableName:
-    Description: The name of the Applications table
-    Value: !Ref ApplicationsTable
-    Export:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-name
   ApplicationRolesTableArn:
     Description: The ARN of the ApplicationRoles table
     Value: !GetAtt ApplicationRolesTable.Arn
@@ -289,6 +278,17 @@ Outputs:
     Value: !Ref ApplicationRolesTable
     Export:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles-table-name
+  ApplicationsTableArn:
+    Description: The ARN of the Applications table
+    Value: !GetAtt ApplicationsTable.Arn
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-arn
+
+  ApplicationsTableName:
+    Description: The name of the Applications table
+    Value: !Ref ApplicationsTable
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-name
   ApplicationUsersTableArn:
     Description: The ARN of the ApplicationUsers table
     Value: !GetAtt ApplicationUsersTable.Arn

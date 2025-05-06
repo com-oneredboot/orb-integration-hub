@@ -20,7 +20,7 @@ export interface I{{ schema.table }} {
 
 export class {{ schema.table }} implements I{{ schema.table }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }}: {{ attr.type }} = {% if attr.type == 'string[]' %}[]{% elif attr.type == 'boolean' %}false{% elif attr.type == 'number' %}0{% elif attr.enum_type %}{{ attr.enum_type }}.UNKNOWN{% elif not attr.required %}undefined{% else %}''{% endif %};
+  {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}{% elif attr.type == 'timestamp' %}number{% elif attr.type == 'array' or attr.name in ['groups', 'permissions'] %}string[]{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'number' %}number{% else %}string{% endif %} = {% if attr.enum_type %}{{ attr.enum_type }}.UNKNOWN{% elif attr.type == 'string[]' %}[]{% elif attr.type == 'boolean' %}false{% elif attr.type == 'number' %}0{% elif not attr.required %}undefined{% else %}''{% endif %};
 {% endfor %}
 
   constructor(data: Partial<I{{ schema.table }}> = {}) {

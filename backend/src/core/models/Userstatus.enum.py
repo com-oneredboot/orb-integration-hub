@@ -1,6 +1,6 @@
 from enum import Enum
 
-class Userstatus(Enum):
+class UserStatus(Enum):
     UNKNOWN = "UNKNOWN"
     ACTIVE = "ACTIVE"
     INACTIVE = "INACTIVE"

@@ -29,9 +29,9 @@ export class Roles implements IRoles {
   user_id: string = '';
   application_id: string = '';
   role_name: string = '';
-  role_type: string = RoleType.UNKNOWN;
+  role_type: RoleType = RoleType.UNKNOWN;
   permissions: string[] = [];
-  status: string = RoleStatus.UNKNOWN;
+  status: RoleStatus = RoleStatus.UNKNOWN;
   created_at: number = 0;
   updated_at: number = 0;
 

@@ -104,21 +104,6 @@ Resources:
 
   # Data Sources
   # --------------------------------------------------- #
-  # Applications Data Source
-  ApplicationsDataSource:
-    Type: AWS::AppSync::DataSource
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      Name: ApplicationsDataSource
-      Type: AMAZON_DYNAMODB
-      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
-      DynamoDBConfig:
-        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-applications-table-name'
-        AwsRegion: !Ref AWS::Region
-
-  # Applications Resolvers
-  # --------------------------------------------------- #
-
   # ApplicationRoles Data Source
   ApplicationRolesDataSource:
     Type: AWS::AppSync::DataSource
@@ -132,6 +117,21 @@ Resources:
         AwsRegion: !Ref AWS::Region
 
   # ApplicationRoles Resolvers
+  # --------------------------------------------------- #
+
+  # Applications Data Source
+  ApplicationsDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      Name: ApplicationsDataSource
+      Type: AMAZON_DYNAMODB
+      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+      DynamoDBConfig:
+        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-applications-table-name'
+        AwsRegion: !Ref AWS::Region
+
+  # Applications Resolvers
   # --------------------------------------------------- #
 
   # ApplicationUsers Data Source
@@ -181,17 +181,6 @@ Resources:
 
   # Index-based Resolvers
   # --------------------------------------------------- #
-  Applicationsapplication-name-indexResolver:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Query
-      FieldName: ApplicationsQueryByName
-      DataSourceName: !GetAtt ApplicationsDataSource.Name
-      RequestMappingTemplate: |
-        # DynamoDB Query request mapping template
-      ResponseMappingTemplate: |
-        # DynamoDB Query response mapping template
   ApplicationRolesrole-applications-indexResolver:
     Type: AWS::AppSync::Resolver
     Properties:
@@ -199,6 +188,17 @@ Resources:
       TypeName: Query
       FieldName: ApplicationRolesQueryByRole_id
       DataSourceName: !GetAtt ApplicationRolesDataSource.Name
+      RequestMappingTemplate: |
+        # DynamoDB Query request mapping template
+      ResponseMappingTemplate: |
+        # DynamoDB Query response mapping template
+  Applicationsapplication-name-indexResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationsQueryByName
+      DataSourceName: !GetAtt ApplicationsDataSource.Name
       RequestMappingTemplate: |
         # DynamoDB Query request mapping template
       ResponseMappingTemplate: |

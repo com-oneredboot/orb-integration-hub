@@ -22,7 +22,7 @@ export class ApplicationRoles implements IApplicationRoles {
   application_id: string = '';
   role_id: string = '';
   description: string = undefined;
-  status: string = ApplicationRoleStatus.UNKNOWN;
+  status: ApplicationRoleStatus = ApplicationRoleStatus.UNKNOWN;
   created_at: number = 0;
   updated_at: number = 0;
 

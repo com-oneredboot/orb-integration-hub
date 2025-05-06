@@ -3,6 +3,6 @@
 
 {% for op in operations %}
 export const {{ op.name }} = /* GraphQL */ `
-{{ op.gql | indent(2) }}
+{{ op.gql.strip() }}
 `;
 {% endfor %} 

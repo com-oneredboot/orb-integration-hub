@@ -22,7 +22,7 @@ export class ApplicationUsers implements IApplicationUsers {
   application_id: string = '';
   user_id: string = '';
   role_id: string = undefined;
-  status: string = ApplicationUserStatus.UNKNOWN;
+  status: ApplicationUserStatus = ApplicationUserStatus.UNKNOWN;
   created_at: number = 0;
   updated_at: number = 0;
 

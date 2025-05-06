@@ -1,2 +1,2 @@
-export enum Userstatus {
+export enum UserStatus {
   UNKNOWN = 'UNKNOWN',  ACTIVE = 'ACTIVE',  INACTIVE = 'INACTIVE',  PENDING = 'PENDING',  REJECTED = 'REJECTED',  DELETED = 'DELETED'} 

@@ -33,7 +33,7 @@ export class Users implements IUsers {
   first_name: string = '';
   last_name: string = '';
   groups: string[] = [];
-  status: string = UserStatus.UNKNOWN;
+  status: UserStatus = UserStatus.UNKNOWN;
   created_at: number = 0;
   updated_at: number = 0;
 

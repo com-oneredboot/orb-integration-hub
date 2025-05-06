@@ -22,7 +22,7 @@ export class Applications implements IApplications {
   application_id: string = '';
   name: string = '';
   description: string = '';
-  status: string = ApplicationStatus.UNKNOWN;
+  status: ApplicationStatus = ApplicationStatus.UNKNOWN;
   created_at: number = 0;
   updated_at: number = 0;
   user_id: string = '';

@@ -1,2 +1,2 @@
-export enum Applicationuserstatus {
+export enum ApplicationUserStatus {
   ACTIVE = 'ACTIVE',  INACTIVE = 'INACTIVE',  PENDING = 'PENDING',  REJECTED = 'REJECTED',  DELETED = 'DELETED'} 

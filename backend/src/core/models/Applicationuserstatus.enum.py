@@ -1,6 +1,6 @@
 from enum import Enum
 
-class Applicationuserstatus(Enum):
+class ApplicationUserStatus(Enum):
     ACTIVE = "ACTIVE"
     INACTIVE = "INACTIVE"
     PENDING = "PENDING"
