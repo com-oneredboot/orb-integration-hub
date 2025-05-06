@@ -108,13 +108,13 @@
     border: none;
     padding: 0;
     font-size: 0.875rem;
-    color: $primary-color;
+    color: color.adjust($primary-color, $lightness: -10%);
     cursor: pointer;
     text-decoration: none;
     transition: color 0.3s ease;
 
     &:hover {
-      color: darken($primary-color, 10%);
+      color: color.adjust($primary-color, $lightness: -10%);
       text-decoration: underline;
     }
   }

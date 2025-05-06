@@ -411,7 +411,7 @@
   box-shadow: 0 2px 4px rgba(227, 24, 55, 0.2);
 
   &:hover {
-    background-color: darken(v.$orb-red, 5%);
+    background-color: color.adjust(v.$orb-red, $lightness: -5%);
     box-shadow: 0 4px 6px rgba(227, 24, 55, 0.3);
   }
 }
@@ -423,7 +423,7 @@
   box-shadow: 0 2px 4px rgba(227, 24, 55, 0.2);
 
   &:hover {
-    background-color: darken(v.$orb-red, 5%);
+    background-color: color.adjust(v.$orb-red, $lightness: -5%);
     box-shadow: 0 4px 6px rgba(227, 24, 55, 0.3);
   }
 }
@@ -438,7 +438,7 @@
   box-shadow: 0 2px 4px rgba(227, 24, 55, 0.2);
 
   &:hover {
-    background-color: darken(v.$orb-red, 5%);
+    background-color: color.adjust(v.$orb-red, $lightness: -5%);
     box-shadow: 0 4px 6px rgba(227, 24, 55, 0.3);
   }
 
@@ -447,7 +447,7 @@
     color: v.$orb-white;
     
     &:hover {
-      background-color: darken(v.$orb-red, 5%);
+      background-color: color.adjust(v.$orb-red, $lightness: -5%);
     }
   }
 }
