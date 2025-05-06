@@ -2,8 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Observable, Subject, takeUntil } from 'rxjs';
-import { IUser } from '../../../../core/models/users.model';
-import { UsersUpdateInput } from '../../../../core/graphql/Users.graphql';
+import { IUsers, UsersUpdateInput, UsersResponse } from '../../../../core/models/Users.model';
 import * as fromAuth from '../../components/auth-flow/store/auth.selectors';
 import { AuthActions } from '../../components/auth-flow/store/auth.actions';
 import { UserService } from '../../../../core/services/user.service';
@@ -16,7 +15,7 @@ import { Router } from '@angular/router';
   standalone: false
 })
 export class ProfileComponent implements OnInit, OnDestroy {
-  currentUser$: Observable<IUser | null>;
+  currentUser$: Observable<IUsers | null>;
   debugMode$: Observable<boolean>;
   profileForm: FormGroup;
   isLoading = false;
@@ -189,8 +188,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
       // Make API call to update the user
       const response = await this.userService.userQueryByUserId(updateInput);
       
-      if (response.usersQueryByUserId?.StatusCode === 200) {
-        const updatedUser = response.usersQueryByUserId.Data;
+      if (response.UsersQueryByUserId?.StatusCode === 200) {
+        const updatedUser = response.UsersQueryByUserId.Data;
         if (updatedUser) {
           this.profileForm.patchValue({
             firstName: updatedUser.first_name,
@@ -202,9 +201,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
       }
       
       // Update the store with the updated user data
-      if (response?.usersQueryByUserId?.Data) {
+      if (response?.UsersQueryByUserId?.Data) {
         this.store.dispatch(AuthActions.signInSuccess({
-          user: response.usersQueryByUserId.Data,
+          user: response.UsersQueryByUserId.Data,
           message: 'Profile updated successfully'
         }));
       }
@@ -223,7 +222,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   /**
    * Get the current user as a promise
    */
-  private async getCurrentUser(): Promise<IUser | null> {
+  private async getCurrentUser(): Promise<IUsers | null> {
     return new Promise((resolve) => {
       this.currentUser$
         .pipe(takeUntil(this.destroy$))

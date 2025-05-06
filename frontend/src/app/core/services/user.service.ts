@@ -13,10 +13,12 @@ import { BehaviorSubject, Observable } from 'rxjs';
 // Application Imports
 import {ApiService} from "./api.service";
 import {
-  UsersCreateInput, UsersUpdateInput,
-  UsersCreateResponse, UsersResponse, UsersUpdateResponse,
-  UsersCreateMutation, UsersQueryByUserId, UsersUpdateMutation
+  UsersCreateMutation, UsersUpdateMutation, UsersDeleteMutation, UsersQueryByUserId
 } from "../graphql/Users.graphql";
+import {
+  UsersCreateInput, UsersUpdateInput, UsersQueryByUserIdInput,
+  UsersCreateResponse, UsersResponse, UsersUpdateResponse
+} from "../models/Users.model";
 import { UserGroups, UserStatus } from "../models/user.enum";
 import { CognitoService } from "./cognito.service";
 import { AuthResponse } from "../models/auth.model";

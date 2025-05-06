@@ -122,7 +122,7 @@ Resources:
   EmployeesGroup:
     Type: AWS::Cognito::UserPoolGroup
     Properties:
-      GroupName: Employees
+      GroupName: Employee
       UserPoolId: !Ref UserPool
       Description: Group for internal staff
 

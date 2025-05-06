@@ -2,21 +2,53 @@
  * ApplicationUsers model.
  */
 
-export enum ApplicationUserStatus {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  PENDING = 'PENDING',
-  REJECTED = 'REJECTED',
-  DELETED = 'DELETED'}
+// Import enums used in this model
+import { ApplicationUserStatus } from './ApplicationUserStatus.enum';
 
 export interface IApplicationUsers {
   application_id: string;
   user_id: string;
-  role_id: string?;
+  role_id: string;
   status: ApplicationUserStatus;
   created_at: number;
   updated_at: number;
 }
+
+// CreateInput
+export type ApplicationUsersCreateInput = {
+  user_id: string;
+  role_id: string;
+  status: ApplicationUserStatus;
+  created_at: number;
+  updated_at: number;
+};
+
+// UpdateInput
+export type ApplicationUsersUpdateInput = Partial<IApplicationUsers>;
+
+// QueryBy<PartitionKey>Input
+export type ApplicationUsersQueryByApplicationIdInput = {
+  application_id: string;
+};
+
+// Response types
+export type ApplicationUsersCreateResponse = {
+  StatusCode: number;
+  Message: string;
+  Data: IApplicationUsers;
+};
+export type ApplicationUsersUpdateResponse = {
+  StatusCode: number;
+  Message: string;
+  Data: IApplicationUsers;
+};
+export type ApplicationUsersResponse = {
+  ApplicationUsersQueryByApplicationId: {
+    StatusCode: number;
+    Message: string;
+    Data: IApplicationUsers;
+  };
+};
 
 export class ApplicationUsers implements IApplicationUsers {
   application_id: string = '';

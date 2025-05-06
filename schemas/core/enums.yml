@@ -3,6 +3,14 @@
 # date: 2024-03-21
 # description: Centralized enum definitions for the schema generator
 
+# User Groups enums
+UserGroup:
+  - USER
+  - CUSTOMER
+  - CLIENT
+  - EMPLOYEE
+  - OWNER
+
 # User status enums
 UserStatus:
   - UNKNOWN

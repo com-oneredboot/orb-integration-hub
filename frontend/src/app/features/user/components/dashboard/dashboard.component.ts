@@ -6,7 +6,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { IUser } from '../../../../core/models/users.model';
+import { IUsers } from '../../../../core/models/Users.model';
 import * as fromAuth from '../../components/auth-flow/store/auth.selectors';
 import { UserService } from '../../../../core/services/user.service';
 
@@ -17,7 +17,7 @@ import { UserService } from '../../../../core/services/user.service';
   standalone: false
 })
 export class DashboardComponent implements OnInit {
-  currentUser$: Observable<IUser | null>;
+  currentUser$: Observable<IUsers | null>;
   debugMode$: Observable<boolean>;
 
   constructor(

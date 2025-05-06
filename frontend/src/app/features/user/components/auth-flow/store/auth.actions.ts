@@ -7,7 +7,7 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 
 // Application Imports
-import { IUser } from '../../../../../core/models/users.model';
+import { IUsers } from '../../../../../core/models/Users.model';
 import { UsersCreateInput, UsersQueryByEmailInput } from '../../../../../core/graphql/Users.graphql';
 import { MfaSetupDetails } from '../../../../../core/models/auth.model';
 
@@ -28,7 +28,7 @@ export const AuthActions = createActionGroup({
     'Verify Cognito Password Failure': props<{ error: string }>(),
 
     'SignIn': props<{ email: string; password: string }>(),
-    'SignIn Success': props<{ user: IUser, message: string }>(),
+    'SignIn Success': props<{ user: IUsers, message: string }>(),
     'SignIn Failure': props<{ error: string }>(),
 
     'Setup Password': props<{ password: string }>(),
@@ -61,7 +61,7 @@ export const AuthActions = createActionGroup({
     'Create User Failure': props<{ error: string }>(),
 
     'Register': props<{ email: string; password: string; firstName: string; lastName: string }>(),
-    'Register Success': props<{ user: IUser }>(),
+    'Register Success': props<{ user: IUsers }>(),
     'Register Failure': props<{ error: string }>(),
 
     'Verify Email': props<{ input: UsersQueryByEmailInput, code: string, email?: string }>(),
@@ -69,7 +69,7 @@ export const AuthActions = createActionGroup({
     'Verify Email Failure': props<{ error: string }>(),
 
     'Refresh Session': emptyProps(),
-    'Refresh Session Success': props<{ user: IUser }>(),
+    'Refresh Session Success': props<{ user: IUsers }>(),
     'Refresh Session Failure': props<{ error: string }>(),
 
     'Check Phone Required': emptyProps(),

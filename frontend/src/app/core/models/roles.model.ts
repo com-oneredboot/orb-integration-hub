@@ -2,15 +2,9 @@
  * Roles model.
  */
 
-export enum RoleType {
-  ADMIN = 'ADMIN',
-  USER = 'USER',
-  GUEST = 'GUEST',
-  CUSTOM = 'CUSTOM'}
-export enum RoleStatus {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  DELETED = 'DELETED'}
+// Import enums used in this model
+import { RoleType } from './RoleType.enum';
+import { RoleStatus } from './RoleStatus.enum';
 
 export interface IRoles {
   role_id: string;
@@ -23,6 +17,45 @@ export interface IRoles {
   created_at: number;
   updated_at: number;
 }
+
+// CreateInput
+export type RolesCreateInput = {
+  user_id: string;
+  application_id: string;
+  role_name: string;
+  role_type: RoleType;
+  permissions: string[];
+  status: RoleStatus;
+  created_at: number;
+  updated_at: number;
+};
+
+// UpdateInput
+export type RolesUpdateInput = Partial<IRoles>;
+
+// QueryBy<PartitionKey>Input
+export type RolesQueryByRoleIdInput = {
+  role_id: string;
+};
+
+// Response types
+export type RolesCreateResponse = {
+  StatusCode: number;
+  Message: string;
+  Data: IRoles;
+};
+export type RolesUpdateResponse = {
+  StatusCode: number;
+  Message: string;
+  Data: IRoles;
+};
+export type RolesResponse = {
+  RolesQueryByRoleId: {
+    StatusCode: number;
+    Message: string;
+    Data: IRoles;
+  };
+};
 
 export class Roles implements IRoles {
   role_id: string = '';

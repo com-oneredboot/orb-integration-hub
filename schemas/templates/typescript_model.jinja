@@ -2,21 +2,54 @@
  * {{ schema.table }} model.
  */
 
+// Import enums used in this model
+{% set imported_enums = [] %}
 {% for attr in schema.attributes %}
-{% if attr.enum_type %}
-export enum {{ attr.enum_type }} {
-{% for value in attr.enum_values %}
-  {{ value }} = '{{ value }}'{% if not loop.last %},
-{% endif %}{% endfor %}
-}
+{% if attr.enum_type and attr.enum_type not in imported_enums %}
+import { {{ attr.enum_type }} } from './{{ attr.enum_type }}.enum';
+{% set _ = imported_enums.append(attr.enum_type) %}
 {% endif %}
 {% endfor %}
 
 export interface I{{ schema.table }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }}: {% if attr.type == 'timestamp' %}number{% elif attr.type == 'array' or attr.name in ['groups', 'permissions'] %}string[]{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'number' %}number{% elif attr.enum_type %}{{ attr.enum_type }}{% else %}string{% endif %}{% if not attr.required %}?{% endif %};
+  {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}{% elif attr.type == 'timestamp' %}number{% elif attr.type == 'array' or attr.name in ['groups', 'permissions'] %}string[]{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'number' %}number{% else %}string{% endif %};
 {% endfor %}
 }
+
+// CreateInput
+export type {{ schema.table }}CreateInput = {
+{% for attr in schema.attributes if attr.name != schema.partition_key %}
+  {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}{% elif attr.type == 'timestamp' %}number{% elif attr.type == 'array' or attr.name in ['groups', 'permissions'] %}string[]{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'number' %}number{% else %}string{% endif %};
+{% endfor %}
+};
+
+// UpdateInput
+export type {{ schema.table }}UpdateInput = Partial<I{{ schema.table }}>;
+
+// QueryBy<PartitionKey>Input
+export type {{ schema.table }}QueryBy{{ schema.partition_key|to_pascal_case }}Input = {
+  {{ schema.partition_key }}: string;
+};
+
+// Response types
+export type {{ schema.table }}CreateResponse = {
+  StatusCode: number;
+  Message: string;
+  Data: I{{ schema.table }};
+};
+export type {{ schema.table }}UpdateResponse = {
+  StatusCode: number;
+  Message: string;
+  Data: I{{ schema.table }};
+};
+export type {{ schema.table }}Response = {
+  {{ schema.table }}QueryBy{{ schema.partition_key|to_pascal_case }}: {
+    StatusCode: number;
+    Message: string;
+    Data: I{{ schema.table }};
+  };
+};
 
 export class {{ schema.table }} implements I{{ schema.table }} {
 {% for attr in schema.attributes %}

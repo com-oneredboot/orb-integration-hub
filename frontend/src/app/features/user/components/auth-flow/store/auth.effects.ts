@@ -65,11 +65,11 @@ export class AuthEffects {
         // create the user
         return from(this.userService.userCreate(input, password)).pipe(
           map(response => {
-            if (response.usersQueryByUserId?.StatusCode === 200) {
+            if (response.UsersQueryByUserId?.StatusCode === 200) {
               return AuthActions.createUserSuccess();
             }
             return AuthActions.createUserFailure({
-              error: response.usersQueryByUserId?.Message || 'Failed to create user'
+              error: response.UsersQueryByUserId?.Message || 'Failed to create user'
             });
           }),
           catchError(error => {

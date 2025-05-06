@@ -4,9 +4,8 @@
 // description: Contains the Auth reducer
 
 // Application Imports
-import { IUser } from "../../../../../core/models/users.model";
-import { UserGroups } from "../../../../../core/models/user.enum";
-import { User } from "../../../../../core/models/users.model";
+import { IUsers } from '../../../../../core/models/Users.model';
+import { UserGroups } from "../../../../../core/models/Users.enum";
 
 export enum AuthSteps {
   EMAIL,
@@ -31,7 +30,7 @@ export interface AuthState {
   isLoading: boolean;
   error: string | null;
   currentStep: AuthSteps;
-  currentUser: IUser | null;
+  currentUser: IUsers | null;
   userExists: boolean;
   currentEmail: string | null;
 

@@ -2,21 +2,53 @@
  * ApplicationRoles model.
  */
 
-export enum ApplicationRoleStatus {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  PENDING = 'PENDING',
-  REJECTED = 'REJECTED',
-  DELETED = 'DELETED'}
+// Import enums used in this model
+import { ApplicationRoleStatus } from './ApplicationRoleStatus.enum';
 
 export interface IApplicationRoles {
   application_id: string;
   role_id: string;
-  description: string?;
+  description: string;
   status: ApplicationRoleStatus;
   created_at: number;
   updated_at: number;
 }
+
+// CreateInput
+export type ApplicationRolesCreateInput = {
+  role_id: string;
+  description: string;
+  status: ApplicationRoleStatus;
+  created_at: number;
+  updated_at: number;
+};
+
+// UpdateInput
+export type ApplicationRolesUpdateInput = Partial<IApplicationRoles>;
+
+// QueryBy<PartitionKey>Input
+export type ApplicationRolesQueryByApplicationIdInput = {
+  application_id: string;
+};
+
+// Response types
+export type ApplicationRolesCreateResponse = {
+  StatusCode: number;
+  Message: string;
+  Data: IApplicationRoles;
+};
+export type ApplicationRolesUpdateResponse = {
+  StatusCode: number;
+  Message: string;
+  Data: IApplicationRoles;
+};
+export type ApplicationRolesResponse = {
+  ApplicationRolesQueryByApplicationId: {
+    StatusCode: number;
+    Message: string;
+    Data: IApplicationRoles;
+  };
+};
 
 export class ApplicationRoles implements IApplicationRoles {
   application_id: string = '';
