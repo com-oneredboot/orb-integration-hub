@@ -21,9 +21,12 @@ export type ApplicationRolesUpdateInput = Partial<IApplicationRoles>;
 // QueryBy<PartitionKey>Input
 // QueryBy<SecondaryIndex>Input types
 export type ApplicationRolesQueryByApplicationIdInput = {
-application_id: string; };
+    applicationId: string;
+};
 export type ApplicationRolesQueryByRoleIdInput = {
-role_id: string; application_id: string; };
+    roleId: string;
+    applicationId?: string;
+};
 
 // Response types
 export type ApplicationRolesCreateResponse = {

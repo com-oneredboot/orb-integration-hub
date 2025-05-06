@@ -228,7 +228,7 @@ export class UserService extends ApiService {
     let user;
 
     try {
-      const userQueryInput: UsersQueryByUserIdInput = { user_id: email, status: '' };
+      const userQueryInput: UsersQueryByUserIdInput = { userId: email, status: '' };
       const userResponse = await this.userQueryByUserId(userQueryInput, email);
 
       user = userResponse.UsersQueryByUserId?.data;
@@ -436,7 +436,7 @@ export class UserService extends ApiService {
         };
       }
 
-      const updatedUser = await this.userQueryByUserId({ user_id: input.userId, status: '' });
+      const updatedUser = await this.userQueryByUserId({ userId: input.userId, status: '' });
 
       return updatedUser;
 
@@ -461,5 +461,26 @@ export class UserService extends ApiService {
         }
       };
     }
+  }
+
+  /**
+   * Send SMS verification code to a phone number
+   * @param phoneNumber
+   * @returns Promise with status_code and optional message
+   */
+  public async sendSMSVerificationCode(phoneNumber: string): Promise<{ statusCode: number, message?: string }> {
+    // TODO: Implement actual SMS sending logic
+    return { statusCode: 200, message: 'Verification code sent' };
+  }
+
+  /**
+   * Verify SMS code for a phone number
+   * @param phoneNumber
+   * @param code
+   * @returns Promise<boolean> indicating if the code is valid
+   */
+  public async verifySMSCode(phoneNumber: string, code: string): Promise<boolean> {
+    // TODO: Implement actual verification logic
+    return true;
   }
 }

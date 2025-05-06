@@ -18,6 +18,7 @@ import * as fromAuth from "./auth.selectors";
 import { CognitoService } from "../../../../../core/services/cognito.service";
 import { ErrorRegistryUtil } from "../../../../../core/models/ErrorRegistry.util";
 import { UsersQueryByEmailInput } from "../../../../../core/models/Users.model";
+import { IUsers } from "../../../../../core/models/Users.model";
 
 @Injectable()
 export class AuthEffects {
@@ -28,11 +29,12 @@ export class AuthEffects {
       tap(action => console.debug('Effect [CheckEmail]: Starting', action)),
       switchMap(({ email }) => {
         console.debug('Effect [CheckEmail]: Making service call');
-        const userInput: UsersQueryByEmailInput = { email: email, user_id: '' };
+        const userInput: UsersQueryByEmailInput = { email: email, userId: '' };
         
-        return from(this.userService.userExists(userInput, email)).pipe(
+        return from(this.userService.userExists(userInput)).pipe(
           tap(result => console.debug('Effect [CheckEmail]: Service returned', result)),
-          map((exists: boolean) => {
+          map((result: IUsers | false) => {
+            const exists = !!result;
             console.debug('Effect [CheckEmail]: Success, user exists:', exists);
             return AuthActions.checkEmailSuccess({ userExists: exists });
           }),
@@ -93,8 +95,9 @@ export class AuthEffects {
     this.actions$.pipe(
       ofType(AuthActions.verifyEmail),
       switchMap(({ input, code, email }) => {
-        // Use the email directly if provided in the action
-        return from(this.userService.emailVerify(input, code, email)).pipe(
+        // Convert UsersQueryByEmailInput to UsersQueryByUserIdInput
+        const userIdInput = { userId: input.userId || '', status: '' };
+        return from(this.userService.emailVerify(userIdInput, code, email)).pipe(
           map(response => {
             if (response) {
               return AuthActions.verifyEmailSuccess();
@@ -227,7 +230,7 @@ export class AuthEffects {
       switchMap(({ phoneNumber }) => {
         return from(this.userService.sendSMSVerificationCode(phoneNumber)).pipe(
           map(response => {
-            if (response.status_code === 200) {
+            if (response.statusCode === 200) {
               return AuthActions.setupPhoneSuccess({ 
                 validationId: phoneNumber,
                 expiresAt: Date.now() + 10 * 60 * 1000

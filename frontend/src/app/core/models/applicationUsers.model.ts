@@ -21,9 +21,14 @@ export type ApplicationUsersUpdateInput = Partial<IApplicationUsers>;
 // QueryBy<PartitionKey>Input
 // QueryBy<SecondaryIndex>Input types
 export type ApplicationUsersQueryByApplicationIdInput = {
-application_id: string; role_id: string; status: string; };
+    applicationId: string;
+    roleId?: string;
+    status?: string;
+};
 export type ApplicationUsersQueryByUserIdInput = {
-user_id: string; application_id: string; };
+    userId: string;
+    applicationId?: string;
+};
 
 // Response types
 export type ApplicationUsersCreateResponse = {

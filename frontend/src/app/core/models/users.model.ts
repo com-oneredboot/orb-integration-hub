@@ -26,9 +26,13 @@ export type UsersUpdateInput = Partial<IUsers>;
 // QueryBy<PartitionKey>Input
 // QueryBy<SecondaryIndex>Input types
 export type UsersQueryByUserIdInput = {
-user_id: string; status: string; };
+    userId: string;
+    status?: string;
+};
 export type UsersQueryByEmailInput = {
-email: string; user_id: string; };
+    email: string;
+    userId?: string;
+};
 
 // Response types
 export type UsersCreateResponse = {

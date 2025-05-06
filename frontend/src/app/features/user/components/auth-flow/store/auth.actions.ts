@@ -8,7 +8,7 @@ import { createActionGroup, emptyProps, props } from '@ngrx/store';
 
 // Application Imports
 import { IUsers } from '../../../../../core/models/Users.model';
-import { UsersQueryByEmail } from '../../../../../core/graphql/Users.graphql';
+import { UsersQueryByEmailInput } from '../../../../../core/models/Users.model';
 import { UsersCreateInput } from '../../../../../core/models/Users.model';
 import { MfaSetupDetails } from '../../../../../core/models/MfaSetupDetails.model';
 
@@ -65,7 +65,7 @@ export const AuthActions = createActionGroup({
     'Register Success': props<{ user: IUsers }>(),
     'Register Failure': props<{ error: string }>(),
 
-    'Verify Email': props<{ input: UsersQueryByEmail, code: string, email?: string }>(),
+    'Verify Email': props<{ input: UsersQueryByEmailInput, code: string, email?: string }>(),
     'Verify Email Success': emptyProps(),
     'Verify Email Failure': props<{ error: string }>(),
 

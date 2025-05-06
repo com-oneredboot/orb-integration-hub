@@ -80,7 +80,9 @@ export type {{ schema.table }}UpdateInput = Partial<I{{ schema.table }}>;
 {% endfor %}
 {% for type_name, fields in query_input_map.items() %}
 export type {{ type_name }} = {
-  {% for field in fields %}{{ field }}: string; {% endfor %}
+  {% for field in fields %}
+    {{ field|to_camel_case }}{{ '' if loop.index0 == 0 else '?' }}: string;
+  {% endfor %}
 };
 {% endfor %}
 

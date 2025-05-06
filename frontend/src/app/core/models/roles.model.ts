@@ -25,11 +25,17 @@ export type RolesUpdateInput = Partial<IRoles>;
 // QueryBy<PartitionKey>Input
 // QueryBy<SecondaryIndex>Input types
 export type RolesQueryByRoleIdInput = {
-role_id: string; role_type: string; };
+    roleId: string;
+    roleType?: string;
+};
 export type RolesQueryByUserIdInput = {
-user_id: string; role_id: string; };
+    userId: string;
+    roleId?: string;
+};
 export type RolesQueryByApplicationIdInput = {
-application_id: string; role_id: string; };
+    applicationId: string;
+    roleId?: string;
+};
 
 // Response types
 export type RolesCreateResponse = {

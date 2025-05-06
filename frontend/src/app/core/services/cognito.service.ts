@@ -260,7 +260,7 @@ export class CognitoService {
       this.isAuthenticatedSubject.next(false);
     } catch (error) {
       console.error('Sign out error:', error);
-      throw new AuthError(error instanceof Error ? error.message : 'Sign out failed');
+      throw new AuthError({ message: error instanceof Error ? error.message : 'Sign out failed' });
     }
   }
 

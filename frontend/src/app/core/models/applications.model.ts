@@ -22,9 +22,12 @@ export type ApplicationsUpdateInput = Partial<IApplications>;
 // QueryBy<PartitionKey>Input
 // QueryBy<SecondaryIndex>Input types
 export type ApplicationsQueryByApplicationIdInput = {
-application_id: string; };
+    applicationId: string;
+};
 export type ApplicationsQueryByNameInput = {
-name: string; application_id: string; };
+    name: string;
+    applicationId?: string;
+};
 
 // Response types
 export type ApplicationsCreateResponse = {
