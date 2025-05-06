@@ -16,9 +16,10 @@ import {v4 as uuidv4} from 'uuid';
 import {AuthActions} from './store/auth.actions';
 import {AuthState, AuthSteps} from './store/auth.state';
 import * as fromAuth from './store/auth.selectors';
-import {UsersCreateInput} from "../../../../core/graphql/Users.graphql";
+import { UsersCreateInput } from "../../../../core/models/Users.model";
 import {QRCodeToDataURLOptions} from "qrcode";
 import {UserService} from "../../../../core/services/user.service";
+import { UserStatus } from "../../../../core/models/UserStatus.enum";
 
 
 @Component({
@@ -186,21 +187,21 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           case AuthSteps.PASSWORD_SETUP:
             // Create a complete UserCreateInput with all required fields
             const timestamp = Date.now();
-            const userCreateInput = {
-              user_id: uuidv4(),
-              cognito_id: uuidv4(),
+            const userCreateInput: UsersCreateInput = {
+              userId: uuidv4(),
+              cognitoId: uuidv4(),
               email: email,
               // Optional fields
-              first_name: this.authForm.get('firstName')?.value || '',
-              last_name: this.authForm.get('lastName')?.value || '',
-              phone_number: '',
-              phone_verified: false,
+              firstName: this.authForm.get('firstName')?.value || '',
+              lastName: this.authForm.get('lastName')?.value || '',
+              phoneNumber: '',
+              phoneVerified: false,
               // Required fields
               groups: ['USER'],
-              status: 'PENDING',
-              created_at: timestamp,
-              updated_at: timestamp
-            } as UsersCreateInput;
+              status: UserStatus.PENDING,
+              createdAt: timestamp,
+              updatedAt: timestamp
+            };
             if (!password) return;
             this.store.dispatch(AuthActions.createUser({input: userCreateInput, password: password } ));
             break;

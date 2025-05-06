@@ -7,63 +7,62 @@ import { ApplicationStatus } from './ApplicationStatus.enum';
 
 // CreateInput
 export type ApplicationsCreateInput = {
+  applicationId: string;
   name: string;
   description: string;
   status: ApplicationStatus;
-  created_at: number;
-  updated_at: number;
-  user_id: string;
+  createdAt: number;
+  updatedAt: number;
+  userId: string;
 };
 
 // UpdateInput
 export type ApplicationsUpdateInput = Partial<IApplications>;
 
 // QueryBy<PartitionKey>Input
-export type ApplicationsQueryByApplicationIdInput = {
-  application_id: string;
-};
-
 // QueryBy<SecondaryIndex>Input types
+export type ApplicationsQueryByApplicationIdInput = {
+application_id: string; };
 export type ApplicationsQueryByNameInput = {
-  name: string;  application_id: string;};
+name: string; application_id: string; };
 
 // Response types
 export type ApplicationsCreateResponse = {
-  StatusCode: number;
-  Message: string;
-  Data: IApplications | null;
+  statusCode: number;
+  message: string;
+  data: IApplications | null;
 };
 export type ApplicationsUpdateResponse = {
-  StatusCode: number;
-  Message: string;
-  Data: IApplications | null;
+  statusCode: number;
+  message: string;
+  data: IApplications | null;
 };
 export type ApplicationsResponse = {
   ApplicationsQueryByApplicationId: {
-    StatusCode: number;
-    Message: string;
-    Data: IApplications | null;
+    statusCode: number;
+    message: string;
+    data: IApplications | null;
   };
 };
 
 export interface IApplications {
-  application_id: string;
+  applicationId: string;
   name: string;
   description: string;
   status: ApplicationStatus;
-  created_at: number;
-  updated_at: number;
-  user_id: string;
+  createdAt: number;
+  updatedAt: number;
+  userId: string;
 }
 
 export class Applications implements IApplications {
-  application_id: string = '';
+  applicationId: string = '';
   name: string = '';
   description: string = '';
   status: ApplicationStatus = ApplicationStatus.UNKNOWN;
-  created_at: number = 0;
-  updated_at: number = 0;
-  user_id: string = '';
+  createdAt: number = 0;
+  updatedAt: number = 0;
+  userId: string = '';
 
   constructor(data: Partial<IApplications> = {}) {
     Object.entries(data).forEach(([key, value]) => {

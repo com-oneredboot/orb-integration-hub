@@ -7,64 +7,59 @@ import { ApplicationUserStatus } from './ApplicationUserStatus.enum';
 
 // CreateInput
 export type ApplicationUsersCreateInput = {
-  user_id: string;
-  role_id: string;
+  applicationId: string;
+  userId: string;
+  roleId: string;
   status: ApplicationUserStatus;
-  created_at: number;
-  updated_at: number;
+  createdAt: number;
+  updatedAt: number;
 };
 
 // UpdateInput
 export type ApplicationUsersUpdateInput = Partial<IApplicationUsers>;
 
 // QueryBy<PartitionKey>Input
-export type ApplicationUsersQueryByApplicationIdInput = {
-  application_id: string;
-};
-
 // QueryBy<SecondaryIndex>Input types
+export type ApplicationUsersQueryByApplicationIdInput = {
+application_id: string; role_id: string; status: string; };
 export type ApplicationUsersQueryByUserIdInput = {
-  user_id: string;  application_id: string;};
-export type ApplicationUsersQueryByApplicationIdInput = {
-  application_id: string;  role_id: string;};
-export type ApplicationUsersQueryByApplicationIdInput = {
-  application_id: string;  status: string;};
+user_id: string; application_id: string; };
 
 // Response types
 export type ApplicationUsersCreateResponse = {
-  StatusCode: number;
-  Message: string;
-  Data: IApplicationUsers | null;
+  statusCode: number;
+  message: string;
+  data: IApplicationUsers | null;
 };
 export type ApplicationUsersUpdateResponse = {
-  StatusCode: number;
-  Message: string;
-  Data: IApplicationUsers | null;
+  statusCode: number;
+  message: string;
+  data: IApplicationUsers | null;
 };
 export type ApplicationUsersResponse = {
   ApplicationUsersQueryByApplicationId: {
-    StatusCode: number;
-    Message: string;
-    Data: IApplicationUsers | null;
+    statusCode: number;
+    message: string;
+    data: IApplicationUsers | null;
   };
 };
 
 export interface IApplicationUsers {
-  application_id: string;
-  user_id: string;
-  role_id: string;
+  applicationId: string;
+  userId: string;
+  roleId: string | undefined;
   status: ApplicationUserStatus;
-  created_at: number;
-  updated_at: number;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export class ApplicationUsers implements IApplicationUsers {
-  application_id: string = '';
-  user_id: string = '';
-  role_id: string = '';
+  applicationId: string = '';
+  userId: string = '';
+  roleId: string | undefined = '';
   status: ApplicationUserStatus = ApplicationUserStatus.UNKNOWN;
-  created_at: number = 0;
-  updated_at: number = 0;
+  createdAt: number = 0;
+  updatedAt: number = 0;
 
   constructor(data: Partial<IApplicationUsers> = {}) {
     Object.entries(data).forEach(([key, value]) => {

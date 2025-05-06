@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Observable, Subject, takeUntil } from 'rxjs';
-import { IUsers, UsersUpdateInput, UsersResponse } from '../../../../core/models/Users.model';
+import { IUsers, UsersUpdateInput, UsersResponse, UsersQueryByUserIdInput } from '../../../../core/models/Users.model';
 import * as fromAuth from '../../components/auth-flow/store/auth.selectors';
 import { AuthActions } from '../../components/auth-flow/store/auth.actions';
 import { UserService } from '../../../../core/services/user.service';
@@ -47,10 +47,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
         if (user) {
           // User exists, update the form
           this.profileForm.patchValue({
-            firstName: user.first_name || '',
-            lastName: user.last_name || '',
+            firstName: user.firstName || '',
+            lastName: user.lastName || '',
             email: user.email || '',
-            phoneNumber: user.phone_number || ''
+            phoneNumber: user.phoneNumber || ''
           });
         } else {
           // No user, redirect to authentication page
@@ -143,8 +143,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
       .subscribe(user => {
         if (user) {
           this.profileForm.patchValue({
-            firstName: user.first_name || '',
-            lastName: user.last_name || ''
+            firstName: user.firstName || '',
+            lastName: user.lastName || ''
           });
           this.profileForm.markAsPristine();
         }
@@ -170,40 +170,45 @@ export class ProfileComponent implements OnInit, OnDestroy {
       // Get current user to retrieve the user_id
       const user = await this.getCurrentUser();
       
-      if (!user || !user.user_id) {
+      if (!user || !user.userId) {
         console.error('Cannot update profile: No user ID available');
         return;
       }
       
       // Create update input from form values
       const updateInput: UsersUpdateInput = {
-        user_id: user.user_id,
-        first_name: this.profileForm.get('firstName')?.value,
-        last_name: this.profileForm.get('lastName')?.value
+        userId: user.userId,
+        firstName: this.profileForm.get('firstName')?.value,
+        lastName: this.profileForm.get('lastName')?.value
       };
       
       // Call the userService to update the profile
       console.log('Updating user profile:', updateInput);
       
-      // Make API call to update the user
-      const response = await this.userService.userQueryByUserId(updateInput);
-      
-      if (response.UsersQueryByUserId?.StatusCode === 200) {
-        const updatedUser = response.UsersQueryByUserId.Data;
-        if (updatedUser) {
-          this.profileForm.patchValue({
-            firstName: updatedUser.first_name,
-            lastName: updatedUser.last_name,
-            email: updatedUser.email,
-            phoneNumber: updatedUser.phone_number
-          });
+      let response: UsersResponse | undefined;
+      if (updateInput.userId) {
+        const queryInput: UsersQueryByUserIdInput = { userId: updateInput.userId, status: '' };
+        response = await this.userService.userQueryByUserId(queryInput);
+        
+        if (response.UsersQueryByUserId?.statusCode === 200) {
+          const updatedUser = response.UsersQueryByUserId.data;
+          if (updatedUser) {
+            this.profileForm.patchValue({
+              firstName: updatedUser.firstName,
+              lastName: updatedUser.lastName,
+              email: updatedUser.email,
+              phoneNumber: updatedUser.phoneNumber
+            });
+          }
         }
+      } else {
+        // handle missing userId case (e.g., show error or skip)
       }
       
       // Update the store with the updated user data
-      if (response?.UsersQueryByUserId?.Data) {
+      if (response?.UsersQueryByUserId?.data) {
         this.store.dispatch(AuthActions.signInSuccess({
-          user: response.UsersQueryByUserId.Data,
+          user: response.UsersQueryByUserId.data,
           message: 'Profile updated successfully'
         }));
       }

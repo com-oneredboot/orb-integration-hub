@@ -7,15 +7,15 @@
 export interface IAuthError {
   code: string;
   message: string;
-  description: string;
-  details: string;
+  description: string | undefined;
+  details: Record<string, any> | undefined;
 }
 
 export class AuthError implements IAuthError {
   code: string = '';
   message: string = '';
-  description: string = '';
-  details: string = '';
+  description: string | undefined = '';
+  details: Record<string, any> | undefined = undefined;
 
   constructor(data: Partial<IAuthError> = {}) {
     Object.entries(data).forEach(([key, value]) => {
@@ -29,7 +29,7 @@ export class AuthError implements IAuthError {
 }
 // Response envelope for GraphQL type
 export type AuthErrorResponse = {
-  StatusCode: number;
-  Message: string;
-  Data: IAuthError | null;
+  statusCode: number;
+  message: string;
+  data: IAuthError | null;
 };

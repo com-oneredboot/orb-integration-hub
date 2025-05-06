@@ -13,19 +13,18 @@ import { BehaviorSubject, Observable } from 'rxjs';
 // Application Imports
 import {ApiService} from "./api.service";
 import {
-  UsersCreateMutation, UsersUpdateMutation, UsersDeleteMutation, UsersQueryByUserId
+  UsersCreateMutation, UsersUpdateMutation, UsersDeleteMutation, UsersQueryByUserId, UsersQueryByEmail
 } from "../graphql/Users.graphql";
 import {
   UsersCreateInput, UsersUpdateInput, UsersQueryByUserIdInput,
-  UsersCreateResponse, UsersResponse, UsersUpdateResponse
+  UsersCreateResponse, UsersResponse, UsersUpdateResponse, IUsers
 } from "../models/Users.model";
 import { UserGroup } from "../models/UserGroup.enum";
 import { UserStatus } from "../models/UserStatus.enum";
 import { CognitoService } from "./cognito.service";
-import { AuthResponse } from "../models/auth.model";
+import { AuthResponse } from "../models/Auth.model";
 import { AuthActions } from '../../features/user/components/auth-flow/store/auth.actions';
-import { sendSMSVerificationCodeMutation, SMSVerificationInput, SMSVerificationResponse } from "../models/sms.model";
-import { ErrorRegistry } from "../models/error-registry.model";
+import { toSnakeCase, toCamelCase } from '../caseConverter';
 
 
 @Injectable({
@@ -71,60 +70,39 @@ export class UserService extends ApiService {
 
       const timestamp = Date.now();
       const userCreateInput: UsersCreateInput = {
-        user_id: uuidv4(),
-        cognito_id: input.cognito_id,
+        userId: uuidv4(),
+        cognitoId: input.cognitoId,
         email: input.email,
-        groups: [UserGroups.USER] as string[],
+        firstName: '',
+        lastName: '',
+        phoneNumber: '',
+        groups: [UserGroup.USER] as string[],
         status: UserStatus.PENDING,
-        created_at: timestamp,
-        phone_verified: false,
-        updated_at: timestamp
+        createdAt: timestamp,
+        phoneVerified: false,
+        updatedAt: timestamp
       };
 
       const response = await this.mutate(
-        UsersCreateMutation, {"input": userCreateInput}, "apiKey") as GraphQLResult<UsersCreateResponse>;
+        UsersCreateMutation, {"input": toSnakeCase(userCreateInput)}, "apiKey") as GraphQLResult<UsersCreateResponse>;
       console.debug('createUser Response: ', response);
 
       return {
-        UsersQueryByUserId: response.data.UsersCreate
+        UsersQueryByUserId: {
+          statusCode: response.data?.statusCode ?? 200,
+          message: response.data?.message ?? '',
+          data: response.data?.data ?? null
+        }
       } as UsersResponse;
 
     } catch (error) {
       console.error('Error creating User:', error);
       
-      let errorCode = 'ORB-API-002';
-      let errorMessage = 'Error creating user';
-      
-      if (error && typeof error === 'object' && 'errors' in error) {
-        const gqlError = error as any;
-        if (gqlError.errors?.[0]?.message) {
-          const errorMsg = gqlError.errors[0].message;
-          
-          if (errorMsg.includes('NonNull type')) {
-            errorCode = 'ORB-API-003';
-            errorMessage = `[${errorCode}] Invalid input for user creation: Missing required field`;
-          } else if (errorMsg.includes('already exists')) {
-            errorCode = 'ORB-AUTH-004';
-            errorMessage = ErrorRegistry.getErrorMessage(errorCode);
-          } else {
-            errorMessage = `[${errorCode}] ${errorMsg}`;
-          }
-          
-          ErrorRegistry.logError(errorCode, { 
-            originalError: error,
-            graphqlError: gqlError.errors[0]
-          });
-        }
-      } else if (error instanceof Error) {
-        errorMessage = `[${errorCode}] ${error.message}`;
-        ErrorRegistry.logError(errorCode, { originalError: error });
-      }
-      
       return {
         UsersQueryByUserId: {
-          StatusCode: 500,
-          Message: errorMessage,
-          Data: null
+          statusCode: 500,
+          message: 'Error creating user',
+          data: null
         }
       } as UsersResponse;
     }
@@ -135,44 +113,29 @@ export class UserService extends ApiService {
    * @param input UserQueryInput with backend-compatible fields
    * @param email Optional email to filter results client-side
    */
-  public async userExists(input: UsersQueryByUserId, email?: string): Promise<boolean> {
-    const startTime = Date.now();
-    console.debug('UserService [userExists]: Starting', { input, email, time: startTime });
-
+  public async userExists(input: { userId?: string; email?: string }): Promise<IUsers | false> {
     try {
-      console.debug('UserService [userExists]: Making API call');
-      
+      let queryInput;
+      let query;
+      if (input.userId) {
+        queryInput = { userId: input.userId, status: '' };
+        query = UsersQueryByUserId;
+      } else if (input.email) {
+        queryInput = { email: input.email, userId: '' };
+        query = UsersQueryByEmail;
+      } else {
+        throw new Error('Must provide userId or email');
+      }
       const response = await this.query(
-        usersExistQuery,
-        {input: input},
+        query,
+        { input: toSnakeCase(queryInput) },
         'apiKey'
       ) as GraphQLResult<UsersResponse>;
-
-      console.debug('UserService [userExists]: API response received', {
-        response,
-        elapsed: Date.now() - startTime
-      });
-
-      if (response.data?.UsersQueryByUserId?.StatusCode === 404) {
-        console.debug('UserService [userExists]: User not found (404)');
-        return false;
-      }
-
-      if (response.data?.UsersQueryByUserId?.StatusCode !== 200) {
-        console.debug('UserService [userExists]: Invalid status code', response.data?.UsersQueryByUserId?.StatusCode);
-        throw new Error(`Invalid response code: ${response.data?.UsersQueryByUserId?.StatusCode}`);
-      }
-
-      const result = Boolean(response.data?.UsersQueryByUserId?.Data?.user_id);
-      console.debug('UserService [userExists]: Returning result', result);
-      return result;
-
+      const user = response.data?.UsersQueryByUserId?.data;
+      return user ? user : false;
     } catch (error) {
-      console.error('UserService [userExists]: Error caught', {
-        error,
-        elapsed: Date.now() - startTime
-      });
-      throw error;
+      console.error('Error in userExists:', error);
+      return false;
     }
   }
 
@@ -189,15 +152,15 @@ export class UserService extends ApiService {
       // get the user
       const userResponse = await this.userQueryByUserId(input, email);
       console.debug('User Response:', userResponse);
-      if (userResponse.UsersQueryByUserId?.StatusCode !== 200 || !userResponse.UsersQueryByUserId?.Data) {
+      if (userResponse.UsersQueryByUserId?.statusCode !== 200 || !userResponse.UsersQueryByUserId?.data) {
         return {
-          status_code: userResponse.UsersQueryByUserId?.StatusCode,
-          isSignedIn: false,
-          message: 'Error getting user'
+          statusCode: userResponse.UsersQueryByUserId?.statusCode,
+          message: 'Error getting user',
+          data: null
         };
       }
 
-      const emailVerifyResponse = await this.cognitoService.emailVerify(userResponse.UsersQueryByUserId.Data.cognito_id, code);
+      const emailVerifyResponse = await this.cognitoService.emailVerify(userResponse.UsersQueryByUserId.data.cognitoId, code);
       console.debug('verifyEmail Response: ', emailVerifyResponse);
 
       return emailVerifyResponse;
@@ -205,9 +168,9 @@ export class UserService extends ApiService {
     } catch (error) {
       console.error('Error verifying email:', error);
       return {
-        status_code: 500,
-        isSignedIn: false,
-        message: 'Error verifying email'
+        statusCode: 500,
+        message: 'Error verifying email',
+        data: null
       };
     }
   }
@@ -217,38 +180,39 @@ export class UserService extends ApiService {
    * @param input UserQueryInput with backend-compatible fields
    * @param email Optional email to filter results client-side
    */
-  public async userQueryByUserId(input: UsersQueryInput, email?: string): Promise<UsersResponse> {
+  public async userQueryByUserId(input: UsersQueryByUserIdInput, email?: string): Promise<UsersResponse> {
     console.debug('userQueryByUserId:', input, email ? { email } : '');
     try {
       const response = await this.query(
         UsersQueryByUserId,
-        {input: input},
+        {input: toSnakeCase(input)},
         'apiKey') as GraphQLResult<UsersResponse>;
 
       console.debug('userQueryByUserId Response: ', response);
       
-      if (email && response.data?.UsersQueryByUserId?.Data && 
-          response.data.UsersQueryByUserId.Data.email !== email) {
+      if (email && response.data?.UsersQueryByUserId?.data && 
+          response.data.UsersQueryByUserId.data.email !== email) {
         
         console.debug('userQueryByUserId: Email mismatch, returning 404');
         
         return {
           UsersQueryByUserId: {
-            StatusCode: 404,
-            Message: 'User not found',
-            Data: null
+            statusCode: 404,
+            message: 'User not found',
+            data: null
           }
         } as UsersResponse;
       }
       
-      return response.data;
+      const camelResponse = toCamelCase(response);
+      return camelResponse;
     } catch (error) {
       console.error('Error getting user:', error);
       return {
         UsersQueryByUserId: {
-          StatusCode: 500,
-          Message: 'Error getting user',
-          Data: null
+          statusCode: 500,
+          message: 'Error getting user',
+          data: null
         }
       } as UsersResponse;
     }
@@ -264,15 +228,15 @@ export class UserService extends ApiService {
     let user;
 
     try {
-      const userQueryInput = { email: email } as UsersQueryInput;
+      const userQueryInput: UsersQueryByUserIdInput = { user_id: email, status: '' };
       const userResponse = await this.userQueryByUserId(userQueryInput, email);
 
-      user = userResponse.UsersQueryByUserId?.Data;
-      if (userResponse.UsersQueryByUserId?.StatusCode !== 200 || !user) {
+      user = userResponse.UsersQueryByUserId?.data;
+      if (userResponse.UsersQueryByUserId?.statusCode !== 200 || !user) {
         return {
-          status_code: userResponse.UsersQueryByUserId?.StatusCode,
-          isSignedIn: false,
-          message: 'User Does Not Exist'
+          statusCode: userResponse.UsersQueryByUserId?.statusCode,
+          message: 'User Does Not Exist',
+          data: null
         };
       }
 
@@ -283,26 +247,25 @@ export class UserService extends ApiService {
     } catch (error) {
       console.error('Error getting user:', error);
       return {
-        status_code: 500,
-        isSignedIn: false,
-        message: 'Error getting user'
-      } as AuthResponse;
+        statusCode: 500,
+        message: 'Error getting user',
+        data: null
+      };
     }
 
     try {
       // Pass the user's email as the third parameter for MFA setup
-      const userSignInResponse = await this.cognitoService.signIn(user.cognito_id, password, user.email);
+      const userSignInResponse = await this.cognitoService.signIn(user.cognitoId, password, user.email);
 
       // Handle already signed in case
-      if (userSignInResponse.status_code === 401 &&
+      if (userSignInResponse.statusCode === 401 &&
         userSignInResponse.message?.toLowerCase().includes('already signed in')) {
         console.warn('User already signed in');
         await this.cognitoService.checkIsAuthenticated();
         return {
-          status_code: 200,
-          isSignedIn: true,
+          statusCode: 200,
           message: 'User already signed in',
-          user
+          data: null
         };
       }
 
@@ -315,18 +278,17 @@ export class UserService extends ApiService {
       if (error_message.toLowerCase().includes('already signed in')) {
         await this.cognitoService.checkIsAuthenticated();
         return {
-          status_code: 200,
-          isSignedIn: true,
+          statusCode: 200,
           message: 'User already signed in',
-          user
+          data: null
         };
       }
 
       return {
-        status_code: 500,
-        isSignedIn: false,
-        message: 'Error signing in: ' + error_message
-      } as AuthResponse;
+        statusCode: 500,
+        message: 'Error signing in: ' + error_message,
+        data: null
+      };
 
     }
   }
@@ -339,15 +301,17 @@ export class UserService extends ApiService {
     try {
       console.debug('mfaSetup');
       return {
-        status_code: 200,
-      } as AuthResponse
+        statusCode: 200,
+        message: 'MFA setup successful',
+        data: null
+      };
     } catch (error) {
       console.error('Error setting up MFA:', error);
       return {
-        status_code: 500,
-        isSignedIn: false,
-        message: 'Error setting up MFA'
-      } as AuthResponse
+        statusCode: 500,
+        message: 'Error setting up MFA',
+        data: null
+      };
     }
   }
 
@@ -366,10 +330,10 @@ export class UserService extends ApiService {
     } catch (error) {
       console.error('Error verifying MFA:', error);
       return {
-        status_code: 500,
-        isSignedIn: false,
-        message: 'Error verifying MFA'
-      } as AuthResponse;
+        statusCode: 500,
+        message: 'Error verifying MFA',
+        data: null
+      };
     }
   }
 
@@ -391,80 +355,14 @@ export class UserService extends ApiService {
     // Check for required attributes
     const hasRequiredAttributes =
       !!user.email &&
-      !!user.first_name &&
-      !!user.last_name &&
-      !!user.phone_number;
+      !!user.firstName &&
+      !!user.lastName &&
+      !!user.phoneNumber;
 
     // Check user status is ACTIVE
     const isActive = user.status === 'ACTIVE';
 
     return hasRequiredAttributes && isActive;
-  }
-
-  /**
-   * Send SMS verification code to a phone number
-   * @param phoneNumber The phone number to send the verification code to
-   * @returns Promise with the verification response
-   */
-  public async sendSMSVerificationCode(phoneNumber: string): Promise<SMSVerificationResponse> {
-    console.debug('sendSMSVerificationCode:', phoneNumber);
-
-    try {
-      const input: SMSVerificationInput = {
-        phone_number: phoneNumber
-      };
-
-      const response = await this.mutate<{sendSMSVerificationCode: SMSVerificationResponse}>(
-        sendSMSVerificationCodeMutation,
-        { input },
-        'userPool'
-      );
-
-      console.debug('sendSMSVerificationCode Response:', response);
-
-      if (!response.data?.sendSMSVerificationCode) {
-        return {
-          status_code: 500,
-          message: 'No response from SMS verification service'
-        };
-      }
-
-      return response.data.sendSMSVerificationCode;
-    } catch (error) {
-      console.error('Error sending SMS verification code:', error);
-
-      let errorMessage = 'Error sending SMS verification code';
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-
-      return {
-        status_code: 500,
-        message: errorMessage
-      };
-    }
-  }
-
-  /**
-   * Verify an SMS code
-   * @param phoneNumber The phone number to verify
-   * @param code The verification code
-   * @returns Promise with a boolean indicating success
-   */
-  public async verifySMSCode(phoneNumber: string, code: string): Promise<boolean> {
-    console.debug('verifySMSCode:', phoneNumber, code);
-
-    try {
-      // TODO: Implement actual code verification against backend
-      // This should be replaced with a real API call to a verification endpoint
-      
-      // For now we'll return false until the real implementation is complete
-      console.error('SMS verification not yet implemented with backend');
-      return false;
-    } catch (error) {
-      console.error('Error verifying SMS code:', error);
-      throw error;
-    }
   }
 
   /**
@@ -476,31 +374,31 @@ export class UserService extends ApiService {
     console.debug('userUpdate input:', input);
 
     try {
-      if (!input.user_id) {
-        console.error('Cannot update user: missing required user_id');
+      if (!input.userId) {
+        console.error('Cannot update user: missing required userId');
         return {
           UsersQueryByUserId: {
-            StatusCode: 400,
-            Message: 'Missing required user_id',
-            Data: null
+            statusCode: 400,
+            message: 'Missing required userId',
+            data: null
           }
         };
       }
 
       let hasUpdates = false;
       const updateInput: UsersUpdateInput = {
-        user_id: input.user_id,
-        updated_at: Date.now()
+        userId: input.userId,
+        updatedAt: Date.now()
       };
       hasUpdates = true;
 
-      if (input.first_name) {
-        updateInput.first_name = input.first_name;
+      if (input.firstName) {
+        updateInput.firstName = input.firstName;
         hasUpdates = true;
       }
 
-      if (input.last_name) {
-        updateInput.last_name = input.last_name;
+      if (input.lastName) {
+        updateInput.lastName = input.lastName;
         hasUpdates = true;
       }
 
@@ -509,8 +407,8 @@ export class UserService extends ApiService {
         hasUpdates = true;
       }
 
-      if (input.phone_number) {
-        updateInput.phone_number = input.phone_number;
+      if (input.phoneNumber) {
+        updateInput.phoneNumber = input.phoneNumber;
         hasUpdates = true;
       }
 
@@ -522,23 +420,23 @@ export class UserService extends ApiService {
 
       const response = await this.mutate(
         UsersUpdateMutation,
-        { input: updateInput },
+        { input: toSnakeCase(updateInput) },
         "userPool"
       ) as GraphQLResult<UsersUpdateResponse>;
 
       console.debug('userUpdate Response:', response);
 
-      if (!response.data?.UsersUpdate) {
+      if (!response.data) {
         return {
           UsersQueryByUserId: {
-            StatusCode: 500,
-            Message: 'No response from update operation',
-            Data: null
+            statusCode: 500,
+            message: 'No response from update operation',
+            data: null
           }
         };
       }
 
-      const updatedUser = await this.userQueryByUserId({ user_id: input.user_id });
+      const updatedUser = await this.userQueryByUserId({ user_id: input.userId, status: '' });
 
       return updatedUser;
 
@@ -557,9 +455,9 @@ export class UserService extends ApiService {
 
       return {
         UsersQueryByUserId: {
-          StatusCode: 500,
-          Message: errorMessage,
-          Data: null
+          statusCode: 500,
+          message: errorMessage,
+          data: null
         }
       };
     }

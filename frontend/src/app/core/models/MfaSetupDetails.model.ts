@@ -7,13 +7,13 @@
 export interface IMfaSetupDetails {
   qrCode: string;
   secretKey: string;
-  setupUri: string;
+  setupUri: string | undefined;
 }
 
 export class MfaSetupDetails implements IMfaSetupDetails {
   qrCode: string = '';
   secretKey: string = '';
-  setupUri: string = '';
+  setupUri: string | undefined = '';
 
   constructor(data: Partial<IMfaSetupDetails> = {}) {
     Object.entries(data).forEach(([key, value]) => {
@@ -27,7 +27,7 @@ export class MfaSetupDetails implements IMfaSetupDetails {
 }
 // Response envelope for GraphQL type
 export type MfaSetupDetailsResponse = {
-  StatusCode: number;
-  Message: string;
-  Data: IMfaSetupDetails | null;
+  statusCode: number;
+  message: string;
+  data: IMfaSetupDetails | null;
 };

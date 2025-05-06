@@ -52,7 +52,7 @@ export interface AuthState {
   mfaSetupDetails?: {
     qrCode: string;
     secretKey: string;
-    setupUri?: URL;
+    setupUri?: string;
   };
 
   // Group related

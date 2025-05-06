@@ -174,6 +174,7 @@ Role-based UI organization:
   - Field names: camelCase (e.g., `applicationId`)
   - Operation names: camelCase (e.g., `applicationUserQueryById`)
   - Response types: PascalCase with "Response" suffix (e.g., `ApplicationUserResponse`)
+  - Response fields: camelCase (e.g., `statusCode`, `message`, `data`)
   - Input types: PascalCase with "Input" suffix (e.g., `ApplicationUserCreateInput`)
 
 ### Frontend Services

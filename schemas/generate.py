@@ -213,11 +213,13 @@ def setup_jinja_env() -> Environment:
     return env
 
 def to_camel_case(s: str) -> str:
-    """Convert string to camelCase."""
-    # First convert to PascalCase
-    pascal = to_pascal_case(s)
-    # Then lowercase the first character
-    return pascal[0].lower() + pascal[1:]
+    """Convert string to camelCase, preserving internal capitalization."""
+    # If already camelCase or PascalCase, just lowercase the first character
+    if '_' not in s and '-' not in s:
+        return s[0].lower() + s[1:] if s else s
+    # Otherwise, convert snake_case or kebab-case to camelCase
+    parts = re.split(r'[_-]', s)
+    return parts[0].lower() + ''.join(word.capitalize() for word in parts[1:])
 
 def to_pascal_case(s: str) -> str:
     """Convert string to PascalCase."""
@@ -401,14 +403,20 @@ def generate_python_model(table: str, schema: TableSchema) -> None:
         logger.error(f'Failed to generate Python model for {table}: {str(e)}')
         raise
 
-def generate_typescript_model(table: str, schema: TableSchema, is_static=False, model_type=None) -> None:
+def generate_typescript_model(table: str, schema: TableSchema, is_static=False, model_type=None, all_model_names=None) -> None:
     try:
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('typescript_model.jinja')
         processed_schema = copy.deepcopy(schema)
         enum_fields = []
+        model_names = all_model_names or []
         for attr in processed_schema.attributes:
-            attr.type = to_typescript_type(attr.type)
+            # Only convert to primitive if not a model reference
+            if attr.type not in model_names:
+                attr.type = to_typescript_type(attr.type)
+            # Always use camelCase for TypeScript property names
+            attr.name = to_camel_case(attr.name)
+            # Enum handling
             if attr.enum_type and not attr.enum_values:
                 enums_path = os.path.join(SCRIPT_DIR, 'core', 'enums.yml')
                 if os.path.exists(enums_path):
@@ -421,7 +429,7 @@ def generate_typescript_model(table: str, schema: TableSchema, is_static=False, 
         # Ensure secondary_indexes is always present
         if not hasattr(processed_schema, 'secondary_indexes') or processed_schema.secondary_indexes is None:
             processed_schema.secondary_indexes = []
-        model_content = template.render(schema=processed_schema, is_static=is_static, enum_fields=enum_fields, model_type=model_type)
+        model_content = template.render(schema=processed_schema, is_static=is_static, enum_fields=enum_fields, model_type=model_type, model_names=model_names)
         file_name = f'{table}.model.ts'
         output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models', file_name)
         write_file(output_path, model_content)
@@ -840,6 +848,7 @@ def main():
         valid_model_names = set()
         valid_enum_names = set()
         valid_graphql_names = set()
+        all_model_names = list(schemas.keys()) + list(static_schemas.keys()) + list(graphql_schemas.keys())
         for table in schemas:
             valid_model_names.add(f'{table}.model.ts')
             valid_model_names.add(f'{table}.model.py')
@@ -860,16 +869,16 @@ def main():
         # Generate models and GraphQL ops for table-backed schemas
         for table, schema in schemas.items():
             generate_python_model(table, schema)
-            generate_typescript_model(table, schema, is_static=False, model_type='table')
+            generate_typescript_model(table, schema, is_static=False, model_type='table', all_model_names=all_model_names)
             generate_typescript_graphql_ops(table, schema)
         # Generate models for static schemas
         for name, schema in static_schemas.items():
             generate_python_model(name, schema)
-            generate_typescript_model(name, schema, is_static=True, model_type='static')
+            generate_typescript_model(name, schema, is_static=True, model_type='static', all_model_names=all_model_names)
         # Generate models for graphql schemas (virtual GraphQL types)
         for name, schema in graphql_schemas.items():
             generate_python_model(name, schema)
-            generate_typescript_model(name, schema, is_static=True, model_type='graphql')
+            generate_typescript_model(name, schema, is_static=True, model_type='graphql', all_model_names=all_model_names)
         # Generate all enums from enums.yml
         generate_all_enums()
         # Generate base GraphQL schema

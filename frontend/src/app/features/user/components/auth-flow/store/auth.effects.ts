@@ -66,11 +66,11 @@ export class AuthEffects {
         // create the user
         return from(this.userService.userCreate(input, password)).pipe(
           map(response => {
-            if (response.UsersQueryByUserId?.StatusCode === 200) {
+            if (response.UsersQueryByUserId?.statusCode === 200) {
               return AuthActions.createUserSuccess();
             }
             return AuthActions.createUserFailure({
-              error: response.UsersQueryByUserId?.Message || 'Failed to create user'
+              error: response.UsersQueryByUserId?.message || 'Failed to create user'
             });
           }),
           catchError(error => {
@@ -118,17 +118,17 @@ export class AuthEffects {
             console.debug('verifyCognitoPassword response:', response);
 
             // error state
-            if (response.status_code !== 200) {
+            if (response.statusCode !== 200) {
               return AuthActions.verifyCognitoPasswordFailure({
                 error: response?.message || 'Failed to verify email and password'
               });
             }
 
             return AuthActions.verifyCognitoPasswordSuccess({
-              needsMFA: response.needsMFA,
-              needsMFASetup: response.needsMFASetup,
+              needsMFA: response.data?.needsMFA,
+              needsMFASetup: response.data?.needsMFASetup,
               message: 'Successfully verified email and password',
-              mfaSetupDetails: response.mfaSetupDetails
+              mfaSetupDetails: response.data?.mfaSetupDetails
             });
 
           }),
@@ -146,7 +146,7 @@ export class AuthEffects {
       switchMap(() =>
         from(this.userService.mfaSetup()).pipe(
           map(response => {
-            if (response.status_code === 200) {
+            if (response.statusCode === 200) {
               return AuthActions.needsMFASetupSuccess();
             }
             return AuthActions.needsMFASetupFailure({
@@ -167,7 +167,7 @@ export class AuthEffects {
       switchMap(({ code }) =>
         from(this.userService.mfaVerify(code)).pipe(
           map(response => {
-            if (response.status_code === 200) {
+            if (response.statusCode === 200) {
               return AuthActions.needsMFASuccess();
             }
             return AuthActions.needsMFAFailure({

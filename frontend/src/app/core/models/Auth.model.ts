@@ -5,25 +5,25 @@
 // Import enums used in this model
 
 export interface IAuth {
-  status_code: number;
-  isSignedIn: boolean;
-  message: string;
-  user: string;
-  needsMFA: boolean;
-  needsMFASetup: boolean;
-  mfaType: string;
-  mfaSetupDetails: string;
+  statusCode: number;
+  isSignedIn: boolean | undefined;
+  message: string | undefined;
+  user: string | undefined;
+  needsMFA: boolean | undefined;
+  needsMFASetup: boolean | undefined;
+  mfaType: string | undefined;
+  mfaSetupDetails: IMfaSetupDetails | undefined;
 }
 
 export class Auth implements IAuth {
-  status_code: number = 0;
-  isSignedIn: boolean = false;
-  message: string = '';
-  user: string = '';
-  needsMFA: boolean = false;
-  needsMFASetup: boolean = false;
-  mfaType: string = '';
-  mfaSetupDetails: string = '';
+  statusCode: number = 0;
+  isSignedIn: boolean | undefined = false;
+  message: string | undefined = '';
+  user: string | undefined = '';
+  needsMFA: boolean | undefined = false;
+  needsMFASetup: boolean | undefined = false;
+  mfaType: string | undefined = '';
+  mfaSetupDetails: IMfaSetupDetails | undefined = undefined;
 
   constructor(data: Partial<IAuth> = {}) {
     Object.entries(data).forEach(([key, value]) => {
@@ -37,7 +37,7 @@ export class Auth implements IAuth {
 }
 // Response envelope for GraphQL type
 export type AuthResponse = {
-  StatusCode: number;
-  Message: string;
-  Data: IAuth | null;
+  statusCode: number;
+  message: string;
+  data: IAuth | null;
 };

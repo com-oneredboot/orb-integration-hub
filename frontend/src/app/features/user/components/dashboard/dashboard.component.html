@@ -8,7 +8,7 @@ description: HTML template file
 <div class="dashboard-container">
   <div class="dashboard-header">
     <h1>Dashboard</h1>
-    <p *ngIf="currentUser$ | async as user">Welcome, {{ user.first_name }}!</p>
+    <p *ngIf="currentUser$ | async as user">Welcome, {{ user.firstName }}!</p>
   </div>
 
   <div class="dashboard-content" *ngIf="currentUser$ | async as user">
@@ -17,7 +17,7 @@ description: HTML template file
       <div class="profile-info">
         <div class="info-item">
           <span class="label">Name:</span>
-          <span class="value">{{ user.first_name }} {{ user.last_name }}</span>
+          <span class="value">{{ user.firstName }} {{ user.lastName }}</span>
         </div>
         <div class="info-item">
           <span class="label">Email:</span>
@@ -25,7 +25,7 @@ description: HTML template file
         </div>
         <div class="info-item">
           <span class="label">Phone:</span>
-          <span class="value">{{ user.phone_number }}</span>
+          <span class="value">{{ user.phoneNumber }}</span>
         </div>
         <div class="info-item">
           <span class="label">Account Status:</span>
@@ -61,9 +61,9 @@ description: HTML template file
           <pre>User Is Valid: {{ isUserValid(user) | json }}</pre>
           <pre>Required Attributes Check:
   - Email: {{ !!user.email }}
-  - First Name: {{ !!user.first_name }}
-  - Last Name: {{ !!user.last_name }}
-  - Phone Number: {{ !!user.phone_number }}
+  - First Name: {{ !!user.firstName }}
+  - Last Name: {{ !!user.lastName}}
+  - Phone Number: {{ !!user.phoneNumber}}
   - Status Is Active: {{ user.status === 'ACTIVE' }}</pre>
         </ng-container>
       </div>

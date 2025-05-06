@@ -114,7 +114,7 @@ export const authReducer = createReducer(
   })),
   on(AuthActions.signInSuccess, (state, { user }) => {
     // Check if phone verification is needed
-    const phoneVerificationNeeded = !user.phone_number;
+    const phoneVerificationNeeded = !user.phoneNumber;
     
     return {
       ...state,

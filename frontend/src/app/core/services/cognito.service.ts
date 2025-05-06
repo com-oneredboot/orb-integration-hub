@@ -21,8 +21,9 @@ import {
 import {BehaviorSubject, Observable} from 'rxjs';
 
 // Application-specific imports
-import { Users, UsersCreateInput } from '../models/Users.model'; 
-import {IAuth } from "../models/Auth.model";
+import { Users, UsersCreateInput, IUsers } from '../models/Users.model';
+import { AuthResponse } from '../models/Auth.model';
+import { IAuth } from "../models/Auth.model";
 import { AuthError } from "../models/AuthError.model";
 import { environment } from '../../../environments/environment';
 
@@ -34,12 +35,12 @@ const appName = environment.appName;
 })
 export class CognitoService {
 
-  public currentUser: Observable<User | null>;
+  public currentUser: Observable<IUsers | null>;
   public isAuthenticated: Observable<boolean>;
   public mfaSetupRequired: Observable<boolean>;
   public mfaRequired: Observable<boolean>;
 
-  private currentUserSubject: BehaviorSubject<User | null>;
+  private currentUserSubject: BehaviorSubject<IUsers | null>;
   private isAuthenticatedSubject: BehaviorSubject<boolean>;
   private mfaSetupRequiredSubject: BehaviorSubject<boolean>;
   private mfaRequiredSubject: BehaviorSubject<boolean>;
@@ -50,7 +51,7 @@ export class CognitoService {
   constructor() {
 
     // Get BehaviorSubjects for current user, authentication status, and MFA setup
-    this.currentUserSubject = new BehaviorSubject<User | null>(null);
+    this.currentUserSubject = new BehaviorSubject<IUsers | null>(null);
     this.isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
     this.mfaSetupRequiredSubject = new BehaviorSubject<boolean>(false);
     this.mfaRequiredSubject = new BehaviorSubject<boolean>(false);
@@ -72,7 +73,7 @@ export class CognitoService {
       console.debug('Creating Cognito user:', input);
 
       return await signUp({
-        username: input.cognito_id,
+        username: input.cognitoId,
         password,
         options: {
           userAttributes: {
@@ -94,17 +95,17 @@ export class CognitoService {
       await confirmSignUp({ username: cognito_id, confirmationCode: code });
 
       return {
-        status_code: 200,
-        isSignedIn: false,
-        message: 'Email verified'
+        statusCode: 200,
+        message: 'Email verified',
+        data: createAuthData({ isSignedIn: false })
       };
 
     } catch (error) {
       console.error('Confirmation error:', error);
       return {
-        status_code: 500,
-        isSignedIn: false,
-        message: error instanceof Error ? error.message : 'Confirmation failed'
+        statusCode: 500,
+        message: error instanceof Error ? error.message : 'Confirmation failed',
+        data: null
       };
     }
   }
@@ -122,10 +123,9 @@ export class CognitoService {
     if (signInResponse.isSignedIn) {
       console.info('Sign in successful for cognito_id:', username);
       return {
-        status_code: 200,
-        isSignedIn: true,
+        statusCode: 200,
         message: 'Sign in successful',
-        user: this.currentUserSubject.value || undefined
+        data: createAuthData({ isSignedIn: true })
       };
     }
 
@@ -140,33 +140,25 @@ export class CognitoService {
         const setupUri = totpSetupDetails.getSetupUri(issuer);
         this.mfaSetupRequiredSubject.next(true);
         return {
-          status_code: 200,
-          isSignedIn: false,
-          needsMFASetup: true,
-          mfaType: 'totp',
-          mfaSetupDetails: {
-            qrCode: email || username, // Use email if available
-            secretKey: nextStep.totpSetupDetails?.sharedSecret,
-            setupUri: setupUri
-          }
+          statusCode: 200,
+          message: 'MFA setup required',
+          data: createAuthData({ isSignedIn: false, needsMFASetup: true, mfaType: 'totp', mfaSetupDetails: { qrCode: email || username, secretKey: nextStep.totpSetupDetails?.sharedSecret, setupUri: setupUri } })
         };
       case 'CONFIRM_SIGN_IN_WITH_TOTP_CODE':
         this.mfaSetupRequiredSubject.next(true);
         return {
-          status_code: 200,
-          isSignedIn: false,
-          needsMFASetup: false,
-          needsMFA: true,
-          mfaType: 'totp',
+          statusCode: 200,
+          message: 'MFA setup not required',
+          data: createAuthData({ isSignedIn: false, needsMFASetup: false, needsMFA: true, mfaType: 'totp' })
         };
       default:
         console.error('Sign in failed:', signInResponse);
     }
 
     return {
-      status_code: 401,
-      isSignedIn: false,
-      message: 'Sign in failed'
+      statusCode: 401,
+      message: 'Sign in failed',
+      data: createAuthData({ isSignedIn: false })
     }
   }
 
@@ -188,25 +180,24 @@ export class CognitoService {
         console.info('MFA verification successful');
 
         return {
-          status_code: 200,
-          isSignedIn: true,
+          statusCode: 200,
           message: 'MFA verification successful',
-          user: this.currentUserSubject.value || undefined
+          data: createAuthData({ isSignedIn: true })
         };
       }
 
       return {
-        status_code: 401,
-        isSignedIn: false,
-        message: 'MFA verification failed'
+        statusCode: 401,
+        message: 'MFA verification failed',
+        data: createAuthData({ isSignedIn: false })
       };
 
     } catch (error) {
       console.error('MFA verification error:', error);
       return {
-        status_code: 500,
-        isSignedIn: false,
-        message: error instanceof Error ? error.message : 'MFA verification failed'
+        statusCode: 500,
+        message: error instanceof Error ? error.message : 'MFA verification failed',
+        data: null
       };
     }
   }
@@ -284,16 +275,16 @@ export class CognitoService {
       await resetPassword({ username });
       
       return {
-        status_code: 200,
-        isSignedIn: false,
-        message: 'Password reset initiated successfully'
+        statusCode: 200,
+        message: 'Password reset initiated successfully',
+        data: createAuthData({ isSignedIn: false })
       };
     } catch (error) {
       console.error('Password reset initiation error:', error);
       return {
-        status_code: 500,
-        isSignedIn: false,
-        message: error instanceof Error ? error.message : 'Password reset failed'
+        statusCode: 500,
+        message: error instanceof Error ? error.message : 'Password reset failed',
+        data: null
       };
     }
   }
@@ -315,17 +306,30 @@ export class CognitoService {
       });
       
       return {
-        status_code: 200,
-        isSignedIn: false,
-        message: 'Password reset successfully'
+        statusCode: 200,
+        message: 'Password reset successfully',
+        data: createAuthData({ isSignedIn: false })
       };
     } catch (error) {
       console.error('Password reset confirmation error:', error);
       return {
-        status_code: 500,
-        isSignedIn: false,
-        message: error instanceof Error ? error.message : 'Password reset confirmation failed'
+        statusCode: 500,
+        message: error instanceof Error ? error.message : 'Password reset confirmation failed',
+        data: null
       };
     }
   }
+}
+
+function createAuthData(partial: Partial<IAuth>): IAuth {
+  return {
+    statusCode: partial.statusCode ?? 0,
+    isSignedIn: partial.isSignedIn ?? false,
+    message: partial.message,
+    user: partial.user,
+    needsMFA: partial.needsMFA,
+    needsMFASetup: partial.needsMFASetup,
+    mfaType: partial.mfaType,
+    mfaSetupDetails: partial.mfaSetupDetails
+  };
 }

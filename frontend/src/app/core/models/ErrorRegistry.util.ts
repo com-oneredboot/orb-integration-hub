@@ -7,21 +7,21 @@ const ERROR_REGISTRY: Record<string, IErrorRegistry> = {
     message: 'A problem occurred while processing your request.',
     description: 'GraphQL mutation error',
     solution: 'Check the mutation input and try again.',
-    details: ''
+    details: {}
   },
   'ORB-API-003': {
     code: 'ORB-API-003',
     message: 'Invalid input for operation.',
     description: 'Invalid input for GraphQL operation',
     solution: 'Check the input and try again.',
-    details: ''
+    details: {}
   },
   'ORB-SYS-001': {
     code: 'ORB-SYS-001',
     message: 'An unexpected system error occurred.',
     description: 'Unexpected error',
     solution: 'Try again later or contact support.',
-    details: ''
+    details: {}
   }
 };
 

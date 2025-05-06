@@ -14,13 +14,13 @@ import { {{ attr.enum_type }} } from './{{ attr.enum_type }}.enum';
 {% if is_static %}
 export interface I{{ schema.table }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}{% elif attr.type == 'timestamp' %}number{% elif attr.type == 'array' or attr.name in ['groups', 'permissions'] %}string[]{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'number' %}number{% else %}string{% endif %};
+  {{ attr.name|to_camel_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% elif attr.type|lower in ['string', 'number', 'boolean', 'array', 'timestamp', 'object'] %}{{ attr.type == 'timestamp' and 'number' or attr.type == 'array' and 'string[]' or attr.type == 'boolean' and 'boolean' or attr.type == 'number' and 'number' or attr.type == 'object' and 'Record<string, any>' or 'string' }}{% elif attr.type in model_names %}I{{ attr.type }}{% else %}{{ attr.type }}{% endif %}{% if not attr.required %} | undefined{% endif %};
 {% endfor %}
 }
 
 export class {{ schema.table }} implements I{{ schema.table }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}{% elif attr.type == 'timestamp' %}number{% elif attr.type == 'array' or attr.name in ['groups', 'permissions'] %}string[]{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'number' %}number{% else %}string{% endif %} = {% if attr.enum_type %}{{ attr.enum_type }}.UNKNOWN{% elif attr.type == 'string[]' %}[]{% elif attr.type == 'boolean' %}false{% elif attr.type == 'number' %}0{% elif attr.type == 'string' %}''{% elif not attr.required %}''{% else %}''{% endif %};
+  {{ attr.name|to_camel_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% elif attr.type|lower in ['string', 'number', 'boolean', 'array', 'timestamp', 'object'] %}{{ attr.type == 'timestamp' and 'number' or attr.type == 'array' and 'string[]' or attr.type == 'boolean' and 'boolean' or attr.type == 'number' and 'number' or attr.type == 'object' and 'Record<string, any>' or 'string' }}{% elif attr.type in model_names %}I{{ attr.type }}{% else %}{{ attr.type }}{% endif %}{% if not attr.required %} | undefined{% endif %} = {% if attr.enum_type %}{{ attr.enum_type }}.UNKNOWN{% elif attr.type == 'string[]' %}[]{% elif attr.type == 'boolean' %}false{% elif attr.type == 'number' %}0{% elif attr.type == 'string' %}''{% elif not attr.required %}undefined{% else %}undefined{% endif %};
 {% endfor %}
 
   constructor(data: Partial<I{{ schema.table }}> = {}) {
@@ -41,16 +41,16 @@ export class {{ schema.table }} implements I{{ schema.table }} {
 {% if model_type == 'graphql' %}
 // Response envelope for GraphQL type
 export type {{ schema.table }}Response = {
-  StatusCode: number;
-  Message: string;
-  Data: I{{ schema.table }} | null;
+  statusCode: number;
+  message: string;
+  data: I{{ schema.table }} | null;
 };
 {% endif %}
 {% else %}
 // CreateInput
 export type {{ schema.table }}CreateInput = {
 {% for attr in schema.attributes if attr.name != schema.partition_key %}
-  {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}{% elif attr.type == 'timestamp' %}number{% elif attr.type == 'array' or attr.name in ['groups', 'permissions'] %}string[]{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'number' %}number{% else %}string{% endif %};
+  {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}{% elif attr.type in ['string', 'number', 'boolean', 'array', 'timestamp', 'object'] %}{{ attr.type == 'timestamp' and 'number' or attr.type == 'array' and 'string[]' or attr.type == 'boolean' and 'boolean' or attr.type == 'number' and 'number' or attr.type == 'object' and 'Record<string, any>' or 'string' }}{% else %}{{ attr.type }}{% endif %};
 {% endfor %}
 };
 
@@ -58,46 +58,60 @@ export type {{ schema.table }}CreateInput = {
 export type {{ schema.table }}UpdateInput = Partial<I{{ schema.table }}>;
 
 // QueryBy<PartitionKey>Input
-export type {{ schema.table }}QueryBy{{ schema.partition_key|to_pascal_case }}Input = {
-  {{ schema.partition_key }}: string;
-};
-
+{% set query_input_map = {} %}
+{% set pk_type_name = schema.table + 'QueryBy' + schema.partition_key|to_pascal_case + 'Input' %}
+{% set _ = query_input_map.update({pk_type_name: [schema.partition_key]}) %}
 // QueryBy<SecondaryIndex>Input types
 {% for index in schema.secondary_indexes %}
-export type {{ schema.table }}QueryBy{{ index.partition|to_pascal_case }}Input = {
-  {{ index.partition }}: string;{% if index.sort and index.sort != 'None' %}
-  {{ index.sort }}: string;{% endif %}
+  {% set type_name = schema.table + 'QueryBy' + index.partition|to_pascal_case + 'Input' %}
+  {% set fields = [index.partition] %}
+  {% if index.sort and index.sort != 'None' %}
+    {% set _ = fields.append(index.sort) %}
+  {% endif %}
+  {% if type_name in query_input_map %}
+    {% for f in fields %}
+      {% if f not in query_input_map[type_name] %}
+        {% set _ = query_input_map[type_name].append(f) %}
+      {% endif %}
+    {% endfor %}
+  {% else %}
+    {% set _ = query_input_map.update({type_name: fields}) %}
+  {% endif %}
+{% endfor %}
+{% for type_name, fields in query_input_map.items() %}
+export type {{ type_name }} = {
+  {% for field in fields %}{{ field }}: string; {% endfor %}
 };
 {% endfor %}
 
 // Response types
 export type {{ schema.table }}CreateResponse = {
-  StatusCode: number;
-  Message: string;
-  Data: I{{ schema.table }} | null;
+  statusCode: number;
+  message: string;
+  data: I{{ schema.table }} | null;
 };
 export type {{ schema.table }}UpdateResponse = {
-  StatusCode: number;
-  Message: string;
-  Data: I{{ schema.table }} | null;
+  statusCode: number;
+  message: string;
+  data: I{{ schema.table }} | null;
 };
 export type {{ schema.table }}Response = {
   {{ schema.table }}QueryBy{{ schema.partition_key|to_pascal_case }}: {
-    StatusCode: number;
-    Message: string;
-    Data: I{{ schema.table }} | null;
+    statusCode: number;
+    message: string;
+    data: I{{ schema.table }} | null;
   };
 };
 
 export interface I{{ schema.table }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}{% elif attr.type == 'timestamp' %}number{% elif attr.type == 'array' or attr.name in ['groups', 'permissions'] %}string[]{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'number' %}number{% else %}string{% endif %};
+  {{ attr.name|to_camel_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% elif attr.type|lower in ['string', 'number', 'boolean', 'array', 'timestamp', 'object'] %}{{ attr.type == 'timestamp' and 'number' or attr.type == 'array' and 'string[]' or attr.type == 'boolean' and 'boolean' or attr.type == 'number' and 'number' or attr.type == 'object' and 'Record<string, any>' or 'string' }}{% elif attr.type in model_names %}I{{ attr.type }}{% else %}{{ attr.type }}{% endif %}{% if not attr.required %} | undefined{% endif %};
 {% endfor %}
 }
 
 export class {{ schema.table }} implements I{{ schema.table }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}{% elif attr.type == 'timestamp' %}number{% elif attr.type == 'array' or attr.name in ['groups', 'permissions'] %}string[]{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'number' %}number{% else %}string{% endif %} = {% if attr.enum_type %}{{ attr.enum_type }}.UNKNOWN{% elif attr.type == 'string[]' %}[]{% elif attr.type == 'boolean' %}false{% elif attr.type == 'number' %}0{% elif attr.type == 'string' %}''{% elif not attr.required %}''{% else %}''{% endif %};
+  {{ attr.name|to_camel_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% elif attr.type|lower in ['string', 'number', 'boolean', 'array', 'timestamp', 'object'] %}{{ attr.type == 'timestamp' and 'number' or attr.type == 'array' and 'string[]' or attr.type == 'boolean' and 'boolean' or attr.type == 'number' and 'number' or attr.type == 'object' and 'Record<string, any>' or 'string' }}{% elif attr.type in model_names %}I{{ attr.type }}{% else %}{{ attr.type }}{% endif %}{% if not attr.required %} | undefined{% endif %} = {% if attr.enum_type %}{{ attr.enum_type }}.UNKNOWN{% elif attr.type == 'string[]' %}[]{% elif attr.type == 'boolean' %}false{% elif attr.type == 'number' %}0{% elif attr.type == 'string' %}''{% elif not attr.required %}undefined{% else %}undefined{% endif %};
 {% endfor %}
 
   constructor(data: Partial<I{{ schema.table }}> = {}) {

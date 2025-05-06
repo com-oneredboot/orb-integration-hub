@@ -34,7 +34,7 @@ Located in `schemas/templates/`:
 - List response types: PascalCase with ListResponse suffix (e.g., `ApplicationsListResponse`)
 - Query operations: PascalCase with Query suffix (e.g., `ApplicationsQuery`)
 - Mutation operations: PascalCase with action suffix (e.g., `ApplicationsCreate`, `ApplicationsUpdate`)
-- Response fields: PascalCase (e.g., `StatusCode`, `Message`, `Data`)
+- Response fields: camelCase (e.g., `statusCode`, `message`, `data`)
 
 ### Database Tables
 - Table names: kebab-case (e.g., `applications-table`, `application-roles-table`)

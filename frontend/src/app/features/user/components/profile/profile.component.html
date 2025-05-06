@@ -11,7 +11,7 @@ description: HTML template file
     <div class="profile-header__welcome" *ngIf="currentUser$ | async as user">
       <p class="profile-header__welcome-text">
         <i class="profile-header__icon">⚙️</i> 
-        Ready to build, {{ user.first_name || 'Engineer' }}? Your integration hub is operational.
+        Ready to build, {{ user.firstName || 'Engineer' }}? Your integration hub is operational.
       </p>
       <p class="profile-header__tagline">
         <strong>OneRedBoot</strong> — Software that works
@@ -96,7 +96,7 @@ description: HTML template file
           <!-- Member Since -->
           <div class="profile-form__field">
             <label class="profile-form__field-label">Member Since</label>
-            <div class="profile-form__field-value">{{ formatDate(user.created_at) }}</div>
+            <div class="profile-form__field-value">{{ formatDate(user.createdAt) }}</div>
           </div>
         </div>
         
@@ -137,7 +137,7 @@ description: HTML template file
       <h4>User Controls</h4>
       <ng-container *ngIf="currentUser$ | async as user">
         <div class="profile__debug-status">
-          <div>User ID: <code>{{ user.user_id }}</code></div>
+          <div>User ID: <code>{{ user.userId }}</code></div>
         </div>
         
         <div class="profile__debug-actions">
@@ -172,9 +172,9 @@ description: HTML template file
         <pre>User Is Valid: {{ isUserValid(user) | json }}</pre>
         <pre>Required Attributes Check:
   - Email: {{ !!user.email }}
-  - First Name: {{ !!user.first_name }}
-  - Last Name: {{ !!user.last_name }}
-  - Phone Number: {{ !!user.phone_number }}
+  - First Name: {{ !!user.firstName }}
+  - Last Name: {{ !!user.lastName }}
+  - Phone Number: {{ !!user.phoneNumber}}
   - Status Is Active: {{ user.status === 'ACTIVE' }}</pre>
       </div>
     </div>
