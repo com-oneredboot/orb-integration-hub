@@ -142,7 +142,7 @@ export class CognitoService {
         return {
           statusCode: 200,
           message: 'MFA setup required',
-          data: createAuthData({ isSignedIn: false, needsMFASetup: true, mfaType: 'totp', mfaSetupDetails: { qrCode: email || username, secretKey: nextStep.totpSetupDetails?.sharedSecret, setupUri: setupUri } })
+          data: createAuthData({ isSignedIn: false, needsMFASetup: true, mfaType: 'totp', mfaSetupDetails: { qrCode: email || username, secretKey: nextStep.totpSetupDetails?.sharedSecret, setupUri: setupUri.toString() } })
         };
       case 'CONFIRM_SIGN_IN_WITH_TOTP_CODE':
         this.mfaSetupRequiredSubject.next(true);

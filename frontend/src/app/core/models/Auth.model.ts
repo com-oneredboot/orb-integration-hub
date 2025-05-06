@@ -3,6 +3,7 @@
  */
 
 // Import enums used in this model
+import { IMfaSetupDetails } from './MfaSetupDetails.model';
 
 export interface IAuth {
   statusCode: number;
