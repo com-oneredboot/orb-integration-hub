@@ -5,7 +5,7 @@
 
 // Application Imports
 import { GenericResponse } from "../models/appsync.model";
-import { User } from "../models/users.model";
+import { User, IUser } from "../models/users.model";
 import { UserGroups } from "../models/user.enum";
 
 export type UsersResponse = {
@@ -40,7 +40,7 @@ export type UsersQueryByEmailInput = {
   email: string;
 };
 
-export type UsersCreateInput = Omit<User, 'first_name' | 'last_name' | 'phone_number' >;
+export type UsersCreateInput = Omit<IUser, 'first_name' | 'last_name' | 'phone_number' >;
 
 export type UsersUpdateInput = Partial<Omit<User, 'user_id' | 'created_at' >> & { user_id: string };
 

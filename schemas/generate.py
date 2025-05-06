@@ -14,6 +14,7 @@ from datetime import datetime
 from dataclasses import dataclass
 import re
 import copy
+import shutil
 
 # 3rd party imports
 import yaml
@@ -356,8 +357,8 @@ def generate_python_model(table: str, schema: TableSchema) -> None:
         # Generate model
         model_content = template.render(schema=schema)
         
-        # Write to file
-        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'src', 'models', f'{to_snake_case(table)}.py')
+        # Write to file (use .model.py extension)
+        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'src', 'core', 'models', f'{to_snake_case(table)}.model.py')
         write_file(output_path, model_content)
         logger.info(f'Generated Python model for {table}')
         
@@ -393,7 +394,7 @@ def generate_typescript_model(table: str, schema: TableSchema) -> None:
         file_name = to_pascal_case(table)
         
         # Write to file
-        output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'models', f'{file_name}.ts')
+        output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models', f'{file_name}.ts')
         write_file(output_path, model_content)
         logger.info(f'Generated TypeScript model for {table}')
         
@@ -583,6 +584,21 @@ def write_file(output_path: str, content: str) -> None:
     with open(output_path, 'w', encoding='utf-8', newline='\n') as f:
         f.write(content)
 
+def move_enum_files():
+    """Move and rename enum files to backend/src/core/models as <name>.enum.py for consistency."""
+    enum_files = [
+        ('user_enum.py', 'user.enum.py'),
+        ('role_enum.py', 'role.enum.py'),
+        # Add more enums here as needed
+    ]
+    src_dir = os.path.join(SCRIPT_DIR, '..', 'backend', 'src', 'models')
+    dst_dir = os.path.join(SCRIPT_DIR, '..', 'backend', 'src', 'core', 'models')
+    for src_name, dst_name in enum_files:
+        src_path = os.path.join(src_dir, src_name)
+        dst_path = os.path.join(dst_dir, dst_name)
+        if os.path.exists(src_path):
+            shutil.move(src_path, dst_path)
+            logger.info(f"Moved and renamed {src_name} to {dst_path}")
 
 def main():
     """Main entry point for the schema generator."""
@@ -597,7 +613,10 @@ def main():
         for table, schema in schemas.items():
             generate_python_model(table, schema)
             generate_typescript_model(table, schema)
-            
+        
+        # Move/rename enum files for consistency
+        move_enum_files()
+        
         # Generate base GraphQL schema
         graphql_template_path = os.path.join(SCRIPT_DIR, 'templates', 'graphql_schema.jinja')
         graphql_schema = generate_graphql_schema(schemas, graphql_template_path)
