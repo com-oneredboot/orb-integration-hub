@@ -272,13 +272,13 @@ def load_schemas() -> Dict[str, TableSchema]:
         
         schemas = {}
         static_schemas = {}
+        graphql_schemas = {}
         for entity in entities:
             print(f"Reading entity: {entity}")
             # Load the schema file
             with open(os.path.join(SCRIPT_DIR, 'entities', entity), 'r') as f:
                 schema_data = yaml.safe_load(f)
 
-            # Determine model type
             model_type = schema_data.get('type', 'table')
             if model_type == 'static':
                 # For static models, use 'name' instead of 'table'
@@ -299,6 +299,31 @@ def load_schemas() -> Dict[str, TableSchema]:
                         enum_values=enum_values
                     ))
                 static_schemas[name] = TableSchema(
+                    table=name,
+                    attributes=attributes,
+                    partition_key='',
+                    sort_key='None',
+                    secondary_indexes=[]
+                )
+                continue
+            if model_type == 'graphql':
+                name = schema_data['name']
+                attributes = []
+                for attr_name, attr_data in schema_data['attributes'].items():
+                    attr_type = attr_data['type']
+                    description = attr_data.get('description', '')
+                    required = attr_data.get('required', True)
+                    enum_type = attr_data.get('enum_type')
+                    enum_values = attr_data.get('enum_values', []) if enum_type else None
+                    attributes.append(Attribute(
+                        name=attr_name,
+                        type=attr_type,
+                        description=description,
+                        required=required,
+                        enum_type=enum_type,
+                        enum_values=enum_values
+                    ))
+                graphql_schemas[name] = TableSchema(
                     table=name,
                     attributes=attributes,
                     partition_key='',
@@ -345,7 +370,7 @@ def load_schemas() -> Dict[str, TableSchema]:
                 sort_key=sort_key,
                 secondary_indexes=secondary_indexes
             )
-        return schemas, static_schemas
+        return schemas, static_schemas, graphql_schemas
     except Exception as e:
         logger.error(f'Failed to load schemas: {str(e)}')
         raise
@@ -376,7 +401,7 @@ def generate_python_model(table: str, schema: TableSchema) -> None:
         logger.error(f'Failed to generate Python model for {table}: {str(e)}')
         raise
 
-def generate_typescript_model(table: str, schema: TableSchema, is_static=False) -> None:
+def generate_typescript_model(table: str, schema: TableSchema, is_static=False, model_type=None) -> None:
     try:
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('typescript_model.jinja')
@@ -396,7 +421,7 @@ def generate_typescript_model(table: str, schema: TableSchema, is_static=False) 
         # Ensure secondary_indexes is always present
         if not hasattr(processed_schema, 'secondary_indexes') or processed_schema.secondary_indexes is None:
             processed_schema.secondary_indexes = []
-        model_content = template.render(schema=processed_schema, is_static=is_static, enum_fields=enum_fields)
+        model_content = template.render(schema=processed_schema, is_static=is_static, enum_fields=enum_fields, model_type=model_type)
         file_name = f'{table}.model.ts'
         output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models', file_name)
         write_file(output_path, model_content)
@@ -810,7 +835,7 @@ def main():
     """Main entry point for the schema generator."""
     try:
         jinja_env = setup_jinja_env()
-        schemas, static_schemas = load_schemas()
+        schemas, static_schemas, graphql_schemas = load_schemas()
         # Build valid file name sets
         valid_model_names = set()
         valid_enum_names = set()
@@ -835,12 +860,16 @@ def main():
         # Generate models and GraphQL ops for table-backed schemas
         for table, schema in schemas.items():
             generate_python_model(table, schema)
-            generate_typescript_model(table, schema, is_static=False)
+            generate_typescript_model(table, schema, is_static=False, model_type='table')
             generate_typescript_graphql_ops(table, schema)
         # Generate models for static schemas
         for name, schema in static_schemas.items():
             generate_python_model(name, schema)
-            generate_typescript_model(name, schema, is_static=True)
+            generate_typescript_model(name, schema, is_static=True, model_type='static')
+        # Generate models for graphql schemas (virtual GraphQL types)
+        for name, schema in graphql_schemas.items():
+            generate_python_model(name, schema)
+            generate_typescript_model(name, schema, is_static=True, model_type='graphql')
         # Generate all enums from enums.yml
         generate_all_enums()
         # Generate base GraphQL schema

@@ -1,0 +1,19 @@
+type: graphql
+name: AuthError
+attributes:
+  code:
+    type: string
+    required: true
+    description: Error code (e.g., AUTH-001)
+  message:
+    type: string
+    required: true
+    description: User-facing error message
+  description:
+    type: string
+    required: false
+    description: Optional technical description
+  details:
+    type: object
+    required: false
+    description: Optional extra data or context 

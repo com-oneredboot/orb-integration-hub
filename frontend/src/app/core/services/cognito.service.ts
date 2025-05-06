@@ -21,9 +21,9 @@ import {
 import {BehaviorSubject, Observable} from 'rxjs';
 
 // Application-specific imports
-import { User } from '../models/user.model'; 
-import { UsersCreateInput } from '../graphql/Users.graphql';
-import {AuthResponse, AuthError } from "../models/auth.model";
+import { Users, UsersCreateInput } from '../models/Users.model'; 
+import {IAuth } from "../models/Auth.model";
+import { AuthError } from "../models/AuthError.model";
 import { environment } from '../../../environments/environment';
 
 // Settings

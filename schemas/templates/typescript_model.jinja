@@ -38,6 +38,14 @@ export class {{ schema.table }} implements I{{ schema.table }} {
     });
   }
 }
+{% if model_type == 'graphql' %}
+// Response envelope for GraphQL type
+export type {{ schema.table }}Response = {
+  StatusCode: number;
+  Message: string;
+  Data: I{{ schema.table }} | null;
+};
+{% endif %}
 {% else %}
 // CreateInput
 export type {{ schema.table }}CreateInput = {
