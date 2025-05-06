@@ -19,7 +19,8 @@ import {
   UsersCreateInput, UsersUpdateInput, UsersQueryByUserIdInput,
   UsersCreateResponse, UsersResponse, UsersUpdateResponse
 } from "../models/Users.model";
-import { UserGroups, UserStatus } from "../models/user.enum";
+import { UserGroup } from "../models/UserGroup.enum";
+import { UserStatus } from "../models/UserStatus.enum";
 import { CognitoService } from "./cognito.service";
 import { AuthResponse } from "../models/auth.model";
 import { AuthActions } from '../../features/user/components/auth-flow/store/auth.actions';

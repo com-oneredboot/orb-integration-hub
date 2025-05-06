@@ -1,0 +1,35 @@
+type: static
+name: Auth
+attributes:
+  status_code:
+    type: number
+    required: true
+    description: HTTP or operation status code
+  isSignedIn:
+    type: boolean
+    required: false
+    description: Whether the user is signed in
+  message:
+    type: string
+    required: false
+    description: User-facing or system message
+  user:
+    type: IUsers
+    required: false
+    description: The user object (IUsers)
+  needsMFA:
+    type: boolean
+    required: false
+    description: Whether MFA is required
+  needsMFASetup:
+    type: boolean
+    required: false
+    description: Whether MFA setup is required
+  mfaType:
+    type: string
+    required: false
+    description: Type of MFA (e.g., 'sms', 'totp')
+  mfaSetupDetails:
+    type: MfaSetupDetails
+    required: false
+    description: Details for MFA setup (MfaSetupDetails) 

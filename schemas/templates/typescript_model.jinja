@@ -26,12 +26,13 @@ export class {{ schema.table }} implements I{{ schema.table }} {
   constructor(data: Partial<I{{ schema.table }}> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
-        if (Array.isArray(value) && this[key] instanceof Array && this[key].length === 0) {
-          this[key] = value as typeof this[key];
-        } else if (typeof value === 'string' && this[key] instanceof Object && 'UNKNOWN' in this[key]) {
-          this[key] = (this[key] as any)[value] || (this[key] as any).UNKNOWN;
-        } else {
-          this[key] = value as any;
+{% for enum_field in enum_fields %}
+        if (key === '{{ enum_field.name }}' && typeof value === 'string') {
+          this.{{ enum_field.name }} = {{ enum_field.enum_type }}[value as keyof typeof {{ enum_field.enum_type }}] ?? {{ enum_field.enum_type }}.UNKNOWN;
+        } else 
+{% endfor %}
+        {
+          this[key as keyof this] = value as any;
         }
       }
     });
@@ -94,12 +95,13 @@ export class {{ schema.table }} implements I{{ schema.table }} {
   constructor(data: Partial<I{{ schema.table }}> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
-        if (Array.isArray(value) && this[key] instanceof Array && this[key].length === 0) {
-          this[key] = value as typeof this[key];
-        } else if (typeof value === 'string' && this[key] instanceof Object && 'UNKNOWN' in this[key]) {
-          this[key] = (this[key] as any)[value] || (this[key] as any).UNKNOWN;
-        } else {
-          this[key] = value as any;
+{% for enum_field in enum_fields %}
+        if (key === '{{ enum_field.name }}' && typeof value === 'string') {
+          this.{{ enum_field.name }} = {{ enum_field.enum_type }}[value as keyof typeof {{ enum_field.enum_type }}] ?? {{ enum_field.enum_type }}.UNKNOWN;
+        } else 
+{% endfor %}
+        {
+          this[key as keyof this] = value as any;
         }
       }
     });

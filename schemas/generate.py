@@ -381,6 +381,7 @@ def generate_typescript_model(table: str, schema: TableSchema, is_static=False) 
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('typescript_model.jinja')
         processed_schema = copy.deepcopy(schema)
+        enum_fields = []
         for attr in processed_schema.attributes:
             attr.type = to_typescript_type(attr.type)
             if attr.enum_type and not attr.enum_values:
@@ -390,12 +391,12 @@ def generate_typescript_model(table: str, schema: TableSchema, is_static=False) 
                         enums_data = yaml.safe_load(f)
                         if attr.enum_type in enums_data:
                             attr.enum_values = enums_data[attr.enum_type]
-                        else:
-                            logger.warning(f"Enum type {attr.enum_type} not found in enums.yml")
+            if attr.enum_type:
+                enum_fields.append({'name': attr.name, 'enum_type': attr.enum_type})
         # Ensure secondary_indexes is always present
         if not hasattr(processed_schema, 'secondary_indexes') or processed_schema.secondary_indexes is None:
             processed_schema.secondary_indexes = []
-        model_content = template.render(schema=processed_schema, is_static=is_static)
+        model_content = template.render(schema=processed_schema, is_static=is_static, enum_fields=enum_fields)
         file_name = f'{table}.model.ts'
         output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models', file_name)
         write_file(output_path, model_content)
