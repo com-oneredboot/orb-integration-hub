@@ -1,25 +1,23 @@
 /**
- * ErrorRegistry static model.
+ * AuthError static model.
  */
 
 // Import enums and models used in this model
 
-export interface IErrorRegistry {
+export interface IAuthError {
   code: string;
   message: string;
-  description: string;
-  solution: string;
-  details: object | undefined;
+  description: string | undefined;
+  details: Record<string, any> | undefined;
 }
 
-export class ErrorRegistry implements IErrorRegistry {
+export class AuthError implements IAuthError {
   code = '';
   message = '';
   description = '';
-  solution = '';
-  details = undefined;
+  details = {};
 
-  constructor(data: Partial<IErrorRegistry> = {}) {
+  constructor(data: Partial<IAuthError> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
         {
@@ -31,8 +29,8 @@ export class ErrorRegistry implements IErrorRegistry {
 }
 
 // Static type definitions
-export type ErrorRegistryResponse = {
+export type AuthErrorResponse = {
   statusCode: number;
   message: string;
-  data: IErrorRegistry | null;
+  data: IAuthError | null;
 }; 

@@ -1,58 +1,78 @@
 /**
- * Roles model.
+ * Roles DynamoDB model.
  */
 
-// Import enums used in this model
+// Import enums and models used in this model
 import { RoleType } from './RoleType.enum';
 import { RoleStatus } from './RoleStatus.enum';
 
 // CreateInput
 export type RolesCreateInput = {
+  roleId: string;
   userId: string;
   applicationId: string;
   roleName: string;
-  roleType: RoleType;
-  permissions: string[];
-  status: RoleStatus;
-  createdAt: number;
-  updatedAt: number;
+  roleType: string;
+  permissions: array;
+  status: string;
+  createdAt: timestamp;
+  updatedAt: timestamp;
 };
 
 // UpdateInput
-export type RolesUpdateInput = Partial<IRoles>;
-
-// QueryBy<PartitionKey>Input
-// QueryBy<SecondaryIndex>Input types
-export type RolesQueryByRoleIdInput = {
-    roleId: string;
-    roleType?: string;
+export type RolesUpdateInput = {
+  roleId: string;
+  userId: string;
+  applicationId: string;
+  roleName: string;
+  roleType: string;
+  permissions: array;
+  status: string;
+  createdAt: timestamp;
+  updatedAt: timestamp;
 };
+
+// QueryInput
+export type RolesQueryByRoleIdInput = {
+  roleId: string;
+};
+
+export type RolesQueryByApplicationIdInput = {
+  applicationId: string;
+};
+
+export type RolesQueryByBothInput = {
+  roleId: string;
+  applicationId: string;
+};
+
 export type RolesQueryByUserIdInput = {
-    userId: string;
-    roleId?: string;
+  userId: string;
 };
 export type RolesQueryByApplicationIdInput = {
-    applicationId: string;
-    roleId?: string;
+  applicationId: string;
+};
+export type RolesQueryByRoleIdInput = {
+  roleId: string;
 };
 
 // Response types
+export type RolesResponse = {
+  statusCode: number;
+  message: string;
+  data: IRoles | null;
+};
+
 export type RolesCreateResponse = {
   statusCode: number;
   message: string;
   data: IRoles | null;
 };
+
 export type RolesUpdateResponse = {
   statusCode: number;
   message: string;
   data: IRoles | null;
-};
-export type RolesResponse = {
-  RolesQueryByRoleId: {
-    statusCode: number;
-    message: string;
-    data: IRoles | null;
-  };
 };
 
 export interface IRoles {
@@ -60,23 +80,23 @@ export interface IRoles {
   userId: string;
   applicationId: string;
   roleName: string;
-  roleType: RoleType;
-  permissions: string[];
-  status: RoleStatus;
-  createdAt: number;
-  updatedAt: number;
+  roleType: string;
+  permissions: array;
+  status: string;
+  createdAt: timestamp;
+  updatedAt: timestamp;
 }
 
 export class Roles implements IRoles {
-  roleId: string = '';
-  userId: string = '';
-  applicationId: string = '';
-  roleName: string = '';
-  roleType: RoleType = RoleType.UNKNOWN;
-  permissions: string[] = [];
-  status: RoleStatus = RoleStatus.UNKNOWN;
-  createdAt: number = 0;
-  updatedAt: number = 0;
+  roleId = '';
+  userId = '';
+  applicationId = '';
+  roleName = '';
+  roleType = '';
+  permissions = undefined;
+  status = '';
+  createdAt = undefined;
+  updatedAt = undefined;
 
   constructor(data: Partial<IRoles> = {}) {
     Object.entries(data).forEach(([key, value]) => {
@@ -88,9 +108,9 @@ export class Roles implements IRoles {
           this.status = RoleStatus[value as keyof typeof RoleStatus] ?? RoleStatus.UNKNOWN;
         } else 
         {
-          this[key as keyof this] = value as any;
+          this[key as keyof this] = value as this[keyof this];
         }
       }
     });
   }
-}
+} 

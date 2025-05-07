@@ -1,6 +1,6 @@
 """{{ schema.table }} model."""
 from typing import Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from datetime import datetime
 {% for attr in schema.attributes %}
 {% if attr.enum_type %}
@@ -15,6 +15,25 @@ class {{ schema.table }}(BaseModel):
     {{ attr.name }}: {% if attr.type == 'timestamp' %}datetime{% elif attr.type == 'array' %}List[str]{% elif attr.type == 'boolean' %}bool{% elif attr.type == 'number' %}float{% elif attr.enum_type %}{{ attr.enum_type }}{% else %}str{% endif %}{% if not attr.required %} | None{% endif %} = Field({% if attr.required %}...{% else %}None{% endif %}, description="{{ attr.description }}")
     {% endfor %}
 
+    {% for attr in schema.attributes %}
+    {% if attr.type == 'timestamp' %}
+    @validator('{{ attr.name }}', pre=True)
+    def parse_{{ attr.name }}(cls, value):
+        """Parse timestamp to ISO format."""
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            return value
+        try:
+            return datetime.fromisoformat(value.replace('Z', '+00:00'))
+        except (ValueError, TypeError):
+            return None
+    {% endif %}
+    {% endfor %}
+
     class Config:
         """Model configuration."""
         from_attributes = True
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }

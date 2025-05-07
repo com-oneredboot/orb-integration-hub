@@ -15,10 +15,10 @@ export type UsersCreateInput = {
   phoneVerified: boolean | undefined;
   firstName: string;
   lastName: string;
-  groups: array;
+  groups: any[];
   status: string;
-  createdAt: timestamp;
-  updatedAt: timestamp;
+  createdAt: string;
+  updatedAt: string;
 };
 
 // UpdateInput
@@ -31,10 +31,10 @@ export type UsersUpdateInput = {
   phoneVerified: boolean | undefined;
   firstName: string;
   lastName: string;
-  groups: array;
+  groups: any[];
   status: string;
-  createdAt: timestamp;
-  updatedAt: timestamp;
+  createdAt: string;
+  updatedAt: string;
 };
 
 // QueryInput
@@ -89,10 +89,10 @@ export interface IUsers {
   phoneVerified: boolean | undefined;
   firstName: string;
   lastName: string;
-  groups: array;
+  groups: any[];
   status: string;
-  createdAt: timestamp;
-  updatedAt: timestamp;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export class Users implements IUsers {
@@ -104,10 +104,10 @@ export class Users implements IUsers {
   phoneVerified = false;
   firstName = '';
   lastName = '';
-  groups = undefined;
+  groups = [];
   status = '';
-  createdAt = undefined;
-  updatedAt = undefined;
+  createdAt = '';
+  updatedAt = '';
 
   constructor(data: Partial<IUsers> = {}) {
     Object.entries(data).forEach(([key, value]) => {

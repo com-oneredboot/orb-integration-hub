@@ -11,8 +11,8 @@ export type ApplicationsCreateInput = {
   name: string;
   description: string;
   status: string;
-  createdAt: timestamp;
-  updatedAt: timestamp;
+  createdAt: string;
+  updatedAt: string;
   userId: string;
 };
 
@@ -22,8 +22,8 @@ export type ApplicationsUpdateInput = {
   name: string;
   description: string;
   status: string;
-  createdAt: timestamp;
-  updatedAt: timestamp;
+  createdAt: string;
+  updatedAt: string;
   userId: string;
 };
 
@@ -69,8 +69,8 @@ export interface IApplications {
   name: string;
   description: string;
   status: string;
-  createdAt: timestamp;
-  updatedAt: timestamp;
+  createdAt: string;
+  updatedAt: string;
   userId: string;
 }
 
@@ -79,8 +79,8 @@ export class Applications implements IApplications {
   name = '';
   description = '';
   status = '';
-  createdAt = undefined;
-  updatedAt = undefined;
+  createdAt = '';
+  updatedAt = '';
   userId = '';
 
   constructor(data: Partial<IApplications> = {}) {

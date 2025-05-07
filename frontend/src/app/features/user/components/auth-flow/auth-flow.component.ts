@@ -196,6 +196,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
               lastName: this.authForm.get('lastName')?.value || '',
               phoneNumber: '',
               phoneVerified: false,
+              emailVerified: false,
               // Required fields
               groups: ['USER'],
               status: UserStatus.PENDING,

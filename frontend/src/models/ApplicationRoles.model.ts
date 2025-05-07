@@ -13,10 +13,10 @@ export type ApplicationRolesCreateInput = {
   applicationId: string;
   roleName: string;
   roleType: string;
-  permissions: array;
+  permissions: any[];
   status: string;
-  createdAt: timestamp;
-  updatedAt: timestamp;
+  createdAt: string;
+  updatedAt: string;
 };
 
 // UpdateInput
@@ -26,10 +26,10 @@ export type ApplicationRolesUpdateInput = {
   applicationId: string;
   roleName: string;
   roleType: string;
-  permissions: array;
+  permissions: any[];
   status: string;
-  createdAt: timestamp;
-  updatedAt: timestamp;
+  createdAt: string;
+  updatedAt: string;
 };
 
 // QueryInput
@@ -81,10 +81,10 @@ export interface IApplicationRoles {
   applicationId: string;
   roleName: string;
   roleType: string;
-  permissions: array;
+  permissions: any[];
   status: string;
-  createdAt: timestamp;
-  updatedAt: timestamp;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export class ApplicationRoles implements IApplicationRoles {
@@ -93,10 +93,10 @@ export class ApplicationRoles implements IApplicationRoles {
   applicationId = '';
   roleName = '';
   roleType = '';
-  permissions = undefined;
+  permissions = [];
   status = '';
-  createdAt = undefined;
-  updatedAt = undefined;
+  createdAt = '';
+  updatedAt = '';
 
   constructor(data: Partial<IApplicationRoles> = {}) {
     Object.entries(data).forEach(([key, value]) => {

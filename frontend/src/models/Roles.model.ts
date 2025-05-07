@@ -1,5 +1,5 @@
 /**
- * ApplicationRoles DynamoDB model.
+ * Roles DynamoDB model.
  */
 
 // Import enums and models used in this model
@@ -7,98 +7,98 @@ import { RoleType } from './RoleType.enum';
 import { RoleStatus } from './RoleStatus.enum';
 
 // CreateInput
-export type ApplicationRolesCreateInput = {
+export type RolesCreateInput = {
   roleId: string;
   userId: string;
   applicationId: string;
   roleName: string;
   roleType: string;
-  permissions: array;
+  permissions: any[];
   status: string;
-  createdAt: timestamp;
-  updatedAt: timestamp;
+  createdAt: string;
+  updatedAt: string;
 };
 
 // UpdateInput
-export type ApplicationRolesUpdateInput = {
+export type RolesUpdateInput = {
   roleId: string;
   userId: string;
   applicationId: string;
   roleName: string;
   roleType: string;
-  permissions: array;
+  permissions: any[];
   status: string;
-  createdAt: timestamp;
-  updatedAt: timestamp;
+  createdAt: string;
+  updatedAt: string;
 };
 
 // QueryInput
-export type ApplicationRolesQueryByApplicationIdInput = {
-  applicationId: string;
-};
-
-export type ApplicationRolesQueryByRoleIdInput = {
+export type RolesQueryByRoleIdInput = {
   roleId: string;
 };
 
-export type ApplicationRolesQueryByBothInput = {
+export type RolesQueryByApplicationIdInput = {
   applicationId: string;
-  roleId: string;
 };
 
-export type ApplicationRolesQueryByUserIdInput = {
+export type RolesQueryByBothInput = {
+  roleId: string;
+  applicationId: string;
+};
+
+export type RolesQueryByUserIdInput = {
   userId: string;
 };
-export type ApplicationRolesQueryByApplicationIdInput = {
+export type RolesQueryByApplicationIdInput = {
   applicationId: string;
 };
-export type ApplicationRolesQueryByRoleIdInput = {
+export type RolesQueryByRoleIdInput = {
   roleId: string;
 };
 
 // Response types
-export type ApplicationRolesResponse = {
+export type RolesResponse = {
   statusCode: number;
   message: string;
-  data: IApplicationRoles | null;
+  data: IRoles | null;
 };
 
-export type ApplicationRolesCreateResponse = {
+export type RolesCreateResponse = {
   statusCode: number;
   message: string;
-  data: IApplicationRoles | null;
+  data: IRoles | null;
 };
 
-export type ApplicationRolesUpdateResponse = {
+export type RolesUpdateResponse = {
   statusCode: number;
   message: string;
-  data: IApplicationRoles | null;
+  data: IRoles | null;
 };
 
-export interface IApplicationRoles {
+export interface IRoles {
   roleId: string;
   userId: string;
   applicationId: string;
   roleName: string;
   roleType: string;
-  permissions: array;
+  permissions: any[];
   status: string;
-  createdAt: timestamp;
-  updatedAt: timestamp;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export class ApplicationRoles implements IApplicationRoles {
+export class Roles implements IRoles {
   roleId = '';
   userId = '';
   applicationId = '';
   roleName = '';
   roleType = '';
-  permissions = undefined;
+  permissions = [];
   status = '';
-  createdAt = undefined;
-  updatedAt = undefined;
+  createdAt = '';
+  updatedAt = '';
 
-  constructor(data: Partial<IApplicationRoles> = {}) {
+  constructor(data: Partial<IRoles> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
         if (key === 'roleType' && typeof value === 'string') {

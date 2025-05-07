@@ -1,35 +1,36 @@
 /**
- *  model.
+ * AuthError static model.
  */
 
-// Import enums used in this model
+// Import enums and models used in this model
 
-export interface I {
+export interface IAuthError {
   code: string;
   message: string;
   description: string | undefined;
-  details: Record<string, any> | undefined;
+  details: object | undefined;
 }
 
-export class  implements I {
-  code: string = '';
-  message: string = '';
-  description: string | undefined = '';
-  details: Record<string, any> | undefined = undefined;
+export class AuthError implements IAuthError {
+  code = '';
+  message = '';
+  description = '';
+  details = undefined;
 
-  constructor(data: Partial<I> = {}) {
+  constructor(data: Partial<IAuthError> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
         {
-          this[key as keyof this] = value as any;
+          this[key as keyof this] = value as this[keyof this];
         }
       }
     });
   }
 }
-// Response envelope for GraphQL type
-export type Response = {
+
+// Static type definitions
+export type AuthErrorResponse = {
   statusCode: number;
   message: string;
-  data: I | null;
-};
+  data: IAuthError | null;
+}; 

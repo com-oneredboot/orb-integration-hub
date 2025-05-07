@@ -1,5 +1,5 @@
 /**
- * {{ schema.name }} model.
+ * {{ schema.table }} DynamoDB model.
  */
 
 // Import enums and models used in this model
@@ -12,25 +12,26 @@ import { {{ attr.enum_type }} } from './{{ attr.enum_type }}.enum';
 import { {{ model }} } from './{{ model }}.model';
 {% endfor %}
 
-{% if schema.type == 'table' %}
 // CreateInput
 export type {{ schema.table }}CreateInput = {
 {% for attr in schema.attributes %}
-  {{ attr.name }}: {{ attr.type }}{% if not attr.required %} | undefined{% endif %};
+  {{ attr.name }}: {{ attr.type|to_typescript_type }}{% if not attr.required %} | undefined{% endif %};
 {% endfor %}
 };
 
 // UpdateInput
 export type {{ schema.table }}UpdateInput = {
 {% for attr in schema.attributes %}
-  {{ attr.name }}: {{ attr.type }}{% if not attr.required %} | undefined{% endif %};
+  {{ attr.name }}: {{ attr.type|to_typescript_type }}{% if not attr.required %} | undefined{% endif %};
 {% endfor %}
 };
 
 // QueryInput
+{% if schema.partition_key %}
 export type {{ schema.table }}QueryBy{{ schema.partition_key|to_pascal_case }}Input = {
   {{ schema.partition_key }}: string;
 };
+{% endif %}
 
 {% if schema.sort_key and schema.sort_key != 'None' %}
 export type {{ schema.table }}QueryBy{{ schema.sort_key|to_pascal_case }}Input = {
@@ -43,11 +44,13 @@ export type {{ schema.table }}QueryByBothInput = {
 };
 {% endif %}
 
+{% if schema.secondary_indexes %}
 {% for index in schema.secondary_indexes %}
 export type {{ schema.table }}QueryBy{{ index.partition|to_pascal_case }}Input = {
   {{ index.partition }}: string;
 };
 {% endfor %}
+{% endif %}
 
 // Response types
 export type {{ schema.table }}Response = {
@@ -67,20 +70,19 @@ export type {{ schema.table }}UpdateResponse = {
   message: string;
   data: I{{ schema.table }} | null;
 };
-{% endif %}
 
-export interface I{{ schema.name }} {
+export interface I{{ schema.table }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }}: {{ attr.type }}{% if not attr.required %} | undefined{% endif %};
+  {{ attr.name }}: {{ attr.type|to_typescript_type }}{% if not attr.required %} | undefined{% endif %};
 {% endfor %}
 }
 
-export class {{ schema.name }} implements I{{ schema.name }} {
+export class {{ schema.table }} implements I{{ schema.table }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }} = {% if attr.type == 'string' %}''{% elif attr.type == 'number' %}0{% elif attr.type == 'boolean' %}false{% elif attr.type == 'string[]' %}[]{% elif attr.type == 'Record<string, any>' %}{}{% elif attr.type == 'string | undefined' %}undefined{% elif attr.type == 'boolean | undefined' %}undefined{% elif attr.type == 'Record<string, any> | undefined' %}undefined{% else %}undefined{% endif %};
+  {{ attr.name }} = {% if attr.type|to_typescript_type == 'string' %}''{% elif attr.type|to_typescript_type == 'number' %}0{% elif attr.type|to_typescript_type == 'boolean' %}false{% elif attr.type|to_typescript_type == 'string[]' %}[]{% elif attr.type|to_typescript_type == 'any[]' %}[]{% elif attr.type|to_typescript_type == 'Record<string, any>' %}{}{% elif attr.type|to_typescript_type == 'Set<string>' %}new Set(){% elif attr.type|to_typescript_type == 'Buffer' %}Buffer.from(''){% elif not attr.required %}undefined{% else %}''{% endif %};
 {% endfor %}
 
-  constructor(data: Partial<I{{ schema.name }}> = {}) {
+  constructor(data: Partial<I{{ schema.table }}> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
 {% for attr in schema.attributes %}
@@ -89,6 +91,12 @@ export class {{ schema.name }} implements I{{ schema.name }} {
           this.{{ attr.name }} = {{ attr.enum_type }}[value as keyof typeof {{ attr.enum_type }}] ?? {{ attr.enum_type }}.UNKNOWN;
         } else 
 {% endif %}
+{% if attr.name.endswith('_at') or attr.name.endswith('_date') or attr.name == 'timestamp' %}
+        if (key === '{{ attr.name }}' && value !== undefined) {
+          // Ensure ISO 8601 format for timestamps
+          this.{{ attr.name }} = typeof value === 'string' ? value : new Date(value).toISOString();
+        } else
+{% endif %}
 {% endfor %}
         {
           this[key as keyof this] = value as this[keyof this];
@@ -96,4 +104,4 @@ export class {{ schema.name }} implements I{{ schema.name }} {
       }
     });
   }
-}
+} 

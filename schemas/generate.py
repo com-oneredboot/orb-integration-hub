@@ -157,15 +157,29 @@ def to_python_type(attr_type: str) -> str:
 
 def to_typescript_type(attr_type: str) -> str:
     """Convert schema type to TypeScript type."""
+    # Extract array element type if it's an array
+    if attr_type.lower().startswith('array<'):
+        element_type = attr_type[6:-1]  # Extract type between array< and >
+        return f"{to_typescript_type(element_type)}[]"
+    
+    # Handle model references (types starting with I)
+    if attr_type.startswith('I'):
+        return attr_type  # Keep the interface name as is
+    
     type_mapping = {
         'string': 'string',
         'number': 'number',
         'boolean': 'boolean',
-        'array': 'string[]',
+        'array': 'any[]',  # Fallback for untyped arrays
         'object': 'Record<string, any>',
-        'timestamp': 'number'
+        'timestamp': 'string',  # Changed to string for ISO 8601 format
+        'date': 'string',      # Changed to string for ISO 8601 format
+        'map': 'Record<string, any>',
+        'set': 'Set<string>',
+        'binary': 'Buffer',
+        'null': 'null'
     }
-    return type_mapping.get(attr_type.lower(), 'string')
+    return type_mapping.get(attr_type.lower(), attr_type)  # Return the type as is if not in mapping
 
 def to_dynamodb_type(attr_type: str) -> str:
     """Convert schema type to DynamoDB attribute type."""
@@ -443,40 +457,53 @@ def generate_python_model(table: str, schema: Union[TableSchema, GraphQLType]) -
         raise
 
 def generate_typescript_model(table: str, schema: Union[TableSchema, GraphQLType], is_static=False, model_type=None, all_model_names=None) -> None:
-    try:
-        jinja_env = setup_jinja_env()
-        template = jinja_env.get_template('typescript_model.jinja')
-        processed_schema = copy.deepcopy(schema)
-        enum_fields = []
-        model_names = all_model_names or []
-        for attr in processed_schema.attributes:
-            # Only convert to primitive if not a model reference
-            if attr.type not in model_names:
-                attr.type = to_typescript_type(attr.type)
-            # Always use camelCase for TypeScript property names
-            attr.name = to_camel_case(attr.name)
-            # Enum handling
-            if attr.enum_type and not attr.enum_values:
-                enums_path = os.path.join(SCRIPT_DIR, 'core', 'enums.yml')
-                if os.path.exists(enums_path):
-                    with open(enums_path, 'r') as f:
-                        enums_data = yaml.safe_load(f)
-                        if attr.enum_type in enums_data:
-                            attr.enum_values = enums_data[attr.enum_type]
-            if attr.enum_type:
-                enum_fields.append({'name': attr.name, 'enum_type': attr.enum_type})
-        # Ensure secondary_indexes is always present for table schemas
-        if isinstance(schema, TableSchema):
-            if not hasattr(processed_schema, 'secondary_indexes') or processed_schema.secondary_indexes is None:
-                processed_schema.secondary_indexes = []
-        model_content = template.render(schema=processed_schema, is_static=is_static, enum_fields=enum_fields, model_type=model_type, model_names=model_names)
-        file_name = f'{table}.model.ts'
-        output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models', file_name)
-        write_file(output_path, model_content)
-        logger.info(f'Generated TypeScript model for {table}')
-    except Exception as e:
-        logger.error(f'Failed to generate TypeScript model for {table}: {str(e)}')
-        raise
+    """Generate TypeScript model from schema."""
+    template_name = None
+    
+    # Determine template based on model type
+    if isinstance(schema, TableSchema):
+        template_name = 'typescript_dynamodb_model.jinja'
+    elif is_static:
+        template_name = 'typescript_static_model.jinja'
+    else:
+        template_name = 'typescript_graphql_model.jinja'
+    
+    # Get template
+    env = setup_jinja_env()
+    template = env.get_template(template_name)
+    
+    # Track generated query types to prevent duplicates
+    generated_query_types = set()
+    if isinstance(schema, TableSchema):
+        generated_query_types.add('QueryBy' + to_pascal_case(schema.partition_key) + 'Input')
+        if schema.sort_key and schema.sort_key != 'None':
+            generated_query_types.add('QueryBy' + to_pascal_case(schema.sort_key) + 'Input')
+            generated_query_types.add('QueryByBothInput')
+        if schema.secondary_indexes:
+            for index in schema.secondary_indexes:
+                generated_query_types.add('QueryBy' + to_pascal_case(index['partition']) + 'Input')
+    
+    # Prepare model imports
+    model_imports = []
+    if all_model_names:
+        for attr in schema.attributes:
+            # Check for direct model references
+            if attr.type in all_model_names and attr.type != table:
+                model_imports.append(attr.type)
+            # Check for interface references (IModel)
+            elif attr.type.startswith('I') and attr.type[1:] in all_model_names and attr.type[1:] != table:
+                model_imports.append(attr.type[1:])  # Import the model class, not the interface
+    
+    # Render template
+    content = template.render(
+        schema=schema,
+        model_imports=sorted(set(model_imports)),
+        generated_query_types=generated_query_types
+    )
+    
+    # Write to file
+    output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'models', f'{table}.model.ts')
+    write_file(output_path, content)
 
 def process_field_type(field_name: str, field_info: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -672,6 +699,8 @@ def write_file(output_path: str, content: str) -> None:
         output_path: Path to write the file to
         content: Content to write
     """
+    # Create directory if it doesn't exist
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
    
     # Write with explicit UTF-8 encoding
     with open(output_path, 'w', encoding='utf-8', newline='\n') as f:

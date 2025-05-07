@@ -1,5 +1,5 @@
 /**
- * {{ schema.name }} model.
+ * {{ schema.table }} model.
  */
 
 // Import enums and models used in this model
@@ -12,7 +12,6 @@ import { {{ attr.enum_type }} } from './{{ attr.enum_type }}.enum';
 import { {{ model }} } from './{{ model }}.model';
 {% endfor %}
 
-{% if schema.type == 'table' %}
 // CreateInput
 export type {{ schema.table }}CreateInput = {
 {% for attr in schema.attributes %}
@@ -67,20 +66,19 @@ export type {{ schema.table }}UpdateResponse = {
   message: string;
   data: I{{ schema.table }} | null;
 };
-{% endif %}
 
-export interface I{{ schema.name }} {
+export interface I{{ schema.table }} {
 {% for attr in schema.attributes %}
   {{ attr.name }}: {{ attr.type }}{% if not attr.required %} | undefined{% endif %};
 {% endfor %}
 }
 
-export class {{ schema.name }} implements I{{ schema.name }} {
+export class {{ schema.table }} implements I{{ schema.table }} {
 {% for attr in schema.attributes %}
   {{ attr.name }} = {% if attr.type == 'string' %}''{% elif attr.type == 'number' %}0{% elif attr.type == 'boolean' %}false{% elif attr.type == 'string[]' %}[]{% elif attr.type == 'Record<string, any>' %}{}{% elif attr.type == 'string | undefined' %}undefined{% elif attr.type == 'boolean | undefined' %}undefined{% elif attr.type == 'Record<string, any> | undefined' %}undefined{% else %}undefined{% endif %};
 {% endfor %}
 
-  constructor(data: Partial<I{{ schema.name }}> = {}) {
+  constructor(data: Partial<I{{ schema.table }}> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
 {% for attr in schema.attributes %}
@@ -96,4 +94,4 @@ export class {{ schema.name }} implements I{{ schema.name }} {
       }
     });
   }
-}
+} 
