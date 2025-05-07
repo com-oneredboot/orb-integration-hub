@@ -493,6 +493,12 @@ def generate_typescript_model(table: str, schema: Union[TableSchema, GraphQLType
             # Check for interface references (IModel)
             elif attr.type.startswith('I') and attr.type[1:] in all_model_names and attr.type[1:] != table:
                 model_imports.append(attr.type[1:])  # Import the model class, not the interface
+            # Check for model references in array types
+            elif attr.type.startswith('array<') and attr.type[6:-1] in all_model_names and attr.type[6:-1] != table:
+                model_imports.append(attr.type[6:-1])
+            # Check for interface references in array types
+            elif attr.type.startswith('array<I') and attr.type[7:-1] in all_model_names and attr.type[7:-1] != table:
+                model_imports.append(attr.type[7:-1])
     
     # Render template
     content = template.render(
@@ -502,7 +508,7 @@ def generate_typescript_model(table: str, schema: Union[TableSchema, GraphQLType
     )
     
     # Write to file
-    output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'models', f'{table}.model.ts')
+    output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models', f'{table}.model.ts')
     write_file(output_path, content)
 
 def process_field_type(field_name: str, field_info: Dict[str, Any]) -> Dict[str, Any]:

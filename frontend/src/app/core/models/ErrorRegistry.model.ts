@@ -9,7 +9,7 @@ export interface IErrorRegistry {
   message: string;
   description: string;
   solution: string;
-  details: object | undefined;
+  details: Record<string, any> | undefined;
 }
 
 export class ErrorRegistry implements IErrorRegistry {
@@ -17,7 +17,7 @@ export class ErrorRegistry implements IErrorRegistry {
   message = '';
   description = '';
   solution = '';
-  details = undefined;
+  details = {};
 
   constructor(data: Partial<IErrorRegistry> = {}) {
     Object.entries(data).forEach(([key, value]) => {

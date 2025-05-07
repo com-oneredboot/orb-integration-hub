@@ -40,13 +40,13 @@ Resources:
         - AttributeName: roleId
           KeyType: RANGE
       AttributeDefinitions:
-        - AttributeName: roleType
-          AttributeType: S
-        - AttributeName: applicationId
-          AttributeType: S
         - AttributeName: userId
           AttributeType: S
         - AttributeName: roleId
+          AttributeType: S
+        - AttributeName: applicationId
+          AttributeType: S
+        - AttributeName: roleType
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: user-role-index
@@ -103,9 +103,9 @@ Resources:
         - AttributeName: createdAt
           KeyType: RANGE
       AttributeDefinitions:
-        - AttributeName: applicationId
-          AttributeType: S
         - AttributeName: name
+          AttributeType: S
+        - AttributeName: applicationId
           AttributeType: S
         - AttributeName: createdAt
           AttributeType: S
@@ -143,13 +143,13 @@ Resources:
         - AttributeName: userId
           KeyType: RANGE
       AttributeDefinitions:
-        - AttributeName: status
-          AttributeType: S
-        - AttributeName: applicationId
+        - AttributeName: userId
           AttributeType: S
         - AttributeName: roleId
           AttributeType: S
-        - AttributeName: userId
+        - AttributeName: applicationId
+          AttributeType: S
+        - AttributeName: status
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: user-applications-index
@@ -201,13 +201,13 @@ Resources:
         - AttributeName: applicationId
           KeyType: RANGE
       AttributeDefinitions:
-        - AttributeName: roleType
-          AttributeType: S
-        - AttributeName: applicationId
-          AttributeType: S
         - AttributeName: userId
           AttributeType: S
         - AttributeName: roleId
+          AttributeType: S
+        - AttributeName: applicationId
+          AttributeType: S
+        - AttributeName: roleType
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: user-role-index
@@ -266,11 +266,11 @@ Resources:
       AttributeDefinitions:
         - AttributeName: cognitoId
           AttributeType: S
-        - AttributeName: email
+        - AttributeName: userId
           AttributeType: S
         - AttributeName: phoneNumber
           AttributeType: S
-        - AttributeName: userId
+        - AttributeName: email
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: cognito-user-index

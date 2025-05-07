@@ -8,14 +8,14 @@ export interface IAuthError {
   code: string;
   message: string;
   description: string | undefined;
-  details: object | undefined;
+  details: Record<string, any> | undefined;
 }
 
 export class AuthError implements IAuthError {
   code = '';
   message = '';
   description = '';
-  details = undefined;
+  details = {};
 
   constructor(data: Partial<IAuthError> = {}) {
     Object.entries(data).forEach(([key, value]) => {

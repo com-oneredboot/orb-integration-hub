@@ -11,8 +11,8 @@ export type ApplicationUsersCreateInput = {
   userId: string;
   roleId: string | undefined;
   status: string;
-  createdAt: timestamp;
-  updatedAt: timestamp;
+  createdAt: string;
+  updatedAt: string;
 };
 
 // UpdateInput
@@ -21,11 +21,12 @@ export type ApplicationUsersUpdateInput = {
   userId: string;
   roleId: string | undefined;
   status: string;
-  createdAt: timestamp;
-  updatedAt: timestamp;
+  createdAt: string;
+  updatedAt: string;
 };
 
 // QueryInput
+// Primary key queries
 export type ApplicationUsersQueryByApplicationIdInput = {
   applicationId: string;
 };
@@ -39,15 +40,7 @@ export type ApplicationUsersQueryByBothInput = {
   userId: string;
 };
 
-export type ApplicationUsersQueryByUserIdInput = {
-  userId: string;
-};
-export type ApplicationUsersQueryByApplicationIdInput = {
-  applicationId: string;
-};
-export type ApplicationUsersQueryByApplicationIdInput = {
-  applicationId: string;
-};
+// Secondary index queries
 
 // Response types
 export type ApplicationUsersResponse = {
@@ -73,8 +66,8 @@ export interface IApplicationUsers {
   userId: string;
   roleId: string | undefined;
   status: string;
-  createdAt: timestamp;
-  updatedAt: timestamp;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export class ApplicationUsers implements IApplicationUsers {
@@ -82,8 +75,8 @@ export class ApplicationUsers implements IApplicationUsers {
   userId = '';
   roleId = '';
   status = '';
-  createdAt = undefined;
-  updatedAt = undefined;
+  createdAt = '';
+  updatedAt = '';
 
   constructor(data: Partial<IApplicationUsers> = {}) {
     Object.entries(data).forEach(([key, value]) => {

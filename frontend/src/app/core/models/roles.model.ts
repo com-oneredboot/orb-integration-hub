@@ -13,10 +13,10 @@ export type RolesCreateInput = {
   applicationId: string;
   roleName: string;
   roleType: string;
-  permissions: array;
+  permissions: any[];
   status: string;
-  createdAt: timestamp;
-  updatedAt: timestamp;
+  createdAt: string;
+  updatedAt: string;
 };
 
 // UpdateInput
@@ -26,13 +26,14 @@ export type RolesUpdateInput = {
   applicationId: string;
   roleName: string;
   roleType: string;
-  permissions: array;
+  permissions: any[];
   status: string;
-  createdAt: timestamp;
-  updatedAt: timestamp;
+  createdAt: string;
+  updatedAt: string;
 };
 
 // QueryInput
+// Primary key queries
 export type RolesQueryByRoleIdInput = {
   roleId: string;
 };
@@ -46,14 +47,9 @@ export type RolesQueryByBothInput = {
   applicationId: string;
 };
 
+// Secondary index queries
 export type RolesQueryByUserIdInput = {
   userId: string;
-};
-export type RolesQueryByApplicationIdInput = {
-  applicationId: string;
-};
-export type RolesQueryByRoleIdInput = {
-  roleId: string;
 };
 
 // Response types
@@ -81,10 +77,10 @@ export interface IRoles {
   applicationId: string;
   roleName: string;
   roleType: string;
-  permissions: array;
+  permissions: any[];
   status: string;
-  createdAt: timestamp;
-  updatedAt: timestamp;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export class Roles implements IRoles {
@@ -93,10 +89,10 @@ export class Roles implements IRoles {
   applicationId = '';
   roleName = '';
   roleType = '';
-  permissions = undefined;
+  permissions = [];
   status = '';
-  createdAt = undefined;
-  updatedAt = undefined;
+  createdAt = '';
+  updatedAt = '';
 
   constructor(data: Partial<IRoles> = {}) {
     Object.entries(data).forEach(([key, value]) => {
