@@ -5,7 +5,7 @@
 
 type: table
 version: '1.0'
-table: Users
+name: Users
 model:
   authConfig:
     apiKeyOperations:
@@ -26,19 +26,19 @@ model:
       projectionType: ALL
       description: Primary key for users
     secondary:
-      - name: CognitoUserIndex
+      - name: cognito-user-index
         type: GSI
         partition: cognitoId
         sort: userId
         projectionType: ALL
         description: Index for querying users by Cognito ID
-      - name: PhoneUserIndex
+      - name: phone-user-index
         type: GSI
         partition: phoneNumber
         sort: userId
         projectionType: ALL
         description: Index for querying users by phone number
-      - name: EmailUserIndex
+      - name: email-user-index
         type: GSI
         partition: email
         sort: userId

@@ -5,7 +5,7 @@
 
 type: table
 version: '1.0'
-table: ApplicationRoles
+name: ApplicationRoles
 model:
   authConfig:
     defaultAuth: user_pools
@@ -16,7 +16,7 @@ model:
       projectionType: ALL
       description: Primary key for application roles
     secondary:
-      - name: UserRoleIndex
+      - name: user-role-index
         type: GSI
         partition: userId
         sort: roleId
@@ -27,14 +27,14 @@ model:
           - permissions
         description: Index for querying roles by user with essential role attributes projected
       
-      - name: ApplicationRoleIndex
+      - name: application-role-index
         type: GSI
         partition: applicationId
         sort: roleId
         projectionType: KEYS_ONLY
         description: Index for querying roles by application with minimal projection
       
-      - name: RoleTypeIndex
+      - name: role-type-index
         type: LSI
         partition: roleId
         sort: roleType

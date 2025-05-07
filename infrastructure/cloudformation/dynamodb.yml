@@ -42,11 +42,11 @@ Resources:
       AttributeDefinitions:
         - AttributeName: roleType
           AttributeType: S
-        - AttributeName: applicationId
+        - AttributeName: userId
           AttributeType: S
         - AttributeName: roleId
           AttributeType: S
-        - AttributeName: userId
+        - AttributeName: applicationId
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: user-role-index
@@ -56,11 +56,7 @@ Resources:
             - AttributeName: roleId
               KeyType: RANGE
           Projection:
-            ProjectionType: INCLUDE
-            NonKeyAttributes:
-              - roleName
-              - roleType
-              - permissions
+            ProjectionType: ALL
         - IndexName: application-role-index
           KeySchema:
             - AttributeName: applicationId
@@ -68,7 +64,7 @@ Resources:
             - AttributeName: roleId
               KeyType: RANGE
           Projection:
-            ProjectionType: KEYS_ONLY
+            ProjectionType: ALL
       LocalSecondaryIndexes:
         - IndexName: role-type-index
           KeySchema:
@@ -103,11 +99,11 @@ Resources:
         - AttributeName: createdAt
           KeyType: RANGE
       AttributeDefinitions:
+        - AttributeName: createdAt
+          AttributeType: S
         - AttributeName: name
           AttributeType: S
         - AttributeName: applicationId
-          AttributeType: S
-        - AttributeName: createdAt
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: application-name-index
@@ -143,11 +139,11 @@ Resources:
         - AttributeName: userId
           KeyType: RANGE
       AttributeDefinitions:
-        - AttributeName: applicationId
+        - AttributeName: userId
           AttributeType: S
         - AttributeName: roleId
           AttributeType: S
-        - AttributeName: userId
+        - AttributeName: applicationId
           AttributeType: S
         - AttributeName: status
           AttributeType: S
@@ -203,11 +199,11 @@ Resources:
       AttributeDefinitions:
         - AttributeName: roleType
           AttributeType: S
-        - AttributeName: applicationId
+        - AttributeName: userId
           AttributeType: S
         - AttributeName: roleId
           AttributeType: S
-        - AttributeName: userId
+        - AttributeName: applicationId
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: user-role-index
@@ -264,13 +260,13 @@ Resources:
         - AttributeName: cognitoId
           KeyType: RANGE
       AttributeDefinitions:
-        - AttributeName: cognitoId
-          AttributeType: S
-        - AttributeName: phoneNumber
-          AttributeType: S
         - AttributeName: userId
           AttributeType: S
+        - AttributeName: cognitoId
+          AttributeType: S
         - AttributeName: email
+          AttributeType: S
+        - AttributeName: phoneNumber
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: cognito-user-index

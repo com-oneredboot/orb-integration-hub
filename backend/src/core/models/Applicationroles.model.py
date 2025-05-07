@@ -1,22 +1,27 @@
-"""ApplicationRoles model."""
+"""
+Generated Python models for 
+Generated at 
+"""
+
 from typing import Optional, List
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
+from enum import Enum
 from .role_type import RoleType
 from .role_status import RoleStatus
 
 
-class ApplicationRoles(BaseModel):
-    """ApplicationRoles model."""
-    roleId: str = Field(..., description="Unique identifier for the role")
-    userId: str = Field(..., description="ID of the user this role belongs to")
-    applicationId: str = Field(..., description="ID of the application this role belongs to")
-    roleName: str = Field(..., description="Name of the role")
-    roleType: RoleType = Field(..., description="Type of the role")
+class (BaseModel):
+    """ model."""
+    role_id: str = Field(..., description="Unique identifier for the role")
+    user_id: str = Field(..., description="ID of the user this role belongs to")
+    application_id: str = Field(..., description="ID of the application this role belongs to")
+    role_name: str = Field(..., description="Name of the role")
+    role_type: RoleType = Field(..., description="Type of the role")
     permissions: List[str] = Field(..., description="List of permissions granted to this role")
     status: RoleStatus = Field(..., description="Current status of the role")
-    createdAt: datetime = Field(..., description="When the role was created")
-    updatedAt: datetime = Field(..., description="When the role was last updated")
+    created_at: datetime = Field(..., description="When the role was created")
+    updated_at: datetime = Field(..., description="When the role was last updated")
 
     @validator('createdAt', pre=True)
     def parse_createdAt(cls, value):
@@ -47,3 +52,35 @@ class ApplicationRoles(BaseModel):
         json_encoders = {
             datetime: lambda v: v.isoformat()
         }
+
+class CreateInput(BaseModel):
+    role_id: str = Field(..., description="Unique identifier for the role")
+    user_id: str = Field(..., description="ID of the user this role belongs to")
+    application_id: str = Field(..., description="ID of the application this role belongs to")
+    role_name: str = Field(..., description="Name of the role")
+    role_type: RoleType = Field(..., description="Type of the role")
+    permissions: List[str] = Field(..., description="List of permissions granted to this role")
+    status: RoleStatus = Field(..., description="Current status of the role")
+    created_at: datetime = Field(..., description="When the role was created")
+    updated_at: datetime = Field(..., description="When the role was last updated")
+
+class UpdateInput(BaseModel):
+    role_id: Optional[str] = Field(None, description="Unique identifier for the role")
+    user_id: Optional[str] = Field(None, description="ID of the user this role belongs to")
+    application_id: Optional[str] = Field(None, description="ID of the application this role belongs to")
+    role_name: Optional[str] = Field(None, description="Name of the role")
+    role_type: Optional[RoleType] = Field(None, description="Type of the role")
+    permissions: Optional[List[str]] = Field(None, description="List of permissions granted to this role")
+    status: Optional[RoleStatus] = Field(None, description="Current status of the role")
+    created_at: Optional[datetime] = Field(None, description="When the role was created")
+    updated_at: Optional[datetime] = Field(None, description="When the role was last updated")
+
+class Response(BaseModel):
+    StatusCode: int = Field(..., description="HTTP status code")
+    Message: str = Field(..., description="Response message")
+    Data:  = Field(..., description="Response data")
+
+class ListResponse(BaseModel):
+    StatusCode: int = Field(..., description="HTTP status code")
+    Message: str = Field(..., description="Response message")
+    Data: List[] = Field(..., description="Response data")

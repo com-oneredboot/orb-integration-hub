@@ -38,87 +38,56 @@ type {{ type_name }} {
 {% endfor %}
 
 # Base types
-type Query {
-  Ping: String
-  {% for table_name, schema in schemas.items() %}
-  {{ schema.table | to_pascal_case }}QueryBy{{ schema.partition_key | to_pascal_case }}(input: {{ schema.table | to_pascal_case }}QueryBy{{ schema.partition_key | to_pascal_case }}Input!): {{ schema.table | to_pascal_case }}Response
-    @aws_auth(cognito_groups: ["admin"])
-  {% if schema.sort_key and schema.sort_key != 'None' %}
-  {{ schema.table | to_pascal_case }}QueryBy{{ schema.sort_key | to_pascal_case }}(input: {{ schema.table | to_pascal_case }}QueryBy{{ schema.sort_key | to_pascal_case }}Input!): {{ schema.table | to_pascal_case }}Response
-    @aws_auth(cognito_groups: ["admin"])
-  {{ schema.table | to_pascal_case }}QueryByBoth(input: {{ schema.table | to_pascal_case }}QueryByBothInput!): {{ schema.table | to_pascal_case }}Response
-    @aws_auth(cognito_groups: ["admin"])
-  {% endif %}
-  {% for index in schema.secondary_indexes %}
-  {{ schema.table | to_pascal_case }}QueryBy{{ index.partition | to_pascal_case }}(input: {{ schema.table | to_pascal_case }}QueryBy{{ index.partition | to_pascal_case }}Input!): {{ schema.table | to_pascal_case }}ListResponse
-    @aws_auth(cognito_groups: ["admin"])
-  {% endfor %}
-  {% endfor %}
-}
-
-type Mutation {
-  Ping: String
-  {% for table_name, schema in schemas.items() %}
-  {{ schema.table | to_pascal_case }}Create(input: {{ schema.table | to_pascal_case }}CreateInput!): {{ schema.table | to_pascal_case }}Response
-    @aws_auth(cognito_groups: ["admin"])
-  {{ schema.table | to_pascal_case }}Update(input: {{ schema.table | to_pascal_case }}UpdateInput!): {{ schema.table | to_pascal_case }}Response
-    @aws_auth(cognito_groups: ["admin"])
-  {{ schema.table | to_pascal_case }}Delete(id: ID!): {{ schema.table | to_pascal_case }}Response
-    @aws_auth(cognito_groups: ["admin"])
-  {% endfor %}
-}
-
-# Model types
-{% for table_name, schema in schemas.items() %}
-type {{ schema.table | to_pascal_case }} {
+{% for schema_name, schema in schemas.items() %}
+type {{ schema.name }} {
   {% for attr in schema.attributes %}
   {{ attr.name | to_camel_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}AWSDateTime{% elif attr.type == 'boolean' %}Boolean{% elif attr.type == 'array' %}[String]{% else %}String{% endif %}{% endif %}!
   {% endfor %}
 }
 
-input {{ schema.table | to_pascal_case }}CreateInput {
+input {{ schema.name }}CreateInput {
   {% for attr in schema.attributes %}
   {{ attr.name | to_camel_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}AWSDateTime{% elif attr.type == 'boolean' %}Boolean{% elif attr.type == 'array' %}[String]{% else %}String{% endif %}{% endif %}!
   {% endfor %}
 }
 
-input {{ schema.table | to_pascal_case }}UpdateInput {
+input {{ schema.name }}UpdateInput {
   {% for attr in schema.attributes %}
   {{ attr.name | to_camel_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}AWSDateTime{% elif attr.type == 'boolean' %}Boolean{% elif attr.type == 'array' %}[String]{% else %}String{% endif %}{% endif %}
   {% endfor %}
 }
 
-input {{ schema.table | to_pascal_case }}QueryBy{{ schema.partition_key | to_pascal_case }}Input {
+input {{ schema.name }}QueryBy{{ schema.partition_key | to_pascal_case }}Input {
   {{ schema.partition_key | to_camel_case }}: String!
 }
 
 {% if schema.sort_key and schema.sort_key != 'None' %}
-input {{ schema.table | to_pascal_case }}QueryBy{{ schema.sort_key | to_pascal_case }}Input {
+input {{ schema.name }}QueryBy{{ schema.sort_key | to_pascal_case }}Input {
   {{ schema.sort_key | to_camel_case }}: String!
 }
 
-input {{ schema.table | to_pascal_case }}QueryByBothInput {
+input {{ schema.name }}QueryByBothInput {
   {{ schema.partition_key | to_camel_case }}: String!
   {{ schema.sort_key | to_camel_case }}: String!
 }
 {% endif %}
+
 {% for index in schema.secondary_indexes %}
-input {{ schema.table | to_pascal_case }}QueryBy{{ index.partition | to_pascal_case }}Input {
+input {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}Input {
   {{ index.partition | to_camel_case }}: String!{% if index.sort and index.sort != 'None' %}
   {{ index.sort | to_camel_case }}: String!{% endif %}
 }
 {% endfor %}
 
-type {{ schema.table | to_pascal_case }}Response {
+type {{ schema.name }}Response {
   StatusCode: Int!
   Message: String!
-  Data: {{ schema.table | to_pascal_case }}
+  Data: {{ schema.name }}
 }
 
-type {{ schema.table | to_pascal_case }}ListResponse {
+type {{ schema.name }}ListResponse {
   StatusCode: Int!
   Message: String!
-  Data: [{{ schema.table | to_pascal_case }}]
+  Data: [{{ schema.name }}]
 }
-
 {% endfor %}

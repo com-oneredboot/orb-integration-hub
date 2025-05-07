@@ -287,25 +287,24 @@ def to_kebab_case(s: str) -> str:
 
 def validate_case_conventions(schema: Dict[str, Any], file_path: str) -> None:
     """Validate case conventions in schema files."""
-    # Validate file name is PascalCase
+    if 'name' not in schema:
+        raise SchemaValidationError(f"Schema must have a 'name' field: {file_path}")
+        
+    schema_name = schema['name']
     file_name = os.path.basename(file_path)
-    if not re.match(r'^[A-Z][a-zA-Z0-9]*\.yml$', file_name):
-        raise SchemaValidationError(f"Schema file name '{file_name}' must be in PascalCase")
+    expected_file_name = f"{schema_name}.yml"
+    
+    if file_name != expected_file_name:
+        raise SchemaValidationError(
+            f"Schema file name '{file_name}' must match the schema name '{schema_name}' defined in the 'name' field."
+        )
 
     if 'type' in schema and schema['type'] in ['graphql', 'static']:
-        # Validate GraphQL type name is PascalCase
-        if not re.match(r'^[A-Z][a-zA-Z0-9]*$', schema['name']):
-            raise SchemaValidationError(f"GraphQL type name '{schema['name']}' must be in PascalCase")
-
         # Validate attribute names are camelCase
         for attr_name in schema['attributes']:
             if not re.match(r'^[a-z][a-zA-Z0-9]*$', attr_name):
                 raise SchemaValidationError(f"Attribute name '{attr_name}' must be in camelCase")
     else:
-        # Validate table name is PascalCase
-        if not re.match(r'^[A-Z][a-zA-Z0-9]*$', schema['table']):
-            raise SchemaValidationError(f"Table name '{schema['table']}' must be in PascalCase")
-
         # Validate index names are kebab-case
         if 'model' in schema and 'keys' in schema['model'] and 'secondary' in schema['model']['keys']:
             for index in schema['model']['keys']['secondary']:
@@ -327,19 +326,16 @@ def load_schema(schema_path: str) -> Dict[str, Any]:
         # Validate schema structure
         if 'type' not in schema:
             raise SchemaValidationError(f"Schema must have a 'type' field: {schema_path}")
+        if 'name' not in schema:
+            raise SchemaValidationError(f"Schema must have a 'name' field: {schema_path}")
             
-        if schema['type'] == 'graphql' or schema['type'] == 'static':
-            # GraphQL or static type schema
-            if 'name' not in schema:
-                raise SchemaValidationError(f"GraphQL/static type schema must have a 'name' field: {schema_path}")
+        # Additional validation based on type
+        if schema['type'] in ['graphql', 'static']:
             if 'attributes' not in schema:
                 raise SchemaValidationError(f"GraphQL/static type schema must have an 'attributes' field: {schema_path}")
         else:
-            # Table schema
             if 'version' not in schema:
                 raise SchemaValidationError(f"Table schema must have a 'version' field: {schema_path}")
-            if 'table' not in schema:
-                raise SchemaValidationError(f"Table schema must have a 'table' field: {schema_path}")
             if 'model' not in schema:
                 raise SchemaValidationError(f"Table schema must have a 'model' field: {schema_path}")
             
@@ -401,7 +397,7 @@ def load_schemas() -> Dict[str, Union[TableSchema, GraphQLType]]:
                 )
             else:
                 # Handle table schema
-                table = schema['table']
+                name = schema['name']
                 model = schema['model']
                 attributes = []
                 
@@ -433,8 +429,8 @@ def load_schemas() -> Dict[str, Union[TableSchema, GraphQLType]]:
                             'projected_attributes': index.get('projected_attributes', [])
                         })
                 
-                schemas[table] = TableSchema(
-                    table=table,
+                schemas[name] = TableSchema(
+                    table=name,
                     attributes=attributes,
                     partition_key=partition_key,
                     sort_key=sort_key,

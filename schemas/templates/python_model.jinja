@@ -1,18 +1,31 @@
-"""{{ schema.table }} model."""
+"""
+Generated Python models for {{ schema.name }}
+Generated at {{ timestamp }}
+"""
+
 from typing import Optional, List
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
+from enum import Enum
 {% for attr in schema.attributes %}
 {% if attr.enum_type %}
 from .{{ attr.enum_type | to_snake_case }} import {{ attr.enum_type }}
 {% endif %}
 {% endfor %}
 
+{% if schema.enums %}
+{% for enum_name, enum_values in schema.enums.items() %}
+class {{ enum_name }}(str, Enum):
+    {% for value in enum_values %}
+    {{ value }} = "{{ value }}"
+    {% endfor %}
+{% endfor %}
+{% endif %}
 
-class {{ schema.table }}(BaseModel):
-    """{{ schema.table }} model."""
+class {{ schema.name }}(BaseModel):
+    """{{ schema.name }} model."""
     {% for attr in schema.attributes %}
-    {{ attr.name }}: {% if attr.type == 'timestamp' %}datetime{% elif attr.type == 'array' %}List[str]{% elif attr.type == 'boolean' %}bool{% elif attr.type == 'number' %}float{% elif attr.enum_type %}{{ attr.enum_type }}{% else %}str{% endif %}{% if not attr.required %} | None{% endif %} = Field({% if attr.required %}...{% else %}None{% endif %}, description="{{ attr.description }}")
+    {{ attr.name | to_snake_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}datetime{% elif attr.type == 'boolean' %}bool{% elif attr.type == 'array' %}List[str]{% else %}str{% endif %}{% endif %} = Field(..., description="{{ attr.description }}")
     {% endfor %}
 
     {% for attr in schema.attributes %}
@@ -37,3 +50,23 @@ class {{ schema.table }}(BaseModel):
         json_encoders = {
             datetime: lambda v: v.isoformat()
         }
+
+class {{ schema.name }}CreateInput(BaseModel):
+    {% for attr in schema.attributes %}
+    {{ attr.name | to_snake_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}datetime{% elif attr.type == 'boolean' %}bool{% elif attr.type == 'array' %}List[str]{% else %}str{% endif %}{% endif %} = Field(..., description="{{ attr.description }}")
+    {% endfor %}
+
+class {{ schema.name }}UpdateInput(BaseModel):
+    {% for attr in schema.attributes %}
+    {{ attr.name | to_snake_case }}: Optional[{% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}datetime{% elif attr.type == 'boolean' %}bool{% elif attr.type == 'array' %}List[str]{% else %}str{% endif %}{% endif %}] = Field(None, description="{{ attr.description }}")
+    {% endfor %}
+
+class {{ schema.name }}Response(BaseModel):
+    StatusCode: int = Field(..., description="HTTP status code")
+    Message: str = Field(..., description="Response message")
+    Data: {{ schema.name }} = Field(..., description="Response data")
+
+class {{ schema.name }}ListResponse(BaseModel):
+    StatusCode: int = Field(..., description="HTTP status code")
+    Message: str = Field(..., description="Response message")
+    Data: List[{{ schema.name }}] = Field(..., description="Response data")

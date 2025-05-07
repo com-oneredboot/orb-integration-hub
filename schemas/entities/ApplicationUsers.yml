@@ -5,7 +5,7 @@
 
 type: table
 version: '1.0'
-table: ApplicationUsers
+name: ApplicationUsers
 model:
   authConfig:
     defaultAuth: user_pools
@@ -16,19 +16,19 @@ model:
       projectionType: ALL
       description: Primary key for application users
     secondary:
-      - name: UserApplicationsIndex
+      - name: user-applications-index
         type: GSI
         partition: userId
         sort: applicationId
         projectionType: ALL
         description: Index for querying applications by user
-      - name: ApplicationRoleIndex
+      - name: application-role-index
         type: GSI
         partition: applicationId
         sort: roleId
         projectionType: ALL
         description: Index for querying users by role within an application
-      - name: UserStatusIndex
+      - name: user-status-index
         type: GSI
         partition: applicationId
         sort: status

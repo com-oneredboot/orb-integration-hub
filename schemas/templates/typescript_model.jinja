@@ -1,5 +1,6 @@
 /**
- * {{ schema.name }} model.
+ * Generated TypeScript models for {{ schema.name }}
+ * Generated at {{ timestamp }}
  */
 
 // Import enums and models used in this model
@@ -96,4 +97,44 @@ export class {{ schema.name }} implements I{{ schema.name }} {
       }
     });
   }
+}
+
+{% if schema.enums %}
+{% for enum_name, enum_values in schema.enums.items() %}
+export enum {{ enum_name }} {
+  {% for value in enum_values %}
+  {{ value }} = '{{ value }}',
+  {% endfor %}
+}
+{% endfor %}
+{% endif %}
+
+export interface {{ schema.name }} {
+  {% for attr in schema.attributes %}
+  {{ attr.name | to_camel_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}Date{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'array' %}string[]{% else %}string{% endif %}{% endif %};
+  {% endfor %}
+}
+
+export interface {{ schema.name }}CreateInput {
+  {% for attr in schema.attributes %}
+  {{ attr.name | to_camel_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}Date{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'array' %}string[]{% else %}string{% endif %}{% endif %};
+  {% endfor %}
+}
+
+export interface {{ schema.name }}UpdateInput {
+  {% for attr in schema.attributes %}
+  {{ attr.name | to_camel_case }}?: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}Date{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'array' %}string[]{% else %}string{% endif %}{% endif %};
+  {% endfor %}
+}
+
+export interface {{ schema.name }}Response {
+  StatusCode: number;
+  Message: string;
+  Data: {{ schema.name }};
+}
+
+export interface {{ schema.name }}ListResponse {
+  StatusCode: number;
+  Message: string;
+  Data: {{ schema.name }}[];
 }

@@ -8,7 +8,7 @@
 
 type: table
 version: '1.0'
-table: Roles
+name: Roles
 model:
   auth_config:
     default_auth: user_pools

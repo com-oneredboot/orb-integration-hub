@@ -5,7 +5,7 @@
 
 type: table
 version: '1.0'
-table: Applications
+name: Applications
 model:
   auth_config:
     default_auth: user_pools
