@@ -93,14 +93,20 @@ class SchemaIndex(BaseModel):
         if v:
             # DynamoDB index name requirements:
             # - 3-255 characters long
-            # - Only alphanumeric characters, underscores, and hyphens
+            # - Only alphanumeric characters
             # - Must start with a letter
+            # - Must be in PascalCase format
             if not (3 <= len(v) <= 255):
                 raise ValueError('Index name must be between 3 and 255 characters')
             if not v[0].isalpha():
                 raise ValueError('Index name must start with a letter')
-            if not all(c.isalnum() or c in ['_', '-'] for c in v):
-                raise ValueError('Index name can only contain alphanumeric characters, underscores, and hyphens')
+            if not all(c.isalnum() for c in v):
+                raise ValueError('Index name can only contain alphanumeric characters')
+            # Validate PascalCase format
+            if not v[0].isupper():
+                raise ValueError('Index name must be in PascalCase format (e.g., RoleIndex)')
+            if any(c.isupper() and i > 0 and v[i-1].isupper() for i, c in enumerate(v)):
+                raise ValueError('Index name must be in PascalCase format (e.g., RoleIndex)')
         return v
 
 class SchemaModel(BaseModel):
