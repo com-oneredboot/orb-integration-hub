@@ -104,7 +104,7 @@ Resources:
 
   # Data Sources
   # --------------------------------------------------- #
-  {%- for table_name, schema in schemas.items() %}
+  {%- for table_name, schema in schemas.items() if schema.type == 'table' %}
 
   # {{ schema.name }} Data Source
   {{ schema.name }}DataSource:

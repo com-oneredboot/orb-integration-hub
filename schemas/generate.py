@@ -135,6 +135,7 @@ class TableSchema:
     sort_key: str = 'None'  # Default to 'None' string
     secondary_indexes: Optional[List[Dict[str, Any]]] = None
     auth_config: Optional[Dict[str, Any]] = None
+    type: str = 'table'  # Add type field to indicate this is a table schema
 
     def __post_init__(self):
         """Post-initialization validation and defaults."""
@@ -659,11 +660,27 @@ def generate_graphql_schema(schemas: Dict[str, Union[TableSchema, GraphQLType]],
                     logger.error(f'Attribute in schema {schema_name} is None')
                     raise ValueError(f'Attribute in schema {schema_name} is None')
         
+        # Generate schema content
         schema_content = template.render(
             schemas=table_schemas,
             graphql_types=graphql_types,
             timestamp=datetime.now().isoformat()
         )
+        
+        # Validate schema content
+        if not schema_content.strip():
+            raise ValueError("Generated schema content is empty")
+        
+        # Ensure schema has required elements
+        required_elements = [
+            "schema {",
+            "type Query {",
+            "type Mutation {"
+        ]
+        for element in required_elements:
+            if element not in schema_content:
+                raise ValueError(f"Generated schema is missing required element: {element}")
+        
         logger.debug('Completed generate_graphql_schema')
         return schema_content
     except Exception as e:

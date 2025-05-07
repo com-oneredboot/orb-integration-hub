@@ -85,7 +85,7 @@ input {{ schema.name }}QueryByBothInput {
 {% endif %}
 
 {% for index in schema.secondary_indexes %}
-input {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}And{{ index.sort | to_pascal_case }}Input {
+input {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}Input {
   {{ index.partition | to_camel_case }}: String!{% if index.sort and index.sort != 'None' %}
   {{ index.sort | to_camel_case }}: String!{% endif %}
 }
