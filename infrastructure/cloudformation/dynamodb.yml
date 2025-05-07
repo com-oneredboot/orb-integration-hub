@@ -35,7 +35,44 @@ Resources:
       TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles
       BillingMode: PAY_PER_REQUEST
       KeySchema:
+        - AttributeName: applicationId
+          KeyType: HASH
+        - AttributeName: roleId
+          KeyType: RANGE
       AttributeDefinitions:
+        - AttributeName: applicationId
+          AttributeType: S
+        - AttributeName: roleId
+          AttributeType: S
+        - AttributeName: roleType
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: UserRoleIndex
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: roleType
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: ApplicationRoleIndex
+          KeySchema:
+            - AttributeName: applicationId
+              KeyType: HASH
+            - AttributeName: roleId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: RoleTypeIndex
+          KeySchema:
+            - AttributeName: roleId
+              KeyType: HASH
+            - AttributeName: roleType
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
 
   ApplicationRolesTableArn:
     Type: AWS::SSM::Parameter
@@ -56,7 +93,36 @@ Resources:
       TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications
       BillingMode: PAY_PER_REQUEST
       KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: name
+          KeyType: RANGE
       AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: name
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+        - AttributeName: type
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: ApplicationStatusIndex
+          KeySchema:
+            - AttributeName: status
+              KeyType: HASH
+            - AttributeName: name
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: ApplicationTypeIndex
+          KeySchema:
+            - AttributeName: type
+              KeyType: HASH
+            - AttributeName: name
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
 
   ApplicationsTableArn:
     Type: AWS::SSM::Parameter
@@ -77,7 +143,44 @@ Resources:
       TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users
       BillingMode: PAY_PER_REQUEST
       KeySchema:
+        - AttributeName: applicationId
+          KeyType: HASH
+        - AttributeName: userId
+          KeyType: RANGE
       AttributeDefinitions:
+        - AttributeName: applicationId
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: roleId
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: UserApplicationsIndex
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: applicationId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: ApplicationRoleIndex
+          KeySchema:
+            - AttributeName: applicationId
+              KeyType: HASH
+            - AttributeName: roleId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: UserStatusIndex
+          KeySchema:
+            - AttributeName: applicationId
+              KeyType: HASH
+            - AttributeName: status
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
 
   ApplicationUsersTableArn:
     Type: AWS::SSM::Parameter
@@ -92,97 +195,32 @@ Resources:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users-table-name
       Type: String
       Value: !Ref ApplicationUsersTable
-  AuthTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-auth
-      BillingMode: PAY_PER_REQUEST
-      KeySchema:
-      AttributeDefinitions:
-
-  AuthTableArn:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-auth-table-arn
-      Type: String
-      Value: !GetAtt AuthTable.Arn
-
-  AuthTableName:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-auth-table-name
-      Type: String
-      Value: !Ref AuthTable
-  AuthErrorTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-auth-error
-      BillingMode: PAY_PER_REQUEST
-      KeySchema:
-      AttributeDefinitions:
-
-  AuthErrorTableArn:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-auth-error-table-arn
-      Type: String
-      Value: !GetAtt AuthErrorTable.Arn
-
-  AuthErrorTableName:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-auth-error-table-name
-      Type: String
-      Value: !Ref AuthErrorTable
-  ErrorRegistryTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-error-registry
-      BillingMode: PAY_PER_REQUEST
-      KeySchema:
-      AttributeDefinitions:
-
-  ErrorRegistryTableArn:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-error-registry-table-arn
-      Type: String
-      Value: !GetAtt ErrorRegistryTable.Arn
-
-  ErrorRegistryTableName:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-error-registry-table-name
-      Type: String
-      Value: !Ref ErrorRegistryTable
-  MfaSetupDetailsTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-mfa-setup-details
-      BillingMode: PAY_PER_REQUEST
-      KeySchema:
-      AttributeDefinitions:
-
-  MfaSetupDetailsTableArn:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-mfa-setup-details-table-arn
-      Type: String
-      Value: !GetAtt MfaSetupDetailsTable.Arn
-
-  MfaSetupDetailsTableName:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-mfa-setup-details-table-name
-      Type: String
-      Value: !Ref MfaSetupDetailsTable
   RolesTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-roles
       BillingMode: PAY_PER_REQUEST
       KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: roleType
+          KeyType: RANGE
       AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: roleType
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: UserRoleIndex
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: roleType
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
 
   RolesTableArn:
     Type: AWS::SSM::Parameter
@@ -203,7 +241,28 @@ Resources:
       TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-users
       BillingMode: PAY_PER_REQUEST
       KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: email
+          KeyType: RANGE
       AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: email
+          AttributeType: S
+        - AttributeName: roleType
+          AttributeType: S
+        - AttributeName: roleId
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: RoleIndex
+          KeySchema:
+            - AttributeName: roleId
+              KeyType: HASH
+            - AttributeName: roleType
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
 
   UsersTableArn:
     Type: AWS::SSM::Parameter
@@ -254,50 +313,6 @@ Outputs:
     Value: !Ref ApplicationUsersTable
     Export:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users-table-name
-  AuthTableArn:
-    Description: The ARN of the Auth table
-    Value: !GetAtt AuthTable.Arn
-    Export:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-auth-table-arn
-
-  AuthTableName:
-    Description: The name of the Auth table
-    Value: !Ref AuthTable
-    Export:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-auth-table-name
-  AuthErrorTableArn:
-    Description: The ARN of the AuthError table
-    Value: !GetAtt AuthErrorTable.Arn
-    Export:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-auth-error-table-arn
-
-  AuthErrorTableName:
-    Description: The name of the AuthError table
-    Value: !Ref AuthErrorTable
-    Export:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-auth-error-table-name
-  ErrorRegistryTableArn:
-    Description: The ARN of the ErrorRegistry table
-    Value: !GetAtt ErrorRegistryTable.Arn
-    Export:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-error-registry-table-arn
-
-  ErrorRegistryTableName:
-    Description: The name of the ErrorRegistry table
-    Value: !Ref ErrorRegistryTable
-    Export:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-error-registry-table-name
-  MfaSetupDetailsTableArn:
-    Description: The ARN of the MfaSetupDetails table
-    Value: !GetAtt MfaSetupDetailsTable.Arn
-    Export:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-mfa-setup-details-table-arn
-
-  MfaSetupDetailsTableName:
-    Description: The name of the MfaSetupDetails table
-    Value: !Ref MfaSetupDetailsTable
-    Export:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-mfa-setup-details-table-name
   RolesTableArn:
     Description: The ARN of the Roles table
     Value: !GetAtt RolesTable.Arn

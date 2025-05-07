@@ -675,28 +675,118 @@ def generate_timestamped_schema(schema_content: str) -> str:
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     return f'appsync_{timestamp}.graphql'
 
-def generate_cloudformation_template(schemas: Dict[str, Union[TableSchema, GraphQLType]], template_path: str, output_path: str) -> None:
-    logger.debug('Starting generate_cloudformation_template')
+def generate_dynamodb_cloudformation_template(schemas: Dict[str, Union[TableSchema, GraphQLType]], output_path: str) -> None:
+    """Generate CloudFormation template for DynamoDB tables only."""
+    logger.debug('Starting generate_dynamodb_cloudformation_template')
     try:
+        # Filter to only include TableSchema instances
+        table_schemas = {name: schema for name, schema in schemas.items() if isinstance(schema, TableSchema)}
+        
+        # Prepare schemas for template rendering
+        for schema in table_schemas.values():
+            # Prepare key schema
+            schema.key_schema = [
+                {'name': schema.partition_key, 'type': 'HASH'}
+            ]
+            if schema.sort_key and schema.sort_key != 'None':
+                schema.key_schema.append({'name': schema.sort_key, 'type': 'RANGE'})
+            
+            # Prepare attribute definitions
+            schema.attribute_definitions = []
+            # Add partition key
+            schema.attribute_definitions.append({
+                'AttributeName': schema.partition_key,
+                'AttributeType': to_dynamodb_type(next(attr.type for attr in schema.attributes if attr.name == schema.partition_key))
+            })
+            # Add sort key if present
+            if schema.sort_key and schema.sort_key != 'None':
+                schema.attribute_definitions.append({
+                    'AttributeName': schema.sort_key,
+                    'AttributeType': to_dynamodb_type(next(attr.type for attr in schema.attributes if attr.name == schema.sort_key))
+                })
+            
+            # Prepare GSIs
+            if schema.secondary_indexes:
+                schema.global_secondary_indexes = []
+                schema.local_secondary_indexes = []
+                for idx in schema.secondary_indexes:
+                    if idx['type'] == 'GSI':
+                        gsi = {
+                            'IndexName': idx['name'],
+                            'KeySchema': [
+                                {'AttributeName': idx['partition'], 'KeyType': 'HASH'}
+                            ],
+                            'Projection': {
+                                'ProjectionType': idx['projection_type']
+                            }
+                        }
+                        if idx.get('sort'):
+                            gsi['KeySchema'].append({'AttributeName': idx['sort'], 'KeyType': 'RANGE'})
+                            # Add sort key to attribute definitions if not already present
+                            sort_attr_def = {
+                                'AttributeName': idx['sort'],
+                                'AttributeType': to_dynamodb_type(next(attr.type for attr in schema.attributes if attr.name == idx['sort']))
+                            }
+                            if sort_attr_def not in schema.attribute_definitions:
+                                schema.attribute_definitions.append(sort_attr_def)
+                        
+                        # Add partition key to attribute definitions if not already present
+                        part_attr_def = {
+                            'AttributeName': idx['partition'],
+                            'AttributeType': to_dynamodb_type(next(attr.type for attr in schema.attributes if attr.name == idx['partition']))
+                        }
+                        if part_attr_def not in schema.attribute_definitions:
+                            schema.attribute_definitions.append(part_attr_def)
+                        
+                        if idx['projection_type'] == 'INCLUDE':
+                            gsi['Projection']['NonKeyAttributes'] = idx['projected_attributes']
+                        
+                        schema.global_secondary_indexes.append(gsi)
+                    elif idx['type'] == 'LSI':
+                        lsi = {
+                            'IndexName': idx['name'],
+                            'KeySchema': [
+                                {'AttributeName': schema.partition_key, 'KeyType': 'HASH'},
+                                {'AttributeName': idx['sort'], 'KeyType': 'RANGE'}
+                            ],
+                            'Projection': {
+                                'ProjectionType': idx['projection_type']
+                            }
+                        }
+                        
+                        # Add sort key to attribute definitions if not already present
+                        sort_attr_def = {
+                            'AttributeName': idx['sort'],
+                            'AttributeType': to_dynamodb_type(next(attr.type for attr in schema.attributes if attr.name == idx['sort']))
+                        }
+                        if sort_attr_def not in schema.attribute_definitions:
+                            schema.attribute_definitions.append(sort_attr_def)
+                        
+                        if idx['projection_type'] == 'INCLUDE':
+                            lsi['Projection']['NonKeyAttributes'] = idx['projected_attributes']
+                        
+                        schema.local_secondary_indexes.append(lsi)
+        
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('dynamodb_cloudformation.jinja')
-        template_content = template.render(schemas=schemas)
+        template_content = template.render(schemas=table_schemas)
         write_file(output_path, template_content)
-        logger.debug('Completed generate_cloudformation_template')
+        logger.debug('Completed generate_dynamodb_cloudformation_template')
     except Exception as e:
-        logger.error(f'Failed to generate CloudFormation template: {str(e)}')
+        logger.error(f'Failed to generate DynamoDB CloudFormation template: {str(e)}')
         raise
 
-def generate_appsync_template(schemas: Dict[str, Union[TableSchema, GraphQLType]], output_path: str) -> None:
-    logger.debug('Starting generate_appsync_template')
+def generate_appsync_cloudformation_template(schemas: Dict[str, Union[TableSchema, GraphQLType]], output_path: str) -> None:
+    """Generate CloudFormation template for AppSync resources."""
+    logger.debug('Starting generate_appsync_cloudformation_template')
     try:
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('appsync_cloudformation.jinja')
         template_content = template.render(schemas=schemas)
         write_file(output_path, template_content)
-        logger.debug('Completed generate_appsync_template')
+        logger.debug('Completed generate_appsync_cloudformation_template')
     except Exception as e:
-        logger.error(f'Failed to generate AppSync template: {str(e)}')
+        logger.error(f'Failed to generate AppSync CloudFormation template: {str(e)}')
         raise
 
 def write_file(output_path: str, content: str) -> None:
@@ -979,13 +1069,17 @@ def main():
         schema_output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'cloudformation', timestamped_schema)
         write_file(schema_output_path, graphql_schema)
         logger.info(f'Generated timestamped schema file: {timestamped_schema}')
+        
+        # Generate DynamoDB CloudFormation template
         logger.debug('Generating DynamoDB CloudFormation template')
-        dynamodb_template_path = os.path.join(SCRIPT_DIR, 'templates', 'dynamodb_cloudformation.jinja')
         dynamodb_output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'cloudformation', 'dynamodb.yml')
-        generate_cloudformation_template(schemas, dynamodb_template_path, dynamodb_output_path)
+        generate_dynamodb_cloudformation_template(schemas, dynamodb_output_path)
+        
+        # Generate AppSync CloudFormation template
         logger.debug('Generating AppSync CloudFormation template')
         appsync_output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'cloudformation', 'appsync.yml')
-        generate_appsync_template(schemas, appsync_output_path)
+        generate_appsync_cloudformation_template(schemas, appsync_output_path)
+        
         logger.info('Schema generation completed successfully')
     except Exception as e:
         logger.error(f'Schema generation failed: {str(e)}')
