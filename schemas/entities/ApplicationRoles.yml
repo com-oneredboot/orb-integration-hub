@@ -35,11 +35,11 @@ model:
         description: Index for querying roles by application with minimal projection
       
       - name: role-type-index
-        type: LSI
+        type: GSI
         partition: roleId
         sort: roleType
         projectionType: ALL
-        description: Local secondary index for filtering roles by type
+        description: Global secondary index for filtering roles by type
   attributes:
     roleId:
       type: string
