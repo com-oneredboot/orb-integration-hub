@@ -12,18 +12,32 @@ This schema follows these conventions:
 - Mutation operations: PascalCase with action suffix (e.g., ApplicationRoleCreate)
 - Response fields: PascalCase (e.g., StatusCode, Message, Data)
 
-All operations are secured with AWS Cognito user pool authentication for the admin group.
+Authentication is configured per operation using authConfig in the schema files.
+Operations can use either API key authentication (@aws_api_key) or Cognito user pool authentication (@aws_auth).
+The default is Cognito user pool authentication for the admin group.
 """
 
+# Authentication Directives
+directive @aws_auth(cognito_groups: [String!]!) on FIELD_DEFINITION
+directive @aws_api_key on FIELD_DEFINITION
+
+# Schema Definition
+schema {
+  query: Query
+  mutation: Mutation
+}
+
 # Enums
+{% set processed_enums = [] %}
 {% for table_name, schema in schemas.items() %}
 {% for attr in schema.attributes %}
-{% if attr.enum_type %}
+{% if attr.enum_type and attr.enum_type not in processed_enums %}
 enum {{ attr.enum_type }} {
     {% for value in attr.enum_values %}
     {{ value }}
     {% endfor %}
 }
+{% set _ = processed_enums.append(attr.enum_type) %}
 {% endif %}
 {% endfor %}
 {% endfor %}
@@ -73,21 +87,82 @@ input {{ schema.name }}QueryByBothInput {
 {% endif %}
 
 {% for index in schema.secondary_indexes %}
-input {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}Input {
+input {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}And{{ index.sort | to_pascal_case }}Input {
   {{ index.partition | to_camel_case }}: String!{% if index.sort and index.sort != 'None' %}
   {{ index.sort | to_camel_case }}: String!{% endif %}
 }
 {% endfor %}
 
 type {{ schema.name }}Response {
+  {% for directive in get_auth_directives(schema_name + "Response", schema) %}
+  {{ directive }}
+  {% endfor %}
   StatusCode: Int!
   Message: String!
   Data: {{ schema.name }}
 }
 
 type {{ schema.name }}ListResponse {
+  {% for directive in get_auth_directives(schema_name + "ListResponse", schema) %}
+  {{ directive }}
+  {% endfor %}
   StatusCode: Int!
   Message: String!
   Data: [{{ schema.name }}]
 }
 {% endfor %}
+
+# Root Types
+type Query {
+  {% for schema_name, schema in schemas.items() %}
+  # Query by primary key
+  {% for directive in get_auth_directives(schema_name + "QueryBy" + schema.partition_key | to_pascal_case, schema) %}
+  {{ directive }}
+  {% endfor %}
+  {{ schema.name }}QueryBy{{ schema.partition_key | to_pascal_case }}(input: {{ schema.name }}QueryBy{{ schema.partition_key | to_pascal_case }}Input!): {{ schema.name }}Response!
+  
+  {% if schema.sort_key and schema.sort_key != 'None' %}
+  # Query by sort key
+  {% for directive in get_auth_directives(schema_name + "QueryBy" + schema.sort_key | to_pascal_case, schema) %}
+  {{ directive }}
+  {% endfor %}
+  {{ schema.name }}QueryBy{{ schema.sort_key | to_pascal_case }}(input: {{ schema.name }}QueryBy{{ schema.sort_key | to_pascal_case }}Input!): {{ schema.name }}Response!
+  
+  # Query by both keys
+  {% for directive in get_auth_directives(schema_name + "QueryByBoth", schema) %}
+  {{ directive }}
+  {% endfor %}
+  {{ schema.name }}QueryByBoth(input: {{ schema.name }}QueryByBothInput!): {{ schema.name }}Response!
+  {% endif %}
+  
+  {% for index in schema.secondary_indexes %}
+  # Query by index
+  {% for directive in get_auth_directives(schema_name + "QueryBy" + index.partition | to_pascal_case + "And" + index.sort | to_pascal_case, schema) %}
+  {{ directive }}
+  {% endfor %}
+  {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}And{{ index.sort | to_pascal_case }}(input: {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}And{{ index.sort | to_pascal_case }}Input!): {{ schema.name }}Response!
+  {% endfor %}
+  {% endfor %}
+}
+
+type Mutation {
+  {% for schema_name, schema in schemas.items() %}
+  # Create operation
+  {% for directive in get_auth_directives(schema_name + "Create", schema) %}
+  {{ directive }}
+  {% endfor %}
+  {{ schema.name }}Create(input: {{ schema.name }}CreateInput!): {{ schema.name }}Response!
+  
+  # Update operation
+  {% for directive in get_auth_directives(schema_name + "Update", schema) %}
+  {{ directive }}
+  {% endfor %}
+  {{ schema.name }}Update(input: {{ schema.name }}UpdateInput!): {{ schema.name }}Response!
+  
+  # Delete operation
+  {% for directive in get_auth_directives(schema_name + "Delete", schema) %}
+  {{ directive }}
+  {% endfor %}
+  {{ schema.name }}Delete(id: ID!): {{ schema.name }}Response!
+  {% endfor %}
+}

@@ -40,13 +40,13 @@ Resources:
         - AttributeName: roleId
           KeyType: RANGE
       AttributeDefinitions:
-        - AttributeName: userId
-          AttributeType: S
-        - AttributeName: roleType
-          AttributeType: S
         - AttributeName: applicationId
           AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
         - AttributeName: roleId
+          AttributeType: S
+        - AttributeName: roleType
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: user-role-index
@@ -98,11 +98,11 @@ Resources:
         - AttributeName: createdAt
           KeyType: RANGE
       AttributeDefinitions:
-        - AttributeName: name
-          AttributeType: S
         - AttributeName: applicationId
           AttributeType: S
         - AttributeName: createdAt
+          AttributeType: S
+        - AttributeName: name
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: application-name-index
@@ -138,13 +138,13 @@ Resources:
         - AttributeName: userId
           KeyType: RANGE
       AttributeDefinitions:
-        - AttributeName: userId
-          AttributeType: S
         - AttributeName: applicationId
           AttributeType: S
-        - AttributeName: roleId
+        - AttributeName: userId
           AttributeType: S
         - AttributeName: status
+          AttributeType: S
+        - AttributeName: roleId
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: user-applications-index
@@ -200,9 +200,9 @@ Resources:
           AttributeType: S
         - AttributeName: userId
           AttributeType: S
-        - AttributeName: roleType
-          AttributeType: S
         - AttributeName: roleId
+          AttributeType: S
+        - AttributeName: roleType
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: user-role-index
@@ -263,9 +263,9 @@ Resources:
           AttributeType: S
         - AttributeName: cognitoId
           AttributeType: S
-        - AttributeName: phoneNumber
-          AttributeType: S
         - AttributeName: email
+          AttributeType: S
+        - AttributeName: phoneNumber
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: cognito-user-index

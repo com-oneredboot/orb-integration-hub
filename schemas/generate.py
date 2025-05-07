@@ -109,6 +109,7 @@ class SchemaModel(BaseModel):
     keys: Dict[str, Any]
     attributes: Dict[str, SchemaField]
     indexes: Optional[List[SchemaIndex]] = None
+    auth_config: Optional[Dict[str, Any]] = None
 
 @dataclass
 class Attribute:
@@ -127,6 +128,7 @@ class TableSchema:
     partition_key: str
     sort_key: str = 'None'  # Default to 'None' string
     secondary_indexes: Optional[List[Dict[str, Any]]] = None
+    auth_config: Optional[Dict[str, Any]] = None
 
     def __post_init__(self):
         """Post-initialization validation and defaults."""
@@ -134,6 +136,12 @@ class TableSchema:
             self.sort_key = 'None'
         if self.secondary_indexes is None:
             self.secondary_indexes = []
+        if self.auth_config is None:
+            self.auth_config = {
+                'defaultAuth': 'user_pools',
+                'apiKeyOperations': [],
+                'cognitoOperations': []
+            }
 
 @dataclass
 class GraphQLType:
@@ -141,6 +149,7 @@ class GraphQLType:
     name: str
     attributes: List[Attribute]
     description: Optional[str] = None
+    auth_config: Optional[Dict[str, Any]] = None
 
 def to_python_type(attr_type: str) -> str:
     """Convert schema type to Python type."""
@@ -328,6 +337,33 @@ def validate_case_conventions(schema: Dict[str, Any], file_path: str) -> None:
                 if not re.match(r'^[a-z][a-zA-Z0-9]*$', attr_name):
                     raise SchemaValidationError(f"Attribute name '{attr_name}' must be in camelCase")
 
+def get_auth_directives(operation_name: str, schema: Union[TableSchema, GraphQLType]) -> List[str]:
+    """Get the appropriate auth directives for an operation."""
+    directives = []
+    
+    if not hasattr(schema, 'auth_config') or not schema.auth_config:
+        # Default to Cognito auth if no config
+        return ['@aws_auth(cognito_groups: ["admin"])']
+    
+    auth_config = schema.auth_config
+    
+    # Check if operation should use API key auth
+    if 'apiKeyOperations' in auth_config and operation_name in auth_config['apiKeyOperations']:
+        directives.append('@aws_api_key')
+    
+    # Check if operation should use Cognito auth
+    if 'cognitoOperations' in auth_config and operation_name in auth_config['cognitoOperations']:
+        directives.append('@aws_auth(cognito_groups: ["admin"])')
+    
+    # If no specific auth is configured, use default
+    if not directives:
+        if auth_config.get('defaultAuth') == 'api_key':
+            directives.append('@aws_api_key')
+        else:
+            directives.append('@aws_auth(cognito_groups: ["admin"])')
+    
+    return directives
+
 def load_schema(schema_path: str) -> Dict[str, Any]:
     """Load a schema file and return its contents."""
     try:
@@ -349,6 +385,10 @@ def load_schema(schema_path: str) -> Dict[str, Any]:
                 raise SchemaValidationError(f"Table schema must have a 'version' field: {schema_path}")
             if 'model' not in schema:
                 raise SchemaValidationError(f"Table schema must have a 'model' field: {schema_path}")
+            
+        # Process auth config if present
+        if 'model' in schema and 'authConfig' in schema['model']:
+            schema['auth_config'] = schema['model']['authConfig']
             
         return schema
     except yaml.YAMLError as e:
@@ -386,7 +426,8 @@ def load_schemas() -> Dict[str, Union[TableSchema, GraphQLType]]:
                 schemas[name] = GraphQLType(
                     name=name,
                     attributes=attributes,
-                    description=schema.get('description')
+                    description=schema.get('description'),
+                    auth_config=schema.get('auth_config')
                 )
             elif 'type' in schema and schema['type'] == 'static':
                 # Handle static type schema
@@ -404,7 +445,8 @@ def load_schemas() -> Dict[str, Union[TableSchema, GraphQLType]]:
                 schemas[name] = GraphQLType(
                     name=name,
                     attributes=attributes,
-                    description=schema.get('description')
+                    description=schema.get('description'),
+                    auth_config=schema.get('auth_config')
                 )
             else:
                 # Handle table schema
@@ -445,7 +487,8 @@ def load_schemas() -> Dict[str, Union[TableSchema, GraphQLType]]:
                     attributes=attributes,
                     partition_key=partition_key,
                     sort_key=sort_key,
-                    secondary_indexes=secondary_indexes
+                    secondary_indexes=secondary_indexes,
+                    auth_config=schema.get('auth_config')
                 )
     
     return schemas
@@ -561,9 +604,21 @@ def generate_graphql_schema(schemas: Dict[str, Union[TableSchema, GraphQLType]],
     table_schemas = {name: schema for name, schema in schemas.items() if isinstance(schema, TableSchema)}
     graphql_types = {name: schema for name, schema in schemas.items() if isinstance(schema, GraphQLType)}
     
+    # Process schemas into the format expected by the template
+    processed_schemas = {}
+    for name, schema in table_schemas.items():
+        processed_schemas[name] = {
+            'name': name,
+            'table': schema.table,
+            'partition_key': schema.partition_key,
+            'sort_key': schema.sort_key,
+            'attributes': schema.attributes,
+            'secondary_indexes': schema.secondary_indexes
+        }
+    
     # Generate schema content
     schema_content = template.render(
-        schemas=table_schemas,
+        schemas=processed_schemas,
         graphql_types=graphql_types,
         timestamp=datetime.now().strftime('%Y%m%d_%H%M%S')
     )
