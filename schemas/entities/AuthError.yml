@@ -1,3 +1,8 @@
+# file: schemas/entities/AuthError.yml
+# author: Corey Dale Peters
+# date: 2025-02-17
+# description: yaml file containing the AuthError GraphQL type schema
+
 type: graphql
 name: AuthError
 attributes:

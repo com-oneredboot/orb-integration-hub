@@ -8,7 +8,14 @@ version: '1.0'
 name: ApplicationUsers
 model:
   authConfig:
-    defaultAuth: user_pools
+    cognitoOperations:
+      - ApplicationUsersQueryById
+      - ApplicationUsersResponse
+      - ApplicationUsersCreate
+      - ApplicationUsersUpdate
+      - ApplicationUsersDelete
+      - ApplicationUsersQueryByApplication
+      - ApplicationUsersQueryByUser
   keys:
     primary:
       partition: applicationId
@@ -16,19 +23,19 @@ model:
       projectionType: ALL
       description: Primary key for application users
     secondary:
-      - name: user-applications-index
+      - name: UserApplicationsIndex
         type: GSI
         partition: userId
         sort: applicationId
         projectionType: ALL
         description: Index for querying applications by user
-      - name: application-role-index
+      - name: ApplicationRoleIndex
         type: GSI
         partition: applicationId
         sort: roleId
         projectionType: ALL
         description: Index for querying users by role within an application
-      - name: user-status-index
+      - name: UserStatusIndex
         type: GSI
         partition: applicationId
         sort: status
@@ -58,11 +65,11 @@ model:
         - REJECTED
         - DELETED
       description: Status of the user in the application
-    createdAt:
+    created_at:
       type: timestamp
       required: true
       description: When the user was added to the application
-    updatedAt:
+    updated_at:
       type: timestamp
       required: true
       description: When the user's application status was last updated 

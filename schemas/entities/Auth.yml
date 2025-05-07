@@ -1,3 +1,8 @@
+# file: schemas/entities/Auth.yml
+# author: Corey Dale Peters
+# date: 2025-02-17
+# description: yaml file containing the Auth GraphQL type schema
+
 type: graphql
 name: Auth
 attributes:

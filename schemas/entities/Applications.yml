@@ -7,23 +7,35 @@ type: table
 version: '1.0'
 name: Applications
 model:
-  auth_config:
-    default_auth: user_pools
+  authConfig:
+    cognitoOperations:
+      - ApplicationsQueryById
+      - ApplicationsResponse
+      - ApplicationsCreate
+      - ApplicationsUpdate
+      - ApplicationsDelete
+      - ApplicationsQueryByStatus
   keys:
     primary:
-      partition: applicationId
-      sort: createdAt
-      projection_type: ALL
+      partition: id
+      sort: name
+      projectionType: ALL
       description: Primary key for applications
     secondary:
-      - name: application-name-index
+      - name: ApplicationStatusIndex
         type: GSI
-        partition: name
-        sort: applicationId
-        projection_type: ALL
-        description: Index for querying applications by name
+        partition: status
+        sort: name
+        projectionType: ALL
+        description: Index for querying applications by status
+      - name: ApplicationTypeIndex
+        type: GSI
+        partition: type
+        sort: name
+        projectionType: ALL
+        description: Index for querying applications by type
   attributes:
-    applicationId:
+    id:
       type: string
       required: true
       description: Unique identifier for the application
@@ -33,8 +45,17 @@ model:
       description: Name of the application
     description:
       type: string
-      required: true
+      required: false
       description: Description of the application
+    type:
+      type: string
+      required: true
+      enum_type: ApplicationType
+      enum_values:
+        - INTERNAL
+        - EXTERNAL
+        - SYSTEM
+      description: Type of the application
     status:
       type: string
       required: true
@@ -44,16 +65,12 @@ model:
         - INACTIVE
         - PENDING
         - DELETED
-      description: Current status of the application
-    createdAt:
+      description: Status of the application
+    created_at:
       type: timestamp
       required: true
       description: When the application was created
-    updatedAt:
+    updated_at:
       type: timestamp
       required: true
-      description: When the application was last updated
-    userId:
-      type: string
-      required: true
-      description: Unique identifier for the user who created the application 
+      description: When the application was last updated 

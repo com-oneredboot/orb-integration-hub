@@ -8,15 +8,15 @@ version: '1.0'
 name: Users
 model:
   authConfig:
-    defaultAuth: user_pools
     apiKeyOperations:
       - UsersCreate
       - UsersQueryById
       - UsersQueryByEmail
       - UsersResponse
-      - UsersQueryByRole
     cognitoOperations:
       - UsersCreate
+      - UsersQueryById
+      - UsersQueryByEmail
       - UsersUpdate
       - UsersDelete
       - UsersQueryByRole

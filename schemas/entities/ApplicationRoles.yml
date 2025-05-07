@@ -8,7 +8,12 @@ version: '1.0'
 name: ApplicationRoles
 model:
   authConfig:
-    defaultAuth: user_pools
+    cognitoOperations:
+      - ApplicationRolesQueryById
+      - ApplicationRolesResponse
+      - ApplicationRolesCreate
+      - ApplicationRolesUpdate
+      - ApplicationRolesDelete
   keys:
     primary:
       partition: applicationId
@@ -16,25 +21,25 @@ model:
       projectionType: ALL
       description: Primary key for application roles
     secondary:
-      - name: user-role-index
+      - name: UserRoleIndex
         type: GSI
         partition: userId
-        sort: roleId
-        projectionType: INCLUDE
+        sort: roleType
+        projection_type: ALL
         projectedAttributes:
           - roleName
           - roleType
           - permissions
         description: Index for querying roles by user with essential role attributes projected
       
-      - name: application-role-index
+      - name: ApplicationRoleIndex
         type: GSI
         partition: applicationId
         sort: roleId
         projectionType: KEYS_ONLY
         description: Index for querying roles by application with minimal projection
       
-      - name: role-type-index
+      - name: RoleTypeIndex
         type: GSI
         partition: roleId
         sort: roleType
@@ -82,11 +87,11 @@ model:
         - INACTIVE
         - DELETED
       description: Current status of the role
-    createdAt:
+    created_at:
       type: timestamp
       required: true
       description: When the role was created
-    updatedAt:
+    updated_at:
       type: timestamp
       required: true
       description: When the role was last updated
