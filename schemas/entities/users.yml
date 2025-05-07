@@ -1,7 +1,7 @@
-# file: schemas/entities/User.yml
+# file: schemas/entities/Users.yml
 # author: Corey Dale Peters
 # date: 2025-02-17
-# description: yaml file containing the User table schema
+# description: yaml file containing the Users table schema
 
 type: table
 version: '1.0'

@@ -294,10 +294,21 @@ def validate_case_conventions(schema: Dict[str, Any], file_path: str) -> None:
     file_name = os.path.basename(file_path)
     expected_file_name = f"{schema_name}.yml"
     
-    if file_name != expected_file_name:
+    if file_name.lower() != expected_file_name.lower():
         raise SchemaValidationError(
             f"Schema file name '{file_name}' must match the schema name '{schema_name}' defined in the 'name' field."
         )
+
+    # Ensure the actual file name matches the expected PascalCase
+    if file_name != expected_file_name:
+        # Try to rename the file to match the expected case
+        try:
+            new_path = os.path.join(os.path.dirname(file_path), expected_file_name)
+            os.rename(file_path, new_path)
+            logger.info(f"Renamed {file_name} to {expected_file_name} to match schema name")
+        except OSError as e:
+            # If rename fails (e.g., due to case-insensitive file system), just log it
+            logger.warning(f"Could not rename {file_name} to {expected_file_name}: {str(e)}")
 
     if 'type' in schema and schema['type'] in ['graphql', 'static']:
         # Validate attribute names are camelCase

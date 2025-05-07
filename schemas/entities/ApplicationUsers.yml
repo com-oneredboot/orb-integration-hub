@@ -1,7 +1,7 @@
-# file: schemas/entities/ApplicationUser.yml
+# file: schemas/entities/ApplicationUsers.yml
 # author: Corey Dale Peters
 # date: 2025-02-17
-# description: yaml file containing the ApplicationUser table schema
+# description: yaml file containing the ApplicationUsers table schema
 
 type: table
 version: '1.0'

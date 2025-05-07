@@ -1,7 +1,7 @@
-# file: schemas/entities/ApplicationRole.yml
+# file: schemas/entities/ApplicationRoles.yml
 # author: Corey Dale Peters
 # date: 2025-02-17
-# description: yaml file containing the ApplicationRole table schema
+# description: yaml file containing the ApplicationRoles table schema
 
 type: table
 version: '1.0'
