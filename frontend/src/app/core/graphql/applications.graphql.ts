@@ -7,13 +7,13 @@
     StatusCode
     Message
     Data {
-      applicationId
+      id
       name
       description
+      type
       status
       createdAt
       updatedAt
-      userId
     }
   }
 }
@@ -24,13 +24,13 @@
     StatusCode
     Message
     Data {
-      applicationId
+      id
       name
       description
+      type
       status
       createdAt
       updatedAt
-      userId
     }
   }
 }
@@ -41,64 +41,30 @@
     StatusCode
     Message
     Data {
-      applicationId
+      id
       name
       description
+      type
       status
       createdAt
       updatedAt
-      userId
     }
   }
 }
     `;
-    export const ApplicationsQueryByApplicationId = /* GraphQL */ `
-    query ApplicationsQueryByApplicationId($input: ApplicationsQueryByApplicationIdInput!) {
-  ApplicationsQueryByApplicationId(input: $input) {
+    export const ApplicationsQueryById = /* GraphQL */ `
+    query ApplicationsQueryById($input: ApplicationsQueryByIdInput!) {
+  ApplicationsQueryById(input: $input) {
     StatusCode
     Message
     Data {
-      applicationId
+      id
       name
       description
+      type
       status
       createdAt
       updatedAt
-      userId
-    }
-  }
-}
-    `;
-    export const ApplicationsQueryByCreatedAt = /* GraphQL */ `
-    query ApplicationsQueryByCreatedAt($input: ApplicationsQueryByCreatedAtInput!) {
-  ApplicationsQueryByCreatedAt(input: $input) {
-    StatusCode
-    Message
-    Data {
-      applicationId
-      name
-      description
-      status
-      createdAt
-      updatedAt
-      userId
-    }
-  }
-}
-    `;
-    export const ApplicationsQueryByBoth = /* GraphQL */ `
-    query ApplicationsQueryByBoth($input: ApplicationsQueryByBothInput!) {
-  ApplicationsQueryByBoth(input: $input) {
-    StatusCode
-    Message
-    Data {
-      applicationId
-      name
-      description
-      status
-      createdAt
-      updatedAt
-      userId
     }
   }
 }
@@ -109,13 +75,64 @@
     StatusCode
     Message
     Data {
-      applicationId
+      id
       name
       description
+      type
       status
       createdAt
       updatedAt
-      userId
+    }
+  }
+}
+    `;
+    export const ApplicationsQueryByBoth = /* GraphQL */ `
+    query ApplicationsQueryByBoth($input: ApplicationsQueryByBothInput!) {
+  ApplicationsQueryByBoth(input: $input) {
+    StatusCode
+    Message
+    Data {
+      id
+      name
+      description
+      type
+      status
+      createdAt
+      updatedAt
+    }
+  }
+}
+    `;
+    export const ApplicationsQueryByStatus = /* GraphQL */ `
+    query ApplicationsQueryByStatus($input: ApplicationsQueryByStatusInput!) {
+  ApplicationsQueryByStatus(input: $input) {
+    StatusCode
+    Message
+    Data {
+      id
+      name
+      description
+      type
+      status
+      createdAt
+      updatedAt
+    }
+  }
+}
+    `;
+    export const ApplicationsQueryByType = /* GraphQL */ `
+    query ApplicationsQueryByType($input: ApplicationsQueryByTypeInput!) {
+  ApplicationsQueryByType(input: $input) {
+    StatusCode
+    Message
+    Data {
+      id
+      name
+      description
+      type
+      status
+      createdAt
+      updatedAt
     }
   }
 }

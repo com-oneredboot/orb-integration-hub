@@ -7,12 +7,9 @@
     StatusCode
     Message
     Data {
-      roleId
+      id
       userId
-      applicationId
-      roleName
       roleType
-      permissions
       status
       createdAt
       updatedAt
@@ -26,12 +23,9 @@
     StatusCode
     Message
     Data {
-      roleId
+      id
       userId
-      applicationId
-      roleName
       roleType
-      permissions
       status
       createdAt
       updatedAt
@@ -45,12 +39,9 @@
     StatusCode
     Message
     Data {
-      roleId
+      id
       userId
-      applicationId
-      roleName
       roleType
-      permissions
       status
       createdAt
       updatedAt
@@ -58,18 +49,15 @@
   }
 }
     `;
-    export const RolesQueryByRoleId = /* GraphQL */ `
-    query RolesQueryByRoleId($input: RolesQueryByRoleIdInput!) {
-  RolesQueryByRoleId(input: $input) {
+    export const RolesQueryById = /* GraphQL */ `
+    query RolesQueryById($input: RolesQueryByIdInput!) {
+  RolesQueryById(input: $input) {
     StatusCode
     Message
     Data {
-      roleId
+      id
       userId
-      applicationId
-      roleName
       roleType
-      permissions
       status
       createdAt
       updatedAt
@@ -77,18 +65,15 @@
   }
 }
     `;
-    export const RolesQueryByApplicationId = /* GraphQL */ `
-    query RolesQueryByApplicationId($input: RolesQueryByApplicationIdInput!) {
-  RolesQueryByApplicationId(input: $input) {
+    export const RolesQueryByRoleType = /* GraphQL */ `
+    query RolesQueryByRoleType($input: RolesQueryByRoleTypeInput!) {
+  RolesQueryByRoleType(input: $input) {
     StatusCode
     Message
     Data {
-      roleId
+      id
       userId
-      applicationId
-      roleName
       roleType
-      permissions
       status
       createdAt
       updatedAt
@@ -102,12 +87,9 @@
     StatusCode
     Message
     Data {
-      roleId
+      id
       userId
-      applicationId
-      roleName
       roleType
-      permissions
       status
       createdAt
       updatedAt
@@ -121,12 +103,9 @@
     StatusCode
     Message
     Data {
-      roleId
+      id
       userId
-      applicationId
-      roleName
       roleType
-      permissions
       status
       createdAt
       updatedAt

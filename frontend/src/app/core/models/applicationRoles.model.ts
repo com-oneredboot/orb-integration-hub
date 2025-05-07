@@ -1,5 +1,5 @@
 /**
- * ApplicationRoles DynamoDB model.
+ *  DynamoDB model.
  */
 
 // Import enums and models used in this model
@@ -7,7 +7,7 @@ import { RoleType } from './RoleType.enum';
 import { RoleStatus } from './RoleStatus.enum';
 
 // CreateInput
-export type ApplicationRolesCreateInput = {
+export type CreateInput = {
   roleId: string;
   userId: string;
   applicationId: string;
@@ -20,7 +20,7 @@ export type ApplicationRolesCreateInput = {
 };
 
 // UpdateInput
-export type ApplicationRolesUpdateInput = {
+export type UpdateInput = {
   roleId: string;
   userId: string;
   applicationId: string;
@@ -34,44 +34,44 @@ export type ApplicationRolesUpdateInput = {
 
 // QueryInput
 // Primary key queries
-export type ApplicationRolesQueryByApplicationIdInput = {
+export type QueryByApplicationIdInput = {
   applicationId: string;
 };
 
-export type ApplicationRolesQueryByRoleIdInput = {
+export type QueryByRoleIdInput = {
   roleId: string;
 };
 
-export type ApplicationRolesQueryByBothInput = {
+export type QueryByBothInput = {
   applicationId: string;
   roleId: string;
 };
 
 // Secondary index queries
-export type ApplicationRolesQueryByUserIdInput = {
+export type QueryByUserIdInput = {
   userId: string;
 };
 
 // Response types
-export type ApplicationRolesResponse = {
+export type Response = {
   statusCode: number;
   message: string;
-  data: IApplicationRoles | null;
+  data: I | null;
 };
 
-export type ApplicationRolesCreateResponse = {
+export type CreateResponse = {
   statusCode: number;
   message: string;
-  data: IApplicationRoles | null;
+  data: I | null;
 };
 
-export type ApplicationRolesUpdateResponse = {
+export type UpdateResponse = {
   statusCode: number;
   message: string;
-  data: IApplicationRoles | null;
+  data: I | null;
 };
 
-export interface IApplicationRoles {
+export interface I {
   roleId: string;
   userId: string;
   applicationId: string;
@@ -83,7 +83,7 @@ export interface IApplicationRoles {
   updatedAt: string;
 }
 
-export class ApplicationRoles implements IApplicationRoles {
+export class  implements I {
   roleId = '';
   userId = '';
   applicationId = '';
@@ -94,7 +94,7 @@ export class ApplicationRoles implements IApplicationRoles {
   createdAt = '';
   updatedAt = '';
 
-  constructor(data: Partial<IApplicationRoles> = {}) {
+  constructor(data: Partial<I> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
         if (key === 'roleType' && typeof value === 'string') {

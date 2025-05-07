@@ -106,28 +106,28 @@ Resources:
   # --------------------------------------------------- #
   {%- for table_name, schema in schemas.items() %}
 
-  # {{ schema.table }} Data Source
-  {{ schema.table }}DataSource:
+  # {{ schema.name }} Data Source
+  {{ schema.name }}DataSource:
     Type: AWS::AppSync::DataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
-      Name: {{ schema.table }}DataSource
+      Name: {{ schema.name }}DataSource
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-{{ schema.table | to_kebab_case }}-table-name'
+        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}-table-name'
         AwsRegion: !Ref AWS::Region
 
-  # {{ schema.table }} Resolvers
+  # {{ schema.name }} Resolvers
   # --------------------------------------------------- #
   {% for operation in schema.operations %}
-  {{ schema.table }}{{ operation.name }}Resolver:
+  {{ schema.name }}{{ operation.name }}Resolver:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: {{ operation.type }}
       FieldName: {{ operation.field }}
-      DataSourceName: !GetAtt {{ schema.table }}DataSource.Name
+      DataSourceName: !GetAtt {{ schema.name }}DataSource.Name
       RequestMappingTemplate: |
         {{ operation.request_template | indent(8) }}
       ResponseMappingTemplate: |

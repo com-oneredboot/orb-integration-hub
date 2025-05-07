@@ -30,10 +30,10 @@ Parameters:
 # --------------------------------------------------- #
 Resources:
   {% for schema in schemas.values() %}
-  {{ schema.table }}Table:
+  {{ schema.name }}Table:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table | to_kebab_case }}
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         {% for key in schema.key_schema %}
@@ -84,33 +84,33 @@ Resources:
         {% endfor %}
       {% endif %}
 
-  {{ schema.table }}TableArn:
+  {{ schema.name }}TableArn:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table | to_kebab_case }}-table-arn
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}-table-arn
       Type: String
-      Value: !GetAtt {{ schema.table }}Table.Arn
+      Value: !GetAtt {{ schema.name }}Table.Arn
 
-  {{ schema.table }}TableName:
+  {{ schema.name }}TableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table | to_kebab_case }}-table-name
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}-table-name
       Type: String
-      Value: !Ref {{ schema.table }}Table
+      Value: !Ref {{ schema.name }}Table
   {% endfor %}
 
 # --------------------------------------------------- #
 Outputs:
   {% for schema in schemas.values() %}
-  {{ schema.table }}TableArn:
-    Description: The ARN of the {{ schema.table }} table
-    Value: !GetAtt {{ schema.table }}Table.Arn
+  {{ schema.name }}TableArn:
+    Description: The ARN of the {{ schema.name }} table
+    Value: !GetAtt {{ schema.name }}Table.Arn
     Export:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table | to_kebab_case }}-table-arn
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}-table-arn
 
-  {{ schema.table }}TableName:
-    Description: The name of the {{ schema.table }} table
-    Value: !Ref {{ schema.table }}Table
+  {{ schema.name }}TableName:
+    Description: The name of the {{ schema.name }} table
+    Value: !Ref {{ schema.name }}Table
     Export:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.table | to_kebab_case }}-table-name
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}-table-name
   {% endfor %}

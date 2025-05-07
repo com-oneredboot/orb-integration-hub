@@ -1,5 +1,5 @@
 """
-Generated Python models for 
+Generated Python models for Users
 Generated at 
 """
 
@@ -7,20 +7,18 @@ from typing import Optional, List
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
 from enum import Enum
+from .role_type import RoleType
 from .user_status import UserStatus
 
 
-class (BaseModel):
-    """ model."""
-    user_id: str = Field(..., description="Unique identifier for the user")
-    cognito_id: str = Field(..., description="Cognito user ID")
+class Users(BaseModel):
+    """Users model."""
+    id: str = Field(..., description="Unique identifier for the user")
     email: str = Field(..., description="User's email address")
-    email_verified: bool = Field(..., description="Whether the email has been verified")
-    phone_number: str = Field(..., description="User's phone number")
-    phone_verified: bool = Field(..., description="Whether the phone number has been verified")
     first_name: str = Field(..., description="User's first name")
     last_name: str = Field(..., description="User's last name")
-    groups: List[str] = Field(..., description="User's groups")
+    role_id: str = Field(..., description="ID of the user's role")
+    role_type: RoleType = Field(..., description="Type of the user's role")
     status: UserStatus = Field(..., description="Current status of the user")
     created_at: datetime = Field(..., description="When the user was created")
     updated_at: datetime = Field(..., description="When the user was last updated")
@@ -55,40 +53,34 @@ class (BaseModel):
             datetime: lambda v: v.isoformat()
         }
 
-class CreateInput(BaseModel):
-    user_id: str = Field(..., description="Unique identifier for the user")
-    cognito_id: str = Field(..., description="Cognito user ID")
+class UsersCreateInput(BaseModel):
+    id: str = Field(..., description="Unique identifier for the user")
     email: str = Field(..., description="User's email address")
-    email_verified: bool = Field(..., description="Whether the email has been verified")
-    phone_number: str = Field(..., description="User's phone number")
-    phone_verified: bool = Field(..., description="Whether the phone number has been verified")
     first_name: str = Field(..., description="User's first name")
     last_name: str = Field(..., description="User's last name")
-    groups: List[str] = Field(..., description="User's groups")
+    role_id: str = Field(..., description="ID of the user's role")
+    role_type: RoleType = Field(..., description="Type of the user's role")
     status: UserStatus = Field(..., description="Current status of the user")
     created_at: datetime = Field(..., description="When the user was created")
     updated_at: datetime = Field(..., description="When the user was last updated")
 
-class UpdateInput(BaseModel):
-    user_id: Optional[str] = Field(None, description="Unique identifier for the user")
-    cognito_id: Optional[str] = Field(None, description="Cognito user ID")
+class UsersUpdateInput(BaseModel):
+    id: Optional[str] = Field(None, description="Unique identifier for the user")
     email: Optional[str] = Field(None, description="User's email address")
-    email_verified: Optional[bool] = Field(None, description="Whether the email has been verified")
-    phone_number: Optional[str] = Field(None, description="User's phone number")
-    phone_verified: Optional[bool] = Field(None, description="Whether the phone number has been verified")
     first_name: Optional[str] = Field(None, description="User's first name")
     last_name: Optional[str] = Field(None, description="User's last name")
-    groups: Optional[List[str]] = Field(None, description="User's groups")
+    role_id: Optional[str] = Field(None, description="ID of the user's role")
+    role_type: Optional[RoleType] = Field(None, description="Type of the user's role")
     status: Optional[UserStatus] = Field(None, description="Current status of the user")
     created_at: Optional[datetime] = Field(None, description="When the user was created")
     updated_at: Optional[datetime] = Field(None, description="When the user was last updated")
 
-class Response(BaseModel):
+class UsersResponse(BaseModel):
     StatusCode: int = Field(..., description="HTTP status code")
     Message: str = Field(..., description="Response message")
-    Data:  = Field(..., description="Response data")
+    Data: Users = Field(..., description="Response data")
 
-class ListResponse(BaseModel):
+class UsersListResponse(BaseModel):
     StatusCode: int = Field(..., description="HTTP status code")
     Message: str = Field(..., description="Response message")
-    Data: List[] = Field(..., description="Response data")
+    Data: List[Users] = Field(..., description="Response data")

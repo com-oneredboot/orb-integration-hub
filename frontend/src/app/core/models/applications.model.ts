@@ -1,93 +1,100 @@
 /**
- * Applications DynamoDB model.
+ *  DynamoDB model.
  */
 
 // Import enums and models used in this model
+import { ApplicationType } from './ApplicationType.enum';
 import { ApplicationStatus } from './ApplicationStatus.enum';
 
 // CreateInput
-export type ApplicationsCreateInput = {
-  applicationId: string;
+export type CreateInput = {
+  id: string;
   name: string;
-  description: string;
+  description: string | undefined;
+  type: string;
   status: string;
   createdAt: string;
   updatedAt: string;
-  userId: string;
 };
 
 // UpdateInput
-export type ApplicationsUpdateInput = {
-  applicationId: string;
+export type UpdateInput = {
+  id: string;
   name: string;
-  description: string;
+  description: string | undefined;
+  type: string;
   status: string;
   createdAt: string;
   updatedAt: string;
-  userId: string;
 };
 
 // QueryInput
 // Primary key queries
-export type ApplicationsQueryByApplicationIdInput = {
-  applicationId: string;
+export type QueryByIdInput = {
+  id: string;
 };
 
-export type ApplicationsQueryByCreatedAtInput = {
-  createdAt: string;
+export type QueryByNameInput = {
+  name: string;
 };
 
-export type ApplicationsQueryByBothInput = {
-  applicationId: string;
-  createdAt: string;
+export type QueryByBothInput = {
+  id: string;
+  name: string;
 };
 
 // Secondary index queries
-export type ApplicationsQueryByNameInput = {
-  name: string;
+export type QueryByStatusInput = {
+  status: string;
+};
+export type QueryByTypeInput = {
+  type: string;
 };
 
 // Response types
-export type ApplicationsResponse = {
+export type Response = {
   statusCode: number;
   message: string;
-  data: IApplications | null;
+  data: I | null;
 };
 
-export type ApplicationsCreateResponse = {
+export type CreateResponse = {
   statusCode: number;
   message: string;
-  data: IApplications | null;
+  data: I | null;
 };
 
-export type ApplicationsUpdateResponse = {
+export type UpdateResponse = {
   statusCode: number;
   message: string;
-  data: IApplications | null;
+  data: I | null;
 };
 
-export interface IApplications {
-  applicationId: string;
+export interface I {
+  id: string;
   name: string;
-  description: string;
+  description: string | undefined;
+  type: string;
   status: string;
   createdAt: string;
   updatedAt: string;
-  userId: string;
 }
 
-export class Applications implements IApplications {
-  applicationId = '';
+export class  implements I {
+  id = '';
   name = '';
   description = '';
+  type = '';
   status = '';
   createdAt = '';
   updatedAt = '';
-  userId = '';
 
-  constructor(data: Partial<IApplications> = {}) {
+  constructor(data: Partial<I> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
+        if (key === 'type' && typeof value === 'string') {
+          this.type = ApplicationType[value as keyof typeof ApplicationType] ?? ApplicationType.UNKNOWN;
+        } else 
         if (key === 'status' && typeof value === 'string') {
           this.status = ApplicationStatus[value as keyof typeof ApplicationStatus] ?? ApplicationStatus.UNKNOWN;
         } else 

@@ -3,7 +3,7 @@ Base GraphQL schema.
 Generated at {{ timestamp }}.
 
 This schema follows these conventions:
-- Type names: PascalCase (e.g., ApplicationRole)
+- Type names: PascalCase (e.g., Application)
 - Field names: camelCase (e.g., applicationId)
 - Input types: PascalCase with Input suffix (e.g., ApplicationRoleInput)
 - Response types: PascalCase with Response suffix (e.g., ApplicationRoleResponse)
@@ -28,16 +28,14 @@ schema {
 }
 
 # Enums
-{% set processed_enums = [] %}
-{% for table_name, schema in schemas.items() %}
+{% for schema_name, schema in schemas.items() %}
 {% for attr in schema.attributes %}
-{% if attr.enum_type and attr.enum_type not in processed_enums %}
+{% if attr.enum_type and attr.enum_values %}
 enum {{ attr.enum_type }} {
-    {% for value in attr.enum_values %}
-    {{ value }}
-    {% endfor %}
+  {% for value in attr.enum_values %}
+  {{ value }}
+  {% endfor %}
 }
-{% set _ = processed_enums.append(attr.enum_type) %}
 {% endif %}
 {% endfor %}
 {% endfor %}
@@ -55,7 +53,7 @@ type {{ type_name }} {
 {% for schema_name, schema in schemas.items() %}
 type {{ schema.name }} {
   {% for attr in schema.attributes %}
-  {{ attr.name | to_camel_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}AWSDateTime{% elif attr.type == 'boolean' %}Boolean{% elif attr.type == 'array' %}[String]{% else %}String{% endif %}{% endif %}!
+  {{ attr.name | to_camel_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}AWSDateTime{% elif attr.type == 'boolean' %}Boolean{% elif attr.type == 'array' %}[String]{% else %}String{% endif %}{% endif %}{% if attr.required %}!{% endif %}
   {% endfor %}
 }
 
@@ -94,7 +92,7 @@ input {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}And{{ index.
 {% endfor %}
 
 type {{ schema.name }}Response {
-  {% for directive in get_auth_directives(schema_name + "Response", schema) %}
+  {% for directive in get_auth_directives(schema.name + "Response", schema) %}
   {{ directive }}
   {% endfor %}
   StatusCode: Int!
@@ -103,7 +101,7 @@ type {{ schema.name }}Response {
 }
 
 type {{ schema.name }}ListResponse {
-  {% for directive in get_auth_directives(schema_name + "ListResponse", schema) %}
+  {% for directive in get_auth_directives(schema.name + "ListResponse", schema) %}
   {{ directive }}
   {% endfor %}
   StatusCode: Int!
@@ -116,20 +114,20 @@ type {{ schema.name }}ListResponse {
 type Query {
   {% for schema_name, schema in schemas.items() %}
   # Query by primary key
-  {% for directive in get_auth_directives(schema_name + "QueryBy" + schema.partition_key | to_pascal_case, schema) %}
+  {% for directive in get_auth_directives(schema.name + "QueryBy" + schema.partition_key | to_pascal_case, schema) %}
   {{ directive }}
   {% endfor %}
   {{ schema.name }}QueryBy{{ schema.partition_key | to_pascal_case }}(input: {{ schema.name }}QueryBy{{ schema.partition_key | to_pascal_case }}Input!): {{ schema.name }}Response!
   
   {% if schema.sort_key and schema.sort_key != 'None' %}
   # Query by sort key
-  {% for directive in get_auth_directives(schema_name + "QueryBy" + schema.sort_key | to_pascal_case, schema) %}
+  {% for directive in get_auth_directives(schema.name + "QueryBy" + schema.sort_key | to_pascal_case, schema) %}
   {{ directive }}
   {% endfor %}
   {{ schema.name }}QueryBy{{ schema.sort_key | to_pascal_case }}(input: {{ schema.name }}QueryBy{{ schema.sort_key | to_pascal_case }}Input!): {{ schema.name }}Response!
   
   # Query by both keys
-  {% for directive in get_auth_directives(schema_name + "QueryByBoth", schema) %}
+  {% for directive in get_auth_directives(schema.name + "QueryByBoth", schema) %}
   {{ directive }}
   {% endfor %}
   {{ schema.name }}QueryByBoth(input: {{ schema.name }}QueryByBothInput!): {{ schema.name }}Response!
@@ -137,7 +135,7 @@ type Query {
   
   {% for index in schema.secondary_indexes %}
   # Query by index
-  {% for directive in get_auth_directives(schema_name + "QueryBy" + index.partition | to_pascal_case + "And" + index.sort | to_pascal_case, schema) %}
+  {% for directive in get_auth_directives(schema.name + "QueryBy" + index.partition | to_pascal_case + "And" + index.sort | to_pascal_case, schema) %}
   {{ directive }}
   {% endfor %}
   {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}And{{ index.sort | to_pascal_case }}(input: {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}And{{ index.sort | to_pascal_case }}Input!): {{ schema.name }}Response!
@@ -148,21 +146,35 @@ type Query {
 type Mutation {
   {% for schema_name, schema in schemas.items() %}
   # Create operation
-  {% for directive in get_auth_directives(schema_name + "Create", schema) %}
+  {% for directive in get_auth_directives(schema.name + "Create", schema) %}
   {{ directive }}
   {% endfor %}
   {{ schema.name }}Create(input: {{ schema.name }}CreateInput!): {{ schema.name }}Response!
   
   # Update operation
-  {% for directive in get_auth_directives(schema_name + "Update", schema) %}
+  {% for directive in get_auth_directives(schema.name + "Update", schema) %}
   {{ directive }}
   {% endfor %}
   {{ schema.name }}Update(input: {{ schema.name }}UpdateInput!): {{ schema.name }}Response!
   
   # Delete operation
-  {% for directive in get_auth_directives(schema_name + "Delete", schema) %}
+  {% for directive in get_auth_directives(schema.name + "Delete", schema) %}
   {{ directive }}
   {% endfor %}
   {{ schema.name }}Delete(id: ID!): {{ schema.name }}Response!
   {% endfor %}
 }
+
+{% for schema_name, schema in schemas.items() %}
+enum {{ schema.name }}Status {
+  {% if schema.attributes %}
+    {% for attr in schema.attributes %}
+      {% if attr.enum_type and attr.enum_values %}
+        {% for value in attr.enum_values %}
+  {{ value }}
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+}
+{% endfor %}

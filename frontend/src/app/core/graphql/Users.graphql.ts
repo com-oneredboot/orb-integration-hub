@@ -7,15 +7,12 @@
     StatusCode
     Message
     Data {
-      userId
-      cognitoId
+      id
       email
-      emailVerified
-      phoneNumber
-      phoneVerified
       firstName
       lastName
-      groups
+      roleId
+      roleType
       status
       createdAt
       updatedAt
@@ -29,15 +26,12 @@
     StatusCode
     Message
     Data {
-      userId
-      cognitoId
+      id
       email
-      emailVerified
-      phoneNumber
-      phoneVerified
       firstName
       lastName
-      groups
+      roleId
+      roleType
       status
       createdAt
       updatedAt
@@ -51,15 +45,12 @@
     StatusCode
     Message
     Data {
-      userId
-      cognitoId
+      id
       email
-      emailVerified
-      phoneNumber
-      phoneVerified
       firstName
       lastName
-      groups
+      roleId
+      roleType
       status
       createdAt
       updatedAt
@@ -67,87 +58,18 @@
   }
 }
     `;
-    export const UsersQueryByUserId = /* GraphQL */ `
-    query UsersQueryByUserId($input: UsersQueryByUserIdInput!) {
-  UsersQueryByUserId(input: $input) {
+    export const UsersQueryById = /* GraphQL */ `
+    query UsersQueryById($input: UsersQueryByIdInput!) {
+  UsersQueryById(input: $input) {
     StatusCode
     Message
     Data {
-      userId
-      cognitoId
+      id
       email
-      emailVerified
-      phoneNumber
-      phoneVerified
       firstName
       lastName
-      groups
-      status
-      createdAt
-      updatedAt
-    }
-  }
-}
-    `;
-    export const UsersQueryByCognitoId = /* GraphQL */ `
-    query UsersQueryByCognitoId($input: UsersQueryByCognitoIdInput!) {
-  UsersQueryByCognitoId(input: $input) {
-    StatusCode
-    Message
-    Data {
-      userId
-      cognitoId
-      email
-      emailVerified
-      phoneNumber
-      phoneVerified
-      firstName
-      lastName
-      groups
-      status
-      createdAt
-      updatedAt
-    }
-  }
-}
-    `;
-    export const UsersQueryByBoth = /* GraphQL */ `
-    query UsersQueryByBoth($input: UsersQueryByBothInput!) {
-  UsersQueryByBoth(input: $input) {
-    StatusCode
-    Message
-    Data {
-      userId
-      cognitoId
-      email
-      emailVerified
-      phoneNumber
-      phoneVerified
-      firstName
-      lastName
-      groups
-      status
-      createdAt
-      updatedAt
-    }
-  }
-}
-    `;
-    export const UsersQueryByPhoneNumber = /* GraphQL */ `
-    query UsersQueryByPhoneNumber($input: UsersQueryByPhoneNumberInput!) {
-  UsersQueryByPhoneNumber(input: $input) {
-    StatusCode
-    Message
-    Data {
-      userId
-      cognitoId
-      email
-      emailVerified
-      phoneNumber
-      phoneVerified
-      firstName
-      lastName
-      groups
+      roleId
+      roleType
       status
       createdAt
       updatedAt
@@ -161,15 +83,50 @@
     StatusCode
     Message
     Data {
-      userId
-      cognitoId
+      id
       email
-      emailVerified
-      phoneNumber
-      phoneVerified
       firstName
       lastName
-      groups
+      roleId
+      roleType
+      status
+      createdAt
+      updatedAt
+    }
+  }
+}
+    `;
+    export const UsersQueryByBoth = /* GraphQL */ `
+    query UsersQueryByBoth($input: UsersQueryByBothInput!) {
+  UsersQueryByBoth(input: $input) {
+    StatusCode
+    Message
+    Data {
+      id
+      email
+      firstName
+      lastName
+      roleId
+      roleType
+      status
+      createdAt
+      updatedAt
+    }
+  }
+}
+    `;
+    export const UsersQueryByRoleId = /* GraphQL */ `
+    query UsersQueryByRoleId($input: UsersQueryByRoleIdInput!) {
+  UsersQueryByRoleId(input: $input) {
+    StatusCode
+    Message
+    Data {
+      id
+      email
+      firstName
+      lastName
+      roleId
+      roleType
       status
       createdAt
       updatedAt

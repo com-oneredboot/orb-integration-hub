@@ -1,12 +1,12 @@
 /**
- * ApplicationUsers DynamoDB model.
+ *  DynamoDB model.
  */
 
 // Import enums and models used in this model
 import { ApplicationUserStatus } from './ApplicationUserStatus.enum';
 
 // CreateInput
-export type ApplicationUsersCreateInput = {
+export type CreateInput = {
   applicationId: string;
   userId: string;
   roleId: string | undefined;
@@ -16,7 +16,7 @@ export type ApplicationUsersCreateInput = {
 };
 
 // UpdateInput
-export type ApplicationUsersUpdateInput = {
+export type UpdateInput = {
   applicationId: string;
   userId: string;
   roleId: string | undefined;
@@ -27,15 +27,15 @@ export type ApplicationUsersUpdateInput = {
 
 // QueryInput
 // Primary key queries
-export type ApplicationUsersQueryByApplicationIdInput = {
+export type QueryByApplicationIdInput = {
   applicationId: string;
 };
 
-export type ApplicationUsersQueryByUserIdInput = {
+export type QueryByUserIdInput = {
   userId: string;
 };
 
-export type ApplicationUsersQueryByBothInput = {
+export type QueryByBothInput = {
   applicationId: string;
   userId: string;
 };
@@ -43,25 +43,25 @@ export type ApplicationUsersQueryByBothInput = {
 // Secondary index queries
 
 // Response types
-export type ApplicationUsersResponse = {
+export type Response = {
   statusCode: number;
   message: string;
-  data: IApplicationUsers | null;
+  data: I | null;
 };
 
-export type ApplicationUsersCreateResponse = {
+export type CreateResponse = {
   statusCode: number;
   message: string;
-  data: IApplicationUsers | null;
+  data: I | null;
 };
 
-export type ApplicationUsersUpdateResponse = {
+export type UpdateResponse = {
   statusCode: number;
   message: string;
-  data: IApplicationUsers | null;
+  data: I | null;
 };
 
-export interface IApplicationUsers {
+export interface I {
   applicationId: string;
   userId: string;
   roleId: string | undefined;
@@ -70,7 +70,7 @@ export interface IApplicationUsers {
   updatedAt: string;
 }
 
-export class ApplicationUsers implements IApplicationUsers {
+export class  implements I {
   applicationId = '';
   userId = '';
   roleId = '';
@@ -78,7 +78,7 @@ export class ApplicationUsers implements IApplicationUsers {
   createdAt = '';
   updatedAt = '';
 
-  constructor(data: Partial<IApplicationUsers> = {}) {
+  constructor(data: Partial<I> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
         if (key === 'status' && typeof value === 'string') {

@@ -1,5 +1,5 @@
 """
-Generated Python models for 
+Generated Python models for ApplicationUsers
 Generated at 
 """
 
@@ -10,8 +10,8 @@ from enum import Enum
 from .application_user_status import ApplicationUserStatus
 
 
-class (BaseModel):
-    """ model."""
+class ApplicationUsers(BaseModel):
+    """ApplicationUsers model."""
     application_id: str = Field(..., description="ID of the application")
     user_id: str = Field(..., description="ID of the user")
     role_id: str = Field(..., description="Unique identifier for the role assigned to the user")
@@ -49,7 +49,7 @@ class (BaseModel):
             datetime: lambda v: v.isoformat()
         }
 
-class CreateInput(BaseModel):
+class ApplicationUsersCreateInput(BaseModel):
     application_id: str = Field(..., description="ID of the application")
     user_id: str = Field(..., description="ID of the user")
     role_id: str = Field(..., description="Unique identifier for the role assigned to the user")
@@ -57,7 +57,7 @@ class CreateInput(BaseModel):
     created_at: datetime = Field(..., description="When the user was added to the application")
     updated_at: datetime = Field(..., description="When the user's application status was last updated")
 
-class UpdateInput(BaseModel):
+class ApplicationUsersUpdateInput(BaseModel):
     application_id: Optional[str] = Field(None, description="ID of the application")
     user_id: Optional[str] = Field(None, description="ID of the user")
     role_id: Optional[str] = Field(None, description="Unique identifier for the role assigned to the user")
@@ -65,12 +65,12 @@ class UpdateInput(BaseModel):
     created_at: Optional[datetime] = Field(None, description="When the user was added to the application")
     updated_at: Optional[datetime] = Field(None, description="When the user's application status was last updated")
 
-class Response(BaseModel):
+class ApplicationUsersResponse(BaseModel):
     StatusCode: int = Field(..., description="HTTP status code")
     Message: str = Field(..., description="Response message")
-    Data:  = Field(..., description="Response data")
+    Data: ApplicationUsers = Field(..., description="Response data")
 
-class ListResponse(BaseModel):
+class ApplicationUsersListResponse(BaseModel):
     StatusCode: int = Field(..., description="HTTP status code")
     Message: str = Field(..., description="Response message")
-    Data: List[] = Field(..., description="Response data")
+    Data: List[ApplicationUsers] = Field(..., description="Response data")

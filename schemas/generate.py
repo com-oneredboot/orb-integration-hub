@@ -25,7 +25,7 @@ from pydantic import field_validator
 
 # Set up logging
 logger = logging.getLogger('schema_generator')
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 # Create handlers
 console_handler = logging.StreamHandler(sys.stdout)
@@ -129,7 +129,7 @@ class Attribute:
 @dataclass
 class TableSchema:
     """Table schema definition."""
-    table: str
+    name: str
     attributes: List[Attribute]
     partition_key: str
     sort_key: str = 'None'  # Default to 'None' string
@@ -215,6 +215,7 @@ def setup_jinja_env() -> Environment:
     Returns:
         Configured Jinja environment
     """
+    logger.debug('Setting up Jinja environment')
     env = Environment(
         loader=FileSystemLoader(os.path.join(SCRIPT_DIR, 'templates')),
         autoescape=select_autoescape(['html', 'xml']),
@@ -246,6 +247,29 @@ def setup_jinja_env() -> Environment:
     env.filters['to_python_type'] = to_python_type
     env.filters['to_typescript_type'] = to_typescript_type
     env.filters['to_dynamodb_type'] = to_dynamodb_type
+    
+    # Add custom functions
+    def get_auth_directives(operation_name: str, schema: Union[TableSchema, GraphQLType]) -> List[str]:
+        """Generate auth directives for a GraphQL operation."""
+        directives = []
+        
+        # Skip if no auth config
+        if not schema.auth_config:
+            return directives
+        
+        # Check if operation is in apiKeyOperations
+        if operation_name in schema.auth_config.get('apiKeyOperations', []):
+            directives.append('@aws_api_key')
+        
+        # Check if operation is in cognitoOperations
+        if operation_name in schema.auth_config.get('cognitoOperations', []):
+            directives.append('@aws_auth(cognito_groups: ["admin"])')
+        
+        return directives
+    
+    env.globals['get_auth_directives'] = get_auth_directives
+    
+    logger.debug('Loaded Jinja environment')
     return env
 
 def to_camel_case(s: str) -> str:
@@ -306,6 +330,11 @@ def validate_case_conventions(schema: Dict[str, Any], file_path: str) -> None:
         raise SchemaValidationError(f"Schema must have a 'name' field: {file_path}")
         
     schema_name = schema['name']
+    
+    # Validate schema name is in PascalCase
+    if not re.match(r'^[A-Z][a-zA-Z0-9]*$', schema_name):
+        raise SchemaValidationError(f"Schema name '{schema_name}' must be in PascalCase format (e.g., ApplicationRole)")
+    
     file_name = os.path.basename(file_path)
     expected_file_name = f"{schema_name}.yml"
     
@@ -314,7 +343,7 @@ def validate_case_conventions(schema: Dict[str, Any], file_path: str) -> None:
             f"Schema file name '{file_name}' must match the schema name '{schema_name}' defined in the 'name' field."
         )
 
-    # Ensure the actual file name matches the expected PascalCase
+    # Ensure the actual file name matches the expected case
     if file_name != expected_file_name:
         # Try to rename the file to match the expected case
         try:
@@ -344,29 +373,20 @@ def validate_case_conventions(schema: Dict[str, Any], file_path: str) -> None:
                     raise SchemaValidationError(f"Attribute name '{attr_name}' must be in camelCase")
 
 def get_auth_directives(operation_name: str, schema: Union[TableSchema, GraphQLType]) -> List[str]:
-    """Get the appropriate auth directives for an operation."""
+    """Generate auth directives for a GraphQL operation."""
     directives = []
     
-    if not hasattr(schema, 'auth_config') or not schema.auth_config:
-        # Default to Cognito auth if no config
-        return ['@aws_auth(cognito_groups: ["admin"])']
+    # Skip if no auth config
+    if not schema.auth_config:
+        return directives
     
-    auth_config = schema.auth_config
-    
-    # Check if operation should use API key auth
-    if 'apiKeyOperations' in auth_config and operation_name in auth_config['apiKeyOperations']:
+    # Check if operation is in apiKeyOperations
+    if operation_name in schema.auth_config.get('apiKeyOperations', []):
         directives.append('@aws_api_key')
     
-    # Check if operation should use Cognito auth
-    if 'cognitoOperations' in auth_config and operation_name in auth_config['cognitoOperations']:
+    # Check if operation is in cognitoOperations
+    if operation_name in schema.auth_config.get('cognitoOperations', []):
         directives.append('@aws_auth(cognito_groups: ["admin"])')
-    
-    # If no specific auth is configured, use default
-    if not directives:
-        if auth_config.get('defaultAuth') == 'api_key':
-            directives.append('@aws_api_key')
-        else:
-            directives.append('@aws_auth(cognito_groups: ["admin"])')
     
     return directives
 
@@ -489,7 +509,7 @@ def load_schemas() -> Dict[str, Union[TableSchema, GraphQLType]]:
                         })
                 
                 schemas[name] = TableSchema(
-                    table=name,
+                    name=name,
                     attributes=attributes,
                     partition_key=partition_key,
                     sort_key=sort_key,
@@ -602,34 +622,53 @@ def map_to_graphql_type(schema_type: str) -> str:
     return type_mapping.get(schema_type.lower(), 'String')
 
 def generate_graphql_schema(schemas: Dict[str, Union[TableSchema, GraphQLType]], template_path: str) -> str:
-    """Generate GraphQL schema from schemas."""
-    env = setup_jinja_env()
-    template = env.get_template(os.path.basename(template_path))
-    
-    # Separate table schemas and GraphQL types
-    table_schemas = {name: schema for name, schema in schemas.items() if isinstance(schema, TableSchema)}
-    graphql_types = {name: schema for name, schema in schemas.items() if isinstance(schema, GraphQLType)}
-    
-    # Process schemas into the format expected by the template
-    processed_schemas = {}
-    for name, schema in table_schemas.items():
-        processed_schemas[name] = {
-            'name': name,
-            'table': schema.table,
-            'partition_key': schema.partition_key,
-            'sort_key': schema.sort_key,
-            'attributes': schema.attributes,
-            'secondary_indexes': schema.secondary_indexes
-        }
-    
-    # Generate schema content
-    schema_content = template.render(
-        schemas=processed_schemas,
-        graphql_types=graphql_types,
-        timestamp=datetime.now().strftime('%Y%m%d_%H%M%S')
-    )
-    
-    return schema_content
+    logger.debug('Starting generate_graphql_schema')
+    logger.debug(f'Template path: {template_path}')
+    logger.debug(f'Schemas dictionary in generate_graphql_schema: {schemas}')
+    try:
+        jinja_env = setup_jinja_env()
+        template = jinja_env.get_template('graphql_schema.jinja')
+        
+        # Separate GraphQL types from table schemas
+        table_schemas = {}
+        graphql_types = {}
+        for schema_name, schema in schemas.items():
+            if isinstance(schema, GraphQLType):
+                graphql_types[schema_name] = schema
+            else:
+                table_schemas[schema_name] = schema
+        
+        # Debug log to check separated schemas
+        logger.debug(f'Table schemas: {table_schemas}')
+        logger.debug(f'GraphQL types: {graphql_types}')
+        
+        # Defensive check to ensure all values are valid iterables
+        for schema_name, schema in schemas.items():
+            if schema is None:
+                logger.error(f'Schema {schema_name} is None')
+                raise ValueError(f'Schema {schema_name} is None')
+            if not hasattr(schema, 'attributes'):
+                logger.error(f'Schema {schema_name} does not have attributes')
+                raise ValueError(f'Schema {schema_name} does not have attributes')
+            if not isinstance(schema.attributes, list):
+                logger.error(f'Schema {schema_name} attributes is not a list')
+                raise ValueError(f'Schema {schema_name} attributes is not a list')
+            # Defensive check to ensure attributes are not None
+            for attr in schema.attributes:
+                if attr is None:
+                    logger.error(f'Attribute in schema {schema_name} is None')
+                    raise ValueError(f'Attribute in schema {schema_name} is None')
+        
+        schema_content = template.render(
+            schemas=table_schemas,
+            graphql_types=graphql_types,
+            timestamp=datetime.now().isoformat()
+        )
+        logger.debug('Completed generate_graphql_schema')
+        return schema_content
+    except Exception as e:
+        logger.error(f'Failed to generate GraphQL schema: {str(e)}')
+        raise
 
 def generate_timestamped_schema(schema_content: str) -> str:
     """Generate a timestamped schema file name."""
@@ -637,132 +676,27 @@ def generate_timestamped_schema(schema_content: str) -> str:
     return f'appsync_{timestamp}.graphql'
 
 def generate_cloudformation_template(schemas: Dict[str, Union[TableSchema, GraphQLType]], template_path: str, output_path: str) -> None:
-    """Generate a CloudFormation template for DynamoDB tables."""
+    logger.debug('Starting generate_cloudformation_template')
     try:
-        logger.info(f"Starting CloudFormation template generation with template: {template_path}")
-        # Get Jinja environment
         jinja_env = setup_jinja_env()
-        template = jinja_env.get_template(os.path.basename(template_path))
-        
-        # Process only table schemas
-        table_schemas = {name: schema for name, schema in schemas.items() if isinstance(schema, TableSchema)}
-        
-        # Process schemas into the format expected by the template
-        processed_schemas = {}
-        for table_name, schema in table_schemas.items():
-            logger.info(f"Processing schema for table: {table_name}")
-            logger.info(f"Schema data: table={schema.table}, partition_key={schema.partition_key}, sort_key={schema.sort_key}")
-            # Process keys
-            key_schema = [
-                {
-                    'name': schema.partition_key,
-                    'type': 'HASH',
-                    'attr_type': 'S'  # Default to string type
-                }
-            ]
-            if schema.sort_key and schema.sort_key != 'None':
-                key_schema.append({
-                    'name': schema.sort_key,
-                    'type': 'RANGE',
-                    'attr_type': 'S'  # Default to string type
-                })
-
-            # Process indexes
-            global_secondary_indexes = []
-            local_secondary_indexes = []
-            attribute_names = set([schema.partition_key])
-            if schema.sort_key and schema.sort_key != 'None':
-                attribute_names.add(schema.sort_key)
-            if schema.secondary_indexes:
-                for index in schema.secondary_indexes:
-                    # Add index attribute names
-                    attribute_names.add(index['partition'])
-                    if index.get('sort') and index['sort'] != 'None':
-                        attribute_names.add(index['sort'])
-                    proj_type = index.get('projection_type', 'ALL')
-                    proj_attrs = index.get('projected_attributes')
-                    index_def = {
-                        'IndexName': index['name'],
-                        'KeySchema': [
-                            {'AttributeName': index['partition'], 'KeyType': 'HASH'}
-                        ],
-                        'Projection': {'ProjectionType': proj_type}
-                    }
-                    if index.get('sort') and index['sort'] != 'None':
-                        index_def['KeySchema'].append({'AttributeName': index['sort'], 'KeyType': 'RANGE'})
-                    if proj_type == 'INCLUDE' and proj_attrs:
-                        index_def['Projection']['NonKeyAttributes'] = proj_attrs
-                    if index['type'] == 'GSI':
-                        global_secondary_indexes.append(index_def)
-                    elif index['type'] == 'LSI':
-                        local_secondary_indexes.append(index_def)
-
-            # Build AttributeDefinitions
-            attribute_definitions = [
-                {'AttributeName': name, 'AttributeType': 'S'} for name in attribute_names
-            ]
-
-            processed_schemas[schema.table] = {
-                'table': schema.table,
-                'partition_key': schema.partition_key,
-                'sort_key': schema.sort_key,
-                'key_schema': key_schema,
-                'attribute_definitions': attribute_definitions,
-                'global_secondary_indexes': global_secondary_indexes,
-                'local_secondary_indexes': local_secondary_indexes
-            }
-            logger.info(f"Processed schema: {processed_schemas[schema.table]}")
-        
-        # Generate the template content
-        logger.info("Rendering template...")
-        template_content = template.render(schemas=processed_schemas)
-        
-        # Write the template to file
+        template = jinja_env.get_template('dynamodb_cloudformation.jinja')
+        template_content = template.render(schemas=schemas)
         write_file(output_path, template_content)
-        logger.info(f"Generated CloudFormation template: {output_path}")
+        logger.debug('Completed generate_cloudformation_template')
     except Exception as e:
-        logger.error(f"Failed to generate CloudFormation template: {str(e)}")
+        logger.error(f'Failed to generate CloudFormation template: {str(e)}')
         raise
 
 def generate_appsync_template(schemas: Dict[str, Union[TableSchema, GraphQLType]], output_path: str) -> None:
-    """Generate an AppSync CloudFormation template."""
+    logger.debug('Starting generate_appsync_template')
     try:
-        logger.info("Starting AppSync template generation")
-        # Get Jinja environment
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('appsync_cloudformation.jinja')
-        
-        # Process only table schemas
-        table_schemas = {name: schema for name, schema in schemas.items() if isinstance(schema, TableSchema)}
-        
-        # Process schemas into the format expected by the template
-        processed_schemas = {}
-        for table_name, schema in table_schemas.items():
-            logger.info(f"Processing schema for table: {table_name}")
-            processed_schemas[table_name] = {
-                'table': table_name,
-                'partition_key': schema.partition_key,
-                'sort_key': schema.sort_key,
-                'attributes': [
-                    {
-                        'name': attr.name,
-                        'type': map_to_graphql_type(attr.type),
-                        'required': attr.required
-                    }
-                    for attr in schema.attributes
-                ]
-            }
-            logger.info(f"Processed schema: {processed_schemas[table_name]}")
-        
-        # Generate the template content
-        logger.info("Rendering template...")
-        template_content = template.render(schemas=processed_schemas)
-        
-        # Write the template to file
+        template_content = template.render(schemas=schemas)
         write_file(output_path, template_content)
-        logger.info(f"Generated AppSync template: {output_path}")
+        logger.debug('Completed generate_appsync_template')
     except Exception as e:
-        logger.error(f"Failed to generate AppSync template: {str(e)}")
+        logger.error(f'Failed to generate AppSync template: {str(e)}')
         raise
 
 def write_file(output_path: str, content: str) -> None:
@@ -920,6 +854,7 @@ def generate_typescript_model_file(table: str, schema: TableSchema) -> None:
         raise
 
 def generate_typescript_enum(enum_name: str, enum_values: list) -> None:
+    logger.debug(f'generate_typescript_enum called for {enum_name}')
     try:
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('typescript_enum.jinja')
@@ -933,6 +868,7 @@ def generate_typescript_enum(enum_name: str, enum_values: list) -> None:
         raise
 
 def generate_python_enum(enum_name: str, enum_values: list) -> None:
+    logger.debug(f'generate_python_enum called for {enum_name}')
     try:
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('python_enum.jinja')
@@ -974,7 +910,7 @@ def cleanup_old_files(valid_model_names, valid_enum_names, valid_graphql_names):
             logger.info(f'Removed old/incorrect Python enum file: {fname}')
 
 def generate_all_enums():
-    """Generate enums for all entries in enums.yml for both TypeScript and Python, using exact enum names."""
+    logger.debug('Starting generate_all_enums')
     enums_path = os.path.join(SCRIPT_DIR, 'core', 'enums.yml')
     if not os.path.exists(enums_path):
         logger.warning('enums.yml not found, skipping enum generation.')
@@ -982,16 +918,25 @@ def generate_all_enums():
     with open(enums_path, 'r') as f:
         enums_data = yaml.safe_load(f)
     for enum_name, enum_values in enums_data.items():
-        if not isinstance(enum_values, list):
+        logger.debug(f'Processing enum: {enum_name}')
+        if not isinstance(enum_values, list) or enum_values is None:
+            logger.warning(f"Enum {enum_name} is not a list or is None, skipping.")
             continue
+        logger.debug(f'Calling generate_typescript_enum for {enum_name}')
         generate_typescript_enum(enum_name, enum_values)
+        logger.debug(f'Calling generate_python_enum for {enum_name}')
         generate_python_enum(enum_name, enum_values)
+    logger.debug('Completed generate_all_enums')
 
 def main():
-    """Main entry point for the schema generator."""
+    logger.info('Starting schema generation main()')
     try:
         jinja_env = setup_jinja_env()
+        logger.debug('Loaded Jinja environment')
         schemas = load_schemas()
+        logger.debug('Loaded schemas')
+        # Debug log to check schemas dictionary
+        logger.debug(f'Schemas dictionary: {schemas}')
         # Build valid file name sets
         valid_model_names = set()
         valid_enum_names = set()
@@ -1013,30 +958,32 @@ def main():
                 if isinstance(enums_data[enum_name], list):
                     valid_enum_names.add(f'{enum_name}.enum.ts')
                     valid_enum_names.add(f'{enum_name}.enum.py')
-        # Cleanup old files before generation
+        logger.debug('Cleaning up old files')
         cleanup_old_files(valid_model_names, valid_enum_names, valid_graphql_names)
-        # Generate models and GraphQL ops for table-backed schemas
+        logger.debug('Generating models and GraphQL ops for table-backed schemas')
         for table, schema in schemas.items():
             if isinstance(schema, TableSchema):
+                logger.debug(f'Generating models and ops for table: {table}')
                 generate_python_model(table, schema)
                 generate_typescript_model(table, schema, is_static=False, model_type='table', all_model_names=all_model_names)
                 generate_typescript_graphql_ops(table, schema)
             elif isinstance(schema, GraphQLType):
+                logger.debug(f'Generating static model for type: {table}')
                 generate_typescript_model(table, schema, is_static=True, model_type='graphql', all_model_names=all_model_names)
-        # Generate all enums from enums.yml
+        logger.debug('Generating all enums')
         generate_all_enums()
-        # Generate base GraphQL schema
+        logger.debug('Generating base GraphQL schema')
         graphql_template_path = os.path.join(SCRIPT_DIR, 'templates', 'graphql_schema.jinja')
         graphql_schema = generate_graphql_schema(schemas, graphql_template_path)
         timestamped_schema = generate_timestamped_schema(graphql_schema)
         schema_output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'cloudformation', timestamped_schema)
         write_file(schema_output_path, graphql_schema)
         logger.info(f'Generated timestamped schema file: {timestamped_schema}')
-        # Generate DynamoDB CloudFormation template
+        logger.debug('Generating DynamoDB CloudFormation template')
         dynamodb_template_path = os.path.join(SCRIPT_DIR, 'templates', 'dynamodb_cloudformation.jinja')
         dynamodb_output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'cloudformation', 'dynamodb.yml')
         generate_cloudformation_template(schemas, dynamodb_template_path, dynamodb_output_path)
-        # Generate AppSync CloudFormation template
+        logger.debug('Generating AppSync CloudFormation template')
         appsync_output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'cloudformation', 'appsync.yml')
         generate_appsync_template(schemas, appsync_output_path)
         logger.info('Schema generation completed successfully')

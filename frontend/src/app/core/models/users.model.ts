@@ -1,37 +1,32 @@
 /**
- * Users DynamoDB model.
+ *  DynamoDB model.
  */
 
 // Import enums and models used in this model
+import { RoleType } from './RoleType.enum';
 import { UserStatus } from './UserStatus.enum';
 
 // CreateInput
-export type UsersCreateInput = {
-  userId: string;
-  cognitoId: string;
+export type CreateInput = {
+  id: string;
   email: string;
-  emailVerified: boolean;
-  phoneNumber: string | undefined;
-  phoneVerified: boolean | undefined;
   firstName: string;
   lastName: string;
-  groups: any[];
+  roleId: string;
+  roleType: string;
   status: string;
   createdAt: string;
   updatedAt: string;
 };
 
 // UpdateInput
-export type UsersUpdateInput = {
-  userId: string;
-  cognitoId: string;
+export type UpdateInput = {
+  id: string;
   email: string;
-  emailVerified: boolean;
-  phoneNumber: string | undefined;
-  phoneVerified: boolean | undefined;
   firstName: string;
   lastName: string;
-  groups: any[];
+  roleId: string;
+  roleType: string;
   status: string;
   createdAt: string;
   updatedAt: string;
@@ -39,78 +34,72 @@ export type UsersUpdateInput = {
 
 // QueryInput
 // Primary key queries
-export type UsersQueryByUserIdInput = {
-  userId: string;
+export type QueryByIdInput = {
+  id: string;
 };
 
-export type UsersQueryByCognitoIdInput = {
-  cognitoId: string;
+export type QueryByEmailInput = {
+  email: string;
 };
 
-export type UsersQueryByBothInput = {
-  userId: string;
-  cognitoId: string;
+export type QueryByBothInput = {
+  id: string;
+  email: string;
 };
 
 // Secondary index queries
-export type UsersQueryByPhoneNumberInput = {
-  phoneNumber: string;
-};
-export type UsersQueryByEmailInput = {
-  email: string;
+export type QueryByRoleIdInput = {
+  roleId: string;
 };
 
 // Response types
-export type UsersResponse = {
+export type Response = {
   statusCode: number;
   message: string;
-  data: IUsers | null;
+  data: I | null;
 };
 
-export type UsersCreateResponse = {
+export type CreateResponse = {
   statusCode: number;
   message: string;
-  data: IUsers | null;
+  data: I | null;
 };
 
-export type UsersUpdateResponse = {
+export type UpdateResponse = {
   statusCode: number;
   message: string;
-  data: IUsers | null;
+  data: I | null;
 };
 
-export interface IUsers {
-  userId: string;
-  cognitoId: string;
+export interface I {
+  id: string;
   email: string;
-  emailVerified: boolean;
-  phoneNumber: string | undefined;
-  phoneVerified: boolean | undefined;
   firstName: string;
   lastName: string;
-  groups: any[];
+  roleId: string;
+  roleType: string;
   status: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export class Users implements IUsers {
-  userId = '';
-  cognitoId = '';
+export class  implements I {
+  id = '';
   email = '';
-  emailVerified = false;
-  phoneNumber = '';
-  phoneVerified = false;
   firstName = '';
   lastName = '';
-  groups = [];
+  roleId = '';
+  roleType = '';
   status = '';
   createdAt = '';
   updatedAt = '';
 
-  constructor(data: Partial<IUsers> = {}) {
+  constructor(data: Partial<I> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
+        if (key === 'roleType' && typeof value === 'string') {
+          this.roleType = RoleType[value as keyof typeof RoleType] ?? RoleType.UNKNOWN;
+        } else 
         if (key === 'status' && typeof value === 'string') {
           this.status = UserStatus[value as keyof typeof UserStatus] ?? UserStatus.UNKNOWN;
         } else 

@@ -1,5 +1,5 @@
 /**
- * Roles DynamoDB model.
+ *  DynamoDB model.
  */
 
 // Import enums and models used in this model
@@ -7,26 +7,20 @@ import { RoleType } from './RoleType.enum';
 import { RoleStatus } from './RoleStatus.enum';
 
 // CreateInput
-export type RolesCreateInput = {
-  roleId: string;
+export type CreateInput = {
+  id: string;
   userId: string;
-  applicationId: string;
-  roleName: string;
   roleType: string;
-  permissions: any[];
   status: string;
   createdAt: string;
   updatedAt: string;
 };
 
 // UpdateInput
-export type RolesUpdateInput = {
-  roleId: string;
+export type UpdateInput = {
+  id: string;
   userId: string;
-  applicationId: string;
-  roleName: string;
   roleType: string;
-  permissions: any[];
   status: string;
   createdAt: string;
   updatedAt: string;
@@ -34,67 +28,61 @@ export type RolesUpdateInput = {
 
 // QueryInput
 // Primary key queries
-export type RolesQueryByRoleIdInput = {
-  roleId: string;
+export type QueryByIdInput = {
+  id: string;
 };
 
-export type RolesQueryByApplicationIdInput = {
-  applicationId: string;
+export type QueryByRoleTypeInput = {
+  roleType: string;
 };
 
-export type RolesQueryByBothInput = {
-  roleId: string;
-  applicationId: string;
+export type QueryByBothInput = {
+  id: string;
+  roleType: string;
 };
 
 // Secondary index queries
-export type RolesQueryByUserIdInput = {
+export type QueryByUserIdInput = {
   userId: string;
 };
 
 // Response types
-export type RolesResponse = {
+export type Response = {
   statusCode: number;
   message: string;
-  data: IRoles | null;
+  data: I | null;
 };
 
-export type RolesCreateResponse = {
+export type CreateResponse = {
   statusCode: number;
   message: string;
-  data: IRoles | null;
+  data: I | null;
 };
 
-export type RolesUpdateResponse = {
+export type UpdateResponse = {
   statusCode: number;
   message: string;
-  data: IRoles | null;
+  data: I | null;
 };
 
-export interface IRoles {
-  roleId: string;
+export interface I {
+  id: string;
   userId: string;
-  applicationId: string;
-  roleName: string;
   roleType: string;
-  permissions: any[];
   status: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export class Roles implements IRoles {
-  roleId = '';
+export class  implements I {
+  id = '';
   userId = '';
-  applicationId = '';
-  roleName = '';
   roleType = '';
-  permissions = [];
   status = '';
   createdAt = '';
   updatedAt = '';
 
-  constructor(data: Partial<IRoles> = {}) {
+  constructor(data: Partial<I> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
         if (key === 'roleType' && typeof value === 'string') {
