@@ -186,7 +186,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             break;
           case AuthSteps.PASSWORD_SETUP:
             // Create a complete UserCreateInput with all required fields
-            const timestamp = Date.now();
+            const timestamp = new Date().toISOString();
             const userCreateInput: UsersCreateInput = {
               userId: uuidv4(),
               cognitoId: uuidv4(),

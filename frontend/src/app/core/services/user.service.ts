@@ -68,7 +68,7 @@ export class UserService extends ApiService {
       const cognitoResponse = await this.cognitoService.createCognitoUser(input, password);
       console.debug('createCognitoUser Response: ', cognitoResponse);
 
-      const timestamp = Date.now();
+      const timestamp = new Date().toISOString();
       const userCreateInput: UsersCreateInput = {
         userId: uuidv4(),
         cognitoId: input.cognitoId,
@@ -89,22 +89,18 @@ export class UserService extends ApiService {
       console.debug('createUser Response: ', response);
 
       return {
-        UsersQueryByUserId: {
-          statusCode: response.data?.statusCode ?? 200,
-          message: response.data?.message ?? '',
-          data: response.data?.data ?? null
-        }
+        statusCode: response.data?.statusCode ?? 200,
+        message: response.data?.message ?? '',
+        data: response.data?.data ?? null
       } as UsersResponse;
 
     } catch (error) {
       console.error('Error creating User:', error);
       
       return {
-        UsersQueryByUserId: {
-          statusCode: 500,
-          message: 'Error creating user',
-          data: null
-        }
+        statusCode: 500,
+        message: 'Error creating user',
+        data: null
       } as UsersResponse;
     }
   }
@@ -132,7 +128,7 @@ export class UserService extends ApiService {
         { input: toSnakeCase(queryInput) },
         'apiKey'
       ) as GraphQLResult<UsersResponse>;
-      const user = response.data?.UsersQueryByUserId?.data;
+      const user = response.data?.data;
       return user ? user : false;
     } catch (error) {
       console.error('Error in userExists:', error);
@@ -153,15 +149,15 @@ export class UserService extends ApiService {
       // get the user
       const userResponse = await this.userQueryByUserId(input, email);
       console.debug('User Response:', userResponse);
-      if (userResponse.UsersQueryByUserId?.statusCode !== 200 || !userResponse.UsersQueryByUserId?.data) {
+      if (userResponse.statusCode !== 200 || !userResponse.data) {
         return {
-          statusCode: userResponse.UsersQueryByUserId?.statusCode,
+          statusCode: userResponse.statusCode,
           message: 'Error getting user',
           data: null
         };
       }
 
-      const emailVerifyResponse = await this.cognitoService.emailVerify(userResponse.UsersQueryByUserId.data.cognitoId, code);
+      const emailVerifyResponse = await this.cognitoService.emailVerify(userResponse.data.cognitoId, code);
       console.debug('verifyEmail Response: ', emailVerifyResponse);
 
       return emailVerifyResponse;
@@ -191,30 +187,29 @@ export class UserService extends ApiService {
 
       console.debug('userQueryByUserId Response: ', response);
       
-      if (email && response.data?.UsersQueryByUserId?.data && 
-          response.data.UsersQueryByUserId.data.email !== email) {
+      if (email && response.data?.data && 
+          response.data.data.email !== email) {
         
         console.debug('userQueryByUserId: Email mismatch, returning 404');
         
         return {
-          UsersQueryByUserId: {
-            statusCode: 404,
-            message: 'User not found',
-            data: null
-          }
+          statusCode: 404,
+          message: 'User not found',
+          data: null
         } as UsersResponse;
       }
       
-      const camelResponse = toCamelCase(response);
-      return camelResponse;
+      return {
+        statusCode: response.data?.statusCode ?? 200,
+        message: response.data?.message ?? '',
+        data: response.data?.data ?? null
+      } as UsersResponse;
     } catch (error) {
       console.error('Error getting user:', error);
       return {
-        UsersQueryByUserId: {
-          statusCode: 500,
-          message: 'Error getting user',
-          data: null
-        }
+        statusCode: 500,
+        message: 'Error getting user',
+        data: null
       } as UsersResponse;
     }
   }
@@ -229,13 +224,13 @@ export class UserService extends ApiService {
     let user;
 
     try {
-      const userQueryInput: UsersQueryByUserIdInput = { userId: email, status: '' };
+      const userQueryInput: UsersQueryByUserIdInput = { userId: email };
       const userResponse = await this.userQueryByUserId(userQueryInput, email);
 
-      user = userResponse.UsersQueryByUserId?.data;
-      if (userResponse.UsersQueryByUserId?.statusCode !== 200 || !user) {
+      user = userResponse.data;
+      if (userResponse.statusCode !== 200 || !user) {
         return {
-          statusCode: userResponse.UsersQueryByUserId?.statusCode,
+          statusCode: userResponse.statusCode,
           message: 'User Does Not Exist',
           data: null
         };
@@ -378,18 +373,26 @@ export class UserService extends ApiService {
       if (!input.userId) {
         console.error('Cannot update user: missing required userId');
         return {
-          UsersQueryByUserId: {
-            statusCode: 400,
-            message: 'Missing required userId',
-            data: null
-          }
-        };
+          statusCode: 400,
+          message: 'Missing required userId',
+          data: null
+        } as UsersResponse;
       }
 
       let hasUpdates = false;
       const updateInput: UsersUpdateInput = {
         userId: input.userId,
-        updatedAt: Date.now()
+        cognitoId: '',
+        email: '',
+        emailVerified: false,
+        phoneNumber: undefined,
+        phoneVerified: undefined,
+        firstName: '',
+        lastName: '',
+        groups: [],
+        status: '',
+        createdAt: '',
+        updatedAt: new Date().toISOString()
       };
       hasUpdates = true;
 
@@ -429,15 +432,13 @@ export class UserService extends ApiService {
 
       if (!response.data) {
         return {
-          UsersQueryByUserId: {
-            statusCode: 500,
-            message: 'No response from update operation',
-            data: null
-          }
-        };
+          statusCode: 500,
+          message: 'No response from update operation',
+          data: null
+        } as UsersResponse;
       }
 
-      const updatedUser = await this.userQueryByUserId({ userId: input.userId, status: '' });
+      const updatedUser = await this.userQueryByUserId({ userId: input.userId });
 
       return updatedUser;
 
@@ -455,12 +456,10 @@ export class UserService extends ApiService {
       }
 
       return {
-        UsersQueryByUserId: {
-          statusCode: 500,
-          message: errorMessage,
-          data: null
-        }
-      };
+        statusCode: 500,
+        message: errorMessage,
+        data: null
+      } as UsersResponse;
     }
   }
 

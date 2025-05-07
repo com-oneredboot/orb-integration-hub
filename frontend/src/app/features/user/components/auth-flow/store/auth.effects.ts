@@ -16,7 +16,7 @@ import { UsersQueryByEmail } from "../../../../../core/graphql/Users.graphql";
 import { AuthActions } from "./auth.actions";
 import * as fromAuth from "./auth.selectors";
 import { CognitoService } from "../../../../../core/services/cognito.service";
-import { ErrorRegistryUtil } from "../../../../../core/models/ErrorRegistry.util";
+import { ErrorRegistry } from "../../../../../core/models/ErrorRegistry.model";
 import { UsersQueryByEmailInput } from "../../../../../core/models/Users.model";
 import { IUsers } from "../../../../../core/models/Users.model";
 
@@ -29,7 +29,7 @@ export class AuthEffects {
       tap(action => console.debug('Effect [CheckEmail]: Starting', action)),
       switchMap(({ email }) => {
         console.debug('Effect [CheckEmail]: Making service call');
-        const userInput: UsersQueryByEmailInput = { email: email, userId: '' };
+        const userInput: UsersQueryByEmailInput = { email: email };
         
         return from(this.userService.userExists(userInput)).pipe(
           tap(result => console.debug('Effect [CheckEmail]: Service returned', result)),
@@ -41,10 +41,15 @@ export class AuthEffects {
           catchError((error: Error) => {
             // Use error registry to log and format error
             const errorCode = 'ORB-API-003'; // Invalid input for GraphQL operation
-            ErrorRegistryUtil.logError(errorCode, { originalError: error });
+            const errorRegistry = new ErrorRegistry({
+              code: errorCode,
+              message: error.message,
+              description: 'Error checking email',
+              solution: 'Please try again or contact support'
+            });
             
             return of(AuthActions.checkEmailFailure({
-              error: ErrorRegistryUtil.getErrorMessage(errorCode)
+              error: errorRegistry.message
             }));
           }),
           tap(resultAction => console.debug('Effect [CheckEmail]: Emitting action', resultAction))
@@ -53,9 +58,14 @@ export class AuthEffects {
       catchError(error => {
         console.error('Effect [CheckEmail]: Outer error caught', error);
         const errorCode = 'ORB-SYS-001'; // Unexpected error
-        ErrorRegistryUtil.logError(errorCode, { originalError: error });
+        const errorRegistry = new ErrorRegistry({
+          code: errorCode,
+          message: error.message,
+          description: 'Unexpected error checking email',
+          solution: 'Please try again or contact support'
+        });
         return of(AuthActions.checkEmailFailure({
-          error: ErrorRegistryUtil.getErrorMessage(errorCode)
+          error: errorRegistry.message
         }));
       })
     )
@@ -68,22 +78,25 @@ export class AuthEffects {
         // create the user
         return from(this.userService.userCreate(input, password)).pipe(
           map(response => {
-            if (response.UsersQueryByUserId?.statusCode === 200) {
+            if (response.statusCode === 200) {
               return AuthActions.createUserSuccess();
             }
             return AuthActions.createUserFailure({
-              error: response.UsersQueryByUserId?.message || 'Failed to create user'
+              error: response.message || 'Failed to create user'
             });
           }),
           catchError(error => {
             // Use error registry to handle the error
             const errorCode = 'ORB-API-002'; // Default to GraphQL mutation error
-            ErrorRegistryUtil.logError(errorCode, { originalError: error });
+            const errorRegistry = new ErrorRegistry({
+              code: errorCode,
+              message: error instanceof Error ? error.message : 'Failed to create user',
+              description: 'Error creating user',
+              solution: 'Please try again or contact support'
+            });
             
             return of(AuthActions.createUserFailure({
-              error: error instanceof Error ? 
-                `[${errorCode}] ${error.message}` : 
-                ErrorRegistryUtil.getErrorMessage(errorCode)
+              error: errorRegistry.message
             }));
           })
         );
@@ -95,18 +108,29 @@ export class AuthEffects {
     this.actions$.pipe(
       ofType(AuthActions.verifyEmail),
       switchMap(({ input, code, email }) => {
-        // Convert UsersQueryByEmailInput to UsersQueryByUserIdInput
-        const userIdInput = { userId: input.userId || '', status: '' };
-        return from(this.userService.emailVerify(userIdInput, code, email)).pipe(
-          map(response => {
-            if (response) {
-              return AuthActions.verifyEmailSuccess();
+        // First get the user by email to get their userId
+        const emailInput: UsersQueryByEmailInput = { email: input.email };
+        return from(this.userService.userExists(emailInput)).pipe(
+          switchMap(user => {
+            if (!user || typeof user === 'boolean') {
+              return of(AuthActions.verifyEmailFailure({
+                error: 'User not found'
+              }));
             }
-            return AuthActions.verifyEmailFailure({
-              error: 'Failed to verify email'
-            });
+            // Now verify the email with the userId
+            const userIdInput = { userId: user.userId };
+            return from(this.userService.emailVerify(userIdInput, code, email)).pipe(
+              map(response => {
+                if (response) {
+                  return AuthActions.verifyEmailSuccess();
+                }
+                return AuthActions.verifyEmailFailure({
+                  error: 'Failed to verify email'
+                });
+              })
+            );
           })
-        )
+        );
       })
     )
   );

@@ -178,45 +178,38 @@ export class ProfileComponent implements OnInit, OnDestroy {
       // Create update input from form values
       const updateInput: UsersUpdateInput = {
         userId: user.userId,
+        cognitoId: user.cognitoId,
+        email: user.email,
+        emailVerified: user.emailVerified,
+        phoneNumber: user.phoneNumber,
+        phoneVerified: user.phoneVerified,
         firstName: this.profileForm.get('firstName')?.value,
-        lastName: this.profileForm.get('lastName')?.value
+        lastName: this.profileForm.get('lastName')?.value,
+        groups: user.groups,
+        status: user.status,
+        createdAt: user.createdAt,
+        updatedAt: new Date().toISOString()
       };
       
       // Call the userService to update the profile
       console.log('Updating user profile:', updateInput);
       
-      let response: UsersResponse | undefined;
-      if (updateInput.userId) {
-        const queryInput: UsersQueryByUserIdInput = { userId: updateInput.userId, status: '' };
-        response = await this.userService.userQueryByUserId(queryInput);
-        
-        if (response.UsersQueryByUserId?.statusCode === 200) {
-          const updatedUser = response.UsersQueryByUserId.data;
-          if (updatedUser) {
-            this.profileForm.patchValue({
-              firstName: updatedUser.firstName,
-              lastName: updatedUser.lastName,
-              email: updatedUser.email,
-              phoneNumber: updatedUser.phoneNumber
-            });
-          }
-        }
-      } else {
-        // handle missing userId case (e.g., show error or skip)
-      }
+      const response = await this.userService.userUpdate(updateInput);
       
-      // Update the store with the updated user data
-      if (response?.UsersQueryByUserId?.data) {
+      if (response.statusCode === 200 && response.data) {
+        // Update the store with the updated user data
         this.store.dispatch(AuthActions.signInSuccess({
-          user: response.UsersQueryByUserId.data,
+          user: response.data,
           message: 'Profile updated successfully'
         }));
+        
+        // Mark form as pristine after successful update
+        this.profileForm.markAsPristine();
+        
+        console.log('Profile updated successfully');
+      } else {
+        console.error('Failed to update profile:', response.message);
       }
-      
-      // Mark form as pristine after successful update
-      this.profileForm.markAsPristine();
-      
-      console.log('Profile updated successfully');
     } catch (error) {
       console.error('Error updating profile:', error);
     } finally {
