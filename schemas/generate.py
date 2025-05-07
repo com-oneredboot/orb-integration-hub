@@ -331,11 +331,11 @@ def validate_case_conventions(schema: Dict[str, Any], file_path: str) -> None:
             if not re.match(r'^[a-z][a-zA-Z0-9]*$', attr_name):
                 raise SchemaValidationError(f"Attribute name '{attr_name}' must be in camelCase")
     else:
-        # Validate index names are kebab-case
+        # Validate index names are PascalCase
         if 'model' in schema and 'keys' in schema['model'] and 'secondary' in schema['model']['keys']:
             for index in schema['model']['keys']['secondary']:
-                if not re.match(r'^[a-z][a-z0-9]*(-[a-z0-9]+)*$', index['name']):
-                    raise SchemaValidationError(f"Index name '{index['name']}' must be in kebab-case")
+                if not re.match(r'^[A-Z][a-zA-Z0-9]*$', index['name']):
+                    raise SchemaValidationError(f"Index name '{index['name']}' must be in PascalCase format (e.g., RoleIndex)")
 
         # Validate attribute names are camelCase
         if 'model' in schema and 'attributes' in schema['model']:
