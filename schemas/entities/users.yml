@@ -1,14 +1,14 @@
-# file: schemas/tables/Users.yml
+# file: schemas/entities/User.yml
 # author: Corey Dale Peters
 # date: 2025-02-17
-# description: yaml file containing the Users table schema
+# description: yaml file containing the User table schema
 
 type: table
 version: '1.0'
 table: Users
 model:
-  auth_config:
-    api_key_operations:
+  authConfig:
+    apiKeyOperations:
       - User
       - UserResponse
       - UserQueryInput
@@ -18,31 +18,31 @@ model:
       - UserCreate
       - UserUpdate
     # Default auth is user pools only
-    default_auth: user_pools
+    defaultAuth: user_pools
   keys:
     primary:
       partition: userId
       sort: cognitoId
-      projection_type: ALL
+      projectionType: ALL
       description: Primary key for users
     secondary:
-      - name: cognito-user-index
+      - name: CognitoUserIndex
         type: GSI
         partition: cognitoId
         sort: userId
-        projection_type: ALL
+        projectionType: ALL
         description: Index for querying users by Cognito ID
-      - name: phone-user-index
+      - name: PhoneUserIndex
         type: GSI
         partition: phoneNumber
         sort: userId
-        projection_type: ALL
+        projectionType: ALL
         description: Index for querying users by phone number
-      - name: email-user-index
+      - name: EmailUserIndex
         type: GSI
         partition: email
         sort: userId
-        projection_type: ALL
+        projectionType: ALL
         description: Index for querying users by email
   attributes:
     userId:

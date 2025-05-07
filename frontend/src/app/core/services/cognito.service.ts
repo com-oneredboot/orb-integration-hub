@@ -85,14 +85,14 @@ export class CognitoService {
   }
 
   /**
-   * Confirm the email using the verification code
-   * @param cognito_id
+   * Verify email for a user
+   * @param cognitoId
    * @param code
    */
-  public async emailVerify(cognito_id: string, code: string): Promise<AuthResponse> {
-    console.debug('Verifying email:', cognito_id, code);
+  public async emailVerify(cognitoId: string, code: string): Promise<AuthResponse> {
+    console.debug('Verifying email:', cognitoId, code);
     try {
-      await confirmSignUp({ username: cognito_id, confirmationCode: code });
+      await confirmSignUp({ username: cognitoId, confirmationCode: code });
 
       return {
         statusCode: 200,
@@ -112,7 +112,7 @@ export class CognitoService {
 
   /**
    * Sign in a user
-   * @param username (cognito_id in users table)
+   * @param username (cognitoId in users table)
    * @param password
    * @param email (optional) User's email for better MFA labeling
    */
@@ -121,7 +121,7 @@ export class CognitoService {
     const signInResponse = await signIn({ username, password });
 
     if (signInResponse.isSignedIn) {
-      console.info('Sign in successful for cognito_id:', username);
+      console.info('Sign in successful for cognitoId:', username);
       return {
         statusCode: 200,
         message: 'Sign in successful',

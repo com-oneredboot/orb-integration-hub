@@ -1,38 +1,38 @@
-# file: schemas/tables/ApplicationUsers.yml
+# file: schemas/entities/ApplicationUser.yml
 # author: Corey Dale Peters
 # date: 2025-02-17
-# description: yaml file containing the ApplicationUsers table schema
+# description: yaml file containing the ApplicationUser table schema
 
 type: table
 version: '1.0'
 table: ApplicationUsers
 model:
-  auth_config:
-    default_auth: user_pools
+  authConfig:
+    defaultAuth: user_pools
   keys:
     primary:
       partition: applicationId
       sort: userId
-      projection_type: ALL
+      projectionType: ALL
       description: Primary key for application users
     secondary:
-      - name: user-applications-index
+      - name: UserApplicationsIndex
         type: GSI
         partition: userId
         sort: applicationId
-        projection_type: ALL
+        projectionType: ALL
         description: Index for querying applications by user
-      - name: application-role-index
+      - name: ApplicationRoleIndex
         type: GSI
         partition: applicationId
         sort: roleId
-        projection_type: ALL
+        projectionType: ALL
         description: Index for querying users by role within an application
-      - name: user-status-index
+      - name: UserStatusIndex
         type: GSI
         partition: applicationId
         sort: status
-        projection_type: ALL
+        projectionType: ALL
         description: Index for querying users by status within an application
   attributes:
     applicationId:

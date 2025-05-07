@@ -1,44 +1,44 @@
-# file: schemas/tables/ApplicationRoles.yml
+# file: schemas/entities/ApplicationRole.yml
 # author: Corey Dale Peters
 # date: 2025-02-17
-# description: yaml file containing the ApplicationRoles table schema
+# description: yaml file containing the ApplicationRole table schema
 
 type: table
 version: '1.0'
 table: ApplicationRoles
 model:
-  auth_config:
-    default_auth: user_pools
+  authConfig:
+    defaultAuth: user_pools
   keys:
     primary:
       partition: applicationId
       sort: roleId
-      projection_type: ALL
+      projectionType: ALL
       description: Primary key for application roles
     secondary:
-      - name: user-role-index
+      - name: UserRoleIndex
         type: GSI
         partition: userId
         sort: roleId
-        projection_type: INCLUDE
-        projected_attributes:
+        projectionType: INCLUDE
+        projectedAttributes:
           - roleName
           - roleType
           - permissions
         description: Index for querying roles by user with essential role attributes projected
       
-      - name: application-role-index
+      - name: ApplicationRoleIndex
         type: GSI
         partition: applicationId
         sort: roleId
-        projection_type: KEYS_ONLY
+        projectionType: KEYS_ONLY
         description: Index for querying roles by application with minimal projection
       
-      - name: role-type-index
+      - name: RoleTypeIndex
         type: LSI
         partition: roleId
         sort: roleType
-        projection_type: ALL
+        projectionType: ALL
         description: Local secondary index for filtering roles by type
   attributes:
     roleId:

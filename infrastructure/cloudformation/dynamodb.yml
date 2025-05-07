@@ -40,11 +40,11 @@ Resources:
         - AttributeName: roleId
           KeyType: RANGE
       AttributeDefinitions:
+        - AttributeName: roleType
+          AttributeType: S
         - AttributeName: applicationId
           AttributeType: S
         - AttributeName: roleId
-          AttributeType: S
-        - AttributeName: roleType
           AttributeType: S
         - AttributeName: userId
           AttributeType: S
@@ -103,9 +103,9 @@ Resources:
         - AttributeName: createdAt
           KeyType: RANGE
       AttributeDefinitions:
-        - AttributeName: applicationId
-          AttributeType: S
         - AttributeName: name
+          AttributeType: S
+        - AttributeName: applicationId
           AttributeType: S
         - AttributeName: createdAt
           AttributeType: S
@@ -201,11 +201,11 @@ Resources:
         - AttributeName: applicationId
           KeyType: RANGE
       AttributeDefinitions:
+        - AttributeName: roleType
+          AttributeType: S
         - AttributeName: applicationId
           AttributeType: S
         - AttributeName: roleId
-          AttributeType: S
-        - AttributeName: roleType
           AttributeType: S
         - AttributeName: userId
           AttributeType: S
@@ -264,13 +264,13 @@ Resources:
         - AttributeName: cognitoId
           KeyType: RANGE
       AttributeDefinitions:
+        - AttributeName: cognitoId
+          AttributeType: S
         - AttributeName: phoneNumber
           AttributeType: S
         - AttributeName: userId
           AttributeType: S
         - AttributeName: email
-          AttributeType: S
-        - AttributeName: cognitoId
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: cognito-user-index

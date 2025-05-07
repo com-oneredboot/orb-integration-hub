@@ -12,11 +12,11 @@ import {Router} from "@angular/router";
 // Application imports
 import { AppState } from "../store/app.state";
 import { CognitoService } from "../core/services/cognito.service";
-import { CognitoUser } from "../core/models/cognito.model";
+import { IAuth } from "../core/models/Auth.model";
+import { IUsers } from "../core/models/Users.model";
 import { UserService } from "../core/services/user.service";
-import { User } from "../core/models/user.model";
 import { selectUser } from "../store/app.selector";
-import {updateUser} from "./user/store/user.actions";
+import { updateUser } from "./user/store/user.actions";
 
 @Component({
     template: '',
@@ -25,7 +25,7 @@ import {updateUser} from "./user/store/user.actions";
 export class BaseFeatureComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Subscriptions
-    public user$: Observable<User | null>;
+    public user$: Observable<IUsers | null>;
 
     // Subscriptions
     protected subscription?: Subscription;
@@ -64,10 +64,12 @@ export class BaseFeatureComponent implements OnInit, OnDestroy, AfterViewInit {
             }
         }));
 
-        let currentUser = this.userService.getCurrentUser$();
-
-        this.store.dispatch(updateUser({ user: currentUser }));
-
+        const currentUser$ = this.userService.getCurrentUser$();
+        currentUser$.subscribe(user => {
+            if (user) {
+                this.store.dispatch(updateUser({ user }));
+            }
+        });
     }
 
     public async ngOnDestroy(): Promise<void> {
@@ -81,7 +83,7 @@ export class BaseFeatureComponent implements OnInit, OnDestroy, AfterViewInit {
         console.debug('BaseFeatureComponent::ngAfterViewInit');
     }
 
-    protected async onUser$Updated(user: User): Promise<void> {
+    protected async onUser$Updated(user: IUsers): Promise<void> {
         console.debug('BaseFeatureComponent::onUser$Updated::User: ', user);
     }
 

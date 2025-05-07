@@ -13,8 +13,8 @@ export enum AuthSteps {
   PASSWORD_SETUP,     // For new users
   EMAIL_VERIFY,       // Verifies the email code
   SIGNIN,             // For users who have verified their email
-  NAME_SETUP,         // for users without first_name, last_name
-  PHONE_SETUP,        // for users without phone_number
+  NAME_SETUP,         // for users without firstName, lastName
+  PHONE_SETUP,        // for users without phoneNumber
   PHONE_VERIFY,       // verifies the phone number
   MFA_SETUP,          // for users without MFA
   MFA_VERIFY,         // verifies the MFA code

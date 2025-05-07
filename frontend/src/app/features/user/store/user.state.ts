@@ -4,14 +4,15 @@
 // description: User State
 
 // Application Imports
-import { User, UserGroup } from "../../../core/models/user.model";
+import { IUsers } from "../../../core/models/Users.model";
+import { UserGroup } from "../../../core/models/UserGroup.enum";
 
 
 export interface UserState {
   debugMode: boolean;
   isAuthenticated: boolean;
   error: string | null;
-  currentUser: User | null;
+  currentUser: IUsers | null;
   userExists: boolean;
 
   // Group related

@@ -438,7 +438,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         }
         
         // Check if phone verification is needed
-        if (!user.phone_number) {
+        if (!user.phoneNumber) {
           console.debug('User is missing phone number, redirecting to phone setup');
           // Update the current step to phone setup
           this.store.dispatch(AuthActions.checkPhoneRequired());
@@ -482,8 +482,8 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       this.currentUser$
         .pipe(take(1))
         .subscribe(user => {
-          if (user?.phone_number) {
-            this.store.dispatch(AuthActions.setupPhone({ phoneNumber: user.phone_number }));
+          if (user?.phoneNumber) {
+            this.store.dispatch(AuthActions.setupPhone({ phoneNumber: user.phoneNumber }));
           } else {
             // Display error
             this.store.dispatch(AuthActions.setupPhoneFailure({

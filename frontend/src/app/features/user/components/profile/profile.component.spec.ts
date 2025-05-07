@@ -4,20 +4,25 @@
 // description: Unit tests for the profile component
 
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { of } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { Router } from '@angular/router';
 
 import { ProfileComponent } from './profile.component';
 import { UserService } from '../../../../core/services/user.service';
-import { User } from '../../../../core/models/user.model';
-import { UserStatus, UserGroups } from '../../../../core/models/user.enum';
+import { IUsers, UsersUpdateInput, UsersResponse } from '../../../../core/models/Users.model';
+import { UserStatus } from '../../../../core/models/UserStatus.enum';
+import { UserGroup } from '../../../../core/models/UserGroup.enum';
 
 describe('ProfileComponent', () => {
   let component: ProfileComponent;
   let fixture: ComponentFixture<ProfileComponent>;
   let mockStore: MockStore;
   let mockUserService: jasmine.SpyObj<UserService>;
+  let store: jasmine.SpyObj<Store>;
+  let router: jasmine.SpyObj<Router>;
 
   const initialState = {
     auth: {
@@ -26,32 +31,59 @@ describe('ProfileComponent', () => {
     }
   };
 
-  const mockUser: User = {
-    user_id: '123',
-    cognito_id: 'abc123',
+  const mockUser: IUsers = {
+    userId: '123',
+    cognitoId: 'abc123',
     email: 'test@example.com',
-    first_name: 'Test',
-    last_name: 'User',
-    phone_number: '+12345678901',
-    groups: [UserGroups.USER] as UserGroups[],
+    emailVerified: true,
+    phoneNumber: '+12345678901',
+    phoneVerified: true,
+    firstName: 'Test',
+    lastName: 'User',
+    groups: [UserGroup.USER],
     status: UserStatus.ACTIVE,
-    created_at: Date.now()
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
 
-  const mockIncompleteUser: User = {
-    user_id: '123',
-    cognito_id: 'abc123',
+  const mockUpdateInput: UsersUpdateInput = {
+    userId: '123',
+    cognitoId: 'abc123',
     email: 'test@example.com',
-    first_name: '',
-    last_name: '',
-    phone_number: '',
-    groups: [UserGroups.USER] as UserGroups[],
+    emailVerified: true,
+    phoneNumber: '+12345678901',
+    phoneVerified: true,
+    firstName: 'Test',
+    lastName: 'User',
+    groups: [UserGroup.USER],
     status: UserStatus.ACTIVE,
-    created_at: Date.now()
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  const mockResponse: UsersResponse = {
+    statusCode: 200,
+    message: 'Success',
+    data: mockUser
+  };
+
+  const mockIncompleteUser: IUsers = {
+    userId: '123',
+    cognitoId: 'abc123',
+    email: 'test@example.com',
+    emailVerified: true,
+    phoneNumber: '',
+    phoneVerified: false,
+    firstName: '',
+    lastName: '',
+    groups: [UserGroup.USER],
+    status: UserStatus.ACTIVE,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
 
   beforeEach(async () => {
-    mockUserService = jasmine.createSpyObj('UserService', ['isUserValid', 'userUpdate']);
+    mockUserService = jasmine.createSpyObj('UserService', ['isUserValid', 'userUpdate', 'updateUser']);
     mockUserService.isUserValid.and.callFake(user => {
       return !!(user?.first_name && user?.last_name && user?.email && user?.phone_number);
     });
@@ -75,18 +107,37 @@ describe('ProfileComponent', () => {
       };
     });
 
+    mockUserService.updateUser.and.returnValue(Promise.resolve(mockResponse));
+
+    const storeSpy = jasmine.createSpyObj('Store', ['select']);
+    storeSpy.select.and.returnValue(of(mockUser));
+
+    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+
     await TestBed.configureTestingModule({
       declarations: [ProfileComponent],
       imports: [ReactiveFormsModule],
       providers: [
         provideMockStore({ initialState }),
-        { provide: UserService, useValue: mockUserService }
+        { provide: UserService, useValue: mockUserService },
+        { provide: Store, useValue: storeSpy },
+        { provide: Router, useValue: routerSpy },
+        FormBuilder
       ]
     }).compileComponents();
 
     mockStore = TestBed.inject(MockStore);
     fixture = TestBed.createComponent(ProfileComponent);
     component = fixture.componentInstance;
+    store = TestBed.inject(Store) as jasmine.SpyObj<Store>;
+    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+  });
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(ProfileComponent);
+    component = fixture.componentInstance;
+    component.user = mockUser;
+    fixture.detectChanges();
   });
 
   it('should create', () => {
@@ -277,5 +328,24 @@ describe('ProfileComponent', () => {
       // Just make sure we get something back and no errors thrown
       expect(typeof invalidResult).toBe('string');
     });
+  });
+
+  it('should update user profile', async () => {
+    const updatedUser = { ...mockUser, firstName: 'Updated', lastName: 'Name' };
+    const updateInput: UsersUpdateInput = {
+      ...mockUpdateInput,
+      firstName: 'Updated',
+      lastName: 'Name'
+    };
+    const response: UsersResponse = {
+      statusCode: 200,
+      message: 'Success',
+      data: updatedUser
+    };
+    mockUserService.updateUser.and.returnValue(Promise.resolve(response));
+
+    await component.updateProfile();
+    expect(mockUserService.updateUser).toHaveBeenCalledWith(updateInput);
+    expect(component.user).toEqual(updatedUser);
   });
 });

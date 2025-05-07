@@ -466,7 +466,7 @@ export class UserService extends ApiService {
   /**
    * Send SMS verification code to a phone number
    * @param phoneNumber
-   * @returns Promise with status_code and optional message
+   * @returns Promise with statusCode and optional message
    */
   public async sendSMSVerificationCode(phoneNumber: string): Promise<{ statusCode: number, message?: string }> {
     // TODO: Implement actual SMS sending logic
