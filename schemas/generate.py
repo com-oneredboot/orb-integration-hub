@@ -9,7 +9,7 @@ import os
 import sys
 import logging
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union
 from datetime import datetime
 from dataclasses import dataclass
 import re
@@ -135,6 +135,13 @@ class TableSchema:
         if self.secondary_indexes is None:
             self.secondary_indexes = []
 
+@dataclass
+class GraphQLType:
+    """GraphQL type definition."""
+    name: str
+    attributes: List[Attribute]
+    description: Optional[str] = None
+
 def to_python_type(attr_type: str) -> str:
     """Convert schema type to Python type."""
     type_mapping = {
@@ -223,10 +230,31 @@ def to_camel_case(s: str) -> str:
 
 def to_pascal_case(s: str) -> str:
     """Convert string to PascalCase."""
+    if not s:
+        return s
+    
     # First split by underscores and hyphens
     words = re.split(r'[_-]', s)
-    # Then capitalize each word and join them
-    return ''.join(word.capitalize() for word in words)
+    result = []
+    
+    for word in words:
+        # Handle empty strings
+        if not word:
+            continue
+            
+        # Split on camelCase boundaries
+        # This will split "userId" into ["user", "Id"]
+        # and "XMLHttpRequest" into ["XML", "Http", "Request"]
+        parts = re.findall(r'[A-Z]?[a-z]+|[A-Z]{2,}(?=[A-Z][a-z]|\d|\W|\Z)|[A-Z]{2,}|[A-Z][a-z]+|\d+', word)
+        
+        # Handle case where the word starts with a lowercase letter
+        if word[0].islower() and parts:
+            parts[0] = parts[0].lower()
+            
+        result.extend(parts)
+    
+    # Capitalize each word and join them
+    return ''.join(word.capitalize() for word in result)
 
 def to_snake_case(s: str) -> str:
     """Convert string to snake_case."""
@@ -245,152 +273,163 @@ def to_kebab_case(s: str) -> str:
 
 def validate_case_conventions(schema: Dict[str, Any], file_path: str) -> None:
     """Validate case conventions in schema files."""
-    # Validate file name is snake_case
+    # Validate file name is PascalCase
     file_name = os.path.basename(file_path)
-    if not re.match(r'^[a-z][a-z0-9_]*(_[a-z0-9]+)*\.yml$', file_name):
-        raise SchemaValidationError(f"Schema file name '{file_name}' must be in snake_case")
+    if not re.match(r'^[A-Z][a-zA-Z0-9]*\.yml$', file_name):
+        raise SchemaValidationError(f"Schema file name '{file_name}' must be in PascalCase")
 
-    # Validate table name is PascalCase
-    if not re.match(r'^[A-Z][a-zA-Z0-9]*$', schema['table']):
-        raise SchemaValidationError(f"Table name '{schema['table']}' must be in PascalCase")
+    if 'type' in schema and schema['type'] in ['graphql', 'static']:
+        # Validate GraphQL type name is PascalCase
+        if not re.match(r'^[A-Z][a-zA-Z0-9]*$', schema['name']):
+            raise SchemaValidationError(f"GraphQL type name '{schema['name']}' must be in PascalCase")
 
-    # Validate index names are kebab-case
-    if 'model' in schema and 'keys' in schema['model'] and 'secondary' in schema['model']['keys']:
-        for index in schema['model']['keys']['secondary']:
-            if not re.match(r'^[a-z][a-z0-9]*(-[a-z0-9]+)*$', index['name']):
-                raise SchemaValidationError(f"Index name '{index['name']}' must be in kebab-case")
+        # Validate attribute names are camelCase
+        for attr_name in schema['attributes']:
+            if not re.match(r'^[a-z][a-zA-Z0-9]*$', attr_name):
+                raise SchemaValidationError(f"Attribute name '{attr_name}' must be in camelCase")
+    else:
+        # Validate table name is PascalCase
+        if not re.match(r'^[A-Z][a-zA-Z0-9]*$', schema['table']):
+            raise SchemaValidationError(f"Table name '{schema['table']}' must be in PascalCase")
 
-    # Validate attribute names are snake_case
-    if 'model' in schema and 'attributes' in schema['model']:
-        for attr_name in schema['model']['attributes']:
-            if not re.match(r'^[a-z][a-z0-9]*(_[a-z0-9]+)*$', attr_name):
-                raise SchemaValidationError(f"Attribute name '{attr_name}' must be in snake_case")
+        # Validate index names are kebab-case
+        if 'model' in schema and 'keys' in schema['model'] and 'secondary' in schema['model']['keys']:
+            for index in schema['model']['keys']['secondary']:
+                if not re.match(r'^[a-z][a-z0-9]*(-[a-z0-9]+)*$', index['name']):
+                    raise SchemaValidationError(f"Index name '{index['name']}' must be in kebab-case")
 
-def load_schemas() -> Dict[str, TableSchema]:
-    """Load all schemas from index.yml."""
-    try:
-        # List all files in the schemas/entities directory
-        entities = [f for f in os.listdir(os.path.join(SCRIPT_DIR, 'entities')) if f.endswith('.yml')]
-        
-        schemas = {}
-        static_schemas = {}
-        graphql_schemas = {}
-        for entity in entities:
-            print(f"Reading entity: {entity}")
-            # Load the schema file
-            with open(os.path.join(SCRIPT_DIR, 'entities', entity), 'r') as f:
-                schema_data = yaml.safe_load(f)
-
-            model_type = schema_data.get('type', 'table')
-            if model_type == 'static':
-                # For static models, use 'name' instead of 'table'
-                name = schema_data['name']
-                attributes = []
-                for attr_name, attr_data in schema_data['attributes'].items():
-                    attr_type = attr_data['type']
-                    description = attr_data.get('description', '')
-                    required = attr_data.get('required', True)
-                    enum_type = attr_data.get('enum_type')
-                    enum_values = attr_data.get('enum_values', []) if enum_type else None
-                    attributes.append(Attribute(
-                        name=attr_name,
-                        type=attr_type,
-                        description=description,
-                        required=required,
-                        enum_type=enum_type,
-                        enum_values=enum_values
-                    ))
-                static_schemas[name] = TableSchema(
-                    table=name,
-                    attributes=attributes,
-                    partition_key='',
-                    sort_key='None',
-                    secondary_indexes=[]
-                )
-                continue
-            if model_type == 'graphql':
-                name = schema_data['name']
-                attributes = []
-                for attr_name, attr_data in schema_data['attributes'].items():
-                    attr_type = attr_data['type']
-                    description = attr_data.get('description', '')
-                    required = attr_data.get('required', True)
-                    enum_type = attr_data.get('enum_type')
-                    enum_values = attr_data.get('enum_values', []) if enum_type else None
-                    attributes.append(Attribute(
-                        name=attr_name,
-                        type=attr_type,
-                        description=description,
-                        required=required,
-                        enum_type=enum_type,
-                        enum_values=enum_values
-                    ))
-                graphql_schemas[name] = TableSchema(
-                    table=name,
-                    attributes=attributes,
-                    partition_key='',
-                    sort_key='None',
-                    secondary_indexes=[]
-                )
-                continue
-            # Use the table name from the schema file
-            table = schema_data['table']
-            print(f"table: {table}")
-            # Extract attributes and keys
-            attributes = []
-            for attr_name, attr_data in schema_data['model']['attributes'].items():
-                attr_type = attr_data['type']
-                description = attr_data.get('description', '')
-                required = attr_data.get('required', True)
-                enum_type = attr_data.get('enum_type')
-                enum_values = attr_data.get('enum_values', []) if enum_type else None
-                attributes.append(Attribute(
-                    name=attr_name,
-                    type=attr_type,
-                    description=description,
-                    required=required,
-                    enum_type=enum_type,
-                    enum_values=enum_values
-                ))
-            partition_key = schema_data['model']['keys']['primary']['partition']
-            sort_key = schema_data['model']['keys'].get('sort', 'None')
-            secondary_indexes = []
-            if 'secondary' in schema_data['model']['keys']:
-                for index in schema_data['model']['keys']['secondary']:
-                    secondary_indexes.append({
-                        'name': index['name'],
-                        'type': index['type'],
-                        'partition': index['partition'],
-                        'sort': index.get('sort', 'None'),
-                        'projection_type': index.get('projection_type', 'ALL'),
-                        'projected_attributes': index.get('projected_attributes')
-                    })
-            schemas[table] = TableSchema(
-                table=table,
-                attributes=attributes,
-                partition_key=partition_key,
-                sort_key=sort_key,
-                secondary_indexes=secondary_indexes
-            )
-        return schemas, static_schemas, graphql_schemas
-    except Exception as e:
-        logger.error(f'Failed to load schemas: {str(e)}')
-        raise
+        # Validate attribute names are camelCase
+        if 'model' in schema and 'attributes' in schema['model']:
+            for attr_name in schema['model']['attributes']:
+                if not re.match(r'^[a-z][a-zA-Z0-9]*$', attr_name):
+                    raise SchemaValidationError(f"Attribute name '{attr_name}' must be in camelCase")
 
 def load_schema(schema_path: str) -> Dict[str, Any]:
-    """Load and validate a schema file."""
+    """Load a schema file and return its contents."""
     try:
         with open(schema_path, 'r') as f:
             schema = yaml.safe_load(f)
-        
-        # Validate case conventions
-        validate_case_conventions(schema, schema_path)
-        
+            
+        # Validate schema structure
+        if 'type' not in schema:
+            raise SchemaValidationError(f"Schema must have a 'type' field: {schema_path}")
+            
+        if schema['type'] == 'graphql' or schema['type'] == 'static':
+            # GraphQL or static type schema
+            if 'name' not in schema:
+                raise SchemaValidationError(f"GraphQL/static type schema must have a 'name' field: {schema_path}")
+            if 'attributes' not in schema:
+                raise SchemaValidationError(f"GraphQL/static type schema must have an 'attributes' field: {schema_path}")
+        else:
+            # Table schema
+            if 'version' not in schema:
+                raise SchemaValidationError(f"Table schema must have a 'version' field: {schema_path}")
+            if 'table' not in schema:
+                raise SchemaValidationError(f"Table schema must have a 'table' field: {schema_path}")
+            if 'model' not in schema:
+                raise SchemaValidationError(f"Table schema must have a 'model' field: {schema_path}")
+            
         return schema
+    except yaml.YAMLError as e:
+        raise SchemaValidationError(f"Error parsing schema file {schema_path}: {str(e)}")
     except Exception as e:
-        raise SchemaValidationError(f"Failed to load schema {schema_path}: {str(e)}")
+        raise SchemaValidationError(f"Error loading schema file {schema_path}: {str(e)}")
 
-def generate_python_model(table: str, schema: TableSchema) -> None:
+def load_schemas() -> Dict[str, Union[TableSchema, GraphQLType]]:
+    """Load all schema files and return a dictionary of schemas."""
+    schemas = {}
+    schema_dir = os.path.join(SCRIPT_DIR, 'entities')
+    
+    # Load all schema files
+    for filename in os.listdir(schema_dir):
+        if filename.endswith('.yml') or filename.endswith('.yaml'):
+            schema_path = os.path.join(schema_dir, filename)
+            schema = load_schema(schema_path)
+            
+            # Validate case conventions
+            validate_case_conventions(schema, schema_path)
+            
+            if 'type' in schema and schema['type'] == 'graphql':
+                # Handle GraphQL type schema
+                name = schema['name']
+                attributes = []
+                for attr_name, attr_info in schema['attributes'].items():
+                    attributes.append(Attribute(
+                        name=attr_name,
+                        type=attr_info['type'],
+                        description=attr_info.get('description', ''),
+                        required=attr_info.get('required', True),
+                        enum_type=attr_info.get('enum_type'),
+                        enum_values=attr_info.get('enum_values')
+                    ))
+                schemas[name] = GraphQLType(
+                    name=name,
+                    attributes=attributes,
+                    description=schema.get('description')
+                )
+            elif 'type' in schema and schema['type'] == 'static':
+                # Handle static type schema
+                name = schema['name']
+                attributes = []
+                for attr_name, attr_info in schema['attributes'].items():
+                    attributes.append(Attribute(
+                        name=attr_name,
+                        type=attr_info['type'],
+                        description=attr_info.get('description', ''),
+                        required=attr_info.get('required', True),
+                        enum_type=attr_info.get('enum_type'),
+                        enum_values=attr_info.get('enum_values')
+                    ))
+                schemas[name] = GraphQLType(
+                    name=name,
+                    attributes=attributes,
+                    description=schema.get('description')
+                )
+            else:
+                # Handle table schema
+                table = schema['table']
+                model = schema['model']
+                attributes = []
+                
+                # Process attributes
+                for attr_name, attr_info in model['attributes'].items():
+                    attributes.append(Attribute(
+                        name=attr_name,
+                        type=attr_info['type'],
+                        description=attr_info.get('description', ''),
+                        required=attr_info.get('required', True),
+                        enum_type=attr_info.get('enum_type'),
+                        enum_values=attr_info.get('enum_values')
+                    ))
+                
+                # Get primary key
+                partition_key = model['keys']['primary']['partition']
+                sort_key = model['keys']['primary'].get('sort', 'None')
+                
+                # Get secondary indexes
+                secondary_indexes = []
+                if 'secondary' in model['keys']:
+                    for index in model['keys']['secondary']:
+                        secondary_indexes.append({
+                            'name': index['name'],
+                            'type': index['type'],
+                            'partition': index['partition'],
+                            'sort': index.get('sort'),
+                            'projection_type': index.get('projection_type', 'ALL'),
+                            'projected_attributes': index.get('projected_attributes', [])
+                        })
+                
+                schemas[table] = TableSchema(
+                    table=table,
+                    attributes=attributes,
+                    partition_key=partition_key,
+                    sort_key=sort_key,
+                    secondary_indexes=secondary_indexes
+                )
+    
+    return schemas
+
+def generate_python_model(table: str, schema: Union[TableSchema, GraphQLType]) -> None:
     try:
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('python_model.jinja')
@@ -403,7 +442,7 @@ def generate_python_model(table: str, schema: TableSchema) -> None:
         logger.error(f'Failed to generate Python model for {table}: {str(e)}')
         raise
 
-def generate_typescript_model(table: str, schema: TableSchema, is_static=False, model_type=None, all_model_names=None) -> None:
+def generate_typescript_model(table: str, schema: Union[TableSchema, GraphQLType], is_static=False, model_type=None, all_model_names=None) -> None:
     try:
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('typescript_model.jinja')
@@ -426,9 +465,10 @@ def generate_typescript_model(table: str, schema: TableSchema, is_static=False, 
                             attr.enum_values = enums_data[attr.enum_type]
             if attr.enum_type:
                 enum_fields.append({'name': attr.name, 'enum_type': attr.enum_type})
-        # Ensure secondary_indexes is always present
-        if not hasattr(processed_schema, 'secondary_indexes') or processed_schema.secondary_indexes is None:
-            processed_schema.secondary_indexes = []
+        # Ensure secondary_indexes is always present for table schemas
+        if isinstance(schema, TableSchema):
+            if not hasattr(processed_schema, 'secondary_indexes') or processed_schema.secondary_indexes is None:
+                processed_schema.secondary_indexes = []
         model_content = template.render(schema=processed_schema, is_static=is_static, enum_fields=enum_fields, model_type=model_type, model_names=model_names)
         file_name = f'{table}.model.ts'
         output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models', file_name)
@@ -472,27 +512,30 @@ def map_to_graphql_type(schema_type: str) -> str:
     }
     return type_mapping.get(schema_type.lower(), 'String')
 
-def generate_graphql_schema(schemas: Dict[str, TableSchema], template_path: str) -> str:
-    """Generate GraphQL schema from table schemas."""
-    try:
-        # Get Jinja environment
-        jinja_env = setup_jinja_env()
-        template = jinja_env.get_template(os.path.basename(template_path))
-        
-        # Generate schema
-        schema_content = template.render(schemas=schemas)
-        return schema_content
-        
-    except Exception as e:
-        logger.error(f'Failed to generate GraphQL schema: {str(e)}')
-        raise
+def generate_graphql_schema(schemas: Dict[str, Union[TableSchema, GraphQLType]], template_path: str) -> str:
+    """Generate GraphQL schema from schemas."""
+    env = setup_jinja_env()
+    template = env.get_template(os.path.basename(template_path))
+    
+    # Separate table schemas and GraphQL types
+    table_schemas = {name: schema for name, schema in schemas.items() if isinstance(schema, TableSchema)}
+    graphql_types = {name: schema for name, schema in schemas.items() if isinstance(schema, GraphQLType)}
+    
+    # Generate schema content
+    schema_content = template.render(
+        schemas=table_schemas,
+        graphql_types=graphql_types,
+        timestamp=datetime.now().strftime('%Y%m%d_%H%M%S')
+    )
+    
+    return schema_content
 
 def generate_timestamped_schema(schema_content: str) -> str:
     """Generate a timestamped schema file name."""
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     return f'appsync_{timestamp}.graphql'
 
-def generate_cloudformation_template(schemas: Dict[str, TableSchema], template_path: str, output_path: str) -> None:
+def generate_cloudformation_template(schemas: Dict[str, Union[TableSchema, GraphQLType]], template_path: str, output_path: str) -> None:
     """Generate a CloudFormation template for DynamoDB tables."""
     try:
         logger.info(f"Starting CloudFormation template generation with template: {template_path}")
@@ -500,9 +543,12 @@ def generate_cloudformation_template(schemas: Dict[str, TableSchema], template_p
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template(os.path.basename(template_path))
         
+        # Process only table schemas
+        table_schemas = {name: schema for name, schema in schemas.items() if isinstance(schema, TableSchema)}
+        
         # Process schemas into the format expected by the template
         processed_schemas = {}
-        for table_name, schema in schemas.items():
+        for table_name, schema in table_schemas.items():
             logger.info(f"Processing schema for table: {table_name}")
             logger.info(f"Schema data: table={schema.table}, partition_key={schema.partition_key}, sort_key={schema.sort_key}")
             # Process keys
@@ -569,70 +615,53 @@ def generate_cloudformation_template(schemas: Dict[str, TableSchema], template_p
         # Generate the template content
         logger.info("Rendering template...")
         template_content = template.render(schemas=processed_schemas)
-        logger.info("Template rendered successfully")
         
-        # Write the content
-        with open(output_path, 'w') as f:
-            f.write(template_content)
-            
-        logger.info('Generated DynamoDB CloudFormation template')
-        
+        # Write the template to file
+        write_file(output_path, template_content)
+        logger.info(f"Generated CloudFormation template: {output_path}")
     except Exception as e:
-        logger.error(f'Failed to generate CloudFormation template: {str(e)}')
-        logger.error(f'Exception type: {type(e)}')
-        import traceback
-        logger.error(f'Traceback: {traceback.format_exc()}')
+        logger.error(f"Failed to generate CloudFormation template: {str(e)}")
         raise
 
-def generate_appsync_template(schemas: Dict[str, TableSchema], output_path: str) -> None:
-    """Generate AppSync CloudFormation template."""
+def generate_appsync_template(schemas: Dict[str, Union[TableSchema, GraphQLType]], output_path: str) -> None:
+    """Generate an AppSync CloudFormation template."""
     try:
         logger.info("Starting AppSync template generation")
         # Get Jinja environment
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('appsync_cloudformation.jinja')
-
+        
+        # Process only table schemas
+        table_schemas = {name: schema for name, schema in schemas.items() if isinstance(schema, TableSchema)}
+        
         # Process schemas into the format expected by the template
         processed_schemas = {}
-        resolver_resources = []
-        for table_name, schema in schemas.items():
-            logger.info(f"Processing schema for table: {schema.table}")
-            logger.info(f"Schema data: table={schema.table}, partition_key={schema.partition_key}, sort_key={schema.sort_key}")
-            processed_schemas[schema.table] = {
-                'table': schema.table,
-                'attributes': schema.attributes,
+        for table_name, schema in table_schemas.items():
+            logger.info(f"Processing schema for table: {table_name}")
+            processed_schemas[table_name] = {
+                'table': table_name,
                 'partition_key': schema.partition_key,
                 'sort_key': schema.sort_key,
-                'secondary_indexes': schema.secondary_indexes or []
+                'attributes': [
+                    {
+                        'name': attr.name,
+                        'type': map_to_graphql_type(attr.type),
+                        'required': attr.required
+                    }
+                    for attr in schema.attributes
+                ]
             }
-            # Generate resolvers for each secondary index
-            if schema.secondary_indexes:
-                for index in schema.secondary_indexes:
-                    resolver_resources.append({
-                        'table': schema.table,
-                        'index': index,
-                        'field': f"{schema.table}QueryBy{index['partition'][0].upper() + index['partition'][1:]}" if index.get('partition') else '',
-                        'type': 'Query',
-                        'data_source': f"{schema.table}DataSource",
-                        'request_template': '# DynamoDB Query request mapping template',
-                        'response_template': '# DynamoDB Query response mapping template'
-                    })
-
-        # Generate template
+            logger.info(f"Processed schema: {processed_schemas[table_name]}")
+        
+        # Generate the template content
         logger.info("Rendering template...")
-        rendered = template.render(schemas=processed_schemas, resolver_resources=resolver_resources)
-        logger.info("Template rendered successfully")
-
-        # Write the processed template
-        with open(output_path, 'w', newline='\n', encoding='utf-8') as f:
-            f.write(rendered)
-
-        logger.info('Generated AppSync CloudFormation template')
+        template_content = template.render(schemas=processed_schemas)
+        
+        # Write the template to file
+        write_file(output_path, template_content)
+        logger.info(f"Generated AppSync template: {output_path}")
     except Exception as e:
-        logger.error(f'Failed to generate AppSync CloudFormation template: {str(e)}')
-        logger.error(f'Exception type: {type(e)}')
-        import traceback
-        logger.error(f'Traceback: {traceback.format_exc()}')
+        logger.error(f"Failed to generate AppSync template: {str(e)}")
         raise
 
 def write_file(output_path: str, content: str) -> None:
@@ -859,19 +888,20 @@ def main():
     """Main entry point for the schema generator."""
     try:
         jinja_env = setup_jinja_env()
-        schemas, static_schemas, graphql_schemas = load_schemas()
+        schemas = load_schemas()
         # Build valid file name sets
         valid_model_names = set()
         valid_enum_names = set()
         valid_graphql_names = set()
-        all_model_names = list(schemas.keys()) + list(static_schemas.keys()) + list(graphql_schemas.keys())
-        for table in schemas:
-            valid_model_names.add(f'{table}.model.ts')
-            valid_model_names.add(f'{table}.model.py')
-            valid_graphql_names.add(f'{table}.graphql.ts')
-        for name in static_schemas:
-            valid_model_names.add(f'{name}.model.ts')
-            valid_model_names.add(f'{name}.model.py')
+        all_model_names = list(schemas.keys())
+        for table, schema in schemas.items():
+            if isinstance(schema, TableSchema):
+                valid_model_names.add(f'{table}.model.ts')
+                valid_model_names.add(f'{table}.model.py')
+                valid_graphql_names.add(f'{table}.graphql.ts')
+            elif isinstance(schema, GraphQLType):
+                valid_model_names.add(f'{table}.model.ts')
+                valid_model_names.add(f'{table}.model.py')
         enums_path = os.path.join(SCRIPT_DIR, 'core', 'enums.yml')
         if os.path.exists(enums_path):
             with open(enums_path, 'r') as f:
@@ -884,17 +914,12 @@ def main():
         cleanup_old_files(valid_model_names, valid_enum_names, valid_graphql_names)
         # Generate models and GraphQL ops for table-backed schemas
         for table, schema in schemas.items():
-            generate_python_model(table, schema)
-            generate_typescript_model(table, schema, is_static=False, model_type='table', all_model_names=all_model_names)
-            generate_typescript_graphql_ops(table, schema)
-        # Generate models for static schemas
-        for name, schema in static_schemas.items():
-            generate_python_model(name, schema)
-            generate_typescript_model(name, schema, is_static=True, model_type='static', all_model_names=all_model_names)
-        # Generate models for graphql schemas (virtual GraphQL types)
-        for name, schema in graphql_schemas.items():
-            generate_python_model(name, schema)
-            generate_typescript_model(name, schema, is_static=True, model_type='graphql', all_model_names=all_model_names)
+            if isinstance(schema, TableSchema):
+                generate_python_model(table, schema)
+                generate_typescript_model(table, schema, is_static=False, model_type='table', all_model_names=all_model_names)
+                generate_typescript_graphql_ops(table, schema)
+            elif isinstance(schema, GraphQLType):
+                generate_typescript_model(table, schema, is_static=True, model_type='graphql', all_model_names=all_model_names)
         # Generate all enums from enums.yml
         generate_all_enums()
         # Generate base GraphQL schema

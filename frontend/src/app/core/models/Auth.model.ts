@@ -36,6 +36,7 @@ export class Auth implements IAuth {
     });
   }
 }
+
 // Response envelope for GraphQL type
 export type AuthResponse = {
   statusCode: number;

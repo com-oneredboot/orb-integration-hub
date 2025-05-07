@@ -81,6 +81,22 @@
   }
 }
     `;
+    export const ApplicationUsersQueryByBoth = /* GraphQL */ `
+    query ApplicationUsersQueryByBoth($input: ApplicationUsersQueryByBothInput!) {
+  ApplicationUsersQueryByBoth(input: $input) {
+    StatusCode
+    Message
+    Data {
+      applicationId
+      userId
+      roleId
+      status
+      createdAt
+      updatedAt
+    }
+  }
+}
+    `;
 
 // For each secondary index, generate a query operation
  

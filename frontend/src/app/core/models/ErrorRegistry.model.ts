@@ -1,10 +1,10 @@
 /**
- * ErrorRegistry model.
+ *  model.
  */
 
 // Import enums used in this model
 
-export interface IErrorRegistry {
+export interface I {
   code: string;
   message: string;
   description: string;
@@ -12,14 +12,14 @@ export interface IErrorRegistry {
   details: Record<string, any> | undefined;
 }
 
-export class ErrorRegistry implements IErrorRegistry {
+export class  implements I {
   code: string = '';
   message: string = '';
   description: string = '';
   solution: string = '';
   details: Record<string, any> | undefined = undefined;
 
-  constructor(data: Partial<IErrorRegistry> = {}) {
+  constructor(data: Partial<I> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
         {
@@ -29,3 +29,9 @@ export class ErrorRegistry implements IErrorRegistry {
     });
   }
 }
+// Response envelope for GraphQL type
+export type Response = {
+  statusCode: number;
+  message: string;
+  data: I | null;
+};

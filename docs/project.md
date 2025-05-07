@@ -162,20 +162,40 @@ Role-based UI organization:
 - Internal (Employees): Administrative interfaces
 
 ### Naming Conventions
-- Angular Components: PascalCase (e.g., SignupComponent)
-- TypeScript files: camelCase
-- Python files and functions: snake_case
-- AWS Resources:
-  - DynamoDB table names: camelCase (e.g., `applicationUsers`)
-  - DynamoDB column names: snake_case (e.g., `application_id`)
-  - CloudFormation resource names: PascalCase (e.g., `ApplicationUsersTable`)
-- GraphQL/AppSync:
-  - Type names: PascalCase (e.g., `ApplicationUser`)
-  - Field names: camelCase (e.g., `applicationId`)
-  - Operation names: camelCase (e.g., `applicationUserQueryById`)
-  - Response types: PascalCase with "Response" suffix (e.g., `ApplicationUserResponse`)
-  - Response fields: camelCase (e.g., `statusCode`, `message`, `data`)
-  - Input types: PascalCase with "Input" suffix (e.g., `ApplicationUserCreateInput`)
+
+### Frontend
+- Angular components: PascalCase (e.g., `UserProfileComponent`)
+- TypeScript files: kebab-case (e.g., `user-profile.component.ts`)
+- CSS files: kebab-case (e.g., `user-profile.component.css`)
+- Services: PascalCase with 'Service' suffix (e.g., `UserService`)
+- Models: PascalCase with 'Model' suffix (e.g., `UserModel`)
+- Enums: PascalCase (e.g., `UserStatus`)
+- Interfaces: PascalCase with 'I' prefix (e.g., `IUser`)
+
+### Backend
+- Python files: snake_case (e.g., `user_service.py`)
+- Python classes: PascalCase (e.g., `UserService`)
+- Python functions: snake_case (e.g., `get_user_by_id`)
+- Python variables: camelCase (e.g., `userId`)
+- Python constants: UPPER_SNAKE_CASE (e.g., `MAX_RETRIES`)
+
+### AWS Resources
+- DynamoDB tables: kebab-case (e.g., `application-users`)
+- AppSync/GraphQL types: PascalCase (e.g., `ApplicationUser`)
+- AppSync/GraphQL fields: camelCase (e.g., `applicationId`)
+- CloudFormation resources: PascalCase (e.g., `ApplicationUsersTable`)
+- S3 buckets: kebab-case (e.g., `orb-integration-hub-build-artifacts`)
+
+### Schema Files
+- File names: PascalCase (e.g., `Applications.yml`, `ApplicationRoles.yml`)
+- Table names: PascalCase (e.g., `Applications`, `ApplicationRoles`)
+- Attribute names: camelCase (e.g., `applicationId`, `roleId`)
+- Index names: kebab-case (e.g., `application-name-index`)
+
+### Generated Files
+- Python models: PascalCase (e.g., `Applications.py`)
+- TypeScript models: PascalCase (e.g., `Applications.model.ts`)
+- DynamoDB table definitions: PascalCase (e.g., `ApplicationsTable.yml`)
 
 ### Frontend Services
 
@@ -426,22 +446,26 @@ This project is an integration hub that provides a unified interface for managin
 - Python files: snake_case (e.g., `user_service.py`)
 - Python classes: PascalCase (e.g., `UserService`)
 - Python functions: snake_case (e.g., `get_user_by_id`)
-- Python variables: snake_case (e.g., `user_id`)
+- Python variables: camelCase (e.g., `userId`)
 - Python constants: UPPER_SNAKE_CASE (e.g., `MAX_RETRIES`)
 
 ### AWS Resources
-- DynamoDB tables: camelCase (e.g., `applicationUsers`)
+- DynamoDB tables: kebab-case (e.g., `application-users`)
 - AppSync/GraphQL types: PascalCase (e.g., `ApplicationUser`)
 - AppSync/GraphQL fields: camelCase (e.g., `applicationId`)
 - CloudFormation resources: PascalCase (e.g., `ApplicationUsersTable`)
 - S3 buckets: kebab-case (e.g., `orb-integration-hub-build-artifacts`)
 
+### Schema Files
+- File names: PascalCase (e.g., `Applications.yml`, `ApplicationRoles.yml`)
+- Table names: PascalCase (e.g., `Applications`, `ApplicationRoles`)
+- Attribute names: camelCase (e.g., `applicationId`, `roleId`)
+- Index names: kebab-case (e.g., `application-name-index`)
+
 ### Generated Files
-- Python models: snake_case (e.g., `application_users.py`)
-- TypeScript models: kebab-case (e.g., `application-users.model.ts`)
-- DynamoDB table definitions: snake_case (e.g., `application_users_table.yml`)
-- GraphQL schema files: snake_case (e.g., `application_users_schema.graphql`)
-- Base GraphQL schema: snake_case with timestamp (e.g., `appsync_20250321_170633.graphql`)
+- Python models: PascalCase (e.g., `Applications.py`)
+- TypeScript models: PascalCase (e.g., `Applications.model.ts`)
+- DynamoDB table definitions: PascalCase (e.g., `ApplicationsTable.yml`)
 
 ## Development Workflow
 1. Create feature branch from main

@@ -10,6 +10,7 @@
       userId
       cognitoId
       email
+      emailVerified
       phoneNumber
       phoneVerified
       firstName
@@ -31,6 +32,7 @@
       userId
       cognitoId
       email
+      emailVerified
       phoneNumber
       phoneVerified
       firstName
@@ -52,6 +54,7 @@
       userId
       cognitoId
       email
+      emailVerified
       phoneNumber
       phoneVerified
       firstName
@@ -73,6 +76,73 @@
       userId
       cognitoId
       email
+      emailVerified
+      phoneNumber
+      phoneVerified
+      firstName
+      lastName
+      groups
+      status
+      createdAt
+      updatedAt
+    }
+  }
+}
+    `;
+    export const UsersQueryByCognitoId = /* GraphQL */ `
+    query UsersQueryByCognitoId($input: UsersQueryByCognitoIdInput!) {
+  UsersQueryByCognitoId(input: $input) {
+    StatusCode
+    Message
+    Data {
+      userId
+      cognitoId
+      email
+      emailVerified
+      phoneNumber
+      phoneVerified
+      firstName
+      lastName
+      groups
+      status
+      createdAt
+      updatedAt
+    }
+  }
+}
+    `;
+    export const UsersQueryByBoth = /* GraphQL */ `
+    query UsersQueryByBoth($input: UsersQueryByBothInput!) {
+  UsersQueryByBoth(input: $input) {
+    StatusCode
+    Message
+    Data {
+      userId
+      cognitoId
+      email
+      emailVerified
+      phoneNumber
+      phoneVerified
+      firstName
+      lastName
+      groups
+      status
+      createdAt
+      updatedAt
+    }
+  }
+}
+    `;
+    export const UsersQueryByPhoneNumber = /* GraphQL */ `
+    query UsersQueryByPhoneNumber($input: UsersQueryByPhoneNumberInput!) {
+  UsersQueryByPhoneNumber(input: $input) {
+    StatusCode
+    Message
+    Data {
+      userId
+      cognitoId
+      email
+      emailVerified
       phoneNumber
       phoneVerified
       firstName
@@ -94,6 +164,7 @@
       userId
       cognitoId
       email
+      emailVerified
       phoneNumber
       phoneVerified
       firstName

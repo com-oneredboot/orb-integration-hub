@@ -25,6 +25,7 @@ export class MfaSetupDetails implements IMfaSetupDetails {
     });
   }
 }
+
 // Response envelope for GraphQL type
 export type MfaSetupDetailsResponse = {
   statusCode: number;

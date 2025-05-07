@@ -2,17 +2,21 @@
 from typing import Optional, List
 from pydantic import BaseModel, Field
 from datetime import datetime
-from .application_role_status import ApplicationRoleStatus
+from .role_type import RoleType
+from .role_status import RoleStatus
 
 
 class ApplicationRoles(BaseModel):
     """ApplicationRoles model."""
-    application_id: str = Field(..., description="ID of the application")
-    role_id: str = Field(..., description="ID of the role")
-    description: str | None = Field(None, description="Human-readable description of the role")
-    status: ApplicationRoleStatus = Field(..., description="Status of the role in the application")
-    created_at: datetime = Field(..., description="When the role was added to the application")
-    updated_at: datetime = Field(..., description="When the role's application status was last updated")
+    roleId: str = Field(..., description="Unique identifier for the role")
+    userId: str = Field(..., description="ID of the user this role belongs to")
+    applicationId: str = Field(..., description="ID of the application this role belongs to")
+    roleName: str = Field(..., description="Name of the role")
+    roleType: RoleType = Field(..., description="Type of the role")
+    permissions: List[str] = Field(..., description="List of permissions granted to this role")
+    status: RoleStatus = Field(..., description="Current status of the role")
+    createdAt: datetime = Field(..., description="When the role was created")
+    updatedAt: datetime = Field(..., description="When the role was last updated")
 
     class Config:
         """Model configuration."""

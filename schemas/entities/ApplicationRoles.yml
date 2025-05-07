@@ -1,8 +1,9 @@
-# file: schemas/tables/application_roles.yml
+# file: schemas/tables/ApplicationRoles.yml
 # author: Corey Dale Peters
 # date: 2025-02-17
-# description: yaml file containing the application_roles table schema
+# description: yaml file containing the ApplicationRoles table schema
 
+type: table
 version: '1.0'
 table: ApplicationRoles
 model:
@@ -10,46 +11,82 @@ model:
     default_auth: user_pools
   keys:
     primary:
-      partition: application_id
-      sort: role_id            
-      projection_type: ALL     
+      partition: applicationId
+      sort: roleId
+      projection_type: ALL
       description: Primary key for application roles
     secondary:
-      - name: role-applications-index
+      - name: user-role-index
         type: GSI
-        partition: role_id
-        sort: application_id
+        partition: userId
+        sort: roleId
+        projection_type: INCLUDE
+        projected_attributes:
+          - roleName
+          - roleType
+          - permissions
+        description: Index for querying roles by user with essential role attributes projected
+      
+      - name: application-role-index
+        type: GSI
+        partition: applicationId
+        sort: roleId
+        projection_type: KEYS_ONLY
+        description: Index for querying roles by application with minimal projection
+      
+      - name: role-type-index
+        type: LSI
+        partition: roleId
+        sort: roleType
         projection_type: ALL
-        description: Index for querying applications by role
+        description: Local secondary index for filtering roles by type
   attributes:
-    application_id:
+    roleId:
       type: string
       required: true
-      description: ID of the application
-    role_id:
+      description: Unique identifier for the role
+    userId:
       type: string
       required: true
-      description: ID of the role
-    description:
+      description: ID of the user this role belongs to
+    applicationId:
       type: string
-      required: false
-      description: Human-readable description of the role
+      required: true
+      description: ID of the application this role belongs to
+    roleName:
+      type: string
+      required: true
+      description: Name of the role
+    roleType:
+      type: string
+      required: true
+      enum_type: RoleType
+      enum_values:
+        - ADMIN
+        - USER
+        - GUEST
+        - CUSTOM
+      description: Type of the role
+    permissions:
+      type: array
+      items:
+        type: string
+      required: true
+      description: List of permissions granted to this role
     status:
       type: string
       required: true
-      enum_type: ApplicationRoleStatus
+      enum_type: RoleStatus
       enum_values:
         - ACTIVE
         - INACTIVE
-        - PENDING
-        - REJECTED
         - DELETED
-      description: Status of the role in the application
-    created_at:
+      description: Current status of the role
+    createdAt:
       type: timestamp
       required: true
-      description: When the role was added to the application
-    updated_at:
+      description: When the role was created
+    updatedAt:
       type: timestamp
       required: true
-      description: When the role's application status was last updated
+      description: When the role was last updated

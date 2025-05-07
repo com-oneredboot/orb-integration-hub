@@ -1,58 +1,63 @@
-# file: schemas/tables/roles.yml
+# file: schemas/tables/Roles.yml
 # author: Corey Dale Peters
 # date: 2025-02-17
-# description: yaml file containing the roles table schema
+# description: yaml file containing the Roles table schema
 
+type: table
 version: '1.0'
 table: Roles
 model:
+  auth_config:
+    default_auth: user_pools
   keys:
     primary:
-      partition: role_id
-      sort: application_id
+      partition: roleId
+      sort: applicationId
+      projection_type: ALL
+      description: Primary key for roles
     secondary:
       - name: user-role-index
         type: GSI
-        partition: user_id
-        sort: role_id
+        partition: userId
+        sort: roleId
         projection_type: INCLUDE
         projected_attributes:
-          - role_name
-          - role_type
+          - roleName
+          - roleType
           - permissions
         description: Index for querying roles by user with essential role attributes projected
       
       - name: application-role-index
         type: GSI
-        partition: application_id
-        sort: role_id
+        partition: applicationId
+        sort: roleId
         projection_type: KEYS_ONLY
         description: Index for querying roles by application with minimal projection
       
       - name: role-type-index
         type: LSI
-        partition: role_id
-        sort: role_type
+        partition: roleId
+        sort: roleType
         projection_type: ALL
         description: Local secondary index for filtering roles by type
   attributes:
-    role_id:
+    roleId:
       type: string
       required: true
       description: Unique identifier for the role
-    user_id:
+    userId:
       type: string
       required: true
       description: ID of the user this role belongs to
-    application_id:
+    applicationId:
       type: string
       required: true
       description: ID of the application this role belongs to
-    role_name:
+    roleName:
       type: string
       required: true
       description: Name of the role
-    role_type:
+    roleType:
       type: string
       required: true
       enum_type: RoleType
@@ -77,11 +82,11 @@ model:
         - INACTIVE
         - DELETED
       description: Current status of the role
-    created_at:
+    createdAt:
       type: timestamp
       required: true
       description: When the role was created
-    updated_at:
+    updatedAt:
       type: timestamp
       required: true
       description: When the role was last updated

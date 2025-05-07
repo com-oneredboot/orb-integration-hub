@@ -7,9 +7,12 @@
     StatusCode
     Message
     Data {
-      applicationId
       roleId
-      description
+      userId
+      applicationId
+      roleName
+      roleType
+      permissions
       status
       createdAt
       updatedAt
@@ -23,9 +26,12 @@
     StatusCode
     Message
     Data {
-      applicationId
       roleId
-      description
+      userId
+      applicationId
+      roleName
+      roleType
+      permissions
       status
       createdAt
       updatedAt
@@ -39,9 +45,12 @@
     StatusCode
     Message
     Data {
-      applicationId
       roleId
-      description
+      userId
+      applicationId
+      roleName
+      roleType
+      permissions
       status
       createdAt
       updatedAt
@@ -55,9 +64,12 @@
     StatusCode
     Message
     Data {
-      applicationId
       roleId
-      description
+      userId
+      applicationId
+      roleName
+      roleType
+      permissions
       status
       createdAt
       updatedAt
@@ -71,9 +83,50 @@
     StatusCode
     Message
     Data {
-      applicationId
       roleId
-      description
+      userId
+      applicationId
+      roleName
+      roleType
+      permissions
+      status
+      createdAt
+      updatedAt
+    }
+  }
+}
+    `;
+    export const ApplicationRolesQueryByBoth = /* GraphQL */ `
+    query ApplicationRolesQueryByBoth($input: ApplicationRolesQueryByBothInput!) {
+  ApplicationRolesQueryByBoth(input: $input) {
+    StatusCode
+    Message
+    Data {
+      roleId
+      userId
+      applicationId
+      roleName
+      roleType
+      permissions
+      status
+      createdAt
+      updatedAt
+    }
+  }
+}
+    `;
+    export const ApplicationRolesQueryByUserId = /* GraphQL */ `
+    query ApplicationRolesQueryByUserId($input: ApplicationRolesQueryByUserIdInput!) {
+  ApplicationRolesQueryByUserId(input: $input) {
+    StatusCode
+    Message
+    Data {
+      roleId
+      userId
+      applicationId
+      roleName
+      roleType
+      permissions
       status
       createdAt
       updatedAt

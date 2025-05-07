@@ -3,14 +3,17 @@
  */
 
 // Import enums used in this model
-import { ApplicationRoleStatus } from './ApplicationRoleStatus.enum';
+import { RoleType } from './RoleType.enum';
+import { RoleStatus } from './RoleStatus.enum';
 
 // CreateInput
 export type ApplicationRolesCreateInput = {
-  applicationId: string;
   roleId: string;
-  description: string;
-  status: ApplicationRoleStatus;
+  userId: string;
+  roleName: string;
+  roleType: RoleType;
+  permissions: string[];
+  status: RoleStatus;
   createdAt: number;
   updatedAt: number;
 };
@@ -22,10 +25,15 @@ export type ApplicationRolesUpdateInput = Partial<IApplicationRoles>;
 // QueryBy<SecondaryIndex>Input types
 export type ApplicationRolesQueryByApplicationIdInput = {
     applicationId: string;
+    roleId?: string;
+};
+export type ApplicationRolesQueryByUserIdInput = {
+    userId: string;
+    roleId?: string;
 };
 export type ApplicationRolesQueryByRoleIdInput = {
     roleId: string;
-    applicationId?: string;
+    roleType?: string;
 };
 
 // Response types
@@ -48,27 +56,36 @@ export type ApplicationRolesResponse = {
 };
 
 export interface IApplicationRoles {
-  applicationId: string;
   roleId: string;
-  description: string | undefined;
-  status: ApplicationRoleStatus;
+  userId: string;
+  applicationId: string;
+  roleName: string;
+  roleType: RoleType;
+  permissions: string[];
+  status: RoleStatus;
   createdAt: number;
   updatedAt: number;
 }
 
 export class ApplicationRoles implements IApplicationRoles {
-  applicationId: string = '';
   roleId: string = '';
-  description: string | undefined = '';
-  status: ApplicationRoleStatus = ApplicationRoleStatus.UNKNOWN;
+  userId: string = '';
+  applicationId: string = '';
+  roleName: string = '';
+  roleType: RoleType = RoleType.UNKNOWN;
+  permissions: string[] = [];
+  status: RoleStatus = RoleStatus.UNKNOWN;
   createdAt: number = 0;
   updatedAt: number = 0;
 
   constructor(data: Partial<IApplicationRoles> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
+        if (key === 'roleType' && typeof value === 'string') {
+          this.roleType = RoleType[value as keyof typeof RoleType] ?? RoleType.UNKNOWN;
+        } else 
         if (key === 'status' && typeof value === 'string') {
-          this.status = ApplicationRoleStatus[value as keyof typeof ApplicationRoleStatus] ?? ApplicationRoleStatus.UNKNOWN;
+          this.status = RoleStatus[value as keyof typeof RoleStatus] ?? RoleStatus.UNKNOWN;
         } else 
         {
           this[key as keyof this] = value as any;

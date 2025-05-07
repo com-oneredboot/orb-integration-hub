@@ -7,17 +7,18 @@ from .user_status import UserStatus
 
 class Users(BaseModel):
     """Users model."""
-    user_id: str = Field(..., description="Unique identifier for the user")
-    cognito_id: str = Field(..., description="Unique identifier from Cognito")
+    userId: str = Field(..., description="Unique identifier for the user")
+    cognitoId: str = Field(..., description="Cognito user ID")
     email: str = Field(..., description="User's email address")
-    phone_number: str = Field(..., description="User's phone number")
-    phone_verified: bool = Field(..., description="Whether the phone number is verified")
-    first_name: str = Field(..., description="User's first name")
-    last_name: str = Field(..., description="User's last name")
+    emailVerified: bool = Field(..., description="Whether the email has been verified")
+    phoneNumber: str | None = Field(None, description="User's phone number")
+    phoneVerified: bool | None = Field(None, description="Whether the phone number has been verified")
+    firstName: str = Field(..., description="User's first name")
+    lastName: str = Field(..., description="User's last name")
     groups: List[str] = Field(..., description="User's groups")
-    status: UserStatus = Field(..., description="User's status")
-    created_at: datetime = Field(..., description="When the user was created")
-    updated_at: datetime = Field(..., description="When the user was last updated")
+    status: UserStatus = Field(..., description="Current status of the user")
+    createdAt: datetime = Field(..., description="When the user was created")
+    updatedAt: datetime = Field(..., description="When the user was last updated")
 
     class Config:
         """Model configuration."""

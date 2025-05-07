@@ -26,6 +26,12 @@ Located in `schemas/templates/`:
 
 ## Naming Conventions
 
+### Schema Files
+- File names: PascalCase (e.g., `Applications.yml`, `ApplicationRoles.yml`)
+- Table names: PascalCase (e.g., `Applications`, `ApplicationRoles`)
+- Attribute names: camelCase (e.g., `applicationId`, `roleId`)
+- Index names: kebab-case (e.g., `application-name-index`)
+
 ### GraphQL Schema
 - Type names: PascalCase (e.g., `Applications`, `ApplicationRoles`)
 - Field names: camelCase (e.g., `applicationId`, `roleId`)
@@ -38,12 +44,12 @@ Located in `schemas/templates/`:
 
 ### Database Tables
 - Table names: kebab-case (e.g., `applications-table`, `application-roles-table`)
-- Column names: snake_case (e.g., `application_id`, `role_id`)
+- Column names: camelCase (e.g., `applicationId`, `roleId`)
 
 ### Generated Code
 - Python classes: PascalCase (e.g., `Applications`, `ApplicationRoles`)
 - TypeScript interfaces: PascalCase (e.g., `Applications`, `ApplicationRoles`)
-- Field names: camelCase in TypeScript, snake_case in Python
+- Field names: camelCase in both TypeScript and Python
 
 ## Schema Generation
 

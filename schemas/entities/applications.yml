@@ -1,8 +1,9 @@
-# file: schemas/tables/applications.yml
+# file: schemas/tables/Applications.yml
 # author: Corey Dale Peters
 # date: 2025-02-17
-# description: yaml file containing the applications table schema
+# description: yaml file containing the Applications table schema
 
+type: table
 version: '1.0'
 table: Applications
 model:
@@ -10,18 +11,19 @@ model:
     default_auth: user_pools
   keys:
     primary:
-      partition: application_id
+      partition: applicationId
+      sort: createdAt
       projection_type: ALL
       description: Primary key for applications
     secondary:
       - name: application-name-index
         type: GSI
         partition: name
-        sort: application_id
+        sort: applicationId
         projection_type: ALL
         description: Index for querying applications by name
   attributes:
-    application_id:
+    applicationId:
       type: string
       required: true
       description: Unique identifier for the application
@@ -43,15 +45,15 @@ model:
         - PENDING
         - DELETED
       description: Current status of the application
-    created_at:
+    createdAt:
       type: timestamp
       required: true
       description: When the application was created
-    updated_at:
+    updatedAt:
       type: timestamp
       required: true
       description: When the application was last updated
-    user_id:
+    userId:
       type: string
       required: true
       description: Unique identifier for the user who created the application 

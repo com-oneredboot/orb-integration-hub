@@ -1,8 +1,9 @@
-# file: schemas/tables/application_users.yml
+# file: schemas/tables/ApplicationUsers.yml
 # author: Corey Dale Peters
 # date: 2025-02-17
-# description: yaml file containing the application_users table schema
+# description: yaml file containing the ApplicationUsers table schema
 
+type: table
 version: '1.0'
 table: ApplicationUsers
 model:
@@ -10,39 +11,39 @@ model:
     default_auth: user_pools
   keys:
     primary:
-      partition: application_id
-      sort: user_id
+      partition: applicationId
+      sort: userId
       projection_type: ALL
       description: Primary key for application users
     secondary:
       - name: user-applications-index
         type: GSI
-        partition: user_id
-        sort: application_id
+        partition: userId
+        sort: applicationId
         projection_type: ALL
         description: Index for querying applications by user
       - name: application-role-index
         type: GSI
-        partition: application_id
-        sort: role_id
+        partition: applicationId
+        sort: roleId
         projection_type: ALL
         description: Index for querying users by role within an application
       - name: user-status-index
         type: GSI
-        partition: application_id
+        partition: applicationId
         sort: status
         projection_type: ALL
         description: Index for querying users by status within an application
   attributes:
-    application_id:
+    applicationId:
       type: string
       required: true
       description: ID of the application
-    user_id:
+    userId:
       type: string
       required: true
       description: ID of the user
-    role_id:
+    roleId:
       type: string
       required: false
       description: Unique identifier for the role assigned to the user
@@ -57,11 +58,11 @@ model:
         - REJECTED
         - DELETED
       description: Status of the user in the application
-    created_at:
+    createdAt:
       type: timestamp
       required: true
       description: When the user was added to the application
-    updated_at:
+    updatedAt:
       type: timestamp
       required: true
       description: When the user's application status was last updated 

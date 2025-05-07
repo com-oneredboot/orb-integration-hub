@@ -10,6 +10,7 @@ export type UsersCreateInput = {
   userId: string;
   cognitoId: string;
   email: string;
+  emailVerified: boolean;
   phoneNumber: string;
   phoneVerified: boolean;
   firstName: string;
@@ -28,6 +29,14 @@ export type UsersUpdateInput = Partial<IUsers>;
 export type UsersQueryByUserIdInput = {
     userId: string;
     status?: string;
+};
+export type UsersQueryByCognitoIdInput = {
+    cognitoId: string;
+    userId?: string;
+};
+export type UsersQueryByPhoneNumberInput = {
+    phoneNumber: string;
+    userId?: string;
 };
 export type UsersQueryByEmailInput = {
     email: string;
@@ -57,8 +66,9 @@ export interface IUsers {
   userId: string;
   cognitoId: string;
   email: string;
-  phoneNumber: string;
-  phoneVerified: boolean;
+  emailVerified: boolean;
+  phoneNumber: string | undefined;
+  phoneVerified: boolean | undefined;
   firstName: string;
   lastName: string;
   groups: string[];
@@ -71,8 +81,9 @@ export class Users implements IUsers {
   userId: string = '';
   cognitoId: string = '';
   email: string = '';
-  phoneNumber: string = '';
-  phoneVerified: boolean = false;
+  emailVerified: boolean = false;
+  phoneNumber: string | undefined = '';
+  phoneVerified: boolean | undefined = false;
   firstName: string = '';
   lastName: string = '';
   groups: string[] = [];

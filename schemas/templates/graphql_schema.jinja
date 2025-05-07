@@ -28,6 +28,15 @@ enum {{ attr.enum_type }} {
 {% endfor %}
 {% endfor %}
 
+# GraphQL Types
+{% for type_name, type_info in graphql_types.items() %}
+type {{ type_name }} {
+  {% for attr in type_info.attributes %}
+  {{ attr.name | to_camel_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}AWSDateTime{% elif attr.type == 'boolean' %}Boolean{% elif attr.type == 'array' %}[String]{% else %}String{% endif %}{% endif %}{% if attr.required %}!{% endif %}
+  {% endfor %}
+}
+{% endfor %}
+
 # Base types
 type Query {
   Ping: String

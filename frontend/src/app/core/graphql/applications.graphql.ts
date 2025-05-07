@@ -69,6 +69,40 @@
   }
 }
     `;
+    export const ApplicationsQueryByCreatedAt = /* GraphQL */ `
+    query ApplicationsQueryByCreatedAt($input: ApplicationsQueryByCreatedAtInput!) {
+  ApplicationsQueryByCreatedAt(input: $input) {
+    StatusCode
+    Message
+    Data {
+      applicationId
+      name
+      description
+      status
+      createdAt
+      updatedAt
+      userId
+    }
+  }
+}
+    `;
+    export const ApplicationsQueryByBoth = /* GraphQL */ `
+    query ApplicationsQueryByBoth($input: ApplicationsQueryByBothInput!) {
+  ApplicationsQueryByBoth(input: $input) {
+    StatusCode
+    Message
+    Data {
+      applicationId
+      name
+      description
+      status
+      createdAt
+      updatedAt
+      userId
+    }
+  }
+}
+    `;
     export const ApplicationsQueryByName = /* GraphQL */ `
     query ApplicationsQueryByName($input: ApplicationsQueryByNameInput!) {
   ApplicationsQueryByName(input: $input) {

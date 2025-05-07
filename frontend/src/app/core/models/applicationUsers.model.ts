@@ -7,7 +7,6 @@ import { ApplicationUserStatus } from './ApplicationUserStatus.enum';
 
 // CreateInput
 export type ApplicationUsersCreateInput = {
-  applicationId: string;
   userId: string;
   roleId: string;
   status: ApplicationUserStatus;

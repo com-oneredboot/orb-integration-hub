@@ -80,6 +80,7 @@ export class UserService extends ApiService {
         status: UserStatus.PENDING,
         createdAt: timestamp,
         phoneVerified: false,
+        emailVerified: false,
         updatedAt: timestamp
       };
 

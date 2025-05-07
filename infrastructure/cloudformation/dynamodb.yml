@@ -35,19 +35,46 @@ Resources:
       TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles
       BillingMode: PAY_PER_REQUEST
       KeySchema:
-        - AttributeName: application_id
+        - AttributeName: applicationId
           KeyType: HASH
+        - AttributeName: roleId
+          KeyType: RANGE
       AttributeDefinitions:
-        - AttributeName: application_id
+        - AttributeName: applicationId
           AttributeType: S
-        - AttributeName: role_id
+        - AttributeName: roleType
+          AttributeType: S
+        - AttributeName: roleId
+          AttributeType: S
+        - AttributeName: userId
           AttributeType: S
       GlobalSecondaryIndexes:
-        - IndexName: role-applications-index
+        - IndexName: user-role-index
           KeySchema:
-            - AttributeName: role_id
+            - AttributeName: userId
               KeyType: HASH
-            - AttributeName: application_id
+            - AttributeName: roleId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: INCLUDE
+            NonKeyAttributes:
+              - roleName
+              - roleType
+              - permissions
+        - IndexName: application-role-index
+          KeySchema:
+            - AttributeName: applicationId
+              KeyType: HASH
+            - AttributeName: roleId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: KEYS_ONLY
+      LocalSecondaryIndexes:
+        - IndexName: role-type-index
+          KeySchema:
+            - AttributeName: roleId
+              KeyType: HASH
+            - AttributeName: roleType
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
@@ -71,19 +98,23 @@ Resources:
       TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications
       BillingMode: PAY_PER_REQUEST
       KeySchema:
-        - AttributeName: application_id
+        - AttributeName: applicationId
           KeyType: HASH
+        - AttributeName: createdAt
+          KeyType: RANGE
       AttributeDefinitions:
+        - AttributeName: applicationId
+          AttributeType: S
         - AttributeName: name
           AttributeType: S
-        - AttributeName: application_id
+        - AttributeName: createdAt
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: application-name-index
           KeySchema:
             - AttributeName: name
               KeyType: HASH
-            - AttributeName: application_id
+            - AttributeName: applicationId
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
@@ -107,37 +138,39 @@ Resources:
       TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users
       BillingMode: PAY_PER_REQUEST
       KeySchema:
-        - AttributeName: application_id
+        - AttributeName: applicationId
           KeyType: HASH
+        - AttributeName: userId
+          KeyType: RANGE
       AttributeDefinitions:
         - AttributeName: status
           AttributeType: S
-        - AttributeName: user_id
+        - AttributeName: applicationId
           AttributeType: S
-        - AttributeName: application_id
+        - AttributeName: roleId
           AttributeType: S
-        - AttributeName: role_id
+        - AttributeName: userId
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: user-applications-index
           KeySchema:
-            - AttributeName: user_id
+            - AttributeName: userId
               KeyType: HASH
-            - AttributeName: application_id
+            - AttributeName: applicationId
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
         - IndexName: application-role-index
           KeySchema:
-            - AttributeName: application_id
+            - AttributeName: applicationId
               KeyType: HASH
-            - AttributeName: role_id
+            - AttributeName: roleId
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
         - IndexName: user-status-index
           KeySchema:
-            - AttributeName: application_id
+            - AttributeName: applicationId
               KeyType: HASH
             - AttributeName: status
               KeyType: RANGE
@@ -163,44 +196,46 @@ Resources:
       TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-roles
       BillingMode: PAY_PER_REQUEST
       KeySchema:
-        - AttributeName: role_id
+        - AttributeName: roleId
           KeyType: HASH
+        - AttributeName: applicationId
+          KeyType: RANGE
       AttributeDefinitions:
-        - AttributeName: application_id
+        - AttributeName: applicationId
           AttributeType: S
-        - AttributeName: role_type
+        - AttributeName: roleType
           AttributeType: S
-        - AttributeName: user_id
+        - AttributeName: roleId
           AttributeType: S
-        - AttributeName: role_id
+        - AttributeName: userId
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: user-role-index
           KeySchema:
-            - AttributeName: user_id
+            - AttributeName: userId
               KeyType: HASH
-            - AttributeName: role_id
+            - AttributeName: roleId
               KeyType: RANGE
           Projection:
             ProjectionType: INCLUDE
             NonKeyAttributes:
-              - role_name
-              - role_type
+              - roleName
+              - roleType
               - permissions
         - IndexName: application-role-index
           KeySchema:
-            - AttributeName: application_id
+            - AttributeName: applicationId
               KeyType: HASH
-            - AttributeName: role_id
+            - AttributeName: roleId
               KeyType: RANGE
           Projection:
             ProjectionType: KEYS_ONLY
       LocalSecondaryIndexes:
         - IndexName: role-type-index
           KeySchema:
-            - AttributeName: role_id
+            - AttributeName: roleId
               KeyType: HASH
-            - AttributeName: role_type
+            - AttributeName: roleType
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
@@ -224,29 +259,41 @@ Resources:
       TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-users
       BillingMode: PAY_PER_REQUEST
       KeySchema:
-        - AttributeName: user_id
+        - AttributeName: userId
           KeyType: HASH
+        - AttributeName: cognitoId
+          KeyType: RANGE
       AttributeDefinitions:
-        - AttributeName: status
+        - AttributeName: cognitoId
           AttributeType: S
-        - AttributeName: user_id
+        - AttributeName: userId
           AttributeType: S
         - AttributeName: email
           AttributeType: S
+        - AttributeName: phoneNumber
+          AttributeType: S
       GlobalSecondaryIndexes:
-        - IndexName: user-status-index
+        - IndexName: cognito-user-index
           KeySchema:
-            - AttributeName: user_id
+            - AttributeName: cognitoId
               KeyType: HASH
-            - AttributeName: status
+            - AttributeName: userId
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
-        - IndexName: user-email-index
+        - IndexName: phone-user-index
+          KeySchema:
+            - AttributeName: phoneNumber
+              KeyType: HASH
+            - AttributeName: userId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: email-user-index
           KeySchema:
             - AttributeName: email
               KeyType: HASH
-            - AttributeName: user_id
+            - AttributeName: userId
               KeyType: RANGE
           Projection:
             ProjectionType: ALL

@@ -72,7 +72,6 @@ This guide provides instructions for setting up the development environment and 
 
 ## 4. Schema Generation Workflow
 
-*   (This section seems accurate based on `generate.py` and previous info)
 1.  Modify schema definitions in `schemas/entities/*.yml`.
 2.  Modify templates if necessary in `schemas/templates/*.jinja`.
 3.  Run the generator from the root directory:
@@ -82,12 +81,54 @@ This guide provides instructions for setting up the development environment and 
     pipenv run python generate.py
     cd ..
     ```
-4.  Verify generated files in `backend/src/models/`, `frontend/src/models/`, and `backend/infrastructure/cloudformation/`.
+4.  Verify generated files:
+    - Check `backend/src/models/` for Python models
+    - Check `frontend/src/models/` for TypeScript models
+    - Check `infrastructure/cloudformation/` for:
+      - Latest `appsync_*.graphql` file
+      - Updated `appsync.yml` and `dynamodb.yml`
 5.  Commit *both* the schema changes *and* the generated files.
 
 **Important:** Never edit generated files directly.
 
-## 5. Running Tests
+## 5. Deployment Process
+
+1. **Schema Validation**:
+   - After schema generation, verify the GraphQL schema:
+     ```bash
+     cd infrastructure/cloudformation
+     # Find the latest generated schema file
+     SCHEMA_FILE=$(find . -name "appsync_*.graphql" | sort -r | head -1)
+     ```
+   - Check for:
+     - Proper type definitions
+     - Query and mutation definitions
+     - Input type definitions
+     - No duplicate operations
+
+2. **Deployment Steps**:
+   - Use GitHub Actions workflow:
+     1. Go to Actions tab in GitHub repository
+     2. Select "deploy-backend" workflow
+     3. Click "Run workflow"
+     4. Select environment and required parameters
+     5. Monitor deployment progress
+
+3. **Post-Deployment Verification**:
+   - Check AWS AppSync console for:
+     - Updated schema
+     - Working resolvers
+     - No deployment errors
+   - Test queries using AppSync console or frontend application
+   - Verify DynamoDB table updates
+
+4. **Common Issues**:
+   - Schema validation errors: Check YAML syntax and required fields
+   - Deployment failures: Check CloudFormation logs
+   - Query errors: Verify generated schema matches expected operations
+   - Resolver issues: Check AppSync console for resolver mapping errors
+
+## 6. Running Tests
 
 *   **Frontend:**
     ```bash
@@ -109,12 +150,12 @@ This guide provides instructions for setting up the development environment and 
     cd ..
     ```
 
-## 6. Coding Style & Conventions
+## 7. Coding Style & Conventions
 
 *   **Frontend:** Adheres to Angular standards and ESLint rules defined in `frontend/eslint.config.js`. Uses Prettier (likely via VS Code extension) for formatting.
 *   **Backend:** Uses **Black** for code formatting and **Flake8** for linting. Configuration is typically in `pyproject.toml`. Ensure these tools are run before committing.
 
-## 7. Branching Strategy
+## 8. Branching Strategy
 
 *   Follows a feature branch workflow:
     1.  Create feature branches from `main` (e.g., `git checkout -b feature/your-feature-name main`).
@@ -123,12 +164,12 @@ This guide provides instructions for setting up the development environment and 
     4.  Create a Pull Request (PR) targeting the `main` branch.
     5.  PR requires successful automated tests (GitHub Actions) and manual verification/review before merging.
 
-## 8. Deployment
+## 9. Deployment
 
 *   Deployment is automated via GitHub Actions upon merges to the `main` branch (Verify triggers in workflow files).
 *   See workflow files in `.github/workflows/` (`deploy-backend.yml`, `deploy-frontend.yml`).
 
-## 9. Troubleshooting
+## 10. Troubleshooting
 
 *   **SAM Local Issues:** Ensure Docker is running. Check AWS credentials. Verify `--env-vars` path/format.
 *   **Frontend Build Issues:** Delete `node_modules` and `package-lock.json`, then run `npm install` again.

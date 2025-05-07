@@ -77,9 +77,9 @@
   }
 }
     `;
-    export const RolesQueryByUserId = /* GraphQL */ `
-    query RolesQueryByUserId($input: RolesQueryByUserIdInput!) {
-  RolesQueryByUserId(input: $input) {
+    export const RolesQueryByApplicationId = /* GraphQL */ `
+    query RolesQueryByApplicationId($input: RolesQueryByApplicationIdInput!) {
+  RolesQueryByApplicationId(input: $input) {
     StatusCode
     Message
     Data {
@@ -96,9 +96,28 @@
   }
 }
     `;
-    export const RolesQueryByApplicationId = /* GraphQL */ `
-    query RolesQueryByApplicationId($input: RolesQueryByApplicationIdInput!) {
-  RolesQueryByApplicationId(input: $input) {
+    export const RolesQueryByBoth = /* GraphQL */ `
+    query RolesQueryByBoth($input: RolesQueryByBothInput!) {
+  RolesQueryByBoth(input: $input) {
+    StatusCode
+    Message
+    Data {
+      roleId
+      userId
+      applicationId
+      roleName
+      roleType
+      permissions
+      status
+      createdAt
+      updatedAt
+    }
+  }
+}
+    `;
+    export const RolesQueryByUserId = /* GraphQL */ `
+    query RolesQueryByUserId($input: RolesQueryByUserIdInput!) {
+  RolesQueryByUserId(input: $input) {
     StatusCode
     Message
     Data {

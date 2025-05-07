@@ -1,23 +1,23 @@
 /**
- * AuthError model.
+ *  model.
  */
 
 // Import enums used in this model
 
-export interface IAuthError {
+export interface I {
   code: string;
   message: string;
   description: string | undefined;
   details: Record<string, any> | undefined;
 }
 
-export class AuthError implements IAuthError {
+export class  implements I {
   code: string = '';
   message: string = '';
   description: string | undefined = '';
   details: Record<string, any> | undefined = undefined;
 
-  constructor(data: Partial<IAuthError> = {}) {
+  constructor(data: Partial<I> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
         {
@@ -28,8 +28,8 @@ export class AuthError implements IAuthError {
   }
 }
 // Response envelope for GraphQL type
-export type AuthErrorResponse = {
+export type Response = {
   statusCode: number;
   message: string;
-  data: IAuthError | null;
+  data: I | null;
 };

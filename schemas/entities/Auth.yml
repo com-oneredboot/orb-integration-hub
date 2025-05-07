@@ -1,7 +1,7 @@
 type: graphql
 name: Auth
 attributes:
-  status_code:
+  statusCode:
     type: number
     required: true
     description: HTTP or operation status code

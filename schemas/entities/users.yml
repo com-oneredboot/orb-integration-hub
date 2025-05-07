@@ -1,8 +1,9 @@
-# file: schemas/tables/users.yml
-# author: AI Assistant
-# date: 2024-03-21
-# description: yaml file containing the users table schema
+# file: schemas/tables/Users.yml
+# author: Corey Dale Peters
+# date: 2025-02-17
+# description: yaml file containing the Users table schema
 
+type: table
 version: '1.0'
 table: Users
 model:
@@ -20,48 +21,59 @@ model:
     default_auth: user_pools
   keys:
     primary:
-      partition: user_id  # Partition key for the table
-      projection_type: ALL     # Project all attributes in indexes
+      partition: userId
+      sort: cognitoId
+      projection_type: ALL
       description: Primary key for users
     secondary:
-      - name: user-status-index
+      - name: cognito-user-index
         type: GSI
-        partition: user_id
-        sort: status
+        partition: cognitoId
+        sort: userId
         projection_type: ALL
-        description: Index for querying users by status
-      - name: user-email-index
+        description: Index for querying users by Cognito ID
+      - name: phone-user-index
+        type: GSI
+        partition: phoneNumber
+        sort: userId
+        projection_type: ALL
+        description: Index for querying users by phone number
+      - name: email-user-index
         type: GSI
         partition: email
-        sort: user_id
+        sort: userId
         projection_type: ALL
         description: Index for querying users by email
   attributes:
-    user_id:
+    userId:
       type: string
       required: true
       description: Unique identifier for the user
-    cognito_id:
+    cognitoId:
       type: string
       required: true
-      description: Unique identifier from Cognito
+      description: Cognito user ID
     email:
       type: string
       required: true
       description: User's email address
-    phone_number:
-      type: string
-      required: true
-      description: User's phone number
-    phone_verified:
+    emailVerified:
       type: boolean
       required: true
-      description: Whether the phone number is verified
-    first_name:
+      description: Whether the email has been verified
+    phoneNumber:
+      type: string
+      required: false
+      description: User's phone number
+    phoneVerified:
+      type: boolean
+      required: false
+      description: Whether the phone number has been verified
+    firstName:
       type: string
       required: true
       description: User's first name
-    last_name:
+    lastName:
       type: string
       required: true
       description: User's last name
@@ -76,18 +88,16 @@ model:
       required: true
       enum_type: UserStatus
       enum_values:
-        - UNKNOWN
         - ACTIVE
         - INACTIVE
         - PENDING
-        - REJECTED
         - DELETED
-      description: User's status
-    created_at:
+      description: Current status of the user
+    createdAt:
       type: timestamp
       required: true
       description: When the user was created
-    updated_at:
+    updatedAt:
       type: timestamp
       required: true
       description: When the user was last updated

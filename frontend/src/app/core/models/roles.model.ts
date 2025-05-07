@@ -8,7 +8,6 @@ import { RoleStatus } from './RoleStatus.enum';
 
 // CreateInput
 export type RolesCreateInput = {
-  roleId: string;
   userId: string;
   applicationId: string;
   roleName: string;
