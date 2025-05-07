@@ -113,3 +113,48 @@ The orb-master-plan will periodically scan project repositories to update its do
 ## License
 
 [Add your license information here]
+
+## Recent Changes
+
+### Timestamp Handling
+- Updated timestamp handling across the application to use ISO string format
+- Ensures consistency between TypeScript, Python, and DynamoDB
+- Fixed type mismatches in user creation and update flows
+
+### Error Handling
+- Implemented proper error registry pattern
+- Improved error messages and error handling flow
+- Added better error tracking and logging
+
+### User Profile Management
+- Fixed user profile update functionality
+- Improved state management with NgRx
+- Added proper validation and error handling
+- Ensures all required fields are present in updates
+
+### Type Safety
+- Fixed TypeScript type definitions
+- Improved type checking across the application
+- Added proper interfaces for all models
+
+## Development Guidelines
+
+### Timestamps
+- Always use `new Date().toISOString()` for timestamps
+- Never use `Date.now()` for database operations
+- Ensure timestamps are stored as strings in ISO format
+
+### Error Handling
+- Use the `ErrorRegistry` class for error handling
+- Include proper error codes and messages
+- Log errors with appropriate context
+
+### User Updates
+- Always include all required fields in update operations
+- Validate input before sending to the server
+- Handle errors appropriately and provide user feedback
+
+### Type Safety
+- Use proper TypeScript interfaces
+- Avoid using `any` type
+- Ensure all required fields are present in type definitions
