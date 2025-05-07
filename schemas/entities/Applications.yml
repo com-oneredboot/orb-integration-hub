@@ -66,11 +66,11 @@ model:
         - PENDING
         - DELETED
       description: Status of the application
-    created_at:
+    createdAt:
       type: timestamp
       required: true
       description: When the application was created
-    updated_at:
+    updatedAt:
       type: timestamp
       required: true
       description: When the application was last updated 

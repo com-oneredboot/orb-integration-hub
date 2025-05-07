@@ -87,11 +87,11 @@ model:
         - INACTIVE
         - DELETED
       description: Current status of the role
-    created_at:
+    createdAt:
       type: timestamp
       required: true
       description: When the role was created
-    updated_at:
+    updatedAt:
       type: timestamp
       required: true
       description: When the role was last updated

@@ -65,11 +65,11 @@ model:
         - REJECTED
         - DELETED
       description: Status of the user in the application
-    created_at:
+    createdAt:
       type: timestamp
       required: true
       description: When the user was added to the application
-    updated_at:
+    updatedAt:
       type: timestamp
       required: true
       description: When the user's application status was last updated 
