@@ -6,7 +6,15 @@
   ApplicationsCreate(input: $input) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      applicationId
+      name
+      description
+      status
+      createdAt
+      updatedAt
+      userId
+    }
   }
 }
     `;
@@ -15,7 +23,15 @@
   ApplicationsUpdate(input: $input) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      applicationId
+      name
+      description
+      status
+      createdAt
+      updatedAt
+      userId
+    }
   }
 }
     `;
@@ -24,7 +40,15 @@
   ApplicationsDelete(id: $id) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      applicationId
+      name
+      description
+      status
+      createdAt
+      updatedAt
+      userId
+    }
   }
 }
     `;
@@ -33,7 +57,15 @@
   ApplicationsQueryByApplicationId(input: $input) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      applicationId
+      name
+      description
+      status
+      createdAt
+      updatedAt
+      userId
+    }
   }
 }
     `;
@@ -42,7 +74,15 @@
   ApplicationsQueryByName(input: $input) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      applicationId
+      name
+      description
+      status
+      createdAt
+      updatedAt
+      userId
+    }
   }
 }
     `;

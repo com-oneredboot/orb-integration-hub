@@ -6,7 +6,17 @@
   RolesCreate(input: $input) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      roleId
+      userId
+      applicationId
+      roleName
+      roleType
+      permissions
+      status
+      createdAt
+      updatedAt
+    }
   }
 }
     `;
@@ -15,7 +25,17 @@
   RolesUpdate(input: $input) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      roleId
+      userId
+      applicationId
+      roleName
+      roleType
+      permissions
+      status
+      createdAt
+      updatedAt
+    }
   }
 }
     `;
@@ -24,7 +44,17 @@
   RolesDelete(id: $id) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      roleId
+      userId
+      applicationId
+      roleName
+      roleType
+      permissions
+      status
+      createdAt
+      updatedAt
+    }
   }
 }
     `;
@@ -33,7 +63,17 @@
   RolesQueryByRoleId(input: $input) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      roleId
+      userId
+      applicationId
+      roleName
+      roleType
+      permissions
+      status
+      createdAt
+      updatedAt
+    }
   }
 }
     `;
@@ -42,7 +82,17 @@
   RolesQueryByUserId(input: $input) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      roleId
+      userId
+      applicationId
+      roleName
+      roleType
+      permissions
+      status
+      createdAt
+      updatedAt
+    }
   }
 }
     `;
@@ -51,7 +101,17 @@
   RolesQueryByApplicationId(input: $input) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      roleId
+      userId
+      applicationId
+      roleName
+      roleType
+      permissions
+      status
+      createdAt
+      updatedAt
+    }
   }
 }
     `;

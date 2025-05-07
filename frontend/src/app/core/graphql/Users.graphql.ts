@@ -6,7 +6,19 @@
   UsersCreate(input: $input) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      userId
+      cognitoId
+      email
+      phoneNumber
+      phoneVerified
+      firstName
+      lastName
+      groups
+      status
+      createdAt
+      updatedAt
+    }
   }
 }
     `;
@@ -15,7 +27,19 @@
   UsersUpdate(input: $input) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      userId
+      cognitoId
+      email
+      phoneNumber
+      phoneVerified
+      firstName
+      lastName
+      groups
+      status
+      createdAt
+      updatedAt
+    }
   }
 }
     `;
@@ -24,7 +48,19 @@
   UsersDelete(id: $id) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      userId
+      cognitoId
+      email
+      phoneNumber
+      phoneVerified
+      firstName
+      lastName
+      groups
+      status
+      createdAt
+      updatedAt
+    }
   }
 }
     `;
@@ -33,7 +69,19 @@
   UsersQueryByUserId(input: $input) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      userId
+      cognitoId
+      email
+      phoneNumber
+      phoneVerified
+      firstName
+      lastName
+      groups
+      status
+      createdAt
+      updatedAt
+    }
   }
 }
     `;
@@ -42,7 +90,19 @@
   UsersQueryByEmail(input: $input) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      userId
+      cognitoId
+      email
+      phoneNumber
+      phoneVerified
+      firstName
+      lastName
+      groups
+      status
+      createdAt
+      updatedAt
+    }
   }
 }
     `;

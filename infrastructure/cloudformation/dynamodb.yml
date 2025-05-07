@@ -74,9 +74,9 @@ Resources:
         - AttributeName: application_id
           KeyType: HASH
       AttributeDefinitions:
-        - AttributeName: application_id
-          AttributeType: S
         - AttributeName: name
+          AttributeType: S
+        - AttributeName: application_id
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: application-name-index
@@ -110,13 +110,13 @@ Resources:
         - AttributeName: application_id
           KeyType: HASH
       AttributeDefinitions:
-        - AttributeName: application_id
-          AttributeType: S
         - AttributeName: status
           AttributeType: S
-        - AttributeName: role_id
-          AttributeType: S
         - AttributeName: user_id
+          AttributeType: S
+        - AttributeName: application_id
+          AttributeType: S
+        - AttributeName: role_id
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: user-applications-index
@@ -170,9 +170,9 @@ Resources:
           AttributeType: S
         - AttributeName: role_type
           AttributeType: S
-        - AttributeName: role_id
-          AttributeType: S
         - AttributeName: user_id
+          AttributeType: S
+        - AttributeName: role_id
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: user-role-index
@@ -227,11 +227,11 @@ Resources:
         - AttributeName: user_id
           KeyType: HASH
       AttributeDefinitions:
-        - AttributeName: email
-          AttributeType: S
         - AttributeName: status
           AttributeType: S
         - AttributeName: user_id
+          AttributeType: S
+        - AttributeName: email
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: user-status-index

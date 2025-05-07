@@ -6,7 +6,14 @@
   ApplicationUsersCreate(input: $input) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      applicationId
+      userId
+      roleId
+      status
+      createdAt
+      updatedAt
+    }
   }
 }
     `;
@@ -15,7 +22,14 @@
   ApplicationUsersUpdate(input: $input) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      applicationId
+      userId
+      roleId
+      status
+      createdAt
+      updatedAt
+    }
   }
 }
     `;
@@ -24,7 +38,14 @@
   ApplicationUsersDelete(id: $id) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      applicationId
+      userId
+      roleId
+      status
+      createdAt
+      updatedAt
+    }
   }
 }
     `;
@@ -33,7 +54,14 @@
   ApplicationUsersQueryByApplicationId(input: $input) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      applicationId
+      userId
+      roleId
+      status
+      createdAt
+      updatedAt
+    }
   }
 }
     `;
@@ -42,7 +70,14 @@
   ApplicationUsersQueryByUserId(input: $input) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      applicationId
+      userId
+      roleId
+      status
+      createdAt
+      updatedAt
+    }
   }
 }
     `;

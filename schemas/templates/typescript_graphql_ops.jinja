@@ -21,8 +21,8 @@
         StatusCode
         Message
         Data {
-          // ...fields
-        }
+{% for attr in schema.attributes %}          {{ attr.name|to_camel_case }}
+{% endfor %}        }
       }
     }
     `;

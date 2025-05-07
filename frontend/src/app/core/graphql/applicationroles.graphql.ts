@@ -6,7 +6,14 @@
   ApplicationRolesCreate(input: $input) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      applicationId
+      roleId
+      description
+      status
+      createdAt
+      updatedAt
+    }
   }
 }
     `;
@@ -15,7 +22,14 @@
   ApplicationRolesUpdate(input: $input) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      applicationId
+      roleId
+      description
+      status
+      createdAt
+      updatedAt
+    }
   }
 }
     `;
@@ -24,7 +38,14 @@
   ApplicationRolesDelete(id: $id) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      applicationId
+      roleId
+      description
+      status
+      createdAt
+      updatedAt
+    }
   }
 }
     `;
@@ -33,7 +54,14 @@
   ApplicationRolesQueryByApplicationId(input: $input) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      applicationId
+      roleId
+      description
+      status
+      createdAt
+      updatedAt
+    }
   }
 }
     `;
@@ -42,7 +70,14 @@
   ApplicationRolesQueryByRoleId(input: $input) {
     StatusCode
     Message
-    Data { ...fields }
+    Data {
+      applicationId
+      roleId
+      description
+      status
+      createdAt
+      updatedAt
+    }
   }
 }
     `;

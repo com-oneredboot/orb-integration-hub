@@ -659,6 +659,8 @@ def generate_typescript_graphql_ops(table: str, schema: TableSchema) -> None:
         sk_pascal = to_pascal_case(schema.sort_key) if schema.sort_key and schema.sort_key != 'None' else None
         # Build CRUD operations
         operations = []
+        # Build the field list for the Data selection set
+        field_list = "\n      ".join([to_camel_case(attr.name) for attr in schema.attributes])
         # Create
         operations.append({
             'name': f'{table}CreateMutation',
@@ -667,7 +669,9 @@ mutation {table}Create($input: {table}CreateInput!) {{
   {table}Create(input: $input) {{
     StatusCode
     Message
-    Data {{ ...fields }}
+    Data {{
+      {field_list}
+    }}
   }}
 }}'''
         })
@@ -679,7 +683,9 @@ mutation {table}Update($input: {table}UpdateInput!) {{
   {table}Update(input: $input) {{
     StatusCode
     Message
-    Data {{ ...fields }}
+    Data {{
+      {field_list}
+    }}
   }}
 }}'''
         })
@@ -691,7 +697,9 @@ mutation {table}Delete($id: ID!) {{
   {table}Delete(id: $id) {{
     StatusCode
     Message
-    Data {{ ...fields }}
+    Data {{
+      {field_list}
+    }}
   }}
 }}'''
         })
@@ -703,7 +711,9 @@ query {table}QueryBy{pk_pascal}($input: {table}QueryBy{pk_pascal}Input!) {{
   {table}QueryBy{pk_pascal}(input: $input) {{
     StatusCode
     Message
-    Data {{ ...fields }}
+    Data {{
+      {field_list}
+    }}
   }}
 }}'''
         })
@@ -716,7 +726,9 @@ query {table}QueryBy{sk_pascal}($input: {table}QueryBy{sk_pascal}Input!) {{
   {table}QueryBy{sk_pascal}(input: $input) {{
     StatusCode
     Message
-    Data {{ ...fields }}
+    Data {{
+      {field_list}
+    }}
   }}
 }}'''
             })
@@ -728,7 +740,9 @@ query {table}QueryByBoth($input: {table}QueryByBothInput!) {{
   {table}QueryByBoth(input: $input) {{
     StatusCode
     Message
-    Data {{ ...fields }}
+    Data {{
+      {field_list}
+    }}
   }}
 }}'''
             })
@@ -742,7 +756,9 @@ query {table}QueryBy{idx_pascal}($input: {table}QueryBy{idx_pascal}Input!) {{
   {table}QueryBy{idx_pascal}(input: $input) {{
     StatusCode
     Message
-    Data {{ ...fields }}
+    Data {{
+      {field_list}
+    }}
   }}
 }}'''
             })

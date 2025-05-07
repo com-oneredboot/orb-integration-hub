@@ -118,10 +118,10 @@ export class UserService extends ApiService {
       let queryInput;
       let query;
       if (input.userId) {
-        queryInput = { userId: input.userId, status: '' };
+        queryInput = { userId: input.userId };
         query = UsersQueryByUserId;
       } else if (input.email) {
-        queryInput = { email: input.email, userId: '' };
+        queryInput = { email: input.email };
         query = UsersQueryByEmail;
       } else {
         throw new Error('Must provide userId or email');
