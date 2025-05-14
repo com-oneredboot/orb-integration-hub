@@ -13,14 +13,18 @@ input {{ schema.name }}UpdateInput {
 
 {%- set seen_indexes = [] %}
 {%- for index in schema.indexes %}
-{% set input_name = schema.name ~ 'QueryBy' ~ index.partition|to_pascal_case ~ 'Input' %}
-{% if input_name not in seen_indexes %}input {{ input_name }} {
+  {%- if index.sort %}
+    {%- set input_name = schema.name ~ 'QueryBy' ~ index.partition|to_pascal_case ~ 'And' ~ index.sort|to_pascal_case ~ 'Input' %}
+  {%- else %}
+    {%- set input_name = schema.name ~ 'QueryBy' ~ index.partition|to_pascal_case ~ 'Input' %}
+  {%- endif %}
+  {% if input_name not in seen_indexes %}input {{ input_name }} {
   {{ index.partition }}: {{ schema.fields[index.partition]|graphql_type }}
 {% if index.sort %}  {{ index.sort }}: {{ schema.fields[index.sort]|graphql_type }}
-{% endif -%}}
+{% endif %}}
 
-{%- do seen_indexes.append(input_name) %}{% endif -%}
-{%- endfor -%}
+{% set _ = seen_indexes.append(input_name) %}{% endif %}
+{%- endfor %}
 
 type {{ schema.name }}Response {
   StatusCode: Int!

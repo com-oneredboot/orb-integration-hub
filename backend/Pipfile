@@ -8,7 +8,6 @@ boto3 = "*"
 pynamodb = "*"
 requests = "*"
 stripe = "*"
-graphql-core = "*"
 
 [dev-packages]
 black = "*"
