@@ -24,75 +24,20 @@ schema {
 }
 
 # Enums
-{%- include 'enums.jinja' %}
+{%- include 'enums.jinja' -%}
 
 # GraphQL Types
-{% include 'graphql_type_schema.jinja' %}
+{%- include 'graphql_type_schema.jinja' -%}
 
 # Base types
-{% for schema_name, schema in table_schemas.items() %}
-type {{ schema.name }} {
-{% for field_name, field_type in schema.fields.items() %}  {{ field_name }}: {{ field_type|graphql_type }}
-{% endfor %}}
-
-input {{ schema.name }}CreateInput {
-{% for field_name, field_type in schema.fields.items() %}  {{ field_name }}: {{ field_type|graphql_type }}
-{% endfor %}}
-
-input {{ schema.name }}UpdateInput {
-{% for field_name, field_type in schema.fields.items() %}  {{ field_name }}: {{ field_type|graphql_type }}
-{% endfor %}}
-
-{% set seen_indexes = [] %}
-{% for index in schema.indexes %}
-{% set input_name = schema.name ~ 'QueryBy' ~ index.partition|to_pascal_case ~ 'Input' %}
-{% if input_name not in seen_indexes %}input {{ input_name }} {
-  {{ index.partition }}: {{ schema.fields[index.partition]|graphql_type }}
-{% if index.sort %}  {{ index.sort }}: {{ schema.fields[index.sort]|graphql_type }}
-{% endif %}}
-
-{% do seen_indexes.append(input_name) %}{% endif %}
-{% endfor %}
-
-type {{ schema.name }}Response {
-  StatusCode: Int!
-  Message: String!
-  Data: {{ schema.name }}
-}
-
-type {{ schema.name }}ListResponse {
-  StatusCode: Int!
-  Message: String!
-  Data: [{{ schema.name }}]
-}
-
-{% endfor %}
+{%- include 'base_types.jinja' -%}
 
 # Queries
 type Query {
-{%- include 'queries.jinja' %}
+{%- include 'queries.jinja' -%}
 }
 
 # Mutations
 type Mutation {
-{%- include 'mutations.jinja' %}
+{%- include 'mutations.jinja' -%}
 }
-
-{% macro graphql_type(type_name) -%}
-{%- set mapping = {
-  'string': 'String',
-  'number': 'Int',
-  'boolean': 'Boolean',
-  'object': 'String',
-  'array': '[String]',
-  'timestamp': 'String',
-  'ID': 'ID',
-  'int': 'Int',
-  'float': 'Float',
-  'double': 'Float',
-  'bigint': 'String',
-  'IUsers': 'Users',
-  'any': 'String',
-} %}
-{{ mapping.get(type_name, type_name) }}
-{%- endmacro %}
