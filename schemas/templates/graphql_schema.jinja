@@ -17,9 +17,6 @@ Operations can use either API key authentication (@aws_api_key) or Cognito user 
 The default is Cognito user pool authentication for the admin group.
 """
 
-# Authentication Directives
-directive @aws_auth(cognito_groups: [String!]!) on FIELD_DEFINITION
-directive @aws_api_key on FIELD_DEFINITION
 
 # Schema Definition
 schema {
@@ -28,22 +25,15 @@ schema {
 }
 
 # Enums
-{% if enums %}
 {% for enum_name, enum_values in enums.items() %}
 enum {{ enum_name }} {
 {% for value in enum_values %}  {{ value }}
 {% endfor %}}
 
 {% endfor %}
-{% endif %}
 
 # GraphQL Types
-{% for type_name, type_def in graphql_types.items() %}
-type {{ type_name }} {
-{% for attr in type_def.attributes %}  {{ attr.name }}: {{ attr.type|graphql_type }}{% if attr.required %}!{% endif %}
-{% endfor %}}
-
-{% endfor %}
+{% include 'graphql_type_schema.jinja' %}
 
 # Base types
 {% for schema_name, schema in table_schemas.items() %}
@@ -71,7 +61,6 @@ input {{ schema.name }}UpdateInput {
 {% endfor %}
 
 type {{ schema.name }}Response {
-  @aws_auth(cognito_groups: ["admin"])
   StatusCode: Int!
   Message: String!
   Data: {{ schema.name }}
@@ -87,21 +76,13 @@ type {{ schema.name }}ListResponse {
 
 # Queries
 type Query {
-{% set seen_queries = [] %}
-{% for schema_name, schema in table_schemas.items() %}
-{% for index in schema.indexes %}
-{% set query_name = schema.name ~ 'QueryBy' ~ index.partition|to_pascal_case %}
-{% if query_name not in seen_queries %}  {{ query_name }}(input: {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}Input!): {{ schema.name }}ListResponse @aws_auth(cognito_groups: ["admin"])
-{% do seen_queries.append(query_name) %}{% endif %}
-{% endfor %}
-{% endfor %}}
+  {% include 'queries.jinja' %}
+}
 
 # Mutations
 type Mutation {
-{% for schema_name, schema in table_schemas.items() %}  {{ schema.name }}Create(input: {{ schema.name }}CreateInput!): {{ schema.name }}Response @aws_auth(cognito_groups: ["admin"])
-  {{ schema.name }}Update(input: {{ schema.name }}UpdateInput!): {{ schema.name }}Response @aws_auth(cognito_groups: ["admin"])
-
-{% endfor %}}
+  {% include 'mutations.jinja' %}
+}
 
 {% macro graphql_type(type_name) -%}
 {%- set mapping = {

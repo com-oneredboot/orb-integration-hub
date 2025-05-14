@@ -104,6 +104,7 @@ Resources:
 
   # Data Sources
   # --------------------------------------------------- #
+
   # ApplicationRoles Data Source
   ApplicationRolesDataSource:
     Type: AWS::AppSync::DataSource
@@ -118,6 +119,7 @@ Resources:
 
   # ApplicationRoles Resolvers
   # --------------------------------------------------- #
+  
 
   # Applications Data Source
   ApplicationsDataSource:
@@ -133,6 +135,7 @@ Resources:
 
   # Applications Resolvers
   # --------------------------------------------------- #
+  
 
   # ApplicationUsers Data Source
   ApplicationUsersDataSource:
@@ -148,6 +151,7 @@ Resources:
 
   # ApplicationUsers Resolvers
   # --------------------------------------------------- #
+  
 
   # Roles Data Source
   RolesDataSource:
@@ -163,6 +167,7 @@ Resources:
 
   # Roles Resolvers
   # --------------------------------------------------- #
+  
 
   # Users Data Source
   UsersDataSource:
@@ -178,9 +183,11 @@ Resources:
 
   # Users Resolvers
   # --------------------------------------------------- #
+  
 
   # Index-based Resolvers
   # --------------------------------------------------- #
+  
 
 # --------------------------------------------------- #
 Outputs:

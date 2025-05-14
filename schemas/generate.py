@@ -220,8 +220,8 @@ def setup_jinja_env() -> Environment:
     env = Environment(
         loader=FileSystemLoader(os.path.join(SCRIPT_DIR, 'templates')),
         autoescape=select_autoescape(['html', 'xml']),
-        trim_blocks=True,
-        lstrip_blocks=True,
+        trim_blocks=False,
+        lstrip_blocks=False,
         keep_trailing_newline=True,
         extensions=['jinja2.ext.do']
     )
@@ -375,21 +375,26 @@ def validate_case_conventions(schema: Dict[str, Any], file_path: str) -> None:
                     raise SchemaValidationError(f"Attribute name '{attr_name}' must be in camelCase")
 
 def get_auth_directives(operation_name: str, schema: Union[TableSchema, GraphQLType]) -> List[str]:
-    """Generate auth directives for a GraphQL operation."""
+    """
+    Generate auth directives for a GraphQL operation.
+    - By default, every operation gets @aws_auth(cognito_groups: ["admin"])
+    - If the operation is in apiKeyOperations, also add @aws_api_key
+    - In the future, group customization can be added via authConfig
+    """
     directives = []
-    
-    # Skip if no auth config
+    # Always add Cognito admin group by default
+    directives.append('@aws_auth(cognito_groups: ["admin"])')
     if not schema.auth_config:
         return directives
-    
-    # Check if operation is in apiKeyOperations
-    if operation_name in schema.auth_config.get('apiKeyOperations', []):
-        directives.append('@aws_api_key')
-    
-    # Check if operation is in cognitoOperations
-    if operation_name in schema.auth_config.get('cognitoOperations', []):
-        directives.append('@aws_auth(cognito_groups: ["admin"])')
-    
+    # Check for apiKeyOperations
+    if 'apiKeyOperations' in schema.auth_config:
+        if operation_name in schema.auth_config['apiKeyOperations']:
+            directives.append('@aws_api_key')
+        # Warn if operation is in config but not matched
+        for op in schema.auth_config['apiKeyOperations']:
+            if op not in [operation_name]:
+                logger.warning(f"apiKeyOperations entry '{op}' not matched for operation '{operation_name}' in schema '{schema.name}'")
+    # In the future, handle group customization here
     return directives
 
 def load_schema(schema_path: str) -> Dict[str, Any]:
@@ -629,11 +634,9 @@ def generate_graphql_schema(schemas: Dict[str, Union[TableSchema, GraphQLType]],
     logger.debug(f'Schemas dictionary in generate_graphql_schema: {schemas}')
     try:
         jinja_env = setup_jinja_env()
-        
         # Separate schemas by type
         table_schemas = {}
         graphql_types = {}
-        
         for schema_name, schema in schemas.items():
             if isinstance(schema, TableSchema):
                 table_schemas[schema_name] = schema
@@ -641,20 +644,34 @@ def generate_graphql_schema(schemas: Dict[str, Union[TableSchema, GraphQLType]],
                 schema.fields = {attr.name: attr.type for attr in schema.attributes}
                 if hasattr(schema, 'secondary_indexes'):
                     schema.indexes = schema.secondary_indexes
+                # Debug: Print auth_config for this schema
+                logger.debug(f"Auth config for {schema.name}: {getattr(schema, 'auth_config', None)}")
+                # Build per-query auth directives
+                schema.query_auth_directives = {}
+                if hasattr(schema, 'indexes'):
+                    for index in schema.indexes:
+                        op_name = f"{schema.name}QueryBy{to_pascal_case(index['partition'])}"
+                        logger.debug(f"Checking query op_name: {op_name} for schema {schema.name}")
+                        schema.query_auth_directives[op_name] = get_auth_directives(op_name, schema)
+                        logger.debug(f"Directives for {op_name}: {schema.query_auth_directives[op_name]}")
+                # Build per-mutation auth directives using full operation names
+                schema.mutation_auth_directives = {}
+                for op in ['Create', 'Update']:
+                    full_op_name = f"{schema.name}{op}"
+                    logger.debug(f"Checking mutation op: {full_op_name} for schema {schema.name}")
+                    schema.mutation_auth_directives[full_op_name] = get_auth_directives(full_op_name, schema)
+                    logger.debug(f"Directives for {schema.name} {full_op_name}: {schema.mutation_auth_directives[full_op_name]}")
             elif isinstance(schema, GraphQLType):
                 graphql_types[schema_name] = schema
-        
         # Load enums from enums.yml
         enums = {}
         enums_path = os.path.join(SCRIPT_DIR, 'core', 'enums.yml')
         if os.path.exists(enums_path):
             with open(enums_path, 'r') as f:
                 enums = yaml.safe_load(f)
-        
         logger.debug(f'Table schemas: {table_schemas}')
         logger.debug(f'GraphQL types: {graphql_types}')
         logger.debug(f'Enums: {enums}')
-        
         # Use the main template
         template = jinja_env.get_template('graphql_schema.jinja')
         schema_content = template.render(
@@ -663,7 +680,6 @@ def generate_graphql_schema(schemas: Dict[str, Union[TableSchema, GraphQLType]],
             graphql_types=graphql_types,
             enums=enums
         )
-        
         return schema_content
     except Exception as e:
         logger.error(f'Failed to generate GraphQL schema: {str(e)}')
@@ -1017,6 +1033,19 @@ def generate_all_enums():
         generate_python_enum(enum_name, enum_values)
     logger.debug('Completed generate_all_enums')
 
+def validate_graphql_sdl(sdl_path):
+    """Validate the generated GraphQL SDL file using graphql-core."""
+    with open(sdl_path, 'r', encoding='utf-8') as f:
+        sdl = f.read()
+    try:
+        from graphql import parse, Source
+        source = Source(sdl, name=sdl_path)
+        parse(source)
+        print(f"[OK] GraphQL SDL validation passed: {sdl_path}")
+    except Exception as e:
+        print(f"[ERROR] GraphQL SDL validation failed: {sdl_path}\n{e}")
+        sys.exit(1)
+
 def main():
     logger.info('Starting schema generation main()')
     try:
@@ -1068,6 +1097,8 @@ def main():
         schema_output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'cloudformation', timestamped_schema)
         write_file(schema_output_path, graphql_schema)
         logger.info(f'Generated timestamped schema file: {timestamped_schema}')
+        # Validate the generated SDL
+        validate_graphql_sdl(schema_output_path)
         
         # Generate DynamoDB CloudFormation template
         logger.debug('Generating DynamoDB CloudFormation template')

@@ -1,2 +1,13 @@
 export enum ApplicationRoleStatus {
-  ACTIVE = 'ACTIVE',  INACTIVE = 'INACTIVE',  PENDING = 'PENDING',  REJECTED = 'REJECTED',  DELETED = 'DELETED'} 
+
+  ACTIVE = 'ACTIVE',
+
+  INACTIVE = 'INACTIVE',
+
+  PENDING = 'PENDING',
+
+  REJECTED = 'REJECTED',
+
+  DELETED = 'DELETED'
+
+} 

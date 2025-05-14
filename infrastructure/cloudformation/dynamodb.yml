@@ -29,50 +29,78 @@ Parameters:
 
 # --------------------------------------------------- #
 Resources:
+  
   ApplicationRolesTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles
       BillingMode: PAY_PER_REQUEST
       KeySchema:
+        
         - AttributeName: applicationId
           KeyType: HASH
+        
         - AttributeName: roleId
           KeyType: RANGE
+        
       AttributeDefinitions:
+        
         - AttributeName: applicationId
           AttributeType: S
+        
         - AttributeName: roleId
           AttributeType: S
+        
         - AttributeName: roleType
           AttributeType: S
+        
         - AttributeName: userId
           AttributeType: S
+        
+      
       GlobalSecondaryIndexes:
+        
         - IndexName: UserRoleIndex
           KeySchema:
+            
             - AttributeName: userId
               KeyType: HASH
+            
             - AttributeName: roleType
               KeyType: RANGE
+            
           Projection:
             ProjectionType: ALL
+            
+        
         - IndexName: ApplicationRoleIndex
           KeySchema:
+            
             - AttributeName: applicationId
               KeyType: HASH
+            
             - AttributeName: roleId
               KeyType: RANGE
+            
           Projection:
             ProjectionType: ALL
+            
+        
         - IndexName: RoleTypeIndex
           KeySchema:
+            
             - AttributeName: roleId
               KeyType: HASH
+            
             - AttributeName: roleType
               KeyType: RANGE
+            
           Projection:
             ProjectionType: ALL
+            
+        
+      
+      
 
   ApplicationRolesTableArn:
     Type: AWS::SSM::Parameter
@@ -87,42 +115,65 @@ Resources:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles-table-name
       Type: String
       Value: !Ref ApplicationRolesTable
+  
   ApplicationsTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications
       BillingMode: PAY_PER_REQUEST
       KeySchema:
+        
         - AttributeName: id
           KeyType: HASH
+        
         - AttributeName: name
           KeyType: RANGE
+        
       AttributeDefinitions:
+        
         - AttributeName: id
           AttributeType: S
+        
         - AttributeName: name
           AttributeType: S
+        
         - AttributeName: status
           AttributeType: S
+        
         - AttributeName: type
           AttributeType: S
+        
+      
       GlobalSecondaryIndexes:
+        
         - IndexName: ApplicationStatusIndex
           KeySchema:
+            
             - AttributeName: status
               KeyType: HASH
+            
             - AttributeName: name
               KeyType: RANGE
+            
           Projection:
             ProjectionType: ALL
+            
+        
         - IndexName: ApplicationTypeIndex
           KeySchema:
+            
             - AttributeName: type
               KeyType: HASH
+            
             - AttributeName: name
               KeyType: RANGE
+            
           Projection:
             ProjectionType: ALL
+            
+        
+      
+      
 
   ApplicationsTableArn:
     Type: AWS::SSM::Parameter
@@ -137,50 +188,78 @@ Resources:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-name
       Type: String
       Value: !Ref ApplicationsTable
+  
   ApplicationUsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users
       BillingMode: PAY_PER_REQUEST
       KeySchema:
+        
         - AttributeName: applicationId
           KeyType: HASH
+        
         - AttributeName: userId
           KeyType: RANGE
+        
       AttributeDefinitions:
+        
         - AttributeName: applicationId
           AttributeType: S
+        
         - AttributeName: userId
           AttributeType: S
+        
         - AttributeName: roleId
           AttributeType: S
+        
         - AttributeName: status
           AttributeType: S
+        
+      
       GlobalSecondaryIndexes:
+        
         - IndexName: UserApplicationsIndex
           KeySchema:
+            
             - AttributeName: userId
               KeyType: HASH
+            
             - AttributeName: applicationId
               KeyType: RANGE
+            
           Projection:
             ProjectionType: ALL
+            
+        
         - IndexName: ApplicationRoleIndex
           KeySchema:
+            
             - AttributeName: applicationId
               KeyType: HASH
+            
             - AttributeName: roleId
               KeyType: RANGE
+            
           Projection:
             ProjectionType: ALL
+            
+        
         - IndexName: UserStatusIndex
           KeySchema:
+            
             - AttributeName: applicationId
               KeyType: HASH
+            
             - AttributeName: status
               KeyType: RANGE
+            
           Projection:
             ProjectionType: ALL
+            
+        
+      
+      
 
   ApplicationUsersTableArn:
     Type: AWS::SSM::Parameter
@@ -195,32 +274,49 @@ Resources:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users-table-name
       Type: String
       Value: !Ref ApplicationUsersTable
+  
   RolesTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-roles
       BillingMode: PAY_PER_REQUEST
       KeySchema:
+        
         - AttributeName: id
           KeyType: HASH
+        
         - AttributeName: roleType
           KeyType: RANGE
+        
       AttributeDefinitions:
+        
         - AttributeName: id
           AttributeType: S
+        
         - AttributeName: roleType
           AttributeType: S
+        
         - AttributeName: userId
           AttributeType: S
+        
+      
       GlobalSecondaryIndexes:
+        
         - IndexName: UserRoleIndex
           KeySchema:
+            
             - AttributeName: userId
               KeyType: HASH
+            
             - AttributeName: roleType
               KeyType: RANGE
+            
           Projection:
             ProjectionType: ALL
+            
+        
+      
+      
 
   RolesTableArn:
     Type: AWS::SSM::Parameter
@@ -235,34 +331,52 @@ Resources:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-roles-table-name
       Type: String
       Value: !Ref RolesTable
+  
   UsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-users
       BillingMode: PAY_PER_REQUEST
       KeySchema:
+        
         - AttributeName: id
           KeyType: HASH
+        
         - AttributeName: email
           KeyType: RANGE
+        
       AttributeDefinitions:
+        
         - AttributeName: id
           AttributeType: S
+        
         - AttributeName: email
           AttributeType: S
+        
         - AttributeName: roleType
           AttributeType: S
+        
         - AttributeName: roleId
           AttributeType: S
+        
+      
       GlobalSecondaryIndexes:
+        
         - IndexName: RoleIndex
           KeySchema:
+            
             - AttributeName: roleId
               KeyType: HASH
+            
             - AttributeName: roleType
               KeyType: RANGE
+            
           Projection:
             ProjectionType: ALL
+            
+        
+      
+      
 
   UsersTableArn:
     Type: AWS::SSM::Parameter
@@ -277,9 +391,11 @@ Resources:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-users-table-name
       Type: String
       Value: !Ref UsersTable
+  
 
 # --------------------------------------------------- #
 Outputs:
+  
   ApplicationRolesTableArn:
     Description: The ARN of the ApplicationRoles table
     Value: !GetAtt ApplicationRolesTable.Arn
@@ -291,6 +407,7 @@ Outputs:
     Value: !Ref ApplicationRolesTable
     Export:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles-table-name
+  
   ApplicationsTableArn:
     Description: The ARN of the Applications table
     Value: !GetAtt ApplicationsTable.Arn
@@ -302,6 +419,7 @@ Outputs:
     Value: !Ref ApplicationsTable
     Export:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-name
+  
   ApplicationUsersTableArn:
     Description: The ARN of the ApplicationUsers table
     Value: !GetAtt ApplicationUsersTable.Arn
@@ -313,6 +431,7 @@ Outputs:
     Value: !Ref ApplicationUsersTable
     Export:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users-table-name
+  
   RolesTableArn:
     Description: The ARN of the Roles table
     Value: !GetAtt RolesTable.Arn
@@ -324,6 +443,7 @@ Outputs:
     Value: !Ref RolesTable
     Export:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-roles-table-name
+  
   UsersTableArn:
     Description: The ARN of the Users table
     Value: !GetAtt UsersTable.Arn
@@ -335,3 +455,4 @@ Outputs:
     Value: !Ref UsersTable
     Export:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-users-table-name
+  
