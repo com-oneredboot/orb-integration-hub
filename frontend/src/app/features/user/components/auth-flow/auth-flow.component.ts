@@ -187,21 +187,24 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           case AuthSteps.PASSWORD_SETUP:
             // Create a complete UserCreateInput with all required fields
             const timestamp = new Date().toISOString();
+            const firstName = this.authForm.get('firstName')?.value || '';
+            const lastName = this.authForm.get('lastName')?.value || '';
+            const phoneNumber = this.authForm.get('phoneNumber')?.value || '';
             const userCreateInput: UsersCreateInput = {
-              userId: uuidv4(),
+              id: uuidv4(),
               cognitoId: uuidv4(),
               email: email,
-              // Optional fields
-              firstName: this.authForm.get('firstName')?.value || '',
-              lastName: this.authForm.get('lastName')?.value || '',
-              phoneNumber: '',
+              firstName: firstName,
+              lastName: lastName,
+              phoneNumber: phoneNumber,
               phoneVerified: false,
               emailVerified: false,
-              // Required fields
-              groups: ['USER'],
+              groups: [],
               status: UserStatus.PENDING,
               createdAt: timestamp,
-              updatedAt: timestamp
+              updatedAt: timestamp,
+              roleId: 'role-1',
+              roleType: 'USER',
             };
             if (!password) return;
             this.store.dispatch(AuthActions.createUser({input: userCreateInput, password: password } ));
@@ -215,9 +218,9 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             }));
             break;
           case AuthSteps.PHONE_SETUP:
-            const phoneNumber = this.authForm.get('phoneNumber')?.value;
-            if (!phoneNumber) return;
-            this.store.dispatch(AuthActions.setupPhone({ phoneNumber }));
+            const setupPhoneNumber = this.authForm.get('phoneNumber')?.value;
+            if (!setupPhoneNumber) return;
+            this.store.dispatch(AuthActions.setupPhone({ phoneNumber: setupPhoneNumber }));
             break;
           case AuthSteps.PHONE_VERIFY:
             const phoneCode = this.authForm.get('phoneCode')?.value;

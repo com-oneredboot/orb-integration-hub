@@ -1,0 +1,12 @@
+# Enums
+{%- if enums %}
+{%- for enum_name, enum_values in enums.items() %}
+enum {{ enum_name }} {
+{%- for value in enum_values %}
+
+  {{ value }}
+{%- endfor %}
+}
+
+{%- endfor %}
+{%- endif %} 

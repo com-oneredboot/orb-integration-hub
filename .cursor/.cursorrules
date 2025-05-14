@@ -58,9 +58,11 @@
     }
   ],
   "priorityDirectories": [
+    ".github/",
     "schemas/",
-    "backend/src/",
-    "frontend/src/",
+    "backend/",
+    "frontend/",
+    "infrastructure/",
     "docs/"
   ]
 } 

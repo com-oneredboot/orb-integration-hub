@@ -2,12 +2,17 @@
  *  DynamoDB model.
  */
 
+/*
+ * schema.table: 
+ * schema.name: Roles
+ */
+
 // Import enums and models used in this model
 import { RoleType } from './RoleType.enum';
 import { RoleStatus } from './RoleStatus.enum';
 
 // CreateInput
-export type CreateInput = {
+export type RolesCreateInput = {
   id: string;
   userId: string;
   roleType: string;
@@ -17,7 +22,7 @@ export type CreateInput = {
 };
 
 // UpdateInput
-export type UpdateInput = {
+export type RolesUpdateInput = {
   id: string;
   userId: string;
   roleType: string;
@@ -28,44 +33,44 @@ export type UpdateInput = {
 
 // QueryInput
 // Primary key queries
-export type QueryByIdInput = {
+export type RolesQueryByIdInput = {
   id: string;
 };
 
-export type QueryByRoleTypeInput = {
+export type RolesQueryByRoleTypeInput = {
   roleType: string;
 };
 
-export type QueryByBothInput = {
+export type RolesQueryByBothInput = {
   id: string;
   roleType: string;
 };
 
 // Secondary index queries
-export type QueryByUserIdInput = {
+export type RolesQueryByUserIdInput = {
   userId: string;
 };
 
 // Response types
-export type Response = {
+export type RolesResponse = {
   statusCode: number;
   message: string;
-  data: I | null;
+  data: IRoles | null;
 };
 
-export type CreateResponse = {
+export type RolesCreateResponse = {
   statusCode: number;
   message: string;
-  data: I | null;
+  data: IRoles | null;
 };
 
-export type UpdateResponse = {
+export type RolesUpdateResponse = {
   statusCode: number;
   message: string;
-  data: I | null;
+  data: IRoles | null;
 };
 
-export interface I {
+export interface IRoles {
   id: string;
   userId: string;
   roleType: string;
@@ -74,7 +79,7 @@ export interface I {
   updatedAt: string;
 }
 
-export class  implements I {
+export class Roles implements IRoles {
   id = '';
   userId = '';
   roleType = '';
@@ -82,7 +87,7 @@ export class  implements I {
   createdAt = '';
   updatedAt = '';
 
-  constructor(data: Partial<I> = {}) {
+  constructor(data: Partial<IRoles> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
         if (key === 'roleType' && typeof value === 'string') {

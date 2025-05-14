@@ -1,0 +1,4 @@
+{%- for schema_name, schema in table_schemas.items() %}
+  {{ schema.name }}Create(input: {{ schema.name }}CreateInput!): {{ schema.name }}Response @aws_auth(cognito_groups: ["admin"])
+  {{ schema.name }}Update(input: {{ schema.name }}UpdateInput!): {{ schema.name }}Response @aws_auth(cognito_groups: ["admin"])
+{%- endfor %} 

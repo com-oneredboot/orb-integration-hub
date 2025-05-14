@@ -149,66 +149,6 @@ Resources:
   # ApplicationUsers Resolvers
   # --------------------------------------------------- #
 
-  # Auth Data Source
-  AuthDataSource:
-    Type: AWS::AppSync::DataSource
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      Name: AuthDataSource
-      Type: AMAZON_DYNAMODB
-      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
-      DynamoDBConfig:
-        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-auth-table-name'
-        AwsRegion: !Ref AWS::Region
-
-  # Auth Resolvers
-  # --------------------------------------------------- #
-
-  # AuthError Data Source
-  AuthErrorDataSource:
-    Type: AWS::AppSync::DataSource
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      Name: AuthErrorDataSource
-      Type: AMAZON_DYNAMODB
-      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
-      DynamoDBConfig:
-        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-auth-error-table-name'
-        AwsRegion: !Ref AWS::Region
-
-  # AuthError Resolvers
-  # --------------------------------------------------- #
-
-  # ErrorRegistry Data Source
-  ErrorRegistryDataSource:
-    Type: AWS::AppSync::DataSource
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      Name: ErrorRegistryDataSource
-      Type: AMAZON_DYNAMODB
-      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
-      DynamoDBConfig:
-        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-error-registry-table-name'
-        AwsRegion: !Ref AWS::Region
-
-  # ErrorRegistry Resolvers
-  # --------------------------------------------------- #
-
-  # MfaSetupDetails Data Source
-  MfaSetupDetailsDataSource:
-    Type: AWS::AppSync::DataSource
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      Name: MfaSetupDetailsDataSource
-      Type: AMAZON_DYNAMODB
-      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
-      DynamoDBConfig:
-        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-mfa-setup-details-table-name'
-        AwsRegion: !Ref AWS::Region
-
-  # MfaSetupDetails Resolvers
-  # --------------------------------------------------- #
-
   # Roles Data Source
   RolesDataSource:
     Type: AWS::AppSync::DataSource

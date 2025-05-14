@@ -13,10 +13,10 @@ import { BehaviorSubject, Observable } from 'rxjs';
 // Application Imports
 import {ApiService} from "./api.service";
 import {
-  UsersCreateMutation, UsersUpdateMutation, UsersDeleteMutation, UsersQueryByUserId, UsersQueryByEmail
+  UsersCreateMutation, UsersUpdateMutation, UsersDeleteMutation, UsersQueryById, UsersQueryByEmail
 } from "../graphql/Users.graphql";
 import {
-  UsersCreateInput, UsersUpdateInput, UsersQueryByUserIdInput,
+  UsersCreateInput, UsersUpdateInput, UsersQueryByIdInput,
   UsersCreateResponse, UsersResponse, UsersUpdateResponse, IUsers
 } from "../models/Users.model";
 import { UserGroup } from "../models/UserGroup.enum";
@@ -70,7 +70,7 @@ export class UserService extends ApiService {
 
       const timestamp = new Date().toISOString();
       const userCreateInput: UsersCreateInput = {
-        userId: uuidv4(),
+        id: uuidv4(),
         cognitoId: input.cognitoId,
         email: input.email,
         firstName: '',
@@ -81,7 +81,9 @@ export class UserService extends ApiService {
         createdAt: timestamp,
         phoneVerified: false,
         emailVerified: false,
-        updatedAt: timestamp
+        updatedAt: timestamp,
+        roleId: input.roleId,
+        roleType: input.roleType
       };
 
       const response = await this.mutate(
@@ -110,18 +112,18 @@ export class UserService extends ApiService {
    * @param input UserQueryInput with backend-compatible fields
    * @param email Optional email to filter results client-side
    */
-  public async userExists(input: { userId?: string; email?: string }): Promise<IUsers | false> {
+  public async userExists(input: { id?: string; email?: string }): Promise<IUsers | false> {
     try {
       let queryInput;
       let query;
-      if (input.userId) {
-        queryInput = { userId: input.userId };
-        query = UsersQueryByUserId;
+      if (input.id) {
+        queryInput = { id: input.id };
+        query = UsersQueryById;
       } else if (input.email) {
         queryInput = { email: input.email };
         query = UsersQueryByEmail;
       } else {
-        throw new Error('Must provide userId or email');
+        throw new Error('Must provide id or email');
       }
       const response = await this.query(
         query,
@@ -142,12 +144,12 @@ export class UserService extends ApiService {
    * @param code Verification code
    * @param email Optional email to filter results client-side
    */
-  public async emailVerify(input: UsersQueryByUserIdInput, code: string, email?: string): Promise<AuthResponse> {
+  public async emailVerify(input: UsersQueryByIdInput, code: string, email?: string): Promise<AuthResponse> {
     console.debug('verifyEmail:', input, email ? { email } : '');
     try {
 
       // get the user
-      const userResponse = await this.userQueryByUserId(input, email);
+      const userResponse = await this.userQueryById(input, email);
       console.debug('User Response:', userResponse);
       if (userResponse.statusCode !== 200 || !userResponse.data) {
         return {
@@ -177,20 +179,20 @@ export class UserService extends ApiService {
    * @param input UserQueryInput with backend-compatible fields
    * @param email Optional email to filter results client-side
    */
-  public async userQueryByUserId(input: UsersQueryByUserIdInput, email?: string): Promise<UsersResponse> {
-    console.debug('userQueryByUserId:', input, email ? { email } : '');
+  public async userQueryById(input: UsersQueryByIdInput, email?: string): Promise<UsersResponse> {
+    console.debug('userQueryById:', input, email ? { email } : '');
     try {
       const response = await this.query(
-        UsersQueryByUserId,
+        UsersQueryById,
         {input: toSnakeCase(input)},
         'apiKey') as GraphQLResult<UsersResponse>;
 
-      console.debug('userQueryByUserId Response: ', response);
+      console.debug('userQueryById Response: ', response);
       
       if (email && response.data?.data && 
           response.data.data.email !== email) {
         
-        console.debug('userQueryByUserId: Email mismatch, returning 404');
+        console.debug('userQueryById: Email mismatch, returning 404');
         
         return {
           statusCode: 404,
@@ -224,8 +226,8 @@ export class UserService extends ApiService {
     let user;
 
     try {
-      const userQueryInput: UsersQueryByUserIdInput = { userId: email };
-      const userResponse = await this.userQueryByUserId(userQueryInput, email);
+      const userQueryInput: UsersQueryByIdInput = { id: email };
+      const userResponse = await this.userQueryById(userQueryInput, email);
 
       user = userResponse.data;
       if (userResponse.statusCode !== 200 || !user) {
@@ -370,18 +372,18 @@ export class UserService extends ApiService {
     console.debug('userUpdate input:', input);
 
     try {
-      if (!input.userId) {
-        console.error('Cannot update user: missing required userId');
+      if (!input.id) {
+        console.error('Cannot update user: missing required id');
         return {
           statusCode: 400,
-          message: 'Missing required userId',
+          message: 'Missing required id',
           data: null
         } as UsersResponse;
       }
 
       let hasUpdates = false;
       const updateInput: UsersUpdateInput = {
-        userId: input.userId,
+        id: input.id,
         cognitoId: '',
         email: '',
         emailVerified: false,
@@ -392,7 +394,9 @@ export class UserService extends ApiService {
         groups: [],
         status: '',
         createdAt: '',
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        roleId: input.roleId,
+        roleType: input.roleType
       };
       hasUpdates = true;
 
@@ -438,7 +442,7 @@ export class UserService extends ApiService {
         } as UsersResponse;
       }
 
-      const updatedUser = await this.userQueryByUserId({ userId: input.userId });
+      const updatedUser = await this.userQueryById({ id: input.id });
 
       return updatedUser;
 

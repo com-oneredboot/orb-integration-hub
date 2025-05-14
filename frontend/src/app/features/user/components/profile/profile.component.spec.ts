@@ -32,7 +32,7 @@ describe('ProfileComponent', () => {
   };
 
   const mockUser: IUsers = {
-    userId: '123',
+    id: '123',
     cognitoId: 'abc123',
     email: 'test@example.com',
     emailVerified: true,
@@ -43,11 +43,13 @@ describe('ProfileComponent', () => {
     groups: [UserGroup.USER],
     status: UserStatus.ACTIVE,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    roleId: 'role-1',
+    roleType: 'ADMIN',
   };
 
   const mockUpdateInput: UsersUpdateInput = {
-    userId: '123',
+    id: '123',
     cognitoId: 'abc123',
     email: 'test@example.com',
     emailVerified: true,
@@ -58,7 +60,9 @@ describe('ProfileComponent', () => {
     groups: [UserGroup.USER],
     status: UserStatus.ACTIVE,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    roleId: 'role-1',
+    roleType: 'ADMIN',
   };
 
   const mockResponse: UsersResponse = {
@@ -68,7 +72,7 @@ describe('ProfileComponent', () => {
   };
 
   const mockIncompleteUser: IUsers = {
-    userId: '123',
+    id: '123',
     cognitoId: 'abc123',
     email: 'test@example.com',
     emailVerified: true,
@@ -79,7 +83,9 @@ describe('ProfileComponent', () => {
     groups: [UserGroup.USER],
     status: UserStatus.ACTIVE,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    roleId: 'role-1',
+    roleType: 'ADMIN',
   };
 
   beforeEach(async () => {

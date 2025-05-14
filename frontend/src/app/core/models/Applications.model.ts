@@ -2,12 +2,17 @@
  *  DynamoDB model.
  */
 
+/*
+ * schema.table: 
+ * schema.name: Applications
+ */
+
 // Import enums and models used in this model
 import { ApplicationType } from './ApplicationType.enum';
 import { ApplicationStatus } from './ApplicationStatus.enum';
 
 // CreateInput
-export type CreateInput = {
+export type ApplicationsCreateInput = {
   id: string;
   name: string;
   description: string | undefined;
@@ -18,7 +23,7 @@ export type CreateInput = {
 };
 
 // UpdateInput
-export type UpdateInput = {
+export type ApplicationsUpdateInput = {
   id: string;
   name: string;
   description: string | undefined;
@@ -30,47 +35,47 @@ export type UpdateInput = {
 
 // QueryInput
 // Primary key queries
-export type QueryByIdInput = {
+export type ApplicationsQueryByIdInput = {
   id: string;
 };
 
-export type QueryByNameInput = {
+export type ApplicationsQueryByNameInput = {
   name: string;
 };
 
-export type QueryByBothInput = {
+export type ApplicationsQueryByBothInput = {
   id: string;
   name: string;
 };
 
 // Secondary index queries
-export type QueryByStatusInput = {
+export type ApplicationsQueryByStatusInput = {
   status: string;
 };
-export type QueryByTypeInput = {
+export type ApplicationsQueryByTypeInput = {
   type: string;
 };
 
 // Response types
-export type Response = {
+export type ApplicationsResponse = {
   statusCode: number;
   message: string;
-  data: I | null;
+  data: IApplications | null;
 };
 
-export type CreateResponse = {
+export type ApplicationsCreateResponse = {
   statusCode: number;
   message: string;
-  data: I | null;
+  data: IApplications | null;
 };
 
-export type UpdateResponse = {
+export type ApplicationsUpdateResponse = {
   statusCode: number;
   message: string;
-  data: I | null;
+  data: IApplications | null;
 };
 
-export interface I {
+export interface IApplications {
   id: string;
   name: string;
   description: string | undefined;
@@ -80,7 +85,7 @@ export interface I {
   updatedAt: string;
 }
 
-export class  implements I {
+export class Applications implements IApplications {
   id = '';
   name = '';
   description = '';
@@ -89,7 +94,7 @@ export class  implements I {
   createdAt = '';
   updatedAt = '';
 
-  constructor(data: Partial<I> = {}) {
+  constructor(data: Partial<IApplications> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
         if (key === 'type' && typeof value === 'string') {

@@ -2,11 +2,16 @@
  *  DynamoDB model.
  */
 
+/*
+ * schema.table: 
+ * schema.name: ApplicationUsers
+ */
+
 // Import enums and models used in this model
 import { ApplicationUserStatus } from './ApplicationUserStatus.enum';
 
 // CreateInput
-export type CreateInput = {
+export type ApplicationUsersCreateInput = {
   applicationId: string;
   userId: string;
   roleId: string | undefined;
@@ -16,7 +21,7 @@ export type CreateInput = {
 };
 
 // UpdateInput
-export type UpdateInput = {
+export type ApplicationUsersUpdateInput = {
   applicationId: string;
   userId: string;
   roleId: string | undefined;
@@ -27,15 +32,15 @@ export type UpdateInput = {
 
 // QueryInput
 // Primary key queries
-export type QueryByApplicationIdInput = {
+export type ApplicationUsersQueryByApplicationIdInput = {
   applicationId: string;
 };
 
-export type QueryByUserIdInput = {
+export type ApplicationUsersQueryByUserIdInput = {
   userId: string;
 };
 
-export type QueryByBothInput = {
+export type ApplicationUsersQueryByBothInput = {
   applicationId: string;
   userId: string;
 };
@@ -43,25 +48,25 @@ export type QueryByBothInput = {
 // Secondary index queries
 
 // Response types
-export type Response = {
+export type ApplicationUsersResponse = {
   statusCode: number;
   message: string;
-  data: I | null;
+  data: IApplicationUsers | null;
 };
 
-export type CreateResponse = {
+export type ApplicationUsersCreateResponse = {
   statusCode: number;
   message: string;
-  data: I | null;
+  data: IApplicationUsers | null;
 };
 
-export type UpdateResponse = {
+export type ApplicationUsersUpdateResponse = {
   statusCode: number;
   message: string;
-  data: I | null;
+  data: IApplicationUsers | null;
 };
 
-export interface I {
+export interface IApplicationUsers {
   applicationId: string;
   userId: string;
   roleId: string | undefined;
@@ -70,7 +75,7 @@ export interface I {
   updatedAt: string;
 }
 
-export class  implements I {
+export class ApplicationUsers implements IApplicationUsers {
   applicationId = '';
   userId = '';
   roleId = '';
@@ -78,7 +83,7 @@ export class  implements I {
   createdAt = '';
   updatedAt = '';
 
-  constructor(data: Partial<I> = {}) {
+  constructor(data: Partial<IApplicationUsers> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
         if (key === 'status' && typeof value === 'string') {

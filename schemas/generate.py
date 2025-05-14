@@ -221,7 +221,8 @@ def setup_jinja_env() -> Environment:
         loader=FileSystemLoader(os.path.join(SCRIPT_DIR, 'templates')),
         autoescape=select_autoescape(['html', 'xml']),
         trim_blocks=True,
-        lstrip_blocks=True
+        lstrip_blocks=True,
+        keep_trailing_newline=True
     )
     
     # Add custom filters
@@ -248,27 +249,6 @@ def setup_jinja_env() -> Environment:
     env.filters['to_python_type'] = to_python_type
     env.filters['to_typescript_type'] = to_typescript_type
     env.filters['to_dynamodb_type'] = to_dynamodb_type
-    
-    # Add custom functions
-    def get_auth_directives(operation_name: str, schema: Union[TableSchema, GraphQLType]) -> List[str]:
-        """Generate auth directives for a GraphQL operation."""
-        directives = []
-        
-        # Skip if no auth config
-        if not schema.auth_config:
-            return directives
-        
-        # Check if operation is in apiKeyOperations
-        if operation_name in schema.auth_config.get('apiKeyOperations', []):
-            directives.append('@aws_api_key')
-        
-        # Check if operation is in cognitoOperations
-        if operation_name in schema.auth_config.get('cognitoOperations', []):
-            directives.append('@aws_auth(cognito_groups: ["admin"])')
-        
-        return directives
-    
-    env.globals['get_auth_directives'] = get_auth_directives
     
     logger.debug('Loaded Jinja environment')
     return env
@@ -628,60 +608,41 @@ def generate_graphql_schema(schemas: Dict[str, Union[TableSchema, GraphQLType]],
     logger.debug(f'Schemas dictionary in generate_graphql_schema: {schemas}')
     try:
         jinja_env = setup_jinja_env()
-        template = jinja_env.get_template('graphql_schema.jinja')
         
-        # Separate GraphQL types from table schemas
+        # Separate schemas by type
         table_schemas = {}
         graphql_types = {}
-        for schema_name, schema in schemas.items():
-            if isinstance(schema, GraphQLType):
-                graphql_types[schema_name] = schema
-            else:
-                table_schemas[schema_name] = schema
         
-        # Debug log to check separated schemas
+        for schema_name, schema in schemas.items():
+            if isinstance(schema, TableSchema):
+                table_schemas[schema_name] = schema
+                # Convert TableSchema attributes to fields dictionary
+                schema.fields = {attr.name: attr.type for attr in schema.attributes}
+                if hasattr(schema, 'secondary_indexes'):
+                    schema.indexes = schema.secondary_indexes
+            elif isinstance(schema, GraphQLType):
+                graphql_types[schema_name] = schema
+        
+        # Load enums from enums.yml
+        enums = {}
+        enums_path = os.path.join(SCRIPT_DIR, 'core', 'enums.yml')
+        if os.path.exists(enums_path):
+            with open(enums_path, 'r') as f:
+                enums = yaml.safe_load(f)
+        
         logger.debug(f'Table schemas: {table_schemas}')
         logger.debug(f'GraphQL types: {graphql_types}')
+        logger.debug(f'Enums: {enums}')
         
-        # Defensive check to ensure all values are valid iterables
-        for schema_name, schema in schemas.items():
-            if schema is None:
-                logger.error(f'Schema {schema_name} is None')
-                raise ValueError(f'Schema {schema_name} is None')
-            if not hasattr(schema, 'attributes'):
-                logger.error(f'Schema {schema_name} does not have attributes')
-                raise ValueError(f'Schema {schema_name} does not have attributes')
-            if not isinstance(schema.attributes, list):
-                logger.error(f'Schema {schema_name} attributes is not a list')
-                raise ValueError(f'Schema {schema_name} attributes is not a list')
-            # Defensive check to ensure attributes are not None
-            for attr in schema.attributes:
-                if attr is None:
-                    logger.error(f'Attribute in schema {schema_name} is None')
-                    raise ValueError(f'Attribute in schema {schema_name} is None')
-        
-        # Generate schema content
+        # Use the main template
+        template = jinja_env.get_template('graphql_schema.jinja')
         schema_content = template.render(
-            schemas=table_schemas,
+            timestamp=datetime.now().isoformat(),
+            table_schemas=table_schemas,
             graphql_types=graphql_types,
-            timestamp=datetime.now().isoformat()
+            enums=enums
         )
         
-        # Validate schema content
-        if not schema_content.strip():
-            raise ValueError("Generated schema content is empty")
-        
-        # Ensure schema has required elements
-        required_elements = [
-            "schema {",
-            "type Query {",
-            "type Mutation {"
-        ]
-        for element in required_elements:
-            if element not in schema_content:
-                raise ValueError(f"Generated schema is missing required element: {element}")
-        
-        logger.debug('Completed generate_graphql_schema')
         return schema_content
     except Exception as e:
         logger.error(f'Failed to generate GraphQL schema: {str(e)}')

@@ -1,0 +1,41 @@
+# Table-based types
+{%- for schema_name, schema in table_schemas.items() %}
+type {{ schema.name }} {
+{%- for field_name, field_type in schema.fields.items() %}
+  {{ field_name }}: {{ field_type }}
+{%- endfor %}
+}
+
+input {{ schema.name }}CreateInput {
+{%- for field_name, field_type in schema.fields.items() %}
+  {{ field_name }}: {{ field_type }}
+{%- endfor %}
+}
+
+input {{ schema.name }}UpdateInput {
+{%- for field_name, field_type in schema.fields.items() %}
+  {{ field_name }}: {{ field_type }}
+{%- endfor %}
+}
+
+{%- for index in schema.indexes %}
+input {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}Input {
+  {{ index.partition }}: {{ schema.fields[index.partition] }}
+{%- if index.sort %}
+  {{ index.sort }}: {{ schema.fields[index.sort] }}
+{%- endif %}
+}
+{%- endfor %}
+
+type {{ schema.name }}Response {
+  StatusCode: Int!
+  Message: String!
+  Data: {{ schema.name }}
+}
+
+type {{ schema.name }}ListResponse {
+  StatusCode: Int!
+  Message: String!
+  Data: [{{ schema.name }}]
+}
+{%- endfor %} 

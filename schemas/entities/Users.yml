@@ -69,3 +69,24 @@ model:
       type: timestamp
       required: true
       description: When the user was last updated
+    cognitoId:
+      type: string
+      required: true
+      description: Cognito user identifier
+    phoneNumber:
+      type: string
+      required: false
+      description: User's phone number
+    groups:
+      type: array
+      items: string
+      required: false
+      description: List of Cognito groups the user belongs to
+    emailVerified:
+      type: boolean
+      required: false
+      description: Whether the user's email is verified
+    phoneVerified:
+      type: boolean
+      required: false
+      description: Whether the user's phone number is verified

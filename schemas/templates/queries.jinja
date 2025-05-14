@@ -1,0 +1,5 @@
+{%- for schema_name, schema in table_schemas.items() %}
+{%- for index in schema.indexes %}
+  {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}(input: {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}Input!): {{ schema.name }}ListResponse @aws_auth(cognito_groups: ["admin"])
+{%- endfor %}
+{%- endfor %} 

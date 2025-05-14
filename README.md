@@ -8,6 +8,7 @@ Orb Integration Hub is a serverless application that provides a unified API for 
 
 ## Quick Links
 
+- [Product Requirements (PRD)](docs/prd.md) - Canonical requirements and feature planning document
 - [Architecture Documentation](docs/architecture.md) - System design and component interactions
 - [Development Guide](docs/development.md) - Setup and development workflow
 - [Feature Registry](docs/features/REGISTRY.md) - List of active and completed features
@@ -20,8 +21,9 @@ Orb Integration Hub is a serverless application that provides a unified API for 
 ## Getting Started
 
 1. Review the [Development Guide](docs/development.md) for setup instructions
-2. Check the [Architecture Documentation](docs/architecture.md) to understand the system
-3. Explore the [API Documentation](docs/api.md) to start integrating
+2. Check the [Product Requirements (PRD)](docs/prd.md) for the latest requirements and features
+3. Check the [Architecture Documentation](docs/architecture.md) to understand the system
+4. Explore the [API Documentation](docs/api.md) to start integrating
 
 ## Project Structure
 
@@ -30,11 +32,45 @@ orb-integration-hub/
 ├── backend/           # Python backend services
 ├── frontend/         # TypeScript frontend application
 ├── docs/            # Project documentation
+│   ├── prd.md       # Product Requirements Document (PRD)
+│   ├── core/        # Core project documentation
+│   ├── features/    # Feature-specific documentation
+│   └── ...
 └── schemas/         # Schema definitions and generators
     ├── entities/    # YAML schema definitions
     ├── templates/   # Jinja templates for code generation
     └── generate.py  # Schema generation script
 ```
+
+## Task & Project Management (AI-Driven)
+
+This project uses [task-master-ai](https://github.com/CoreyDalePeters/task-master-ai) for requirements-driven planning and task management.
+
+- The canonical source of requirements is [docs/prd.md](docs/prd.md).
+- To update or generate tasks:
+  1. Edit `docs/prd.md` as requirements evolve.
+  2. Run `task-master-ai parse-prd` to generate or update the project's tasks.
+  3. Use `task-master-ai` to expand, update, and track tasks throughout the project lifecycle.
+- See [docs/development.md](docs/development.md) for detailed workflow instructions.
+
+All features, tasks, and documentation should trace back to the PRD to ensure alignment and traceability.
+
+### Using task-master-ai
+
+- **Parse PRD and generate tasks:**
+  ```bash
+  npx task-master-ai parse-prd --input=docs/prd.md
+  ```
+- **Expand tasks into subtasks:**
+  ```bash
+  npx task-master-ai expand --all
+  ```
+- **List and track tasks:**
+  ```bash
+  npx task-master-ai list
+  ```
+
+See [task-master-ai documentation](https://github.com/CoreyDalePeters/task-master-ai) for more details.
 
 ## Development Workflow
 
@@ -86,6 +122,7 @@ To ensure compatibility with the orb-master-plan, this project follows a standar
 
 ```
 docs/
+├── prd.md                 # Product Requirements Document (PRD)
 ├── core/                  # Core project documentation
 │   ├── DESIGN_PLAN.md     # Overall design plan
 │   ├── IMPLEMENTATION_PLAN.md # Implementation timeline

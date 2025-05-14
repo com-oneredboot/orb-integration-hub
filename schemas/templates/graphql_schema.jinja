@@ -28,153 +28,84 @@ schema {
 }
 
 # Enums
-{% for schema_name, schema in schemas.items() %}
-{% for attr in schema.attributes %}
-{% if attr.enum_type and attr.enum_values %}
-enum {{ attr.enum_type }} {
-  {% for value in attr.enum_values %}
+{%- if enums %}
+{%- for enum_name, enum_values in enums.items() %}
+enum {{ enum_name }} {
+{%- for value in enum_values %}
   {{ value }}
-  {% endfor %}
+{%- endfor %}
 }
-{% endif %}
-{% endfor %}
-{% endfor %}
+
+{%- endfor %}
+{%- endif %}
 
 # GraphQL Types
-{% for type_name, type_info in graphql_types.items() %}
+{%- for type_name, type_def in graphql_types.items() %}
 type {{ type_name }} {
-  {% for attr in type_info.attributes %}
-  {{ attr.name | to_camel_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}AWSDateTime{% elif attr.type == 'boolean' %}Boolean{% elif attr.type == 'array' %}[String]{% else %}String{% endif %}{% endif %}{% if attr.required %}!{% endif %}
-  {% endfor %}
+{%- for attr in type_def.attributes %}
+  {{ attr.name }}: {{ attr.type }}{% if attr.required %}!{% endif %}
+{%- endfor %}
 }
-{% endfor %}
+
+{%- endfor %}
 
 # Base types
-{% for schema_name, schema in schemas.items() %}
+{%- for schema_name, schema in table_schemas.items() %}
 type {{ schema.name }} {
-  {% for attr in schema.attributes %}
-  {{ attr.name | to_camel_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}AWSDateTime{% elif attr.type == 'boolean' %}Boolean{% elif attr.type == 'array' %}[String]{% else %}String{% endif %}{% endif %}{% if attr.required %}!{% endif %}
-  {% endfor %}
+{%- for field_name, field_type in schema.fields.items() %}
+  {{ field_name }}: {{ field_type }}
+{%- endfor %}
 }
 
 input {{ schema.name }}CreateInput {
-  {% for attr in schema.attributes %}
-  {{ attr.name | to_camel_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}AWSDateTime{% elif attr.type == 'boolean' %}Boolean{% elif attr.type == 'array' %}[String]{% else %}String{% endif %}{% endif %}!
-  {% endfor %}
+{%- for field_name, field_type in schema.fields.items() %}
+  {{ field_name }}: {{ field_type }}
+{%- endfor %}
 }
 
 input {{ schema.name }}UpdateInput {
-  {% for attr in schema.attributes %}
-  {{ attr.name | to_camel_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}AWSDateTime{% elif attr.type == 'boolean' %}Boolean{% elif attr.type == 'array' %}[String]{% else %}String{% endif %}{% endif %}
-  {% endfor %}
+{%- for field_name, field_type in schema.fields.items() %}
+  {{ field_name }}: {{ field_type }}
+{%- endfor %}
 }
 
-input {{ schema.name }}QueryBy{{ schema.partition_key | to_pascal_case }}Input {
-  {{ schema.partition_key | to_camel_case }}: String!
-}
-
-{% if schema.sort_key and schema.sort_key != 'None' %}
-input {{ schema.name }}QueryBy{{ schema.sort_key | to_pascal_case }}Input {
-  {{ schema.sort_key | to_camel_case }}: String!
-}
-
-input {{ schema.name }}QueryByBothInput {
-  {{ schema.partition_key | to_camel_case }}: String!
-  {{ schema.sort_key | to_camel_case }}: String!
-}
-{% endif %}
-
-{% for index in schema.secondary_indexes %}
+{%- for index in schema.indexes %}
 input {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}Input {
-  {{ index.partition | to_camel_case }}: String!{% if index.sort and index.sort != 'None' %}
-  {{ index.sort | to_camel_case }}: String!{% endif %}
+  {{ index.partition }}: {{ schema.fields[index.partition] }}
+{%- if index.sort %}
+  {{ index.sort }}: {{ schema.fields[index.sort] }}
+{%- endif %}
 }
-{% endfor %}
+{%- endfor %}
 
 type {{ schema.name }}Response {
-  {% for directive in get_auth_directives(schema.name + "Response", schema) %}
-  {{ directive }}
-  {% endfor %}
+  @aws_auth(cognito_groups: ["admin"])
   StatusCode: Int!
   Message: String!
   Data: {{ schema.name }}
 }
 
 type {{ schema.name }}ListResponse {
-  {% for directive in get_auth_directives(schema.name + "ListResponse", schema) %}
-  {{ directive }}
-  {% endfor %}
   StatusCode: Int!
   Message: String!
   Data: [{{ schema.name }}]
 }
-{% endfor %}
 
-# Root Types
+{%- endfor %}
+
+# Queries
 type Query {
-  {% for schema_name, schema in schemas.items() %}
-  # Query by primary key
-  {% for directive in get_auth_directives(schema.name + "QueryBy" + schema.partition_key | to_pascal_case, schema) %}
-  {{ directive }}
-  {% endfor %}
-  {{ schema.name }}QueryBy{{ schema.partition_key | to_pascal_case }}(input: {{ schema.name }}QueryBy{{ schema.partition_key | to_pascal_case }}Input!): {{ schema.name }}Response!
-  
-  {% if schema.sort_key and schema.sort_key != 'None' %}
-  # Query by sort key
-  {% for directive in get_auth_directives(schema.name + "QueryBy" + schema.sort_key | to_pascal_case, schema) %}
-  {{ directive }}
-  {% endfor %}
-  {{ schema.name }}QueryBy{{ schema.sort_key | to_pascal_case }}(input: {{ schema.name }}QueryBy{{ schema.sort_key | to_pascal_case }}Input!): {{ schema.name }}Response!
-  
-  # Query by both keys
-  {% for directive in get_auth_directives(schema.name + "QueryByBoth", schema) %}
-  {{ directive }}
-  {% endfor %}
-  {{ schema.name }}QueryByBoth(input: {{ schema.name }}QueryByBothInput!): {{ schema.name }}Response!
-  {% endif %}
-  
-  {% for index in schema.secondary_indexes %}
-  # Query by index
-  {% for directive in get_auth_directives(schema.name + "QueryBy" + index.partition | to_pascal_case + "And" + index.sort | to_pascal_case, schema) %}
-  {{ directive }}
-  {% endfor %}
-  {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}And{{ index.sort | to_pascal_case }}(input: {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}And{{ index.sort | to_pascal_case }}Input!): {{ schema.name }}Response!
-  {% endfor %}
-  {% endfor %}
+{%- for schema_name, schema in table_schemas.items() %}
+{%- for index in schema.indexes %}
+  {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}(input: {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}Input!): {{ schema.name }}ListResponse @aws_auth(cognito_groups: ["admin"])
+{%- endfor %}
+{%- endfor %}
 }
 
+# Mutations
 type Mutation {
-  {% for schema_name, schema in schemas.items() %}
-  # Create operation
-  {% for directive in get_auth_directives(schema.name + "Create", schema) %}
-  {{ directive }}
-  {% endfor %}
-  {{ schema.name }}Create(input: {{ schema.name }}CreateInput!): {{ schema.name }}Response!
-  
-  # Update operation
-  {% for directive in get_auth_directives(schema.name + "Update", schema) %}
-  {{ directive }}
-  {% endfor %}
-  {{ schema.name }}Update(input: {{ schema.name }}UpdateInput!): {{ schema.name }}Response!
-  
-  # Delete operation
-  {% for directive in get_auth_directives(schema.name + "Delete", schema) %}
-  {{ directive }}
-  {% endfor %}
-  {{ schema.name }}Delete(id: ID!): {{ schema.name }}Response!
-  {% endfor %}
+{%- for schema_name, schema in table_schemas.items() %}
+  {{ schema.name }}Create(input: {{ schema.name }}CreateInput!): {{ schema.name }}Response @aws_auth(cognito_groups: ["admin"])
+  {{ schema.name }}Update(input: {{ schema.name }}UpdateInput!): {{ schema.name }}Response @aws_auth(cognito_groups: ["admin"])
+{%- endfor %}
 }
-
-{% for schema_name, schema in schemas.items() %}
-enum {{ schema.name }}Status {
-  {% if schema.attributes %}
-    {% for attr in schema.attributes %}
-      {% if attr.enum_type and attr.enum_values %}
-        {% for value in attr.enum_values %}
-  {{ value }}
-        {% endfor %}
-      {% endif %}
-    {% endfor %}
-  {% endif %}
-}
-{% endfor %}

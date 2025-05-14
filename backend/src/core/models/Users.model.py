@@ -22,6 +22,11 @@ class Users(BaseModel):
     status: UserStatus = Field(..., description="Current status of the user")
     created_at: datetime = Field(..., description="When the user was created")
     updated_at: datetime = Field(..., description="When the user was last updated")
+    cognito_id: str = Field(..., description="Cognito user identifier")
+    phone_number: str = Field(..., description="User's phone number")
+    groups: List[str] = Field(..., description="List of Cognito groups the user belongs to")
+    email_verified: bool = Field(..., description="Whether the user's email is verified")
+    phone_verified: bool = Field(..., description="Whether the user's phone number is verified")
 
     @validator('createdAt', pre=True)
     def parse_createdAt(cls, value):
@@ -63,6 +68,11 @@ class UsersCreateInput(BaseModel):
     status: UserStatus = Field(..., description="Current status of the user")
     created_at: datetime = Field(..., description="When the user was created")
     updated_at: datetime = Field(..., description="When the user was last updated")
+    cognito_id: str = Field(..., description="Cognito user identifier")
+    phone_number: str = Field(..., description="User's phone number")
+    groups: List[str] = Field(..., description="List of Cognito groups the user belongs to")
+    email_verified: bool = Field(..., description="Whether the user's email is verified")
+    phone_verified: bool = Field(..., description="Whether the user's phone number is verified")
 
 class UsersUpdateInput(BaseModel):
     id: Optional[str] = Field(None, description="Unique identifier for the user")
@@ -74,6 +84,11 @@ class UsersUpdateInput(BaseModel):
     status: Optional[UserStatus] = Field(None, description="Current status of the user")
     created_at: Optional[datetime] = Field(None, description="When the user was created")
     updated_at: Optional[datetime] = Field(None, description="When the user was last updated")
+    cognito_id: Optional[str] = Field(None, description="Cognito user identifier")
+    phone_number: Optional[str] = Field(None, description="User's phone number")
+    groups: Optional[List[str]] = Field(None, description="List of Cognito groups the user belongs to")
+    email_verified: Optional[bool] = Field(None, description="Whether the user's email is verified")
+    phone_verified: Optional[bool] = Field(None, description="Whether the user's phone number is verified")
 
 class UsersResponse(BaseModel):
     StatusCode: int = Field(..., description="HTTP status code")

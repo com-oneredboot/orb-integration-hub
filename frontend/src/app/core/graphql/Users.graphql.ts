@@ -16,6 +16,11 @@
       status
       createdAt
       updatedAt
+      cognitoId
+      phoneNumber
+      groups
+      emailVerified
+      phoneVerified
     }
   }
 }
@@ -35,6 +40,11 @@
       status
       createdAt
       updatedAt
+      cognitoId
+      phoneNumber
+      groups
+      emailVerified
+      phoneVerified
     }
   }
 }
@@ -54,6 +64,11 @@
       status
       createdAt
       updatedAt
+      cognitoId
+      phoneNumber
+      groups
+      emailVerified
+      phoneVerified
     }
   }
 }
@@ -73,6 +88,11 @@
       status
       createdAt
       updatedAt
+      cognitoId
+      phoneNumber
+      groups
+      emailVerified
+      phoneVerified
     }
   }
 }
@@ -92,6 +112,11 @@
       status
       createdAt
       updatedAt
+      cognitoId
+      phoneNumber
+      groups
+      emailVerified
+      phoneVerified
     }
   }
 }
@@ -111,6 +136,11 @@
       status
       createdAt
       updatedAt
+      cognitoId
+      phoneNumber
+      groups
+      emailVerified
+      phoneVerified
     }
   }
 }
@@ -130,6 +160,11 @@
       status
       createdAt
       updatedAt
+      cognitoId
+      phoneNumber
+      groups
+      emailVerified
+      phoneVerified
     }
   }
 }

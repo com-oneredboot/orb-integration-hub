@@ -2,12 +2,17 @@
  *  DynamoDB model.
  */
 
+/*
+ * schema.table: 
+ * schema.name: Users
+ */
+
 // Import enums and models used in this model
 import { RoleType } from './RoleType.enum';
 import { UserStatus } from './UserStatus.enum';
 
 // CreateInput
-export type CreateInput = {
+export type UsersCreateInput = {
   id: string;
   email: string;
   firstName: string;
@@ -17,10 +22,15 @@ export type CreateInput = {
   status: string;
   createdAt: string;
   updatedAt: string;
+  cognitoId: string;
+  phoneNumber: string | undefined;
+  groups: any[] | undefined;
+  emailVerified: boolean | undefined;
+  phoneVerified: boolean | undefined;
 };
 
 // UpdateInput
-export type UpdateInput = {
+export type UsersUpdateInput = {
   id: string;
   email: string;
   firstName: string;
@@ -30,48 +40,53 @@ export type UpdateInput = {
   status: string;
   createdAt: string;
   updatedAt: string;
+  cognitoId: string;
+  phoneNumber: string | undefined;
+  groups: any[] | undefined;
+  emailVerified: boolean | undefined;
+  phoneVerified: boolean | undefined;
 };
 
 // QueryInput
 // Primary key queries
-export type QueryByIdInput = {
+export type UsersQueryByIdInput = {
   id: string;
 };
 
-export type QueryByEmailInput = {
+export type UsersQueryByEmailInput = {
   email: string;
 };
 
-export type QueryByBothInput = {
+export type UsersQueryByBothInput = {
   id: string;
   email: string;
 };
 
 // Secondary index queries
-export type QueryByRoleIdInput = {
+export type UsersQueryByRoleIdInput = {
   roleId: string;
 };
 
 // Response types
-export type Response = {
+export type UsersResponse = {
   statusCode: number;
   message: string;
-  data: I | null;
+  data: IUsers | null;
 };
 
-export type CreateResponse = {
+export type UsersCreateResponse = {
   statusCode: number;
   message: string;
-  data: I | null;
+  data: IUsers | null;
 };
 
-export type UpdateResponse = {
+export type UsersUpdateResponse = {
   statusCode: number;
   message: string;
-  data: I | null;
+  data: IUsers | null;
 };
 
-export interface I {
+export interface IUsers {
   id: string;
   email: string;
   firstName: string;
@@ -81,9 +96,14 @@ export interface I {
   status: string;
   createdAt: string;
   updatedAt: string;
+  cognitoId: string;
+  phoneNumber: string | undefined;
+  groups: any[] | undefined;
+  emailVerified: boolean | undefined;
+  phoneVerified: boolean | undefined;
 }
 
-export class  implements I {
+export class Users implements IUsers {
   id = '';
   email = '';
   firstName = '';
@@ -93,8 +113,13 @@ export class  implements I {
   status = '';
   createdAt = '';
   updatedAt = '';
+  cognitoId = '';
+  phoneNumber = '';
+  groups = [];
+  emailVerified = false;
+  phoneVerified = false;
 
-  constructor(data: Partial<I> = {}) {
+  constructor(data: Partial<IUsers> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
         if (key === 'roleType' && typeof value === 'string') {

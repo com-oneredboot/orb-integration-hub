@@ -22,6 +22,7 @@ UserStatus:
 
 # Role type and status enums
 RoleType:
+  - UNKNOWN
   - ADMIN
   - USER
   - GUEST
