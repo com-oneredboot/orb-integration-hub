@@ -1,6 +1,6 @@
-{% for schema_name, schema in table_schemas.items() %}
-{% for index in schema.indexes %}
-  {% set op_name = schema.name ~ 'QueryBy' ~ index.partition|to_pascal_case %}
+{%- for schema_name, schema in table_schemas.items() -%}
+{%- for index in schema.indexes -%}
+  {%- set op_name = schema.name ~ 'QueryBy' ~ index.partition|to_pascal_case %}
   {{ op_name }}(input: {{ op_name }}Input!): {{ schema.name }}ListResponse{{ (" " + (schema.query_auth_directives[op_name]|join(' '))) if schema.query_auth_directives and op_name in schema.query_auth_directives and schema.query_auth_directives[op_name] else ' @aws_auth(cognito_groups: ["admin"])' }}
-{% endfor %}
-{% endfor %} 
+{%- endfor -%}
+{%- endfor -%} 

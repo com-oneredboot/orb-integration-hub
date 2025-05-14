@@ -17,7 +17,6 @@ Operations can use either API key authentication (@aws_api_key) or Cognito user 
 The default is Cognito user pool authentication for the admin group.
 """
 
-
 # Schema Definition
 schema {
   query: Query
@@ -25,12 +24,7 @@ schema {
 }
 
 # Enums
-{% for enum_name, enum_values in enums.items() %}
-enum {{ enum_name }} {
-{% for value in enum_values %}  {{ value }}
-{% endfor %}}
-
-{% endfor %}
+{%- include 'enums.jinja' %}
 
 # GraphQL Types
 {% include 'graphql_type_schema.jinja' %}
@@ -76,12 +70,12 @@ type {{ schema.name }}ListResponse {
 
 # Queries
 type Query {
-  {% include 'queries.jinja' %}
+{%- include 'queries.jinja' %}
 }
 
 # Mutations
 type Mutation {
-  {% include 'mutations.jinja' %}
+{%- include 'mutations.jinja' %}
 }
 
 {% macro graphql_type(type_name) -%}
