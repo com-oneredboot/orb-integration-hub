@@ -222,7 +222,8 @@ def setup_jinja_env() -> Environment:
         autoescape=select_autoescape(['html', 'xml']),
         trim_blocks=True,
         lstrip_blocks=True,
-        keep_trailing_newline=True
+        keep_trailing_newline=True,
+        extensions=['jinja2.ext.do']
     )
     
     # Add custom filters
@@ -249,6 +250,26 @@ def setup_jinja_env() -> Environment:
     env.filters['to_python_type'] = to_python_type
     env.filters['to_typescript_type'] = to_typescript_type
     env.filters['to_dynamodb_type'] = to_dynamodb_type
+    
+    # Add graphql_type macro as a filter
+    def graphql_type(type_name):
+        mapping = {
+            'string': 'String',
+            'number': 'Int',
+            'boolean': 'Boolean',
+            'object': 'String',
+            'array': '[String]',
+            'timestamp': 'String',
+            'ID': 'ID',
+            'int': 'Int',
+            'float': 'Float',
+            'double': 'Float',
+            'bigint': 'String',
+            'IUsers': 'Users',
+            'any': 'String',
+        }
+        return mapping.get(type_name, type_name)
+    env.filters['graphql_type'] = graphql_type
     
     logger.debug('Loaded Jinja environment')
     return env

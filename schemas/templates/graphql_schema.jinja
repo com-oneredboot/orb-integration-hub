@@ -28,55 +28,47 @@ schema {
 }
 
 # Enums
-{%- if enums %}
-{%- for enum_name, enum_values in enums.items() %}
+{% if enums %}
+{% for enum_name, enum_values in enums.items() %}
 enum {{ enum_name }} {
-{%- for value in enum_values %}
-  {{ value }}
-{%- endfor %}
-}
+{% for value in enum_values %}  {{ value }}
+{% endfor %}}
 
-{%- endfor %}
-{%- endif %}
+{% endfor %}
+{% endif %}
 
 # GraphQL Types
-{%- for type_name, type_def in graphql_types.items() %}
+{% for type_name, type_def in graphql_types.items() %}
 type {{ type_name }} {
-{%- for attr in type_def.attributes %}
-  {{ attr.name }}: {{ attr.type }}{% if attr.required %}!{% endif %}
-{%- endfor %}
-}
+{% for attr in type_def.attributes %}  {{ attr.name }}: {{ attr.type|graphql_type }}{% if attr.required %}!{% endif %}
+{% endfor %}}
 
-{%- endfor %}
+{% endfor %}
 
 # Base types
-{%- for schema_name, schema in table_schemas.items() %}
+{% for schema_name, schema in table_schemas.items() %}
 type {{ schema.name }} {
-{%- for field_name, field_type in schema.fields.items() %}
-  {{ field_name }}: {{ field_type }}
-{%- endfor %}
-}
+{% for field_name, field_type in schema.fields.items() %}  {{ field_name }}: {{ field_type|graphql_type }}
+{% endfor %}}
 
 input {{ schema.name }}CreateInput {
-{%- for field_name, field_type in schema.fields.items() %}
-  {{ field_name }}: {{ field_type }}
-{%- endfor %}
-}
+{% for field_name, field_type in schema.fields.items() %}  {{ field_name }}: {{ field_type|graphql_type }}
+{% endfor %}}
 
 input {{ schema.name }}UpdateInput {
-{%- for field_name, field_type in schema.fields.items() %}
-  {{ field_name }}: {{ field_type }}
-{%- endfor %}
-}
+{% for field_name, field_type in schema.fields.items() %}  {{ field_name }}: {{ field_type|graphql_type }}
+{% endfor %}}
 
-{%- for index in schema.indexes %}
-input {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}Input {
-  {{ index.partition }}: {{ schema.fields[index.partition] }}
-{%- if index.sort %}
-  {{ index.sort }}: {{ schema.fields[index.sort] }}
-{%- endif %}
-}
-{%- endfor %}
+{% set seen_indexes = [] %}
+{% for index in schema.indexes %}
+{% set input_name = schema.name ~ 'QueryBy' ~ index.partition|to_pascal_case ~ 'Input' %}
+{% if input_name not in seen_indexes %}input {{ input_name }} {
+  {{ index.partition }}: {{ schema.fields[index.partition]|graphql_type }}
+{% if index.sort %}  {{ index.sort }}: {{ schema.fields[index.sort]|graphql_type }}
+{% endif %}}
+
+{% do seen_indexes.append(input_name) %}{% endif %}
+{% endfor %}
 
 type {{ schema.name }}Response {
   @aws_auth(cognito_groups: ["admin"])
@@ -91,21 +83,41 @@ type {{ schema.name }}ListResponse {
   Data: [{{ schema.name }}]
 }
 
-{%- endfor %}
+{% endfor %}
 
 # Queries
 type Query {
-{%- for schema_name, schema in table_schemas.items() %}
-{%- for index in schema.indexes %}
-  {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}(input: {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}Input!): {{ schema.name }}ListResponse @aws_auth(cognito_groups: ["admin"])
-{%- endfor %}
-{%- endfor %}
-}
+{% set seen_queries = [] %}
+{% for schema_name, schema in table_schemas.items() %}
+{% for index in schema.indexes %}
+{% set query_name = schema.name ~ 'QueryBy' ~ index.partition|to_pascal_case %}
+{% if query_name not in seen_queries %}  {{ query_name }}(input: {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}Input!): {{ schema.name }}ListResponse @aws_auth(cognito_groups: ["admin"])
+{% do seen_queries.append(query_name) %}{% endif %}
+{% endfor %}
+{% endfor %}}
 
 # Mutations
 type Mutation {
-{%- for schema_name, schema in table_schemas.items() %}
-  {{ schema.name }}Create(input: {{ schema.name }}CreateInput!): {{ schema.name }}Response @aws_auth(cognito_groups: ["admin"])
+{% for schema_name, schema in table_schemas.items() %}  {{ schema.name }}Create(input: {{ schema.name }}CreateInput!): {{ schema.name }}Response @aws_auth(cognito_groups: ["admin"])
   {{ schema.name }}Update(input: {{ schema.name }}UpdateInput!): {{ schema.name }}Response @aws_auth(cognito_groups: ["admin"])
-{%- endfor %}
-}
+
+{% endfor %}}
+
+{% macro graphql_type(type_name) -%}
+{%- set mapping = {
+  'string': 'String',
+  'number': 'Int',
+  'boolean': 'Boolean',
+  'object': 'String',
+  'array': '[String]',
+  'timestamp': 'String',
+  'ID': 'ID',
+  'int': 'Int',
+  'float': 'Float',
+  'double': 'Float',
+  'bigint': 'String',
+  'IUsers': 'Users',
+  'any': 'String',
+} %}
+{{ mapping.get(type_name, type_name) }}
+{%- endmacro %}
