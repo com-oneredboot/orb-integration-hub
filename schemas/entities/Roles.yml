@@ -3,13 +3,14 @@
 # date: 2025-02-17
 # description: Canonical role definition table. Referenced by ApplicationRoles.
 
+# GROUP_TYPES: OWNER, ADMIN, SUPPORT, USER (see enum definition)
+
 type: table
 version: '1.0'
 name: Roles
 model:
   authConfig:
     cognitoAuthentication:
-      default: OWNER
       groups:
         OWNER:
           - '*'

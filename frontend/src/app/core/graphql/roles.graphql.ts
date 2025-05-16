@@ -10,7 +10,7 @@
     StatusCode
     Message
     Data {
-      id
+      roleId
       userId
       roleType
       status
@@ -30,7 +30,7 @@
     StatusCode
     Message
     Data {
-      id
+      roleId
       userId
       roleType
       status
@@ -50,7 +50,7 @@
     StatusCode
     Message
     Data {
-      id
+      roleId
       userId
       roleType
       status
@@ -64,53 +64,13 @@
   
 
   
-    export const RolesQueryById = /* GraphQL */ `
-    query RolesQueryById($input: RolesQueryByIdInput!) {
-  RolesQueryById(input: $input) {
+    export const RolesQueryByRoleId = /* GraphQL */ `
+    query RolesQueryByRoleId($input: RolesQueryByRoleIdInput!) {
+  RolesQueryByRoleId(input: $input) {
     StatusCode
     Message
     Data {
-      id
-      userId
-      roleType
-      status
-      createdAt
-      updatedAt
-    }
-  }
-}
-    `;
-    
-  
-
-  
-    export const RolesQueryByRoleType = /* GraphQL */ `
-    query RolesQueryByRoleType($input: RolesQueryByRoleTypeInput!) {
-  RolesQueryByRoleType(input: $input) {
-    StatusCode
-    Message
-    Data {
-      id
-      userId
-      roleType
-      status
-      createdAt
-      updatedAt
-    }
-  }
-}
-    `;
-    
-  
-
-  
-    export const RolesQueryByBoth = /* GraphQL */ `
-    query RolesQueryByBoth($input: RolesQueryByBothInput!) {
-  RolesQueryByBoth(input: $input) {
-    StatusCode
-    Message
-    Data {
-      id
+      roleId
       userId
       roleType
       status
@@ -130,7 +90,7 @@
     StatusCode
     Message
     Data {
-      id
+      roleId
       userId
       roleType
       status

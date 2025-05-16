@@ -12,14 +12,13 @@ name: ApplicationRoles
 model:
   authConfig:
     cognitoAuthentication:
-      default: OWNER
       groups:
         OWNER:
           - '*'
   keys:
     primary:
       partition: applicationRoleId
-      description: Primary key for application roles (unique for each user/application/role assignment)
+      description: Primary key for application roles (unique for each user/application/role)
     secondary:
       - name: UserRoleIndex
         type: GSI
@@ -35,13 +34,13 @@ model:
         type: GSI
         partition: applicationId
         sort: roleId
-        projectionType: KEYS_ONLY
+        projection_type: ALL
         description: Index for querying roles by application with minimal projection
       - name: RoleTypeIndex
         type: GSI
         partition: roleId
         sort: roleType
-        projectionType: ALL
+        projection_type: ALL
         description: Global secondary index for filtering roles by type
   attributes:
     applicationRoleId:

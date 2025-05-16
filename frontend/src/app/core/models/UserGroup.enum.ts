@@ -4,8 +4,6 @@ export enum UserGroup {
 
   CUSTOMER = 'CUSTOMER',
 
-  CLIENT = 'CLIENT',
-
   EMPLOYEE = 'EMPLOYEE',
 
   OWNER = 'OWNER'

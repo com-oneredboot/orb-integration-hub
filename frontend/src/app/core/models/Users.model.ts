@@ -20,13 +20,7 @@
 
 
 
-import { RoleType } from './RoleType.enum';
-
-
-
 import { UserStatus } from './UserStatus.enum';
-
-
 
 
 
@@ -46,7 +40,9 @@ import { UserStatus } from './UserStatus.enum';
 // CreateInput
 export type UsersCreateInput = {
 
-  id: string;
+  userId: string;
+
+  cognitoId: string;
 
   email: string;
 
@@ -54,17 +50,11 @@ export type UsersCreateInput = {
 
   lastName: string;
 
-  roleId: string;
-
-  roleType: string;
-
   status: string;
 
   createdAt: string;
 
   updatedAt: string;
-
-  cognitoId: string;
 
   phoneNumber: string | undefined;
 
@@ -79,7 +69,9 @@ export type UsersCreateInput = {
 // UpdateInput
 export type UsersUpdateInput = {
 
-  id: string;
+  userId: string;
+
+  cognitoId: string;
 
   email: string;
 
@@ -87,17 +79,11 @@ export type UsersUpdateInput = {
 
   lastName: string;
 
-  roleId: string;
-
-  roleType: string;
-
   status: string;
 
   createdAt: string;
 
   updatedAt: string;
-
-  cognitoId: string;
 
   phoneNumber: string | undefined;
 
@@ -111,27 +97,24 @@ export type UsersUpdateInput = {
 
 // QueryInput
 // Primary key queries
-export type UsersQueryByIdInput = {
-  id: string;
+export type UsersQueryByUserIdInput = {
+  userId: string;
 };
 
-
-export type UsersQueryByEmailInput = {
-  email: string;
-};
-
-export type UsersQueryByBothInput = {
-  id: string;
-  email: string;
-};
 
 
 
 // Secondary index queries
 
 
-export type UsersQueryByRoleIdInput = {
-  roleId: string;
+export type UsersQueryByEmailInput = {
+  email: string;
+};
+
+
+
+export type UsersQueryByCognitoIdInput = {
+  cognitoId: string;
 };
 
 
@@ -158,7 +141,9 @@ export type UsersUpdateResponse = {
 
 export interface IUsers {
 
-  id: string;
+  userId: string;
+
+  cognitoId: string;
 
   email: string;
 
@@ -166,17 +151,11 @@ export interface IUsers {
 
   lastName: string;
 
-  roleId: string;
-
-  roleType: string;
-
   status: string;
 
   createdAt: string;
 
   updatedAt: string;
-
-  cognitoId: string;
 
   phoneNumber: string | undefined;
 
@@ -190,7 +169,9 @@ export interface IUsers {
 
 export class Users implements IUsers {
 
-  id = '';
+  userId = '';
+
+  cognitoId = '';
 
   email = '';
 
@@ -198,17 +179,11 @@ export class Users implements IUsers {
 
   lastName = '';
 
-  roleId = '';
-
-  roleType = '';
-
   status = '';
 
   createdAt = '';
 
   updatedAt = '';
-
-  cognitoId = '';
 
   phoneNumber = '';
 
@@ -234,17 +209,9 @@ export class Users implements IUsers {
 
 
 
-        if (key === 'roleType' && typeof value === 'string') {
-          this.roleType = RoleType[value as keyof typeof RoleType] ?? RoleType.UNKNOWN;
-        } else 
-
-
-
         if (key === 'status' && typeof value === 'string') {
           this.status = UserStatus[value as keyof typeof UserStatus] ?? UserStatus.UNKNOWN;
         } else 
-
-
 
 
 

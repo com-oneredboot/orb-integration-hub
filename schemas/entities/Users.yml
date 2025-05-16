@@ -11,24 +11,10 @@ version: '1.0'
 name: Users
 model:
   authConfig:
-    apiKeyAuthentication:
-      - UsersCreate
-      - UsersQueryByUserId
-      - UsersQueryByEmail
-      - UsersQueryByCognitoId
-      - UsersResponse
     cognitoAuthentication:
-      default: OWNER
       groups:
         OWNER:
           - '*'
-        ADMIN:
-          - UsersQueryByUserId
-          - UsersQueryByEmail
-          - UsersResponse
-        SUPPORT:
-          - UsersQueryByEmail
-          - UsersResponse
   keys:
     primary:
       partition: userId

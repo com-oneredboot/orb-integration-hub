@@ -16,10 +16,6 @@
 
 
 
-import { ApplicationType } from './ApplicationType.enum';
-
-
-
 import { ApplicationStatus } from './ApplicationStatus.enum';
 
 
@@ -32,13 +28,11 @@ import { ApplicationStatus } from './ApplicationStatus.enum';
 // CreateInput
 export type ApplicationsCreateInput = {
 
-  id: string;
+  applicationId: string;
 
   name: string;
 
-  description: string | undefined;
-
-  type: string;
+  ownerId: string;
 
   status: string;
 
@@ -51,13 +45,11 @@ export type ApplicationsCreateInput = {
 // UpdateInput
 export type ApplicationsUpdateInput = {
 
-  id: string;
+  applicationId: string;
 
   name: string;
 
-  description: string | undefined;
-
-  type: string;
+  ownerId: string;
 
   status: string;
 
@@ -69,34 +61,10 @@ export type ApplicationsUpdateInput = {
 
 // QueryInput
 // Primary key queries
-export type ApplicationsQueryByIdInput = {
-  id: string;
+export type ApplicationsQueryByApplicationIdInput = {
+  applicationId: string;
 };
 
-
-export type ApplicationsQueryByNameInput = {
-  name: string;
-};
-
-export type ApplicationsQueryByBothInput = {
-  id: string;
-  name: string;
-};
-
-
-
-// Secondary index queries
-
-
-export type ApplicationsQueryByStatusInput = {
-  status: string;
-};
-
-
-
-export type ApplicationsQueryByTypeInput = {
-  type: string;
-};
 
 
 
@@ -122,13 +90,11 @@ export type ApplicationsUpdateResponse = {
 
 export interface IApplications {
 
-  id: string;
+  applicationId: string;
 
   name: string;
 
-  description: string | undefined;
-
-  type: string;
+  ownerId: string;
 
   status: string;
 
@@ -140,13 +106,11 @@ export interface IApplications {
 
 export class Applications implements IApplications {
 
-  id = '';
+  applicationId = '';
 
   name = '';
 
-  description = '';
-
-  type = '';
+  ownerId = '';
 
   status = '';
 
@@ -163,12 +127,6 @@ export class Applications implements IApplications {
 
 
 
-
-
-
-        if (key === 'type' && typeof value === 'string') {
-          this.type = ApplicationType[value as keyof typeof ApplicationType] ?? ApplicationType.UNKNOWN;
-        } else 
 
 
 

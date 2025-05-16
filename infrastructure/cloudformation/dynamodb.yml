@@ -37,24 +37,24 @@ Resources:
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         
-        - AttributeName: applicationId
+        - AttributeName: applicationRoleId
           KeyType: HASH
-        
-        - AttributeName: roleId
-          KeyType: RANGE
         
       AttributeDefinitions:
         
-        - AttributeName: applicationId
+        - AttributeName: applicationRoleId
           AttributeType: S
         
         - AttributeName: roleId
           AttributeType: S
         
-        - AttributeName: roleType
+        - AttributeName: userId
           AttributeType: S
         
-        - AttributeName: userId
+        - AttributeName: applicationId
+          AttributeType: S
+        
+        - AttributeName: roleType
           AttributeType: S
         
       
@@ -66,7 +66,7 @@ Resources:
             - AttributeName: userId
               KeyType: HASH
             
-            - AttributeName: roleType
+            - AttributeName: roleId
               KeyType: RANGE
             
           Projection:
@@ -123,54 +123,13 @@ Resources:
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         
-        - AttributeName: id
+        - AttributeName: applicationId
           KeyType: HASH
-        
-        - AttributeName: name
-          KeyType: RANGE
         
       AttributeDefinitions:
         
-        - AttributeName: id
+        - AttributeName: applicationId
           AttributeType: S
-        
-        - AttributeName: name
-          AttributeType: S
-        
-        - AttributeName: status
-          AttributeType: S
-        
-        - AttributeName: type
-          AttributeType: S
-        
-      
-      GlobalSecondaryIndexes:
-        
-        - IndexName: ApplicationStatusIndex
-          KeySchema:
-            
-            - AttributeName: status
-              KeyType: HASH
-            
-            - AttributeName: name
-              KeyType: RANGE
-            
-          Projection:
-            ProjectionType: ALL
-            
-        
-        - IndexName: ApplicationTypeIndex
-          KeySchema:
-            
-            - AttributeName: type
-              KeyType: HASH
-            
-            - AttributeName: name
-              KeyType: RANGE
-            
-          Projection:
-            ProjectionType: ALL
-            
         
       
       
@@ -196,30 +155,24 @@ Resources:
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         
-        - AttributeName: applicationId
+        - AttributeName: applicationUserId
           KeyType: HASH
-        
-        - AttributeName: userId
-          KeyType: RANGE
         
       AttributeDefinitions:
         
+        - AttributeName: applicationUserId
+          AttributeType: S
+        
         - AttributeName: applicationId
           AttributeType: S
         
         - AttributeName: userId
-          AttributeType: S
-        
-        - AttributeName: roleId
-          AttributeType: S
-        
-        - AttributeName: status
           AttributeType: S
         
       
       GlobalSecondaryIndexes:
         
-        - IndexName: UserApplicationsIndex
+        - IndexName: UserAppIndex
           KeySchema:
             
             - AttributeName: userId
@@ -232,26 +185,13 @@ Resources:
             ProjectionType: ALL
             
         
-        - IndexName: ApplicationRoleIndex
+        - IndexName: AppUserIndex
           KeySchema:
             
             - AttributeName: applicationId
               KeyType: HASH
             
-            - AttributeName: roleId
-              KeyType: RANGE
-            
-          Projection:
-            ProjectionType: ALL
-            
-        
-        - IndexName: UserStatusIndex
-          KeySchema:
-            
-            - AttributeName: applicationId
-              KeyType: HASH
-            
-            - AttributeName: status
+            - AttributeName: userId
               KeyType: RANGE
             
           Projection:
@@ -282,15 +222,12 @@ Resources:
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         
-        - AttributeName: id
+        - AttributeName: roleId
           KeyType: HASH
-        
-        - AttributeName: roleType
-          KeyType: RANGE
         
       AttributeDefinitions:
         
-        - AttributeName: id
+        - AttributeName: roleId
           AttributeType: S
         
         - AttributeName: roleType
@@ -339,37 +276,38 @@ Resources:
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         
-        - AttributeName: id
+        - AttributeName: userId
           KeyType: HASH
-        
-        - AttributeName: email
-          KeyType: RANGE
         
       AttributeDefinitions:
         
-        - AttributeName: id
+        - AttributeName: userId
           AttributeType: S
         
         - AttributeName: email
           AttributeType: S
         
-        - AttributeName: roleType
-          AttributeType: S
-        
-        - AttributeName: roleId
+        - AttributeName: cognitoId
           AttributeType: S
         
       
       GlobalSecondaryIndexes:
         
-        - IndexName: RoleIndex
+        - IndexName: EmailIndex
           KeySchema:
             
-            - AttributeName: roleId
+            - AttributeName: email
               KeyType: HASH
             
-            - AttributeName: roleType
-              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+            
+        
+        - IndexName: CognitoIdIndex
+          KeySchema:
+            
+            - AttributeName: cognitoId
+              KeyType: HASH
             
           Projection:
             ProjectionType: ALL

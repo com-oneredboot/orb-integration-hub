@@ -28,11 +28,11 @@ import { ApplicationUserStatus } from './ApplicationUserStatus.enum';
 // CreateInput
 export type ApplicationUsersCreateInput = {
 
-  applicationId: string;
+  applicationUserId: string;
 
   userId: string;
 
-  roleId: string | undefined;
+  applicationId: string;
 
   status: string;
 
@@ -45,11 +45,11 @@ export type ApplicationUsersCreateInput = {
 // UpdateInput
 export type ApplicationUsersUpdateInput = {
 
-  applicationId: string;
+  applicationUserId: string;
 
   userId: string;
 
-  roleId: string | undefined;
+  applicationId: string;
 
   status: string;
 
@@ -61,28 +61,25 @@ export type ApplicationUsersUpdateInput = {
 
 // QueryInput
 // Primary key queries
-export type ApplicationUsersQueryByApplicationIdInput = {
-  applicationId: string;
+export type ApplicationUsersQueryByApplicationUserIdInput = {
+  applicationUserId: string;
 };
 
-
-export type ApplicationUsersQueryByUserIdInput = {
-  userId: string;
-};
-
-export type ApplicationUsersQueryByBothInput = {
-  applicationId: string;
-  userId: string;
-};
 
 
 
 // Secondary index queries
 
 
+export type ApplicationUsersQueryByUserIdInput = {
+  userId: string;
+};
 
 
 
+export type ApplicationUsersQueryByApplicationIdInput = {
+  applicationId: string;
+};
 
 
 
@@ -108,11 +105,11 @@ export type ApplicationUsersUpdateResponse = {
 
 export interface IApplicationUsers {
 
-  applicationId: string;
+  applicationUserId: string;
 
   userId: string;
 
-  roleId: string | undefined;
+  applicationId: string;
 
   status: string;
 
@@ -124,11 +121,11 @@ export interface IApplicationUsers {
 
 export class ApplicationUsers implements IApplicationUsers {
 
-  applicationId = '';
+  applicationUserId = '';
 
   userId = '';
 
-  roleId = '';
+  applicationId = '';
 
   status = '';
 

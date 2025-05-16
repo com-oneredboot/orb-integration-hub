@@ -28,17 +28,17 @@ from .application_user_status import ApplicationUserStatus
 class ApplicationUsers(BaseModel):
     """ApplicationUsers model."""
     
-    application_id: str = Field(..., description="ID of the application")
+    application_user_id: str = Field(..., description="Unique identifier for the application user membership (primary key)")
     
-    user_id: str = Field(..., description="ID of the user")
+    user_id: str = Field(..., description="ID of the user (foreign key to Users)")
     
-    role_id: str = Field(..., description="Unique identifier for the role assigned to the user")
+    application_id: str = Field(..., description="ID of the application (foreign key to Applications)")
     
-    status: ApplicationUserStatus = Field(..., description="Status of the user in the application")
+    status: ApplicationUserStatus = Field(..., description="Current status of the user in the application")
     
     created_at: datetime = Field(..., description="When the user was added to the application")
     
-    updated_at: datetime = Field(..., description="When the user's application status was last updated")
+    updated_at: datetime = Field(..., description="When the membership was last updated")
     
 
     
@@ -88,32 +88,32 @@ class ApplicationUsers(BaseModel):
 
 class ApplicationUsersCreateInput(BaseModel):
     
-    application_id: str = Field(..., description="ID of the application")
+    application_user_id: str = Field(..., description="Unique identifier for the application user membership (primary key)")
     
-    user_id: str = Field(..., description="ID of the user")
+    user_id: str = Field(..., description="ID of the user (foreign key to Users)")
     
-    role_id: str = Field(..., description="Unique identifier for the role assigned to the user")
+    application_id: str = Field(..., description="ID of the application (foreign key to Applications)")
     
-    status: ApplicationUserStatus = Field(..., description="Status of the user in the application")
+    status: ApplicationUserStatus = Field(..., description="Current status of the user in the application")
     
     created_at: datetime = Field(..., description="When the user was added to the application")
     
-    updated_at: datetime = Field(..., description="When the user's application status was last updated")
+    updated_at: datetime = Field(..., description="When the membership was last updated")
     
 
 class ApplicationUsersUpdateInput(BaseModel):
     
-    application_id: Optional[str] = Field(None, description="ID of the application")
+    application_user_id: Optional[str] = Field(None, description="Unique identifier for the application user membership (primary key)")
     
-    user_id: Optional[str] = Field(None, description="ID of the user")
+    user_id: Optional[str] = Field(None, description="ID of the user (foreign key to Users)")
     
-    role_id: Optional[str] = Field(None, description="Unique identifier for the role assigned to the user")
+    application_id: Optional[str] = Field(None, description="ID of the application (foreign key to Applications)")
     
-    status: Optional[ApplicationUserStatus] = Field(None, description="Status of the user in the application")
+    status: Optional[ApplicationUserStatus] = Field(None, description="Current status of the user in the application")
     
     created_at: Optional[datetime] = Field(None, description="When the user was added to the application")
     
-    updated_at: Optional[datetime] = Field(None, description="When the user's application status was last updated")
+    updated_at: Optional[datetime] = Field(None, description="When the membership was last updated")
     
 
 class ApplicationUsersResponse(BaseModel):

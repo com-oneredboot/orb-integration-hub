@@ -12,7 +12,6 @@ name: ApplicationUsers
 model:
   authConfig:
     cognitoAuthentication:
-      default: OWNER
       groups:
         OWNER:
           - '*'

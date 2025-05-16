@@ -358,9 +358,10 @@ def validate_case_conventions(schema: Dict[str, Any], file_path: str) -> None:
 
     if 'type' in schema and schema['type'] in ['graphql', 'static']:
         # Validate attribute names are camelCase
-        for attr_name in schema['attributes']:
-            if not re.match(r'^[a-z][a-zA-Z0-9]*$', attr_name):
-                raise SchemaValidationError(f"Attribute name '{attr_name}' must be in camelCase")
+        if 'model' in schema and 'attributes' in schema['model']:
+            for attr_name in schema['model']['attributes']:
+                if not re.match(r'^[a-z][a-zA-Z0-9]*$', attr_name):
+                    raise SchemaValidationError(f"Attribute name '{attr_name}' must be in camelCase")
     else:
         # Validate index names are PascalCase
         if 'model' in schema and 'keys' in schema['model'] and 'secondary' in schema['model']['keys']:
@@ -370,31 +371,52 @@ def validate_case_conventions(schema: Dict[str, Any], file_path: str) -> None:
 
         # Validate attribute names are camelCase
         if 'model' in schema and 'attributes' in schema['model']:
-            for attr_name in schema['model']['attributes']:
+            print(f"[DEBUG] {schema_name}: model['attributes'] type: {type(schema['model']['attributes'])}, value: {schema['model']['attributes']}")
+            if not isinstance(schema['model']['attributes'], dict):
+                raise SchemaValidationError(f"Schema '{schema_name}' has a non-dict 'attributes' section: {type(schema['model']['attributes'])}. Value: {schema['model']['attributes']}")
+            for attr_name, attr_info in schema['model']['attributes'].items():
                 if not re.match(r'^[a-z][a-zA-Z0-9]*$', attr_name):
                     raise SchemaValidationError(f"Attribute name '{attr_name}' must be in camelCase")
 
 def get_auth_directives(operation_name: str, schema: Union[TableSchema, GraphQLType]) -> List[str]:
     """
     Generate auth directives for a GraphQL operation.
-    - By default, every operation gets @aws_auth(cognito_groups: ["admin"])
-    - If the operation is in apiKeyOperations, also add @aws_api_key
-    - In the future, group customization can be added via authConfig
+    - For each operation, include @aws_auth(cognito_groups: [...]) for all allowed groups (explicitly from YAML only)
+    - If the operation is in apiKeyAuthentication, also add @aws_api_key
+    - Raise SchemaValidationError if no group is found for the operation
     """
     directives = []
-    # Always add Cognito admin group by default
-    directives.append('@aws_auth(cognito_groups: ["admin"])')
+    allowed_groups = set()
     if not schema.auth_config:
-        return directives
-    # Check for apiKeyOperations
-    if 'apiKeyOperations' in schema.auth_config:
-        if operation_name in schema.auth_config['apiKeyOperations']:
-            directives.append('@aws_api_key')
-        # Warn if operation is in config but not matched
-        for op in schema.auth_config['apiKeyOperations']:
-            if op not in [operation_name]:
-                logger.warning(f"apiKeyOperations entry '{op}' not matched for operation '{operation_name}' in schema '{schema.name}'")
-    # In the future, handle group customization here
+        logger.error(f"No auth_config found for schema '{schema.name}' (operation: {operation_name})")
+        raise SchemaValidationError(f"No auth_config found for schema '{schema.name}' (operation: {operation_name})")
+
+    # Handle cognitoAuthentication (group-based)
+    cognito_auth = schema.auth_config.get('cognitoAuthentication', {})
+    if isinstance(cognito_auth, dict):
+        groups = cognito_auth.get('groups', {})
+        for group, ops in groups.items():
+            if isinstance(ops, list):
+                # '*' means all operations for this group
+                if '*' in ops or operation_name in ops:
+                    allowed_groups.add(group)
+            else:
+                logger.warning(f"Group '{group}' in cognitoAuthentication.groups is not a list in schema '{schema.name}'")
+        if allowed_groups:
+            group_list = ', '.join(f'"{g}"' for g in sorted(list(allowed_groups)))
+            directives.append(f'@aws_auth(cognito_groups: [{group_list}])')
+        else:
+            logger.error(f"No cognitoAuthentication group found for operation '{operation_name}' in schema '{schema.name}'. Please explicitly assign this operation to a group in the YAML.")
+            raise SchemaValidationError(f"No cognitoAuthentication group found for operation '{operation_name}' in schema '{schema.name}'. Please explicitly assign this operation to a group in the YAML.")
+    else:
+        logger.error(f"cognitoAuthentication is not a dict in schema '{schema.name}'")
+        raise SchemaValidationError(f"cognitoAuthentication is not a dict in schema '{schema.name}'")
+
+    # Handle apiKeyAuthentication
+    api_key_ops = schema.auth_config.get('apiKeyAuthentication', [])
+    if operation_name in api_key_ops:
+        directives.append('@aws_api_key')
+
     return directives
 
 def load_schema(schema_path: str) -> Dict[str, Any]:
@@ -402,27 +424,23 @@ def load_schema(schema_path: str) -> Dict[str, Any]:
     try:
         with open(schema_path, 'r') as f:
             schema = yaml.safe_load(f)
-            
+
         # Validate schema structure
         if 'type' not in schema:
             raise SchemaValidationError(f"Schema must have a 'type' field: {schema_path}")
         if 'name' not in schema:
             raise SchemaValidationError(f"Schema must have a 'name' field: {schema_path}")
-            
-        # Additional validation based on type
-        if schema['type'] in ['graphql', 'static']:
-            if 'attributes' not in schema:
-                raise SchemaValidationError(f"GraphQL/static type schema must have an 'attributes' field: {schema_path}")
-        else:
-            if 'version' not in schema:
-                raise SchemaValidationError(f"Table schema must have a 'version' field: {schema_path}")
-            if 'model' not in schema:
-                raise SchemaValidationError(f"Table schema must have a 'model' field: {schema_path}")
-            
+        if 'model' not in schema:
+            raise SchemaValidationError(f"Schema must have a 'model' field: {schema_path}")
+        # Debug: print model keys before checking for 'attributes'
+        print(f"[DEBUG] Checking file: {schema_path}, model keys: {list(schema['model'].keys())}")
+        if 'attributes' not in schema['model']:
+            raise SchemaValidationError(f"Schema 'model' must have an 'attributes' field: {schema_path}")
+
         # Process auth config if present
-        if 'model' in schema and 'authConfig' in schema['model']:
+        if 'authConfig' in schema['model']:
             schema['auth_config'] = schema['model']['authConfig']
-            
+
         return schema
     except yaml.YAMLError as e:
         raise SchemaValidationError(f"Error parsing schema file {schema_path}: {str(e)}")
@@ -433,76 +451,36 @@ def load_schemas() -> Dict[str, Union[TableSchema, GraphQLType]]:
     """Load all schema files and return a dictionary of schemas."""
     schemas = {}
     schema_dir = os.path.join(SCRIPT_DIR, 'entities')
-    
+
     # Load all schema files
     for filename in os.listdir(schema_dir):
         if filename.endswith('.yml') or filename.endswith('.yaml'):
             schema_path = os.path.join(schema_dir, filename)
             schema = load_schema(schema_path)
-            
+
             # Validate case conventions
             validate_case_conventions(schema, schema_path)
-            
-            if 'type' in schema and schema['type'] == 'graphql':
-                # Handle GraphQL type schema
-                name = schema['name']
-                attributes = []
-                for attr_name, attr_info in schema['attributes'].items():
-                    attributes.append(Attribute(
-                        name=attr_name,
-                        type=attr_info['type'],
-                        description=attr_info.get('description', ''),
-                        required=attr_info.get('required', True),
-                        enum_type=attr_info.get('enum_type'),
-                        enum_values=attr_info.get('enum_values')
-                    ))
-                schemas[name] = GraphQLType(
-                    name=name,
-                    attributes=attributes,
-                    description=schema.get('description'),
-                    auth_config=schema.get('auth_config')
-                )
-            elif 'type' in schema and schema['type'] == 'static':
-                # Handle static type schema
-                name = schema['name']
-                attributes = []
-                for attr_name, attr_info in schema['attributes'].items():
-                    attributes.append(Attribute(
-                        name=attr_name,
-                        type=attr_info['type'],
-                        description=attr_info.get('description', ''),
-                        required=attr_info.get('required', True),
-                        enum_type=attr_info.get('enum_type'),
-                        enum_values=attr_info.get('enum_values')
-                    ))
-                schemas[name] = GraphQLType(
-                    name=name,
-                    attributes=attributes,
-                    description=schema.get('description'),
-                    auth_config=schema.get('auth_config')
-                )
-            else:
-                # Handle table schema
-                name = schema['name']
-                model = schema['model']
-                attributes = []
-                
-                # Process attributes
-                for attr_name, attr_info in model['attributes'].items():
-                    attributes.append(Attribute(
-                        name=attr_name,
-                        type=attr_info['type'],
-                        description=attr_info.get('description', ''),
-                        required=attr_info.get('required', True),
-                        enum_type=attr_info.get('enum_type'),
-                        enum_values=attr_info.get('enum_values')
-                    ))
-                
-                # Get primary key
+
+            name = schema['name']
+            model = schema['model']
+            schema_type = schema['type']
+            print(f"[DEBUG] Processing schema: {name}, type: {schema_type}, model keys: {list(model.keys())}")
+            attributes = []
+            for attr_name, attr_info in model['attributes'].items():
+                attributes.append(Attribute(
+                    name=attr_name,
+                    type=attr_info['type'],
+                    description=attr_info.get('description', ''),
+                    required=attr_info.get('required', True),
+                    enum_type=attr_info.get('enum_type'),
+                    enum_values=attr_info.get('enum_values')
+                ))
+
+            if schema_type == 'table':
+                if 'keys' not in model:
+                    raise SchemaValidationError(f"Table schema '{name}' is missing required 'keys' section in model.")
                 partition_key = model['keys']['primary']['partition']
                 sort_key = model['keys']['primary'].get('sort', 'None')
-                
-                # Get secondary indexes
                 secondary_indexes = []
                 if 'secondary' in model['keys']:
                     for index in model['keys']['secondary']:
@@ -514,7 +492,6 @@ def load_schemas() -> Dict[str, Union[TableSchema, GraphQLType]]:
                             'projection_type': index.get('projection_type', 'ALL'),
                             'projected_attributes': index.get('projected_attributes', [])
                         })
-                
                 schemas[name] = TableSchema(
                     name=name,
                     attributes=attributes,
@@ -523,7 +500,16 @@ def load_schemas() -> Dict[str, Union[TableSchema, GraphQLType]]:
                     secondary_indexes=secondary_indexes,
                     auth_config=schema.get('auth_config')
                 )
-    
+            else:
+                # For non-table types, do not expect 'keys'
+                if 'attributes' not in model:
+                    raise SchemaValidationError(f"Non-table schema '{name}' is missing required 'attributes' section in model.")
+                schemas[name] = GraphQLType(
+                    name=name,
+                    attributes=attributes,
+                    description=schema.get('description'),
+                    auth_config=schema.get('auth_config')
+                )
     return schemas
 
 def generate_python_model(table: str, schema: Union[TableSchema, GraphQLType]) -> None:
@@ -642,18 +628,28 @@ def generate_graphql_schema(schemas: Dict[str, Union[TableSchema, GraphQLType]],
                 table_schemas[schema_name] = schema
                 # Convert TableSchema attributes to fields dictionary
                 schema.fields = {attr.name: attr.type for attr in schema.attributes}
-                if hasattr(schema, 'secondary_indexes'):
-                    schema.indexes = schema.secondary_indexes
+                # Always include the primary key as the first index
+                primary_index = {
+                    'name': 'PrimaryIndex',
+                    'type': 'PRIMARY',
+                    'partition': schema.partition_key,
+                    'sort': schema.sort_key if schema.sort_key and schema.sort_key != 'None' else None,
+                    'projection_type': 'ALL',
+                    'projected_attributes': []
+                }
+                schema.indexes = [primary_index] + (schema.secondary_indexes or [])
                 # Debug: Print auth_config for this schema
                 logger.debug(f"Auth config for {schema.name}: {getattr(schema, 'auth_config', None)}")
                 # Build per-query auth directives
                 schema.query_auth_directives = {}
-                if hasattr(schema, 'indexes'):
-                    for index in schema.indexes:
-                        op_name = f"{schema.name}QueryBy{to_pascal_case(index['partition'])}"
-                        logger.debug(f"Checking query op_name: {op_name} for schema {schema.name}")
-                        schema.query_auth_directives[op_name] = get_auth_directives(op_name, schema)
-                        logger.debug(f"Directives for {op_name}: {schema.query_auth_directives[op_name]}")
+                for index in schema.indexes:
+                    # QueryBy{Partition}
+                    op_name = f"{schema.name}QueryBy{to_pascal_case(index['partition'])}"
+                    schema.query_auth_directives[op_name] = get_auth_directives(op_name, schema)
+                    # QueryBy{Partition}And{Sort} if sort exists
+                    if index.get('sort') and index['sort'] != 'None':
+                        op_name_and = f"{schema.name}QueryBy{to_pascal_case(index['partition'])}And{to_pascal_case(index['sort'])}"
+                        schema.query_auth_directives[op_name_and] = get_auth_directives(op_name_and, schema)
                 # Build per-mutation auth directives using full operation names
                 schema.mutation_auth_directives = {}
                 for op in ['Create', 'Update']:

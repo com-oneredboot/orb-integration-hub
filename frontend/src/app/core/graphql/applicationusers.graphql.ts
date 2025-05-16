@@ -10,9 +10,9 @@
     StatusCode
     Message
     Data {
-      applicationId
+      applicationUserId
       userId
-      roleId
+      applicationId
       status
       createdAt
       updatedAt
@@ -30,9 +30,9 @@
     StatusCode
     Message
     Data {
-      applicationId
+      applicationUserId
       userId
-      roleId
+      applicationId
       status
       createdAt
       updatedAt
@@ -50,9 +50,9 @@
     StatusCode
     Message
     Data {
-      applicationId
+      applicationUserId
       userId
-      roleId
+      applicationId
       status
       createdAt
       updatedAt
@@ -64,15 +64,15 @@
   
 
   
-    export const ApplicationUsersQueryByApplicationId = /* GraphQL */ `
-    query ApplicationUsersQueryByApplicationId($input: ApplicationUsersQueryByApplicationIdInput!) {
-  ApplicationUsersQueryByApplicationId(input: $input) {
+    export const ApplicationUsersQueryByApplicationUserId = /* GraphQL */ `
+    query ApplicationUsersQueryByApplicationUserId($input: ApplicationUsersQueryByApplicationUserIdInput!) {
+  ApplicationUsersQueryByApplicationUserId(input: $input) {
     StatusCode
     Message
     Data {
-      applicationId
+      applicationUserId
       userId
-      roleId
+      applicationId
       status
       createdAt
       updatedAt
@@ -90,9 +90,9 @@
     StatusCode
     Message
     Data {
-      applicationId
+      applicationUserId
       userId
-      roleId
+      applicationId
       status
       createdAt
       updatedAt
@@ -104,15 +104,15 @@
   
 
   
-    export const ApplicationUsersQueryByBoth = /* GraphQL */ `
-    query ApplicationUsersQueryByBoth($input: ApplicationUsersQueryByBothInput!) {
-  ApplicationUsersQueryByBoth(input: $input) {
+    export const ApplicationUsersQueryByApplicationId = /* GraphQL */ `
+    query ApplicationUsersQueryByApplicationId($input: ApplicationUsersQueryByApplicationIdInput!) {
+  ApplicationUsersQueryByApplicationId(input: $input) {
     StatusCode
     Message
     Data {
-      applicationId
+      applicationUserId
       userId
-      roleId
+      applicationId
       status
       createdAt
       updatedAt
@@ -121,19 +121,10 @@
 }
     `;
     
-  
-
-  
-
-  
-
   
 
 
 // For each secondary index, generate a query operation
-
-  
-  
 
   
   

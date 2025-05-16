@@ -10,10 +10,9 @@
     StatusCode
     Message
     Data {
-      id
+      applicationId
       name
-      description
-      type
+      ownerId
       status
       createdAt
       updatedAt
@@ -31,10 +30,9 @@
     StatusCode
     Message
     Data {
-      id
+      applicationId
       name
-      description
-      type
+      ownerId
       status
       createdAt
       updatedAt
@@ -52,10 +50,9 @@
     StatusCode
     Message
     Data {
-      id
+      applicationId
       name
-      description
-      type
+      ownerId
       status
       createdAt
       updatedAt
@@ -67,100 +64,15 @@
   
 
   
-    export const ApplicationsQueryById = /* GraphQL */ `
-    query ApplicationsQueryById($input: ApplicationsQueryByIdInput!) {
-  ApplicationsQueryById(input: $input) {
+    export const ApplicationsQueryByApplicationId = /* GraphQL */ `
+    query ApplicationsQueryByApplicationId($input: ApplicationsQueryByApplicationIdInput!) {
+  ApplicationsQueryByApplicationId(input: $input) {
     StatusCode
     Message
     Data {
-      id
+      applicationId
       name
-      description
-      type
-      status
-      createdAt
-      updatedAt
-    }
-  }
-}
-    `;
-    
-  
-
-  
-    export const ApplicationsQueryByName = /* GraphQL */ `
-    query ApplicationsQueryByName($input: ApplicationsQueryByNameInput!) {
-  ApplicationsQueryByName(input: $input) {
-    StatusCode
-    Message
-    Data {
-      id
-      name
-      description
-      type
-      status
-      createdAt
-      updatedAt
-    }
-  }
-}
-    `;
-    
-  
-
-  
-    export const ApplicationsQueryByBoth = /* GraphQL */ `
-    query ApplicationsQueryByBoth($input: ApplicationsQueryByBothInput!) {
-  ApplicationsQueryByBoth(input: $input) {
-    StatusCode
-    Message
-    Data {
-      id
-      name
-      description
-      type
-      status
-      createdAt
-      updatedAt
-    }
-  }
-}
-    `;
-    
-  
-
-  
-    export const ApplicationsQueryByStatus = /* GraphQL */ `
-    query ApplicationsQueryByStatus($input: ApplicationsQueryByStatusInput!) {
-  ApplicationsQueryByStatus(input: $input) {
-    StatusCode
-    Message
-    Data {
-      id
-      name
-      description
-      type
-      status
-      createdAt
-      updatedAt
-    }
-  }
-}
-    `;
-    
-  
-
-  
-    export const ApplicationsQueryByType = /* GraphQL */ `
-    query ApplicationsQueryByType($input: ApplicationsQueryByTypeInput!) {
-  ApplicationsQueryByType(input: $input) {
-    StatusCode
-    Message
-    Data {
-      id
-      name
-      description
-      type
+      ownerId
       status
       createdAt
       updatedAt
@@ -173,10 +85,4 @@
 
 
 // For each secondary index, generate a query operation
-
-  
-  
-
-  
-  
  

@@ -30,9 +30,9 @@ import { RoleStatus } from './RoleStatus.enum';
 // CreateInput
 export type RolesCreateInput = {
 
-  id: string;
+  roleId: string;
 
-  userId: string;
+  userId: string | undefined;
 
   roleType: string;
 
@@ -47,9 +47,9 @@ export type RolesCreateInput = {
 // UpdateInput
 export type RolesUpdateInput = {
 
-  id: string;
+  roleId: string;
 
-  userId: string;
+  userId: string | undefined;
 
   roleType: string;
 
@@ -63,19 +63,10 @@ export type RolesUpdateInput = {
 
 // QueryInput
 // Primary key queries
-export type RolesQueryByIdInput = {
-  id: string;
+export type RolesQueryByRoleIdInput = {
+  roleId: string;
 };
 
-
-export type RolesQueryByRoleTypeInput = {
-  roleType: string;
-};
-
-export type RolesQueryByBothInput = {
-  id: string;
-  roleType: string;
-};
 
 
 
@@ -110,9 +101,9 @@ export type RolesUpdateResponse = {
 
 export interface IRoles {
 
-  id: string;
+  roleId: string;
 
-  userId: string;
+  userId: string | undefined;
 
   roleType: string;
 
@@ -126,7 +117,7 @@ export interface IRoles {
 
 export class Roles implements IRoles {
 
-  id = '';
+  roleId = '';
 
   userId = '';
 

@@ -30,9 +30,9 @@ from .role_status import RoleStatus
 class Roles(BaseModel):
     """Roles model."""
     
-    id: str = Field(..., description="Unique identifier for the role")
+    role_id: str = Field(..., description="Unique identifier for the role (primary key)")
     
-    user_id: str = Field(..., description="ID of the user this role belongs to")
+    user_id: str = Field(..., description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.")
     
     role_type: RoleType = Field(..., description="Type of the role")
     
@@ -90,9 +90,9 @@ class Roles(BaseModel):
 
 class RolesCreateInput(BaseModel):
     
-    id: str = Field(..., description="Unique identifier for the role")
+    role_id: str = Field(..., description="Unique identifier for the role (primary key)")
     
-    user_id: str = Field(..., description="ID of the user this role belongs to")
+    user_id: str = Field(..., description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.")
     
     role_type: RoleType = Field(..., description="Type of the role")
     
@@ -105,9 +105,9 @@ class RolesCreateInput(BaseModel):
 
 class RolesUpdateInput(BaseModel):
     
-    id: Optional[str] = Field(None, description="Unique identifier for the role")
+    role_id: Optional[str] = Field(None, description="Unique identifier for the role (primary key)")
     
-    user_id: Optional[str] = Field(None, description="ID of the user this role belongs to")
+    user_id: Optional[str] = Field(None, description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.")
     
     role_type: Optional[RoleType] = Field(None, description="Type of the role")
     

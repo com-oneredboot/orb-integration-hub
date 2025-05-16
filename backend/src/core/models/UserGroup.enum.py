@@ -6,8 +6,6 @@ class UserGroup(Enum):
 
     CUSTOMER = "CUSTOMER"
 
-    CLIENT = "CLIENT"
-
     EMPLOYEE = "EMPLOYEE"
 
     OWNER = "OWNER"

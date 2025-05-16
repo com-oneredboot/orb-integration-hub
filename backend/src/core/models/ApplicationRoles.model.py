@@ -17,6 +17,8 @@ from enum import Enum
 
 
 
+
+
 from .role_type import RoleType
 
 
@@ -36,11 +38,13 @@ from .role_status import RoleStatus
 class ApplicationRoles(BaseModel):
     """ApplicationRoles model."""
     
-    role_id: str = Field(..., description="Unique identifier for the role")
+    application_role_id: str = Field(..., description="Unique identifier for the application role assignment (primary key)")
     
-    user_id: str = Field(..., description="ID of the user this role belongs to")
+    user_id: str = Field(..., description="ID of the user this role assignment belongs to (foreign key to Users)")
     
-    application_id: str = Field(..., description="ID of the application this role belongs to")
+    application_id: str = Field(..., description="ID of the application this role assignment belongs to (foreign key to Applications)")
+    
+    role_id: str = Field(..., description="ID of the role (foreign key to Roles)")
     
     role_name: str = Field(..., description="Name of the role")
     
@@ -48,13 +52,15 @@ class ApplicationRoles(BaseModel):
     
     permissions: List[str] = Field(..., description="List of permissions granted to this role")
     
-    status: RoleStatus = Field(..., description="Current status of the role")
+    status: RoleStatus = Field(..., description="Current status of the role assignment")
     
-    created_at: datetime = Field(..., description="When the role was created")
+    created_at: datetime = Field(..., description="When the role assignment was created")
     
-    updated_at: datetime = Field(..., description="When the role was last updated")
+    updated_at: datetime = Field(..., description="When the role assignment was last updated")
     
 
+    
+    
     
     
     
@@ -108,11 +114,13 @@ class ApplicationRoles(BaseModel):
 
 class ApplicationRolesCreateInput(BaseModel):
     
-    role_id: str = Field(..., description="Unique identifier for the role")
+    application_role_id: str = Field(..., description="Unique identifier for the application role assignment (primary key)")
     
-    user_id: str = Field(..., description="ID of the user this role belongs to")
+    user_id: str = Field(..., description="ID of the user this role assignment belongs to (foreign key to Users)")
     
-    application_id: str = Field(..., description="ID of the application this role belongs to")
+    application_id: str = Field(..., description="ID of the application this role assignment belongs to (foreign key to Applications)")
+    
+    role_id: str = Field(..., description="ID of the role (foreign key to Roles)")
     
     role_name: str = Field(..., description="Name of the role")
     
@@ -120,20 +128,22 @@ class ApplicationRolesCreateInput(BaseModel):
     
     permissions: List[str] = Field(..., description="List of permissions granted to this role")
     
-    status: RoleStatus = Field(..., description="Current status of the role")
+    status: RoleStatus = Field(..., description="Current status of the role assignment")
     
-    created_at: datetime = Field(..., description="When the role was created")
+    created_at: datetime = Field(..., description="When the role assignment was created")
     
-    updated_at: datetime = Field(..., description="When the role was last updated")
+    updated_at: datetime = Field(..., description="When the role assignment was last updated")
     
 
 class ApplicationRolesUpdateInput(BaseModel):
     
-    role_id: Optional[str] = Field(None, description="Unique identifier for the role")
+    application_role_id: Optional[str] = Field(None, description="Unique identifier for the application role assignment (primary key)")
     
-    user_id: Optional[str] = Field(None, description="ID of the user this role belongs to")
+    user_id: Optional[str] = Field(None, description="ID of the user this role assignment belongs to (foreign key to Users)")
     
-    application_id: Optional[str] = Field(None, description="ID of the application this role belongs to")
+    application_id: Optional[str] = Field(None, description="ID of the application this role assignment belongs to (foreign key to Applications)")
+    
+    role_id: Optional[str] = Field(None, description="ID of the role (foreign key to Roles)")
     
     role_name: Optional[str] = Field(None, description="Name of the role")
     
@@ -141,11 +151,11 @@ class ApplicationRolesUpdateInput(BaseModel):
     
     permissions: Optional[List[str]] = Field(None, description="List of permissions granted to this role")
     
-    status: Optional[RoleStatus] = Field(None, description="Current status of the role")
+    status: Optional[RoleStatus] = Field(None, description="Current status of the role assignment")
     
-    created_at: Optional[datetime] = Field(None, description="When the role was created")
+    created_at: Optional[datetime] = Field(None, description="When the role assignment was created")
     
-    updated_at: Optional[datetime] = Field(None, description="When the role was last updated")
+    updated_at: Optional[datetime] = Field(None, description="When the role assignment was last updated")
     
 
 class ApplicationRolesResponse(BaseModel):

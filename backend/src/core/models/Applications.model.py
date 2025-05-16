@@ -15,10 +15,6 @@ from enum import Enum
 
 
 
-from .application_type import ApplicationType
-
-
-
 from .application_status import ApplicationStatus
 
 
@@ -32,23 +28,19 @@ from .application_status import ApplicationStatus
 class Applications(BaseModel):
     """Applications model."""
     
-    id: str = Field(..., description="Unique identifier for the application")
+    application_id: str = Field(..., description="Unique identifier for the application (primary key)")
     
     name: str = Field(..., description="Name of the application")
     
-    description: str = Field(..., description="Description of the application")
+    owner_id: str = Field(..., description="ID of the user who owns the application (foreign key to Users)")
     
-    type: ApplicationType = Field(..., description="Type of the application")
-    
-    status: ApplicationStatus = Field(..., description="Status of the application")
+    status: ApplicationStatus = Field(..., description="Current status of the application")
     
     created_at: datetime = Field(..., description="When the application was created")
     
     updated_at: datetime = Field(..., description="When the application was last updated")
     
 
-    
-    
     
     
     
@@ -96,15 +88,13 @@ class Applications(BaseModel):
 
 class ApplicationsCreateInput(BaseModel):
     
-    id: str = Field(..., description="Unique identifier for the application")
+    application_id: str = Field(..., description="Unique identifier for the application (primary key)")
     
     name: str = Field(..., description="Name of the application")
     
-    description: str = Field(..., description="Description of the application")
+    owner_id: str = Field(..., description="ID of the user who owns the application (foreign key to Users)")
     
-    type: ApplicationType = Field(..., description="Type of the application")
-    
-    status: ApplicationStatus = Field(..., description="Status of the application")
+    status: ApplicationStatus = Field(..., description="Current status of the application")
     
     created_at: datetime = Field(..., description="When the application was created")
     
@@ -113,15 +103,13 @@ class ApplicationsCreateInput(BaseModel):
 
 class ApplicationsUpdateInput(BaseModel):
     
-    id: Optional[str] = Field(None, description="Unique identifier for the application")
+    application_id: Optional[str] = Field(None, description="Unique identifier for the application (primary key)")
     
     name: Optional[str] = Field(None, description="Name of the application")
     
-    description: Optional[str] = Field(None, description="Description of the application")
+    owner_id: Optional[str] = Field(None, description="ID of the user who owns the application (foreign key to Users)")
     
-    type: Optional[ApplicationType] = Field(None, description="Type of the application")
-    
-    status: Optional[ApplicationStatus] = Field(None, description="Status of the application")
+    status: Optional[ApplicationStatus] = Field(None, description="Current status of the application")
     
     created_at: Optional[datetime] = Field(None, description="When the application was created")
     

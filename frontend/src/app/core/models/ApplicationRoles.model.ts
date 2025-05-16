@@ -18,6 +18,8 @@
 
 
 
+
+
 import { RoleType } from './RoleType.enum';
 
 
@@ -36,11 +38,13 @@ import { RoleStatus } from './RoleStatus.enum';
 // CreateInput
 export type ApplicationRolesCreateInput = {
 
-  roleId: string;
+  applicationRoleId: string;
 
   userId: string;
 
   applicationId: string;
+
+  roleId: string;
 
   roleName: string;
 
@@ -59,11 +63,13 @@ export type ApplicationRolesCreateInput = {
 // UpdateInput
 export type ApplicationRolesUpdateInput = {
 
-  roleId: string;
+  applicationRoleId: string;
 
   userId: string;
 
   applicationId: string;
+
+  roleId: string;
 
   roleName: string;
 
@@ -81,19 +87,10 @@ export type ApplicationRolesUpdateInput = {
 
 // QueryInput
 // Primary key queries
-export type ApplicationRolesQueryByApplicationIdInput = {
-  applicationId: string;
+export type ApplicationRolesQueryByApplicationRoleIdInput = {
+  applicationRoleId: string;
 };
 
-
-export type ApplicationRolesQueryByRoleIdInput = {
-  roleId: string;
-};
-
-export type ApplicationRolesQueryByBothInput = {
-  applicationId: string;
-  roleId: string;
-};
 
 
 
@@ -106,7 +103,15 @@ export type ApplicationRolesQueryByUserIdInput = {
 
 
 
+export type ApplicationRolesQueryByApplicationIdInput = {
+  applicationId: string;
+};
 
+
+
+export type ApplicationRolesQueryByRoleIdInput = {
+  roleId: string;
+};
 
 
 
@@ -132,11 +137,13 @@ export type ApplicationRolesUpdateResponse = {
 
 export interface IApplicationRoles {
 
-  roleId: string;
+  applicationRoleId: string;
 
   userId: string;
 
   applicationId: string;
+
+  roleId: string;
 
   roleName: string;
 
@@ -154,11 +161,13 @@ export interface IApplicationRoles {
 
 export class ApplicationRoles implements IApplicationRoles {
 
-  roleId = '';
+  applicationRoleId = '';
 
   userId = '';
 
   applicationId = '';
+
+  roleId = '';
 
   roleName = '';
 
@@ -176,6 +185,8 @@ export class ApplicationRoles implements IApplicationRoles {
   constructor(data: Partial<IApplicationRoles> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
+
+
 
 
 

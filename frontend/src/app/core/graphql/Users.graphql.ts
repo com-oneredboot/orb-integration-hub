@@ -10,16 +10,14 @@
     StatusCode
     Message
     Data {
-      id
+      userId
+      cognitoId
       email
       firstName
       lastName
-      roleId
-      roleType
       status
       createdAt
       updatedAt
-      cognitoId
       phoneNumber
       groups
       emailVerified
@@ -38,16 +36,14 @@
     StatusCode
     Message
     Data {
-      id
+      userId
+      cognitoId
       email
       firstName
       lastName
-      roleId
-      roleType
       status
       createdAt
       updatedAt
-      cognitoId
       phoneNumber
       groups
       emailVerified
@@ -66,16 +62,14 @@
     StatusCode
     Message
     Data {
-      id
+      userId
+      cognitoId
       email
       firstName
       lastName
-      roleId
-      roleType
       status
       createdAt
       updatedAt
-      cognitoId
       phoneNumber
       groups
       emailVerified
@@ -88,22 +82,20 @@
   
 
   
-    export const UsersQueryById = /* GraphQL */ `
-    query UsersQueryById($input: UsersQueryByIdInput!) {
-  UsersQueryById(input: $input) {
+    export const UsersQueryByUserId = /* GraphQL */ `
+    query UsersQueryByUserId($input: UsersQueryByUserIdInput!) {
+  UsersQueryByUserId(input: $input) {
     StatusCode
     Message
     Data {
-      id
+      userId
+      cognitoId
       email
       firstName
       lastName
-      roleId
-      roleType
       status
       createdAt
       updatedAt
-      cognitoId
       phoneNumber
       groups
       emailVerified
@@ -122,16 +114,14 @@
     StatusCode
     Message
     Data {
-      id
+      userId
+      cognitoId
       email
       firstName
       lastName
-      roleId
-      roleType
       status
       createdAt
       updatedAt
-      cognitoId
       phoneNumber
       groups
       emailVerified
@@ -144,50 +134,20 @@
   
 
   
-    export const UsersQueryByBoth = /* GraphQL */ `
-    query UsersQueryByBoth($input: UsersQueryByBothInput!) {
-  UsersQueryByBoth(input: $input) {
+    export const UsersQueryByCognitoId = /* GraphQL */ `
+    query UsersQueryByCognitoId($input: UsersQueryByCognitoIdInput!) {
+  UsersQueryByCognitoId(input: $input) {
     StatusCode
     Message
     Data {
-      id
+      userId
+      cognitoId
       email
       firstName
       lastName
-      roleId
-      roleType
       status
       createdAt
       updatedAt
-      cognitoId
-      phoneNumber
-      groups
-      emailVerified
-      phoneVerified
-    }
-  }
-}
-    `;
-    
-  
-
-  
-    export const UsersQueryByRoleId = /* GraphQL */ `
-    query UsersQueryByRoleId($input: UsersQueryByRoleIdInput!) {
-  UsersQueryByRoleId(input: $input) {
-    StatusCode
-    Message
-    Data {
-      id
-      email
-      firstName
-      lastName
-      roleId
-      roleType
-      status
-      createdAt
-      updatedAt
-      cognitoId
       phoneNumber
       groups
       emailVerified
@@ -201,6 +161,9 @@
 
 
 // For each secondary index, generate a query operation
+
+  
+  
 
   
   

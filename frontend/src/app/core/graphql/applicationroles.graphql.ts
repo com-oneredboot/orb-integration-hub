@@ -10,9 +10,10 @@
     StatusCode
     Message
     Data {
-      roleId
+      applicationRoleId
       userId
       applicationId
+      roleId
       roleName
       roleType
       permissions
@@ -33,9 +34,10 @@
     StatusCode
     Message
     Data {
-      roleId
+      applicationRoleId
       userId
       applicationId
+      roleId
       roleName
       roleType
       permissions
@@ -56,9 +58,10 @@
     StatusCode
     Message
     Data {
-      roleId
+      applicationRoleId
       userId
       applicationId
+      roleId
       roleName
       roleType
       permissions
@@ -73,61 +76,16 @@
   
 
   
-    export const ApplicationRolesQueryByApplicationId = /* GraphQL */ `
-    query ApplicationRolesQueryByApplicationId($input: ApplicationRolesQueryByApplicationIdInput!) {
-  ApplicationRolesQueryByApplicationId(input: $input) {
+    export const ApplicationRolesQueryByApplicationRoleId = /* GraphQL */ `
+    query ApplicationRolesQueryByApplicationRoleId($input: ApplicationRolesQueryByApplicationRoleIdInput!) {
+  ApplicationRolesQueryByApplicationRoleId(input: $input) {
     StatusCode
     Message
     Data {
-      roleId
+      applicationRoleId
       userId
       applicationId
-      roleName
-      roleType
-      permissions
-      status
-      createdAt
-      updatedAt
-    }
-  }
-}
-    `;
-    
-  
-
-  
-    export const ApplicationRolesQueryByRoleId = /* GraphQL */ `
-    query ApplicationRolesQueryByRoleId($input: ApplicationRolesQueryByRoleIdInput!) {
-  ApplicationRolesQueryByRoleId(input: $input) {
-    StatusCode
-    Message
-    Data {
       roleId
-      userId
-      applicationId
-      roleName
-      roleType
-      permissions
-      status
-      createdAt
-      updatedAt
-    }
-  }
-}
-    `;
-    
-  
-
-  
-    export const ApplicationRolesQueryByBoth = /* GraphQL */ `
-    query ApplicationRolesQueryByBoth($input: ApplicationRolesQueryByBothInput!) {
-  ApplicationRolesQueryByBoth(input: $input) {
-    StatusCode
-    Message
-    Data {
-      roleId
-      userId
-      applicationId
       roleName
       roleType
       permissions
@@ -148,9 +106,10 @@
     StatusCode
     Message
     Data {
-      roleId
+      applicationRoleId
       userId
       applicationId
+      roleId
       roleName
       roleType
       permissions
@@ -165,7 +124,51 @@
   
 
   
+    export const ApplicationRolesQueryByApplicationId = /* GraphQL */ `
+    query ApplicationRolesQueryByApplicationId($input: ApplicationRolesQueryByApplicationIdInput!) {
+  ApplicationRolesQueryByApplicationId(input: $input) {
+    StatusCode
+    Message
+    Data {
+      applicationRoleId
+      userId
+      applicationId
+      roleId
+      roleName
+      roleType
+      permissions
+      status
+      createdAt
+      updatedAt
+    }
+  }
+}
+    `;
+    
+  
 
+  
+    export const ApplicationRolesQueryByRoleId = /* GraphQL */ `
+    query ApplicationRolesQueryByRoleId($input: ApplicationRolesQueryByRoleIdInput!) {
+  ApplicationRolesQueryByRoleId(input: $input) {
+    StatusCode
+    Message
+    Data {
+      applicationRoleId
+      userId
+      applicationId
+      roleId
+      roleName
+      roleType
+      permissions
+      status
+      createdAt
+      updatedAt
+    }
+  }
+}
+    `;
+    
   
 
 
