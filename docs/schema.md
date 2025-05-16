@@ -139,3 +139,18 @@ Applications (applicationId) <─┬─> Roles (roleId)
 - Roles are not stored directly on the user; use ApplicationRoles for all role assignments.
 - ApplicationUsers is used for managing user membership in applications.
 - This structure supports multi-tenancy, custom roles per application, and scalable authorization. 
+
+## Code Generation & GraphQL Auth Guarantees
+
+- Query operations are generated for both primary and all secondary indexes for every table schema.
+- Each query and mutation operation in the generated GraphQL schema is guaranteed to have an explicit `@aws_auth` directive, as enforced by the YAML schemas.
+- The YAML schemas in `schemas/entities/` are the single source of truth for all model, index, and authentication configuration.
+- The code generation pipeline will fail if any query or mutation is missing an explicit group assignment in the YAML, ensuring no operation is left unauthenticated.
+- All naming conventions for operations, types, and indexes are now strictly enforced and validated.
+
+### Pipeline Improvements
+- The generator now automatically includes queries for both primary and secondary indexes.
+- Operation names are consistent and predictable, matching the YAML schema definitions.
+- Validation ensures that all required fields, keys, and auth directives are present and correct.
+
+Refer to this section when updating schemas or troubleshooting codegen issues. 
