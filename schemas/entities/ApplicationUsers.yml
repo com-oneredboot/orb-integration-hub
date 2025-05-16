@@ -2,6 +2,7 @@
 # author: Corey Dale Peters
 # date: 2025-02-17
 # description: yaml file containing the ApplicationUsers table schema
+# This is the join table mapping users to applications.
 
 type: table
 version: '1.0'
@@ -14,46 +15,36 @@ model:
       - ApplicationUsersCreate
       - ApplicationUsersUpdate
       - ApplicationUsersDelete
-      - ApplicationUsersQueryByApplication
-      - ApplicationUsersQueryByUser
   keys:
     primary:
-      partition: applicationId
-      sort: userId
-      projectionType: ALL
-      description: Primary key for application users
+      partition: applicationUserId
+      description: Primary key for application user membership (unique for each user/application pair)
     secondary:
-      - name: UserApplicationsIndex
+      - name: UserAppIndex
         type: GSI
         partition: userId
         sort: applicationId
-        projectionType: ALL
+        projection_type: ALL
         description: Index for querying applications by user
-      - name: ApplicationRoleIndex
+      - name: AppUserIndex
         type: GSI
         partition: applicationId
-        sort: roleId
-        projectionType: ALL
-        description: Index for querying users by role within an application
-      - name: UserStatusIndex
-        type: GSI
-        partition: applicationId
-        sort: status
-        projectionType: ALL
-        description: Index for querying users by status within an application
+        sort: userId
+        projection_type: ALL
+        description: Index for querying users by application
   attributes:
-    applicationId:
+    applicationUserId:
       type: string
       required: true
-      description: ID of the application
+      description: Unique identifier for the application user membership (primary key)
     userId:
       type: string
       required: true
-      description: ID of the user
-    roleId:
+      description: ID of the user (foreign key to Users)
+    applicationId:
       type: string
-      required: false
-      description: Unique identifier for the role assigned to the user
+      required: true
+      description: ID of the application (foreign key to Applications)
     status:
       type: string
       required: true
@@ -61,10 +52,9 @@ model:
       enum_values:
         - ACTIVE
         - INACTIVE
-        - PENDING
-        - REJECTED
-        - DELETED
-      description: Status of the user in the application
+        - INVITED
+        - REMOVED
+      description: Current status of the user in the application
     createdAt:
       type: timestamp
       required: true
@@ -72,4 +62,4 @@ model:
     updatedAt:
       type: timestamp
       required: true
-      description: When the user's application status was last updated 
+      description: When the membership was last updated 

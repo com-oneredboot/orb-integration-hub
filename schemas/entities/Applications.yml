@@ -1,7 +1,7 @@
 # file: schemas/entities/Applications.yml
 # author: Corey Dale Peters
 # date: 2025-02-17
-# description: yaml file containing the Applications table schema
+# description: Canonical applications table. Referenced by ApplicationRoles and ApplicationUsers.
 
 type: table
 version: '1.0'
@@ -14,48 +14,23 @@ model:
       - ApplicationsCreate
       - ApplicationsUpdate
       - ApplicationsDelete
-      - ApplicationsQueryByStatus
   keys:
     primary:
-      partition: id
-      sort: name
-      projectionType: ALL
-      description: Primary key for applications
-    secondary:
-      - name: ApplicationStatusIndex
-        type: GSI
-        partition: status
-        sort: name
-        projectionType: ALL
-        description: Index for querying applications by status
-      - name: ApplicationTypeIndex
-        type: GSI
-        partition: type
-        sort: name
-        projectionType: ALL
-        description: Index for querying applications by type
+      partition: applicationId
+      description: Primary key for applications (unique for each application)
   attributes:
-    id:
+    applicationId:
       type: string
       required: true
-      description: Unique identifier for the application
+      description: Unique identifier for the application (primary key)
     name:
       type: string
       required: true
       description: Name of the application
-    description:
-      type: string
-      required: false
-      description: Description of the application
-    type:
+    ownerId:
       type: string
       required: true
-      enum_type: ApplicationType
-      enum_values:
-        - INTERNAL
-        - EXTERNAL
-        - SYSTEM
-      description: Type of the application
+      description: ID of the user who owns the application (foreign key to Users)
     status:
       type: string
       required: true
@@ -63,9 +38,8 @@ model:
       enum_values:
         - ACTIVE
         - INACTIVE
-        - PENDING
-        - DELETED
-      description: Status of the application
+        - ARCHIVED
+      description: Current status of the application
     createdAt:
       type: timestamp
       required: true

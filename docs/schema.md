@@ -104,3 +104,38 @@ The generator creates:
 4. Commit both schema changes and generated files
 5. Keep naming conventions consistent across all layers
 6. Update documentation when making schema changes 
+
+## Key Tables and Relationships
+
+| Table             | Primary Key            | Purpose                                 | References                        |
+|-------------------|-----------------------|-----------------------------------------|------------------------------------|
+| Users             | userId                | Identity, Cognito mapping, groups       | —                                  |
+| Applications      | applicationId         | Customer applications                   | ownerId (Users)                    |
+| Roles             | roleId                | Canonical role definitions              | —                                  |
+| ApplicationRoles  | applicationRoleId     | User's role(s) in a specific app        | userId, applicationId, roleId      |
+| ApplicationUsers  | applicationUserId     | User's membership in an application     | userId, applicationId              |
+
+### Join Tables
+
+- **ApplicationRoles**: Maps a user to a role within a specific application. References `userId` (Users), `applicationId` (Applications), and `roleId` (Roles).
+- **ApplicationUsers**: Maps a user to an application. References `userId` (Users) and `applicationId` (Applications).
+
+### Diagram
+
+```
+Users (userId)
+ └─< ApplicationUsers (applicationUserId, userId, applicationId) >─┐
+                                                                   |
+Applications (applicationId) <─┘
+
+Users (userId)
+ └─< ApplicationRoles (applicationRoleId, userId, applicationId, roleId) >─┐
+                                                                           |
+Applications (applicationId) <─┬─> Roles (roleId)
+```
+
+## Notes
+- All primary keys are now explicit and descriptive (e.g., `userId`, `applicationId`, `roleId`, `applicationRoleId`, `applicationUserId`).
+- Roles are not stored directly on the user; use ApplicationRoles for all role assignments.
+- ApplicationUsers is used for managing user membership in applications.
+- This structure supports multi-tenancy, custom roles per application, and scalable authorization. 

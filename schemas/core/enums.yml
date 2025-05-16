@@ -7,7 +7,6 @@
 UserGroup:
   - USER
   - CUSTOMER
-  - CLIENT
   - EMPLOYEE
   - OWNER
 

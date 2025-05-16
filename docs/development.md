@@ -155,6 +155,30 @@ This guide provides instructions for setting up the development environment and 
 *   **Frontend:** Adheres to Angular standards and ESLint rules defined in `frontend/eslint.config.js`. Uses Prettier (likely via VS Code extension) for formatting.
 *   **Backend:** Uses **Black** for code formatting and **Flake8** for linting. Configuration is typically in `pyproject.toml`. Ensure these tools are run before committing.
 
+## 8a. Using the MCP Memory Graph
+
+The MCP Memory Graph is a living knowledge base for entities, relationships, and key observations in the project. Keeping it up to date helps the team and AI agents reason about architecture, dependencies, and lessons learned.
+
+**When to update the Memory Graph:**
+- When adding a new feature, service, error type, or workflow
+- When discovering a recurring issue or making a key architectural/implementation decision
+- After completing a major feature, refactor, or resolving a significant bug
+- When updating documentation that changes project structure or conventions
+
+**How to update:**
+- Use the MCP tools to add entities, relationships, and observations (see project README for examples)
+- Reference the Memory Graph when planning, debugging, or onboarding
+- After updating a task/subtask (especially when logging new findings), check if a new entity, relationship, or observation should be added to the Memory Graph
+
+**Example actions:**
+- Add an entity: `admin-interface` (type: feature)
+- Add a relationship: `admin-interface` manages `UserProfileService`
+- Add an observation: `UserProfileService`: 'Switched to ISO string timestamps for DynamoDB compatibility (2024-06-01)'
+
+**Review:**
+- Periodically review the Memory Graph for gaps or outdated info
+- Use it to inform retrospectives, planning, and documentation updates
+
 ## 8. Branching Strategy
 
 *   Follows a feature branch workflow:
