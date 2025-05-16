@@ -3,17 +3,18 @@
 # date: 2025-02-17
 # description: Canonical applications table. Referenced by ApplicationRoles and ApplicationUsers.
 
+# GROUP_TYPES: OWNER, ADMIN, SUPPORT, USER (see enum definition)
+
 type: table
 version: '1.0'
 name: Applications
 model:
   authConfig:
-    cognitoOperations:
-      - ApplicationsQueryById
-      - ApplicationsResponse
-      - ApplicationsCreate
-      - ApplicationsUpdate
-      - ApplicationsDelete
+    cognitoAuthentication:
+      default: OWNER
+      groups:
+        OWNER:
+          - '*'
   keys:
     primary:
       partition: applicationId

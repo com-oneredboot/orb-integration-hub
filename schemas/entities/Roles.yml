@@ -8,12 +8,11 @@ version: '1.0'
 name: Roles
 model:
   authConfig:
-    cognitoOperations:
-      - RolesQueryById
-      - RolesResponse
-      - RolesCreate
-      - RolesUpdate
-      - RolesDelete
+    cognitoAuthentication:
+      default: OWNER
+      groups:
+        OWNER:
+          - '*'
   keys:
     primary:
       partition: roleId

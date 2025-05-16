@@ -4,17 +4,18 @@
 # description: yaml file containing the ApplicationUsers table schema
 # This is the join table mapping users to applications.
 
+# GROUP_TYPES: OWNER, ADMIN, SUPPORT, USER (see enum definition)
+
 type: table
 version: '1.0'
 name: ApplicationUsers
 model:
   authConfig:
-    cognitoOperations:
-      - ApplicationUsersQueryById
-      - ApplicationUsersResponse
-      - ApplicationUsersCreate
-      - ApplicationUsersUpdate
-      - ApplicationUsersDelete
+    cognitoAuthentication:
+      default: OWNER
+      groups:
+        OWNER:
+          - '*'
   keys:
     primary:
       partition: applicationUserId
