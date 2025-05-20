@@ -20,6 +20,7 @@ import { UsersCreateInput } from "../../../../core/models/Users.model";
 import {QRCodeToDataURLOptions} from "qrcode";
 import {UserService} from "../../../../core/services/user.service";
 import { UserStatus } from "../../../../core/models/UserStatus.enum";
+import { UserGroup } from "../../../../core/models/UserGroup.enum";
 
 
 @Component({
@@ -186,28 +187,22 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             break;
           case AuthSteps.PASSWORD_SETUP:
             // Create a complete UserCreateInput with all required fields
-            const timestamp = new Date().toISOString();
-            const firstName = this.authForm.get('firstName')?.value || '';
-            const lastName = this.authForm.get('lastName')?.value || '';
-            const phoneNumber = this.authForm.get('phoneNumber')?.value || '';
-            const userCreateInput: UsersCreateInput = {
-              id: uuidv4(),
+            const userInput = {
+              userId: uuidv4(),
               cognitoId: uuidv4(),
-              email: email,
-              firstName: firstName,
-              lastName: lastName,
-              phoneNumber: phoneNumber,
+              email: this.authForm.value.email,
+              firstName: this.authForm.value.firstName,
+              lastName: this.authForm.value.lastName,
+              phoneNumber: this.authForm.value.phoneNumber,
+              groups: [UserGroup.USER],
+              status: UserStatus.PENDING,
+              createdAt: new Date().toISOString(),
               phoneVerified: false,
               emailVerified: false,
-              groups: [],
-              status: UserStatus.PENDING,
-              createdAt: timestamp,
-              updatedAt: timestamp,
-              roleId: 'role-1',
-              roleType: 'USER',
+              updatedAt: new Date().toISOString()
             };
             if (!password) return;
-            this.store.dispatch(AuthActions.createUser({input: userCreateInput, password: password } ));
+            this.store.dispatch(AuthActions.createUser({input: userInput, password: password } ));
             break;
           case AuthSteps.EMAIL_VERIFY:
             if (!emailCode) return;

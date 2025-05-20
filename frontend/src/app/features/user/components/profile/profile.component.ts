@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Observable, Subject, takeUntil } from 'rxjs';
-import { IUsers, UsersUpdateInput, UsersResponse, UsersQueryByIdInput } from '../../../../core/models/Users.model';
+import { IUsers, UsersUpdateInput, UsersResponse, UsersQueryByUserIdInput } from '../../../../core/models/Users.model';
 import * as fromAuth from '../../components/auth-flow/store/auth.selectors';
 import { AuthActions } from '../../components/auth-flow/store/auth.actions';
 import { UserService } from '../../../../core/services/user.service';
@@ -170,14 +170,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
       // Get current user to retrieve the user_id
       const user = await this.getCurrentUser();
       
-      if (!user || !user.id) {
+      if (!user || !user.userId) {
         console.error('Cannot update profile: No user ID available');
         return;
       }
       
       // Create update input from form values
       const updateInput: UsersUpdateInput = {
-        id: user.id,
+        userId: user.userId,
         cognitoId: user.cognitoId,
         email: user.email,
         emailVerified: user.emailVerified,
@@ -189,8 +189,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
         status: user.status,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
-        roleId: user.roleId,
-        roleType: user.roleType,
       };
       
       // Call the userService to update the profile

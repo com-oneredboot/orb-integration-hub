@@ -118,7 +118,7 @@ export class AuthEffects {
               }));
             }
             // Now verify the email with the userId
-            const userIdInput = { id: user.id };
+            const userIdInput = { userId: user.userId };
             return from(this.userService.emailVerify(userIdInput, code, email)).pipe(
               map(response => {
                 if (response) {
