@@ -21,7 +21,7 @@ describe('ProfileComponent', () => {
   let fixture: ComponentFixture<ProfileComponent>;
   let mockStore: MockStore;
   let mockUserService: jasmine.SpyObj<UserService>;
-  let store: jasmine.SpyObj<Store>;
+  let store: MockStore;
   let router: jasmine.SpyObj<Router>;
 
   const initialState = {
@@ -84,12 +84,10 @@ describe('ProfileComponent', () => {
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
 
     await TestBed.configureTestingModule({
-      declarations: [ProfileComponent],
-      imports: [ReactiveFormsModule],
+      imports: [ ProfileComponent ],
       providers: [
         provideMockStore({ initialState }),
         { provide: UserService, useValue: mockUserService },
-        { provide: Store, useValue: storeSpy },
         { provide: Router, useValue: routerSpy },
         FormBuilder
       ]
@@ -98,7 +96,7 @@ describe('ProfileComponent', () => {
     mockStore = TestBed.inject(MockStore);
     fixture = TestBed.createComponent(ProfileComponent);
     component = fixture.componentInstance;
-    store = TestBed.inject(Store) as jasmine.SpyObj<Store>;
+    store = mockStore;
     router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
   });
 
@@ -120,28 +118,29 @@ describe('ProfileComponent', () => {
   });
 
   describe('Form initialization', () => {
-    it('should initialize form with empty values', () => {
-      fixture.detectChanges();
-      expect(component.profileForm.get('firstName')?.value).toBe('');
-      expect(component.profileForm.get('lastName')?.value).toBe('');
-      // Note: email and phoneNumber are disabled fields, so they aren't in form.value
-    });
-
-    it('should populate form with user data when available', () => {
-      // Set up the store with mock user
+    it('should initialize form with user data when user exists', () => {
       mockStore.setState({
         auth: {
           currentUser: mockUser,
           debugMode: false
         }
       });
-      
       fixture.detectChanges();
-      
       expect(component.profileForm.get('firstName')?.value).toBe('Test');
       expect(component.profileForm.get('lastName')?.value).toBe('User');
       expect(component.profileForm.get('email')?.value).toBe('test@example.com');
       expect(component.profileForm.get('phoneNumber')?.value).toBe('+12345678901');
+    });
+    it('should initialize form with empty values when no user exists', () => {
+      mockStore.setState({
+        auth: {
+          currentUser: null,
+          debugMode: false
+        }
+      });
+      fixture.detectChanges();
+      expect(component.profileForm.get('firstName')?.value).toBe('');
+      expect(component.profileForm.get('lastName')?.value).toBe('');
     });
   });
 

@@ -58,17 +58,25 @@ describe('AuthFlowComponent', () => {
   };
 
   beforeEach(async () => {
-    const userServiceSpy = jasmine.createSpyObj('UserService', ['userCreate']);
+    const userServiceSpy = jasmine.createSpyObj('UserService', ['userCreate', 'isUserValid']);
     userServiceSpy.userCreate.and.returnValue(Promise.resolve(mockResponse));
+    userServiceSpy.isUserValid.and.returnValue(true);
 
-    const storeSpy = jasmine.createSpyObj('Store', ['select']);
-    storeSpy.select.and.returnValue(of(mockUser));
+    const storeSpy = jasmine.createSpyObj('Store', ['select', 'dispatch']);
+    storeSpy.select.and.callFake((selector: any) => {
+      if (selector === require('./store/auth.selectors').selectCurrentStep) {
+        return of(require('./store/auth.state').AuthSteps.PASSWORD_SETUP);
+      }
+      if (selector === require('./store/auth.selectors').selectCurrentUser) {
+        return of(mockUser);
+      }
+      return of(null);
+    });
 
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
 
     await TestBed.configureTestingModule({
-      declarations: [ AuthFlowComponent ],
-      imports: [ ReactiveFormsModule ],
+      imports: [ AuthFlowComponent ],
       providers: [
         FormBuilder,
         { provide: UserService, useValue: userServiceSpy },
@@ -94,10 +102,19 @@ describe('AuthFlowComponent', () => {
   });
 
   it('should create user', async () => {
-    const password = 'TestPassword123!';
-    userService.userCreate.and.returnValue(Promise.resolve(mockResponse));
+    store.select.and.callFake((selector: any) => {
+      if (selector === require('./store/auth.selectors').selectCurrentStep) {
+        return of(require('./store/auth.state').AuthSteps.PASSWORD_SETUP);
+      }
+      if (selector === require('./store/auth.selectors').selectCurrentUser) {
+        return of(mockUser);
+      }
+      return of(null);
+    });
 
-    component.signupForm.patchValue({
+    const password = 'TestPassword123!';
+
+    component.authForm.patchValue({
       email: 'test@example.com',
       password: password,
       firstName: 'Test',
@@ -106,6 +123,25 @@ describe('AuthFlowComponent', () => {
     });
 
     await component.onSubmit();
-    expect(userService.userCreate).toHaveBeenCalledWith(mockCreateInput, password);
+    expect(store.dispatch).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        type: '[Auth] Create User',
+        input: jasmine.objectContaining({
+          email: 'test@example.com',
+          firstName: 'Test',
+          lastName: 'User',
+          phoneNumber: '+12345678901',
+          groups: [require('../../../../core/models/UserGroup.enum').UserGroup.USER],
+          status: 'PENDING',
+          userId: jasmine.any(String),
+          cognitoId: jasmine.any(String),
+          createdAt: jasmine.any(String),
+          updatedAt: jasmine.any(String),
+          phoneVerified: false,
+          emailVerified: false
+        }),
+        password: password
+      })
+    );
   });
 });

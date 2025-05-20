@@ -40,7 +40,7 @@ describe('DashboardComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ DashboardComponent ],
+      imports: [ DashboardComponent ],
       providers: [
         provideMockStore({ initialState })
       ]

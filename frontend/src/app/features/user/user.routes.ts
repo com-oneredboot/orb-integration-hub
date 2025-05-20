@@ -14,7 +14,7 @@ import { AuthGuard } from '../../core/guards/auth.guard';
 import { AuthFlowComponent } from "./components/auth-flow/auth-flow.component";
 import { UserLayoutComponent } from '../../layouts/user-layout/user-layout.component';
 
-const routes: Routes = [
+export const USER_ROUTES: Routes = [
   {
     path: '',
     component: UserLayoutComponent,
@@ -46,7 +46,7 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  imports: [RouterModule.forChild(routes)],
+  imports: [RouterModule.forChild(USER_ROUTES)],
   exports: [RouterModule]
 })
 

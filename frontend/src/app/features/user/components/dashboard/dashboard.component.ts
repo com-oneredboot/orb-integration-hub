@@ -9,12 +9,21 @@ import { Observable } from 'rxjs';
 import { IUsers } from '../../../../core/models/Users.model';
 import * as fromAuth from '../../components/auth-flow/store/auth.selectors';
 import { UserService } from '../../../../core/services/user.service';
+import { CommonModule } from '@angular/common';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
-  standalone: false
+  standalone: true,
+  imports: [
+    CommonModule,
+    FontAwesomeModule,
+    RouterModule
+    // Add any shared components, directives, or pipes used in the template here
+  ]
 })
 export class DashboardComponent implements OnInit {
   currentUser$: Observable<IUsers | null>;

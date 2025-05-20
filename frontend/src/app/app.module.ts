@@ -28,7 +28,6 @@ import { UserModule } from "./features/user/user.module";
     NgOptimizedImage,
     FontAwesomeModule,
     UserLayoutComponent,
-    AppComponent,
     PlatformLayoutComponent,
     UserModule
   ],

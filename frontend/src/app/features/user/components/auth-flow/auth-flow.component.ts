@@ -9,6 +9,10 @@ import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {Router} from '@angular/router';
 import {Store} from '@ngrx/store';
 import {map, Observable, Subject, take, takeUntil, tap} from 'rxjs';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { RouterModule } from '@angular/router';
 
 import {v4 as uuidv4} from 'uuid';
 
@@ -27,7 +31,14 @@ import { UserGroup } from "../../../../core/models/UserGroup.enum";
   selector: 'app-auth-flow',
   templateUrl: './auth-flow.component.html',
   styleUrls: ['./auth-flow.component.scss'],
-  standalone: false
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FontAwesomeModule,
+    RouterModule
+    // Add any shared components, directives, or pipes used in the template here
+  ]
 })
 export class AuthFlowComponent implements OnInit, OnDestroy {
 
