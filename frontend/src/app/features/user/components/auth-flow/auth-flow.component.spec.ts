@@ -163,4 +163,29 @@ describe('AuthFlowComponent', () => {
     expect(compiled.querySelector('.auth-flow__error')?.textContent)
       .toContain('Unable to connect to the server. Please check your connection and try again.');
   });
+
+  it('should not advance to password step and should show error if userExists returns false', () => {
+    // Simulate error in store for user not found or not authorized
+    store.select.and.callFake((selector: any) => {
+      if (selector === require('./store/auth.selectors').selectError) {
+        return of('User not found or not authorized.');
+      }
+      if (selector === require('./store/auth.selectors').selectCurrentStep) {
+        return of(require('./store/auth.state').AuthSteps.EMAIL);
+      }
+      return of(null);
+    });
+    fixture = TestBed.createComponent(AuthFlowComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    // Error banner should be shown
+    expect(compiled.querySelector('.auth-flow__error')?.textContent)
+      .toContain('User not found or not authorized.');
+    // Should still be on email step
+    expect(compiled.querySelector('input[type="email"]')).toBeTruthy();
+    // Should not show password input in the active step
+    const activePasswordInput = compiled.querySelector('.auth-flow__form-step--active input[type="password"]');
+    expect(activePasswordInput).toBeFalsy();
+  });
 });
