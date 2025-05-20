@@ -7,6 +7,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { PlatformLayoutComponent } from "./layouts/platform-layout/platform-layout.component";
 import { AuthGuard } from './core/guards/auth.guard';
+import { PlatformComponent } from './features/platform/platform.component';
 
 export const routes: Routes = [
   {
@@ -17,6 +18,10 @@ export const routes: Routes = [
         path: '',
         redirectTo: 'platform',
         pathMatch: 'full'
+      },
+      {
+        path: 'platform',
+        component: PlatformComponent
       }
     ]
   }
