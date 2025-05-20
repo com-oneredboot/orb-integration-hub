@@ -89,6 +89,13 @@ export class AuthEffects {
             if (response.statusCode === 200) {
               return AuthActions.createUserSuccess();
             }
+            if (response.statusCode === 401) {
+              // Unauthorized: surface the error, do not dispatch createUserSuccess
+              const errorObj = getError('ORB-API-002');
+              return AuthActions.createUserFailure({
+                error: response.message || (errorObj ? errorObj.message : 'Unauthorized')
+              });
+            }
             const errorObj = getError('ORB-API-002');
             return AuthActions.createUserFailure({
               error: errorObj ? errorObj.message : 'GraphQL mutation error'

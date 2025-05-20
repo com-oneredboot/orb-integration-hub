@@ -82,6 +82,32 @@
   
 
   
+    export const UsersDisableMutation = /* GraphQL */ `
+    mutation UsersDisable($id: ID!) {
+  UsersDisable(id: $id) {
+    StatusCode
+    Message
+    Data {
+      userId
+      cognitoId
+      email
+      firstName
+      lastName
+      status
+      createdAt
+      updatedAt
+      phoneNumber
+      groups
+      emailVerified
+      phoneVerified
+    }
+  }
+}
+    `;
+    
+  
+
+  
     export const UsersQueryByUserId = /* GraphQL */ `
     query UsersQueryByUserId($input: UsersQueryByUserIdInput!) {
   UsersQueryByUserId(input: $input) {

@@ -104,6 +104,8 @@ Resources:
 
   # Data Sources
   # --------------------------------------------------- #
+  
+  # DEBUG: ApplicationRoles operations: [{'name': 'Create', 'type': 'Mutation', 'field': 'ApplicationRolesCreate', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "PutItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)\n}', 'response_template': '$util.toJson($ctx.result)'}, {'name': 'Update', 'type': 'Mutation', 'field': 'ApplicationRolesUpdate', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "UpdateItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "update": {\n    "expression": "SET #attr = :val",\n    "expressionNames": {\n      "#attr": "status"\n    },\n    "expressionValues": {\n      ":val": { "S": $ctx.args.input.status }\n    }\n  },\n  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)\n}', 'response_template': '$util.toJson($ctx.result)'}, {'name': 'Delete', 'type': 'Mutation', 'field': 'ApplicationRolesDelete', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "DeleteItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  }\n}', 'response_template': '$util.toJson($ctx.result)'}, {'name': 'Disable', 'type': 'Mutation', 'field': 'ApplicationRolesDisable', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "UpdateItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "update": {\n    "expression": "SET #status = :status, disabledAt = :disabledAt",\n    "expressionNames": {\n      "#status": "status"\n    },\n    "expressionValues": {\n      ":status": { "S": "DISABLED" },\n      ":disabledAt": { "S": "$util.time.nowISO8601()" }\n    }\n  }\n}', 'response_template': '$util.toJson($ctx.result)'}]
 
   # ApplicationRoles Data Source
   ApplicationRolesDataSource:
@@ -120,6 +122,102 @@ Resources:
   # ApplicationRoles Resolvers
   # --------------------------------------------------- #
   
+  
+  ApplicationRolesCreateResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationRolesCreate
+      DataSourceName: !GetAtt ApplicationRolesDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "PutItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          },
+          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  
+  ApplicationRolesUpdateResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationRolesUpdate
+      DataSourceName: !GetAtt ApplicationRolesDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "UpdateItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          },
+          "update": {
+            "expression": "SET #attr = :val",
+            "expressionNames": {
+              "#attr": "status"
+            },
+            "expressionValues": {
+              ":val": { "S": $ctx.args.input.status }
+            }
+          },
+          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  
+  ApplicationRolesDeleteResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationRolesDelete
+      DataSourceName: !GetAtt ApplicationRolesDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "DeleteItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  
+  ApplicationRolesDisableResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationRolesDisable
+      DataSourceName: !GetAtt ApplicationRolesDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "UpdateItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          },
+          "update": {
+            "expression": "SET #status = :status, disabledAt = :disabledAt",
+            "expressionNames": {
+              "#status": "status"
+            },
+            "expressionValues": {
+              ":status": { "S": "DISABLED" },
+              ":disabledAt": { "S": "$util.time.nowISO8601()" }
+            }
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  
+  
+  # DEBUG: Applications operations: [{'name': 'Create', 'type': 'Mutation', 'field': 'ApplicationsCreate', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "PutItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)\n}', 'response_template': '$util.toJson($ctx.result)'}, {'name': 'Update', 'type': 'Mutation', 'field': 'ApplicationsUpdate', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "UpdateItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "update": {\n    "expression": "SET #attr = :val",\n    "expressionNames": {\n      "#attr": "status"\n    },\n    "expressionValues": {\n      ":val": { "S": $ctx.args.input.status }\n    }\n  },\n  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)\n}', 'response_template': '$util.toJson($ctx.result)'}, {'name': 'Delete', 'type': 'Mutation', 'field': 'ApplicationsDelete', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "DeleteItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  }\n}', 'response_template': '$util.toJson($ctx.result)'}, {'name': 'Disable', 'type': 'Mutation', 'field': 'ApplicationsDisable', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "UpdateItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "update": {\n    "expression": "SET #status = :status, disabledAt = :disabledAt",\n    "expressionNames": {\n      "#status": "status"\n    },\n    "expressionValues": {\n      ":status": { "S": "DISABLED" },\n      ":disabledAt": { "S": "$util.time.nowISO8601()" }\n    }\n  }\n}', 'response_template': '$util.toJson($ctx.result)'}]
 
   # Applications Data Source
   ApplicationsDataSource:
@@ -136,6 +234,102 @@ Resources:
   # Applications Resolvers
   # --------------------------------------------------- #
   
+  
+  ApplicationsCreateResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationsCreate
+      DataSourceName: !GetAtt ApplicationsDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "PutItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          },
+          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  
+  ApplicationsUpdateResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationsUpdate
+      DataSourceName: !GetAtt ApplicationsDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "UpdateItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          },
+          "update": {
+            "expression": "SET #attr = :val",
+            "expressionNames": {
+              "#attr": "status"
+            },
+            "expressionValues": {
+              ":val": { "S": $ctx.args.input.status }
+            }
+          },
+          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  
+  ApplicationsDeleteResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationsDelete
+      DataSourceName: !GetAtt ApplicationsDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "DeleteItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  
+  ApplicationsDisableResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationsDisable
+      DataSourceName: !GetAtt ApplicationsDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "UpdateItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          },
+          "update": {
+            "expression": "SET #status = :status, disabledAt = :disabledAt",
+            "expressionNames": {
+              "#status": "status"
+            },
+            "expressionValues": {
+              ":status": { "S": "DISABLED" },
+              ":disabledAt": { "S": "$util.time.nowISO8601()" }
+            }
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  
+  
+  # DEBUG: ApplicationUsers operations: [{'name': 'Create', 'type': 'Mutation', 'field': 'ApplicationUsersCreate', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "PutItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)\n}', 'response_template': '$util.toJson($ctx.result)'}, {'name': 'Update', 'type': 'Mutation', 'field': 'ApplicationUsersUpdate', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "UpdateItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "update": {\n    "expression": "SET #attr = :val",\n    "expressionNames": {\n      "#attr": "status"\n    },\n    "expressionValues": {\n      ":val": { "S": $ctx.args.input.status }\n    }\n  },\n  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)\n}', 'response_template': '$util.toJson($ctx.result)'}, {'name': 'Delete', 'type': 'Mutation', 'field': 'ApplicationUsersDelete', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "DeleteItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  }\n}', 'response_template': '$util.toJson($ctx.result)'}, {'name': 'Disable', 'type': 'Mutation', 'field': 'ApplicationUsersDisable', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "UpdateItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "update": {\n    "expression": "SET #status = :status, disabledAt = :disabledAt",\n    "expressionNames": {\n      "#status": "status"\n    },\n    "expressionValues": {\n      ":status": { "S": "DISABLED" },\n      ":disabledAt": { "S": "$util.time.nowISO8601()" }\n    }\n  }\n}', 'response_template': '$util.toJson($ctx.result)'}]
 
   # ApplicationUsers Data Source
   ApplicationUsersDataSource:
@@ -152,6 +346,102 @@ Resources:
   # ApplicationUsers Resolvers
   # --------------------------------------------------- #
   
+  
+  ApplicationUsersCreateResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationUsersCreate
+      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "PutItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          },
+          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  
+  ApplicationUsersUpdateResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationUsersUpdate
+      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "UpdateItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          },
+          "update": {
+            "expression": "SET #attr = :val",
+            "expressionNames": {
+              "#attr": "status"
+            },
+            "expressionValues": {
+              ":val": { "S": $ctx.args.input.status }
+            }
+          },
+          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  
+  ApplicationUsersDeleteResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationUsersDelete
+      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "DeleteItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  
+  ApplicationUsersDisableResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationUsersDisable
+      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "UpdateItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          },
+          "update": {
+            "expression": "SET #status = :status, disabledAt = :disabledAt",
+            "expressionNames": {
+              "#status": "status"
+            },
+            "expressionValues": {
+              ":status": { "S": "DISABLED" },
+              ":disabledAt": { "S": "$util.time.nowISO8601()" }
+            }
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  
+  
+  # DEBUG: Roles operations: [{'name': 'Create', 'type': 'Mutation', 'field': 'RolesCreate', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "PutItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)\n}', 'response_template': '$util.toJson($ctx.result)'}, {'name': 'Update', 'type': 'Mutation', 'field': 'RolesUpdate', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "UpdateItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "update": {\n    "expression": "SET #attr = :val",\n    "expressionNames": {\n      "#attr": "status"\n    },\n    "expressionValues": {\n      ":val": { "S": $ctx.args.input.status }\n    }\n  },\n  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)\n}', 'response_template': '$util.toJson($ctx.result)'}, {'name': 'Delete', 'type': 'Mutation', 'field': 'RolesDelete', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "DeleteItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  }\n}', 'response_template': '$util.toJson($ctx.result)'}, {'name': 'Disable', 'type': 'Mutation', 'field': 'RolesDisable', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "UpdateItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "update": {\n    "expression": "SET #status = :status, disabledAt = :disabledAt",\n    "expressionNames": {\n      "#status": "status"\n    },\n    "expressionValues": {\n      ":status": { "S": "DISABLED" },\n      ":disabledAt": { "S": "$util.time.nowISO8601()" }\n    }\n  }\n}', 'response_template': '$util.toJson($ctx.result)'}]
 
   # Roles Data Source
   RolesDataSource:
@@ -168,6 +458,102 @@ Resources:
   # Roles Resolvers
   # --------------------------------------------------- #
   
+  
+  RolesCreateResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: RolesCreate
+      DataSourceName: !GetAtt RolesDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "PutItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          },
+          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  
+  RolesUpdateResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: RolesUpdate
+      DataSourceName: !GetAtt RolesDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "UpdateItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          },
+          "update": {
+            "expression": "SET #attr = :val",
+            "expressionNames": {
+              "#attr": "status"
+            },
+            "expressionValues": {
+              ":val": { "S": $ctx.args.input.status }
+            }
+          },
+          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  
+  RolesDeleteResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: RolesDelete
+      DataSourceName: !GetAtt RolesDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "DeleteItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  
+  RolesDisableResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: RolesDisable
+      DataSourceName: !GetAtt RolesDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "UpdateItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          },
+          "update": {
+            "expression": "SET #status = :status, disabledAt = :disabledAt",
+            "expressionNames": {
+              "#status": "status"
+            },
+            "expressionValues": {
+              ":status": { "S": "DISABLED" },
+              ":disabledAt": { "S": "$util.time.nowISO8601()" }
+            }
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  
+  
+  # DEBUG: Users operations: [{'name': 'Create', 'type': 'Mutation', 'field': 'UsersCreate', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "PutItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)\n}', 'response_template': '$util.toJson($ctx.result)'}, {'name': 'Update', 'type': 'Mutation', 'field': 'UsersUpdate', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "UpdateItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "update": {\n    "expression": "SET #attr = :val",\n    "expressionNames": {\n      "#attr": "status"\n    },\n    "expressionValues": {\n      ":val": { "S": $ctx.args.input.status }\n    }\n  },\n  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)\n}', 'response_template': '$util.toJson($ctx.result)'}, {'name': 'Delete', 'type': 'Mutation', 'field': 'UsersDelete', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "DeleteItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  }\n}', 'response_template': '$util.toJson($ctx.result)'}, {'name': 'Disable', 'type': 'Mutation', 'field': 'UsersDisable', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "UpdateItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "update": {\n    "expression": "SET #status = :status, disabledAt = :disabledAt",\n    "expressionNames": {\n      "#status": "status"\n    },\n    "expressionValues": {\n      ":status": { "S": "DISABLED" },\n      ":disabledAt": { "S": "$util.time.nowISO8601()" }\n    }\n  }\n}', 'response_template': '$util.toJson($ctx.result)'}]
 
   # Users Data Source
   UsersDataSource:
@@ -184,9 +570,101 @@ Resources:
   # Users Resolvers
   # --------------------------------------------------- #
   
-
-  # Index-based Resolvers
-  # --------------------------------------------------- #
+  
+  UsersCreateResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: UsersCreate
+      DataSourceName: !GetAtt UsersDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "PutItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          },
+          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  
+  UsersUpdateResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: UsersUpdate
+      DataSourceName: !GetAtt UsersDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "UpdateItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          },
+          "update": {
+            "expression": "SET #attr = :val",
+            "expressionNames": {
+              "#attr": "status"
+            },
+            "expressionValues": {
+              ":val": { "S": $ctx.args.input.status }
+            }
+          },
+          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  
+  UsersDeleteResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: UsersDelete
+      DataSourceName: !GetAtt UsersDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "DeleteItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  
+  UsersDisableResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: UsersDisable
+      DataSourceName: !GetAtt UsersDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "UpdateItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          },
+          "update": {
+            "expression": "SET #status = :status, disabledAt = :disabledAt",
+            "expressionNames": {
+              "#status": "status"
+            },
+            "expressionValues": {
+              ":status": { "S": "DISABLED" },
+              ":disabledAt": { "S": "$util.time.nowISO8601()" }
+            }
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  
+ 
   
 
 # --------------------------------------------------- #

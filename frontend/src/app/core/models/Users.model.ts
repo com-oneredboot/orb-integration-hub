@@ -58,7 +58,7 @@ export type UsersCreateInput = {
 
   phoneNumber: string | undefined;
 
-  groups: any[] | undefined;
+  groups: string[] | undefined;
 
   emailVerified: boolean | undefined;
 
@@ -87,7 +87,7 @@ export type UsersUpdateInput = {
 
   phoneNumber: string | undefined;
 
-  groups: any[] | undefined;
+  groups: string[] | undefined;
 
   emailVerified: boolean | undefined;
 
@@ -159,7 +159,7 @@ export interface IUsers {
 
   phoneNumber: string | undefined;
 
-  groups: any[] | undefined;
+  groups: string[] | undefined;
 
   emailVerified: boolean | undefined;
 

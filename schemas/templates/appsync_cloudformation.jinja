@@ -104,7 +104,8 @@ Resources:
 
   # Data Sources
   # --------------------------------------------------- #
-  {%- for table_name, schema in schemas.items() if schema.type == 'table' %}
+  {% for table_name, schema in schemas.items() if schema.type == 'table' %}
+  # DEBUG: {{ schema.name }} operations: {{ schema.operations }}
 
   # {{ schema.name }} Data Source
   {{ schema.name }}DataSource:
@@ -120,6 +121,7 @@ Resources:
 
   # {{ schema.name }} Resolvers
   # --------------------------------------------------- #
+  {% if schema.operations %}
   {% for operation in schema.operations %}
   {{ schema.name }}{{ operation.name }}Resolver:
     Type: AWS::AppSync::Resolver
@@ -133,6 +135,7 @@ Resources:
       ResponseMappingTemplate: |
         {{ operation.response_template | indent(8) }}
   {% endfor %}
+  {% endif %}
 
   {%- endfor %}
 

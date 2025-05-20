@@ -64,6 +64,26 @@
   
 
   
+    export const ApplicationsDisableMutation = /* GraphQL */ `
+    mutation ApplicationsDisable($id: ID!) {
+  ApplicationsDisable(id: $id) {
+    StatusCode
+    Message
+    Data {
+      applicationId
+      name
+      ownerId
+      status
+      createdAt
+      updatedAt
+    }
+  }
+}
+    `;
+    
+  
+
+  
     export const ApplicationsQueryByApplicationId = /* GraphQL */ `
     query ApplicationsQueryByApplicationId($input: ApplicationsQueryByApplicationIdInput!) {
   ApplicationsQueryByApplicationId(input: $input) {

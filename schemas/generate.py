@@ -15,6 +15,7 @@ from dataclasses import dataclass
 import re
 import copy
 import shutil
+import glob
 
 # 3rd party imports
 import yaml
@@ -185,16 +186,16 @@ def to_typescript_type(attr_type: str) -> str:
     if attr_type.lower().startswith('array<'):
         element_type = attr_type[6:-1]  # Extract type between array< and >
         return f"{to_typescript_type(element_type)}[]"
-    
+    if attr_type.lower() == 'array':
+        return 'string[]'  # Default to string[] for untyped arrays
     # Handle model references (types starting with I)
     if attr_type.startswith('I'):
         return attr_type  # Keep the interface name as is
-    
     type_mapping = {
         'string': 'string',
         'number': 'number',
         'boolean': 'boolean',
-        'array': 'any[]',  # Fallback for untyped arrays
+        'array': 'string[]',  # Default to string[]
         'object': 'Record<string, any>',
         'timestamp': 'string',  # Changed to string for ISO 8601 format
         'date': 'string',      # Changed to string for ISO 8601 format
@@ -473,73 +474,97 @@ def load_schema(schema_path: str) -> Dict[str, Any]:
     except Exception as e:
         raise SchemaValidationError(f"Error loading schema file {schema_path}: {str(e)}")
 
-def load_schemas() -> Dict[str, Union[TableSchema, GraphQLType, RegistryType]]:
-    """Load all schema files and return a dictionary of schemas."""
-    schemas = {}
-    schema_dir = os.path.join(SCRIPT_DIR, 'entities')
-    
-    # Load all schema files
-    for filename in os.listdir(schema_dir):
-        if filename.endswith('.yml') or filename.endswith('.yaml'):
-            schema_path = os.path.join(schema_dir, filename)
-            schema = load_schema(schema_path)
-            # Validate case conventions
-            validate_case_conventions(schema, schema_path)
-            name = schema['name']
-            model = schema['model']
-            schema_type = schema['type']
-            print(f"[DEBUG] Processing schema: {name}, type: {schema_type}, model keys: {list(model.keys())}")
-            attributes = []
-            for attr_name, attr_info in model['attributes'].items():
-                attributes.append(Attribute(
-                    name=attr_name,
-                    type=attr_info['type'],
-                    description=attr_info.get('description', ''),
-                    required=attr_info.get('required', True),
-                    enum_type=attr_info.get('enum_type'),
-                    enum_values=attr_info.get('enum_values')
-                ))
-            if schema_type == 'table':
-                if 'keys' not in model:
-                    raise SchemaValidationError(f"Table schema '{name}' is missing required 'keys' section in model.")
-                partition_key = model['keys']['primary']['partition']
-                sort_key = model['keys']['primary'].get('sort', 'None')
-                secondary_indexes = []
-                if 'secondary' in model['keys']:
-                    for index in model['keys']['secondary']:
-                        secondary_indexes.append({
-                            'name': index['name'],
-                            'type': index['type'],
-                            'partition': index['partition'],
-                            'sort': index.get('sort'),
-                            'projection_type': index.get('projection_type', 'ALL'),
-                            'projected_attributes': index.get('projected_attributes', [])
-                        })
-                schemas[name] = TableSchema(
-                    name=name,
-                    attributes=attributes,
-                    partition_key=partition_key,
-                    sort_key=sort_key,
-                    secondary_indexes=secondary_indexes,
-                    auth_config=schema.get('auth_config')
-                )
-            elif schema_type == 'registry':
-                schemas[name] = RegistryType(
-                    name=name,
-                    items=schema['items'],
-                    description=schema.get('description'),
-                )
-            else:
-                # For non-table types, do not expect 'keys'
-                if 'attributes' not in model:
-                    raise SchemaValidationError(f"Non-table schema '{name}' is missing required 'attributes' section in model.")
-                schemas[name] = GraphQLType(
-                    name=name,
-                    attributes=attributes,
-                    description=schema.get('description'),
-                    auth_config=schema.get('auth_config')
-                )
-    return schemas
+def build_crud_operations_for_table(schema: TableSchema):
+    """
+    Attach CRUD operation definitions to the TableSchema instance for use in Jinja templates.
+    Each operation includes:
+      - name: e.g., 'Create', 'Update', 'Delete', 'Disable'
+      - type: 'Mutation'
+      - field: e.g., 'UsersCreate', 'UsersUpdate', 'UsersDelete', 'UsersDisable'
+      - request_template: VTL for DynamoDB operation
+      - response_template: VTL for returning the result
+    """
+    # VTL templates
+    put_item_vtl = '''{
+  "version": "2018-05-29",
+  "operation": "PutItem",
+  "key": {
+    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+  },
+  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+}'''
+    update_item_vtl = '''{
+  "version": "2018-05-29",
+  "operation": "UpdateItem",
+  "key": {
+    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+  },
+  "update": {
+    "expression": "SET #attr = :val",
+    "expressionNames": {
+      "#attr": "status"
+    },
+    "expressionValues": {
+      ":val": { "S": $ctx.args.input.status }
+    }
+  },
+  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+}'''
+    delete_item_vtl = '''{
+  "version": "2018-05-29",
+  "operation": "DeleteItem",
+  "key": {
+    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+  }
+}'''
+    disable_item_vtl = '''{
+  "version": "2018-05-29",
+  "operation": "UpdateItem",
+  "key": {
+    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+  },
+  "update": {
+    "expression": "SET #status = :status, disabledAt = :disabledAt",
+    "expressionNames": {
+      "#status": "status"
+    },
+    "expressionValues": {
+      ":status": { "S": "DISABLED" },
+      ":disabledAt": { "S": "$util.time.nowISO8601()" }
+    }
+  }
+}'''
+    response_vtl = '''$util.toJson($ctx.result)'''
+    schema.operations = [
+        {
+            'name': 'Create',
+            'type': 'Mutation',
+            'field': f'{schema.name}Create',
+            'request_template': put_item_vtl,
+            'response_template': response_vtl,
+        },
+        {
+            'name': 'Update',
+            'type': 'Mutation',
+            'field': f'{schema.name}Update',
+            'request_template': update_item_vtl,
+            'response_template': response_vtl,
+        },
+        {
+            'name': 'Delete',
+            'type': 'Mutation',
+            'field': f'{schema.name}Delete',
+            'request_template': delete_item_vtl,
+            'response_template': response_vtl,
+        },
+        {
+            'name': 'Disable',
+            'type': 'Mutation',
+            'field': f'{schema.name}Disable',
+            'request_template': disable_item_vtl,
+            'response_template': response_vtl,
+        },
+    ]
 
 def generate_python_model(table: str, schema: Union[TableSchema, GraphQLType]) -> None:
     try:
@@ -899,6 +924,20 @@ mutation {table}Delete($id: ID!) {{
   }}
 }}'''
         })
+        # Disable
+        operations.append({
+            'name': f'{table}DisableMutation',
+            'gql': f'''
+mutation {table}Disable($id: ID!) {{
+  {table}Disable(id: $id) {{
+    StatusCode
+    Message
+    Data {{
+      {field_list}
+    }}
+  }}
+}}'''
+        })
         # Query by primary key
         operations.append({
             'name': f'{table}QueryBy{pk_pascal}',
@@ -1097,15 +1136,97 @@ def generate_typescript_registry(name: str, schema: RegistryType) -> None:
         logger.error(f'Failed to generate TypeScript registry model for {name}: {str(e)}')
         raise
 
+def load_schemas() -> dict:
+    """
+    Load all schema YAML files from schemas/entities/ and return a dict of schema objects keyed by name.
+    """
+    schemas_dir = os.path.join(SCRIPT_DIR, 'entities')
+    schema_files = glob.glob(os.path.join(schemas_dir, '*.yml'))
+    schemas = {}
+    for schema_file in schema_files:
+        schema_dict = load_schema(schema_file)
+        schema_type = schema_dict.get('type')
+        schema_name = schema_dict.get('name')
+        if schema_type == 'table':
+            # Build TableSchema object
+            model = schema_dict['model']
+            attributes = []
+            for attr_name, attr_info in model['attributes'].items():
+                attr = Attribute(
+                    name=attr_name,
+                    type=attr_info['type'],
+                    description=attr_info.get('description', ''),
+                    required=attr_info.get('required', True),
+                    enum_type=attr_info.get('enum_type'),
+                    enum_values=attr_info.get('enum_values')
+                )
+                attributes.append(attr)
+            keys = model['keys']
+            partition_key = keys['primary']['partition']
+            sort_key = keys['primary'].get('sort', 'None')
+            secondary_indexes = keys.get('secondary', [])
+            auth_config = model.get('authConfig')
+            schema_obj = TableSchema(
+                name=schema_name,
+                attributes=attributes,
+                partition_key=partition_key,
+                sort_key=sort_key,
+                secondary_indexes=secondary_indexes,
+                auth_config=auth_config
+            )
+            schemas[schema_name] = schema_obj
+        elif schema_type == 'registry':
+            schema_obj = RegistryType(
+                name=schema_name,
+                items=schema_dict['items'],
+                description=schema_dict.get('description'),
+                type='registry'
+            )
+            schemas[schema_name] = schema_obj
+        else:
+            # Fallback: treat as GraphQLType
+            model = schema_dict['model']
+            attributes = []
+            for attr_name, attr_info in model['attributes'].items():
+                attr = Attribute(
+                    name=attr_name,
+                    type=attr_info['type'],
+                    description=attr_info.get('description', ''),
+                    required=attr_info.get('required', True),
+                    enum_type=attr_info.get('enum_type'),
+                    enum_values=attr_info.get('enum_values')
+                )
+                attributes.append(attr)
+            auth_config = model.get('authConfig')
+            schema_obj = GraphQLType(
+                name=schema_name,
+                attributes=attributes,
+                description=schema_dict.get('description'),
+                auth_config=auth_config
+            )
+            schemas[schema_name] = schema_obj
+    return schemas
+
 def main():
-    logger.info('Starting schema generation main()')
+    print('DEBUG: main() started')
     try:
+        print('DEBUG: before Jinja env setup')
         jinja_env = setup_jinja_env()
+        print('DEBUG: after Jinja env setup')
         logger.debug('Loaded Jinja environment')
-        schemas = load_schemas()
+        print('DEBUG: before schema loading')
+        schemas = load_schemas()  # Use the correct load_schemas
+        print('DEBUG: after schema loading')
         logger.debug('Loaded schemas')
-        # Debug log to check schemas dictionary
-        logger.debug(f'Schemas dictionary: {schemas}')
+        print('DEBUG: before CRUD attachment')
+        # Attach CRUD operations to all TableSchema instances
+        for table, schema in schemas.items():
+            if isinstance(schema, TableSchema):
+                build_crud_operations_for_table(schema)
+                logger.info(f"Table {table} operations: {getattr(schema, 'operations', None)}")
+        print('DEBUG: after CRUD attachment')
+        # Remove debug printout of all in-memory TableSchema objects
+        # Restore template rendering and file writing
         # Build valid file name sets
         valid_model_names = set()
         valid_enum_names = set()
@@ -1156,21 +1277,19 @@ def main():
         logger.info(f'Generated timestamped schema file: {timestamped_schema}')
         # Validate the generated SDL
         validate_graphql_sdl(schema_output_path)
-        
         # Generate DynamoDB CloudFormation template
         logger.debug('Generating DynamoDB CloudFormation template')
         dynamodb_output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'cloudformation', 'dynamodb.yml')
         generate_dynamodb_cloudformation_template(schemas, dynamodb_output_path)
-        
         # Generate AppSync CloudFormation template
         logger.debug('Generating AppSync CloudFormation template')
         appsync_output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'cloudformation', 'appsync.yml')
         generate_appsync_cloudformation_template(schemas, appsync_output_path)
-        
         logger.info('Schema generation completed successfully')
     except Exception as e:
-        logger.error(f'Schema generation failed: {str(e)}')
-        sys.exit(1)
+        print(f"DEBUG: Exception in main(): {e}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == '__main__':
     main()

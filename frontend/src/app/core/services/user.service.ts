@@ -93,9 +93,16 @@ export class UserService extends ApiService {
         data: response.data?.data ?? null
       } as UsersResponse;
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating User:', error);
-      
+      const message = error?.message || error?.toString() || '';
+      if (message.includes('Not Authorized') || message.includes('Unauthorized')) {
+        return {
+          statusCode: 401,
+          message: 'Not Authorized to access UsersCreate on type Mutation',
+          data: null
+        } as UsersResponse;
+      }
       return {
         statusCode: 500,
         message: 'Error creating user',

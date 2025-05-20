@@ -257,11 +257,13 @@ describe('AuthFlowComponent', () => {
     });
 
     await component.onSubmit();
-    // The store should not dispatch a successful user creation
-    expect(store.dispatch).not.toHaveBeenCalledWith(
+    // '[Auth] Create User' should be dispatched to start the effect
+    expect(store.dispatch).toHaveBeenCalledWith(
       jasmine.objectContaining({ type: '[Auth] Create User' })
     );
-    // Optionally, check for error handling logic (e.g., error banner, log, etc.)
-    // This depends on how your component surfaces errors
+    // '[Auth] Create User Success' should NOT be dispatched on unauthorized
+    expect(store.dispatch).not.toHaveBeenCalledWith(
+      jasmine.objectContaining({ type: '[Auth] Create User Success' })
+    );
   });
 });

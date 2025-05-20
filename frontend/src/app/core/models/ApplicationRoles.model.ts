@@ -50,7 +50,7 @@ export type ApplicationRolesCreateInput = {
 
   roleType: string;
 
-  permissions: any[];
+  permissions: string[];
 
   status: string;
 
@@ -75,7 +75,7 @@ export type ApplicationRolesUpdateInput = {
 
   roleType: string;
 
-  permissions: any[];
+  permissions: string[];
 
   status: string;
 
@@ -149,7 +149,7 @@ export interface IApplicationRoles {
 
   roleType: string;
 
-  permissions: any[];
+  permissions: string[];
 
   status: string;
 

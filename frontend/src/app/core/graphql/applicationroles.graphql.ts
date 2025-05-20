@@ -76,6 +76,30 @@
   
 
   
+    export const ApplicationRolesDisableMutation = /* GraphQL */ `
+    mutation ApplicationRolesDisable($id: ID!) {
+  ApplicationRolesDisable(id: $id) {
+    StatusCode
+    Message
+    Data {
+      applicationRoleId
+      userId
+      applicationId
+      roleId
+      roleName
+      roleType
+      permissions
+      status
+      createdAt
+      updatedAt
+    }
+  }
+}
+    `;
+    
+  
+
+  
     export const ApplicationRolesQueryByApplicationRoleId = /* GraphQL */ `
     query ApplicationRolesQueryByApplicationRoleId($input: ApplicationRolesQueryByApplicationRoleIdInput!) {
   ApplicationRolesQueryByApplicationRoleId(input: $input) {
