@@ -60,14 +60,14 @@ def lambda_handler(event, context):
     try:
         # Extract form data from the event
         input_data = event['input']
-        first_name = input_data['name_first']
-        last_name = input_data['name_last']
+        first_name = input_data['firstName']
+        last_name = input_data['lastName']
         email = input_data['email']
         subject = input_data['subject']
         message = input_data['message']
 
         logger.info(
-            "Extracted form data: name_first=%s, name_last=%s, email=%s, subject=%s",
+            "Extracted form data: firstName=%s, lastName=%s, email=%s, subject=%s",
             first_name, last_name, email, subject
         )
 

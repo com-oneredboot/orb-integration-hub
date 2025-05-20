@@ -38,7 +38,7 @@ def get_stripe_api_key():
 
 def validate_input(payload):
     """Validate the input parameters."""
-    required_fields = ['amount', 'payment_id', 'customer_id', 'currency', 'payment_method_id', 'created_on']
+    required_fields = ['amount', 'paymentId', 'customerId', 'currency', 'paymentMethodId', 'createdOn']
     for field in required_fields:
         if field not in payload:
             raise ValueError(f"Missing required field: {field}")
@@ -50,7 +50,7 @@ def validate_input(payload):
     except ValueError:
         raise ValueError("Invalid amount")
 
-    return payload['payment_method_id'], payload['customer_id'], amount, payload['currency']
+    return payload['paymentMethodId'], payload['customerId'], amount, payload['currency']
 
 
 def store_transaction(payment_id, customer_id, amount, status, currency, created_on):
@@ -59,12 +59,12 @@ def store_transaction(payment_id, customer_id, amount, status, currency, created
     try:
         payments_table.put_item(
             Item={
-                'customer_id': customer_id,
-                'payment_id': payment_id,
+                'customerId': customer_id,
+                'paymentId': payment_id,
                 'amount': amount,
                 'status': status,
-                'created_on': created_on,
-                'payment_method': 'stripe',
+                'createdOn': created_on,
+                'paymentMethod': 'stripe',
                 'currency': currency
             }
         )
@@ -112,7 +112,7 @@ def lambda_handler(event, context):
         logger.debug(f"Payment intent created: {intent}")
 
         # Store transaction details
-        store_transaction(intent.id, customer_id, amount, intent.status, currency, payload.get('created_on'))
+        store_transaction(intent.id, customer_id, amount, intent.status, currency, payload.get('createdOn'))
         logger.info(f"Payment processed successfully. Payment ID: {intent.id}")
 
         return {

@@ -29,7 +29,7 @@ def lambda_handler(event, context):
 
     # Get data
     input_data = event['input']
-    phone_number = input_data['phone_number']
+    phone_number = input_data['phoneNumber']
 
     try:
         # create a code of 6 numbers from 0-9
