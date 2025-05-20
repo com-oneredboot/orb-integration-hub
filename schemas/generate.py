@@ -534,7 +534,11 @@ def build_crud_operations_for_table(schema: TableSchema):
     }
   }
 }'''
-    response_vtl = '''$util.toJson($ctx.result)'''
+    response_vtl = '''{
+  "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),
+  "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),
+  "Data": $util.defaultIfNull($ctx.result.Data, null)
+}'''
     schema.operations = [
         {
             'name': 'Create',
