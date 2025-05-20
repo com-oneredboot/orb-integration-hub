@@ -116,7 +116,7 @@ Resources:
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}-table-name'
+        TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}'
         AwsRegion: !Ref AWS::Region
 
   # {{ schema.name }} Resolvers

@@ -116,7 +116,7 @@ Resources:
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-application-roles-table-name'
+        TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-application-roles'
         AwsRegion: !Ref AWS::Region
 
   # ApplicationRoles Resolvers
@@ -228,7 +228,7 @@ Resources:
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-applications-table-name'
+        TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-applications'
         AwsRegion: !Ref AWS::Region
 
   # Applications Resolvers
@@ -340,7 +340,7 @@ Resources:
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-application-users-table-name'
+        TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-application-users'
         AwsRegion: !Ref AWS::Region
 
   # ApplicationUsers Resolvers
@@ -452,7 +452,7 @@ Resources:
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-roles-table-name'
+        TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-roles'
         AwsRegion: !Ref AWS::Region
 
   # Roles Resolvers
@@ -564,7 +564,7 @@ Resources:
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       DynamoDBConfig:
-        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-table-name'
+        TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-users'
         AwsRegion: !Ref AWS::Region
 
   # Users Resolvers
