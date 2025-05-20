@@ -11,6 +11,10 @@ version: '1.0'
 name: Users
 model:
   authConfig:
+    apiKeyAuthentication:
+    - UsersQueryByEmail
+    - UsersQueryByCognitoId
+    - UsersQueryByUserId
     cognitoAuthentication:
       groups:
         OWNER:

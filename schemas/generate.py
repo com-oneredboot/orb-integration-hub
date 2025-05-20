@@ -360,15 +360,14 @@ def validate_case_conventions(schema: Dict[str, Any], file_path: str) -> None:
         # Validate attribute names are camelCase
         if 'model' in schema and 'attributes' in schema['model']:
             for attr_name in schema['model']['attributes']:
-            if not re.match(r'^[a-z][a-zA-Z0-9]*$', attr_name):
-                raise SchemaValidationError(f"Attribute name '{attr_name}' must be in camelCase")
+                if not re.match(r'^[a-z][a-zA-Z0-9]*$', attr_name):
+                    raise SchemaValidationError(f"Attribute name '{attr_name}' must be in camelCase")
     else:
         # Validate index names are PascalCase
         if 'model' in schema and 'keys' in schema['model'] and 'secondary' in schema['model']['keys']:
             for index in schema['model']['keys']['secondary']:
                 if not re.match(r'^[A-Z][a-zA-Z0-9]*$', index['name']):
                     raise SchemaValidationError(f"Index name '{index['name']}' must be in PascalCase format (e.g., RoleIndex)")
-
         # Validate attribute names are camelCase
         if 'model' in schema and 'attributes' in schema['model']:
             print(f"[DEBUG] {schema_name}: model['attributes'] type: {type(schema['model']['attributes'])}, value: {schema['model']['attributes']}")
@@ -430,7 +429,7 @@ def load_schema(schema_path: str) -> Dict[str, Any]:
             raise SchemaValidationError(f"Schema must have a 'type' field: {schema_path}")
         if 'name' not in schema:
             raise SchemaValidationError(f"Schema must have a 'name' field: {schema_path}")
-            if 'model' not in schema:
+        if 'model' not in schema:
             raise SchemaValidationError(f"Schema must have a 'model' field: {schema_path}")
         # Debug: print model keys before checking for 'attributes'
         print(f"[DEBUG] Checking file: {schema_path}, model keys: {list(schema['model'].keys())}")
@@ -457,25 +456,22 @@ def load_schemas() -> Dict[str, Union[TableSchema, GraphQLType]]:
         if filename.endswith('.yml') or filename.endswith('.yaml'):
             schema_path = os.path.join(schema_dir, filename)
             schema = load_schema(schema_path)
-            
             # Validate case conventions
             validate_case_conventions(schema, schema_path)
-            
-                name = schema['name']
-                model = schema['model']
+            name = schema['name']
+            model = schema['model']
             schema_type = schema['type']
             print(f"[DEBUG] Processing schema: {name}, type: {schema_type}, model keys: {list(model.keys())}")
-                attributes = []
-                for attr_name, attr_info in model['attributes'].items():
-                    attributes.append(Attribute(
-                        name=attr_name,
-                        type=attr_info['type'],
-                        description=attr_info.get('description', ''),
-                        required=attr_info.get('required', True),
-                        enum_type=attr_info.get('enum_type'),
-                        enum_values=attr_info.get('enum_values')
-                    ))
-                
+            attributes = []
+            for attr_name, attr_info in model['attributes'].items():
+                attributes.append(Attribute(
+                    name=attr_name,
+                    type=attr_info['type'],
+                    description=attr_info.get('description', ''),
+                    required=attr_info.get('required', True),
+                    enum_type=attr_info.get('enum_type'),
+                    enum_values=attr_info.get('enum_values')
+                ))
             if schema_type == 'table':
                 if 'keys' not in model:
                     raise SchemaValidationError(f"Table schema '{name}' is missing required 'keys' section in model.")
@@ -642,10 +638,10 @@ def generate_graphql_schema(schemas: Dict[str, Union[TableSchema, GraphQLType]],
                 logger.debug(f"Auth config for {schema.name}: {getattr(schema, 'auth_config', None)}")
                 # Build per-query auth directives
                 schema.query_auth_directives = {}
-                    for index in schema.indexes:
+                for index in schema.indexes:
                     # QueryBy{Partition}
-                        op_name = f"{schema.name}QueryBy{to_pascal_case(index['partition'])}"
-                        schema.query_auth_directives[op_name] = get_auth_directives(op_name, schema)
+                    op_name = f"{schema.name}QueryBy{to_pascal_case(index['partition'])}"
+                    schema.query_auth_directives[op_name] = get_auth_directives(op_name, schema)
                     # QueryBy{Partition}And{Sort} if sort exists
                     if index.get('sort') and index['sort'] != 'None':
                         op_name_and = f"{schema.name}QueryBy{to_pascal_case(index['partition'])}And{to_pascal_case(index['sort'])}"
