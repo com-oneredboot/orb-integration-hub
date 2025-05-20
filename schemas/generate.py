@@ -158,6 +158,14 @@ class GraphQLType:
     description: Optional[str] = None
     auth_config: Optional[Dict[str, Any]] = None
 
+@dataclass
+class RegistryType:
+    """Registry type definition (for static registries like ErrorRegistry)."""
+    name: str
+    items: dict
+    description: Optional[str] = None
+    type: str = 'registry'
+
 def to_python_type(attr_type: str) -> str:
     """Convert schema type to Python type."""
     type_mapping = {
@@ -377,6 +385,21 @@ def validate_case_conventions(schema: Dict[str, Any], file_path: str) -> None:
                 if not re.match(r'^[a-z][a-zA-Z0-9]*$', attr_name):
                     raise SchemaValidationError(f"Attribute name '{attr_name}' must be in camelCase")
 
+    if 'type' in schema and schema['type'] == 'registry':
+        # Validate items block
+        if 'items' not in schema:
+            raise SchemaValidationError(f"Registry schema '{schema['name']}' must have an 'items' block: {file_path}")
+        items = schema['items']
+        if not isinstance(items, dict):
+            raise SchemaValidationError(f"Registry 'items' must be a dict in '{schema['name']}'")
+        for code, entry in items.items():
+            if not isinstance(entry, dict):
+                raise SchemaValidationError(f"Registry item '{code}' must be a dict in '{schema['name']}'")
+            for field in ['message', 'description', 'solution']:
+                if field not in entry:
+                    raise SchemaValidationError(f"Registry item '{code}' missing required field '{field}' in '{schema['name']}'")
+        return  # Skip other checks for registry
+
 def get_auth_directives(operation_name: str, schema: Union[TableSchema, GraphQLType]) -> List[str]:
     """
     Generate auth directives for a GraphQL operation.
@@ -429,6 +452,10 @@ def load_schema(schema_path: str) -> Dict[str, Any]:
             raise SchemaValidationError(f"Schema must have a 'type' field: {schema_path}")
         if 'name' not in schema:
             raise SchemaValidationError(f"Schema must have a 'name' field: {schema_path}")
+        if schema['type'] == 'registry':
+            if 'items' not in schema:
+                raise SchemaValidationError(f"Registry schema '{schema['name']}' must have an 'items' block: {schema_path}")
+            return schema
         if 'model' not in schema:
             raise SchemaValidationError(f"Schema must have a 'model' field: {schema_path}")
         # Debug: print model keys before checking for 'attributes'
@@ -446,7 +473,7 @@ def load_schema(schema_path: str) -> Dict[str, Any]:
     except Exception as e:
         raise SchemaValidationError(f"Error loading schema file {schema_path}: {str(e)}")
 
-def load_schemas() -> Dict[str, Union[TableSchema, GraphQLType]]:
+def load_schemas() -> Dict[str, Union[TableSchema, GraphQLType, RegistryType]]:
     """Load all schema files and return a dictionary of schemas."""
     schemas = {}
     schema_dir = os.path.join(SCRIPT_DIR, 'entities')
@@ -495,6 +522,12 @@ def load_schemas() -> Dict[str, Union[TableSchema, GraphQLType]]:
                     sort_key=sort_key,
                     secondary_indexes=secondary_indexes,
                     auth_config=schema.get('auth_config')
+                )
+            elif schema_type == 'registry':
+                schemas[name] = RegistryType(
+                    name=name,
+                    items=schema['items'],
+                    description=schema.get('description'),
                 )
             else:
                 # For non-table types, do not expect 'keys'
@@ -1038,6 +1071,32 @@ def validate_graphql_sdl(sdl_path):
         print(f"[ERROR] GraphQL SDL validation failed: {sdl_path}\n{e}")
         sys.exit(1)
 
+def generate_python_registry(name: str, schema: RegistryType) -> None:
+    try:
+        jinja_env = setup_jinja_env()
+        template = jinja_env.get_template('python_registry.jinja')
+        content = template.render(schema=schema)
+        file_name = f'{name}.model.py'
+        output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'src', 'core', 'models', file_name)
+        write_file(output_path, content)
+        logger.info(f'Generated Python registry model for {name}')
+    except Exception as e:
+        logger.error(f'Failed to generate Python registry model for {name}: {str(e)}')
+        raise
+
+def generate_typescript_registry(name: str, schema: RegistryType) -> None:
+    try:
+        jinja_env = setup_jinja_env()
+        template = jinja_env.get_template('typescript_registry.jinja')
+        content = template.render(schema=schema)
+        file_name = f'{name}.model.ts'
+        output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models', file_name)
+        write_file(output_path, content)
+        logger.info(f'Generated TypeScript registry model for {name}')
+    except Exception as e:
+        logger.error(f'Failed to generate TypeScript registry model for {name}: {str(e)}')
+        raise
+
 def main():
     logger.info('Starting schema generation main()')
     try:
@@ -1060,6 +1119,8 @@ def main():
             elif isinstance(schema, GraphQLType):
                 valid_model_names.add(f'{table}.model.ts')
                 valid_model_names.add(f'{table}.model.py')
+            elif isinstance(schema, RegistryType):
+                valid_model_names.add(f'{table}.model.py')
         enums_path = os.path.join(SCRIPT_DIR, 'core', 'enums.yml')
         if os.path.exists(enums_path):
             with open(enums_path, 'r') as f:
@@ -1080,6 +1141,10 @@ def main():
             elif isinstance(schema, GraphQLType):
                 logger.debug(f'Generating static model for type: {table}')
                 generate_typescript_model(table, schema, is_static=True, model_type='graphql', all_model_names=all_model_names)
+            elif isinstance(schema, RegistryType):
+                logger.debug(f'Generating registry model for type: {table}')
+                generate_python_registry(table, schema)
+                generate_typescript_registry(table, schema)
         logger.debug('Generating all enums')
         generate_all_enums()
         logger.debug('Generating base GraphQL schema')

@@ -16,7 +16,7 @@ import { UsersQueryByEmail } from "../../../../../core/graphql/Users.graphql";
 import { AuthActions } from "./auth.actions";
 import * as fromAuth from "./auth.selectors";
 import { CognitoService } from "../../../../../core/services/cognito.service";
-import { ErrorRegistry } from "../../../../../core/models/ErrorRegistry.model";
+import { getError } from "../../../../../core/models/ErrorRegistry.model";
 import { UsersQueryByEmailInput } from "../../../../../core/models/Users.model";
 import { IUsers } from "../../../../../core/models/Users.model";
 
@@ -59,14 +59,9 @@ export class AuthEffects {
               message = 'Unable to connect to the server. Please check your connection and try again.';
             }
             const errorCode = 'ORB-API-003'; // Invalid input for GraphQL operation
-            const errorRegistry = new ErrorRegistry({
-              code: errorCode,
-              message: message,
-              description: 'Error checking email',
-              solution: 'Please try again or contact support'
-            });
+            const errorObj = getError(errorCode);
             return of(AuthActions.checkEmailFailure({
-              error: errorRegistry.message
+              error: errorObj ? errorObj.message : 'Unknown error'
             }));
           }),
           tap(resultAction => console.debug('Effect [CheckEmail]: Emitting action', resultAction))
@@ -75,14 +70,9 @@ export class AuthEffects {
       catchError(error => {
         console.error('Effect [CheckEmail]: Outer error caught', error);
         const errorCode = 'ORB-SYS-001'; // Unexpected error
-        const errorRegistry = new ErrorRegistry({
-          code: errorCode,
-          message: error.message,
-          description: 'Unexpected error checking email',
-          solution: 'Please try again or contact support'
-        });
+        const errorObj = getError(errorCode);
         return of(AuthActions.checkEmailFailure({
-          error: errorRegistry.message
+          error: errorObj ? errorObj.message : 'Unknown error'
         }));
       })
     )
@@ -105,15 +95,10 @@ export class AuthEffects {
           catchError(error => {
             // Use error registry to handle the error
             const errorCode = 'ORB-API-002'; // Default to GraphQL mutation error
-            const errorRegistry = new ErrorRegistry({
-              code: errorCode,
-              message: error instanceof Error ? error.message : 'Failed to create user',
-              description: 'Error creating user',
-              solution: 'Please try again or contact support'
-            });
+            const errorObj = getError(errorCode);
             
             return of(AuthActions.createUserFailure({
-              error: errorRegistry.message
+              error: errorObj ? errorObj.message : 'Unknown error'
             }));
           })
         );

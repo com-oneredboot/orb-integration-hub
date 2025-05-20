@@ -6,11 +6,6 @@
 type: graphql
 name: AuthError
 model:
-  authConfig:
-    cognitoAuthentication:
-      groups:
-        OWNER:
-          - '*'
   attributes:
     code:
       type: string

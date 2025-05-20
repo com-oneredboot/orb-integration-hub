@@ -1,0 +1,24 @@
+"""
+Generated Python registry model for {{ schema.name }}
+Generated at {{ now() }}
+"""
+
+from typing import Dict, Any, Optional
+
+class {{ schema.name }}:
+    """Static error registry for {{ schema.name }}."""
+    ERRORS: Dict[str, Dict[str, Any]] = {
+    {% for code, entry in schema.items.items() %}
+        "{{ code }}": {
+            "message": "{{ entry.message }}",
+            "description": "{{ entry.description }}",
+            "solution": "{{ entry.solution }}"{% if entry.details is defined %},
+            "details": {{ entry.details | tojson }}{% endif %}
+        },
+    {% endfor %}
+    }
+
+    @classmethod
+    def get(cls, code: str) -> Optional[Dict[str, Any]]:
+        """Get error details by code."""
+        return cls.ERRORS.get(code) 

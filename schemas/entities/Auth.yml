@@ -6,11 +6,6 @@
 type: graphql
 name: Auth
 model:
-  authConfig:
-    cognitoAuthentication:
-      groups:
-        OWNER:
-          - '*'
   attributes:
     statusCode:
       type: number
