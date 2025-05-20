@@ -664,7 +664,10 @@ Resources:
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
   
- 
+  
+
+  # Index-based Resolvers
+  # --------------------------------------------------- #
   
 
 # --------------------------------------------------- #
