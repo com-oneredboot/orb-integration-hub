@@ -17,16 +17,8 @@ export const routes: Routes = [
         path: '',
         redirectTo: 'platform',
         pathMatch: 'full'
-      },
-      {
-        path: 'platform',
-        loadChildren: () => import('./features/platform/platform.module').then(m => m.PlatformModule)
       }
     ]
-  },
-  {
-    path: '',
-    loadChildren: () => import('./features/user/user.module').then(m => m.UserModule)
   }
 ];
 

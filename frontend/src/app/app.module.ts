@@ -15,7 +15,6 @@ import { PlatformLayoutComponent } from "./layouts/platform-layout/platform-layo
 import { UserLayoutComponent } from "./layouts/user-layout/user-layout.component";
 import { EffectsModule } from "@ngrx/effects";
 import { StoreModule } from "@ngrx/store";
-import { UserModule } from "./features/user/user.module";
 
 @NgModule({
   declarations: [],
@@ -28,8 +27,7 @@ import { UserModule } from "./features/user/user.module";
     NgOptimizedImage,
     FontAwesomeModule,
     UserLayoutComponent,
-    PlatformLayoutComponent,
-    UserModule
+    PlatformLayoutComponent
   ],
   providers: [],
   bootstrap: [AppComponent]
