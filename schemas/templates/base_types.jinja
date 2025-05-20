@@ -11,6 +11,11 @@ input {{ schema.name }}UpdateInput {
 {% for field_name, field_type in schema.fields.items() %}  {{ field_name }}: {{ field_type|graphql_type }}
 {% endfor %}}
 
+input {{ schema.name }}DisableInput {
+  {{ schema.partition_key }}: {{ schema.fields[schema.partition_key]|graphql_type }}
+{% if schema.sort_key and schema.sort_key != 'None' %}  {{ schema.sort_key }}: {{ schema.fields[schema.sort_key]|graphql_type }}
+{% endif %}}
+
 {%- set seen_indexes = [] %}
 {%- for index in schema.indexes %}
   {%- if index.sort %}
