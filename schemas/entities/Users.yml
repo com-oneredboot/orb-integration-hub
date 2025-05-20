@@ -13,8 +13,7 @@ model:
   authConfig:
     apiKeyAuthentication:
     - UsersQueryByEmail
-    - UsersQueryByCognitoId
-    - UsersQueryByUserId
+    - UsersCreate
     cognitoAuthentication:
       groups:
         OWNER:

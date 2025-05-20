@@ -177,7 +177,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     
     try {
-      // Get current user to retrieve the user_id
+      // Get current user to retrieve the userId
       const user = await this.getCurrentUser();
       
       if (!user || !user.userId) {

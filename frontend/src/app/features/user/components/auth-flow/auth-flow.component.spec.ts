@@ -229,4 +229,39 @@ describe('AuthFlowComponent', () => {
     const activePasswordInput = compiled.querySelector('.auth-flow__form-step--active input[type="password"]');
     expect(activePasswordInput).toBeFalsy();
   });
+
+  it('should handle unauthorized error from UsersCreate mutation', async () => {
+    // Simulate Unauthorized error from userCreate
+    userService.userCreate.and.returnValue(Promise.resolve({
+      statusCode: 401,
+      message: 'Not Authorized to access UsersCreate on type Mutation',
+      data: null
+    }));
+
+    store.select.and.callFake((selector: any) => {
+      if (selector === require('./store/auth.selectors').selectCurrentStep) {
+        return of(require('./store/auth.state').AuthSteps.PASSWORD_SETUP);
+      }
+      if (selector === require('./store/auth.selectors').selectCurrentUser) {
+        return of(null);
+      }
+      return of(null);
+    });
+
+    component.authForm.patchValue({
+      email: 'unauth@example.com',
+      password: 'TestPassword123!',
+      firstName: 'Unauthorized',
+      lastName: 'User',
+      phoneNumber: '+12345678901'
+    });
+
+    await component.onSubmit();
+    // The store should not dispatch a successful user creation
+    expect(store.dispatch).not.toHaveBeenCalledWith(
+      jasmine.objectContaining({ type: '[Auth] Create User' })
+    );
+    // Optionally, check for error handling logic (e.g., error banner, log, etc.)
+    // This depends on how your component surfaces errors
+  });
 });

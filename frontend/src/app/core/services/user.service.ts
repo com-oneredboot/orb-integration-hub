@@ -24,7 +24,6 @@ import { UserStatus } from "../models/UserStatus.enum";
 import { CognitoService } from "./cognito.service";
 import { AuthResponse } from "../models/Auth.model";
 import { AuthActions } from '../../features/user/components/auth-flow/store/auth.actions';
-import { toSnakeCase, toCamelCase } from '../caseConverter';
 
 
 @Injectable({
@@ -85,7 +84,7 @@ export class UserService extends ApiService {
       };
 
       const response = await this.mutate(
-        UsersCreateMutation, {"input": toSnakeCase(userCreateInput)}, "apiKey") as GraphQLResult<UsersCreateResponse>;
+        UsersCreateMutation, {"input": userCreateInput}, "apiKey") as GraphQLResult<UsersCreateResponse>;
       console.debug('createUser Response: ', response);
 
       return {
@@ -125,7 +124,7 @@ export class UserService extends ApiService {
       }
       const response = await this.query(
         query,
-        { input: toSnakeCase(queryInput) },
+        { input: queryInput },
         'apiKey'
       ) as GraphQLResult<UsersResponse>;
       // Compose UsersResponse
@@ -201,7 +200,7 @@ export class UserService extends ApiService {
     try {
       const response = await this.query(
         UsersQueryByUserId,
-        {input: toSnakeCase(input)},
+        {input: input},
         'apiKey') as GraphQLResult<UsersResponse>;
 
       console.debug('userQueryByUserId Response: ', response);
@@ -246,7 +245,7 @@ export class UserService extends ApiService {
       // Use UsersQueryByEmailInput for email lookups
       const userResponse = await this.query(
         UsersQueryByEmail,
-        { input: toSnakeCase({ email }) },
+        { input: { email } },
         'apiKey'
       ) as GraphQLResult<UsersResponse>;
 
@@ -447,7 +446,7 @@ export class UserService extends ApiService {
 
       const response = await this.mutate(
         UsersUpdateMutation,
-        { input: toSnakeCase(updateInput) },
+        { input: updateInput },
         "userPool"
       ) as GraphQLResult<UsersUpdateResponse>;
 
