@@ -69,7 +69,7 @@ describe('ProfileComponent', () => {
         statusCode: 200,
         message: 'Profile updated successfully',
         data: {
-          ...mockUser,
+            ...mockUser,
           firstName: input.firstName || mockUser.firstName,
           lastName: input.lastName || mockUser.lastName
         }
