@@ -34,20 +34,34 @@ export class AuthEffects {
         return from(this.userService.userExists(userInput)).pipe(
           tap(result => console.debug('Effect [CheckEmail]: Service returned', result)),
           map((result: IUsers | false) => {
+            if (!result) {
+              // If no user found or error, dispatch failure
+              return AuthActions.checkEmailFailure({ error: 'User not found or not authorized.' });
+            }
             const exists = !!result;
             console.debug('Effect [CheckEmail]: Success, user exists:', exists);
             return AuthActions.checkEmailSuccess({ userExists: exists });
           }),
           catchError((error: Error) => {
             // Use error registry to log and format error
+            let message = error.message;
+            if (
+              message.includes('Unable to connect to the server') ||
+              message.includes('ERR_NAME_NOT_RESOLVED') ||
+              message.includes('NetworkError') ||
+              message.includes('Failed to fetch') ||
+              message.includes('network timeout') ||
+              message.includes('Could not connect')
+            ) {
+              message = 'Unable to connect to the server. Please check your connection and try again.';
+            }
             const errorCode = 'ORB-API-003'; // Invalid input for GraphQL operation
             const errorRegistry = new ErrorRegistry({
               code: errorCode,
-              message: error.message,
+              message: message,
               description: 'Error checking email',
               solution: 'Please try again or contact support'
             });
-            
             return of(AuthActions.checkEmailFailure({
               error: errorRegistry.message
             }));

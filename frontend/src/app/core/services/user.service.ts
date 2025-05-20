@@ -130,7 +130,18 @@ export class UserService extends ApiService {
       ) as GraphQLResult<UsersResponse>;
       const user = response.data?.data;
       return user ? user : false;
-    } catch (error) {
+    } catch (error: any) {
+      // Detect network/DNS errors and throw a user-friendly error
+      const message = error?.message || error?.toString() || '';
+      if (
+        message.includes('ERR_NAME_NOT_RESOLVED') ||
+        message.includes('NetworkError') ||
+        message.includes('Failed to fetch') ||
+        message.includes('network timeout') ||
+        message.includes('Could not connect')
+      ) {
+        throw new Error('Unable to connect to the server. Please check your connection and try again.');
+      }
       console.error('Error in userExists:', error);
       return false;
     }

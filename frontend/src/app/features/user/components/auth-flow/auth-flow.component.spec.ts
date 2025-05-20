@@ -144,4 +144,23 @@ describe('AuthFlowComponent', () => {
       })
     );
   });
+
+  it('should display error banner when error is set in store', () => {
+    // Simulate error in store
+    store.select.and.callFake((selector: any) => {
+      if (selector === require('./store/auth.selectors').selectError) {
+        return of('Unable to connect to the server. Please check your connection and try again.');
+      }
+      if (selector === require('./store/auth.selectors').selectCurrentStep) {
+        return of(require('./store/auth.state').AuthSteps.EMAIL);
+      }
+      return of(null);
+    });
+    fixture = TestBed.createComponent(AuthFlowComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.auth-flow__error')?.textContent)
+      .toContain('Unable to connect to the server. Please check your connection and try again.');
+  });
 });
