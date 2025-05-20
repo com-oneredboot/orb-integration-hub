@@ -23,6 +23,7 @@ export const AuthActions = createActionGroup({
     'Check Email': props<{ email: string }>(),
     'Check Email Success': props<{ userExists: boolean }>(),
     'Check Email Failure': props<{ error: string }>(),
+    'Check Email User Not Found': emptyProps(),
 
     'Verify Cognito Password': props<{ email: string; password: string }>(),
     'Verify Cognito Password Success': props<{ message?: string, needsMFA?: boolean, needsMFASetup?:boolean, mfaSetupDetails?: MfaSetupDetails }>(),

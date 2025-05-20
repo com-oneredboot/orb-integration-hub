@@ -184,7 +184,48 @@ describe('AuthFlowComponent', () => {
       .toContain('User not found or not authorized.');
     // Should still be on email step
     expect(compiled.querySelector('input[type="email"]')).toBeTruthy();
-    // Should not show password input in the active step
+    // Password input should NOT be in the active step
+    const activePasswordInput = compiled.querySelector('.auth-flow__form-step--active input[type="password"]');
+    expect(activePasswordInput).toBeFalsy();
+  });
+
+  it('should advance to password step if user is not found', () => {
+    store.select.and.callFake((selector: any) => {
+      if (selector === require('./store/auth.selectors').selectCurrentStep) {
+        return of(require('./store/auth.state').AuthSteps.PASSWORD);
+      }
+      if (selector === require('./store/auth.selectors').selectError) {
+        return of(null);
+      }
+      return of(null);
+    });
+    fixture = TestBed.createComponent(AuthFlowComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    // Password input should be present in the active step
+    const activePasswordInput = compiled.querySelector('.auth-flow__form-step--active input[type="password"]');
+    expect(activePasswordInput).toBeTruthy();
+  });
+
+  it('should show error and not advance if checkEmailFailure is dispatched', () => {
+    store.select.and.callFake((selector: any) => {
+      if (selector === require('./store/auth.selectors').selectCurrentStep) {
+        return of(require('./store/auth.state').AuthSteps.EMAIL);
+      }
+      if (selector === require('./store/auth.selectors').selectError) {
+        return of('Some error occurred');
+      }
+      return of(null);
+    });
+    fixture = TestBed.createComponent(AuthFlowComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    // Error banner should be shown
+    const errorBanner = compiled.querySelector('.auth-flow__error');
+    expect(errorBanner).toBeTruthy();
+    // Password input should NOT be in the active step
     const activePasswordInput = compiled.querySelector('.auth-flow__form-step--active input[type="password"]');
     expect(activePasswordInput).toBeFalsy();
   });

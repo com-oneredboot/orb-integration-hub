@@ -33,14 +33,17 @@ export class AuthEffects {
         
         return from(this.userService.userExists(userInput)).pipe(
           tap(result => console.debug('Effect [CheckEmail]: Service returned', result)),
-          map((result: IUsers | false) => {
-            if (!result) {
-              // If no user found or error, dispatch failure
+          map((result: IUsers | false | null) => {
+            if (result === false) {
+              // Backend/network error or unauthorized
               return AuthActions.checkEmailFailure({ error: 'User not found or not authorized.' });
             }
-            const exists = !!result;
-            console.debug('Effect [CheckEmail]: Success, user exists:', exists);
-            return AuthActions.checkEmailSuccess({ userExists: exists });
+            if (!result) {
+              // User not found (null)
+              return AuthActions.checkEmailUserNotFound();
+            }
+            // User exists
+            return AuthActions.checkEmailSuccess({ userExists: true });
           }),
           catchError((error: Error) => {
             // Use error registry to log and format error
@@ -323,3 +326,4 @@ export class AuthEffects {
     private store: Store
   ) {}
 }
+
