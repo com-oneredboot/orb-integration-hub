@@ -108,9 +108,9 @@ export class UserService extends ApiService {
   /**
    * Check if a user exists
    * @param input UserQueryInput with backend-compatible fields
-   * @param email Optional email to filter results client-side
+   * @returns UsersResponse object
    */
-  public async userExists(input: { userId?: string; email?: string }): Promise<IUsers | false> {
+  public async userExists(input: { userId?: string; email?: string }): Promise<UsersResponse> {
     try {
       let queryInput;
       let query;
@@ -128,8 +128,12 @@ export class UserService extends ApiService {
         { input: toSnakeCase(queryInput) },
         'apiKey'
       ) as GraphQLResult<UsersResponse>;
-      const user = response.data?.data;
-      return user ? user : false;
+      // Compose UsersResponse
+      return {
+        statusCode: response.data?.statusCode ?? 200,
+        message: response.data?.message ?? '',
+        data: response.data?.data ?? null
+      } as UsersResponse;
     } catch (error: any) {
       // Detect network/DNS errors and throw a user-friendly error
       const message = error?.message || error?.toString() || '';
@@ -143,7 +147,11 @@ export class UserService extends ApiService {
         throw new Error('Unable to connect to the server. Please check your connection and try again.');
       }
       console.error('Error in userExists:', error);
-      return false;
+      return {
+        statusCode: 500,
+        message: message || 'Unknown error',
+        data: null
+      } as UsersResponse;
     }
   }
 

@@ -45,7 +45,8 @@ export const authReducer = createReducer(
   })),
   on(AuthActions.checkEmailUserNotFound, (state) => ({
     ...state,
-    currentStep: AuthSteps.PASSWORD,
+    currentStep: AuthSteps.PASSWORD_SETUP,
+    isLoading: false,
     error: null
   })),
 

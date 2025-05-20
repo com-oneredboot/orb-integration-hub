@@ -19,6 +19,7 @@ import { CognitoService } from "../../../../../core/services/cognito.service";
 import { getError } from "../../../../../core/models/ErrorRegistry.model";
 import { UsersQueryByEmailInput } from "../../../../../core/models/Users.model";
 import { IUsers } from "../../../../../core/models/Users.model";
+import { UsersResponse } from "../../../../../core/models/Users.model";
 
 @Injectable()
 export class AuthEffects {
@@ -33,21 +34,23 @@ export class AuthEffects {
         
         return from(this.userService.userExists(userInput)).pipe(
           tap(result => console.debug('Effect [CheckEmail]: Service returned', result)),
-          map((result: IUsers | false | null) => {
-            if (result === false) {
-              // Backend/network error or unauthorized
-              return AuthActions.checkEmailFailure({ error: 'User not found or not authorized.' });
+          map((result: UsersResponse) => {
+            if (result.statusCode === 200 && result.data) {
+              // User exists
+              return AuthActions.checkEmailSuccess({ userExists: true });
             }
-            if (!result) {
-              // User not found (null)
+            if (result.statusCode === 200 && !result.data) {
+              // User not found
               return AuthActions.checkEmailUserNotFound();
             }
-            // User exists
-            return AuthActions.checkEmailSuccess({ userExists: true });
+            // Any other statusCode is an error
+            const errorObj = getError('ORB-AUTH-005');
+            return AuthActions.checkEmailFailure({ error: errorObj ? errorObj.message : 'User email check failed' });
           }),
           catchError((error: Error) => {
-            // Use error registry to log and format error
-            let message = error.message;
+            // Map network errors to ORB-API-004, others to ORB-SYS-001
+            let errorCode = 'ORB-SYS-001';
+            const message = error.message || '';
             if (
               message.includes('Unable to connect to the server') ||
               message.includes('ERR_NAME_NOT_RESOLVED') ||
@@ -56,12 +59,11 @@ export class AuthEffects {
               message.includes('network timeout') ||
               message.includes('Could not connect')
             ) {
-              message = 'Unable to connect to the server. Please check your connection and try again.';
+              errorCode = 'ORB-API-004';
             }
-            const errorCode = 'ORB-API-003'; // Invalid input for GraphQL operation
             const errorObj = getError(errorCode);
             return of(AuthActions.checkEmailFailure({
-              error: errorObj ? errorObj.message : 'Unknown error'
+              error: errorObj ? errorObj.message : 'Unexpected error'
             }));
           }),
           tap(resultAction => console.debug('Effect [CheckEmail]: Emitting action', resultAction))
@@ -69,10 +71,9 @@ export class AuthEffects {
       }),
       catchError(error => {
         console.error('Effect [CheckEmail]: Outer error caught', error);
-        const errorCode = 'ORB-SYS-001'; // Unexpected error
-        const errorObj = getError(errorCode);
+        const errorObj = getError('ORB-SYS-001');
         return of(AuthActions.checkEmailFailure({
-          error: errorObj ? errorObj.message : 'Unknown error'
+          error: errorObj ? errorObj.message : 'Unexpected error'
         }));
       })
     )
@@ -88,17 +89,15 @@ export class AuthEffects {
             if (response.statusCode === 200) {
               return AuthActions.createUserSuccess();
             }
+            const errorObj = getError('ORB-API-002');
             return AuthActions.createUserFailure({
-              error: response.message || 'Failed to create user'
+              error: errorObj ? errorObj.message : 'GraphQL mutation error'
             });
           }),
           catchError(error => {
-            // Use error registry to handle the error
-            const errorCode = 'ORB-API-002'; // Default to GraphQL mutation error
-            const errorObj = getError(errorCode);
-            
+            const errorObj = getError('ORB-API-002');
             return of(AuthActions.createUserFailure({
-              error: errorObj ? errorObj.message : 'Unknown error'
+              error: errorObj ? errorObj.message : 'GraphQL mutation error'
             }));
           })
         );
@@ -114,20 +113,22 @@ export class AuthEffects {
         const emailInput: UsersQueryByEmailInput = { email: input.email };
         return from(this.userService.userExists(emailInput)).pipe(
           switchMap(user => {
-            if (!user || typeof user === 'boolean') {
+            if (!user || user.statusCode !== 200 || !user.data) {
+              const errorObj = getError('ORB-AUTH-003');
               return of(AuthActions.verifyEmailFailure({
-                error: 'User not found'
+                error: errorObj ? errorObj.message : 'Email verification failed'
               }));
             }
             // Now verify the email with the userId
-            const userIdInput = { userId: user.userId };
+            const userIdInput = { userId: user.data.userId };
             return from(this.userService.emailVerify(userIdInput, code, email)).pipe(
               map(response => {
                 if (response) {
                   return AuthActions.verifyEmailSuccess();
                 }
+                const errorObj = getError('ORB-AUTH-003');
                 return AuthActions.verifyEmailFailure({
-                  error: 'Failed to verify email'
+                  error: errorObj ? errorObj.message : 'Email verification failed'
                 });
               })
             );
@@ -148,8 +149,9 @@ export class AuthEffects {
 
             // error state
             if (response.statusCode !== 200) {
+              const errorObj = getError('ORB-AUTH-002');
               return AuthActions.verifyCognitoPasswordFailure({
-                error: response?.message || 'Failed to verify email and password'
+                error: errorObj ? errorObj.message : 'Invalid credentials'
               });
             }
 
@@ -161,13 +163,16 @@ export class AuthEffects {
             });
 
           }),
-          catchError(error => of(AuthActions.verifyCognitoPasswordFailure({
-            error: error instanceof Error ? error.message : 'Failed to sign in'
-          }))
+          catchError(error => {
+            const errorObj = getError('ORB-AUTH-002');
+            return of(AuthActions.verifyCognitoPasswordFailure({
+              error: errorObj ? errorObj.message : 'Invalid credentials'
+            }));
+          })
         )
       )
     )
-  ));
+  );
 
   setupMFA$ = createEffect(() =>
     this.actions$.pipe(
@@ -178,17 +183,21 @@ export class AuthEffects {
             if (response.statusCode === 200) {
               return AuthActions.needsMFASetupSuccess();
             }
+            const errorObj = getError('ORB-AUTH-003');
             return AuthActions.needsMFASetupFailure({
-              error: response.message || 'Failed to setup MFA'
+              error: errorObj ? errorObj.message : 'Email verification failed'
             });
           }),
-          catchError(error => of(AuthActions.needsMFASetupFailure({
-            error: error instanceof Error ? error.message : 'Failed to setup MFA'
-          }))
+          catchError(error => {
+            const errorObj = getError('ORB-AUTH-003');
+            return of(AuthActions.needsMFASetupFailure({
+              error: errorObj ? errorObj.message : 'Email verification failed'
+            }));
+          })
         )
       )
     )
-  ));
+  );
 
   verifyMFA$ = createEffect(() =>
     this.actions$.pipe(
@@ -199,17 +208,21 @@ export class AuthEffects {
             if (response.statusCode === 200) {
               return AuthActions.needsMFASuccess();
             }
+            const errorObj = getError('ORB-AUTH-003');
             return AuthActions.needsMFAFailure({
-              error: response.message || 'Failed to verify MFA code'
+              error: errorObj ? errorObj.message : 'Email verification failed'
             });
           }),
-          catchError(error => of(AuthActions.needsMFAFailure({
-            error: error instanceof Error ? error.message : 'Failed to verify MFA code'
-          }))
+          catchError(error => {
+            const errorObj = getError('ORB-AUTH-003');
+            return of(AuthActions.needsMFAFailure({
+              error: errorObj ? errorObj.message : 'Email verification failed'
+            }));
+          })
         )
       )
     )
-  ));
+  );
 
   // Add signout effect
   signout$ = createEffect(() =>

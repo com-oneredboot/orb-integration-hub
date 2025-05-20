@@ -189,10 +189,10 @@ describe('AuthFlowComponent', () => {
     expect(activePasswordInput).toBeFalsy();
   });
 
-  it('should advance to password step if user is not found', () => {
+  it('should advance to password setup step if user is not found', () => {
     store.select.and.callFake((selector: any) => {
       if (selector === require('./store/auth.selectors').selectCurrentStep) {
-        return of(require('./store/auth.state').AuthSteps.PASSWORD);
+        return of(require('./store/auth.state').AuthSteps.PASSWORD_SETUP);
       }
       if (selector === require('./store/auth.selectors').selectError) {
         return of(null);
@@ -203,7 +203,7 @@ describe('AuthFlowComponent', () => {
     component = fixture.componentInstance;
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    // Password input should be present in the active step
+    // Password input should be present in the active step (for password setup)
     const activePasswordInput = compiled.querySelector('.auth-flow__form-step--active input[type="password"]');
     expect(activePasswordInput).toBeTruthy();
   });
