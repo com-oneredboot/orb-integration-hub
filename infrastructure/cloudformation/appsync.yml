@@ -104,646 +104,461 @@ Resources:
 
   # Data Sources
   # --------------------------------------------------- #
-  
-  # DEBUG: ApplicationRoles operations: [{'name': 'Create', 'type': 'Mutation', 'field': 'ApplicationRolesCreate', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "PutItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)\n}', 'response_template': '{\n  "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),\n  "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),\n  "Data": $util.defaultIfNull($ctx.result.Data, null)\n}'}, {'name': 'Update', 'type': 'Mutation', 'field': 'ApplicationRolesUpdate', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "UpdateItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "update": {\n    "expression": "SET #attr = :val",\n    "expressionNames": {\n      "#attr": "status"\n    },\n    "expressionValues": {\n      ":val": { "S": $ctx.args.input.status }\n    }\n  },\n  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)\n}', 'response_template': '{\n  "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),\n  "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),\n  "Data": $util.defaultIfNull($ctx.result.Data, null)\n}'}, {'name': 'Delete', 'type': 'Mutation', 'field': 'ApplicationRolesDelete', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "DeleteItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  }\n}', 'response_template': '{\n  "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),\n  "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),\n  "Data": $util.defaultIfNull($ctx.result.Data, null)\n}'}, {'name': 'Disable', 'type': 'Mutation', 'field': 'ApplicationRolesDisable', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "UpdateItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "update": {\n    "expression": "SET #status = :status, disabledAt = :disabledAt",\n    "expressionNames": {\n      "#status": "status"\n    },\n    "expressionValues": {\n      ":status": { "S": "DISABLED" },\n      ":disabledAt": { "S": "$util.time.nowISO8601()" }\n    }\n  }\n}', 'response_template': '{\n  "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),\n  "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),\n  "Data": $util.defaultIfNull($ctx.result.Data, null)\n}'}]
-
-  # ApplicationRoles Data Source
-  ApplicationRolesDataSource:
+  # DynamoDB CRUD Lambda Data Source (imported from lambdas.yml)
+  DynamoDbCrudLambdaDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
-      Name: ApplicationRolesDataSource
-      Type: AMAZON_DYNAMODB
+      Name: DynamoDbCrudLambdaDataSource
+      Type: AWS_LAMBDA
+      LambdaConfig:
+        LambdaFunctionArn: !ImportValue DynamoDbCrudLambdaArn
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
-      DynamoDBConfig:
-        TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-application-roles'
-        AwsRegion: !Ref AWS::Region
 
-  # ApplicationRoles Resolvers
-  # --------------------------------------------------- #
+  # Table Data Sources and Resolvers
   
+    # ApplicationRoles Table-specific resources (must be inside the loop)
+    # TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-application-roles'
+    # (Move any other schema-specific resources here)
+    # ...
   
-  ApplicationRolesCreateResolver:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: ApplicationRolesCreate
-      DataSourceName: !GetAtt ApplicationRolesDataSource.Name
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "PutItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-          },
-          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
-        }
-      ResponseMappingTemplate: |
-        {
-          "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),
-          "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),
-          "Data": $util.defaultIfNull($ctx.result.Data, null)
-        }
+    # Applications Table-specific resources (must be inside the loop)
+    # TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-applications'
+    # (Move any other schema-specific resources here)
+    # ...
   
-  ApplicationRolesUpdateResolver:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: ApplicationRolesUpdate
-      DataSourceName: !GetAtt ApplicationRolesDataSource.Name
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "UpdateItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-          },
-          "update": {
-            "expression": "SET #attr = :val",
-            "expressionNames": {
-              "#attr": "status"
-            },
-            "expressionValues": {
-              ":val": { "S": $ctx.args.input.status }
-            }
-          },
-          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
-        }
-      ResponseMappingTemplate: |
-        {
-          "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),
-          "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),
-          "Data": $util.defaultIfNull($ctx.result.Data, null)
-        }
+    # ApplicationUsers Table-specific resources (must be inside the loop)
+    # TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-application-users'
+    # (Move any other schema-specific resources here)
+    # ...
   
-  ApplicationRolesDeleteResolver:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: ApplicationRolesDelete
-      DataSourceName: !GetAtt ApplicationRolesDataSource.Name
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "DeleteItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-          }
-        }
-      ResponseMappingTemplate: |
-        {
-          "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),
-          "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),
-          "Data": $util.defaultIfNull($ctx.result.Data, null)
-        }
+    # Roles Table-specific resources (must be inside the loop)
+    # TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-roles'
+    # (Move any other schema-specific resources here)
+    # ...
   
-  ApplicationRolesDisableResolver:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: ApplicationRolesDisable
-      DataSourceName: !GetAtt ApplicationRolesDataSource.Name
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "UpdateItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-          },
-          "update": {
-            "expression": "SET #status = :status, disabledAt = :disabledAt",
-            "expressionNames": {
-              "#status": "status"
-            },
-            "expressionValues": {
-              ":status": { "S": "DISABLED" },
-              ":disabledAt": { "S": "$util.time.nowISO8601()" }
-            }
-          }
-        }
-      ResponseMappingTemplate: |
-        {
-          "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),
-          "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),
-          "Data": $util.defaultIfNull($ctx.result.Data, null)
-        }
+    # Users Table-specific resources (must be inside the loop)
+    # TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-users'
+    # (Move any other schema-specific resources here)
+    # ...
   
-  
-  # DEBUG: Applications operations: [{'name': 'Create', 'type': 'Mutation', 'field': 'ApplicationsCreate', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "PutItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)\n}', 'response_template': '{\n  "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),\n  "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),\n  "Data": $util.defaultIfNull($ctx.result.Data, null)\n}'}, {'name': 'Update', 'type': 'Mutation', 'field': 'ApplicationsUpdate', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "UpdateItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "update": {\n    "expression": "SET #attr = :val",\n    "expressionNames": {\n      "#attr": "status"\n    },\n    "expressionValues": {\n      ":val": { "S": $ctx.args.input.status }\n    }\n  },\n  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)\n}', 'response_template': '{\n  "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),\n  "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),\n  "Data": $util.defaultIfNull($ctx.result.Data, null)\n}'}, {'name': 'Delete', 'type': 'Mutation', 'field': 'ApplicationsDelete', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "DeleteItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  }\n}', 'response_template': '{\n  "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),\n  "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),\n  "Data": $util.defaultIfNull($ctx.result.Data, null)\n}'}, {'name': 'Disable', 'type': 'Mutation', 'field': 'ApplicationsDisable', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "UpdateItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "update": {\n    "expression": "SET #status = :status, disabledAt = :disabledAt",\n    "expressionNames": {\n      "#status": "status"\n    },\n    "expressionValues": {\n      ":status": { "S": "DISABLED" },\n      ":disabledAt": { "S": "$util.time.nowISO8601()" }\n    }\n  }\n}', 'response_template': '{\n  "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),\n  "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),\n  "Data": $util.defaultIfNull($ctx.result.Data, null)\n}'}]
 
-  # Applications Data Source
-  ApplicationsDataSource:
-    Type: AWS::AppSync::DataSource
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      Name: ApplicationsDataSource
-      Type: AMAZON_DYNAMODB
-      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
-      DynamoDBConfig:
-        TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-applications'
-        AwsRegion: !Ref AWS::Region
-
-  # Applications Resolvers
-  # --------------------------------------------------- #
+  # CRUD/Disable resolvers for each table
   
-  
-  ApplicationsCreateResolver:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: ApplicationsCreate
-      DataSourceName: !GetAtt ApplicationsDataSource.Name
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "PutItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-          },
-          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
-        }
-      ResponseMappingTemplate: |
-        {
-          "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),
-          "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),
-          "Data": $util.defaultIfNull($ctx.result.Data, null)
-        }
-  
-  ApplicationsUpdateResolver:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: ApplicationsUpdate
-      DataSourceName: !GetAtt ApplicationsDataSource.Name
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "UpdateItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-          },
-          "update": {
-            "expression": "SET #attr = :val",
-            "expressionNames": {
-              "#attr": "status"
-            },
-            "expressionValues": {
-              ":val": { "S": $ctx.args.input.status }
+    # ApplicationRoles Lambda CRUD/Disable Resolvers
+    
+      ApplicationRolesCreateResolver:
+        Type: AWS::AppSync::Resolver
+        Properties:
+          ApiId: !GetAtt IntegrationHubApi.ApiId
+          TypeName: Mutation
+          FieldName: ApplicationRolesCreate
+          DataSourceName: DynamoDbCrudLambdaDataSource
+          RequestMappingTemplate: |
+            {
+              "version": "2018-05-29",
+              "operation": "Invoke",
+              "payload": {
+                "field": "ApplicationRolesCreate",
+                "arguments": $util.toJson($ctx.args)
+              }
             }
-          },
-          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
-        }
-      ResponseMappingTemplate: |
-        {
-          "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),
-          "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),
-          "Data": $util.defaultIfNull($ctx.result.Data, null)
-        }
-  
-  ApplicationsDeleteResolver:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: ApplicationsDelete
-      DataSourceName: !GetAtt ApplicationsDataSource.Name
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "DeleteItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-          }
-        }
-      ResponseMappingTemplate: |
-        {
-          "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),
-          "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),
-          "Data": $util.defaultIfNull($ctx.result.Data, null)
-        }
-  
-  ApplicationsDisableResolver:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: ApplicationsDisable
-      DataSourceName: !GetAtt ApplicationsDataSource.Name
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "UpdateItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-          },
-          "update": {
-            "expression": "SET #status = :status, disabledAt = :disabledAt",
-            "expressionNames": {
-              "#status": "status"
-            },
-            "expressionValues": {
-              ":status": { "S": "DISABLED" },
-              ":disabledAt": { "S": "$util.time.nowISO8601()" }
+          # Always use the standard Lambda response mapping template for CRUD/Disable
+          ResponseMappingTemplate: |
+            $util.toJson($ctx.result)
+    
+      ApplicationRolesUpdateResolver:
+        Type: AWS::AppSync::Resolver
+        Properties:
+          ApiId: !GetAtt IntegrationHubApi.ApiId
+          TypeName: Mutation
+          FieldName: ApplicationRolesUpdate
+          DataSourceName: DynamoDbCrudLambdaDataSource
+          RequestMappingTemplate: |
+            {
+              "version": "2018-05-29",
+              "operation": "Invoke",
+              "payload": {
+                "field": "ApplicationRolesUpdate",
+                "arguments": $util.toJson($ctx.args)
+              }
             }
-          }
-        }
-      ResponseMappingTemplate: |
-        {
-          "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),
-          "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),
-          "Data": $util.defaultIfNull($ctx.result.Data, null)
-        }
-  
-  
-  # DEBUG: ApplicationUsers operations: [{'name': 'Create', 'type': 'Mutation', 'field': 'ApplicationUsersCreate', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "PutItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)\n}', 'response_template': '{\n  "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),\n  "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),\n  "Data": $util.defaultIfNull($ctx.result.Data, null)\n}'}, {'name': 'Update', 'type': 'Mutation', 'field': 'ApplicationUsersUpdate', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "UpdateItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "update": {\n    "expression": "SET #attr = :val",\n    "expressionNames": {\n      "#attr": "status"\n    },\n    "expressionValues": {\n      ":val": { "S": $ctx.args.input.status }\n    }\n  },\n  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)\n}', 'response_template': '{\n  "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),\n  "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),\n  "Data": $util.defaultIfNull($ctx.result.Data, null)\n}'}, {'name': 'Delete', 'type': 'Mutation', 'field': 'ApplicationUsersDelete', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "DeleteItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  }\n}', 'response_template': '{\n  "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),\n  "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),\n  "Data": $util.defaultIfNull($ctx.result.Data, null)\n}'}, {'name': 'Disable', 'type': 'Mutation', 'field': 'ApplicationUsersDisable', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "UpdateItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "update": {\n    "expression": "SET #status = :status, disabledAt = :disabledAt",\n    "expressionNames": {\n      "#status": "status"\n    },\n    "expressionValues": {\n      ":status": { "S": "DISABLED" },\n      ":disabledAt": { "S": "$util.time.nowISO8601()" }\n    }\n  }\n}', 'response_template': '{\n  "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),\n  "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),\n  "Data": $util.defaultIfNull($ctx.result.Data, null)\n}'}]
-
-  # ApplicationUsers Data Source
-  ApplicationUsersDataSource:
-    Type: AWS::AppSync::DataSource
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      Name: ApplicationUsersDataSource
-      Type: AMAZON_DYNAMODB
-      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
-      DynamoDBConfig:
-        TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-application-users'
-        AwsRegion: !Ref AWS::Region
-
-  # ApplicationUsers Resolvers
-  # --------------------------------------------------- #
-  
-  
-  ApplicationUsersCreateResolver:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: ApplicationUsersCreate
-      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "PutItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-          },
-          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
-        }
-      ResponseMappingTemplate: |
-        {
-          "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),
-          "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),
-          "Data": $util.defaultIfNull($ctx.result.Data, null)
-        }
-  
-  ApplicationUsersUpdateResolver:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: ApplicationUsersUpdate
-      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "UpdateItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-          },
-          "update": {
-            "expression": "SET #attr = :val",
-            "expressionNames": {
-              "#attr": "status"
-            },
-            "expressionValues": {
-              ":val": { "S": $ctx.args.input.status }
+          # Always use the standard Lambda response mapping template for CRUD/Disable
+          ResponseMappingTemplate: |
+            $util.toJson($ctx.result)
+    
+      ApplicationRolesDeleteResolver:
+        Type: AWS::AppSync::Resolver
+        Properties:
+          ApiId: !GetAtt IntegrationHubApi.ApiId
+          TypeName: Mutation
+          FieldName: ApplicationRolesDelete
+          DataSourceName: DynamoDbCrudLambdaDataSource
+          RequestMappingTemplate: |
+            {
+              "version": "2018-05-29",
+              "operation": "Invoke",
+              "payload": {
+                "field": "ApplicationRolesDelete",
+                "arguments": $util.toJson($ctx.args)
+              }
             }
-          },
-          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
-        }
-      ResponseMappingTemplate: |
-        {
-          "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),
-          "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),
-          "Data": $util.defaultIfNull($ctx.result.Data, null)
-        }
-  
-  ApplicationUsersDeleteResolver:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: ApplicationUsersDelete
-      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "DeleteItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-          }
-        }
-      ResponseMappingTemplate: |
-        {
-          "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),
-          "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),
-          "Data": $util.defaultIfNull($ctx.result.Data, null)
-        }
-  
-  ApplicationUsersDisableResolver:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: ApplicationUsersDisable
-      DataSourceName: !GetAtt ApplicationUsersDataSource.Name
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "UpdateItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-          },
-          "update": {
-            "expression": "SET #status = :status, disabledAt = :disabledAt",
-            "expressionNames": {
-              "#status": "status"
-            },
-            "expressionValues": {
-              ":status": { "S": "DISABLED" },
-              ":disabledAt": { "S": "$util.time.nowISO8601()" }
+          # Always use the standard Lambda response mapping template for CRUD/Disable
+          ResponseMappingTemplate: |
+            $util.toJson($ctx.result)
+    
+      ApplicationRolesDisableResolver:
+        Type: AWS::AppSync::Resolver
+        Properties:
+          ApiId: !GetAtt IntegrationHubApi.ApiId
+          TypeName: Mutation
+          FieldName: ApplicationRolesDisable
+          DataSourceName: DynamoDbCrudLambdaDataSource
+          RequestMappingTemplate: |
+            {
+              "version": "2018-05-29",
+              "operation": "Invoke",
+              "payload": {
+                "field": "ApplicationRolesDisable",
+                "arguments": $util.toJson($ctx.args)
+              }
             }
-          }
-        }
-      ResponseMappingTemplate: |
-        {
-          "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),
-          "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),
-          "Data": $util.defaultIfNull($ctx.result.Data, null)
-        }
+          # Always use the standard Lambda response mapping template for CRUD/Disable
+          ResponseMappingTemplate: |
+            $util.toJson($ctx.result)
+    
   
-  
-  # DEBUG: Roles operations: [{'name': 'Create', 'type': 'Mutation', 'field': 'RolesCreate', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "PutItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)\n}', 'response_template': '{\n  "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),\n  "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),\n  "Data": $util.defaultIfNull($ctx.result.Data, null)\n}'}, {'name': 'Update', 'type': 'Mutation', 'field': 'RolesUpdate', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "UpdateItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "update": {\n    "expression": "SET #attr = :val",\n    "expressionNames": {\n      "#attr": "status"\n    },\n    "expressionValues": {\n      ":val": { "S": $ctx.args.input.status }\n    }\n  },\n  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)\n}', 'response_template': '{\n  "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),\n  "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),\n  "Data": $util.defaultIfNull($ctx.result.Data, null)\n}'}, {'name': 'Delete', 'type': 'Mutation', 'field': 'RolesDelete', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "DeleteItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  }\n}', 'response_template': '{\n  "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),\n  "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),\n  "Data": $util.defaultIfNull($ctx.result.Data, null)\n}'}, {'name': 'Disable', 'type': 'Mutation', 'field': 'RolesDisable', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "UpdateItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "update": {\n    "expression": "SET #status = :status, disabledAt = :disabledAt",\n    "expressionNames": {\n      "#status": "status"\n    },\n    "expressionValues": {\n      ":status": { "S": "DISABLED" },\n      ":disabledAt": { "S": "$util.time.nowISO8601()" }\n    }\n  }\n}', 'response_template': '{\n  "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),\n  "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),\n  "Data": $util.defaultIfNull($ctx.result.Data, null)\n}'}]
-
-  # Roles Data Source
-  RolesDataSource:
-    Type: AWS::AppSync::DataSource
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      Name: RolesDataSource
-      Type: AMAZON_DYNAMODB
-      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
-      DynamoDBConfig:
-        TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-roles'
-        AwsRegion: !Ref AWS::Region
-
-  # Roles Resolvers
-  # --------------------------------------------------- #
-  
-  
-  RolesCreateResolver:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: RolesCreate
-      DataSourceName: !GetAtt RolesDataSource.Name
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "PutItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-          },
-          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
-        }
-      ResponseMappingTemplate: |
-        {
-          "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),
-          "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),
-          "Data": $util.defaultIfNull($ctx.result.Data, null)
-        }
-  
-  RolesUpdateResolver:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: RolesUpdate
-      DataSourceName: !GetAtt RolesDataSource.Name
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "UpdateItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-          },
-          "update": {
-            "expression": "SET #attr = :val",
-            "expressionNames": {
-              "#attr": "status"
-            },
-            "expressionValues": {
-              ":val": { "S": $ctx.args.input.status }
+    # Applications Lambda CRUD/Disable Resolvers
+    
+      ApplicationsCreateResolver:
+        Type: AWS::AppSync::Resolver
+        Properties:
+          ApiId: !GetAtt IntegrationHubApi.ApiId
+          TypeName: Mutation
+          FieldName: ApplicationsCreate
+          DataSourceName: DynamoDbCrudLambdaDataSource
+          RequestMappingTemplate: |
+            {
+              "version": "2018-05-29",
+              "operation": "Invoke",
+              "payload": {
+                "field": "ApplicationsCreate",
+                "arguments": $util.toJson($ctx.args)
+              }
             }
-          },
-          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
-        }
-      ResponseMappingTemplate: |
-        {
-          "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),
-          "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),
-          "Data": $util.defaultIfNull($ctx.result.Data, null)
-        }
-  
-  RolesDeleteResolver:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: RolesDelete
-      DataSourceName: !GetAtt RolesDataSource.Name
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "DeleteItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-          }
-        }
-      ResponseMappingTemplate: |
-        {
-          "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),
-          "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),
-          "Data": $util.defaultIfNull($ctx.result.Data, null)
-        }
-  
-  RolesDisableResolver:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: RolesDisable
-      DataSourceName: !GetAtt RolesDataSource.Name
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "UpdateItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-          },
-          "update": {
-            "expression": "SET #status = :status, disabledAt = :disabledAt",
-            "expressionNames": {
-              "#status": "status"
-            },
-            "expressionValues": {
-              ":status": { "S": "DISABLED" },
-              ":disabledAt": { "S": "$util.time.nowISO8601()" }
+          # Always use the standard Lambda response mapping template for CRUD/Disable
+          ResponseMappingTemplate: |
+            $util.toJson($ctx.result)
+    
+      ApplicationsUpdateResolver:
+        Type: AWS::AppSync::Resolver
+        Properties:
+          ApiId: !GetAtt IntegrationHubApi.ApiId
+          TypeName: Mutation
+          FieldName: ApplicationsUpdate
+          DataSourceName: DynamoDbCrudLambdaDataSource
+          RequestMappingTemplate: |
+            {
+              "version": "2018-05-29",
+              "operation": "Invoke",
+              "payload": {
+                "field": "ApplicationsUpdate",
+                "arguments": $util.toJson($ctx.args)
+              }
             }
-          }
-        }
-      ResponseMappingTemplate: |
-        {
-          "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),
-          "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),
-          "Data": $util.defaultIfNull($ctx.result.Data, null)
-        }
-  
-  
-  # DEBUG: Users operations: [{'name': 'Create', 'type': 'Mutation', 'field': 'UsersCreate', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "PutItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)\n}', 'response_template': '{\n  "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),\n  "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),\n  "Data": $util.defaultIfNull($ctx.result.Data, null)\n}'}, {'name': 'Update', 'type': 'Mutation', 'field': 'UsersUpdate', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "UpdateItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "update": {\n    "expression": "SET #attr = :val",\n    "expressionNames": {\n      "#attr": "status"\n    },\n    "expressionValues": {\n      ":val": { "S": $ctx.args.input.status }\n    }\n  },\n  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)\n}', 'response_template': '{\n  "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),\n  "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),\n  "Data": $util.defaultIfNull($ctx.result.Data, null)\n}'}, {'name': 'Delete', 'type': 'Mutation', 'field': 'UsersDelete', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "DeleteItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  }\n}', 'response_template': '{\n  "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),\n  "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),\n  "Data": $util.defaultIfNull($ctx.result.Data, null)\n}'}, {'name': 'Disable', 'type': 'Mutation', 'field': 'UsersDisable', 'request_template': '{\n  "version": "2018-05-29",\n  "operation": "UpdateItem",\n  "key": {\n    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)\n  },\n  "update": {\n    "expression": "SET #status = :status, disabledAt = :disabledAt",\n    "expressionNames": {\n      "#status": "status"\n    },\n    "expressionValues": {\n      ":status": { "S": "DISABLED" },\n      ":disabledAt": { "S": "$util.time.nowISO8601()" }\n    }\n  }\n}', 'response_template': '{\n  "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),\n  "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),\n  "Data": $util.defaultIfNull($ctx.result.Data, null)\n}'}]
-
-  # Users Data Source
-  UsersDataSource:
-    Type: AWS::AppSync::DataSource
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      Name: UsersDataSource
-      Type: AMAZON_DYNAMODB
-      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
-      DynamoDBConfig:
-        TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-users'
-        AwsRegion: !Ref AWS::Region
-
-  # Users Resolvers
-  # --------------------------------------------------- #
-  
-  
-  UsersCreateResolver:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: UsersCreate
-      DataSourceName: !GetAtt UsersDataSource.Name
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "PutItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-          },
-          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
-        }
-      ResponseMappingTemplate: |
-        {
-          "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),
-          "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),
-          "Data": $util.defaultIfNull($ctx.result.Data, null)
-        }
-  
-  UsersUpdateResolver:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: UsersUpdate
-      DataSourceName: !GetAtt UsersDataSource.Name
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "UpdateItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-          },
-          "update": {
-            "expression": "SET #attr = :val",
-            "expressionNames": {
-              "#attr": "status"
-            },
-            "expressionValues": {
-              ":val": { "S": $ctx.args.input.status }
+          # Always use the standard Lambda response mapping template for CRUD/Disable
+          ResponseMappingTemplate: |
+            $util.toJson($ctx.result)
+    
+      ApplicationsDeleteResolver:
+        Type: AWS::AppSync::Resolver
+        Properties:
+          ApiId: !GetAtt IntegrationHubApi.ApiId
+          TypeName: Mutation
+          FieldName: ApplicationsDelete
+          DataSourceName: DynamoDbCrudLambdaDataSource
+          RequestMappingTemplate: |
+            {
+              "version": "2018-05-29",
+              "operation": "Invoke",
+              "payload": {
+                "field": "ApplicationsDelete",
+                "arguments": $util.toJson($ctx.args)
+              }
             }
-          },
-          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
-        }
-      ResponseMappingTemplate: |
-        {
-          "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),
-          "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),
-          "Data": $util.defaultIfNull($ctx.result.Data, null)
-        }
-  
-  UsersDeleteResolver:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: UsersDelete
-      DataSourceName: !GetAtt UsersDataSource.Name
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "DeleteItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-          }
-        }
-      ResponseMappingTemplate: |
-        {
-          "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),
-          "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),
-          "Data": $util.defaultIfNull($ctx.result.Data, null)
-        }
-  
-  UsersDisableResolver:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: UsersDisable
-      DataSourceName: !GetAtt UsersDataSource.Name
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "UpdateItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-          },
-          "update": {
-            "expression": "SET #status = :status, disabledAt = :disabledAt",
-            "expressionNames": {
-              "#status": "status"
-            },
-            "expressionValues": {
-              ":status": { "S": "DISABLED" },
-              ":disabledAt": { "S": "$util.time.nowISO8601()" }
+          # Always use the standard Lambda response mapping template for CRUD/Disable
+          ResponseMappingTemplate: |
+            $util.toJson($ctx.result)
+    
+      ApplicationsDisableResolver:
+        Type: AWS::AppSync::Resolver
+        Properties:
+          ApiId: !GetAtt IntegrationHubApi.ApiId
+          TypeName: Mutation
+          FieldName: ApplicationsDisable
+          DataSourceName: DynamoDbCrudLambdaDataSource
+          RequestMappingTemplate: |
+            {
+              "version": "2018-05-29",
+              "operation": "Invoke",
+              "payload": {
+                "field": "ApplicationsDisable",
+                "arguments": $util.toJson($ctx.args)
+              }
             }
-          }
-        }
-      ResponseMappingTemplate: |
-        {
-          "StatusCode": $util.defaultIfNull($ctx.result.StatusCode, 500),
-          "Message": $util.defaultIfNull($ctx.result.Message, "Unknown error"),
-          "Data": $util.defaultIfNull($ctx.result.Data, null)
-        }
+          # Always use the standard Lambda response mapping template for CRUD/Disable
+          ResponseMappingTemplate: |
+            $util.toJson($ctx.result)
+    
   
+    # ApplicationUsers Lambda CRUD/Disable Resolvers
+    
+      ApplicationUsersCreateResolver:
+        Type: AWS::AppSync::Resolver
+        Properties:
+          ApiId: !GetAtt IntegrationHubApi.ApiId
+          TypeName: Mutation
+          FieldName: ApplicationUsersCreate
+          DataSourceName: DynamoDbCrudLambdaDataSource
+          RequestMappingTemplate: |
+            {
+              "version": "2018-05-29",
+              "operation": "Invoke",
+              "payload": {
+                "field": "ApplicationUsersCreate",
+                "arguments": $util.toJson($ctx.args)
+              }
+            }
+          # Always use the standard Lambda response mapping template for CRUD/Disable
+          ResponseMappingTemplate: |
+            $util.toJson($ctx.result)
+    
+      ApplicationUsersUpdateResolver:
+        Type: AWS::AppSync::Resolver
+        Properties:
+          ApiId: !GetAtt IntegrationHubApi.ApiId
+          TypeName: Mutation
+          FieldName: ApplicationUsersUpdate
+          DataSourceName: DynamoDbCrudLambdaDataSource
+          RequestMappingTemplate: |
+            {
+              "version": "2018-05-29",
+              "operation": "Invoke",
+              "payload": {
+                "field": "ApplicationUsersUpdate",
+                "arguments": $util.toJson($ctx.args)
+              }
+            }
+          # Always use the standard Lambda response mapping template for CRUD/Disable
+          ResponseMappingTemplate: |
+            $util.toJson($ctx.result)
+    
+      ApplicationUsersDeleteResolver:
+        Type: AWS::AppSync::Resolver
+        Properties:
+          ApiId: !GetAtt IntegrationHubApi.ApiId
+          TypeName: Mutation
+          FieldName: ApplicationUsersDelete
+          DataSourceName: DynamoDbCrudLambdaDataSource
+          RequestMappingTemplate: |
+            {
+              "version": "2018-05-29",
+              "operation": "Invoke",
+              "payload": {
+                "field": "ApplicationUsersDelete",
+                "arguments": $util.toJson($ctx.args)
+              }
+            }
+          # Always use the standard Lambda response mapping template for CRUD/Disable
+          ResponseMappingTemplate: |
+            $util.toJson($ctx.result)
+    
+      ApplicationUsersDisableResolver:
+        Type: AWS::AppSync::Resolver
+        Properties:
+          ApiId: !GetAtt IntegrationHubApi.ApiId
+          TypeName: Mutation
+          FieldName: ApplicationUsersDisable
+          DataSourceName: DynamoDbCrudLambdaDataSource
+          RequestMappingTemplate: |
+            {
+              "version": "2018-05-29",
+              "operation": "Invoke",
+              "payload": {
+                "field": "ApplicationUsersDisable",
+                "arguments": $util.toJson($ctx.args)
+              }
+            }
+          # Always use the standard Lambda response mapping template for CRUD/Disable
+          ResponseMappingTemplate: |
+            $util.toJson($ctx.result)
+    
+  
+    # Roles Lambda CRUD/Disable Resolvers
+    
+      RolesCreateResolver:
+        Type: AWS::AppSync::Resolver
+        Properties:
+          ApiId: !GetAtt IntegrationHubApi.ApiId
+          TypeName: Mutation
+          FieldName: RolesCreate
+          DataSourceName: DynamoDbCrudLambdaDataSource
+          RequestMappingTemplate: |
+            {
+              "version": "2018-05-29",
+              "operation": "Invoke",
+              "payload": {
+                "field": "RolesCreate",
+                "arguments": $util.toJson($ctx.args)
+              }
+            }
+          # Always use the standard Lambda response mapping template for CRUD/Disable
+          ResponseMappingTemplate: |
+            $util.toJson($ctx.result)
+    
+      RolesUpdateResolver:
+        Type: AWS::AppSync::Resolver
+        Properties:
+          ApiId: !GetAtt IntegrationHubApi.ApiId
+          TypeName: Mutation
+          FieldName: RolesUpdate
+          DataSourceName: DynamoDbCrudLambdaDataSource
+          RequestMappingTemplate: |
+            {
+              "version": "2018-05-29",
+              "operation": "Invoke",
+              "payload": {
+                "field": "RolesUpdate",
+                "arguments": $util.toJson($ctx.args)
+              }
+            }
+          # Always use the standard Lambda response mapping template for CRUD/Disable
+          ResponseMappingTemplate: |
+            $util.toJson($ctx.result)
+    
+      RolesDeleteResolver:
+        Type: AWS::AppSync::Resolver
+        Properties:
+          ApiId: !GetAtt IntegrationHubApi.ApiId
+          TypeName: Mutation
+          FieldName: RolesDelete
+          DataSourceName: DynamoDbCrudLambdaDataSource
+          RequestMappingTemplate: |
+            {
+              "version": "2018-05-29",
+              "operation": "Invoke",
+              "payload": {
+                "field": "RolesDelete",
+                "arguments": $util.toJson($ctx.args)
+              }
+            }
+          # Always use the standard Lambda response mapping template for CRUD/Disable
+          ResponseMappingTemplate: |
+            $util.toJson($ctx.result)
+    
+      RolesDisableResolver:
+        Type: AWS::AppSync::Resolver
+        Properties:
+          ApiId: !GetAtt IntegrationHubApi.ApiId
+          TypeName: Mutation
+          FieldName: RolesDisable
+          DataSourceName: DynamoDbCrudLambdaDataSource
+          RequestMappingTemplate: |
+            {
+              "version": "2018-05-29",
+              "operation": "Invoke",
+              "payload": {
+                "field": "RolesDisable",
+                "arguments": $util.toJson($ctx.args)
+              }
+            }
+          # Always use the standard Lambda response mapping template for CRUD/Disable
+          ResponseMappingTemplate: |
+            $util.toJson($ctx.result)
+    
+  
+    # Users Lambda CRUD/Disable Resolvers
+    
+      UsersCreateResolver:
+        Type: AWS::AppSync::Resolver
+        Properties:
+          ApiId: !GetAtt IntegrationHubApi.ApiId
+          TypeName: Mutation
+          FieldName: UsersCreate
+          DataSourceName: DynamoDbCrudLambdaDataSource
+          RequestMappingTemplate: |
+            {
+              "version": "2018-05-29",
+              "operation": "Invoke",
+              "payload": {
+                "field": "UsersCreate",
+                "arguments": $util.toJson($ctx.args)
+              }
+            }
+          # Always use the standard Lambda response mapping template for CRUD/Disable
+          ResponseMappingTemplate: |
+            $util.toJson($ctx.result)
+    
+      UsersUpdateResolver:
+        Type: AWS::AppSync::Resolver
+        Properties:
+          ApiId: !GetAtt IntegrationHubApi.ApiId
+          TypeName: Mutation
+          FieldName: UsersUpdate
+          DataSourceName: DynamoDbCrudLambdaDataSource
+          RequestMappingTemplate: |
+            {
+              "version": "2018-05-29",
+              "operation": "Invoke",
+              "payload": {
+                "field": "UsersUpdate",
+                "arguments": $util.toJson($ctx.args)
+              }
+            }
+          # Always use the standard Lambda response mapping template for CRUD/Disable
+          ResponseMappingTemplate: |
+            $util.toJson($ctx.result)
+    
+      UsersDeleteResolver:
+        Type: AWS::AppSync::Resolver
+        Properties:
+          ApiId: !GetAtt IntegrationHubApi.ApiId
+          TypeName: Mutation
+          FieldName: UsersDelete
+          DataSourceName: DynamoDbCrudLambdaDataSource
+          RequestMappingTemplate: |
+            {
+              "version": "2018-05-29",
+              "operation": "Invoke",
+              "payload": {
+                "field": "UsersDelete",
+                "arguments": $util.toJson($ctx.args)
+              }
+            }
+          # Always use the standard Lambda response mapping template for CRUD/Disable
+          ResponseMappingTemplate: |
+            $util.toJson($ctx.result)
+    
+      UsersDisableResolver:
+        Type: AWS::AppSync::Resolver
+        Properties:
+          ApiId: !GetAtt IntegrationHubApi.ApiId
+          TypeName: Mutation
+          FieldName: UsersDisable
+          DataSourceName: DynamoDbCrudLambdaDataSource
+          RequestMappingTemplate: |
+            {
+              "version": "2018-05-29",
+              "operation": "Invoke",
+              "payload": {
+                "field": "UsersDisable",
+                "arguments": $util.toJson($ctx.args)
+              }
+            }
+          # Always use the standard Lambda response mapping template for CRUD/Disable
+          ResponseMappingTemplate: |
+            $util.toJson($ctx.result)
+    
   
 
   # Index-based Resolvers

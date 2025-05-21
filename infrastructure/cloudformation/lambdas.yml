@@ -220,8 +220,34 @@ Resources:
       Type: String
       Value: !Ref SMSOriginationNumber
 
+# DynamoDB CRUD Lambda function for all AppSync CRUD/Disable operations
+  DynamoDbCrudLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${ProjectId}-dynamodb-crud-${Environment}'
+      Handler: dynamodb_crud.handler
+      Runtime: python3.11
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code: backend/src/lambdas/
+      Environment:
+        Variables:
+          USERS_TABLE: !Sub '${CustomerId}-${ProjectId}-${Environment}-users'
+          ROLES_TABLE: !Sub '${CustomerId}-${ProjectId}-${Environment}-roles'
+          APPLICATIONS_TABLE: !Sub '${CustomerId}-${ProjectId}-${Environment}-applications'
+          APPLICATIONUSERS_TABLE: !Sub '${CustomerId}-${ProjectId}-${Environment}-applicationusers'
+          APPLICATIONROLES_TABLE: !Sub '${CustomerId}-${ProjectId}-${Environment}-applicationroles'
+      DeadLetterConfig:
+        TargetArn: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-dead-letter-queue-arn}}'
+      MemorySize: 256
+      Timeout: 30
+
 # --------------------------------------------------- #
 Outputs:
   LambdaExecutionRoleArn:
     Description: ARN of the Lambda execution role
     Value: !GetAtt LambdaExecutionRole.Arn
+  DynamoDbCrudLambdaArn:
+    Description: ARN of the DynamoDB CRUD Lambda
+    Value: !GetAtt DynamoDbCrudLambda.Arn
+    Export:
+      Name: DynamoDbCrudLambdaArn

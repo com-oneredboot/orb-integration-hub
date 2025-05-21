@@ -104,40 +104,50 @@ Resources:
 
   # Data Sources
   # --------------------------------------------------- #
-  {% for table_name, schema in schemas.items() if schema.type == 'table' %}
-  # DEBUG: {{ schema.name }} operations: {{ schema.operations }}
-
-  # {{ schema.name }} Data Source
-  {{ schema.name }}DataSource:
+  # DynamoDB CRUD Lambda Data Source (imported from lambdas.yml)
+  DynamoDbCrudLambdaDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
-      Name: {{ schema.name }}DataSource
-      Type: AMAZON_DYNAMODB
+      Name: DynamoDbCrudLambdaDataSource
+      Type: AWS_LAMBDA
+      LambdaConfig:
+        LambdaFunctionArn: !ImportValue DynamoDbCrudLambdaArn
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
-      DynamoDBConfig:
-        TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}'
-        AwsRegion: !Ref AWS::Region
 
-  # {{ schema.name }} Resolvers
-  # --------------------------------------------------- #
-  {% if schema.operations %}
-  {% for operation in schema.operations %}
-  {{ schema.name }}{{ operation.name }}Resolver:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: {{ operation.type }}
-      FieldName: {{ operation.field }}
-      DataSourceName: !GetAtt {{ schema.name }}DataSource.Name
-      RequestMappingTemplate: |
-        {{ operation.request_template | indent(8) }}
-      ResponseMappingTemplate: |
-        {{ operation.response_template | indent(8) }}
+  # Table Data Sources and Resolvers
+  {% for table_name, schema in schemas.items() if schema.type == 'table' %}
+    # {{ schema.name }} Table-specific resources (must be inside the loop)
+    # TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}'
+    # (Move any other schema-specific resources here)
+    # ...
   {% endfor %}
-  {% endif %}
 
-  {%- endfor %}
+  # CRUD/Disable resolvers for each table
+  {% for table_name, schema in schemas.items() if schema.type == 'table' %}
+    # {{ schema.name }} Lambda CRUD/Disable Resolvers
+    {% for operation in schema.operations %}
+      {{ schema.name }}{{ operation.name }}Resolver:
+        Type: AWS::AppSync::Resolver
+        Properties:
+          ApiId: !GetAtt IntegrationHubApi.ApiId
+          TypeName: {{ operation.type }}
+          FieldName: {{ operation.field }}
+          DataSourceName: DynamoDbCrudLambdaDataSource
+          RequestMappingTemplate: |
+            {
+              "version": "2018-05-29",
+              "operation": "Invoke",
+              "payload": {
+                "field": "{{ operation.field }}",
+                "arguments": $util.toJson($ctx.args)
+              }
+            }
+          # Always use the standard Lambda response mapping template for CRUD/Disable
+          ResponseMappingTemplate: |
+            $util.toJson($ctx.result)
+    {% endfor %}
+  {% endfor %}
 
   # Index-based Resolvers
   # --------------------------------------------------- #
