@@ -477,7 +477,6 @@ Resources:
         $util.toJson($ctx.result)
   
   
-  # ApplicationRolesQueryByApplicationRoleId (returns single object)
   ApplicationRolesQueryByApplicationRoleId:
     Type: AWS::AppSync::Resolver
     Properties:
@@ -496,7 +495,6 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  # ApplicationRolesQueryByUserId (returns list)
   ApplicationRolesQueryByUserId:
     Type: AWS::AppSync::Resolver
     Properties:
@@ -515,7 +513,6 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  # ApplicationRolesQueryByUserIdAndRoleId (returns single object)
   ApplicationRolesQueryByUserIdAndRoleId:
     Type: AWS::AppSync::Resolver
     Properties:
@@ -534,7 +531,6 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  # ApplicationRolesQueryByApplicationId (returns list)
   ApplicationRolesQueryByApplicationId:
     Type: AWS::AppSync::Resolver
     Properties:
@@ -553,7 +549,6 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  # ApplicationRolesQueryByApplicationIdAndRoleId (returns single object)
   ApplicationRolesQueryByApplicationIdAndRoleId:
     Type: AWS::AppSync::Resolver
     Properties:
@@ -572,7 +567,6 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  # ApplicationRolesQueryByRoleId (returns list)
   ApplicationRolesQueryByRoleId:
     Type: AWS::AppSync::Resolver
     Properties:
@@ -591,7 +585,6 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  # ApplicationRolesQueryByRoleIdAndRoleType (returns single object)
   ApplicationRolesQueryByRoleIdAndRoleType:
     Type: AWS::AppSync::Resolver
     Properties:
@@ -610,7 +603,6 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  # ApplicationsQueryByApplicationId (returns single object)
   ApplicationsQueryByApplicationId:
     Type: AWS::AppSync::Resolver
     Properties:
@@ -629,7 +621,6 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  # ApplicationUsersQueryByApplicationUserId (returns single object)
   ApplicationUsersQueryByApplicationUserId:
     Type: AWS::AppSync::Resolver
     Properties:
@@ -648,7 +639,6 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  # ApplicationUsersQueryByUserId (returns list)
   ApplicationUsersQueryByUserId:
     Type: AWS::AppSync::Resolver
     Properties:
@@ -667,7 +657,6 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  # ApplicationUsersQueryByUserIdAndApplicationId (returns single object)
   ApplicationUsersQueryByUserIdAndApplicationId:
     Type: AWS::AppSync::Resolver
     Properties:
@@ -686,7 +675,6 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  # ApplicationUsersQueryByApplicationId (returns list)
   ApplicationUsersQueryByApplicationId:
     Type: AWS::AppSync::Resolver
     Properties:
@@ -705,7 +693,6 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  # ApplicationUsersQueryByApplicationIdAndUserId (returns single object)
   ApplicationUsersQueryByApplicationIdAndUserId:
     Type: AWS::AppSync::Resolver
     Properties:
@@ -724,7 +711,6 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  # RolesQueryByRoleId (returns single object)
   RolesQueryByRoleId:
     Type: AWS::AppSync::Resolver
     Properties:
@@ -743,7 +729,6 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  # RolesQueryByUserId (returns list)
   RolesQueryByUserId:
     Type: AWS::AppSync::Resolver
     Properties:
@@ -762,7 +747,6 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  # RolesQueryByUserIdAndRoleType (returns single object)
   RolesQueryByUserIdAndRoleType:
     Type: AWS::AppSync::Resolver
     Properties:
@@ -781,7 +765,6 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  # UsersQueryByUserId (returns single object)
   UsersQueryByUserId:
     Type: AWS::AppSync::Resolver
     Properties:
@@ -800,7 +783,6 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  # UsersQueryByEmail (returns list)
   UsersQueryByEmail:
     Type: AWS::AppSync::Resolver
     Properties:
@@ -819,7 +801,6 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  # UsersQueryByCognitoId (returns list)
   UsersQueryByCognitoId:
     Type: AWS::AppSync::Resolver
     Properties:

@@ -135,7 +135,6 @@ Resources:
   {%- endfor %}
   
   {% for resolver in query_resolvers %}
-  # {{ resolver.name }} (returns {{ 'list' if resolver.returns_list else 'single object' }})
   {{ resolver.name }}:
     Type: AWS::AppSync::Resolver
     Properties:

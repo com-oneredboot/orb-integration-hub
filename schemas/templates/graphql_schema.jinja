@@ -27,17 +27,17 @@ schema {
 {%- include 'enums.jinja' -%}
 
 # GraphQL Types
-{%- include 'graphql_type_schema.jinja' -%}
+{%- include 'graphql_schema_type.jinja' -%}
 
 # Base types
 {%- include 'base_types.jinja' -%}
 
 # Queries
 type Query {
-{%- include 'queries.jinja' -%}
+{%- include 'graphql_schema_queries.jinja' %}
 }
 
 # Mutations
 type Mutation {
-{%- include 'mutations.jinja' %}
+{%- include 'graphql_schema_mutations.jinja' %}
 }
