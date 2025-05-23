@@ -28,7 +28,6 @@ Parameters:
 
 # --------------------------------------------------- #
 Resources:
-  # IAM Roles for AppSync
   AppSyncServiceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -102,9 +101,6 @@ Resources:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       DefinitionS3Location: !Sub 's3://${CustomerId}-${ProjectId}-build-templates/${SchemaS3Key}'
 
-  # Data Sources
-  # --------------------------------------------------- #
-  # DynamoDB CRUD Lambda Data Source (imported from lambdas.yml)
   DynamoDbCrudLambdaDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -115,43 +111,31 @@ Resources:
         LambdaFunctionArn: !ImportValue DynamoDbCrudLambdaArn
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
 
-  # Table Data Sources and Resolvers
-  {% for table_name, schema in schemas.items() if schema.type == 'table' %}
-    # {{ schema.name }} Table-specific resources (must be inside the loop)
-    # TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}'
-    # (Move any other schema-specific resources here)
-    # ...
-  {% endfor %}
-
-  # CRUD/Disable resolvers for each table
-  {% for table_name, schema in schemas.items() if schema.type == 'table' %}
-    # {{ schema.name }} Lambda CRUD/Disable Resolvers
-    {% for operation in schema.operations %}
-      {{ schema.name }}{{ operation.name }}Resolver:
-        Type: AWS::AppSync::Resolver
-        Properties:
-          ApiId: !GetAtt IntegrationHubApi.ApiId
-          TypeName: {{ operation.type }}
-          FieldName: {{ operation.field }}
-          DataSourceName: DynamoDbCrudLambdaDataSource
-          RequestMappingTemplate: |
-            {
-              "version": "2018-05-29",
-              "operation": "Invoke",
-              "payload": {
-                "field": "{{ operation.field }}",
-                "arguments": $util.toJson($ctx.args)
-              }
-            }
-          # Always use the standard Lambda response mapping template for CRUD/Disable
-          ResponseMappingTemplate: |
-            $util.toJson($ctx.result)
-    {% endfor %}
-  {% endfor %}
-
-  # Query resolvers for QueryBy... operations
+  {%- for table_name, schema in schemas.items() if schema.type == 'table' %}
+  {% for operation in schema.operations %}
+  {{ schema.name }}{{ operation.name }}Resolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: {{ operation.type }}
+      FieldName: {{ operation.field }}
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "{{ operation.field }}",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  {%- endfor -%}
+  {%- endfor %}
+  
   {% for resolver in query_resolvers %}
-  {{ resolver.name }}:
+  {{ resolver.name }}Resolver:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -162,23 +146,7 @@ Resources:
         {{ resolver.request_template | indent(8) }}
       ResponseMappingTemplate: |
         {{ resolver.response_template | indent(8) }}
-  {% endfor %}
-
-  # Index-based Resolvers
-  # --------------------------------------------------- #
-  {% for resolver in resolver_resources %}
-  {{ resolver.table }}{{ resolver.index.name }}Resolver:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: {{ resolver.type }}
-      FieldName: {{ resolver.field }}
-      DataSourceName: !GetAtt {{ resolver.data_source }}.Name
-      RequestMappingTemplate: |
-        {{ resolver.request_template | indent(8) }}
-      ResponseMappingTemplate: |
-        {{ resolver.response_template | indent(8) }}
-  {% endfor %}
+  {%- endfor %}
 
 # --------------------------------------------------- #
 Outputs:

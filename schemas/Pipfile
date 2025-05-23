@@ -9,6 +9,7 @@ jinja2 = "*"
 pydantic = "*"
 aws-sam-cli = "*"
 graphql-core = "*"
+cfn-lint = "*"
 
 [dev-packages]
 black = "*"

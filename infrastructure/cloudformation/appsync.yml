@@ -28,7 +28,6 @@ Parameters:
 
 # --------------------------------------------------- #
 Resources:
-  # IAM Roles for AppSync
   AppSyncServiceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -102,9 +101,6 @@ Resources:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       DefinitionS3Location: !Sub 's3://${CustomerId}-${ProjectId}-build-templates/${SchemaS3Key}'
 
-  # Data Sources
-  # --------------------------------------------------- #
-  # DynamoDB CRUD Lambda Data Source (imported from lambdas.yml)
   DynamoDbCrudLambdaDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -114,456 +110,374 @@ Resources:
       LambdaConfig:
         LambdaFunctionArn: !ImportValue DynamoDbCrudLambdaArn
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
-
-  # Table Data Sources and Resolvers
   
-    # ApplicationRoles Table-specific resources (must be inside the loop)
-    # TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-application-roles'
-    # (Move any other schema-specific resources here)
-    # ...
+  ApplicationRolesCreateResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationRolesCreate
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "ApplicationRolesCreate",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  ApplicationRolesUpdateResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationRolesUpdate
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "ApplicationRolesUpdate",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  ApplicationRolesDeleteResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationRolesDelete
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "ApplicationRolesDelete",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  ApplicationRolesDisableResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationRolesDisable
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "ApplicationRolesDisable",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
   
-    # Applications Table-specific resources (must be inside the loop)
-    # TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-applications'
-    # (Move any other schema-specific resources here)
-    # ...
+  ApplicationsCreateResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationsCreate
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "ApplicationsCreate",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  ApplicationsUpdateResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationsUpdate
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "ApplicationsUpdate",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  ApplicationsDeleteResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationsDelete
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "ApplicationsDelete",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  ApplicationsDisableResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationsDisable
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "ApplicationsDisable",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
   
-    # ApplicationUsers Table-specific resources (must be inside the loop)
-    # TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-application-users'
-    # (Move any other schema-specific resources here)
-    # ...
+  ApplicationUsersCreateResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationUsersCreate
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "ApplicationUsersCreate",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  ApplicationUsersUpdateResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationUsersUpdate
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "ApplicationUsersUpdate",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  ApplicationUsersDeleteResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationUsersDelete
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "ApplicationUsersDelete",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  ApplicationUsersDisableResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: ApplicationUsersDisable
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "ApplicationUsersDisable",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
   
-    # Roles Table-specific resources (must be inside the loop)
-    # TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-roles'
-    # (Move any other schema-specific resources here)
-    # ...
+  RolesCreateResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: RolesCreate
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "RolesCreate",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  RolesUpdateResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: RolesUpdate
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "RolesUpdate",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  RolesDeleteResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: RolesDelete
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "RolesDelete",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  RolesDisableResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: RolesDisable
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "RolesDisable",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
   
-    # Users Table-specific resources (must be inside the loop)
-    # TableName: !Sub '${CustomerId}-${ProjectId}-${Environment}-users'
-    # (Move any other schema-specific resources here)
-    # ...
+  UsersCreateResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: UsersCreate
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "UsersCreate",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  UsersUpdateResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: UsersUpdate
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "UsersUpdate",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  UsersDeleteResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: UsersDelete
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "UsersDelete",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  UsersDisableResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: UsersDisable
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "UsersDisable",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
   
-
-  # CRUD/Disable resolvers for each table
   
-    # ApplicationRoles Lambda CRUD/Disable Resolvers
-    
-      ApplicationRolesCreateResolver:
-        Type: AWS::AppSync::Resolver
-        Properties:
-          ApiId: !GetAtt IntegrationHubApi.ApiId
-          TypeName: Mutation
-          FieldName: ApplicationRolesCreate
-          DataSourceName: DynamoDbCrudLambdaDataSource
-          RequestMappingTemplate: |
-            {
-              "version": "2018-05-29",
-              "operation": "Invoke",
-              "payload": {
-                "field": "ApplicationRolesCreate",
-                "arguments": $util.toJson($ctx.args)
-              }
-            }
-          # Always use the standard Lambda response mapping template for CRUD/Disable
-          ResponseMappingTemplate: |
-            $util.toJson($ctx.result)
-    
-      ApplicationRolesUpdateResolver:
-        Type: AWS::AppSync::Resolver
-        Properties:
-          ApiId: !GetAtt IntegrationHubApi.ApiId
-          TypeName: Mutation
-          FieldName: ApplicationRolesUpdate
-          DataSourceName: DynamoDbCrudLambdaDataSource
-          RequestMappingTemplate: |
-            {
-              "version": "2018-05-29",
-              "operation": "Invoke",
-              "payload": {
-                "field": "ApplicationRolesUpdate",
-                "arguments": $util.toJson($ctx.args)
-              }
-            }
-          # Always use the standard Lambda response mapping template for CRUD/Disable
-          ResponseMappingTemplate: |
-            $util.toJson($ctx.result)
-    
-      ApplicationRolesDeleteResolver:
-        Type: AWS::AppSync::Resolver
-        Properties:
-          ApiId: !GetAtt IntegrationHubApi.ApiId
-          TypeName: Mutation
-          FieldName: ApplicationRolesDelete
-          DataSourceName: DynamoDbCrudLambdaDataSource
-          RequestMappingTemplate: |
-            {
-              "version": "2018-05-29",
-              "operation": "Invoke",
-              "payload": {
-                "field": "ApplicationRolesDelete",
-                "arguments": $util.toJson($ctx.args)
-              }
-            }
-          # Always use the standard Lambda response mapping template for CRUD/Disable
-          ResponseMappingTemplate: |
-            $util.toJson($ctx.result)
-    
-      ApplicationRolesDisableResolver:
-        Type: AWS::AppSync::Resolver
-        Properties:
-          ApiId: !GetAtt IntegrationHubApi.ApiId
-          TypeName: Mutation
-          FieldName: ApplicationRolesDisable
-          DataSourceName: DynamoDbCrudLambdaDataSource
-          RequestMappingTemplate: |
-            {
-              "version": "2018-05-29",
-              "operation": "Invoke",
-              "payload": {
-                "field": "ApplicationRolesDisable",
-                "arguments": $util.toJson($ctx.args)
-              }
-            }
-          # Always use the standard Lambda response mapping template for CRUD/Disable
-          ResponseMappingTemplate: |
-            $util.toJson($ctx.result)
-    
-  
-    # Applications Lambda CRUD/Disable Resolvers
-    
-      ApplicationsCreateResolver:
-        Type: AWS::AppSync::Resolver
-        Properties:
-          ApiId: !GetAtt IntegrationHubApi.ApiId
-          TypeName: Mutation
-          FieldName: ApplicationsCreate
-          DataSourceName: DynamoDbCrudLambdaDataSource
-          RequestMappingTemplate: |
-            {
-              "version": "2018-05-29",
-              "operation": "Invoke",
-              "payload": {
-                "field": "ApplicationsCreate",
-                "arguments": $util.toJson($ctx.args)
-              }
-            }
-          # Always use the standard Lambda response mapping template for CRUD/Disable
-          ResponseMappingTemplate: |
-            $util.toJson($ctx.result)
-    
-      ApplicationsUpdateResolver:
-        Type: AWS::AppSync::Resolver
-        Properties:
-          ApiId: !GetAtt IntegrationHubApi.ApiId
-          TypeName: Mutation
-          FieldName: ApplicationsUpdate
-          DataSourceName: DynamoDbCrudLambdaDataSource
-          RequestMappingTemplate: |
-            {
-              "version": "2018-05-29",
-              "operation": "Invoke",
-              "payload": {
-                "field": "ApplicationsUpdate",
-                "arguments": $util.toJson($ctx.args)
-              }
-            }
-          # Always use the standard Lambda response mapping template for CRUD/Disable
-          ResponseMappingTemplate: |
-            $util.toJson($ctx.result)
-    
-      ApplicationsDeleteResolver:
-        Type: AWS::AppSync::Resolver
-        Properties:
-          ApiId: !GetAtt IntegrationHubApi.ApiId
-          TypeName: Mutation
-          FieldName: ApplicationsDelete
-          DataSourceName: DynamoDbCrudLambdaDataSource
-          RequestMappingTemplate: |
-            {
-              "version": "2018-05-29",
-              "operation": "Invoke",
-              "payload": {
-                "field": "ApplicationsDelete",
-                "arguments": $util.toJson($ctx.args)
-              }
-            }
-          # Always use the standard Lambda response mapping template for CRUD/Disable
-          ResponseMappingTemplate: |
-            $util.toJson($ctx.result)
-    
-      ApplicationsDisableResolver:
-        Type: AWS::AppSync::Resolver
-        Properties:
-          ApiId: !GetAtt IntegrationHubApi.ApiId
-          TypeName: Mutation
-          FieldName: ApplicationsDisable
-          DataSourceName: DynamoDbCrudLambdaDataSource
-          RequestMappingTemplate: |
-            {
-              "version": "2018-05-29",
-              "operation": "Invoke",
-              "payload": {
-                "field": "ApplicationsDisable",
-                "arguments": $util.toJson($ctx.args)
-              }
-            }
-          # Always use the standard Lambda response mapping template for CRUD/Disable
-          ResponseMappingTemplate: |
-            $util.toJson($ctx.result)
-    
-  
-    # ApplicationUsers Lambda CRUD/Disable Resolvers
-    
-      ApplicationUsersCreateResolver:
-        Type: AWS::AppSync::Resolver
-        Properties:
-          ApiId: !GetAtt IntegrationHubApi.ApiId
-          TypeName: Mutation
-          FieldName: ApplicationUsersCreate
-          DataSourceName: DynamoDbCrudLambdaDataSource
-          RequestMappingTemplate: |
-            {
-              "version": "2018-05-29",
-              "operation": "Invoke",
-              "payload": {
-                "field": "ApplicationUsersCreate",
-                "arguments": $util.toJson($ctx.args)
-              }
-            }
-          # Always use the standard Lambda response mapping template for CRUD/Disable
-          ResponseMappingTemplate: |
-            $util.toJson($ctx.result)
-    
-      ApplicationUsersUpdateResolver:
-        Type: AWS::AppSync::Resolver
-        Properties:
-          ApiId: !GetAtt IntegrationHubApi.ApiId
-          TypeName: Mutation
-          FieldName: ApplicationUsersUpdate
-          DataSourceName: DynamoDbCrudLambdaDataSource
-          RequestMappingTemplate: |
-            {
-              "version": "2018-05-29",
-              "operation": "Invoke",
-              "payload": {
-                "field": "ApplicationUsersUpdate",
-                "arguments": $util.toJson($ctx.args)
-              }
-            }
-          # Always use the standard Lambda response mapping template for CRUD/Disable
-          ResponseMappingTemplate: |
-            $util.toJson($ctx.result)
-    
-      ApplicationUsersDeleteResolver:
-        Type: AWS::AppSync::Resolver
-        Properties:
-          ApiId: !GetAtt IntegrationHubApi.ApiId
-          TypeName: Mutation
-          FieldName: ApplicationUsersDelete
-          DataSourceName: DynamoDbCrudLambdaDataSource
-          RequestMappingTemplate: |
-            {
-              "version": "2018-05-29",
-              "operation": "Invoke",
-              "payload": {
-                "field": "ApplicationUsersDelete",
-                "arguments": $util.toJson($ctx.args)
-              }
-            }
-          # Always use the standard Lambda response mapping template for CRUD/Disable
-          ResponseMappingTemplate: |
-            $util.toJson($ctx.result)
-    
-      ApplicationUsersDisableResolver:
-        Type: AWS::AppSync::Resolver
-        Properties:
-          ApiId: !GetAtt IntegrationHubApi.ApiId
-          TypeName: Mutation
-          FieldName: ApplicationUsersDisable
-          DataSourceName: DynamoDbCrudLambdaDataSource
-          RequestMappingTemplate: |
-            {
-              "version": "2018-05-29",
-              "operation": "Invoke",
-              "payload": {
-                "field": "ApplicationUsersDisable",
-                "arguments": $util.toJson($ctx.args)
-              }
-            }
-          # Always use the standard Lambda response mapping template for CRUD/Disable
-          ResponseMappingTemplate: |
-            $util.toJson($ctx.result)
-    
-  
-    # Roles Lambda CRUD/Disable Resolvers
-    
-      RolesCreateResolver:
-        Type: AWS::AppSync::Resolver
-        Properties:
-          ApiId: !GetAtt IntegrationHubApi.ApiId
-          TypeName: Mutation
-          FieldName: RolesCreate
-          DataSourceName: DynamoDbCrudLambdaDataSource
-          RequestMappingTemplate: |
-            {
-              "version": "2018-05-29",
-              "operation": "Invoke",
-              "payload": {
-                "field": "RolesCreate",
-                "arguments": $util.toJson($ctx.args)
-              }
-            }
-          # Always use the standard Lambda response mapping template for CRUD/Disable
-          ResponseMappingTemplate: |
-            $util.toJson($ctx.result)
-    
-      RolesUpdateResolver:
-        Type: AWS::AppSync::Resolver
-        Properties:
-          ApiId: !GetAtt IntegrationHubApi.ApiId
-          TypeName: Mutation
-          FieldName: RolesUpdate
-          DataSourceName: DynamoDbCrudLambdaDataSource
-          RequestMappingTemplate: |
-            {
-              "version": "2018-05-29",
-              "operation": "Invoke",
-              "payload": {
-                "field": "RolesUpdate",
-                "arguments": $util.toJson($ctx.args)
-              }
-            }
-          # Always use the standard Lambda response mapping template for CRUD/Disable
-          ResponseMappingTemplate: |
-            $util.toJson($ctx.result)
-    
-      RolesDeleteResolver:
-        Type: AWS::AppSync::Resolver
-        Properties:
-          ApiId: !GetAtt IntegrationHubApi.ApiId
-          TypeName: Mutation
-          FieldName: RolesDelete
-          DataSourceName: DynamoDbCrudLambdaDataSource
-          RequestMappingTemplate: |
-            {
-              "version": "2018-05-29",
-              "operation": "Invoke",
-              "payload": {
-                "field": "RolesDelete",
-                "arguments": $util.toJson($ctx.args)
-              }
-            }
-          # Always use the standard Lambda response mapping template for CRUD/Disable
-          ResponseMappingTemplate: |
-            $util.toJson($ctx.result)
-    
-      RolesDisableResolver:
-        Type: AWS::AppSync::Resolver
-        Properties:
-          ApiId: !GetAtt IntegrationHubApi.ApiId
-          TypeName: Mutation
-          FieldName: RolesDisable
-          DataSourceName: DynamoDbCrudLambdaDataSource
-          RequestMappingTemplate: |
-            {
-              "version": "2018-05-29",
-              "operation": "Invoke",
-              "payload": {
-                "field": "RolesDisable",
-                "arguments": $util.toJson($ctx.args)
-              }
-            }
-          # Always use the standard Lambda response mapping template for CRUD/Disable
-          ResponseMappingTemplate: |
-            $util.toJson($ctx.result)
-    
-  
-    # Users Lambda CRUD/Disable Resolvers
-    
-      UsersCreateResolver:
-        Type: AWS::AppSync::Resolver
-        Properties:
-          ApiId: !GetAtt IntegrationHubApi.ApiId
-          TypeName: Mutation
-          FieldName: UsersCreate
-          DataSourceName: DynamoDbCrudLambdaDataSource
-          RequestMappingTemplate: |
-            {
-              "version": "2018-05-29",
-              "operation": "Invoke",
-              "payload": {
-                "field": "UsersCreate",
-                "arguments": $util.toJson($ctx.args)
-              }
-            }
-          # Always use the standard Lambda response mapping template for CRUD/Disable
-          ResponseMappingTemplate: |
-            $util.toJson($ctx.result)
-    
-      UsersUpdateResolver:
-        Type: AWS::AppSync::Resolver
-        Properties:
-          ApiId: !GetAtt IntegrationHubApi.ApiId
-          TypeName: Mutation
-          FieldName: UsersUpdate
-          DataSourceName: DynamoDbCrudLambdaDataSource
-          RequestMappingTemplate: |
-            {
-              "version": "2018-05-29",
-              "operation": "Invoke",
-              "payload": {
-                "field": "UsersUpdate",
-                "arguments": $util.toJson($ctx.args)
-              }
-            }
-          # Always use the standard Lambda response mapping template for CRUD/Disable
-          ResponseMappingTemplate: |
-            $util.toJson($ctx.result)
-    
-      UsersDeleteResolver:
-        Type: AWS::AppSync::Resolver
-        Properties:
-          ApiId: !GetAtt IntegrationHubApi.ApiId
-          TypeName: Mutation
-          FieldName: UsersDelete
-          DataSourceName: DynamoDbCrudLambdaDataSource
-          RequestMappingTemplate: |
-            {
-              "version": "2018-05-29",
-              "operation": "Invoke",
-              "payload": {
-                "field": "UsersDelete",
-                "arguments": $util.toJson($ctx.args)
-              }
-            }
-          # Always use the standard Lambda response mapping template for CRUD/Disable
-          ResponseMappingTemplate: |
-            $util.toJson($ctx.result)
-    
-      UsersDisableResolver:
-        Type: AWS::AppSync::Resolver
-        Properties:
-          ApiId: !GetAtt IntegrationHubApi.ApiId
-          TypeName: Mutation
-          FieldName: UsersDisable
-          DataSourceName: DynamoDbCrudLambdaDataSource
-          RequestMappingTemplate: |
-            {
-              "version": "2018-05-29",
-              "operation": "Invoke",
-              "payload": {
-                "field": "UsersDisable",
-                "arguments": $util.toJson($ctx.args)
-              }
-            }
-          # Always use the standard Lambda response mapping template for CRUD/Disable
-          ResponseMappingTemplate: |
-            $util.toJson($ctx.result)
-    
-  
-
-  # Query resolvers for QueryBy... operations
-  
-  ApplicationRolesQueryByApplicationRoleId:
+  ApplicationRolesQueryByApplicationRoleIdResolver:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -581,8 +495,7 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  
-  ApplicationRolesQueryByUserId:
+  ApplicationRolesQueryByUserIdResolver:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -600,8 +513,7 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  
-  ApplicationRolesQueryByApplicationId:
+  ApplicationRolesQueryByApplicationIdResolver:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -619,8 +531,7 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  
-  ApplicationRolesQueryByRoleId:
+  ApplicationRolesQueryByRoleIdResolver:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -638,8 +549,7 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  
-  ApplicationsQueryByApplicationId:
+  ApplicationsQueryByApplicationIdResolver:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -657,8 +567,7 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  
-  ApplicationUsersQueryByApplicationUserId:
+  ApplicationUsersQueryByApplicationUserIdResolver:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -676,8 +585,7 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  
-  ApplicationUsersQueryByUserId:
+  ApplicationUsersQueryByUserIdResolver:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -695,8 +603,7 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  
-  ApplicationUsersQueryByApplicationId:
+  ApplicationUsersQueryByApplicationIdResolver:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -714,8 +621,7 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  
-  RolesQueryByRoleId:
+  RolesQueryByRoleIdResolver:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -733,8 +639,7 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  
-  RolesQueryByUserId:
+  RolesQueryByUserIdResolver:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -752,8 +657,7 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  
-  UsersQueryByUserId:
+  UsersQueryByUserIdResolver:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -771,8 +675,7 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  
-  UsersQueryByEmail:
+  UsersQueryByEmailResolver:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -790,8 +693,7 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  
-  UsersQueryByCognitoId:
+  UsersQueryByCognitoIdResolver:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -809,11 +711,6 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  
-
-  # Index-based Resolvers
-  # --------------------------------------------------- #
-  
 
 # --------------------------------------------------- #
 Outputs:
