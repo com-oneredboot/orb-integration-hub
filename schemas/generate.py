@@ -846,8 +846,55 @@ def generate_appsync_cloudformation_template(schemas: Dict[str, Union[TableSchem
     logger.debug('Starting generate_appsync_cloudformation_template')
     try:
         jinja_env = setup_jinja_env()
+        # Build query_resolvers for all QueryBy... operations
+        query_resolvers = []
+        for schema in schemas.values():
+            if not isinstance(schema, TableSchema):
+                continue
+            # Primary key
+            pk_pascal = to_pascal_case(schema.partition_key)
+            query_resolvers.append({
+                'name': f'{schema.name}QueryBy{pk_pascal}',
+                'type': 'Query',
+                'field': f'{schema.name}QueryBy{pk_pascal}',
+                'data_source': 'DynamoDbCrudLambdaDataSource',
+                'request_template': '{\n  "version": "2018-05-29",\n  "operation": "Invoke",\n  "payload": {\n    "field": "' + f'{schema.name}QueryBy{pk_pascal}' + '",\n    "arguments": $util.toJson($ctx.args)\n  }\n}',
+                'response_template': '$util.toJson($ctx.result)'
+            })
+            # Sort key
+            if schema.sort_key and schema.sort_key != 'None':
+                sk_pascal = to_pascal_case(schema.sort_key)
+                query_resolvers.append({
+                    'name': f'{schema.name}QueryBy{sk_pascal}',
+                    'type': 'Query',
+                    'field': f'{schema.name}QueryBy{sk_pascal}',
+                    'data_source': 'DynamoDbCrudLambdaDataSource',
+                    'request_template': '{\n  "version": "2018-05-29",\n  "operation": "Invoke",\n  "payload": {\n    "field": "' + f'{schema.name}QueryBy{sk_pascal}' + '",\n    "arguments": $util.toJson($ctx.args)\n  }\n}',
+                    'response_template': '$util.toJson($ctx.result)'
+                })
+                # Both
+                query_resolvers.append({
+                    'name': f'{schema.name}QueryByBoth',
+                    'type': 'Query',
+                    'field': f'{schema.name}QueryByBoth',
+                    'data_source': 'DynamoDbCrudLambdaDataSource',
+                    'request_template': '{\n  "version": "2018-05-29",\n  "operation": "Invoke",\n  "payload": {\n    "field": "' + f'{schema.name}QueryByBoth' + '",\n    "arguments": $util.toJson($ctx.args)\n  }\n}',
+                    'response_template': '$util.toJson($ctx.result)'
+                })
+            # Secondary indexes
+            if schema.secondary_indexes:
+                for index in schema.secondary_indexes:
+                    idx_pascal = to_pascal_case(index['partition'])
+                    query_resolvers.append({
+                        'name': f'{schema.name}QueryBy{idx_pascal}',
+                        'type': 'Query',
+                        'field': f'{schema.name}QueryBy{idx_pascal}',
+                        'data_source': 'DynamoDbCrudLambdaDataSource',
+                        'request_template': '{\n  "version": "2018-05-29",\n  "operation": "Invoke",\n  "payload": {\n    "field": "' + f'{schema.name}QueryBy{idx_pascal}' + '",\n    "arguments": $util.toJson($ctx.args)\n  }\n}',
+                        'response_template': '$util.toJson($ctx.result)'
+                    })
         template = jinja_env.get_template('appsync_cloudformation.jinja')
-        template_content = template.render(schemas=schemas)
+        template_content = template.render(schemas=schemas, query_resolvers=query_resolvers)
         write_file(output_path, template_content)
         logger.debug('Completed generate_appsync_cloudformation_template')
     except Exception as e:

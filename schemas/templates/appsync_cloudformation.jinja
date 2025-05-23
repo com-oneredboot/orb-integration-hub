@@ -149,6 +149,21 @@ Resources:
     {% endfor %}
   {% endfor %}
 
+  # Query resolvers for QueryBy... operations
+  {% for resolver in query_resolvers %}
+  {{ resolver.name }}:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: {{ resolver.field }}
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {{ resolver.request_template | indent(8) }}
+      ResponseMappingTemplate: |
+        {{ resolver.response_template | indent(8) }}
+  {% endfor %}
+
   # Index-based Resolvers
   # --------------------------------------------------- #
   {% for resolver in resolver_resources %}
