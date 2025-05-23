@@ -224,7 +224,7 @@ Resources:
   DynamoDbCrudLambda:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Sub '${ProjectId}-dynamodb-crud-${Environment}'
+      FunctionName: !Sub '${CustomerId}-${ProjectId}-${Environment}-dynamodb-crud'
       Handler: dynamodb_crud.handler
       Runtime: python3.13
       Role: !GetAtt LambdaExecutionRole.Arn
