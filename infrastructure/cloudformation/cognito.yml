@@ -39,7 +39,7 @@ Globals:
         VERSION: 1
     Handler: index.lambda_handler
     MemorySize: 256
-    Runtime: python3.12
+    Runtime: python3.13
     Tags:
       Billable: true
       CustomerId: !Ref CustomerId

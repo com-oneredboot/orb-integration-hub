@@ -30,7 +30,7 @@ Parameters:
     Default: integration-hub
     Type: String
   Runtime:
-    Default: python3.12
+    Default: python3.13
     Type: String
   SystemLoggingLevel:
     Default: WARN
@@ -226,7 +226,7 @@ Resources:
     Properties:
       FunctionName: !Sub '${ProjectId}-dynamodb-crud-${Environment}'
       Handler: dynamodb_crud.handler
-      Runtime: python3.11
+      Runtime: python3.13
       Role: !GetAtt LambdaExecutionRole.Arn
       Code: backend/src/lambdas/
       Environment:
