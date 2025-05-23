@@ -851,48 +851,72 @@ def generate_appsync_cloudformation_template(schemas: Dict[str, Union[TableSchem
         for schema in schemas.values():
             if not isinstance(schema, TableSchema):
                 continue
-            # Primary key
             pk_pascal = to_pascal_case(schema.partition_key)
-            query_resolvers.append({
-                'name': f'{schema.name}QueryBy{pk_pascal}',
-                'type': 'Query',
-                'field': f'{schema.name}QueryBy{pk_pascal}',
-                'data_source': 'DynamoDbCrudLambdaDataSource',
-                'request_template': '{\n  "version": "2018-05-29",\n  "operation": "Invoke",\n  "payload": {\n    "field": "' + f'{schema.name}QueryBy{pk_pascal}' + '",\n    "arguments": $util.toJson($ctx.args)\n  }\n}',
-                'response_template': '$util.toJson($ctx.result)'
-            })
-            # Sort key
-            if schema.sort_key and schema.sort_key != 'None':
+            # PRIMARY INDEX LOGIC
+            if not (schema.sort_key and schema.sort_key != 'None'):
+                # Partition key only (no sort key): returns a single object
+                query_resolvers.append({
+                    'name': f'{schema.name}QueryBy{pk_pascal}',
+                    'type': 'Query',
+                    'field': f'{schema.name}QueryBy{pk_pascal}',
+                    'data_source': 'DynamoDbCrudLambdaDataSource',
+                    'request_template': '{\n  "version": "2018-05-29",\n  "operation": "Invoke",\n  "payload": {\n    "field": "' + f'{schema.name}QueryBy{pk_pascal}' + '",\n    "arguments": $util.toJson($ctx.args)\n  }\n}',
+                    'response_template': '$util.toJson($ctx.result)',
+                    'returns_list': False,
+                    'is_primary': True
+                })
+            else:
+                # Partition+Sort: QueryByPartition returns a list
+                query_resolvers.append({
+                    'name': f'{schema.name}QueryBy{pk_pascal}',
+                    'type': 'Query',
+                    'field': f'{schema.name}QueryBy{pk_pascal}',
+                    'data_source': 'DynamoDbCrudLambdaDataSource',
+                    'request_template': '{\n  "version": "2018-05-29",\n  "operation": "Invoke",\n  "payload": {\n    "field": "' + f'{schema.name}QueryBy{pk_pascal}' + '",\n    "arguments": $util.toJson($ctx.args)\n  }\n}',
+                    'response_template': '$util.toJson($ctx.result)',
+                    'returns_list': True,
+                    'is_primary': True
+                })
+                # Partition+Sort: QueryByPartitionAndSort returns a single object
                 sk_pascal = to_pascal_case(schema.sort_key)
                 query_resolvers.append({
-                    'name': f'{schema.name}QueryBy{sk_pascal}',
+                    'name': f'{schema.name}QueryBy{pk_pascal}And{sk_pascal}',
                     'type': 'Query',
-                    'field': f'{schema.name}QueryBy{sk_pascal}',
+                    'field': f'{schema.name}QueryBy{pk_pascal}And{sk_pascal}',
                     'data_source': 'DynamoDbCrudLambdaDataSource',
-                    'request_template': '{\n  "version": "2018-05-29",\n  "operation": "Invoke",\n  "payload": {\n    "field": "' + f'{schema.name}QueryBy{sk_pascal}' + '",\n    "arguments": $util.toJson($ctx.args)\n  }\n}',
-                    'response_template': '$util.toJson($ctx.result)'
+                    'request_template': '{\n  "version": "2018-05-29",\n  "operation": "Invoke",\n  "payload": {\n    "field": "' + f'{schema.name}QueryBy{pk_pascal}And{sk_pascal}' + '",\n    "arguments": $util.toJson($ctx.args)\n  }\n}',
+                    'response_template': '$util.toJson($ctx.result)',
+                    'returns_list': False,
+                    'is_primary': True
                 })
-                # Both
-                query_resolvers.append({
-                    'name': f'{schema.name}QueryByBoth',
-                    'type': 'Query',
-                    'field': f'{schema.name}QueryByBoth',
-                    'data_source': 'DynamoDbCrudLambdaDataSource',
-                    'request_template': '{\n  "version": "2018-05-29",\n  "operation": "Invoke",\n  "payload": {\n    "field": "' + f'{schema.name}QueryByBoth' + '",\n    "arguments": $util.toJson($ctx.args)\n  }\n}',
-                    'response_template': '$util.toJson($ctx.result)'
-                })
-            # Secondary indexes
+            # SECONDARY INDEXES (GSI/LSI)
             if schema.secondary_indexes:
                 for index in schema.secondary_indexes:
                     idx_pascal = to_pascal_case(index['partition'])
+                    # Partition-only: always returns a list
                     query_resolvers.append({
                         'name': f'{schema.name}QueryBy{idx_pascal}',
                         'type': 'Query',
                         'field': f'{schema.name}QueryBy{idx_pascal}',
                         'data_source': 'DynamoDbCrudLambdaDataSource',
                         'request_template': '{\n  "version": "2018-05-29",\n  "operation": "Invoke",\n  "payload": {\n    "field": "' + f'{schema.name}QueryBy{idx_pascal}' + '",\n    "arguments": $util.toJson($ctx.args)\n  }\n}',
-                        'response_template': '$util.toJson($ctx.result)'
+                        'response_template': '$util.toJson($ctx.result)',
+                        'returns_list': True,
+                        'is_primary': False
                     })
+                    # Partition+Sort: returns a single object
+                    if index.get('sort') and index['sort'] != 'None':
+                        idx_sk_pascal = to_pascal_case(index['sort'])
+                        query_resolvers.append({
+                            'name': f'{schema.name}QueryBy{idx_pascal}And{idx_sk_pascal}',
+                            'type': 'Query',
+                            'field': f'{schema.name}QueryBy{idx_pascal}And{idx_sk_pascal}',
+                            'data_source': 'DynamoDbCrudLambdaDataSource',
+                            'request_template': '{\n  "version": "2018-05-29",\n  "operation": "Invoke",\n  "payload": {\n    "field": "' + f'{schema.name}QueryBy{idx_pascal}And{idx_sk_pascal}' + '",\n    "arguments": $util.toJson($ctx.args)\n  }\n}',
+                            'response_template': '$util.toJson($ctx.result)',
+                            'returns_list': False,
+                            'is_primary': False
+                        })
         template = jinja_env.get_template('appsync_cloudformation.jinja')
         template_content = template.render(schemas=schemas, query_resolvers=query_resolvers)
         write_file(output_path, template_content)

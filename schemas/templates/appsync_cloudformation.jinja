@@ -135,13 +135,14 @@ Resources:
   {%- endfor %}
   
   {% for resolver in query_resolvers %}
-  {{ resolver.name }}Resolver:
+  # {{ resolver.name }} (returns {{ 'list' if resolver.returns_list else 'single object' }})
+  {{ resolver.name }}:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
       FieldName: {{ resolver.field }}
-      DataSourceName: DynamoDbCrudLambdaDataSource
+      DataSourceName: {{ resolver.data_source }}
       RequestMappingTemplate: |
         {{ resolver.request_template | indent(8) }}
       ResponseMappingTemplate: |

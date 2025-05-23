@@ -477,7 +477,8 @@ Resources:
         $util.toJson($ctx.result)
   
   
-  ApplicationRolesQueryByApplicationRoleIdResolver:
+  # ApplicationRolesQueryByApplicationRoleId (returns single object)
+  ApplicationRolesQueryByApplicationRoleId:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -495,7 +496,8 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  ApplicationRolesQueryByUserIdResolver:
+  # ApplicationRolesQueryByUserId (returns list)
+  ApplicationRolesQueryByUserId:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -513,7 +515,27 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  ApplicationRolesQueryByApplicationIdResolver:
+  # ApplicationRolesQueryByUserIdAndRoleId (returns single object)
+  ApplicationRolesQueryByUserIdAndRoleId:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationRolesQueryByUserIdAndRoleId
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "ApplicationRolesQueryByUserIdAndRoleId",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  # ApplicationRolesQueryByApplicationId (returns list)
+  ApplicationRolesQueryByApplicationId:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -531,7 +553,27 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  ApplicationRolesQueryByRoleIdResolver:
+  # ApplicationRolesQueryByApplicationIdAndRoleId (returns single object)
+  ApplicationRolesQueryByApplicationIdAndRoleId:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationRolesQueryByApplicationIdAndRoleId
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "ApplicationRolesQueryByApplicationIdAndRoleId",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  # ApplicationRolesQueryByRoleId (returns list)
+  ApplicationRolesQueryByRoleId:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -549,7 +591,27 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  ApplicationsQueryByApplicationIdResolver:
+  # ApplicationRolesQueryByRoleIdAndRoleType (returns single object)
+  ApplicationRolesQueryByRoleIdAndRoleType:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationRolesQueryByRoleIdAndRoleType
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "ApplicationRolesQueryByRoleIdAndRoleType",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  # ApplicationsQueryByApplicationId (returns single object)
+  ApplicationsQueryByApplicationId:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -567,7 +629,8 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  ApplicationUsersQueryByApplicationUserIdResolver:
+  # ApplicationUsersQueryByApplicationUserId (returns single object)
+  ApplicationUsersQueryByApplicationUserId:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -585,7 +648,8 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  ApplicationUsersQueryByUserIdResolver:
+  # ApplicationUsersQueryByUserId (returns list)
+  ApplicationUsersQueryByUserId:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -603,7 +667,27 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  ApplicationUsersQueryByApplicationIdResolver:
+  # ApplicationUsersQueryByUserIdAndApplicationId (returns single object)
+  ApplicationUsersQueryByUserIdAndApplicationId:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationUsersQueryByUserIdAndApplicationId
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "ApplicationUsersQueryByUserIdAndApplicationId",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  # ApplicationUsersQueryByApplicationId (returns list)
+  ApplicationUsersQueryByApplicationId:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -621,7 +705,27 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  RolesQueryByRoleIdResolver:
+  # ApplicationUsersQueryByApplicationIdAndUserId (returns single object)
+  ApplicationUsersQueryByApplicationIdAndUserId:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationUsersQueryByApplicationIdAndUserId
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "ApplicationUsersQueryByApplicationIdAndUserId",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  # RolesQueryByRoleId (returns single object)
+  RolesQueryByRoleId:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -639,7 +743,8 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  RolesQueryByUserIdResolver:
+  # RolesQueryByUserId (returns list)
+  RolesQueryByUserId:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -657,7 +762,27 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  UsersQueryByUserIdResolver:
+  # RolesQueryByUserIdAndRoleType (returns single object)
+  RolesQueryByUserIdAndRoleType:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: RolesQueryByUserIdAndRoleType
+      DataSourceName: DynamoDbCrudLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "RolesQueryByUserIdAndRoleType",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  # UsersQueryByUserId (returns single object)
+  UsersQueryByUserId:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -675,7 +800,8 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  UsersQueryByEmailResolver:
+  # UsersQueryByEmail (returns list)
+  UsersQueryByEmail:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
@@ -693,7 +819,8 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  UsersQueryByCognitoIdResolver:
+  # UsersQueryByCognitoId (returns list)
+  UsersQueryByCognitoId:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
