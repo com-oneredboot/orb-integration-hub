@@ -228,7 +228,7 @@ Resources:
       Handler: dynamodb_crud.handler
       Runtime: python3.13
       Role: !GetAtt LambdaExecutionRole.Arn
-      Code: backend/src/lambdas/
+      Code: ../../backend/src/lambdas/
       Environment:
         Variables:
           USERS_TABLE: !Sub '${CustomerId}-${ProjectId}-${Environment}-users'
