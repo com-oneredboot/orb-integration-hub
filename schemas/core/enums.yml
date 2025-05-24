@@ -53,4 +53,17 @@ ApplicationRoleStatus:
   - INACTIVE
   - PENDING
   - REJECTED
-  - DELETED 
+  - DELETED
+
+SchemaType:
+  - dynamodb        # AWS DynamoDB table
+  - postgres        # PostgreSQL table
+  - mysql           # MySQL table
+  - mssql           # Microsoft SQL Server table
+  - sqlite          # SQLite table (for local/dev/testing)
+  - lambda          # AWS Lambda-backed resolver
+  - graphql         # GraphQL-only type (not backed by a data source)
+  - registry        # Static registry or enum
+  - graph           # Graph database (e.g., AWS Neptune, Neo4j)
+  - rest            # REST API-backed type (future)
+  - elasticsearch   # Elasticsearch/OpenSearch index (future) 

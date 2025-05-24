@@ -136,7 +136,7 @@ class TableSchema:
     sort_key: str = 'None'  # Default to 'None' string
     secondary_indexes: Optional[List[Dict[str, Any]]] = None
     auth_config: Optional[Dict[str, Any]] = None
-    type: str = 'table'  # Add type field to indicate this is a table schema
+    type: str = 'dynamodb'  # Default to 'dynamodb' per new SchemaType
 
     def __post_init__(self):
         """Post-initialization validation and defaults."""
@@ -481,88 +481,32 @@ def build_crud_operations_for_table(schema: TableSchema):
       - name: e.g., 'Create', 'Update', 'Delete', 'Disable'
       - type: 'Mutation'
       - field: e.g., 'UsersCreate', 'UsersUpdate', 'UsersDelete', 'UsersDisable'
-      - request_template: VTL for DynamoDB operation
-      - response_template: VTL for returning the result
+      - dynamodb_op: e.g., 'PutItem', 'UpdateItem', 'DeleteItem', etc.
     """
-    # VTL templates
-    put_item_vtl = '''{
-  "version": "2018-05-29",
-  "operation": "PutItem",
-  "key": {
-    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-  },
-  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
-}'''
-    update_item_vtl = '''{
-  "version": "2018-05-29",
-  "operation": "UpdateItem",
-  "key": {
-    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-  },
-  "update": {
-    "expression": "SET #attr = :val",
-    "expressionNames": {
-      "#attr": "status"
-    },
-    "expressionValues": {
-      ":val": { "S": $ctx.args.input.status }
-    }
-  },
-  "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
-}'''
-    delete_item_vtl = '''{
-  "version": "2018-05-29",
-  "operation": "DeleteItem",
-  "key": {
-    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-  }
-}'''
-    disable_item_vtl = '''{
-  "version": "2018-05-29",
-  "operation": "UpdateItem",
-  "key": {
-    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-  },
-  "update": {
-    "expression": "SET #status = :status, disabledAt = :disabledAt",
-    "expressionNames": {
-      "#status": "status"
-    },
-    "expressionValues": {
-      ":status": { "S": "DISABLED" },
-      ":disabledAt": { "S": "$util.time.nowISO8601()" }
-    }
-  }
-}'''
-    response_vtl = '$util.toJson($ctx.result)'
     schema.operations = [
         {
             'name': 'Create',
             'type': 'Mutation',
             'field': f'{schema.name}Create',
-            'request_template': put_item_vtl,
-            'response_template': response_vtl,
+            'dynamodb_op': 'PutItem',
         },
         {
             'name': 'Update',
             'type': 'Mutation',
             'field': f'{schema.name}Update',
-            'request_template': update_item_vtl,
-            'response_template': response_vtl,
+            'dynamodb_op': 'UpdateItem',
         },
         {
             'name': 'Delete',
             'type': 'Mutation',
             'field': f'{schema.name}Delete',
-            'request_template': delete_item_vtl,
-            'response_template': response_vtl,
+            'dynamodb_op': 'DeleteItem',
         },
         {
             'name': 'Disable',
             'type': 'Mutation',
             'field': f'{schema.name}Disable',
-            'request_template': disable_item_vtl,
-            'response_template': response_vtl,
+            'dynamodb_op': 'UpdateItem',
         },
     ]
 
@@ -846,82 +790,8 @@ def generate_appsync_cloudformation_template(schemas: Dict[str, Union[TableSchem
     logger.debug('Starting generate_appsync_cloudformation_template')
     try:
         jinja_env = setup_jinja_env()
-        # Build query_resolvers for all QueryBy... operations
-        query_resolvers = []
-        for schema in schemas.values():
-            if not isinstance(schema, TableSchema):
-                continue
-            pk_pascal = to_pascal_case(schema.partition_key)
-            # PRIMARY INDEX LOGIC
-            if not (schema.sort_key and schema.sort_key != 'None'):
-                # Partition key only (no sort key): returns a single object
-                query_resolvers.append({
-                    'name': f'{schema.name}QueryBy{pk_pascal}',
-                    'type': 'Query',
-                    'field': f'{schema.name}QueryBy{pk_pascal}',
-                    'data_source': 'DynamoDbCrudLambdaDataSource',
-                    'request_template': '{\n  "version": "2018-05-29",\n  "operation": "Invoke",\n  "payload": {\n    "field": "' + f'{schema.name}QueryBy{pk_pascal}' + '",\n    "arguments": $util.toJson($ctx.args)\n  }\n}',
-                    'response_template': '$util.toJson($ctx.result)',
-                    'returns_list': False,
-                    'is_primary': True
-                })
-            else:
-                # Partition+Sort: QueryByPartition returns a list
-                query_resolvers.append({
-                    'name': f'{schema.name}QueryBy{pk_pascal}',
-                    'type': 'Query',
-                    'field': f'{schema.name}QueryBy{pk_pascal}',
-                    'data_source': 'DynamoDbCrudLambdaDataSource',
-                    'request_template': '{\n  "version": "2018-05-29",\n  "operation": "Invoke",\n  "payload": {\n    "field": "' + f'{schema.name}QueryBy{pk_pascal}' + '",\n    "arguments": $util.toJson($ctx.args)\n  }\n}',
-                    'response_template': '$util.toJson($ctx.result)',
-                    'returns_list': True,
-                    'is_primary': True
-                })
-                # Partition+Sort: QueryByPartitionAndSort returns a single object
-                sk_pascal = to_pascal_case(schema.sort_key)
-                query_resolvers.append({
-                    'name': f'{schema.name}QueryBy{pk_pascal}And{sk_pascal}',
-                    'type': 'Query',
-                    'field': f'{schema.name}QueryBy{pk_pascal}And{sk_pascal}',
-                    'data_source': 'DynamoDbCrudLambdaDataSource',
-                    'request_template': '{\n  "version": "2018-05-29",\n  "operation": "Invoke",\n  "payload": {\n    "field": "' + f'{schema.name}QueryBy{pk_pascal}And{sk_pascal}' + '",\n    "arguments": $util.toJson($ctx.args)\n  }\n}',
-                    'response_template': '$util.toJson($ctx.result)',
-                    'returns_list': False,
-                    'is_primary': True
-                })
-            # SECONDARY INDEXES (GSI/LSI)
-            if schema.secondary_indexes:
-                for index in schema.secondary_indexes:
-                    # Only generate QueryBy for the index's partition key (never for sort key alone)
-                    idx_partition = index.get('partition')
-                    idx_sort = index.get('sort') if index.get('sort') and index.get('sort') != 'None' else None
-                    idx_pascal = to_pascal_case(idx_partition)
-                    # Partition-only: always returns a list
-                    query_resolvers.append({
-                        'name': f'{schema.name}QueryBy{idx_pascal}',
-                        'type': 'Query',
-                        'field': f'{schema.name}QueryBy{idx_pascal}',
-                        'data_source': 'DynamoDbCrudLambdaDataSource',
-                        'request_template': '{\n  "version": "2018-05-29",\n  "operation": "Invoke",\n  "payload": {\n    "field": "' + f'{schema.name}QueryBy{idx_pascal}' + '",\n    "arguments": $util.toJson($ctx.args)\n  }\n}',
-                        'response_template': '$util.toJson($ctx.result)',
-                        'returns_list': True,
-                        'is_primary': False
-                    })
-                    # Partition+Sort: returns a single object
-                    if idx_sort:
-                        idx_sk_pascal = to_pascal_case(idx_sort)
-                        query_resolvers.append({
-                            'name': f'{schema.name}QueryBy{idx_pascal}And{idx_sk_pascal}',
-                            'type': 'Query',
-                            'field': f'{schema.name}QueryBy{idx_pascal}And{idx_sk_pascal}',
-                            'data_source': 'DynamoDbCrudLambdaDataSource',
-                            'request_template': '{\n  "version": "2018-05-29",\n  "operation": "Invoke",\n  "payload": {\n    "field": "' + f'{schema.name}QueryBy{idx_pascal}And{idx_sk_pascal}' + '",\n    "arguments": $util.toJson($ctx.args)\n  }\n}',
-                            'response_template': '$util.toJson($ctx.result)',
-                            'returns_list': False,
-                            'is_primary': False
-                        })
         template = jinja_env.get_template('appsync_cloudformation.jinja')
-        template_content = template.render(schemas=schemas, query_resolvers=query_resolvers)
+        template_content = template.render(schemas=schemas)
         write_file(output_path, template_content)
         logger.debug('Completed generate_appsync_cloudformation_template')
     except Exception as e:
@@ -1221,7 +1091,7 @@ def load_schemas() -> dict:
         schema_dict = load_schema(schema_file)
         schema_type = schema_dict.get('type')
         schema_name = schema_dict.get('name')
-        if schema_type == 'table':
+        if schema_type == 'dynamodb':
             # Build TableSchema object
             model = schema_dict['model']
             attributes = []
@@ -1246,7 +1116,8 @@ def load_schemas() -> dict:
                 partition_key=partition_key,
                 sort_key=sort_key,
                 secondary_indexes=secondary_indexes,
-                auth_config=auth_config
+                auth_config=auth_config,
+                type='dynamodb'
             )
             schemas[schema_name] = schema_obj
         elif schema_type == 'registry':
@@ -1292,7 +1163,7 @@ def generate_dynamodb_repository(schemas: dict) -> None:
         'ENTITY_TABLE_ENV = {'
     ]
     for entity, schema in schemas.items():
-        if hasattr(schema, 'type') and getattr(schema, 'type', None) == 'table':
+        if hasattr(schema, 'type') and getattr(schema, 'type', None) == 'dynamodb':
             env_var = f"{entity.upper()}_TABLE"
             lines.append(f'    "{entity}": "{env_var}",')
     lines.append('}')

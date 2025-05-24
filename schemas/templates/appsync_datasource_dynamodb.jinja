@@ -1,0 +1,14 @@
+# Jinja template for AppSync DynamoDB DataSources
+  {%- for schema in schemas.values() if schema.type == 'dynamodb' %}
+  {{ schema.name }}DynamoDbDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      Name: {{ schema.name }}DynamoDbDataSource
+      Type: AMAZON_DYNAMODB
+      DynamoDBConfig:
+        TableName: !Sub 'resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}-table-name'
+        AwsRegion: !Ref AWS::Region
+        UseCallerCredentials: false
+      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+  {%- endfor -%} 

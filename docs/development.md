@@ -198,4 +198,20 @@ The MCP Memory Graph is a living knowledge base for entities, relationships, and
 *   **SAM Local Issues:** Ensure Docker is running. Check AWS credentials. Verify `--env-vars` path/format.
 *   **Frontend Build Issues:** Delete `node_modules` and `package-lock.json`, then run `npm install` again.
 *   **Schema Generation Errors:** Check YAML syntax in `schemas/entities/`. Ensure schema `pipenv` environment is active or dependencies are installed.
-*   *(Add more common issues and solutions)* 
+*   *(Add more common issues and solutions)*
+
+## Auto-Generated CRUD and List Resolvers for DynamoDB Entities
+
+As of [DATE], the code generation process automatically creates standard CRUD (Create, Update, Delete, Get, List) resolvers for every DynamoDB entity schema. You do **not** need to manually specify these in the `operations` field of your entity YAML files.
+
+- **Default resolvers generated:**
+  - Create<Entity>
+  - Update<Entity>
+  - Delete<Entity>
+  - Get<Entity>
+  - List<Entity>
+- These are always present for every entity with `type: dynamodb`.
+- If you need custom or extra operations (e.g., special queries, mutations, or GSI-based queries), you can add an `operations` field to your schema YAML. These will be merged with the defaults.
+- See `schemas/templates/appsync_resolver_dynamodb.jinja` for implementation details.
+
+**This reduces boilerplate and ensures a consistent API for all entities.** 

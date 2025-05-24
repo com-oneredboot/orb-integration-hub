@@ -1,3 +1,8 @@
+# file: backend/src/lambdas/dynamodb_crud/index.py
+# author: Corey Dale Peters
+# date: 2025-05-24
+# description: AWS Lambda function for handling DynamoDB CRUD operations
+
 import os
 import json
 import logging
@@ -5,14 +10,19 @@ import boto3
 from botocore.exceptions import ClientError
 from typing import Any, Dict
 
+# Import the generated entity-to-table mapping
+from core.models.dynamodb.repository import ENTITY_TABLE_ENV
+
 # Setup logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+# Setup Clients
 dynamodb = boto3.resource('dynamodb')
 
-# Import the generated entity-to-table mapping
-from core.models.dynamodb.repository import ENTITY_TABLE_ENV
+# CRUD operation routing
+SUPPORTED_OPERATIONS = ['Create', 'Read', 'Update', 'Delete', 'Disable']
+
 
 def get_table(table_env_var: str) -> Any:
     """
@@ -23,10 +33,6 @@ def get_table(table_env_var: str) -> Any:
         raise Exception(f"Missing environment variable for table: {table_env_var}")
     return dynamodb.Table(table_name)
 
-# CRUD operation routing
-SUPPORTED_OPERATIONS = ['Create', 'Read', 'Update', 'Delete', 'Disable']
-
-# Example: UsersCreate, UsersUpdate, UsersDelete, UsersDisable
 
 def parse_field(field: str) -> (str, str):
     """
@@ -38,7 +44,61 @@ def parse_field(field: str) -> (str, str):
             return field[:-len(op)], op
     raise Exception(f"Unsupported operation in field: {field}")
 
-# Main Lambda handler
+
+def create_item(table, item: Dict) -> Dict:
+    """
+    Create a new item in the table.
+    """
+    table.put_item(Item=item)
+    return item
+
+
+def read_item(table, key: Dict) -> Dict:
+    """
+    Read an item from the table by key.
+    """
+    resp = table.get_item(Key=key)
+    return resp.get('Item')
+
+
+def update_item(table, item: Dict) -> Dict:
+    """
+    Update an item in the table. Assumes full item is provided.
+    """
+    table.put_item(Item=item)
+    return item
+
+
+def delete_item(table, key: Dict) -> Dict:
+    """
+    Delete an item from the table by key.
+    """
+    table.delete_item(Key=key)
+    return key
+
+
+def disable_item(table, key: Dict) -> Dict:
+    """
+    Soft delete (disable) an item by setting status to 'DISABLED' and adding a disabledAt timestamp.
+    """
+    import datetime
+    now = datetime.datetime.utcnow().isoformat()
+    update = {
+        'status': 'DISABLED',
+        'disabledAt': now
+    }
+    # Merge key and update fields
+    expr_attr_names = {f"#{k}": k for k in update.keys()}
+    expr_attr_values = {f":{k}": v for k, v in update.items()}
+    update_expr = "SET " + ", ".join([f"#{k} = :{k}" for k in update.keys()])
+    table.update_item(
+        Key=key,
+        UpdateExpression=update_expr,
+        ExpressionAttributeNames=expr_attr_names,
+        ExpressionAttributeValues=expr_attr_values
+    )
+    return {**key, **update}
+
 
 def handler(event, context):
     """
@@ -85,53 +145,3 @@ def handler(event, context):
             "Message": str(e),
             "Data": None
         }
-
-def create_item(table, item: Dict) -> Dict:
-    """
-    Create a new item in the table.
-    """
-    table.put_item(Item=item)
-    return item
-
-def read_item(table, key: Dict) -> Dict:
-    """
-    Read an item from the table by key.
-    """
-    resp = table.get_item(Key=key)
-    return resp.get('Item')
-
-def update_item(table, item: Dict) -> Dict:
-    """
-    Update an item in the table. Assumes full item is provided.
-    """
-    table.put_item(Item=item)
-    return item
-
-def delete_item(table, key: Dict) -> Dict:
-    """
-    Delete an item from the table by key.
-    """
-    table.delete_item(Key=key)
-    return key
-
-def disable_item(table, key: Dict) -> Dict:
-    """
-    Soft delete (disable) an item by setting status to 'DISABLED' and adding a disabledAt timestamp.
-    """
-    import datetime
-    now = datetime.datetime.utcnow().isoformat()
-    update = {
-        'status': 'DISABLED',
-        'disabledAt': now
-    }
-    # Merge key and update fields
-    expr_attr_names = {f"#{k}": k for k in update.keys()}
-    expr_attr_values = {f":{k}": v for k, v in update.items()}
-    update_expr = "SET " + ", ".join([f"#{k} = :{k}" for k in update.keys()])
-    table.update_item(
-        Key=key,
-        UpdateExpression=update_expr,
-        ExpressionAttributeNames=expr_attr_names,
-        ExpressionAttributeValues=expr_attr_values
-    )
-    return {**key, **update}
