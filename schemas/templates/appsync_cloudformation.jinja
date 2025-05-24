@@ -115,6 +115,7 @@ Resources:
   {% for operation in schema.operations %}
   {{ schema.name }}{{ operation.name }}Resolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: DynamoDbCrudLambdaDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: {{ operation.type }}
@@ -137,6 +138,7 @@ Resources:
   {% for resolver in query_resolvers %}
   {{ resolver.name }}:
     Type: AWS::AppSync::Resolver
+    {% if resolver.data_source == 'DynamoDbCrudLambdaDataSource' %}DependsOn: DynamoDbCrudLambdaDataSource{% endif %}
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
