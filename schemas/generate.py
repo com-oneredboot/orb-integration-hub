@@ -892,7 +892,10 @@ def generate_appsync_cloudformation_template(schemas: Dict[str, Union[TableSchem
             # SECONDARY INDEXES (GSI/LSI)
             if schema.secondary_indexes:
                 for index in schema.secondary_indexes:
-                    idx_pascal = to_pascal_case(index['partition'])
+                    # Only generate QueryBy for the index's partition key (never for sort key alone)
+                    idx_partition = index.get('partition')
+                    idx_sort = index.get('sort') if index.get('sort') and index.get('sort') != 'None' else None
+                    idx_pascal = to_pascal_case(idx_partition)
                     # Partition-only: always returns a list
                     query_resolvers.append({
                         'name': f'{schema.name}QueryBy{idx_pascal}',
@@ -905,8 +908,8 @@ def generate_appsync_cloudformation_template(schemas: Dict[str, Union[TableSchem
                         'is_primary': False
                     })
                     # Partition+Sort: returns a single object
-                    if index.get('sort') and index['sort'] != 'None':
-                        idx_sk_pascal = to_pascal_case(index['sort'])
+                    if idx_sort:
+                        idx_sk_pascal = to_pascal_case(idx_sort)
                         query_resolvers.append({
                             'name': f'{schema.name}QueryBy{idx_pascal}And{idx_sk_pascal}',
                             'type': 'Query',

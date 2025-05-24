@@ -38,10 +38,6 @@ export type {{ schema.name }}QueryBy{{ schema.partition_key|to_pascal_case }}Inp
 };
 
 {% if schema.sort_key and schema.sort_key != 'None' %}
-export type {{ schema.name }}QueryBy{{ schema.sort_key|to_pascal_case }}Input = {
-  {{ schema.sort_key }}: string;
-};
-
 export type {{ schema.name }}QueryByBothInput = {
   {{ schema.partition_key }}: string;
   {{ schema.sort_key }}: string;
@@ -51,9 +47,13 @@ export type {{ schema.name }}QueryByBothInput = {
 {% if schema.secondary_indexes %}
 // Secondary index queries
 {% for index in schema.secondary_indexes %}
-{% if index.partition != schema.partition_key and index.partition != schema.sort_key %}
 export type {{ schema.name }}QueryBy{{ index.partition|to_pascal_case }}Input = {
   {{ index.partition }}: string;
+};
+{% if index.sort and index.sort != schema.partition_key and index.sort != 'None' %}
+export type {{ schema.name }}QueryBy{{ index.partition|to_pascal_case }}And{{ index.sort|to_pascal_case }}Input = {
+  {{ index.partition }}: string;
+  {{ index.sort }}: string;
 };
 {% endif %}
 {% endfor %}
