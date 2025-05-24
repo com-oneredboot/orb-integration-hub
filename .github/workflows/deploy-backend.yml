@@ -61,7 +61,20 @@ jobs:
           cd schemas
           pipenv run python generate.py
           cd ..
-          
+
+      - name: Find latest schema file and set env
+        id: find_schema
+        run: |
+          cd infrastructure/cloudformation
+          SCHEMA_FILE=$(find . -name "appsync_*.graphql" | sort -r | head -1)
+          if [ -z "$SCHEMA_FILE" ]; then
+            echo "ERROR: No schema file found"
+            exit 1
+          fi
+          SCHEMA_FILE=$(basename "$SCHEMA_FILE")
+          echo "schema_file=$SCHEMA_FILE" >> $GITHUB_OUTPUT
+          cd ../../..
+
       - name: Validate GraphQL schema
         run: |
           echo "Validating GraphQL schema..."
@@ -95,9 +108,14 @@ jobs:
             echo "WARNING: Schema file is suspiciously small ($FILE_SIZE bytes)."
           fi
           
-          echo "schema_filename=$SCHEMA_FILE" >> $GITHUB_OUTPUT
           echo "Schema validation complete."
           cd ../../..
+
+      - name: Upload generated GraphQL schema as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.find_schema.outputs.schema_file }}
+          path: infrastructure/cloudformation/${{ steps.find_schema.outputs.schema_file }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
