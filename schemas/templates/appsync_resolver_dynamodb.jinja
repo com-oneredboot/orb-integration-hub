@@ -14,6 +14,7 @@
   {%- for operation in all_ops %}
   {{ schema.name }}{{ operation.name }}Resolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: {{ schema.name }}DynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: {{ operation.type }}

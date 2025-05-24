@@ -162,6 +162,7 @@ Resources:
   # Jinja template for AppSync DynamoDB Resolvers
   ApplicationRolesCreateResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: ApplicationRolesDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -180,6 +181,7 @@ Resources:
         $util.toJson($ctx.result)
   ApplicationRolesUpdateResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: ApplicationRolesDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -198,6 +200,7 @@ Resources:
         $util.toJson($ctx.result)
   ApplicationRolesDeleteResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: ApplicationRolesDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -215,6 +218,7 @@ Resources:
         $util.toJson($ctx.result)
   ApplicationRolesDisableResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: ApplicationRolesDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -233,6 +237,7 @@ Resources:
         $util.toJson($ctx.result)
   ApplicationsCreateResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: ApplicationsDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -251,6 +256,7 @@ Resources:
         $util.toJson($ctx.result)
   ApplicationsUpdateResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: ApplicationsDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -269,6 +275,7 @@ Resources:
         $util.toJson($ctx.result)
   ApplicationsDeleteResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: ApplicationsDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -286,6 +293,7 @@ Resources:
         $util.toJson($ctx.result)
   ApplicationsDisableResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: ApplicationsDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -304,6 +312,7 @@ Resources:
         $util.toJson($ctx.result)
   ApplicationUsersCreateResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: ApplicationUsersDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -322,6 +331,7 @@ Resources:
         $util.toJson($ctx.result)
   ApplicationUsersUpdateResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: ApplicationUsersDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -340,6 +350,7 @@ Resources:
         $util.toJson($ctx.result)
   ApplicationUsersDeleteResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: ApplicationUsersDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -357,6 +368,7 @@ Resources:
         $util.toJson($ctx.result)
   ApplicationUsersDisableResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: ApplicationUsersDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -375,6 +387,7 @@ Resources:
         $util.toJson($ctx.result)
   RolesCreateResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: RolesDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -393,6 +406,7 @@ Resources:
         $util.toJson($ctx.result)
   RolesUpdateResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: RolesDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -411,6 +425,7 @@ Resources:
         $util.toJson($ctx.result)
   RolesDeleteResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: RolesDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -428,6 +443,7 @@ Resources:
         $util.toJson($ctx.result)
   RolesDisableResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: RolesDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -446,6 +462,7 @@ Resources:
         $util.toJson($ctx.result)
   UsersCreateResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: UsersDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -464,6 +481,7 @@ Resources:
         $util.toJson($ctx.result)
   UsersUpdateResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: UsersDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -482,6 +500,7 @@ Resources:
         $util.toJson($ctx.result)
   UsersDeleteResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: UsersDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -499,6 +518,7 @@ Resources:
         $util.toJson($ctx.result)
   UsersDisableResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: UsersDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
