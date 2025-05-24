@@ -70,15 +70,23 @@ export type ApplicationUsersQueryByApplicationUserIdInput = {
 
 // Secondary index queries
 
-
 export type ApplicationUsersQueryByUserIdInput = {
   userId: string;
 };
 
+export type ApplicationUsersQueryByUserIdAndApplicationIdInput = {
+  userId: string;
+  applicationId: string;
+};
 
 
 export type ApplicationUsersQueryByApplicationIdInput = {
   applicationId: string;
+};
+
+export type ApplicationUsersQueryByApplicationIdAndUserIdInput = {
+  applicationId: string;
+  userId: string;
 };
 
 

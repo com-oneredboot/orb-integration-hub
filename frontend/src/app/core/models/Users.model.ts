@@ -106,11 +106,9 @@ export type UsersQueryByUserIdInput = {
 
 // Secondary index queries
 
-
 export type UsersQueryByEmailInput = {
   email: string;
 };
-
 
 
 export type UsersQueryByCognitoIdInput = {

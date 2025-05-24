@@ -96,21 +96,33 @@ export type ApplicationRolesQueryByApplicationRoleIdInput = {
 
 // Secondary index queries
 
-
 export type ApplicationRolesQueryByUserIdInput = {
   userId: string;
 };
 
+export type ApplicationRolesQueryByUserIdAndRoleIdInput = {
+  userId: string;
+  roleId: string;
+};
 
 
 export type ApplicationRolesQueryByApplicationIdInput = {
   applicationId: string;
 };
 
+export type ApplicationRolesQueryByApplicationIdAndRoleIdInput = {
+  applicationId: string;
+  roleId: string;
+};
 
 
 export type ApplicationRolesQueryByRoleIdInput = {
   roleId: string;
+};
+
+export type ApplicationRolesQueryByRoleIdAndRoleTypeInput = {
+  roleId: string;
+  roleType: string;
 };
 
 

@@ -72,9 +72,13 @@ export type RolesQueryByRoleIdInput = {
 
 // Secondary index queries
 
-
 export type RolesQueryByUserIdInput = {
   userId: string;
+};
+
+export type RolesQueryByUserIdAndRoleTypeInput = {
+  userId: string;
+  roleType: string;
 };
 
 
