@@ -23,17 +23,21 @@ input {{ schema.name }}DisableInput {
 
 {%- set seen_indexes = [] %}
 {%- for index in schema.indexes %}
-  {%- if index.sort %}
-    {%- set input_name = schema.name ~ 'QueryBy' ~ index.partition|to_pascal_case ~ 'And' ~ index.sort|to_pascal_case ~ 'Input' %}
-  {%- else %}
-    {%- set input_name = schema.name ~ 'QueryBy' ~ index.partition|to_pascal_case ~ 'Input' %}
-  {%- endif %}
+  {# Partition-only input #}
+  {%- set input_name = schema.name ~ 'QueryBy' ~ index.partition|to_pascal_case ~ 'Input' %}
   {% if input_name not in seen_indexes %}input {{ input_name }} {
   {{ index.partition }}: {{ schema.fields[index.partition]|graphql_type }}
-{% if index.sort %}  {{ index.sort }}: {{ schema.fields[index.sort]|graphql_type }}
-{% endif %}}
-
+}
 {% set _ = seen_indexes.append(input_name) %}{% endif %}
+  {# Partition+Sort input, if sort exists #}
+  {%- if index.sort and index.sort != 'None' %}
+    {%- set input_name_and = schema.name ~ 'QueryBy' ~ index.partition|to_pascal_case ~ 'And' ~ index.sort|to_pascal_case ~ 'Input' %}
+    {% if input_name_and not in seen_indexes %}input {{ input_name_and }} {
+  {{ index.partition }}: {{ schema.fields[index.partition]|graphql_type }}
+  {{ index.sort }}: {{ schema.fields[index.sort]|graphql_type }}
+}
+{% set _ = seen_indexes.append(input_name_and) %}{% endif %}
+  {%- endif %}
 {%- endfor %}
 
 type {{ schema.name }}Response

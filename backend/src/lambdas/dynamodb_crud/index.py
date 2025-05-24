@@ -12,7 +12,7 @@ logger.setLevel(logging.INFO)
 dynamodb = boto3.resource('dynamodb')
 
 # Import the generated entity-to-table mapping
-from core.models.dynamodb_repository import ENTITY_TABLE_ENV
+from core.models.dynamodb.repository import ENTITY_TABLE_ENV
 
 def get_table(table_env_var: str) -> Any:
     """
