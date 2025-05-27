@@ -10,6 +10,7 @@ type: dynamodb
 version: '1.0'
 name: Users
 model:
+  tableName: users
   authConfig:
     apiKeyAuthentication:
     - UsersQueryByEmail

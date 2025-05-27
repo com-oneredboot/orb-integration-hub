@@ -9,6 +9,7 @@ type: dynamodb
 version: '1.0'
 name: Roles
 model:
+  tableName: roles
   authConfig:
     cognitoAuthentication:
       groups:

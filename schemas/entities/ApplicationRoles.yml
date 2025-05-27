@@ -10,6 +10,7 @@ type: dynamodb
 version: '1.0'
 name: ApplicationRoles
 model:
+  tableName: application-roles
   authConfig:
     cognitoAuthentication:
       groups:
