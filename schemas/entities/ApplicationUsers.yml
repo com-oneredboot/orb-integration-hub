@@ -10,7 +10,6 @@ type: dynamodb
 version: '1.0'
 name: ApplicationUsers
 model:
-  tableName: application-users
   authConfig:
     cognitoAuthentication:
       groups:
