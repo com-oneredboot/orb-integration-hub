@@ -21,8 +21,8 @@
       FieldName: {{ operation.field }}
       DataSourceName: {{ schema.name }}DynamoDbDataSource
       RequestMappingTemplate: |
-      {%- set pk = schema.partition_key %}
-      {%- set sk = schema.sort_key if schema.sort_key and schema.sort_key != 'None' else None %}
+      {%- set pk = operation.index_partition if operation.index_partition is defined else schema.partition_key %}
+      {%- set sk = operation.index_sort if operation.index_sort is defined and operation.index_sort and operation.index_sort != 'None' else None %}
       {%- if operation.dynamodb_op == 'PutItem' %}
         {
           "version": "2018-05-29",

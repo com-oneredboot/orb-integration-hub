@@ -476,12 +476,14 @@ def load_schema(schema_path: str) -> Dict[str, Any]:
 
 def build_crud_operations_for_table(schema: TableSchema):
     """
-    Attach CRUD operation definitions to the TableSchema instance for use in Jinja templates.
+    Attach CRUD and QueryBy operation definitions to the TableSchema instance for use in Jinja templates.
     Each operation includes:
-      - name: e.g., 'Create', 'Update', 'Delete', 'Disable'
-      - type: 'Mutation'
-      - field: e.g., 'UsersCreate', 'UsersUpdate', 'UsersDelete', 'UsersDisable'
-      - dynamodb_op: e.g., 'PutItem', 'UpdateItem', 'DeleteItem', etc.
+      - name: e.g., 'Create', 'Update', 'Delete', 'Disable', 'QueryByUserId', etc.
+      - type: 'Mutation' or 'Query'
+      - field: e.g., 'UsersCreate', 'UsersQueryByUserId', etc.
+      - dynamodb_op: e.g., 'PutItem', 'UpdateItem', 'DeleteItem', 'Query', etc.
+      - index_partition: (for secondary index QueryBy) the partition key name
+      - index_sort: (for secondary index QueryBy) the sort key name (if any)
     """
     schema.operations = [
         {
@@ -509,6 +511,50 @@ def build_crud_operations_for_table(schema: TableSchema):
             'dynamodb_op': 'UpdateItem',
         },
     ]
+
+    # Add QueryBy operations for primary key
+    pk_pascal = to_pascal_case(schema.partition_key)
+    schema.operations.append({
+        'name': f'QueryBy{pk_pascal}',
+        'type': 'Query',
+        'field': f'{schema.name}QueryBy{pk_pascal}',
+        'dynamodb_op': 'Query',
+        'index_partition': schema.partition_key,
+        'index_sort': None
+    })
+    # Add QueryBy for sort key if present
+    if schema.sort_key and schema.sort_key != 'None':
+        sk_pascal = to_pascal_case(schema.sort_key)
+        schema.operations.append({
+            'name': f'QueryBy{sk_pascal}',
+            'type': 'Query',
+            'field': f'{schema.name}QueryBy{sk_pascal}',
+            'dynamodb_op': 'Query',
+            'index_partition': schema.sort_key,
+            'index_sort': None
+        })
+        # QueryByBoth
+        schema.operations.append({
+            'name': 'QueryByBoth',
+            'type': 'Query',
+            'field': f'{schema.name}QueryByBoth',
+            'dynamodb_op': 'Query',
+            'index_partition': schema.partition_key,
+            'index_sort': schema.sort_key
+        })
+    # Add QueryBy for each secondary index
+    if schema.secondary_indexes:
+        for index in schema.secondary_indexes:
+            idx_pascal = to_pascal_case(index['partition'])
+            op = {
+                'name': f'QueryBy{idx_pascal}',
+                'type': 'Query',
+                'field': f'{schema.name}QueryBy{idx_pascal}',
+                'dynamodb_op': 'Query',
+                'index_partition': index['partition'],
+                'index_sort': index.get('sort')
+            }
+            schema.operations.append(op)
 
 def generate_python_model(table: str, schema: Union[TableSchema, GraphQLType]) -> None:
     try:

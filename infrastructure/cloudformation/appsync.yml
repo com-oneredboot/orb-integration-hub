@@ -235,6 +235,108 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
+  ApplicationRolesQueryByApplicationRoleIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: ApplicationRolesDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationRolesQueryByApplicationRoleId
+      DataSourceName: ApplicationRolesDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "query": {
+            "expression": "#pk = :pk",
+            "expressionNames": {
+              "#pk": "applicationRoleId"
+            },
+            "expressionValues": {
+              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationRoleId)
+            }
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  ApplicationRolesQueryByUserIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: ApplicationRolesDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationRolesQueryByUserId
+      DataSourceName: ApplicationRolesDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "query": {
+            "expression": "#pk = :pk" AND #sk = :sk,
+            "expressionNames": {
+              "#pk": "userId",
+              "#sk": "roleId"
+            },
+            "expressionValues": {
+              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId),
+              ":sk": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
+            }
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  ApplicationRolesQueryByApplicationIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: ApplicationRolesDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationRolesQueryByApplicationId
+      DataSourceName: ApplicationRolesDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "query": {
+            "expression": "#pk = :pk" AND #sk = :sk,
+            "expressionNames": {
+              "#pk": "applicationId",
+              "#sk": "roleId"
+            },
+            "expressionValues": {
+              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId),
+              ":sk": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
+            }
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  ApplicationRolesQueryByRoleIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: ApplicationRolesDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationRolesQueryByRoleId
+      DataSourceName: ApplicationRolesDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "query": {
+            "expression": "#pk = :pk" AND #sk = :sk,
+            "expressionNames": {
+              "#pk": "roleId",
+              "#sk": "roleType"
+            },
+            "expressionValues": {
+              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId),
+              ":sk": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleType)
+            }
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
   ApplicationsCreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationsDynamoDbDataSource
@@ -307,6 +409,30 @@ Resources:
             "applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
           },
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  ApplicationsQueryByApplicationIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: ApplicationsDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationsQueryByApplicationId
+      DataSourceName: ApplicationsDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "query": {
+            "expression": "#pk = :pk",
+            "expressionNames": {
+              "#pk": "applicationId"
+            },
+            "expressionValues": {
+              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+            }
+          }
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
@@ -385,6 +511,82 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
+  ApplicationUsersQueryByApplicationUserIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: ApplicationUsersDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationUsersQueryByApplicationUserId
+      DataSourceName: ApplicationUsersDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "query": {
+            "expression": "#pk = :pk",
+            "expressionNames": {
+              "#pk": "applicationUserId"
+            },
+            "expressionValues": {
+              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationUserId)
+            }
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  ApplicationUsersQueryByUserIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: ApplicationUsersDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationUsersQueryByUserId
+      DataSourceName: ApplicationUsersDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "query": {
+            "expression": "#pk = :pk" AND #sk = :sk,
+            "expressionNames": {
+              "#pk": "userId",
+              "#sk": "applicationId"
+            },
+            "expressionValues": {
+              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId),
+              ":sk": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+            }
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  ApplicationUsersQueryByApplicationIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: ApplicationUsersDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationUsersQueryByApplicationId
+      DataSourceName: ApplicationUsersDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "query": {
+            "expression": "#pk = :pk" AND #sk = :sk,
+            "expressionNames": {
+              "#pk": "applicationId",
+              "#sk": "userId"
+            },
+            "expressionValues": {
+              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId),
+              ":sk": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+            }
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
   RolesCreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: RolesDynamoDbDataSource
@@ -460,6 +662,56 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
+  RolesQueryByRoleIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: RolesDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: RolesQueryByRoleId
+      DataSourceName: RolesDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "query": {
+            "expression": "#pk = :pk",
+            "expressionNames": {
+              "#pk": "roleId"
+            },
+            "expressionValues": {
+              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
+            }
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  RolesQueryByUserIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: RolesDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: RolesQueryByUserId
+      DataSourceName: RolesDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "query": {
+            "expression": "#pk = :pk" AND #sk = :sk,
+            "expressionNames": {
+              "#pk": "userId",
+              "#sk": "roleType"
+            },
+            "expressionValues": {
+              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId),
+              ":sk": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleType)
+            }
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
   UsersCreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: UsersDynamoDbDataSource
@@ -532,6 +784,78 @@ Resources:
             "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
           },
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  UsersQueryByUserIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: UsersDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: UsersQueryByUserId
+      DataSourceName: UsersDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "query": {
+            "expression": "#pk = :pk",
+            "expressionNames": {
+              "#pk": "userId"
+            },
+            "expressionValues": {
+              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+            }
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  UsersQueryByEmailResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: UsersDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: UsersQueryByEmail
+      DataSourceName: UsersDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "query": {
+            "expression": "#pk = :pk",
+            "expressionNames": {
+              "#pk": "email"
+            },
+            "expressionValues": {
+              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.email)
+            }
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  UsersQueryByCognitoIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: UsersDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: UsersQueryByCognitoId
+      DataSourceName: UsersDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "query": {
+            "expression": "#pk = :pk",
+            "expressionNames": {
+              "#pk": "cognitoId"
+            },
+            "expressionValues": {
+              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.cognitoId)
+            }
+          }
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result) 
