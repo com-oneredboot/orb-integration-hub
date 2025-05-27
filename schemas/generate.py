@@ -545,11 +545,19 @@ def build_crud_operations_for_table(schema: TableSchema):
     # Add QueryBy for each secondary index
     if schema.secondary_indexes:
         for index in schema.secondary_indexes:
-            idx_pascal = to_pascal_case(index['partition'])
+            if index.get('sort') and index['sort'] != 'None':
+                idx_pascal = to_pascal_case(index['partition'])
+                sk_pascal = to_pascal_case(index['sort'])
+                op_name = f'QueryBy{idx_pascal}And{sk_pascal}'
+                field_name = f'{schema.name}{op_name}'
+            else:
+                idx_pascal = to_pascal_case(index['partition'])
+                op_name = f'QueryBy{idx_pascal}'
+                field_name = f'{schema.name}{op_name}'
             op = {
-                'name': f'QueryBy{idx_pascal}',
+                'name': op_name,
                 'type': 'Query',
-                'field': f'{schema.name}QueryBy{idx_pascal}',
+                'field': field_name,
                 'dynamodb_op': 'Query',
                 'index_partition': index['partition'],
                 'index_sort': index.get('sort')

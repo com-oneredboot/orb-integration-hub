@@ -259,13 +259,13 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  ApplicationRolesQueryByUserIdResolver:
+  ApplicationRolesQueryByUserIdAndRoleIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationRolesDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: ApplicationRolesQueryByUserId
+      FieldName: ApplicationRolesQueryByUserIdAndRoleId
       DataSourceName: ApplicationRolesDynamoDbDataSource
       RequestMappingTemplate: |
         {
@@ -285,13 +285,13 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  ApplicationRolesQueryByApplicationIdResolver:
+  ApplicationRolesQueryByApplicationIdAndRoleIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationRolesDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: ApplicationRolesQueryByApplicationId
+      FieldName: ApplicationRolesQueryByApplicationIdAndRoleId
       DataSourceName: ApplicationRolesDynamoDbDataSource
       RequestMappingTemplate: |
         {
@@ -311,13 +311,13 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  ApplicationRolesQueryByRoleIdResolver:
+  ApplicationRolesQueryByRoleIdAndRoleTypeResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationRolesDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: ApplicationRolesQueryByRoleId
+      FieldName: ApplicationRolesQueryByRoleIdAndRoleType
       DataSourceName: ApplicationRolesDynamoDbDataSource
       RequestMappingTemplate: |
         {
@@ -535,13 +535,13 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  ApplicationUsersQueryByUserIdResolver:
+  ApplicationUsersQueryByUserIdAndApplicationIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationUsersDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: ApplicationUsersQueryByUserId
+      FieldName: ApplicationUsersQueryByUserIdAndApplicationId
       DataSourceName: ApplicationUsersDynamoDbDataSource
       RequestMappingTemplate: |
         {
@@ -561,13 +561,13 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  ApplicationUsersQueryByApplicationIdResolver:
+  ApplicationUsersQueryByApplicationIdAndUserIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationUsersDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: ApplicationUsersQueryByApplicationId
+      FieldName: ApplicationUsersQueryByApplicationIdAndUserId
       DataSourceName: ApplicationUsersDynamoDbDataSource
       RequestMappingTemplate: |
         {
@@ -686,13 +686,13 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-  RolesQueryByUserIdResolver:
+  RolesQueryByUserIdAndRoleTypeResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: RolesDynamoDbDataSource
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: RolesQueryByUserId
+      FieldName: RolesQueryByUserIdAndRoleType
       DataSourceName: RolesDynamoDbDataSource
       RequestMappingTemplate: |
         {
