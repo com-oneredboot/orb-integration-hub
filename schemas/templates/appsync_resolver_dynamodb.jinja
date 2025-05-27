@@ -55,7 +55,8 @@
       {%- elif operation.dynamodb_op == 'Query' %}
         {
           "version": "2018-05-29",
-          "operation": "Query",
+          "operation": "Query"{% if operation.index_name is defined and operation.index_name %},
+          "index": "{{ operation.index_name }}"{% endif %},
           "query": {
             "expression": "#pk = :pk"{% if sk %} AND #sk = :sk{% endif %},
             "expressionNames": {

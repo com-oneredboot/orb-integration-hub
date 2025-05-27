@@ -271,6 +271,7 @@ Resources:
         {
           "version": "2018-05-29",
           "operation": "Query",
+          "index": "UserRoleIndex",
           "query": {
             "expression": "#pk = :pk" AND #sk = :sk,
             "expressionNames": {
@@ -297,6 +298,7 @@ Resources:
         {
           "version": "2018-05-29",
           "operation": "Query",
+          "index": "ApplicationRoleIndex",
           "query": {
             "expression": "#pk = :pk" AND #sk = :sk,
             "expressionNames": {
@@ -323,6 +325,7 @@ Resources:
         {
           "version": "2018-05-29",
           "operation": "Query",
+          "index": "RoleTypeIndex",
           "query": {
             "expression": "#pk = :pk" AND #sk = :sk,
             "expressionNames": {
@@ -547,6 +550,7 @@ Resources:
         {
           "version": "2018-05-29",
           "operation": "Query",
+          "index": "UserAppIndex",
           "query": {
             "expression": "#pk = :pk" AND #sk = :sk,
             "expressionNames": {
@@ -573,6 +577,7 @@ Resources:
         {
           "version": "2018-05-29",
           "operation": "Query",
+          "index": "AppUserIndex",
           "query": {
             "expression": "#pk = :pk" AND #sk = :sk,
             "expressionNames": {
@@ -698,6 +703,7 @@ Resources:
         {
           "version": "2018-05-29",
           "operation": "Query",
+          "index": "UserRoleIndex",
           "query": {
             "expression": "#pk = :pk" AND #sk = :sk,
             "expressionNames": {
@@ -823,6 +829,7 @@ Resources:
         {
           "version": "2018-05-29",
           "operation": "Query",
+          "index": "EmailIndex",
           "query": {
             "expression": "#pk = :pk",
             "expressionNames": {
@@ -847,6 +854,7 @@ Resources:
         {
           "version": "2018-05-29",
           "operation": "Query",
+          "index": "CognitoIdIndex",
           "query": {
             "expression": "#pk = :pk",
             "expressionNames": {

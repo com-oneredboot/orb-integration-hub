@@ -484,6 +484,7 @@ def build_crud_operations_for_table(schema: TableSchema):
       - dynamodb_op: e.g., 'PutItem', 'UpdateItem', 'DeleteItem', 'Query', etc.
       - index_partition: (for secondary index QueryBy) the partition key name
       - index_sort: (for secondary index QueryBy) the sort key name (if any)
+      - index_name: (for secondary index QueryBy) the index name (if any)
     """
     schema.operations = [
         {
@@ -520,7 +521,8 @@ def build_crud_operations_for_table(schema: TableSchema):
         'field': f'{schema.name}QueryBy{pk_pascal}',
         'dynamodb_op': 'Query',
         'index_partition': schema.partition_key,
-        'index_sort': None
+        'index_sort': None,
+        'index_name': None
     })
     # Add QueryBy for sort key if present
     if schema.sort_key and schema.sort_key != 'None':
@@ -531,7 +533,8 @@ def build_crud_operations_for_table(schema: TableSchema):
             'field': f'{schema.name}QueryBy{sk_pascal}',
             'dynamodb_op': 'Query',
             'index_partition': schema.sort_key,
-            'index_sort': None
+            'index_sort': None,
+            'index_name': None
         })
         # QueryByBoth
         schema.operations.append({
@@ -540,7 +543,8 @@ def build_crud_operations_for_table(schema: TableSchema):
             'field': f'{schema.name}QueryByBoth',
             'dynamodb_op': 'Query',
             'index_partition': schema.partition_key,
-            'index_sort': schema.sort_key
+            'index_sort': schema.sort_key,
+            'index_name': None
         })
     # Add QueryBy for each secondary index
     if schema.secondary_indexes:
@@ -560,7 +564,8 @@ def build_crud_operations_for_table(schema: TableSchema):
                 'field': field_name,
                 'dynamodb_op': 'Query',
                 'index_partition': index['partition'],
-                'index_sort': index.get('sort')
+                'index_sort': index.get('sort'),
+                'index_name': index['name']
             }
             schema.operations.append(op)
 
