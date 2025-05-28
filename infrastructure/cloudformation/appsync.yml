@@ -182,13 +182,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   ApplicationRolesUpdateResolver:
@@ -213,13 +213,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   ApplicationRolesDeleteResolver:
@@ -243,13 +243,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   ApplicationRolesDisableResolver:
@@ -274,13 +274,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   ApplicationRolesQueryByApplicationRoleIdResolver:
@@ -296,12 +296,9 @@ Resources:
           "version": "2018-05-29",
           "operation": "Query",
           "query": {
-            "expression": "#pk = :pk",
-            "expressionNames": {
-              "#pk": "applicationRoleId"
-            },
+            "expression": "applicationRoleId = :applicationRoleId",
             "expressionValues": {
-              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationRoleId)
+              ":applicationRoleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationRoleId)
             }
           }
         }
@@ -310,13 +307,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   ApplicationRolesQueryByUserIdAndRoleIdResolver:
@@ -333,14 +330,10 @@ Resources:
           "operation": "Query",
           "index": "UserRoleIndex",
           "query": {
-            "expression": "#pk = :pk" AND #sk = :sk,
-            "expressionNames": {
-              "#pk": "userId",
-              "#sk": "roleId"
-            },
+            "expression": "userId = :userId AND roleId = :roleId",
             "expressionValues": {
-              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId),
-              ":sk": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
+              ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId),
+              ":roleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
             }
           }
         }
@@ -349,13 +342,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   ApplicationRolesQueryByApplicationIdAndRoleIdResolver:
@@ -372,14 +365,10 @@ Resources:
           "operation": "Query",
           "index": "ApplicationRoleIndex",
           "query": {
-            "expression": "#pk = :pk" AND #sk = :sk,
-            "expressionNames": {
-              "#pk": "applicationId",
-              "#sk": "roleId"
-            },
+            "expression": "applicationId = :applicationId AND roleId = :roleId",
             "expressionValues": {
-              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId),
-              ":sk": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
+              ":applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId),
+              ":roleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
             }
           }
         }
@@ -388,13 +377,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   ApplicationRolesQueryByRoleIdAndRoleTypeResolver:
@@ -411,14 +400,10 @@ Resources:
           "operation": "Query",
           "index": "RoleTypeIndex",
           "query": {
-            "expression": "#pk = :pk" AND #sk = :sk,
-            "expressionNames": {
-              "#pk": "roleId",
-              "#sk": "roleType"
-            },
+            "expression": "roleId = :roleId AND roleType = :roleType",
             "expressionValues": {
-              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId),
-              ":sk": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleType)
+              ":roleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId),
+              ":roleType": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleType)
             }
           }
         }
@@ -427,13 +412,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   ApplicationsCreateResolver:
@@ -458,13 +443,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   ApplicationsUpdateResolver:
@@ -489,13 +474,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   ApplicationsDeleteResolver:
@@ -519,13 +504,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   ApplicationsDisableResolver:
@@ -550,13 +535,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   ApplicationsQueryByApplicationIdResolver:
@@ -572,12 +557,9 @@ Resources:
           "version": "2018-05-29",
           "operation": "Query",
           "query": {
-            "expression": "#pk = :pk",
-            "expressionNames": {
-              "#pk": "applicationId"
-            },
+            "expression": "applicationId = :applicationId",
             "expressionValues": {
-              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+              ":applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
             }
           }
         }
@@ -586,13 +568,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   ApplicationUsersCreateResolver:
@@ -617,13 +599,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   ApplicationUsersUpdateResolver:
@@ -648,13 +630,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   ApplicationUsersDeleteResolver:
@@ -678,13 +660,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   ApplicationUsersDisableResolver:
@@ -709,13 +691,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   ApplicationUsersQueryByApplicationUserIdResolver:
@@ -731,12 +713,9 @@ Resources:
           "version": "2018-05-29",
           "operation": "Query",
           "query": {
-            "expression": "#pk = :pk",
-            "expressionNames": {
-              "#pk": "applicationUserId"
-            },
+            "expression": "applicationUserId = :applicationUserId",
             "expressionValues": {
-              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationUserId)
+              ":applicationUserId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationUserId)
             }
           }
         }
@@ -745,13 +724,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   ApplicationUsersQueryByUserIdAndApplicationIdResolver:
@@ -768,14 +747,10 @@ Resources:
           "operation": "Query",
           "index": "UserAppIndex",
           "query": {
-            "expression": "#pk = :pk" AND #sk = :sk,
-            "expressionNames": {
-              "#pk": "userId",
-              "#sk": "applicationId"
-            },
+            "expression": "userId = :userId AND applicationId = :applicationId",
             "expressionValues": {
-              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId),
-              ":sk": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+              ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId),
+              ":applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
             }
           }
         }
@@ -784,13 +759,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   ApplicationUsersQueryByApplicationIdAndUserIdResolver:
@@ -807,14 +782,10 @@ Resources:
           "operation": "Query",
           "index": "AppUserIndex",
           "query": {
-            "expression": "#pk = :pk" AND #sk = :sk,
-            "expressionNames": {
-              "#pk": "applicationId",
-              "#sk": "userId"
-            },
+            "expression": "applicationId = :applicationId AND userId = :userId",
             "expressionValues": {
-              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId),
-              ":sk": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+              ":applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId),
+              ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
             }
           }
         }
@@ -823,13 +794,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   RolesCreateResolver:
@@ -854,13 +825,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   RolesUpdateResolver:
@@ -885,13 +856,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   RolesDeleteResolver:
@@ -915,13 +886,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   RolesDisableResolver:
@@ -946,13 +917,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   RolesQueryByRoleIdResolver:
@@ -968,12 +939,9 @@ Resources:
           "version": "2018-05-29",
           "operation": "Query",
           "query": {
-            "expression": "#pk = :pk",
-            "expressionNames": {
-              "#pk": "roleId"
-            },
+            "expression": "roleId = :roleId",
             "expressionValues": {
-              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
+              ":roleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
             }
           }
         }
@@ -982,13 +950,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   RolesQueryByUserIdAndRoleTypeResolver:
@@ -1005,14 +973,10 @@ Resources:
           "operation": "Query",
           "index": "UserRoleIndex",
           "query": {
-            "expression": "#pk = :pk" AND #sk = :sk,
-            "expressionNames": {
-              "#pk": "userId",
-              "#sk": "roleType"
-            },
+            "expression": "userId = :userId AND roleType = :roleType",
             "expressionValues": {
-              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId),
-              ":sk": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleType)
+              ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId),
+              ":roleType": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleType)
             }
           }
         }
@@ -1021,13 +985,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   UsersCreateResolver:
@@ -1052,13 +1016,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   UsersUpdateResolver:
@@ -1083,13 +1047,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   UsersDeleteResolver:
@@ -1113,13 +1077,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   UsersDisableResolver:
@@ -1144,13 +1108,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   UsersQueryByUserIdResolver:
@@ -1166,12 +1130,9 @@ Resources:
           "version": "2018-05-29",
           "operation": "Query",
           "query": {
-            "expression": "#pk = :pk",
-            "expressionNames": {
-              "#pk": "userId"
-            },
+            "expression": "userId = :userId",
             "expressionValues": {
-              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+              ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
             }
           }
         }
@@ -1180,13 +1141,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   UsersQueryByEmailResolver:
@@ -1203,12 +1164,9 @@ Resources:
           "operation": "Query",
           "index": "EmailIndex",
           "query": {
-            "expression": "#pk = :pk",
-            "expressionNames": {
-              "#pk": "email"
-            },
+            "expression": "email = :email",
             "expressionValues": {
-              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.email)
+              ":email": $util.dynamodb.toDynamoDBJson($ctx.args.input.email)
             }
           }
         }
@@ -1217,13 +1175,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   UsersQueryByCognitoIdResolver:
@@ -1240,12 +1198,9 @@ Resources:
           "operation": "Query",
           "index": "CognitoIdIndex",
           "query": {
-            "expression": "#pk = :pk",
-            "expressionNames": {
-              "#pk": "cognitoId"
-            },
+            "expression": "cognitoId = :cognitoId",
             "expressionValues": {
-              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.cognitoId)
+              ":cognitoId": $util.dynamodb.toDynamoDBJson($ctx.args.input.cognitoId)
             }
           }
         }
@@ -1254,13 +1209,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end 
 

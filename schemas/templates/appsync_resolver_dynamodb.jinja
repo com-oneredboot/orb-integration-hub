@@ -58,14 +58,10 @@
           "operation": "Query"{% if operation.index_name is defined and operation.index_name %},
           "index": "{{ operation.index_name }}"{% endif %},
           "query": {
-            "expression": "#pk = :pk"{% if sk %} AND #sk = :sk{% endif %},
-            "expressionNames": {
-              "#pk": "{{ pk }}"{% if sk %},
-              "#sk": "{{ sk }}"{% endif %}
-            },
+            "expression": "{{ pk }} = :{{ pk }}{% if sk %} AND {{ sk }} = :{{ sk }}{% endif %}",
             "expressionValues": {
-              ":pk": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ pk }}){% if sk %},
-              ":sk": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ sk }}){% endif %}
+              ":{{ pk }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ pk }}){% if sk %},
+              ":{{ sk }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ sk }}){% endif %}
             }
           }
         }
@@ -86,13 +82,13 @@
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": null
+            "Data": []
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": $util.toJson($ctx.result)
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end
   {%- endfor %}
