@@ -1161,6 +1161,25 @@ def validate_graphql_sdl(sdl_path):
         print(f"[ERROR] GraphQL SDL validation failed: {sdl_path}\n{e}")
         sys.exit(1)
 
+def prevalidate_appsync_sdl(sdl_path):
+    """Extra validation for AppSync-incompatible SDL patterns."""
+    with open(sdl_path, 'r', encoding='utf-8') as f:
+        sdl = f.read()
+    # Check for triple-quoted docstrings
+    if '"""' in sdl:
+        print(f"[ERROR] AppSync SDL prevalidation failed: triple-quoted docstrings (\"\"\" ... \"\"\") are not allowed in {sdl_path}")
+        sys.exit(1)
+    # Check for top-level # comments (lines starting with #)
+    for line in sdl.splitlines():
+        if line.strip().startswith('#'):
+            print(f"[ERROR] AppSync SDL prevalidation failed: top-level # comments are not allowed in {sdl_path} (line: {line.strip()})")
+            sys.exit(1)
+    # Check for leading or trailing backticks
+    if sdl.strip().startswith('```') or sdl.strip().endswith('```'):
+        print(f"[ERROR] AppSync SDL prevalidation failed: leading or trailing backticks (```) are not allowed in {sdl_path}")
+        sys.exit(1)
+    # Optionally: check for other known AppSync-incompatible patterns here
+
 def generate_python_registry(name: str, schema: RegistryType) -> None:
     try:
         jinja_env = setup_jinja_env()
@@ -1349,6 +1368,8 @@ def main():
         schema_output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'cloudformation', timestamped_schema)
         write_file(schema_output_path, graphql_schema)
         logger.info(f'Generated timestamped schema file: {timestamped_schema}')
+        # Extra AppSync prevalidation
+        prevalidate_appsync_sdl(schema_output_path)
         # Validate the generated SDL
         validate_graphql_sdl(schema_output_path)
         # Generate DynamoDB CloudFormation template
