@@ -82,6 +82,14 @@
         # WARNING: dynamodb_op is missing or unrecognized for this operation!
       {%- endif %}
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   {%- endfor %}
   {%- endfor %} 

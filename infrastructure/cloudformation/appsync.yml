@@ -178,7 +178,15 @@ Resources:
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   ApplicationRolesUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationRolesDynamoDbDataSource
@@ -197,7 +205,15 @@ Resources:
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   ApplicationRolesDeleteResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationRolesDynamoDbDataSource
@@ -215,7 +231,15 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   ApplicationRolesDisableResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationRolesDynamoDbDataSource
@@ -234,7 +258,15 @@ Resources:
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   ApplicationRolesQueryByApplicationRoleIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationRolesDynamoDbDataSource
@@ -258,7 +290,15 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   ApplicationRolesQueryByUserIdAndRoleIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationRolesDynamoDbDataSource
@@ -285,7 +325,15 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   ApplicationRolesQueryByApplicationIdAndRoleIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationRolesDynamoDbDataSource
@@ -312,7 +360,15 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   ApplicationRolesQueryByRoleIdAndRoleTypeResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationRolesDynamoDbDataSource
@@ -339,7 +395,15 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   ApplicationsCreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationsDynamoDbDataSource
@@ -358,7 +422,15 @@ Resources:
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   ApplicationsUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationsDynamoDbDataSource
@@ -377,7 +449,15 @@ Resources:
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   ApplicationsDeleteResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationsDynamoDbDataSource
@@ -395,7 +475,15 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   ApplicationsDisableResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationsDynamoDbDataSource
@@ -414,7 +502,15 @@ Resources:
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   ApplicationsQueryByApplicationIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationsDynamoDbDataSource
@@ -438,7 +534,15 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   ApplicationUsersCreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationUsersDynamoDbDataSource
@@ -457,7 +561,15 @@ Resources:
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   ApplicationUsersUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationUsersDynamoDbDataSource
@@ -476,7 +588,15 @@ Resources:
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   ApplicationUsersDeleteResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationUsersDynamoDbDataSource
@@ -494,7 +614,15 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   ApplicationUsersDisableResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationUsersDynamoDbDataSource
@@ -513,7 +641,15 @@ Resources:
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   ApplicationUsersQueryByApplicationUserIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationUsersDynamoDbDataSource
@@ -537,7 +673,15 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   ApplicationUsersQueryByUserIdAndApplicationIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationUsersDynamoDbDataSource
@@ -564,7 +708,15 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   ApplicationUsersQueryByApplicationIdAndUserIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationUsersDynamoDbDataSource
@@ -591,7 +743,15 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   RolesCreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: RolesDynamoDbDataSource
@@ -610,7 +770,15 @@ Resources:
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   RolesUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: RolesDynamoDbDataSource
@@ -629,7 +797,15 @@ Resources:
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   RolesDeleteResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: RolesDynamoDbDataSource
@@ -647,7 +823,15 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   RolesDisableResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: RolesDynamoDbDataSource
@@ -666,7 +850,15 @@ Resources:
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   RolesQueryByRoleIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: RolesDynamoDbDataSource
@@ -690,7 +882,15 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   RolesQueryByUserIdAndRoleTypeResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: RolesDynamoDbDataSource
@@ -717,7 +917,15 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   UsersCreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: UsersDynamoDbDataSource
@@ -736,7 +944,15 @@ Resources:
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   UsersUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: UsersDynamoDbDataSource
@@ -755,7 +971,15 @@ Resources:
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   UsersDeleteResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: UsersDynamoDbDataSource
@@ -773,7 +997,15 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   UsersDisableResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: UsersDynamoDbDataSource
@@ -792,7 +1024,15 @@ Resources:
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   UsersQueryByUserIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: UsersDynamoDbDataSource
@@ -816,7 +1056,15 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   UsersQueryByEmailResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: UsersDynamoDbDataSource
@@ -841,7 +1089,15 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result)
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end
   UsersQueryByCognitoIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: UsersDynamoDbDataSource
@@ -866,7 +1122,15 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
-        $util.toJson($ctx.result) 
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          $util.toJson($ctx.result)
+        #end 
 
 # --------------------------------------------------- #
 Outputs:
