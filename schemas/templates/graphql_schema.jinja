@@ -43,7 +43,7 @@ The default is Cognito user pool authentication for the admin group.
 {%- endif %}
 type {{ schema.name }}{% if type_directives|length > 0 %} {{ type_directives|join(' ') }}{% endif %} {
 {%- for attr in schema.attributes %}
-  {{ attr.name }}: {{ attr.graphql_type }}
+  {{ attr.name }}: {{ attr.type|graphql_type }}
 {%- endfor %}
 }
 {%- endfor %}
