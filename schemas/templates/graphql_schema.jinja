@@ -28,33 +28,31 @@ The default is Cognito user pool authentication for the admin group.
 
 # Response types (ListResponse and all Response types)
 {%- for schema in table_schemas.values() %}
-  {# Collect all unique decorators for ListResponse #}
-  {%- set list_response_decorators = [] %}
-  {%- for operation in schema.operations if operation.type == 'Query' %}
-    {%- for d in operation.response_auth_directives %}
-      {%- if d not in list_response_decorators %}
-        {%- do list_response_decorators.append(d) %}
-      {%- endif %}
-    {%- endfor %}
-  {%- endfor %}
-  type {{ schema.name }}ListResponse{% if list_response_decorators|length > 0 %} {{ list_response_decorators|join(' ') }}{% endif %} {
-    StatusCode: Int!
-    Message: String!
-    Data: [{{ schema.name }}]
-  }
+{%- set list_response_decorators = [] %}
+{%- for operation in schema.operations if operation.type == 'Query' %}
+{%- for d in operation.response_auth_directives %}
+{%- if d not in list_response_decorators %}
+{%- do list_response_decorators.append(d) %}
+{%- endif %}
 {%- endfor %}
-
+{%- endfor %}
+type {{ schema.name }}ListResponse{% if list_response_decorators|length > 0 %} {{ list_response_decorators|join(' ') }}{% endif %} {
+  StatusCode: Int!
+  Message: String!
+  Data: [{{ schema.name }}]
+}
+{%- endfor %}
 {%- for schema in table_schemas.values() %}
-  {%- for operation in schema.operations %}
-    {%- if operation.type != 'Query' %}
-      {%- set response_type_name = operation.field + 'Response' %}
-      type {{ response_type_name }}{% if operation.response_auth_directives and operation.response_auth_directives|length > 0 %} {{ operation.response_auth_directives|join(' ') }}{% endif %} {
-        StatusCode: Int!
-        Message: String!
-        Data: {{ schema.name }}
-      }
-    {%- endif %}
-  {%- endfor %}
+{%- for operation in schema.operations %}
+{%- if operation.type != 'Query' %}
+{%- set response_type_name = operation.field + 'Response' %}
+type {{ response_type_name }}{% if operation.response_auth_directives and operation.response_auth_directives|length > 0 %} {{ operation.response_auth_directives|join(' ') }}{% endif %} {
+  StatusCode: Int!
+  Message: String!
+  Data: {{ schema.name }}
+}
+{%- endif %}
+{%- endfor %}
 {%- endfor %}
 
 # Queries
