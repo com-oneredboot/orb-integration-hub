@@ -12,6 +12,7 @@ name: Users
 model:
   authConfig:
     apiKeyAuthentication:
+    - Users
     - UsersQueryByEmail
     - UsersCreate
     - UsersResponse

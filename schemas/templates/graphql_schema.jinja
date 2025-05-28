@@ -26,6 +26,28 @@ The default is Cognito user pool authentication for the admin group.
 # Input types
 {%- include 'base_types.jinja' -%}
 
+# Table-backed types with auth directives
+{%- for schema in table_schemas.values() %}
+{%- set type_directives = [] %}
+{%- if schema.auth_config is defined %}
+  {%- if schema.auth_config.apiKeyAuthentication is defined and schema.name in schema.auth_config.apiKeyAuthentication %}
+    {%- do type_directives.append('@aws_api_key') %}
+  {%- endif %}
+  {%- if schema.auth_config.cognitoAuthentication is defined and schema.auth_config.cognitoAuthentication.groups is defined %}
+    {%- set groups = schema.auth_config.cognitoAuthentication.groups.keys()|list %}
+    {%- if groups|length > 0 %}
+      {%- set group_str = groups|map('string')|join(', ') %}
+      {%- do type_directives.append('@aws_auth(cognito_groups: ["' + group_str + '"])') %}
+    {%- endif %}
+  {%- endif %}
+{%- endif %}
+type {{ schema.name }}{% if type_directives|length > 0 %} {{ type_directives|join(' ') }}{% endif %} {
+{%- for attr in schema.attributes %}
+  {{ attr.name }}: {{ attr.graphql_type }}
+{%- endfor %}
+}
+{%- endfor %}
+
 # Response types (singular Response, ListResponse, and all operation-specific Response types)
 {%- for schema in table_schemas.values() %}
 {%- set singular_response_decorators = [] %}
