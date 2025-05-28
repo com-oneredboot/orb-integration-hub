@@ -485,31 +485,58 @@ def build_crud_operations_for_table(schema: TableSchema):
       - index_partition: (for secondary index QueryBy) the partition key name
       - index_sort: (for secondary index QueryBy) the sort key name (if any)
       - index_name: (for secondary index QueryBy) the index name (if any)
+      - response_auth_directives: list of auth directives for the response type
     """
+    def get_response_auth_directives(op_name):
+        directives = []
+        # API Key
+        api_key_ops = schema.auth_config.get('apiKeyAuthentication', []) if schema.auth_config else []
+        if op_name in api_key_ops:
+            directives.append('@aws_api_key')
+        # Cognito groups
+        cognito_auth = schema.auth_config.get('cognitoAuthentication', {}) if schema.auth_config else {}
+        if isinstance(cognito_auth, dict):
+            groups = cognito_auth.get('groups', {})
+            allowed_groups = []
+            for group, ops in groups.items():
+                if isinstance(ops, list) and ('*' in ops or op_name in ops):
+                    allowed_groups.append(group)
+            # Fallback: if no explicit mapping, use OWNER if present
+            if not allowed_groups and 'OWNER' in groups:
+                allowed_groups.append('OWNER')
+            if allowed_groups:
+                group_list = ', '.join(f'"{g}"' for g in sorted(allowed_groups))
+                directives.append(f'@aws_auth(cognito_groups: [{group_list}])')
+        return directives
+
     schema.operations = [
         {
             'name': 'Create',
             'type': 'Mutation',
             'field': f'{schema.name}Create',
             'dynamodb_op': 'PutItem',
+            'response_auth_directives': get_response_auth_directives(f'{schema.name}Create'),
         },
         {
             'name': 'Update',
             'type': 'Mutation',
             'field': f'{schema.name}Update',
             'dynamodb_op': 'UpdateItem',
+            'response_auth_directives': get_response_auth_directives(f'{schema.name}Update'),
         },
         {
             'name': 'Delete',
             'type': 'Mutation',
             'field': f'{schema.name}Delete',
             'dynamodb_op': 'DeleteItem',
+            'response_auth_directives': get_response_auth_directives(f'{schema.name}Delete'),
         },
         {
             'name': 'Disable',
             'type': 'Mutation',
             'field': f'{schema.name}Disable',
             'dynamodb_op': 'UpdateItem',
+            'response_auth_directives': get_response_auth_directives(f'{schema.name}Disable'),
         },
     ]
 
@@ -522,7 +549,8 @@ def build_crud_operations_for_table(schema: TableSchema):
         'dynamodb_op': 'Query',
         'index_partition': schema.partition_key,
         'index_sort': None,
-        'index_name': None
+        'index_name': None,
+        'response_auth_directives': get_response_auth_directives(f'{schema.name}QueryBy{pk_pascal}'),
     })
     # Add QueryBy for sort key if present
     if schema.sort_key and schema.sort_key != 'None':
@@ -534,7 +562,8 @@ def build_crud_operations_for_table(schema: TableSchema):
             'dynamodb_op': 'Query',
             'index_partition': schema.sort_key,
             'index_sort': None,
-            'index_name': None
+            'index_name': None,
+            'response_auth_directives': get_response_auth_directives(f'{schema.name}QueryBy{sk_pascal}'),
         })
         # QueryByBoth
         schema.operations.append({
@@ -544,7 +573,8 @@ def build_crud_operations_for_table(schema: TableSchema):
             'dynamodb_op': 'Query',
             'index_partition': schema.partition_key,
             'index_sort': schema.sort_key,
-            'index_name': None
+            'index_name': None,
+            'response_auth_directives': get_response_auth_directives(f'{schema.name}QueryByBoth'),
         })
     # Add QueryBy for each secondary index
     if schema.secondary_indexes:
@@ -565,7 +595,8 @@ def build_crud_operations_for_table(schema: TableSchema):
                 'dynamodb_op': 'Query',
                 'index_partition': index['partition'],
                 'index_sort': index.get('sort'),
-                'index_name': index['name']
+                'index_name': index['name'],
+                'response_auth_directives': get_response_auth_directives(field_name),
             }
             schema.operations.append(op)
 
