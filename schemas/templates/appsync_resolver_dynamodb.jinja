@@ -89,7 +89,11 @@
             "Data": null
           }
         #else
-          $util.toJson($ctx.result)
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": $util.toJson($ctx.result)
+          }
         #end
   {%- endfor %}
   {%- endfor %} 

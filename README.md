@@ -195,3 +195,59 @@ The orb-master-plan will periodically scan project repositories to update its do
 - Use proper TypeScript interfaces
 - Avoid using `any` type
 - Ensure all required fields are present in type definitions
+
+## Response Type Contract for GraphQL Resolvers
+
+All GraphQL response types follow a strict contract:
+
+- `StatusCode`: Always non-nullable (`Int!`)
+- `Message`: Always nullable (`String`)
+- `Data`: Entity or list, as appropriate
+
+### DynamoDB-backed Resolvers
+- On success: `StatusCode` is always 200, `Message` is `null`, `Data` is the result
+- On error: `StatusCode` is 500, `Message` is the error message, `Data` is `null`
+- This is enforced in the VTL mapping template:
+
+```vtl
+#if($ctx.error)
+  {
+    "StatusCode": 500,
+    "Message": "$ctx.error.message",
+    "Data": null
+  }
+#else
+  {
+    "StatusCode": 200,
+    "Message": null,
+    "Data": $util.toJson($ctx.result)
+  }
+#end
+```
+
+### Lambda-backed Resolvers
+- The Lambda function must return the full response object, e.g.:
+
+```json
+{
+  "StatusCode": 404,
+  "Message": "User not found",
+  "Data": null
+}
+```
+
+- The VTL simply passes through the Lambda's response:
+
+```vtl
+#if($ctx.error)
+  {
+    "StatusCode": 500,
+    "Message": "$ctx.error.message",
+    "Data": null
+  }
+#else
+  $util.toJson($ctx.result)
+#end
+```
+
+> **Note:** This contract is enforced in the GraphQL schema and all generated VTL templates. All resolvers must adhere to this structure for consistent error handling and client experience.
