@@ -1,32 +1,9 @@
-"""
-Base GraphQL schema.
-Generated at {{ timestamp }}.
-
-This schema follows these conventions:
-- Type names: PascalCase (e.g., Application)
-- Field names: camelCase (e.g., applicationId)
-- Input types: PascalCase with Input suffix (e.g., ApplicationRoleInput)
-- Response types: PascalCase with Response suffix (e.g., ApplicationRoleResponse)
-- List response types: PascalCase with ListResponse suffix (e.g., ApplicationRoleListResponse)
-- Query operations: PascalCase with Query suffix (e.g., ApplicationRoleQuery)
-- Mutation operations: PascalCase with action suffix (e.g., ApplicationRoleCreate)
-- Response fields: PascalCase (e.g., StatusCode, Message, Data)
-
-Authentication is configured per operation using authConfig in the schema files.
-Operations can use either API key authentication (@aws_api_key) or Cognito user pool authentication (@aws_auth).
-The default is Cognito user pool authentication for the admin group.
-"""
-
-# Enums
 {%- include 'enums.jinja' -%}
 
-# Base types
 {%- include 'graphql_schema_type.jinja' -%}
 
-# Input types
 {%- include 'base_types.jinja' -%}
 
-# Table-backed types with auth directives
 {%- for schema in table_schemas.values() %}
 {%- set type_directives = [] %}
 {%- if schema.auth_config is defined %}
@@ -48,7 +25,6 @@ type {{ schema.name }}{% if type_directives|length > 0 %} {{ type_directives|joi
 }
 {%- endfor %}
 
-# Response types (singular Response, ListResponse, and all operation-specific Response types)
 {%- for schema in table_schemas.values() %}
 {%- set singular_response_decorators = [] %}
 {%- for operation in schema.operations if operation.type == 'Query' %}
@@ -92,13 +68,9 @@ type {{ response_type_name }}{% if operation.response_auth_directives and operat
 {%- endfor %}
 {%- endfor %}
 
-# Queries
-
 type Query {
 {%- include 'graphql_schema_queries.jinja' %}
 }
-
-# Mutations
 
 type Mutation {
 {%- include 'graphql_schema_mutations.jinja' %}
