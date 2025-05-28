@@ -39,21 +39,4 @@ input {{ schema.name }}DisableInput {
 {% set _ = seen_indexes.append(input_name_and) %}{% endif %}
   {%- endif %}
 {%- endfor %}
-
-type {{ schema.name }}Response
-{%- set api_key_types = schema.auth_config.get('apiKeyAuthentication', []) %}
-{%- set cognito_groups = schema.auth_config.get('cognitoAuthentication', {}).get('groups', {}) %}
-{%- if schema.name ~ 'Response' in api_key_types %} @aws_api_key{% endif %}
-{%- if cognito_groups %} @aws_auth(cognito_groups: [{{ cognito_groups.keys()|map('tojson')|join(', ') }}]){% endif %}
-{
-  StatusCode: Int!
-  Message: String!
-  Data: {{ schema.name }}
-}
-
-type {{ schema.name }}ListResponse {
-  StatusCode: Int!
-  Message: String!
-  Data: [{{ schema.name }}]
-}
-{% endfor -%}
+{%- endfor %}

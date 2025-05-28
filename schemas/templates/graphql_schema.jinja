@@ -17,31 +17,16 @@ Operations can use either API key authentication (@aws_api_key) or Cognito user 
 The default is Cognito user pool authentication for the admin group.
 """
 
-# Schema Definition
-schema {
-  query: Query
-  mutation: Mutation
-}
-
 # Enums
 {%- include 'enums.jinja' -%}
 
-# GraphQL Types
+# Base types
 {%- include 'graphql_schema_type.jinja' -%}
 
-# Base types
+# Input types
 {%- include 'base_types.jinja' -%}
 
-# Queries
-type Query {
-{%- include 'graphql_schema_queries.jinja' %}
-}
-
-# Mutations
-type Mutation {
-{%- include 'graphql_schema_mutations.jinja' %}
-}
-
+# Response types (ListResponse and all Response types)
 {%- for schema in table_schemas.values() %}
   {# Collect all unique decorators for ListResponse #}
   {%- set list_response_decorators = [] %}
@@ -71,3 +56,15 @@ type Mutation {
     {%- endif %}
   {%- endfor %}
 {%- endfor %}
+
+# Queries
+
+type Query {
+{%- include 'graphql_schema_queries.jinja' %}
+}
+
+# Mutations
+
+type Mutation {
+{%- include 'graphql_schema_mutations.jinja' %}
+}

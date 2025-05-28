@@ -26,16 +26,4 @@ input {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}Input {
 {%- endif %}
 }
 {%- endfor %}
-
-type {{ schema.name }}Response {
-  StatusCode: Int!
-  Message: String!
-  Data: {{ schema.name }}
-}
-
-type {{ schema.name }}ListResponse {
-  StatusCode: Int!
-  Message: String!
-  Data: [{{ schema.name }}]
-}
 {%- endfor %} 

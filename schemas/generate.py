@@ -485,7 +485,7 @@ def build_crud_operations_for_table(schema: TableSchema):
       - index_partition: (for secondary index QueryBy) the partition key name
       - index_sort: (for secondary index QueryBy) the sort key name (if any)
       - index_name: (for secondary index QueryBy) the index name (if any)
-      - response_auth_directives: list of auth directives for the response type
+      - response_auth_directives: list of decorators for the response type
     """
     def get_response_auth_directives(op_name):
         directives = []
@@ -599,6 +599,23 @@ def build_crud_operations_for_table(schema: TableSchema):
                 'response_auth_directives': get_response_auth_directives(field_name),
             }
             schema.operations.append(op)
+
+    # VALIDATION: Ensure every operation has at least one auth directive
+    for op in schema.operations:
+        if not op.get('response_auth_directives') or len(op['response_auth_directives']) == 0:
+            raise SchemaValidationError(
+                f"Operation '{op['field']}' in schema '{schema.name}' is missing an auth directive. "
+                f"Please ensure authConfig is set correctly in the schema YAML."
+            )
+
+    # VALIDATION: Ensure every ListResponse type has at least one decorator
+    list_response_decorators = set()
+    for op in schema.operations:
+        if op['type'] == 'Query':
+            for d in op.get('response_auth_directives', []):
+                list_response_decorators.add(d)
+    if not list_response_decorators:
+        raise SchemaValidationError(f"No auth decorators found for {schema.name}ListResponse. Please ensure at least one auth directive is present in the schema's authConfig for a Query operation.")
 
 def generate_python_model(table: str, schema: Union[TableSchema, GraphQLType]) -> None:
     try:
@@ -1001,7 +1018,7 @@ query {table}QueryBy{sk_pascal}($input: {table}QueryBy{sk_pascal}Input!) {{
   }}
 }}'''
             })
-            # Query by both
+            # QueryByBoth
             operations.append({
                 'name': f'{table}QueryByBoth',
                 'gql': f'''
