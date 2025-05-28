@@ -26,7 +26,22 @@ The default is Cognito user pool authentication for the admin group.
 # Input types
 {%- include 'base_types.jinja' -%}
 
-# Response types (ListResponse and all Response types)
+# Response types (singular Response, ListResponse, and all operation-specific Response types)
+{%- for schema in table_schemas.values() %}
+{%- set singular_response_decorators = [] %}
+{%- for operation in schema.operations if operation.type == 'Query' %}
+{%- for d in operation.response_auth_directives %}
+{%- if d not in singular_response_decorators %}
+{%- do singular_response_decorators.append(d) %}
+{%- endif %}
+{%- endfor %}
+{%- endfor %}
+type {{ schema.name }}Response{% if singular_response_decorators|length > 0 %} {{ singular_response_decorators|join(' ') }}{% endif %} {
+  StatusCode: Int!
+  Message: String!
+  Data: {{ schema.name }}
+}
+{%- endfor %}
 {%- for schema in table_schemas.values() %}
 {%- set list_response_decorators = [] %}
 {%- for operation in schema.operations if operation.type == 'Query' %}
