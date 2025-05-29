@@ -140,10 +140,4 @@ Resources:
       AlarmDescription: 'AppSync average latency is high (ms).'
       TreatMissingData: notBreaching
 
-# Add a mapping for AppSyncApiId for use in the dashboard widgets
-Mappings:
-  AppSyncApiId:
-    Value: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-appsync-api-id}}'
-
-# Use the mapping in the dashboard widgets
-# (CloudFormation does not support direct SSM parameter substitution in DashboardBody, so you may need to use a transform or script to inject the value at deploy time) 
+# Note: CloudFormation does not support direct SSM parameter substitution in DashboardBody. Use a parameter or script to inject the value at deploy time. 

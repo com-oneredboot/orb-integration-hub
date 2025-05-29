@@ -64,6 +64,8 @@ Resources:
             Your temporary password for ${CustomerId}-${ProjectId}-${Environment}
       AutoVerifiedAttributes:
         - email
+      AliasAttributes:
+        - email
       LambdaConfig:
         PostConfirmation: !GetAtt PostUserConfirmationTrigger.Arn
       MfaConfiguration: 'ON'
