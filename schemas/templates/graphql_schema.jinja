@@ -12,18 +12,40 @@ type {{ schema.name }} {
 }
 {%- endfor %}
 
+{#-- Helper macro to join unique directives --#}
+{% macro join_unique_directives(directives_list) -%}
+  {%- set seen = [] -%}
+  {%- for d in directives_list -%}
+    {%- if d not in seen -%} {{ ' ' ~ d }}{%- do seen.append(d) -%}{%- endif -%}
+  {%- endfor -%}
+{%- endmacro %}
+
+{#-- Response types with field-level directives --#}
 {%- for schema in table_schemas.values() %}
+{#-- Collect all response_auth_directives for Query operations returning this type --#}
+{%- set response_directives = [] %}
+{%- for op in schema.operations if op.type == 'Query' %}
+  {%- for d in op.response_auth_directives %}
+    {%- if d not in response_directives %}{% do response_directives.append(d) %}{% endif %}
+  {%- endfor %}
+{%- endfor %}
 type {{ schema.name }}Response {
-  StatusCode: Int!
-  Message: String
-  Data: {{ schema.name }}
+  StatusCode: Int!{{ join_unique_directives(response_directives) }}
+  Message: String{{ join_unique_directives(response_directives) }}
+  Data: {{ schema.name }}{{ join_unique_directives(response_directives) }}
 }
 {%- endfor %}
 {%- for schema in table_schemas.values() %}
+{%- set list_response_directives = [] %}
+{%- for op in schema.operations if op.type == 'Query' %}
+  {%- for d in op.response_auth_directives %}
+    {%- if d not in list_response_directives %}{% do list_response_directives.append(d) %}{% endif %}
+  {%- endfor %}
+{%- endfor %}
 type {{ schema.name }}ListResponse {
-  StatusCode: Int!
-  Message: String
-  Data: [{{ schema.name }}]
+  StatusCode: Int!{{ join_unique_directives(list_response_directives) }}
+  Message: String{{ join_unique_directives(list_response_directives) }}
+  Data: [{{ schema.name }}]{{ join_unique_directives(list_response_directives) }}
 }
 {%- endfor %}
 {%- for schema in table_schemas.values() %}
@@ -31,9 +53,9 @@ type {{ schema.name }}ListResponse {
 {%- if operation.type != 'Query' %}
 {%- set response_type_name = operation.field + 'Response' %}
 type {{ response_type_name }} {
-  StatusCode: Int!
-  Message: String
-  Data: {{ schema.name }}
+  StatusCode: Int!{{ join_unique_directives(operation.response_auth_directives) }}
+  Message: String{{ join_unique_directives(operation.response_auth_directives) }}
+  Data: {{ schema.name }}{{ join_unique_directives(operation.response_auth_directives) }}
 }
 {%- endif %}
 {%- endfor %}
