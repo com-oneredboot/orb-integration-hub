@@ -16,6 +16,9 @@ import re
 import copy
 import shutil
 import glob
+import subprocess
+import json
+from dotenv import load_dotenv
 
 # 3rd party imports
 import yaml
@@ -1372,6 +1375,7 @@ def main():
         prevalidate_appsync_sdl(schema_output_path)
         # Validate the generated SDL
         validate_graphql_sdl(schema_output_path)
+        # (Manual) AWS CLI-based AppSync schema validation can be run separately if needed
         # Generate DynamoDB CloudFormation template
         logger.debug('Generating DynamoDB CloudFormation template')
         dynamodb_output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'cloudformation', 'dynamodb.yml')

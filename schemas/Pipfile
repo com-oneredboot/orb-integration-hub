@@ -10,6 +10,7 @@ pydantic = "*"
 aws-sam-cli = "*"
 graphql-core = "*"
 cfn-lint = "*"
+dotenv = "*"
 
 [dev-packages]
 black = "*"

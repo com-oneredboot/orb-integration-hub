@@ -5,20 +5,7 @@
 {%- include 'base_types.jinja' -%}
 
 {%- for schema in table_schemas.values() %}
-{%- set type_directives = [] %}
-{%- if schema.auth_config is defined %}
-  {%- if schema.auth_config.apiKeyAuthentication is defined and schema.name in schema.auth_config.apiKeyAuthentication %}
-    {%- do type_directives.append('@aws_api_key') %}
-  {%- endif %}
-  {%- if schema.auth_config.cognitoAuthentication is defined and schema.auth_config.cognitoAuthentication.groups is defined %}
-    {%- set groups = schema.auth_config.cognitoAuthentication.groups.keys()|list %}
-    {%- if groups|length > 0 %}
-      {%- set group_str = groups|map('string')|join(', ') %}
-      {%- do type_directives.append('@aws_auth(cognito_groups: ["' + group_str + '"])') %}
-    {%- endif %}
-  {%- endif %}
-{%- endif %}
-type {{ schema.name }}{% if type_directives|length > 0 %} {{ type_directives|join(' ') }}{% endif %} {
+type {{ schema.name }} {
 {%- for attr in schema.attributes %}
   {{ attr.name }}: {{ attr.type|graphql_type }}
 {%- endfor %}
@@ -26,30 +13,14 @@ type {{ schema.name }}{% if type_directives|length > 0 %} {{ type_directives|joi
 {%- endfor %}
 
 {%- for schema in table_schemas.values() %}
-{%- set singular_response_decorators = [] %}
-{%- for operation in schema.operations if operation.type == 'Query' %}
-{%- for d in operation.response_auth_directives %}
-{%- if d not in singular_response_decorators %}
-{%- do singular_response_decorators.append(d) %}
-{%- endif %}
-{%- endfor %}
-{%- endfor %}
-type {{ schema.name }}Response{% if singular_response_decorators|length > 0 %} {{ singular_response_decorators|join(' ') }}{% endif %} {
+type {{ schema.name }}Response {
   StatusCode: Int!
   Message: String
   Data: {{ schema.name }}
 }
 {%- endfor %}
 {%- for schema in table_schemas.values() %}
-{%- set list_response_decorators = [] %}
-{%- for operation in schema.operations if operation.type == 'Query' %}
-{%- for d in operation.response_auth_directives %}
-{%- if d not in list_response_decorators %}
-{%- do list_response_decorators.append(d) %}
-{%- endif %}
-{%- endfor %}
-{%- endfor %}
-type {{ schema.name }}ListResponse{% if list_response_decorators|length > 0 %} {{ list_response_decorators|join(' ') }}{% endif %} {
+type {{ schema.name }}ListResponse {
   StatusCode: Int!
   Message: String
   Data: [{{ schema.name }}]
@@ -59,7 +30,7 @@ type {{ schema.name }}ListResponse{% if list_response_decorators|length > 0 %} {
 {%- for operation in schema.operations %}
 {%- if operation.type != 'Query' %}
 {%- set response_type_name = operation.field + 'Response' %}
-type {{ response_type_name }}{% if operation.response_auth_directives and operation.response_auth_directives|length > 0 %} {{ operation.response_auth_directives|join(' ') }}{% endif %} {
+type {{ response_type_name }} {
   StatusCode: Int!
   Message: String
   Data: {{ schema.name }}

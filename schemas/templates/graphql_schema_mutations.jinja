@@ -1,6 +1,7 @@
-{% for schema_name, schema in table_schemas.items() %}
-  {{ schema.name }}Create(input: {{ schema.name }}CreateInput!): {{ schema.name }}Response{{ (" " + (schema.mutation_auth_directives[schema.name ~ 'Create']|join(' '))) if schema.mutation_auth_directives and (schema.name ~ 'Create') in schema.mutation_auth_directives and schema.mutation_auth_directives[schema.name ~ 'Create'] else ' @aws_auth(cognito_groups: ["admin"])' }}
-  {{ schema.name }}Update(input: {{ schema.name }}UpdateInput!): {{ schema.name }}Response{{ (" " + (schema.mutation_auth_directives[schema.name ~ 'Update']|join(' '))) if schema.mutation_auth_directives and (schema.name ~ 'Update') in schema.mutation_auth_directives and schema.mutation_auth_directives[schema.name ~ 'Update'] else ' @aws_auth(cognito_groups: ["admin"])' }}
-  {{ schema.name }}Delete(input: {{ schema.name }}DeleteInput!): {{ schema.name }}Response{{ (" " + (schema.mutation_auth_directives[schema.name ~ 'Delete']|join(' '))) if schema.mutation_auth_directives and (schema.name ~ 'Delete') in schema.mutation_auth_directives and schema.mutation_auth_directives[schema.name ~ 'Delete'] else ' @aws_auth(cognito_groups: ["admin"])' }}
-  {{ schema.name }}Disable(input: {{ schema.name }}DisableInput!): {{ schema.name }}Response{{ (" " + (schema.mutation_auth_directives[schema.name ~ 'Disable']|join(' '))) if schema.mutation_auth_directives and (schema.name ~ 'Disable') in schema.mutation_auth_directives and schema.mutation_auth_directives[schema.name ~ 'Disable'] else ' @aws_auth(cognito_groups: ["admin"])' }}
+{%- for schema in table_schemas.values() %}
+{%- for operation in schema.operations if operation.type == 'Mutation' %}
+  {{ operation.field }}(
+    input: {{ schema.name }}{{ operation.name }}Input
+  ): {{ schema.name }}Response{% if operation.response_auth_directives and operation.response_auth_directives|length > 0 %} {{ operation.response_auth_directives|join(' ') }}{% endif %}
+{%- endfor %}
 {%- endfor %} 
