@@ -115,13 +115,16 @@ export class AuthEffects {
   verifyEmail$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.verifyEmail),
+      tap(({ input, code, email }) => console.debug('[Effect][verifyEmail$] Start', { input, code, email })),
       switchMap(({ input, code, email }) => {
         // First get the user by email to get their userId
         const emailInput: UsersQueryByEmailInput = { email: input.email };
         return from(this.userService.userExists(emailInput)).pipe(
+          tap(user => console.debug('[Effect][verifyEmail$] userExists result', user)),
           switchMap(user => {
             if (!user || user.statusCode !== 200 || !user.data) {
               const errorObj = getError('ORB-AUTH-003');
+              console.error('[Effect][verifyEmail$] User not found or error', user);
               return of(AuthActions.verifyEmailFailure({
                 error: errorObj ? errorObj.message : 'Email verification failed'
               }));
@@ -129,16 +132,32 @@ export class AuthEffects {
             // Now verify the email with the userId
             const userIdInput = { userId: user.data.userId };
             return from(this.userService.emailVerify(userIdInput, code, email)).pipe(
+              tap(response => console.debug('[Effect][verifyEmail$] emailVerify response', response)),
               map(response => {
                 if (response) {
                   return AuthActions.verifyEmailSuccess();
                 }
                 const errorObj = getError('ORB-AUTH-003');
+                console.error('[Effect][verifyEmail$] emailVerify failed', response);
                 return AuthActions.verifyEmailFailure({
                   error: errorObj ? errorObj.message : 'Email verification failed'
                 });
+              }),
+              catchError(error => {
+                console.error('[Effect][verifyEmail$] emailVerify threw error', error);
+                const errorObj = getError('ORB-AUTH-003');
+                return of(AuthActions.verifyEmailFailure({
+                  error: errorObj ? errorObj.message : 'Email verification failed'
+                }));
               })
             );
+          }),
+          catchError(error => {
+            console.error('[Effect][verifyEmail$] userExists threw error', error);
+            const errorObj = getError('ORB-AUTH-003');
+            return of(AuthActions.verifyEmailFailure({
+              error: errorObj ? errorObj.message : 'Email verification failed'
+            }));
           })
         );
       })

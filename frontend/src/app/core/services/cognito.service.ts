@@ -90,18 +90,17 @@ export class CognitoService {
    * @param code
    */
   public async emailVerify(cognitoId: string, code: string): Promise<AuthResponse> {
-    console.debug('Verifying email:', cognitoId, code);
+    console.debug('[CognitoService][emailVerify] called with', { cognitoId, code });
     try {
       await confirmSignUp({ username: cognitoId, confirmationCode: code });
-
+      console.debug('[CognitoService][emailVerify] confirmSignUp success');
       return {
         statusCode: 200,
         message: 'Email verified',
         data: createAuthData({ isSignedIn: false })
       };
-
     } catch (error) {
-      console.error('Confirmation error:', error);
+      console.error('[CognitoService][emailVerify] threw error', error);
       return {
         statusCode: 500,
         message: error instanceof Error ? error.message : 'Confirmation failed',

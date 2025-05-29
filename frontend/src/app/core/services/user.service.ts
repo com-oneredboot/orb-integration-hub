@@ -168,27 +168,24 @@ export class UserService extends ApiService {
    * @param email Optional email to filter results client-side
    */
   public async emailVerify(input: UsersQueryByUserIdInput, code: string, email?: string): Promise<AuthResponse> {
-    console.debug('verifyEmail:', input, email ? { email } : '');
+    console.debug('[UserService][emailVerify] called with', { input, code, email });
     try {
-
       // get the user
       const userResponse = await this.userQueryByUserId(input, email);
-      console.debug('User Response:', userResponse);
+      console.debug('[UserService][emailVerify] userQueryByUserId response:', userResponse);
       if (userResponse.statusCode !== 200 || !userResponse.data) {
+        console.error('[UserService][emailVerify] user not found or error', userResponse);
         return {
           statusCode: userResponse.statusCode,
           message: 'Error getting user',
           data: null
         };
       }
-
       const emailVerifyResponse = await this.cognitoService.emailVerify(userResponse.data.cognitoId, code);
-      console.debug('verifyEmail Response: ', emailVerifyResponse);
-
+      console.debug('[UserService][emailVerify] cognitoService.emailVerify response:', emailVerifyResponse);
       return emailVerifyResponse;
-
     } catch (error) {
-      console.error('Error verifying email:', error);
+      console.error('[UserService][emailVerify] threw error', error);
       return {
         statusCode: 500,
         message: 'Error verifying email',
