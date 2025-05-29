@@ -140,7 +140,7 @@ jobs:
       - name: Deploy All Stacks
         run: |
           SCHEMA_FILE="${{ steps.find_schema.outputs.schema_file }}"
-          for stack in bootstrap cognito dynamodb lambdas appsync; do
+          for stack in bootstrap cognito dynamodb lambdas appsync monitoring; do
             echo "Deploying $stack stack..."
             PARAMS="Environment=${{ inputs.environment }} CustomerId=${{ inputs.customer_id }} ProjectId=${{ inputs.project_id }}"
             case "$stack" in
