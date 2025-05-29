@@ -79,6 +79,7 @@ Resources:
         CloudWatchLogsRoleArn: !GetAtt AppSyncLoggingServiceRole.Arn
         FieldLogLevel: ALL
         ExcludeVerboseContent: false
+      XrayEnabled: true
 
   IntegrationHubApiKey:
     Type: AWS::AppSync::ApiKey
@@ -1217,7 +1218,14 @@ Resources:
             "Message": null,
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
-        #end 
+        #end
+  IntegrationHubApiIdParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-appsync-api-id"
+      Type: String
+      Value: !GetAtt IntegrationHubApi.ApiId
+      Description: AppSync API ID for monitoring and cross-stack reference
 
 # --------------------------------------------------- #
 Outputs:
