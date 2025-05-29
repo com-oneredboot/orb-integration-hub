@@ -156,6 +156,10 @@ jobs:
                 PARAMS="$PARAMS SMSOriginationNumber=${{ inputs.sms_origination_number }}"
                 echo "Using SMS Origination Number: ${{ inputs.sms_origination_number }} for Lambdas stack"
                 ;;
+              "monitoring")
+                PARAMS="$PARAMS AppSyncApiId=${{ inputs.environment }}-${{ inputs.customer_id }}-${{ inputs.project_id }}-appsync-api-id"
+                ;;
+
             esac
             echo "Building ${stack} stack..."
             sam build --template ${stack}.yml --parameter-overrides $PARAMS || {
