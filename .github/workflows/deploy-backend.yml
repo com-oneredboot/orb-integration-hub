@@ -157,7 +157,7 @@ jobs:
                 echo "Using SMS Origination Number: ${{ inputs.sms_origination_number }} for Lambdas stack"
                 ;;
               "monitoring")
-                PARAMS="$PARAMS AppSyncApiId=${{ inputs.environment }}-${{ inputs.customer_id }}-${{ inputs.project_id }}-appsync-api-id"
+                PARAMS="$PARAMS AppSyncApiId=${{ inputs.customer_id }}-${{ inputs.project_id }}-${{ inputs.environment }}-appsync-api-id"
                 ;;
 
             esac
