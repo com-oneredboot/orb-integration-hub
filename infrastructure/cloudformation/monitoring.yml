@@ -28,7 +28,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ "AWS/AppSync", "4XXError", "GraphQLAPIId", "${AppSyncApiId}" ],
+                  [ "AWS/AppSync", "4XXError", "GraphQLAPIId", "{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-appsync-api-id}}" ],
                   [ ".", "5XXError", ".", "." ]
                 ],
                 "view": "timeSeries",
@@ -45,7 +45,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ "AWS/AppSync", "Latency", "GraphQLAPIId", "${AppSyncApiId}" ],
+                  [ "AWS/AppSync", "Latency", "GraphQLAPIId", "{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-appsync-api-id}}" ],
                   [ ".", "IntegrationLatency", ".", "." ]
                 ],
                 "view": "timeSeries",
@@ -62,7 +62,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ "AWS/AppSync", "RequestCount", "GraphQLAPIId", "${AppSyncApiId}" ]
+                  [ "AWS/AppSync", "RequestCount", "GraphQLAPIId", "{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-appsync-api-id}}" ]
                 ],
                 "view": "timeSeries",
                 "stacked": false,
@@ -78,7 +78,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ "AWS/AppSync", "ThrottledRequests", "GraphQLAPIId", "${AppSyncApiId}" ]
+                  [ "AWS/AppSync", "ThrottledRequests", "GraphQLAPIId", "{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-appsync-api-id}}" ]
                 ],
                 "view": "timeSeries",
                 "stacked": false,

@@ -9,8 +9,8 @@ export const environment = {
   production: false,
   loggingLevel: 'debug',
   cognito: {
-    userPoolId: 'us-east-1_YRI3K0Ijp',
-    userPoolClientId: '1tfddnvolaq04ufmcimq35mlkl',
+    userPoolId: 'us-east-1_Vt4EWV7Yh',
+    userPoolClientId: '4ip90kp92pt2p8i3kos51tj351',
     qrCodeIssuer: 'OneRedBoot.com'
   },
   graphql: {
