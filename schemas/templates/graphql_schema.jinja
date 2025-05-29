@@ -1,17 +1,3 @@
-{%- include 'enums.jinja' -%}
-
-{%- include 'graphql_schema_type.jinja' -%}
-
-{%- include 'base_types.jinja' -%}
-
-{%- for schema in table_schemas.values() %}
-type {{ schema.name }} {
-{%- for attr in schema.attributes %}
-  {{ attr.name }}: {{ attr.type|graphql_type }}
-{%- endfor %}
-}
-{%- endfor %}
-
 {#-- Helper macro to join unique directives --#}
 {% macro join_unique_directives(directives_list) -%}
   {%- set seen = [] -%}
@@ -19,6 +5,27 @@ type {{ schema.name }} {
     {%- if d not in seen -%} {{ ' ' ~ d }}{%- do seen.append(d) -%}{%- endif -%}
   {%- endfor -%}
 {%- endmacro %}
+
+{%- include 'enums.jinja' -%}
+
+{%- include 'graphql_schema_type.jinja' -%}
+
+{%- include 'base_types.jinja' -%}
+
+{%- for schema in table_schemas.values() %}
+{#-- Collect all auth directives for Query/Mutation operations returning this type --#}
+{%- set entity_field_directives = [] %}
+{%- for op in schema.operations %}
+  {%- for d in op.response_auth_directives %}
+    {%- if d not in entity_field_directives %}{% do entity_field_directives.append(d) %}{% endif %}
+  {%- endfor %}
+{%- endfor %}
+type {{ schema.name }} {
+{%- for attr in schema.attributes %}
+  {{ attr.name }}: {{ attr.type|graphql_type }}{{ join_unique_directives(entity_field_directives) }}
+{%- endfor %}
+}
+{%- endfor %}
 
 {#-- Response types with field-level directives --#}
 {%- for schema in table_schemas.values() %}
