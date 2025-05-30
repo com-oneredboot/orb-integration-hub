@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for Auth
- * Generated at 2025-05-30T11:43:03.936564
+ * Generated at 2025-05-30T12:08:26.956086
  */
 
 // Import enums and models used in this model

@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for MfaSetupDetails
- * Generated at 2025-05-30T11:43:04.016566
+ * Generated at 2025-05-30T12:08:27.051825
  */
 
 // Import enums and models used in this model

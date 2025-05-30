@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for ApplicationRoles
- * Generated at 2025-05-30T11:43:03.765345
+ * Generated at 2025-05-30T12:08:26.803137
  */
 
 // Import enums and models used in this model

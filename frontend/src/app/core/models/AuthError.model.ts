@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for AuthError
- * Generated at 2025-05-30T11:43:03.963448
+ * Generated at 2025-05-30T12:08:26.982741
  */
 
 // Import enums and models used in this model

@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for ApplicationUsers
- * Generated at 2025-05-30T11:43:03.898310
+ * Generated at 2025-05-30T12:08:26.921032
  */
 
 // Import enums and models used in this model
