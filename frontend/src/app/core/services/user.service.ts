@@ -25,7 +25,6 @@ import { CognitoService } from "./cognito.service";
 import { AuthResponse } from "../models/Auth.model";
 import { AuthActions } from '../../features/user/components/auth-flow/store/auth.actions';
 
-
 @Injectable({
   providedIn: 'root'
 })
@@ -133,13 +132,30 @@ export class UserService extends ApiService {
         query,
         { input: queryInput },
         'apiKey'
-      ) as GraphQLResult<UsersResponse>;
-      // Compose UsersResponse
+      ) as any; // Use 'any' to access raw keys
+
+      const result = response.data?.UsersQueryByEmail;
+      const statusCode = result?.StatusCode ?? 200;
+      const message = result?.Message ?? '';
+      const Data = result?.Data ?? [];
+
+      const users = Data as IUsers[];
+
+      if (users.length > 1) {
+        console.error('[userExists] Duplicate users found for input:', input, users);
+        return {
+          statusCode: 500,
+          message: 'Duplicate users found for this email or userId',
+          data: users
+        };
+      }
+
       return {
-        statusCode: response.data?.statusCode ?? 200,
-        message: response.data?.message ?? '',
-        data: response.data?.data ?? null
-      } as UsersResponse;
+        statusCode,
+        message,
+        data: users
+      };
+
     } catch (error: any) {
       // Detect network/DNS errors and throw a user-friendly error
       const message = error?.message || error?.toString() || '';
@@ -156,8 +172,8 @@ export class UserService extends ApiService {
       return {
         statusCode: 500,
         message: message || 'Unknown error',
-        data: null
-      } as UsersResponse;
+        data: []
+      };
     }
   }
 

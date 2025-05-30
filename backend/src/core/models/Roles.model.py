@@ -6,53 +6,44 @@ Generated at
 from typing import Optional, List
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
-from enum import Enum
+from enum import Enumfrom .role_type import RoleTypefrom .role_status import RoleStatus
+class RolesCreateInput(BaseModel):
+    role_id: str = Field(..., description="Unique identifier for the role (primary key)")
+    user_id: str = Field(..., description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.")
+    role_type: RoleType = Field(..., description="Type of the role")
+    status: RoleStatus = Field(..., description="Current status of the role")
+    created_at: datetime = Field(..., description="When the role was created")
+    updated_at: datetime = Field(..., description="When the role was last updated")
 
+class RolesUpdateInput(BaseModel):
+    role_id: Optional[str] = Field(None, description="Unique identifier for the role (primary key)")
+    user_id: Optional[str] = Field(None, description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.")
+    role_type: Optional[RoleType] = Field(None, description="Type of the role")
+    status: Optional[RoleStatus] = Field(None, description="Current status of the role")
+    created_at: Optional[datetime] = Field(None, description="When the role was created")
+    updated_at: Optional[datetime] = Field(None, description="When the role was last updated")
 
+class RolesDeleteInput(BaseModel):
+    role_id: str
 
+class RolesDisableInput(BaseModel):
+    role_id: str
+    disabled: bool
 
-
-
-from .role_type import RoleType
-
-
-
-from .role_status import RoleStatus
-
-
-
-
-
-
-
-
+class RolesQueryByRoleIdInput(BaseModel):
+    role_id: str
+class RolesQueryByUserIdInput(BaseModel):
+    user_id: str
 
 class Roles(BaseModel):
     """Roles model."""
-    
     role_id: str = Field(..., description="Unique identifier for the role (primary key)")
-    
     user_id: str = Field(..., description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.")
-    
     role_type: RoleType = Field(..., description="Type of the role")
-    
     status: RoleStatus = Field(..., description="Current status of the role")
-    
     created_at: datetime = Field(..., description="When the role was created")
-    
     updated_at: datetime = Field(..., description="When the role was last updated")
-    
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     @validator('createdAt', pre=True)
     def parse_createdAt(cls, value):
         """Parse timestamp to ISO format."""
@@ -64,9 +55,6 @@ class Roles(BaseModel):
             return datetime.fromisoformat(value.replace('Z', '+00:00'))
         except (ValueError, TypeError):
             return None
-    
-    
-    
     @validator('updatedAt', pre=True)
     def parse_updatedAt(cls, value):
         """Parse timestamp to ISO format."""
@@ -78,8 +66,6 @@ class Roles(BaseModel):
             return datetime.fromisoformat(value.replace('Z', '+00:00'))
         except (ValueError, TypeError):
             return None
-    
-    
 
     class Config:
         """Model configuration."""
@@ -88,42 +74,12 @@ class Roles(BaseModel):
             datetime: lambda v: v.isoformat()
         }
 
-class RolesCreateInput(BaseModel):
-    
-    role_id: str = Field(..., description="Unique identifier for the role (primary key)")
-    
-    user_id: str = Field(..., description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.")
-    
-    role_type: RoleType = Field(..., description="Type of the role")
-    
-    status: RoleStatus = Field(..., description="Current status of the role")
-    
-    created_at: datetime = Field(..., description="When the role was created")
-    
-    updated_at: datetime = Field(..., description="When the role was last updated")
-    
-
-class RolesUpdateInput(BaseModel):
-    
-    role_id: Optional[str] = Field(None, description="Unique identifier for the role (primary key)")
-    
-    user_id: Optional[str] = Field(None, description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.")
-    
-    role_type: Optional[RoleType] = Field(None, description="Type of the role")
-    
-    status: Optional[RoleStatus] = Field(None, description="Current status of the role")
-    
-    created_at: Optional[datetime] = Field(None, description="When the role was created")
-    
-    updated_at: Optional[datetime] = Field(None, description="When the role was last updated")
-    
-
 class RolesResponse(BaseModel):
-    StatusCode: int = Field(..., description="HTTP status code")
-    Message: str = Field(..., description="Response message")
-    Data: Roles = Field(..., description="Response data")
+    StatusCode: int
+    Message: Optional[str]
+    Data: Optional[Roles]
 
 class RolesListResponse(BaseModel):
-    StatusCode: int = Field(..., description="HTTP status code")
-    Message: str = Field(..., description="Response message")
-    Data: List[Roles] = Field(..., description="Response data")
+    StatusCode: int
+    Message: Optional[str]
+    Data: List[Roles]

@@ -1,25 +1,2 @@
 export enum SchemaType {
-
-  dynamodb = 'dynamodb',
-
-  postgres = 'postgres',
-
-  mysql = 'mysql',
-
-  mssql = 'mssql',
-
-  sqlite = 'sqlite',
-
-  lambda = 'lambda',
-
-  graphql = 'graphql',
-
-  registry = 'registry',
-
-  graph = 'graph',
-
-  rest = 'rest',
-
-  elasticsearch = 'elasticsearch'
-
-} 
+  dynamodb = 'dynamodb',  postgres = 'postgres',  mysql = 'mysql',  mssql = 'mssql',  sqlite = 'sqlite',  lambda = 'lambda',  graphql = 'graphql',  registry = 'registry',  graph = 'graph',  rest = 'rest',  elasticsearch = 'elasticsearch'} 

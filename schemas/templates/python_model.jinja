@@ -7,29 +7,63 @@ from typing import Optional, List
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
 from enum import Enum
-{% for attr in schema.attributes %}
-{% if attr.enum_type %}
+{%- for attr in schema.attributes %}
+{%- if attr.enum_type %}
 from .{{ attr.enum_type | to_snake_case }} import {{ attr.enum_type }}
-{% endif %}
+{%- endif %}
+{%- endfor %}
+
+{%- if schema.enums %}
+{%- for enum_name, enum_values in schema.enums.items() %}
+class {{ enum_name }}(str, Enum):
+    {%- for value in enum_values %}
+    {{ value }} = "{{ value }}"
+    {%- endfor %}
+{%- endfor %}
+{%- endif %}
+
+class {{ schema.name }}CreateInput(BaseModel):
+{% for attr in schema.attributes %}
+    {{ attr.name | to_snake_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}datetime{% elif attr.type == 'boolean' %}bool{% elif attr.type == 'array' %}List[str]{% else %}str{% endif %}{% endif %} = Field(..., description="{{ attr.description }}")
 {% endfor %}
 
-{% if schema.enums %}
-{% for enum_name, enum_values in schema.enums.items() %}
-class {{ enum_name }}(str, Enum):
-    {% for value in enum_values %}
-    {{ value }} = "{{ value }}"
-    {% endfor %}
+class {{ schema.name }}UpdateInput(BaseModel):
+{% for attr in schema.attributes %}
+    {{ attr.name | to_snake_case }}: Optional[{% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}datetime{% elif attr.type == 'boolean' %}bool{% elif attr.type == 'array' %}List[str]{% else %}str{% endif %}{% endif %}] = Field(None, description="{{ attr.description }}")
 {% endfor %}
+
+class {{ schema.name }}DeleteInput(BaseModel):
+    {{ schema.partition_key | to_snake_case }}: str
+{% if schema.sort_key and schema.sort_key != 'None' %}    {{ schema.sort_key | to_snake_case }}: str
 {% endif %}
+
+class {{ schema.name }}DisableInput(BaseModel):
+    {{ schema.partition_key | to_snake_case }}: str
+{% if schema.sort_key and schema.sort_key != 'None' %}    {{ schema.sort_key | to_snake_case }}: str
+{% endif %}    disabled: bool
+
+class {{ schema.name }}QueryBy{{ schema.partition_key|to_pascal_case }}Input(BaseModel):
+    {{ schema.partition_key | to_snake_case }}: str
+{% if schema.sort_key and schema.sort_key != 'None' %}
+class {{ schema.name }}QueryBy{{ schema.sort_key|to_pascal_case }}Input(BaseModel):
+    {{ schema.sort_key | to_snake_case }}: str
+class {{ schema.name }}QueryByBothInput(BaseModel):
+    {{ schema.partition_key | to_snake_case }}: str
+    {{ schema.sort_key | to_snake_case }}: str
+{% endif %}
+{% for index in schema.secondary_indexes %}
+class {{ schema.name }}QueryBy{{ index.partition|to_pascal_case }}Input(BaseModel):
+    {{ index.partition | to_snake_case }}: str
+{% endfor %}
 
 class {{ schema.name }}(BaseModel):
     """{{ schema.name }} model."""
-    {% for attr in schema.attributes %}
+{% for attr in schema.attributes %}
     {{ attr.name | to_snake_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}datetime{% elif attr.type == 'boolean' %}bool{% elif attr.type == 'array' %}List[str]{% else %}str{% endif %}{% endif %} = Field(..., description="{{ attr.description }}")
-    {% endfor %}
+{% endfor %}
 
-    {% for attr in schema.attributes %}
-    {% if attr.type == 'timestamp' %}
+{% for attr in schema.attributes %}
+{% if attr.type == 'timestamp' %}
     @validator('{{ attr.name }}', pre=True)
     def parse_{{ attr.name }}(cls, value):
         """Parse timestamp to ISO format."""
@@ -41,8 +75,8 @@ class {{ schema.name }}(BaseModel):
             return datetime.fromisoformat(value.replace('Z', '+00:00'))
         except (ValueError, TypeError):
             return None
-    {% endif %}
-    {% endfor %}
+{% endif %}
+{% endfor %}
 
     class Config:
         """Model configuration."""
@@ -51,22 +85,12 @@ class {{ schema.name }}(BaseModel):
             datetime: lambda v: v.isoformat()
         }
 
-class {{ schema.name }}CreateInput(BaseModel):
-    {% for attr in schema.attributes %}
-    {{ attr.name | to_snake_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}datetime{% elif attr.type == 'boolean' %}bool{% elif attr.type == 'array' %}List[str]{% else %}str{% endif %}{% endif %} = Field(..., description="{{ attr.description }}")
-    {% endfor %}
-
-class {{ schema.name }}UpdateInput(BaseModel):
-    {% for attr in schema.attributes %}
-    {{ attr.name | to_snake_case }}: Optional[{% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}datetime{% elif attr.type == 'boolean' %}bool{% elif attr.type == 'array' %}List[str]{% else %}str{% endif %}{% endif %}] = Field(None, description="{{ attr.description }}")
-    {% endfor %}
-
 class {{ schema.name }}Response(BaseModel):
-    StatusCode: int = Field(..., description="HTTP status code")
-    Message: str = Field(..., description="Response message")
-    Data: {{ schema.name }} = Field(..., description="Response data")
+    StatusCode: int
+    Message: Optional[str]
+    Data: Optional[{{ schema.name }}]
 
 class {{ schema.name }}ListResponse(BaseModel):
-    StatusCode: int = Field(..., description="HTTP status code")
-    Message: str = Field(..., description="Response message")
-    Data: List[{{ schema.name }}] = Field(..., description="Response data")
+    StatusCode: int
+    Message: Optional[str]
+    Data: List[{{ schema.name }}]

@@ -100,6 +100,13 @@ Resources:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       DefinitionS3Location: !Sub 's3://${CustomerId}-${ProjectId}-build-templates/${SchemaS3Key}'
 
+  IntegrationHubApiId:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-appsync-api-id
+      Type: String
+      Value: !GetAtt IntegrationHubApi.id
+
   # DynamoDB DataSources
   {% include 'appsync_datasource_dynamodb.jinja' %}
 

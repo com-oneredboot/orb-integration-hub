@@ -159,45 +159,44 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   }
 
   onSubmit(): void {
-
+    console.debug('[onSubmit] called');
     if (!this.authForm.valid) {
-      console.debug('Form invalid:', this.authForm.errors);
+      console.debug('[onSubmit] Form invalid:', this.authForm.errors);
       return;
     }
-
-    console.debug('Form submitted', this.authForm.value);
-
-
+    console.debug('[onSubmit] Form submitted', this.authForm.value);
     this.currentStep$
       .pipe(
-        take(1), // Only take one value
-        tap(step => console.debug('Processing step:', step)),
+        take(1),
+        tap(step => console.debug('[onSubmit] Processing step:', step, 'Type:', typeof step, 'Enum:', this.authSteps[step])),
         takeUntil(this.destroy$))
       .subscribe(step => {
         const email = this.authForm.get('email')?.value;
         const password = this.authForm.get('password')?.value;
         const emailCode = this.authForm.get('emailCode')?.value;
         const mfaCode = this.authForm.get('mfaCode')?.value;
-
-        console.debug('Step processing values:', {
+        console.debug('[onSubmit] Step processing values:', {
           step,
+          stepName: this.authSteps[step],
           email,
           hasPassword: !!password,
           hasEmailCode: !!emailCode,
           hasMfaCode: !!mfaCode
         });
-
         switch (step) {
           case AuthSteps.EMAIL:
-            console.debug('Dispatching checkEmail action:', { email });
+            console.debug('[onSubmit] Dispatching checkEmail action:', { email });
             this.store.dispatch(AuthActions.checkEmail({ email }));
             break;
           case AuthSteps.PASSWORD:
-            if (!password) return;
+            if (!password) {
+              console.error('[onSubmit] PASSWORD: password missing');
+              return;
+            }
+            console.debug('[onSubmit] Dispatching verifyCognitoPassword:', { email, password });
             this.store.dispatch(AuthActions.verifyCognitoPassword({ email: email, password }));
             break;
           case AuthSteps.PASSWORD_SETUP:
-            // Create a complete UserCreateInput with all required fields
             const userInput = {
               userId: uuidv4(),
               cognitoId: uuidv4(),
@@ -212,36 +211,57 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
               emailVerified: false,
               updatedAt: new Date().toISOString()
             };
-            if (!password) return;
+            if (!password) {
+              console.error('[onSubmit] PASSWORD_SETUP: password missing');
+              return;
+            }
+            console.debug('[onSubmit] Dispatching createUser:', { userInput, password });
             this.store.dispatch(AuthActions.createUser({input: userInput, password: password } ));
             break;
           case AuthSteps.EMAIL_VERIFY:
-            if (!emailCode) return;
+            if (!emailCode) {
+              console.error('[onSubmit] EMAIL_VERIFY: emailCode missing');
+              return;
+            }
+            console.debug('[onSubmit] Dispatching verifyEmail:', { email, emailCode });
             this.store.dispatch(AuthActions.verifyEmail({
               input: { email: email }, 
               code: emailCode,
-              email: email  // Pass email as a separate property
+              email: email
             }));
             break;
           case AuthSteps.PHONE_SETUP:
             const setupPhoneNumber = this.authForm.get('phoneNumber')?.value;
-            if (!setupPhoneNumber) return;
+            if (!setupPhoneNumber) {
+              console.error('[onSubmit] PHONE_SETUP: phoneNumber missing');
+              return;
+            }
+            console.debug('[onSubmit] Dispatching setupPhone:', { setupPhoneNumber });
             this.store.dispatch(AuthActions.setupPhone({ phoneNumber: setupPhoneNumber }));
             break;
           case AuthSteps.PHONE_VERIFY:
             const phoneCode = this.authForm.get('phoneCode')?.value;
-            if (!phoneCode) return;
+            if (!phoneCode) {
+              console.error('[onSubmit] PHONE_VERIFY: phoneCode missing');
+              return;
+            }
+            console.debug('[onSubmit] Dispatching verifyPhone:', { phoneCode });
             this.store.dispatch(AuthActions.verifyPhone({ code: phoneCode }));
             break;
           case AuthSteps.MFA_SETUP:
-            //if(!mfaCode) return;
+            console.debug('[onSubmit] Dispatching needsMFASetup');
             this.store.dispatch(AuthActions.needsMFASetup());
             break;
           case AuthSteps.MFA_VERIFY:
-            if(!mfaCode) return;
+            if(!mfaCode) {
+              console.error('[onSubmit] MFA_VERIFY: mfaCode missing');
+              return;
+            }
+            console.debug('[onSubmit] Dispatching needsMFA:', { mfaCode });
             this.store.dispatch(AuthActions.needsMFA( {code: mfaCode, rememberDevice: false}));
             break;
-          // ... other cases
+          default:
+            console.error('[onSubmit] Unhandled step:', step, this.authSteps[step]);
         }
       });
   }

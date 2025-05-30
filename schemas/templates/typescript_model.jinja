@@ -4,14 +4,14 @@
  */
 
 // Import enums and models used in this model
-{% for attr in schema.attributes %}
-{% if attr.enum_type %}
+{%- for attr in schema.attributes %}
+{%- if attr.enum_type %}
 import { {{ attr.enum_type }} } from './{{ attr.enum_type }}.enum';
-{% endif %}
-{% endfor %}
-{% for model in model_imports %}
+{%- endif %}
+{%- endfor %}
+{%- for model in model_imports %}
 import { {{ model }} } from './{{ model }}.model';
-{% endfor %}
+{%- endfor %}
 
 {% if schema.type == 'table' %}
 // CreateInput
@@ -70,17 +70,62 @@ export type {{ schema.table }}UpdateResponse = {
 };
 {% endif %}
 
+// Input types
+export interface {{ schema.name }}CreateInput {
+{% for attr in schema.attributes %}
+  {{ attr.name }}: {{ attr.type|to_typescript_type }};
+{% endfor %}
+}
+
+export interface {{ schema.name }}UpdateInput {
+{% for attr in schema.attributes %}
+  {{ attr.name }}?: {{ attr.type|to_typescript_type }};
+{% endfor %}
+}
+
+// Always include DeleteInput (PK fields only)
+export interface {{ schema.name }}DeleteInput {
+  {{ schema.partition_key }}: string;
+{% if schema.sort_key and schema.sort_key != 'None' %}  {{ schema.sort_key }}: string;
+{% endif %}}
+
+// Always include DisableInput (PK fields + disabled boolean)
+export interface {{ schema.name }}DisableInput {
+  {{ schema.partition_key }}: string;
+{% if schema.sort_key and schema.sort_key != 'None' %}  {{ schema.sort_key }}: string;
+{% endif %}  disabled: boolean;
+}
+
+// QueryBy inputs for PK, SK, and all indexes
+export interface {{ schema.name }}QueryBy{{ schema.partition_key|to_pascal_case }}Input {
+  {{ schema.partition_key }}: string;
+}
+{% if schema.sort_key and schema.sort_key != 'None' %}
+export interface {{ schema.name }}QueryBy{{ schema.sort_key|to_pascal_case }}Input {
+  {{ schema.sort_key }}: string;
+}
+export interface {{ schema.name }}QueryByBothInput {
+  {{ schema.partition_key }}: string;
+  {{ schema.sort_key }}: string;
+}
+{% endif %}
+{% for index in schema.secondary_indexes %}
+export interface {{ schema.name }}QueryBy{{ index.partition|to_pascal_case }}Input {
+  {{ index.partition }}: string;
+}
+{% endfor %}
+
+// Model
 export interface I{{ schema.name }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }}: {{ attr.type }}{% if not attr.required %} | undefined{% endif %};
+  {{ attr.name }}: {{ attr.type|to_typescript_type }};
 {% endfor %}
 }
 
 export class {{ schema.name }} implements I{{ schema.name }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }} = {% if attr.type == 'string' %}''{% elif attr.type == 'number' %}0{% elif attr.type == 'boolean' %}false{% elif attr.type == 'string[]' %}[]{% elif attr.type == 'Record<string, any>' %}{}{% elif attr.type == 'string | undefined' %}undefined{% elif attr.type == 'boolean | undefined' %}undefined{% elif attr.type == 'Record<string, any> | undefined' %}undefined{% else %}undefined{% endif %};
+  {{ attr.name }} = {% if attr.type|to_typescript_type == 'string' %}''{% elif attr.type|to_typescript_type == 'number' %}0{% elif attr.type|to_typescript_type == 'boolean' %}false{% elif attr.type|to_typescript_type == 'string[]' %}[]{% elif attr.type|to_typescript_type == 'Record<string, any>' %}{}{% elif attr.type|to_typescript_type == 'string | undefined' %}undefined{% elif attr.type|to_typescript_type == 'boolean | undefined' %}undefined{% elif attr.type|to_typescript_type == 'Record<string, any> | undefined' %}undefined{% else %}undefined{% endif %};
 {% endfor %}
-
   constructor(data: Partial<I{{ schema.name }}> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
@@ -115,18 +160,7 @@ export interface {{ schema.name }} {
   {% endfor %}
 }
 
-export interface {{ schema.name }}CreateInput {
-  {% for attr in schema.attributes %}
-  {{ attr.name | to_camel_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}Date{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'array' %}string[]{% else %}string{% endif %}{% endif %};
-  {% endfor %}
-}
-
-export interface {{ schema.name }}UpdateInput {
-  {% for attr in schema.attributes %}
-  {{ attr.name | to_camel_case }}?: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}Date{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'array' %}string[]{% else %}string{% endif %}{% endif %};
-  {% endfor %}
-}
-
+// ProperCase response types
 export interface {{ schema.name }}Response {
   StatusCode: number;
   Message: string;
@@ -138,3 +172,9 @@ export interface {{ schema.name }}ListResponse {
   Message: string;
   Data: {{ schema.name }}[];
 }
+
+// CRUD response aliases
+export type {{ schema.name }}CreateResponse = {{ schema.name }}Response;
+export type {{ schema.name }}UpdateResponse = {{ schema.name }}Response;
+export type {{ schema.name }}DeleteResponse = {{ schema.name }}Response;
+export type {{ schema.name }}DisableResponse = {{ schema.name }}Response;

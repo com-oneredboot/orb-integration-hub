@@ -35,11 +35,20 @@ export class AuthEffects {
         return from(this.userService.userExists(userInput)).pipe(
           tap(result => console.debug('Effect [CheckEmail]: Service returned', result)),
           map((result: UsersResponse) => {
-            if (result.statusCode === 200 && result.data) {
+            const users = Array.isArray(result.data) ? result.data : [];
+            if (result.statusCode === 500 && users.length > 1) {
+              // Duplicate user error
+              console.error('Effect [CheckEmail]: Duplicate users found for email:', email, users);
+              const errorObj = getError('ORB-AUTH-006'); // Use a suitable error code
+              return AuthActions.checkEmailFailure({
+                error: errorObj ? errorObj.message : 'Duplicate users found for this email.'
+              });
+            }
+            if (result.statusCode === 200 && users.length === 1) {
               // User exists
               return AuthActions.checkEmailSuccess({ userExists: true });
             }
-            if (result.statusCode === 200 && !result.data) {
+            if (result.statusCode === 200 && users.length === 0) {
               // User not found
               return AuthActions.checkEmailUserNotFound();
             }
@@ -122,7 +131,16 @@ export class AuthEffects {
         return from(this.userService.userExists(emailInput)).pipe(
           tap(user => console.debug('[Effect][verifyEmail$] userExists result', user)),
           switchMap(user => {
-            if (!user || user.statusCode !== 200 || !user.data) {
+            const users = Array.isArray(user.data) ? user.data : [];
+            if (user.statusCode === 500 && users.length > 1) {
+              // Duplicate user error
+              console.error('[Effect][verifyEmail$] Duplicate users found for email:', input.email, users);
+              const errorObj = getError('ORB-AUTH-006');
+              return of(AuthActions.verifyEmailFailure({
+                error: errorObj ? errorObj.message : 'Duplicate users found for this email.'
+              }));
+            }
+            if (!user || user.statusCode !== 200 || users.length === 0) {
               const errorObj = getError('ORB-AUTH-003');
               console.error('[Effect][verifyEmail$] User not found or error', user);
               return of(AuthActions.verifyEmailFailure({
@@ -130,7 +148,7 @@ export class AuthEffects {
               }));
             }
             // Now verify the email with the userId
-            const userIdInput = { userId: user.data.userId };
+            const userIdInput = { userId: users[0].userId };
             return from(this.userService.emailVerify(userIdInput, code, email)).pipe(
               tap(response => console.debug('[Effect][verifyEmail$] emailVerify response', response)),
               map(response => {

@@ -1,90 +1,73 @@
 /**
- * Auth static model.
+ * Generated TypeScript models for Auth
+ * Generated at 2025-05-30T08:46:39.266799
  */
 
-// Import enums and models used in this model
+// Import enums and models used in this modelimport { MfaSetupDetails } from './MfaSetupDetails.model';import { Users } from './Users.model';
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import { MfaSetupDetails, IMfaSetupDetails } from './MfaSetupDetails.model';
-
-import { Users, IUsers } from './Users.model';
-
-
-export interface IAuth {
-
+// Input types
+export interface AuthCreateInput {
   statusCode: number;
+  isSignedIn: boolean;
+  message: string;
+  user: IUsers;
+  needsMFA: boolean;
+  needsMFASetup: boolean;
+  mfaType: string;
+  mfaSetupDetails: MfaSetupDetails;
+}
 
-  isSignedIn: boolean | undefined;
+export interface AuthUpdateInput {
+  statusCode?: number;
+  isSignedIn?: boolean;
+  message?: string;
+  user?: IUsers;
+  needsMFA?: boolean;
+  needsMFASetup?: boolean;
+  mfaType?: string;
+  mfaSetupDetails?: MfaSetupDetails;
+}
 
-  message: string | undefined;
+// Always include DeleteInput (PK fields only)
+export interface AuthDeleteInput {
+  : string;
+}
 
-  user: IUsers | undefined;
+// Always include DisableInput (PK fields + disabled boolean)
+export interface AuthDisableInput {
+  : string;
+  disabled: boolean;
+}
 
-  needsMFA: boolean | undefined;
+// QueryBy inputs for PK, SK, and all indexes
+export interface AuthQueryByInput {
+  : string;
+}
 
-  needsMFASetup: boolean | undefined;
-
-  mfaType: string | undefined;
-
-  mfaSetupDetails: MfaSetupDetails | undefined;
-
+// Model
+export interface IAuth {
+  statusCode: number;
+  isSignedIn: boolean;
+  message: string;
+  user: IUsers;
+  needsMFA: boolean;
+  needsMFASetup: boolean;
+  mfaType: string;
+  mfaSetupDetails: MfaSetupDetails;
 }
 
 export class Auth implements IAuth {
-
   statusCode = 0;
-
   isSignedIn = false;
-
   message = '';
-
   user = undefined;
-
   needsMFA = false;
-
   needsMFASetup = false;
-
   mfaType = '';
-
   mfaSetupDetails = undefined;
-
-
   constructor(data: Partial<IAuth> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         {
           this[key as keyof this] = value as this[keyof this];
         }
@@ -93,9 +76,33 @@ export class Auth implements IAuth {
   }
 }
 
-// Static type definitions
-export type AuthResponse = {
-  statusCode: number;
+
+export interface Auth {
+  statusCode: string;
+  isSignedIn: boolean;
   message: string;
-  data: IAuth | null;
-}; 
+  user: string;
+  needsMFA: boolean;
+  needsMFASetup: boolean;
+  mfaType: string;
+  mfaSetupDetails: string;
+}
+
+// ProperCase response types
+export interface AuthResponse {
+  StatusCode: number;
+  Message: string;
+  Data: Auth;
+}
+
+export interface AuthListResponse {
+  StatusCode: number;
+  Message: string;
+  Data: Auth[];
+}
+
+// CRUD response aliases
+export type AuthCreateResponse = AuthResponse;
+export type AuthUpdateResponse = AuthResponse;
+export type AuthDeleteResponse = AuthResponse;
+export type AuthDisableResponse = AuthResponse;

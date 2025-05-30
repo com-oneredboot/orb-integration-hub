@@ -232,8 +232,8 @@ def setup_jinja_env() -> Environment:
     env = Environment(
         loader=FileSystemLoader(os.path.join(SCRIPT_DIR, 'templates')),
         autoescape=select_autoescape(['html', 'xml']),
-        trim_blocks=False,
-        lstrip_blocks=False,
+        trim_blocks=True,
+        lstrip_blocks=True,
         keep_trailing_newline=True,
         extensions=['jinja2.ext.do']
     )
@@ -635,21 +635,14 @@ def generate_python_model(table: str, schema: Union[TableSchema, GraphQLType]) -
 
 def generate_typescript_model(table: str, schema: Union[TableSchema, GraphQLType], is_static=False, model_type=None, all_model_names=None) -> None:
     """Generate TypeScript model from schema."""
-    template_name = None
-    
-    # Determine template based on model type
-    if isinstance(schema, TableSchema):
-        template_name = 'typescript_dynamodb_model.jinja'
-    elif is_static:
-        template_name = 'typescript_static_model.jinja'
-    else:
-        template_name = 'typescript_graphql_model.jinja'
+    # Always use the unified, DRY template
+    template_name = 'typescript_model.jinja'
     
     # Get template
     env = setup_jinja_env()
     template = env.get_template(template_name)
     
-    # Track generated query types to prevent duplicates
+    # Track generated query types to prevent duplicates (if needed for future use)
     generated_query_types = set()
     if isinstance(schema, TableSchema):
         generated_query_types.add('QueryBy' + to_pascal_case(schema.partition_key) + 'Input')
@@ -664,16 +657,12 @@ def generate_typescript_model(table: str, schema: Union[TableSchema, GraphQLType
     model_imports = []
     if all_model_names:
         for attr in schema.attributes:
-            # Check for direct model references
             if attr.type in all_model_names and attr.type != table:
                 model_imports.append(attr.type)
-            # Check for interface references (IModel)
             elif attr.type.startswith('I') and attr.type[1:] in all_model_names and attr.type[1:] != table:
-                model_imports.append(attr.type[1:])  # Import the model class, not the interface
-            # Check for model references in array types
+                model_imports.append(attr.type[1:])
             elif attr.type.startswith('array<') and attr.type[6:-1] in all_model_names and attr.type[6:-1] != table:
                 model_imports.append(attr.type[6:-1])
-            # Check for interface references in array types
             elif attr.type.startswith('array<I') and attr.type[7:-1] in all_model_names and attr.type[7:-1] != table:
                 model_imports.append(attr.type[7:-1])
     
@@ -681,7 +670,8 @@ def generate_typescript_model(table: str, schema: Union[TableSchema, GraphQLType
     content = template.render(
         schema=schema,
         model_imports=sorted(set(model_imports)),
-        generated_query_types=generated_query_types
+        generated_query_types=generated_query_types,
+        timestamp=datetime.now().isoformat()
     )
     
     # Write to file

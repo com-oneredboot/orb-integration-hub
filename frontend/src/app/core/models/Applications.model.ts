@@ -1,148 +1,101 @@
 /**
- *  DynamoDB model.
+ * Generated TypeScript models for Applications
+ * Generated at 2025-05-30T08:46:39.164804
  */
 
-/*
- * schema.table: 
- * schema.name: Applications
- */
+// Import enums and models used in this modelimport { ApplicationStatus } from './ApplicationStatus.enum';
 
-// Import enums and models used in this model
-
-
-
-
-
-
-
-
-import { ApplicationStatus } from './ApplicationStatus.enum';
-
-
-
-
-
-
-
-
-// CreateInput
-export type ApplicationsCreateInput = {
-
+// Input types
+export interface ApplicationsCreateInput {
   applicationId: string;
-
   name: string;
-
   ownerId: string;
-
   status: string;
-
   createdAt: string;
-
   updatedAt: string;
+}
 
-};
+export interface ApplicationsUpdateInput {
+  applicationId?: string;
+  name?: string;
+  ownerId?: string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
-// UpdateInput
-export type ApplicationsUpdateInput = {
-
+// Always include DeleteInput (PK fields only)
+export interface ApplicationsDeleteInput {
   applicationId: string;
+}
 
-  name: string;
-
-  ownerId: string;
-
-  status: string;
-
-  createdAt: string;
-
-  updatedAt: string;
-
-};
-
-// QueryInput
-// Primary key queries
-export type ApplicationsQueryByApplicationIdInput = {
+// Always include DisableInput (PK fields + disabled boolean)
+export interface ApplicationsDisableInput {
   applicationId: string;
-};
+  disabled: boolean;
+}
 
+// QueryBy inputs for PK, SK, and all indexes
+export interface ApplicationsQueryByApplicationIdInput {
+  applicationId: string;
+}
 
-
-
-
-// Response types
-export type ApplicationsResponse = {
-  statusCode: number;
-  message: string;
-  data: IApplications | null;
-};
-
-export type ApplicationsCreateResponse = {
-  statusCode: number;
-  message: string;
-  data: IApplications | null;
-};
-
-export type ApplicationsUpdateResponse = {
-  statusCode: number;
-  message: string;
-  data: IApplications | null;
-};
-
+// Model
 export interface IApplications {
-
   applicationId: string;
-
   name: string;
-
   ownerId: string;
-
   status: string;
-
   createdAt: string;
-
   updatedAt: string;
-
 }
 
 export class Applications implements IApplications {
-
   applicationId = '';
-
   name = '';
-
   ownerId = '';
-
   status = '';
-
   createdAt = '';
-
   updatedAt = '';
-
-
   constructor(data: Partial<IApplications> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
-
-
-
-
-
-
-
-
         if (key === 'status' && typeof value === 'string') {
           this.status = ApplicationStatus[value as keyof typeof ApplicationStatus] ?? ApplicationStatus.UNKNOWN;
         } else 
-
-
-
-
-
-
         {
           this[key as keyof this] = value as this[keyof this];
         }
       }
     });
   }
-} 
+}
+
+
+export interface Applications {
+  applicationId: string;
+  name: string;
+  ownerId: string;
+  status: ApplicationStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ProperCase response types
+export interface ApplicationsResponse {
+  StatusCode: number;
+  Message: string;
+  Data: Applications;
+}
+
+export interface ApplicationsListResponse {
+  StatusCode: number;
+  Message: string;
+  Data: Applications[];
+}
+
+// CRUD response aliases
+export type ApplicationsCreateResponse = ApplicationsResponse;
+export type ApplicationsUpdateResponse = ApplicationsResponse;
+export type ApplicationsDeleteResponse = ApplicationsResponse;
+export type ApplicationsDisableResponse = ApplicationsResponse;

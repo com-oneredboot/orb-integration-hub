@@ -1,171 +1,107 @@
 /**
- *  DynamoDB model.
+ * Generated TypeScript models for ApplicationUsers
+ * Generated at 2025-05-30T08:46:39.234099
  */
 
-/*
- * schema.table: 
- * schema.name: ApplicationUsers
- */
+// Import enums and models used in this modelimport { ApplicationUserStatus } from './ApplicationUserStatus.enum';
 
-// Import enums and models used in this model
-
-
-
-
-
-
-
-
-import { ApplicationUserStatus } from './ApplicationUserStatus.enum';
-
-
-
-
-
-
-
-
-// CreateInput
-export type ApplicationUsersCreateInput = {
-
+// Input types
+export interface ApplicationUsersCreateInput {
   applicationUserId: string;
-
   userId: string;
-
   applicationId: string;
-
   status: string;
-
   createdAt: string;
-
   updatedAt: string;
+}
 
-};
+export interface ApplicationUsersUpdateInput {
+  applicationUserId?: string;
+  userId?: string;
+  applicationId?: string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
-// UpdateInput
-export type ApplicationUsersUpdateInput = {
-
+// Always include DeleteInput (PK fields only)
+export interface ApplicationUsersDeleteInput {
   applicationUserId: string;
+}
 
-  userId: string;
-
-  applicationId: string;
-
-  status: string;
-
-  createdAt: string;
-
-  updatedAt: string;
-
-};
-
-// QueryInput
-// Primary key queries
-export type ApplicationUsersQueryByApplicationUserIdInput = {
+// Always include DisableInput (PK fields + disabled boolean)
+export interface ApplicationUsersDisableInput {
   applicationUserId: string;
-};
+  disabled: boolean;
+}
 
-
-
-
-// Secondary index queries
-
-export type ApplicationUsersQueryByUserIdInput = {
+// QueryBy inputs for PK, SK, and all indexes
+export interface ApplicationUsersQueryByApplicationUserIdInput {
+  applicationUserId: string;
+}
+export interface ApplicationUsersQueryByUserIdInput {
   userId: string;
-};
-
-export type ApplicationUsersQueryByUserIdAndApplicationIdInput = {
-  userId: string;
+}
+export interface ApplicationUsersQueryByApplicationIdInput {
   applicationId: string;
-};
+}
 
-
-export type ApplicationUsersQueryByApplicationIdInput = {
-  applicationId: string;
-};
-
-export type ApplicationUsersQueryByApplicationIdAndUserIdInput = {
-  applicationId: string;
-  userId: string;
-};
-
-
-
-
-// Response types
-export type ApplicationUsersResponse = {
-  statusCode: number;
-  message: string;
-  data: IApplicationUsers | null;
-};
-
-export type ApplicationUsersCreateResponse = {
-  statusCode: number;
-  message: string;
-  data: IApplicationUsers | null;
-};
-
-export type ApplicationUsersUpdateResponse = {
-  statusCode: number;
-  message: string;
-  data: IApplicationUsers | null;
-};
-
+// Model
 export interface IApplicationUsers {
-
   applicationUserId: string;
-
   userId: string;
-
   applicationId: string;
-
   status: string;
-
   createdAt: string;
-
   updatedAt: string;
-
 }
 
 export class ApplicationUsers implements IApplicationUsers {
-
   applicationUserId = '';
-
   userId = '';
-
   applicationId = '';
-
   status = '';
-
   createdAt = '';
-
   updatedAt = '';
-
-
   constructor(data: Partial<IApplicationUsers> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
-
-
-
-
-
-
-
-
         if (key === 'status' && typeof value === 'string') {
           this.status = ApplicationUserStatus[value as keyof typeof ApplicationUserStatus] ?? ApplicationUserStatus.UNKNOWN;
         } else 
-
-
-
-
-
-
         {
           this[key as keyof this] = value as this[keyof this];
         }
       }
     });
   }
-} 
+}
+
+
+export interface ApplicationUsers {
+  applicationUserId: string;
+  userId: string;
+  applicationId: string;
+  status: ApplicationUserStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ProperCase response types
+export interface ApplicationUsersResponse {
+  StatusCode: number;
+  Message: string;
+  Data: ApplicationUsers;
+}
+
+export interface ApplicationUsersListResponse {
+  StatusCode: number;
+  Message: string;
+  Data: ApplicationUsers[];
+}
+
+// CRUD response aliases
+export type ApplicationUsersCreateResponse = ApplicationUsersResponse;
+export type ApplicationUsersUpdateResponse = ApplicationUsersResponse;
+export type ApplicationUsersDeleteResponse = ApplicationUsersResponse;
+export type ApplicationUsersDisableResponse = ApplicationUsersResponse;

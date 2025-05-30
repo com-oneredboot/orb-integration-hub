@@ -6,79 +6,64 @@ Generated at
 from typing import Optional, List
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
-from enum import Enum
+from enum import Enumfrom .user_status import UserStatus
+class UsersCreateInput(BaseModel):
+    user_id: str = Field(..., description="Unique identifier for the user (primary key)")
+    cognito_id: str = Field(..., description="Cognito user identifier")
+    email: str = Field(..., description="User's email address")
+    first_name: str = Field(..., description="User's first name")
+    last_name: str = Field(..., description="User's last name")
+    status: UserStatus = Field(..., description="Current status of the user")
+    created_at: datetime = Field(..., description="When the user was created")
+    updated_at: datetime = Field(..., description="When the user was last updated")
+    phone_number: str = Field(..., description="User's phone number")
+    groups: List[str] = Field(..., description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)")
+    email_verified: bool = Field(..., description="Whether the user's email is verified")
+    phone_verified: bool = Field(..., description="Whether the user's phone number is verified")
 
+class UsersUpdateInput(BaseModel):
+    user_id: Optional[str] = Field(None, description="Unique identifier for the user (primary key)")
+    cognito_id: Optional[str] = Field(None, description="Cognito user identifier")
+    email: Optional[str] = Field(None, description="User's email address")
+    first_name: Optional[str] = Field(None, description="User's first name")
+    last_name: Optional[str] = Field(None, description="User's last name")
+    status: Optional[UserStatus] = Field(None, description="Current status of the user")
+    created_at: Optional[datetime] = Field(None, description="When the user was created")
+    updated_at: Optional[datetime] = Field(None, description="When the user was last updated")
+    phone_number: Optional[str] = Field(None, description="User's phone number")
+    groups: Optional[List[str]] = Field(None, description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)")
+    email_verified: Optional[bool] = Field(None, description="Whether the user's email is verified")
+    phone_verified: Optional[bool] = Field(None, description="Whether the user's phone number is verified")
 
+class UsersDeleteInput(BaseModel):
+    user_id: str
 
+class UsersDisableInput(BaseModel):
+    user_id: str
+    disabled: bool
 
-
-
-
-
-
-
-
-
-from .user_status import UserStatus
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+class UsersQueryByUserIdInput(BaseModel):
+    user_id: str
+class UsersQueryByEmailInput(BaseModel):
+    email: str
+class UsersQueryByCognitoIdInput(BaseModel):
+    cognito_id: str
 
 class Users(BaseModel):
     """Users model."""
-    
     user_id: str = Field(..., description="Unique identifier for the user (primary key)")
-    
     cognito_id: str = Field(..., description="Cognito user identifier")
-    
     email: str = Field(..., description="User's email address")
-    
     first_name: str = Field(..., description="User's first name")
-    
     last_name: str = Field(..., description="User's last name")
-    
     status: UserStatus = Field(..., description="Current status of the user")
-    
     created_at: datetime = Field(..., description="When the user was created")
-    
     updated_at: datetime = Field(..., description="When the user was last updated")
-    
     phone_number: str = Field(..., description="User's phone number")
-    
     groups: List[str] = Field(..., description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)")
-    
     email_verified: bool = Field(..., description="Whether the user's email is verified")
-    
     phone_verified: bool = Field(..., description="Whether the user's phone number is verified")
-    
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     @validator('createdAt', pre=True)
     def parse_createdAt(cls, value):
         """Parse timestamp to ISO format."""
@@ -90,9 +75,6 @@ class Users(BaseModel):
             return datetime.fromisoformat(value.replace('Z', '+00:00'))
         except (ValueError, TypeError):
             return None
-    
-    
-    
     @validator('updatedAt', pre=True)
     def parse_updatedAt(cls, value):
         """Parse timestamp to ISO format."""
@@ -104,16 +86,6 @@ class Users(BaseModel):
             return datetime.fromisoformat(value.replace('Z', '+00:00'))
         except (ValueError, TypeError):
             return None
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
 
     class Config:
         """Model configuration."""
@@ -122,66 +94,12 @@ class Users(BaseModel):
             datetime: lambda v: v.isoformat()
         }
 
-class UsersCreateInput(BaseModel):
-    
-    user_id: str = Field(..., description="Unique identifier for the user (primary key)")
-    
-    cognito_id: str = Field(..., description="Cognito user identifier")
-    
-    email: str = Field(..., description="User's email address")
-    
-    first_name: str = Field(..., description="User's first name")
-    
-    last_name: str = Field(..., description="User's last name")
-    
-    status: UserStatus = Field(..., description="Current status of the user")
-    
-    created_at: datetime = Field(..., description="When the user was created")
-    
-    updated_at: datetime = Field(..., description="When the user was last updated")
-    
-    phone_number: str = Field(..., description="User's phone number")
-    
-    groups: List[str] = Field(..., description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)")
-    
-    email_verified: bool = Field(..., description="Whether the user's email is verified")
-    
-    phone_verified: bool = Field(..., description="Whether the user's phone number is verified")
-    
-
-class UsersUpdateInput(BaseModel):
-    
-    user_id: Optional[str] = Field(None, description="Unique identifier for the user (primary key)")
-    
-    cognito_id: Optional[str] = Field(None, description="Cognito user identifier")
-    
-    email: Optional[str] = Field(None, description="User's email address")
-    
-    first_name: Optional[str] = Field(None, description="User's first name")
-    
-    last_name: Optional[str] = Field(None, description="User's last name")
-    
-    status: Optional[UserStatus] = Field(None, description="Current status of the user")
-    
-    created_at: Optional[datetime] = Field(None, description="When the user was created")
-    
-    updated_at: Optional[datetime] = Field(None, description="When the user was last updated")
-    
-    phone_number: Optional[str] = Field(None, description="User's phone number")
-    
-    groups: Optional[List[str]] = Field(None, description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)")
-    
-    email_verified: Optional[bool] = Field(None, description="Whether the user's email is verified")
-    
-    phone_verified: Optional[bool] = Field(None, description="Whether the user's phone number is verified")
-    
-
 class UsersResponse(BaseModel):
-    StatusCode: int = Field(..., description="HTTP status code")
-    Message: str = Field(..., description="Response message")
-    Data: Users = Field(..., description="Response data")
+    StatusCode: int
+    Message: Optional[str]
+    Data: Optional[Users]
 
 class UsersListResponse(BaseModel):
-    StatusCode: int = Field(..., description="HTTP status code")
-    Message: str = Field(..., description="Response message")
-    Data: List[Users] = Field(..., description="Response data")
+    StatusCode: int
+    Message: Optional[str]
+    Data: List[Users]

@@ -1,235 +1,133 @@
 /**
- *  DynamoDB model.
+ * Generated TypeScript models for ApplicationRoles
+ * Generated at 2025-05-30T08:46:39.113429
  */
 
-/*
- * schema.table: 
- * schema.name: ApplicationRoles
- */
+// Import enums and models used in this modelimport { RoleType } from './RoleType.enum';import { RoleStatus } from './RoleStatus.enum';
 
-// Import enums and models used in this model
-
-
-
-
-
-
-
-
-
-
-
-
-import { RoleType } from './RoleType.enum';
-
-
-
-
-
-import { RoleStatus } from './RoleStatus.enum';
-
-
-
-
-
-
-
-
-// CreateInput
-export type ApplicationRolesCreateInput = {
-
+// Input types
+export interface ApplicationRolesCreateInput {
   applicationRoleId: string;
-
   userId: string;
-
   applicationId: string;
-
   roleId: string;
-
   roleName: string;
-
   roleType: string;
-
   permissions: string[];
-
   status: string;
-
   createdAt: string;
-
   updatedAt: string;
+}
 
-};
+export interface ApplicationRolesUpdateInput {
+  applicationRoleId?: string;
+  userId?: string;
+  applicationId?: string;
+  roleId?: string;
+  roleName?: string;
+  roleType?: string;
+  permissions?: string[];
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
-// UpdateInput
-export type ApplicationRolesUpdateInput = {
-
+// Always include DeleteInput (PK fields only)
+export interface ApplicationRolesDeleteInput {
   applicationRoleId: string;
+}
 
-  userId: string;
-
-  applicationId: string;
-
-  roleId: string;
-
-  roleName: string;
-
-  roleType: string;
-
-  permissions: string[];
-
-  status: string;
-
-  createdAt: string;
-
-  updatedAt: string;
-
-};
-
-// QueryInput
-// Primary key queries
-export type ApplicationRolesQueryByApplicationRoleIdInput = {
+// Always include DisableInput (PK fields + disabled boolean)
+export interface ApplicationRolesDisableInput {
   applicationRoleId: string;
-};
+  disabled: boolean;
+}
 
-
-
-
-// Secondary index queries
-
-export type ApplicationRolesQueryByUserIdInput = {
+// QueryBy inputs for PK, SK, and all indexes
+export interface ApplicationRolesQueryByApplicationRoleIdInput {
+  applicationRoleId: string;
+}
+export interface ApplicationRolesQueryByUserIdInput {
   userId: string;
-};
-
-export type ApplicationRolesQueryByUserIdAndRoleIdInput = {
-  userId: string;
-  roleId: string;
-};
-
-
-export type ApplicationRolesQueryByApplicationIdInput = {
+}
+export interface ApplicationRolesQueryByApplicationIdInput {
   applicationId: string;
-};
-
-export type ApplicationRolesQueryByApplicationIdAndRoleIdInput = {
-  applicationId: string;
+}
+export interface ApplicationRolesQueryByRoleIdInput {
   roleId: string;
-};
+}
 
-
-export type ApplicationRolesQueryByRoleIdInput = {
-  roleId: string;
-};
-
-export type ApplicationRolesQueryByRoleIdAndRoleTypeInput = {
-  roleId: string;
-  roleType: string;
-};
-
-
-
-
-// Response types
-export type ApplicationRolesResponse = {
-  statusCode: number;
-  message: string;
-  data: IApplicationRoles | null;
-};
-
-export type ApplicationRolesCreateResponse = {
-  statusCode: number;
-  message: string;
-  data: IApplicationRoles | null;
-};
-
-export type ApplicationRolesUpdateResponse = {
-  statusCode: number;
-  message: string;
-  data: IApplicationRoles | null;
-};
-
+// Model
 export interface IApplicationRoles {
-
   applicationRoleId: string;
-
   userId: string;
-
   applicationId: string;
-
   roleId: string;
-
   roleName: string;
-
   roleType: string;
-
   permissions: string[];
-
   status: string;
-
   createdAt: string;
-
   updatedAt: string;
-
 }
 
 export class ApplicationRoles implements IApplicationRoles {
-
   applicationRoleId = '';
-
   userId = '';
-
   applicationId = '';
-
   roleId = '';
-
   roleName = '';
-
   roleType = '';
-
   permissions = [];
-
   status = '';
-
   createdAt = '';
-
   updatedAt = '';
-
-
   constructor(data: Partial<IApplicationRoles> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
-
-
-
-
-
-
-
-
-
-
-
-
         if (key === 'roleType' && typeof value === 'string') {
           this.roleType = RoleType[value as keyof typeof RoleType] ?? RoleType.UNKNOWN;
         } else 
-
-
-
-
-
         if (key === 'status' && typeof value === 'string') {
           this.status = RoleStatus[value as keyof typeof RoleStatus] ?? RoleStatus.UNKNOWN;
         } else 
-
-
-
-
-
-
         {
           this[key as keyof this] = value as this[keyof this];
         }
       }
     });
   }
-} 
+}
+
+
+export interface ApplicationRoles {
+  applicationRoleId: string;
+  userId: string;
+  applicationId: string;
+  roleId: string;
+  roleName: string;
+  roleType: RoleType;
+  permissions: string[];
+  status: RoleStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ProperCase response types
+export interface ApplicationRolesResponse {
+  StatusCode: number;
+  Message: string;
+  Data: ApplicationRoles;
+}
+
+export interface ApplicationRolesListResponse {
+  StatusCode: number;
+  Message: string;
+  Data: ApplicationRoles[];
+}
+
+// CRUD response aliases
+export type ApplicationRolesCreateResponse = ApplicationRolesResponse;
+export type ApplicationRolesUpdateResponse = ApplicationRolesResponse;
+export type ApplicationRolesDeleteResponse = ApplicationRolesResponse;
+export type ApplicationRolesDisableResponse = ApplicationRolesResponse;
