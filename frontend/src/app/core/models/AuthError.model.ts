@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for AuthError
- * Generated at 2025-05-30T10:59:55.180122
+ * Generated at 2025-05-30T11:43:03.963448
  */
 
 // Import enums and models used in this model
@@ -42,7 +42,7 @@ export interface IAuthError {
   code: string;
   message: string;
   description: string;
-  details: string;
+  details: Record<string, any>;
 }
 
 // Domain Model Class (uses enums for enum fields)
@@ -72,7 +72,7 @@ export class AuthError {
     return {
       code: this.code,
       message: this.message,
-      description: this.description,
+      description: this.description ?? '',
       details: this.details,
     };
   }

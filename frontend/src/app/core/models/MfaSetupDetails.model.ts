@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for MfaSetupDetails
- * Generated at 2025-05-30T10:59:55.228509
+ * Generated at 2025-05-30T11:43:04.016566
  */
 
 // Import enums and models used in this model
@@ -67,7 +67,7 @@ export class MfaSetupDetails {
     return {
       qrCode: this.qrCode,
       secretKey: this.secretKey,
-      setupUri: this.setupUri,
+      setupUri: this.setupUri ?? '',
     };
   }
 }

@@ -1,6 +1,7 @@
 from enum import Enum
 
 class ApplicationUserStatus(Enum):
+    UNKNOWN = "UNKNOWN"
     ACTIVE = "ACTIVE"
     INACTIVE = "INACTIVE"
     PENDING = "PENDING"

@@ -66,7 +66,7 @@ class {{ schema.name }}QueryBy{{ index.partition|to_pascal_case }}Input(BaseMode
 class {{ schema.name }}(BaseModel):
     """{{ schema.name }} model."""
 {% for attr in schema.attributes %}
-    {{ attr.name | to_snake_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}datetime{% elif attr.type == 'boolean' %}bool{% elif attr.type == 'array' %}List[str]{% else %}str{% endif %}{% endif %}{% if not attr.required %} = Field(None, description="{{ attr.description }}"){% else %} = Field(..., description="{{ attr.description }}"){% endif %}
+    {{ attr.name | to_snake_case }}: {% if attr.enum_type %}str{% elif attr.model_reference %}{{ attr.model_reference }}{% else %}{% if attr.type == 'timestamp' %}datetime{% elif attr.type == 'boolean' %}bool{% elif attr.type == 'array' %}List[str]{% elif attr.type == 'number' %}float{% else %}str{% endif %}{% endif %}{% if not attr.required %} = Field(None, description="{{ attr.description }}"){% else %} = Field(..., description="{{ attr.description }}"){% endif %}
 {% endfor %}
 
 {% for attr in schema.attributes %}
@@ -83,7 +83,36 @@ class {{ schema.name }}(BaseModel):
         except (ValueError, TypeError):
             return None
 {% endif %}
+{% if attr.type == 'boolean' %}
+    @validator('{{ attr.name }}', pre=True, always=True)
+    def parse_{{ attr.name }}_bool(cls, value):
+        if value is None:
+            return None
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            if value.lower() == 'true':
+                return True
+            if value.lower() == 'false':
+                return False
+        return bool(value)
+{% endif %}
 {% endfor %}
+
+    @classmethod
+    def from_dto(cls, dto: dict) -> "{{ schema.name }}":
+        return cls(
+{% for attr in schema.attributes %}
+            {{ attr.name | to_snake_case }}={% if attr.enum_type %}{{ attr.enum_type }}[dto.get('{{ attr.name | to_snake_case }}', '{{ attr.enum_type }}.UNKNOWN')] if dto.get('{{ attr.name | to_snake_case }}') else {{ attr.enum_type }}.UNKNOWN{% else %}dto.get('{{ attr.name | to_snake_case }}'){% endif %},
+{% endfor %}
+        )
+
+    def to_dto(self) -> dict:
+        return {
+{% for attr in schema.attributes %}
+            '{{ attr.name | to_snake_case }}': {% if attr.enum_type %}self.{{ attr.name | to_snake_case }}.value if self.{{ attr.name | to_snake_case }} else '{{ attr.enum_type }}.UNKNOWN'{% else %}self.{{ attr.name | to_snake_case }}{% endif %},
+{% endfor %}
+        }
 
     class Config:
         """Model configuration."""

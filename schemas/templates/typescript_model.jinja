@@ -116,7 +116,7 @@ export interface {{ schema.name }}QueryBy{{ index.partition|to_pascal_case }}Inp
 // DTO Interface (API/DB contract)
 export interface I{{ schema.name }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }}: string{% if attr.type|to_typescript_type == 'string[]' %}[]{% elif attr.type|to_typescript_type == 'number' %} | number{% elif attr.type|to_typescript_type == 'boolean' %} | boolean{% endif %};
+  {{ attr.name }}: {% if attr.enum_type %}string{% elif attr.model_reference %}{{ attr.model_reference }}{% else %}{{ attr.type|to_typescript_type }}{% endif %};
 {% endfor %}
 }
 
@@ -124,7 +124,7 @@ export interface I{{ schema.name }} {
 // Properties: '!' = required (definite assignment), '?' = optional (from schema)
 export class {{ schema.name }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }}{% if not attr.required %}?{% else %}!{% endif %}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{{ attr.type|to_typescript_type }}{% endif %};
+  {{ attr.name }}{% if not attr.required %}?{% else %}!{% endif %}: {% if attr.enum_type %}{{ attr.enum_type }}{% elif attr.model_reference %}{{ attr.model_reference }}{% else %}{{ attr.type|to_typescript_type }}{% endif %};
 {% endfor %}
 
   constructor(data: Partial<{{ schema.name }}> = {}) {
@@ -144,7 +144,7 @@ export class {{ schema.name }} {
   toDto(): I{{ schema.name }} {
     return {
 {% for attr in schema.attributes %}
-      {{ attr.name }}: {% if attr.enum_type %}this.{{ attr.name }}.toString(){% else %}this.{{ attr.name }}{% endif %},
+      {{ attr.name }}: {% if attr.enum_type %}this.{{ attr.name }}.toString(){% elif attr.type|to_typescript_type == 'boolean' %}this.{{ attr.name }} ?? false{% elif attr.type|to_typescript_type == 'string' and not attr.required %}this.{{ attr.name }} ?? ''{% elif attr.type|to_typescript_type == 'string[]' and not attr.required %}this.{{ attr.name }} ?? []{% elif attr.type|to_typescript_type == 'number' and not attr.required %}this.{{ attr.name }} ?? 0{% else %}this.{{ attr.name }}{% endif %},
 {% endfor %}
     };
   }

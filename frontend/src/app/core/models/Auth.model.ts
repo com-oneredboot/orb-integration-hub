@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for Auth
- * Generated at 2025-05-30T10:59:55.154708
+ * Generated at 2025-05-30T11:43:03.936564
  */
 
 // Import enums and models used in this model
@@ -49,14 +49,14 @@ export interface AuthQueryByInput {
 
 // DTO Interface (API/DB contract)
 export interface IAuth {
-  statusCode: string | number;
-  isSignedIn: string | boolean;
+  statusCode: number;
+  isSignedIn: boolean;
   message: string;
-  user: string;
-  needsMFA: string | boolean;
-  needsMFASetup: string | boolean;
+  user: IUsers;
+  needsMFA: boolean;
+  needsMFASetup: boolean;
   mfaType: string;
-  mfaSetupDetails: string;
+  mfaSetupDetails: MfaSetupDetails;
 }
 
 // Domain Model Class (uses enums for enum fields)
@@ -93,12 +93,12 @@ export class Auth {
   toDto(): IAuth {
     return {
       statusCode: this.statusCode,
-      isSignedIn: this.isSignedIn,
-      message: this.message,
+      isSignedIn: this.isSignedIn ?? false,
+      message: this.message ?? '',
       user: this.user,
-      needsMFA: this.needsMFA,
-      needsMFASetup: this.needsMFASetup,
-      mfaType: this.mfaType,
+      needsMFA: this.needsMFA ?? false,
+      needsMFASetup: this.needsMFASetup ?? false,
+      mfaType: this.mfaType ?? '',
       mfaSetupDetails: this.mfaSetupDetails,
     };
   }

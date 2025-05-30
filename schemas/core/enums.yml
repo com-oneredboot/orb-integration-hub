@@ -28,12 +28,14 @@ RoleType:
   - CUSTOM
 
 RoleStatus:
+  - UNKNOWN
   - ACTIVE
   - INACTIVE
   - DELETED
 
 # Application status enums
 ApplicationStatus:
+  - UNKNOWN
   - ACTIVE
   - INACTIVE
   - PENDING
@@ -41,6 +43,7 @@ ApplicationStatus:
 
 # Application user status enums
 ApplicationUserStatus:
+  - UNKNOWN
   - ACTIVE
   - INACTIVE
   - PENDING
@@ -49,6 +52,7 @@ ApplicationUserStatus:
 
 # Application role status enums
 ApplicationRoleStatus:
+  - UNKNOWN
   - ACTIVE
   - INACTIVE
   - PENDING

@@ -45,7 +45,7 @@ class ApplicationUsersQueryByApplicationIdInput(BaseModel):
 # Properties: Field(...) = required (from schema), Optional[...] = optional (from schema)
 class ApplicationUsers(BaseModel):
     """ApplicationUsers model."""
-    application_user_id: str = Field(..., description="Unique identifier for the application user membership (primary key)")    user_id: str = Field(..., description="ID of the user (foreign key to Users)")    application_id: str = Field(..., description="ID of the application (foreign key to Applications)")    status: ApplicationUserStatus = Field(..., description="Current status of the user in the application")    created_at: datetime = Field(..., description="When the user was added to the application")    updated_at: datetime = Field(..., description="When the membership was last updated")
+    application_user_id: str = Field(..., description="Unique identifier for the application user membership (primary key)")    user_id: str = Field(..., description="ID of the user (foreign key to Users)")    application_id: str = Field(..., description="ID of the application (foreign key to Applications)")    status: str = Field(..., description="Current status of the user in the application")    created_at: datetime = Field(..., description="When the user was added to the application")    updated_at: datetime = Field(..., description="When the membership was last updated")
     @validator('createdAt', pre=True)
     def parse_createdAt(cls, value):
         """Parse timestamp to ISO format."""
@@ -68,6 +68,27 @@ class ApplicationUsers(BaseModel):
             return datetime.fromisoformat(value.replace('Z', '+00:00'))
         except (ValueError, TypeError):
             return None
+
+    @classmethod
+    def from_dto(cls, dto: dict) -> "ApplicationUsers":
+        return cls(
+            application_user_id=dto.get('application_user_id'),
+            user_id=dto.get('user_id'),
+            application_id=dto.get('application_id'),
+            status=ApplicationUserStatus[dto.get('status', 'ApplicationUserStatus.UNKNOWN')] if dto.get('status') else ApplicationUserStatus.UNKNOWN,
+            created_at=dto.get('created_at'),
+            updated_at=dto.get('updated_at'),
+        )
+
+    def to_dto(self) -> dict:
+        return {
+            'application_user_id': self.application_user_id,
+            'user_id': self.user_id,
+            'application_id': self.application_id,
+            'status': self.status.value if self.status else 'ApplicationUserStatus.UNKNOWN',
+            'created_at': self.created_at,
+            'updated_at': self.updated_at,
+        }
 
     class Config:
         """Model configuration."""

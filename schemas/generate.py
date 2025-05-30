@@ -1209,6 +1209,13 @@ def load_schemas() -> dict:
             model = schema_dict['model']
             attributes = []
             for attr_name, attr_info in model['attributes'].items():
+                # Determine dto_type for special boolean fields
+                # Default: dto_type = type
+                dto_type = attr_info['type']
+                # Special case: if attr_name in a known list, or if attr_info has a flag, set dto_type to 'string | boolean'
+                # You can make this more dynamic if needed
+                if attr_name in ['emailVerified', 'phoneVerified', 'isSignedIn', 'needsMFA', 'needsMFASetup']:
+                    dto_type = 'string | boolean'
                 attr = Attribute(
                     name=attr_name,
                     type=attr_info['type'],
@@ -1217,6 +1224,8 @@ def load_schemas() -> dict:
                     enum_type=attr_info.get('enum_type'),
                     enum_values=attr_info.get('enum_values')
                 )
+                # Attach dto_type as an attribute (monkey-patch for dataclass)
+                setattr(attr, 'dto_type', dto_type)
                 attributes.append(attr)
             keys = model['keys']
             partition_key = keys['primary']['partition']
@@ -1246,6 +1255,13 @@ def load_schemas() -> dict:
             model = schema_dict['model']
             attributes = []
             for attr_name, attr_info in model['attributes'].items():
+                # Determine dto_type for special boolean fields
+                # Default: dto_type = type
+                dto_type = attr_info['type']
+                # Special case: if attr_name in a known list, or if attr_info has a flag, set dto_type to 'string | boolean'
+                # You can make this more dynamic if needed
+                if attr_name in ['emailVerified', 'phoneVerified', 'isSignedIn', 'needsMFA', 'needsMFASetup']:
+                    dto_type = 'string | boolean'
                 attr = Attribute(
                     name=attr_name,
                     type=attr_info['type'],
@@ -1254,6 +1270,8 @@ def load_schemas() -> dict:
                     enum_type=attr_info.get('enum_type'),
                     enum_values=attr_info.get('enum_values')
                 )
+                # Attach dto_type as an attribute (monkey-patch for dataclass)
+                setattr(attr, 'dto_type', dto_type)
                 attributes.append(attr)
             auth_config = model.get('authConfig')
             schema_obj = GraphQLType(

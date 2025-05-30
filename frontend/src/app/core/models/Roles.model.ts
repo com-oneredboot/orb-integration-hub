@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for Roles
- * Generated at 2025-05-30T10:59:55.274194
+ * Generated at 2025-05-30T11:43:04.073670
  */
 
 // Import enums and models used in this model
@@ -86,7 +86,7 @@ export class Roles {
   toDto(): IRoles {
     return {
       roleId: this.roleId,
-      userId: this.userId,
+      userId: this.userId ?? '',
       roleType: this.roleType.toString(),
       status: this.status.toString(),
       createdAt: this.createdAt,

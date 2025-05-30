@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for Users
- * Generated at 2025-05-30T10:59:55.328780
+ * Generated at 2025-05-30T11:43:04.138575
  */
 
 // Import enums and models used in this model
@@ -72,8 +72,8 @@ export interface IUsers {
   updatedAt: string;
   phoneNumber: string;
   groups: string[];
-  emailVerified: string | boolean;
-  phoneVerified: string | boolean;
+  emailVerified: boolean;
+  phoneVerified: boolean;
 }
 
 // Domain Model Class (uses enums for enum fields)
@@ -125,10 +125,10 @@ export class Users {
       status: this.status.toString(),
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
-      phoneNumber: this.phoneNumber,
-      groups: this.groups,
-      emailVerified: this.emailVerified,
-      phoneVerified: this.phoneVerified,
+      phoneNumber: this.phoneNumber ?? '',
+      groups: this.groups ?? [],
+      emailVerified: this.emailVerified ?? false,
+      phoneVerified: this.phoneVerified ?? false,
     };
   }
 }

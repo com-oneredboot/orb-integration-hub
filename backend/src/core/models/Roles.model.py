@@ -42,7 +42,7 @@ class RolesQueryByUserIdInput(BaseModel):
 # Properties: Field(...) = required (from schema), Optional[...] = optional (from schema)
 class Roles(BaseModel):
     """Roles model."""
-    role_id: str = Field(..., description="Unique identifier for the role (primary key)")    user_id: str = Field(None, description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.")    role_type: RoleType = Field(..., description="Type of the role")    status: RoleStatus = Field(..., description="Current status of the role")    created_at: datetime = Field(..., description="When the role was created")    updated_at: datetime = Field(..., description="When the role was last updated")
+    role_id: str = Field(..., description="Unique identifier for the role (primary key)")    user_id: str = Field(None, description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.")    role_type: str = Field(..., description="Type of the role")    status: str = Field(..., description="Current status of the role")    created_at: datetime = Field(..., description="When the role was created")    updated_at: datetime = Field(..., description="When the role was last updated")
     @validator('createdAt', pre=True)
     def parse_createdAt(cls, value):
         """Parse timestamp to ISO format."""
@@ -65,6 +65,27 @@ class Roles(BaseModel):
             return datetime.fromisoformat(value.replace('Z', '+00:00'))
         except (ValueError, TypeError):
             return None
+
+    @classmethod
+    def from_dto(cls, dto: dict) -> "Roles":
+        return cls(
+            role_id=dto.get('role_id'),
+            user_id=dto.get('user_id'),
+            role_type=RoleType[dto.get('role_type', 'RoleType.UNKNOWN')] if dto.get('role_type') else RoleType.UNKNOWN,
+            status=RoleStatus[dto.get('status', 'RoleStatus.UNKNOWN')] if dto.get('status') else RoleStatus.UNKNOWN,
+            created_at=dto.get('created_at'),
+            updated_at=dto.get('updated_at'),
+        )
+
+    def to_dto(self) -> dict:
+        return {
+            'role_id': self.role_id,
+            'user_id': self.user_id,
+            'role_type': self.role_type.value if self.role_type else 'RoleType.UNKNOWN',
+            'status': self.status.value if self.status else 'RoleStatus.UNKNOWN',
+            'created_at': self.created_at,
+            'updated_at': self.updated_at,
+        }
 
     class Config:
         """Model configuration."""
