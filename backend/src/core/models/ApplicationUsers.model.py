@@ -7,6 +7,7 @@ from typing import Optional, List
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
 from enum import Enumfrom .application_user_status import ApplicationUserStatus
+# CRUD Input Types
 class ApplicationUsersCreateInput(BaseModel):
     application_user_id: str = Field(..., description="Unique identifier for the application user membership (primary key)")
     user_id: str = Field(..., description="ID of the user (foreign key to Users)")
@@ -30,22 +31,21 @@ class ApplicationUsersDisableInput(BaseModel):
     application_user_id: str
     disabled: bool
 
+# QueryBy Inputs for PK, SK, Both, and all secondary indexes
 class ApplicationUsersQueryByApplicationUserIdInput(BaseModel):
     application_user_id: str
+
 class ApplicationUsersQueryByUserIdInput(BaseModel):
     user_id: str
+
 class ApplicationUsersQueryByApplicationIdInput(BaseModel):
     application_id: str
 
+# Main Model (DTO)
+# Properties: Field(...) = required (from schema), Optional[...] = optional (from schema)
 class ApplicationUsers(BaseModel):
     """ApplicationUsers model."""
-    application_user_id: str = Field(..., description="Unique identifier for the application user membership (primary key)")
-    user_id: str = Field(..., description="ID of the user (foreign key to Users)")
-    application_id: str = Field(..., description="ID of the application (foreign key to Applications)")
-    status: ApplicationUserStatus = Field(..., description="Current status of the user in the application")
-    created_at: datetime = Field(..., description="When the user was added to the application")
-    updated_at: datetime = Field(..., description="When the membership was last updated")
-
+    application_user_id: str = Field(..., description="Unique identifier for the application user membership (primary key)")    user_id: str = Field(..., description="ID of the user (foreign key to Users)")    application_id: str = Field(..., description="ID of the application (foreign key to Applications)")    status: ApplicationUserStatus = Field(..., description="Current status of the user in the application")    created_at: datetime = Field(..., description="When the user was added to the application")    updated_at: datetime = Field(..., description="When the membership was last updated")
     @validator('createdAt', pre=True)
     def parse_createdAt(cls, value):
         """Parse timestamp to ISO format."""
@@ -76,6 +76,7 @@ class ApplicationUsers(BaseModel):
             datetime: lambda v: v.isoformat()
         }
 
+# ProperCase Response Types
 class ApplicationUsersResponse(BaseModel):
     StatusCode: int
     Message: Optional[str]
@@ -85,3 +86,9 @@ class ApplicationUsersListResponse(BaseModel):
     StatusCode: int
     Message: Optional[str]
     Data: List[ApplicationUsers]
+
+# CRUD Response Aliases
+ApplicationUsersCreateResponse = ApplicationUsersResponse
+ApplicationUsersUpdateResponse = ApplicationUsersResponse
+ApplicationUsersDeleteResponse = ApplicationUsersResponse
+ApplicationUsersDisableResponse = ApplicationUsersResponse

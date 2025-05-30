@@ -7,6 +7,7 @@ from typing import Optional, List
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
 from enum import Enumfrom .application_status import ApplicationStatus
+# CRUD Input Types
 class ApplicationsCreateInput(BaseModel):
     application_id: str = Field(..., description="Unique identifier for the application (primary key)")
     name: str = Field(..., description="Name of the application")
@@ -30,18 +31,15 @@ class ApplicationsDisableInput(BaseModel):
     application_id: str
     disabled: bool
 
+# QueryBy Inputs for PK, SK, Both, and all secondary indexes
 class ApplicationsQueryByApplicationIdInput(BaseModel):
     application_id: str
 
+# Main Model (DTO)
+# Properties: Field(...) = required (from schema), Optional[...] = optional (from schema)
 class Applications(BaseModel):
     """Applications model."""
-    application_id: str = Field(..., description="Unique identifier for the application (primary key)")
-    name: str = Field(..., description="Name of the application")
-    owner_id: str = Field(..., description="ID of the user who owns the application (foreign key to Users)")
-    status: ApplicationStatus = Field(..., description="Current status of the application")
-    created_at: datetime = Field(..., description="When the application was created")
-    updated_at: datetime = Field(..., description="When the application was last updated")
-
+    application_id: str = Field(..., description="Unique identifier for the application (primary key)")    name: str = Field(..., description="Name of the application")    owner_id: str = Field(..., description="ID of the user who owns the application (foreign key to Users)")    status: ApplicationStatus = Field(..., description="Current status of the application")    created_at: datetime = Field(..., description="When the application was created")    updated_at: datetime = Field(..., description="When the application was last updated")
     @validator('createdAt', pre=True)
     def parse_createdAt(cls, value):
         """Parse timestamp to ISO format."""
@@ -72,6 +70,7 @@ class Applications(BaseModel):
             datetime: lambda v: v.isoformat()
         }
 
+# ProperCase Response Types
 class ApplicationsResponse(BaseModel):
     StatusCode: int
     Message: Optional[str]
@@ -81,3 +80,9 @@ class ApplicationsListResponse(BaseModel):
     StatusCode: int
     Message: Optional[str]
     Data: List[Applications]
+
+# CRUD Response Aliases
+ApplicationsCreateResponse = ApplicationsResponse
+ApplicationsUpdateResponse = ApplicationsResponse
+ApplicationsDeleteResponse = ApplicationsResponse
+ApplicationsDisableResponse = ApplicationsResponse

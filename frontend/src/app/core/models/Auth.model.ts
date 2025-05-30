@@ -1,9 +1,12 @@
 /**
  * Generated TypeScript models for Auth
- * Generated at 2025-05-30T08:46:39.266799
+ * Generated at 2025-05-30T10:59:55.154708
  */
 
-// Import enums and models used in this modelimport { MfaSetupDetails } from './MfaSetupDetails.model';import { Users } from './Users.model';
+// Import enums and models used in this model
+import { MfaSetupDetails } from './MfaSetupDetails.model';
+import { Users } from './Users.model';
+
 
 // Input types
 export interface AuthCreateInput {
@@ -44,49 +47,63 @@ export interface AuthQueryByInput {
   : string;
 }
 
-// Model
+// DTO Interface (API/DB contract)
 export interface IAuth {
-  statusCode: number;
-  isSignedIn: boolean;
-  message: string;
-  user: IUsers;
-  needsMFA: boolean;
-  needsMFASetup: boolean;
-  mfaType: string;
-  mfaSetupDetails: MfaSetupDetails;
-}
-
-export class Auth implements IAuth {
-  statusCode = 0;
-  isSignedIn = false;
-  message = '';
-  user = undefined;
-  needsMFA = false;
-  needsMFASetup = false;
-  mfaType = '';
-  mfaSetupDetails = undefined;
-  constructor(data: Partial<IAuth> = {}) {
-    Object.entries(data).forEach(([key, value]) => {
-      if (key in this) {
-        {
-          this[key as keyof this] = value as this[keyof this];
-        }
-      }
-    });
-  }
-}
-
-
-export interface Auth {
-  statusCode: string;
-  isSignedIn: boolean;
+  statusCode: string | number;
+  isSignedIn: string | boolean;
   message: string;
   user: string;
-  needsMFA: boolean;
-  needsMFASetup: boolean;
+  needsMFA: string | boolean;
+  needsMFASetup: string | boolean;
   mfaType: string;
   mfaSetupDetails: string;
 }
+
+// Domain Model Class (uses enums for enum fields)
+// Properties: '!' = required (definite assignment), '?' = optional (from schema)
+export class Auth {
+  statusCode!: number;
+  isSignedIn?: boolean;
+  message?: string;
+  user?: IUsers;
+  needsMFA?: boolean;
+  needsMFASetup?: boolean;
+  mfaType?: string;
+  mfaSetupDetails?: MfaSetupDetails;
+
+  constructor(data: Partial<Auth> = {}) {
+    Object.assign(this, data);
+  }
+
+  // Convert from DTO (IAuth) to domain model
+  static fromDto(dto: IAuth): Auth {
+    return new Auth({
+      statusCode: dto.statusCode,
+      isSignedIn: dto.isSignedIn,
+      message: dto.message,
+      user: dto.user,
+      needsMFA: dto.needsMFA,
+      needsMFASetup: dto.needsMFASetup,
+      mfaType: dto.mfaType,
+      mfaSetupDetails: dto.mfaSetupDetails,
+    });
+  }
+
+  // Convert domain model to DTO (IAuth)
+  toDto(): IAuth {
+    return {
+      statusCode: this.statusCode,
+      isSignedIn: this.isSignedIn,
+      message: this.message,
+      user: this.user,
+      needsMFA: this.needsMFA,
+      needsMFASetup: this.needsMFASetup,
+      mfaType: this.mfaType,
+      mfaSetupDetails: this.mfaSetupDetails,
+    };
+  }
+}
+
 
 // ProperCase response types
 export interface AuthResponse {

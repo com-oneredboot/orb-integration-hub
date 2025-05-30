@@ -7,6 +7,7 @@ from typing import Optional, List
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
 from enum import Enumfrom .role_type import RoleTypefrom .role_status import RoleStatus
+# CRUD Input Types
 class RolesCreateInput(BaseModel):
     role_id: str = Field(..., description="Unique identifier for the role (primary key)")
     user_id: str = Field(..., description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.")
@@ -30,20 +31,18 @@ class RolesDisableInput(BaseModel):
     role_id: str
     disabled: bool
 
+# QueryBy Inputs for PK, SK, Both, and all secondary indexes
 class RolesQueryByRoleIdInput(BaseModel):
     role_id: str
+
 class RolesQueryByUserIdInput(BaseModel):
     user_id: str
 
+# Main Model (DTO)
+# Properties: Field(...) = required (from schema), Optional[...] = optional (from schema)
 class Roles(BaseModel):
     """Roles model."""
-    role_id: str = Field(..., description="Unique identifier for the role (primary key)")
-    user_id: str = Field(..., description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.")
-    role_type: RoleType = Field(..., description="Type of the role")
-    status: RoleStatus = Field(..., description="Current status of the role")
-    created_at: datetime = Field(..., description="When the role was created")
-    updated_at: datetime = Field(..., description="When the role was last updated")
-
+    role_id: str = Field(..., description="Unique identifier for the role (primary key)")    user_id: str = Field(None, description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.")    role_type: RoleType = Field(..., description="Type of the role")    status: RoleStatus = Field(..., description="Current status of the role")    created_at: datetime = Field(..., description="When the role was created")    updated_at: datetime = Field(..., description="When the role was last updated")
     @validator('createdAt', pre=True)
     def parse_createdAt(cls, value):
         """Parse timestamp to ISO format."""
@@ -74,6 +73,7 @@ class Roles(BaseModel):
             datetime: lambda v: v.isoformat()
         }
 
+# ProperCase Response Types
 class RolesResponse(BaseModel):
     StatusCode: int
     Message: Optional[str]
@@ -83,3 +83,9 @@ class RolesListResponse(BaseModel):
     StatusCode: int
     Message: Optional[str]
     Data: List[Roles]
+
+# CRUD Response Aliases
+RolesCreateResponse = RolesResponse
+RolesUpdateResponse = RolesResponse
+RolesDeleteResponse = RolesResponse
+RolesDisableResponse = RolesResponse

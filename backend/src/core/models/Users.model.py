@@ -7,6 +7,7 @@ from typing import Optional, List
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
 from enum import Enumfrom .user_status import UserStatus
+# CRUD Input Types
 class UsersCreateInput(BaseModel):
     user_id: str = Field(..., description="Unique identifier for the user (primary key)")
     cognito_id: str = Field(..., description="Cognito user identifier")
@@ -42,28 +43,21 @@ class UsersDisableInput(BaseModel):
     user_id: str
     disabled: bool
 
+# QueryBy Inputs for PK, SK, Both, and all secondary indexes
 class UsersQueryByUserIdInput(BaseModel):
     user_id: str
+
 class UsersQueryByEmailInput(BaseModel):
     email: str
+
 class UsersQueryByCognitoIdInput(BaseModel):
     cognito_id: str
 
+# Main Model (DTO)
+# Properties: Field(...) = required (from schema), Optional[...] = optional (from schema)
 class Users(BaseModel):
     """Users model."""
-    user_id: str = Field(..., description="Unique identifier for the user (primary key)")
-    cognito_id: str = Field(..., description="Cognito user identifier")
-    email: str = Field(..., description="User's email address")
-    first_name: str = Field(..., description="User's first name")
-    last_name: str = Field(..., description="User's last name")
-    status: UserStatus = Field(..., description="Current status of the user")
-    created_at: datetime = Field(..., description="When the user was created")
-    updated_at: datetime = Field(..., description="When the user was last updated")
-    phone_number: str = Field(..., description="User's phone number")
-    groups: List[str] = Field(..., description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)")
-    email_verified: bool = Field(..., description="Whether the user's email is verified")
-    phone_verified: bool = Field(..., description="Whether the user's phone number is verified")
-
+    user_id: str = Field(..., description="Unique identifier for the user (primary key)")    cognito_id: str = Field(..., description="Cognito user identifier")    email: str = Field(..., description="User's email address")    first_name: str = Field(..., description="User's first name")    last_name: str = Field(..., description="User's last name")    status: UserStatus = Field(..., description="Current status of the user")    created_at: datetime = Field(..., description="When the user was created")    updated_at: datetime = Field(..., description="When the user was last updated")    phone_number: str = Field(None, description="User's phone number")    groups: List[str] = Field(None, description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)")    email_verified: bool = Field(None, description="Whether the user's email is verified")    phone_verified: bool = Field(None, description="Whether the user's phone number is verified")
     @validator('createdAt', pre=True)
     def parse_createdAt(cls, value):
         """Parse timestamp to ISO format."""
@@ -94,6 +88,7 @@ class Users(BaseModel):
             datetime: lambda v: v.isoformat()
         }
 
+# ProperCase Response Types
 class UsersResponse(BaseModel):
     StatusCode: int
     Message: Optional[str]
@@ -103,3 +98,9 @@ class UsersListResponse(BaseModel):
     StatusCode: int
     Message: Optional[str]
     Data: List[Users]
+
+# CRUD Response Aliases
+UsersCreateResponse = UsersResponse
+UsersUpdateResponse = UsersResponse
+UsersDeleteResponse = UsersResponse
+UsersDisableResponse = UsersResponse

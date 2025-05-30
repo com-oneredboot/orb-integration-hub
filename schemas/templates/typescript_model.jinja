@@ -4,14 +4,12 @@
  */
 
 // Import enums and models used in this model
-{%- for attr in schema.attributes %}
-{%- if attr.enum_type %}
-import { {{ attr.enum_type }} } from './{{ attr.enum_type }}.enum';
-{%- endif %}
-{%- endfor %}
-{%- for model in model_imports %}
+{% for enum in enum_imports %}
+import { {{ enum }} } from './{{ enum }}.enum';
+{% endfor %}
+{% for model in model_imports %}
 import { {{ model }} } from './{{ model }}.model';
-{%- endfor %}
+{% endfor %}
 
 {% if schema.type == 'table' %}
 // CreateInput
@@ -115,32 +113,40 @@ export interface {{ schema.name }}QueryBy{{ index.partition|to_pascal_case }}Inp
 }
 {% endfor %}
 
-// Model
+// DTO Interface (API/DB contract)
 export interface I{{ schema.name }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }}: {{ attr.type|to_typescript_type }};
+  {{ attr.name }}: string{% if attr.type|to_typescript_type == 'string[]' %}[]{% elif attr.type|to_typescript_type == 'number' %} | number{% elif attr.type|to_typescript_type == 'boolean' %} | boolean{% endif %};
 {% endfor %}
 }
 
-export class {{ schema.name }} implements I{{ schema.name }} {
+// Domain Model Class (uses enums for enum fields)
+// Properties: '!' = required (definite assignment), '?' = optional (from schema)
+export class {{ schema.name }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }} = {% if attr.type|to_typescript_type == 'string' %}''{% elif attr.type|to_typescript_type == 'number' %}0{% elif attr.type|to_typescript_type == 'boolean' %}false{% elif attr.type|to_typescript_type == 'string[]' %}[]{% elif attr.type|to_typescript_type == 'Record<string, any>' %}{}{% elif attr.type|to_typescript_type == 'string | undefined' %}undefined{% elif attr.type|to_typescript_type == 'boolean | undefined' %}undefined{% elif attr.type|to_typescript_type == 'Record<string, any> | undefined' %}undefined{% else %}undefined{% endif %};
+  {{ attr.name }}{% if not attr.required %}?{% else %}!{% endif %}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{{ attr.type|to_typescript_type }}{% endif %};
 {% endfor %}
-  constructor(data: Partial<I{{ schema.name }}> = {}) {
-    Object.entries(data).forEach(([key, value]) => {
-      if (key in this) {
+
+  constructor(data: Partial<{{ schema.name }}> = {}) {
+    Object.assign(this, data);
+  }
+
+  // Convert from DTO (I{{ schema.name }}) to domain model
+  static fromDto(dto: I{{ schema.name }}): {{ schema.name }} {
+    return new {{ schema.name }}({
 {% for attr in schema.attributes %}
-{% if attr.enum_type %}
-        if (key === '{{ attr.name }}' && typeof value === 'string') {
-          this.{{ attr.name }} = {{ attr.enum_type }}[value as keyof typeof {{ attr.enum_type }}] ?? {{ attr.enum_type }}.UNKNOWN;
-        } else 
-{% endif %}
+      {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}[dto.{{ attr.name }} as keyof typeof {{ attr.enum_type }}] ?? {{ attr.enum_type }}.UNKNOWN{% else %}dto.{{ attr.name }}{% endif %},
 {% endfor %}
-        {
-          this[key as keyof this] = value as this[keyof this];
-        }
-      }
     });
+  }
+
+  // Convert domain model to DTO (I{{ schema.name }})
+  toDto(): I{{ schema.name }} {
+    return {
+{% for attr in schema.attributes %}
+      {{ attr.name }}: {% if attr.enum_type %}this.{{ attr.name }}.toString(){% else %}this.{{ attr.name }}{% endif %},
+{% endfor %}
+    };
   }
 }
 
@@ -153,12 +159,6 @@ export enum {{ enum_name }} {
 }
 {% endfor %}
 {% endif %}
-
-export interface {{ schema.name }} {
-  {% for attr in schema.attributes %}
-  {{ attr.name | to_camel_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}Date{% elif attr.type == 'boolean' %}boolean{% elif attr.type == 'array' %}string[]{% else %}string{% endif %}{% endif %};
-  {% endfor %}
-}
 
 // ProperCase response types
 export interface {{ schema.name }}Response {

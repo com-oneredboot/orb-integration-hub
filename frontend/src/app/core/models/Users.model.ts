@@ -1,9 +1,11 @@
 /**
  * Generated TypeScript models for Users
- * Generated at 2025-05-30T08:46:39.448965
+ * Generated at 2025-05-30T10:59:55.328780
  */
 
-// Import enums and models used in this modelimport { UserStatus } from './UserStatus.enum';
+// Import enums and models used in this model
+import { UserStatus } from './UserStatus.enum';
+
 
 // Input types
 export interface UsersCreateInput {
@@ -58,7 +60,7 @@ export interface UsersQueryByCognitoIdInput {
   cognitoId: string;
 }
 
-// Model
+// DTO Interface (API/DB contract)
 export interface IUsers {
   userId: string;
   cognitoId: string;
@@ -70,52 +72,67 @@ export interface IUsers {
   updatedAt: string;
   phoneNumber: string;
   groups: string[];
-  emailVerified: boolean;
-  phoneVerified: boolean;
+  emailVerified: string | boolean;
+  phoneVerified: string | boolean;
 }
 
-export class Users implements IUsers {
-  userId = '';
-  cognitoId = '';
-  email = '';
-  firstName = '';
-  lastName = '';
-  status = '';
-  createdAt = '';
-  updatedAt = '';
-  phoneNumber = '';
-  groups = [];
-  emailVerified = false;
-  phoneVerified = false;
-  constructor(data: Partial<IUsers> = {}) {
-    Object.entries(data).forEach(([key, value]) => {
-      if (key in this) {
-        if (key === 'status' && typeof value === 'string') {
-          this.status = UserStatus[value as keyof typeof UserStatus] ?? UserStatus.UNKNOWN;
-        } else 
-        {
-          this[key as keyof this] = value as this[keyof this];
-        }
-      }
+// Domain Model Class (uses enums for enum fields)
+// Properties: '!' = required (definite assignment), '?' = optional (from schema)
+export class Users {
+  userId!: string;
+  cognitoId!: string;
+  email!: string;
+  firstName!: string;
+  lastName!: string;
+  status!: UserStatus;
+  createdAt!: string;
+  updatedAt!: string;
+  phoneNumber?: string;
+  groups?: string[];
+  emailVerified?: boolean;
+  phoneVerified?: boolean;
+
+  constructor(data: Partial<Users> = {}) {
+    Object.assign(this, data);
+  }
+
+  // Convert from DTO (IUsers) to domain model
+  static fromDto(dto: IUsers): Users {
+    return new Users({
+      userId: dto.userId,
+      cognitoId: dto.cognitoId,
+      email: dto.email,
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+      status: UserStatus[dto.status as keyof typeof UserStatus] ?? UserStatus.UNKNOWN,
+      createdAt: dto.createdAt,
+      updatedAt: dto.updatedAt,
+      phoneNumber: dto.phoneNumber,
+      groups: dto.groups,
+      emailVerified: dto.emailVerified,
+      phoneVerified: dto.phoneVerified,
     });
+  }
+
+  // Convert domain model to DTO (IUsers)
+  toDto(): IUsers {
+    return {
+      userId: this.userId,
+      cognitoId: this.cognitoId,
+      email: this.email,
+      firstName: this.firstName,
+      lastName: this.lastName,
+      status: this.status.toString(),
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+      phoneNumber: this.phoneNumber,
+      groups: this.groups,
+      emailVerified: this.emailVerified,
+      phoneVerified: this.phoneVerified,
+    };
   }
 }
 
-
-export interface Users {
-  userId: string;
-  cognitoId: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  status: UserStatus;
-  createdAt: Date;
-  updatedAt: Date;
-  phoneNumber: string;
-  groups: string[];
-  emailVerified: boolean;
-  phoneVerified: boolean;
-}
 
 // ProperCase response types
 export interface UsersResponse {

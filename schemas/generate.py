@@ -635,46 +635,40 @@ def generate_python_model(table: str, schema: Union[TableSchema, GraphQLType]) -
 
 def generate_typescript_model(table: str, schema: Union[TableSchema, GraphQLType], is_static=False, model_type=None, all_model_names=None) -> None:
     """Generate TypeScript model from schema."""
-    # Always use the unified, DRY template
     template_name = 'typescript_model.jinja'
-    
-    # Get template
     env = setup_jinja_env()
     template = env.get_template(template_name)
-    
-    # Track generated query types to prevent duplicates (if needed for future use)
-    generated_query_types = set()
-    if isinstance(schema, TableSchema):
-        generated_query_types.add('QueryBy' + to_pascal_case(schema.partition_key) + 'Input')
-        if schema.sort_key and schema.sort_key != 'None':
-            generated_query_types.add('QueryBy' + to_pascal_case(schema.sort_key) + 'Input')
-            generated_query_types.add('QueryByBothInput')
-        if schema.secondary_indexes:
-            for index in schema.secondary_indexes:
-                generated_query_types.add('QueryBy' + to_pascal_case(index['partition']) + 'Input')
-    
-    # Prepare model imports
-    model_imports = []
-    if all_model_names:
-        for attr in schema.attributes:
-            if attr.type in all_model_names and attr.type != table:
-                model_imports.append(attr.type)
-            elif attr.type.startswith('I') and attr.type[1:] in all_model_names and attr.type[1:] != table:
-                model_imports.append(attr.type[1:])
-            elif attr.type.startswith('array<') and attr.type[6:-1] in all_model_names and attr.type[6:-1] != table:
-                model_imports.append(attr.type[6:-1])
-            elif attr.type.startswith('array<I') and attr.type[7:-1] in all_model_names and attr.type[7:-1] != table:
-                model_imports.append(attr.type[7:-1])
-    
+
+    # Collect all enums and models referenced in attributes
+    enum_imports = set()
+    model_imports = set()
+    if all_model_names is None:
+        all_model_names = []
+    # Check all attributes for enums/models
+    for attr in schema.attributes:
+        # Enum detection
+        if getattr(attr, 'enum_type', None):
+            enum_imports.add(attr.enum_type)
+        # Model detection (for references to other models)
+        attr_type = attr.type
+        # Handle array<...> types
+        if attr_type.startswith('array<') and attr_type.endswith('>'):
+            inner_type = attr_type[6:-1]
+            if inner_type in all_model_names and inner_type != table:
+                model_imports.add(inner_type)
+        # Direct model reference
+        if attr_type in all_model_names and attr_type != table:
+            model_imports.add(attr_type)
+        # Interface reference (IModel)
+        if attr_type.startswith('I') and attr_type[1:] in all_model_names and attr_type[1:] != table:
+            model_imports.add(attr_type[1:])
     # Render template
     content = template.render(
         schema=schema,
-        model_imports=sorted(set(model_imports)),
-        generated_query_types=generated_query_types,
+        model_imports=sorted(model_imports),
+        enum_imports=sorted(enum_imports),
         timestamp=datetime.now().isoformat()
     )
-    
-    # Write to file
     output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models', f'{table}.model.ts')
     write_file(output_path, content)
 

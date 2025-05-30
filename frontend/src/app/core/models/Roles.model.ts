@@ -1,9 +1,12 @@
 /**
  * Generated TypeScript models for Roles
- * Generated at 2025-05-30T08:46:39.396239
+ * Generated at 2025-05-30T10:59:55.274194
  */
 
-// Import enums and models used in this modelimport { RoleType } from './RoleType.enum';import { RoleStatus } from './RoleStatus.enum';
+// Import enums and models used in this model
+import { RoleStatus } from './RoleStatus.enum';
+import { RoleType } from './RoleType.enum';
+
 
 // Input types
 export interface RolesCreateInput {
@@ -43,7 +46,7 @@ export interface RolesQueryByUserIdInput {
   userId: string;
 }
 
-// Model
+// DTO Interface (API/DB contract)
 export interface IRoles {
   roleId: string;
   userId: string;
@@ -53,39 +56,45 @@ export interface IRoles {
   updatedAt: string;
 }
 
-export class Roles implements IRoles {
-  roleId = '';
-  userId = '';
-  roleType = '';
-  status = '';
-  createdAt = '';
-  updatedAt = '';
-  constructor(data: Partial<IRoles> = {}) {
-    Object.entries(data).forEach(([key, value]) => {
-      if (key in this) {
-        if (key === 'roleType' && typeof value === 'string') {
-          this.roleType = RoleType[value as keyof typeof RoleType] ?? RoleType.UNKNOWN;
-        } else 
-        if (key === 'status' && typeof value === 'string') {
-          this.status = RoleStatus[value as keyof typeof RoleStatus] ?? RoleStatus.UNKNOWN;
-        } else 
-        {
-          this[key as keyof this] = value as this[keyof this];
-        }
-      }
+// Domain Model Class (uses enums for enum fields)
+// Properties: '!' = required (definite assignment), '?' = optional (from schema)
+export class Roles {
+  roleId!: string;
+  userId?: string;
+  roleType!: RoleType;
+  status!: RoleStatus;
+  createdAt!: string;
+  updatedAt!: string;
+
+  constructor(data: Partial<Roles> = {}) {
+    Object.assign(this, data);
+  }
+
+  // Convert from DTO (IRoles) to domain model
+  static fromDto(dto: IRoles): Roles {
+    return new Roles({
+      roleId: dto.roleId,
+      userId: dto.userId,
+      roleType: RoleType[dto.roleType as keyof typeof RoleType] ?? RoleType.UNKNOWN,
+      status: RoleStatus[dto.status as keyof typeof RoleStatus] ?? RoleStatus.UNKNOWN,
+      createdAt: dto.createdAt,
+      updatedAt: dto.updatedAt,
     });
+  }
+
+  // Convert domain model to DTO (IRoles)
+  toDto(): IRoles {
+    return {
+      roleId: this.roleId,
+      userId: this.userId,
+      roleType: this.roleType.toString(),
+      status: this.status.toString(),
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+    };
   }
 }
 
-
-export interface Roles {
-  roleId: string;
-  userId: string;
-  roleType: RoleType;
-  status: RoleStatus;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 // ProperCase response types
 export interface RolesResponse {

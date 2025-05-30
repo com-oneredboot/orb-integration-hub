@@ -1,9 +1,11 @@
 /**
  * Generated TypeScript models for Applications
- * Generated at 2025-05-30T08:46:39.164804
+ * Generated at 2025-05-30T10:59:55.067533
  */
 
-// Import enums and models used in this modelimport { ApplicationStatus } from './ApplicationStatus.enum';
+// Import enums and models used in this model
+import { ApplicationStatus } from './ApplicationStatus.enum';
+
 
 // Input types
 export interface ApplicationsCreateInput {
@@ -40,7 +42,7 @@ export interface ApplicationsQueryByApplicationIdInput {
   applicationId: string;
 }
 
-// Model
+// DTO Interface (API/DB contract)
 export interface IApplications {
   applicationId: string;
   name: string;
@@ -50,36 +52,45 @@ export interface IApplications {
   updatedAt: string;
 }
 
-export class Applications implements IApplications {
-  applicationId = '';
-  name = '';
-  ownerId = '';
-  status = '';
-  createdAt = '';
-  updatedAt = '';
-  constructor(data: Partial<IApplications> = {}) {
-    Object.entries(data).forEach(([key, value]) => {
-      if (key in this) {
-        if (key === 'status' && typeof value === 'string') {
-          this.status = ApplicationStatus[value as keyof typeof ApplicationStatus] ?? ApplicationStatus.UNKNOWN;
-        } else 
-        {
-          this[key as keyof this] = value as this[keyof this];
-        }
-      }
+// Domain Model Class (uses enums for enum fields)
+// Properties: '!' = required (definite assignment), '?' = optional (from schema)
+export class Applications {
+  applicationId!: string;
+  name!: string;
+  ownerId!: string;
+  status!: ApplicationStatus;
+  createdAt!: string;
+  updatedAt!: string;
+
+  constructor(data: Partial<Applications> = {}) {
+    Object.assign(this, data);
+  }
+
+  // Convert from DTO (IApplications) to domain model
+  static fromDto(dto: IApplications): Applications {
+    return new Applications({
+      applicationId: dto.applicationId,
+      name: dto.name,
+      ownerId: dto.ownerId,
+      status: ApplicationStatus[dto.status as keyof typeof ApplicationStatus] ?? ApplicationStatus.UNKNOWN,
+      createdAt: dto.createdAt,
+      updatedAt: dto.updatedAt,
     });
+  }
+
+  // Convert domain model to DTO (IApplications)
+  toDto(): IApplications {
+    return {
+      applicationId: this.applicationId,
+      name: this.name,
+      ownerId: this.ownerId,
+      status: this.status.toString(),
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+    };
   }
 }
 
-
-export interface Applications {
-  applicationId: string;
-  name: string;
-  ownerId: string;
-  status: ApplicationStatus;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 // ProperCase response types
 export interface ApplicationsResponse {

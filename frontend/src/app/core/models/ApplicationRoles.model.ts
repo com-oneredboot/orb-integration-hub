@@ -1,9 +1,12 @@
 /**
  * Generated TypeScript models for ApplicationRoles
- * Generated at 2025-05-30T08:46:39.113429
+ * Generated at 2025-05-30T10:59:55.013018
  */
 
-// Import enums and models used in this modelimport { RoleType } from './RoleType.enum';import { RoleStatus } from './RoleStatus.enum';
+// Import enums and models used in this model
+import { RoleStatus } from './RoleStatus.enum';
+import { RoleType } from './RoleType.enum';
+
 
 // Input types
 export interface ApplicationRolesCreateInput {
@@ -57,7 +60,7 @@ export interface ApplicationRolesQueryByRoleIdInput {
   roleId: string;
 }
 
-// Model
+// DTO Interface (API/DB contract)
 export interface IApplicationRoles {
   applicationRoleId: string;
   userId: string;
@@ -71,47 +74,57 @@ export interface IApplicationRoles {
   updatedAt: string;
 }
 
-export class ApplicationRoles implements IApplicationRoles {
-  applicationRoleId = '';
-  userId = '';
-  applicationId = '';
-  roleId = '';
-  roleName = '';
-  roleType = '';
-  permissions = [];
-  status = '';
-  createdAt = '';
-  updatedAt = '';
-  constructor(data: Partial<IApplicationRoles> = {}) {
-    Object.entries(data).forEach(([key, value]) => {
-      if (key in this) {
-        if (key === 'roleType' && typeof value === 'string') {
-          this.roleType = RoleType[value as keyof typeof RoleType] ?? RoleType.UNKNOWN;
-        } else 
-        if (key === 'status' && typeof value === 'string') {
-          this.status = RoleStatus[value as keyof typeof RoleStatus] ?? RoleStatus.UNKNOWN;
-        } else 
-        {
-          this[key as keyof this] = value as this[keyof this];
-        }
-      }
+// Domain Model Class (uses enums for enum fields)
+// Properties: '!' = required (definite assignment), '?' = optional (from schema)
+export class ApplicationRoles {
+  applicationRoleId!: string;
+  userId!: string;
+  applicationId!: string;
+  roleId!: string;
+  roleName!: string;
+  roleType!: RoleType;
+  permissions!: string[];
+  status!: RoleStatus;
+  createdAt!: string;
+  updatedAt!: string;
+
+  constructor(data: Partial<ApplicationRoles> = {}) {
+    Object.assign(this, data);
+  }
+
+  // Convert from DTO (IApplicationRoles) to domain model
+  static fromDto(dto: IApplicationRoles): ApplicationRoles {
+    return new ApplicationRoles({
+      applicationRoleId: dto.applicationRoleId,
+      userId: dto.userId,
+      applicationId: dto.applicationId,
+      roleId: dto.roleId,
+      roleName: dto.roleName,
+      roleType: RoleType[dto.roleType as keyof typeof RoleType] ?? RoleType.UNKNOWN,
+      permissions: dto.permissions,
+      status: RoleStatus[dto.status as keyof typeof RoleStatus] ?? RoleStatus.UNKNOWN,
+      createdAt: dto.createdAt,
+      updatedAt: dto.updatedAt,
     });
+  }
+
+  // Convert domain model to DTO (IApplicationRoles)
+  toDto(): IApplicationRoles {
+    return {
+      applicationRoleId: this.applicationRoleId,
+      userId: this.userId,
+      applicationId: this.applicationId,
+      roleId: this.roleId,
+      roleName: this.roleName,
+      roleType: this.roleType.toString(),
+      permissions: this.permissions,
+      status: this.status.toString(),
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+    };
   }
 }
 
-
-export interface ApplicationRoles {
-  applicationRoleId: string;
-  userId: string;
-  applicationId: string;
-  roleId: string;
-  roleName: string;
-  roleType: RoleType;
-  permissions: string[];
-  status: RoleStatus;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 // ProperCase response types
 export interface ApplicationRolesResponse {

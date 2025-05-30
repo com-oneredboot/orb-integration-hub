@@ -1,9 +1,10 @@
 /**
  * Generated TypeScript models for MfaSetupDetails
- * Generated at 2025-05-30T08:46:39.345988
+ * Generated at 2025-05-30T10:59:55.228509
  */
 
 // Import enums and models used in this model
+
 
 // Input types
 export interface MfaSetupDetailsCreateInput {
@@ -34,34 +35,43 @@ export interface MfaSetupDetailsQueryByInput {
   : string;
 }
 
-// Model
+// DTO Interface (API/DB contract)
 export interface IMfaSetupDetails {
   qrCode: string;
   secretKey: string;
   setupUri: string;
 }
 
-export class MfaSetupDetails implements IMfaSetupDetails {
-  qrCode = '';
-  secretKey = '';
-  setupUri = '';
-  constructor(data: Partial<IMfaSetupDetails> = {}) {
-    Object.entries(data).forEach(([key, value]) => {
-      if (key in this) {
-        {
-          this[key as keyof this] = value as this[keyof this];
-        }
-      }
+// Domain Model Class (uses enums for enum fields)
+// Properties: '!' = required (definite assignment), '?' = optional (from schema)
+export class MfaSetupDetails {
+  qrCode!: string;
+  secretKey!: string;
+  setupUri?: string;
+
+  constructor(data: Partial<MfaSetupDetails> = {}) {
+    Object.assign(this, data);
+  }
+
+  // Convert from DTO (IMfaSetupDetails) to domain model
+  static fromDto(dto: IMfaSetupDetails): MfaSetupDetails {
+    return new MfaSetupDetails({
+      qrCode: dto.qrCode,
+      secretKey: dto.secretKey,
+      setupUri: dto.setupUri,
     });
+  }
+
+  // Convert domain model to DTO (IMfaSetupDetails)
+  toDto(): IMfaSetupDetails {
+    return {
+      qrCode: this.qrCode,
+      secretKey: this.secretKey,
+      setupUri: this.setupUri,
+    };
   }
 }
 
-
-export interface MfaSetupDetails {
-  qrCode: string;
-  secretKey: string;
-  setupUri: string;
-}
 
 // ProperCase response types
 export interface MfaSetupDetailsResponse {
