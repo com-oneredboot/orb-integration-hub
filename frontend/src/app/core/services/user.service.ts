@@ -191,7 +191,7 @@ export class UserService extends ApiService {
       const userResponse = await this.userQueryByEmail(email);
       console.debug('[UserService][emailVerify] userQueryByEmail response:', userResponse);
 
-      if (userResponse.StatusCode !== 200 || !userResponse.Data) {
+      if (userResponse.StatusCode !== 200) {
         console.error('[UserService][emailVerify] user not found or error', userResponse);
 
         return {
@@ -202,7 +202,9 @@ export class UserService extends ApiService {
 
       }
 
-      const emailVerifyResponse = await this.cognitoService.emailVerify(userResponse.Data.cognitoId, code);
+      // QueryByEmail ensures we have either 1
+      const user = userResponse.Data[0];
+      const emailVerifyResponse = await this.cognitoService.emailVerify(user.cognitoId, code);
       console.debug('[UserService][emailVerify] cognitoService.emailVerify response:', emailVerifyResponse);
 
       return emailVerifyResponse;
@@ -226,7 +228,13 @@ export class UserService extends ApiService {
   public async userQueryByUserId(userId: string): Promise<UsersResponse> {
     console.debug('userQueryByUserId:', userId);
     try {
-      const response = await this.query(UsersQueryByUserId, {input: {userId: userId}},'apiKey') as GraphQLResult<UsersResponse>;
+      const response = await this.query(
+        UsersQueryByUserId,
+        {
+          input: {
+            userId: userId
+          }
+        },'apiKey') as GraphQLResult<UsersResponse>;
 
       console.debug('userQueryByUserId Response: ', response);
      
@@ -248,30 +256,37 @@ export class UserService extends ApiService {
     }
   }
 
-  public async userQueryByEmail(email: string): Promise<UsersResponse> {
+  public async userQueryByEmail(email: string): Promise<UsersListResponse> {
     console.debug('userQueryByEmail: ', email);
     try {
-      const response = await this.query(UsersQueryByUserId, {input: {email: email}},'apiKey') as GraphQLResult<UsersResponse>;
+      const query = await this.query(
+        UsersQueryByEmail,
+        {
+          input: {
+            email: email
+          }
+        },
+        'apiKey') as any;
 
-      console.debug('userQueryByEmail Response: ', response);
+        const response = query.data?.UsersQueryByEmail;
+        const users = response.Data;
+
+        if (users.length > 1) {
+          return {
+            StatusCode: 500,
+            Message: 'Duplicate users found for this email or userId',
+            Data: []
+          };
+        }
+        if (users.length === 0) {
+          return {
+            StatusCode: 404,
+            Message: 'User not found.',
+            Data: []
+          };
+        }          
       
-      if (email && response.data?.Data && 
-          response.data.Data.email !== email) {
-        
-        console.debug('userQueryByEmail: Email mismatch, returning 404');
-        
-        return {
-          StatusCode: 404,
-          Message: 'User not found',
-          Data: new Users()
-        } as UsersResponse;
-      }
-      
-      return {
-        StatusCode: response.data?.StatusCode ?? 200,
-        Message: response.data?.Message ?? '',
-        Data: response.data?.Data ?? null
-      } as UsersResponse;
+      return response;
 
     } catch (error) {
 
@@ -279,12 +294,11 @@ export class UserService extends ApiService {
       return {
         StatusCode: 500,
         Message: 'Error getting user',
-        Data: new Users()
-      } as UsersResponse;
+        Data: []
+      }
 
     }
   }
-
 
   /**
    * Sign in a user
@@ -293,54 +307,39 @@ export class UserService extends ApiService {
    */
   public async userSignIn(email: string, password: string): Promise<AuthResponse> {
     console.debug('userSignIn:', email);
-    let user;
 
     try {
-      // Use UsersQueryByEmailInput for email lookups
-      const userResponse = await this.query(
-        UsersQueryByEmail,
-        { input: { email } },
-        'apiKey'
-      ) as GraphQLResult<UsersResponse>;
 
-      user = userResponse.data?.Data;
-      if (userResponse.data?.StatusCode !== 200 || !user) {
+      // Lookup the User
+      const userResult = await this.userQueryByEmail(email);
+      console.debug('userResult:', userResult);
+      if (userResult.StatusCode !== 200) {
         return {
-          StatusCode: userResponse.data?.StatusCode ?? 404,
-          Message: 'User Does Not Exist',
+          StatusCode: userResult?.StatusCode,
+          Message: userResult.Message,
           Data: new Auth({ isSignedIn: false, message: 'User Does Not Exist' })
         };
       }
 
-      // Update store with user data before auth attempt
-      this.store.dispatch(AuthActions.signInSuccess({ user: user.toDto(), message: 'User found' }));
-      this.currentUser.next(user);
-
-    } catch (error) {
-      
-      console.error('Error getting user:', error);
-
-      return {
-        StatusCode: 500,
-        Message: 'Error getting user',
-        Data: new Auth({ isSignedIn: false, message: 'Error getting user' })
-      };
-    }
-
-    try {
-      // Pass the user's email as the third parameter for MFA setup
+      // SIgn in
+      const user = new Users(userResult.Data[0]);
+      console.debug('User: ', user)
       const userSignInResponse = await this.cognitoService.signIn(user.cognitoId, password, user.email);
 
-      // Handle already signed in case
       if (userSignInResponse.StatusCode === 401 &&
         userSignInResponse.Message?.toLowerCase().includes('already signed in')) {
-        console.warn('User already signed in');
         await this.cognitoService.checkIsAuthenticated();
         return {
           StatusCode: 200,
           Message: 'User already signed in',
           Data: new Auth({ isSignedIn: false, message: 'User already signed in' })
         };
+      }
+
+      // Only dispatch signInSuccess if authentication is successful
+      if (userSignInResponse.StatusCode === 200) {
+        this.store.dispatch(AuthActions.signInSuccess({ user: user.toDto(), message: 'User found' }));
+        this.currentUser.next(user);
       }
 
       return userSignInResponse;
@@ -363,7 +362,6 @@ export class UserService extends ApiService {
         Message: 'Error signing in: ' + error_message,
         Data: new Auth({ isSignedIn: false, message: 'Error signing in: ' + error_message })
       };
-
     }
   }
 

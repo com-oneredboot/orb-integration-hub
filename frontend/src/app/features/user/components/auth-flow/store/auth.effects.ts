@@ -149,9 +149,7 @@ export class AuthEffects {
             }
 
             // Now verify the email with the userId
-            const userId = users[0].userId ?? '';
-            const safeCode = code ?? '';
-            return from(this.userService.emailVerify(userId, safeCode)).pipe(
+            return from(this.userService.emailVerify(code, email)).pipe(
               tap(response => console.debug('[Effect][verifyEmail$] emailVerify response', response)),
               map(response => {
                 if (response) {

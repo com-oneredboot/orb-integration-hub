@@ -159,11 +159,15 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   }
 
   onSubmit(): void {
+
+    // Logging
     console.debug('[onSubmit] called');
     if (!this.authForm.valid) {
       console.debug('[onSubmit] Form invalid:', this.authForm.errors);
       return;
     }
+
+    // Form Submitted
     console.debug('[onSubmit] Form submitted', this.authForm.value);
     this.currentStep$
       .pipe(
@@ -188,14 +192,16 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             console.debug('[onSubmit] Dispatching checkEmail action:', { email });
             this.store.dispatch(AuthActions.checkEmail({ email }));
             break;
+
           case AuthSteps.PASSWORD:
             if (!password) {
               console.error('[onSubmit] PASSWORD: password missing');
               return;
             }
             console.debug('[onSubmit] Dispatching verifyCognitoPassword:', { email, password });
-            this.store.dispatch(AuthActions.verifyCognitoPassword({ email: email, password }));
+            this.store.dispatch(AuthActions.verifyCognitoPassword({ email, password }));
             break;
+
           case AuthSteps.PASSWORD_SETUP:
             const userInput = {
               userId: uuidv4(),
@@ -218,6 +224,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             console.debug('[onSubmit] Dispatching createUser:', { userInput, password });
             this.store.dispatch(AuthActions.createUser({input: userInput, password: password } ));
             break;
+
           case AuthSteps.EMAIL_VERIFY:
             if (!emailCode) {
               console.error('[onSubmit] EMAIL_VERIFY: emailCode missing');
@@ -225,11 +232,28 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             }
             console.debug('[onSubmit] Dispatching verifyEmail:', { email, emailCode });
             this.store.dispatch(AuthActions.verifyEmail({
-              input: { email: email }, 
               code: emailCode,
               email: email
             }));
             break;
+
+          case AuthSteps.SIGNIN:
+            if (!password) {
+              console.error('[onSubmit] SIGNIN: password missing');
+              return;
+            }
+            if (!email) {
+              console.error('[onSubmit] SIGNIN: email missing');
+              return;
+            }
+
+            console.debug('[onSubmit] Dispatching signIn:', { email, password });
+            this.store.dispatch(AuthActions.verifyCognitoPassword({
+              email,
+              password
+            }));
+            break;
+
           case AuthSteps.PHONE_SETUP:
             const setupPhoneNumber = this.authForm.get('phoneNumber')?.value;
             if (!setupPhoneNumber) {
@@ -239,6 +263,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             console.debug('[onSubmit] Dispatching setupPhone:', { setupPhoneNumber });
             this.store.dispatch(AuthActions.setupPhone({ phoneNumber: setupPhoneNumber }));
             break;
+
           case AuthSteps.PHONE_VERIFY:
             const phoneCode = this.authForm.get('phoneCode')?.value;
             if (!phoneCode) {
@@ -248,10 +273,12 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             console.debug('[onSubmit] Dispatching verifyPhone:', { phoneCode });
             this.store.dispatch(AuthActions.verifyPhone({ code: phoneCode }));
             break;
+
           case AuthSteps.MFA_SETUP:
             console.debug('[onSubmit] Dispatching needsMFASetup');
             this.store.dispatch(AuthActions.needsMFASetup());
             break;
+
           case AuthSteps.MFA_VERIFY:
             if(!mfaCode) {
               console.error('[onSubmit] MFA_VERIFY: mfaCode missing');
@@ -260,6 +287,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             console.debug('[onSubmit] Dispatching needsMFA:', { mfaCode });
             this.store.dispatch(AuthActions.needsMFA( {code: mfaCode, rememberDevice: false}));
             break;
+
           default:
             console.error('[onSubmit] Unhandled step:', step, this.authSteps[step]);
         }
