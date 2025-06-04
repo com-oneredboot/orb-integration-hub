@@ -466,7 +466,7 @@ def load_schema(schema_path: str) -> Dict[str, Any]:
         print(f"[DEBUG] Checking file: {schema_path}, model keys: {list(schema['model'].keys())}")
         if 'attributes' not in schema['model']:
             raise SchemaValidationError(f"Schema 'model' must have an 'attributes' field: {schema_path}")
-        
+            
         # Process auth config if present
         if 'authConfig' in schema['model']:
             schema['auth_config'] = schema['model']['authConfig']
@@ -638,7 +638,7 @@ def generate_typescript_model(table: str, schema: Union[TableSchema, GraphQLType
     template_name = 'typescript_model.jinja'
     env = setup_jinja_env()
     template = env.get_template(template_name)
-
+    
     # Collect all enums and models referenced in attributes
     enum_imports = set()
     model_imports = set()

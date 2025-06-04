@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for AuthError
- * Generated at 2025-05-30T12:08:26.982741
+ * Generated at 2025-06-04T09:26:37.089614
  */
 
 // Import enums and models used in this model
@@ -22,20 +22,6 @@ export interface AuthErrorUpdateInput {
 }
 
 // Always include DeleteInput (PK fields only)
-export interface AuthErrorDeleteInput {
-  : string;
-}
-
-// Always include DisableInput (PK fields + disabled boolean)
-export interface AuthErrorDisableInput {
-  : string;
-  disabled: boolean;
-}
-
-// QueryBy inputs for PK, SK, and all indexes
-export interface AuthErrorQueryByInput {
-  : string;
-}
 
 // DTO Interface (API/DB contract)
 export interface IAuthError {

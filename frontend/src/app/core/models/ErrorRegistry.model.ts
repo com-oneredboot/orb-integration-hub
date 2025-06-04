@@ -1,5 +1,5 @@
 // Generated TypeScript registry model for ErrorRegistry
-// Generated at 2025-05-30T12:08:27.013533
+// Generated at 2025-06-04T09:26:37.114937
 
 export interface IErrorRegistry {
   code: string;

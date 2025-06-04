@@ -1,11 +1,12 @@
 /**
  * Generated TypeScript models for Auth
- * Generated at 2025-05-30T12:08:26.956086
+ * Generated at 2025-06-04T09:26:37.061515
  */
 
 // Import enums and models used in this model
 import { MfaSetupDetails } from './MfaSetupDetails.model';
 import { Users } from './Users.model';
+import type { IUsers } from './Users.model';
 
 
 // Input types
@@ -32,31 +33,17 @@ export interface AuthUpdateInput {
 }
 
 // Always include DeleteInput (PK fields only)
-export interface AuthDeleteInput {
-  : string;
-}
-
-// Always include DisableInput (PK fields + disabled boolean)
-export interface AuthDisableInput {
-  : string;
-  disabled: boolean;
-}
-
-// QueryBy inputs for PK, SK, and all indexes
-export interface AuthQueryByInput {
-  : string;
-}
 
 // DTO Interface (API/DB contract)
 export interface IAuth {
   statusCode: number;
   isSignedIn: boolean;
   message: string;
-  user: IUsers;
+  user?: IUsers;
   needsMFA: boolean;
   needsMFASetup: boolean;
   mfaType: string;
-  mfaSetupDetails: MfaSetupDetails;
+  mfaSetupDetails?: MfaSetupDetails;
 }
 
 // Domain Model Class (uses enums for enum fields)
@@ -81,11 +68,11 @@ export class Auth {
       statusCode: dto.statusCode,
       isSignedIn: dto.isSignedIn,
       message: dto.message,
-      user: dto.user,
+      user: dto.user ?? undefined,
       needsMFA: dto.needsMFA,
       needsMFASetup: dto.needsMFASetup,
       mfaType: dto.mfaType,
-      mfaSetupDetails: dto.mfaSetupDetails,
+      mfaSetupDetails: dto.mfaSetupDetails ?? undefined,
     });
   }
 

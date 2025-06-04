@@ -17,12 +17,13 @@ import {
 } from "../graphql/Users.graphql";
 import {
   UsersCreateInput, UsersUpdateInput, UsersQueryByUserIdInput,
-  UsersCreateResponse, UsersResponse, UsersUpdateResponse, IUsers
+  UsersCreateResponse, UsersUpdateResponse, IUsers,
+  UsersListResponse, UsersResponse
 } from "../models/Users.model";
 import { UserGroup } from "../models/UserGroup.enum";
 import { UserStatus } from "../models/UserStatus.enum";
 import { CognitoService } from "./cognito.service";
-import { AuthResponse } from "../models/Auth.model";
+import { Auth, AuthResponse } from "../models/Auth.model";
 import { AuthActions } from '../../features/user/components/auth-flow/store/auth.actions';
 
 @Injectable({
@@ -115,7 +116,7 @@ export class UserService extends ApiService {
    * @param input UserQueryInput with backend-compatible fields
    * @returns UsersResponse object
    */
-  public async userExists(input: { userId?: string; email?: string }): Promise<UsersResponse> {
+  public async userExists(input: { userId?: string; email?: string }): Promise<UsersListResponse> {
     try {
       let queryInput;
       let query;
@@ -144,17 +145,17 @@ export class UserService extends ApiService {
       if (users.length > 1) {
         console.error('[userExists] Duplicate users found for input:', input, users);
         return {
-          statusCode: 500,
-          message: 'Duplicate users found for this email or userId',
-          data: users
+          StatusCode: 500,
+          Message: 'Duplicate users found for this email or userId',
+          Data: []
         };
       }
 
       return {
-        statusCode,
-        message,
-        data: users
-      };
+        StatusCode: statusCode,
+        Message: message,
+        Data: users
+      } as UsersListResponse;
 
     } catch (error: any) {
       // Detect network/DNS errors and throw a user-friendly error
@@ -183,30 +184,37 @@ export class UserService extends ApiService {
    * @param code Verification code
    * @param email Optional email to filter results client-side
    */
-  public async emailVerify(input: UsersQueryByUserIdInput, code: string, email?: string): Promise<AuthResponse> {
-    console.debug('[UserService][emailVerify] called with', { input, code, email });
+  public async emailVerify(code: string, email?: string): Promise<AuthResponse> {
+    console.debug('[UserService][emailVerify] called with', { code, email });
     try {
       // get the user
       const userResponse = await this.userQueryByUserId(input, email);
       console.debug('[UserService][emailVerify] userQueryByUserId response:', userResponse);
-      if (userResponse.statusCode !== 200 || !userResponse.data) {
+
+      if (userResponse.StatusCode !== 200 || !userResponse.Data) {
         console.error('[UserService][emailVerify] user not found or error', userResponse);
+
         return {
-          statusCode: userResponse.statusCode,
-          message: 'Error getting user',
-          data: null
+          StatusCode: userResponse.StatusCode,
+          Message: 'Error getting user',
+          Data: {} as Auth
         };
+
       }
+
       const emailVerifyResponse = await this.cognitoService.emailVerify(userResponse.data.cognitoId, code);
       console.debug('[UserService][emailVerify] cognitoService.emailVerify response:', emailVerifyResponse);
+
       return emailVerifyResponse;
+
     } catch (error) {
       console.error('[UserService][emailVerify] threw error', error);
       return {
-        statusCode: 500,
-        message: 'Error verifying email',
-        data: null
+        StatusCode: 500,
+        Message: 'Error verifying email',
+        Data: {} as Auth
       };
+
     }
   }
 
@@ -242,13 +250,16 @@ export class UserService extends ApiService {
         message: response.data?.message ?? '',
         data: response.data?.data ?? null
       } as UsersResponse;
+
     } catch (error) {
+
       console.error('Error getting user:', error);
       return {
         statusCode: 500,
         message: 'Error getting user',
         data: null
       } as UsersResponse;
+
     }
   }
 

@@ -82,6 +82,7 @@ export interface {{ schema.name }}UpdateInput {
 }
 
 // Always include DeleteInput (PK fields only)
+{% if schema.type == 'table' or schema.partition_key %}
 export interface {{ schema.name }}DeleteInput {
   {{ schema.partition_key }}: string;
 {% if schema.sort_key and schema.sort_key != 'None' %}  {{ schema.sort_key }}: string;
@@ -112,11 +113,12 @@ export interface {{ schema.name }}QueryBy{{ index.partition|to_pascal_case }}Inp
   {{ index.partition }}: string;
 }
 {% endfor %}
+{% endif %}
 
 // DTO Interface (API/DB contract)
 export interface I{{ schema.name }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }}: {% if attr.enum_type %}string{% elif attr.model_reference %}{{ attr.model_reference }}{% else %}{{ attr.type|to_typescript_type }}{% endif %};
+  {{ attr.name }}: {% if attr.enum_type %}string{% elif attr.model_reference %}I{{ attr.model_reference }}{% else %}{{ attr.type|to_typescript_type }}{% endif %};
 {% endfor %}
 }
 
@@ -135,7 +137,7 @@ export class {{ schema.name }} {
   static fromDto(dto: I{{ schema.name }}): {{ schema.name }} {
     return new {{ schema.name }}({
 {% for attr in schema.attributes %}
-      {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}[dto.{{ attr.name }} as keyof typeof {{ attr.enum_type }}] ?? {{ attr.enum_type }}.UNKNOWN{% else %}dto.{{ attr.name }}{% endif %},
+      {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}[dto.{{ attr.name }} as keyof typeof {{ attr.enum_type }}] ?? {{ attr.enum_type }}.UNKNOWN{% elif attr.model_reference %}dto.{{ attr.name }} ? {{ attr.model_reference }}.fromDto(dto.{{ attr.name }}) : undefined{% else %}dto.{{ attr.name }}{% endif %},
 {% endfor %}
     });
   }
@@ -144,7 +146,7 @@ export class {{ schema.name }} {
   toDto(): I{{ schema.name }} {
     return {
 {% for attr in schema.attributes %}
-      {{ attr.name }}: {% if attr.enum_type %}this.{{ attr.name }}.toString(){% elif attr.type|to_typescript_type == 'boolean' %}this.{{ attr.name }} ?? false{% elif attr.type|to_typescript_type == 'string' and not attr.required %}this.{{ attr.name }} ?? ''{% elif attr.type|to_typescript_type == 'string[]' and not attr.required %}this.{{ attr.name }} ?? []{% elif attr.type|to_typescript_type == 'number' and not attr.required %}this.{{ attr.name }} ?? 0{% else %}this.{{ attr.name }}{% endif %},
+      {{ attr.name }}: {% if attr.enum_type %}this.{{ attr.name }}.toString(){% elif attr.model_reference %}this.{{ attr.name }} ? this.{{ attr.name }}.toDto() : undefined{% elif attr.type|to_typescript_type == 'boolean' %}this.{{ attr.name }} ?? false{% elif attr.type|to_typescript_type == 'string' and not attr.required %}this.{{ attr.name }} ?? ''{% elif attr.type|to_typescript_type == 'string[]' and not attr.required %}this.{{ attr.name }} ?? []{% elif attr.type|to_typescript_type == 'number' and not attr.required %}this.{{ attr.name }} ?? 0{% else %}this.{{ attr.name }}{% endif %},
 {% endfor %}
     };
   }

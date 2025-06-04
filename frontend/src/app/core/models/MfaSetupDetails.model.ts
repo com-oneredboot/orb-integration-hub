@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for MfaSetupDetails
- * Generated at 2025-05-30T12:08:27.051825
+ * Generated at 2025-06-04T09:26:37.146003
  */
 
 // Import enums and models used in this model
@@ -20,20 +20,6 @@ export interface MfaSetupDetailsUpdateInput {
 }
 
 // Always include DeleteInput (PK fields only)
-export interface MfaSetupDetailsDeleteInput {
-  : string;
-}
-
-// Always include DisableInput (PK fields + disabled boolean)
-export interface MfaSetupDetailsDisableInput {
-  : string;
-  disabled: boolean;
-}
-
-// QueryBy inputs for PK, SK, and all indexes
-export interface MfaSetupDetailsQueryByInput {
-  : string;
-}
 
 // DTO Interface (API/DB contract)
 export interface IMfaSetupDetails {
