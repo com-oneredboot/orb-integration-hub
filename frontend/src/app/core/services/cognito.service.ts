@@ -98,7 +98,7 @@ export class CognitoService {
       return {
         StatusCode: 200,
         Message: 'Email verified',
-        Data: new Auth(createAuthData({ isSignedIn: false }))
+        Data: new Auth({ isSignedIn: false })
       };
     } catch (error) {
       console.error('[CognitoService][emailVerify] threw error', error);
@@ -125,7 +125,7 @@ export class CognitoService {
       return {
         StatusCode: 200,
         Message: 'Sign in successful',
-        Data: new Auth(createAuthData({ isSignedIn: true }))
+        Data: new Auth({ isSignedIn: true })
       };
     }
 
@@ -143,7 +143,7 @@ export class CognitoService {
           StatusCode: 200,
           Message: 'MFA setup required',
           Data: new Auth(
-            createAuthData({ 
+            { 
               isSignedIn: false,
               needsMFASetup: true,
               mfaType: 'totp',
@@ -152,8 +152,7 @@ export class CognitoService {
                 secretKey: nextStep.totpSetupDetails?.sharedSecret,
                 setupUri: setupUri.toString()
               })
-            }
-          ))
+            })
         };
 
       case 'CONFIRM_SIGN_IN_WITH_TOTP_CODE':
@@ -161,7 +160,7 @@ export class CognitoService {
         return {
           StatusCode: 200,
           Message: 'MFA setup not required',
-          Data: new Auth(createAuthData({ isSignedIn: false, needsMFASetup: false, needsMFA: true, mfaType: 'totp' }))
+          Data: new Auth({ isSignedIn: false, needsMFASetup: false, needsMFA: true, mfaType: 'totp' })
         };
       default:
         console.error('Sign in failed:', signInResponse);
@@ -170,7 +169,7 @@ export class CognitoService {
     return {
       StatusCode: 401,
       Message: 'Sign in failed',
-      Data: new Auth(createAuthData({ isSignedIn: false }))
+      Data: new Auth({ isSignedIn: false })
     }
   }
 
@@ -194,14 +193,14 @@ export class CognitoService {
         return {
           StatusCode: 200,
           Message: 'MFA verification successful',
-          Data: new Auth(createAuthData({ isSignedIn: true }))
+          Data: new Auth({ isSignedIn: true })
         };
       }
 
       return {
         StatusCode: 401,
         Message: 'MFA verification failed',
-        Data: new Auth(createAuthData({ isSignedIn: false }))
+        Data: new Auth({ isSignedIn: false })
       };
 
     } catch (error) {
@@ -289,7 +288,7 @@ export class CognitoService {
       return {
         StatusCode: 200,
         Message: 'Password reset initiated successfully',
-        Data: new Auth(createAuthData({ isSignedIn: false }))
+        Data: new Auth({ isSignedIn: false })
       };
     } catch (error) {
       console.error('Password reset initiation error:', error);
@@ -320,7 +319,7 @@ export class CognitoService {
       return {
         StatusCode: 200,
         Message: 'Password reset successfully',
-        Data: new Auth(createAuthData({ isSignedIn: false }))
+        Data: new Auth({ isSignedIn: false })
       };
     } catch (error) {
       console.error('Password reset confirmation error:', error);
@@ -333,15 +332,3 @@ export class CognitoService {
   }
 }
 
-function createAuthData(partial: Partial<IAuth>): IAuth {
-  return {
-    statusCode: partial.statusCode ?? 0,
-    isSignedIn: partial.isSignedIn ?? false,
-    message: partial.message ?? '',
-    user: partial.user,
-    needsMFA: partial.needsMFA ?? false,
-    needsMFASetup: partial.needsMFASetup ?? false,
-    mfaType: partial.mfaType?? '',
-    mfaSetupDetails: partial.mfaSetupDetails
-  };
-}

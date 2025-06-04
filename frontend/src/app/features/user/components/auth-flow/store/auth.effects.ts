@@ -122,22 +122,24 @@ export class AuthEffects {
   verifyEmail$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.verifyEmail),
-      tap(({ input, code, email }) => console.debug('[Effect][verifyEmail$] Start', { input, code, email })),
-      switchMap(({ input, code, email }) => {
-        // First get the user by email to get their userId
-        const emailInput: UsersQueryByEmailInput = { email: input.email };
-        return from(this.userService.userExists(emailInput)).pipe(
+      tap(({ code, email }) => console.debug('[Effect][verifyEmail$] Start', { code, email })),
+      switchMap(({ code, email }) => {
+
+        return from(this.userService.userExists({ email })).pipe(
           tap(user => console.debug('[Effect][verifyEmail$] userExists result', user)),
           switchMap(user => {
             const users = Array.isArray(user.Data) ? user.Data : [];
             if (user.StatusCode === 500 && users.length > 1) {
+
               // Duplicate user error
-              console.error('[Effect][verifyEmail$] Duplicate users found for email:', input.email, users);
+              console.error('[Effect][verifyEmail$] Duplicate users found for email:', email, users);
               const errorObj = getError('ORB-AUTH-006');
               return of(AuthActions.verifyEmailFailure({
                 error: errorObj ? errorObj.message : 'Duplicate users found for this email.'
               }));
+
             }
+
             if (!user || user.StatusCode !== 200 || users.length === 0) {
               const errorObj = getError('ORB-AUTH-003');
               console.error('[Effect][verifyEmail$] User not found or error', user);
@@ -145,9 +147,11 @@ export class AuthEffects {
                 error: errorObj ? errorObj.message : 'Email verification failed'
               }));
             }
+
             // Now verify the email with the userId
-            const userIdInput = { userId: users[0].userId };
-            return from(this.userService.emailVerify(code, email)).pipe(
+            const userId = users[0].userId ?? '';
+            const safeCode = code ?? '';
+            return from(this.userService.emailVerify(userId, safeCode)).pipe(
               tap(response => console.debug('[Effect][verifyEmail$] emailVerify response', response)),
               map(response => {
                 if (response) {

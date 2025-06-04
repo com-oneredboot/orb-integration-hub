@@ -171,9 +171,9 @@ export class UserService extends ApiService {
       }
       console.error('Error in userExists:', error);
       return {
-        statusCode: 500,
-        message: message || 'Unknown error',
-        data: []
+        StatusCode: 500,
+        Message: message || 'Unknown error',
+        Data: []
       };
     }
   }
@@ -184,12 +184,12 @@ export class UserService extends ApiService {
    * @param code Verification code
    * @param email Optional email to filter results client-side
    */
-  public async emailVerify(code: string, email?: string): Promise<AuthResponse> {
+  public async emailVerify(code: string, email: string): Promise<AuthResponse> {
     console.debug('[UserService][emailVerify] called with', { code, email });
     try {
       // get the user
-      const userResponse = await this.userQueryByEmail(input, email);
-      console.debug('[UserService][emailVerify] userQueryByUserId response:', userResponse);
+      const userResponse = await this.userQueryByEmail(email);
+      console.debug('[UserService][emailVerify] userQueryByEmail response:', userResponse);
 
       if (userResponse.StatusCode !== 200 || !userResponse.Data) {
         console.error('[UserService][emailVerify] user not found or error', userResponse);
@@ -197,12 +197,12 @@ export class UserService extends ApiService {
         return {
           StatusCode: userResponse.StatusCode,
           Message: 'Error getting user',
-          Data: {} as Auth
+          Data: new Auth( { isSignedIn: false})
         };
 
       }
 
-      const emailVerifyResponse = await this.cognitoService.emailVerify(userResponse.data.cognitoId, code);
+      const emailVerifyResponse = await this.cognitoService.emailVerify(userResponse.Data.cognitoId, code);
       console.debug('[UserService][emailVerify] cognitoService.emailVerify response:', emailVerifyResponse);
 
       return emailVerifyResponse;
@@ -223,20 +223,42 @@ export class UserService extends ApiService {
    * @param input UserQueryInput with backend-compatible fields
    * @param email Optional email to filter results client-side
    */
-  public async userQueryByUserId(input: UsersQueryByUserIdInput, email?: string): Promise<UsersResponse> {
-    console.debug('userQueryByUserId:', input, email ? { email } : '');
+  public async userQueryByUserId(userId: string): Promise<UsersResponse> {
+    console.debug('userQueryByUserId:', userId);
     try {
-      const response = await this.query(
-        UsersQueryByUserId,
-        {input: input},
-        'apiKey') as GraphQLResult<UsersResponse>;
+      const response = await this.query(UsersQueryByUserId, {input: {userId: userId}},'apiKey') as GraphQLResult<UsersResponse>;
 
       console.debug('userQueryByUserId Response: ', response);
+     
+      return {
+        StatusCode: response.data?.StatusCode,
+        Message: response.data?.Message,
+        Data: response.data?.Data
+      } as UsersResponse;
+
+    } catch (error) {
+
+      console.error('Error getting user:', error);
+      return {
+        StatusCode: 500,
+        Message: 'Error getting user',
+        Data: new Users()
+      } as UsersResponse;
+
+    }
+  }
+
+  public async userQueryByEmail(email: string): Promise<UsersResponse> {
+    console.debug('userQueryByEmail: ', email);
+    try {
+      const response = await this.query(UsersQueryByUserId, {input: {email: email}},'apiKey') as GraphQLResult<UsersResponse>;
+
+      console.debug('userQueryByEmail Response: ', response);
       
       if (email && response.data?.Data && 
           response.data.Data.email !== email) {
         
-        console.debug('userQueryByUserId: Email mismatch, returning 404');
+        console.debug('userQueryByEmail: Email mismatch, returning 404');
         
         return {
           StatusCode: 404,
@@ -262,6 +284,7 @@ export class UserService extends ApiService {
 
     }
   }
+
 
   /**
    * Sign in a user
@@ -493,7 +516,7 @@ export class UserService extends ApiService {
         } as UsersResponse;
       }
 
-      const updatedUser = await this.userQueryByUserId({ userId: input.userId });
+      const updatedUser = await this.userQueryByUserId(input.userId);
 
       return updatedUser;
 
