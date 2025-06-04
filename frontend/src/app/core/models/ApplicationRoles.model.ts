@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for ApplicationRoles
- * Generated at 2025-06-04T09:26:36.860370
+ * Generated at 2025-06-04T10:49:55.273890
  */
 
 // Import enums and models used in this model
@@ -95,32 +95,32 @@ export class ApplicationRoles {
   // Convert from DTO (IApplicationRoles) to domain model
   static fromDto(dto: IApplicationRoles): ApplicationRoles {
     return new ApplicationRoles({
-      applicationRoleId: dto.applicationRoleId,
-      userId: dto.userId,
-      applicationId: dto.applicationId,
-      roleId: dto.roleId,
-      roleName: dto.roleName,
+      applicationRoleId: dto.applicationRoleId ?? '',
+      userId: dto.userId ?? '',
+      applicationId: dto.applicationId ?? '',
+      roleId: dto.roleId ?? '',
+      roleName: dto.roleName ?? '',
       roleType: RoleType[dto.roleType as keyof typeof RoleType] ?? RoleType.UNKNOWN,
-      permissions: dto.permissions,
+      permissions: dto.permissions ?? [],
       status: RoleStatus[dto.status as keyof typeof RoleStatus] ?? RoleStatus.UNKNOWN,
-      createdAt: dto.createdAt,
-      updatedAt: dto.updatedAt,
+      createdAt: dto.createdAt ?? '',
+      updatedAt: dto.updatedAt ?? '',
     });
   }
 
   // Convert domain model to DTO (IApplicationRoles)
   toDto(): IApplicationRoles {
     return {
-      applicationRoleId: this.applicationRoleId,
-      userId: this.userId,
-      applicationId: this.applicationId,
-      roleId: this.roleId,
-      roleName: this.roleName,
+      applicationRoleId: this.applicationRoleId ?? '',
+      userId: this.userId ?? '',
+      applicationId: this.applicationId ?? '',
+      roleId: this.roleId ?? '',
+      roleName: this.roleName ?? '',
       roleType: this.roleType.toString(),
-      permissions: this.permissions,
+      permissions: this.permissions ?? [],
       status: this.status.toString(),
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
+      createdAt: this.createdAt ?? '',
+      updatedAt: this.updatedAt ?? '',
     };
   }
 }

@@ -18,7 +18,7 @@ import {
 import {
   UsersCreateInput, UsersUpdateInput, UsersQueryByUserIdInput,
   UsersCreateResponse, UsersUpdateResponse, IUsers,
-  UsersListResponse, UsersResponse
+  UsersListResponse, UsersResponse, Users
 } from "../models/Users.model";
 import { UserGroup } from "../models/UserGroup.enum";
 import { UserStatus } from "../models/UserStatus.enum";
@@ -83,14 +83,13 @@ export class UserService extends ApiService {
         updatedAt: timestamp
       };
 
-      const response = await this.mutate(
-        UsersCreateMutation, {"input": userCreateInput}, "apiKey") as GraphQLResult<UsersCreateResponse>;
+      const response = await this.mutate(UsersCreateMutation, {"input": userCreateInput}, "apiKey") as GraphQLResult<UsersCreateResponse>;
       console.debug('createUser Response: ', response);
 
       return {
-        statusCode: response.data?.statusCode ?? 200,
-        message: response.data?.message ?? '',
-        data: response.data?.data ?? null
+        StatusCode: response.data?.StatusCode ?? 200,
+        Message: response.data?.Message ?? '',
+        Data: response.data?.Data ?? null
       } as UsersResponse;
 
     } catch (error: any) {
@@ -98,15 +97,16 @@ export class UserService extends ApiService {
       const message = error?.message || error?.toString() || '';
       if (message.includes('Not Authorized') || message.includes('Unauthorized')) {
         return {
-          statusCode: 401,
-          message: 'Not Authorized to access UsersCreate on type Mutation',
-          data: null
+          StatusCode: 401,
+          Message: 'Not Authorized to access UsersCreate on type Mutation',
+          Data: new Users()
         } as UsersResponse;
       }
+
       return {
-        statusCode: 500,
-        message: 'Error creating user',
-        data: null
+        StatusCode: 500,
+        Message: 'Error creating user',
+        Data: new Users()
       } as UsersResponse;
     }
   }
@@ -188,7 +188,7 @@ export class UserService extends ApiService {
     console.debug('[UserService][emailVerify] called with', { code, email });
     try {
       // get the user
-      const userResponse = await this.userQueryByUserId(input, email);
+      const userResponse = await this.userQueryByEmail(input, email);
       console.debug('[UserService][emailVerify] userQueryByUserId response:', userResponse);
 
       if (userResponse.StatusCode !== 200 || !userResponse.Data) {
@@ -233,31 +233,31 @@ export class UserService extends ApiService {
 
       console.debug('userQueryByUserId Response: ', response);
       
-      if (email && response.data?.data && 
-          response.data.data.email !== email) {
+      if (email && response.data?.Data && 
+          response.data.Data.email !== email) {
         
         console.debug('userQueryByUserId: Email mismatch, returning 404');
         
         return {
-          statusCode: 404,
-          message: 'User not found',
-          data: null
+          StatusCode: 404,
+          Message: 'User not found',
+          Data: new Users()
         } as UsersResponse;
       }
       
       return {
-        statusCode: response.data?.statusCode ?? 200,
-        message: response.data?.message ?? '',
-        data: response.data?.data ?? null
+        StatusCode: response.data?.StatusCode ?? 200,
+        Message: response.data?.Message ?? '',
+        Data: response.data?.Data ?? null
       } as UsersResponse;
 
     } catch (error) {
 
       console.error('Error getting user:', error);
       return {
-        statusCode: 500,
-        message: 'Error getting user',
-        data: null
+        StatusCode: 500,
+        Message: 'Error getting user',
+        Data: new Users()
       } as UsersResponse;
 
     }
@@ -280,25 +280,27 @@ export class UserService extends ApiService {
         'apiKey'
       ) as GraphQLResult<UsersResponse>;
 
-      user = userResponse.data?.data;
-      if (userResponse.data?.statusCode !== 200 || !user) {
+      user = userResponse.data?.Data;
+      if (userResponse.data?.StatusCode !== 200 || !user) {
         return {
-          statusCode: userResponse.data?.statusCode ?? 404,
-          message: 'User Does Not Exist',
-          data: null
+          StatusCode: userResponse.data?.StatusCode ?? 404,
+          Message: 'User Does Not Exist',
+          Data: new Auth({ isSignedIn: false, message: 'User Does Not Exist' })
         };
       }
 
       // Update store with user data before auth attempt
-      this.store.dispatch(AuthActions.signInSuccess({ user, message: 'User found' }));
+      this.store.dispatch(AuthActions.signInSuccess({ user: user.toDto(), message: 'User found' }));
       this.currentUser.next(user);
 
     } catch (error) {
+      
       console.error('Error getting user:', error);
+
       return {
-        statusCode: 500,
-        message: 'Error getting user',
-        data: null
+        StatusCode: 500,
+        Message: 'Error getting user',
+        Data: new Auth({ isSignedIn: false, message: 'Error getting user' })
       };
     }
 
@@ -307,14 +309,14 @@ export class UserService extends ApiService {
       const userSignInResponse = await this.cognitoService.signIn(user.cognitoId, password, user.email);
 
       // Handle already signed in case
-      if (userSignInResponse.statusCode === 401 &&
-        userSignInResponse.message?.toLowerCase().includes('already signed in')) {
+      if (userSignInResponse.StatusCode === 401 &&
+        userSignInResponse.Message?.toLowerCase().includes('already signed in')) {
         console.warn('User already signed in');
         await this.cognitoService.checkIsAuthenticated();
         return {
-          statusCode: 200,
-          message: 'User already signed in',
-          data: null
+          StatusCode: 200,
+          Message: 'User already signed in',
+          Data: new Auth({ isSignedIn: false, message: 'User already signed in' })
         };
       }
 
@@ -327,16 +329,16 @@ export class UserService extends ApiService {
       if (error_message.toLowerCase().includes('already signed in')) {
         await this.cognitoService.checkIsAuthenticated();
         return {
-          statusCode: 200,
-          message: 'User already signed in',
-          data: null
+          StatusCode: 200,
+          Message: 'User already signed in',
+          Data: new Auth({ isSignedIn: false, message: 'User already signed in' })
         };
       }
 
       return {
-        statusCode: 500,
-        message: 'Error signing in: ' + error_message,
-        data: null
+        StatusCode: 500,
+        Message: 'Error signing in: ' + error_message,
+        Data: new Auth({ isSignedIn: false, message: 'Error signing in: ' + error_message })
       };
 
     }
@@ -350,16 +352,16 @@ export class UserService extends ApiService {
     try {
       console.debug('mfaSetup');
       return {
-        statusCode: 200,
-        message: 'MFA setup successful',
-        data: null
+        StatusCode: 200,
+        Message: 'MFA setup successful',
+        Data: new Auth({ isSignedIn: true, message: 'MFA setup successful' })
       };
     } catch (error) {
       console.error('Error setting up MFA:', error);
       return {
-        statusCode: 500,
-        message: 'Error setting up MFA',
-        data: null
+        StatusCode: 500,
+        Message: 'Error setting up MFA',
+        Data: new Auth({ isSignedIn: true, message: 'Error setting up MFA' })
       };
     }
   }
@@ -379,9 +381,9 @@ export class UserService extends ApiService {
     } catch (error) {
       console.error('Error verifying MFA:', error);
       return {
-        statusCode: 500,
-        message: 'Error verifying MFA',
-        data: null
+        StatusCode: 500,
+        Message: 'Error verifying MFA',
+        Data: new Auth({ isSignedIn: false, message: 'Error verifying MFA' })
       };
     }
   }
@@ -426,9 +428,9 @@ export class UserService extends ApiService {
       if (!input.userId) {
         console.error('Cannot update user: missing required userId');
         return {
-          statusCode: 400,
-          message: 'Missing required userId',
-          data: null
+          StatusCode: 400,
+          Message: 'Missing required userId',
+          Data: new Users()
         } as UsersResponse;
       }
 
@@ -485,9 +487,9 @@ export class UserService extends ApiService {
 
       if (!response.data) {
         return {
-          statusCode: 500,
-          message: 'No response from update operation',
-          data: null
+          StatusCode: 500,
+          Message: 'No response from update operation',
+          Data: new Users()
         } as UsersResponse;
       }
 
@@ -509,9 +511,9 @@ export class UserService extends ApiService {
       }
 
       return {
-        statusCode: 500,
-        message: errorMessage,
-        data: null
+        StatusCode: 500,
+        Message: errorMessage,
+        Data: new Users()
       } as UsersResponse;
     }
   }

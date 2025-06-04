@@ -9,6 +9,7 @@ import { {{ enum }} } from './{{ enum }}.enum';
 {% endfor %}
 {% for model in model_imports %}
 import { {{ model }} } from './{{ model }}.model';
+import type { I{{ model }} } from './{{ model }}.model';
 {% endfor %}
 
 {% if schema.type == 'table' %}
@@ -137,7 +138,7 @@ export class {{ schema.name }} {
   static fromDto(dto: I{{ schema.name }}): {{ schema.name }} {
     return new {{ schema.name }}({
 {% for attr in schema.attributes %}
-      {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}[dto.{{ attr.name }} as keyof typeof {{ attr.enum_type }}] ?? {{ attr.enum_type }}.UNKNOWN{% elif attr.model_reference %}dto.{{ attr.name }} ? {{ attr.model_reference }}.fromDto(dto.{{ attr.name }}) : undefined{% else %}dto.{{ attr.name }}{% endif %},
+      {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}[dto.{{ attr.name }} as keyof typeof {{ attr.enum_type }}] ?? {{ attr.enum_type }}.UNKNOWN{% elif attr.model_reference %}dto.{{ attr.name }} ? (typeof dto.{{ attr.name }}.toDto === 'function' ? dto.{{ attr.name }}.toDto() : dto.{{ attr.name }}) : undefined{% elif attr.type|to_typescript_type == 'boolean' %}dto.{{ attr.name }} ?? false{% elif attr.type|to_typescript_type == 'string' %}dto.{{ attr.name }} ?? ''{% elif attr.type|to_typescript_type == 'string[]' %}dto.{{ attr.name }} ?? []{% elif attr.type|to_typescript_type == 'number' %}dto.{{ attr.name }} ?? 0{% elif attr.type|to_typescript_type == 'Record<string, any>' %}dto.{{ attr.name }} ?? {}{% else %}dto.{{ attr.name }}{% endif %},
 {% endfor %}
     });
   }
@@ -146,7 +147,7 @@ export class {{ schema.name }} {
   toDto(): I{{ schema.name }} {
     return {
 {% for attr in schema.attributes %}
-      {{ attr.name }}: {% if attr.enum_type %}this.{{ attr.name }}.toString(){% elif attr.model_reference %}this.{{ attr.name }} ? this.{{ attr.name }}.toDto() : undefined{% elif attr.type|to_typescript_type == 'boolean' %}this.{{ attr.name }} ?? false{% elif attr.type|to_typescript_type == 'string' and not attr.required %}this.{{ attr.name }} ?? ''{% elif attr.type|to_typescript_type == 'string[]' and not attr.required %}this.{{ attr.name }} ?? []{% elif attr.type|to_typescript_type == 'number' and not attr.required %}this.{{ attr.name }} ?? 0{% else %}this.{{ attr.name }}{% endif %},
+      {{ attr.name }}: {% if attr.enum_type %}this.{{ attr.name }}.toString(){% elif attr.model_reference %}this.{{ attr.name }} ? (typeof this.{{ attr.name }}.toDto === 'function' ? this.{{ attr.name }}.toDto() : this.{{ attr.name }}) : undefined{% elif attr.type|to_typescript_type == 'boolean' %}this.{{ attr.name }} ?? false{% elif attr.type|to_typescript_type == 'string' %}this.{{ attr.name }} ?? ''{% elif attr.type|to_typescript_type == 'string[]' %}this.{{ attr.name }} ?? []{% elif attr.type|to_typescript_type == 'number' %}this.{{ attr.name }} ?? 0{% elif attr.type|to_typescript_type == 'Record<string, any>' %}this.{{ attr.name }} ?? {}{% else %}this.{{ attr.name }}{% endif %},
 {% endfor %}
     };
   }

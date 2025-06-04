@@ -644,6 +644,38 @@ def generate_typescript_model(table: str, schema: Union[TableSchema, GraphQLType
     model_imports = set()
     if all_model_names is None:
         all_model_names = []
+    # Build model_attributes: {model_name: [Attribute, ...]}
+    from inspect import isclass
+    import types
+    # Find all loaded schemas
+    schemas_dir = os.path.join(SCRIPT_DIR, 'entities')
+    schema_files = glob.glob(os.path.join(schemas_dir, '*.yml'))
+    model_attributes = {}
+    for schema_file in schema_files:
+        schema_dict = load_schema(schema_file)
+        schema_name = schema_dict.get('name')
+        model = schema_dict['model']
+        attrs = []
+        for attr_name, attr_info in model['attributes'].items():
+            attr = {
+                'name': attr_name,
+                'type': attr_info['type'],
+                'required': attr_info.get('required', True),
+                'default': ''
+            }
+            # Set default for booleans, arrays, etc.
+            if attr['type'] == 'boolean':
+                attr['default'] = 'false'
+            elif attr['type'] == 'string[]':
+                attr['default'] = '[]'
+            elif attr['type'] == 'number':
+                attr['default'] = '0'
+            elif attr['type'] == 'Record<string, any>':
+                attr['default'] = '{}'
+            elif attr['type'] == 'string':
+                attr['default'] = "''"
+            attrs.append(attr)
+        model_attributes[schema_name] = attrs
     # Check all attributes for enums/models
     for attr in schema.attributes:
         # Enum detection
@@ -667,6 +699,7 @@ def generate_typescript_model(table: str, schema: Union[TableSchema, GraphQLType
         schema=schema,
         model_imports=sorted(model_imports),
         enum_imports=sorted(enum_imports),
+        model_attributes=model_attributes,
         timestamp=datetime.now().isoformat()
     )
     output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models', f'{table}.model.ts')
@@ -1200,6 +1233,12 @@ def load_schemas() -> dict:
     schemas_dir = os.path.join(SCRIPT_DIR, 'entities')
     schema_files = glob.glob(os.path.join(schemas_dir, '*.yml'))
     schemas = {}
+    # First pass: collect all model names
+    model_names = set()
+    for schema_file in schema_files:
+        schema_dict = load_schema(schema_file)
+        schema_name = schema_dict.get('name')
+        model_names.add(schema_name)
     for schema_file in schema_files:
         schema_dict = load_schema(schema_file)
         schema_type = schema_dict.get('type')
@@ -1209,11 +1248,7 @@ def load_schemas() -> dict:
             model = schema_dict['model']
             attributes = []
             for attr_name, attr_info in model['attributes'].items():
-                # Determine dto_type for special boolean fields
-                # Default: dto_type = type
                 dto_type = attr_info['type']
-                # Special case: if attr_name in a known list, or if attr_info has a flag, set dto_type to 'string | boolean'
-                # You can make this more dynamic if needed
                 if attr_name in ['emailVerified', 'phoneVerified', 'isSignedIn', 'needsMFA', 'needsMFASetup']:
                     dto_type = 'string | boolean'
                 attr = Attribute(
@@ -1224,8 +1259,10 @@ def load_schemas() -> dict:
                     enum_type=attr_info.get('enum_type'),
                     enum_values=attr_info.get('enum_values')
                 )
-                # Attach dto_type as an attribute (monkey-patch for dataclass)
                 setattr(attr, 'dto_type', dto_type)
+                # Patch: mark as model_reference if type matches a known model
+                if attr.type in model_names:
+                    setattr(attr, 'model_reference', attr.type)
                 attributes.append(attr)
             keys = model['keys']
             partition_key = keys['primary']['partition']
@@ -1255,11 +1292,7 @@ def load_schemas() -> dict:
             model = schema_dict['model']
             attributes = []
             for attr_name, attr_info in model['attributes'].items():
-                # Determine dto_type for special boolean fields
-                # Default: dto_type = type
                 dto_type = attr_info['type']
-                # Special case: if attr_name in a known list, or if attr_info has a flag, set dto_type to 'string | boolean'
-                # You can make this more dynamic if needed
                 if attr_name in ['emailVerified', 'phoneVerified', 'isSignedIn', 'needsMFA', 'needsMFASetup']:
                     dto_type = 'string | boolean'
                 attr = Attribute(
@@ -1270,8 +1303,10 @@ def load_schemas() -> dict:
                     enum_type=attr_info.get('enum_type'),
                     enum_values=attr_info.get('enum_values')
                 )
-                # Attach dto_type as an attribute (monkey-patch for dataclass)
                 setattr(attr, 'dto_type', dto_type)
+                # Patch: mark as model_reference if type matches a known model
+                if attr.type in model_names:
+                    setattr(attr, 'model_reference', attr.type)
                 attributes.append(attr)
             auth_config = model.get('authConfig')
             schema_obj = GraphQLType(

@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for ApplicationUsers
- * Generated at 2025-06-04T09:26:37.021451
+ * Generated at 2025-06-04T10:49:55.455496
  */
 
 // Import enums and models used in this model
@@ -75,24 +75,24 @@ export class ApplicationUsers {
   // Convert from DTO (IApplicationUsers) to domain model
   static fromDto(dto: IApplicationUsers): ApplicationUsers {
     return new ApplicationUsers({
-      applicationUserId: dto.applicationUserId,
-      userId: dto.userId,
-      applicationId: dto.applicationId,
+      applicationUserId: dto.applicationUserId ?? '',
+      userId: dto.userId ?? '',
+      applicationId: dto.applicationId ?? '',
       status: ApplicationUserStatus[dto.status as keyof typeof ApplicationUserStatus] ?? ApplicationUserStatus.UNKNOWN,
-      createdAt: dto.createdAt,
-      updatedAt: dto.updatedAt,
+      createdAt: dto.createdAt ?? '',
+      updatedAt: dto.updatedAt ?? '',
     });
   }
 
   // Convert domain model to DTO (IApplicationUsers)
   toDto(): IApplicationUsers {
     return {
-      applicationUserId: this.applicationUserId,
-      userId: this.userId,
-      applicationId: this.applicationId,
+      applicationUserId: this.applicationUserId ?? '',
+      userId: this.userId ?? '',
+      applicationId: this.applicationId ?? '',
       status: this.status.toString(),
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
+      createdAt: this.createdAt ?? '',
+      updatedAt: this.updatedAt ?? '',
     };
   }
 }

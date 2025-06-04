@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for Users
- * Generated at 2025-06-04T09:26:37.268534
+ * Generated at 2025-06-04T10:49:55.847467
  */
 
 // Import enums and models used in this model
@@ -99,32 +99,32 @@ export class Users {
   // Convert from DTO (IUsers) to domain model
   static fromDto(dto: IUsers): Users {
     return new Users({
-      userId: dto.userId,
-      cognitoId: dto.cognitoId,
-      email: dto.email,
-      firstName: dto.firstName,
-      lastName: dto.lastName,
+      userId: dto.userId ?? '',
+      cognitoId: dto.cognitoId ?? '',
+      email: dto.email ?? '',
+      firstName: dto.firstName ?? '',
+      lastName: dto.lastName ?? '',
       status: UserStatus[dto.status as keyof typeof UserStatus] ?? UserStatus.UNKNOWN,
-      createdAt: dto.createdAt,
-      updatedAt: dto.updatedAt,
-      phoneNumber: dto.phoneNumber,
-      groups: dto.groups,
-      emailVerified: dto.emailVerified,
-      phoneVerified: dto.phoneVerified,
+      createdAt: dto.createdAt ?? '',
+      updatedAt: dto.updatedAt ?? '',
+      phoneNumber: dto.phoneNumber ?? '',
+      groups: dto.groups ?? [],
+      emailVerified: dto.emailVerified ?? false,
+      phoneVerified: dto.phoneVerified ?? false,
     });
   }
 
   // Convert domain model to DTO (IUsers)
   toDto(): IUsers {
     return {
-      userId: this.userId,
-      cognitoId: this.cognitoId,
-      email: this.email,
-      firstName: this.firstName,
-      lastName: this.lastName,
+      userId: this.userId ?? '',
+      cognitoId: this.cognitoId ?? '',
+      email: this.email ?? '',
+      firstName: this.firstName ?? '',
+      lastName: this.lastName ?? '',
       status: this.status.toString(),
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
+      createdAt: this.createdAt ?? '',
+      updatedAt: this.updatedAt ?? '',
       phoneNumber: this.phoneNumber ?? '',
       groups: this.groups ?? [],
       emailVerified: this.emailVerified ?? false,

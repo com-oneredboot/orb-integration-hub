@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for Roles
- * Generated at 2025-06-04T09:26:37.203869
+ * Generated at 2025-06-04T10:49:55.754212
  */
 
 // Import enums and models used in this model
@@ -73,24 +73,24 @@ export class Roles {
   // Convert from DTO (IRoles) to domain model
   static fromDto(dto: IRoles): Roles {
     return new Roles({
-      roleId: dto.roleId,
-      userId: dto.userId,
+      roleId: dto.roleId ?? '',
+      userId: dto.userId ?? '',
       roleType: RoleType[dto.roleType as keyof typeof RoleType] ?? RoleType.UNKNOWN,
       status: RoleStatus[dto.status as keyof typeof RoleStatus] ?? RoleStatus.UNKNOWN,
-      createdAt: dto.createdAt,
-      updatedAt: dto.updatedAt,
+      createdAt: dto.createdAt ?? '',
+      updatedAt: dto.updatedAt ?? '',
     });
   }
 
   // Convert domain model to DTO (IRoles)
   toDto(): IRoles {
     return {
-      roleId: this.roleId,
+      roleId: this.roleId ?? '',
       userId: this.userId ?? '',
       roleType: this.roleType.toString(),
       status: this.status.toString(),
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
+      createdAt: this.createdAt ?? '',
+      updatedAt: this.updatedAt ?? '',
     };
   }
 }

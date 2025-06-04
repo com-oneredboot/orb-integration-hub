@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for MfaSetupDetails
- * Generated at 2025-06-04T09:26:37.146003
+ * Generated at 2025-06-04T10:49:55.672763
  */
 
 // Import enums and models used in this model
@@ -42,17 +42,17 @@ export class MfaSetupDetails {
   // Convert from DTO (IMfaSetupDetails) to domain model
   static fromDto(dto: IMfaSetupDetails): MfaSetupDetails {
     return new MfaSetupDetails({
-      qrCode: dto.qrCode,
-      secretKey: dto.secretKey,
-      setupUri: dto.setupUri,
+      qrCode: dto.qrCode ?? '',
+      secretKey: dto.secretKey ?? '',
+      setupUri: dto.setupUri ?? '',
     });
   }
 
   // Convert domain model to DTO (IMfaSetupDetails)
   toDto(): IMfaSetupDetails {
     return {
-      qrCode: this.qrCode,
-      secretKey: this.secretKey,
+      qrCode: this.qrCode ?? '',
+      secretKey: this.secretKey ?? '',
       setupUri: this.setupUri ?? '',
     };
   }

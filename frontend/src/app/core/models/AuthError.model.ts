@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for AuthError
- * Generated at 2025-06-04T09:26:37.089614
+ * Generated at 2025-06-04T10:49:55.594183
  */
 
 // Import enums and models used in this model
@@ -46,20 +46,20 @@ export class AuthError {
   // Convert from DTO (IAuthError) to domain model
   static fromDto(dto: IAuthError): AuthError {
     return new AuthError({
-      code: dto.code,
-      message: dto.message,
-      description: dto.description,
-      details: dto.details,
+      code: dto.code ?? '',
+      message: dto.message ?? '',
+      description: dto.description ?? '',
+      details: dto.details ?? {},
     });
   }
 
   // Convert domain model to DTO (IAuthError)
   toDto(): IAuthError {
     return {
-      code: this.code,
-      message: this.message,
+      code: this.code ?? '',
+      message: this.message ?? '',
       description: this.description ?? '',
-      details: this.details,
+      details: this.details ?? {},
     };
   }
 }

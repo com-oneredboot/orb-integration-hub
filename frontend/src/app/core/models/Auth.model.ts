@@ -1,10 +1,11 @@
 /**
  * Generated TypeScript models for Auth
- * Generated at 2025-06-04T09:26:37.061515
+ * Generated at 2025-06-04T10:49:55.520164
  */
 
 // Import enums and models used in this model
 import { MfaSetupDetails } from './MfaSetupDetails.model';
+import type { IMfaSetupDetails } from './MfaSetupDetails.model';
 import { Users } from './Users.model';
 import type { IUsers } from './Users.model';
 
@@ -39,11 +40,11 @@ export interface IAuth {
   statusCode: number;
   isSignedIn: boolean;
   message: string;
-  user?: IUsers;
+  user: IUsers;
   needsMFA: boolean;
   needsMFASetup: boolean;
   mfaType: string;
-  mfaSetupDetails?: MfaSetupDetails;
+  mfaSetupDetails: IMfaSetupDetails;
 }
 
 // Domain Model Class (uses enums for enum fields)
@@ -65,28 +66,28 @@ export class Auth {
   // Convert from DTO (IAuth) to domain model
   static fromDto(dto: IAuth): Auth {
     return new Auth({
-      statusCode: dto.statusCode,
-      isSignedIn: dto.isSignedIn,
-      message: dto.message,
-      user: dto.user ?? undefined,
-      needsMFA: dto.needsMFA,
-      needsMFASetup: dto.needsMFASetup,
-      mfaType: dto.mfaType,
-      mfaSetupDetails: dto.mfaSetupDetails ?? undefined,
+      statusCode: dto.statusCode ?? 0,
+      isSignedIn: dto.isSignedIn ?? false,
+      message: dto.message ?? '',
+      user: dto.user,
+      needsMFA: dto.needsMFA ?? false,
+      needsMFASetup: dto.needsMFASetup ?? false,
+      mfaType: dto.mfaType ?? '',
+      mfaSetupDetails: dto.mfaSetupDetails ? (typeof dto.mfaSetupDetails.toDto === 'function' ? dto.mfaSetupDetails.toDto() : dto.mfaSetupDetails) : undefined,
     });
   }
 
   // Convert domain model to DTO (IAuth)
   toDto(): IAuth {
     return {
-      statusCode: this.statusCode,
+      statusCode: this.statusCode ?? 0,
       isSignedIn: this.isSignedIn ?? false,
       message: this.message ?? '',
       user: this.user,
       needsMFA: this.needsMFA ?? false,
       needsMFASetup: this.needsMFASetup ?? false,
       mfaType: this.mfaType ?? '',
-      mfaSetupDetails: this.mfaSetupDetails,
+      mfaSetupDetails: this.mfaSetupDetails ? (typeof this.mfaSetupDetails.toDto === 'function' ? this.mfaSetupDetails.toDto() : this.mfaSetupDetails) : undefined,
     };
   }
 }

@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { RouterModule } from '@angular/router';
+import { Users } from '../../../../core/models/Users.model';
 
 @Component({
   selector: 'app-profile',
@@ -206,10 +207,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
       
       const response = await this.userService.userUpdate(updateInput);
       
-      if (response.statusCode === 200 && response.data) {
+      if (response.StatusCode === 200 && response.Data) {
         // Update the store with the updated user data
         this.store.dispatch(AuthActions.signInSuccess({
-          user: response.data,
+          user: new Users(response.Data).toDto(),
           message: 'Profile updated successfully'
         }));
         
@@ -218,7 +219,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         
         console.log('Profile updated successfully');
       } else {
-        console.error('Failed to update profile:', response.message);
+        console.error('Failed to update profile:', response.Message);
       }
     } catch (error) {
       console.error('Error updating profile:', error);

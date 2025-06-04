@@ -17,9 +17,7 @@ import { AuthActions } from "./auth.actions";
 import * as fromAuth from "./auth.selectors";
 import { CognitoService } from "../../../../../core/services/cognito.service";
 import { getError } from "../../../../../core/models/ErrorRegistry.model";
-import { UsersQueryByEmailInput } from "../../../../../core/models/Users.model";
-import { IUsers } from "../../../../../core/models/Users.model";
-import { UsersResponse } from "../../../../../core/models/Users.model";
+import { UsersQueryByEmailInput, UsersResponse, UsersListResponse } from "../../../../../core/models/Users.model";
 
 @Injectable()
 export class AuthEffects {
@@ -34,9 +32,9 @@ export class AuthEffects {
         
         return from(this.userService.userExists(userInput)).pipe(
           tap(result => console.debug('Effect [CheckEmail]: Service returned', result)),
-          map((result: UsersResponse) => {
-            const users = Array.isArray(result.data) ? result.data : [];
-            if (result.statusCode === 500 && users.length > 1) {
+          map((result: UsersListResponse) => {
+            const users = result.Data || [];
+            if (result.StatusCode === 500 && users.length > 1) {
               // Duplicate user error
               console.error('Effect [CheckEmail]: Duplicate users found for email:', email, users);
               const errorObj = getError('ORB-AUTH-006'); // Use a suitable error code
@@ -44,11 +42,11 @@ export class AuthEffects {
                 error: errorObj ? errorObj.message : 'Duplicate users found for this email.'
               });
             }
-            if (result.statusCode === 200 && users.length === 1) {
+            if (result.StatusCode === 200 && users.length === 1) {
               // User exists
               return AuthActions.checkEmailSuccess({ userExists: true });
             }
-            if (result.statusCode === 200 && users.length === 0) {
+            if (result.StatusCode === 200 && users.length === 0) {
               // User not found
               return AuthActions.checkEmailUserNotFound();
             }
@@ -95,14 +93,14 @@ export class AuthEffects {
         // create the user
         return from(this.userService.userCreate(input, password)).pipe(
           map(response => {
-            if (response.statusCode === 200) {
+            if (response.StatusCode === 200) {
               return AuthActions.createUserSuccess();
             }
-            if (response.statusCode === 401) {
+            if (response.StatusCode === 401) {
               // Unauthorized: surface the error, do not dispatch createUserSuccess
               const errorObj = getError('ORB-API-002');
               return AuthActions.createUserFailure({
-                error: response.message || (errorObj ? errorObj.message : 'Unauthorized')
+                error: response.Message || (errorObj ? errorObj.message : 'Unauthorized')
               });
             }
             const errorObj = getError('ORB-API-002');
@@ -131,8 +129,8 @@ export class AuthEffects {
         return from(this.userService.userExists(emailInput)).pipe(
           tap(user => console.debug('[Effect][verifyEmail$] userExists result', user)),
           switchMap(user => {
-            const users = Array.isArray(user.data) ? user.data : [];
-            if (user.statusCode === 500 && users.length > 1) {
+            const users = Array.isArray(user.Data) ? user.Data : [];
+            if (user.StatusCode === 500 && users.length > 1) {
               // Duplicate user error
               console.error('[Effect][verifyEmail$] Duplicate users found for email:', input.email, users);
               const errorObj = getError('ORB-AUTH-006');
@@ -140,7 +138,7 @@ export class AuthEffects {
                 error: errorObj ? errorObj.message : 'Duplicate users found for this email.'
               }));
             }
-            if (!user || user.statusCode !== 200 || users.length === 0) {
+            if (!user || user.StatusCode !== 200 || users.length === 0) {
               const errorObj = getError('ORB-AUTH-003');
               console.error('[Effect][verifyEmail$] User not found or error', user);
               return of(AuthActions.verifyEmailFailure({
@@ -149,7 +147,7 @@ export class AuthEffects {
             }
             // Now verify the email with the userId
             const userIdInput = { userId: users[0].userId };
-            return from(this.userService.emailVerify(userIdInput, code, email)).pipe(
+            return from(this.userService.emailVerify(code, email)).pipe(
               tap(response => console.debug('[Effect][verifyEmail$] emailVerify response', response)),
               map(response => {
                 if (response) {
@@ -192,7 +190,7 @@ export class AuthEffects {
             console.debug('verifyCognitoPassword response:', response);
 
             // error state
-            if (response.statusCode !== 200) {
+            if (response.StatusCode !== 200) {
               const errorObj = getError('ORB-AUTH-002');
               return AuthActions.verifyCognitoPasswordFailure({
                 error: errorObj ? errorObj.message : 'Invalid credentials'
@@ -200,10 +198,10 @@ export class AuthEffects {
             }
 
             return AuthActions.verifyCognitoPasswordSuccess({
-              needsMFA: response.data?.needsMFA,
-              needsMFASetup: response.data?.needsMFASetup,
+              needsMFA: response.Data?.needsMFA,
+              needsMFASetup: response.Data?.needsMFASetup,
               message: 'Successfully verified email and password',
-              mfaSetupDetails: response.data?.mfaSetupDetails
+              mfaSetupDetails: response.Data?.mfaSetupDetails
             });
 
           }),
@@ -224,7 +222,7 @@ export class AuthEffects {
       switchMap(() =>
         from(this.userService.mfaSetup()).pipe(
           map(response => {
-            if (response.statusCode === 200) {
+            if (response.StatusCode === 200) {
               return AuthActions.needsMFASetupSuccess();
             }
             const errorObj = getError('ORB-AUTH-003');
@@ -249,7 +247,7 @@ export class AuthEffects {
       switchMap(({ code }) =>
         from(this.userService.mfaVerify(code)).pipe(
           map(response => {
-            if (response.statusCode === 200) {
+            if (response.StatusCode === 200) {
               return AuthActions.needsMFASuccess();
             }
             const errorObj = getError('ORB-AUTH-003');
