@@ -20,9 +20,9 @@ model:
       required: false
       description: User-facing or system message
     user:
-      type: IUsers
+      type: Users
       required: false
-      description: The user object (IUsers)
+      description: The user object (Users)
     needsMFA:
       type: boolean
       required: false

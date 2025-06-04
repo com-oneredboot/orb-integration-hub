@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for MfaSetupDetails
- * Generated at 2025-06-04T10:49:55.672763
+ * Generated at 2025-06-04T10:59:51.776065
  */
 
 // Import enums and models used in this model
@@ -54,6 +54,15 @@ export class MfaSetupDetails {
       qrCode: this.qrCode ?? '',
       secretKey: this.secretKey ?? '',
       setupUri: this.setupUri ?? '',
+    };
+  }
+
+  // Returns a DTO with all fields set to their default values
+  static emptyDto(): IMfaSetupDetails {
+    return {
+      qrCode: '',
+      secretKey: '',
+      setupUri: '',
     };
   }
 }

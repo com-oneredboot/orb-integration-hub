@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for AuthError
- * Generated at 2025-06-04T10:49:55.594183
+ * Generated at 2025-06-04T10:59:51.685732
  */
 
 // Import enums and models used in this model
@@ -60,6 +60,16 @@ export class AuthError {
       message: this.message ?? '',
       description: this.description ?? '',
       details: this.details ?? {},
+    };
+  }
+
+  // Returns a DTO with all fields set to their default values
+  static emptyDto(): IAuthError {
+    return {
+      code: '',
+      message: '',
+      description: '',
+      details: {},
     };
   }
 }

@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for ApplicationRoles
- * Generated at 2025-06-04T10:49:55.273890
+ * Generated at 2025-06-04T10:59:51.352967
  */
 
 // Import enums and models used in this model
@@ -116,11 +116,27 @@ export class ApplicationRoles {
       applicationId: this.applicationId ?? '',
       roleId: this.roleId ?? '',
       roleName: this.roleName ?? '',
-      roleType: this.roleType.toString(),
+      roleType: (this.roleType ?? RoleType.UNKNOWN).toString(),
       permissions: this.permissions ?? [],
-      status: this.status.toString(),
+      status: (this.status ?? RoleStatus.UNKNOWN).toString(),
       createdAt: this.createdAt ?? '',
       updatedAt: this.updatedAt ?? '',
+    };
+  }
+
+  // Returns a DTO with all fields set to their default values
+  static emptyDto(): IApplicationRoles {
+    return {
+      applicationRoleId: '',
+      userId: '',
+      applicationId: '',
+      roleId: '',
+      roleName: '',
+      roleType: RoleType.UNKNOWN.toString(),
+      permissions: [],
+      status: RoleStatus.UNKNOWN.toString(),
+      createdAt: '',
+      updatedAt: '',
     };
   }
 }

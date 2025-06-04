@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for ApplicationUsers
- * Generated at 2025-06-04T10:49:55.455496
+ * Generated at 2025-06-04T10:59:51.549477
  */
 
 // Import enums and models used in this model
@@ -90,9 +90,21 @@ export class ApplicationUsers {
       applicationUserId: this.applicationUserId ?? '',
       userId: this.userId ?? '',
       applicationId: this.applicationId ?? '',
-      status: this.status.toString(),
+      status: (this.status ?? ApplicationUserStatus.UNKNOWN).toString(),
       createdAt: this.createdAt ?? '',
       updatedAt: this.updatedAt ?? '',
+    };
+  }
+
+  // Returns a DTO with all fields set to their default values
+  static emptyDto(): IApplicationUsers {
+    return {
+      applicationUserId: '',
+      userId: '',
+      applicationId: '',
+      status: ApplicationUserStatus.UNKNOWN.toString(),
+      createdAt: '',
+      updatedAt: '',
     };
   }
 }

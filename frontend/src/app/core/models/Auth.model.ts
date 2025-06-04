@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for Auth
- * Generated at 2025-06-04T10:49:55.520164
+ * Generated at 2025-06-04T10:59:51.624079
  */
 
 // Import enums and models used in this model
@@ -15,7 +15,7 @@ export interface AuthCreateInput {
   statusCode: number;
   isSignedIn: boolean;
   message: string;
-  user: IUsers;
+  user: Users;
   needsMFA: boolean;
   needsMFASetup: boolean;
   mfaType: string;
@@ -26,7 +26,7 @@ export interface AuthUpdateInput {
   statusCode?: number;
   isSignedIn?: boolean;
   message?: string;
-  user?: IUsers;
+  user?: Users;
   needsMFA?: boolean;
   needsMFASetup?: boolean;
   mfaType?: string;
@@ -53,7 +53,7 @@ export class Auth {
   statusCode!: number;
   isSignedIn?: boolean;
   message?: string;
-  user?: IUsers;
+  user?: Users;
   needsMFA?: boolean;
   needsMFASetup?: boolean;
   mfaType?: string;
@@ -69,11 +69,11 @@ export class Auth {
       statusCode: dto.statusCode ?? 0,
       isSignedIn: dto.isSignedIn ?? false,
       message: dto.message ?? '',
-      user: dto.user,
+      user: dto.user ? Users.fromDto(dto.user) : undefined,
       needsMFA: dto.needsMFA ?? false,
       needsMFASetup: dto.needsMFASetup ?? false,
       mfaType: dto.mfaType ?? '',
-      mfaSetupDetails: dto.mfaSetupDetails ? (typeof dto.mfaSetupDetails.toDto === 'function' ? dto.mfaSetupDetails.toDto() : dto.mfaSetupDetails) : undefined,
+      mfaSetupDetails: dto.mfaSetupDetails ? MfaSetupDetails.fromDto(dto.mfaSetupDetails) : undefined,
     });
   }
 
@@ -83,11 +83,25 @@ export class Auth {
       statusCode: this.statusCode ?? 0,
       isSignedIn: this.isSignedIn ?? false,
       message: this.message ?? '',
-      user: this.user,
+      user: this.user ? this.user.toDto() : Users.emptyDto(),
       needsMFA: this.needsMFA ?? false,
       needsMFASetup: this.needsMFASetup ?? false,
       mfaType: this.mfaType ?? '',
-      mfaSetupDetails: this.mfaSetupDetails ? (typeof this.mfaSetupDetails.toDto === 'function' ? this.mfaSetupDetails.toDto() : this.mfaSetupDetails) : undefined,
+      mfaSetupDetails: this.mfaSetupDetails ? this.mfaSetupDetails.toDto() : MfaSetupDetails.emptyDto(),
+    };
+  }
+
+  // Returns a DTO with all fields set to their default values
+  static emptyDto(): IAuth {
+    return {
+      statusCode: 0,
+      isSignedIn: false,
+      message: '',
+      user: Users.emptyDto(),
+      needsMFA: false,
+      needsMFASetup: false,
+      mfaType: '',
+      mfaSetupDetails: MfaSetupDetails.emptyDto(),
     };
   }
 }

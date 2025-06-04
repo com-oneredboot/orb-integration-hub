@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for Users
- * Generated at 2025-06-04T10:49:55.847467
+ * Generated at 2025-06-04T10:59:51.987504
  */
 
 // Import enums and models used in this model
@@ -122,13 +122,31 @@ export class Users {
       email: this.email ?? '',
       firstName: this.firstName ?? '',
       lastName: this.lastName ?? '',
-      status: this.status.toString(),
+      status: (this.status ?? UserStatus.UNKNOWN).toString(),
       createdAt: this.createdAt ?? '',
       updatedAt: this.updatedAt ?? '',
       phoneNumber: this.phoneNumber ?? '',
       groups: this.groups ?? [],
       emailVerified: this.emailVerified ?? false,
       phoneVerified: this.phoneVerified ?? false,
+    };
+  }
+
+  // Returns a DTO with all fields set to their default values
+  static emptyDto(): IUsers {
+    return {
+      userId: '',
+      cognitoId: '',
+      email: '',
+      firstName: '',
+      lastName: '',
+      status: UserStatus.UNKNOWN.toString(),
+      createdAt: '',
+      updatedAt: '',
+      phoneNumber: '',
+      groups: [],
+      emailVerified: false,
+      phoneVerified: false,
     };
   }
 }

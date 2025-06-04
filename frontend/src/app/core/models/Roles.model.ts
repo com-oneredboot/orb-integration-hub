@@ -1,6 +1,6 @@
 /**
  * Generated TypeScript models for Roles
- * Generated at 2025-06-04T10:49:55.754212
+ * Generated at 2025-06-04T10:59:51.868533
  */
 
 // Import enums and models used in this model
@@ -87,10 +87,22 @@ export class Roles {
     return {
       roleId: this.roleId ?? '',
       userId: this.userId ?? '',
-      roleType: this.roleType.toString(),
-      status: this.status.toString(),
+      roleType: (this.roleType ?? RoleType.UNKNOWN).toString(),
+      status: (this.status ?? RoleStatus.UNKNOWN).toString(),
       createdAt: this.createdAt ?? '',
       updatedAt: this.updatedAt ?? '',
+    };
+  }
+
+  // Returns a DTO with all fields set to their default values
+  static emptyDto(): IRoles {
+    return {
+      roleId: '',
+      userId: '',
+      roleType: RoleType.UNKNOWN.toString(),
+      status: RoleStatus.UNKNOWN.toString(),
+      createdAt: '',
+      updatedAt: '',
     };
   }
 }
