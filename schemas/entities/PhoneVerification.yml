@@ -1,0 +1,17 @@
+# file: schemas/entities/PhoneVerification.yml
+# author: Corey Dale Peters
+# date: 2025-06-04
+# description: GraphQL type schema for phone verification
+
+type: lambda
+name: PhoneVerification
+model:
+  attributes:
+    phonenumber:
+      type: number
+      required: true
+      description: the phonenumber to verify
+    code:
+      type: number
+      required: false
+      description: the confirmation Code
