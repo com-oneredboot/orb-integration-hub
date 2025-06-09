@@ -634,89 +634,32 @@ def build_crud_operations_for_table(schema: TableSchema):
         raise SchemaValidationError(f"No auth decorators found for {schema.name}ListResponse. Please ensure at least one auth directive is present in the schema's authConfig for a Query operation.")
 
 def generate_python_model(table: str, schema: Union[TableSchema, GraphQLType], template_name: str = 'python_model.jinja') -> None:
-    """Generate Python model from schema using the specified template."""
+    logger.debug(f'generate_python_model called for {table}')
     try:
-        env = setup_jinja_env()
-        template = env.get_template(template_name)
-        model_content = template.render(schema=schema, timestamp=datetime.now().isoformat())
-        file_name = f'{table}.model.py'
+        jinja_env = setup_jinja_env()
+        template = jinja_env.get_template(template_name)
+        content = template.render(schema=schema, timestamp=datetime.utcnow().isoformat())
+        file_name = f'{table}Model.py'
         output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'src', 'core', 'models', file_name)
-        write_file(output_path, model_content)
+        write_file(output_path, content)
         logger.info(f'Generated Python model for {table}')
     except Exception as e:
         logger.error(f'Failed to generate Python model for {table}: {str(e)}')
         raise
 
 def generate_typescript_model(table: str, schema: Union[TableSchema, GraphQLType], template_name: str, all_model_names=None) -> None:
-    """Generate TypeScript model from schema using the specified template."""
-    env = setup_jinja_env()
-    template = env.get_template(template_name)
-    
-    # Collect all enums and models referenced in attributes
-    enum_imports = set()
-    model_imports = set()
-    if all_model_names is None:
-        all_model_names = []
-    # Build model_attributes: {model_name: [Attribute, ...]}
-    from inspect import isclass
-    import types
-    # Find all loaded schemas
-    schemas_dir = os.path.join(SCRIPT_DIR, 'entities')
-    schema_files = glob.glob(os.path.join(schemas_dir, '*.yml'))
-    model_attributes = {}
-    for schema_file in schema_files:
-        schema_dict = load_schema(schema_file)
-        schema_name = schema_dict.get('name')
-        model = schema_dict['model']
-        attrs = []
-        for attr_name, attr_info in model['attributes'].items():
-            attr = {
-                'name': attr_name,
-                'type': attr_info['type'],
-                'required': attr_info.get('required', True),
-                'default': ''
-            }
-            # Set default for booleans, arrays, etc.
-            if attr['type'] == 'boolean':
-                attr['default'] = 'false'
-            elif attr['type'] == 'string[]':
-                attr['default'] = '[]'
-            elif attr['type'] == 'number':
-                attr['default'] = '0'
-            elif attr['type'] == 'Record<string, any>':
-                attr['default'] = '{}'
-            elif attr['type'] == 'string':
-                attr['default'] = "''"
-            attrs.append(attr)
-        model_attributes[schema_name] = attrs
-    # Check all attributes for enums/models
-    for attr in schema.attributes:
-        # Enum detection
-        if getattr(attr, 'enum_type', None):
-            enum_imports.add(attr.enum_type)
-        # Model detection (for references to other models)
-        attr_type = attr.type
-        # Handle array<...> types
-        if attr_type.startswith('array<') and attr_type.endswith('>'):
-            inner_type = attr_type[6:-1]
-            if inner_type in all_model_names and inner_type != table:
-                model_imports.add(inner_type)
-        # Direct model reference
-        if attr_type in all_model_names and attr_type != table:
-            model_imports.add(attr_type)
-        # Interface reference (IModel)
-        if attr_type.startswith('I') and attr_type[1:] in all_model_names and attr_type[1:] != table:
-            model_imports.add(attr_type[1:])
-    # Render template
-    content = template.render(
-        schema=schema,
-        model_imports=sorted(model_imports),
-        enum_imports=sorted(enum_imports),
-        model_attributes=model_attributes,
-        timestamp=datetime.now().isoformat()
-    )
-    output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models', f'{table}.model.ts')
-    write_file(output_path, content)
+    logger.debug(f'generate_typescript_model called for {table}')
+    try:
+        jinja_env = setup_jinja_env()
+        template = jinja_env.get_template(template_name)
+        content = template.render(schema=schema, timestamp=datetime.utcnow().isoformat(), all_model_names=all_model_names)
+        file_name = f'{table}Model.ts'
+        output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models', file_name)
+        write_file(output_path, content)
+        logger.info(f'Generated TypeScript model for {table}')
+    except Exception as e:
+        logger.error(f'Failed to generate TypeScript model for {table}: {str(e)}')
+        raise
 
 def process_field_type(field_name: str, field_info: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -1114,7 +1057,7 @@ def generate_typescript_enum(enum_name: str, enum_values: list) -> None:
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('typescript_enum.jinja')
         enum_content = template.render(enum_name=enum_name, enum_values=enum_values)
-        file_name = f'{enum_name}.enum.ts'
+        file_name = f'{enum_name}Enum.ts'
         output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models', file_name)
         write_file(output_path, enum_content)
         logger.info(f'Generated TypeScript enum for {enum_name}')
@@ -1128,7 +1071,7 @@ def generate_python_enum(enum_name: str, enum_values: list) -> None:
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('python_enum.jinja')
         enum_content = template.render(enum_name=enum_name, enum_values=enum_values)
-        file_name = f'{enum_name}.enum.py'
+        file_name = f'{enum_name}Enum.py'
         output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'src', 'core', 'models', file_name)
         write_file(output_path, enum_content)
         logger.info(f'Generated Python enum for {enum_name}')
@@ -1144,10 +1087,10 @@ def cleanup_old_files(valid_model_names, valid_enum_names, valid_graphql_names):
 
     # TypeScript models
     for fname in os.listdir(ts_model_dir):
-        if fname.endswith('.model.ts') and fname not in valid_model_names:
+        if fname.endswith('Model.ts') and fname not in valid_model_names:
             os.remove(os.path.join(ts_model_dir, fname))
             logger.info(f'Removed old/incorrect TS model file: {fname}')
-        if fname.endswith('.enum.ts') and fname not in valid_enum_names:
+        if fname.endswith('Enum.ts') and fname not in valid_enum_names:
             os.remove(os.path.join(ts_model_dir, fname))
             logger.info(f'Removed old/incorrect TS enum file: {fname}')
     # TypeScript GraphQL
@@ -1157,10 +1100,10 @@ def cleanup_old_files(valid_model_names, valid_enum_names, valid_graphql_names):
             logger.info(f'Removed old/incorrect TS GraphQL file: {fname}')
     # Python models/enums
     for fname in os.listdir(py_model_dir):
-        if fname.endswith('.model.py') and fname not in valid_model_names:
+        if fname.endswith('Model.py') and fname not in valid_model_names:
             os.remove(os.path.join(py_model_dir, fname))
             logger.info(f'Removed old/incorrect Python model file: {fname}')
-        if fname.endswith('.enum.py') and fname not in valid_enum_names:
+        if fname.endswith('Enum.py') and fname not in valid_enum_names:
             os.remove(os.path.join(py_model_dir, fname))
             logger.info(f'Removed old/incorrect Python enum file: {fname}')
 

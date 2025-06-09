@@ -6,11 +6,11 @@
 // Import enums and models used in this model
 {% for attr in schema.attributes %}
 {% if attr.enum_type %}
-import { {{ attr.enum_type }} } from './{{ attr.enum_type }}.enum';
+import { {{ attr.enum_type }} } from './{{ attr.enum_type }}Enum';
 {% endif %}
 {% endfor %}
 {% for model in model_imports %}
-import { {{ model }}, I{{ model }} } from './{{ model }}.model';
+import { {{ model }}Model, I{{ model }}Model } from './{{ model }}Model';
 {% endfor %}
 
 // Interface definition
@@ -32,7 +32,7 @@ export class {{ schema.name }} implements I{{ schema.name }} {
 {% for attr in schema.attributes %}
 {% if attr.enum_type %}
         if (key === '{{ attr.name }}' && typeof value === 'string') {
-          this.{{ attr.name }} = {{ attr.enum_type }}[value as keyof typeof {{ attr.enum_type }}] ?? {{ attr.enum_type }}.UNKNOWN;
+          this.{{ attr.name }} = {{ attr.enum_type }}Enum[value as keyof typeof {{ attr.enum_type }}Enum] ?? {{ attr.enum_type }}Enum.UNKNOWN;
         } else 
 {% endif %}
 {% endfor %}

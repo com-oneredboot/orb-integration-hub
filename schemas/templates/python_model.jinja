@@ -9,7 +9,10 @@ from datetime import datetime
 from enum import Enum
 {% for attr in schema.attributes %}
 {% if attr.enum_type %}
-from .{{ attr.enum_type | to_snake_case }} import {{ attr.enum_type }}
+from .{{ attr.enum_type }}Enum import {{ attr.enum_type }}
+{% endif %}
+{% if attr.model_reference %}
+from .{{ attr.model_reference }}Model import {{ attr.model_reference }}Model
 {% endif %}
 {% endfor %}
 

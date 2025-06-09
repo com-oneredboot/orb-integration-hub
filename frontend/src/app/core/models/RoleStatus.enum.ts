@@ -1,2 +1,0 @@
-export enum RoleStatus {
-  UNKNOWN = 'UNKNOWN',  ACTIVE = 'ACTIVE',  INACTIVE = 'INACTIVE',  DELETED = 'DELETED'} 

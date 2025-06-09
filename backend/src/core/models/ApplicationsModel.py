@@ -1,13 +1,13 @@
 """
 Generated Python models for Applications
-Generated at 2025-06-09T17:34:21.156606
+Generated at 2025-06-09T21:46:13.102568
 """
 
 from typing import Optional, List
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
 from enum import Enum
-from .ApplicationStatus_enum import ApplicationStatus
+from .ApplicationStatusEnum import ApplicationStatus
 
 # CRUD Input Types
 class ApplicationsCreateInput(BaseModel):
