@@ -1,54 +1,62 @@
 /**
- * Generated TypeScript models for ApplicationUsers
- * Generated at 2025-06-06T11:47:29.590523
+ * ApplicationUsers model.
  */
 
 // Import enums and models used in this model
 import { ApplicationUserStatus } from './ApplicationUserStatus.enum';
 
-
-// Input types
-export interface ApplicationUsersCreateInput {
+// CreateInput
+export type ApplicationUsersCreateInput = {
   applicationUserId: string;
   userId: string;
   applicationId: string;
   status: string;
   createdAt: string;
   updatedAt: string;
-}
+};
 
-export interface ApplicationUsersUpdateInput {
-  applicationUserId?: string;
-  userId?: string;
-  applicationId?: string;
-  status?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-// Always include DeleteInput (PK fields only)
-export interface ApplicationUsersDeleteInput {
+// UpdateInput
+export type ApplicationUsersUpdateInput = {
   applicationUserId: string;
-}
-
-// Always include DisableInput (PK fields + disabled boolean)
-export interface ApplicationUsersDisableInput {
-  applicationUserId: string;
-  disabled: boolean;
-}
-
-// QueryBy inputs for PK, SK, and all indexes
-export interface ApplicationUsersQueryByApplicationUserIdInput {
-  applicationUserId: string;
-}
-export interface ApplicationUsersQueryByUserIdInput {
   userId: string;
-}
-export interface ApplicationUsersQueryByApplicationIdInput {
   applicationId: string;
-}
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+};
 
-// DTO Interface (API/DB contract)
+// QueryInput
+export type ApplicationUsersQueryByApplicationUserIdInput = {
+  applicationUserId: string;
+};
+
+
+export type ApplicationUsersQueryByUserIdInput = {
+  userId: string;
+};
+export type ApplicationUsersQueryByApplicationIdInput = {
+  applicationId: string;
+};
+
+// Response types
+export type ApplicationUsersResponse = {
+  statusCode: number;
+  message: string;
+  data: IApplicationUsers | null;
+};
+
+export type ApplicationUsersCreateResponse = {
+  statusCode: number;
+  message: string;
+  data: IApplicationUsers | null;
+};
+
+export type ApplicationUsersUpdateResponse = {
+  statusCode: number;
+  message: string;
+  data: IApplicationUsers | null;
+};
+
 export interface IApplicationUsers {
   applicationUserId: string;
   userId: string;
@@ -58,73 +66,24 @@ export interface IApplicationUsers {
   updatedAt: string;
 }
 
-// Domain Model Class (uses enums for enum fields)
-// Properties: '!' = required (definite assignment), '?' = optional (from schema)
-export class ApplicationUsers {
-  applicationUserId!: string;
-  userId!: string;
-  applicationId!: string;
-  status!: ApplicationUserStatus;
-  createdAt!: string;
-  updatedAt!: string;
+export class ApplicationUsers implements IApplicationUsers {
+  applicationUserId = '';
+  userId = '';
+  applicationId = '';
+  status = '';
+  createdAt = '';
+  updatedAt = '';
 
-  constructor(data: Partial<ApplicationUsers> = {}) {
-    Object.assign(this, data);
-  }
-
-  // Convert from DTO (IApplicationUsers) to domain model
-  static fromDto(dto: IApplicationUsers): ApplicationUsers {
-    return new ApplicationUsers({
-      applicationUserId: dto.applicationUserId ?? '',
-      userId: dto.userId ?? '',
-      applicationId: dto.applicationId ?? '',
-      status: ApplicationUserStatus[dto.status as keyof typeof ApplicationUserStatus] ?? ApplicationUserStatus.UNKNOWN,
-      createdAt: dto.createdAt ?? '',
-      updatedAt: dto.updatedAt ?? '',
+  constructor(data: Partial<IApplicationUsers> = {}) {
+    Object.entries(data).forEach(([key, value]) => {
+      if (key in this) {
+        if (key === 'status' && typeof value === 'string') {
+          this.status = ApplicationUserStatus[value as keyof typeof ApplicationUserStatus] ?? ApplicationUserStatus.UNKNOWN;
+        } else 
+        {
+          this[key as keyof this] = value as this[keyof this];
+        }
+      }
     });
   }
-
-  // Convert domain model to DTO (IApplicationUsers)
-  toDto(): IApplicationUsers {
-    return {
-      applicationUserId: this.applicationUserId ?? '',
-      userId: this.userId ?? '',
-      applicationId: this.applicationId ?? '',
-      status: (this.status ?? ApplicationUserStatus.UNKNOWN).toString(),
-      createdAt: this.createdAt ?? '',
-      updatedAt: this.updatedAt ?? '',
-    };
-  }
-
-  // Returns a DTO with all fields set to their default values
-  static emptyDto(): IApplicationUsers {
-    return {
-      applicationUserId: '',
-      userId: '',
-      applicationId: '',
-      status: ApplicationUserStatus.UNKNOWN.toString(),
-      createdAt: '',
-      updatedAt: '',
-    };
-  }
-}
-
-
-// ProperCase response types
-export interface ApplicationUsersResponse {
-  StatusCode: number;
-  Message: string;
-  Data: ApplicationUsers;
-}
-
-export interface ApplicationUsersListResponse {
-  StatusCode: number;
-  Message: string;
-  Data: ApplicationUsers[];
-}
-
-// CRUD response aliases
-export type ApplicationUsersCreateResponse = ApplicationUsersResponse;
-export type ApplicationUsersUpdateResponse = ApplicationUsersResponse;
-export type ApplicationUsersDeleteResponse = ApplicationUsersResponse;
-export type ApplicationUsersDisableResponse = ApplicationUsersResponse;
+} 

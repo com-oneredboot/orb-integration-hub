@@ -1,14 +1,12 @@
 /**
- * Generated TypeScript models for Users
- * Generated at 2025-06-06T11:47:30.085163
+ * Users model.
  */
 
 // Import enums and models used in this model
 import { UserStatus } from './UserStatus.enum';
 
-
-// Input types
-export interface UsersCreateInput {
+// CreateInput
+export type UsersCreateInput = {
   userId: string;
   cognitoId: string;
   email: string;
@@ -17,50 +15,60 @@ export interface UsersCreateInput {
   status: string;
   createdAt: string;
   updatedAt: string;
-  phoneNumber: string;
-  groups: string[];
-  emailVerified: boolean;
-  phoneVerified: boolean;
-}
+  phoneNumber: string | undefined;
+  groups: string[] | undefined;
+  emailVerified: boolean | undefined;
+  phoneVerified: boolean | undefined;
+};
 
-export interface UsersUpdateInput {
-  userId?: string;
-  cognitoId?: string;
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  status?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  phoneNumber?: string;
-  groups?: string[];
-  emailVerified?: boolean;
-  phoneVerified?: boolean;
-}
-
-// Always include DeleteInput (PK fields only)
-export interface UsersDeleteInput {
+// UpdateInput
+export type UsersUpdateInput = {
   userId: string;
-}
-
-// Always include DisableInput (PK fields + disabled boolean)
-export interface UsersDisableInput {
-  userId: string;
-  disabled: boolean;
-}
-
-// QueryBy inputs for PK, SK, and all indexes
-export interface UsersQueryByUserIdInput {
-  userId: string;
-}
-export interface UsersQueryByEmailInput {
-  email: string;
-}
-export interface UsersQueryByCognitoIdInput {
   cognitoId: string;
-}
+  email: string;
+  firstName: string;
+  lastName: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  phoneNumber: string | undefined;
+  groups: string[] | undefined;
+  emailVerified: boolean | undefined;
+  phoneVerified: boolean | undefined;
+};
 
-// DTO Interface (API/DB contract)
+// QueryInput
+export type UsersQueryByUserIdInput = {
+  userId: string;
+};
+
+
+export type UsersQueryByEmailInput = {
+  email: string;
+};
+export type UsersQueryByCognitoIdInput = {
+  cognitoId: string;
+};
+
+// Response types
+export type UsersResponse = {
+  statusCode: number;
+  message: string;
+  data: IUsers | null;
+};
+
+export type UsersCreateResponse = {
+  statusCode: number;
+  message: string;
+  data: IUsers | null;
+};
+
+export type UsersUpdateResponse = {
+  statusCode: number;
+  message: string;
+  data: IUsers | null;
+};
+
 export interface IUsers {
   userId: string;
   cognitoId: string;
@@ -70,103 +78,36 @@ export interface IUsers {
   status: string;
   createdAt: string;
   updatedAt: string;
-  phoneNumber: string;
-  groups: string[];
-  emailVerified: boolean;
-  phoneVerified: boolean;
+  phoneNumber: string | undefined;
+  groups: string[] | undefined;
+  emailVerified: boolean | undefined;
+  phoneVerified: boolean | undefined;
 }
 
-// Domain Model Class (uses enums for enum fields)
-// Properties: '!' = required (definite assignment), '?' = optional (from schema)
-export class Users {
-  userId!: string;
-  cognitoId!: string;
-  email!: string;
-  firstName!: string;
-  lastName!: string;
-  status!: UserStatus;
-  createdAt!: string;
-  updatedAt!: string;
-  phoneNumber?: string;
-  groups?: string[];
-  emailVerified?: boolean;
-  phoneVerified?: boolean;
+export class Users implements IUsers {
+  userId = '';
+  cognitoId = '';
+  email = '';
+  firstName = '';
+  lastName = '';
+  status = '';
+  createdAt = '';
+  updatedAt = '';
+  phoneNumber = '';
+  groups = [];
+  emailVerified = false;
+  phoneVerified = false;
 
-  constructor(data: Partial<Users> = {}) {
-    Object.assign(this, data);
-  }
-
-  // Convert from DTO (IUsers) to domain model
-  static fromDto(dto: IUsers): Users {
-    return new Users({
-      userId: dto.userId ?? '',
-      cognitoId: dto.cognitoId ?? '',
-      email: dto.email ?? '',
-      firstName: dto.firstName ?? '',
-      lastName: dto.lastName ?? '',
-      status: UserStatus[dto.status as keyof typeof UserStatus] ?? UserStatus.UNKNOWN,
-      createdAt: dto.createdAt ?? '',
-      updatedAt: dto.updatedAt ?? '',
-      phoneNumber: dto.phoneNumber ?? '',
-      groups: dto.groups ?? [],
-      emailVerified: dto.emailVerified ?? false,
-      phoneVerified: dto.phoneVerified ?? false,
+  constructor(data: Partial<IUsers> = {}) {
+    Object.entries(data).forEach(([key, value]) => {
+      if (key in this) {
+        if (key === 'status' && typeof value === 'string') {
+          this.status = UserStatus[value as keyof typeof UserStatus] ?? UserStatus.UNKNOWN;
+        } else 
+        {
+          this[key as keyof this] = value as this[keyof this];
+        }
+      }
     });
   }
-
-  // Convert domain model to DTO (IUsers)
-  toDto(): IUsers {
-    return {
-      userId: this.userId ?? '',
-      cognitoId: this.cognitoId ?? '',
-      email: this.email ?? '',
-      firstName: this.firstName ?? '',
-      lastName: this.lastName ?? '',
-      status: (this.status ?? UserStatus.UNKNOWN).toString(),
-      createdAt: this.createdAt ?? '',
-      updatedAt: this.updatedAt ?? '',
-      phoneNumber: this.phoneNumber ?? '',
-      groups: this.groups ?? [],
-      emailVerified: this.emailVerified ?? false,
-      phoneVerified: this.phoneVerified ?? false,
-    };
-  }
-
-  // Returns a DTO with all fields set to their default values
-  static emptyDto(): IUsers {
-    return {
-      userId: '',
-      cognitoId: '',
-      email: '',
-      firstName: '',
-      lastName: '',
-      status: UserStatus.UNKNOWN.toString(),
-      createdAt: '',
-      updatedAt: '',
-      phoneNumber: '',
-      groups: [],
-      emailVerified: false,
-      phoneVerified: false,
-    };
-  }
-}
-
-
-// ProperCase response types
-export interface UsersResponse {
-  StatusCode: number;
-  Message: string;
-  Data: Users;
-}
-
-export interface UsersListResponse {
-  StatusCode: number;
-  Message: string;
-  Data: Users[];
-}
-
-// CRUD response aliases
-export type UsersCreateResponse = UsersResponse;
-export type UsersUpdateResponse = UsersResponse;
-export type UsersDeleteResponse = UsersResponse;
-export type UsersDisableResponse = UsersResponse;
+} 

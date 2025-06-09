@@ -1,5 +1,5 @@
 /**
- * {{ schema.table }} model.
+ * {{ schema.name }} model.
  */
 
 // Import enums and models used in this model
@@ -13,72 +13,72 @@ import { {{ model }} } from './{{ model }}.model';
 {% endfor %}
 
 // CreateInput
-export type {{ schema.table }}CreateInput = {
+export type {{ schema.name }}CreateInput = {
 {% for attr in schema.attributes %}
-  {{ attr.name }}: {{ attr.type }}{% if not attr.required %} | undefined{% endif %};
+  {{ attr.name }}: {{ attr.type|to_typescript_type }}{% if not attr.required %} | undefined{% endif %};
 {% endfor %}
 };
 
 // UpdateInput
-export type {{ schema.table }}UpdateInput = {
+export type {{ schema.name }}UpdateInput = {
 {% for attr in schema.attributes %}
-  {{ attr.name }}: {{ attr.type }}{% if not attr.required %} | undefined{% endif %};
+  {{ attr.name }}: {{ attr.type|to_typescript_type }}{% if not attr.required %} | undefined{% endif %};
 {% endfor %}
 };
 
 // QueryInput
-export type {{ schema.table }}QueryBy{{ schema.partition_key|to_pascal_case }}Input = {
+export type {{ schema.name }}QueryBy{{ schema.partition_key|to_pascal_case }}Input = {
   {{ schema.partition_key }}: string;
 };
 
 {% if schema.sort_key and schema.sort_key != 'None' %}
-export type {{ schema.table }}QueryBy{{ schema.sort_key|to_pascal_case }}Input = {
+export type {{ schema.name }}QueryBy{{ schema.sort_key|to_pascal_case }}Input = {
   {{ schema.sort_key }}: string;
 };
 
-export type {{ schema.table }}QueryByBothInput = {
+export type {{ schema.name }}QueryByBothInput = {
   {{ schema.partition_key }}: string;
   {{ schema.sort_key }}: string;
 };
 {% endif %}
 
 {% for index in schema.secondary_indexes %}
-export type {{ schema.table }}QueryBy{{ index.partition|to_pascal_case }}Input = {
+export type {{ schema.name }}QueryBy{{ index.partition|to_pascal_case }}Input = {
   {{ index.partition }}: string;
 };
 {% endfor %}
 
 // Response types
-export type {{ schema.table }}Response = {
+export type {{ schema.name }}Response = {
   statusCode: number;
   message: string;
-  data: I{{ schema.table }} | null;
+  data: I{{ schema.name }} | null;
 };
 
-export type {{ schema.table }}CreateResponse = {
+export type {{ schema.name }}CreateResponse = {
   statusCode: number;
   message: string;
-  data: I{{ schema.table }} | null;
+  data: I{{ schema.name }} | null;
 };
 
-export type {{ schema.table }}UpdateResponse = {
+export type {{ schema.name }}UpdateResponse = {
   statusCode: number;
   message: string;
-  data: I{{ schema.table }} | null;
+  data: I{{ schema.name }} | null;
 };
 
-export interface I{{ schema.table }} {
+export interface I{{ schema.name }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }}: {{ attr.type }}{% if not attr.required %} | undefined{% endif %};
+  {{ attr.name }}: {{ attr.type|to_typescript_type }}{% if not attr.required %} | undefined{% endif %};
 {% endfor %}
 }
 
-export class {{ schema.table }} implements I{{ schema.table }} {
+export class {{ schema.name }} implements I{{ schema.name }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }} = {% if attr.type == 'string' %}''{% elif attr.type == 'number' %}0{% elif attr.type == 'boolean' %}false{% elif attr.type == 'string[]' %}[]{% elif attr.type == 'Record<string, any>' %}{}{% elif attr.type == 'string | undefined' %}undefined{% elif attr.type == 'boolean | undefined' %}undefined{% elif attr.type == 'Record<string, any> | undefined' %}undefined{% else %}undefined{% endif %};
+  {{ attr.name }} = {% if attr.type|to_typescript_type == 'string' %}''{% elif attr.type|to_typescript_type == 'number' %}0{% elif attr.type|to_typescript_type == 'boolean' %}false{% elif attr.type|to_typescript_type == 'string[]' %}[]{% elif attr.type|to_typescript_type == 'any[]' %}[]{% elif attr.type|to_typescript_type == 'Record<string, any>' %}{}{% elif not attr.required %}undefined{% else %}undefined{% endif %};
 {% endfor %}
 
-  constructor(data: Partial<I{{ schema.table }}> = {}) {
+  constructor(data: Partial<I{{ schema.name }}> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
 {% for attr in schema.attributes %}

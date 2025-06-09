@@ -1,0 +1,35 @@
+/**
+ * PhoneVerification Lambda-backed GraphQL resolver model.
+ * Generated at 2025-06-09T17:25:40.797550
+ */
+
+// Import enums and models used in this model
+
+// Interface definition
+export interface IPhoneVerification {
+  phonenumber: number;
+  code: number | undefined;
+}
+
+// Class definition
+export class PhoneVerification implements IPhoneVerification {
+  phonenumber = 0;
+  code = 0;
+
+  constructor(data: Partial<IPhoneVerification> = {}) {
+    Object.entries(data).forEach(([key, value]) => {
+      if (key in this) {
+        {
+          this[key as keyof this] = value as this[keyof this];
+        }
+      }
+    });
+  }
+}
+
+// Response type
+export type PhoneVerificationResponse = {
+  statusCode: number;
+  message: string;
+  data: IPhoneVerification | null;
+}; 

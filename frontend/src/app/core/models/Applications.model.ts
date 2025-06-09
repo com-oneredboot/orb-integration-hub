@@ -1,48 +1,56 @@
 /**
- * Generated TypeScript models for Applications
- * Generated at 2025-06-06T11:47:29.491883
+ * Applications model.
  */
 
 // Import enums and models used in this model
 import { ApplicationStatus } from './ApplicationStatus.enum';
 
-
-// Input types
-export interface ApplicationsCreateInput {
+// CreateInput
+export type ApplicationsCreateInput = {
   applicationId: string;
   name: string;
   ownerId: string;
   status: string;
   createdAt: string;
   updatedAt: string;
-}
+};
 
-export interface ApplicationsUpdateInput {
-  applicationId?: string;
-  name?: string;
-  ownerId?: string;
-  status?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-// Always include DeleteInput (PK fields only)
-export interface ApplicationsDeleteInput {
+// UpdateInput
+export type ApplicationsUpdateInput = {
   applicationId: string;
-}
+  name: string;
+  ownerId: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+};
 
-// Always include DisableInput (PK fields + disabled boolean)
-export interface ApplicationsDisableInput {
+// QueryInput
+export type ApplicationsQueryByApplicationIdInput = {
   applicationId: string;
-  disabled: boolean;
-}
+};
 
-// QueryBy inputs for PK, SK, and all indexes
-export interface ApplicationsQueryByApplicationIdInput {
-  applicationId: string;
-}
 
-// DTO Interface (API/DB contract)
+
+// Response types
+export type ApplicationsResponse = {
+  statusCode: number;
+  message: string;
+  data: IApplications | null;
+};
+
+export type ApplicationsCreateResponse = {
+  statusCode: number;
+  message: string;
+  data: IApplications | null;
+};
+
+export type ApplicationsUpdateResponse = {
+  statusCode: number;
+  message: string;
+  data: IApplications | null;
+};
+
 export interface IApplications {
   applicationId: string;
   name: string;
@@ -52,73 +60,24 @@ export interface IApplications {
   updatedAt: string;
 }
 
-// Domain Model Class (uses enums for enum fields)
-// Properties: '!' = required (definite assignment), '?' = optional (from schema)
-export class Applications {
-  applicationId!: string;
-  name!: string;
-  ownerId!: string;
-  status!: ApplicationStatus;
-  createdAt!: string;
-  updatedAt!: string;
+export class Applications implements IApplications {
+  applicationId = '';
+  name = '';
+  ownerId = '';
+  status = '';
+  createdAt = '';
+  updatedAt = '';
 
-  constructor(data: Partial<Applications> = {}) {
-    Object.assign(this, data);
-  }
-
-  // Convert from DTO (IApplications) to domain model
-  static fromDto(dto: IApplications): Applications {
-    return new Applications({
-      applicationId: dto.applicationId ?? '',
-      name: dto.name ?? '',
-      ownerId: dto.ownerId ?? '',
-      status: ApplicationStatus[dto.status as keyof typeof ApplicationStatus] ?? ApplicationStatus.UNKNOWN,
-      createdAt: dto.createdAt ?? '',
-      updatedAt: dto.updatedAt ?? '',
+  constructor(data: Partial<IApplications> = {}) {
+    Object.entries(data).forEach(([key, value]) => {
+      if (key in this) {
+        if (key === 'status' && typeof value === 'string') {
+          this.status = ApplicationStatus[value as keyof typeof ApplicationStatus] ?? ApplicationStatus.UNKNOWN;
+        } else 
+        {
+          this[key as keyof this] = value as this[keyof this];
+        }
+      }
     });
   }
-
-  // Convert domain model to DTO (IApplications)
-  toDto(): IApplications {
-    return {
-      applicationId: this.applicationId ?? '',
-      name: this.name ?? '',
-      ownerId: this.ownerId ?? '',
-      status: (this.status ?? ApplicationStatus.UNKNOWN).toString(),
-      createdAt: this.createdAt ?? '',
-      updatedAt: this.updatedAt ?? '',
-    };
-  }
-
-  // Returns a DTO with all fields set to their default values
-  static emptyDto(): IApplications {
-    return {
-      applicationId: '',
-      name: '',
-      ownerId: '',
-      status: ApplicationStatus.UNKNOWN.toString(),
-      createdAt: '',
-      updatedAt: '',
-    };
-  }
-}
-
-
-// ProperCase response types
-export interface ApplicationsResponse {
-  StatusCode: number;
-  Message: string;
-  Data: Applications;
-}
-
-export interface ApplicationsListResponse {
-  StatusCode: number;
-  Message: string;
-  Data: Applications[];
-}
-
-// CRUD response aliases
-export type ApplicationsCreateResponse = ApplicationsResponse;
-export type ApplicationsUpdateResponse = ApplicationsResponse;
-export type ApplicationsDeleteResponse = ApplicationsResponse;
-export type ApplicationsDisableResponse = ApplicationsResponse;
+} 
