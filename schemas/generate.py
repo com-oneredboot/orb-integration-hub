@@ -14,10 +14,7 @@ from datetime import datetime
 from dataclasses import dataclass
 import re
 import copy
-import shutil
 import glob
-import subprocess
-import json
 from dotenv import load_dotenv
 
 # 3rd party imports
@@ -169,6 +166,22 @@ class RegistryType:
     items: dict
     description: Optional[str] = None
     type: str = 'registry'
+
+@dataclass
+class StandardType:
+    """Standard model definition (plain object, not tied to a data source or API)."""
+    name: str
+    attributes: List[Attribute]
+    description: Optional[str] = None
+    type: str = 'standard'
+
+@dataclass
+class LambdaType:
+    """Lambda resolver model definition (for GraphQL Lambda-backed types)."""
+    name: str
+    attributes: List[Attribute]
+    description: Optional[str] = None
+    type: str = 'lambda'
 
 def to_python_type(attr_type: str) -> str:
     """Convert schema type to Python type."""
@@ -620,11 +633,12 @@ def build_crud_operations_for_table(schema: TableSchema):
     if not list_response_decorators:
         raise SchemaValidationError(f"No auth decorators found for {schema.name}ListResponse. Please ensure at least one auth directive is present in the schema's authConfig for a Query operation.")
 
-def generate_python_model(table: str, schema: Union[TableSchema, GraphQLType]) -> None:
+def generate_python_model(table: str, schema: Union[TableSchema, GraphQLType], template_name: str = 'python_model.jinja') -> None:
+    """Generate Python model from schema using the specified template."""
     try:
-        jinja_env = setup_jinja_env()
-        template = jinja_env.get_template('python_model.jinja')
-        model_content = template.render(schema=schema)
+        env = setup_jinja_env()
+        template = env.get_template(template_name)
+        model_content = template.render(schema=schema, timestamp=datetime.now().isoformat())
         file_name = f'{table}.model.py'
         output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'src', 'core', 'models', file_name)
         write_file(output_path, model_content)
@@ -633,9 +647,8 @@ def generate_python_model(table: str, schema: Union[TableSchema, GraphQLType]) -
         logger.error(f'Failed to generate Python model for {table}: {str(e)}')
         raise
 
-def generate_typescript_model(table: str, schema: Union[TableSchema, GraphQLType], is_static=False, model_type=None, all_model_names=None) -> None:
-    """Generate TypeScript model from schema."""
-    template_name = 'typescript_model.jinja'
+def generate_typescript_model(table: str, schema: Union[TableSchema, GraphQLType], template_name: str, all_model_names=None) -> None:
+    """Generate TypeScript model from schema using the specified template."""
     env = setup_jinja_env()
     template = env.get_template(template_name)
     
@@ -783,6 +796,8 @@ def generate_graphql_schema(schemas: Dict[str, Union[TableSchema, GraphQLType]],
                     schema.mutation_auth_directives[full_op_name] = get_auth_directives(full_op_name, schema)
                     logger.debug(f"Directives for {schema.name} {full_op_name}: {schema.mutation_auth_directives[full_op_name]}")
             elif isinstance(schema, GraphQLType):
+                graphql_types[schema_name] = schema
+            elif isinstance(schema, LambdaType):
                 graphql_types[schema_name] = schema
         # Load enums from enums.yml
         enums = {}
@@ -1287,6 +1302,46 @@ def load_schemas() -> dict:
                 type='registry'
             )
             schemas[schema_name] = schema_obj
+        elif schema_type == 'standard':
+            model = schema_dict['model']
+            attributes = []
+            for attr_name, attr_info in model['attributes'].items():
+                attr = Attribute(
+                    name=attr_name,
+                    type=attr_info['type'],
+                    description=attr_info.get('description', ''),
+                    required=attr_info.get('required', True),
+                    enum_type=attr_info.get('enum_type'),
+                    enum_values=attr_info.get('enum_values')
+                )
+                attributes.append(attr)
+            schema_obj = StandardType(
+                name=schema_name,
+                attributes=attributes,
+                description=schema_dict.get('description'),
+                type='standard'
+            )
+            schemas[schema_name] = schema_obj
+        elif schema_type == 'lambda':
+            model = schema_dict['model']
+            attributes = []
+            for attr_name, attr_info in model['attributes'].items():
+                attr = Attribute(
+                    name=attr_name,
+                    type=attr_info['type'],
+                    description=attr_info.get('description', ''),
+                    required=attr_info.get('required', True),
+                    enum_type=attr_info.get('enum_type'),
+                    enum_values=attr_info.get('enum_values')
+                )
+                attributes.append(attr)
+            schema_obj = LambdaType(
+                name=schema_name,
+                attributes=attributes,
+                description=schema_dict.get('description'),
+                type='lambda'
+            )
+            schemas[schema_name] = schema_obj
         else:
             # Fallback: treat as GraphQLType
             model = schema_dict['model']
@@ -1387,18 +1442,29 @@ def main():
         cleanup_old_files(valid_model_names, valid_enum_names, valid_graphql_names)
         logger.debug('Generating models and GraphQL ops for table-backed schemas')
         for table, schema in schemas.items():
-            if isinstance(schema, TableSchema):
+            schema_type = getattr(schema, 'type', None)
+            if schema_type == 'dynamodb':
                 logger.debug(f'Generating models and ops for table: {table}')
                 generate_python_model(table, schema)
-                generate_typescript_model(table, schema, is_static=False, model_type='table', all_model_names=all_model_names)
+                generate_typescript_model(table, schema, template_name='typescript_dynamodb.jinja', all_model_names=all_model_names)
                 generate_typescript_graphql_ops(table, schema)
-            elif isinstance(schema, GraphQLType):
-                logger.debug(f'Generating static model for type: {table}')
-                generate_typescript_model(table, schema, is_static=True, model_type='graphql', all_model_names=all_model_names)
-            elif isinstance(schema, RegistryType):
+            elif schema_type == 'standard':
+                logger.debug(f'Generating standard model for type: {table}')
+                generate_python_model(table, schema, template_name='python_standard.jinja')
+                generate_typescript_model(table, schema, template_name='typescript_standard.jinja', all_model_names=all_model_names)
+            elif schema_type == 'graphql':
+                logger.debug(f'Generating GraphQL-only model for type: {table}')
+                generate_typescript_model(table, schema, template_name='typescript_graphql_model.jinja', all_model_names=all_model_names)
+            elif schema_type == 'registry':
                 logger.debug(f'Generating registry model for type: {table}')
                 generate_python_registry(table, schema)
                 generate_typescript_registry(table, schema)
+            elif schema_type == 'lambda':
+                logger.debug(f'Generating lambda model for type: {table}')
+                generate_typescript_model(table, schema, template_name='typescript_lambda_model.jinja', all_model_names=all_model_names)
+            else:
+                logger.error(f'Unknown or unsupported schema type: {schema_type} for {table}')
+                raise ValueError(f"Unknown schema type: {schema_type} for {table}")
         logger.debug('Generating all enums')
         generate_all_enums()
         logger.debug('Generating base GraphQL schema')

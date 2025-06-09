@@ -60,6 +60,7 @@ ApplicationRoleStatus:
   - DELETED
 
 SchemaType:
+  - standard        # Standard model (plain object), not tied to a data source or API
   - dynamodb        # AWS DynamoDB table
   - postgres        # PostgreSQL table
   - mysql           # MySQL table

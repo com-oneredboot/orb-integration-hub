@@ -1,0 +1,208 @@
+
+input ApplicationRolesCreateInput {
+  applicationRoleId: String
+  userId: String
+  applicationId: String
+  roleId: String
+  roleName: String
+  roleType: String
+  permissions: [String]
+  status: String
+  createdAt: String
+  updatedAt: String
+}
+
+input ApplicationRolesUpdateInput {
+  applicationRoleId: String
+  userId: String
+  applicationId: String
+  roleId: String
+  roleName: String
+  roleType: String
+  permissions: [String]
+  status: String
+  createdAt: String
+  updatedAt: String
+}
+
+input ApplicationRolesDeleteInput {
+  applicationRoleId: String
+}
+
+input ApplicationRolesDisableInput {
+  applicationRoleId: String
+}input ApplicationRolesQueryByApplicationRoleIdInput {
+  applicationRoleId: String
+}
+input ApplicationRolesQueryByUserIdInput {
+  userId: String
+}
+input ApplicationRolesQueryByUserIdAndRoleIdInput {
+  userId: String
+  roleId: String
+}
+input ApplicationRolesQueryByApplicationIdInput {
+  applicationId: String
+}
+input ApplicationRolesQueryByApplicationIdAndRoleIdInput {
+  applicationId: String
+  roleId: String
+}
+input ApplicationRolesQueryByRoleIdInput {
+  roleId: String
+}
+input ApplicationRolesQueryByRoleIdAndRoleTypeInput {
+  roleId: String
+  roleType: String
+}
+
+input ApplicationsCreateInput {
+  applicationId: String
+  name: String
+  ownerId: String
+  status: String
+  createdAt: String
+  updatedAt: String
+}
+
+input ApplicationsUpdateInput {
+  applicationId: String
+  name: String
+  ownerId: String
+  status: String
+  createdAt: String
+  updatedAt: String
+}
+
+input ApplicationsDeleteInput {
+  applicationId: String
+}
+
+input ApplicationsDisableInput {
+  applicationId: String
+}input ApplicationsQueryByApplicationIdInput {
+  applicationId: String
+}
+
+input ApplicationUsersCreateInput {
+  applicationUserId: String
+  userId: String
+  applicationId: String
+  status: String
+  createdAt: String
+  updatedAt: String
+}
+
+input ApplicationUsersUpdateInput {
+  applicationUserId: String
+  userId: String
+  applicationId: String
+  status: String
+  createdAt: String
+  updatedAt: String
+}
+
+input ApplicationUsersDeleteInput {
+  applicationUserId: String
+}
+
+input ApplicationUsersDisableInput {
+  applicationUserId: String
+}input ApplicationUsersQueryByApplicationUserIdInput {
+  applicationUserId: String
+}
+input ApplicationUsersQueryByUserIdInput {
+  userId: String
+}
+input ApplicationUsersQueryByUserIdAndApplicationIdInput {
+  userId: String
+  applicationId: String
+}
+input ApplicationUsersQueryByApplicationIdInput {
+  applicationId: String
+}
+input ApplicationUsersQueryByApplicationIdAndUserIdInput {
+  applicationId: String
+  userId: String
+}
+
+input RolesCreateInput {
+  roleId: String
+  userId: String
+  roleType: String
+  status: String
+  createdAt: String
+  updatedAt: String
+}
+
+input RolesUpdateInput {
+  roleId: String
+  userId: String
+  roleType: String
+  status: String
+  createdAt: String
+  updatedAt: String
+}
+
+input RolesDeleteInput {
+  roleId: String
+}
+
+input RolesDisableInput {
+  roleId: String
+}input RolesQueryByRoleIdInput {
+  roleId: String
+}
+input RolesQueryByUserIdInput {
+  userId: String
+}
+input RolesQueryByUserIdAndRoleTypeInput {
+  userId: String
+  roleType: String
+}
+
+input UsersCreateInput {
+  userId: String
+  cognitoId: String
+  email: String
+  firstName: String
+  lastName: String
+  status: String
+  createdAt: String
+  updatedAt: String
+  phoneNumber: String
+  groups: [String]
+  emailVerified: Boolean
+  phoneVerified: Boolean
+}
+
+input UsersUpdateInput {
+  userId: String
+  cognitoId: String
+  email: String
+  firstName: String
+  lastName: String
+  status: String
+  createdAt: String
+  updatedAt: String
+  phoneNumber: String
+  groups: [String]
+  emailVerified: Boolean
+  phoneVerified: Boolean
+}
+
+input UsersDeleteInput {
+  userId: String
+}
+
+input UsersDisableInput {
+  userId: String
+}input UsersQueryByUserIdInput {
+  userId: String
+}
+input UsersQueryByEmailInput {
+  email: String
+}
+input UsersQueryByCognitoIdInput {
+  cognitoId: String
+}

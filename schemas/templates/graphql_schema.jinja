@@ -10,7 +10,7 @@
 
 {%- include 'graphql_schema_type.jinja' -%}
 
-{%- include 'base_types.jinja' -%}
+{%- include 'graphql_schema_base_types.jinja' -%}
 
 {%- for schema in table_schemas.values() %}
 {#-- Collect all auth directives for Query/Mutation operations returning this type --#}

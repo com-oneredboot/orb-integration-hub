@@ -3,7 +3,7 @@
 # date: 2025-02-17
 # description: yaml file containing the AuthError GraphQL type schema
 
-type: graphql
+type: standard
 name: AuthError
 model:
   attributes:
