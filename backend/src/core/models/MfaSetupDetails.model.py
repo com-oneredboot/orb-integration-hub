@@ -1,11 +1,12 @@
 """
 MfaSetupDetails standard model.
-Generated at 2025-06-09T17:25:40.709816
+Generated at 2025-06-09T17:28:56.073250
 """
 
 from typing import Optional
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
+
 # Main Model (Standard)
 class MfaSetupDetails(BaseModel):
     """MfaSetupDetails model."""

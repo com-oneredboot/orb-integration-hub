@@ -6,11 +6,11 @@ Generated at {{ timestamp }}
 from typing import Optional
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
-{%- for attr in schema.attributes %}
-{%- if attr.enum_type %}
+{% for attr in schema.attributes %}
+{% if attr.enum_type %}
 from .{{ attr.enum_type | to_snake_case }} import {{ attr.enum_type }}
-{%- endif %}
-{%- endfor %}
+{% endif %}
+{% endfor %}
 
 # Main Model (Standard)
 class {{ schema.name }}(BaseModel):

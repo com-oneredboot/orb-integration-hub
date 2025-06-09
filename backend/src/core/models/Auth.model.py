@@ -1,11 +1,12 @@
 """
 Auth standard model.
-Generated at 2025-06-09T17:25:40.562558
+Generated at 2025-06-09T17:28:55.914211
 """
 
 from typing import Optional
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
+
 # Main Model (Standard)
 class Auth(BaseModel):
     """Auth model."""

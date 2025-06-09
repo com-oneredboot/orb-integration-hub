@@ -1,11 +1,12 @@
 """
 AuthError standard model.
-Generated at 2025-06-09T17:25:40.630107
+Generated at 2025-06-09T17:28:55.979471
 """
 
 from typing import Optional
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
+
 # Main Model (Standard)
 class AuthError(BaseModel):
     """AuthError model."""

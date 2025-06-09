@@ -1,12 +1,14 @@
 """
 Generated Python models for ApplicationUsers
-Generated at 2025-06-09T17:25:40.492086
+Generated at 2025-06-09T17:28:55.837380
 """
 
 from typing import Optional, List
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
-from enum import Enumfrom .application_user_status import ApplicationUserStatus
+from enum import Enum
+from .application_user_status import ApplicationUserStatus
+
 # CRUD Input Types
 class ApplicationUsersCreateInput(BaseModel):
     application_user_id: str = Field(..., description="Unique identifier for the application user membership (primary key)")

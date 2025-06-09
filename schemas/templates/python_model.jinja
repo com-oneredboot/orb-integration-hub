@@ -7,11 +7,11 @@ from typing import Optional, List
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
 from enum import Enum
-{%- for attr in schema.attributes %}
-{%- if attr.enum_type %}
+{% for attr in schema.attributes %}
+{% if attr.enum_type %}
 from .{{ attr.enum_type | to_snake_case }} import {{ attr.enum_type }}
-{%- endif %}
-{%- endfor %}
+{% endif %}
+{% endfor %}
 
 {%- if schema.enums %}
 {%- for enum_name, enum_values in schema.enums.items() %}

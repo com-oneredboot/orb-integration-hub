@@ -1,12 +1,15 @@
 """
 Generated Python models for ApplicationRoles
-Generated at 2025-06-09T17:25:40.330968
+Generated at 2025-06-09T17:28:55.670547
 """
 
 from typing import Optional, List
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
-from enum import Enumfrom .role_type import RoleTypefrom .role_status import RoleStatus
+from enum import Enum
+from .role_type import RoleType
+from .role_status import RoleStatus
+
 # CRUD Input Types
 class ApplicationRolesCreateInput(BaseModel):
     application_role_id: str = Field(..., description="Unique identifier for the application role assignment (primary key)")
