@@ -216,12 +216,12 @@ Resources:
 
   # SMS Verification Lambda
   SmsVerificationLambda:
-    Type: AWS::Lambda::Function
+    Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub '${CustomerId}-${ProjectId}-${Environment}-sms-verification'
       Handler: index.lambda_handler
       Role: !GetAtt LambdaExecutionRole.Arn
-      Code: ../../backend/src/lambdas/sms_verification/
+      CodeUri: ../../backend/src/lambdas/sms_verification/
       Environment:
         Variables:
           SMS_ORIGINATION_NUMBER: !Ref SMSOriginationNumber
