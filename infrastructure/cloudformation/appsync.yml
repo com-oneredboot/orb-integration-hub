@@ -159,6 +159,16 @@ Resources:
         AwsRegion: !Ref AWS::Region
         UseCallerCredentials: false
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+  # Lambda DataSources
+# Jinja template for AppSync Lambda DataSources  SmsVerificationLambdaDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      Name: SmsVerificationLambdaDataSource
+      Type: AWS_LAMBDA
+      LambdaConfig:
+        LambdaFunctionArn: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-sms-verification-lambda-arn}}'
+      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn 
   # DynamoDB Resolvers
 # Jinja template for AppSync DynamoDB Resolvers  ApplicationRolesCreateResolver:
     Type: AWS::AppSync::Resolver
@@ -1087,6 +1097,19 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
           }
         #end 
+  # Lambda Resolvers
+# Jinja template for AppSync Lambda Resolvers  SmsVerificationResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: SmsVerificationLambdaDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation  # or Query, adjust as needed
+      FieldName: SmsVerification  # or the actual field name
+      DataSourceName: SmsVerificationLambdaDataSource
+      RequestMappingTemplate: |
+        $util.toJson($ctx.args.input)
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result) 
 # --------------------------------------------------- #
 Outputs:
   IntegrationHubApiId:

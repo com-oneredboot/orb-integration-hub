@@ -873,15 +873,16 @@ def generate_dynamodb_cloudformation_template(schemas: Dict[str, Union[TableSche
         logger.error(f'Failed to generate DynamoDB CloudFormation template: {str(e)}')
         raise
 
-def generate_appsync_cloudformation_template(schemas: Dict[str, Union[TableSchema, GraphQLType]], output_path: str) -> None:
-    """Generate CloudFormation template for AppSync resources."""
+def generate_appsync_cloudformation_template(schemas: Dict[str, Union[TableSchema, GraphQLType, StandardType, LambdaType]], output_path: str) -> None:
+    """Generate CloudFormation template for AppSync, including DynamoDB and Lambda data sources and resolvers."""
     logger.debug('Starting generate_appsync_cloudformation_template')
     try:
         jinja_env = setup_jinja_env()
+        # Render the main AppSync CloudFormation template, which now includes both DynamoDB and Lambda data sources/resolvers
         template = jinja_env.get_template('appsync_cloudformation.jinja')
-        template_content = template.render(schemas=schemas)
-        write_file(output_path, template_content)
-        logger.debug('Completed generate_appsync_cloudformation_template')
+        content = template.render(schemas=schemas)
+        write_file(output_path, content)
+        logger.info(f'Generated AppSync CloudFormation template at {output_path}')
     except Exception as e:
         logger.error(f'Failed to generate AppSync CloudFormation template: {str(e)}')
         raise

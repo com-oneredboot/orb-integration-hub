@@ -1,22 +1,22 @@
 /**
- * PhoneVerification Lambda-backed GraphQL resolver model.
- * Generated at 2025-06-12T16:30:18.395112
+ * SmsVerification Lambda-backed GraphQL resolver model.
+ * Generated at 2025-06-12T18:05:19.048544
  */
 
 // Import enums and models used in this model
 
 // Interface definition
-export interface IPhoneVerification {
+export interface ISmsVerification {
   phonenumber: number;
   code: number | undefined;
 }
 
 // Class definition
-export class PhoneVerification implements IPhoneVerification {
+export class SmsVerification implements ISmsVerification {
   phonenumber = 0;
   code = 0;
 
-  constructor(data: Partial<IPhoneVerification> = {}) {
+  constructor(data: Partial<ISmsVerification> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
         {
@@ -28,8 +28,8 @@ export class PhoneVerification implements IPhoneVerification {
 }
 
 // Response type
-export type PhoneVerificationResponse = {
+export type SmsVerificationResponse = {
   StatusCode: number;
   Message: string;
-  Data: PhoneVerification | null;
+  Data: SmsVerification | null;
 }; 

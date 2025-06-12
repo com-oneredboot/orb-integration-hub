@@ -169,6 +169,7 @@ Resources:
               - "logs:PutLogEvents"
             Resource:
               - "arn:aws:logs:*:*:*"
+
   # ParameterStorePolicy: Grants access to SSM Parameter Store for configuration management.
   ParameterStorePolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -182,6 +183,7 @@ Resources:
               - "ssm:GetParameter"
             Resource:
               - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter//${CustomerId}/${ProjectId}/${Environment}/*"
+
   # QueueStorePolicy: Provides access to SQS and SNS for message queuing and notifications.
   QueueStorePolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -212,7 +214,37 @@ Resources:
             Resource:
               - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:/${CustomerId}/${ProjectId}/${Environment}/*"
 
+
+  # SMS Verification Lambda
+  SmsVerificationLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${CustomerId}-${ProjectId}-${Environment}-sms-verification'
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code: ../../backend/src/lambdas/sms_verification/
+      Environment:
+        Variables:
+          SMS_ORIGINATION_NUMBER: !Ref SMSOriginationNumber
+      DeadLetterConfig:
+        TargetArn: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-dead-letter-queue-arn}}'
+      MemorySize: 256
+      Timeout: 30
+      Tags:
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+
   # SSM Parameters
+
+  # Paramter Store for the SMS Verification Lambda ARN
+  SmsVerificationLambdaArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-sms-verification-lambda-arn"
+      Type: String
+      Value: !GetAtt SmsVerificationLambda.Arn
+
+  # Paramter Store for the SMS Origination Number
   SMSOriginationNumberParemeter:
     Type: AWS::SSM::Parameter
     Properties:
@@ -220,34 +252,9 @@ Resources:
       Type: String
       Value: !Ref SMSOriginationNumber
 
-# DynamoDB CRUD Lambda function for all AppSync CRUD/Disable operations
-  DynamoDbCrudLambda:
-    Type: AWS::Lambda::Function
-    Properties:
-      FunctionName: !Sub '${CustomerId}-${ProjectId}-${Environment}-dynamodb-crud'
-      Handler: dynamodb_crud.handler
-      Runtime: python3.13
-      Role: !GetAtt LambdaExecutionRole.Arn
-      Code: ../../backend/src/lambdas/
-      Environment:
-        Variables:
-          USERS_TABLE: !Sub '${CustomerId}-${ProjectId}-${Environment}-users'
-          ROLES_TABLE: !Sub '${CustomerId}-${ProjectId}-${Environment}-roles'
-          APPLICATIONS_TABLE: !Sub '${CustomerId}-${ProjectId}-${Environment}-applications'
-          APPLICATIONUSERS_TABLE: !Sub '${CustomerId}-${ProjectId}-${Environment}-applicationusers'
-          APPLICATIONROLES_TABLE: !Sub '${CustomerId}-${ProjectId}-${Environment}-applicationroles'
-      DeadLetterConfig:
-        TargetArn: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-dead-letter-queue-arn}}'
-      MemorySize: 256
-      Timeout: 30
-
 # --------------------------------------------------- #
 Outputs:
   LambdaExecutionRoleArn:
     Description: ARN of the Lambda execution role
     Value: !GetAtt LambdaExecutionRole.Arn
-  DynamoDbCrudLambdaArn:
-    Description: ARN of the DynamoDB CRUD Lambda
-    Value: !GetAtt DynamoDbCrudLambda.Arn
-    Export:
-      Name: DynamoDbCrudLambdaArn
+
