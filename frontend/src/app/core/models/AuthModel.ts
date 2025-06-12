@@ -1,6 +1,6 @@
 /**
  * Auth standard model.
- * Generated at 2025-06-12T15:42:11.435673
+ * Generated at 2025-06-12T16:30:18.295075
  */
 
 // Import enums and models used in this model
@@ -49,7 +49,7 @@ export class Auth implements IAuth {
 
 // Response type
 export type AuthResponse = {
-  statusCode: number;
-  message: string;
-  data: IAuth | null;
+  StatusCode: number;
+  Message: string;
+  Data: Auth | null;
 };

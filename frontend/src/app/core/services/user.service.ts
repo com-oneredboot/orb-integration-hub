@@ -19,11 +19,11 @@ import {
   UsersCreateInput, UsersUpdateInput, UsersQueryByUserIdInput,
   UsersCreateResponse, UsersUpdateResponse, IUsers,
   UsersListResponse, UsersResponse, Users
-} from "../models/Users.model";
-import { UserGroup } from "../models/UserGroup.enum";
-import { UserStatus } from "../models/UserStatus.enum";
+} from "../models/UsersModel";
+import { UserGroup } from "../models/UserGroupEnum";
+import { UserStatus } from "../models/UserStatusEnum";
 import { CognitoService } from "./cognito.service";
-import { Auth, AuthResponse } from "../models/Auth.model";
+import { Auth, AuthResponse } from "../models/AuthModel";
 import { AuthActions } from '../../features/user/components/auth-flow/store/auth.actions';
 
 @Injectable({
@@ -191,7 +191,7 @@ export class UserService extends ApiService {
       const userResponse = await this.userQueryByEmail(email);
       console.debug('[UserService][emailVerify] userQueryByEmail response:', userResponse);
 
-      if (userResponse.StatusCode !== 200) {
+      if (userResponse.StatusCode !== 200 || userResponse.Data == null || userResponse.Data?.length == 0) {
         console.error('[UserService][emailVerify] user not found or error', userResponse);
 
         return {
@@ -313,7 +313,7 @@ export class UserService extends ApiService {
       // Lookup the User
       const userResult = await this.userQueryByEmail(email);
       console.debug('userResult:', userResult);
-      if (userResult.StatusCode !== 200) {
+      if (userResult.StatusCode !== 200 || userResult.Data == null || userResult.Data?.length == 0) {
         return {
           StatusCode: userResult?.StatusCode,
           Message: userResult.Message,
@@ -338,7 +338,7 @@ export class UserService extends ApiService {
 
       // Only dispatch signInSuccess if authentication is successful
       if (userSignInResponse.StatusCode === 200) {
-        this.store.dispatch(AuthActions.signInSuccess({ user: user.toDto(), message: 'User found' }));
+        this.store.dispatch(AuthActions.signInSuccess({ user: user, message: 'User found' }));
         this.currentUser.next(user);
       }
 

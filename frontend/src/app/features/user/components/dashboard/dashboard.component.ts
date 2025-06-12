@@ -6,7 +6,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { IUsers } from '../../../../core/models/Users.model';
+import { IUsers } from '../../../../core/models/UsersModel';
 import * as fromAuth from '../../components/auth-flow/store/auth.selectors';
 import { UserService } from '../../../../core/services/user.service';
 import { CommonModule } from '@angular/common';

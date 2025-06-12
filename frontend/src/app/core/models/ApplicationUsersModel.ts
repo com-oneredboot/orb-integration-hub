@@ -40,21 +40,27 @@ export type ApplicationUsersQueryByApplicationIdInput = {
 
 // Response types
 export type ApplicationUsersResponse = {
-  statusCode: number;
-  message: string;
-  data: IApplicationUsers | null;
+  StatusCode: number;
+  Message: string;
+  Data: ApplicationUsers | null;
 };
 
 export type ApplicationUsersCreateResponse = {
-  statusCode: number;
-  message: string;
-  data: IApplicationUsers | null;
+  StatusCode: number;
+  Message: string;
+  Data: ApplicationUsers | null;
 };
 
 export type ApplicationUsersUpdateResponse = {
-  statusCode: number;
-  message: string;
-  data: IApplicationUsers | null;
+  StatusCode: number;
+  Message: string;
+  Data: ApplicationUsers | null;
+};
+
+export type ApplicationUsersListResponse = {
+  StatusCode: number;
+  Message: string;
+  Data: ApplicationUsers[] | null;
 };
 
 export interface IApplicationUsers {

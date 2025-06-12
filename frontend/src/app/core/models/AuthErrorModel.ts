@@ -1,6 +1,6 @@
 /**
  * AuthError standard model.
- * Generated at 2025-06-12T15:42:11.465647
+ * Generated at 2025-06-12T16:30:18.324986
  */
 
 // Import enums and models used in this model
@@ -33,7 +33,7 @@ export class AuthError implements IAuthError {
 
 // Response type
 export type AuthErrorResponse = {
-  statusCode: number;
-  message: string;
-  data: IAuthError | null;
+  StatusCode: number;
+  Message: string;
+  Data: AuthError | null;
 };

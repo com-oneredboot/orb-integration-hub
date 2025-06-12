@@ -53,21 +53,27 @@ export type {{ schema.name }}QueryBy{{ index.partition|to_pascal_case }}Input = 
 
 // Response types
 export type {{ schema.name }}Response = {
-  statusCode: number;
-  message: string;
-  data: I{{ schema.name }} | null;
+  StatusCode: number;
+  Message: string;
+  Data: {{ schema.name }} | null;
 };
 
 export type {{ schema.name }}CreateResponse = {
-  statusCode: number;
-  message: string;
-  data: I{{ schema.name }} | null;
+  StatusCode: number;
+  Message: string;
+  Data: {{ schema.name }} | null;
 };
 
 export type {{ schema.name }}UpdateResponse = {
-  statusCode: number;
-  message: string;
-  data: I{{ schema.name }} | null;
+  StatusCode: number;
+  Message: string;
+  Data: {{ schema.name }} | null;
+};
+
+export type {{ schema.name }}ListResponse = {
+  StatusCode: number;
+  Message: string;
+  Data: {{ schema.name }}[] | null;
 };
 
 export interface I{{ schema.name }} {

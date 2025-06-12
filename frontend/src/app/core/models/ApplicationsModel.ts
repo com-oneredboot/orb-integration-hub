@@ -34,21 +34,27 @@ export type ApplicationsQueryByApplicationIdInput = {
 
 // Response types
 export type ApplicationsResponse = {
-  statusCode: number;
-  message: string;
-  data: IApplications | null;
+  StatusCode: number;
+  Message: string;
+  Data: Applications | null;
 };
 
 export type ApplicationsCreateResponse = {
-  statusCode: number;
-  message: string;
-  data: IApplications | null;
+  StatusCode: number;
+  Message: string;
+  Data: Applications | null;
 };
 
 export type ApplicationsUpdateResponse = {
-  statusCode: number;
-  message: string;
-  data: IApplications | null;
+  StatusCode: number;
+  Message: string;
+  Data: Applications | null;
+};
+
+export type ApplicationsListResponse = {
+  StatusCode: number;
+  Message: string;
+  Data: Applications[] | null;
 };
 
 export interface IApplications {

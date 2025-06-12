@@ -7,10 +7,8 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 
 // Application Imports
-import { IUsers } from '../../../../../core/models/Users.model';
-import { UsersQueryByEmailInput } from '../../../../../core/models/Users.model';
-import { UsersCreateInput } from '../../../../../core/models/Users.model';
-import { MfaSetupDetails } from '../../../../../core/models/MfaSetupDetails.model';
+import { IUsers, UsersQueryByEmailInput, UsersCreateInput } from '../../../../../core/models/UsersModel';
+import { MfaSetupDetails } from '../../../../../core/models/MfaSetupDetailsModel';
 
 /**
  * Auth Actions

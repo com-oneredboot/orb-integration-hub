@@ -20,11 +20,11 @@ import {v4 as uuidv4} from 'uuid';
 import {AuthActions} from './store/auth.actions';
 import {AuthState, AuthSteps} from './store/auth.state';
 import * as fromAuth from './store/auth.selectors';
-import { UsersCreateInput } from "../../../../core/models/Users.model";
+import { UsersCreateInput } from "../../../../core/models/UsersModel";
 import {QRCodeToDataURLOptions} from "qrcode";
 import {UserService} from "../../../../core/services/user.service";
-import { UserStatus } from "../../../../core/models/UserStatus.enum";
-import { UserGroup } from "../../../../core/models/UserGroup.enum";
+import { UserStatus } from "../../../../core/models/UserStatusEnum";
+import { UserGroup } from "../../../../core/models/UserGroupEnum";
 
 
 @Component({

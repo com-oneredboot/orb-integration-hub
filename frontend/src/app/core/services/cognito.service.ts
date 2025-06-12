@@ -21,12 +21,12 @@ import {
 import {BehaviorSubject, Observable} from 'rxjs';
 
 // Application-specific imports
-import { Users, UsersCreateInput, IUsers } from '../models/Users.model';
-import { AuthResponse } from '../models/Auth.model';
-import { IAuth, Auth } from "../models/Auth.model";
-import { AuthError } from "../models/AuthError.model";
+import { Users, UsersCreateInput, IUsers } from '../models/UsersModel';
+import { AuthResponse } from '../models/AuthModel';
+import { IAuth, Auth } from "../models/AuthModel";
+import { AuthError } from "../models/AuthErrorModel";
 import { environment } from '../../../environments/environment';
-import { MfaSetupDetails } from '../models/MfaSetupDetails.model';
+import { MfaSetupDetails } from '../models/MfaSetupDetailsModel';
 
 // Settings
 const appName = environment.appName;

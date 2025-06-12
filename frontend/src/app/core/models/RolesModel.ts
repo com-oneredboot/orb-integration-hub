@@ -38,21 +38,27 @@ export type RolesQueryByUserIdInput = {
 
 // Response types
 export type RolesResponse = {
-  statusCode: number;
-  message: string;
-  data: IRoles | null;
+  StatusCode: number;
+  Message: string;
+  Data: Roles | null;
 };
 
 export type RolesCreateResponse = {
-  statusCode: number;
-  message: string;
-  data: IRoles | null;
+  StatusCode: number;
+  Message: string;
+  Data: Roles | null;
 };
 
 export type RolesUpdateResponse = {
-  statusCode: number;
-  message: string;
-  data: IRoles | null;
+  StatusCode: number;
+  Message: string;
+  Data: Roles | null;
+};
+
+export type RolesListResponse = {
+  StatusCode: number;
+  Message: string;
+  Data: Roles[] | null;
 };
 
 export interface IRoles {

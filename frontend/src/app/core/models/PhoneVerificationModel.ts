@@ -1,6 +1,6 @@
 /**
  * PhoneVerification Lambda-backed GraphQL resolver model.
- * Generated at 2025-06-12T15:42:11.537955
+ * Generated at 2025-06-12T16:30:18.395112
  */
 
 // Import enums and models used in this model
@@ -29,7 +29,7 @@ export class PhoneVerification implements IPhoneVerification {
 
 // Response type
 export type PhoneVerificationResponse = {
-  statusCode: number;
-  message: string;
-  data: IPhoneVerification | null;
+  StatusCode: number;
+  Message: string;
+  Data: PhoneVerification | null;
 }; 

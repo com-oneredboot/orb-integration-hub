@@ -17,7 +17,7 @@ import { AuthActions } from "./auth.actions";
 import * as fromAuth from "./auth.selectors";
 import { CognitoService } from "../../../../../core/services/cognito.service";
 import { getError } from "../../../../../core/models/ErrorRegistry.model";
-import { UsersQueryByEmailInput, UsersResponse, UsersListResponse } from "../../../../../core/models/Users.model";
+import { UsersQueryByEmailInput, UsersResponse, UsersListResponse } from "../../../../../core/models/UsersModel";
 
 @Injectable()
 export class AuthEffects {

@@ -4,8 +4,8 @@
 // description: Contains the Auth reducer
 
 // Application Imports
-import { IUsers } from '../../../../../core/models/Users.model';
-import { UserGroup } from "../../../../../core/models/UserGroup.enum";
+import { IUsers } from '../../../../../core/models/UsersModel';
+import { UserGroup } from "../../../../../core/models/UserGroupEnum";
 
 export enum AuthSteps {
   EMAIL,

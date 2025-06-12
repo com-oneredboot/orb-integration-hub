@@ -52,21 +52,27 @@ export type UsersQueryByCognitoIdInput = {
 
 // Response types
 export type UsersResponse = {
-  statusCode: number;
-  message: string;
-  data: IUsers | null;
+  StatusCode: number;
+  Message: string;
+  Data: Users | null;
 };
 
 export type UsersCreateResponse = {
-  statusCode: number;
-  message: string;
-  data: IUsers | null;
+  StatusCode: number;
+  Message: string;
+  Data: Users | null;
 };
 
 export type UsersUpdateResponse = {
-  statusCode: number;
-  message: string;
-  data: IUsers | null;
+  StatusCode: number;
+  Message: string;
+  Data: Users | null;
+};
+
+export type UsersListResponse = {
+  StatusCode: number;
+  Message: string;
+  Data: Users[] | null;
 };
 
 export interface IUsers {

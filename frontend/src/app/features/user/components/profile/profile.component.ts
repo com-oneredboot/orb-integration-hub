@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Observable, Subject, takeUntil } from 'rxjs';
-import { IUsers, UsersUpdateInput, UsersResponse, UsersQueryByUserIdInput } from '../../../../core/models/Users.model';
+import { IUsers, UsersUpdateInput, UsersResponse, UsersQueryByUserIdInput } from '../../../../core/models/UsersModel';
 import * as fromAuth from '../../components/auth-flow/store/auth.selectors';
 import { AuthActions } from '../../components/auth-flow/store/auth.actions';
 import { UserService } from '../../../../core/services/user.service';
@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { RouterModule } from '@angular/router';
-import { Users } from '../../../../core/models/Users.model';
+import { Users } from '../../../../core/models/UsersModel';
 
 @Component({
   selector: 'app-profile',
@@ -210,7 +210,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       if (response.StatusCode === 200 && response.Data) {
         // Update the store with the updated user data
         this.store.dispatch(AuthActions.signInSuccess({
-          user: new Users(response.Data).toDto(),
+          user: new Users(response.Data),
           message: 'Profile updated successfully'
         }));
         

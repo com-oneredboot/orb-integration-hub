@@ -52,21 +52,27 @@ export type ApplicationRolesQueryByRoleIdInput = {
 
 // Response types
 export type ApplicationRolesResponse = {
-  statusCode: number;
-  message: string;
-  data: IApplicationRoles | null;
+  StatusCode: number;
+  Message: string;
+  Data: ApplicationRoles | null;
 };
 
 export type ApplicationRolesCreateResponse = {
-  statusCode: number;
-  message: string;
-  data: IApplicationRoles | null;
+  StatusCode: number;
+  Message: string;
+  Data: ApplicationRoles | null;
 };
 
 export type ApplicationRolesUpdateResponse = {
-  statusCode: number;
-  message: string;
-  data: IApplicationRoles | null;
+  StatusCode: number;
+  Message: string;
+  Data: ApplicationRoles | null;
+};
+
+export type ApplicationRolesListResponse = {
+  StatusCode: number;
+  Message: string;
+  Data: ApplicationRoles[] | null;
 };
 
 export interface IApplicationRoles {

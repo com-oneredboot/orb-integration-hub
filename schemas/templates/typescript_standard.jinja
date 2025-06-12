@@ -50,7 +50,7 @@ export class {{ schema.name }} implements I{{ schema.name }} {
 
 // Response type
 export type {{ schema.name }}Response = {
-  statusCode: number;
-  message: string;
-  data: I{{ schema.name }} | null;
+  StatusCode: number;
+  Message: string;
+  Data: {{ schema.name }} | null;
 };
