@@ -58,8 +58,8 @@ export type RolesUpdateResponse = {
 export interface IRoles {
   roleId: string;
   userId: string | undefined;
-  roleType: string;
-  status: string;
+  roleType: RoleType;
+  status: RoleStatus;
   createdAt: string;
   updatedAt: string;
 }
@@ -67,8 +67,8 @@ export interface IRoles {
 export class Roles implements IRoles {
   roleId = '';
   userId = '';
-  roleType = '';
-  status = '';
+  roleType = RoleType.UNKNOWN;
+  status = RoleStatus.UNKNOWN;
   createdAt = '';
   updatedAt = '';
 
@@ -76,10 +76,10 @@ export class Roles implements IRoles {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
         if (key === 'roleType' && typeof value === 'string') {
-          this.roleType = RoleTypeEnum[value as keyof typeof RoleTypeEnum] ?? RoleTypeEnum.UNKNOWN;
+          this.roleType = RoleType[value as keyof typeof RoleType] ?? RoleType.UNKNOWN;
         } else 
         if (key === 'status' && typeof value === 'string') {
-          this.status = RoleStatusEnum[value as keyof typeof RoleStatusEnum] ?? RoleStatusEnum.UNKNOWN;
+          this.status = RoleStatus[value as keyof typeof RoleStatus] ?? RoleStatus.UNKNOWN;
         } else 
         {
           this[key as keyof this] = value as this[keyof this];

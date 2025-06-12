@@ -75,9 +75,9 @@ export interface IApplicationRoles {
   applicationId: string;
   roleId: string;
   roleName: string;
-  roleType: string;
+  roleType: RoleType;
   permissions: string[];
-  status: string;
+  status: RoleStatus;
   createdAt: string;
   updatedAt: string;
 }
@@ -88,9 +88,9 @@ export class ApplicationRoles implements IApplicationRoles {
   applicationId = '';
   roleId = '';
   roleName = '';
-  roleType = '';
+  roleType = RoleType.UNKNOWN;
   permissions = [];
-  status = '';
+  status = RoleStatus.UNKNOWN;
   createdAt = '';
   updatedAt = '';
 
@@ -98,10 +98,10 @@ export class ApplicationRoles implements IApplicationRoles {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
         if (key === 'roleType' && typeof value === 'string') {
-          this.roleType = RoleTypeEnum[value as keyof typeof RoleTypeEnum] ?? RoleTypeEnum.UNKNOWN;
+          this.roleType = RoleType[value as keyof typeof RoleType] ?? RoleType.UNKNOWN;
         } else 
         if (key === 'status' && typeof value === 'string') {
-          this.status = RoleStatusEnum[value as keyof typeof RoleStatusEnum] ?? RoleStatusEnum.UNKNOWN;
+          this.status = RoleStatus[value as keyof typeof RoleStatus] ?? RoleStatus.UNKNOWN;
         } else 
         {
           this[key as keyof this] = value as this[keyof this];

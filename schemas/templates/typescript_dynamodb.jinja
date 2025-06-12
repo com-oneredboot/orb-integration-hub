@@ -11,6 +11,9 @@ import { {{ attr.enum_type }} } from './{{ attr.enum_type }}Enum';
 {% for model in model_imports %}
 import { {{ model }}Model, I{{ model }}Model } from './{{ model }}Model';
 {% endfor %}
+{% for enum in schema.enums %}
+import { {{ enum }} } from './{{ enum }}Enum';
+{% endfor %}
 
 // CreateInput
 export type {{ schema.name }}CreateInput = {
@@ -69,13 +72,13 @@ export type {{ schema.name }}UpdateResponse = {
 
 export interface I{{ schema.name }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }}: {{ attr.type|to_typescript_type }}{% if not attr.required %} | undefined{% endif %};
+  {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{{ attr.type|to_typescript_type }}{% endif %}{% if not attr.required %} | undefined{% endif %};
 {% endfor %}
 }
 
 export class {{ schema.name }} implements I{{ schema.name }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }} = {% if attr.type|to_typescript_type == 'string' %}''{% elif attr.type|to_typescript_type == 'number' %}0{% elif attr.type|to_typescript_type == 'boolean' %}false{% elif attr.type|to_typescript_type == 'string[]' %}[]{% elif attr.type|to_typescript_type == 'any[]' %}[]{% elif attr.type|to_typescript_type == 'Record<string, any>' %}{}{% elif not attr.required %}undefined{% else %}undefined{% endif %};
+  {{ attr.name }} = {% if attr.enum_type %}{{ attr.enum_type }}.UNKNOWN{% elif attr.type|to_typescript_type == 'string' %}''{% elif attr.type|to_typescript_type == 'number' %}0{% elif attr.type|to_typescript_type == 'boolean' %}false{% elif attr.type|to_typescript_type == 'string[]' %}[]{% elif attr.type|to_typescript_type == 'any[]' %}[]{% elif attr.type|to_typescript_type == 'Record<string, any>' %}{}{% elif attr.type|to_typescript_type == 'Set<string>' %}new Set(){% elif attr.type|to_typescript_type == 'Buffer' %}Buffer.from(''){% elif not attr.required %}undefined{% else %}undefined{% endif %};
 {% endfor %}
 
   constructor(data: Partial<I{{ schema.name }}> = {}) {
@@ -84,7 +87,7 @@ export class {{ schema.name }} implements I{{ schema.name }} {
 {% for attr in schema.attributes %}
 {% if attr.enum_type %}
         if (key === '{{ attr.name }}' && typeof value === 'string') {
-          this.{{ attr.name }} = {{ attr.enum_type }}Enum[value as keyof typeof {{ attr.enum_type }}Enum] ?? {{ attr.enum_type }}Enum.UNKNOWN;
+          this.{{ attr.name }} = {{ attr.enum_type }}[value as keyof typeof {{ attr.enum_type }}] ?? {{ attr.enum_type }}.UNKNOWN;
         } else 
 {% endif %}
 {% endfor %}

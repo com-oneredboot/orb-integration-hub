@@ -75,7 +75,7 @@ export interface IUsers {
   email: string;
   firstName: string;
   lastName: string;
-  status: string;
+  status: UserStatus;
   createdAt: string;
   updatedAt: string;
   phoneNumber: string | undefined;
@@ -90,7 +90,7 @@ export class Users implements IUsers {
   email = '';
   firstName = '';
   lastName = '';
-  status = '';
+  status = UserStatus.UNKNOWN;
   createdAt = '';
   updatedAt = '';
   phoneNumber = '';
@@ -102,7 +102,7 @@ export class Users implements IUsers {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
         if (key === 'status' && typeof value === 'string') {
-          this.status = UserStatusEnum[value as keyof typeof UserStatusEnum] ?? UserStatusEnum.UNKNOWN;
+          this.status = UserStatus[value as keyof typeof UserStatus] ?? UserStatus.UNKNOWN;
         } else 
         {
           this[key as keyof this] = value as this[keyof this];

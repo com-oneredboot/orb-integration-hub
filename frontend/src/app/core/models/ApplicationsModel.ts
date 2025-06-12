@@ -55,7 +55,7 @@ export interface IApplications {
   applicationId: string;
   name: string;
   ownerId: string;
-  status: string;
+  status: ApplicationStatus;
   createdAt: string;
   updatedAt: string;
 }
@@ -64,7 +64,7 @@ export class Applications implements IApplications {
   applicationId = '';
   name = '';
   ownerId = '';
-  status = '';
+  status = ApplicationStatus.UNKNOWN;
   createdAt = '';
   updatedAt = '';
 
@@ -72,7 +72,7 @@ export class Applications implements IApplications {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
         if (key === 'status' && typeof value === 'string') {
-          this.status = ApplicationStatusEnum[value as keyof typeof ApplicationStatusEnum] ?? ApplicationStatusEnum.UNKNOWN;
+          this.status = ApplicationStatus[value as keyof typeof ApplicationStatus] ?? ApplicationStatus.UNKNOWN;
         } else 
         {
           this[key as keyof this] = value as this[keyof this];
