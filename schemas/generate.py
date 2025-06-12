@@ -647,12 +647,15 @@ def generate_python_model(table: str, schema: Union[TableSchema, GraphQLType], t
         logger.error(f'Failed to generate Python model for {table}: {str(e)}')
         raise
 
-def generate_typescript_model(table: str, schema: Union[TableSchema, GraphQLType], template_name: str, all_model_names=None) -> None:
+def generate_typescript_model(table: str, schema: Union[TableSchema, GraphQLType, StandardType, LambdaType], template_name: str, all_model_names=None, model_imports=None) -> None:
     logger.debug(f'generate_typescript_model called for {table}')
     try:
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template(template_name)
-        content = template.render(schema=schema, timestamp=datetime.utcnow().isoformat(), all_model_names=all_model_names)
+        # Use model_imports from schema if not explicitly provided
+        if model_imports is None and hasattr(schema, 'model_imports'):
+            model_imports = getattr(schema, 'model_imports')
+        content = template.render(schema=schema, timestamp=datetime.utcnow().isoformat(), all_model_names=all_model_names, model_imports=model_imports or [])
         file_name = f'{table}Model.ts'
         output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models', file_name)
         write_file(output_path, content)
@@ -1248,6 +1251,7 @@ def load_schemas() -> dict:
         elif schema_type == 'standard':
             model = schema_dict['model']
             attributes = []
+            referenced_models = set()
             for attr_name, attr_info in model['attributes'].items():
                 attr = Attribute(
                     name=attr_name,
@@ -1257,6 +1261,10 @@ def load_schemas() -> dict:
                     enum_type=attr_info.get('enum_type'),
                     enum_values=attr_info.get('enum_values')
                 )
+                # If the type matches a known model, mark as model_reference and add to referenced_models
+                if attr.type in model_names:
+                    setattr(attr, 'model_reference', attr.type)
+                    referenced_models.add(attr.type)
                 attributes.append(attr)
             schema_obj = StandardType(
                 name=schema_name,
@@ -1264,10 +1272,13 @@ def load_schemas() -> dict:
                 description=schema_dict.get('description'),
                 type='standard'
             )
+            # Attach referenced models for use in template rendering
+            setattr(schema_obj, 'model_imports', sorted(referenced_models))
             schemas[schema_name] = schema_obj
         elif schema_type == 'lambda':
             model = schema_dict['model']
             attributes = []
+            referenced_models = set()
             for attr_name, attr_info in model['attributes'].items():
                 attr = Attribute(
                     name=attr_name,
@@ -1277,6 +1288,10 @@ def load_schemas() -> dict:
                     enum_type=attr_info.get('enum_type'),
                     enum_values=attr_info.get('enum_values')
                 )
+                # If the type matches a known model, mark as model_reference and add to referenced_models
+                if attr.type in model_names:
+                    setattr(attr, 'model_reference', attr.type)
+                    referenced_models.add(attr.type)
                 attributes.append(attr)
             schema_obj = LambdaType(
                 name=schema_name,
@@ -1284,6 +1299,8 @@ def load_schemas() -> dict:
                 description=schema_dict.get('description'),
                 type='lambda'
             )
+            # Attach referenced models for use in template rendering
+            setattr(schema_obj, 'model_imports', sorted(referenced_models))
             schemas[schema_name] = schema_obj
         else:
             # Fallback: treat as GraphQLType

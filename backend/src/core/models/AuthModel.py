@@ -1,16 +1,18 @@
 """
 Auth standard model.
-Generated at 2025-06-09T21:46:13.212247
+Generated at 2025-06-12T15:39:20.218237
 """
 
 from typing import Optional
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
+from .UsersModel import UsersModel
+from .MfaSetupDetailsModel import MfaSetupDetailsModel
 
 # Main Model (Standard)
 class Auth(BaseModel):
     """Auth model."""
-    status_code: float = Field(..., description="HTTP or operation status code")    is_signed_in: bool = Field(None, description="Whether the user is signed in")    message: str = Field(None, description="User-facing or system message")    user: str = Field(None, description="The user object (Users)")    needs_mfa: bool = Field(None, description="Whether MFA is required")    needs_mfa_setup: bool = Field(None, description="Whether MFA setup is required")    mfa_type: str = Field(None, description="Type of MFA (e.g., 'sms', 'totp')")    mfa_setup_details: str = Field(None, description="Details for MFA setup (MfaSetupDetails)")
+    status_code: float = Field(..., description="HTTP or operation status code")    is_signed_in: bool = Field(None, description="Whether the user is signed in")    message: str = Field(None, description="User-facing or system message")    user: Users = Field(None, description="The user object (Users)")    needs_mfa: bool = Field(None, description="Whether MFA is required")    needs_mfa_setup: bool = Field(None, description="Whether MFA setup is required")    mfa_type: str = Field(None, description="Type of MFA (e.g., 'sms', 'totp')")    mfa_setup_details: MfaSetupDetails = Field(None, description="Details for MFA setup (MfaSetupDetails)")
     @validator('isSignedIn', pre=True, always=True)
     def parse_isSignedIn_bool(cls, value):
         if value is None:

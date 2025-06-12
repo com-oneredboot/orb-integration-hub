@@ -1,9 +1,11 @@
 /**
  * Auth standard model.
- * Generated at 2025-06-09T21:46:13.229868
+ * Generated at 2025-06-12T15:39:20.234393
  */
 
 // Import enums and models used in this model
+import { MfaSetupDetails } from './MfaSetupDetailsModel';
+import { Users } from './UsersModel';
 
 // Interface definition
 export interface IAuth {
@@ -22,15 +24,21 @@ export class Auth implements IAuth {
   statusCode = 0;
   isSignedIn = false;
   message = '';
-  user = undefined;
+  user = new Users();
   needsMFA = false;
   needsMFASetup = false;
   mfaType = '';
-  mfaSetupDetails = undefined;
+  mfaSetupDetails = new MfaSetupDetails();
 
   constructor(data: Partial<IAuth> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
+        if (key === 'user' && value) {
+          this.user = value as Users;
+        } else 
+        if (key === 'mfaSetupDetails' && value) {
+          this.mfaSetupDetails = value as MfaSetupDetails;
+        } else 
         {
           this[key as keyof this] = value as this[keyof this];
         }
