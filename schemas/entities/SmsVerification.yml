@@ -1,10 +1,10 @@
-# file: schemas/entities/PhoneVerification.yml
+# file: schemas/entities/SmsVerification.yml
 # author: Corey Dale Peters
 # date: 2025-06-04
 # description: GraphQL type schema for phone verification
 
 type: lambda
-name: PhoneVerification
+name: SmsVerification
 model:
   attributes:
     phonenumber:

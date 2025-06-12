@@ -59,9 +59,9 @@ def lambda_handler(event, context):
         logger.info(f"Verification code sent to {phone_number}")
 
         return {
-            'status_code': 200,
-            'message': "Verification code sent successfully",
-            'code': code
+            "StatusCode": 200,
+            "Message": "Verification code sent successfully",
+            "Data": {"code": code}
         }
 
     except Exception as e:
