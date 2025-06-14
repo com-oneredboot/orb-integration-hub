@@ -105,7 +105,7 @@ Resources:
     Properties:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-appsync-api-id
       Type: String
-      Value: !GetAtt IntegrationHubApi.id
+      Value: !GetAtt IntegrationHubApi.ApiId
 
   # DynamoDB DataSources
   {% include 'appsync_datasource_dynamodb.jinja' %}
