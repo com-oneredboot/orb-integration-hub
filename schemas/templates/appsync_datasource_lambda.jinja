@@ -1,5 +1,5 @@
-# Jinja template for AppSync Lambda DataSources
-{%- for schema in schemas.values() if schema.type == 'lambda' %}
+  # Jinja template for AppSync Lambda DataSources
+  {% for schema in schemas.values() if schema.type == 'lambda' %}
   {{ schema.name }}LambdaDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -9,4 +9,4 @@
       LambdaConfig:
         LambdaFunctionArn: !Sub '{{"{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-" ~ schema.name|to_kebab_case ~ "-lambda-arn}}"}}'
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
-{%- endfor %} 
+  {% endfor %} 

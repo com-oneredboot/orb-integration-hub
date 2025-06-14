@@ -1,5 +1,5 @@
-# Jinja template for AppSync DynamoDB DataSources
-  {%- for schema in schemas.values() if schema.type == 'dynamodb' %}
+  # Jinja template for AppSync DynamoDB DataSources
+  {% for schema in schemas.values() if schema.type == 'dynamodb' %}
   {{ schema.name }}DynamoDbDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -11,4 +11,4 @@
         AwsRegion: !Ref AWS::Region
         UseCallerCredentials: false
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
-  {%- endfor -%} 
+    {% endfor %} 
