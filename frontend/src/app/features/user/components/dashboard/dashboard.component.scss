@@ -200,44 +200,22 @@
   }
   
   .dashboard-card {
-    background: v.$bg-primary;
-    border-radius: v.$border-radius-lg;
-    box-shadow: v.$shadow-md;
-    border: 1px solid v.$border-color;
-    overflow: hidden;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: v.$shadow-lg;
-    }
+    @include m.card;
     
     &--profile {
       grid-column: 1 / -1; // Full width
     }
     
     &__header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: v.$spacing-lg;
-      background: v.$bg-secondary;
-      border-bottom: 1px solid v.$border-color;
+      @include m.card-header;
     }
     
     &__title {
-      display: flex;
-      align-items: center;
-      gap: v.$spacing-sm;
-      font-size: v.$font-size-lg;
-      font-weight: v.$font-weight-semibold;
-      color: v.$text-primary;
-      margin: 0;
+      @include m.card-title;
     }
     
     &__icon {
-      color: v.$orb-red;
-      font-size: v.$font-size-lg;
+      @include m.card-icon;
     }
     
     &__badge {
@@ -254,7 +232,7 @@
     }
     
     &__content {
-      padding: v.$spacing-lg;
+      @include m.card-content;
     }
   }
   

@@ -398,19 +398,11 @@
 
 // Profile Overview Card Styles
 .profile-card {
-  background-color: v.$bg-secondary;
-  border-radius: v.$border-radius;
-  box-shadow: v.$shadow-sm;
+  @include m.card;
   margin-bottom: v.$spacing-lg;
-  overflow: hidden;
   
   &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: v.$spacing-md v.$spacing-lg;
-    border-bottom: 1px solid v.$border-color;
-    background-color: v.$bg-primary;
+    @include m.card-header;
   }
   
   &__header-actions {
@@ -420,19 +412,11 @@
   }
   
   &__title {
-    display: flex;
-    align-items: center;
-    gap: v.$spacing-sm;
-    font-family: v.$font-family-heading;
-    font-size: v.$font-size-lg;
-    color: v.$text-primary;
-    margin: 0;
-    font-weight: v.$font-weight-semibold;
+    @include m.card-title;
   }
   
   &__icon {
-    color: v.$primary-color;
-    font-size: v.$font-size-lg;
+    @include m.card-icon;
   }
   
   &__badge {
@@ -464,7 +448,7 @@
   }
   
   &__content {
-    padding: v.$spacing-lg;
+    @include m.card-content;
   }
   
   &__edit-btn {

@@ -1,9 +1,38 @@
-{#-- Helper macro to join unique directives --#}
+{#-- Helper macro to merge and deduplicate auth directives --#}
 {% macro join_unique_directives(directives_list) -%}
-  {%- set unique_directives = directives_list | unique | list -%}
-  {%- for d in unique_directives -%}
-    {{- ' ' ~ d -}}
+  {%- set api_key = false -%}
+  {%- set cognito_groups = [] -%}
+  
+  {#-- Parse all directives --#}
+  {%- for directive in directives_list -%}
+    {%- if directive == '@aws_api_key' -%}
+      {%- set api_key = true -%}
+    {%- elif directive.startswith('@aws_auth(cognito_groups:') -%}
+      {#-- Extract groups from directive like @aws_auth(cognito_groups: ["OWNER", "USER"]) --#}
+      {%- set groups_part = directive.split('[')[1].split(']')[0] -%}
+      {%- set groups = groups_part.split(',') -%}
+      {%- for group in groups -%}
+        {%- set clean_group = group.strip().strip('"').strip("'") -%}
+        {%- if clean_group not in cognito_groups -%}
+          {%- do cognito_groups.append(clean_group) -%}
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endif -%}
   {%- endfor -%}
+  
+  {#-- Output consolidated directives --#}
+  {%- if api_key -%}
+    {{- ' @aws_api_key' -}}
+  {%- endif -%}
+  {%- if cognito_groups -%}
+    {%- set sorted_groups = cognito_groups | sort -%}
+    {{- ' @aws_auth(cognito_groups: [' -}}
+    {%- for group in sorted_groups -%}
+      {{- '"' ~ group ~ '"' -}}
+      {%- if not loop.last -%}, {%- endif -%}
+    {%- endfor -%}
+    {{- '])' -}}
+  {%- endif -%}
 {%- endmacro %}
 
 {#-- Table-based types with auth directives --#}

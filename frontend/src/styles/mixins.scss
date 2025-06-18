@@ -159,4 +159,48 @@
   padding: v.$spacing-lg;
   max-width: 960px;
   margin: 0 auto;
+}
+
+// Card Component Mixin
+@mixin card {
+  background: v.$bg-primary;
+  border-radius: v.$border-radius-lg;
+  box-shadow: v.$shadow-md;
+  border: 1px solid v.$border-color;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: v.$shadow-lg;
+  }
+}
+
+@mixin card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: v.$spacing-lg;
+  border-bottom: 1px solid v.$border-color;
+  background: rgba(v.$primary-color, 0.02);
+}
+
+@mixin card-title {
+  display: flex;
+  align-items: center;
+  gap: v.$spacing-sm;
+  font-family: v.$font-family-heading;
+  font-size: v.$font-size-lg;
+  color: v.$text-primary;
+  margin: 0;
+  font-weight: v.$font-weight-semibold;
+}
+
+@mixin card-icon {
+  color: v.$primary-color;
+  font-size: v.$font-size-lg;
+}
+
+@mixin card-content {
+  padding: v.$spacing-lg;
 } 
