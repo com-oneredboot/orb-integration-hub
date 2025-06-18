@@ -6,5 +6,18 @@ type {{ type_name }} {
 
 {% endfor %}
 }
+
+input {{ type_name }}Input {
+{% for attr in type_def.attributes %}
+  {{ attr.name }}: {{ attr.type|graphql_type }}{% if attr.required %}!{% endif %}
+
+{% endfor %}
+}
+
+type {{ type_name }}Response {
+  StatusCode: Int!
+  Message: String
+  Data: {{ type_name }}
+}
 {% endif %}
 {% endfor %}

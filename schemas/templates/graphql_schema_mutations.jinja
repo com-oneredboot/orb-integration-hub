@@ -4,3 +4,8 @@
 
 {% endfor %}
 {% endfor %}
+{% for type_name, type_def in graphql_types.items() %}
+{% if type_def.type == 'lambda' %}
+  {{ type_name }}(input: {{ type_name }}Input): {{ type_name }}Response
+{% endif %}
+{% endfor %}
