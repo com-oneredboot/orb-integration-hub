@@ -375,7 +375,7 @@ Resources:
               - "cloudwatch:PutDashboard"
               - "cloudwatch:DeleteDashboards"
             Resource:
-              - !Sub "arn:aws:cloudwatch:*:${AWS::AccountId}:dashboard:/${CustomerId}-${ProjectId}-${Environment}-*"
+              - !Sub "arn:aws:cloudwatch:${AWS:Region}:${AWS::AccountId}:dashboard/*"
     Type: AWS::IAM::ManagedPolicy
   CloudWatchDashboardPolicyArnParameter:
     Properties:
