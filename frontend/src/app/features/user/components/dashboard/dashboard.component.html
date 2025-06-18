@@ -7,16 +7,30 @@ description: HTML template file
 
 <div class="dashboard-container">
   <div class="dashboard-header">
-    <img src="../../../../../assets/onredboot-logo.jpg" alt="OneRedBoot Logo" class="dashboard-header__logo">
-    <div class="dashboard-header__content" *ngIf="currentUser$ | async as user">
-      <h1 class="dashboard-header__title">
-        <i class="dashboard-header__icon">🏗️</i>
-        Welcome back, {{ user.firstName || 'Engineer' }}!
-      </h1>
-      <p class="dashboard-header__subtitle">Your integration hub is ready for action</p>
-      <p class="dashboard-header__tagline">
-        <strong>OneRedBoot</strong> — Software that works
-      </p>
+    <div class="dashboard-header__content">
+      <div class="dashboard-header__flex-container">
+        <div class="dashboard-header__logo-section">
+          <img src="../../../../../assets/onredboot-logo.jpg" alt="OneRedBoot Logo" class="dashboard-header__logo">
+        </div>
+        <div class="dashboard-header__text-section" *ngIf="currentUser$ | async as user">
+          <div class="dashboard-header__greeting">
+            <div class="dashboard-header__icon-title">
+              <img src="../../../../../assets/hardhat.jpg" alt="Engineering" class="dashboard-header__icon">
+              <h1 class="dashboard-header__title">
+                Integration Hub
+              </h1>
+            </div>
+            <p class="dashboard-header__subtitle">Your integration hub is ready for action</p>
+            <div class="dashboard-header__status">
+              <span class="dashboard-header__status-badge" 
+                    [ngClass]="'dashboard-header__status-badge--' + getStatusClass(user.status)">
+                <fa-icon [icon]="user.status === 'ACTIVE' ? 'check-circle' : 'clock'" class="dashboard-header__status-icon"></fa-icon>
+                Account {{ user.status }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

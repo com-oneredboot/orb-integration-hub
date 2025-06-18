@@ -7,56 +7,174 @@
 @use '../../../../../styles/mixins' as m;
 @use 'sass:color';
 
+// Status badge mixin to reduce duplication
+@mixin status-badge-color($color) {
+  background: rgba($color, 0.1);
+  color: $color;
+  border: 1px solid rgba($color, 0.2);
+}
+
 .dashboard-container {
   @include m.page-container;
   
   .dashboard-header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    margin-bottom: v.$spacing-xl;
-    padding: v.$spacing-xl v.$spacing-lg;
-    background: linear-gradient(135deg, v.$orb-paper 0%, v.$gray-50 100%);
-    border-radius: v.$border-radius-lg;
-    box-shadow: v.$shadow-sm;
-    
-    &__logo {
-      width: 120px;
-      height: auto;
-      margin-bottom: v.$spacing-md;
-      border-radius: v.$border-radius;
+    background: v.$orb-white;
+    padding: v.$spacing-xl * 2 0;
+    position: relative;
+    overflow: hidden;
+
+    &__content {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 v.$spacing-lg;
+    }
+
+    &__flex-container {
+      display: flex;
+      align-items: center;
+      gap: v.$spacing-xl * 3;
+      justify-content: center;
+
+      @media (max-width: 1024px) {
+        flex-direction: column;
+        text-align: center;
+        gap: v.$spacing-xl;
+      }
+    }
+
+    &__logo-section {
+      flex: 1;
+      max-width: 600px;
+      
+      @media (max-width: 1024px) {
+        max-width: 400px;
+      }
+      
+      @media (max-width: 768px) {
+        max-width: 300px;
+      }
     }
     
-    &__content {
+    &__logo {
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+    }
+
+    &__text-section {
+      flex: 1;
       max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: v.$spacing-lg;
+      align-items: flex-start;
+
+      @media (max-width: 1024px) {
+        align-items: center;
+        text-align: center;
+      }
+    }
+
+    &__greeting {
+      display: flex;
+      flex-direction: column;
+      gap: v.$spacing-md;
+      width: 100%;
+    }
+
+    &__icon-title {
+      display: flex;
+      align-items: center;
+      gap: v.$spacing-md;
+      margin-bottom: v.$spacing-sm;
+
+      @media (max-width: 1024px) {
+        justify-content: center;
+      }
+    }
+
+    &__icon {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      border-radius: v.$border-radius;
     }
     
     &__title {
       font-family: v.$font-family-heading;
-      font-size: v.$font-size-xl;
+      font-size: 1.5rem;
       font-weight: v.$font-weight-bold;
-      color: v.$text-primary;
-      margin: 0 0 v.$spacing-sm 0;
-      
-      .dashboard-header__icon {
-        margin-right: v.$spacing-sm;
+      color: v.$orb-dark-blue;
+      margin: 0;
+      line-height: 1.2;
+
+      @media (max-width: 768px) {
+        font-size: 2rem;
+      }
+
+      @media (max-width: 480px) {
+        font-size: 1.75rem;
       }
     }
     
     &__subtitle {
       font-size: v.$font-size-lg;
-      color: v.$text-secondary;
-      margin: 0 0 v.$spacing-sm 0;
+      color: v.$orb-dark-blue;
+      margin: 0;
+      line-height: 1.6;
+      text-align: left;
+
+      @media (max-width: 1024px) {
+        text-align: center;
+      }
+    }
+
+    &__status {
+      display: flex;
+      align-items: center;
+      gap: v.$spacing-lg;
+      flex-wrap: wrap;
+
+      @media (max-width: 1024px) {
+        justify-content: center;
+      }
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+        gap: v.$spacing-sm;
+      }
+    }
+
+    &__status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: v.$spacing-xs;
+      padding: v.$spacing-sm v.$spacing-md;
+      border-radius: v.$border-radius-lg;
+      font-size: v.$font-size-sm;
+      font-weight: v.$font-weight-medium;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+
+      &--success { @include status-badge-color(v.$success-color); }
+      &--warning { @include status-badge-color(#f59e0b); }
+      &--error { @include status-badge-color(v.$danger-color); }
+      &--default { @include status-badge-color(v.$gray-500); }
+    }
+
+    &__status-icon {
+      font-size: v.$font-size-sm;
     }
     
     &__tagline {
       font-size: v.$font-size-sm;
       color: v.$orb-gray;
       margin: 0;
+      font-style: italic;
       
       strong {
         color: v.$orb-red;
+        font-weight: v.$font-weight-semibold;
       }
     }
   }
@@ -116,29 +234,10 @@
       font-weight: v.$font-weight-medium;
       text-transform: uppercase;
       
-      &--success {
-        background: rgba(v.$success-color, 0.1);
-        color: v.$success-color;
-        border: 1px solid rgba(v.$success-color, 0.2);
-      }
-      
-      &--warning {
-        background: rgba(#f59e0b, 0.1);
-        color: #f59e0b;
-        border: 1px solid rgba(#f59e0b, 0.2);
-      }
-      
-      &--error {
-        background: rgba(v.$danger-color, 0.1);
-        color: v.$danger-color;
-        border: 1px solid rgba(v.$danger-color, 0.2);
-      }
-      
-      &--default {
-        background: rgba(v.$gray-500, 0.1);
-        color: v.$gray-500;
-        border: 1px solid rgba(v.$gray-500, 0.2);
-      }
+      &--success { @include status-badge-color(v.$success-color); }
+      &--warning { @include status-badge-color(#f59e0b); }
+      &--error { @include status-badge-color(v.$danger-color); }
+      &--default { @include status-badge-color(v.$gray-500); }
     }
     
     &__content {
@@ -147,70 +246,32 @@
   }
   
   // Profile Grid
-  .profile-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: v.$spacing-lg;
-  }
+  .profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: v.$spacing-lg; }
   
   .profile-item {
     &__label {
-      font-size: v.$font-size-sm;
-      font-weight: v.$font-weight-medium;
-      color: v.$text-secondary;
-      margin-bottom: v.$spacing-xs;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; color: v.$text-secondary;
+      margin-bottom: v.$spacing-xs; text-transform: uppercase; letter-spacing: 0.5px;
     }
-    
     &__value {
-      font-size: v.$font-size-base;
-      color: v.$text-primary;
-      font-weight: v.$font-weight-medium;
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: v.$spacing-sm;
+      font-size: v.$font-size-base; color: v.$text-primary; font-weight: v.$font-weight-medium;
+      display: flex; align-items: center; flex-wrap: wrap; gap: v.$spacing-sm;
     }
   }
   
-  // Verification Badges
+  // Verification & Role Badges
   .verification-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: v.$spacing-xs;
-    padding: v.$spacing-xs v.$spacing-sm;
-    border-radius: v.$border-radius;
-    font-size: v.$font-size-xs;
-    font-weight: v.$font-weight-medium;
-    text-transform: uppercase;
+    display: inline-flex; align-items: center; gap: v.$spacing-xs; padding: v.$spacing-xs v.$spacing-sm;
+    border-radius: v.$border-radius; font-size: v.$font-size-xs; font-weight: v.$font-weight-medium; text-transform: uppercase;
     
-    &--verified {
-      background: rgba(v.$success-color, 0.1);
-      color: v.$success-color;
-      border: 1px solid rgba(v.$success-color, 0.2);
-    }
-    
-    &--pending {
-      background: rgba(#f59e0b, 0.1);
-      color: #f59e0b;
-      border: 1px solid rgba(#f59e0b, 0.2);
-    }
-    
-    &__icon {
-      font-size: v.$font-size-xs;
-    }
+    &--verified { @include status-badge-color(v.$success-color); }
+    &--pending { @include status-badge-color(#f59e0b); }
+    &__icon { font-size: v.$font-size-xs; }
   }
   
-  // Role Badges
   .role-badge {
-    padding: v.$spacing-xs v.$spacing-sm;
-    background: v.$orb-red;
-    color: v.$orb-white;
-    border-radius: v.$border-radius;
-    font-size: v.$font-size-xs;
-    font-weight: v.$font-weight-medium;
-    text-transform: uppercase;
+    padding: v.$spacing-xs v.$spacing-sm; background: v.$orb-red; color: v.$orb-white;
+    border-radius: v.$border-radius; font-size: v.$font-size-xs; font-weight: v.$font-weight-medium; text-transform: uppercase;
   }
   
   // Action Grid
@@ -274,65 +335,24 @@
     }
   }
   
-  // Health Check
-  .health-check {
-    display: flex;
-    flex-direction: column;
-    gap: v.$spacing-md;
-  }
+  // Health Check - simplified
+  .health-check { display: flex; flex-direction: column; gap: v.$spacing-md; }
   
   .health-item {
-    display: flex;
-    align-items: center;
-    gap: v.$spacing-md;
-    padding: v.$spacing-md;
-    border-radius: v.$border-radius;
-    transition: background-color 0.2s ease;
+    display: flex; align-items: center; gap: v.$spacing-md; padding: v.$spacing-md;
+    border-radius: v.$border-radius; transition: background-color 0.2s ease;
     
-    &--healthy {
-      background: rgba(v.$success-color, 0.05);
-      border-left: 4px solid v.$success-color;
-      
-      .health-item__icon {
-        color: v.$success-color;
-      }
-    }
+    &--healthy { background: rgba(v.$success-color, 0.05); border-left: 4px solid v.$success-color; }
+    &--warning { background: rgba(#f59e0b, 0.05); border-left: 4px solid #f59e0b; }
     
-    &--warning {
-      background: rgba(#f59e0b, 0.05);
-      border-left: 4px solid #f59e0b;
-      
-      .health-item__icon {
-        color: #f59e0b;
-      }
-    }
-    
-    &__icon {
-      font-size: v.$font-size-lg;
-      flex-shrink: 0;
-    }
-    
-    &__content {
-      flex: 1;
-    }
-    
-    &__title {
-      font-weight: v.$font-weight-medium;
-      margin-bottom: v.$spacing-xs;
-    }
-    
-    &__status {
-      font-size: v.$font-size-sm;
-      color: v.$text-secondary;
-    }
+    &__icon { font-size: v.$font-size-lg; flex-shrink: 0; }
+    &__content { flex: 1; }
+    &__title { font-weight: v.$font-weight-medium; margin-bottom: v.$spacing-xs; }
+    &__status { font-size: v.$font-size-sm; color: v.$text-secondary; }
   }
   
   // Activity List
-  .activity-list {
-    display: flex;
-    flex-direction: column;
-    gap: v.$spacing-md;
-  }
+  .activity-list { display: flex; flex-direction: column; gap: v.$spacing-md; }
   
   .activity-item {
     padding: v.$spacing-md;
@@ -340,16 +360,8 @@
     background: v.$bg-secondary;
     border-left: 3px solid v.$orb-red;
     
-    &__time {
-      font-size: v.$font-size-sm;
-      color: v.$text-secondary;
-      margin-bottom: v.$spacing-xs;
-    }
-    
-    &__description {
-      font-weight: v.$font-weight-medium;
-      color: v.$text-primary;
-    }
+    &__time { font-size: v.$font-size-sm; color: v.$text-secondary; margin-bottom: v.$spacing-xs; }
+    &__description { font-weight: v.$font-weight-medium; color: v.$text-primary; }
   }
   
   // Empty State
@@ -358,16 +370,8 @@
     padding: v.$spacing-xl;
     color: v.$text-secondary;
     
-    &__icon {
-      font-size: v.$font-size-xl;
-      margin-bottom: v.$spacing-md;
-      color: v.$gray-400;
-    }
-    
-    &__text {
-      font-size: v.$font-size-sm;
-      font-style: italic;
-    }
+    &__icon { font-size: v.$font-size-xl; margin-bottom: v.$spacing-md; color: v.$gray-400; }
+    &__text { font-size: v.$font-size-sm; font-style: italic; }
   }
   
   // Debug section
@@ -382,38 +386,23 @@
   .dashboard-container {
     padding: v.$spacing-md;
     
-    .dashboard-content {
+    .dashboard-content, .profile-grid, .action-grid {
       grid-template-columns: 1fr;
       gap: v.$spacing-md;
-    }
-    
-    .profile-grid {
-      grid-template-columns: 1fr;
-      gap: v.$spacing-md;
-    }
-    
-    .action-grid {
-      grid-template-columns: 1fr;
     }
     
     .action-button {
       padding: v.$spacing-md;
-      
-      &__content {
-        text-align: center;
-      }
+      &__content { text-align: center; }
     }
     
     .dashboard-header {
-      padding: v.$spacing-md;
-      
-      &__logo {
-        width: 80px;
-      }
-      
-      &__title {
-        font-size: v.$font-size-lg;
-      }
+      padding: v.$spacing-xl 0;
+      &__content { padding: 0 v.$spacing-md; }
+      &__flex-container { gap: v.$spacing-lg; }
+      &__logo-section { max-width: 300px; }
+      &__title { font-size: 2rem; }
+      &__subtitle { font-size: v.$font-size-base; }
     }
   }
 }
@@ -422,6 +411,20 @@
   .dashboard-container {
     padding: v.$spacing-sm;
     
+    .dashboard-header {
+      padding: v.$spacing-lg 0;
+      &__content { padding: 0 v.$spacing-sm; }
+      &__flex-container { gap: v.$spacing-md; }
+      &__logo-section { max-width: 250px; }
+      &__title { font-size: 1.75rem; }
+      &__subtitle { font-size: v.$font-size-sm; }
+      &__status { gap: v.$spacing-xs; }
+      &__status-badge { 
+        padding: v.$spacing-xs v.$spacing-sm;
+        font-size: v.$font-size-xs;
+      }
+    }
+    
     .dashboard-card {
       &__header {
         padding: v.$spacing-md;
@@ -429,10 +432,7 @@
         align-items: flex-start;
         gap: v.$spacing-sm;
       }
-      
-      &__content {
-        padding: v.$spacing-md;
-      }
+      &__content { padding: v.$spacing-md; }
     }
     
     .health-item {
