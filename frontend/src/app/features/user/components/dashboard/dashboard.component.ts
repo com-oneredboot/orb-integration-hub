@@ -12,6 +12,21 @@ import { UserService } from '../../../../core/services/user.service';
 import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { RouterModule } from '@angular/router';
+import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
+import { 
+  faUser, 
+  faBolt, 
+  faHeartbeat, 
+  faHistory, 
+  faUserEdit, 
+  faShieldAlt, 
+  faCreditCard, 
+  faCog, 
+  faCheckCircle, 
+  faClock, 
+  faExclamationTriangle, 
+  faInfoCircle 
+} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-dashboard',
@@ -31,10 +46,27 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private store: Store,
-    private userService: UserService
+    private userService: UserService,
+    private library: FaIconLibrary
   ) {
     this.currentUser$ = this.store.select(fromAuth.selectCurrentUser);
     this.debugMode$ = this.store.select(fromAuth.selectDebugMode);
+    
+    // Add FontAwesome icons to library
+    this.library.addIcons(
+      faUser, 
+      faBolt, 
+      faHeartbeat, 
+      faHistory, 
+      faUserEdit, 
+      faShieldAlt, 
+      faCreditCard, 
+      faCog, 
+      faCheckCircle, 
+      faClock, 
+      faExclamationTriangle, 
+      faInfoCircle
+    );
   }
   
   /**
@@ -48,5 +80,44 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     // Additional initialization if needed
+  }
+
+  /**
+   * Get CSS class for user status badge
+   * @param status The user status
+   * @returns CSS class name
+   */
+  getStatusClass(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'active':
+        return 'success';
+      case 'pending':
+        return 'warning';
+      case 'suspended':
+      case 'inactive':
+        return 'error';
+      default:
+        return 'default';
+    }
+  }
+
+  /**
+   * Format date string for display
+   * @param dateString The ISO date string
+   * @returns Formatted date
+   */
+  formatDate(dateString: string): string {
+    if (!dateString) return 'Not available';
+    
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch {
+      return 'Invalid date';
+    }
   }
 }

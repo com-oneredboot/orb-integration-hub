@@ -328,11 +328,24 @@ export class UserService extends ApiService {
 
       if (userSignInResponse.StatusCode === 401 &&
         userSignInResponse.Message?.toLowerCase().includes('already signed in')) {
-        await this.cognitoService.checkIsAuthenticated();
+        console.debug('User is already signed in, checking authentication status');
+        const isAuth = await this.cognitoService.checkIsAuthenticated();
+        
+        if (isAuth) {
+          // User is authenticated, dispatch success and redirect will be handled by auth component
+          this.store.dispatch(AuthActions.signInSuccess({ user: user, message: 'User already signed in' }));
+          this.currentUser.next(user);
+          return {
+            StatusCode: 200,
+            Message: 'User already signed in',
+            Data: new Auth({ isSignedIn: true, message: 'User already signed in', user: user })
+          };
+        }
+        
         return {
-          StatusCode: 200,
-          Message: 'User already signed in',
-          Data: new Auth({ isSignedIn: false, message: 'User already signed in' })
+          StatusCode: 500,
+          Message: 'Error signing in: There is already a signed in user.',
+          Data: new Auth({ isSignedIn: false, message: 'Error signing in: There is already a signed in user.' })
         };
       }
 
@@ -349,11 +362,43 @@ export class UserService extends ApiService {
       console.warn('Sign in error:', error_message);
 
       if (error_message.toLowerCase().includes('already signed in')) {
-        await this.cognitoService.checkIsAuthenticated();
+        console.debug('Caught already signed in error, checking authentication status');
+        const isAuth = await this.cognitoService.checkIsAuthenticated();
+        
+        if (isAuth) {
+          // Try to get user profile and dispatch success
+          const profile = await this.cognitoService.getCognitoProfile();
+          if (profile) {
+            // Create a user object from the profile for consistency
+            const userFromProfile = new Users({
+              userId: profile.sub,
+              cognitoId: profile.username,
+              email: profile.email || '',
+              firstName: profile.given_name || '',
+              lastName: profile.family_name || '',
+              phoneNumber: profile.phone_number || '',
+              groups: profile.groups || [],
+              status: UserStatus.PENDING,
+              phoneVerified: profile.phone_number_verified === 'true',
+              emailVerified: profile.email_verified === 'true',
+              createdAt: '',
+              updatedAt: ''
+            });
+            
+            this.store.dispatch(AuthActions.signInSuccess({ user: userFromProfile, message: 'User already signed in' }));
+            this.currentUser.next(userFromProfile);
+            return {
+              StatusCode: 200,
+              Message: 'User already signed in',
+              Data: new Auth({ isSignedIn: true, message: 'User already signed in', user: userFromProfile })
+            };
+          }
+        }
+        
         return {
-          StatusCode: 200,
-          Message: 'User already signed in',
-          Data: new Auth({ isSignedIn: false, message: 'User already signed in' })
+          StatusCode: 500,
+          Message: 'Error signing in: There is already a signed in user.',
+          Data: new Auth({ isSignedIn: false, message: 'Error signing in: There is already a signed in user.' })
         };
       }
 

@@ -11,7 +11,7 @@ import { map, take, catchError, switchMap } from 'rxjs/operators';
 
 import { AuthState } from '../components/auth-flow/store/auth.state';
 import { selectCurrentUser, selectIsAuthenticated } from '../components/auth-flow/store/auth.selectors';
-import { checkProfileCompletion } from '../components/auth-flow/store/auth.actions';
+import { AuthActions } from '../components/auth-flow/store/auth.actions';
 import { UserService } from '../../../core/services/user.service';
 
 @Injectable({
@@ -38,16 +38,19 @@ export class DashboardGuard implements CanActivate {
         return this.store.select(selectCurrentUser).pipe(
           take(1),
           map(user => {
-            if (!user) {
-              this.router.navigate(['/authenticate']);
-              return false;
-            }
+            console.debug('DashboardGuard: Current user from store:', user);
             
-            // Dispatch profile completion check action
-            this.store.dispatch(checkProfileCompletion());
+            if (!user) {
+              // User is authenticated but no user data in store - refresh session
+              console.debug('DashboardGuard: No user data, dispatching refreshSession');
+              this.store.dispatch(AuthActions.refreshSession());
+              // Allow navigation to continue, the layout will handle loading user data
+              return true;
+            }
             
             // Check if the user profile is valid using the service
             const isValid = this.userService.isUserValid(user);
+            console.debug('DashboardGuard: User validity check:', isValid);
             
             if (!isValid) {
               this.router.navigate(['/profile-completion']);

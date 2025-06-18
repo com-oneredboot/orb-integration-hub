@@ -23,6 +23,7 @@ import * as fromAuth from './store/auth.selectors';
 import { UsersCreateInput } from "../../../../core/models/UsersModel";
 import {QRCodeToDataURLOptions} from "qrcode";
 import {UserService} from "../../../../core/services/user.service";
+import {CognitoService} from "../../../../core/services/cognito.service";
 import { UserStatus } from "../../../../core/models/UserStatusEnum";
 import { UserGroup } from "../../../../core/models/UserGroupEnum";
 
@@ -77,7 +78,8 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private store: Store<{ auth: AuthState }>,
     private router: Router,
-    private userService: UserService
+    private userService: UserService,
+    private cognitoService: CognitoService
   ) {
     console.debug('AuthFlowComponent constructor');
 
@@ -103,6 +105,9 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Check for existing authentication session first
+    this.checkExistingSession();
+    
     // Redirect if session is active
     this.store.select(fromAuth.selectSessionActive)
       .pipe(takeUntil(this.destroy$))
@@ -248,7 +253,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             }
 
             console.debug('[onSubmit] Dispatching signIn:', { email, password });
-            this.store.dispatch(AuthActions.verifyCognitoPassword({
+            this.store.dispatch(AuthActions.signIn({
               email,
               password
             }));
@@ -551,6 +556,37 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     } else {
       // Use the phone number from the form
       this.store.dispatch(AuthActions.setupPhone({ phoneNumber }));
+    }
+  }
+
+  /**
+   * Check for existing authentication session on component initialization
+   * If user is already authenticated, redirect to dashboard
+   */
+  private async checkExistingSession(): Promise<void> {
+    try {
+      console.debug('[checkExistingSession] Checking for existing authentication session');
+      
+      const isAuthenticated = await this.cognitoService.checkIsAuthenticated();
+      
+      if (isAuthenticated) {
+        console.debug('[checkExistingSession] User is already authenticated, getting profile');
+        
+        const profile = await this.cognitoService.getCognitoProfile();
+        
+        if (profile) {
+          console.debug('[checkExistingSession] User profile found, redirecting to dashboard', profile);
+          
+          // User is authenticated and has a valid session, redirect to dashboard
+          this.router.navigate(['/dashboard']);
+          return;
+        }
+      }
+      
+      console.debug('[checkExistingSession] No existing session found, proceeding with auth flow');
+    } catch (error) {
+      console.debug('[checkExistingSession] Error checking existing session:', error);
+      // If there's an error checking the session, proceed with normal auth flow
     }
   }
 

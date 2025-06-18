@@ -7,7 +7,7 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { catchError, map, switchMap, tap, withLatestFrom } from 'rxjs/operators';
-import { from, of } from "rxjs";
+import { from, of, EMPTY } from "rxjs";
 import { Store } from '@ngrx/store';
 
 // Application Imports
@@ -17,7 +17,7 @@ import { AuthActions } from "./auth.actions";
 import * as fromAuth from "./auth.selectors";
 import { CognitoService } from "../../../../../core/services/cognito.service";
 import { getError } from "../../../../../core/models/ErrorRegistry.model";
-import { UsersQueryByEmailInput, UsersResponse, UsersListResponse } from "../../../../../core/models/UsersModel";
+import { UsersQueryByEmailInput, UsersResponse, UsersListResponse, Users } from "../../../../../core/models/UsersModel";
 
 @Injectable()
 export class AuthEffects {
@@ -218,6 +218,25 @@ export class AuthEffects {
     )
   );
 
+  // Auto-trigger signIn when step becomes SIGNIN (after password verification)
+  autoSignIn$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.verifyCognitoPasswordSuccess),
+      withLatestFrom(this.store.select(fromAuth.selectCurrentEmail)),
+      switchMap(([{ needsMFA, needsMFASetup }, email]) => {
+        // Only auto-trigger signIn if no MFA is required
+        if (!needsMFA && !needsMFASetup && email) {
+          console.debug('Auto-triggering signIn after password verification');
+          return of(AuthActions.signIn({ 
+            email, 
+            password: '' // Password already verified, we just need to complete the sign-in
+          }));
+        }
+        return EMPTY; // No action needed if MFA is required
+      })
+    )
+  );
+
   setupMFA$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.needsMFASetup),
@@ -261,6 +280,40 @@ export class AuthEffects {
             const errorObj = getError('ORB-AUTH-003');
             return of(AuthActions.needsMFAFailure({
               error: errorObj ? errorObj.message : 'Email verification failed'
+            }));
+          })
+        )
+      )
+    )
+  );
+
+  // Add signIn effect - this was missing!
+  signIn$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.signIn),
+      tap(action => console.debug('Effect [SignIn]: Starting', action)),
+      switchMap(({ email, password }) =>
+        from(this.userService.userSignIn(email, password)).pipe(
+          tap(response => console.debug('Effect [SignIn]: Response', response)),
+          map(response => {
+            if (response.StatusCode === 200 && response.Data?.isSignedIn) {
+              console.debug('Effect [SignIn]: Success - dispatching signInSuccess');
+              return AuthActions.signInSuccess({ 
+                user: response.Data.user, 
+                message: response.Message || 'Sign in successful' 
+              });
+            }
+            console.error('Effect [SignIn]: Failed', response);
+            const errorObj = getError('ORB-AUTH-002');
+            return AuthActions.signInFailure({
+              error: response.Message || (errorObj ? errorObj.message : 'Sign in failed')
+            });
+          }),
+          catchError(error => {
+            console.error('Effect [SignIn]: Error caught', error);
+            const errorObj = getError('ORB-AUTH-002');
+            return of(AuthActions.signInFailure({
+              error: errorObj ? errorObj.message : 'Sign in failed'
             }));
           })
         )
@@ -358,6 +411,51 @@ export class AuthEffects {
           })))
         );
       })
+    )
+  );
+
+  // Add missing refreshSession effect
+  refreshSession$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.refreshSession),
+      tap(() => console.debug('Effect [RefreshSession]: Starting')),
+      switchMap(() =>
+        from(this.cognitoService.getCognitoProfile()).pipe(
+          switchMap(cognitoProfile => {
+            console.debug('Effect [RefreshSession]: Cognito profile', cognitoProfile);
+            
+            if (!cognitoProfile?.email) {
+              throw new Error('No email found in Cognito profile');
+            }
+            
+            // Get user data from our backend using the email from Cognito
+            return from(this.userService.userExists({ email: cognitoProfile.email })).pipe(
+              map(response => {
+                console.debug('Effect [RefreshSession]: User lookup response', response);
+                
+                if (response.StatusCode !== 200 || !response.Data || response.Data.length === 0) {
+                  throw new Error('User not found in backend');
+                }
+                
+                if (response.Data.length > 1) {
+                  throw new Error('Multiple users found for email');
+                }
+                
+                const user = new Users(response.Data[0]);
+                console.debug('Effect [RefreshSession]: User object created', user);
+                return AuthActions.refreshSessionSuccess({ user });
+              })
+            );
+          }),
+          catchError(error => {
+            console.error('Effect [RefreshSession]: Error', error);
+            const errorObj = getError('ORB-AUTH-001');
+            return of(AuthActions.refreshSessionFailure({
+              error: errorObj ? errorObj.message : 'Session refresh failed'
+            }));
+          })
+        )
+      )
     )
   );
 
