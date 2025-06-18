@@ -254,4 +254,20 @@ export class ProfileComponent implements OnInit, OnDestroy {
   public signOut(): void {
     this.store.dispatch(AuthActions.signout());
   }
+
+  /**
+   * Get status class for styling
+   */
+  getStatusClass(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'active':
+        return 'active';
+      case 'pending':
+        return 'pending';
+      case 'suspended':
+        return 'suspended';
+      default:
+        return 'unknown';
+    }
+  }
 }

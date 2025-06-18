@@ -10,7 +10,13 @@ description: HTML template file
     <header class="header">
       <nav class="nav-menu">
         <a routerLink="platform" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">Platform</a>
-        <a routerLink="authenticate" routerLinkActive="active" class="nav-link">Sign In</a>
+        <ng-container *ngIf="isAuthenticated$ | async">
+          <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">Dashboard</a>
+          <a (click)="signOut()" class="nav-link" style="cursor: pointer;">Sign Out</a>
+        </ng-container>
+        <ng-container *ngIf="!(isAuthenticated$ | async)">
+          <a routerLink="authenticate" routerLinkActive="active" class="nav-link">Sign In</a>
+        </ng-container>
       </nav>
     </header>
 

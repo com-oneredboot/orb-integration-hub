@@ -20,6 +20,75 @@ description: HTML template file
   </div>
 
   <div class="profile-content" *ngIf="(currentUser$ | async) as user">
+    
+    <!-- Profile Overview Card -->
+    <div class="profile-card profile-card--overview">
+      <div class="profile-card__header">
+        <h2 class="profile-card__title">
+          <fa-icon icon="user" class="profile-card__icon"></fa-icon>
+          Profile Overview
+        </h2>
+        <div class="profile-card__badge" 
+             [ngClass]="'profile-card__badge--' + getStatusClass(user.status)">
+          {{ user.status }}
+        </div>
+      </div>
+      
+      <div class="profile-card__content">
+        <div class="profile-overview-grid">
+          <div class="profile-overview-item">
+            <div class="profile-overview-item__label">Full Name</div>
+            <div class="profile-overview-item__value">{{ user.firstName }} {{ user.lastName }}</div>
+          </div>
+          
+          <div class="profile-overview-item">
+            <div class="profile-overview-item__label">Email Address</div>
+            <div class="profile-overview-item__value">
+              {{ user.email }}
+              <span class="verification-badge" 
+                    [ngClass]="user.emailVerified ? 'verification-badge--verified' : 'verification-badge--pending'">
+                <fa-icon [icon]="user.emailVerified ? 'check-circle' : 'clock'" class="verification-badge__icon"></fa-icon>
+                {{ user.emailVerified ? 'Verified' : 'Pending' }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="profile-overview-item">
+            <div class="profile-overview-item__label">Phone Number</div>
+            <div class="profile-overview-item__value">
+              {{ user.phoneNumber || 'Not provided' }}
+              <span class="verification-badge" 
+                    *ngIf="user.phoneNumber"
+                    [ngClass]="user.phoneVerified ? 'verification-badge--verified' : 'verification-badge--pending'">
+                <fa-icon [icon]="user.phoneVerified ? 'check-circle' : 'clock'" class="verification-badge__icon"></fa-icon>
+                {{ user.phoneVerified ? 'Verified' : 'Pending' }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="profile-overview-item">
+            <div class="profile-overview-item__label">Account Type</div>
+            <div class="profile-overview-item__value">
+              <span *ngFor="let group of user.groups; let last = last" 
+                    class="role-badge">
+                {{ group }}{{ !last ? ', ' : '' }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="profile-overview-item">
+            <div class="profile-overview-item__label">Member Since</div>
+            <div class="profile-overview-item__value">{{ formatDate(user.createdAt) }}</div>
+          </div>
+          
+          <div class="profile-overview-item">
+            <div class="profile-overview-item__label">Last Updated</div>
+            <div class="profile-overview-item__value">{{ formatDate(user.updatedAt) }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="profile-form">
       <!-- Personal Information Section -->
       <div class="profile-form__section">

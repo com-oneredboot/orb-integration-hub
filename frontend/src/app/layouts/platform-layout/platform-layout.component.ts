@@ -8,6 +8,8 @@ import {CognitoService} from "../../core/services/cognito.service";
 import {Router} from "@angular/router";
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { Store } from '@ngrx/store';
+import { selectIsAuthenticated } from '../../features/user/components/auth-flow/store/auth.selectors';
 
 @Component({
     selector: 'app-platform-layout',
@@ -19,11 +21,12 @@ import { CommonModule } from '@angular/common';
 export class PlatformLayoutComponent {
   title = 'OneRedBoot Integration Hub';
   currentYear: number = new Date().getFullYear();
-  isAuthenticated$ = this.authService.isAuthenticated$();
+  isAuthenticated$ = this.store.select(selectIsAuthenticated);
 
   constructor(
     private authService: CognitoService,
-    public router: Router  // Make router public to use in template
+    public router: Router,  // Make router public to use in template
+    private store: Store
   ) {}
 
   async signOut(): Promise<void> {

@@ -288,12 +288,166 @@
   }
 }
 
+// Profile Overview Card Styles
+.profile-card {
+  background-color: v.$bg-secondary;
+  border-radius: v.$border-radius;
+  box-shadow: v.$shadow-sm;
+  margin-bottom: v.$spacing-lg;
+  overflow: hidden;
+  
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: v.$spacing-md v.$spacing-lg;
+    border-bottom: 1px solid v.$border-color;
+    background-color: v.$bg-primary;
+  }
+  
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-sm;
+    font-family: v.$font-family-heading;
+    font-size: v.$font-size-lg;
+    color: v.$text-primary;
+    margin: 0;
+    font-weight: v.$font-weight-semibold;
+  }
+  
+  &__icon {
+    color: v.$primary-color;
+    font-size: v.$font-size-lg;
+  }
+  
+  &__badge {
+    padding: v.$spacing-xs v.$spacing-sm;
+    border-radius: v.$border-radius;
+    font-size: v.$font-size-xs;
+    font-weight: v.$font-weight-medium;
+    text-transform: uppercase;
+    
+    &--active {
+      background-color: color.adjust(v.$success-color, $alpha: -0.85);
+      color: v.$success-color;
+    }
+    
+    &--pending {
+      background-color: color.adjust(#f59e0b, $alpha: -0.85);
+      color: #f59e0b;
+    }
+    
+    &--suspended {
+      background-color: color.adjust(v.$danger-color, $alpha: -0.85);
+      color: v.$danger-color;
+    }
+    
+    &--unknown {
+      background-color: color.adjust(v.$text-secondary, $alpha: -0.85);
+      color: v.$text-secondary;
+    }
+  }
+  
+  &__content {
+    padding: v.$spacing-lg;
+  }
+}
+
+// Profile Overview Grid
+.profile-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: v.$spacing-lg;
+}
+
+.profile-overview-item {
+  &__label {
+    font-size: v.$font-size-sm;
+    font-weight: v.$font-weight-medium;
+    color: v.$text-secondary;
+    margin-bottom: v.$spacing-xs;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  &__value {
+    font-size: v.$font-size-base;
+    color: v.$text-primary;
+    font-weight: v.$font-weight-medium;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: v.$spacing-sm;
+  }
+}
+
+// Verification & Role Badges
+.verification-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: v.$spacing-xs;
+  padding: v.$spacing-xs v.$spacing-sm;
+  border-radius: v.$border-radius;
+  font-size: v.$font-size-xs;
+  font-weight: v.$font-weight-medium;
+  text-transform: uppercase;
+  
+  &--verified {
+    background-color: color.adjust(v.$success-color, $alpha: -0.85);
+    color: v.$success-color;
+  }
+  
+  &--pending {
+    background-color: color.adjust(#f59e0b, $alpha: -0.85);
+    color: #f59e0b;
+  }
+  
+  &__icon {
+    font-size: v.$font-size-xs;
+  }
+}
+
+.role-badge {
+  padding: v.$spacing-xs v.$spacing-sm;
+  background: v.$primary-color;
+  color: v.$white;
+  border-radius: v.$border-radius;
+  font-size: v.$font-size-xs;
+  font-weight: v.$font-weight-medium;
+  text-transform: uppercase;
+}
+
+@media (max-width: 768px) {
+  .profile-container {
+    padding: v.$spacing-md;
+    
+    .profile-overview-grid {
+      grid-template-columns: 1fr;
+      gap: v.$spacing-md;
+    }
+  }
+}
+
 @media (max-width: 480px) {
   .profile-container {
     padding: v.$spacing-sm;
     
     .profile-content {
       max-width: 100%;
+    }
+    
+    .profile-card {
+      &__header {
+        padding: v.$spacing-md;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: v.$spacing-sm;
+      }
+      
+      &__content {
+        padding: v.$spacing-md;
+      }
     }
   }
 }

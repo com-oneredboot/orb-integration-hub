@@ -9,6 +9,7 @@ import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { CognitoService } from '../../core/services/cognito.service';
 import { AuthActions } from '../../features/user/components/auth-flow/store/auth.actions';
+import { selectIsAuthenticated } from '../../features/user/components/auth-flow/store/auth.selectors';
 
 @Component({
   selector: 'app-user-layout',
@@ -18,7 +19,7 @@ import { AuthActions } from '../../features/user/components/auth-flow/store/auth
   imports: [RouterModule, CommonModule]
 })
 export class UserLayoutComponent implements OnInit {
-  isAuthenticated$ = this.authService.isAuthenticated$();
+  isAuthenticated$ = this.store.select(selectIsAuthenticated);
 
   constructor(
     private authService: CognitoService,
