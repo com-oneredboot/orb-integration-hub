@@ -6,6 +6,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
+import { Router } from '@angular/router';
 import { IUsers } from '../../../../core/models/UsersModel';
 import * as fromAuth from '../../components/auth-flow/store/auth.selectors';
 import { UserService } from '../../../../core/services/user.service';
@@ -25,7 +26,8 @@ import {
   faCheckCircle, 
   faClock, 
   faExclamationTriangle, 
-  faInfoCircle 
+  faInfoCircle,
+  faArrowRight
 } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
@@ -47,7 +49,8 @@ export class DashboardComponent implements OnInit {
   constructor(
     private store: Store,
     private userService: UserService,
-    private library: FaIconLibrary
+    private library: FaIconLibrary,
+    private router: Router
   ) {
     this.currentUser$ = this.store.select(fromAuth.selectCurrentUser);
     this.debugMode$ = this.store.select(fromAuth.selectDebugMode);
@@ -65,7 +68,8 @@ export class DashboardComponent implements OnInit {
       faCheckCircle, 
       faClock, 
       faExclamationTriangle, 
-      faInfoCircle
+      faInfoCircle,
+      faArrowRight
     );
   }
   
@@ -119,5 +123,21 @@ export class DashboardComponent implements OnInit {
     } catch {
       return 'Invalid date';
     }
+  }
+
+  /**
+   * Check if user has valid first and last name
+   * @param user The user object
+   * @returns true if both first and last name are present
+   */
+  hasValidName(user: any): boolean {
+    return !!(user?.firstName?.trim() && user?.lastName?.trim());
+  }
+
+  /**
+   * Navigate to profile page
+   */
+  goToProfile(): void {
+    this.router.navigate(['/profile']);
   }
 }

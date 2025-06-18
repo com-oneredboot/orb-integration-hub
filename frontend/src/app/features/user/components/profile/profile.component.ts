@@ -9,9 +9,10 @@ import { UserService } from '../../../../core/services/user.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { FontAwesomeModule, FaIconLibrary } from '@fortawesome/angular-fontawesome';
 import { RouterModule } from '@angular/router';
 import { Users } from '../../../../core/models/UsersModel';
+import { faUser, faEdit, faCheckCircle, faClock } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-profile',
@@ -30,16 +31,21 @@ export class ProfileComponent implements OnInit, OnDestroy {
   debugMode$: Observable<boolean>;
   profileForm: FormGroup;
   isLoading = false;
+  isEditMode = false;
   private destroy$ = new Subject<void>();
 
   constructor(
     private store: Store,
     private userService: UserService,
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private library: FaIconLibrary
   ) {
     this.currentUser$ = this.store.select(fromAuth.selectCurrentUser);
     this.debugMode$ = this.store.select(fromAuth.selectDebugMode);
+    
+    // Add FontAwesome icons to library
+    this.library.addIcons(faUser, faEdit, faCheckCircle, faClock);
     
     // Initialize the form with empty values and properly disabled controls
     this.profileForm = this.fb.group({
@@ -187,6 +193,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       }
       
       // Create update input from form values
+      const formValues = this.profileForm.value;
       const updateInput: UsersUpdateInput = {
         userId: user.userId,
         cognitoId: user.cognitoId,
@@ -194,8 +201,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
         emailVerified: user.emailVerified,
         phoneNumber: user.phoneNumber,
         phoneVerified: user.phoneVerified,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        firstName: formValues.firstName?.trim() || user.firstName,
+        lastName: formValues.lastName?.trim() || user.lastName,
         groups: user.groups,
         status: user.status,
         createdAt: user.createdAt,
@@ -216,6 +223,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
         
         // Mark form as pristine after successful update
         this.profileForm.markAsPristine();
+        
+        // Exit edit mode
+        this.onFormSuccess();
         
         console.log('Profile updated successfully');
       } else {
@@ -269,5 +279,35 @@ export class ProfileComponent implements OnInit, OnDestroy {
       default:
         return 'unknown';
     }
+  }
+
+  /**
+   * Check if account setup is complete
+   * Account is complete when status is ACTIVE
+   */
+  isAccountComplete(user: any): boolean {
+    return user?.status === 'ACTIVE';
+  }
+
+  /**
+   * Enter edit mode
+   */
+  enterEditMode(): void {
+    this.isEditMode = true;
+  }
+
+  /**
+   * Cancel edit mode and reset form
+   */
+  cancelEdit(): void {
+    this.isEditMode = false;
+    this.resetForm();
+  }
+
+  /**
+   * Handle successful form submission
+   */
+  onFormSuccess(): void {
+    this.isEditMode = false;
   }
 }

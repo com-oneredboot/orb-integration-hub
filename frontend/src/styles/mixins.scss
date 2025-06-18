@@ -24,6 +24,78 @@
   }
 }
 
+// Debug Section Mixin
+@mixin debug-container {
+  background: v.$gray-100;
+  padding: v.$spacing-lg;
+  margin: v.$spacing-lg 0;
+  border-radius: v.$border-radius-md;
+  
+  h3 {
+    margin-top: 0;
+    margin-bottom: v.$spacing-md;
+    color: v.$text-primary;
+    font-family: v.$font-family-heading;
+  }
+  
+  h4 {
+    margin-bottom: v.$spacing-sm;
+    color: v.$text-primary;
+    font-family: v.$font-family-heading;
+  }
+  
+  pre {
+    background: v.$white;
+    padding: v.$spacing-sm;
+    border-radius: v.$border-radius-sm;
+    margin: v.$spacing-xs 0;
+    font-family: v.$font-family-monospace;
+    font-size: v.$font-size-sm;
+    overflow-x: auto;
+  }
+  
+  ul {
+    margin: v.$spacing-sm 0;
+    padding-left: v.$spacing-lg;
+  }
+  
+  li {
+    margin-bottom: v.$spacing-xs;
+  }
+  
+  p {
+    margin: v.$spacing-xs 0;
+    
+    &.error {
+      color: v.$danger-color;
+      font-weight: v.$font-weight-semibold;
+    }
+  }
+}
+
+@mixin debug-section {
+  margin-bottom: v.$spacing-lg;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+@mixin debug-button {
+  background: v.$primary-color;
+  color: v.$white;
+  border: none;
+  padding: v.$spacing-xs v.$spacing-md;
+  border-radius: v.$border-radius-sm;
+  cursor: pointer;
+  font-weight: v.$font-weight-medium;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background: color.adjust(v.$primary-color, $lightness: -10%);
+  }
+}
+
 // Common Mixins
 
 @mixin flex-center {

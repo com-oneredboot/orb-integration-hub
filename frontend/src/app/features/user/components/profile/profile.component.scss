@@ -15,60 +15,214 @@
   }
   
   .profile-header {
-    text-align: center;
+    background: v.$orb-white;
+    padding: v.$spacing-xl * 2 0;
+    position: relative;
+    overflow: hidden;
     margin-bottom: v.$spacing-xl;
 
-    h1 {
-      font-family: v.$font-family-heading;
-      color: v.$text-primary;
-      margin-top: v.$spacing-md;
-      margin-bottom: v.$spacing-md;
-      font-weight: v.$font-weight-semibold;
-    }
-    
-    &__welcome {
-      background-color: v.$bg-secondary;
-      border-radius: v.$border-radius;
-      padding: v.$spacing-md;
-      max-width: 600px;
+    &__content {
+      max-width: 1400px;
       margin: 0 auto;
-      border-left: 4px solid v.$primary-color;
-      text-align: left;
+      padding: 0 v.$spacing-lg;
     }
-    
-    &__welcome-text {
-      font-size: v.$font-size-lg;
-      margin-bottom: v.$spacing-sm;
-      color: v.$text-primary;
-      line-height: 1.4;
-    }
-    
-    &__icon {
-      font-style: normal;
-      margin-right: v.$spacing-xs;
-      display: inline-block;
-      transform: rotate(15deg);
-    }
-    
-    &__tagline {
-      color: v.$text-secondary;
-      font-size: v.$font-size-sm;
-      margin: 0;
-      
-      strong {
-        color: v.$primary-color;
-        font-weight: v.$font-weight-semibold;
+
+    &__flex-container {
+      display: flex;
+      align-items: center;
+      gap: v.$spacing-xl * 3;
+      justify-content: center;
+
+      @media (max-width: 1024px) {
+        flex-direction: column;
+        text-align: center;
+        gap: v.$spacing-xl;
       }
     }
+
+    &__logo-section {
+      flex: 1;
+      max-width: 600px;
+      
+      @media (max-width: 1024px) {
+        max-width: 400px;
+      }
+      
+      @media (max-width: 768px) {
+        max-width: 300px;
+      }
+    }
+    
+    &__logo {
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+    }
+
+    &__text-section {
+      flex: 1;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: v.$spacing-lg;
+      align-items: flex-start;
+
+      @media (max-width: 1024px) {
+        align-items: center;
+        text-align: center;
+      }
+    }
+
+    &__greeting {
+      display: flex;
+      flex-direction: column;
+      gap: v.$spacing-md;
+      width: 100%;
+    }
+
+    &__icon-title {
+      display: flex;
+      align-items: center;
+      gap: v.$spacing-md;
+      margin-bottom: v.$spacing-sm;
+
+      @media (max-width: 1024px) {
+        justify-content: center;
+      }
+    }
+
+    &__icon {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      border-radius: v.$border-radius;
+    }
+    
+    &__title {
+      font-family: v.$font-family-heading;
+      font-size: 1.5rem;
+      font-weight: v.$font-weight-bold;
+      color: v.$orb-dark-blue;
+      margin: 0;
+      line-height: 1.2;
+
+      @media (max-width: 768px) {
+        font-size: 2rem;
+      }
+
+      @media (max-width: 480px) {
+        font-size: 1.75rem;
+      }
+    }
+    
+    &__subtitle {
+      font-size: v.$font-size-lg;
+      color: v.$orb-dark-blue;
+      margin: 0;
+      line-height: 1.6;
+      text-align: left;
+
+      @media (max-width: 1024px) {
+        text-align: center;
+      }
+      
+      &--warning {
+        color: #000000 !important;
+        font-weight: v.$font-weight-semibold;
+        font-style: italic;
+        border-left: 3px solid v.$warning-color;
+        background: rgba(v.$warning-color, 0.05);
+        border-radius: v.$border-radius-sm;
+        padding: v.$spacing-sm v.$spacing-md;
+        margin-top: v.$spacing-xs;
+      }
+    }
+
+    &__status {
+      display: flex;
+      align-items: center;
+      gap: v.$spacing-lg;
+      flex-wrap: wrap;
+
+      @media (max-width: 1024px) {
+        justify-content: center;
+      }
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+        gap: v.$spacing-sm;
+      }
+    }
+
+    &__status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: v.$spacing-xs;
+      padding: v.$spacing-sm v.$spacing-md;
+      border-radius: v.$border-radius-lg;
+      font-size: v.$font-size-sm;
+      font-weight: v.$font-weight-medium;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+
+      &--active {
+        background: rgba(v.$success-color, 0.1);
+        color: v.$success-color;
+        border: 1px solid rgba(v.$success-color, 0.2);
+      }
+      
+      &--pending {
+        background: rgba(v.$warning-color, 0.1);
+        color: v.$warning-color;
+        border: 1px solid rgba(v.$warning-color, 0.2);
+      }
+      
+      &--suspended {
+        background: rgba(v.$danger-color, 0.1);
+        color: v.$danger-color;
+        border: 1px solid rgba(v.$danger-color, 0.2);
+      }
+      
+      &--unknown {
+        background: rgba(v.$gray-500, 0.1);
+        color: v.$gray-500;
+        border: 1px solid rgba(v.$gray-500, 0.2);
+      }
+    }
+
+    &__status-icon {
+      font-size: v.$font-size-sm;
+    }
+  }
+
+  .profile-overview-section {
+    max-width: 1400px;
+    margin: 0 auto v.$spacing-xl auto;
+    padding: 0 v.$spacing-lg;
+    width: 100%;
+  }
+
+  .profile-debug-section {
+    max-width: 1400px;
+    margin: v.$spacing-xl auto 0 auto;
+    padding: 0 v.$spacing-lg;
+    width: 100%;
   }
 
   .profile-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 v.$spacing-lg;
     width: 100%;
-    max-width: 600px;
   }
   
   .profile-form {
-    @include m.form-container;
+    width: 100%;
+    max-width: none;
+    background: none;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0;
     
     &__section {
       background-color: v.$bg-secondary;
@@ -226,58 +380,12 @@
   .profile__debug {
     @include m.debug-container;
     
-    & {
-      width: 100%;
-      max-width: 600px;
-      margin-top: v.$spacing-xl;
-      font-family: v.$font-family-monospace;
-    }
-    
-    &-status {
-      margin-bottom: v.$spacing-md;
-      font-family: monospace;
-      
-      code {
-        background-color: v.$gray-200;
-        padding: 2px 4px;
-        border-radius: v.$border-radius-sm;
-      }
-      
-      .highlight {
-        color: v.$danger-color;
-        font-weight: bold;
-      }
-    }
-    
-    &-actions {
-      display: flex;
-      gap: v.$spacing-md;
-      margin-top: v.$spacing-md;
-      flex-wrap: wrap;
+    &-section {
+      @include m.debug-section;
     }
     
     &-button {
-      background-color: v.$gray-800;
-      color: v.$white;
-      border: none;
-      padding: v.$spacing-xs v.$spacing-md;
-      border-radius: v.$border-radius;
-      cursor: pointer;
-      font-family: v.$font-family-base;
-      font-size: v.$font-size-sm;
-      transition: all 0.2s ease;
-      
-      &:hover {
-        background-color: v.$gray-900;
-      }
-      
-      &:first-child {
-        background-color: v.$danger-color;
-        
-        &:hover {
-          background-color: color.adjust(v.$danger-color, $lightness: -10%);
-        }
-      }
+      @include m.debug-button;
     }
   }
 }
@@ -303,6 +411,12 @@
     padding: v.$spacing-md v.$spacing-lg;
     border-bottom: 1px solid v.$border-color;
     background-color: v.$bg-primary;
+  }
+  
+  &__header-actions {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-md;
   }
   
   &__title {
@@ -334,8 +448,8 @@
     }
     
     &--pending {
-      background-color: color.adjust(#f59e0b, $alpha: -0.85);
-      color: #f59e0b;
+      background-color: color.adjust(v.$warning-color, $alpha: -0.85);
+      color: v.$warning-color;
     }
     
     &--suspended {
@@ -351,6 +465,34 @@
   
   &__content {
     padding: v.$spacing-lg;
+  }
+  
+  &__edit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+    padding: v.$spacing-xs v.$spacing-sm;
+    background-color: v.$primary-color;
+    color: v.$white;
+    border: none;
+    border-radius: v.$border-radius;
+    font-size: v.$font-size-sm;
+    font-weight: v.$font-weight-medium;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background-color: color.adjust(v.$primary-color, $lightness: -10%);
+      transform: translateY(-1px);
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+  }
+  
+  &__edit-icon {
+    font-size: v.$font-size-xs;
   }
 }
 
@@ -399,8 +541,8 @@
   }
   
   &--pending {
-    background-color: color.adjust(#f59e0b, $alpha: -0.85);
-    color: #f59e0b;
+    background-color: color.adjust(v.$warning-color, $alpha: -0.85);
+    color: v.$warning-color;
   }
   
   &__icon {

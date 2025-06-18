@@ -20,6 +20,8 @@ model:
       groups:
         OWNER:
           - '*'
+        USER:
+          - UsersUpdate
   keys:
     primary:
       partition: userId

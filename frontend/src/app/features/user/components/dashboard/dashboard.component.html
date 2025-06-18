@@ -20,7 +20,14 @@ description: HTML template file
                 Integration Hub
               </h1>
             </div>
-            <p class="dashboard-header__subtitle">Your integration hub is ready for action</p>
+            <p class="dashboard-header__subtitle" *ngIf="user.status === 'ACTIVE'; else pendingDashboardMessage">
+              Your integration hub is ready for action
+            </p>
+            <ng-template #pendingDashboardMessage>
+              <p class="dashboard-header__subtitle dashboard-header__subtitle--warning">
+                Complete your profile setup to activate your account
+              </p>
+            </ng-template>
             <div class="dashboard-header__status">
               <span class="dashboard-header__status-badge" 
                     [ngClass]="'dashboard-header__status-badge--' + getStatusClass(user.status)">
@@ -93,6 +100,24 @@ description: HTML template file
       
       <div class="dashboard-card__content">
         <div class="health-check">
+          <div class="health-item health-item--clickable" 
+               [ngClass]="hasValidName(user) ? 'health-item--healthy' : 'health-item--warning'"
+               (click)="goToProfile()"
+               [title]="hasValidName(user) ? 'Name complete' : 'Click to update your name in profile'">
+            <fa-icon [icon]="hasValidName(user) ? 'check-circle' : 'exclamation-triangle'" 
+                     class="health-item__icon"></fa-icon>
+            <div class="health-item__content">
+              <div class="health-item__title">Full Name</div>
+              <div class="health-item__status">
+                {{ hasValidName(user) ? 'Complete' : 'First & Last Name Required' }}
+              </div>
+              <div class="health-item__action" *ngIf="!hasValidName(user)">
+                <fa-icon icon="arrow-right" class="health-item__action-icon"></fa-icon>
+                Update Profile
+              </div>
+            </div>
+          </div>
+          
           <div class="health-item" 
                [ngClass]="user.emailVerified ? 'health-item--healthy' : 'health-item--warning'">
             <fa-icon [icon]="user.emailVerified ? 'check-circle' : 'exclamation-triangle'" 
@@ -100,7 +125,7 @@ description: HTML template file
             <div class="health-item__content">
               <div class="health-item__title">Email Verification</div>
               <div class="health-item__status">
-                {{ user.emailVerified ? 'Verified' : 'Action Required' }}
+                {{ user.emailVerified ? 'Verified' : 'Check your email for verification link' }}
               </div>
             </div>
           </div>
@@ -112,19 +137,18 @@ description: HTML template file
             <div class="health-item__content">
               <div class="health-item__title">Phone Verification</div>
               <div class="health-item__status">
-                {{ user.phoneVerified ? 'Verified' : (user.phoneNumber ? 'Action Required' : 'Not Set') }}
+                {{ user.phoneVerified ? 'Verified' : (user.phoneNumber ? 'Phone verification required' : 'Phone number required') }}
               </div>
             </div>
           </div>
           
           <div class="health-item" 
-               [ngClass]="isUserValid(user) ? 'health-item--healthy' : 'health-item--warning'">
-            <fa-icon [icon]="isUserValid(user) ? 'check-circle' : 'exclamation-triangle'" 
-                     class="health-item__icon"></fa-icon>
+               [ngClass]="'health-item--warning'">
+            <fa-icon icon="exclamation-triangle" class="health-item__icon"></fa-icon>
             <div class="health-item__content">
-              <div class="health-item__title">Profile Completion</div>
+              <div class="health-item__title">Multi-Factor Authentication</div>
               <div class="health-item__status">
-                {{ isUserValid(user) ? 'Complete' : 'Incomplete' }}
+                MFA setup required (coming soon)
               </div>
             </div>
           </div>
@@ -172,14 +196,14 @@ description: HTML template file
   </ng-template>
   
   <!-- Debug section - Always show for troubleshooting -->
-  <div class="dashboard__debug" style="background: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 8px;">
-    <h3 class="dashboard__debug-title">Debug Information</h3>
+  <div class="dashboard__debug">
+    <h3>Debug Information</h3>
     
     <div class="dashboard__debug-section">
       <h4>Current User Observable Status</h4>
       <ng-container *ngIf="currentUser$ | async as user; else noUser">
         <p><strong>User Data Found:</strong></p>
-        <pre style="background: #fff; padding: 10px; border-radius: 4px;">{{ user | json }}</pre>
+        <pre>{{ user | json }}</pre>
         <p><strong>User Is Valid:</strong> {{ isUserValid(user) }}</p>
         <p><strong>Required Attributes Check:</strong></p>
         <ul>
@@ -191,7 +215,7 @@ description: HTML template file
         </ul>
       </ng-container>
       <ng-template #noUser>
-        <p style="color: red;"><strong>No User Data Found</strong></p>
+        <p class="error"><strong>No User Data Found</strong></p>
         <p>currentUser$ observable is emitting null or undefined</p>
       </ng-template>
     </div>

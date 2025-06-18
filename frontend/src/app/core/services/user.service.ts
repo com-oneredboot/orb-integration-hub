@@ -491,6 +491,14 @@ export class UserService extends ApiService {
     console.debug('userUpdate input:', input);
 
     try {
+      // Check Cognito auth status
+      const cognitoProfile = await this.cognitoService.getCognitoProfile();
+      console.debug('Cognito profile for update:', cognitoProfile);
+      
+      if (!cognitoProfile) {
+        console.warn('No Cognito profile found - user may not be authenticated');
+      }
+
       if (!input.userId) {
         console.error('Cannot update user: missing required userId');
         return {
@@ -543,11 +551,25 @@ export class UserService extends ApiService {
 
       console.debug('Update input:', updateInput);
 
-      const response = await this.mutate(
-        UsersUpdateMutation,
-        { input: updateInput },
-        "userPool"
-      ) as GraphQLResult<UsersUpdateResponse>;
+      let response: GraphQLResult<UsersUpdateResponse>;
+      
+      try {
+        // Try userPool authentication first
+        response = await this.mutate(
+          UsersUpdateMutation,
+          { input: updateInput },
+          "userPool"
+        ) as GraphQLResult<UsersUpdateResponse>;
+      } catch (authError) {
+        console.warn('userPool authentication failed, trying API key:', authError);
+        
+        // Fallback to API key authentication
+        response = await this.mutate(
+          UsersUpdateMutation,
+          { input: updateInput },
+          "apiKey"
+        ) as GraphQLResult<UsersUpdateResponse>;
+      }
 
       console.debug('userUpdate Response:', response);
 
