@@ -1,11 +1,11 @@
 # Frontend Implementation Plan - Orb Integration Hub
 
-This document outlines the phases, tasks, and milestones for building the Orb Integration Hub frontend, based on the design specified in `docs/frontend-design.md` and organized by features defined in `docs/features/REGISTRY.md`.
+This document outlines the phases, tasks, and milestones for building the Orb Integration Hub frontend, based on the design specified in `../../docs/frontend-design.md` and organized by features defined in `features/REGISTRY.md`.
 
 ## 1. Introduction
 
 *   **Purpose:** Provide a step-by-step roadmap for frontend development, aligned with feature delivery.
-*   **Reference:** This plan directly follows the specifications outlined in the [Frontend Design Plan](frontend-design.md) and references feature details in `docs/features/`.
+*   **Reference:** This plan directly follows the specifications outlined in the [Frontend Design Plan](../../docs/frontend-design.md) and references feature details in `features/`.
 
 ## 2. Prerequisites
 
@@ -30,11 +30,11 @@ This document outlines the phases, tasks, and milestones for building the Orb In
 
 ## 4. Feature Implementation
 
-*(Features are listed based on `docs/features/REGISTRY.md`. Add new feature sections as they are initiated.)*
+*(Features are listed based on `.taskmaster/docs/features/REGISTRY.md`. Add new feature sections as they are initiated.)*
 
 ### Feature: Authentication Flow Creation (`auth-flow-creation`)
 *   **Goal:** Implement comprehensive authentication flow with login, registration, and account management.
-*   **Reference:** `docs/features/auth-flow-creation/` (Assume feature-specific doc exists/will exist)
+*   **Reference:** `features/auth-flow-creation/` (Assume feature-specific doc exists/will exist)
 *   **Frontend Tasks:**
     *   [ ] Create `AuthModule` (lazy-loaded potentially).
     *   [ ] Implement `LoginComponent` within `AuthModule` (UI + Logic).
@@ -49,7 +49,7 @@ This document outlines the phases, tasks, and milestones for building the Orb In
 
 ### Feature: API Explorer (`api-explorer` - *Example Placeholder*)
 *   **Goal:** Build the API Explorer feature.
-*   **Reference:** `docs/features/api-explorer/`
+*   **Reference:** `features/api-explorer/`
 *   **Frontend Tasks:**
     *   [ ] Create an `ApiExplorerModule` (lazy-loaded).
     *   [ ] Implement `ApiExplorerComponent`.
@@ -59,7 +59,7 @@ This document outlines the phases, tasks, and milestones for building the Orb In
 
 ### Feature: Schema Viewer (`schema-viewer` - *Example Placeholder*)
 *   **Goal:** Implement the view for displaying generated data schemas/models.
-*   **Reference:** `docs/features/schema-viewer/`
+*   **Reference:** `.taskmaster/docs/features/schema-viewer/`
 *   **Frontend Tasks:**
     *   [ ] Create a `SchemaViewerModule` (lazy-loaded).
     *   [ ] Implement `SchemaViewerComponent`.

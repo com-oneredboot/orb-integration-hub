@@ -54,33 +54,15 @@
   - Missing password reset service methods
 
 ### Implementation Plan
+> **Note**: This implementation plan has been migrated to Taskmaster tasks. See `.taskmaster/tasks/tasks.json` for current task breakdown:
+> - **Task #1**: Setup AWS Cognito User Pool (with 5 subtasks)
+> - **Task #23**: SMS Verification Feature (with 6 subtasks)
 
-1. Refactor Auth Flow Architecture:
-   - Break down monolithic auth-flow component into smaller, focused components
-   - Implement proper routing for different authentication steps
-   - Create dedicated components for each auth step
-
-2. Enhance State Management:
-   - Refine existing NgRx store structure for better state organization
-   - Add missing action types for password reset
-   - Improve error handling in effects
-   - Add selectors for derived state
-
-3. Missing Functionality:
-   - Implement password reset flow
-   - Add account recovery options
-   - Enhance error messaging and user feedback
-
-4. Component Structure:
-   - Create container/presentational component pattern
-   - Implement shared form components for reuse
-   - Create dedicated route guards for auth flow steps
-
-### Initial Implementation Tasks
-1. Create directory structure for refactored components
-2. Implement password reset functionality in services
-3. Enhance the state management with additional actions and effects
-4. Create basic UI components for each auth step
+Historical implementation plan (now managed in Taskmaster):
+- ✅ Refactor Auth Flow Architecture (covered in Task #1.3)
+- ✅ Enhance State Management (implemented)
+- 🔄 Missing Functionality (Task #1.3, #1.4, #1.5)
+- ✅ Component Structure (implemented)
 
 ### Technical Decisions
 - Will use NgRx for state management of authentication

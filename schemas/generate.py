@@ -1383,22 +1383,29 @@ def main():
         all_model_names = list(schemas.keys())
         for table, schema in schemas.items():
             if isinstance(schema, TableSchema):
-                valid_model_names.add(f'{table}.model.ts')
-                valid_model_names.add(f'{table}.model.py')
+                valid_model_names.add(f'{table}Model.ts')
+                valid_model_names.add(f'{table}Model.py')
                 valid_graphql_names.add(f'{table}.graphql.ts')
             elif isinstance(schema, GraphQLType):
-                valid_model_names.add(f'{table}.model.ts')
-                valid_model_names.add(f'{table}.model.py')
+                valid_model_names.add(f'{table}Model.ts')
+                valid_model_names.add(f'{table}Model.py')
             elif isinstance(schema, RegistryType):
                 valid_model_names.add(f'{table}.model.py')
+                valid_model_names.add(f'{table}.model.ts')
+            elif isinstance(schema, LambdaType):
+                valid_model_names.add(f'{table}Model.ts')
+                valid_model_names.add(f'{table}Model.py')
+            elif isinstance(schema, StandardType):
+                valid_model_names.add(f'{table}Model.ts')
+                valid_model_names.add(f'{table}Model.py')
         enums_path = os.path.join(SCRIPT_DIR, 'core', 'enums.yml')
         if os.path.exists(enums_path):
             with open(enums_path, 'r') as f:
                 enums_data = yaml.safe_load(f)
             for enum_name in enums_data:
                 if isinstance(enums_data[enum_name], list):
-                    valid_enum_names.add(f'{enum_name}.enum.ts')
-                    valid_enum_names.add(f'{enum_name}.enum.py')
+                    valid_enum_names.add(f'{enum_name}Enum.ts')
+                    valid_enum_names.add(f'{enum_name}Enum.py')
         logger.debug('Cleaning up old files')
         cleanup_old_files(valid_model_names, valid_enum_names, valid_graphql_names)
         logger.debug('Generating models and GraphQL ops for table-backed schemas')
@@ -1422,6 +1429,7 @@ def main():
                 generate_typescript_registry(table, schema)
             elif schema_type == 'lambda':
                 logger.debug(f'Generating lambda model for type: {table}')
+                generate_python_model(table, schema, template_name='python_lambda.jinja')
                 generate_typescript_model(table, schema, template_name='typescript_lambda_model.jinja', all_model_names=all_model_names)
             else:
                 logger.error(f'Unknown or unsupported schema type: {schema_type} for {table}')

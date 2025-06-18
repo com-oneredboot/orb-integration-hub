@@ -1,4 +1,6 @@
-# Auth Flow Creation Context
+# Auth Flow Creation Feature
+
+> **Note**: For current tasks and subtasks, see `.taskmaster/tasks/tasks.json` - Task #1 and Task #23
 
 ## Feature Overview
 - Implement a comprehensive authentication flow for user login, registration, and account management
@@ -7,10 +9,11 @@
 - Success criteria: Users can register, login, reset password, and access appropriate resources based on their role
 
 ## Current Status
-- SMS Configuration: Updated and streamlined IAM roles
-- Authentication Flow: Basic login and registration implemented
-- MFA Support: SMS and TOTP configured
-- Error Handling: Comprehensive error registry system in place
+**See Taskmaster Task #1 "Setup AWS Cognito User Pool" for current progress**
+- ✅ CloudFormation template created
+- ✅ Backend APIs implemented
+- 🔄 Auth-flow component integration (in testing)
+- ⏳ Documentation and user groups pending
 
 ## Technical Approach
 - Leverage AWS Cognito for authentication and user management
@@ -43,12 +46,11 @@
     - MFA setup/verification
   - Has form validation and error handling
 
-- Next Steps:
-  1. Test SMS verification functionality
-  2. Complete MFA setup flow
-  3. Implement phone number verification
-  4. Add proper loading states and transitions
-  5. Enhance error handling and user feedback
+## Active Tasks
+- **Task #1.3**: Verify auth-flow.component integration (manual testing in progress)
+- **Task #23**: SMS Verification feature implementation (subtasks 23.3-23.6 pending)
+
+> See `.taskmaster/tasks/tasks.json` for detailed subtasks and dependencies
 
 ## Testing Strategy
 - Unit tests for authentication services and components

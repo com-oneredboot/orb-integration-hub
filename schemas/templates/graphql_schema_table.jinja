@@ -1,29 +1,112 @@
-# Table-based types
-{%- for schema_name, schema in table_schemas.items() %}
-type {{ schema.name }} {
-{%- for field_name, field_type in schema.fields.items() %}
-  {{ field_name }}: {{ field_type }}
-{%- endfor %}
-}
+{#-- Helper macro to join unique directives --#}
+{% macro join_unique_directives(directives_list) -%}
+  {%- set unique_directives = directives_list | unique | list -%}
+  {%- for d in unique_directives -%}
+    {{- ' ' ~ d -}}
+  {%- endfor -%}
+{%- endmacro %}
 
-input {{ schema.name }}CreateInput {
-{%- for field_name, field_type in schema.fields.items() %}
-  {{ field_name }}: {{ field_type }}
-{%- endfor %}
+{#-- Table-based types with auth directives --#}
+{% for schema in table_schemas.values() %}
+{#-- Collect all auth directives for Query/Mutation operations returning this type --#}
+{% set entity_field_directives = [] %}
+{% for op in schema.operations %}
+  {% for d in op.response_auth_directives %}
+    {% if d not in entity_field_directives %}{% do entity_field_directives.append(d) %}{% endif %}
+  {% endfor %}
+{% endfor %}
+type {{ schema.name }} {
+{% for attr in schema.attributes %}
+  {{ attr.name }}: {{ attr.type|graphql_type }}{{ join_unique_directives(entity_field_directives) }}
+{% endfor %}
 }
+{% endfor %}
+
+{#-- Input types for table schemas --#}
+{% for schema_name, schema in table_schemas.items() %}
+{% if schema.type == 'dynamodb' %}
+input {{ schema.name }}CreateInput {
+{% for field_name, field_type in schema.fields.items() %}
+  {{ field_name }}: {{ field_type|graphql_type }}
+{% endfor %}}
 
 input {{ schema.name }}UpdateInput {
-{%- for field_name, field_type in schema.fields.items() %}
-  {{ field_name }}: {{ field_type }}
-{%- endfor %}
+{% for field_name, field_type in schema.fields.items() %}
+  {{ field_name }}: {{ field_type|graphql_type }}
+{% endfor %}}
+
+input {{ schema.name }}DeleteInput {
+  {{ schema.partition_key }}: {{ schema.fields[schema.partition_key]|graphql_type }}
+{% if schema.sort_key and schema.sort_key != 'None' %}
+  {{ schema.sort_key }}: {{ schema.fields[schema.sort_key]|graphql_type }}
+{% endif %}}
+
+input {{ schema.name }}DisableInput {
+  {{ schema.partition_key }}: {{ schema.fields[schema.partition_key]|graphql_type }}
+{% if schema.sort_key and schema.sort_key != 'None' %}
+  {{ schema.sort_key }}: {{ schema.fields[schema.sort_key]|graphql_type }}
+{% endif %}}
+
+{% set seen_indexes = [] %}
+{%- for index in schema.indexes %}
+{%- set input_name = schema.name ~ 'QueryBy' ~ index.partition|to_pascal_case ~ 'Input' %}
+{% if input_name not in seen_indexes %}
+input {{ input_name }} {
+  {{ index.partition }}: {{ schema.fields[index.partition]|graphql_type }}
 }
 
-{%- for index in schema.indexes %}
-input {{ schema.name }}QueryBy{{ index.partition | to_pascal_case }}Input {
-  {{ index.partition }}: {{ schema.fields[index.partition] }}
-{%- if index.sort %}
-  {{ index.sort }}: {{ schema.fields[index.sort] }}
-{%- endif %}
+{% set _ = seen_indexes.append(input_name) %}
+{% endif %}
+{%- if index.sort and index.sort != 'None' %}
+{%- set input_name_and = schema.name ~ 'QueryBy' ~ index.partition|to_pascal_case ~ 'And' ~ index.sort|to_pascal_case ~ 'Input' %}
+{% if input_name_and not in seen_indexes %}
+input {{ input_name_and }} {
+  {{ index.partition }}: {{ schema.fields[index.partition]|graphql_type }}
+  {{ index.sort }}: {{ schema.fields[index.sort]|graphql_type }}
 }
-{%- endfor %}
-{%- endfor %} 
+
+{% set _ = seen_indexes.append(input_name_and) %}
+{% endif %}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+{% for schema in table_schemas.values() %}
+{% set response_directives = [] %}
+{% for op in schema.operations if op.type == 'Query' %}
+  {% for d in op.response_auth_directives %}
+    {% if d not in response_directives %}{% do response_directives.append(d) %}{% endif %}
+  {% endfor %}
+{% endfor %}
+type {{ schema.name }}Response {
+  StatusCode: Int!{{ join_unique_directives(response_directives) }}
+  Message: String{{ join_unique_directives(response_directives) }}
+  Data: {{ schema.name }}{{ join_unique_directives(response_directives) }}
+}
+{% endfor %}
+{% for schema in table_schemas.values() %}
+{% set list_response_directives = [] %}
+{% for op in schema.operations if op.type == 'Query' %}
+  {% for d in op.response_auth_directives %}
+    {% if d not in list_response_directives %}{% do list_response_directives.append(d) %}{% endif %}
+  {% endfor %}
+{% endfor %}
+type {{ schema.name }}ListResponse {
+  StatusCode: Int!{{ join_unique_directives(list_response_directives) }}
+  Message: String{{ join_unique_directives(list_response_directives) }}
+  Data: [{{ schema.name }}]{{ join_unique_directives(list_response_directives) }}
+}
+{% endfor %}
+{% for schema in table_schemas.values() %}
+{% for operation in schema.operations %}
+{% if operation.type != 'Query' %}
+{% set response_type_name = operation.field + 'Response' %}
+type {{ response_type_name }} {
+  StatusCode: Int!{{ join_unique_directives(operation.response_auth_directives) }}
+  Message: String{{ join_unique_directives(operation.response_auth_directives) }}
+  Data: {{ schema.name }}{{ join_unique_directives(operation.response_auth_directives) }}
+}
+{% endif %}
+{% endfor %}
+{% endfor %} 

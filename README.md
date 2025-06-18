@@ -8,20 +8,20 @@ Orb Integration Hub is a serverless application that provides a unified API for 
 
 ## Quick Links
 
-- [Product Requirements (PRD)](docs/prd.md) - Canonical requirements and feature planning document
+- [Product Requirements (PRD)](.taskmaster/docs/prd.md) - Canonical requirements and feature planning document
 - [Architecture Documentation](docs/architecture.md) - System design and component interactions
 - [Development Guide](docs/development.md) - Setup and development workflow
-- [Feature Registry](docs/features/REGISTRY.md) - List of active and completed features
+- [Feature Registry](.taskmaster/docs/features/REGISTRY.md) - List of active and completed features
 - [Frontend Design Plan](docs/frontend-design.md) - Frontend architecture, UI/UX, and features
-- [Frontend Implementation Plan](docs/frontend-implementation-plan.md) - Frontend development phases and tasks (feature-based)
-- [Frontend Todo List](docs/frontend-todo.md) - Frontend development checklist (feature-based)
+- [Frontend Implementation Plan](.taskmaster/docs/frontend-implementation-plan.md) - Frontend development phases and tasks (feature-based)
+- [Frontend Todo List](.taskmaster/docs/frontend-todo.md) - Frontend development checklist (feature-based)
 - [API Documentation](docs/api.md) - GraphQL API reference and examples
 - [Schema Documentation](docs/schema.md) - Data models and schema definitions
 
 ## Getting Started
 
 1. Review the [Development Guide](docs/development.md) for setup instructions
-2. Check the [Product Requirements (PRD)](docs/prd.md) for the latest requirements and features
+2. Check the [Product Requirements (PRD)](.taskmaster/docs/prd.md) for the latest requirements and features
 3. Check the [Architecture Documentation](docs/architecture.md) to understand the system
 4. Explore the [API Documentation](docs/api.md) to start integrating
 
@@ -31,10 +31,10 @@ Orb Integration Hub is a serverless application that provides a unified API for 
 orb-integration-hub/
 ├── backend/           # Python backend services
 ├── frontend/         # TypeScript frontend application
-├── docs/            # Project documentation
-│   ├── prd.md       # Product Requirements Document (PRD)
-│   ├── core/        # Core project documentation
-│   ├── features/    # Feature-specific documentation
+├── docs/            # Technical documentation (API, architecture, dev guides)
+├── .taskmaster/      # Task management, planning, and feature docs
+│   ├── docs/        # Planning documents (PRD, implementation plans)
+│   └── tasks/       # Task definitions and tracking
 │   └── ...
 └── schemas/         # Schema definitions and generators
     ├── entities/    # YAML schema definitions
@@ -46,9 +46,9 @@ orb-integration-hub/
 
 This project uses [task-master-ai](https://github.com/CoreyDalePeters/task-master-ai) for requirements-driven planning and task management.
 
-- The canonical source of requirements is [docs/prd.md](docs/prd.md).
+- The canonical source of requirements is [.taskmaster/docs/prd.md](.taskmaster/docs/prd.md).
 - To update or generate tasks:
-  1. Edit `docs/prd.md` as requirements evolve.
+  1. Edit `.taskmaster/docs/prd.md` as requirements evolve.
   2. Run `task-master-ai parse-prd` to generate or update the project's tasks.
   3. Use `task-master-ai` to expand, update, and track tasks throughout the project lifecycle.
 - See [docs/development.md](docs/development.md) for detailed workflow instructions.
@@ -59,7 +59,7 @@ All features, tasks, and documentation should trace back to the PRD to ensure al
 
 - **Parse PRD and generate tasks:**
   ```bash
-  npx task-master-ai parse-prd --input=docs/prd.md
+  npx task-master-ai parse-prd --input=.taskmaster/docs/prd.md
   ```
 - **Expand tasks into subtasks:**
   ```bash
@@ -127,10 +127,14 @@ docs/
 │   ├── DESIGN_PLAN.md     # Overall design plan
 │   ├── IMPLEMENTATION_PLAN.md # Implementation timeline
 │   └── TODO.md            # Current tasks and action items
-├── features/              # Feature-specific documentation
-│   └── [feature-name]/    # Documentation for each feature
-│       ├── feature-plan.md # Feature design and implementation plan
-│       └── summary.md      # Feature completion summary
+├── .taskmaster/docs/
+│   ├── prd.md             # Product Requirements Document
+│   ├── core/              # Core planning documents
+│   ├── features/          # Feature-specific documentation
+│   │   └── [feature-name]/ # Documentation for each feature
+│   │       ├── feature-plan.md # Feature design and implementation plan
+│   │       └── summary.md      # Feature completion summary
+│   └── market-research/   # Business analysis and research
 ├── architecture.md        # System architecture documentation
 ├── development.md         # Development setup and workflow
 └── api.md                 # API documentation
@@ -140,8 +144,8 @@ docs/
 
 When working on this project:
 
-1. **Update Feature Documentation**: When implementing new features, create or update the corresponding feature documentation in `docs/features/[feature-name]/`.
-2. **Update Core Documentation**: Keep the core documentation files (`DESIGN_PLAN.md`, `IMPLEMENTATION_PLAN.md`, `TODO.md`) up-to-date with the latest project status.
+1. **Update Feature Documentation**: When implementing new features, create or update the corresponding feature documentation in `.taskmaster/docs/features/[feature-name]/`.
+2. **Update Core Documentation**: Keep the core documentation files (`.taskmaster/docs/core/DESIGN_PLAN.md`, `IMPLEMENTATION_PLAN.md`) up-to-date with the latest project status.
 3. **Follow Standards**: Adhere to the development standards defined in the orb-master-plan.
 4. **Report Progress**: Update the orb-master-plan's task tracking when completing significant milestones.
 

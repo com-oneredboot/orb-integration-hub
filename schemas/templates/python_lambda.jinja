@@ -1,5 +1,5 @@
 """
-{{ schema.name }} standard model.
+{{ schema.name }} Lambda-backed GraphQL resolver model.
 Generated at {{ timestamp }}
 """
 
@@ -15,9 +15,9 @@ from .{{ attr.model_reference }}Model import {{ attr.model_reference }}Model
 {% endif %}
 {% endfor %}
 
-# Main Model (Standard)
+# Lambda Model
 class {{ schema.name }}(BaseModel):
-    """{{ schema.name }} model."""
+    """{{ schema.name }} lambda model."""
 {% for attr in schema.attributes %}
     {{ attr.name | to_snake_case }}: {% if attr.enum_type %}str{% elif attr.model_reference %}{{ attr.model_reference }}{% else %}{% if attr.type == 'timestamp' %}datetime{% elif attr.type == 'boolean' %}bool{% elif attr.type == 'array' %}list[str]{% elif attr.type == 'number' %}float{% else %}str{% endif %}{% endif %}{% if not attr.required %} = Field(None, description="{{ attr.description }}"){% else %} = Field(..., description="{{ attr.description }}"){% endif %}
 {% endfor %}
@@ -57,9 +57,3 @@ class {{ schema.name }}(BaseModel):
         json_encoders = {
             datetime: lambda v: v.isoformat()
         }
-
-# Response Type
-class {{ schema.name }}Response(BaseModel):
-    statusCode: int
-    message: Optional[str]
-    data: Optional[{{ schema.name }}] 
