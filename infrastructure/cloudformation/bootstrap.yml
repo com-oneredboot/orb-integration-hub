@@ -374,6 +374,7 @@ Resources:
             Action:
               - "cloudwatch:PutDashboard"
               - "cloudwatch:DeleteDashboards"
+              - "cloudwatch:DeleteDashboards"
             Resource:
               - !Sub "arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:dashboard/*"
     Type: AWS::IAM::ManagedPolicy
