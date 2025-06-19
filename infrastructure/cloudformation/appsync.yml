@@ -70,7 +70,7 @@ Resources:
       Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-appsync'
       AuthenticationType: AMAZON_COGNITO_USER_POOLS
       UserPoolConfig:
-        UserPoolId: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-cognito-user-pool-id}}'
+        UserPoolId: us-east-1_3axyfJmvW
         AwsRegion: !Ref AWS::Region
         DefaultAction: ALLOW
       AdditionalAuthenticationProviders:
@@ -107,8 +107,6 @@ Resources:
       Type: String
       Value: !GetAtt IntegrationHubApi.ApiId
 
-  # DynamoDB DataSources
-  # Jinja template for AppSync DynamoDB DataSources
   ApplicationUsersDynamoDbDataSource:
     Type: AWS::AppSync::DataSource
     Properties:

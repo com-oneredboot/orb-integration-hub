@@ -9,8 +9,8 @@ export const environment = {
   appName: 'OneRedBoot.com',
   production: true,
   cognito: {
-    userPoolId: 'orb-integration-hub-prod-user-pool-id',
-    userPoolClientId: 'orb-integration-hub-prod-user-pool-client-id',
+    userPoolId: 'us-east-1_3axyfJmvW',
+    userPoolClientId: '40r8ms3deicu90jcfh6kpjdp1g',
     qrCodeIssuer: 'OneRedBoot.com'
   },
   graphql: {
