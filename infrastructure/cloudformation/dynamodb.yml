@@ -213,6 +213,8 @@ Resources:
           AttributeType: S
         - AttributeName: cognitoId
           AttributeType: S
+        - AttributeName: cognitoSub
+          AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: EmailIndex
           KeySchema:
@@ -223,6 +225,12 @@ Resources:
         - IndexName: CognitoIdIndex
           KeySchema:
             - AttributeName: cognitoId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: CognitoSubIndex
+          KeySchema:
+            - AttributeName: cognitoSub
               KeyType: HASH
           Projection:
             ProjectionType: ALL

@@ -35,6 +35,10 @@ Resources:
     Properties:
       TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}
       BillingMode: PAY_PER_REQUEST
+      {% if schema.stream and schema.stream.enabled %}
+      StreamSpecification:
+        StreamViewType: {{ schema.stream.viewType }}
+      {% endif %}
       KeySchema:
         {% for key in schema.key_schema %}
         - AttributeName: {{ key.name }}
@@ -97,6 +101,15 @@ Resources:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}-table-name
       Type: String
       Value: !Ref {{ schema.name }}Table
+
+  {% if schema.stream and schema.stream.enabled %}
+  {{ schema.name }}TableStreamArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}-table-stream-arn
+      Type: String
+      Value: !GetAtt {{ schema.name }}Table.StreamArn
+  {% endif %}
   {% endfor %}
 
 # --------------------------------------------------- #
@@ -113,4 +126,12 @@ Outputs:
     Value: !Ref {{ schema.name }}Table
     Export:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}-table-name
+
+  {% if schema.stream and schema.stream.enabled %}
+  {{ schema.name }}TableStreamArn:
+    Description: The Stream ARN of the {{ schema.name }} table
+    Value: !GetAtt {{ schema.name }}Table.StreamArn
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}-table-stream-arn
+  {% endif %}
   {% endfor %}

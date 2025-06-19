@@ -10,6 +10,9 @@ type: dynamodb
 version: '1.0'
 name: Users
 model:
+  stream:
+    enabled: true
+    viewType: NEW_AND_OLD_IMAGES
   authConfig:
     apiKeyAuthentication:
     - Users
