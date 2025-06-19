@@ -430,3 +430,33 @@ Resources:
       Type: String
       Value: !Ref DeadLetterQueuePolicy
     Type: AWS::SSM::Parameter
+
+  # SMS Verification Secret for HMAC-based code generation
+  SmsVerificationSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-sms-verification-secret'
+      Description: 'Secret key for SMS verification code generation'
+      GenerateSecretString:
+        SecretStringTemplate: '{}'
+        GenerateStringKey: 'secret_key'
+        PasswordLength: 32
+        ExcludeCharacters: '"@/\'
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
+
+  # Store SMS Verification Secret Name in Parameter Store
+  SmsVerificationSecretNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-sms-verification-secret-name"
+      Type: String
+      Value: !Ref SmsVerificationSecret
+      Description: "Name of the SMS verification secret for lambda access"

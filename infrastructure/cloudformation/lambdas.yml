@@ -225,6 +225,7 @@ Resources:
       Environment:
         Variables:
           SMS_ORIGINATION_NUMBER: !Ref SMSOriginationNumber
+          SMS_VERIFICATION_SECRET_NAME: !Sub '${CustomerId}-${ProjectId}-${Environment}-sms-verification-secret'
 
   # SSM Parameters
 

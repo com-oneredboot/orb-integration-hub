@@ -735,6 +735,12 @@ export class UserService extends ApiService {
       console.debug('SMS verification response:', response);
 
       if (response.data?.SmsVerification?.StatusCode === 200) {
+        // Log the generated code for testing purposes (remove in production)
+        const generatedCode = response.data.SmsVerification.Data?.code;
+        if (generatedCode) {
+          console.debug('🔐 Generated verification code for testing:', generatedCode);
+        }
+        
         return { 
           statusCode: 200, 
           message: response.data.SmsVerification.Message || 'Verification code sent' 
@@ -778,10 +784,13 @@ export class UserService extends ApiService {
 
       console.debug('SMS verification check response:', response);
 
-      // For now, the lambda doesn't implement verification logic
-      // It would need to be updated to store and verify codes
-      // As a temporary solution, accept any 6-digit code
-      return code.length === 6 && /^\d+$/.test(code);
+      // Check if the lambda verified the code successfully
+      if (response.data?.SmsVerification?.StatusCode === 200) {
+        const verificationData = response.data.SmsVerification.Data;
+        return verificationData?.valid === true;
+      }
+
+      return false;
 
     } catch (error) {
       console.error('Error verifying SMS code:', error);

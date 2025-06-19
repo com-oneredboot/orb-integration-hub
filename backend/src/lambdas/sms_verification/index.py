@@ -7,21 +7,86 @@ import json
 import boto3
 import os
 import logging
+import hmac
+import hashlib
+import time
 from botocore.exceptions import ClientError
-from random import randint
 
 # AWS clients
-client = boto3.client('sns')
+sns_client = boto3.client('sns')
+secrets_client = boto3.client('secretsmanager')
 
 # Environment variables
 ENV_LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
 ENV_REGION = os.getenv('AWS_REGION', 'us-east-1')
 ENV_ENVIRONMENT = os.getenv('ENVIRONMENT', 'dev')
-ENV_ORIGINATION_NUMBER = os.getenv('ORIGINATION_NUMBER')
+ENV_ORIGINATION_NUMBER = os.getenv('SMS_ORIGINATION_NUMBER')
+ENV_SECRET_NAME = os.getenv('SMS_VERIFICATION_SECRET_NAME')
 
 # Setting up logging
 logger = logging.getLogger()
 logger.setLevel(ENV_LOG_LEVEL)
+
+# Cache for secret to avoid repeated API calls
+secret_cache = {'secret': None, 'expires': 0}
+
+
+def get_secret():
+    """Retrieve SMS verification secret from AWS Secrets Manager with caching"""
+    current_time = time.time()
+    
+    # Use cached secret if still valid (cache for 5 minutes)
+    if secret_cache['secret'] and current_time < secret_cache['expires']:
+        return secret_cache['secret']
+    
+    try:
+        logger.debug(f"Retrieving secret: {ENV_SECRET_NAME}")
+        response = secrets_client.get_secret_value(SecretId=ENV_SECRET_NAME)
+        secret_data = json.loads(response['SecretString'])
+        secret_key = secret_data['secret_key']
+        
+        # Cache the secret for 5 minutes
+        secret_cache['secret'] = secret_key
+        secret_cache['expires'] = current_time + 300
+        
+        logger.debug("Secret retrieved and cached successfully")
+        return secret_key
+        
+    except Exception as e:
+        logger.error(f"Error retrieving secret: {str(e)}")
+        raise
+
+
+def generate_verification_code(phone_number: str, timestamp: int, secret: str) -> str:
+    """Generate 6-digit code using HMAC with 5-minute time windows"""
+    # Create 5-minute time windows
+    time_window = timestamp // 300  # 300 seconds = 5 minutes
+    message = f"{phone_number}:{time_window}"
+    
+    # Generate HMAC
+    signature = hmac.new(
+        secret.encode('utf-8'),
+        message.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+    
+    # Convert to 6-digit code
+    code_int = int(signature[:8], 16) % 1000000
+    return str(code_int).zfill(6)
+
+
+def verify_code(phone_number: str, code: str, secret: str) -> bool:
+    """Verify code against current and previous time window (10 min total)"""
+    current_time = int(time.time())
+    
+    # Check current and previous time window
+    for i in range(2):  # 0 = current window, 1 = previous window
+        window_time = current_time - (i * 300)
+        expected_code = generate_verification_code(phone_number, window_time, secret)
+        logger.debug(f"Checking window {i}: expected={expected_code}, provided={code}")
+        if expected_code == code:
+            return True
+    return False
 
 
 def lambda_handler(event, context):
@@ -30,11 +95,31 @@ def lambda_handler(event, context):
     # Get data
     input_data = event['input']
     phone_number = input_data['phoneNumber']
+    provided_code = input_data.get('code')  # Optional for verification
 
     try:
-        # create a code of 6 numbers from 0-9
-        code = randint(100000, 999999)
-
+        # Get the secret key
+        secret = get_secret()
+        current_time = int(time.time())
+        
+        # If code is provided, verify it
+        if provided_code is not None:
+            logger.info(f"Verifying code for phone number: {phone_number}")
+            is_valid = verify_code(phone_number, str(provided_code), secret)
+            
+            return {
+                "StatusCode": 200,
+                "Message": "Code verified successfully" if is_valid else "Invalid or expired code",
+                "Data": {
+                    "phoneNumber": phone_number,
+                    "valid": is_valid
+                }
+            }
+        
+        # Generate and send new verification code
+        logger.info(f"Generating verification code for phone number: {phone_number}")
+        code = generate_verification_code(phone_number, current_time, secret)
+        
         # SMS using origination number
         sns_parameters = {
             'PhoneNumber': phone_number,
@@ -52,21 +137,26 @@ def lambda_handler(event, context):
             }
         }
         
-        logger.info(f"sns_parameters: {sns_parameters}")
+        logger.info(f"Sending SMS to {phone_number}")
+        logger.debug(f"SMS parameters: {sns_parameters}")
 
-        response = client.publish(**sns_parameters)
+        response = sns_client.publish(**sns_parameters)
         logger.info(f"SNS response: {response}")
         logger.info(f"Verification code sent to {phone_number}")
 
         return {
             "StatusCode": 200,
             "Message": "Verification code sent successfully",
-            "Data": {"code": code}
+            "Data": {
+                "phoneNumber": phone_number,
+                "code": code  # Return for debugging (remove in production)
+            }
         }
 
     except Exception as e:
-        logger.error(f"AWS service error: {str(e)}")
+        logger.error(f"Error in SMS verification: {str(e)}")
         return {
-            'status_code': 400,
-            'message': f"Error sending verification code: {str(e)}"
+            "StatusCode": 500,
+            "Message": f"Error processing SMS verification: {str(e)}",
+            "Data": None
         }
