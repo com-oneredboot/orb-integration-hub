@@ -6,6 +6,7 @@
 {% endfor %}
 {% for type_name, type_def in graphql_types.items() %}
 {% if type_def.type == 'lambda' %}
-  {{ type_name }}(input: {{ type_name }}Input): {{ type_name }}Response
+  {{ type_name }}(input: {{ type_name }}Input): {{ type_name }}Response{% if type_def.auth_config and type_def.auth_config.cognitoAuthentication %} @aws_auth(cognito_groups: {{ type_def.auth_config.cognitoAuthentication.groups.keys() | list | tojson }}){% endif %}
+
 {% endif %}
 {% endfor %}

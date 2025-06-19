@@ -1,6 +1,6 @@
 /**
  * Auth standard model.
- * Generated at 2025-06-19T12:32:39.822625
+ * Generated at 2025-06-19T13:19:12.751941
  */
 
 // Import enums and models used in this model

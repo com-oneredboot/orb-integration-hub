@@ -1,6 +1,6 @@
 """
 Generated Python models for ApplicationRoles
-Generated at 2025-06-19T12:32:39.839212
+Generated at 2025-06-19T13:19:12.767819
 """
 
 from typing import Optional, List

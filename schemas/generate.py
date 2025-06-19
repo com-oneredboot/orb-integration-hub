@@ -182,6 +182,7 @@ class LambdaType:
     attributes: List[Attribute]
     description: Optional[str] = None
     type: str = 'lambda'
+    auth_config: Optional[Dict[str, Any]] = None
 
 def to_python_type(attr_type: str) -> str:
     """Convert schema type to Python type."""
@@ -1321,11 +1322,16 @@ def load_schemas() -> dict:
                     setattr(attr, 'model_reference', attr.type)
                     referenced_models.add(attr.type)
                 attributes.append(attr)
+            
+            # Extract auth_config from the model
+            auth_config = model.get('authConfig')
+            
             schema_obj = LambdaType(
                 name=schema_name,
                 attributes=attributes,
                 description=schema_dict.get('description'),
-                type='lambda'
+                type='lambda',
+                auth_config=auth_config
             )
             # Attach referenced models for use in template rendering
             setattr(schema_obj, 'model_imports', sorted(referenced_models))
