@@ -227,7 +227,36 @@ Resources:
           SMS_ORIGINATION_NUMBER: !Ref SMSOriginationNumber
           SMS_VERIFICATION_SECRET_NAME: !Sub '${CustomerId}-${ProjectId}-${Environment}-sms-verification-secret'
 
+  # Cognito Group Manager Lambda
+  CognitoGroupManagerLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${CustomerId}-${ProjectId}-${Environment}-cognito-group-manager"
+      Description: "Lambda function to manage Cognito User Pool groups"
+      Handler: index.lambda_handler
+      CodeUri: ../../backend/src/lambdas/cognito_group_manager/
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:AdminAddUserToGroup
+                - cognito-idp:AdminRemoveUserFromGroup
+                - cognito-idp:AdminListGroupsForUser
+                - cognito-idp:ListUsersInGroup
+                - cognito-idp:GetGroup
+                - cognito-idp:ListGroups
+              Resource: !Sub "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/*"
+        - AWSXrayWriteOnlyAccess
+
   # SSM Parameters
+
+  # Parameter Store for the Cognito Group Manager Lambda ARN
+  CognitoGroupManagerLambdaArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-cognito-group-manager-lambda-arn"
+      Type: String
+      Value: !GetAtt CognitoGroupManagerLambda.Arn
 
   # Paramter Store for the SMS Verification Lambda ARN
   SmsVerificationLambdaArnParameter:

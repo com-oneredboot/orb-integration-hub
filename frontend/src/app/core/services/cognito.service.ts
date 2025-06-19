@@ -390,5 +390,55 @@ export class CognitoService {
 
     return hasAccess;
   }
+
+  /**
+   * Debug method to check user's authentication and group status
+   * Call this from browser console: window.cognitoService.debugUserStatus()
+   */
+  async debugUserStatus(): Promise<void> {
+    console.log('🔍 === COGNITO USER DEBUG STATUS ===');
+    
+    try {
+      // Check authentication
+      const isAuth = await this.checkIsAuthenticated();
+      console.log('✅ Is Authenticated:', isAuth);
+      
+      if (!isAuth) {
+        console.log('❌ User is not authenticated - cannot check groups');
+        return;
+      }
+      
+      // Get user profile
+      const profile = await this.getCognitoProfile();
+      console.log('👤 User Profile:', {
+        username: profile?.username,
+        email: profile?.email,
+        email_verified: profile?.email_verified,
+        phone_number: profile?.phone_number,
+        phone_number_verified: profile?.phone_number_verified
+      });
+      
+      // Get groups
+      const groups = await this.getCurrentUserGroups();
+      console.log('👥 Current Cognito Groups:', groups);
+      
+      // Check SMS verification access
+      const hasAccess = await this.hasRequiredGroups(['USER', 'OWNER']);
+      console.log('📱 Has SMS Verification Access:', hasAccess);
+      
+      if (!hasAccess) {
+        console.log('❌ User needs to be added to USER or OWNER group for SMS verification');
+        console.log('💡 Required groups: ["USER", "OWNER"]');
+        console.log('💡 Current groups:', groups);
+      } else {
+        console.log('✅ User has proper group membership for SMS verification');
+      }
+      
+    } catch (error) {
+      console.error('❌ Error checking user status:', error);
+    }
+    
+    console.log('🔍 === END DEBUG STATUS ===');
+  }
 }
 

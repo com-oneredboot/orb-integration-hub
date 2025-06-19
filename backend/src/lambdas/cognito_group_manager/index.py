@@ -1,290 +1,205 @@
-# file: backend/src/lambdas/cognito_group_manager/index.py
-# author: Claude Code
-# created: 2025-06-19
-# description: Lambda function for managing Cognito User Pool group assignments
+#!/usr/bin/env python3
+"""
+Lambda function to manage Cognito User Pool groups
+This can be used to add users to groups manually when needed
+"""
 
 import json
 import boto3
-import os
 import logging
 from typing import Dict, Any, List
-from botocore.exceptions import ClientError
 
-# Environment variables
-ENV_LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
-ENV_REGION = os.getenv('AWS_REGION', 'us-east-1')
-ENV_USER_POOL_ID = os.getenv('COGNITO_USER_POOL_ID')
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# Setting up logging
-logger = logging.getLogger()
-logger.setLevel(ENV_LOG_LEVEL)
-
-# AWS clients
-cognito_client = boto3.client('cognito-idp', region_name=ENV_REGION)
-
+# Initialize Cognito client
+cognito_client = boto3.client('cognito-idp')
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
-    Lambda handler for managing Cognito User Pool group assignments.
+    Lambda handler for Cognito group management operations
     
-    Expected event format:
+    Expected event structure:
     {
-        "action": "add_user_to_group" | "remove_user_from_group" | "sync_user_groups" | "get_user_groups",
-        "username": "cognito_username",
-        "group_name": "GROUP_NAME",  # For add/remove actions
-        "target_groups": ["GROUP1", "GROUP2"]  # For sync action
+        "operation": "add_user_to_group" | "remove_user_from_group" | "list_user_groups" | "list_users_in_group",
+        "userPoolId": "us-east-1_XXXXXXXX",
+        "username": "user@example.com",
+        "groupName": "USER" (optional, depends on operation)
     }
     """
-    logger.info(f"Received event: {json.dumps(event)}")
-    
     try:
-        # Validate required parameters
-        if not ENV_USER_POOL_ID:
-            raise ValueError("COGNITO_USER_POOL_ID environment variable is required")
+        logger.info(f"Received event: {json.dumps(event)}")
         
-        action = event.get('action')
+        operation = event.get('operation')
+        user_pool_id = event.get('userPoolId')
         username = event.get('username')
+        group_name = event.get('groupName')
         
-        if not action or not username:
-            raise ValueError("Both 'action' and 'username' are required")
+        if not operation:
+            raise ValueError("Missing required parameter: operation")
+        
+        if not user_pool_id:
+            raise ValueError("Missing required parameter: userPoolId")
         
         # Route to appropriate handler
-        if action == 'add_user_to_group':
-            return handle_add_user_to_group(username, event.get('group_name'))
-        elif action == 'remove_user_from_group':
-            return handle_remove_user_from_group(username, event.get('group_name'))
-        elif action == 'sync_user_groups':
-            return handle_sync_user_groups(username, event.get('target_groups', []))
-        elif action == 'get_user_groups':
-            return handle_get_user_groups(username)
-        elif action == 'validate_access':
-            return handle_validate_access(username, event.get('required_groups', []))
+        if operation == 'add_user_to_group':
+            return add_user_to_group(user_pool_id, username, group_name)
+        elif operation == 'remove_user_from_group':
+            return remove_user_from_group(user_pool_id, username, group_name)
+        elif operation == 'list_user_groups':
+            return list_user_groups(user_pool_id, username)
+        elif operation == 'list_users_in_group':
+            return list_users_in_group(user_pool_id, group_name)
+        elif operation == 'add_user_to_default_group':
+            return add_user_to_default_group(user_pool_id, username)
         else:
-            raise ValueError(f"Unknown action: {action}")
+            raise ValueError(f"Unknown operation: {operation}")
             
     except Exception as e:
-        logger.error(f"Error in cognito_group_manager: {str(e)}")
+        logger.error(f"Error processing request: {str(e)}")
         return {
-            "StatusCode": 500,
-            "Message": f"Error processing request: {str(e)}",
-            "Data": None
+            'statusCode': 500,
+            'body': json.dumps({
+                'error': str(e),
+                'operation': event.get('operation', 'unknown')
+            })
         }
 
-
-def handle_add_user_to_group(username: str, group_name: str) -> Dict[str, Any]:
-    """Add a user to a Cognito User Pool group."""
-    if not group_name:
-        raise ValueError("group_name is required for add_user_to_group action")
+def add_user_to_group(user_pool_id: str, username: str, group_name: str) -> Dict[str, Any]:
+    """Add a user to a specific group"""
+    if not username or not group_name:
+        raise ValueError("Missing required parameters: username and groupName")
     
     try:
         cognito_client.admin_add_user_to_group(
-            UserPoolId=ENV_USER_POOL_ID,
+            UserPoolId=user_pool_id,
             Username=username,
             GroupName=group_name
         )
         
         logger.info(f"Successfully added user {username} to group {group_name}")
+        
         return {
-            "StatusCode": 200,
-            "Message": f"User {username} added to group {group_name}",
-            "Data": {
-                "username": username,
-                "group_name": group_name,
-                "action": "added"
-            }
+            'statusCode': 200,
+            'body': json.dumps({
+                'message': f'User {username} added to group {group_name}',
+                'username': username,
+                'groupName': group_name
+            })
         }
         
-    except ClientError as e:
-        error_code = e.response.get('Error', {}).get('Code', 'Unknown')
-        error_message = e.response.get('Error', {}).get('Message', str(e))
-        
-        if error_code == 'UserNotFoundException':
-            logger.error(f"User {username} not found")
-            return {
-                "StatusCode": 404,
-                "Message": f"User {username} not found",
-                "Data": None
-            }
-        elif error_code == 'ResourceNotFoundException':
-            logger.error(f"Group {group_name} not found")
-            return {
-                "StatusCode": 404,
-                "Message": f"Group {group_name} not found",
-                "Data": None
-            }
-        else:
-            logger.error(f"Error adding user to group: {error_message}")
-            return {
-                "StatusCode": 500,
-                "Message": f"Error adding user to group: {error_message}",
-                "Data": None
-            }
+    except cognito_client.exceptions.UserNotFoundException:
+        raise ValueError(f"User {username} not found in user pool")
+    except cognito_client.exceptions.ResourceNotFoundException:
+        raise ValueError(f"Group {group_name} not found in user pool")
+    except Exception as e:
+        raise Exception(f"Failed to add user to group: {str(e)}")
 
-
-def handle_remove_user_from_group(username: str, group_name: str) -> Dict[str, Any]:
-    """Remove a user from a Cognito User Pool group."""
-    if not group_name:
-        raise ValueError("group_name is required for remove_user_from_group action")
+def remove_user_from_group(user_pool_id: str, username: str, group_name: str) -> Dict[str, Any]:
+    """Remove a user from a specific group"""
+    if not username or not group_name:
+        raise ValueError("Missing required parameters: username and groupName")
     
     try:
         cognito_client.admin_remove_user_from_group(
-            UserPoolId=ENV_USER_POOL_ID,
+            UserPoolId=user_pool_id,
             Username=username,
             GroupName=group_name
         )
         
         logger.info(f"Successfully removed user {username} from group {group_name}")
+        
         return {
-            "StatusCode": 200,
-            "Message": f"User {username} removed from group {group_name}",
-            "Data": {
-                "username": username,
-                "group_name": group_name,
-                "action": "removed"
-            }
+            'statusCode': 200,
+            'body': json.dumps({
+                'message': f'User {username} removed from group {group_name}',
+                'username': username,
+                'groupName': group_name
+            })
         }
         
-    except ClientError as e:
-        error_code = e.response.get('Error', {}).get('Code', 'Unknown')
-        error_message = e.response.get('Error', {}).get('Message', str(e))
-        
-        logger.error(f"Error removing user from group: {error_message}")
-        return {
-            "StatusCode": 500,
-            "Message": f"Error removing user from group: {error_message}",
-            "Data": None
-        }
+    except cognito_client.exceptions.UserNotFoundException:
+        raise ValueError(f"User {username} not found in user pool")
+    except Exception as e:
+        raise Exception(f"Failed to remove user from group: {str(e)}")
 
-
-def handle_get_user_groups(username: str) -> Dict[str, Any]:
-    """Get all groups that a user belongs to."""
+def list_user_groups(user_pool_id: str, username: str) -> Dict[str, Any]:
+    """List all groups that a user belongs to"""
+    if not username:
+        raise ValueError("Missing required parameter: username")
+    
     try:
         response = cognito_client.admin_list_groups_for_user(
-            UserPoolId=ENV_USER_POOL_ID,
+            UserPoolId=user_pool_id,
             Username=username
         )
         
         groups = [group['GroupName'] for group in response.get('Groups', [])]
+        
         logger.info(f"User {username} belongs to groups: {groups}")
         
         return {
-            "StatusCode": 200,
-            "Message": f"Retrieved groups for user {username}",
-            "Data": {
-                "username": username,
-                "groups": groups
-            }
+            'statusCode': 200,
+            'body': json.dumps({
+                'username': username,
+                'groups': groups,
+                'groupCount': len(groups)
+            })
         }
         
-    except ClientError as e:
-        error_code = e.response.get('Error', {}).get('Code', 'Unknown')
-        error_message = e.response.get('Error', {}).get('Message', str(e))
-        
-        if error_code == 'UserNotFoundException':
-            logger.error(f"User {username} not found")
-            return {
-                "StatusCode": 404,
-                "Message": f"User {username} not found",
-                "Data": None
-            }
-        else:
-            logger.error(f"Error getting user groups: {error_message}")
-            return {
-                "StatusCode": 500,
-                "Message": f"Error getting user groups: {error_message}",
-                "Data": None
-            }
-
-
-def handle_sync_user_groups(username: str, target_groups: List[str]) -> Dict[str, Any]:
-    """Synchronize a user's group membership to match target groups."""
-    try:
-        # Get current groups
-        current_groups_response = handle_get_user_groups(username)
-        if current_groups_response["StatusCode"] != 200:
-            return current_groups_response
-        
-        current_groups = current_groups_response["Data"]["groups"]
-        
-        # Determine changes needed
-        groups_to_add = [group for group in target_groups if group not in current_groups]
-        groups_to_remove = [group for group in current_groups if group not in target_groups]
-        
-        results = {
-            "username": username,
-            "target_groups": target_groups,
-            "current_groups": current_groups,
-            "groups_added": [],
-            "groups_removed": [],
-            "errors": []
-        }
-        
-        # Add to new groups
-        for group in groups_to_add:
-            add_result = handle_add_user_to_group(username, group)
-            if add_result["StatusCode"] == 200:
-                results["groups_added"].append(group)
-            else:
-                results["errors"].append(f"Failed to add to {group}: {add_result['Message']}")
-        
-        # Remove from old groups
-        for group in groups_to_remove:
-            remove_result = handle_remove_user_from_group(username, group)
-            if remove_result["StatusCode"] == 200:
-                results["groups_removed"].append(group)
-            else:
-                results["errors"].append(f"Failed to remove from {group}: {remove_result['Message']}")
-        
-        # Determine overall success
-        success = len(results["errors"]) == 0
-        status_code = 200 if success else 207  # 207 = Multi-Status (partial success)
-        
-        message = f"Group sync completed for user {username}"
-        if not success:
-            message += f" with {len(results['errors'])} errors"
-        
-        logger.info(f"Group sync result: {results}")
-        
-        return {
-            "StatusCode": status_code,
-            "Message": message,
-            "Data": results
-        }
-        
+    except cognito_client.exceptions.UserNotFoundException:
+        raise ValueError(f"User {username} not found in user pool")
     except Exception as e:
-        logger.error(f"Error syncing user groups: {str(e)}")
-        return {
-            "StatusCode": 500,
-            "Message": f"Error syncing user groups: {str(e)}",
-            "Data": None
-        }
+        raise Exception(f"Failed to list user groups: {str(e)}")
 
-
-def handle_validate_access(username: str, required_groups: List[str]) -> Dict[str, Any]:
-    """Validate that a user has access based on required groups."""
+def list_users_in_group(user_pool_id: str, group_name: str) -> Dict[str, Any]:
+    """List all users in a specific group"""
+    if not group_name:
+        raise ValueError("Missing required parameter: groupName")
+    
     try:
-        groups_response = handle_get_user_groups(username)
-        if groups_response["StatusCode"] != 200:
-            return groups_response
+        response = cognito_client.list_users_in_group(
+            UserPoolId=user_pool_id,
+            GroupName=group_name
+        )
         
-        user_groups = groups_response["Data"]["groups"]
-        has_access = any(group in user_groups for group in required_groups)
+        users = [user['Username'] for user in response.get('Users', [])]
+        
+        logger.info(f"Group {group_name} contains users: {users}")
         
         return {
-            "StatusCode": 200,
-            "Message": f"Access validation completed for user {username}",
-            "Data": {
-                "username": username,
-                "user_groups": user_groups,
-                "required_groups": required_groups,
-                "has_access": has_access
-            }
+            'statusCode': 200,
+            'body': json.dumps({
+                'groupName': group_name,
+                'users': users,
+                'userCount': len(users)
+            })
         }
         
+    except cognito_client.exceptions.ResourceNotFoundException:
+        raise ValueError(f"Group {group_name} not found in user pool")
     except Exception as e:
-        logger.error(f"Error validating access: {str(e)}")
-        return {
-            "StatusCode": 500,
-            "Message": f"Error validating access: {str(e)}",
-            "Data": None
-        }
+        raise Exception(f"Failed to list users in group: {str(e)}")
+
+def add_user_to_default_group(user_pool_id: str, username: str) -> Dict[str, Any]:
+    """Add a user to the default USER group (convenience method)"""
+    return add_user_to_group(user_pool_id, username, 'USER')
+
+# Helper function for CLI/testing
+def main():
+    """For local testing"""
+    import os
+    
+    # Example usage - add user to USER group
+    event = {
+        'operation': 'add_user_to_default_group',
+        'userPoolId': os.environ.get('USER_POOL_ID', 'us-east-1_XXXXXXXX'),
+        'username': 'corey@thepetersfamily.ca'
+    }
+    
+    result = lambda_handler(event, None)
+    print(json.dumps(result, indent=2))
+
+if __name__ == '__main__':
+    main()

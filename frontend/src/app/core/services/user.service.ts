@@ -733,13 +733,20 @@ export class UserService extends ApiService {
         };
       }
       
+      // Debug: Check what groups the user currently has
+      const userGroups = await this.cognitoService.getCurrentUserGroups();
+      console.debug('🔍 Current user Cognito groups:', userGroups);
+      
       // Validate user has required Cognito groups for SMS verification
       const hasAccess = await this.cognitoService.validateGraphQLAccess(['USER', 'OWNER']);
+      console.debug('🔍 User has SMS verification access:', hasAccess);
+      
       if (!hasAccess) {
-        console.error('User does not have required Cognito groups for SMS verification');
+        console.error('❌ User does not have required Cognito groups for SMS verification');
+        console.error('❌ Required groups: [USER, OWNER], User groups:', userGroups);
         return { 
           statusCode: 403, 
-          message: 'User does not have required permissions for SMS verification' 
+          message: `User does not have required permissions for SMS verification. User groups: [${userGroups.join(', ')}], Required: [USER, OWNER]` 
         };
       }
       
@@ -802,10 +809,17 @@ export class UserService extends ApiService {
         return false;
       }
       
+      // Debug: Check what groups the user currently has
+      const userGroups = await this.cognitoService.getCurrentUserGroups();
+      console.debug('🔍 Current user Cognito groups (verify):', userGroups);
+      
       // Validate user has required Cognito groups for SMS verification
       const hasAccess = await this.cognitoService.validateGraphQLAccess(['USER', 'OWNER']);
+      console.debug('🔍 User has SMS verification access (verify):', hasAccess);
+      
       if (!hasAccess) {
-        console.error('User does not have required Cognito groups for SMS verification');
+        console.error('❌ User does not have required Cognito groups for SMS verification (verify)');
+        console.error('❌ Required groups: [USER, OWNER], User groups:', userGroups);
         return false;
       }
       
