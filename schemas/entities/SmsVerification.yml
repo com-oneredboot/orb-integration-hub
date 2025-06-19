@@ -11,8 +11,10 @@ model:
       groups:
         USER:
           - SmsVerification
+          - SmsVerificationResponse
         OWNER:
           - SmsVerification
+          - SmsVerificationResponse
   attributes:
     phoneNumber:
       type: string

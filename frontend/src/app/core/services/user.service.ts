@@ -722,6 +722,18 @@ export class UserService extends ApiService {
     console.debug('sendSMSVerificationCode:', phoneNumber);
     
     try {
+      // Check if user is authenticated - only authenticated users can verify phone
+      const isAuthenticated = await this.cognitoService.checkIsAuthenticated();
+      console.debug('sendSMSVerificationCode - authenticated:', isAuthenticated);
+      
+      if (!isAuthenticated) {
+        return { 
+          statusCode: 401, 
+          message: 'User must be authenticated to verify phone number' 
+        };
+      }
+      
+      // Use userPool authentication for authenticated users
       const response = await this.mutate(
         SmsVerificationMutation,
         {
@@ -729,7 +741,7 @@ export class UserService extends ApiService {
             phoneNumber: phoneNumber
           }
         },
-        "apiKey"
+        "userPool"
       ) as any;
 
       console.debug('SMS verification response:', response);
@@ -771,6 +783,16 @@ export class UserService extends ApiService {
     console.debug('verifySMSCode:', phoneNumber, code);
     
     try {
+      // Check if user is authenticated - only authenticated users can verify phone
+      const isAuthenticated = await this.cognitoService.checkIsAuthenticated();
+      console.debug('verifySMSCode - authenticated:', isAuthenticated);
+      
+      if (!isAuthenticated) {
+        console.error('User must be authenticated to verify SMS code');
+        return false;
+      }
+      
+      // Use userPool authentication for authenticated users
       const response = await this.mutate(
         SmsVerificationMutation,
         {
@@ -779,7 +801,7 @@ export class UserService extends ApiService {
             code: parseInt(code)
           }
         },
-        "apiKey"
+        "userPool"
       ) as any;
 
       console.debug('SMS verification check response:', response);
