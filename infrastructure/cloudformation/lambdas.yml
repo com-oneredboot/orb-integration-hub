@@ -250,6 +250,27 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       CodeUri: ../../backend/src/lambdas/cognito_group_manager/
 
+  # User Status Calculator Lambda (DynamoDB Stream Trigger)
+  UserStatusCalculatorLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${CustomerId}-${ProjectId}-${Environment}-user-status-calculator"
+      Description: "Lambda function triggered by DynamoDB streams to automatically calculate user status"
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      CodeUri: ../../backend/src/lambdas/user_status_calculator/
+      Environment:
+        Variables:
+          USERS_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-table-name}}'
+      Events:
+        DynamoDBStream:
+          Type: DynamoDB
+          Properties:
+            Stream: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-table-stream-arn}}'
+            StartingPosition: LATEST
+            BatchSize: 10
+            MaximumBatchingWindowInSeconds: 5
+
   # SSM Parameters
 
   # Parameter Store for the Cognito Group Manager Lambda ARN
@@ -267,6 +288,14 @@ Resources:
       Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-sms-verification-lambda-arn"
       Type: String
       Value: !GetAtt SmsVerificationLambda.Arn
+
+  # Parameter Store for the User Status Calculator Lambda ARN
+  UserStatusCalculatorLambdaArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-user-status-calculator-lambda-arn"
+      Type: String
+      Value: !GetAtt UserStatusCalculatorLambda.Arn
 
   # Paramter Store for the SMS Origination Number
   SMSOriginationNumberParemeter:

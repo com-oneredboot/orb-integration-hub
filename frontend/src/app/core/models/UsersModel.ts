@@ -20,6 +20,8 @@ export type UsersCreateInput = {
   groups: string[] | undefined;
   emailVerified: boolean | undefined;
   phoneVerified: boolean | undefined;
+  mfaEnabled: boolean | undefined;
+  mfaSetupComplete: boolean | undefined;
 };
 
 // UpdateInput
@@ -37,6 +39,8 @@ export type UsersUpdateInput = {
   groups: string[] | undefined;
   emailVerified: boolean | undefined;
   phoneVerified: boolean | undefined;
+  mfaEnabled: boolean | undefined;
+  mfaSetupComplete: boolean | undefined;
 };
 
 // QueryInput
@@ -94,6 +98,8 @@ export interface IUsers {
   groups: string[] | undefined;
   emailVerified: boolean | undefined;
   phoneVerified: boolean | undefined;
+  mfaEnabled: boolean | undefined;
+  mfaSetupComplete: boolean | undefined;
 }
 
 export class Users implements IUsers {
@@ -110,6 +116,8 @@ export class Users implements IUsers {
   groups = [];
   emailVerified = false;
   phoneVerified = false;
+  mfaEnabled = false;
+  mfaSetupComplete = false;
 
   constructor(data: Partial<IUsers> = {}) {
     Object.entries(data).forEach(([key, value]) => {

@@ -509,17 +509,26 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           return;
         }
         
-        // Step 7: Check if user has all required attributes
-        const isValid = this.userService.isUserValid(user);
-        console.debug('User validation:', { isValid, user });
+        // Step 7: Check if user can access dashboard or needs to complete profile
+        const canAccessDashboard = this.userService.canAccessDashboard(user);
+        const isFullyValid = this.userService.isUserValid(user);
+        const calculatedStatus = this.userService.calculateUserStatus(user);
         
-        if (isValid) {
-          // User is valid (has all required attributes), go to dashboard
-          console.debug('User is valid, redirecting to dashboard');
+        console.debug('User validation:', { 
+          canAccessDashboard, 
+          isFullyValid,
+          calculatedStatus,
+          currentStatus: user.status,
+          user 
+        });
+        
+        if (canAccessDashboard) {
+          // User has minimum requirements for dashboard access
+          console.debug('User can access dashboard, redirecting to dashboard');
           this.router.navigate(['/dashboard']);
         } else {
-          // User is missing required attributes, go to profile
-          console.debug('User is missing required attributes, redirecting to profile');
+          // User needs to complete required fields, go to profile
+          console.debug('User needs to complete profile, redirecting to profile');
           this.router.navigate(['/profile']);
         }
       });

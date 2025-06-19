@@ -201,6 +201,8 @@ Resources:
     Properties:
       TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-users
       BillingMode: PAY_PER_REQUEST
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
       KeySchema:
         - AttributeName: userId
           KeyType: HASH
@@ -238,6 +240,13 @@ Resources:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-users-table-name
       Type: String
       Value: !Ref UsersTable
+
+  UsersTableStreamArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-users-table-stream-arn
+      Type: String
+      Value: !GetAtt UsersTable.StreamArn
 
 # --------------------------------------------------- #
 Outputs:
@@ -296,3 +305,9 @@ Outputs:
     Value: !Ref UsersTable
     Export:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-users-table-name
+
+  UsersTableStreamArn:
+    Description: The Stream ARN of the Users table
+    Value: !GetAtt UsersTable.StreamArn
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-users-table-stream-arn

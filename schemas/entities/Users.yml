@@ -94,4 +94,12 @@ model:
       type: boolean
       required: false
       description: Whether the user's phone number is verified
+    mfaEnabled:
+      type: boolean
+      required: false
+      description: Whether multi-factor authentication is enabled for the user
+    mfaSetupComplete:
+      type: boolean
+      required: false
+      description: Whether MFA setup has been completed successfully
     # Note: User roles for the IntegrationHub and customer applications are managed via ApplicationRoles table.

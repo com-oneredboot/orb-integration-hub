@@ -44,6 +44,10 @@ export const AuthActions = createActionGroup({
     'Verify Phone Success': emptyProps(),
     'Verify Phone Failure': props<{ error: string }>(),
 
+    'Update User After Phone Verification': props<{ phoneNumber: string }>(),
+    'Update User After Phone Verification Success': props<{ user: IUsers }>(),
+    'Update User After Phone Verification Failure': props<{ error: string }>(),
+
     'Needs MFA': props<{ code: string, rememberDevice:boolean }>(),
     'Needs MFA Success': emptyProps(),
     'Needs MFA Failure': props<{ error: string }>(),

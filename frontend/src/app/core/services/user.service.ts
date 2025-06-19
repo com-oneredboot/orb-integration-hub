@@ -567,24 +567,74 @@ export class UserService extends ApiService {
   }
 
   /**
-   * Check if a user has all required attributes
+   * Calculate the correct user status based on completion requirements
    * @param user The user to check
-   * @returns True if the user has all required attributes, false otherwise
+   * @returns The status the user should have ('PENDING' or 'ACTIVE')
    */
-  public isUserValid(user: any): boolean {
-    if (!user) return false;
+  public calculateUserStatus(user: any): 'PENDING' | 'ACTIVE' {
+    if (!user) return 'PENDING';
 
-    // Check for required attributes
-    const hasRequiredAttributes =
+    // Check all required fields are present
+    const hasRequiredFields = 
       !!user.email &&
       !!user.firstName &&
       !!user.lastName &&
       !!user.phoneNumber;
 
-    // Check user status is ACTIVE
-    const isActive = user.status === 'ACTIVE';
+    // Check all verification requirements are met
+    const hasRequiredVerifications = 
+      !!user.emailVerified &&
+      !!user.phoneVerified;
 
-    return hasRequiredAttributes && isActive;
+    // Check MFA requirements are met
+    const hasMFARequirements = 
+      !!user.mfaEnabled &&
+      !!user.mfaSetupComplete;
+
+    // User is ACTIVE only when ALL requirements are met
+    const isComplete = hasRequiredFields && hasRequiredVerifications && hasMFARequirements;
+    
+    return isComplete ? 'ACTIVE' : 'PENDING';
+  }
+
+  /**
+   * Check if a user has all required attributes and is ACTIVE
+   * @param user The user to check
+   * @returns True if the user is complete and active, false otherwise
+   */
+  public isUserValid(user: any): boolean {
+    if (!user) return false;
+
+    // User is valid if they have all required attributes and are ACTIVE
+    const requiredStatus = this.calculateUserStatus(user);
+    return requiredStatus === 'ACTIVE' && user.status === 'ACTIVE';
+  }
+
+  /**
+   * Check if a user is ready for dashboard access
+   * Since MFA setup is done during signup, all requirements must be met
+   * @param user The user to check
+   * @returns True if user can access dashboard, false otherwise
+   */
+  public canAccessDashboard(user: any): boolean {
+    if (!user) return false;
+
+    // All requirements must be met for dashboard access
+    const hasRequiredFields = 
+      !!user.email &&
+      !!user.firstName &&
+      !!user.lastName &&
+      !!user.phoneNumber;
+
+    const hasRequiredVerifications = 
+      !!user.emailVerified &&
+      !!user.phoneVerified;
+
+    const hasMFARequirements = 
+      !!user.mfaEnabled &&
+      !!user.mfaSetupComplete;
+
+    return hasRequiredFields && hasRequiredVerifications && hasMFARequirements;
   }
 
   /**

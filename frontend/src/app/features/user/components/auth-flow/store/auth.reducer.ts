@@ -250,8 +250,8 @@ export const authReducer = createReducer(
     ...state,
     isLoading: false,
     error: null,
-    phoneVerified: true,
-    currentStep: AuthSteps.COMPLETE
+    phoneVerified: true
+    // Don't set currentStep to COMPLETE yet - wait for user update to complete
   })),
   on(AuthActions.verifyPhoneFailure, (state, { error }) => ({
     ...state,
@@ -276,6 +276,27 @@ export const authReducer = createReducer(
     return {...initialState};
   }),
   on(AuthActions.signoutFailure, (state, { error }) => ({
+    ...state,
+    error,
+    isLoading: false
+  })),
+
+  // User update after phone verification
+  on(AuthActions.updateUserAfterPhoneVerification, (state) => ({
+    ...state,
+    isLoading: true,
+    error: null
+  })),
+  on(AuthActions.updateUserAfterPhoneVerificationSuccess, (state, { user }) => ({
+    ...state,
+    isLoading: false,
+    error: null,
+    currentUser: user,
+    sessionActive: true,
+    isAuthenticated: true,
+    currentStep: AuthSteps.COMPLETE
+  })),
+  on(AuthActions.updateUserAfterPhoneVerificationFailure, (state, { error }) => ({
     ...state,
     error,
     isLoading: false

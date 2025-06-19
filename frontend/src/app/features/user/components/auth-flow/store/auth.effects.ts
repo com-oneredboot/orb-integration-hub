@@ -413,6 +413,7 @@ export class AuthEffects {
         return from(this.userService.verifySMSCode(phoneNumber, code)).pipe(
           map(isValid => {
             if (isValid) {
+              // First mark verification success, then trigger user update
               return AuthActions.verifyPhoneSuccess();
             }
             return AuthActions.verifyPhoneFailure({
@@ -422,6 +423,54 @@ export class AuthEffects {
           catchError(error => of(AuthActions.verifyPhoneFailure({ 
             error: error instanceof Error ? error.message : 'Failed to verify phone code'
           })))
+        );
+      })
+    )
+  );
+
+  // Update user record after successful phone verification
+  updateUserAfterPhoneVerification$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.verifyPhoneSuccess),
+      withLatestFrom(
+        this.store.select(fromAuth.selectPhoneValidationId),
+        this.store.select(fromAuth.selectCurrentUser)
+      ),
+      switchMap(([action, phoneNumber, currentUser]) => {
+        if (!phoneNumber || !currentUser) {
+          return of(AuthActions.updateUserAfterPhoneVerificationFailure({ 
+            error: 'Missing phone number or user data'
+          }));
+        }
+
+        console.debug('Effect: Updating user after phone verification', { phoneNumber, currentUser });
+        
+        // Update the user record with verified phone number
+        // Note: Status will be automatically calculated by DynamoDB stream trigger
+        const updateInput = {
+          userId: currentUser.userId,
+          phoneNumber: phoneNumber,
+          phoneVerified: true
+        };
+
+        return from(this.userService.userUpdate(updateInput)).pipe(
+          map(response => {
+            console.debug('User update response:', response);
+            
+            // Extract the updated user from the response
+            const updatedUser = response.data?.UsersUpdate?.Data;
+            if (!updatedUser) {
+              throw new Error('User update succeeded but no user data returned');
+            }
+
+            return AuthActions.updateUserAfterPhoneVerificationSuccess({ user: updatedUser });
+          }),
+          catchError(error => {
+            console.error('Failed to update user after phone verification:', error);
+            return of(AuthActions.updateUserAfterPhoneVerificationFailure({ 
+              error: error instanceof Error ? error.message : 'Failed to update user record'
+            }));
+          })
         );
       })
     )

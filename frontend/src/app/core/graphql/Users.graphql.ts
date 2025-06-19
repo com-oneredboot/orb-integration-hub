@@ -20,6 +20,8 @@ mutation UsersCreate($input: UsersCreateInput!) {
       groups
       emailVerified
       phoneVerified
+      mfaEnabled
+      mfaSetupComplete
     }
   }
 }
@@ -44,6 +46,8 @@ mutation UsersUpdate($input: UsersUpdateInput!) {
       groups
       emailVerified
       phoneVerified
+      mfaEnabled
+      mfaSetupComplete
     }
   }
 }
@@ -68,6 +72,8 @@ mutation UsersDelete($id: ID!) {
       groups
       emailVerified
       phoneVerified
+      mfaEnabled
+      mfaSetupComplete
     }
   }
 }
@@ -92,6 +98,8 @@ mutation UsersDisable($id: ID!) {
       groups
       emailVerified
       phoneVerified
+      mfaEnabled
+      mfaSetupComplete
     }
   }
 }
@@ -116,6 +124,8 @@ query UsersQueryByUserId($input: UsersQueryByUserIdInput!) {
       groups
       emailVerified
       phoneVerified
+      mfaEnabled
+      mfaSetupComplete
     }
   }
 }
@@ -140,6 +150,8 @@ query UsersQueryByEmail($input: UsersQueryByEmailInput!) {
       groups
       emailVerified
       phoneVerified
+      mfaEnabled
+      mfaSetupComplete
     }
   }
 }
@@ -164,6 +176,8 @@ query UsersQueryByCognitoId($input: UsersQueryByCognitoIdInput!) {
       groups
       emailVerified
       phoneVerified
+      mfaEnabled
+      mfaSetupComplete
     }
   }
 }
@@ -188,6 +202,8 @@ query UsersQueryByCognitoSub($input: UsersQueryByCognitoSubInput!) {
       groups
       emailVerified
       phoneVerified
+      mfaEnabled
+      mfaSetupComplete
     }
   }
 }

@@ -1,6 +1,6 @@
 """
 Generated Python models for Users
-Generated at 2025-06-19T19:00:27.450024
+Generated at 2025-06-19T19:31:06.633169
 """
 
 from typing import Optional, List
@@ -24,6 +24,8 @@ class UsersCreateInput(BaseModel):
     groups: List[str] = Field(..., description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)")
     email_verified: bool = Field(..., description="Whether the user's email is verified")
     phone_verified: bool = Field(..., description="Whether the user's phone number is verified")
+    mfa_enabled: bool = Field(..., description="Whether multi-factor authentication is enabled for the user")
+    mfa_setup_complete: bool = Field(..., description="Whether MFA setup has been completed successfully")
 
 class UsersUpdateInput(BaseModel):
     user_id: Optional[str] = Field(None, description="Unique identifier for the user (primary key)")
@@ -39,6 +41,8 @@ class UsersUpdateInput(BaseModel):
     groups: Optional[List[str]] = Field(None, description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)")
     email_verified: Optional[bool] = Field(None, description="Whether the user's email is verified")
     phone_verified: Optional[bool] = Field(None, description="Whether the user's phone number is verified")
+    mfa_enabled: Optional[bool] = Field(None, description="Whether multi-factor authentication is enabled for the user")
+    mfa_setup_complete: Optional[bool] = Field(None, description="Whether MFA setup has been completed successfully")
 
 class UsersDeleteInput(BaseModel):
     user_id: str
@@ -64,7 +68,7 @@ class UsersQueryByCognitoSubInput(BaseModel):
 # Properties: Field(...) = required (from schema), Optional[...] = optional (from schema)
 class Users(BaseModel):
     """Users model."""
-    user_id: str = Field(..., description="Unique identifier for the user (primary key)")    cognito_id: str = Field(..., description="Cognito username (used for authentication)")    cognito_sub: str = Field(..., description="Cognito user sub (unique identifier from tokens)")    email: str = Field(..., description="User's email address")    first_name: str = Field(..., description="User's first name")    last_name: str = Field(..., description="User's last name")    status: str = Field(..., description="Current status of the user")    created_at: datetime = Field(..., description="When the user was created")    updated_at: datetime = Field(..., description="When the user was last updated")    phone_number: str = Field(None, description="User's phone number")    groups: List[str] = Field(None, description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)")    email_verified: bool = Field(None, description="Whether the user's email is verified")    phone_verified: bool = Field(None, description="Whether the user's phone number is verified")
+    user_id: str = Field(..., description="Unique identifier for the user (primary key)")    cognito_id: str = Field(..., description="Cognito username (used for authentication)")    cognito_sub: str = Field(..., description="Cognito user sub (unique identifier from tokens)")    email: str = Field(..., description="User's email address")    first_name: str = Field(..., description="User's first name")    last_name: str = Field(..., description="User's last name")    status: str = Field(..., description="Current status of the user")    created_at: datetime = Field(..., description="When the user was created")    updated_at: datetime = Field(..., description="When the user was last updated")    phone_number: str = Field(None, description="User's phone number")    groups: List[str] = Field(None, description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)")    email_verified: bool = Field(None, description="Whether the user's email is verified")    phone_verified: bool = Field(None, description="Whether the user's phone number is verified")    mfa_enabled: bool = Field(None, description="Whether multi-factor authentication is enabled for the user")    mfa_setup_complete: bool = Field(None, description="Whether MFA setup has been completed successfully")
     @validator('createdAt', pre=True)
     def parse_createdAt(cls, value):
         """Parse timestamp to ISO format."""
@@ -111,6 +115,30 @@ class Users(BaseModel):
             if value.lower() == 'false':
                 return False
         return bool(value)
+    @validator('mfaEnabled', pre=True, always=True)
+    def parse_mfaEnabled_bool(cls, value):
+        if value is None:
+            return None
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            if value.lower() == 'true':
+                return True
+            if value.lower() == 'false':
+                return False
+        return bool(value)
+    @validator('mfaSetupComplete', pre=True, always=True)
+    def parse_mfaSetupComplete_bool(cls, value):
+        if value is None:
+            return None
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            if value.lower() == 'true':
+                return True
+            if value.lower() == 'false':
+                return False
+        return bool(value)
 
     @classmethod
     def from_dto(cls, dto: dict) -> "Users":
@@ -128,6 +156,8 @@ class Users(BaseModel):
             groups=dto.get('groups'),
             email_verified=dto.get('email_verified'),
             phone_verified=dto.get('phone_verified'),
+            mfa_enabled=dto.get('mfa_enabled'),
+            mfa_setup_complete=dto.get('mfa_setup_complete'),
         )
 
     def to_dto(self) -> dict:
@@ -145,6 +175,8 @@ class Users(BaseModel):
             'groups': self.groups,
             'email_verified': self.email_verified,
             'phone_verified': self.phone_verified,
+            'mfa_enabled': self.mfa_enabled,
+            'mfa_setup_complete': self.mfa_setup_complete,
         }
 
     class Config:
