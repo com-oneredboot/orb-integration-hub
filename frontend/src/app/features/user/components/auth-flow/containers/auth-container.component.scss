@@ -3,40 +3,30 @@
 // date: 2025-03-07
 // description: SCSS style file
 
-@import '../../../../../../../styles/variables';
-@import '../../../../../../../styles/mixins';
+@use '../../../../../../../styles/variables' as v;
+@use '../../../../../../../styles/mixins' as m;
 
 .auth-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 2rem;
-  background-color: $background-color-light;
-  border-radius: $border-radius;
-  box-shadow: $box-shadow;
-
+  @include m.auth-container;
+  
   &__header {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: v.$spacing-xl * 2;
     width: 100%;
     text-align: center;
 
     &-logo {
       width: 120px;
       height: auto;
-      margin-bottom: 1rem;
+      margin-bottom: v.$spacing-lg;
     }
 
     &-title {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: $text-color-primary;
+      font-size: v.$font-size-xl;
+      font-weight: v.$font-weight-semibold;
+      color: v.$text-primary;
     }
   }
 
@@ -44,18 +34,18 @@
     display: flex;
     justify-content: center;
     width: 100%;
-    margin-bottom: 2rem;
+    margin-bottom: v.$spacing-xl * 2;
 
     &-step {
       width: 12px;
       height: 12px;
-      margin: 0 4px;
+      margin: 0 v.$spacing-xs;
       border-radius: 50%;
-      background-color: $gray-light;
+      background-color: v.$orb-light-gray;
       transition: background-color 0.3s ease;
 
       &--active {
-        background-color: $primary-color;
+        background-color: v.$primary-color;
       }
     }
   }
@@ -66,11 +56,11 @@
 
   &__error {
     width: 100%;
-    padding: 0.75rem;
-    margin-bottom: 1rem;
-    color: $error-color;
-    background-color: rgba($error-color, 0.1);
-    border-radius: $border-radius;
+    padding: v.$spacing-md;
+    margin-bottom: v.$spacing-lg;
+    color: v.$danger-color;
+    background-color: rgba(v.$danger-color, 0.1);
+    border-radius: v.$border-radius;
     text-align: center;
   }
 }

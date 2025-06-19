@@ -3,8 +3,9 @@
 // date: 2025-03-07
 // description: SCSS style file
 
-@import '../../../../../../../../styles/variables';
-@import '../../../../../../../../styles/mixins';
+@use '../../../../../../../../styles/variables' as v;
+@use '../../../../../../../../styles/mixins' as m;
+@use 'sass:color';
 
 .login-form {
   display: flex;
@@ -13,76 +14,87 @@
 
   &__error {
     width: 100%;
-    padding: 0.75rem;
-    margin-bottom: 1rem;
-    color: $error-color;
-    background-color: rgba($error-color, 0.1);
-    border-radius: $border-radius;
+    padding: v.$spacing-md;
+    margin-bottom: v.$spacing-lg;
+    color: v.$danger-color;
+    background-color: rgba(v.$danger-color, 0.1);
+    border-radius: v.$border-radius;
     text-align: center;
   }
 
   &__header {
-    margin-bottom: 1.5rem;
+    margin-bottom: v.$spacing-xl;
     text-align: center;
   }
 
   &__title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: $text-color-primary;
+    font-size: v.$font-size-lg;
+    font-weight: v.$font-weight-semibold;
+    margin-bottom: v.$spacing-sm;
+    color: v.$text-primary;
   }
 
   &__subtitle {
-    font-size: 0.875rem;
-    color: $text-color-secondary;
+    font-size: v.$font-size-sm;
+    color: v.$text-secondary;
   }
 
   &__input-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: v.$spacing-xl;
   }
 
   &__label {
     display: block;
-    margin-bottom: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: $text-color-primary;
+    margin-bottom: v.$spacing-sm;
+    font-size: v.$font-size-sm;
+    font-weight: v.$font-weight-medium;
+    color: v.$text-primary;
   }
 
   &__input {
     width: 100%;
-    padding: 0.75rem;
-    font-size: 1rem;
-    border: 1px solid $border-color;
-    border-radius: $border-radius;
-    background-color: $background-color-light;
+    padding: v.$spacing-md;
+    font-size: v.$font-size-base;
+    border: 1px solid v.$border-color;
+    border-radius: v.$border-radius;
+    background-color: v.$bg-primary;
     transition: border-color 0.3s ease;
 
     &:focus {
       outline: none;
-      border-color: $primary-color;
+      border-color: v.$primary-color;
     }
 
     &--error {
-      border-color: $error-color;
+      border-color: v.$danger-color;
     }
 
     &::placeholder {
-      color: $text-color-placeholder;
+      color: v.$text-muted;
     }
   }
 
   &__error-message {
-    margin-top: 0.5rem;
-    font-size: 0.75rem;
-    color: $error-color;
+    margin-top: v.$spacing-sm;
+    font-size: v.$font-size-xs;
+    color: v.$danger-color;
   }
 
   &__button {
-    @include button-primary;
+    background: v.$primary-color;
+    color: v.$white;
+    border: none;
+    padding: v.$spacing-md v.$spacing-lg;
+    border-radius: v.$border-radius;
+    font-weight: v.$font-weight-medium;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
     position: relative;
-    margin-bottom: 1rem;
+    margin-bottom: v.$spacing-lg;
+    
+    &:hover {
+      background: color.adjust(v.$primary-color, $lightness: -10%);
+    }
     
     &--loading {
       color: transparent;
@@ -90,32 +102,42 @@
   }
 
   &__button-loader {
-    @include loading-spinner(1.5rem, 0.25rem, $white);
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 0.25rem solid rgba(v.$white, 0.3);
+    border-top: 0.25rem solid v.$white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
   }
 
   &__footer {
     display: flex;
     justify-content: center;
-    margin-top: 1rem;
+    margin-top: v.$spacing-lg;
   }
 
   &__link {
     background: none;
     border: none;
     padding: 0;
-    font-size: 0.875rem;
-    color: color.adjust($primary-color, $lightness: -10%);
+    font-size: v.$font-size-sm;
+    color: v.$primary-color;
     cursor: pointer;
     text-decoration: none;
     transition: color 0.3s ease;
 
     &:hover {
-      color: color.adjust($primary-color, $lightness: -10%);
+      color: color.adjust(v.$primary-color, $lightness: -10%);
       text-decoration: underline;
     }
   }
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
 }

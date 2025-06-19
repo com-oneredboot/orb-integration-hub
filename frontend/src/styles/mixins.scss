@@ -24,52 +24,84 @@
   }
 }
 
-// Debug Section Mixin
+// Enhanced Global Debug Section Mixin
 @mixin debug-container {
-  background: v.$gray-100;
+  border: 2px dashed v.$orb-gray;
+  background-color: v.$orb-white;
   padding: v.$spacing-lg;
-  margin: v.$spacing-lg 0;
-  border-radius: v.$border-radius-md;
-  
+  margin: v.$spacing-xl 0;
+  border-radius: v.$border-radius-lg;
+  font-family: v.$font-family-monospace;
+  font-size: v.$font-size-sm;
+  color: v.$text-primary;
+  width: 100%;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+
+  // Debug title styling
   h3 {
-    margin-top: 0;
-    margin-bottom: v.$spacing-md;
-    color: v.$text-primary;
+    color: v.$orb-red;
+    font-weight: v.$font-weight-bold;
+    margin: 0 0 v.$spacing-lg 0;
+    font-size: v.$font-size-lg;
     font-family: v.$font-family-heading;
+    text-align: center;
+    border-bottom: 1px solid v.$orb-light-gray;
+    padding-bottom: v.$spacing-sm;
   }
-  
+
+  // Debug section headers
   h4 {
-    margin-bottom: v.$spacing-sm;
-    color: v.$text-primary;
+    color: v.$orb-dark-blue;
+    font-weight: v.$font-weight-semibold;
+    margin: v.$spacing-lg 0 v.$spacing-sm 0;
+    font-size: v.$font-size-base;
     font-family: v.$font-family-heading;
+    
+    &:first-of-type {
+      margin-top: 0;
+    }
   }
-  
+
+  // Pre-formatted debug output
   pre {
-    background: v.$white;
+    background: rgba(v.$orb-light-gray, 0.3);
+    border: 1px solid v.$orb-light-gray;
     padding: v.$spacing-sm;
     border-radius: v.$border-radius-sm;
     margin: v.$spacing-xs 0;
     font-family: v.$font-family-monospace;
     font-size: v.$font-size-sm;
     overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
   }
-  
+
+  // Debug section containers
+  .debug-section,
+  &-section {
+    margin-bottom: v.$spacing-lg;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  // Error states
+  p.error, .error {
+    color: v.$danger-color;
+    font-weight: v.$font-weight-semibold;
+  }
+
+  // Lists
   ul {
     margin: v.$spacing-sm 0;
     padding-left: v.$spacing-lg;
   }
-  
+
   li {
     margin-bottom: v.$spacing-xs;
-  }
-  
-  p {
-    margin: v.$spacing-xs 0;
-    
-    &.error {
-      color: v.$danger-color;
-      font-weight: v.$font-weight-semibold;
-    }
   }
 }
 
@@ -110,30 +142,6 @@
   box-shadow: 0px 0px $blur $color;
 }
 
-@mixin debug-container {
-  border: 2px dashed v.$orb-gray;
-  background-color: rgba(v.$orb-light-gray, 0.1);
-  padding: v.$spacing-md;
-  margin: v.$spacing-sm 0;
-  border-radius: v.$border-radius;
-  font-family: v.$font-family-monospace;
-  font-size: v.$font-size-sm;
-  color: v.$text-primary;
-
-  // Title styling for debug area
-  h3, h4, h5, h6 {
-    color: v.$orb-red;
-    font-weight: v.$font-weight-semibold;
-    margin-bottom: v.$spacing-sm;
-  }
-
-  // Debug section headers
-  .debug-section {
-    color: v.$orb-slate;
-    font-weight: v.$font-weight-medium;
-    margin-top: v.$spacing-sm;
-  }
-}
 
 @mixin auth-container {
   // Define styles for auth-container

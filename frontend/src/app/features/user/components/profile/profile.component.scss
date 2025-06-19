@@ -127,7 +127,7 @@
       }
       
       &--warning {
-        color: #000000 !important;
+        color: v.$warning-color;
         font-weight: v.$font-weight-semibold;
         font-style: italic;
         border-left: 3px solid v.$warning-color;

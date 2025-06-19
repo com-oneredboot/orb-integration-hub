@@ -12,6 +12,7 @@ import { AuthFlowComponent } from './features/user/components/auth-flow/auth-flo
 import { ProfileComponent } from './features/user/components/profile/profile.component';
 import { DashboardComponent } from './features/user/components/dashboard/dashboard.component';
 import { UserLayoutComponent } from './layouts/user-layout/user-layout.component';
+import { ThisIsNotThePageComponent } from './features/user/components/this-is-not-the-page/this-is-not-the-page.component';
 
 export const routes: Routes = [
   {
@@ -36,18 +37,24 @@ export const routes: Routes = [
   {
     path: '',
     component: UserLayoutComponent,
-    canActivate: [AuthGuard],
-    data: { requiresAuth: true },
     children: [
       {
         path: 'dashboard',
-        component: DashboardComponent
+        component: DashboardComponent,
+        canActivate: [AuthGuard],
+        data: { requiresAuth: true }
       },
       {
         path: 'profile',
-        component: ProfileComponent
+        component: ProfileComponent,
+        canActivate: [AuthGuard],
+        data: { requiresAuth: true }
       }
     ]
+  },
+  {
+    path: '**',
+    component: ThisIsNotThePageComponent
   }
 ];
 

@@ -5,17 +5,77 @@ date: 2025-03-07
 description: HTML template file
 -->
 
-<div>
-    <div class="row justify-content-center my-5" >
-        <div class="col-8">
-            <div class="row justify-content-left my-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h2>O.o</h2>
-                        <p>This is not the page you were looking for.</p>
-                    </div>
-                </div>
-            </div>
+<div class="not-found-container">
+  <div class="not-found-header">
+    <div class="not-found-header__content">
+      <div class="not-found-header__flex-container">
+        <div class="not-found-header__logo-section">
+          <img src="../../../../../assets/onredboot-logo.jpg" alt="OneRedBoot Logo" class="not-found-header__logo">
         </div>
+        <div class="not-found-header__text-section">
+          <div class="not-found-header__message">
+            <div class="not-found-header__icon-title">
+              <img src="../../../../../assets/hardhat.jpg" alt="Engineering" class="not-found-header__icon">
+              <h1 class="not-found-header__title">Page Not Found</h1>
+            </div>
+            <p class="not-found-header__subtitle not-found-header__subtitle--warning">
+              This is not the page you were looking for.
+            </p>
+            <p class="not-found-header__description">
+              The requested page could not be found. Please check the URL or navigate back to a valid page.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <div class="not-found-actions">
+    <div class="not-found-actions__card">
+      <div class="not-found-actions__content">
+        <h3 class="not-found-actions__title">What can you do?</h3>
+        <div class="not-found-actions__options">
+          <a routerLink="/dashboard" class="not-found-actions__button not-found-actions__button--primary">
+            Go to Dashboard
+          </a>
+          <a routerLink="/profile" class="not-found-actions__button not-found-actions__button--secondary">
+            View Profile
+          </a>
+          <button (click)="goBack()" class="not-found-actions__button not-found-actions__button--outline">
+            Go Back
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Debug Section -->
+  <ng-container *ngIf="debugMode$ | async">
+    <div class="not-found__debug">
+      <h3 class="not-found__debug-title">Debug Information</h3>
+      
+      <div class="not-found__debug-section">
+        <h4>Page Information</h4>
+        <pre>Current URL: {{ currentUrl }}</pre>
+        <pre>Requested At: {{ timestamp | date:'medium' }}</pre>
+        <pre>User Agent: {{ getUserAgent() }}</pre>
+        <pre>Referrer: {{ getReferrer() }}</pre>
+      </div>
+
+      <div class="not-found__debug-section">
+        <h4>Navigation State</h4>
+        <pre>Can Go Back: {{ canGoBack() }}</pre>
+        <pre>History Length: {{ getHistoryLength() }}</pre>
+        <pre>Location Path: {{ location.path() }}</pre>
+      </div>
+
+      <div class="not-found__debug-section">
+        <h4>Browser Information</h4>
+        <pre>Window Width: {{ getWindowWidth() }}px</pre>
+        <pre>Window Height: {{ getWindowHeight() }}px</pre>
+        <pre>Is Mobile: {{ isMobile() }}</pre>
+        <pre>Connection Type: {{ getConnectionType() }}</pre>
+      </div>
+    </div>
+  </ng-container>
 </div>
