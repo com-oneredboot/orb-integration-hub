@@ -9,6 +9,7 @@ import {Router} from "@angular/router";
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
+import { AuthActions } from '../../features/user/components/auth-flow/store/auth.actions';
 import { selectIsAuthenticated } from '../../features/user/components/auth-flow/store/auth.selectors';
 
 @Component({
@@ -29,12 +30,8 @@ export class PlatformLayoutComponent {
     private store: Store
   ) {}
 
-  async signOut(): Promise<void> {
-    try {
-      await this.authService.signOut();
-      await this.router.navigate(['/platform']);
-    } catch (error) {
-      console.error('Sign out error:', error);
-    }
+  signOut(): void {
+    // Use NgRx action - navigation will be handled by the effect
+    this.store.dispatch(AuthActions.signout());
   }
 }

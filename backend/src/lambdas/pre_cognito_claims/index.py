@@ -44,7 +44,7 @@ async def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             .get('groupConfiguration', {})
             .get('groupsToOverride', [])
         )
-        cognito_group = groups[0] if groups else 'Customer'
+        cognito_group = groups[0] if groups else 'CUSTOMER'
 
         # Get the application ID from the client metadata or default context
         application_id = (

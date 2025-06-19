@@ -32,12 +32,8 @@ export class UserLayoutComponent implements OnInit {
     this.store.dispatch(AuthActions.refreshSession());
   }
 
-  async signOut(): Promise<void> {
-    try {
-      await this.authService.signOut();
-      await this.router.navigate(['/platform']);
-    } catch (error) {
-      console.error('Sign out error:', error);
-    }
+  signOut(): void {
+    // Use NgRx action - navigation will be handled by the effect
+    this.store.dispatch(AuthActions.signout());
   }
 } 

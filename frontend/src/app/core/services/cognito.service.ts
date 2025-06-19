@@ -330,5 +330,65 @@ export class CognitoService {
       };
     }
   }
+
+  /**
+   * Get the current user's Cognito groups from the JWT token
+   * @returns Array of group names the user belongs to
+   */
+  async getCurrentUserGroups(): Promise<string[]> {
+    try {
+      const session = await fetchAuthSession();
+      
+      if (!session.tokens?.idToken?.payload) {
+        console.debug('No valid session found for group retrieval');
+        return [];
+      }
+
+      const groups = session.tokens.idToken.payload['cognito:groups'] || [];
+      console.debug('Current user groups:', groups);
+      return groups as string[];
+    } catch (error) {
+      console.error('Error fetching user groups:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Check if the current user belongs to specific Cognito groups
+   * @param requiredGroups Array of group names to check
+   * @returns True if user belongs to at least one of the required groups
+   */
+  async hasRequiredGroups(requiredGroups: string[]): Promise<boolean> {
+    try {
+      const userGroups = await this.getCurrentUserGroups();
+      const hasGroup = requiredGroups.some(group => userGroups.includes(group));
+      console.debug(`User groups: ${userGroups}, Required: ${requiredGroups}, Has access: ${hasGroup}`);
+      return hasGroup;
+    } catch (error) {
+      console.error('Error checking user groups:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Validate that the current user has access to perform a specific operation
+   * This should be called before making GraphQL requests that require specific groups
+   * @param requiredGroups Array of group names required for the operation
+   * @returns True if user has access, false otherwise
+   */
+  async validateGraphQLAccess(requiredGroups: string[]): Promise<boolean> {
+    const isAuthenticated = await this.checkIsAuthenticated();
+    if (!isAuthenticated) {
+      console.error('User is not authenticated');
+      return false;
+    }
+
+    const hasAccess = await this.hasRequiredGroups(requiredGroups);
+    if (!hasAccess) {
+      console.error(`User does not have required groups for operation. Required: ${requiredGroups}`);
+    }
+
+    return hasAccess;
+  }
 }
 

@@ -1,6 +1,6 @@
 """
 MfaSetupDetails standard model.
-Generated at 2025-06-19T14:22:33.059805
+Generated at 2025-06-19T14:33:35.118047
 """
 
 from typing import Optional

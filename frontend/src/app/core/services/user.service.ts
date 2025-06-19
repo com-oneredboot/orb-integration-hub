@@ -733,6 +733,16 @@ export class UserService extends ApiService {
         };
       }
       
+      // Validate user has required Cognito groups for SMS verification
+      const hasAccess = await this.cognitoService.validateGraphQLAccess(['USER', 'OWNER']);
+      if (!hasAccess) {
+        console.error('User does not have required Cognito groups for SMS verification');
+        return { 
+          statusCode: 403, 
+          message: 'User does not have required permissions for SMS verification' 
+        };
+      }
+      
       // Use userPool authentication for authenticated users
       const response = await this.mutate(
         SmsVerificationMutation,
@@ -789,6 +799,13 @@ export class UserService extends ApiService {
       
       if (!isAuthenticated) {
         console.error('User must be authenticated to verify SMS code');
+        return false;
+      }
+      
+      // Validate user has required Cognito groups for SMS verification
+      const hasAccess = await this.cognitoService.validateGraphQLAccess(['USER', 'OWNER']);
+      if (!hasAccess) {
+        console.error('User does not have required Cognito groups for SMS verification');
         return false;
       }
       

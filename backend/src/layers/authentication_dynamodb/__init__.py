@@ -7,5 +7,16 @@
 from .core import CoreDynamoDBService
 from .models import RoleData, UserRoles
 from .exceptions import DatabaseError, RecordNotFoundError
+from .cognito_groups import CognitoGroupManager, get_cognito_group_manager, add_user_to_default_group, validate_user_access
 
-__all__ = ['CoreDynamoDBService', 'RoleData', 'UserRoles', 'DatabaseError', 'RecordNotFoundError']
+__all__ = [
+    'CoreDynamoDBService', 
+    'RoleData', 
+    'UserRoles', 
+    'DatabaseError', 
+    'RecordNotFoundError',
+    'CognitoGroupManager',
+    'get_cognito_group_manager',
+    'add_user_to_default_group',
+    'validate_user_access'
+]

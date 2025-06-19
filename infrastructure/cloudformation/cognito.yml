@@ -103,35 +103,35 @@ Resources:
   UserGroup:
     Type: AWS::Cognito::UserPoolGroup
     Properties:
-      GroupName: User
+      GroupName: USER
       UserPoolId: !Ref UserPool
       Description: Base group for all users
 
   CustomerGroup:
     Type: AWS::Cognito::UserPoolGroup
     Properties:
-      GroupName: Customer
+      GroupName: CUSTOMER
       UserPoolId: !Ref UserPool
       Description: Group for end-users making purchases
 
   ClientGroup:
     Type: AWS::Cognito::UserPoolGroup
     Properties:
-      GroupName: Client
+      GroupName: CLIENT
       UserPoolId: !Ref UserPool
       Description: Group for customers using the integration hub service
 
   EmployeesGroup:
     Type: AWS::Cognito::UserPoolGroup
     Properties:
-      GroupName: Employee
+      GroupName: EMPLOYEE
       UserPoolId: !Ref UserPool
       Description: Group for internal staff
 
   OwnerGroup:
     Type: AWS::Cognito::UserPoolGroup
     Properties:
-      GroupName: Owner
+      GroupName: OWNER
       UserPoolId: !Ref UserPool
       Description: Group for root-level system access
 
@@ -197,9 +197,9 @@ Resources:
                 client.admin_add_user_to_group(
                     UserPoolId=event['userPoolId'],
                     Username=event['userName'],
-                    GroupName='User'
+                    GroupName='USER'
                 )
-                print(f"User {event['userName']} added to User group")
+                print(f"User {event['userName']} added to USER group")
                 return event
             except Exception as e:
                 print(f"Error adding user to group: {str(e)}")

@@ -5,6 +5,7 @@
 
 // 3rd Party Imports
 import { Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { catchError, map, switchMap, tap, withLatestFrom } from 'rxjs/operators';
 import { from, of, EMPTY } from "rxjs";
@@ -342,6 +343,18 @@ export class AuthEffects {
     )
   );
 
+  // Navigate to signin page after successful signout
+  signoutNavigation$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.signoutSuccess),
+      tap(() => {
+        console.debug('Signout success - navigating to authenticate page');
+        this.router.navigate(['/authenticate']);
+      })
+    ),
+    { dispatch: false }
+  );
+
   // Check phone required
   checkPhoneRequired$ = createEffect(() =>
     this.actions$.pipe(
@@ -463,7 +476,8 @@ export class AuthEffects {
     private actions$: Actions,
     private userService: UserService,
     private cognitoService: CognitoService,
-    private store: Store
+    private store: Store,
+    private router: Router
   ) {}
 }
 
