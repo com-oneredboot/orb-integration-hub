@@ -5,7 +5,7 @@
 
 // 3rd Party Imports
 import { generateClient } from 'aws-amplify/api';
-import { GraphQLResult, GraphQLOptions } from '@aws-amplify/api-graphql';
+import { GraphQLResult } from '@aws-amplify/api-graphql';
 import { Injectable } from '@angular/core';
 
 
@@ -41,8 +41,8 @@ export abstract class ApiService {
           currentTime: Math.floor(Date.now() / 1000),
           userGroups: session.tokens?.idToken?.payload?.['cognito:groups'],
           tokenUse: session.tokens?.accessToken?.payload?.['token_use'],
-          clientId: session.tokens?.accessToken?.payload?.client_id,
-          username: session.tokens?.accessToken?.payload?.username
+          clientId: session.tokens?.accessToken?.payload?.['client_id'],
+          username: session.tokens?.accessToken?.payload?.['username']
         });
       } catch (tokenError) {
         console.error('❌ Error checking JWT token:', tokenError);
