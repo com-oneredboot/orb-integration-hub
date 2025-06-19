@@ -9,6 +9,7 @@ mutation SmsVerification($input: SmsVerificationInput!) {
     Data {
       phoneNumber
       code
+      valid
     }
   }
 }

@@ -24,3 +24,7 @@ model:
       type: number
       required: false
       description: the confirmation Code
+    valid:
+      type: boolean
+      required: false
+      description: whether the provided code is valid (returned during verification)

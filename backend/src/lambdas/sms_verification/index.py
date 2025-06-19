@@ -94,6 +94,8 @@ def lambda_handler(event, context):
     input_data = event['input']
     phone_number = input_data['phoneNumber']
     provided_code = input_data.get('code')  # Optional for verification
+    
+    logger.info(f"Processing request - Phone: {phone_number}, Code provided: {provided_code is not None}, Code value: {provided_code}")
 
     try:
         # Get the secret key
@@ -105,7 +107,7 @@ def lambda_handler(event, context):
             logger.info(f"Verifying code for phone number: {phone_number}")
             is_valid = verify_code(phone_number, str(provided_code), secret)
             
-            return {
+            response = {
                 "StatusCode": 200,
                 "Message": "Code verified successfully" if is_valid else "Invalid or expired code",
                 "Data": {
@@ -113,16 +115,17 @@ def lambda_handler(event, context):
                     "valid": is_valid
                 }
             }
+            logger.info(f"Verification response: {json.dumps(response)}")
+            return response
         
         # Generate and send new verification code
         logger.info(f"Generating verification code for phone number: {phone_number}")
         code = generate_verification_code(phone_number, current_time, secret)
         
-        # SMS using origination number
+        # SMS parameters
         sns_parameters = {
             'PhoneNumber': phone_number,
             'Message': f"Your verification code is {code}",
-            'OriginationNumber': ORIGINATION_NUMBER,
             'MessageAttributes': {
                 'AWS.SNS.SMS.SenderID': {
                     'DataType': 'String',
@@ -134,6 +137,13 @@ def lambda_handler(event, context):
                 }
             }
         }
+        
+        # Add origination number if provided
+        if ORIGINATION_NUMBER:
+            sns_parameters['MessageAttributes']['AWS.MM.SMS.OriginationNumber'] = {
+                'DataType': 'String',
+                'StringValue': ORIGINATION_NUMBER
+            }
         
         logger.info(f"Sending SMS to {phone_number}")
         logger.debug(f"SMS parameters: {sns_parameters}")
