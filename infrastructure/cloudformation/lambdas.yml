@@ -177,7 +177,14 @@ Resources:
                 - cognito-idp:GetGroup
                 - cognito-idp:ListGroups
                 Resource: !Sub "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/*"
-
+        - PolicyName: LambdaEventAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - lambda:GetEventSourceMapping
+                Resource: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:event-source-mapping:*"
   # IAM Policies
   # CloudWatchLoggingPolicy: Allows logging to CloudWatch for monitoring and debugging.
   CloudWatchLoggingPolicy:
