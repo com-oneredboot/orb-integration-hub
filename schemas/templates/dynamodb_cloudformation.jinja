@@ -102,12 +102,14 @@ Resources:
       Type: String
       Value: !Ref {{ schema.name }}Table
 
+  {% if schema.stream %}
   {{ schema.name }}TableStreamArn:
     Type: AWS::SSM::Parameter
     Properties:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}-table-stream-arn
       Type: String
       Value: !GetAtt {{ schema.name }}Table.StreamArn
+  {% endif %}    
   {% endfor %}
 
 # --------------------------------------------------- #

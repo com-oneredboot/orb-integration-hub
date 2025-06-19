@@ -76,12 +76,7 @@ Resources:
       Type: String
       Value: !Ref ApplicationUsersTable
 
-  ApplicationUsersTableStreamArn:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users-table-stream-arn
-      Type: String
-      Value: !GetAtt ApplicationUsersTable.StreamArn
+    
   ApplicationRolesTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -141,12 +136,7 @@ Resources:
       Type: String
       Value: !Ref ApplicationRolesTable
 
-  ApplicationRolesTableStreamArn:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles-table-stream-arn
-      Type: String
-      Value: !GetAtt ApplicationRolesTable.StreamArn
+    
   RolesTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -186,12 +176,7 @@ Resources:
       Type: String
       Value: !Ref RolesTable
 
-  RolesTableStreamArn:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-roles-table-stream-arn
-      Type: String
-      Value: !GetAtt RolesTable.StreamArn
+    
   ApplicationsTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -218,12 +203,7 @@ Resources:
       Type: String
       Value: !Ref ApplicationsTable
 
-  ApplicationsTableStreamArn:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-stream-arn
-      Type: String
-      Value: !GetAtt ApplicationsTable.StreamArn
+    
   UsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -283,6 +263,7 @@ Resources:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-users-table-stream-arn
       Type: String
       Value: !GetAtt UsersTable.StreamArn
+    
 
 # --------------------------------------------------- #
 Outputs:

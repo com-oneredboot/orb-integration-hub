@@ -1,6 +1,6 @@
 /**
  * MfaSetupDetails standard model.
- * Generated at 2025-06-19T20:54:26.955192
+ * Generated at 2025-06-19T21:00:27.542978
  */
 
 // Import enums and models used in this model
