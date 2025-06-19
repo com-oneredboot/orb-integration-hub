@@ -1,19 +1,19 @@
 /**
  * SmsVerification Lambda-backed GraphQL resolver model.
- * Generated at 2025-06-19T10:51:14.061070
+ * Generated at 2025-06-19T12:32:39.950110
  */
 
 // Import enums and models used in this model
 
 // Interface definition
 export interface ISmsVerification {
-  phonenumber: number;
+  phoneNumber: string;
   code: number | undefined;
 }
 
 // Class definition
 export class SmsVerification implements ISmsVerification {
-  phonenumber = 0;
+  phoneNumber = '';
   code = 0;
 
   constructor(data: Partial<ISmsVerification> = {}) {

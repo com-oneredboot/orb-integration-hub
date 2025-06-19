@@ -211,6 +211,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             const userInput = {
               userId: uuidv4(),
               cognitoId: uuidv4(),
+              cognitoSub: '', // Will be populated by user service with actual Cognito sub
               email: this.authForm.value.email,
               firstName: this.authForm.value.firstName,
               lastName: this.authForm.value.lastName,

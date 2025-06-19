@@ -15,6 +15,7 @@ model:
     - Users
     - UsersQueryByEmail
     - UsersCreate
+    - UsersUpdate
     - UsersResponse
     cognitoAuthentication:
       groups:
@@ -34,6 +35,10 @@ model:
         type: GSI
         partition: cognitoId
         projection_type: ALL
+      - name: CognitoSubIndex
+        type: GSI
+        partition: cognitoSub
+        projection_type: ALL
   attributes:
     userId:
       type: string
@@ -42,7 +47,11 @@ model:
     cognitoId:
       type: string
       required: true
-      description: Cognito user identifier
+      description: Cognito username (used for authentication)
+    cognitoSub:
+      type: string
+      required: true
+      description: Cognito user sub (unique identifier from tokens)
     email:
       type: string
       required: true

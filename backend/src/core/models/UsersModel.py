@@ -1,6 +1,6 @@
 """
 Generated Python models for Users
-Generated at 2025-06-19T10:51:14.038968
+Generated at 2025-06-19T12:32:39.927419
 """
 
 from typing import Optional, List
@@ -12,7 +12,8 @@ from .UserStatusEnum import UserStatus
 # CRUD Input Types
 class UsersCreateInput(BaseModel):
     user_id: str = Field(..., description="Unique identifier for the user (primary key)")
-    cognito_id: str = Field(..., description="Cognito user identifier")
+    cognito_id: str = Field(..., description="Cognito username (used for authentication)")
+    cognito_sub: str = Field(..., description="Cognito user sub (unique identifier from tokens)")
     email: str = Field(..., description="User's email address")
     first_name: str = Field(..., description="User's first name")
     last_name: str = Field(..., description="User's last name")
@@ -26,7 +27,8 @@ class UsersCreateInput(BaseModel):
 
 class UsersUpdateInput(BaseModel):
     user_id: Optional[str] = Field(None, description="Unique identifier for the user (primary key)")
-    cognito_id: Optional[str] = Field(None, description="Cognito user identifier")
+    cognito_id: Optional[str] = Field(None, description="Cognito username (used for authentication)")
+    cognito_sub: Optional[str] = Field(None, description="Cognito user sub (unique identifier from tokens)")
     email: Optional[str] = Field(None, description="User's email address")
     first_name: Optional[str] = Field(None, description="User's first name")
     last_name: Optional[str] = Field(None, description="User's last name")
@@ -55,11 +57,14 @@ class UsersQueryByEmailInput(BaseModel):
 class UsersQueryByCognitoIdInput(BaseModel):
     cognito_id: str
 
+class UsersQueryByCognitoSubInput(BaseModel):
+    cognito_sub: str
+
 # Main Model (DTO)
 # Properties: Field(...) = required (from schema), Optional[...] = optional (from schema)
 class Users(BaseModel):
     """Users model."""
-    user_id: str = Field(..., description="Unique identifier for the user (primary key)")    cognito_id: str = Field(..., description="Cognito user identifier")    email: str = Field(..., description="User's email address")    first_name: str = Field(..., description="User's first name")    last_name: str = Field(..., description="User's last name")    status: str = Field(..., description="Current status of the user")    created_at: datetime = Field(..., description="When the user was created")    updated_at: datetime = Field(..., description="When the user was last updated")    phone_number: str = Field(None, description="User's phone number")    groups: List[str] = Field(None, description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)")    email_verified: bool = Field(None, description="Whether the user's email is verified")    phone_verified: bool = Field(None, description="Whether the user's phone number is verified")
+    user_id: str = Field(..., description="Unique identifier for the user (primary key)")    cognito_id: str = Field(..., description="Cognito username (used for authentication)")    cognito_sub: str = Field(..., description="Cognito user sub (unique identifier from tokens)")    email: str = Field(..., description="User's email address")    first_name: str = Field(..., description="User's first name")    last_name: str = Field(..., description="User's last name")    status: str = Field(..., description="Current status of the user")    created_at: datetime = Field(..., description="When the user was created")    updated_at: datetime = Field(..., description="When the user was last updated")    phone_number: str = Field(None, description="User's phone number")    groups: List[str] = Field(None, description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)")    email_verified: bool = Field(None, description="Whether the user's email is verified")    phone_verified: bool = Field(None, description="Whether the user's phone number is verified")
     @validator('createdAt', pre=True)
     def parse_createdAt(cls, value):
         """Parse timestamp to ISO format."""
@@ -112,6 +117,7 @@ class Users(BaseModel):
         return cls(
             user_id=dto.get('user_id'),
             cognito_id=dto.get('cognito_id'),
+            cognito_sub=dto.get('cognito_sub'),
             email=dto.get('email'),
             first_name=dto.get('first_name'),
             last_name=dto.get('last_name'),
@@ -128,6 +134,7 @@ class Users(BaseModel):
         return {
             'user_id': self.user_id,
             'cognito_id': self.cognito_id,
+            'cognito_sub': self.cognito_sub,
             'email': self.email,
             'first_name': self.first_name,
             'last_name': self.last_name,

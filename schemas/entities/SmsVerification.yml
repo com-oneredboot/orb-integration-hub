@@ -7,10 +7,10 @@ type: lambda
 name: SmsVerification
 model:
   attributes:
-    phonenumber:
-      type: number
+    phoneNumber:
+      type: string
       required: true
-      description: the phonenumber to verify
+      description: the phone number to verify
     code:
       type: number
       required: false

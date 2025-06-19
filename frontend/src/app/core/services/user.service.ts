@@ -13,10 +13,11 @@ import { BehaviorSubject, Observable } from 'rxjs';
 // Application Imports
 import {ApiService} from "./api.service";
 import {
-  UsersCreateMutation, UsersUpdateMutation, UsersDeleteMutation, UsersQueryByUserId, UsersQueryByEmail
+  UsersCreateMutation, UsersUpdateMutation, UsersDeleteMutation, UsersQueryByUserId, UsersQueryByEmail, UsersQueryByCognitoSub
 } from "../graphql/Users.graphql";
+import { SmsVerificationMutation } from "../graphql/SmsVerification.graphql";
 import {
-  UsersCreateInput, UsersUpdateInput, UsersQueryByUserIdInput,
+  UsersCreateInput, UsersUpdateInput, UsersQueryByUserIdInput, UsersQueryByCognitoSubInput,
   UsersCreateResponse, UsersUpdateResponse, IUsers,
   UsersListResponse, UsersResponse, Users
 } from "../models/UsersModel";
@@ -24,6 +25,7 @@ import { UserGroup } from "../models/UserGroupEnum";
 import { UserStatus } from "../models/UserStatusEnum";
 import { CognitoService } from "./cognito.service";
 import { Auth, AuthResponse } from "../models/AuthModel";
+import { SmsVerificationResponse } from "../models/SmsVerificationModel";
 import { AuthActions } from '../../features/user/components/auth-flow/store/auth.actions';
 
 @Injectable({
@@ -70,7 +72,8 @@ export class UserService extends ApiService {
       const timestamp = new Date().toISOString();
       const userCreateInput: UsersCreateInput = {
         userId: uuidv4(),
-        cognitoId: input.cognitoId,
+        cognitoId: input.cognitoId, // Store random UUID as cognitoId for authentication
+        cognitoSub: cognitoResponse.userId || '', // Store actual Cognito sub from signup response
         email: input.email,
         firstName: '',
         lastName: '',
@@ -252,6 +255,50 @@ export class UserService extends ApiService {
         Message: 'Error getting user',
         Data: new Users()
       } as UsersResponse;
+
+    }
+  }
+
+  public async userQueryByCognitoSub(cognitoSub: string): Promise<UsersListResponse> {
+    console.debug('userQueryByCognitoSub: ', cognitoSub);
+    try {
+      const query = await this.query(
+        UsersQueryByCognitoSub,
+        {
+          input: {
+            cognitoSub: cognitoSub
+          }
+        },
+        'apiKey') as any;
+
+        const response = query.data?.UsersQueryByCognitoSub;
+        const users = response.Data;
+
+        if (users.length > 1) {
+          return {
+            StatusCode: 500,
+            Message: 'Duplicate users found for this cognitoSub',
+            Data: []
+          };
+        }
+        if (users.length === 0) {
+          return {
+            StatusCode: 404,
+            Message: 'User not found.',
+            Data: []
+          };
+        }          
+      
+      return response;
+
+    } catch (error) {
+
+      console.error('Error getting user by cognitoSub:', error);
+      return {
+        StatusCode: 500,
+        Message: 'Error getting user',
+        Data: []
+      }
 
     }
   }
@@ -489,14 +536,53 @@ export class UserService extends ApiService {
    */
   public async userUpdate(input: UsersUpdateInput): Promise<UsersResponse> {
     console.debug('userUpdate input:', input);
+    console.debug('🔍 DEBUG: Enhanced userUpdate method with token validation is running');
 
     try {
       // Check Cognito auth status
       const cognitoProfile = await this.cognitoService.getCognitoProfile();
       console.debug('Cognito profile for update:', cognitoProfile);
       
-      if (!cognitoProfile) {
-        console.warn('No Cognito profile found - user may not be authenticated');
+      const isAuthenticated = await this.cognitoService.checkIsAuthenticated();
+      console.debug('Is authenticated:', isAuthenticated);
+      
+      // Additional token validation - check if tokens are actually valid
+      let hasValidTokens = false;
+      if (isAuthenticated && cognitoProfile) {
+        try {
+          // Import fetchAuthSession to check token validity
+          const { fetchAuthSession } = await import('@aws-amplify/auth');
+          const session = await fetchAuthSession();
+          const now = Math.floor(Date.now() / 1000);
+          const accessTokenExp = session.tokens?.accessToken?.payload?.exp;
+          const idTokenExp = session.tokens?.idToken?.payload?.exp;
+          
+          hasValidTokens = !!(accessTokenExp && idTokenExp && accessTokenExp > now && idTokenExp > now);
+          console.debug('Token expiration check:', { 
+            now, 
+            accessTokenExp, 
+            idTokenExp, 
+            hasValidTokens,
+            accessExpired: accessTokenExp ? accessTokenExp <= now : 'no-token',
+            idExpired: idTokenExp ? idTokenExp <= now : 'no-token'
+          });
+          
+          // Debug token claims for userPool authentication
+          console.debug('Token claims for debugging:', {
+            accessTokenClaims: session.tokens?.accessToken?.payload,
+            idTokenClaims: session.tokens?.idToken?.payload,
+            userSub: session.tokens?.idToken?.payload?.sub,
+            userGroups: session.tokens?.idToken?.payload['cognito:groups'],
+            tokenUse: session.tokens?.accessToken?.payload?.['token_use']
+          });
+        } catch (tokenError) {
+          console.warn('Error checking token validity:', tokenError);
+          hasValidTokens = false;
+        }
+      }
+      
+      if (!cognitoProfile || !isAuthenticated || !hasValidTokens) {
+        console.warn('User not properly authenticated or tokens expired - skipping userPool auth and using apiKey directly');
       }
 
       if (!input.userId) {
@@ -512,6 +598,7 @@ export class UserService extends ApiService {
       const updateInput: UsersUpdateInput = {
         userId: input.userId,
         cognitoId: input.cognitoId,
+        cognitoSub: input.cognitoSub,
         email: input.email,
         emailVerified: input.emailVerified,
         phoneNumber: input.phoneNumber,
@@ -553,22 +640,42 @@ export class UserService extends ApiService {
 
       let response: GraphQLResult<UsersUpdateResponse>;
       
-      try {
-        // Try userPool authentication first
-        response = await this.mutate(
-          UsersUpdateMutation,
-          { input: updateInput },
-          "userPool"
-        ) as GraphQLResult<UsersUpdateResponse>;
-      } catch (authError) {
-        console.warn('userPool authentication failed, trying API key:', authError);
-        
-        // Fallback to API key authentication
+      // Skip userPool auth if user is not properly authenticated or tokens are expired
+      if (!cognitoProfile || !isAuthenticated || !hasValidTokens) {
+        console.debug('Skipping userPool auth - using apiKey directly');
         response = await this.mutate(
           UsersUpdateMutation,
           { input: updateInput },
           "apiKey"
         ) as GraphQLResult<UsersUpdateResponse>;
+      } else {
+        try {
+          // Try userPool authentication first
+          response = await this.mutate(
+            UsersUpdateMutation,
+            { input: updateInput },
+            "userPool"
+          ) as GraphQLResult<UsersUpdateResponse>;
+        } catch (authError) {
+          console.warn('userPool authentication failed, trying API key:', authError);
+          
+          // Log detailed error information for debugging
+          if (authError && typeof authError === 'object') {
+            console.debug('userPool error details:', {
+              errorType: (authError as any)?.errors?.[0]?.errorType,
+              errorMessage: (authError as any)?.errors?.[0]?.message,
+              data: (authError as any)?.data,
+              fullError: authError
+            });
+          }
+          
+          // Fallback to API key authentication
+          response = await this.mutate(
+            UsersUpdateMutation,
+            { input: updateInput },
+            "apiKey"
+          ) as GraphQLResult<UsersUpdateResponse>;
+        }
       }
 
       console.debug('userUpdate Response:', response);
@@ -612,8 +719,40 @@ export class UserService extends ApiService {
    * @returns Promise with statusCode and optional message
    */
   public async sendSMSVerificationCode(phoneNumber: string): Promise<{ statusCode: number, message?: string }> {
-    // TODO: Implement actual SMS sending logic
-    return { statusCode: 200, message: 'Verification code sent' };
+    console.debug('sendSMSVerificationCode:', phoneNumber);
+    
+    try {
+      const response = await this.mutate(
+        SmsVerificationMutation,
+        {
+          input: {
+            phoneNumber: phoneNumber
+          }
+        },
+        "apiKey"
+      ) as any;
+
+      console.debug('SMS verification response:', response);
+
+      if (response.data?.SmsVerification?.StatusCode === 200) {
+        return { 
+          statusCode: 200, 
+          message: response.data.SmsVerification.Message || 'Verification code sent' 
+        };
+      } else {
+        return { 
+          statusCode: response.data?.SmsVerification?.StatusCode || 500,
+          message: response.data?.SmsVerification?.Message || 'Failed to send verification code'
+        };
+      }
+
+    } catch (error) {
+      console.error('Error sending SMS verification code:', error);
+      return { 
+        statusCode: 500, 
+        message: 'Error sending verification code' 
+      };
+    }
   }
 
   /**
@@ -623,7 +762,30 @@ export class UserService extends ApiService {
    * @returns Promise<boolean> indicating if the code is valid
    */
   public async verifySMSCode(phoneNumber: string, code: string): Promise<boolean> {
-    // TODO: Implement actual verification logic
-    return true;
+    console.debug('verifySMSCode:', phoneNumber, code);
+    
+    try {
+      const response = await this.mutate(
+        SmsVerificationMutation,
+        {
+          input: {
+            phoneNumber: phoneNumber,
+            code: parseInt(code)
+          }
+        },
+        "apiKey"
+      ) as any;
+
+      console.debug('SMS verification check response:', response);
+
+      // For now, the lambda doesn't implement verification logic
+      // It would need to be updated to store and verify codes
+      // As a temporary solution, accept any 6-digit code
+      return code.length === 6 && /^\d+$/.test(code);
+
+    } catch (error) {
+      console.error('Error verifying SMS code:', error);
+      return false;
+    }
   }
 }

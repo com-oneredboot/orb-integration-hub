@@ -197,6 +197,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       const updateInput: UsersUpdateInput = {
         userId: user.userId,
         cognitoId: user.cognitoId,
+        cognitoSub: user.cognitoSub,
         email: user.email,
         emailVerified: user.emailVerified,
         phoneNumber: user.phoneNumber,

@@ -1039,6 +1039,33 @@ query {table}QueryBy{idx_pascal}($input: {table}QueryBy{idx_pascal}Input!) {{
         logger.error(f'Failed to generate TypeScript GraphQL ops for {table}: {str(e)}')
         raise
 
+def generate_typescript_lambda_graphql_ops(type_name: str, lambda_type) -> None:
+    """Generate TypeScript GraphQL operations for lambda types."""
+    try:
+        jinja_env = setup_jinja_env()
+        template = jinja_env.get_template('typescript_lambda_graphql_ops.jinja')
+        
+        # Create a schema-like object for the template
+        schema_data = {
+            'name': type_name,
+            'attributes': lambda_type.attributes
+        }
+        
+        content = template.render(schema=schema_data)
+        
+        # Write to the GraphQL operations file
+        output_path = os.path.join(
+            SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'graphql', f'{type_name}.graphql.ts'
+        )
+        
+        write_file(output_path, content)
+            
+        logger.info(f'Generated TypeScript lambda GraphQL operations at {output_path}')
+        
+    except Exception as e:
+        logger.error(f'Error generating TypeScript lambda GraphQL operations for {type_name}: {str(e)}')
+        raise
+
 def generate_typescript_model_file(table: str, schema: TableSchema) -> None:
     try:
         jinja_env = setup_jinja_env()
@@ -1431,6 +1458,7 @@ def main():
                 logger.debug(f'Generating lambda model for type: {table}')
                 generate_python_model(table, schema, template_name='python_lambda.jinja')
                 generate_typescript_model(table, schema, template_name='typescript_lambda_model.jinja', all_model_names=all_model_names)
+                generate_typescript_lambda_graphql_ops(table, schema)
             else:
                 logger.error(f'Unknown or unsupported schema type: {schema_type} for {table}')
                 raise ValueError(f"Unknown schema type: {schema_type} for {table}")

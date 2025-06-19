@@ -9,6 +9,7 @@ import { UserStatus } from './UserStatusEnum';
 export type UsersCreateInput = {
   userId: string;
   cognitoId: string;
+  cognitoSub: string;
   email: string;
   firstName: string;
   lastName: string;
@@ -25,6 +26,7 @@ export type UsersCreateInput = {
 export type UsersUpdateInput = {
   userId: string;
   cognitoId: string;
+  cognitoSub: string;
   email: string;
   firstName: string;
   lastName: string;
@@ -48,6 +50,9 @@ export type UsersQueryByEmailInput = {
 };
 export type UsersQueryByCognitoIdInput = {
   cognitoId: string;
+};
+export type UsersQueryByCognitoSubInput = {
+  cognitoSub: string;
 };
 
 // Response types
@@ -78,6 +83,7 @@ export type UsersListResponse = {
 export interface IUsers {
   userId: string;
   cognitoId: string;
+  cognitoSub: string;
   email: string;
   firstName: string;
   lastName: string;
@@ -93,6 +99,7 @@ export interface IUsers {
 export class Users implements IUsers {
   userId = '';
   cognitoId = '';
+  cognitoSub = '';
   email = '';
   firstName = '';
   lastName = '';

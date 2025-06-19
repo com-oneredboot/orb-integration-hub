@@ -1,6 +1,6 @@
 """
 SmsVerification Lambda-backed GraphQL resolver model.
-Generated at 2025-06-19T10:51:14.055434
+Generated at 2025-06-19T12:32:39.943985
 """
 
 from typing import Optional
@@ -10,7 +10,7 @@ from datetime import datetime
 # Lambda Model
 class SmsVerification(BaseModel):
     """SmsVerification lambda model."""
-    phonenumber: float = Field(..., description="the phonenumber to verify")    code: float = Field(None, description="the confirmation Code")
+    phone_number: str = Field(..., description="the phone number to verify")    code: float = Field(None, description="the confirmation Code")
 
     class Config:
         from_attributes = True

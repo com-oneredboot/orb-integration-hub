@@ -9,6 +9,7 @@ mutation UsersCreate($input: UsersCreateInput!) {
     Data {
       userId
       cognitoId
+      cognitoSub
       email
       firstName
       lastName
@@ -32,6 +33,7 @@ mutation UsersUpdate($input: UsersUpdateInput!) {
     Data {
       userId
       cognitoId
+      cognitoSub
       email
       firstName
       lastName
@@ -55,6 +57,7 @@ mutation UsersDelete($id: ID!) {
     Data {
       userId
       cognitoId
+      cognitoSub
       email
       firstName
       lastName
@@ -78,6 +81,7 @@ mutation UsersDisable($id: ID!) {
     Data {
       userId
       cognitoId
+      cognitoSub
       email
       firstName
       lastName
@@ -101,6 +105,7 @@ query UsersQueryByUserId($input: UsersQueryByUserIdInput!) {
     Data {
       userId
       cognitoId
+      cognitoSub
       email
       firstName
       lastName
@@ -124,6 +129,7 @@ query UsersQueryByEmail($input: UsersQueryByEmailInput!) {
     Data {
       userId
       cognitoId
+      cognitoSub
       email
       firstName
       lastName
@@ -147,6 +153,31 @@ query UsersQueryByCognitoId($input: UsersQueryByCognitoIdInput!) {
     Data {
       userId
       cognitoId
+      cognitoSub
+      email
+      firstName
+      lastName
+      status
+      createdAt
+      updatedAt
+      phoneNumber
+      groups
+      emailVerified
+      phoneVerified
+    }
+  }
+}
+`;
+
+export const UsersQueryByCognitoSub = /* GraphQL */ `
+query UsersQueryByCognitoSub($input: UsersQueryByCognitoSubInput!) {
+  UsersQueryByCognitoSub(input: $input) {
+    StatusCode
+    Message
+    Data {
+      userId
+      cognitoId
+      cognitoSub
       email
       firstName
       lastName
