@@ -70,9 +70,9 @@ Resources:
       Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-appsync'
       AuthenticationType: AMAZON_COGNITO_USER_POOLS
       UserPoolConfig:
-        UserPoolId: us-east-1_3axyfJmvW
+        UserPoolId: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-cognito-user-pool-id}}'
         AwsRegion: !Ref AWS::Region
-        DefaultAction: DENY
+        DefaultAction: ALLOW
       AdditionalAuthenticationProviders:
         - AuthenticationType: API_KEY
       LogConfig:
@@ -1227,7 +1227,11 @@ Resources:
       FieldName: SmsVerification  # or the actual field name
       DataSourceName: SmsVerificationLambdaDataSource
       RequestMappingTemplate: |
-        $util.toJson($ctx.args.input)
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": $util.toJson($ctx.args.input)
+        }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
  

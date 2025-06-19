@@ -14,8 +14,8 @@ export const environment = {
     qrCodeIssuer: 'OneRedBoot.com'
   },
   graphql: {
-    url: 'https://3khpbaqhknechjhkqfefyf4v6a.appsync-api.us-east-1.amazonaws.com/graphql', // Replace with production URL
+    url: 'https://62fdzwsyvje53e2zg56zj7brfm.appsync-api.us-east-1.amazonaws.com/graphql', // Replace with production URL
     region: 'us-east-1',
-    apiKey: 'da2-e2cylrdqvfaibnsemnolr7pmki' // Replace with production API key
+    apiKey: 'da2-2efhtxv5fna4zgoynl7vbdmvcu' // Replace with production API key
   }
 };

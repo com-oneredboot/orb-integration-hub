@@ -35,6 +35,11 @@ export const routes: Routes = [
     component: AuthFlowComponent
   },
   {
+    path: 'signout',
+    component: AuthFlowComponent,
+    data: { forceSignOut: true }
+  },
+  {
     path: '',
     component: UserLayoutComponent,
     children: [

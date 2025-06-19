@@ -8,7 +8,11 @@
       FieldName: {{ schema.name }}  # or the actual field name
       DataSourceName: {{ schema.name }}LambdaDataSource
       RequestMappingTemplate: |
-        $util.toJson($ctx.args.input)
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": $util.toJson($ctx.args.input)
+        }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
 {% endfor %} 

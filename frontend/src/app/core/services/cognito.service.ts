@@ -221,16 +221,105 @@ export class CognitoService {
   }
 
   /**
-   * Get the current user
+   * Check if user is properly authenticated with valid tokens and accessible user data
+   * This method validates:
+   * 1. Session exists with tokens
+   * 2. Tokens are not expired 
+   * 3. User profile can be retrieved
+   * 4. User has basic required groups for app access
    */
   public async checkIsAuthenticated(): Promise<boolean> {
     try {
+      // Step 1: Check if session and tokens exist
       const session = await fetchAuthSession();
-      const isAuth = !!session.tokens;
-      this.isAuthenticatedSubject.next(isAuth);
-      return isAuth;
-    } catch {
+      if (!session.tokens?.accessToken || !session.tokens?.idToken) {
+        console.debug('checkIsAuthenticated: No valid tokens found');
+        this.isAuthenticatedSubject.next(false);
+        return false;
+      }
+
+      // Step 2: Validate token expiration
+      const currentTime = Math.floor(Date.now() / 1000);
+      const accessTokenExp = session.tokens.accessToken.payload?.exp;
+      const idTokenExp = session.tokens.idToken.payload?.exp;
+
+      if (!accessTokenExp || !idTokenExp) {
+        console.debug('checkIsAuthenticated: Tokens missing expiration data');
+        this.isAuthenticatedSubject.next(false);
+        return false;
+      }
+
+      if (accessTokenExp <= currentTime || idTokenExp <= currentTime) {
+        console.debug('checkIsAuthenticated: Tokens are expired', {
+          currentTime,
+          accessTokenExp,
+          idTokenExp,
+          accessExpired: accessTokenExp <= currentTime,
+          idExpired: idTokenExp <= currentTime
+        });
+        this.isAuthenticatedSubject.next(false);
+        return false;
+      }
+
+      // Step 3: Verify we can retrieve current user (validates tokens are functional)
+      let currentUser;
+      try {
+        currentUser = await getCurrentUser();
+        if (!currentUser.username) {
+          console.debug('checkIsAuthenticated: Unable to retrieve current user');
+          this.isAuthenticatedSubject.next(false);
+          return false;
+        }
+      } catch (userError) {
+        console.debug('checkIsAuthenticated: Error retrieving current user:', userError);
+        this.isAuthenticatedSubject.next(false);
+        return false;
+      }
+
+      // Step 4: Verify user has basic app access (USER or OWNER group)
+      const userGroupsRaw = session.tokens.idToken.payload['cognito:groups'];
+      const userGroups = Array.isArray(userGroupsRaw) ? userGroupsRaw : [];
+      const hasBasicAccess = userGroups.includes('USER') || userGroups.includes('OWNER');
+      
+      if (!hasBasicAccess) {
+        console.debug('checkIsAuthenticated: User lacks required groups for app access', {
+          userGroups,
+          requiredGroups: ['USER', 'OWNER']
+        });
+        this.isAuthenticatedSubject.next(false);
+        return false;
+      }
+
+      // All checks passed
+      console.debug('checkIsAuthenticated: User is properly authenticated', {
+        username: currentUser?.username,
+        groups: userGroups,
+        tokenExpiry: {
+          access: new Date(accessTokenExp * 1000).toISOString(),
+          id: new Date(idTokenExp * 1000).toISOString()
+        }
+      });
+
+      this.isAuthenticatedSubject.next(true);
+      return true;
+
+    } catch (error) {
+      console.debug('checkIsAuthenticated: Error during authentication check:', error);
       this.isAuthenticatedSubject.next(false);
+      return false;
+    }
+  }
+
+  /**
+   * Lightweight authentication check - only validates token existence
+   * Use this for non-critical checks where performance is important
+   * For dashboard/protected routes, use checkIsAuthenticated() instead
+   */
+  public async checkHasTokens(): Promise<boolean> {
+    try {
+      const session = await fetchAuthSession();
+      return !!session.tokens?.accessToken && !!session.tokens?.idToken;
+    } catch {
       return false;
     }
   }
@@ -251,11 +340,14 @@ export class CognitoService {
       // Get user attributes using getCurrentUser() and getUserAttributes()
       const userAttributes = await fetchUserAttributes();
 
+      const groupsRaw = session.tokens.idToken.payload['cognito:groups'];
+      const groups = Array.isArray(groupsRaw) ? groupsRaw.filter(g => typeof g === 'string') : [];
+      
       return {
         username,
         ...userAttributes,
         sub: session.tokens.idToken.payload.sub,
-        groups: session.tokens.idToken.payload['cognito:groups'] || []
+        groups: groups
       };
 
     } catch (error) {
@@ -344,7 +436,8 @@ export class CognitoService {
         return [];
       }
 
-      const groups = session.tokens.idToken.payload['cognito:groups'] || [];
+      const groupsRaw = session.tokens.idToken.payload['cognito:groups'];
+      const groups = Array.isArray(groupsRaw) ? groupsRaw.filter(g => typeof g === 'string') : [];
       console.debug('Current user groups:', groups);
       return groups as string[];
     } catch (error) {

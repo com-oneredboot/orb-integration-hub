@@ -132,13 +132,33 @@ export class UserService extends ApiService {
       } else {
         throw new Error('Must provide userId or email');
       }
-      const response = await this.query(
-        query,
-        { input: queryInput },
-        'apiKey'
-      ) as any; // Use 'any' to access raw keys
+      // Try userPool auth first (user might have access), fallback to apiKey
+      let response;
+      try {
+        // First try with userPool authentication (for authenticated users)
+        response = await this.query(
+          query,
+          { input: queryInput },
+          'userPool'
+        ) as any;
+      } catch (userPoolError) {
+        console.debug('userExists: userPool auth failed, trying apiKey', userPoolError);
+        // Fallback to apiKey authentication
+        response = await this.query(
+          query,
+          { input: queryInput },
+          'apiKey'
+        ) as any;
+      }
 
-      const result = response.data?.UsersQueryByEmail;
+      // Dynamically get the result based on which query was used
+      let result;
+      if (input.userId) {
+        result = response.data?.UsersQueryByUserId;
+      } else if (input.email) {
+        result = response.data?.UsersQueryByEmail;
+      }
+      
       const statusCode = result?.StatusCode ?? 200;
       const message = result?.Message ?? '';
       const Data = result?.Data ?? [];
@@ -161,8 +181,35 @@ export class UserService extends ApiService {
       } as UsersListResponse;
 
     } catch (error: any) {
+      // Better error message handling
+      let message = '';
+      
+      if (error?.message && typeof error.message === 'string') {
+        message = error.message;
+      } else if (error?.toString && typeof error.toString === 'function') {
+        message = error.toString();
+      } else if (typeof error === 'string') {
+        message = error;
+      } else {
+        // Handle complex error objects by extracting useful information
+        if (error?.errors && Array.isArray(error.errors)) {
+          const errorMessages = error.errors.map((e: any) => e.message || e.toString()).join(', ');
+          message = `GraphQL Error: ${errorMessages}`;
+          
+          // Add recovery suggestions if available
+          const suggestions = error.errors
+            .filter((e: any) => e.recoverySuggestion)
+            .map((e: any) => e.recoverySuggestion)
+            .join(', ');
+          if (suggestions) {
+            message += ` | Suggestions: ${suggestions}`;
+          }
+        } else {
+          message = `GraphQL Error: ${error?.name || 'Unknown'} - ${error?.code || 'No code'}`;
+        }
+      }
+      
       // Detect network/DNS errors and throw a user-friendly error
-      const message = error?.message || error?.toString() || '';
       if (
         message.includes('ERR_NAME_NOT_RESOLVED') ||
         message.includes('NetworkError') ||
@@ -172,10 +219,21 @@ export class UserService extends ApiService {
       ) {
         throw new Error('Unable to connect to the server. Please check your connection and try again.');
       }
+      
       console.error('Error in userExists:', error);
+      console.debug('userExists error details:', {
+        input,
+        error: error,
+        errorMessage: message,
+        errorType: typeof error,
+        errorName: error?.name,
+        errorCode: error?.code,
+        rawError: JSON.stringify(error, null, 2)
+      });
+      
       return {
         StatusCode: 500,
-        Message: message || 'Unknown error',
+        Message: message || 'Unknown error occurred in user lookup',
         Data: []
       };
     }

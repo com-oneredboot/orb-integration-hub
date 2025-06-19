@@ -30,6 +30,12 @@ export class AuthGuard {
       url: state.url
     });
 
+    // If authentication fails, try to clean up any stale tokens
+    if (!isAuthenticated && await this.cognitoService.checkHasTokens()) {
+      console.debug('AuthGuard: Found stale tokens, signing out user');
+      await this.cognitoService.signOut();
+    }
+
     // Check if this route requires authentication
     const requiresAuth = route.data?.['requiresAuth'];
     

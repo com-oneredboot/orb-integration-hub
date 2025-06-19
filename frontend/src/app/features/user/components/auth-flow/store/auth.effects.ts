@@ -446,22 +446,63 @@ export class AuthEffects {
               map(response => {
                 console.debug('Effect [RefreshSession]: User lookup response', response);
                 
-                if (response.StatusCode !== 200 || !response.Data || response.Data.length === 0) {
-                  throw new Error('User not found in backend');
+                // Handle backend user lookup - be resilient to failures
+                if (response.StatusCode === 200 && response.Data && response.Data.length === 1) {
+                  // Ideal case: user found in backend
+                  const user = new Users(response.Data[0]);
+                  console.debug('Effect [RefreshSession]: User object created from backend', user);
+                  return AuthActions.refreshSessionSuccess({ user });
                 }
                 
-                if (response.Data.length > 1) {
+                if (response.StatusCode === 500 && response.Data && response.Data.length > 1) {
+                  // Multiple users found - this is a critical error we can't recover from
                   throw new Error('Multiple users found for email');
                 }
                 
-                const user = new Users(response.Data[0]);
-                console.debug('Effect [RefreshSession]: User object created', user);
-                return AuthActions.refreshSessionSuccess({ user });
+                // For any other case (user not found, 500 error, network issues, etc.)
+                // Continue with Cognito profile data to maintain user session
+                console.warn('Effect [RefreshSession]: Backend user lookup failed, continuing with Cognito profile only', {
+                  statusCode: response.StatusCode,
+                  dataLength: response.Data?.length,
+                  email: cognitoProfile.email
+                });
+                
+                // Create a minimal user object from Cognito profile
+                const fallbackUser = new Users({
+                  userId: cognitoProfile.sub || '', // Cognito user ID as fallback
+                  cognitoSub: cognitoProfile.sub || '',
+                  email: cognitoProfile.email,
+                  firstName: cognitoProfile.given_name || '',
+                  lastName: cognitoProfile.family_name || '',
+                  emailVerified: cognitoProfile.email_verified === 'true',
+                  groups: cognitoProfile['cognito:groups'] || []
+                });
+                
+                console.debug('Effect [RefreshSession]: Created fallback user from Cognito profile', fallbackUser);
+                return AuthActions.refreshSessionSuccess({ user: fallbackUser });
+              }),
+              catchError(backendError => {
+                // Backend call failed completely (network error, etc.)
+                // Continue with Cognito profile data
+                console.warn('Effect [RefreshSession]: Backend user lookup threw error, continuing with Cognito profile only', backendError);
+                
+                const fallbackUser = new Users({
+                  userId: cognitoProfile.sub || '',
+                  cognitoSub: cognitoProfile.sub || '',
+                  email: cognitoProfile.email,
+                  firstName: cognitoProfile.given_name || '',
+                  lastName: cognitoProfile.family_name || '',
+                  emailVerified: cognitoProfile.email_verified === 'true',
+                  groups: cognitoProfile['cognito:groups'] || []
+                });
+                
+                console.debug('Effect [RefreshSession]: Created fallback user after backend error', fallbackUser);
+                return of(AuthActions.refreshSessionSuccess({ user: fallbackUser }));
               })
             );
           }),
           catchError(error => {
-            console.error('Effect [RefreshSession]: Error', error);
+            console.error('Effect [RefreshSession]: Critical error (Cognito profile failed)', error);
             const errorObj = getError('ORB-AUTH-001');
             return of(AuthActions.refreshSessionFailure({
               error: errorObj ? errorObj.message : 'Session refresh failed'

@@ -6,7 +6,7 @@
 // 3rd Party Imports
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import {Router} from '@angular/router';
+import {Router, ActivatedRoute} from '@angular/router';
 import {Store} from '@ngrx/store';
 import {map, Observable, Subject, take, takeUntil, tap} from 'rxjs';
 import { CommonModule } from '@angular/common';
@@ -78,6 +78,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private store: Store<{ auth: AuthState }>,
     private router: Router,
+    private route: ActivatedRoute,
     private userService: UserService,
     private cognitoService: CognitoService
   ) {
@@ -567,6 +568,34 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   private async checkExistingSession(): Promise<void> {
     try {
       console.debug('[checkExistingSession] Checking for existing authentication session');
+      
+      // Check if signout query parameter is present
+      const signoutParam = this.route.snapshot.queryParams['signout'];
+      if (signoutParam === 'true') {
+        console.debug('[checkExistingSession] Signout parameter detected, forcing user signout');
+        
+        try {
+          // Dispatch signout action to clear auth state
+          this.store.dispatch(AuthActions.signout());
+          
+          // Clear cognito session
+          await this.cognitoService.signOut();
+          
+          // Clear browser storage
+          localStorage.clear();
+          sessionStorage.clear();
+          
+          console.debug('[checkExistingSession] User successfully signed out, showing auth form');
+          
+          // Remove signout parameter from URL without page reload
+          this.router.navigate(['/authenticate'], { replaceUrl: true });
+          
+          return; // Stop here and show auth form
+        } catch (signoutError) {
+          console.error('[checkExistingSession] Error during forced signout:', signoutError);
+          // Continue with normal flow even if signout fails
+        }
+      }
       
       const isAuthenticated = await this.cognitoService.checkIsAuthenticated();
       
