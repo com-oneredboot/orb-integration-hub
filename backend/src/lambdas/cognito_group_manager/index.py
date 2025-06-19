@@ -16,56 +16,6 @@ logger = logging.getLogger(__name__)
 # Initialize Cognito client
 cognito_client = boto3.client('cognito-idp')
 
-def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
-    """
-    Lambda handler for Cognito group management operations
-    
-    Expected event structure:
-    {
-        "operation": "add_user_to_group" | "remove_user_from_group" | "list_user_groups" | "list_users_in_group",
-        "userPoolId": "us-east-1_XXXXXXXX",
-        "username": "user@example.com",
-        "groupName": "USER" (optional, depends on operation)
-    }
-    """
-    try:
-        logger.info(f"Received event: {json.dumps(event)}")
-        
-        operation = event.get('operation')
-        user_pool_id = event.get('userPoolId')
-        username = event.get('username')
-        group_name = event.get('groupName')
-        
-        if not operation:
-            raise ValueError("Missing required parameter: operation")
-        
-        if not user_pool_id:
-            raise ValueError("Missing required parameter: userPoolId")
-        
-        # Route to appropriate handler
-        if operation == 'add_user_to_group':
-            return add_user_to_group(user_pool_id, username, group_name)
-        elif operation == 'remove_user_from_group':
-            return remove_user_from_group(user_pool_id, username, group_name)
-        elif operation == 'list_user_groups':
-            return list_user_groups(user_pool_id, username)
-        elif operation == 'list_users_in_group':
-            return list_users_in_group(user_pool_id, group_name)
-        elif operation == 'add_user_to_default_group':
-            return add_user_to_default_group(user_pool_id, username)
-        else:
-            raise ValueError(f"Unknown operation: {operation}")
-            
-    except Exception as e:
-        logger.error(f"Error processing request: {str(e)}")
-        return {
-            'statusCode': 500,
-            'body': json.dumps({
-                'error': str(e),
-                'operation': event.get('operation', 'unknown')
-            })
-        }
-
 def add_user_to_group(user_pool_id: str, username: str, group_name: str) -> Dict[str, Any]:
     """Add a user to a specific group"""
     if not username or not group_name:
@@ -186,20 +136,53 @@ def add_user_to_default_group(user_pool_id: str, username: str) -> Dict[str, Any
     """Add a user to the default USER group (convenience method)"""
     return add_user_to_group(user_pool_id, username, 'USER')
 
-# Helper function for CLI/testing
-def main():
-    """For local testing"""
-    import os
-    
-    # Example usage - add user to USER group
-    event = {
-        'operation': 'add_user_to_default_group',
-        'userPoolId': os.environ.get('USER_POOL_ID', 'us-east-1_XXXXXXXX'),
-        'username': 'corey@thepetersfamily.ca'
-    }
-    
-    result = lambda_handler(event, None)
-    print(json.dumps(result, indent=2))
 
-if __name__ == '__main__':
-    main()
+def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    """
+    Lambda handler for Cognito group management operations
+    
+    Expected event structure:
+    {
+        "operation": "add_user_to_group" | "remove_user_from_group" | "list_user_groups" | "list_users_in_group",
+        "userPoolId": "us-east-1_XXXXXXXX",
+        "username": "user@example.com",
+        "groupName": "USER" (optional, depends on operation)
+    }
+    """
+    try:
+        logger.info(f"Received event: {json.dumps(event)}")
+        
+        operation = event.get('operation')
+        user_pool_id = event.get('userPoolId')
+        username = event.get('username')
+        group_name = event.get('groupName')
+        
+        if not operation:
+            raise ValueError("Missing required parameter: operation")
+        
+        if not user_pool_id:
+            raise ValueError("Missing required parameter: userPoolId")
+        
+        # Route to appropriate handler
+        if operation == 'add_user_to_group':
+            return add_user_to_group(user_pool_id, username, group_name)
+        elif operation == 'remove_user_from_group':
+            return remove_user_from_group(user_pool_id, username, group_name)
+        elif operation == 'list_user_groups':
+            return list_user_groups(user_pool_id, username)
+        elif operation == 'list_users_in_group':
+            return list_users_in_group(user_pool_id, group_name)
+        elif operation == 'add_user_to_default_group':
+            return add_user_to_default_group(user_pool_id, username)
+        else:
+            raise ValueError(f"Unknown operation: {operation}")
+            
+    except Exception as e:
+        logger.error(f"Error processing request: {str(e)}")
+        return {
+            'statusCode': 500,
+            'body': json.dumps({
+                'error': str(e),
+                'operation': event.get('operation', 'unknown')
+            })
+        }
