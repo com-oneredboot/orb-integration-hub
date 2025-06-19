@@ -237,6 +237,7 @@ Resources:
       CodeUri: ../../backend/src/lambdas/sms_verification/
       Environment:
         Variables:
+        
           SMS_ORIGINATION_NUMBER: !Ref SMSOriginationNumber
           SMS_VERIFICATION_SECRET_NAME: !Sub '${CustomerId}-${ProjectId}-${Environment}-sms-verification-secret'
 

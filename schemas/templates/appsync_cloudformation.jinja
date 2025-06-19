@@ -50,7 +50,15 @@ Resources:
                   - ssm:GetParameter
                   - ssm:GetParameters
                 Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Environment}/${CustomerId}/${ProjectId}/*'
-  
+        - PolicyName: LambdaInvokeAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${CustomerId}-${ProjectId}-${Environment}-*'
+
   AppSyncLoggingServiceRole:
     Type: AWS::IAM::Role
     Properties:

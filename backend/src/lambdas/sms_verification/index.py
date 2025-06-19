@@ -17,15 +17,13 @@ sns_client = boto3.client('sns')
 secrets_client = boto3.client('secretsmanager')
 
 # Environment variables
-ENV_LOG_LEVEL = os.getenv('LOGGING_LEVEL', 'INFO')  # Changed to match CloudFormation
-ENV_REGION = os.getenv('AWS_REGION', 'us-east-1')
-ENV_ENVIRONMENT = os.getenv('ENVIRONMENT', 'dev')
-ENV_ORIGINATION_NUMBER = os.getenv('SMS_ORIGINATION_NUMBER')
-ENV_SECRET_NAME = os.getenv('SMS_VERIFICATION_SECRET_NAME')
+LOGGING_LEVEL = os.getenv('LOGGING_LEVEL', 'INFO')  # Changed to match CloudFormation
+ORIGINATION_NUMBER = os.getenv('SMS_ORIGINATION_NUMBER')
+SECRET_NAME = os.getenv('SMS_VERIFICATION_SECRET_NAME')
 
 # Setting up logging
 logger = logging.getLogger()
-logger.setLevel(getattr(logging, ENV_LOG_LEVEL.upper(), logging.INFO))
+logger.setLevel(LOGGING_LEVEL)
 
 # Cache for secret to avoid repeated API calls
 secret_cache = {'secret': None, 'expires': 0}
@@ -40,8 +38,8 @@ def get_secret():
         return secret_cache['secret']
     
     try:
-        logger.debug(f"Retrieving secret: {ENV_SECRET_NAME}")
-        response = secrets_client.get_secret_value(SecretId=ENV_SECRET_NAME)
+        logger.debug(f"Retrieving secret: {SECRET_NAME}")
+        response = secrets_client.get_secret_value(SecretId=SECRET_NAME)
         secret_data = json.loads(response['SecretString'])
         secret_key = secret_data['secret_key']
         
@@ -124,7 +122,7 @@ def lambda_handler(event, context):
         sns_parameters = {
             'PhoneNumber': phone_number,
             'Message': f"Your verification code is {code}",
-            'OriginationNumber': ENV_ORIGINATION_NUMBER,
+            'OriginationNumber': ORIGINATION_NUMBER,
             'MessageAttributes': {
                 'AWS.SNS.SMS.SenderID': {
                     'DataType': 'String',
