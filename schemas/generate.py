@@ -1195,7 +1195,7 @@ def generate_python_registry(name: str, schema: RegistryType) -> None:
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('python_registry.jinja')
         content = template.render(schema=schema)
-        file_name = f'{name}.model.py'
+        file_name = f'{name}Model.py'
         output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'src', 'core', 'models', file_name)
         write_file(output_path, content)
         logger.info(f'Generated Python registry model for {name}')
@@ -1208,7 +1208,7 @@ def generate_typescript_registry(name: str, schema: RegistryType) -> None:
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template('typescript_registry.jinja')
         content = template.render(schema=schema)
-        file_name = f'{name}.model.ts'
+        file_name = f'{name}Model.ts'
         output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models', file_name)
         write_file(output_path, content)
         logger.info(f'Generated TypeScript registry model for {name}')
@@ -1423,8 +1423,8 @@ def main():
                 valid_model_names.add(f'{table}Model.ts')
                 valid_model_names.add(f'{table}Model.py')
             elif isinstance(schema, RegistryType):
-                valid_model_names.add(f'{table}.model.py')
-                valid_model_names.add(f'{table}.model.ts')
+                valid_model_names.add(f'{table}Model.py')
+                valid_model_names.add(f'{table}Model.ts')
             elif isinstance(schema, LambdaType):
                 valid_model_names.add(f'{table}Model.ts')
                 valid_model_names.add(f'{table}Model.py')

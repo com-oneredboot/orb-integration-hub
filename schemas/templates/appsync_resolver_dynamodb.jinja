@@ -35,16 +35,36 @@
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
         }
       {% elif operation.dynamodb_op == 'UpdateItem' %}
+        #set($input = $ctx.args.input)
+        #set($key = "{{ pk }}")
+        #set($updateExpression = "")
+        #set($expressionNames = {})
+        #set($expressionValues = {})
+        #set($separator = "")
+        
+        #foreach($entry in $input.entrySet())
+          #if($entry.key != $key)
+            #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
+            $!expressionNames.put("#$entry.key", "$entry.key")
+            $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
+            #set($separator = ", ")
+          #end
+        #end
+        
         {
           "version": "2018-05-29",
           "operation": "UpdateItem",
           "key": {
-              "{{ pk }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ pk }})
+            "{{ pk }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ pk }})
             {% if sk %},
-              "{{ sk }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ sk }})
+            "{{ sk }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ sk }})
             {% endif %}
           },
-          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+          "update": {
+            "expression": "SET $updateExpression",
+            "expressionNames": $util.toJson($expressionNames),
+            "expressionValues": $util.toJson($expressionValues)
+          }
         }
       {% elif operation.dynamodb_op == 'DeleteItem' %}
         {
@@ -85,13 +105,13 @@
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
     {% endfor %}
