@@ -163,6 +163,7 @@ Resources:
           - Effect: Allow
             Action:
               - lambda:CreateEventSourceMapping
+              - lambda:GetEventSourceMapping
               - lambda:TagResource
               - lambda:UntagResource
             Resource: "*"
