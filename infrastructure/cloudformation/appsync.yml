@@ -72,7 +72,7 @@ Resources:
       UserPoolConfig:
         UserPoolId: us-east-1_3axyfJmvW
         AwsRegion: !Ref AWS::Region
-        DefaultAction: ALLOW
+        DefaultAction: DENY
       AdditionalAuthenticationProviders:
         - AuthenticationType: API_KEY
       LogConfig:
