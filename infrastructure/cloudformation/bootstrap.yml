@@ -431,6 +431,25 @@ Resources:
       Value: !Ref DeadLetterQueuePolicy
     Type: AWS::SSM::Parameter
 
+  LambdaEventPolicy:
+    Properties:
+      ManagedPolicyName: !Sub "${CustomerId}-${ProjectId}-${Environment}-lambda-event"
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "lambda:GetEventSourceMapping"
+            Resource: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:event-source-mapping:*"
+    Type: AWS::IAM::ManagedPolicy
+  LambdaEventPolicyArnParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}--lambda-event-policy-arn"
+      Type: String
+      Value: !Ref LambdaEventPolicy
+    Type: AWS::SSM::Parameter
+  
+
   # SMS Verification Secret for HMAC-based code generation
   SmsVerificationSecret:
     Type: AWS::SecretsManager::Secret
