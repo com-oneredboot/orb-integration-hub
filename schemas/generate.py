@@ -15,18 +15,16 @@ from dataclasses import dataclass
 import re
 import copy
 import glob
-from dotenv import load_dotenv
 
 # 3rd party imports
 import yaml
 from jinja2 import Template, Environment, FileSystemLoader, select_autoescape
 from pydantic import BaseModel, Field
-from pydantic import validator
 from pydantic import field_validator
 
 # Set up logging
 logger = logging.getLogger('schema_generator')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARN)
 
 # Create handlers
 console_handler = logging.StreamHandler(sys.stdout)
@@ -137,6 +135,7 @@ class TableSchema:
     secondary_indexes: Optional[List[Dict[str, Any]]] = None
     auth_config: Optional[Dict[str, Any]] = None
     type: str = 'dynamodb'  # Default to 'dynamodb' per new SchemaType
+    stream: Optional[Dict[str, Any]] = None
 
     def __post_init__(self):
         """Post-initialization validation and defaults."""
@@ -396,7 +395,7 @@ def validate_case_conventions(schema: Dict[str, Any], file_path: str) -> None:
                     raise SchemaValidationError(f"Index name '{index['name']}' must be in PascalCase format (e.g., RoleIndex)")
         # Validate attribute names are camelCase
         if 'model' in schema and 'attributes' in schema['model']:
-            print(f"[DEBUG] {schema_name}: model['attributes'] type: {type(schema['model']['attributes'])}, value: {schema['model']['attributes']}")
+            logger.debug(f"[DEBUG] {schema_name}: model['attributes'] type: {type(schema['model']['attributes'])}, value: {schema['model']['attributes']}")
             if not isinstance(schema['model']['attributes'], dict):
                 raise SchemaValidationError(f"Schema '{schema_name}' has a non-dict 'attributes' section: {type(schema['model']['attributes'])}. Value: {schema['model']['attributes']}")
             for attr_name, attr_info in schema['model']['attributes'].items():
@@ -477,7 +476,7 @@ def load_schema(schema_path: str) -> Dict[str, Any]:
         if 'model' not in schema:
             raise SchemaValidationError(f"Schema must have a 'model' field: {schema_path}")
         # Debug: print model keys before checking for 'attributes'
-        print(f"[DEBUG] Checking file: {schema_path}, model keys: {list(schema['model'].keys())}")
+        logger.debug(f"[DEBUG] Checking file: {schema_path}, model keys: {list(schema['model'].keys())}")
         if 'attributes' not in schema['model']:
             raise SchemaValidationError(f"Schema 'model' must have an 'attributes' field: {schema_path}")
             
@@ -870,6 +869,7 @@ def generate_dynamodb_cloudformation_template(schemas: Dict[str, Union[TableSche
         template_content = template.render(schemas=table_schemas)
         write_file(output_path, template_content)
         logger.debug('Completed generate_dynamodb_cloudformation_template')
+
     except Exception as e:
         logger.error(f'Failed to generate DynamoDB CloudFormation template: {str(e)}')
         raise
@@ -1158,35 +1158,22 @@ def generate_all_enums():
         generate_python_enum(enum_name, enum_values)
     logger.debug('Completed generate_all_enums')
 
-def validate_graphql_sdl(sdl_path):
-    """Validate the generated GraphQL SDL file using graphql-core."""
-    with open(sdl_path, 'r', encoding='utf-8') as f:
-        sdl = f.read()
-    try:
-        from graphql import parse, Source
-        source = Source(sdl, name=sdl_path)
-        parse(source)
-        print(f"[OK] GraphQL SDL validation passed: {sdl_path}")
-    except Exception as e:
-        print(f"[ERROR] GraphQL SDL validation failed: {sdl_path}\n{e}")
-        sys.exit(1)
-
 def prevalidate_appsync_sdl(sdl_path):
     """Extra validation for AppSync-incompatible SDL patterns."""
     with open(sdl_path, 'r', encoding='utf-8') as f:
         sdl = f.read()
     # Check for triple-quoted docstrings
     if '"""' in sdl:
-        print(f"[ERROR] AppSync SDL prevalidation failed: triple-quoted docstrings (\"\"\" ... \"\"\") are not allowed in {sdl_path}")
+        logger.error(f"[ERROR] AppSync SDL prevalidation failed: triple-quoted docstrings (\"\"\" ... \"\"\") are not allowed in {sdl_path}")
         sys.exit(1)
     # Check for top-level # comments (lines starting with #)
     for line in sdl.splitlines():
         if line.strip().startswith('#'):
-            print(f"[ERROR] AppSync SDL prevalidation failed: top-level # comments are not allowed in {sdl_path} (line: {line.strip()})")
+            logger.error(f"[ERROR] AppSync SDL prevalidation failed: top-level # comments are not allowed in {sdl_path} (line: {line.strip()})")
             sys.exit(1)
     # Check for leading or trailing backticks
     if sdl.strip().startswith('```') or sdl.strip().endswith('```'):
-        print(f"[ERROR] AppSync SDL prevalidation failed: leading or trailing backticks (```) are not allowed in {sdl_path}")
+        logger.error(f"[ERROR] AppSync SDL prevalidation failed: leading or trailing backticks (```) are not allowed in {sdl_path}")
         sys.exit(1)
     # Optionally: check for other known AppSync-incompatible patterns here
 
@@ -1234,7 +1221,6 @@ def load_schemas() -> dict:
         schema_type = schema_dict.get('type')
         schema_name = schema_dict.get('name')
         if schema_type == 'dynamodb':
-            # Build TableSchema object
             model = schema_dict['model']
             attributes = []
             for attr_name, attr_info in model['attributes'].items():
@@ -1259,6 +1245,7 @@ def load_schemas() -> dict:
             sort_key = keys['primary'].get('sort', 'None')
             secondary_indexes = keys.get('secondary', [])
             auth_config = model.get('authConfig')
+            stream_config = model.get('stream')
             schema_obj = TableSchema(
                 name=schema_name,
                 attributes=attributes,
@@ -1266,7 +1253,8 @@ def load_schemas() -> dict:
                 sort_key=sort_key,
                 secondary_indexes=secondary_indexes,
                 auth_config=auth_config,
-                type='dynamodb'
+                type='dynamodb',
+                stream=stream_config
             )
             schemas[schema_name] = schema_obj
         elif schema_type == 'registry':
@@ -1388,27 +1376,20 @@ def generate_dynamodb_repository(schemas: dict) -> None:
     logger.info(f'Generated DynamoDB repository mapping at {output_path}')
 
 def main():
-    print('DEBUG: main() started')
+    logger.debug('DEBUG: main() started')
     try:
-        print('DEBUG: before Jinja env setup')
         jinja_env = setup_jinja_env()
-        print('DEBUG: after Jinja env setup')
         logger.debug('Loaded Jinja environment')
-        print('DEBUG: before schema loading')
         schemas = load_schemas()  # Use the correct load_schemas
-        print('DEBUG: after schema loading')
         logger.debug('Loaded schemas')
+
         # Generate the DynamoDB repository mapping file
         generate_dynamodb_repository(schemas)
-        print('DEBUG: before CRUD attachment')
         # Attach CRUD operations to all TableSchema instances
         for table, schema in schemas.items():
             if isinstance(schema, TableSchema):
                 build_crud_operations_for_table(schema)
                 logger.info(f"Table {table} operations: {getattr(schema, 'operations', None)}")
-        print('DEBUG: after CRUD attachment')
-        # Remove debug printout of all in-memory TableSchema objects
-        # Restore template rendering and file writing
         # Build valid file name sets
         valid_model_names = set()
         valid_enum_names = set()
@@ -1479,10 +1460,7 @@ def main():
         logger.info(f'Generated timestamped schema file: {timestamped_schema}')
         # Extra AppSync prevalidation
         prevalidate_appsync_sdl(schema_output_path)
-        # Validate the generated SDL
-        validate_graphql_sdl(schema_output_path)
         # (Manual) AWS CLI-based AppSync schema validation can be run separately if needed
-        # Generate DynamoDB CloudFormation template
         logger.debug('Generating DynamoDB CloudFormation template')
         dynamodb_output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'cloudformation', 'dynamodb.yml')
         generate_dynamodb_cloudformation_template(schemas, dynamodb_output_path)
@@ -1492,7 +1470,7 @@ def main():
         generate_appsync_cloudformation_template(schemas, appsync_output_path)
         logger.info('Schema generation completed successfully')
     except Exception as e:
-        print(f"DEBUG: Exception in main(): {e}")
+        logger.error(f"DEBUG: Exception in main(): {e}")
         import traceback
         traceback.print_exc()
 

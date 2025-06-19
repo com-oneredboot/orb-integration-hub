@@ -75,6 +75,13 @@ Resources:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users-table-name
       Type: String
       Value: !Ref ApplicationUsersTable
+
+  ApplicationUsersTableStreamArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users-table-stream-arn
+      Type: String
+      Value: !GetAtt ApplicationUsersTable.StreamArn
   ApplicationRolesTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -133,6 +140,13 @@ Resources:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles-table-name
       Type: String
       Value: !Ref ApplicationRolesTable
+
+  ApplicationRolesTableStreamArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles-table-stream-arn
+      Type: String
+      Value: !GetAtt ApplicationRolesTable.StreamArn
   RolesTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -171,6 +185,13 @@ Resources:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-roles-table-name
       Type: String
       Value: !Ref RolesTable
+
+  RolesTableStreamArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-roles-table-stream-arn
+      Type: String
+      Value: !GetAtt RolesTable.StreamArn
   ApplicationsTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -196,6 +217,13 @@ Resources:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-name
       Type: String
       Value: !Ref ApplicationsTable
+
+  ApplicationsTableStreamArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-stream-arn
+      Type: String
+      Value: !GetAtt ApplicationsTable.StreamArn
   UsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -269,6 +297,7 @@ Outputs:
     Value: !Ref ApplicationUsersTable
     Export:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users-table-name
+
   ApplicationRolesTableArn:
     Description: The ARN of the ApplicationRoles table
     Value: !GetAtt ApplicationRolesTable.Arn
@@ -280,6 +309,7 @@ Outputs:
     Value: !Ref ApplicationRolesTable
     Export:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles-table-name
+
   RolesTableArn:
     Description: The ARN of the Roles table
     Value: !GetAtt RolesTable.Arn
@@ -291,6 +321,7 @@ Outputs:
     Value: !Ref RolesTable
     Export:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-roles-table-name
+
   ApplicationsTableArn:
     Description: The ARN of the Applications table
     Value: !GetAtt ApplicationsTable.Arn
@@ -302,6 +333,7 @@ Outputs:
     Value: !Ref ApplicationsTable
     Export:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-name
+
   UsersTableArn:
     Description: The ARN of the Users table
     Value: !GetAtt UsersTable.Arn

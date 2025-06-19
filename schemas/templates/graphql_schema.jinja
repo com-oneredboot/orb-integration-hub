@@ -3,7 +3,7 @@ schema {
   mutation: Mutation
 }
 
-{%- include 'appsync_enums.jinja' -%}
+{% include 'appsync_enums.jinja' -%}
 
 {% include 'graphql_schema_type.jinja' %}
 

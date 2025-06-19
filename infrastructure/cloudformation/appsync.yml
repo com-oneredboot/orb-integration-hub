@@ -58,7 +58,7 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${CustomerId}-${ProjectId}-${Environment}-*'
-  
+
   AppSyncLoggingServiceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -78,7 +78,7 @@ Resources:
       Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-appsync'
       AuthenticationType: AMAZON_COGNITO_USER_POOLS
       UserPoolConfig:
-        UserPoolId: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-cognito-user-pool-id}}'
+        UserPoolId: !Sub "resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-cognito-user-pool-id"
         AwsRegion: !Ref AWS::Region
         DefaultAction: ALLOW
       AdditionalAuthenticationProviders:
@@ -115,6 +115,8 @@ Resources:
       Type: String
       Value: !GetAtt IntegrationHubApi.ApiId
 
+  # DynamoDB DataSources
+  # Jinja template for AppSync DynamoDB DataSources
   ApplicationUsersDynamoDbDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -206,13 +208,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   ApplicationUsersUpdateResolver:
@@ -224,26 +226,46 @@ Resources:
       FieldName: ApplicationUsersUpdate
       DataSourceName: ApplicationUsersDynamoDbDataSource
       RequestMappingTemplate: |
+        #set($input = $ctx.args.input)
+        #set($key = "applicationUserId")
+        #set($updateExpression = "")
+        #set($expressionNames = {})
+        #set($expressionValues = {})
+        #set($separator = "")
+        
+        #foreach($entry in $input.entrySet())
+          #if($entry.key != $key)
+            #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
+            $!expressionNames.put("#$entry.key", "$entry.key")
+            $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
+            #set($separator = ", ")
+          #end
+        #end
+        
         {
           "version": "2018-05-29",
           "operation": "UpdateItem",
           "key": {
-              "applicationUserId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationUserId)
+            "applicationUserId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationUserId)
           },
-          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+          "update": {
+            "expression": "SET $updateExpression",
+            "expressionNames": $util.toJson($expressionNames),
+            "expressionValues": $util.toJson($expressionValues)
+          }
         }
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   ApplicationUsersDeleteResolver:
@@ -266,13 +288,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   ApplicationUsersDisableResolver:
@@ -284,26 +306,46 @@ Resources:
       FieldName: ApplicationUsersDisable
       DataSourceName: ApplicationUsersDynamoDbDataSource
       RequestMappingTemplate: |
+        #set($input = $ctx.args.input)
+        #set($key = "applicationUserId")
+        #set($updateExpression = "")
+        #set($expressionNames = {})
+        #set($expressionValues = {})
+        #set($separator = "")
+        
+        #foreach($entry in $input.entrySet())
+          #if($entry.key != $key)
+            #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
+            $!expressionNames.put("#$entry.key", "$entry.key")
+            $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
+            #set($separator = ", ")
+          #end
+        #end
+        
         {
           "version": "2018-05-29",
           "operation": "UpdateItem",
           "key": {
-              "applicationUserId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationUserId)
+            "applicationUserId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationUserId)
           },
-          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+          "update": {
+            "expression": "SET $updateExpression",
+            "expressionNames": $util.toJson($expressionNames),
+            "expressionValues": $util.toJson($expressionValues)
+          }
         }
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   ApplicationUsersQueryByApplicationUserIdResolver:
@@ -329,13 +371,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   ApplicationUsersQueryByUserIdAndApplicationIdResolver:
@@ -363,13 +405,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   ApplicationUsersQueryByApplicationIdAndUserIdResolver:
@@ -397,13 +439,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   ApplicationRolesCreateResolver:
@@ -428,13 +470,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   ApplicationRolesUpdateResolver:
@@ -446,26 +488,46 @@ Resources:
       FieldName: ApplicationRolesUpdate
       DataSourceName: ApplicationRolesDynamoDbDataSource
       RequestMappingTemplate: |
+        #set($input = $ctx.args.input)
+        #set($key = "applicationRoleId")
+        #set($updateExpression = "")
+        #set($expressionNames = {})
+        #set($expressionValues = {})
+        #set($separator = "")
+        
+        #foreach($entry in $input.entrySet())
+          #if($entry.key != $key)
+            #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
+            $!expressionNames.put("#$entry.key", "$entry.key")
+            $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
+            #set($separator = ", ")
+          #end
+        #end
+        
         {
           "version": "2018-05-29",
           "operation": "UpdateItem",
           "key": {
-              "applicationRoleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationRoleId)
+            "applicationRoleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationRoleId)
           },
-          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+          "update": {
+            "expression": "SET $updateExpression",
+            "expressionNames": $util.toJson($expressionNames),
+            "expressionValues": $util.toJson($expressionValues)
+          }
         }
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   ApplicationRolesDeleteResolver:
@@ -488,13 +550,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   ApplicationRolesDisableResolver:
@@ -506,26 +568,46 @@ Resources:
       FieldName: ApplicationRolesDisable
       DataSourceName: ApplicationRolesDynamoDbDataSource
       RequestMappingTemplate: |
+        #set($input = $ctx.args.input)
+        #set($key = "applicationRoleId")
+        #set($updateExpression = "")
+        #set($expressionNames = {})
+        #set($expressionValues = {})
+        #set($separator = "")
+        
+        #foreach($entry in $input.entrySet())
+          #if($entry.key != $key)
+            #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
+            $!expressionNames.put("#$entry.key", "$entry.key")
+            $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
+            #set($separator = ", ")
+          #end
+        #end
+        
         {
           "version": "2018-05-29",
           "operation": "UpdateItem",
           "key": {
-              "applicationRoleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationRoleId)
+            "applicationRoleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationRoleId)
           },
-          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+          "update": {
+            "expression": "SET $updateExpression",
+            "expressionNames": $util.toJson($expressionNames),
+            "expressionValues": $util.toJson($expressionValues)
+          }
         }
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   ApplicationRolesQueryByApplicationRoleIdResolver:
@@ -551,13 +633,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   ApplicationRolesQueryByUserIdAndRoleIdResolver:
@@ -585,13 +667,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   ApplicationRolesQueryByApplicationIdAndRoleIdResolver:
@@ -619,13 +701,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   ApplicationRolesQueryByRoleIdAndRoleTypeResolver:
@@ -653,13 +735,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   RolesCreateResolver:
@@ -684,13 +766,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   RolesUpdateResolver:
@@ -702,26 +784,46 @@ Resources:
       FieldName: RolesUpdate
       DataSourceName: RolesDynamoDbDataSource
       RequestMappingTemplate: |
+        #set($input = $ctx.args.input)
+        #set($key = "roleId")
+        #set($updateExpression = "")
+        #set($expressionNames = {})
+        #set($expressionValues = {})
+        #set($separator = "")
+        
+        #foreach($entry in $input.entrySet())
+          #if($entry.key != $key)
+            #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
+            $!expressionNames.put("#$entry.key", "$entry.key")
+            $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
+            #set($separator = ", ")
+          #end
+        #end
+        
         {
           "version": "2018-05-29",
           "operation": "UpdateItem",
           "key": {
-              "roleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
+            "roleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
           },
-          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+          "update": {
+            "expression": "SET $updateExpression",
+            "expressionNames": $util.toJson($expressionNames),
+            "expressionValues": $util.toJson($expressionValues)
+          }
         }
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   RolesDeleteResolver:
@@ -744,13 +846,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   RolesDisableResolver:
@@ -762,26 +864,46 @@ Resources:
       FieldName: RolesDisable
       DataSourceName: RolesDynamoDbDataSource
       RequestMappingTemplate: |
+        #set($input = $ctx.args.input)
+        #set($key = "roleId")
+        #set($updateExpression = "")
+        #set($expressionNames = {})
+        #set($expressionValues = {})
+        #set($separator = "")
+        
+        #foreach($entry in $input.entrySet())
+          #if($entry.key != $key)
+            #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
+            $!expressionNames.put("#$entry.key", "$entry.key")
+            $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
+            #set($separator = ", ")
+          #end
+        #end
+        
         {
           "version": "2018-05-29",
           "operation": "UpdateItem",
           "key": {
-              "roleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
+            "roleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
           },
-          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+          "update": {
+            "expression": "SET $updateExpression",
+            "expressionNames": $util.toJson($expressionNames),
+            "expressionValues": $util.toJson($expressionValues)
+          }
         }
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   RolesQueryByRoleIdResolver:
@@ -807,13 +929,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   RolesQueryByUserIdAndRoleTypeResolver:
@@ -841,13 +963,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   ApplicationsCreateResolver:
@@ -872,13 +994,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   ApplicationsUpdateResolver:
@@ -890,26 +1012,46 @@ Resources:
       FieldName: ApplicationsUpdate
       DataSourceName: ApplicationsDynamoDbDataSource
       RequestMappingTemplate: |
+        #set($input = $ctx.args.input)
+        #set($key = "applicationId")
+        #set($updateExpression = "")
+        #set($expressionNames = {})
+        #set($expressionValues = {})
+        #set($separator = "")
+        
+        #foreach($entry in $input.entrySet())
+          #if($entry.key != $key)
+            #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
+            $!expressionNames.put("#$entry.key", "$entry.key")
+            $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
+            #set($separator = ", ")
+          #end
+        #end
+        
         {
           "version": "2018-05-29",
           "operation": "UpdateItem",
           "key": {
-              "applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+            "applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
           },
-          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+          "update": {
+            "expression": "SET $updateExpression",
+            "expressionNames": $util.toJson($expressionNames),
+            "expressionValues": $util.toJson($expressionValues)
+          }
         }
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   ApplicationsDeleteResolver:
@@ -932,13 +1074,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   ApplicationsDisableResolver:
@@ -950,26 +1092,46 @@ Resources:
       FieldName: ApplicationsDisable
       DataSourceName: ApplicationsDynamoDbDataSource
       RequestMappingTemplate: |
+        #set($input = $ctx.args.input)
+        #set($key = "applicationId")
+        #set($updateExpression = "")
+        #set($expressionNames = {})
+        #set($expressionValues = {})
+        #set($separator = "")
+        
+        #foreach($entry in $input.entrySet())
+          #if($entry.key != $key)
+            #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
+            $!expressionNames.put("#$entry.key", "$entry.key")
+            $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
+            #set($separator = ", ")
+          #end
+        #end
+        
         {
           "version": "2018-05-29",
           "operation": "UpdateItem",
           "key": {
-              "applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+            "applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
           },
-          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+          "update": {
+            "expression": "SET $updateExpression",
+            "expressionNames": $util.toJson($expressionNames),
+            "expressionValues": $util.toJson($expressionValues)
+          }
         }
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   ApplicationsQueryByApplicationIdResolver:
@@ -995,13 +1157,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   UsersCreateResolver:
@@ -1026,13 +1188,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   UsersUpdateResolver:
@@ -1106,13 +1268,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   UsersDisableResolver:
@@ -1124,26 +1286,46 @@ Resources:
       FieldName: UsersDisable
       DataSourceName: UsersDynamoDbDataSource
       RequestMappingTemplate: |
+        #set($input = $ctx.args.input)
+        #set($key = "userId")
+        #set($updateExpression = "")
+        #set($expressionNames = {})
+        #set($expressionValues = {})
+        #set($separator = "")
+        
+        #foreach($entry in $input.entrySet())
+          #if($entry.key != $key)
+            #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
+            $!expressionNames.put("#$entry.key", "$entry.key")
+            $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
+            #set($separator = ", ")
+          #end
+        #end
+        
         {
           "version": "2018-05-29",
           "operation": "UpdateItem",
           "key": {
-              "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
           },
-          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+          "update": {
+            "expression": "SET $updateExpression",
+            "expressionNames": $util.toJson($expressionNames),
+            "expressionValues": $util.toJson($expressionValues)
+          }
         }
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   UsersQueryByUserIdResolver:
@@ -1169,13 +1351,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   UsersQueryByEmailResolver:
@@ -1202,13 +1384,13 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
   UsersQueryByCognitoIdResolver:
@@ -1235,13 +1417,46 @@ Resources:
           {
             "StatusCode": 500,
             "Message": "$ctx.error.message",
-            "Data": []
+            "Data": null
           }
         #else
           {
             "StatusCode": 200,
             "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #else [] #end
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
+  UsersQueryByCognitoSubResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: UsersDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: UsersQueryByCognitoSub
+      DataSourceName: UsersDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "index": "CognitoSubIndex",
+          "query": {
+            "expression": "cognitoSub = :cognitoSub",
+            "expressionValues": {
+              ":cognitoSub": $util.dynamodb.toDynamoDBJson($ctx.args.input.cognitoSub)            }
+          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
  
@@ -1258,7 +1473,7 @@ Resources:
         {
           "version": "2018-05-29",
           "operation": "Invoke",
-          "payload": $util.toJson($ctx.args.input)
+          "payload": $util.toJson($ctx.args)
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
