@@ -1,12 +1,12 @@
 {#-- Helper macro to merge and deduplicate auth directives --#}
 {% macro join_unique_directives(directives_list) -%}
-  {%- set api_key = false -%}
+  {%- set api_key_found = [] -%}
   {%- set cognito_groups = [] -%}
   
   {#-- Parse all directives --#}
   {%- for directive in directives_list -%}
     {%- if directive == '@aws_api_key' -%}
-      {%- set api_key = true -%}
+      {%- do api_key_found.append(true) -%}
     {%- elif directive.startswith('@aws_auth(cognito_groups:') -%}
       {#-- Extract groups from directive like @aws_auth(cognito_groups: ["OWNER", "USER"]) --#}
       {%- set groups_part = directive.split('[')[1].split(']')[0] -%}
@@ -21,7 +21,7 @@
   {%- endfor -%}
   
   {#-- Output consolidated directives --#}
-  {%- if api_key -%}
+  {%- if api_key_found -%}
     {{- ' @aws_api_key' -}}
   {%- endif -%}
   {%- if cognito_groups -%}
@@ -44,9 +44,17 @@
     {% if d not in entity_field_directives %}{% do entity_field_directives.append(d) %}{% endif %}
   {% endfor %}
 {% endfor %}
+{#-- Add API key directive if this type supports it --#}
+{% if schema.auth_config and schema.auth_config.get('apiKeyAuthentication') %}
+  {% set api_key_ops = schema.auth_config.get('apiKeyAuthentication', []) %}
+  {% if schema.name in api_key_ops %}
+    {% do entity_field_directives.append('@aws_api_key') %}
+  {% endif %}
+{% endif %}
 type {{ schema.name }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }}: {{ attr.type|graphql_type }}{{ join_unique_directives(entity_field_directives) }}
+  {% set field_directives = entity_field_directives | list %}
+  {{ attr.name }}: {{ attr.type|graphql_type }}{{ join_unique_directives(field_directives) }}
 {% endfor %}
 }
 {% endfor %}
@@ -103,11 +111,18 @@ input {{ input_name_and }} {
 
 {% for schema in table_schemas.values() %}
 {% set response_directives = [] %}
-{% for op in schema.operations if op.type == 'Query' %}
+{% for op in schema.operations %}
   {% for d in op.response_auth_directives %}
     {% if d not in response_directives %}{% do response_directives.append(d) %}{% endif %}
   {% endfor %}
 {% endfor %}
+{#-- Add API key directive if this response type supports it --#}
+{% if schema.auth_config %}
+  {% set api_key_ops = schema.auth_config.get('apiKeyAuthentication', []) %}
+  {% if (schema.name + 'Response') in api_key_ops %}
+    {% if '@aws_api_key' not in response_directives %}{% do response_directives.append('@aws_api_key') %}{% endif %}
+  {% endif %}
+{% endif %}
 type {{ schema.name }}Response {
   StatusCode: Int!{{ join_unique_directives(response_directives) }}
   Message: String{{ join_unique_directives(response_directives) }}
@@ -121,6 +136,13 @@ type {{ schema.name }}Response {
     {% if d not in list_response_directives %}{% do list_response_directives.append(d) %}{% endif %}
   {% endfor %}
 {% endfor %}
+{#-- Add API key directive if this list response type supports it --#}
+{% if schema.auth_config %}
+  {% set api_key_ops = schema.auth_config.get('apiKeyAuthentication', []) %}
+  {% if (schema.name + 'ListResponse') in api_key_ops %}
+    {% if '@aws_api_key' not in list_response_directives %}{% do list_response_directives.append('@aws_api_key') %}{% endif %}
+  {% endif %}
+{% endif %}
 type {{ schema.name }}ListResponse {
   StatusCode: Int!{{ join_unique_directives(list_response_directives) }}
   Message: String{{ join_unique_directives(list_response_directives) }}
