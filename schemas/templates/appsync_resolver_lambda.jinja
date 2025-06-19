@@ -11,7 +11,7 @@
         {
           "version": "2018-05-29",
           "operation": "Invoke",
-          "payload": $util.toJson($ctx.args.input)
+          "payload": $util.toJson($ctx.args)
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)

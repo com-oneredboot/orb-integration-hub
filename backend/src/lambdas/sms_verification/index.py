@@ -17,7 +17,7 @@ sns_client = boto3.client('sns')
 secrets_client = boto3.client('secretsmanager')
 
 # Environment variables
-ENV_LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
+ENV_LOG_LEVEL = os.getenv('LOGGING_LEVEL', 'INFO')  # Changed to match CloudFormation
 ENV_REGION = os.getenv('AWS_REGION', 'us-east-1')
 ENV_ENVIRONMENT = os.getenv('ENVIRONMENT', 'dev')
 ENV_ORIGINATION_NUMBER = os.getenv('SMS_ORIGINATION_NUMBER')
@@ -25,7 +25,7 @@ ENV_SECRET_NAME = os.getenv('SMS_VERIFICATION_SECRET_NAME')
 
 # Setting up logging
 logger = logging.getLogger()
-logger.setLevel(ENV_LOG_LEVEL)
+logger.setLevel(getattr(logging, ENV_LOG_LEVEL.upper(), logging.INFO))
 
 # Cache for secret to avoid repeated API calls
 secret_cache = {'secret': None, 'expires': 0}
