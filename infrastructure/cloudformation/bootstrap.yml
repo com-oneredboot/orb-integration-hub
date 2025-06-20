@@ -183,6 +183,7 @@ Resources:
               - secretsmanager:GetSecretValue
               - secretsmanager:DeleteSecret
               - secretsmanager:TagResource
+              - secretsmanager:UpdateSecret
               - states:*
               - cloudfront:*
               - route53:*
