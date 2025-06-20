@@ -40,3 +40,7 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Local development files with credentials
+src/environments/environment.local.ts
+.secrets-temp.json

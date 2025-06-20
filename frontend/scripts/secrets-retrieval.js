@@ -19,6 +19,7 @@
 
 const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
 const { SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm');
+const { fromSSO } = require('@aws-sdk/credential-provider-sso');
 const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
@@ -29,13 +30,29 @@ const CONFIG = {
   projectId: process.env.PROJECT_ID || 'integration-hub',
   environment: process.argv[2] || process.env.ENVIRONMENT || 'dev',
   region: process.env.AWS_REGION || 'us-east-1',
+  awsProfile: process.env.AWS_PROFILE || 'sso-tpf',
   bootstrapYmlPath: path.join(__dirname, '../../infrastructure/cloudformation/bootstrap.yml'),
   tempSecretsFile: path.join(__dirname, '../.secrets-temp.json')
 };
 
+// AWS Client configuration with SSO profile support
+const getAWSClientConfig = () => {
+  // If we have traditional environment variables, use them
+  if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+    return { region: CONFIG.region };
+  }
+  
+  // Otherwise, use SSO profile
+  return {
+    region: CONFIG.region,
+    credentials: fromSSO({ profile: CONFIG.awsProfile })
+  };
+};
+
 // AWS Clients
-const secretsManager = new SecretsManagerClient({ region: CONFIG.region });
-const ssmClient = new SSMClient({ region: CONFIG.region });
+const clientConfig = getAWSClientConfig();
+const secretsManager = new SecretsManagerClient(clientConfig);
+const ssmClient = new SSMClient(clientConfig);
 
 /**
  * Frontend secrets mapping - defines which secrets/parameters are needed
@@ -118,16 +135,17 @@ async function getParameter(parameterName) {
 }
 
 /**
- * Validate required environment variables and AWS credentials
+ * Validate AWS credentials - supports both environment variables and SSO
  */
 function validateEnvironment() {
-  const requiredEnvVars = ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY'];
-  const missing = requiredEnvVars.filter(envVar => !process.env[envVar]);
+  // Check if we have traditional environment variables
+  const hasEnvVars = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY;
   
-  if (missing.length > 0) {
-    console.error('Missing required environment variables:', missing.join(', '));
-    console.error('Ensure AWS credentials are configured via environment variables or IAM roles');
-    process.exit(1);
+  if (!hasEnvVars) {
+    console.log('Traditional AWS environment variables not found, using SSO profile...');
+    console.log(`Using AWS Profile: ${CONFIG.awsProfile}`);
+  } else {
+    console.log('Using AWS environment variables for authentication');
   }
   
   console.log(`Environment validated for: ${CONFIG.environment}`);
