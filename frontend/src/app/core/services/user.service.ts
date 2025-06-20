@@ -83,7 +83,9 @@ export class UserService extends ApiService {
         createdAt: timestamp,
         phoneVerified: false,
         emailVerified: false,
-        updatedAt: timestamp
+        updatedAt: timestamp,
+        mfaEnabled: false,
+        mfaSetupComplete: false
       };
 
       const response = await this.mutate(UsersCreateMutation, {"input": userCreateInput}, "apiKey") as GraphQLResult<UsersCreateResponse>;
@@ -236,6 +238,30 @@ export class UserService extends ApiService {
         Message: message || 'Unknown error occurred in user lookup',
         Data: []
       };
+    }
+  }
+
+  /**
+   * Check if email is already verified in Cognito
+   * @param email Email to check
+   * @returns Promise<boolean> indicating if email is verified in Cognito
+   */
+  public async checkCognitoEmailVerification(email: string): Promise<boolean> {
+    try {
+      const cognitoProfile = await this.cognitoService.getCognitoProfile();
+      console.debug('[UserService][checkCognitoEmailVerification] Cognito profile:', cognitoProfile);
+      
+      // Check if the current user's email matches and is verified
+      if (cognitoProfile?.email === email && cognitoProfile?.email_verified === 'true') {
+        console.debug('[UserService][checkCognitoEmailVerification] Email is verified in Cognito');
+        return true;
+      }
+      
+      console.debug('[UserService][checkCognitoEmailVerification] Email not verified in Cognito or different email');
+      return false;
+    } catch (error) {
+      console.error('[UserService][checkCognitoEmailVerification] Error checking Cognito verification:', error);
+      return false;
     }
   }
 
@@ -716,7 +742,9 @@ export class UserService extends ApiService {
         groups: input.groups,
         status: input.status,
         createdAt: input.createdAt,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        mfaEnabled: input.mfaEnabled,
+        mfaSetupComplete: input.mfaSetupComplete
       };
       hasUpdates = true;
 
@@ -872,11 +900,6 @@ export class UserService extends ApiService {
       console.debug('SMS verification response:', response);
 
       if (response.data?.SmsVerification?.StatusCode === 200) {
-        // Log the generated code for testing purposes (remove in production)
-        const generatedCode = response.data.SmsVerification.Data?.code;
-        if (generatedCode) {
-          console.debug('🔐 Generated verification code for testing:', generatedCode);
-        }
         
         return { 
           statusCode: 200, 
@@ -944,14 +967,38 @@ export class UserService extends ApiService {
       ) as any;
 
       console.debug('SMS verification check response:', response);
+      console.debug('🔍 About to check response structure...');
+      console.debug('🔍 Response type:', typeof response);
+      console.debug('🔍 Response has data:', 'data' in response);
+      
+      try {
+        // Simplified debugging - just log the critical parts
+        console.debug('🔍 response.data:', response.data);
+        console.debug('🔍 SmsVerification:', response.data?.SmsVerification);
 
-      // Check if the lambda verified the code successfully
-      if (response.data?.SmsVerification?.StatusCode === 200) {
-        const verificationData = response.data.SmsVerification.Data;
-        return verificationData?.valid === true;
+        // Check if the lambda verified the code successfully
+        console.debug('🔍 Checking response structure...');
+        console.debug('🔍 response.data exists:', !!response.data);
+        console.debug('🔍 response.data.SmsVerification exists:', !!response.data?.SmsVerification);
+        console.debug('🔍 StatusCode:', response.data?.SmsVerification?.StatusCode);
+        
+        if (response.data?.SmsVerification?.StatusCode === 200) {
+          const verificationData = response.data.SmsVerification.Data;
+          console.debug('🔍 SMS verification data:', verificationData);
+          console.debug('🔍 Verification result:', verificationData?.valid === true);
+          const result = verificationData?.valid === true;
+          console.debug('🔍 Returning verification result:', result);
+          return result;
+        }
+
+        console.debug('🔍 SMS verification failed - StatusCode:', response.data?.SmsVerification?.StatusCode);
+        console.debug('🔍 Returning false for failed verification');
+        return false;
+      } catch (parseError) {
+        console.error('🔍 Error parsing SMS verification response:', parseError);
+        console.debug('🔍 Raw response object:', response);
+        return false;
       }
-
-      return false;
 
     } catch (error) {
       console.error('Error verifying SMS code:', error);

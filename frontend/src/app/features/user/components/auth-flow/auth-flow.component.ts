@@ -222,6 +222,8 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
               createdAt: new Date().toISOString(),
               phoneVerified: false,
               emailVerified: false,
+              mfaEnabled: false,
+              mfaSetupComplete: false,
               updatedAt: new Date().toISOString()
             };
             if (!password) {

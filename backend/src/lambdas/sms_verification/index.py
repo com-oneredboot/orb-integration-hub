@@ -156,8 +156,7 @@ def lambda_handler(event, context):
             "StatusCode": 200,
             "Message": "Verification code sent successfully",
             "Data": {
-                "phoneNumber": phone_number,
-                "code": code  # Return for debugging (remove in production)
+                "phoneNumber": phone_number
             }
         }
 

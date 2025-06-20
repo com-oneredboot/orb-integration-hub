@@ -206,6 +206,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
         lastName: formValues.lastName?.trim() || user.lastName,
         groups: user.groups,
         status: user.status,
+        mfaEnabled: false,
+        mfaSetupComplete: false,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       };

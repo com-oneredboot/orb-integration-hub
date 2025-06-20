@@ -68,9 +68,17 @@ export const AuthActions = createActionGroup({
     'Register Success': props<{ user: IUsers }>(),
     'Register Failure': props<{ error: string }>(),
 
+    'Check Email Verification Status': props<{ email: string }>(),
+    'Check Email Verification Status Success': props<{ isVerified: boolean, email: string }>(),
+    'Check Email Verification Status Failure': props<{ error: string }>(),
+
     'Verify Email': props<{ code: string, email: string }>(),
-    'Verify Email Success': emptyProps(),
+    'Verify Email Success': props<{ email: string }>(),
     'Verify Email Failure': props<{ error: string }>(),
+
+    'Update User After Email Verification': props<{ email: string }>(),
+    'Update User After Email Verification Success': props<{ user: IUsers }>(),
+    'Update User After Email Verification Failure': props<{ error: string }>(),
 
     'Refresh Session': emptyProps(),
     'Refresh Session Success': props<{ user: IUsers }>(),

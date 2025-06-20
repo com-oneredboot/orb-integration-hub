@@ -17,7 +17,7 @@ import { UsersQueryByEmail } from "../../../../../core/graphql/Users.graphql";
 import { AuthActions } from "./auth.actions";
 import * as fromAuth from "./auth.selectors";
 import { CognitoService } from "../../../../../core/services/cognito.service";
-import { getError } from "../../../../../core/models/ErrorRegistry.model";
+import { getError } from "../../../../../core/models/ErrorRegistryModel";
 import { UsersQueryByEmailInput, UsersResponse, UsersListResponse, Users } from "../../../../../core/models/UsersModel";
 
 @Injectable()
@@ -120,6 +120,81 @@ export class AuthEffects {
     )
   );
 
+  // Check email verification status in Cognito
+  checkEmailVerificationStatus$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.checkEmailVerificationStatus),
+      tap(({ email }) => console.debug('[Effect][checkEmailVerificationStatus$] Start', { email })),
+      switchMap(({ email }) => {
+        return from(this.userService.checkCognitoEmailVerification(email)).pipe(
+          map(isVerified => {
+            console.debug('[Effect][checkEmailVerificationStatus$] Cognito verification status:', isVerified);
+            return AuthActions.checkEmailVerificationStatusSuccess({ isVerified, email });
+          }),
+          catchError(error => {
+            console.error('[Effect][checkEmailVerificationStatus$] Error:', error);
+            return of(AuthActions.checkEmailVerificationStatusFailure({
+              error: error instanceof Error ? error.message : 'Failed to check email verification status'
+            }));
+          })
+        );
+      })
+    )
+  );
+
+  // Auto-update user table if email is verified in Cognito
+  autoUpdateEmailVerification$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.checkEmailVerificationStatusSuccess),
+      filter(({ isVerified }) => isVerified), // Only proceed if email is verified in Cognito
+      withLatestFrom(this.store.select(fromAuth.selectCurrentUser)),
+      switchMap(([{ email }, currentUser]) => {
+        if (!currentUser || currentUser.emailVerified) {
+          // Skip if no user or already verified in our DB
+          return EMPTY;
+        }
+
+        console.debug('[Effect][autoUpdateEmailVerification$] Auto-updating email verification for user:', currentUser.userId);
+        
+        // Update the user record with verified email
+        const updateInput = {
+          userId: currentUser.userId,
+          cognitoId: currentUser.cognitoId,
+          cognitoSub: currentUser.cognitoSub,
+          email: currentUser.email,
+          firstName: currentUser.firstName,
+          lastName: currentUser.lastName,
+          status: currentUser.status,
+          createdAt: currentUser.createdAt,
+          updatedAt: new Date().toISOString(),
+          phoneNumber: currentUser.phoneNumber,
+          phoneVerified: currentUser.phoneVerified,
+          emailVerified: true,
+          groups: currentUser.groups,
+          mfaEnabled: currentUser.mfaEnabled,
+          mfaSetupComplete: currentUser.mfaSetupComplete
+        };
+
+        return from(this.userService.userUpdate(updateInput)).pipe(
+          map(response => {
+            console.debug('[Effect][autoUpdateEmailVerification$] User update response:', response);
+            const updatedUser = response.Data;
+            if (!updatedUser) {
+              throw new Error('User update succeeded but no user data returned');
+            }
+            return AuthActions.updateUserAfterEmailVerificationSuccess({ user: updatedUser });
+          }),
+          catchError(error => {
+            console.error('[Effect][autoUpdateEmailVerification$] Failed to auto-update email verification:', error);
+            return of(AuthActions.updateUserAfterEmailVerificationFailure({ 
+              error: error instanceof Error ? error.message : 'Failed to update user record'
+            }));
+          })
+        );
+      })
+    )
+  );
+
   verifyEmail$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.verifyEmail),
@@ -153,8 +228,8 @@ export class AuthEffects {
             return from(this.userService.emailVerify(code, email)).pipe(
               tap(response => console.debug('[Effect][verifyEmail$] emailVerify response', response)),
               map(response => {
-                if (response) {
-                  return AuthActions.verifyEmailSuccess();
+                if (response.StatusCode === 200) {
+                  return AuthActions.verifyEmailSuccess({ email });
                 }
                 const errorObj = getError('ORB-AUTH-003');
                 console.error('[Effect][verifyEmail$] emailVerify failed', response);
@@ -176,6 +251,64 @@ export class AuthEffects {
             const errorObj = getError('ORB-AUTH-003');
             return of(AuthActions.verifyEmailFailure({
               error: errorObj ? errorObj.message : 'Email verification failed'
+            }));
+          })
+        );
+      })
+    )
+  );
+
+  // Update user record after successful email verification
+  updateUserAfterEmailVerification$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.verifyEmailSuccess),
+      withLatestFrom(this.store.select(fromAuth.selectCurrentUser)),
+      switchMap(([action, currentUser]) => {
+        const email = (action as any).email;
+        
+        if (!email || !currentUser) {
+          return of(AuthActions.updateUserAfterEmailVerificationFailure({ 
+            error: 'Missing email or user data'
+          }));
+        }
+
+        console.debug('Effect: Updating user after email verification', { email, currentUser });
+        
+        // Update the user record with verified email
+        const updateInput = {
+          userId: currentUser.userId,
+          cognitoId: currentUser.cognitoId,
+          cognitoSub: currentUser.cognitoSub,
+          email: currentUser.email,
+          firstName: currentUser.firstName,
+          lastName: currentUser.lastName,
+          status: currentUser.status,
+          createdAt: currentUser.createdAt,
+          updatedAt: new Date().toISOString(),
+          phoneNumber: currentUser.phoneNumber,
+          phoneVerified: currentUser.phoneVerified,
+          emailVerified: true,
+          groups: currentUser.groups,
+          mfaEnabled: currentUser.mfaEnabled,
+          mfaSetupComplete: currentUser.mfaSetupComplete
+        };
+
+        return from(this.userService.userUpdate(updateInput)).pipe(
+          map(response => {
+            console.debug('User update response after email verification:', response);
+            
+            // Extract the updated user from the response
+            const updatedUser = response.Data;
+            if (!updatedUser) {
+              throw new Error('User update succeeded but no user data returned');
+            }
+
+            return AuthActions.updateUserAfterEmailVerificationSuccess({ user: updatedUser });
+          }),
+          catchError(error => {
+            console.error('Failed to update user after email verification:', error);
+            return of(AuthActions.updateUserAfterEmailVerificationFailure({ 
+              error: error instanceof Error ? error.message : 'Failed to update user record'
             }));
           })
         );
@@ -412,10 +545,13 @@ export class AuthEffects {
         
         return from(this.userService.verifySMSCode(phoneNumber, code)).pipe(
           map(isValid => {
+            console.debug('🔍 SMS verification result in effect:', isValid);
             if (isValid) {
+              console.debug('🔍 Dispatching verifyPhoneSuccess');
               // First mark verification success, then trigger user update
               return AuthActions.verifyPhoneSuccess();
             }
+            console.debug('🔍 Dispatching verifyPhoneFailure - invalid code');
             return AuthActions.verifyPhoneFailure({
               error: 'Invalid verification code'
             });
@@ -449,8 +585,20 @@ export class AuthEffects {
         // Note: Status will be automatically calculated by DynamoDB stream trigger
         const updateInput = {
           userId: currentUser.userId,
+          cognitoId: currentUser.cognitoId,
+          cognitoSub: currentUser.cognitoSub,
+          email: currentUser.email,
+          firstName: currentUser.firstName,
+          lastName: currentUser.lastName,
+          status: currentUser.status,
+          createdAt: currentUser.createdAt,
+          updatedAt: new Date().toISOString(),
           phoneNumber: phoneNumber,
-          phoneVerified: true
+          phoneVerified: true,
+          groups: currentUser.groups,
+          emailVerified: currentUser.emailVerified,
+          mfaEnabled: currentUser.mfaEnabled,
+          mfaSetupComplete: currentUser.mfaSetupComplete
         };
 
         return from(this.userService.userUpdate(updateInput)).pipe(
@@ -458,7 +606,7 @@ export class AuthEffects {
             console.debug('User update response:', response);
             
             // Extract the updated user from the response
-            const updatedUser = response.data?.UsersUpdate?.Data;
+            const updatedUser = response.Data;
             if (!updatedUser) {
               throw new Error('User update succeeded but no user data returned');
             }
