@@ -23,7 +23,7 @@ logger.setLevel(getattr(logging, LOGGING_LEVEL.upper(), logging.INFO))
 
 def check_cognito_mfa_status(email: str) -> Dict[str, bool]:
     """
-    Check user's MFA status in Cognito using adminGetUser.
+    Check user's MFA status in Cognito using multiple methods.
     
     Args:
         email: User's email address (username in Cognito)
@@ -42,25 +42,62 @@ def check_cognito_mfa_status(email: str) -> Dict[str, bool]:
             Username=email
         )
         
-        # Check MFA options
+        # Check MFA options (legacy MFA configuration, mainly SMS)
         mfa_options = response.get('MFAOptions', [])
         has_mfa_options = len(mfa_options) > 0
         
-        # Check UserMFASettingList for detailed MFA settings
+        # Check UserMFASettingList for detailed MFA settings (newer MFA configuration)
+        # Note: This can be empty even when MFA is configured unless AdminSetUserMFAPreference was called
         user_mfa_settings = response.get('UserMFASettingList', [])
         has_mfa_settings = len(user_mfa_settings) > 0
         
-        # Determine MFA status
-        mfa_enabled = has_mfa_options or has_mfa_settings
-        mfa_setup_complete = mfa_enabled  # If enabled, setup is complete
+        # Check PreferredMfaSetting - indicates user has set MFA preferences
+        preferred_mfa = response.get('PreferredMfaSetting')
+        has_preferred_mfa = preferred_mfa is not None
+        
+        logger.debug(f"Raw Cognito response for {email}:")
+        logger.debug(f"  MFAOptions: {mfa_options}")
+        logger.debug(f"  UserMFASettingList: {user_mfa_settings}")
+        logger.debug(f"  PreferredMfaSetting: {preferred_mfa}")
+        
+        # Try to get user's MFA devices using AdminListDevicesForUser
+        try:
+            devices_response = cognito_client.admin_list_devices_for_user(
+                UserPoolId=USER_POOL_ID,
+                Username=email
+            )
+            devices = devices_response.get('Devices', [])
+            has_mfa_devices = any(
+                device.get('DeviceAttributes', [])
+                for device in devices
+                if device.get('DeviceStatus') == 'Confirmed'
+            )
+            logger.debug(f"  MFA Devices: {len(devices)} total, confirmed MFA devices: {has_mfa_devices}")
+        except Exception as device_error:
+            logger.debug(f"Could not check MFA devices: {device_error}")
+            has_mfa_devices = False
+        
+        # Determine MFA status using multiple indicators
+        # MFA is considered enabled if ANY of these are true:
+        # 1. Legacy MFAOptions exist (SMS MFA)
+        # 2. UserMFASettingList contains settings (SMS_MFA or SOFTWARE_TOKEN_MFA)
+        # 3. PreferredMfaSetting is set
+        # 4. User has confirmed MFA devices
+        mfa_enabled = has_mfa_options or has_mfa_settings or has_preferred_mfa or has_mfa_devices
+        
+        # MFA setup is considered complete if MFA is enabled
+        # Additional checks could be added here for more granular status
+        mfa_setup_complete = mfa_enabled
         
         logger.info(f"Cognito MFA status for {email}: enabled={mfa_enabled}, complete={mfa_setup_complete}")
-        logger.debug(f"MFA options: {mfa_options}, MFA settings: {user_mfa_settings}")
+        logger.debug(f"  Indicators: mfa_options={has_mfa_options}, mfa_settings={has_mfa_settings}, preferred={has_preferred_mfa}, devices={has_mfa_devices}")
         
-        return {
+        result = {
             'mfaEnabled': mfa_enabled,
             'mfaSetupComplete': mfa_setup_complete
         }
+        logger.debug(f"Returning MFA status result: {result}")
+        return result
         
     except cognito_client.exceptions.UserNotFoundException:
         logger.warning(f"User {email} not found in Cognito")
@@ -99,13 +136,13 @@ def calculate_user_status(user_data: Dict[str, Any]) -> str:
     mfa_setup_complete = user_data.get('mfaSetupComplete')
     
     # If MFA fields are null, check Cognito for actual status
-    logger.info(f"MFA field values: mfaEnabled={mfa_enabled} (type: {type(mfa_enabled)}), mfaSetupComplete={mfa_setup_complete} (type: {type(mfa_setup_complete)})")
+    logger.debug(f"MFA field values: mfaEnabled={mfa_enabled} (type: {type(mfa_enabled)}), mfaSetupComplete={mfa_setup_complete} (type: {type(mfa_setup_complete)})")
     if mfa_enabled is None or mfa_setup_complete is None:
         email = user_data.get('email')
         if email:
             logger.info(f"MFA fields are null for user {user_data.get('userId')}, checking Cognito")
             cognito_mfa_status = check_cognito_mfa_status(email)
-            logger.info(f"Cognito MFA status result: {cognito_mfa_status}")
+            logger.debug(f"Cognito MFA status result: {cognito_mfa_status}")
             
             # Update user_data with Cognito values for this calculation
             # Note: These will be persisted to DynamoDB by the calling function
@@ -192,7 +229,8 @@ def has_status_relevant_changes(record: Dict[str, Any]) -> bool:
         'emailVerified',
         'phoneVerified',
         'mfaEnabled',      # Whether MFA is enabled for the user
-        'mfaSetupComplete' # Whether MFA setup has been completed
+        'mfaSetupComplete', # Whether MFA setup has been completed
+        'updatedAt'        # Process updatedAt changes (for MFA check triggers)
     }
     
     try:
@@ -204,12 +242,15 @@ def has_status_relevant_changes(record: Dict[str, Any]) -> bool:
             return True
         
         # Check if any status-relevant field changed
+        logger.debug(f"Checking fields: {status_relevant_fields}")
         for field in status_relevant_fields:
             old_value = convert_dynamodb_value(old_image.get(field, {})) if old_image.get(field) else None
             new_value = convert_dynamodb_value(new_image.get(field, {})) if new_image.get(field) else None
             
+            logger.debug(f"Field '{field}': old='{old_value}' new='{new_value}' changed={old_value != new_value}")
+            
             if old_value != new_value:
-                logger.debug(f"Status-relevant field '{field}' changed from '{old_value}' to '{new_value}'")
+                logger.info(f"Status-relevant field '{field}' changed from '{old_value}' to '{new_value}'")
                 return True
         
         logger.debug("No status-relevant fields changed, skipping status calculation")
@@ -227,7 +268,7 @@ def lambda_handler(event, _):
     Expected event: DynamoDB stream event with Records array
     """
     logger.info(f"Processing {len(event.get('Records', []))} DynamoDB stream records")
-    logger.info(f"Environment variables: USER_POOL_ID={USER_POOL_ID}, USERS_TABLE_NAME={USERS_TABLE_NAME}")
+    logger.debug(f"Environment variables: USER_POOL_ID={USER_POOL_ID}, USERS_TABLE_NAME={USERS_TABLE_NAME}")
     
     if not USERS_TABLE_NAME:
         logger.error("USERS_TABLE_NAME environment variable not set")
@@ -240,6 +281,7 @@ def lambda_handler(event, _):
             try:
                 # Only process MODIFY and INSERT events
                 event_name = record.get('eventName')
+                logger.debug(f"Processing record with event type: {event_name}")
                 if event_name not in ['MODIFY', 'INSERT']:
                     logger.debug(f"Skipping event type: {event_name}")
                     continue
@@ -251,6 +293,7 @@ def lambda_handler(event, _):
                 
                 # Extract user data from the record
                 user_data = extract_user_data_from_dynamodb_record(record)
+                logger.debug(f"Extracted user data: userId={user_data.get('userId') if user_data else 'None'}")
                 if not user_data or not user_data.get('userId'):
                     logger.debug("No valid user data found in record")
                     continue
@@ -265,7 +308,7 @@ def lambda_handler(event, _):
                 mfa_status_updated = user_data.get('_mfa_status_updated', False)
                 status_needs_update = current_status != calculated_status
                 
-                logger.info(f"Update check for user {user_id}: status_needs_update={status_needs_update}, mfa_status_updated={mfa_status_updated}")
+                logger.debug(f"Update check for user {user_id}: status_needs_update={status_needs_update}, mfa_status_updated={mfa_status_updated}")
                 
                 # Update if status changed OR if MFA status was updated from Cognito
                 if status_needs_update or mfa_status_updated:
@@ -294,12 +337,22 @@ def lambda_handler(event, _):
                     # Perform the update
                     update_expression = 'SET ' + ', '.join(update_fields)
                     
-                    table.update_item(
-                        Key={'userId': user_id},
-                        UpdateExpression=update_expression,
-                        ExpressionAttributeNames=expression_names if expression_names else None,
-                        ExpressionAttributeValues=expression_values
-                    )
+                    logger.debug(f"Performing DynamoDB update for user {user_id}")
+                    logger.debug(f"UpdateExpression: {update_expression}")
+                    logger.debug(f"ExpressionAttributeValues: {expression_values}")
+                    
+                    # Build update_item parameters
+                    update_params = {
+                        'Key': {'userId': user_id},
+                        'UpdateExpression': update_expression,
+                        'ExpressionAttributeValues': expression_values
+                    }
+                    
+                    # Only add ExpressionAttributeNames if we have any
+                    if expression_names:
+                        update_params['ExpressionAttributeNames'] = expression_names
+                    
+                    table.update_item(**update_params)
                     
                     logger.info(f"Successfully updated user {user_id}")
                 else:
@@ -307,6 +360,8 @@ def lambda_handler(event, _):
                     
             except Exception as e:
                 logger.error(f"Error processing record: {e}")
+                logger.error(f"Exception type: {type(e)}")
+                logger.error(f"Exception details: {str(e)}")
                 # Continue processing other records even if one fails
                 continue
         

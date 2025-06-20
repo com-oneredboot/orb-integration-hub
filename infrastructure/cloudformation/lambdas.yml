@@ -175,6 +175,7 @@ Resources:
                 - cognito-idp:AdminRemoveUserFromGroup
                 - cognito-idp:AdminListGroupsForUser
                 - cognito-idp:AdminGetUser
+                - cognito-idp:AdminListDevicesForUser
                 - cognito-idp:ListUsersInGroup
                 - cognito-idp:GetGroup
                 - cognito-idp:ListGroups
