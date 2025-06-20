@@ -16,8 +16,14 @@ import { MfaSetupDetails } from '../../../../../core/models/MfaSetupDetailsModel
 export const AuthActions = createActionGroup({
   source: 'Auth',
   events: {
-    // Navigation
+    // Navigation and Flow Control
     'Set Current Step': props<{ step: number }>(),
+    
+    // Flow Control Actions (New - Explicit flow management)
+    'Auth Flow Complete': props<{ user: IUsers }>(),
+    'Redirect To Dashboard': emptyProps(),
+    'Redirect To Profile': emptyProps(),
+    'Begin MFA Setup Flow': emptyProps(),
 
     // State 0 - Email
     'Check Email': props<{ email: string }>(),

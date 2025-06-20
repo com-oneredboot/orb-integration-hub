@@ -6,7 +6,7 @@
 // 3rd Party Imports
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import {Router, ActivatedRoute} from '@angular/router';
+import {ActivatedRoute, Router} from '@angular/router';
 import {Store} from '@ngrx/store';
 import {map, Observable, Subject, take, takeUntil, tap} from 'rxjs';
 import { CommonModule } from '@angular/common';
@@ -119,30 +119,25 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         }
       });
     
+    // Pure component - only update form validators when step changes
     this.currentStep$
       .pipe(takeUntil(this.destroy$))
       .subscribe(step => {
         this.updateValidators(step);
         
-        // Handle specific step transitions
-        if (step === AuthSteps.MFA_SETUP) {
-          // When user lands on MFA setup step, first check if MFA is already enabled in Cognito
-          console.log('🎯 [currentStep$ subscription] Landing on MFA_SETUP step, checking Cognito MFA status');
-          this.store.dispatch(AuthActions.checkMFAStatus());
-        } else if (step === AuthSteps.COMPLETE) {
-          // Add a small delay to let any pending step changes complete first
-          // This prevents race conditions where setCurrentStep actions are still in flight
-          setTimeout(() => {
-            this.currentStep$.pipe(take(1)).subscribe(currentStep => {
-              if (currentStep === AuthSteps.COMPLETE) {
-                console.log('🎯 [currentStep$ subscription] Confirmed still on COMPLETE step, handling auth complete');
-                this.handleAuthComplete();
-              } else {
-                console.log('🎯 [currentStep$ subscription] Step changed from COMPLETE to', currentStep, '- not handling auth complete');
-              }
-            });
-          }, 100);
-        }
+        // TODO: Auto-initiate MFA setup logic commented out for testing
+        // if (step === AuthSteps.MFA_SETUP) {
+        //   this.mfaSetupDetails$
+        //     .pipe(take(1))
+        //     .subscribe(details => {
+        //       if (!details?.secretKey || !details?.qrCode) {
+        //         console.debug('[AuthFlowComponent] On MFA_SETUP step without setup details, triggering setup');
+        //         this.store.dispatch(AuthActions.needsMFASetup());
+        //       } else {
+        //         console.debug('[AuthFlowComponent] On MFA_SETUP step with existing setup details');
+        //       }
+        //     });
+        // }
       });
 
     // current user
@@ -300,13 +295,9 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             break;
 
           case AuthSteps.MFA_SETUP:
-            // First check if MFA is already enabled in Cognito
-            console.debug('[onSubmit] MFA_SETUP: Checking Cognito MFA status first');
+            // First check Cognito MFA status to see if user record needs updating
+            console.debug('[onSubmit] MFA_SETUP: Checking Cognito MFA status');
             this.store.dispatch(AuthActions.checkMFAStatus());
-            
-            // Also proceed with MFA setup
-            console.debug('[onSubmit] MFA_SETUP: Also dispatching needsMFASetup');
-            this.store.dispatch(AuthActions.needsMFASetup());
             break;
 
           case AuthSteps.MFA_VERIFY:
@@ -480,6 +471,11 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           Validators.pattern(/^\d{6}$/) // 6-digit code
         ]);
         break;
+      case AuthSteps.MFA_SETUP:
+        // For MFA setup, no specific field validation needed initially
+        // User just needs to click submit to initiate setup
+        // Clear all validators so form is valid
+        break;
     }
 
     // Update form validation
@@ -507,49 +503,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     };
   }
   
-  /**
-   * Handle the authentication complete step
-   * If user has all required attributes, redirect to dashboard
-   * Otherwise, redirect to profile page to complete required info
-   */
-  private handleAuthComplete(): void {
-    console.debug('Handling auth complete');
-    
-    this.currentUser$
-      .pipe(take(1))
-      .subscribe(user => {
-        if (!user) {
-          console.warn('No user found, redirecting to profile');
-          this.router.navigate(['/profile']);
-          return;
-        }
-        
-        // Check if phone verification is needed
-        if (!user.phoneNumber) {
-          console.debug('User is missing phone number, redirecting to phone setup');
-          // Update the current step to phone setup
-          this.store.dispatch(AuthActions.checkPhoneRequired());
-          return;
-        }
-        
-        // Step 7: Check if user can access dashboard or needs to complete profile
-        const canAccessDashboard = this.userService.canAccessDashboard(user);
-        const isFullyValid = this.userService.isUserValid(user);
-        const calculatedStatus = this.userService.calculateUserStatus(user);
-        
-        console.debug('User validation:', { 
-          canAccessDashboard, 
-          isFullyValid,
-          calculatedStatus,
-          currentStatus: user.status,
-          user 
-        });
-        
-        // Always redirect to dashboard - user can complete remaining setup there via call-to-actions
-        console.log('🚀🚀🚀 BRAND NEW VERSION - Auth flow complete, redirecting to dashboard 🚀🚀🚀');
-        this.router.navigate(['/dashboard']);
-      });
-  }
   
   /**
    * Public method to check if a user is valid for templates

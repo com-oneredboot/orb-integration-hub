@@ -18,6 +18,8 @@ import {
   SignUpOutput,
   resetPassword,
   confirmResetPassword,
+  setUpTOTP,
+  verifyTOTPSetup,
 } from 'aws-amplify/auth';
 import {BehaviorSubject, Observable} from 'rxjs';
 
@@ -491,31 +493,107 @@ export class CognitoService {
    */
   async checkMFAPreferences(): Promise<{mfaEnabled: boolean, mfaSetupComplete: boolean}> {
     try {
-      console.debug('[CognitoService][checkMFAPreferences] Checking MFA preferences from Cognito');
+      console.debug('[CognitoService][checkMFAPreferences] Checking MFA status from multiple sources');
       
-      const mfaPreferences = await fetchMFAPreference();
-      console.debug('[CognitoService][checkMFAPreferences] MFA preferences:', mfaPreferences);
+      // Method 1: Try fetchMFAPreference (might only work during auth flow)
+      let mfaPreferences;
+      try {
+        mfaPreferences = await fetchMFAPreference();
+        console.debug('[CognitoService][checkMFAPreferences] fetchMFAPreference result:', mfaPreferences);
+      } catch (mfaError) {
+        console.debug('[CognitoService][checkMFAPreferences] fetchMFAPreference failed:', mfaError);
+        mfaPreferences = null;
+      }
       
-      // Check if TOTP (Time-based One-Time Password) is enabled
-      // The AWS Amplify v6 API uses 'TOTP' property, not 'totp'
-      const totpPreference = (mfaPreferences as any).TOTP || (mfaPreferences as any).totp;
-      const totpEnabled = totpPreference === 'ENABLED' || totpPreference === 'PREFERRED';
+      // Method 2: Check user attributes for MFA-related info
+      let userAttributes;
+      try {
+        userAttributes = await fetchUserAttributes();
+        console.debug('[CognitoService][checkMFAPreferences] User attributes:', userAttributes);
+      } catch (attrError) {
+        console.debug('[CognitoService][checkMFAPreferences] fetchUserAttributes failed:', attrError);
+        userAttributes = null;
+      }
       
-      // For AWS Cognito, if TOTP is enabled, setup is complete
-      const mfaEnabled = totpEnabled;
-      const mfaSetupComplete = totpEnabled;
+      // Method 3: Check auth session for MFA info
+      let authSession;
+      try {
+        authSession = await fetchAuthSession();
+        console.debug('[CognitoService][checkMFAPreferences] Auth session:', {
+          credentials: !!authSession.credentials,
+          tokens: !!authSession.tokens,
+          identityId: authSession.identityId
+        });
+        
+        // Check if tokens have MFA info
+        if (authSession.tokens?.accessToken) {
+          const accessTokenPayload = authSession.tokens.accessToken.payload;
+          console.debug('[CognitoService][checkMFAPreferences] Access token payload:', accessTokenPayload);
+        }
+      } catch (sessionError) {
+        console.debug('[CognitoService][checkMFAPreferences] fetchAuthSession failed:', sessionError);
+        authSession = null;
+      }
       
-      console.debug('[CognitoService][checkMFAPreferences] Parsed MFA status:', { 
+      // Method 4: Check current user for MFA info
+      let currentUser;
+      try {
+        currentUser = await getCurrentUser();
+        console.debug('[CognitoService][checkMFAPreferences] Current user:', currentUser);
+      } catch (userError) {
+        console.debug('[CognitoService][checkMFAPreferences] getCurrentUser failed:', userError);
+        currentUser = null;
+      }
+      
+      // Analyze all the data we collected
+      let mfaEnabled = false;
+      let mfaSetupComplete = false;
+      
+      // Check MFA preferences if available
+      if (mfaPreferences) {
+        const prefs = mfaPreferences as any;
+        if (prefs.TOTP === 'ENABLED' || prefs.TOTP === 'PREFERRED' ||
+            prefs.preferred === 'TOTP' ||
+            (Array.isArray(prefs.enabled) && prefs.enabled.includes('TOTP'))) {
+          mfaEnabled = true;
+          mfaSetupComplete = true;
+          console.debug('[CognitoService][checkMFAPreferences] MFA detected via fetchMFAPreference');
+        }
+      }
+      
+      // Check user attributes for MFA indicators
+      if (userAttributes && !mfaEnabled) {
+        // Look for attributes like 'mfa_enabled', 'software_token_mfa_enabled', etc.
+        console.debug('[CognitoService][checkMFAPreferences] Checking user attributes for MFA:', 
+          Object.keys(userAttributes));
+          
+        if (userAttributes['software_token_mfa_enabled'] === 'true' ||
+            userAttributes['mfa_enabled'] === 'true') {
+          mfaEnabled = true;
+          mfaSetupComplete = true;
+          console.debug('[CognitoService][checkMFAPreferences] MFA detected via user attributes');
+        }
+      }
+      
+      // Check auth session tokens for MFA info
+      if (authSession?.tokens?.accessToken && !mfaEnabled) {
+        const payload = authSession.tokens.accessToken.payload as any;
+        // Check if the token indicates MFA was used
+        if (payload.amr && Array.isArray(payload.amr) && payload.amr.includes('mfa')) {
+          mfaEnabled = true;
+          mfaSetupComplete = true;
+          console.debug('[CognitoService][checkMFAPreferences] MFA detected via auth session token');
+        }
+      }
+      
+      console.debug('[CognitoService][checkMFAPreferences] Final determination:', { 
         mfaEnabled, 
-        mfaSetupComplete,
-        totpPreference,
-        rawPreferences: mfaPreferences
+        mfaSetupComplete
       });
       
       return { mfaEnabled, mfaSetupComplete };
     } catch (error) {
-      console.error('[CognitoService][checkMFAPreferences] Error checking MFA preferences:', error);
-      // If there's an error (like user not found or MFA not configured), assume not enabled
+      console.error('[CognitoService][checkMFAPreferences] Error checking MFA status:', error);
       return { mfaEnabled: false, mfaSetupComplete: false };
     }
   }
@@ -572,6 +650,60 @@ export class CognitoService {
     }
     
     console.log('🔍 === END DEBUG STATUS ===');
+  }
+
+  /**
+   * Set up TOTP MFA for the current user
+   * @returns Promise<AuthResponse> with MFA setup details
+   */
+  public async setupMFA(): Promise<AuthResponse> {
+    try {
+      console.debug('[CognitoService][setupMFA] Starting TOTP setup');
+      
+      // Step 1: Set up TOTP with Cognito
+      const totpSetupDetails = await setUpTOTP();
+      console.debug('[CognitoService][setupMFA] TOTP setup details:', totpSetupDetails);
+      
+      // Step 2: Get current user attributes for issuer
+      const userAttributes = await fetchUserAttributes();
+      const userEmail = userAttributes.email || 'user';
+      
+      // Step 3: Create setup URI with proper issuer format
+      const issuer = `${appName}:${userEmail}`;
+      const setupUri = totpSetupDetails.getSetupUri(issuer);
+      
+      console.debug('[CognitoService][setupMFA] Setup URI created:', setupUri.toString());
+      
+      // Step 4: Return success with MFA setup details
+      const mfaSetupDetails = new MfaSetupDetails({
+        qrCode: userEmail, // Using email as QR identifier
+        secretKey: totpSetupDetails.sharedSecret,
+        setupUri: setupUri.toString()
+      });
+      
+      return {
+        StatusCode: 200,
+        Message: 'MFA setup initiated successfully',
+        Data: new Auth({
+          isSignedIn: true,
+          needsMFASetup: true,
+          mfaType: 'totp',
+          mfaSetupDetails: mfaSetupDetails
+        })
+      };
+      
+    } catch (error) {
+      console.error('[CognitoService][setupMFA] Error setting up MFA:', error);
+      return {
+        StatusCode: 500,
+        Message: 'Failed to set up MFA',
+        Data: new Auth({
+          isSignedIn: true,
+          needsMFASetup: false,
+          message: 'MFA setup failed'
+        })
+      };
+    }
   }
 }
 

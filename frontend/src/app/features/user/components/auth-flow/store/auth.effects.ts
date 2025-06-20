@@ -452,11 +452,29 @@ export class AuthEffects {
   setupMFA$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.needsMFASetup),
-      switchMap(() =>
-        from(this.userService.mfaSetup()).pipe(
+      withLatestFrom(this.store.select(fromAuth.selectMFADetails)),
+      switchMap(([action, existingMfaDetails]) => {
+        console.debug('[Effect][setupMFA$] Checking for existing MFA details:', existingMfaDetails);
+        
+        // If we already have MFA setup details, use them (user should see QR code)
+        if (existingMfaDetails?.secretKey && existingMfaDetails?.qrCode) {
+          console.debug('[Effect][setupMFA$] Using existing MFA setup details');
+          return of(AuthActions.needsMFASetupSuccess());
+        }
+        
+        // Otherwise, initiate fresh MFA setup through Cognito
+        console.debug('[Effect][setupMFA$] No existing MFA details, initiating fresh MFA setup');
+        return from(this.cognitoService.setupMFA()).pipe(
           map(response => {
-            if (response.StatusCode === 200) {
-              return AuthActions.needsMFASetupSuccess();
+            console.debug('[Effect][setupMFA$] Setup MFA response:', response);
+            if (response.StatusCode === 200 && response.Data?.mfaSetupDetails) {
+              // Store the MFA setup details in the state for the UI to display
+              return AuthActions.verifyCognitoPasswordSuccess({
+                message: 'MFA setup initiated',
+                needsMFA: false,
+                needsMFASetup: true,
+                mfaSetupDetails: response.Data.mfaSetupDetails
+              });
             }
             const errorObj = getError('ORB-AUTH-003');
             return AuthActions.needsMFASetupFailure({
@@ -464,13 +482,14 @@ export class AuthEffects {
             });
           }),
           catchError(error => {
+            console.error('[Effect][setupMFA$] MFA setup error:', error);
             const errorObj = getError('ORB-AUTH-003');
             return of(AuthActions.needsMFASetupFailure({
               error: errorObj ? errorObj.message : 'MFA setup failed'
             }));
           })
-        )
-      )
+        );
+      })
     )
   );
 
@@ -901,10 +920,9 @@ export class AuthEffects {
           return of(AuthActions.checkMFAStatus());
         }
 
-        // All verifications complete - this should redirect to dashboard
-        // But we'll let the component handle the redirect
-        console.debug('🚨 [Effect][determineNextStepAfterRefresh$] All verifications complete - DISPATCHING setCurrentStep COMPLETE');
-        return of(AuthActions.setCurrentStep({ step: AuthSteps.COMPLETE }));
+        // All verifications complete - trigger auth flow completion
+        console.debug('🎯 [Effect][determineNextStepAfterRefresh$] All verifications complete - DISPATCHING authFlowComplete');
+        return of(AuthActions.authFlowComplete({ user }));
       })
     )
   );
@@ -929,20 +947,49 @@ export class AuthEffects {
     )
   );
 
-  // Handle MFA status check results - COMPLETELY NEW VERSION
+  // Handle MFA status check results
   handleMFAStatusCheck$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.checkMFAStatusSuccess),
-      tap(() => console.log('🚀🚀🚀 BRAND NEW EFFECT RUNNING 🚀🚀🚀')),
-      switchMap(({ mfaEnabled, mfaSetupComplete }) => {
-        console.log('🚀 [BRAND NEW handleMFAStatusCheck$] MFA status received:', { mfaEnabled, mfaSetupComplete });
+      withLatestFrom(this.store.select(fromAuth.selectCurrentUser)),
+      switchMap(([{ mfaEnabled, mfaSetupComplete }, currentUser]) => {
+        console.debug('[Effect][handleMFAStatusCheck$] Cognito MFA status:', { mfaEnabled, mfaSetupComplete });
         
-        if (!mfaEnabled || !mfaSetupComplete) {
-          console.log('🚀 [BRAND NEW handleMFAStatusCheck$] MFA not setup - DISPATCHING setCurrentStep MFA_SETUP');
-          return of(AuthActions.setCurrentStep({ step: AuthSteps.MFA_SETUP }));
+        if (!currentUser) {
+          console.warn('[Effect][handleMFAStatusCheck$] No current user available');
+          return of(AuthActions.setCurrentStep({ step: AuthSteps.EMAIL }));
+        }
+        
+        // Check if user record needs updating
+        const userMfaEnabled = currentUser.mfaEnabled;
+        const userMfaSetupComplete = currentUser.mfaSetupComplete;
+        console.debug('[Effect][handleMFAStatusCheck$] User record MFA status:', { 
+          userMfaEnabled, 
+          userMfaSetupComplete 
+        });
+        
+        // If user record has nulls or doesn't match Cognito, update the record
+        if (userMfaEnabled !== mfaEnabled || userMfaSetupComplete !== mfaSetupComplete) {
+          console.log('[Effect][handleMFAStatusCheck$] User record MFA status needs updating');
+          console.log('[Effect][handleMFAStatusCheck$] Will update user record to match Cognito:', {
+            from: { mfaEnabled: userMfaEnabled, mfaSetupComplete: userMfaSetupComplete },
+            to: { mfaEnabled, mfaSetupComplete }
+          });
+          
+          // TODO: Dispatch user update action here
+          return of(AuthActions.updateUserAfterMFASetup());
         } else {
-          console.log('🚀 [BRAND NEW handleMFAStatusCheck$] MFA already setup - proceeding to complete');
-          return of(AuthActions.setCurrentStep({ step: AuthSteps.COMPLETE }));
+          console.log('[Effect][handleMFAStatusCheck$] User record MFA status is accurate, no update needed');
+        }
+        
+        // Now handle the flow based on actual Cognito status
+        if (!mfaEnabled || !mfaSetupComplete) {
+          console.debug('[Effect][handleMFAStatusCheck$] MFA not setup in Cognito, staying on MFA_SETUP step');
+          console.log('[Effect][handleMFAStatusCheck$] User needs to set up MFA');
+          return EMPTY; // Stay on current step
+        } else {
+          console.debug('[Effect][handleMFAStatusCheck$] MFA already setup in Cognito, completing flow');
+          return of(AuthActions.authFlowComplete({ user: currentUser }));
         }
       })
     )
@@ -974,8 +1021,8 @@ export class AuthEffects {
         }
 
         // All complete
-        console.debug('[Effect][continueAfterEmailVerificationUpdate$] All verifications complete');
-        return AuthActions.setCurrentStep({ step: AuthSteps.COMPLETE });
+        console.debug('🎯 [Effect][continueAfterEmailVerificationUpdate$] All verifications complete - dispatching authFlowComplete');
+        return AuthActions.authFlowComplete({ user });
       })
     )
   );
@@ -984,12 +1031,59 @@ export class AuthEffects {
   continueAfterMFASetupUpdate$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.updateUserAfterMFASetupSuccess),
-      map(() => {
-        console.debug('[Effect][continueAfterMFASetupUpdate$] MFA setup updated, flow complete');
-        return AuthActions.setCurrentStep({ step: AuthSteps.COMPLETE });
+      map(({ user }) => {
+        console.debug('🎯 [Effect][continueAfterMFASetupUpdate$] MFA setup updated, dispatching authFlowComplete');
+        return AuthActions.authFlowComplete({ user });
       })
     )
   );
+
+  // ===== NEW FLOW CONTROL EFFECTS =====
+  
+  // Handle auth flow completion - determines where to redirect based on user state
+  authFlowComplete$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.authFlowComplete),
+      map(({ user }) => {
+        console.debug('[Effect][authFlowComplete$] Auth flow complete for user:', user.email);
+        return AuthActions.redirectToDashboard();
+      })
+    )
+  );
+
+  // Handle dashboard redirects
+  redirectToDashboard$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.redirectToDashboard),
+      tap(() => {
+        console.debug('[Effect][redirectToDashboard$] Navigating to dashboard');
+        this.router.navigate(['/dashboard']);
+      })
+    ), { dispatch: false }
+  );
+
+  // Handle profile redirects (kept for potential future use)
+  redirectToProfile$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.redirectToProfile),
+      tap(() => {
+        console.debug('[Effect][redirectToProfile$] Navigating to profile');
+        this.router.navigate(['/profile']);
+      })
+    ), { dispatch: false }
+  );
+
+  // Handle MFA setup flow initiation
+  beginMFASetupFlow$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.beginMFASetupFlow),
+      map(() => {
+        console.debug('[Effect][beginMFASetupFlow$] Starting MFA setup flow');
+        return AuthActions.setCurrentStep({ step: AuthSteps.MFA_SETUP });
+      })
+    )
+  );
+
 
   constructor(
     private actions$: Actions,

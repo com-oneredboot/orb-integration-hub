@@ -280,6 +280,7 @@ Resources:
       CodeUri: ../../backend/src/lambdas/user_status_calculator/
       Environment:
         Variables:
+          USER_POOL_ID: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-cognito-user-pool-id}}'
           USERS_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-table-name}}'
       Events:
         DynamoDBStream:

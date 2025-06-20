@@ -10,14 +10,64 @@ from typing import Dict, Any, Optional
 
 # AWS clients
 dynamodb = boto3.resource('dynamodb')
+cognito_client = boto3.client('cognito-idp')
 
 # Environment variables
 LOGGING_LEVEL = os.getenv('LOGGING_LEVEL', 'INFO')
 USERS_TABLE_NAME = os.getenv('USERS_TABLE_NAME')
+USER_POOL_ID = os.getenv('USER_POOL_ID')
 
 # Setting up logging
 logger = logging.getLogger()
 logger.setLevel(getattr(logging, LOGGING_LEVEL.upper(), logging.INFO))
+
+def check_cognito_mfa_status(email: str) -> Dict[str, bool]:
+    """
+    Check user's MFA status in Cognito using adminGetUser.
+    
+    Args:
+        email: User's email address (username in Cognito)
+        
+    Returns:
+        Dictionary with mfaEnabled and mfaSetupComplete status
+    """
+    try:
+        if not USER_POOL_ID:
+            logger.error("USER_POOL_ID environment variable not set")
+            return {'mfaEnabled': False, 'mfaSetupComplete': False}
+        
+        # Call adminGetUser to get user's MFA status
+        response = cognito_client.admin_get_user(
+            UserPoolId=USER_POOL_ID,
+            Username=email
+        )
+        
+        # Check MFA options
+        mfa_options = response.get('MFAOptions', [])
+        has_mfa_options = len(mfa_options) > 0
+        
+        # Check UserMFASettingList for detailed MFA settings
+        user_mfa_settings = response.get('UserMFASettingList', [])
+        has_mfa_settings = len(user_mfa_settings) > 0
+        
+        # Determine MFA status
+        mfa_enabled = has_mfa_options or has_mfa_settings
+        mfa_setup_complete = mfa_enabled  # If enabled, setup is complete
+        
+        logger.info(f"Cognito MFA status for {email}: enabled={mfa_enabled}, complete={mfa_setup_complete}")
+        logger.debug(f"MFA options: {mfa_options}, MFA settings: {user_mfa_settings}")
+        
+        return {
+            'mfaEnabled': mfa_enabled,
+            'mfaSetupComplete': mfa_setup_complete
+        }
+        
+    except cognito_client.exceptions.UserNotFoundException:
+        logger.warning(f"User {email} not found in Cognito")
+        return {'mfaEnabled': False, 'mfaSetupComplete': False}
+    except Exception as e:
+        logger.error(f"Error checking Cognito MFA status for {email}: {e}")
+        return {'mfaEnabled': False, 'mfaSetupComplete': False}
 
 def calculate_user_status(user_data: Dict[str, Any]) -> str:
     """
@@ -45,8 +95,29 @@ def calculate_user_status(user_data: Dict[str, Any]) -> str:
     has_required_verifications = email_verified and phone_verified
     
     # Check MFA requirements are met
-    mfa_enabled = user_data.get('mfaEnabled', False)
-    mfa_setup_complete = user_data.get('mfaSetupComplete', False)
+    mfa_enabled = user_data.get('mfaEnabled')
+    mfa_setup_complete = user_data.get('mfaSetupComplete')
+    
+    # If MFA fields are null, check Cognito for actual status
+    if mfa_enabled is None or mfa_setup_complete is None:
+        email = user_data.get('email')
+        if email:
+            logger.info(f"MFA fields are null for user {user_data.get('userId')}, checking Cognito")
+            cognito_mfa_status = check_cognito_mfa_status(email)
+            
+            # Update user_data with Cognito values for this calculation
+            # Note: These will be persisted to DynamoDB by the calling function
+            user_data['mfaEnabled'] = cognito_mfa_status['mfaEnabled']
+            user_data['mfaSetupComplete'] = cognito_mfa_status['mfaSetupComplete']
+            user_data['_mfa_status_updated'] = True  # Flag to indicate we updated MFA status
+            
+            mfa_enabled = cognito_mfa_status['mfaEnabled'] 
+            mfa_setup_complete = cognito_mfa_status['mfaSetupComplete']
+        else:
+            logger.warning(f"No email found for user {user_data.get('userId')}, cannot check Cognito MFA")
+            mfa_enabled = False
+            mfa_setup_complete = False
+    
     has_mfa_requirements = mfa_enabled and mfa_setup_complete
     
     # User is ACTIVE only when ALL requirements are met
@@ -184,27 +255,50 @@ def lambda_handler(event, _):
                 user_id = user_data['userId']
                 current_status = user_data.get('status', 'UNKNOWN')
                 
-                # Calculate what the status should be
+                # Calculate what the status should be (this may also update MFA fields)
                 calculated_status = calculate_user_status(user_data)
                 
-                # Only update if status needs to change
-                if current_status != calculated_status:
-                    logger.info(f"Updating user {user_id} status from {current_status} to {calculated_status}")
+                # Check if MFA status was updated during calculation
+                mfa_status_updated = user_data.get('_mfa_status_updated', False)
+                status_needs_update = current_status != calculated_status
+                
+                # Update if status changed OR if MFA status was updated from Cognito
+                if status_needs_update or mfa_status_updated:
+                    update_fields = []
+                    expression_names = {}
+                    expression_values = {}
                     
-                    # Update the status in the table
+                    # Always update the timestamp
+                    update_fields.append('updatedAt = :updatedAt')
+                    expression_values[':updatedAt'] = user_data.get('updatedAt', '')
+                    
+                    # Update status if it changed
+                    if status_needs_update:
+                        update_fields.append('#status = :status')
+                        expression_names['#status'] = 'status'
+                        expression_values[':status'] = calculated_status
+                        logger.info(f"Updating user {user_id} status from {current_status} to {calculated_status}")
+                    
+                    # Update MFA fields if they were updated from Cognito
+                    if mfa_status_updated:
+                        update_fields.append('mfaEnabled = :mfaEnabled, mfaSetupComplete = :mfaSetupComplete')
+                        expression_values[':mfaEnabled'] = user_data['mfaEnabled']
+                        expression_values[':mfaSetupComplete'] = user_data['mfaSetupComplete']
+                        logger.info(f"Updating user {user_id} MFA status from Cognito: enabled={user_data['mfaEnabled']}, complete={user_data['mfaSetupComplete']}")
+                    
+                    # Perform the update
+                    update_expression = 'SET ' + ', '.join(update_fields)
+                    
                     table.update_item(
                         Key={'userId': user_id},
-                        UpdateExpression='SET #status = :status, updatedAt = :updatedAt',
-                        ExpressionAttributeNames={'#status': 'status'},
-                        ExpressionAttributeValues={
-                            ':status': calculated_status,
-                            ':updatedAt': user_data.get('updatedAt', '')  # Keep existing timestamp or use current
-                        }
+                        UpdateExpression=update_expression,
+                        ExpressionAttributeNames=expression_names if expression_names else None,
+                        ExpressionAttributeValues=expression_values
                     )
                     
-                    logger.info(f"Successfully updated user {user_id} status to {calculated_status}")
+                    logger.info(f"Successfully updated user {user_id}")
                 else:
-                    logger.debug(f"User {user_id} status {current_status} is already correct")
+                    logger.debug(f"User {user_id} status and MFA fields are already correct")
                     
             except Exception as e:
                 logger.error(f"Error processing record: {e}")

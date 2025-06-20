@@ -156,18 +156,18 @@ description: HTML template file
           
           <div class="health-item health-item--clickable" 
                [ngClass]="(user.mfaEnabled && user.mfaSetupComplete) ? 'health-item--healthy' : 'health-item--warning'"
-               (click)="!(user.mfaEnabled && user.mfaSetupComplete) && goToMFASetup()"
-               [title]="(user.mfaEnabled && user.mfaSetupComplete) ? 'MFA enabled' : 'Click to set up MFA'">
+               (click)="checkMFASetup()"
+               [title]="(user.mfaEnabled && user.mfaSetupComplete) ? 'MFA enabled - click to recheck' : 'Click to check MFA setup'">
             <fa-icon [icon]="(user.mfaEnabled && user.mfaSetupComplete) ? 'check-circle' : 'exclamation-triangle'" 
                      class="health-item__icon"></fa-icon>
             <div class="health-item__content">
               <div class="health-item__title">Multi-Factor Authentication</div>
               <div class="health-item__status">
-                {{ (user.mfaEnabled && user.mfaSetupComplete) ? 'Enabled' : 'MFA setup required' }}
+                {{ (user.mfaEnabled && user.mfaSetupComplete) ? 'Enabled' : 'Status unknown - check setup' }}
               </div>
-              <div class="health-item__action" *ngIf="!(user.mfaEnabled && user.mfaSetupComplete)">
+              <div class="health-item__action">
                 <fa-icon icon="arrow-right" class="health-item__action-icon"></fa-icon>
-                Setup MFA
+                Check MFA Setup
               </div>
             </div>
           </div>

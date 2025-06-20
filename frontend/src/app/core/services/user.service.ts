@@ -547,12 +547,24 @@ export class UserService extends ApiService {
    */
   public async checkCognitoMFAStatus(): Promise<{mfaEnabled: boolean, mfaSetupComplete: boolean}> {
     try {
-      console.debug('[UserService][checkCognitoMFAStatus] Checking MFA status via CognitoService');
+      console.debug('[UserService][checkCognitoMFAStatus] Checking MFA status via backend GraphQL');
       
-      // Use the proper CognitoService method to check MFA preferences from AWS
+      // TODO: Replace this with actual GraphQL query that uses adminGetUser on backend
+      // The backend should implement a query like:
+      // query CheckUserMFAStatus($email: String!) {
+      //   CheckUserMFAStatus(email: $email) {
+      //     mfaEnabled
+      //     mfaSetupComplete
+      //     mfaOptions
+      //     mfaSettings
+      //   }
+      // }
+      
+      // For now, fall back to client-side detection
+      console.debug('[UserService][checkCognitoMFAStatus] Using client-side fallback detection');
       const mfaStatus = await this.cognitoService.checkMFAPreferences();
       
-      console.debug('[UserService][checkCognitoMFAStatus] MFA status from Cognito:', mfaStatus);
+      console.debug('[UserService][checkCognitoMFAStatus] MFA status from client-side:', mfaStatus);
       return mfaStatus;
     } catch (error) {
       console.error('[UserService][checkCognitoMFAStatus] Error checking Cognito MFA status:', error);
@@ -938,6 +950,33 @@ export class UserService extends ApiService {
         message: 'Error sending verification code' 
       };
     }
+  }
+
+  /**
+   * Update user record timestamp to trigger Lambda stream processing
+   * @param userId User ID to update
+   * @returns Observable with update result
+   */
+  public updateUserTimestamp(userId: string): Observable<UsersResponse> {
+    console.debug('[UserService][updateUserTimestamp] Updating timestamp for user:', userId);
+    
+    const updateInput: UsersUpdateInput = {
+      userId: userId,
+      updatedAt: new Date().toISOString()
+    };
+
+    return new Observable(observer => {
+      this.userUpdate(updateInput)
+        .then(response => {
+          console.debug('[UserService][updateUserTimestamp] Update response:', response);
+          observer.next(response);
+          observer.complete();
+        })
+        .catch(error => {
+          console.error('[UserService][updateUserTimestamp] Update error:', error);
+          observer.error(error);
+        });
+    });
   }
 
   /**

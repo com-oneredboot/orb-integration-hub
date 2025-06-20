@@ -9,6 +9,7 @@ import { Observable } from 'rxjs';
 import { Router } from '@angular/router';
 import { IUsers } from '../../../../core/models/UsersModel';
 import * as fromAuth from '../../components/auth-flow/store/auth.selectors';
+import { AuthActions } from '../../components/auth-flow/store/auth.actions';
 import { UserService } from '../../../../core/services/user.service';
 import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -158,19 +159,40 @@ export class DashboardComponent implements OnInit {
   }
 
   /**
-   * Navigate to MFA setup in auth flow
+   * Check MFA setup status by triggering user record update
+   * This will cause the Lambda to check Cognito and update MFA fields
    */
-  goToMFASetup(): void {
-    this.router.navigate(['/authenticate']);
-    // The auth flow will handle checking MFA status
+  checkMFASetup(): void {
+    console.debug('[Dashboard] Checking MFA setup status via user record update');
+    
+    // Dispatch action to update user record with current timestamp
+    // This will trigger the DynamoDB stream and Lambda will check Cognito MFA status
+    this.currentUser$.subscribe(user => {
+      if (user?.userId) {
+        // Update the user record to trigger Lambda stream processing
+        this.userService.updateUserTimestamp(user.userId).subscribe({
+          next: () => {
+            console.debug('[Dashboard] User record timestamp updated successfully');
+            // Refresh session to get updated user data after Lambda processing
+            setTimeout(() => {
+              this.store.dispatch(AuthActions.refreshSession());
+            }, 1000); // Give Lambda time to process
+          },
+          error: (error) => {
+            console.error('[Dashboard] Error updating user timestamp:', error);
+          }
+        });
+      }
+    }).unsubscribe();
   }
 
   /**
    * Navigate to security settings (MFA management)
    */
   goToSecuritySettings(): void {
+    // Use the new explicit MFA setup flow action to avoid redirect loops
+    this.store.dispatch(AuthActions.beginMFASetupFlow());
     this.router.navigate(['/authenticate']);
-    // The auth flow will handle checking MFA status
   }
 
   /**
