@@ -480,3 +480,4 @@ Resources:
       Type: String
       Value: !Ref SmsVerificationSecret
       Description: "Name of the SMS verification secret for lambda access"
+

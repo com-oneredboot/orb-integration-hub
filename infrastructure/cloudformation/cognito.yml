@@ -375,6 +375,32 @@ Resources:
         ProjectId: !Ref ProjectId
     Type: AWS::SSM::Parameter
 
+  UserPoolClientIdParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-cognito-client-id"
+      Type: String
+      Value: !Ref UserPoolClient
+      Description: "Cognito User Pool Client ID for frontend authentication"
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+    Type: AWS::SSM::Parameter
+
+  CognitoQrIssuerParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-cognito-qr-issuer"
+      Type: String
+      Value: !Sub "${CustomerId}-${ProjectId}-${Environment}"
+      Description: "QR code issuer name for TOTP MFA setup"
+      Tags:
+        Billable: true
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+    Type: AWS::SSM::Parameter
+
   # S3
   CognitoLogsBucket:
     Properties:

@@ -98,9 +98,13 @@ Resources:
   ApiKeySecret:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-appsync-graphql-key'
-      Description: "AppSync API Key for unauthenticated access"
-      SecretString: !GetAtt IntegrationHubApiKey.ApiKey
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-graphql-api-key'
+      Description: "GraphQL API Key for frontend authentication"
+      SecretString: !Sub |
+        {
+          "api_key": "${IntegrationHubApiKey}",
+          "description": "GraphQL API key for frontend access"
+        }
 
   IntegrationHubSchema:
     Type: AWS::AppSync::GraphQLSchema
@@ -114,6 +118,19 @@ Resources:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-appsync-api-id
       Type: String
       Value: !GetAtt IntegrationHubApi.ApiId
+
+  GraphqlApiUrlParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-graphql-api-url"
+      Type: String
+      Value: !GetAtt IntegrationHubApi.GraphQLUrl
+      Description: "GraphQL API URL for frontend API calls"
+      Tags:
+        Billable: "true"
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
 
   # DynamoDB DataSources
   {% include 'appsync_datasource_dynamodb.jinja' %}
