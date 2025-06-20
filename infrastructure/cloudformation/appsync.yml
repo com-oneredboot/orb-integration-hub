@@ -233,8 +233,13 @@ Resources:
         #set($expressionValues = {})
         #set($separator = "")
         
+        ## Automatically set updatedAt to current timestamp
+        #set($updateExpression = "updatedAt = :updatedAt")
+        $!expressionValues.put(":updatedAt", $util.dynamodb.toDynamoDB($util.time.nowISO8601()))
+        #set($separator = ", ")
+        
         #foreach($entry in $input.entrySet())
-          #if($entry.key != $key)
+          #if($entry.key != $key && $entry.key != "updatedAt")
             #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
             $!expressionNames.put("#$entry.key", "$entry.key")
             $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
@@ -313,8 +318,13 @@ Resources:
         #set($expressionValues = {})
         #set($separator = "")
         
+        ## Automatically set updatedAt to current timestamp
+        #set($updateExpression = "updatedAt = :updatedAt")
+        $!expressionValues.put(":updatedAt", $util.dynamodb.toDynamoDB($util.time.nowISO8601()))
+        #set($separator = ", ")
+        
         #foreach($entry in $input.entrySet())
-          #if($entry.key != $key)
+          #if($entry.key != $key && $entry.key != "updatedAt")
             #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
             $!expressionNames.put("#$entry.key", "$entry.key")
             $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
@@ -495,8 +505,13 @@ Resources:
         #set($expressionValues = {})
         #set($separator = "")
         
+        ## Automatically set updatedAt to current timestamp
+        #set($updateExpression = "updatedAt = :updatedAt")
+        $!expressionValues.put(":updatedAt", $util.dynamodb.toDynamoDB($util.time.nowISO8601()))
+        #set($separator = ", ")
+        
         #foreach($entry in $input.entrySet())
-          #if($entry.key != $key)
+          #if($entry.key != $key && $entry.key != "updatedAt")
             #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
             $!expressionNames.put("#$entry.key", "$entry.key")
             $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
@@ -575,8 +590,13 @@ Resources:
         #set($expressionValues = {})
         #set($separator = "")
         
+        ## Automatically set updatedAt to current timestamp
+        #set($updateExpression = "updatedAt = :updatedAt")
+        $!expressionValues.put(":updatedAt", $util.dynamodb.toDynamoDB($util.time.nowISO8601()))
+        #set($separator = ", ")
+        
         #foreach($entry in $input.entrySet())
-          #if($entry.key != $key)
+          #if($entry.key != $key && $entry.key != "updatedAt")
             #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
             $!expressionNames.put("#$entry.key", "$entry.key")
             $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
@@ -791,8 +811,13 @@ Resources:
         #set($expressionValues = {})
         #set($separator = "")
         
+        ## Automatically set updatedAt to current timestamp
+        #set($updateExpression = "updatedAt = :updatedAt")
+        $!expressionValues.put(":updatedAt", $util.dynamodb.toDynamoDB($util.time.nowISO8601()))
+        #set($separator = ", ")
+        
         #foreach($entry in $input.entrySet())
-          #if($entry.key != $key)
+          #if($entry.key != $key && $entry.key != "updatedAt")
             #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
             $!expressionNames.put("#$entry.key", "$entry.key")
             $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
@@ -871,8 +896,13 @@ Resources:
         #set($expressionValues = {})
         #set($separator = "")
         
+        ## Automatically set updatedAt to current timestamp
+        #set($updateExpression = "updatedAt = :updatedAt")
+        $!expressionValues.put(":updatedAt", $util.dynamodb.toDynamoDB($util.time.nowISO8601()))
+        #set($separator = ", ")
+        
         #foreach($entry in $input.entrySet())
-          #if($entry.key != $key)
+          #if($entry.key != $key && $entry.key != "updatedAt")
             #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
             $!expressionNames.put("#$entry.key", "$entry.key")
             $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
@@ -1019,8 +1049,13 @@ Resources:
         #set($expressionValues = {})
         #set($separator = "")
         
+        ## Automatically set updatedAt to current timestamp
+        #set($updateExpression = "updatedAt = :updatedAt")
+        $!expressionValues.put(":updatedAt", $util.dynamodb.toDynamoDB($util.time.nowISO8601()))
+        #set($separator = ", ")
+        
         #foreach($entry in $input.entrySet())
-          #if($entry.key != $key)
+          #if($entry.key != $key && $entry.key != "updatedAt")
             #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
             $!expressionNames.put("#$entry.key", "$entry.key")
             $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
@@ -1099,8 +1134,13 @@ Resources:
         #set($expressionValues = {})
         #set($separator = "")
         
+        ## Automatically set updatedAt to current timestamp
+        #set($updateExpression = "updatedAt = :updatedAt")
+        $!expressionValues.put(":updatedAt", $util.dynamodb.toDynamoDB($util.time.nowISO8601()))
+        #set($separator = ", ")
+        
         #foreach($entry in $input.entrySet())
-          #if($entry.key != $key)
+          #if($entry.key != $key && $entry.key != "updatedAt")
             #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
             $!expressionNames.put("#$entry.key", "$entry.key")
             $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
@@ -1213,8 +1253,13 @@ Resources:
         #set($expressionValues = {})
         #set($separator = "")
         
+        ## Automatically set updatedAt to current timestamp
+        #set($updateExpression = "updatedAt = :updatedAt")
+        $!expressionValues.put(":updatedAt", $util.dynamodb.toDynamoDB($util.time.nowISO8601()))
+        #set($separator = ", ")
+        
         #foreach($entry in $input.entrySet())
-          #if($entry.key != $key)
+          #if($entry.key != $key && $entry.key != "updatedAt")
             #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
             $!expressionNames.put("#$entry.key", "$entry.key")
             $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
@@ -1293,8 +1338,13 @@ Resources:
         #set($expressionValues = {})
         #set($separator = "")
         
+        ## Automatically set updatedAt to current timestamp
+        #set($updateExpression = "updatedAt = :updatedAt")
+        $!expressionValues.put(":updatedAt", $util.dynamodb.toDynamoDB($util.time.nowISO8601()))
+        #set($separator = ", ")
+        
         #foreach($entry in $input.entrySet())
-          #if($entry.key != $key)
+          #if($entry.key != $key && $entry.key != "updatedAt")
             #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
             $!expressionNames.put("#$entry.key", "$entry.key")
             $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))

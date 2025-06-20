@@ -897,6 +897,7 @@ export class UserService extends ApiService {
    * @returns Observable with update result
    */
   public updateUserTimestamp(user: IUsers): Observable<UsersResponse> {
+    // Create minimal update input - backend will automatically set updatedAt to current timestamp
     const updateInput: UsersUpdateInput = {
       userId: user.userId,
       cognitoId: user.cognitoId,
@@ -906,7 +907,7 @@ export class UserService extends ApiService {
       lastName: user.lastName,
       status: user.status,
       createdAt: user.createdAt,
-      updatedAt: new Date().toISOString(),
+      updatedAt: user.updatedAt, // This will be ignored and set to current timestamp by backend
       phoneNumber: user.phoneNumber,
       groups: user.groups,
       emailVerified: user.emailVerified,
