@@ -18,11 +18,6 @@ export const authReducer = createReducer(
 
   // Check Email
   on(AuthActions.checkEmail, (state, { email }) => {
-    console.debug('Reducer: checkEmail', {
-      currentState: state,
-      action: 'checkEmail',
-      email
-    });
     return {
       ...state,
       currentEmail: email,
@@ -31,11 +26,6 @@ export const authReducer = createReducer(
     };
   }),
   on(AuthActions.checkEmailSuccess, (state, { userExists }) => {
-    console.debug('Reducer handling checkEmailSuccess:', {
-      currentState: state,
-      userExists,
-      newStep: userExists ? AuthSteps.PASSWORD : AuthSteps.PASSWORD_SETUP
-    });
     return {
       ...state,
       userExists,
@@ -98,12 +88,9 @@ export const authReducer = createReducer(
     error: null
   })),
   on(AuthActions.verifyCognitoPasswordSuccess, (state, { message, needsMFA, needsMFASetup, mfaSetupDetails }) => {
-    console.debug('Reducer handling verifyCognitoPasswordSuccess:', { message, needsMFA, needsMFASetup });
-
     // decide on next step.  NeedsMFASetup trumps all
     let nextStep = (needsMFA)? AuthSteps.MFA_VERIFY: AuthSteps.SIGNIN;
     nextStep = (needsMFASetup) ? AuthSteps.MFA_SETUP : nextStep;
-    console.debug('Reducer handling verifyCognitoPasswordSuccess:', { nextStep });
 
     return {
       ...state,

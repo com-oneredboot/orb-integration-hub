@@ -163,16 +163,13 @@ export class DashboardComponent implements OnInit {
    * This will cause the Lambda to check Cognito and update MFA fields
    */
   checkMFASetup(): void {
-    console.debug('[Dashboard] Checking MFA setup status via user record update');
-    
     // Dispatch action to update user record with current timestamp
     // This will trigger the DynamoDB stream and Lambda will check Cognito MFA status
     this.currentUser$.subscribe(user => {
-      if (user?.userId) {
+      if (user) {
         // Update the user record to trigger Lambda stream processing
-        this.userService.updateUserTimestamp(user.userId).subscribe({
+        this.userService.updateUserTimestamp(user).subscribe({
           next: () => {
-            console.debug('[Dashboard] User record timestamp updated successfully');
             // Refresh session to get updated user data after Lambda processing
             setTimeout(() => {
               this.store.dispatch(AuthActions.refreshSession());

@@ -82,7 +82,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     private userService: UserService,
     private cognitoService: CognitoService
   ) {
-    console.debug('AuthFlowComponent constructor');
 
     // Initialize the form
     this.authForm = this.fb.group({
@@ -124,28 +123,8 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(step => {
         this.updateValidators(step);
-        
-        // TODO: Auto-initiate MFA setup logic commented out for testing
-        // if (step === AuthSteps.MFA_SETUP) {
-        //   this.mfaSetupDetails$
-        //     .pipe(take(1))
-        //     .subscribe(details => {
-        //       if (!details?.secretKey || !details?.qrCode) {
-        //         console.debug('[AuthFlowComponent] On MFA_SETUP step without setup details, triggering setup');
-        //         this.store.dispatch(AuthActions.needsMFASetup());
-        //       } else {
-        //         console.debug('[AuthFlowComponent] On MFA_SETUP step with existing setup details');
-        //       }
-        //     });
-        // }
       });
 
-    // current user
-    this.currentUser$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(user => {
-        console.debug('current user:', user);
-      });
 
     this.mfaSetupDetails$
       .pipe(takeUntil(this.destroy$))
@@ -164,9 +143,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         this.qrCodeDataUrl = await QRCode.toDataURL(qrUrl, options);
       });
 
-    this.debugMode$.pipe().subscribe(debug => {
-      console.debug('debugMode:', debug);
-    });
   }
 
 
@@ -176,46 +152,28 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   }
 
   onSubmit(): void {
-
-    // Logging
-    console.debug('[onSubmit] called');
     if (!this.authForm.valid) {
-      console.debug('[onSubmit] Form invalid:', this.authForm.errors);
       return;
     }
 
-    // Form Submitted
-    console.debug('[onSubmit] Form submitted', this.authForm.value);
     this.currentStep$
       .pipe(
         take(1),
-        tap(step => console.debug('[onSubmit] Processing step:', step, 'Type:', typeof step, 'Enum:', this.authSteps[step])),
         takeUntil(this.destroy$))
       .subscribe(step => {
         const email = this.authForm.get('email')?.value;
         const password = this.authForm.get('password')?.value;
         const emailCode = this.authForm.get('emailCode')?.value;
         const mfaCode = this.authForm.get('mfaCode')?.value;
-        console.debug('[onSubmit] Step processing values:', {
-          step,
-          stepName: this.authSteps[step],
-          email,
-          hasPassword: !!password,
-          hasEmailCode: !!emailCode,
-          hasMfaCode: !!mfaCode
-        });
         switch (step) {
           case AuthSteps.EMAIL:
-            console.debug('[onSubmit] Dispatching checkEmail action:', { email });
             this.store.dispatch(AuthActions.checkEmail({ email }));
             break;
 
           case AuthSteps.PASSWORD:
             if (!password) {
-              console.error('[onSubmit] PASSWORD: password missing');
               return;
             }
-            console.debug('[onSubmit] Dispatching verifyCognitoPassword:', { email, password });
             this.store.dispatch(AuthActions.verifyCognitoPassword({ email, password }));
             break;
 
@@ -238,19 +196,15 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
               updatedAt: new Date().toISOString()
             };
             if (!password) {
-              console.error('[onSubmit] PASSWORD_SETUP: password missing');
               return;
             }
-            console.debug('[onSubmit] Dispatching createUser:', { userInput, password });
             this.store.dispatch(AuthActions.createUser({input: userInput, password: password } ));
             break;
 
           case AuthSteps.EMAIL_VERIFY:
             if (!emailCode) {
-              console.error('[onSubmit] EMAIL_VERIFY: emailCode missing');
               return;
             }
-            console.debug('[onSubmit] Dispatching verifyEmail:', { email, emailCode });
             this.store.dispatch(AuthActions.verifyEmail({
               code: emailCode,
               email: email
@@ -259,15 +213,11 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
 
           case AuthSteps.SIGNIN:
             if (!password) {
-              console.error('[onSubmit] SIGNIN: password missing');
               return;
             }
             if (!email) {
-              console.error('[onSubmit] SIGNIN: email missing');
               return;
             }
-
-            console.debug('[onSubmit] Dispatching signIn:', { email, password });
             this.store.dispatch(AuthActions.signIn({
               email,
               password
@@ -277,40 +227,33 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           case AuthSteps.PHONE_SETUP:
             const setupPhoneNumber = this.authForm.get('phoneNumber')?.value;
             if (!setupPhoneNumber) {
-              console.error('[onSubmit] PHONE_SETUP: phoneNumber missing');
               return;
             }
-            console.debug('[onSubmit] Dispatching setupPhone:', { setupPhoneNumber });
             this.store.dispatch(AuthActions.setupPhone({ phoneNumber: setupPhoneNumber }));
             break;
 
           case AuthSteps.PHONE_VERIFY:
             const phoneCode = this.authForm.get('phoneCode')?.value;
             if (!phoneCode) {
-              console.error('[onSubmit] PHONE_VERIFY: phoneCode missing');
               return;
             }
-            console.debug('[onSubmit] Dispatching verifyPhone:', { phoneCode });
             this.store.dispatch(AuthActions.verifyPhone({ code: phoneCode }));
             break;
 
           case AuthSteps.MFA_SETUP:
             // First check Cognito MFA status to see if user record needs updating
-            console.debug('[onSubmit] MFA_SETUP: Checking Cognito MFA status');
             this.store.dispatch(AuthActions.checkMFAStatus());
             break;
 
           case AuthSteps.MFA_VERIFY:
             if(!mfaCode) {
-              console.error('[onSubmit] MFA_VERIFY: mfaCode missing');
               return;
             }
-            console.debug('[onSubmit] Dispatching needsMFA:', { mfaCode });
             this.store.dispatch(AuthActions.needsMFA( {code: mfaCode, rememberDevice: false}));
             break;
 
           default:
-            console.error('[onSubmit] Unhandled step:', step, this.authSteps[step]);
+            break;
         }
       });
   }
@@ -546,13 +489,9 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
    */
   private async loadUserSessionAndDetermineStep(): Promise<void> {
     try {
-      console.debug('[loadUserSessionAndDetermineStep] Loading user session data');
-      
       // Check if signout query parameter is present
       const signoutParam = this.route.snapshot.queryParams['signout'];
       if (signoutParam === 'true') {
-        console.debug('[loadUserSessionAndDetermineStep] Signout parameter detected, forcing user signout');
-        
         try {
           // Dispatch signout action to clear auth state
           this.store.dispatch(AuthActions.signout());
@@ -563,8 +502,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           // Clear browser storage
           localStorage.clear();
           sessionStorage.clear();
-          
-          console.debug('[loadUserSessionAndDetermineStep] User successfully signed out, showing auth form');
           
           // Remove signout parameter from URL without page reload
           this.router.navigate(['/authenticate'], { replaceUrl: true });
@@ -579,18 +516,14 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       const isAuthenticated = await this.cognitoService.checkIsAuthenticated();
       
       if (isAuthenticated) {
-        console.debug('[loadUserSessionAndDetermineStep] User is authenticated, loading user data');
-        
         // Always load user profile data regardless of authentication
         // The effects will handle determining the next verification step
         this.store.dispatch(AuthActions.refreshSession());
         return;
       }
       
-      console.debug('[loadUserSessionAndDetermineStep] No existing session found, starting with email step');
       this.store.dispatch(AuthActions.setCurrentStep({ step: AuthSteps.EMAIL }));
     } catch (error) {
-      console.debug('[loadUserSessionAndDetermineStep] Error checking session:', error);
       // If there's an error checking the session, start with email step
       this.store.dispatch(AuthActions.setCurrentStep({ step: AuthSteps.EMAIL }));
     }

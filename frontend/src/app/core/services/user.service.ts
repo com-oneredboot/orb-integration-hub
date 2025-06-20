@@ -547,8 +547,6 @@ export class UserService extends ApiService {
    */
   public async checkCognitoMFAStatus(): Promise<{mfaEnabled: boolean, mfaSetupComplete: boolean}> {
     try {
-      console.debug('[UserService][checkCognitoMFAStatus] Checking MFA status via backend GraphQL');
-      
       // TODO: Replace this with actual GraphQL query that uses adminGetUser on backend
       // The backend should implement a query like:
       // query CheckUserMFAStatus($email: String!) {
@@ -561,10 +559,8 @@ export class UserService extends ApiService {
       // }
       
       // For now, fall back to client-side detection
-      console.debug('[UserService][checkCognitoMFAStatus] Using client-side fallback detection');
       const mfaStatus = await this.cognitoService.checkMFAPreferences();
       
-      console.debug('[UserService][checkCognitoMFAStatus] MFA status from client-side:', mfaStatus);
       return mfaStatus;
     } catch (error) {
       console.error('[UserService][checkCognitoMFAStatus] Error checking Cognito MFA status:', error);
@@ -700,16 +696,10 @@ export class UserService extends ApiService {
    * @returns Promise with UserResponse
    */
   public async userUpdate(input: UsersUpdateInput): Promise<UsersResponse> {
-    console.debug('userUpdate input:', input);
-    console.debug('🔍 DEBUG: Enhanced userUpdate method with token validation is running');
-
     try {
       // Check Cognito auth status
       const cognitoProfile = await this.cognitoService.getCognitoProfile();
-      console.debug('Cognito profile for update:', cognitoProfile);
-      
       const isAuthenticated = await this.cognitoService.checkIsAuthenticated();
-      console.debug('Is authenticated:', isAuthenticated);
       
       // Additional token validation - check if tokens are actually valid
       let hasValidTokens = false;
@@ -723,31 +713,10 @@ export class UserService extends ApiService {
           const idTokenExp = session.tokens?.idToken?.payload?.exp;
           
           hasValidTokens = !!(accessTokenExp && idTokenExp && accessTokenExp > now && idTokenExp > now);
-          console.debug('Token expiration check:', { 
-            now, 
-            accessTokenExp, 
-            idTokenExp, 
-            hasValidTokens,
-            accessExpired: accessTokenExp ? accessTokenExp <= now : 'no-token',
-            idExpired: idTokenExp ? idTokenExp <= now : 'no-token'
-          });
-          
-          // Debug token claims for userPool authentication
-          console.debug('Token claims for debugging:', {
-            accessTokenClaims: session.tokens?.accessToken?.payload,
-            idTokenClaims: session.tokens?.idToken?.payload,
-            userSub: session.tokens?.idToken?.payload?.sub,
-            userGroups: session.tokens?.idToken?.payload['cognito:groups'],
-            tokenUse: session.tokens?.accessToken?.payload?.['token_use']
-          });
         } catch (tokenError) {
           console.warn('Error checking token validity:', tokenError);
           hasValidTokens = false;
         }
-      }
-      
-      if (!cognitoProfile || !isAuthenticated || !hasValidTokens) {
-        console.warn('User not properly authenticated or tokens expired - skipping userPool auth and using apiKey directly');
       }
 
       if (!input.userId) {
@@ -799,17 +768,10 @@ export class UserService extends ApiService {
         hasUpdates = true;
       }
 
-      if (Object.keys(updateInput).length <= 2) {
-        console.debug('Only updating timestamp, no other field changes');
-      }
-
-      console.debug('Update input:', updateInput);
-
       let response: GraphQLResult<UsersUpdateResponse>;
       
       // Skip userPool auth if user is not properly authenticated or tokens are expired
       if (!cognitoProfile || !isAuthenticated || !hasValidTokens) {
-        console.debug('Skipping userPool auth - using apiKey directly');
         response = await this.mutate(
           UsersUpdateMutation,
           { input: updateInput },
@@ -826,16 +788,6 @@ export class UserService extends ApiService {
         } catch (authError) {
           console.warn('userPool authentication failed, trying API key:', authError);
           
-          // Log detailed error information for debugging
-          if (authError && typeof authError === 'object') {
-            console.debug('userPool error details:', {
-              errorType: (authError as any)?.errors?.[0]?.errorType,
-              errorMessage: (authError as any)?.errors?.[0]?.message,
-              data: (authError as any)?.data,
-              fullError: authError
-            });
-          }
-          
           // Fallback to API key authentication
           response = await this.mutate(
             UsersUpdateMutation,
@@ -844,8 +796,6 @@ export class UserService extends ApiService {
           ) as GraphQLResult<UsersUpdateResponse>;
         }
       }
-
-      console.debug('userUpdate Response:', response);
 
       if (!response.data) {
         return {
@@ -886,12 +836,9 @@ export class UserService extends ApiService {
    * @returns Promise with statusCode and optional message
    */
   public async sendSMSVerificationCode(phoneNumber: string): Promise<{ statusCode: number, message?: string }> {
-    console.debug('sendSMSVerificationCode:', phoneNumber);
-    
     try {
       // Check if user is authenticated - only authenticated users can verify phone
       const isAuthenticated = await this.cognitoService.checkIsAuthenticated();
-      console.debug('sendSMSVerificationCode - authenticated:', isAuthenticated);
       
       if (!isAuthenticated) {
         return { 
@@ -900,17 +847,12 @@ export class UserService extends ApiService {
         };
       }
       
-      // Debug: Check what groups the user currently has
-      const userGroups = await this.cognitoService.getCurrentUserGroups();
-      console.debug('🔍 Current user Cognito groups:', userGroups);
-      
       // Validate user has required Cognito groups for SMS verification
       const hasAccess = await this.cognitoService.validateGraphQLAccess(['USER', 'OWNER']);
-      console.debug('🔍 User has SMS verification access:', hasAccess);
       
       if (!hasAccess) {
-        console.error('❌ User does not have required Cognito groups for SMS verification');
-        console.error('❌ Required groups: [USER, OWNER], User groups:', userGroups);
+        const userGroups = await this.cognitoService.getCurrentUserGroups();
+        console.error('User does not have required Cognito groups for SMS verification');
         return { 
           statusCode: 403, 
           message: `User does not have required permissions for SMS verification. User groups: [${userGroups.join(', ')}], Required: [USER, OWNER]` 
@@ -928,10 +870,7 @@ export class UserService extends ApiService {
         "userPool"
       ) as any;
 
-      console.debug('SMS verification response:', response);
-
       if (response.data?.SmsVerification?.StatusCode === 200) {
-        
         return { 
           statusCode: 200, 
           message: response.data.SmsVerification.Message || 'Verification code sent' 
@@ -954,21 +893,31 @@ export class UserService extends ApiService {
 
   /**
    * Update user record timestamp to trigger Lambda stream processing
-   * @param userId User ID to update
+   * @param user User object with all required fields
    * @returns Observable with update result
    */
-  public updateUserTimestamp(userId: string): Observable<UsersResponse> {
-    console.debug('[UserService][updateUserTimestamp] Updating timestamp for user:', userId);
-    
+  public updateUserTimestamp(user: IUsers): Observable<UsersResponse> {
     const updateInput: UsersUpdateInput = {
-      userId: userId,
-      updatedAt: new Date().toISOString()
+      userId: user.userId,
+      cognitoId: user.cognitoId,
+      cognitoSub: user.cognitoSub,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      status: user.status,
+      createdAt: user.createdAt,
+      updatedAt: new Date().toISOString(),
+      phoneNumber: user.phoneNumber,
+      groups: user.groups,
+      emailVerified: user.emailVerified,
+      phoneVerified: user.phoneVerified,
+      mfaEnabled: user.mfaEnabled,
+      mfaSetupComplete: user.mfaSetupComplete
     };
 
     return new Observable(observer => {
       this.userUpdate(updateInput)
         .then(response => {
-          console.debug('[UserService][updateUserTimestamp] Update response:', response);
           observer.next(response);
           observer.complete();
         })
@@ -986,29 +935,21 @@ export class UserService extends ApiService {
    * @returns Promise<boolean> indicating if the code is valid
    */
   public async verifySMSCode(phoneNumber: string, code: string): Promise<boolean> {
-    console.debug('verifySMSCode:', phoneNumber, code);
-    
     try {
       // Check if user is authenticated - only authenticated users can verify phone
       const isAuthenticated = await this.cognitoService.checkIsAuthenticated();
-      console.debug('verifySMSCode - authenticated:', isAuthenticated);
       
       if (!isAuthenticated) {
         console.error('User must be authenticated to verify SMS code');
         return false;
       }
       
-      // Debug: Check what groups the user currently has
-      const userGroups = await this.cognitoService.getCurrentUserGroups();
-      console.debug('🔍 Current user Cognito groups (verify):', userGroups);
-      
       // Validate user has required Cognito groups for SMS verification
       const hasAccess = await this.cognitoService.validateGraphQLAccess(['USER', 'OWNER']);
-      console.debug('🔍 User has SMS verification access (verify):', hasAccess);
       
       if (!hasAccess) {
-        console.error('❌ User does not have required Cognito groups for SMS verification (verify)');
-        console.error('❌ Required groups: [USER, OWNER], User groups:', userGroups);
+        const userGroups = await this.cognitoService.getCurrentUserGroups();
+        console.error('User does not have required Cognito groups for SMS verification');
         return false;
       }
       
@@ -1024,37 +965,17 @@ export class UserService extends ApiService {
         "userPool"
       ) as any;
 
-      console.debug('SMS verification check response:', response);
-      console.debug('🔍 About to check response structure...');
-      console.debug('🔍 Response type:', typeof response);
-      console.debug('🔍 Response has data:', 'data' in response);
-      
       try {
-        // Simplified debugging - just log the critical parts
-        console.debug('🔍 response.data:', response.data);
-        console.debug('🔍 SmsVerification:', response.data?.SmsVerification);
-
         // Check if the lambda verified the code successfully
-        console.debug('🔍 Checking response structure...');
-        console.debug('🔍 response.data exists:', !!response.data);
-        console.debug('🔍 response.data.SmsVerification exists:', !!response.data?.SmsVerification);
-        console.debug('🔍 StatusCode:', response.data?.SmsVerification?.StatusCode);
-        
         if (response.data?.SmsVerification?.StatusCode === 200) {
           const verificationData = response.data.SmsVerification.Data;
-          console.debug('🔍 SMS verification data:', verificationData);
-          console.debug('🔍 Verification result:', verificationData?.valid === true);
           const result = verificationData?.valid === true;
-          console.debug('🔍 Returning verification result:', result);
           return result;
         }
 
-        console.debug('🔍 SMS verification failed - StatusCode:', response.data?.SmsVerification?.StatusCode);
-        console.debug('🔍 Returning false for failed verification');
         return false;
       } catch (parseError) {
-        console.error('🔍 Error parsing SMS verification response:', parseError);
-        console.debug('🔍 Raw response object:', response);
+        console.error('Error parsing SMS verification response:', parseError);
         return false;
       }
 

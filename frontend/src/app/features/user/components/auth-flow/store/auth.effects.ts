@@ -27,18 +27,15 @@ export class AuthEffects {
   checkEmail$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.checkEmail),
-      tap(action => console.debug('Effect [CheckEmail]: Starting', action)),
       switchMap(({ email }) => {
-        console.debug('Effect [CheckEmail]: Making service call');
         const userInput: UsersQueryByEmailInput = { email: email };
         
         return from(this.userService.userExists(userInput)).pipe(
-          tap(result => console.debug('Effect [CheckEmail]: Service returned', result)),
           map((result: UsersListResponse) => {
             const users = result.Data || [];
             if (result.StatusCode === 500 && users.length > 1) {
               // Duplicate user error
-              console.error('Effect [CheckEmail]: Duplicate users found for email:', email, users);
+              console.error('Duplicate users found for email:', email, users);
               const errorObj = getError('ORB-AUTH-006'); // Use a suitable error code
               return AuthActions.checkEmailFailure({
                 error: errorObj ? errorObj.message : 'Duplicate users found for this email.'
@@ -74,12 +71,11 @@ export class AuthEffects {
             return of(AuthActions.checkEmailFailure({
               error: errorObj ? errorObj.message : 'Unexpected error'
             }));
-          }),
-          tap(resultAction => console.debug('Effect [CheckEmail]: Emitting action', resultAction))
+          })
         );
       }),
       catchError(error => {
-        console.error('Effect [CheckEmail]: Outer error caught', error);
+        console.error('Effect [CheckEmail]: Error caught', error);
         const errorObj = getError('ORB-SYS-001');
         return of(AuthActions.checkEmailFailure({
           error: errorObj ? errorObj.message : 'Unexpected error'
@@ -125,11 +121,9 @@ export class AuthEffects {
   checkEmailVerificationStatus$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.checkEmailVerificationStatus),
-      tap(({ email }) => console.debug('[Effect][checkEmailVerificationStatus$] Start', { email })),
       switchMap(({ email }) => {
         return from(this.userService.checkCognitoEmailVerification(email)).pipe(
           map(isVerified => {
-            console.debug('[Effect][checkEmailVerificationStatus$] Cognito verification status:', isVerified);
             return AuthActions.checkEmailVerificationStatusSuccess({ isVerified, email });
           }),
           catchError(error => {
@@ -155,8 +149,6 @@ export class AuthEffects {
           // Skip if no user or already verified in our DB
           return EMPTY;
         }
-
-        console.debug('[Effect][autoUpdateEmailVerification$] Auto-updating email verification for user:', currentUser.userId);
         
         // Update the user record with verified email
         const updateInput = {
@@ -179,7 +171,6 @@ export class AuthEffects {
 
         return from(this.userService.userUpdate(updateInput)).pipe(
           map(response => {
-            console.debug('[Effect][autoUpdateEmailVerification$] User update response:', response);
             const updatedUser = response.Data;
             if (!updatedUser) {
               throw new Error('User update succeeded but no user data returned');
@@ -200,17 +191,15 @@ export class AuthEffects {
   verifyEmail$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.verifyEmail),
-      tap(({ code, email }) => console.debug('[Effect][verifyEmail$] Start', { code, email })),
       switchMap(({ code, email }) => {
 
         return from(this.userService.userExists({ email })).pipe(
-          tap(user => console.debug('[Effect][verifyEmail$] userExists result', user)),
           switchMap(user => {
             const users = Array.isArray(user.Data) ? user.Data : [];
             if (user.StatusCode === 500 && users.length > 1) {
 
               // Duplicate user error
-              console.error('[Effect][verifyEmail$] Duplicate users found for email:', email, users);
+              console.error('Duplicate users found for email:', email, users);
               const errorObj = getError('ORB-AUTH-006');
               return of(AuthActions.verifyEmailFailure({
                 error: errorObj ? errorObj.message : 'Duplicate users found for this email.'
@@ -220,7 +209,6 @@ export class AuthEffects {
 
             if (!user || user.StatusCode !== 200 || users.length === 0) {
               const errorObj = getError('ORB-AUTH-003');
-              console.error('[Effect][verifyEmail$] User not found or error', user);
               return of(AuthActions.verifyEmailFailure({
                 error: errorObj ? errorObj.message : 'Email verification failed'
               }));
@@ -228,19 +216,16 @@ export class AuthEffects {
 
             // Now verify the email with the userId
             return from(this.userService.emailVerify(code, email)).pipe(
-              tap(response => console.debug('[Effect][verifyEmail$] emailVerify response', response)),
               map(response => {
                 if (response.StatusCode === 200) {
                   return AuthActions.verifyEmailSuccess({ email });
                 }
                 const errorObj = getError('ORB-AUTH-003');
-                console.error('[Effect][verifyEmail$] emailVerify failed', response);
                 return AuthActions.verifyEmailFailure({
                   error: errorObj ? errorObj.message : 'Email verification failed'
                 });
               }),
               catchError(error => {
-                console.error('[Effect][verifyEmail$] emailVerify threw error', error);
                 const errorObj = getError('ORB-AUTH-003');
                 return of(AuthActions.verifyEmailFailure({
                   error: errorObj ? errorObj.message : 'Email verification failed'
@@ -249,7 +234,6 @@ export class AuthEffects {
             );
           }),
           catchError(error => {
-            console.error('[Effect][verifyEmail$] userExists threw error', error);
             const errorObj = getError('ORB-AUTH-003');
             return of(AuthActions.verifyEmailFailure({
               error: errorObj ? errorObj.message : 'Email verification failed'
@@ -273,8 +257,6 @@ export class AuthEffects {
             error: 'Missing email or user data'
           }));
         }
-
-        console.debug('Effect: Updating user after email verification', { email, currentUser });
         
         // Update the user record with verified email
         const updateInput = {
@@ -297,8 +279,6 @@ export class AuthEffects {
 
         return from(this.userService.userUpdate(updateInput)).pipe(
           map(response => {
-            console.debug('User update response after email verification:', response);
-            
             // Extract the updated user from the response
             const updatedUser = response.Data;
             if (!updatedUser) {
@@ -324,8 +304,6 @@ export class AuthEffects {
       switchMap(({ email, password }) =>
         from(this.userService.userSignIn( email, password )).pipe(
           map(response => {
-
-            console.debug('verifyCognitoPassword response:', response);
 
             // error state
             if (response.StatusCode !== 200) {
@@ -362,7 +340,6 @@ export class AuthEffects {
       switchMap(([{ needsMFA, needsMFASetup }, email]) => {
         // Only auto-trigger signIn if no MFA is required
         if (!needsMFA && !needsMFASetup && email) {
-          console.debug('Auto-triggering signIn after password verification');
           return of(AuthActions.signIn({ 
             email, 
             password: '' // Password already verified, we just need to complete the sign-in
@@ -377,11 +354,9 @@ export class AuthEffects {
   checkMFAStatus$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.checkMFAStatus),
-      tap(() => console.debug('[Effect][checkMFAStatus$] Start')),
       switchMap(() => {
         return from(this.userService.checkCognitoMFAStatus()).pipe(
           map(({ mfaEnabled, mfaSetupComplete }) => {
-            console.debug('[Effect][checkMFAStatus$] Cognito MFA status:', { mfaEnabled, mfaSetupComplete });
             return AuthActions.checkMFAStatusSuccess({ mfaEnabled, mfaSetupComplete });
           }),
           catchError(error => {
@@ -407,8 +382,6 @@ export class AuthEffects {
           // Skip if no user or already enabled in our DB
           return EMPTY;
         }
-
-        console.debug('[Effect][autoUpdateMFAStatus$] Auto-updating MFA status for user:', currentUser.userId);
         
         // Update the user record with MFA enabled status
         const updateInput = {
@@ -431,7 +404,6 @@ export class AuthEffects {
 
         return from(this.userService.userUpdate(updateInput)).pipe(
           map(response => {
-            console.debug('[Effect][autoUpdateMFAStatus$] User update response:', response);
             const updatedUser = response.Data;
             if (!updatedUser) {
               throw new Error('User update succeeded but no user data returned');
@@ -454,19 +426,15 @@ export class AuthEffects {
       ofType(AuthActions.needsMFASetup),
       withLatestFrom(this.store.select(fromAuth.selectMFADetails)),
       switchMap(([action, existingMfaDetails]) => {
-        console.debug('[Effect][setupMFA$] Checking for existing MFA details:', existingMfaDetails);
         
         // If we already have MFA setup details, use them (user should see QR code)
         if (existingMfaDetails?.secretKey && existingMfaDetails?.qrCode) {
-          console.debug('[Effect][setupMFA$] Using existing MFA setup details');
           return of(AuthActions.needsMFASetupSuccess());
         }
         
         // Otherwise, initiate fresh MFA setup through Cognito
-        console.debug('[Effect][setupMFA$] No existing MFA details, initiating fresh MFA setup');
         return from(this.cognitoService.setupMFA()).pipe(
           map(response => {
-            console.debug('[Effect][setupMFA$] Setup MFA response:', response);
             if (response.StatusCode === 200 && response.Data?.mfaSetupDetails) {
               // Store the MFA setup details in the state for the UI to display
               return AuthActions.verifyCognitoPasswordSuccess({
@@ -504,8 +472,6 @@ export class AuthEffects {
             error: 'Missing user data'
           }));
         }
-
-        console.debug('Effect: Updating user after MFA setup', { currentUser });
         
         // Update the user record with MFA enabled
         const updateInput = {
@@ -528,8 +494,6 @@ export class AuthEffects {
 
         return from(this.userService.userUpdate(updateInput)).pipe(
           map(response => {
-            console.debug('User update response after MFA setup:', response);
-            
             // Extract the updated user from the response
             const updatedUser = response.Data;
             if (!updatedUser) {
@@ -581,7 +545,6 @@ export class AuthEffects {
       withLatestFrom(this.store.select(fromAuth.selectCurrentEmail)),
       switchMap(([, email]) => {
         if (email) {
-          console.debug('Auto-triggering signIn after MFA verification to load user data');
           return of(AuthActions.signIn({ 
             email, 
             password: '' // Password already verified, we just need to complete the sign-in and load user data
@@ -596,26 +559,21 @@ export class AuthEffects {
   signIn$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.signIn),
-      tap(action => console.debug('Effect [SignIn]: Starting', action)),
       switchMap(({ email, password }) =>
         from(this.userService.userSignIn(email, password)).pipe(
-          tap(response => console.debug('Effect [SignIn]: Response', response)),
           map(response => {
             if (response.StatusCode === 200 && response.Data?.isSignedIn) {
-              console.debug('Effect [SignIn]: Success - dispatching signInSuccess');
               return AuthActions.signInSuccess({ 
                 user: response.Data.user, 
                 message: response.Message || 'Sign in successful' 
               });
             }
-            console.error('Effect [SignIn]: Failed', response);
             const errorObj = getError('ORB-AUTH-002');
             return AuthActions.signInFailure({
               error: response.Message || (errorObj ? errorObj.message : 'Sign in failed')
             });
           }),
           catchError(error => {
-            console.error('Effect [SignIn]: Error caught', error);
             const errorObj = getError('ORB-AUTH-002');
             return of(AuthActions.signInFailure({
               error: errorObj ? errorObj.message : 'Sign in failed'
@@ -634,7 +592,6 @@ export class AuthEffects {
         // Then attempt to sign out from Cognito service
         return from(this.cognitoService.signOut()).pipe(
           map(() => {
-            console.debug('Signout successful, returning success action');
             return AuthActions.signoutSuccess();
           }),
           catchError(error => {
@@ -652,7 +609,6 @@ export class AuthEffects {
     this.actions$.pipe(
       ofType(AuthActions.signoutSuccess),
       tap(() => {
-        console.debug('Signout success - navigating to authenticate page');
         this.router.navigate(['/authenticate']);
       })
     ),
@@ -663,7 +619,6 @@ export class AuthEffects {
   checkPhoneRequired$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.checkPhoneRequired),
-      tap(() => console.debug('Effect: Checking if phone setup is required')),
       switchMap(() => {
         return of(AuthActions.checkPhoneRequiredSuccess({ required: true }))
           .pipe(
@@ -679,7 +634,6 @@ export class AuthEffects {
   setupPhone$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.setupPhone),
-      tap(action => console.debug('Effect: Setting up phone', action)),
       switchMap(({ phoneNumber }) => {
         return from(this.userService.sendSMSVerificationCode(phoneNumber)).pipe(
           map(response => {
@@ -705,7 +659,6 @@ export class AuthEffects {
   verifyPhone$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.verifyPhone),
-      tap(action => console.debug('Effect: Verifying phone code', action)),
       withLatestFrom(this.store.select(fromAuth.selectPhoneValidationId)),
       switchMap(([{ code }, phoneNumber]) => {
         if (!phoneNumber) {
@@ -716,13 +669,9 @@ export class AuthEffects {
         
         return from(this.userService.verifySMSCode(phoneNumber, code)).pipe(
           map(isValid => {
-            console.debug('🔍 SMS verification result in effect:', isValid);
             if (isValid) {
-              console.debug('🔍 Dispatching verifyPhoneSuccess');
-              // First mark verification success, then trigger user update
               return AuthActions.verifyPhoneSuccess();
             }
-            console.debug('🔍 Dispatching verifyPhoneFailure - invalid code');
             return AuthActions.verifyPhoneFailure({
               error: 'Invalid verification code'
             });
@@ -749,8 +698,6 @@ export class AuthEffects {
             error: 'Missing phone number or user data'
           }));
         }
-
-        console.debug('Effect: Updating user after phone verification', { phoneNumber, currentUser });
         
         // Update the user record with verified phone number
         // Note: Status will be automatically calculated by DynamoDB stream trigger
@@ -774,8 +721,6 @@ export class AuthEffects {
 
         return from(this.userService.userUpdate(updateInput)).pipe(
           map(response => {
-            console.debug('User update response:', response);
-            
             // Extract the updated user from the response
             const updatedUser = response.Data;
             if (!updatedUser) {
@@ -799,11 +744,9 @@ export class AuthEffects {
   refreshSession$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.refreshSession),
-      tap(() => console.debug('Effect [RefreshSession]: Starting')),
       switchMap(() =>
         from(this.cognitoService.getCognitoProfile()).pipe(
           switchMap(cognitoProfile => {
-            console.debug('Effect [RefreshSession]: Cognito profile', cognitoProfile);
             
             if (!cognitoProfile?.email) {
               throw new Error('No email found in Cognito profile');
@@ -812,13 +755,11 @@ export class AuthEffects {
             // Get user data from our backend using the email from Cognito
             return from(this.userService.userExists({ email: cognitoProfile.email })).pipe(
               map(response => {
-                console.debug('Effect [RefreshSession]: User lookup response', response);
                 
                 // Handle backend user lookup - be resilient to failures
                 if (response.StatusCode === 200 && response.Data && response.Data.length === 1) {
                   // Ideal case: user found in backend
                   const user = new Users(response.Data[0]);
-                  console.debug('Effect [RefreshSession]: User object created from backend', user);
                   return AuthActions.refreshSessionSuccess({ user });
                 }
                 
@@ -829,11 +770,6 @@ export class AuthEffects {
                 
                 // For any other case (user not found, 500 error, network issues, etc.)
                 // Continue with Cognito profile data to maintain user session
-                console.warn('Effect [RefreshSession]: Backend user lookup failed, continuing with Cognito profile only', {
-                  statusCode: response.StatusCode,
-                  dataLength: response.Data?.length,
-                  email: cognitoProfile.email
-                });
                 
                 // Create a minimal user object from Cognito profile
                 const fallbackUser = new Users({
@@ -846,13 +782,11 @@ export class AuthEffects {
                   groups: cognitoProfile['cognito:groups'] || []
                 });
                 
-                console.debug('Effect [RefreshSession]: Created fallback user from Cognito profile', fallbackUser);
                 return AuthActions.refreshSessionSuccess({ user: fallbackUser });
               }),
               catchError(backendError => {
                 // Backend call failed completely (network error, etc.)
                 // Continue with Cognito profile data
-                console.warn('Effect [RefreshSession]: Backend user lookup threw error, continuing with Cognito profile only', backendError);
                 
                 const fallbackUser = new Users({
                   userId: cognitoProfile.sub || '',
@@ -864,7 +798,6 @@ export class AuthEffects {
                   groups: cognitoProfile['cognito:groups'] || []
                 });
                 
-                console.debug('Effect [RefreshSession]: Created fallback user after backend error', fallbackUser);
                 return of(AuthActions.refreshSessionSuccess({ user: fallbackUser }));
               })
             );
@@ -891,37 +824,29 @@ export class AuthEffects {
         // This prevents interference with active authentication steps
         const initialSteps = [AuthSteps.EMAIL, AuthSteps.PASSWORD, AuthSteps.SIGNIN, AuthSteps.COMPLETE];
         
-        console.debug('[Effect][determineNextStepAfterRefresh$] Current step check:', currentStep, 'isInitialStep:', initialSteps.includes(currentStep));
-        
         if (!initialSteps.includes(currentStep)) {
-          console.debug('[Effect][determineNextStepAfterRefresh$] User is in auth flow, not interfering with step:', currentStep);
           return false;
         }
         return true;
       }),
       switchMap(([{ user }]) => {
-        console.debug('[Effect][determineNextStepAfterRefresh$] Initial session load, determining correct step for user:', user);
 
         // Check email verification first
         if (!user.emailVerified) {
-          console.debug('[Effect][determineNextStepAfterRefresh$] Email not verified, checking Cognito status');
           return of(AuthActions.checkEmailVerificationStatus({ email: user.email }));
         }
 
         // Check phone verification
         if (!user.phoneNumber || !user.phoneVerified) {
-          console.debug('[Effect][determineNextStepAfterRefresh$] Phone not verified, setting up phone');
           return of(AuthActions.setCurrentStep({ step: AuthSteps.PHONE_SETUP }));
         }
 
         // Check MFA status - this is async, so we let the MFA effects handle the step setting
         if (!user.mfaEnabled || !user.mfaSetupComplete) {
-          console.debug('[Effect][determineNextStepAfterRefresh$] MFA not complete in user record, checking actual Cognito MFA status - letting MFA effects handle step');
           return of(AuthActions.checkMFAStatus());
         }
 
         // All verifications complete - trigger auth flow completion
-        console.debug('🎯 [Effect][determineNextStepAfterRefresh$] All verifications complete - DISPATCHING authFlowComplete');
         return of(AuthActions.authFlowComplete({ user }));
       })
     )
@@ -932,15 +857,10 @@ export class AuthEffects {
     this.actions$.pipe(
       ofType(AuthActions.checkEmailVerificationStatusSuccess),
       map(({ isVerified, email }) => {
-        console.debug('[Effect][handleEmailVerificationStatusCheck$] Email verification status:', { isVerified, email });
         
         if (isVerified) {
-          // Email is already verified in Cognito, auto-update user record
-          console.debug('[Effect][handleEmailVerificationStatusCheck$] Email already verified, updating user');
           return AuthActions.updateUserAfterEmailVerification({ email });
         } else {
-          // Email not verified, show verification step
-          console.debug('[Effect][handleEmailVerificationStatusCheck$] Email not verified, showing verification step');
           return AuthActions.setCurrentStep({ step: AuthSteps.EMAIL_VERIFY });
         }
       })
@@ -953,42 +873,24 @@ export class AuthEffects {
       ofType(AuthActions.checkMFAStatusSuccess),
       withLatestFrom(this.store.select(fromAuth.selectCurrentUser)),
       switchMap(([{ mfaEnabled, mfaSetupComplete }, currentUser]) => {
-        console.debug('[Effect][handleMFAStatusCheck$] Cognito MFA status:', { mfaEnabled, mfaSetupComplete });
         
         if (!currentUser) {
-          console.warn('[Effect][handleMFAStatusCheck$] No current user available');
           return of(AuthActions.setCurrentStep({ step: AuthSteps.EMAIL }));
         }
         
         // Check if user record needs updating
         const userMfaEnabled = currentUser.mfaEnabled;
         const userMfaSetupComplete = currentUser.mfaSetupComplete;
-        console.debug('[Effect][handleMFAStatusCheck$] User record MFA status:', { 
-          userMfaEnabled, 
-          userMfaSetupComplete 
-        });
         
         // If user record has nulls or doesn't match Cognito, update the record
         if (userMfaEnabled !== mfaEnabled || userMfaSetupComplete !== mfaSetupComplete) {
-          console.log('[Effect][handleMFAStatusCheck$] User record MFA status needs updating');
-          console.log('[Effect][handleMFAStatusCheck$] Will update user record to match Cognito:', {
-            from: { mfaEnabled: userMfaEnabled, mfaSetupComplete: userMfaSetupComplete },
-            to: { mfaEnabled, mfaSetupComplete }
-          });
-          
-          // TODO: Dispatch user update action here
           return of(AuthActions.updateUserAfterMFASetup());
-        } else {
-          console.log('[Effect][handleMFAStatusCheck$] User record MFA status is accurate, no update needed');
         }
         
         // Now handle the flow based on actual Cognito status
         if (!mfaEnabled || !mfaSetupComplete) {
-          console.debug('[Effect][handleMFAStatusCheck$] MFA not setup in Cognito, staying on MFA_SETUP step');
-          console.log('[Effect][handleMFAStatusCheck$] User needs to set up MFA');
           return EMPTY; // Stay on current step
         } else {
-          console.debug('[Effect][handleMFAStatusCheck$] MFA already setup in Cognito, completing flow');
           return of(AuthActions.authFlowComplete({ user: currentUser }));
         }
       })
@@ -1001,27 +903,22 @@ export class AuthEffects {
       ofType(AuthActions.updateUserAfterEmailVerificationSuccess),
       withLatestFrom(this.store.select(fromAuth.selectCurrentUser)),
       map(([action, user]) => {
-        console.debug('[Effect][continueAfterEmailVerificationUpdate$] Email verification updated, continuing flow');
         
         if (!user) {
-          console.warn('[Effect][continueAfterEmailVerificationUpdate$] No user found');
           return AuthActions.setCurrentStep({ step: AuthSteps.EMAIL });
         }
 
         // Check phone verification next
         if (!user.phoneNumber || !user.phoneVerified) {
-          console.debug('[Effect][continueAfterEmailVerificationUpdate$] Phone not verified, setting up phone');
           return AuthActions.setCurrentStep({ step: AuthSteps.PHONE_SETUP });
         }
 
         // Check MFA status next
         if (!user.mfaEnabled || !user.mfaSetupComplete) {
-          console.debug('[Effect][continueAfterEmailVerificationUpdate$] MFA not complete, checking MFA status');
           return AuthActions.checkMFAStatus();
         }
 
         // All complete
-        console.debug('🎯 [Effect][continueAfterEmailVerificationUpdate$] All verifications complete - dispatching authFlowComplete');
         return AuthActions.authFlowComplete({ user });
       })
     )
@@ -1032,7 +929,6 @@ export class AuthEffects {
     this.actions$.pipe(
       ofType(AuthActions.updateUserAfterMFASetupSuccess),
       map(({ user }) => {
-        console.debug('🎯 [Effect][continueAfterMFASetupUpdate$] MFA setup updated, dispatching authFlowComplete');
         return AuthActions.authFlowComplete({ user });
       })
     )
@@ -1045,7 +941,6 @@ export class AuthEffects {
     this.actions$.pipe(
       ofType(AuthActions.authFlowComplete),
       map(({ user }) => {
-        console.debug('[Effect][authFlowComplete$] Auth flow complete for user:', user.email);
         return AuthActions.redirectToDashboard();
       })
     )
@@ -1056,7 +951,6 @@ export class AuthEffects {
     this.actions$.pipe(
       ofType(AuthActions.redirectToDashboard),
       tap(() => {
-        console.debug('[Effect][redirectToDashboard$] Navigating to dashboard');
         this.router.navigate(['/dashboard']);
       })
     ), { dispatch: false }
@@ -1067,7 +961,6 @@ export class AuthEffects {
     this.actions$.pipe(
       ofType(AuthActions.redirectToProfile),
       tap(() => {
-        console.debug('[Effect][redirectToProfile$] Navigating to profile');
         this.router.navigate(['/profile']);
       })
     ), { dispatch: false }
@@ -1078,7 +971,6 @@ export class AuthEffects {
     this.actions$.pipe(
       ofType(AuthActions.beginMFASetupFlow),
       map(() => {
-        console.debug('[Effect][beginMFASetupFlow$] Starting MFA setup flow');
         return AuthActions.setCurrentStep({ step: AuthSteps.MFA_SETUP });
       })
     )
@@ -1093,4 +985,3 @@ export class AuthEffects {
     private router: Router
   ) {}
 }
-

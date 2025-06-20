@@ -493,15 +493,11 @@ export class CognitoService {
    */
   async checkMFAPreferences(): Promise<{mfaEnabled: boolean, mfaSetupComplete: boolean}> {
     try {
-      console.debug('[CognitoService][checkMFAPreferences] Checking MFA status from multiple sources');
-      
       // Method 1: Try fetchMFAPreference (might only work during auth flow)
       let mfaPreferences;
       try {
         mfaPreferences = await fetchMFAPreference();
-        console.debug('[CognitoService][checkMFAPreferences] fetchMFAPreference result:', mfaPreferences);
       } catch (mfaError) {
-        console.debug('[CognitoService][checkMFAPreferences] fetchMFAPreference failed:', mfaError);
         mfaPreferences = null;
       }
       
@@ -509,9 +505,7 @@ export class CognitoService {
       let userAttributes;
       try {
         userAttributes = await fetchUserAttributes();
-        console.debug('[CognitoService][checkMFAPreferences] User attributes:', userAttributes);
       } catch (attrError) {
-        console.debug('[CognitoService][checkMFAPreferences] fetchUserAttributes failed:', attrError);
         userAttributes = null;
       }
       
@@ -519,19 +513,7 @@ export class CognitoService {
       let authSession;
       try {
         authSession = await fetchAuthSession();
-        console.debug('[CognitoService][checkMFAPreferences] Auth session:', {
-          credentials: !!authSession.credentials,
-          tokens: !!authSession.tokens,
-          identityId: authSession.identityId
-        });
-        
-        // Check if tokens have MFA info
-        if (authSession.tokens?.accessToken) {
-          const accessTokenPayload = authSession.tokens.accessToken.payload;
-          console.debug('[CognitoService][checkMFAPreferences] Access token payload:', accessTokenPayload);
-        }
       } catch (sessionError) {
-        console.debug('[CognitoService][checkMFAPreferences] fetchAuthSession failed:', sessionError);
         authSession = null;
       }
       
@@ -539,9 +521,7 @@ export class CognitoService {
       let currentUser;
       try {
         currentUser = await getCurrentUser();
-        console.debug('[CognitoService][checkMFAPreferences] Current user:', currentUser);
       } catch (userError) {
-        console.debug('[CognitoService][checkMFAPreferences] getCurrentUser failed:', userError);
         currentUser = null;
       }
       
@@ -557,21 +537,15 @@ export class CognitoService {
             (Array.isArray(prefs.enabled) && prefs.enabled.includes('TOTP'))) {
           mfaEnabled = true;
           mfaSetupComplete = true;
-          console.debug('[CognitoService][checkMFAPreferences] MFA detected via fetchMFAPreference');
         }
       }
       
       // Check user attributes for MFA indicators
       if (userAttributes && !mfaEnabled) {
-        // Look for attributes like 'mfa_enabled', 'software_token_mfa_enabled', etc.
-        console.debug('[CognitoService][checkMFAPreferences] Checking user attributes for MFA:', 
-          Object.keys(userAttributes));
-          
         if (userAttributes['software_token_mfa_enabled'] === 'true' ||
             userAttributes['mfa_enabled'] === 'true') {
           mfaEnabled = true;
           mfaSetupComplete = true;
-          console.debug('[CognitoService][checkMFAPreferences] MFA detected via user attributes');
         }
       }
       
@@ -582,14 +556,8 @@ export class CognitoService {
         if (payload.amr && Array.isArray(payload.amr) && payload.amr.includes('mfa')) {
           mfaEnabled = true;
           mfaSetupComplete = true;
-          console.debug('[CognitoService][checkMFAPreferences] MFA detected via auth session token');
         }
       }
-      
-      console.debug('[CognitoService][checkMFAPreferences] Final determination:', { 
-        mfaEnabled, 
-        mfaSetupComplete
-      });
       
       return { mfaEnabled, mfaSetupComplete };
     } catch (error) {
@@ -658,11 +626,8 @@ export class CognitoService {
    */
   public async setupMFA(): Promise<AuthResponse> {
     try {
-      console.debug('[CognitoService][setupMFA] Starting TOTP setup');
-      
       // Step 1: Set up TOTP with Cognito
       const totpSetupDetails = await setUpTOTP();
-      console.debug('[CognitoService][setupMFA] TOTP setup details:', totpSetupDetails);
       
       // Step 2: Get current user attributes for issuer
       const userAttributes = await fetchUserAttributes();
@@ -671,8 +636,6 @@ export class CognitoService {
       // Step 3: Create setup URI with proper issuer format
       const issuer = `${appName}:${userEmail}`;
       const setupUri = totpSetupDetails.getSetupUri(issuer);
-      
-      console.debug('[CognitoService][setupMFA] Setup URI created:', setupUri.toString());
       
       // Step 4: Return success with MFA setup details
       const mfaSetupDetails = new MfaSetupDetails({
