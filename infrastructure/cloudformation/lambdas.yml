@@ -96,6 +96,7 @@ Resources:
                 Action:
                   - dynamodb:PutItem
                   - dynamodb:GetItem
+                  - dynamodb:UpdateItem
                 Resource:
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-table-arn}}'
         - PolicyName: DynamoDBStreamAccess
@@ -173,6 +174,7 @@ Resources:
                 - cognito-idp:AdminAddUserToGroup
                 - cognito-idp:AdminRemoveUserFromGroup
                 - cognito-idp:AdminListGroupsForUser
+                - cognito-idp:AdminGetUser
                 - cognito-idp:ListUsersInGroup
                 - cognito-idp:GetGroup
                 - cognito-idp:ListGroups

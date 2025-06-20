@@ -99,11 +99,13 @@ def calculate_user_status(user_data: Dict[str, Any]) -> str:
     mfa_setup_complete = user_data.get('mfaSetupComplete')
     
     # If MFA fields are null, check Cognito for actual status
+    logger.info(f"MFA field values: mfaEnabled={mfa_enabled} (type: {type(mfa_enabled)}), mfaSetupComplete={mfa_setup_complete} (type: {type(mfa_setup_complete)})")
     if mfa_enabled is None or mfa_setup_complete is None:
         email = user_data.get('email')
         if email:
             logger.info(f"MFA fields are null for user {user_data.get('userId')}, checking Cognito")
             cognito_mfa_status = check_cognito_mfa_status(email)
+            logger.info(f"Cognito MFA status result: {cognito_mfa_status}")
             
             # Update user_data with Cognito values for this calculation
             # Note: These will be persisted to DynamoDB by the calling function
@@ -225,6 +227,7 @@ def lambda_handler(event, _):
     Expected event: DynamoDB stream event with Records array
     """
     logger.info(f"Processing {len(event.get('Records', []))} DynamoDB stream records")
+    logger.info(f"Environment variables: USER_POOL_ID={USER_POOL_ID}, USERS_TABLE_NAME={USERS_TABLE_NAME}")
     
     if not USERS_TABLE_NAME:
         logger.error("USERS_TABLE_NAME environment variable not set")
@@ -261,6 +264,8 @@ def lambda_handler(event, _):
                 # Check if MFA status was updated during calculation
                 mfa_status_updated = user_data.get('_mfa_status_updated', False)
                 status_needs_update = current_status != calculated_status
+                
+                logger.info(f"Update check for user {user_id}: status_needs_update={status_needs_update}, mfa_status_updated={mfa_status_updated}")
                 
                 # Update if status changed OR if MFA status was updated from Cognito
                 if status_needs_update or mfa_status_updated:
