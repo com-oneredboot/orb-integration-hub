@@ -1,21 +1,47 @@
 // file: frontend/src/environments/environment.prod.ts
 // author: Corey Dale Peters
-// date: 2025-03-07
-// description: TypeScript file
+// date: 2025-06-20
+// description: Production environment configuration requiring secure environment variables
 
+import { getEnvironmentConfig } from './environment.config';
 
 // src/environments/environment.prod.ts
 export const environment = {
   appName: 'OneRedBoot.com',
   production: true,
+  loggingLevel: 'info', // Production logging level
   cognito: {
-    userPoolId: 'us-east-1_3axyfJmvW',
-    userPoolClientId: '40r8ms3deicu90jcfh6kpjdp1g',
-    qrCodeIssuer: 'OneRedBoot.com'
+    userPoolId: getEnvironmentConfig(
+      'COGNITO_USER_POOL_ID', 
+      undefined, // No fallback - must be provided via environment variables
+      true
+    ),
+    userPoolClientId: getEnvironmentConfig(
+      'COGNITO_CLIENT_ID', 
+      undefined, // No fallback - must be provided via environment variables
+      true
+    ),
+    qrCodeIssuer: getEnvironmentConfig(
+      'COGNITO_QR_ISSUER',
+      'OneRedBoot.com', // Safe default for branding
+      false
+    )
   },
   graphql: {
-    url: 'https://62fdzwsyvje53e2zg56zj7brfm.appsync-api.us-east-1.amazonaws.com/graphql', // Replace with production URL
-    region: 'us-east-1',
-    apiKey: 'da2-2efhtxv5fna4zgoynl7vbdmvcu' // Replace with production API key
+    url: getEnvironmentConfig(
+      'GRAPHQL_API_URL', 
+      undefined, // No fallback - must be provided via environment variables
+      true
+    ),
+    region: getEnvironmentConfig(
+      'AWS_REGION', 
+      undefined, // No fallback - must be provided via environment variables
+      true
+    ),
+    apiKey: getEnvironmentConfig(
+      'GRAPHQL_API_KEY', 
+      undefined, // No fallback - must be provided via environment variables
+      true
+    )
   }
 };
