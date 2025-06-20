@@ -258,6 +258,23 @@ export const authReducer = createReducer(
     isLoading: false
   })),
 
+  // Check MFA Setup
+  on(AuthActions.checkMFASetup, (state) => ({
+    ...state,
+    isLoading: true,
+    error: null
+  })),
+  on(AuthActions.checkMFASetupSuccess, (state) => ({
+    ...state,
+    isLoading: false,
+    error: null
+  })),
+  on(AuthActions.checkMFASetupFailure, (state, { error }) => ({
+    ...state,
+    error,
+    isLoading: false
+  })),
+
   // Signout
   on(AuthActions.signout, (state) => ({
     ...state,

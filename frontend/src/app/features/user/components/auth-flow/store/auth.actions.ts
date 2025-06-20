@@ -100,6 +100,10 @@ export const AuthActions = createActionGroup({
     'Refresh Session Success': props<{ user: IUsers }>(),
     'Refresh Session Failure': props<{ error: string }>(),
 
+    'Check MFA Setup': emptyProps(),
+    'Check MFA Setup Success': emptyProps(),
+    'Check MFA Setup Failure': props<{ error: string }>(),
+
     'Check Phone Required': emptyProps(),
     'Check Phone Required Success': props<{ required: boolean }>(),
     'Check Phone Required Failure': props<{ error: string }>(),

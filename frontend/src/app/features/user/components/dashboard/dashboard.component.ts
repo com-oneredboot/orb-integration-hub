@@ -6,6 +6,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { IUsers } from '../../../../core/models/UsersModel';
 import * as fromAuth from '../../components/auth-flow/store/auth.selectors';
@@ -46,6 +47,8 @@ import {
 export class DashboardComponent implements OnInit {
   currentUser$: Observable<IUsers | null>;
   debugMode$: Observable<boolean>;
+  isLoading$: Observable<boolean>;
+  isNotLoading$: Observable<boolean>;
 
   constructor(
     private store: Store,
@@ -55,6 +58,8 @@ export class DashboardComponent implements OnInit {
   ) {
     this.currentUser$ = this.store.select(fromAuth.selectCurrentUser);
     this.debugMode$ = this.store.select(fromAuth.selectDebugMode);
+    this.isLoading$ = this.store.select(fromAuth.selectIsLoading);
+    this.isNotLoading$ = this.isLoading$.pipe(map(loading => !loading));
     
     // Add FontAwesome icons to library
     this.library.addIcons(
@@ -163,31 +168,11 @@ export class DashboardComponent implements OnInit {
    * This will cause the Lambda to check Cognito and update MFA fields
    */
   checkMFASetup(): void {
-    // Dispatch action to update user record with current timestamp
-    // This will trigger the DynamoDB stream and Lambda will check Cognito MFA status
-    this.currentUser$.subscribe(user => {
-      if (user) {
-        console.log('[Dashboard] Triggering MFA check for user:', user.userId);
-        
-        // Update the user record to trigger Lambda stream processing
-        this.userService.updateUserTimestamp(user).subscribe({
-          next: () => {
-            console.log('[Dashboard] User timestamp updated, waiting for Lambda to process...');
-            
-            // Refresh session with exponential backoff: 1s, 2s, 4s
-            const refreshAttempts = [1000, 2000, 4000];
-            
-            refreshAttempts.forEach((delay, index) => {
-              setTimeout(() => {
-                console.log(`[Dashboard] Refresh attempt ${index + 1} after ${delay}ms`);
-                this.store.dispatch(AuthActions.refreshSession());
-              }, delay);
-            });
-          },
-          error: (error) => {
-            console.error('[Dashboard] Error updating user timestamp:', error);
-          }
-        });
+    // Only proceed if not already loading
+    this.isLoading$.subscribe(isLoading => {
+      if (!isLoading) {
+        console.log('[Dashboard] Triggering MFA check...');
+        this.store.dispatch(AuthActions.checkMFASetup());
       }
     }).unsubscribe();
   }

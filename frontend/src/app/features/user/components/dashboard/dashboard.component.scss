@@ -454,6 +454,93 @@
   }
 }
 
+// Loading States
+.global-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  pointer-events: none; // Allow clicks on loading elements only
+}
+
+.global-loading-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(v.$orb-red, 0.95);
+  color: v.$orb-white;
+  padding: v.$spacing-sm 0;
+  z-index: 1001;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  pointer-events: auto;
+
+  &__content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 v.$spacing-lg;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: v.$spacing-sm;
+  }
+
+  &__icon {
+    animation: spin 2s linear infinite;
+    font-size: 1rem;
+  }
+
+  &__text {
+    font-size: v.$font-size-sm;
+    font-weight: 500;
+  }
+}
+
+.global-loading-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(2px);
+  z-index: 999;
+  pointer-events: auto;
+  cursor: wait;
+  
+  // Subtle animation to make it feel more dynamic
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.health-item {
+  &--loading {
+    opacity: 0.7;
+    pointer-events: none;
+    cursor: not-allowed;
+  }
+
+  &__action-icon--loading {
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
 // Debug Styles
 .dashboard__debug {
   @include m.debug-container;

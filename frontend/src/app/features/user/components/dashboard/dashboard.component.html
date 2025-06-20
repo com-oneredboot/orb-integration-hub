@@ -6,6 +6,20 @@ description: HTML template file
 -->
 
 <div class="dashboard-container">
+  <!-- Global Loading Indicator -->
+  <div *ngIf="isLoading$ | async" class="global-loading-overlay">
+    <!-- Loading Bar -->
+    <div class="global-loading-indicator">
+      <div class="global-loading-indicator__content">
+        <fa-icon icon="clock" class="global-loading-indicator__icon"></fa-icon>
+        <span class="global-loading-indicator__text">Processing...</span>
+      </div>
+    </div>
+    
+    <!-- Overlay Mask -->
+    <div class="global-loading-mask"></div>
+  </div>
+
   <div class="dashboard-header">
     <div class="dashboard-header__content">
       <div class="dashboard-header__flex-container">
@@ -157,17 +171,26 @@ description: HTML template file
           <div class="health-item health-item--clickable" 
                [ngClass]="(user.mfaEnabled && user.mfaSetupComplete) ? 'health-item--healthy' : 'health-item--warning'"
                (click)="checkMFASetup()"
+               [class.health-item--loading]="isLoading$ | async"
+               [style.pointer-events]="(isLoading$ | async) ? 'none' : 'auto'"
                [title]="(user.mfaEnabled && user.mfaSetupComplete) ? 'MFA enabled - click to recheck' : 'Click to check MFA setup'">
             <fa-icon [icon]="(user.mfaEnabled && user.mfaSetupComplete) ? 'check-circle' : 'exclamation-triangle'" 
                      class="health-item__icon"></fa-icon>
             <div class="health-item__content">
               <div class="health-item__title">Multi-Factor Authentication</div>
               <div class="health-item__status">
-                {{ (user.mfaEnabled && user.mfaSetupComplete) ? 'Enabled' : 'Status unknown - check setup' }}
+                <ng-container *ngIf="isNotLoading$ | async">
+                  {{ (user.mfaEnabled && user.mfaSetupComplete) ? 'Enabled' : 'Status unknown - check setup' }}
+                </ng-container>
+                <ng-container *ngIf="isLoading$ | async">
+                  Checking MFA status...
+                </ng-container>
               </div>
               <div class="health-item__action">
-                <fa-icon icon="arrow-right" class="health-item__action-icon"></fa-icon>
-                Check MFA Setup
+                <fa-icon *ngIf="isNotLoading$ | async" icon="arrow-right" class="health-item__action-icon"></fa-icon>
+                <fa-icon *ngIf="isLoading$ | async" icon="clock" class="health-item__action-icon health-item__action-icon--loading"></fa-icon>
+                <ng-container *ngIf="isNotLoading$ | async">Check MFA Setup</ng-container>
+                <ng-container *ngIf="isLoading$ | async">Checking...</ng-container>
               </div>
             </div>
           </div>

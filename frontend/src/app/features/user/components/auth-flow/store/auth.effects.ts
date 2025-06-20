@@ -7,7 +7,7 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { catchError, filter, map, switchMap, tap, withLatestFrom } from 'rxjs/operators';
+import { catchError, filter, map, switchMap, tap, withLatestFrom, delay, finalize } from 'rxjs/operators';
 import { from, of, EMPTY } from "rxjs";
 import { Store } from '@ngrx/store';
 
@@ -972,6 +972,62 @@ export class AuthEffects {
       ofType(AuthActions.beginMFASetupFlow),
       map(() => {
         return AuthActions.setCurrentStep({ step: AuthSteps.MFA_SETUP });
+      })
+    )
+  );
+
+  // Handle MFA check process
+  checkMFASetup$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.checkMFASetup),
+      withLatestFrom(this.store.select(fromAuth.selectCurrentUser)),
+      switchMap(([action, user]) => {
+        if (!user) {
+          return of(AuthActions.checkMFASetupFailure({ error: 'No user found' }));
+        }
+
+        console.log('[Auth Effect] Starting MFA check for user:', user.userId);
+
+        // Update the user timestamp to trigger Lambda processing
+        return from(this.userService.updateUserTimestamp(user)).pipe(
+          switchMap(() => {
+            console.log('[Auth Effect] User timestamp updated, starting refresh sequence...');
+            
+            // Create a sequence of refresh attempts with exponential backoff
+            const refreshSequence = [
+              of(null).pipe(delay(1000)), // Wait 1s
+              of(null).pipe(delay(2000)), // Wait 2s more (3s total)
+              of(null).pipe(delay(4000))  // Wait 4s more (7s total)
+            ];
+
+            // Execute refresh attempts in sequence
+            return from(refreshSequence).pipe(
+              switchMap((obs, index) => 
+                obs.pipe(
+                  tap(() => {
+                    console.log(`[Auth Effect] Refresh attempt ${index + 1}`);
+                    this.store.dispatch(AuthActions.refreshSession());
+                  })
+                )
+              ),
+              // After all refreshes complete, mark as success
+              finalize(() => {
+                console.log('[Auth Effect] MFA check sequence completed');
+                setTimeout(() => {
+                  this.store.dispatch(AuthActions.checkMFASetupSuccess());
+                }, 1000); // Small delay to let final refresh complete
+              }),
+              // Don't emit any values, just handle side effects
+              switchMap(() => EMPTY)
+            );
+          }),
+          catchError(error => {
+            console.error('[Auth Effect] MFA check failed:', error);
+            return of(AuthActions.checkMFASetupFailure({ 
+              error: error instanceof Error ? error.message : 'Failed to check MFA setup'
+            }));
+          })
+        );
       })
     )
   );
