@@ -60,37 +60,73 @@ def check_cognito_mfa_status(email: str) -> Dict[str, bool]:
         logger.debug(f"  UserMFASettingList: {user_mfa_settings}")
         logger.debug(f"  PreferredMfaSetting: {preferred_mfa}")
         
-        # Try to get user's MFA devices using AdminListDevicesForUser
+        # Try to get user's registered devices using admin_list_devices
         try:
-            devices_response = cognito_client.admin_list_devices_for_user(
+            devices_response = cognito_client.admin_list_devices(
                 UserPoolId=USER_POOL_ID,
                 Username=email
             )
             devices = devices_response.get('Devices', [])
-            has_mfa_devices = any(
-                device.get('DeviceAttributes', [])
-                for device in devices
-                if device.get('DeviceStatus') == 'Confirmed'
-            )
-            logger.debug(f"  MFA Devices: {len(devices)} total, confirmed MFA devices: {has_mfa_devices}")
+            has_devices = len(devices) > 0
+            logger.debug(f"  Registered Devices: {len(devices)} total")
+            if has_devices:
+                for device in devices:
+                    logger.debug(f"    Device: {device.get('DeviceKey', 'Unknown')} - Created: {device.get('DeviceCreateDate', 'Unknown')}")
         except Exception as device_error:
-            logger.debug(f"Could not check MFA devices: {device_error}")
-            has_mfa_devices = False
+            logger.debug(f"Could not check registered devices: {device_error}")
+            has_devices = False
+        
+        # Check user pool MFA configuration
+        try:
+            user_pool_response = cognito_client.describe_user_pool(
+                UserPoolId=USER_POOL_ID
+            )
+            user_pool = user_pool_response.get('UserPool', {})
+            mfa_configuration = user_pool.get('MfaConfiguration', 'OFF')
+            logger.debug(f"  User Pool MFA Configuration: {mfa_configuration}")
+            
+            # If MFA is OPTIONAL or ON at user pool level, and user has it enabled
+            # Check if user-level MFA might be active
+            pool_has_mfa = mfa_configuration in ['OPTIONAL', 'ON']
+        except Exception as pool_error:
+            logger.debug(f"Could not check user pool MFA config: {pool_error}")
+            pool_has_mfa = False
+            
+        # Try to get user's MFA preferences directly
+        try:
+            mfa_prefs_response = cognito_client.admin_get_user_mfa_preference(
+                UserPoolId=USER_POOL_ID,
+                Username=email
+            )
+            sms_mfa_enabled = mfa_prefs_response.get('SMSMfaSettings', {}).get('Enabled', False)
+            software_token_enabled = mfa_prefs_response.get('SoftwareTokenMfaSettings', {}).get('Enabled', False)
+            logger.debug(f"  User MFA Preferences: SMS={sms_mfa_enabled}, SoftwareToken={software_token_enabled}")
+            has_user_mfa_prefs = sms_mfa_enabled or software_token_enabled
+        except Exception as mfa_prefs_error:
+            logger.debug(f"Could not check user MFA preferences: {mfa_prefs_error}")
+            has_user_mfa_prefs = False
         
         # Determine MFA status using multiple indicators
         # MFA is considered enabled if ANY of these are true:
         # 1. Legacy MFAOptions exist (SMS MFA)
         # 2. UserMFASettingList contains settings (SMS_MFA or SOFTWARE_TOKEN_MFA)
         # 3. PreferredMfaSetting is set
-        # 4. User has confirmed MFA devices
-        mfa_enabled = has_mfa_options or has_mfa_settings or has_preferred_mfa or has_mfa_devices
+        # 4. User has registered devices (remembered devices)
+        # 5. User pool has MFA enabled and user has MFA preferences set
+        mfa_enabled = (
+            has_mfa_options or 
+            has_mfa_settings or 
+            has_preferred_mfa or 
+            has_devices or
+            (pool_has_mfa and has_user_mfa_prefs)
+        )
         
         # MFA setup is considered complete if MFA is enabled
         # Additional checks could be added here for more granular status
         mfa_setup_complete = mfa_enabled
         
         logger.info(f"Cognito MFA status for {email}: enabled={mfa_enabled}, complete={mfa_setup_complete}")
-        logger.debug(f"  Indicators: mfa_options={has_mfa_options}, mfa_settings={has_mfa_settings}, preferred={has_preferred_mfa}, devices={has_mfa_devices}")
+        logger.debug(f"  Indicators: mfa_options={has_mfa_options}, mfa_settings={has_mfa_settings}, preferred={has_preferred_mfa}, devices={has_devices}, pool_mfa={pool_has_mfa}, user_prefs={has_user_mfa_prefs}")
         
         result = {
             'mfaEnabled': mfa_enabled,
@@ -131,31 +167,39 @@ def calculate_user_status(user_data: Dict[str, Any]) -> str:
     phone_verified = user_data.get('phoneVerified', False)
     has_required_verifications = email_verified and phone_verified
     
-    # Check MFA requirements are met
-    mfa_enabled = user_data.get('mfaEnabled')
-    mfa_setup_complete = user_data.get('mfaSetupComplete')
-    
-    # If MFA fields are null, check Cognito for actual status
-    logger.debug(f"MFA field values: mfaEnabled={mfa_enabled} (type: {type(mfa_enabled)}), mfaSetupComplete={mfa_setup_complete} (type: {type(mfa_setup_complete)})")
-    if mfa_enabled is None or mfa_setup_complete is None:
-        email = user_data.get('email')
-        if email:
-            logger.info(f"MFA fields are null for user {user_data.get('userId')}, checking Cognito")
-            cognito_mfa_status = check_cognito_mfa_status(email)
-            logger.debug(f"Cognito MFA status result: {cognito_mfa_status}")
-            
-            # Update user_data with Cognito values for this calculation
-            # Note: These will be persisted to DynamoDB by the calling function
-            user_data['mfaEnabled'] = cognito_mfa_status['mfaEnabled']
-            user_data['mfaSetupComplete'] = cognito_mfa_status['mfaSetupComplete']
+    # Always check Cognito for MFA status as it's the single source of truth
+    email = user_data.get('email')
+    if email:
+        logger.info(f"Checking Cognito MFA status for user {user_data.get('userId')} (Cognito is single source of truth)")
+        cognito_mfa_status = check_cognito_mfa_status(email)
+        logger.debug(f"Cognito MFA status result: {cognito_mfa_status}")
+        
+        # Get current DynamoDB MFA values for comparison
+        current_mfa_enabled = user_data.get('mfaEnabled')
+        current_mfa_complete = user_data.get('mfaSetupComplete')
+        
+        # Update user_data with Cognito values for this calculation
+        user_data['mfaEnabled'] = cognito_mfa_status['mfaEnabled']
+        user_data['mfaSetupComplete'] = cognito_mfa_status['mfaSetupComplete']
+        
+        # Check if MFA status changed from what's in DynamoDB
+        mfa_status_changed = (
+            current_mfa_enabled != cognito_mfa_status['mfaEnabled'] or
+            current_mfa_complete != cognito_mfa_status['mfaSetupComplete']
+        )
+        
+        if mfa_status_changed:
             user_data['_mfa_status_updated'] = True  # Flag to indicate we updated MFA status
-            
-            mfa_enabled = cognito_mfa_status['mfaEnabled'] 
-            mfa_setup_complete = cognito_mfa_status['mfaSetupComplete']
-        else:
-            logger.warning(f"No email found for user {user_data.get('userId')}, cannot check Cognito MFA")
-            mfa_enabled = False
-            mfa_setup_complete = False
+            logger.info(f"MFA status changed for user {user_data.get('userId')}: "
+                       f"enabled {current_mfa_enabled} -> {cognito_mfa_status['mfaEnabled']}, "
+                       f"complete {current_mfa_complete} -> {cognito_mfa_status['mfaSetupComplete']}")
+        
+        mfa_enabled = cognito_mfa_status['mfaEnabled']
+        mfa_setup_complete = cognito_mfa_status['mfaSetupComplete']
+    else:
+        logger.warning(f"No email found for user {user_data.get('userId')}, cannot check Cognito MFA")
+        mfa_enabled = False
+        mfa_setup_complete = False
     
     has_mfa_requirements = mfa_enabled and mfa_setup_complete
     
@@ -241,6 +285,9 @@ def has_status_relevant_changes(record: Dict[str, Any]) -> bool:
         if not old_image:
             return True
         
+        # Track which fields changed
+        changed_fields = []
+        
         # Check if any status-relevant field changed
         logger.debug(f"Checking fields: {status_relevant_fields}")
         for field in status_relevant_fields:
@@ -250,11 +297,20 @@ def has_status_relevant_changes(record: Dict[str, Any]) -> bool:
             logger.debug(f"Field '{field}': old='{old_value}' new='{new_value}' changed={old_value != new_value}")
             
             if old_value != new_value:
+                changed_fields.append(field)
                 logger.info(f"Status-relevant field '{field}' changed from '{old_value}' to '{new_value}'")
-                return True
         
-        logger.debug("No status-relevant fields changed, skipping status calculation")
-        return False
+        # Store metadata about what changed for later use
+        if len(changed_fields) == 1 and changed_fields[0] == 'updatedAt':
+            # Only updatedAt changed - this is likely a "Check MFA Setup" trigger
+            record['_is_mfa_check_trigger'] = True
+            logger.info("Detected MFA check trigger (only updatedAt changed)")
+        
+        has_changes = len(changed_fields) > 0
+        if not has_changes:
+            logger.debug("No status-relevant fields changed, skipping status calculation")
+        
+        return has_changes
         
     except Exception as e:
         logger.error(f"Error checking for relevant changes: {e}")
