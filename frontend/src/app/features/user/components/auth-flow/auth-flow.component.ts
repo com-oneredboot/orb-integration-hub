@@ -24,6 +24,8 @@ import { UsersCreateInput } from "../../../../core/models/UsersModel";
 import {QRCodeToDataURLOptions} from "qrcode";
 import {UserService} from "../../../../core/services/user.service";
 import {CognitoService} from "../../../../core/services/cognito.service";
+import {InputValidationService} from "../../../../core/services/input-validation.service";
+import {CustomValidators} from "../../../../core/validators/custom-validators";
 import { UserStatus } from "../../../../core/models/UserStatusEnum";
 import { UserGroup } from "../../../../core/models/UserGroupEnum";
 
@@ -80,24 +82,47 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private userService: UserService,
-    private cognitoService: CognitoService
+    private cognitoService: CognitoService,
+    private inputValidationService: InputValidationService
   ) {
 
-    // Initialize the form
+    // Initialize the form with enhanced validation
     this.authForm = this.fb.group({
       email: ['', [
         Validators.required,
-        Validators.email,
-        Validators.pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+        CustomValidators.email(),
+        CustomValidators.noDisposableEmail(),
+        CustomValidators.noXSS()
       ]],
       // Make other fields not required initially
-      firstName: [''],
-      lastName: [''],
-      phoneNumber: [''],
-      password: [''],
-      emailCode: [''],
-      mfaCode: [''],
-      phoneCode: ['']
+      firstName: ['', [
+        CustomValidators.validateName('First name'),
+        CustomValidators.noXSS()
+      ]],
+      lastName: ['', [
+        CustomValidators.validateName('Last name'),
+        CustomValidators.noXSS()
+      ]],
+      phoneNumber: ['', [
+        CustomValidators.phoneNumber(),
+        CustomValidators.noXSS()
+      ]],
+      password: ['', [
+        CustomValidators.password(),
+        CustomValidators.noXSS()
+      ]],
+      emailCode: ['', [
+        CustomValidators.verificationCode(),
+        CustomValidators.noXSS()
+      ]],
+      mfaCode: ['', [
+        CustomValidators.verificationCode(),
+        CustomValidators.noXSS()
+      ]],
+      phoneCode: ['', [
+        CustomValidators.verificationCode(),
+        CustomValidators.noXSS()
+      ]]
     });
 
     this.initializeForm();
@@ -259,12 +284,15 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   }
 
   checkPasswordValidations(password: string): void {
+    // Use the enhanced validation service for password checking
+    const validation = this.inputValidationService.validatePassword(password);
+    
     this.passwordValidations = {
-      minLength: password.length >= 8,
-      hasUppercase: /[A-Z]/.test(password),
-      hasLowercase: /[a-z]/.test(password),
-      hasNumber: /\d/.test(password),
-      hasSpecial: /[!@#$%^&*]/.test(password)
+      minLength: validation.criteria.minLength,
+      hasUppercase: validation.criteria.hasUppercase,
+      hasLowercase: validation.criteria.hasLowercase,
+      hasNumber: validation.criteria.hasNumber,
+      hasSpecial: validation.criteria.hasSpecial
     };
   }
 
@@ -281,16 +309,52 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     const control = this.authForm.get(fieldName);
     if (!control || !control.errors) return '';
 
-    if (control.errors['required']) {
+    // Handle custom validator errors first
+    const errors = control.errors;
+
+    // Custom validator error messages
+    if (errors['email']?.message) {
+      return errors['email'].message;
+    }
+    if (errors['disposableEmail']?.message) {
+      return errors['disposableEmail'].message;
+    }
+    if (errors['phoneNumber']?.message) {
+      return errors['phoneNumber'].message;
+    }
+    if (errors['verificationCode']?.message) {
+      return errors['verificationCode'].message;
+    }
+    if (errors['name']?.message) {
+      return errors['name'].message;
+    }
+    if (errors['password']?.message) {
+      return errors['password'].message;
+    }
+    if (errors['xss']?.message) {
+      return errors['xss'].message;
+    }
+    if (errors['customLength']?.message) {
+      return errors['customLength'].message;
+    }
+    if (errors['whitespace']?.message) {
+      return errors['whitespace'].message;
+    }
+    if (errors['invalidDomain']?.message) {
+      return errors['invalidDomain'].message;
+    }
+
+    // Fallback to legacy error handling
+    if (errors['required']) {
       return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is required`;
     }
-    if (control.errors['email']) {
+    if (errors['email']) {
       return 'Please enter a valid email address';
     }
-    if (control.errors['minlength']) {
-      return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} must be at least ${control.errors['minlength'].requiredLength} characters`;
+    if (errors['minlength']) {
+      return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} must be at least ${errors['minlength'].requiredLength} characters`;
     }
-    if (control.errors['pattern']) {
+    if (errors['pattern']) {
       switch (fieldName) {
         case 'password':
           return 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character';
@@ -298,14 +362,19 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           return 'Please enter a valid phone number starting with + and country code';
         case 'verificationCode':
         case 'mfaCode':
+        case 'phoneCode':
+        case 'emailCode':
           return 'Please enter a valid 6-digit code';
         default:
           return 'Please enter valid input';
       }
     }
-    if (fieldName === 'password') {
-      return this.getPasswordErrorMessage(control.errors);
+
+    // Enhanced password validation
+    if (fieldName === 'password' && errors) {
+      return this.getPasswordErrorMessage(errors);
     }
+
     return '';
   }
 
@@ -377,6 +446,8 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     const lastNameControl = this.authForm.get('lastName');
     const phoneNumberControl = this.authForm.get('phoneNumber');
     const phoneCodeControl = this.authForm.get('phoneCode');
+    const emailCodeControl = this.authForm.get('emailCode');
+    const mfaCodeControl = this.authForm.get('mfaCode');
 
     // Reset all validators first
     emailControl?.clearValidators();
@@ -385,33 +456,68 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     lastNameControl?.clearValidators();
     phoneNumberControl?.clearValidators();
     phoneCodeControl?.clearValidators();
+    emailCodeControl?.clearValidators();
+    mfaCodeControl?.clearValidators();
 
-    // Set validators based on current step
+    // Set validators based on current step with enhanced validation
     switch (step) {
       case AuthSteps.EMAIL:
         emailControl?.setValidators([
           Validators.required,
-          Validators.email,
-          Validators.pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+          CustomValidators.email(),
+          CustomValidators.noDisposableEmail(),
+          CustomValidators.noXSS()
+        ]);
+        break;
+      case AuthSteps.PASSWORD:
+        passwordControl?.setValidators([
+          Validators.required,
+          CustomValidators.noXSS()
         ]);
         break;
       case AuthSteps.PASSWORD_SETUP:
         passwordControl?.setValidators([
           Validators.required,
-          Validators.minLength(8),
-          Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[-_!@#$%^&*])[A-Za-z\d\-_!@#$%^&*]{8,}$/)
+          CustomValidators.password(),
+          CustomValidators.noXSS()
+        ]);
+        firstNameControl?.setValidators([
+          Validators.required,
+          CustomValidators.validateName('First name'),
+          CustomValidators.noXSS()
+        ]);
+        lastNameControl?.setValidators([
+          Validators.required,
+          CustomValidators.validateName('Last name'),
+          CustomValidators.noXSS()
         ]);
         break;
       case AuthSteps.PHONE_SETUP:
         phoneNumberControl?.setValidators([
           Validators.required,
-          Validators.pattern(/^\+?[1-9]\d{1,14}$/) // E.164 format validation
+          CustomValidators.phoneNumber(),
+          CustomValidators.noXSS()
         ]);
         break;
       case AuthSteps.PHONE_VERIFY:
         phoneCodeControl?.setValidators([
           Validators.required,
-          Validators.pattern(/^\d{6}$/) // 6-digit code
+          CustomValidators.verificationCode(),
+          CustomValidators.noXSS()
+        ]);
+        break;
+      case AuthSteps.EMAIL_VERIFY:
+        emailCodeControl?.setValidators([
+          Validators.required,
+          CustomValidators.verificationCode(),
+          CustomValidators.noXSS()
+        ]);
+        break;
+      case AuthSteps.MFA_VERIFY:
+        mfaCodeControl?.setValidators([
+          Validators.required,
+          CustomValidators.verificationCode(),
+          CustomValidators.noXSS()
         ]);
         break;
       case AuthSteps.MFA_SETUP:
