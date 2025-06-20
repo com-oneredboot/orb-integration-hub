@@ -62,7 +62,7 @@ description: HTML template file
             </div>
           </a>
           
-          <button class="action-button action-button--secondary">
+          <button class="action-button action-button--secondary" (click)="goToSecuritySettings()">
             <fa-icon icon="shield-alt" class="action-button__icon"></fa-icon>
             <div class="action-button__content">
               <div class="action-button__title">Security Settings</div>
@@ -89,8 +89,8 @@ description: HTML template file
       </div>
     </div>
 
-    <!-- Account Health Card -->
-    <div class="dashboard-card dashboard-card--health">
+    <!-- Account Health Card - Only show if there are warnings -->
+    <div class="dashboard-card dashboard-card--health" *ngIf="hasHealthWarnings(user)">
       <div class="dashboard-card__header">
         <h2 class="dashboard-card__title">
           <fa-icon icon="heartbeat" class="dashboard-card__icon"></fa-icon>
@@ -118,20 +118,28 @@ description: HTML template file
             </div>
           </div>
           
-          <div class="health-item" 
-               [ngClass]="user.emailVerified ? 'health-item--healthy' : 'health-item--warning'">
+          <div class="health-item health-item--clickable" 
+               [ngClass]="user.emailVerified ? 'health-item--healthy' : 'health-item--warning'"
+               (click)="!user.emailVerified && goToEmailVerification()"
+               [title]="user.emailVerified ? 'Email verified' : 'Click to verify your email'">
             <fa-icon [icon]="user.emailVerified ? 'check-circle' : 'exclamation-triangle'" 
                      class="health-item__icon"></fa-icon>
             <div class="health-item__content">
               <div class="health-item__title">Email Verification</div>
               <div class="health-item__status">
-                {{ user.emailVerified ? 'Verified' : 'Check your email for verification link' }}
+                {{ user.emailVerified ? 'Verified' : 'Email verification required' }}
+              </div>
+              <div class="health-item__action" *ngIf="!user.emailVerified">
+                <fa-icon icon="arrow-right" class="health-item__action-icon"></fa-icon>
+                Verify Email
               </div>
             </div>
           </div>
           
-          <div class="health-item" 
-               [ngClass]="user.phoneVerified ? 'health-item--healthy' : 'health-item--warning'">
+          <div class="health-item health-item--clickable" 
+               [ngClass]="user.phoneVerified ? 'health-item--healthy' : 'health-item--warning'"
+               (click)="!user.phoneVerified && goToPhoneVerification()"
+               [title]="user.phoneVerified ? 'Phone verified' : 'Click to verify your phone'">
             <fa-icon [icon]="user.phoneVerified ? 'check-circle' : 'exclamation-triangle'" 
                      class="health-item__icon"></fa-icon>
             <div class="health-item__content">
@@ -139,16 +147,27 @@ description: HTML template file
               <div class="health-item__status">
                 {{ user.phoneVerified ? 'Verified' : (user.phoneNumber ? 'Phone verification required' : 'Phone number required') }}
               </div>
+              <div class="health-item__action" *ngIf="!user.phoneVerified">
+                <fa-icon icon="arrow-right" class="health-item__action-icon"></fa-icon>
+                {{ user.phoneNumber ? 'Verify Phone' : 'Add Phone' }}
+              </div>
             </div>
           </div>
           
-          <div class="health-item" 
-               [ngClass]="'health-item--warning'">
-            <fa-icon icon="exclamation-triangle" class="health-item__icon"></fa-icon>
+          <div class="health-item health-item--clickable" 
+               [ngClass]="(user.mfaEnabled && user.mfaSetupComplete) ? 'health-item--healthy' : 'health-item--warning'"
+               (click)="!(user.mfaEnabled && user.mfaSetupComplete) && goToMFASetup()"
+               [title]="(user.mfaEnabled && user.mfaSetupComplete) ? 'MFA enabled' : 'Click to set up MFA'">
+            <fa-icon [icon]="(user.mfaEnabled && user.mfaSetupComplete) ? 'check-circle' : 'exclamation-triangle'" 
+                     class="health-item__icon"></fa-icon>
             <div class="health-item__content">
               <div class="health-item__title">Multi-Factor Authentication</div>
               <div class="health-item__status">
-                MFA setup required (coming soon)
+                {{ (user.mfaEnabled && user.mfaSetupComplete) ? 'Enabled' : 'MFA setup required' }}
+              </div>
+              <div class="health-item__action" *ngIf="!(user.mfaEnabled && user.mfaSetupComplete)">
+                <fa-icon icon="arrow-right" class="health-item__action-icon"></fa-icon>
+                Setup MFA
               </div>
             </div>
           </div>

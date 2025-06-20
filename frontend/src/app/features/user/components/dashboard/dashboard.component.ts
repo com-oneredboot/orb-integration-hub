@@ -140,4 +140,54 @@ export class DashboardComponent implements OnInit {
   goToProfile(): void {
     this.router.navigate(['/profile']);
   }
+
+  /**
+   * Navigate to email verification in auth flow
+   */
+  goToEmailVerification(): void {
+    this.router.navigate(['/authenticate']);
+    // The auth flow will handle checking email verification status
+  }
+
+  /**
+   * Navigate to phone setup/verification in auth flow
+   */
+  goToPhoneVerification(): void {
+    this.router.navigate(['/authenticate']);
+    // The auth flow will handle checking phone verification status
+  }
+
+  /**
+   * Navigate to MFA setup in auth flow
+   */
+  goToMFASetup(): void {
+    this.router.navigate(['/authenticate']);
+    // The auth flow will handle checking MFA status
+  }
+
+  /**
+   * Navigate to security settings (MFA management)
+   */
+  goToSecuritySettings(): void {
+    this.router.navigate(['/authenticate']);
+    // The auth flow will handle checking MFA status
+  }
+
+  /**
+   * Check if user has any health warnings
+   * @param user The user object
+   * @returns true if there are any incomplete requirements
+   */
+  hasHealthWarnings(user: any): boolean {
+    if (!user) return true;
+    
+    // Check all health requirements
+    const hasValidName = this.hasValidName(user);
+    const emailVerified = !!user.emailVerified;
+    const phoneVerified = !!user.phoneVerified;
+    const mfaComplete = !!(user.mfaEnabled && user.mfaSetupComplete);
+    
+    // Return true if ANY requirement is not met
+    return !hasValidName || !emailVerified || !phoneVerified || !mfaComplete;
+  }
 }

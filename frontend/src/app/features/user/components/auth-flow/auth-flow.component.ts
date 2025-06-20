@@ -106,15 +106,16 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Check for existing authentication session first
-    this.checkExistingSession();
+    // Always check existing session to load user data, but don't redirect
+    this.loadUserSessionAndDetermineStep();
     
-    // Redirect if session is active
+    // Handle unauthenticated users
     this.store.select(fromAuth.selectSessionActive)
       .pipe(takeUntil(this.destroy$))
       .subscribe(active => {
-        if (active) {
-          this.router.navigate(['/dashboard']);
+        if (!active) {
+          // User is not authenticated, start from email step
+          this.store.dispatch(AuthActions.setCurrentStep({ step: AuthSteps.EMAIL }));
         }
       });
     
@@ -158,6 +159,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       console.debug('debugMode:', debug);
     });
   }
+
 
   ngOnDestroy(): void {
     this.destroy$.next();
@@ -284,7 +286,12 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             break;
 
           case AuthSteps.MFA_SETUP:
-            console.debug('[onSubmit] Dispatching needsMFASetup');
+            // First check if MFA is already enabled in Cognito
+            console.debug('[onSubmit] MFA_SETUP: Checking Cognito MFA status first');
+            this.store.dispatch(AuthActions.checkMFAStatus());
+            
+            // Also proceed with MFA setup
+            console.debug('[onSubmit] MFA_SETUP: Also dispatching needsMFASetup');
             this.store.dispatch(AuthActions.needsMFASetup());
             break;
 
@@ -573,17 +580,17 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Check for existing authentication session on component initialization
-   * If user is already authenticated, redirect to dashboard
+   * Load user session data without automatic redirects
+   * Focus on determining the next verification step needed
    */
-  private async checkExistingSession(): Promise<void> {
+  private async loadUserSessionAndDetermineStep(): Promise<void> {
     try {
-      console.debug('[checkExistingSession] Checking for existing authentication session');
+      console.debug('[loadUserSessionAndDetermineStep] Loading user session data');
       
       // Check if signout query parameter is present
       const signoutParam = this.route.snapshot.queryParams['signout'];
       if (signoutParam === 'true') {
-        console.debug('[checkExistingSession] Signout parameter detected, forcing user signout');
+        console.debug('[loadUserSessionAndDetermineStep] Signout parameter detected, forcing user signout');
         
         try {
           // Dispatch signout action to clear auth state
@@ -596,14 +603,14 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           localStorage.clear();
           sessionStorage.clear();
           
-          console.debug('[checkExistingSession] User successfully signed out, showing auth form');
+          console.debug('[loadUserSessionAndDetermineStep] User successfully signed out, showing auth form');
           
           // Remove signout parameter from URL without page reload
           this.router.navigate(['/authenticate'], { replaceUrl: true });
           
           return; // Stop here and show auth form
         } catch (signoutError) {
-          console.error('[checkExistingSession] Error during forced signout:', signoutError);
+          console.error('[loadUserSessionAndDetermineStep] Error during forced signout:', signoutError);
           // Continue with normal flow even if signout fails
         }
       }
@@ -611,24 +618,22 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       const isAuthenticated = await this.cognitoService.checkIsAuthenticated();
       
       if (isAuthenticated) {
-        console.debug('[checkExistingSession] User is already authenticated, getting profile');
+        console.debug('[loadUserSessionAndDetermineStep] User is authenticated, loading user data');
         
-        const profile = await this.cognitoService.getCognitoProfile();
-        
-        if (profile) {
-          console.debug('[checkExistingSession] User profile found, redirecting to dashboard', profile);
-          
-          // User is authenticated and has a valid session, redirect to dashboard
-          this.router.navigate(['/dashboard']);
-          return;
-        }
+        // Always load user profile data regardless of authentication
+        // The effects will handle determining the next verification step
+        this.store.dispatch(AuthActions.refreshSession());
+        return;
       }
       
-      console.debug('[checkExistingSession] No existing session found, proceeding with auth flow');
+      console.debug('[loadUserSessionAndDetermineStep] No existing session found, starting with email step');
+      this.store.dispatch(AuthActions.setCurrentStep({ step: AuthSteps.EMAIL }));
     } catch (error) {
-      console.debug('[checkExistingSession] Error checking existing session:', error);
-      // If there's an error checking the session, proceed with normal auth flow
+      console.debug('[loadUserSessionAndDetermineStep] Error checking session:', error);
+      // If there's an error checking the session, start with email step
+      this.store.dispatch(AuthActions.setCurrentStep({ step: AuthSteps.EMAIL }));
     }
   }
+
 
 }

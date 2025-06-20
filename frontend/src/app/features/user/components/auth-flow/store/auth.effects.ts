@@ -7,7 +7,7 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { catchError, map, switchMap, tap, withLatestFrom } from 'rxjs/operators';
+import { catchError, filter, map, switchMap, tap, withLatestFrom } from 'rxjs/operators';
 import { from, of, EMPTY } from "rxjs";
 import { Store } from '@ngrx/store';
 
@@ -16,6 +16,7 @@ import { UserService } from "../../../../../core/services/user.service";
 import { UsersQueryByEmail } from "../../../../../core/graphql/Users.graphql";
 import { AuthActions } from "./auth.actions";
 import * as fromAuth from "./auth.selectors";
+import { AuthSteps } from "./auth.state";
 import { CognitoService } from "../../../../../core/services/cognito.service";
 import { getError } from "../../../../../core/models/ErrorRegistryModel";
 import { UsersQueryByEmailInput, UsersResponse, UsersListResponse, Users } from "../../../../../core/models/UsersModel";
@@ -146,9 +147,10 @@ export class AuthEffects {
   autoUpdateEmailVerification$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.checkEmailVerificationStatusSuccess),
-      filter(({ isVerified }) => isVerified), // Only proceed if email is verified in Cognito
+      filter((action): action is ReturnType<typeof AuthActions.checkEmailVerificationStatusSuccess> => action.isVerified), // Only proceed if email is verified in Cognito
       withLatestFrom(this.store.select(fromAuth.selectCurrentUser)),
-      switchMap(([{ email }, currentUser]) => {
+      switchMap(([action, currentUser]) => {
+        const { email } = action;
         if (!currentUser || currentUser.emailVerified) {
           // Skip if no user or already verified in our DB
           return EMPTY;
@@ -371,6 +373,82 @@ export class AuthEffects {
     )
   );
 
+  // Check MFA status in Cognito
+  checkMFAStatus$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.checkMFAStatus),
+      tap(() => console.debug('[Effect][checkMFAStatus$] Start')),
+      switchMap(() => {
+        return from(this.userService.checkCognitoMFAStatus()).pipe(
+          map(({ mfaEnabled, mfaSetupComplete }) => {
+            console.debug('[Effect][checkMFAStatus$] Cognito MFA status:', { mfaEnabled, mfaSetupComplete });
+            return AuthActions.checkMFAStatusSuccess({ mfaEnabled, mfaSetupComplete });
+          }),
+          catchError(error => {
+            console.error('[Effect][checkMFAStatus$] Error:', error);
+            return of(AuthActions.checkMFAStatusFailure({
+              error: error instanceof Error ? error.message : 'Failed to check MFA status'
+            }));
+          })
+        );
+      })
+    )
+  );
+
+  // Auto-update user table if MFA is enabled in Cognito
+  autoUpdateMFAStatus$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.checkMFAStatusSuccess),
+      filter((action): action is ReturnType<typeof AuthActions.checkMFAStatusSuccess> => action.mfaEnabled && action.mfaSetupComplete), // Only proceed if MFA is enabled and setup
+      withLatestFrom(this.store.select(fromAuth.selectCurrentUser)),
+      switchMap(([action, currentUser]) => {
+        const { mfaEnabled, mfaSetupComplete } = action;
+        if (!currentUser || (currentUser.mfaEnabled && currentUser.mfaSetupComplete)) {
+          // Skip if no user or already enabled in our DB
+          return EMPTY;
+        }
+
+        console.debug('[Effect][autoUpdateMFAStatus$] Auto-updating MFA status for user:', currentUser.userId);
+        
+        // Update the user record with MFA enabled status
+        const updateInput = {
+          userId: currentUser.userId,
+          cognitoId: currentUser.cognitoId,
+          cognitoSub: currentUser.cognitoSub,
+          email: currentUser.email,
+          firstName: currentUser.firstName,
+          lastName: currentUser.lastName,
+          status: currentUser.status,
+          createdAt: currentUser.createdAt,
+          updatedAt: new Date().toISOString(),
+          phoneNumber: currentUser.phoneNumber,
+          phoneVerified: currentUser.phoneVerified,
+          emailVerified: currentUser.emailVerified,
+          groups: currentUser.groups,
+          mfaEnabled: true,
+          mfaSetupComplete: true
+        };
+
+        return from(this.userService.userUpdate(updateInput)).pipe(
+          map(response => {
+            console.debug('[Effect][autoUpdateMFAStatus$] User update response:', response);
+            const updatedUser = response.Data;
+            if (!updatedUser) {
+              throw new Error('User update succeeded but no user data returned');
+            }
+            return AuthActions.updateUserAfterMFASetupSuccess({ user: updatedUser });
+          }),
+          catchError(error => {
+            console.error('[Effect][autoUpdateMFAStatus$] Failed to auto-update MFA status:', error);
+            return of(AuthActions.updateUserAfterMFASetupFailure({ 
+              error: error instanceof Error ? error.message : 'Failed to update user record'
+            }));
+          })
+        );
+      })
+    )
+  );
+
   setupMFA$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.needsMFASetup),
@@ -382,17 +460,73 @@ export class AuthEffects {
             }
             const errorObj = getError('ORB-AUTH-003');
             return AuthActions.needsMFASetupFailure({
-              error: errorObj ? errorObj.message : 'Email verification failed'
+              error: errorObj ? errorObj.message : 'MFA setup failed'
             });
           }),
           catchError(error => {
             const errorObj = getError('ORB-AUTH-003');
             return of(AuthActions.needsMFASetupFailure({
-              error: errorObj ? errorObj.message : 'Email verification failed'
+              error: errorObj ? errorObj.message : 'MFA setup failed'
             }));
           })
         )
       )
+    )
+  );
+
+  // Update user record after successful MFA setup
+  updateUserAfterMFASetup$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.needsMFASetupSuccess),
+      withLatestFrom(this.store.select(fromAuth.selectCurrentUser)),
+      switchMap(([action, currentUser]) => {
+        if (!currentUser) {
+          return of(AuthActions.updateUserAfterMFASetupFailure({ 
+            error: 'Missing user data'
+          }));
+        }
+
+        console.debug('Effect: Updating user after MFA setup', { currentUser });
+        
+        // Update the user record with MFA enabled
+        const updateInput = {
+          userId: currentUser.userId,
+          cognitoId: currentUser.cognitoId,
+          cognitoSub: currentUser.cognitoSub,
+          email: currentUser.email,
+          firstName: currentUser.firstName,
+          lastName: currentUser.lastName,
+          status: currentUser.status,
+          createdAt: currentUser.createdAt,
+          updatedAt: new Date().toISOString(),
+          phoneNumber: currentUser.phoneNumber,
+          phoneVerified: currentUser.phoneVerified,
+          emailVerified: currentUser.emailVerified,
+          groups: currentUser.groups,
+          mfaEnabled: true,
+          mfaSetupComplete: true
+        };
+
+        return from(this.userService.userUpdate(updateInput)).pipe(
+          map(response => {
+            console.debug('User update response after MFA setup:', response);
+            
+            // Extract the updated user from the response
+            const updatedUser = response.Data;
+            if (!updatedUser) {
+              throw new Error('User update succeeded but no user data returned');
+            }
+
+            return AuthActions.updateUserAfterMFASetupSuccess({ user: updatedUser });
+          }),
+          catchError(error => {
+            console.error('Failed to update user after MFA setup:', error);
+            return of(AuthActions.updateUserAfterMFASetupFailure({ 
+              error: error instanceof Error ? error.message : 'Failed to update user record'
+            }));
+          })
+        );
+      })
     )
   );
 
@@ -418,6 +552,24 @@ export class AuthEffects {
           })
         )
       )
+    )
+  );
+
+  // Auto-trigger signIn after successful MFA verification to load user data into store
+  autoSignInAfterMFA$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.needsMFASuccess),
+      withLatestFrom(this.store.select(fromAuth.selectCurrentEmail)),
+      switchMap(([, email]) => {
+        if (email) {
+          console.debug('Auto-triggering signIn after MFA verification to load user data');
+          return of(AuthActions.signIn({ 
+            email, 
+            password: '' // Password already verified, we just need to complete the sign-in and load user data
+          }));
+        }
+        return EMPTY; // No action needed if no email available
+      })
     )
   );
 
@@ -707,6 +859,122 @@ export class AuthEffects {
           })
         )
       )
+    )
+  );
+
+  // Auto-determine next verification step after session refresh
+  determineNextStepAfterRefresh$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.refreshSessionSuccess),
+      map(({ user }) => {
+        console.debug('[Effect][determineNextStepAfterRefresh$] User loaded, determining next step:', user);
+
+        // Check email verification first
+        if (!user.emailVerified) {
+          console.debug('[Effect][determineNextStepAfterRefresh$] Email not verified, checking Cognito status');
+          return AuthActions.checkEmailVerificationStatus({ email: user.email });
+        }
+
+        // Check phone verification
+        if (!user.phoneNumber || !user.phoneVerified) {
+          console.debug('[Effect][determineNextStepAfterRefresh$] Phone not verified, setting up phone');
+          return AuthActions.setCurrentStep({ step: AuthSteps.PHONE_SETUP });
+        }
+
+        // Check MFA status
+        if (!user.mfaEnabled || !user.mfaSetupComplete) {
+          console.debug('[Effect][determineNextStepAfterRefresh$] MFA not complete, checking MFA status');
+          return AuthActions.checkMFAStatus();
+        }
+
+        // All verifications complete - this should redirect to dashboard
+        // But we'll let the component handle the redirect
+        console.debug('[Effect][determineNextStepAfterRefresh$] All verifications complete');
+        return AuthActions.setCurrentStep({ step: AuthSteps.COMPLETE });
+      })
+    )
+  );
+
+  // Handle email verification status check results
+  handleEmailVerificationStatusCheck$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.checkEmailVerificationStatusSuccess),
+      map(({ isVerified, email }) => {
+        console.debug('[Effect][handleEmailVerificationStatusCheck$] Email verification status:', { isVerified, email });
+        
+        if (isVerified) {
+          // Email is already verified in Cognito, auto-update user record
+          console.debug('[Effect][handleEmailVerificationStatusCheck$] Email already verified, updating user');
+          return AuthActions.updateUserAfterEmailVerification({ email });
+        } else {
+          // Email not verified, show verification step
+          console.debug('[Effect][handleEmailVerificationStatusCheck$] Email not verified, showing verification step');
+          return AuthActions.setCurrentStep({ step: AuthSteps.EMAIL_VERIFY });
+        }
+      })
+    )
+  );
+
+  // Handle MFA status check results  
+  handleMFAStatusCheck$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.checkMFAStatusSuccess),
+      map(({ mfaEnabled, mfaSetupComplete }) => {
+        console.debug('[Effect][handleMFAStatusCheck$] MFA status:', { mfaEnabled, mfaSetupComplete });
+        
+        if (mfaEnabled && mfaSetupComplete) {
+          // MFA is already setup in Cognito, auto-update user record  
+          console.debug('[Effect][handleMFAStatusCheck$] MFA already setup, updating user');
+          return AuthActions.updateUserAfterMFASetup();
+        } else {
+          // MFA not setup, show setup step
+          console.debug('[Effect][handleMFAStatusCheck$] MFA not setup, showing setup step');
+          return AuthActions.setCurrentStep({ step: AuthSteps.MFA_SETUP });
+        }
+      })
+    )
+  );
+
+  // Continue flow after email verification user update
+  continueAfterEmailVerificationUpdate$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.updateUserAfterEmailVerificationSuccess),
+      withLatestFrom(this.store.select(fromAuth.selectCurrentUser)),
+      map(([action, user]) => {
+        console.debug('[Effect][continueAfterEmailVerificationUpdate$] Email verification updated, continuing flow');
+        
+        if (!user) {
+          console.warn('[Effect][continueAfterEmailVerificationUpdate$] No user found');
+          return AuthActions.setCurrentStep({ step: AuthSteps.EMAIL });
+        }
+
+        // Check phone verification next
+        if (!user.phoneNumber || !user.phoneVerified) {
+          console.debug('[Effect][continueAfterEmailVerificationUpdate$] Phone not verified, setting up phone');
+          return AuthActions.setCurrentStep({ step: AuthSteps.PHONE_SETUP });
+        }
+
+        // Check MFA status next
+        if (!user.mfaEnabled || !user.mfaSetupComplete) {
+          console.debug('[Effect][continueAfterEmailVerificationUpdate$] MFA not complete, checking MFA status');
+          return AuthActions.checkMFAStatus();
+        }
+
+        // All complete
+        console.debug('[Effect][continueAfterEmailVerificationUpdate$] All verifications complete');
+        return AuthActions.setCurrentStep({ step: AuthSteps.COMPLETE });
+      })
+    )
+  );
+
+  // Continue flow after MFA setup user update
+  continueAfterMFASetupUpdate$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.updateUserAfterMFASetupSuccess),
+      map(() => {
+        console.debug('[Effect][continueAfterMFASetupUpdate$] MFA setup updated, flow complete');
+        return AuthActions.setCurrentStep({ step: AuthSteps.COMPLETE });
+      })
     )
   );
 

@@ -542,6 +542,25 @@ export class UserService extends ApiService {
   }
 
   /**
+   * Check if MFA is already enabled in Cognito
+   * @returns Promise<{mfaEnabled: boolean, mfaSetupComplete: boolean}> MFA status from Cognito
+   */
+  public async checkCognitoMFAStatus(): Promise<{mfaEnabled: boolean, mfaSetupComplete: boolean}> {
+    try {
+      console.debug('[UserService][checkCognitoMFAStatus] Checking MFA status via CognitoService');
+      
+      // Use the proper CognitoService method to check MFA preferences from AWS
+      const mfaStatus = await this.cognitoService.checkMFAPreferences();
+      
+      console.debug('[UserService][checkCognitoMFAStatus] MFA status from Cognito:', mfaStatus);
+      return mfaStatus;
+    } catch (error) {
+      console.error('[UserService][checkCognitoMFAStatus] Error checking Cognito MFA status:', error);
+      return { mfaEnabled: false, mfaSetupComplete: false };
+    }
+  }
+
+  /**
    * Setup MFA
    * @returns AuthResponse
    */

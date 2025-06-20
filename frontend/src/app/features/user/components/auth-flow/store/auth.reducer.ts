@@ -10,6 +10,12 @@ import {AuthSteps, initialState} from './auth.state';
 export const authReducer = createReducer(
   initialState,
 
+  // Navigation
+  on(AuthActions.setCurrentStep, (state, { step }) => ({
+    ...state,
+    currentStep: step
+  })),
+
   // Check Email
   on(AuthActions.checkEmail, (state, { email }) => {
     console.debug('Reducer: checkEmail', {

@@ -11,6 +11,7 @@ import {
   fetchAuthSession,
   getCurrentUser,
   fetchUserAttributes,
+  fetchMFAPreference,
   signIn,
   signOut,
   signUp,
@@ -485,6 +486,41 @@ export class CognitoService {
   }
 
   /**
+   * Check MFA preferences from Cognito directly
+   * @returns Promise<{mfaEnabled: boolean, mfaSetupComplete: boolean}> MFA status from Cognito
+   */
+  async checkMFAPreferences(): Promise<{mfaEnabled: boolean, mfaSetupComplete: boolean}> {
+    try {
+      console.debug('[CognitoService][checkMFAPreferences] Checking MFA preferences from Cognito');
+      
+      const mfaPreferences = await fetchMFAPreference();
+      console.debug('[CognitoService][checkMFAPreferences] MFA preferences:', mfaPreferences);
+      
+      // Check if TOTP (Time-based One-Time Password) is enabled
+      // The AWS Amplify v6 API uses 'TOTP' property, not 'totp'
+      const totpPreference = (mfaPreferences as any).TOTP || (mfaPreferences as any).totp;
+      const totpEnabled = totpPreference === 'ENABLED' || totpPreference === 'PREFERRED';
+      
+      // For AWS Cognito, if TOTP is enabled, setup is complete
+      const mfaEnabled = totpEnabled;
+      const mfaSetupComplete = totpEnabled;
+      
+      console.debug('[CognitoService][checkMFAPreferences] Parsed MFA status:', { 
+        mfaEnabled, 
+        mfaSetupComplete,
+        totpPreference,
+        rawPreferences: mfaPreferences
+      });
+      
+      return { mfaEnabled, mfaSetupComplete };
+    } catch (error) {
+      console.error('[CognitoService][checkMFAPreferences] Error checking MFA preferences:', error);
+      // If there's an error (like user not found or MFA not configured), assume not enabled
+      return { mfaEnabled: false, mfaSetupComplete: false };
+    }
+  }
+
+  /**
    * Debug method to check user's authentication and group status
    * Call this from browser console: window.cognitoService.debugUserStatus()
    */
@@ -518,6 +554,10 @@ export class CognitoService {
       // Check SMS verification access
       const hasAccess = await this.hasRequiredGroups(['USER', 'OWNER']);
       console.log('📱 Has SMS Verification Access:', hasAccess);
+      
+      // Check MFA status
+      const mfaStatus = await this.checkMFAPreferences();
+      console.log('🔐 MFA Status:', mfaStatus);
       
       if (!hasAccess) {
         console.log('❌ User needs to be added to USER or OWNER group for SMS verification');

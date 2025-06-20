@@ -16,6 +16,8 @@ import { MfaSetupDetails } from '../../../../../core/models/MfaSetupDetailsModel
 export const AuthActions = createActionGroup({
   source: 'Auth',
   events: {
+    // Navigation
+    'Set Current Step': props<{ step: number }>(),
 
     // State 0 - Email
     'Check Email': props<{ email: string }>(),
@@ -48,6 +50,10 @@ export const AuthActions = createActionGroup({
     'Update User After Phone Verification Success': props<{ user: IUsers }>(),
     'Update User After Phone Verification Failure': props<{ error: string }>(),
 
+    'Check MFA Status': emptyProps(),
+    'Check MFA Status Success': props<{ mfaEnabled: boolean, mfaSetupComplete: boolean }>(),
+    'Check MFA Status Failure': props<{ error: string }>(),
+
     'Needs MFA': props<{ code: string, rememberDevice:boolean }>(),
     'Needs MFA Success': emptyProps(),
     'Needs MFA Failure': props<{ error: string }>(),
@@ -55,6 +61,10 @@ export const AuthActions = createActionGroup({
     'Needs MFA Setup': emptyProps(),
     'Needs MFA Setup Success': emptyProps(),
     'Needs MFA Setup Failure': props<{ error: string }>(),
+
+    'Update User After MFA Setup': emptyProps(),
+    'Update User After MFA Setup Success': props<{ user: IUsers }>(),
+    'Update User After MFA Setup Failure': props<{ error: string }>(),
 
     'Signout': emptyProps(),
     'Signout Success': emptyProps(),
