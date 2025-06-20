@@ -866,31 +866,45 @@ export class AuthEffects {
   determineNextStepAfterRefresh$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.refreshSessionSuccess),
-      map(({ user }) => {
-        console.debug('[Effect][determineNextStepAfterRefresh$] User loaded, determining next step:', user);
+      withLatestFrom(this.store.select(fromAuth.selectCurrentStep)),
+      filter(([, currentStep]) => {
+        // Only run this logic if we're not in the middle of an auth flow
+        // This prevents interference with active authentication steps
+        const initialSteps = [AuthSteps.EMAIL, AuthSteps.PASSWORD, AuthSteps.SIGNIN, AuthSteps.COMPLETE];
+        
+        console.debug('[Effect][determineNextStepAfterRefresh$] Current step check:', currentStep, 'isInitialStep:', initialSteps.includes(currentStep));
+        
+        if (!initialSteps.includes(currentStep)) {
+          console.debug('[Effect][determineNextStepAfterRefresh$] User is in auth flow, not interfering with step:', currentStep);
+          return false;
+        }
+        return true;
+      }),
+      switchMap(([{ user }]) => {
+        console.debug('[Effect][determineNextStepAfterRefresh$] Initial session load, determining correct step for user:', user);
 
         // Check email verification first
         if (!user.emailVerified) {
           console.debug('[Effect][determineNextStepAfterRefresh$] Email not verified, checking Cognito status');
-          return AuthActions.checkEmailVerificationStatus({ email: user.email });
+          return of(AuthActions.checkEmailVerificationStatus({ email: user.email }));
         }
 
         // Check phone verification
         if (!user.phoneNumber || !user.phoneVerified) {
           console.debug('[Effect][determineNextStepAfterRefresh$] Phone not verified, setting up phone');
-          return AuthActions.setCurrentStep({ step: AuthSteps.PHONE_SETUP });
+          return of(AuthActions.setCurrentStep({ step: AuthSteps.PHONE_SETUP }));
         }
 
-        // Check MFA status
+        // Check MFA status - this is async, so we let the MFA effects handle the step setting
         if (!user.mfaEnabled || !user.mfaSetupComplete) {
-          console.debug('[Effect][determineNextStepAfterRefresh$] MFA not complete, checking MFA status');
-          return AuthActions.checkMFAStatus();
+          console.debug('[Effect][determineNextStepAfterRefresh$] MFA not complete in user record, checking actual Cognito MFA status - letting MFA effects handle step');
+          return of(AuthActions.checkMFAStatus());
         }
 
         // All verifications complete - this should redirect to dashboard
         // But we'll let the component handle the redirect
-        console.debug('[Effect][determineNextStepAfterRefresh$] All verifications complete');
-        return AuthActions.setCurrentStep({ step: AuthSteps.COMPLETE });
+        console.debug('🚨 [Effect][determineNextStepAfterRefresh$] All verifications complete - DISPATCHING setCurrentStep COMPLETE');
+        return of(AuthActions.setCurrentStep({ step: AuthSteps.COMPLETE }));
       })
     )
   );
@@ -915,21 +929,20 @@ export class AuthEffects {
     )
   );
 
-  // Handle MFA status check results  
+  // Handle MFA status check results - COMPLETELY NEW VERSION
   handleMFAStatusCheck$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.checkMFAStatusSuccess),
-      map(({ mfaEnabled, mfaSetupComplete }) => {
-        console.debug('[Effect][handleMFAStatusCheck$] MFA status:', { mfaEnabled, mfaSetupComplete });
+      tap(() => console.log('🚀🚀🚀 BRAND NEW EFFECT RUNNING 🚀🚀🚀')),
+      switchMap(({ mfaEnabled, mfaSetupComplete }) => {
+        console.log('🚀 [BRAND NEW handleMFAStatusCheck$] MFA status received:', { mfaEnabled, mfaSetupComplete });
         
-        if (mfaEnabled && mfaSetupComplete) {
-          // MFA is already setup in Cognito, auto-update user record  
-          console.debug('[Effect][handleMFAStatusCheck$] MFA already setup, updating user');
-          return AuthActions.updateUserAfterMFASetup();
+        if (!mfaEnabled || !mfaSetupComplete) {
+          console.log('🚀 [BRAND NEW handleMFAStatusCheck$] MFA not setup - DISPATCHING setCurrentStep MFA_SETUP');
+          return of(AuthActions.setCurrentStep({ step: AuthSteps.MFA_SETUP }));
         } else {
-          // MFA not setup, show setup step
-          console.debug('[Effect][handleMFAStatusCheck$] MFA not setup, showing setup step');
-          return AuthActions.setCurrentStep({ step: AuthSteps.MFA_SETUP });
+          console.log('🚀 [BRAND NEW handleMFAStatusCheck$] MFA already setup - proceeding to complete');
+          return of(AuthActions.setCurrentStep({ step: AuthSteps.COMPLETE }));
         }
       })
     )

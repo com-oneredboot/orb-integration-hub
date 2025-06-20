@@ -123,12 +123,26 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(step => {
         this.updateValidators(step);
-        if (step !== AuthSteps.COMPLETE) return;
         
-        // If we reached the COMPLETE step, check if the user is valid
-        // If all attributes are present, go to dashboard
-        // Otherwise, go to profile page to complete required fields
-        this.handleAuthComplete();
+        // Handle specific step transitions
+        if (step === AuthSteps.MFA_SETUP) {
+          // When user lands on MFA setup step, first check if MFA is already enabled in Cognito
+          console.log('🎯 [currentStep$ subscription] Landing on MFA_SETUP step, checking Cognito MFA status');
+          this.store.dispatch(AuthActions.checkMFAStatus());
+        } else if (step === AuthSteps.COMPLETE) {
+          // Add a small delay to let any pending step changes complete first
+          // This prevents race conditions where setCurrentStep actions are still in flight
+          setTimeout(() => {
+            this.currentStep$.pipe(take(1)).subscribe(currentStep => {
+              if (currentStep === AuthSteps.COMPLETE) {
+                console.log('🎯 [currentStep$ subscription] Confirmed still on COMPLETE step, handling auth complete');
+                this.handleAuthComplete();
+              } else {
+                console.log('🎯 [currentStep$ subscription] Step changed from COMPLETE to', currentStep, '- not handling auth complete');
+              }
+            });
+          }, 100);
+        }
       });
 
     // current user
@@ -531,15 +545,9 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           user 
         });
         
-        if (canAccessDashboard) {
-          // User has minimum requirements for dashboard access
-          console.debug('User can access dashboard, redirecting to dashboard');
-          this.router.navigate(['/dashboard']);
-        } else {
-          // User needs to complete required fields, go to profile
-          console.debug('User needs to complete profile, redirecting to profile');
-          this.router.navigate(['/profile']);
-        }
+        // Always redirect to dashboard - user can complete remaining setup there via call-to-actions
+        console.log('🚀🚀🚀 BRAND NEW VERSION - Auth flow complete, redirecting to dashboard 🚀🚀🚀');
+        this.router.navigate(['/dashboard']);
       });
   }
   
