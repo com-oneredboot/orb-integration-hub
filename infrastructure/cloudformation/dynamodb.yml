@@ -263,6 +263,35 @@ Resources:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-users-table-stream-arn
       Type: String
       Value: !GetAtt UsersTable.StreamArn
+
+  SmsRateLimitTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: phoneNumber
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: phoneNumber
+          AttributeType: S
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  SmsRateLimitTableArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit-table-arn
+      Type: String
+      Value: !GetAtt SmsRateLimitTable.Arn
+
+  SmsRateLimitTableName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit-table-name
+      Type: String
+      Value: !Ref SmsRateLimitTable
     
 
 # --------------------------------------------------- #
@@ -332,3 +361,15 @@ Outputs:
     Value: !GetAtt UsersTable.StreamArn
     Export:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-users-table-stream-arn
+
+  SmsRateLimitTableArn:
+    Description: The ARN of the SMS Rate Limit table
+    Value: !GetAtt SmsRateLimitTable.Arn
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit-table-arn
+
+  SmsRateLimitTableName:
+    Description: The name of the SMS Rate Limit table
+    Value: !Ref SmsRateLimitTable
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit-table-name

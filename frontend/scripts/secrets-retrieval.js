@@ -193,8 +193,15 @@ async function retrieveFrontendSecrets() {
         case 'secret':
           value = await getSecret(config.name);
           // For JSON secrets, extract the actual secret value
-          if (typeof value === 'object' && value.secret_key) {
-            value = value.secret_key;
+          if (typeof value === 'object') {
+            // Handle different secret formats
+            if (value.api_key) {
+              value = value.api_key;
+            } else if (value.secret_key) {
+              value = value.secret_key;
+            } else if (value.secretKey) {
+              value = value.secretKey;
+            }
           }
           break;
           
@@ -303,9 +310,9 @@ async function main() {
     console.log('\n✅ Secret retrieval completed successfully');
     console.log(`Environment: ${CONFIG.environment}`);
     console.log(`Retrieved ${Object.keys(secrets).length} configuration values`);
+    console.log('⚠️  Temporary secrets file will remain until replacement script completes');
     
-    // Setup cleanup on process exit
-    process.on('exit', cleanup);
+    // Setup cleanup on interrupt signals only (not on normal exit)
     process.on('SIGINT', () => {
       cleanup();
       process.exit(1);

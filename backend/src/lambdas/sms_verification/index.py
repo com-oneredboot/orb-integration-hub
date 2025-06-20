@@ -15,11 +15,13 @@ from botocore.exceptions import ClientError
 # AWS clients
 sns_client = boto3.client('sns')
 secrets_client = boto3.client('secretsmanager')
+dynamodb = boto3.resource('dynamodb')
 
 # Environment variables
 LOGGING_LEVEL = os.getenv('LOGGING_LEVEL', 'INFO')  # Changed to match CloudFormation
 ORIGINATION_NUMBER = os.getenv('SMS_ORIGINATION_NUMBER')
 SECRET_NAME = os.getenv('SMS_VERIFICATION_SECRET_NAME')
+RATE_LIMIT_TABLE_NAME = os.getenv('SMS_RATE_LIMIT_TABLE_NAME')
 
 # Setting up logging
 logger = logging.getLogger()
@@ -87,6 +89,57 @@ def verify_code(phone_number: str, code: str, secret: str) -> bool:
     return False
 
 
+def check_rate_limit(phone_number: str) -> tuple:
+    """
+    Check if phone number has exceeded rate limit (3 SMS per hour)
+    Returns: (is_allowed, message)
+    """
+    if not RATE_LIMIT_TABLE_NAME:
+        logger.warning("Rate limit table not configured, allowing request")
+        return True, "Rate limiting not configured"
+    
+    table = dynamodb.Table(RATE_LIMIT_TABLE_NAME)
+    current_time = int(time.time())
+    
+    try:
+        # Get current rate limit record
+        response = table.get_item(Key={'phoneNumber': phone_number})
+        
+        if 'Item' not in response:
+            # First request - create new record
+            table.put_item(Item={
+                'phoneNumber': phone_number,
+                'requestCount': 1,
+                'firstRequestTime': current_time,
+                'ttl': current_time + 3600  # 1 hour TTL
+            })
+            logger.info(f"Rate limit: First request for {phone_number}")
+            return True, "First request allowed"
+        
+        item = response['Item']
+        request_count = item['requestCount']
+        
+        if request_count >= 3:
+            # Rate limit exceeded
+            logger.warning(f"Rate limit exceeded for {phone_number}: {request_count}/3 requests")
+            return False, "Rate limit exceeded: Maximum 3 SMS per hour"
+        
+        # Increment counter
+        table.update_item(
+            Key={'phoneNumber': phone_number},
+            UpdateExpression='SET requestCount = requestCount + :inc',
+            ExpressionAttributeValues={':inc': 1}
+        )
+        
+        logger.info(f"Rate limit: Request allowed for {phone_number} ({request_count + 1}/3)")
+        return True, f"Request allowed ({request_count + 1}/3)"
+        
+    except Exception as e:
+        logger.error(f"Rate limit check failed for {phone_number}: {str(e)}")
+        # Fail open - allow request if rate limiting fails
+        return True, "Rate limiting unavailable"
+
+
 def lambda_handler(event, context):
     logger.debug(f"Event received: {json.dumps(event)}")
 
@@ -118,8 +171,24 @@ def lambda_handler(event, context):
             logger.info(f"Verification response: {json.dumps(response)}")
             return response
         
+        # Check rate limiting before generating/sending SMS
+        logger.info(f"Checking rate limit for phone number: {phone_number}")
+        is_allowed, rate_limit_message = check_rate_limit(phone_number)
+        
+        if not is_allowed:
+            logger.warning(f"Rate limit exceeded for {phone_number}: {rate_limit_message}")
+            return {
+                "StatusCode": 429,
+                "Message": rate_limit_message,
+                "Data": {
+                    "phoneNumber": phone_number,
+                    "rateLimited": True
+                }
+            }
+        
         # Generate and send new verification code
         logger.info(f"Generating verification code for phone number: {phone_number}")
+        logger.debug(f"Rate limit status: {rate_limit_message}")
         code = generate_verification_code(phone_number, current_time, secret)
         
         # SMS parameters
