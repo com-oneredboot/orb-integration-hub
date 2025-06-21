@@ -8,11 +8,13 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {ActivatedRoute, Router} from '@angular/router';
 import {Store} from '@ngrx/store';
-import {map, Observable, Subject, take, takeUntil, tap} from 'rxjs';
+import {map, Observable, Subject, take, takeUntil, tap, filter} from 'rxjs';
+import {Location} from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { RouterModule } from '@angular/router';
+import { AuthErrorBoundaryComponent } from './components/auth-error-boundary.component';
 
 import {v4 as uuidv4} from 'uuid';
 
@@ -39,7 +41,8 @@ import { UserGroup } from "../../../../core/models/UserGroupEnum";
     CommonModule,
     ReactiveFormsModule,
     FontAwesomeModule,
-    RouterModule
+    RouterModule,
+    AuthErrorBoundaryComponent
     // Add any shared components, directives, or pipes used in the template here
   ]
 })
@@ -66,6 +69,10 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   passwordVisible = false;
   qrCodeDataUrl: string | null = null;
 
+  // History management
+  public stepHistory: AuthSteps[] = [];
+  private isNavigatingBack = false;
+
   private destroy$ = new Subject<void>();
 
   passwordValidations = {
@@ -81,6 +88,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     private store: Store<{ auth: AuthState }>,
     private router: Router,
     private route: ActivatedRoute,
+    private location: Location,
     private userService: UserService,
     private cognitoService: CognitoService,
     private inputValidationService: InputValidationService
@@ -130,6 +138,9 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Initialize browser history management
+    this.initializeHistoryManagement();
+    
     // Always check existing session to load user data, but don't redirect
     this.loadUserSessionAndDetermineStep();
     
@@ -145,9 +156,16 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     
     // Pure component - only update form validators when step changes
     this.currentStep$
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        takeUntil(this.destroy$),
+        filter(step => !!step)
+      )
       .subscribe(step => {
         this.updateValidators(step);
+        // Track step history for navigation
+        this.trackStepHistory(step);
+        // Update browser history
+        this.updateBrowserHistory(step);
         // Focus management and announcements for accessibility
         this.focusCurrentStepInput(step);
         this.announceStepChange(step);
@@ -778,6 +796,243 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       // If there's an error checking the session, start with email step
       this.store.dispatch(AuthActions.setCurrentStep({ step: AuthSteps.EMAIL }));
     }
+  }
+
+  /**
+   * Initialize browser history management for auth flow navigation
+   */
+  private initializeHistoryManagement(): void {
+    // Listen for browser back/forward button
+    window.addEventListener('popstate', (event) => {
+      if (event.state && event.state.authStep) {
+        this.isNavigatingBack = true;
+        this.store.dispatch(AuthActions.setCurrentStep({ step: event.state.authStep }));
+        
+        // Reset flag after state change
+        setTimeout(() => {
+          this.isNavigatingBack = false;
+        }, 100);
+      }
+    });
+  }
+
+  /**
+   * Track step history for navigation purposes
+   */
+  private trackStepHistory(step: AuthSteps): void {
+    if (!this.isNavigatingBack) {
+      // Only add to history if we're not navigating back
+      const lastStep = this.stepHistory[this.stepHistory.length - 1];
+      if (lastStep !== step) {
+        this.stepHistory.push(step);
+        
+        // Limit history to prevent memory issues
+        if (this.stepHistory.length > 10) {
+          this.stepHistory.shift();
+        }
+      }
+    }
+  }
+
+  /**
+   * Update browser history with current step
+   */
+  private updateBrowserHistory(step: AuthSteps): void {
+    if (!this.isNavigatingBack) {
+      const url = this.router.url.split('?')[0]; // Remove query params
+      const state = { authStep: step };
+      const title = this.getStepLabel(step);
+      
+      // Push new state to browser history
+      window.history.pushState(state, title, url);
+    }
+  }
+
+  /**
+   * Navigate back to previous step (if available and safe)
+   */
+  public navigateBack(): void {
+    const currentStepIndex = this.stepHistory.length - 1;
+    const previousStepIndex = currentStepIndex - 1;
+    
+    if (previousStepIndex >= 0) {
+      const previousStep = this.stepHistory[previousStepIndex];
+      
+      // Only allow back navigation for safe steps
+      if (this.isStepNavigationSafe(previousStep)) {
+        this.isNavigatingBack = true;
+        this.stepHistory.pop(); // Remove current step
+        this.store.dispatch(AuthActions.setCurrentStep({ step: previousStep }));
+        this.location.back();
+        
+        // Reset flag
+        setTimeout(() => {
+          this.isNavigatingBack = false;
+        }, 100);
+      }
+    }
+  }
+
+  /**
+   * Navigate to a specific step (for breadcrumb navigation)
+   */
+  public navigateToStep(targetStep: AuthSteps): void {
+    if (this.isStepNavigationSafe(targetStep)) {
+      this.isNavigatingBack = true;
+      
+      // Remove steps after the target step from history
+      const targetIndex = this.stepHistory.indexOf(targetStep);
+      if (targetIndex >= 0) {
+        this.stepHistory = this.stepHistory.slice(0, targetIndex + 1);
+      }
+      
+      this.store.dispatch(AuthActions.setCurrentStep({ step: targetStep }));
+      
+      // Reset flag
+      setTimeout(() => {
+        this.isNavigatingBack = false;
+      }, 100);
+    }
+  }
+
+  /**
+   * Check if navigation back to a step is safe (non-destructive)
+   */
+  public isStepNavigationSafe(step: AuthSteps): boolean {
+    const destructiveSteps = [
+      AuthSteps.EMAIL_VERIFY,
+      AuthSteps.PHONE_VERIFY,
+      AuthSteps.MFA_VERIFY,
+      AuthSteps.COMPLETE
+    ];
+    
+    return !destructiveSteps.includes(step);
+  }
+
+  /**
+   * Check if back navigation is available
+   */
+  public canNavigateBack(): boolean {
+    const currentStepIndex = this.stepHistory.length - 1;
+    const previousStepIndex = currentStepIndex - 1;
+    
+    if (previousStepIndex >= 0) {
+      const previousStep = this.stepHistory[previousStepIndex];
+      return this.isStepNavigationSafe(previousStep);
+    }
+    
+    return false;
+  }
+
+  /**
+   * Start over the authentication flow
+   */
+  public startOver(): void {
+    // Clear step history
+    this.stepHistory = [];
+    
+    // Clear form data
+    this.authForm.reset();
+    
+    // Clear auth state and start from beginning
+    this.store.dispatch(AuthActions.signout());
+    this.store.dispatch(AuthActions.setCurrentStep({ step: AuthSteps.EMAIL }));
+    
+    // Update browser history
+    const url = this.router.url.split('?')[0];
+    window.history.replaceState({ authStep: AuthSteps.EMAIL }, 'Sign In', url);
+  }
+
+  /**
+   * Handle error boundary retry action
+   */
+  public onErrorRetry(): void {
+    // Retry the current form submission
+    if (this.authForm.valid) {
+      this.onSubmit();
+    } else {
+      // If form is invalid, focus the first invalid field
+      this.focusFirstInvalidField();
+    }
+  }
+
+  /**
+   * Handle error boundary go back action
+   */
+  public onErrorGoBack(): void {
+    this.navigateBack();
+  }
+
+  /**
+   * Handle error boundary start over action  
+   */
+  public onErrorStartOver(): void {
+    this.startOver();
+  }
+
+  /**
+   * Focus the first invalid field for error recovery
+   */
+  private focusFirstInvalidField(): void {
+    const formElement = document.querySelector('.auth-flow__form');
+    if (formElement) {
+      const firstInvalidField = formElement.querySelector('.auth-flow__input-group-field--error') as HTMLElement;
+      if (firstInvalidField) {
+        firstInvalidField.focus();
+      }
+    }
+  }
+
+  /**
+   * Get user-friendly error message for error boundary
+   */
+  public getErrorBoundaryMessage(error: string | null): string {
+    if (!error) return '';
+    
+    // Map technical errors to user-friendly messages
+    const errorMap: { [key: string]: string } = {
+      'UserNotFoundException': 'No account found with this email address. Please check your email or create a new account.',
+      'NotAuthorizedException': 'Invalid email or password. Please check your credentials and try again.',
+      'CodeMismatchException': 'The verification code is incorrect. Please check the code and try again.',
+      'CodeExpiredException': 'The verification code has expired. Please request a new code.',
+      'UserNotConfirmedException': 'Your account needs to be verified. Please check your email for a verification code.',
+      'TooManyRequestsException': 'Too many attempts. Please wait a moment before trying again.',
+      'InvalidParameterException': 'Please check your input and try again.',
+      'ResourceNotFoundException': 'Service temporarily unavailable. Please try again later.',
+      'NetworkError': 'Please check your internet connection and try again.',
+      'user is already logged in': 'You are already signed in. Please refresh the page or sign out first.'
+    };
+
+    // Check for exact matches first
+    if (errorMap[error]) {
+      return errorMap[error];
+    }
+
+    // Check for partial matches
+    for (const [key, message] of Object.entries(errorMap)) {
+      if (error.toLowerCase().includes(key.toLowerCase())) {
+        return message;
+      }
+    }
+
+    // Default user-friendly message
+    return 'An unexpected error occurred. Please try again or contact support if the problem persists.';
+  }
+
+  /**
+   * Check if current error allows retry
+   */
+  public canRetryError(error: string | null): boolean {
+    if (!error) return false;
+    
+    const nonRetryableErrors = [
+      'UserNotFoundException',
+      'UserNotConfirmedException'
+    ];
+    
+    return !nonRetryableErrors.some(nonRetryable => 
+      error.toLowerCase().includes(nonRetryable.toLowerCase())
+    );
   }
 
 

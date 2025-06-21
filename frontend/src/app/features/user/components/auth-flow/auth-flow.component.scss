@@ -83,6 +83,151 @@
     }
   }
 
+  &__breadcrumb {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto v.$spacing-md;
+    padding: 0 v.$spacing-sm;
+
+    &-list {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: v.$spacing-xs;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      font-size: v.$font-size-sm;
+    }
+
+    &-item {
+      display: flex;
+      align-items: center;
+      gap: v.$spacing-xs;
+
+      &--current {
+        .auth-flow__breadcrumb-text {
+          color: v.$primary-color;
+          font-weight: v.$font-weight-semibold;
+        }
+      }
+
+      &--clickable {
+        .auth-flow__breadcrumb-button {
+          cursor: pointer;
+          
+          &:hover {
+            color: v.$primary-color;
+            text-decoration: underline;
+          }
+        }
+      }
+    }
+
+    &-button {
+      background: none;
+      border: none;
+      color: v.$text-secondary;
+      font-size: inherit;
+      font-family: v.$font-family-base;
+      padding: v.$spacing-xs;
+      border-radius: v.$border-radius-sm;
+      transition: color 0.2s ease;
+
+      &:focus {
+        outline: 2px solid v.$primary-color;
+        outline-offset: 2px;
+      }
+    }
+
+    &-text {
+      color: v.$text-secondary;
+      padding: v.$spacing-xs;
+    }
+
+    &-separator {
+      color: v.$gray-500;
+      font-size: v.$font-size-xs;
+      margin: 0 v.$spacing-xs;
+    }
+  }
+
+  &__navigation {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto v.$spacing-lg;
+    padding: 0 v.$spacing-sm;
+
+    &-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    &-spacer {
+      flex: 1; // Takes up space when back button is not visible
+    }
+  }
+
+  &__back-button,
+  &__start-over-button {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+    padding: v.$spacing-xs v.$spacing-sm;
+    background: transparent;
+    border: 1px solid v.$border-color;
+    border-radius: v.$border-radius;
+    color: v.$text-secondary;
+    font-size: v.$font-size-sm;
+    font-family: v.$font-family-base;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 36px;
+
+    &:hover {
+      background-color: v.$bg-secondary;
+      border-color: v.$primary-color;
+      color: v.$primary-color;
+    }
+
+    &:focus {
+      outline: 2px solid v.$primary-color;
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      
+      &:hover {
+        background: transparent;
+        border-color: v.$border-color;
+        color: v.$text-secondary;
+      }
+    }
+
+    i {
+      font-size: v.$font-size-sm;
+    }
+
+    span {
+      font-weight: v.$font-weight-medium;
+    }
+  }
+
+  &__start-over-button {
+    color: v.$danger-color;
+    border-color: v.$danger-color;
+
+    &:hover {
+      background-color: rgba(v.$danger-color, 0.1);
+      border-color: v.$danger-color;
+      color: v.$danger-color;
+    }
+  }
+
   &__progress {
     width: 100%;
     max-width: 600px;
@@ -591,6 +736,44 @@
     padding: v.$spacing-md;
 
     // Logo sizing now handled by responsive container approach - consistent with dashboard/profile
+
+    // Breadcrumb mobile optimizations
+    &__breadcrumb {
+      margin-bottom: v.$spacing-sm;
+      
+      &-list {
+        font-size: v.$font-size-xs;
+        justify-content: center;
+      }
+      
+      &-item {
+        &:not(:last-child) {
+          // Hide intermediate breadcrumb items on small screens, show only first and last
+          &:not(:first-child) {
+            display: none;
+          }
+        }
+      }
+    }
+
+    // Navigation mobile optimizations
+    &__navigation {
+      margin-bottom: v.$spacing-md;
+      
+      &-row {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        gap: v.$spacing-sm;
+      }
+    }
+
+    &__back-button,
+    &__start-over-button {
+      min-height: 44px; // Better touch targets
+      padding: v.$spacing-sm v.$spacing-md;
+      font-size: v.$font-size-base;
+    }
 
     // Progress indicator mobile optimizations
     &__progress {

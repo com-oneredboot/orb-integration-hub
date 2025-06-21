@@ -81,19 +81,90 @@ description: HTML template file
     </div>
 
     <main id="main-content" role="main">
-      <form *ngIf="authForm" [formGroup]="authForm" (ngSubmit)="onSubmit()" 
+      <!-- Breadcrumb Navigation -->
+      <nav class="auth-flow__breadcrumb" aria-label="Authentication progress breadcrumb">
+        <ol class="auth-flow__breadcrumb-list" role="list">
+          <li class="auth-flow__breadcrumb-item" 
+              *ngFor="let step of stepHistory; let i = index; let isLast = last"
+              [ngClass]="{
+                'auth-flow__breadcrumb-item--current': isLast,
+                'auth-flow__breadcrumb-item--clickable': !isLast && isStepNavigationSafe(step)
+              }"
+              role="listitem">
+            
+            <button *ngIf="!isLast && isStepNavigationSafe(step); else stepLabel"
+                    type="button"
+                    class="auth-flow__breadcrumb-button"
+                    (click)="navigateToStep(step)"
+                    [attr.aria-label]="'Go to ' + getStepLabel(step)">
+              {{ getStepLabel(step) }}
+            </button>
+            
+            <ng-template #stepLabel>
+              <span class="auth-flow__breadcrumb-text" 
+                    [attr.aria-current]="isLast ? 'step' : null">
+                {{ getStepLabel(step) }}
+              </span>
+            </ng-template>
+            
+            <i *ngIf="!isLast" 
+               class="fa fa-chevron-right auth-flow__breadcrumb-separator" 
+               aria-hidden="true"></i>
+          </li>
+        </ol>
+      </nav>
+
+      <!-- Navigation Controls -->
+      <nav class="auth-flow__navigation" aria-label="Authentication flow navigation">
+        <div class="auth-flow__navigation-row">
+          <button *ngIf="canNavigateBack()" 
+                  type="button" 
+                  class="auth-flow__back-button"
+                  (click)="navigateBack()"
+                  aria-label="Go back to previous step"
+                  [attr.aria-describedby]="'back-help'">
+            <i class="fa fa-arrow-left" aria-hidden="true"></i>
+            <span>Back</span>
+          </button>
+          <div *ngIf="!canNavigateBack()" class="auth-flow__navigation-spacer"></div>
+          
+          <button type="button" 
+                  class="auth-flow__start-over-button"
+                  (click)="startOver()"
+                  aria-label="Start authentication process over"
+                  [attr.aria-describedby]="'start-over-help'">
+            <i class="fa fa-refresh" aria-hidden="true"></i>
+            <span>Start Over</span>
+          </button>
+        </div>
+        
+        <div id="back-help" class="sr-only">
+          Return to the previous step in the authentication process
+        </div>
+        <div id="start-over-help" class="sr-only">
+          Clear all progress and restart the authentication process from the beginning
+        </div>
+      </nav>
+      
+      <!-- Enhanced Error Boundary -->
+      <app-auth-error-boundary 
+        *ngIf="state.error" 
+        [errorTitle]="'Authentication Error'"
+        [errorMessage]="getErrorBoundaryMessage(state.error)"
+        [technicalDetails]="state.error"
+        [showDetails]="true"
+        [allowRetry]="canRetryError(state.error)"
+        [allowGoBack]="canNavigateBack()"
+        (retry)="onErrorRetry()"
+        (goBack)="onErrorGoBack()"
+        (startOver)="onErrorStartOver()">
+      </app-auth-error-boundary>
+      
+      <form *ngIf="authForm && !state.error" [formGroup]="authForm" (ngSubmit)="onSubmit()" 
             class="auth-flow__form" 
             role="form" 
             aria-labelledby="form-title"
             novalidate>
-      <!-- Error Banner -->
-      <div class="auth-flow__error" 
-           *ngIf="state.error" 
-           role="alert" 
-           aria-live="assertive"
-           tabindex="-1">
-        <span class="sr-only">Error: </span>{{ state.error }}
-      </div>
 
       <!-- Email Step -->
       <div class="auth-flow__form-step"
