@@ -162,6 +162,8 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       )
       .subscribe(step => {
         this.updateValidators(step);
+        // Ensure form validation state is properly updated
+        this.authForm.updateValueAndValidity({ emitEvent: true });
         // Track step history for navigation
         this.trackStepHistory(step);
         // Update browser history
@@ -862,13 +864,20 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       if (this.isStepNavigationSafe(previousStep)) {
         this.isNavigatingBack = true;
         this.stepHistory.pop(); // Remove current step
+        
+        // Clear any form errors before navigation
+        this.clearFormErrors();
+        
         this.store.dispatch(AuthActions.setCurrentStep({ step: previousStep }));
         this.location.back();
         
-        // Reset flag
+        // Reset flag and update validators
         setTimeout(() => {
           this.isNavigatingBack = false;
-        }, 100);
+          this.updateValidators(previousStep);
+          // Ensure form recognizes the new validation state
+          this.authForm.updateValueAndValidity({ emitEvent: true });
+        }, 150);
       }
     }
   }
@@ -886,12 +895,18 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         this.stepHistory = this.stepHistory.slice(0, targetIndex + 1);
       }
       
+      // Clear any form errors before navigation
+      this.clearFormErrors();
+      
       this.store.dispatch(AuthActions.setCurrentStep({ step: targetStep }));
       
-      // Reset flag
+      // Reset flag and update validators
       setTimeout(() => {
         this.isNavigatingBack = false;
-      }, 100);
+        this.updateValidators(targetStep);
+        // Ensure form recognizes the new validation state
+        this.authForm.updateValueAndValidity({ emitEvent: true });
+      }, 150);
     }
   }
 
@@ -931,12 +946,19 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     // Clear step history
     this.stepHistory = [];
     
-    // Clear form data
+    // Clear form data and reset validation state
     this.authForm.reset();
+    this.clearFormErrors();
     
     // Clear auth state and start from beginning
     this.store.dispatch(AuthActions.signout());
     this.store.dispatch(AuthActions.setCurrentStep({ step: AuthSteps.EMAIL }));
+    
+    // Update validators for the email step and ensure form is properly reset
+    setTimeout(() => {
+      this.updateValidators(AuthSteps.EMAIL);
+      this.authForm.updateValueAndValidity({ emitEvent: true });
+    }, 50);
     
     // Update browser history
     const url = this.router.url.split('?')[0];
@@ -981,6 +1003,22 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         firstInvalidField.focus();
       }
     }
+  }
+
+  /**
+   * Clear form errors and reset field states for navigation
+   */
+  private clearFormErrors(): void {
+    // Mark all fields as untouched to reset validation display
+    Object.keys(this.authForm.controls).forEach(key => {
+      const control = this.authForm.get(key);
+      if (control) {
+        control.markAsUntouched();
+        control.markAsPristine();
+        // Clear any existing errors to prevent stuck validation state
+        control.setErrors(null);
+      }
+    });
   }
 
   /**
