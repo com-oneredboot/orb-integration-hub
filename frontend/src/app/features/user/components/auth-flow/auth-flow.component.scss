@@ -661,6 +661,216 @@
     }
   }
 
+  // Skeleton Screens and Loading States
+  &__skeleton {
+    background: linear-gradient(90deg, 
+      rgba(v.$gray-200, 0.8) 25%, 
+      rgba(v.$gray-100, 0.6) 37%, 
+      rgba(v.$gray-200, 0.8) 63%
+    );
+    background-size: 400% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+    border-radius: v.$border-radius;
+
+    &--input {
+      height: 48px;
+      width: 100%;
+      margin-bottom: v.$spacing-md;
+    }
+
+    &--button {
+      height: 48px;
+      width: 100%;
+      margin-top: v.$spacing-md;
+    }
+
+    &--qr-code {
+      width: 200px;
+      height: 200px;
+      margin: 0 auto v.$spacing-md;
+    }
+
+    &--text {
+      height: 16px;
+      margin-bottom: v.$spacing-xs;
+      
+      &.short {
+        width: 60%;
+      }
+      
+      &.medium {
+        width: 80%;
+      }
+      
+      &.long {
+        width: 100%;
+      }
+    }
+
+    &--title {
+      height: 24px;
+      width: 70%;
+      margin: 0 auto v.$spacing-md;
+    }
+
+    &--progress-step {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+  }
+
+  // Step transition loading overlay
+  &__step-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(v.$white, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border-radius: v.$border-radius;
+
+    &-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(v.$primary-color, 0.3);
+      border-radius: 50%;
+      border-top-color: v.$primary-color;
+      animation: spin 1s linear infinite;
+    }
+
+    &-text {
+      margin-top: v.$spacing-sm;
+      color: v.$text-secondary;
+      font-size: v.$font-size-sm;
+      text-align: center;
+    }
+  }
+
+  // Enhanced form step loading states
+  &__form-step {
+    position: relative;
+
+    &--loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    &--skeleton {
+      .auth-flow__input-group {
+        opacity: 0;
+      }
+    }
+  }
+
+  // QR Code loading skeleton
+  &__qr-container {
+    position: relative;
+    display: inline-block;
+
+    &--loading {
+      .auth-flow__qr-code {
+        opacity: 0;
+      }
+    }
+  }
+
+  // Progress bar loading enhancement
+  &__progress {
+    &--loading {
+      .auth-flow__progress-bar-fill {
+        background: linear-gradient(90deg, 
+          rgba(v.$primary-color, 0.3) 25%, 
+          rgba(v.$primary-color, 0.6) 37%, 
+          rgba(v.$primary-color, 0.3) 63%
+        );
+        background-size: 400% 100%;
+        animation: skeleton-loading 1.5s ease-in-out infinite;
+      }
+    }
+  }
+
+  // Validation loading states
+  &__validation-loading {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+    font-size: v.$font-size-sm;
+    color: v.$primary-color;
+    margin-top: v.$spacing-xs;
+    padding: v.$spacing-xs v.$spacing-sm;
+    background-color: rgba(v.$primary-color, 0.05);
+    border-radius: v.$border-radius-sm;
+    border-left: 3px solid v.$primary-color;
+
+    &-spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(v.$primary-color, 0.3);
+      border-radius: 50%;
+      border-top-color: v.$primary-color;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+  }
+
+  // Enhanced button loading with progress
+  &__button {
+    &--progress {
+      background: linear-gradient(90deg, 
+        v.$primary-color 0%, 
+        v.$primary-color var(--progress, 0%), 
+        color.adjust(v.$primary-color, $lightness: 20%) var(--progress, 0%), 
+        color.adjust(v.$primary-color, $lightness: 20%) 100%
+      );
+      transition: background 0.3s ease;
+    }
+
+    &-progress-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: v.$white;
+      font-size: v.$font-size-sm;
+      font-weight: v.$font-weight-medium;
+    }
+  }
+
+  // Additional skeleton and loading styles
+  &__skeleton-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(v.$white, 0.9);
+    z-index: 5;
+    padding: v.$spacing-md;
+    border-radius: v.$border-radius;
+  }
+
+  &__qr-loading-text {
+    text-align: center;
+    color: v.$text-secondary;
+    font-size: v.$font-size-sm;
+    margin-top: v.$spacing-sm;
+    font-style: italic;
+  }
+
+  // Step loading content layout
+  &__step-loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 120px;
+  }
+
   &__debug {
     @include m.debug-container;
   }
@@ -669,6 +879,15 @@
 @keyframes spin {
   to {
     transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
   }
 }
 
@@ -838,4 +1057,37 @@
       min-height: 56px;
     }
   }
+}
+
+// Add support for safe area insets (iPhone X+ notch handling)
+@supports (padding: max(0px)) {
+  .auth-flow {
+    padding-left: max(v.$spacing-md, env(safe-area-inset-left));
+    padding-right: max(v.$spacing-md, env(safe-area-inset-right));
+    padding-bottom: max(v.$spacing-md, env(safe-area-inset-bottom));
+  }
+}
+
+// High contrast mode support for touch targets
+@media (prefers-contrast: high) {
+  .auth-flow {
+    &__button,
+    &__back-button,
+    &__start-over-button,
+    &__text-button {
+      border: 2px solid currentColor;
+    }
+    
+    &__input-group-field {
+      border-width: 2px;
+    }
+  }
+}
+
+
+// Touch-focused state for enhanced visual feedback
+.auth-flow__input-group-field.touch-focused {
+  border-color: v.$primary-color;
+  box-shadow: 0 0 0 3px rgba(v.$primary-color, 0.2);
+  background-color: rgba(v.$primary-color, 0.02);
 }

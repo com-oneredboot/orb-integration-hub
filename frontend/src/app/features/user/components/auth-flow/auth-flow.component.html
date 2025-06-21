@@ -8,7 +8,9 @@ description: HTML template file
 <!-- Skip link for keyboard users -->
 <a class="auth-flow__skip-link" href="#main-content">Skip to main content</a>
 
-<div class="auth-flow">
+<div class="auth-flow" 
+     (touchstart)="onTouchStart($event)"
+     (touchmove)="onTouchMove($event)">
   <ng-container *ngIf="{
     currentStep: currentStep$ | async,
     isLoading: isLoading$ | async,
@@ -82,6 +84,18 @@ description: HTML template file
 
     <main id="main-content" role="main">
       
+      <!-- Step Transition Loading Overlay -->
+      <div *ngIf="isStepTransitioning" 
+           class="auth-flow__step-loading" 
+           role="status" 
+           aria-live="polite"
+           [attr.aria-label]="loadingMessage">
+        <div class="auth-flow__step-loading-content">
+          <div class="auth-flow__step-loading-spinner" aria-hidden="true"></div>
+          <div class="auth-flow__step-loading-text">{{ loadingMessage }}</div>
+        </div>
+      </div>
+      
       <!-- Enhanced Error Boundary -->
       <app-auth-error-boundary 
         *ngIf="state.error" 
@@ -104,7 +118,19 @@ description: HTML template file
 
       <!-- Email Step -->
       <div class="auth-flow__form-step"
-           [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.EMAIL}">
+           [ngClass]="{
+             'auth-flow__form-step--active': state.currentStep === authSteps.EMAIL,
+             'auth-flow__form-step--loading': skeletonStates.form && state.currentStep === authSteps.EMAIL
+           }">
+        
+        <!-- Skeleton Screen for Email Step -->
+        <div *ngIf="skeletonStates.form && state.currentStep === authSteps.EMAIL" 
+             class="auth-flow__skeleton-overlay" 
+             aria-hidden="true">
+          <div class="auth-flow__skeleton auth-flow__skeleton--text medium"></div>
+          <div class="auth-flow__skeleton auth-flow__skeleton--input"></div>
+          <div class="auth-flow__skeleton auth-flow__skeleton--button"></div>
+        </div>
         <div class="auth-flow__verification-info" role="status" aria-live="polite">
           <p>Enter your email address to sign in or create an account.</p>
         </div>
@@ -129,6 +155,15 @@ description: HTML template file
                    autocomplete="email"
                    (focus)="onFieldFocus('email')"
                    (blur)="onFieldBlur('email')">
+            <!-- Enhanced validation loading state -->
+            <div *ngIf="validationLoadingStates['email']" 
+                 class="auth-flow__validation-loading"
+                 role="status"
+                 aria-live="polite">
+              <div class="auth-flow__validation-loading-spinner" aria-hidden="true"></div>
+              <span>Validating email address...</span>
+            </div>
+            
             <!-- Real-time validation feedback -->
             <div id="email-status" 
                  class="auth-flow__validation-status"
@@ -136,7 +171,7 @@ description: HTML template file
                    'auth-flow__validation-status--valid': getFieldValidationStatus('email') === 'valid',
                    'auth-flow__validation-status--pending': getFieldValidationStatus('email') === 'pending'
                  }"
-                 *ngIf="getFieldValidationStatus('email') !== 'none' && !shouldShowFieldError('email')"
+                 *ngIf="getFieldValidationStatus('email') !== 'none' && !shouldShowFieldError('email') && !validationLoadingStates['email']"
                  aria-live="polite">
               <i *ngIf="getFieldValidationStatus('email') === 'valid'" 
                  class="fa fa-check auth-flow__validation-icon" 
@@ -607,9 +642,9 @@ description: HTML template file
         <div class="auth-flow__resend-code">
           <button type="button" 
                   class="auth-flow__text-button" 
-                  (click)="resendVerificationCode()"
+                  (click)="resendVerificationCode(); triggerHapticFeedback('light')"
                   aria-describedby="resend-help">
-            Didn't receive a code? Send again
+            {{ isTouchDevice ? 'Resend Code' : 'Didn\'t receive a code? Send again' }}
           </button>
           <div id="resend-help" class="auth-flow__help-text sr-only">
             Click to resend the verification code to your phone number
@@ -626,16 +661,39 @@ description: HTML template file
             <p>Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)</p>
             <p>This will be registered using your email address in your authenticator app.</p>
           </div>
-          <div class="auth-flow__qr-container" *ngIf="qrCodeDataUrl" role="img" aria-labelledby="qr-description">
-            <img [src]="qrCodeDataUrl" 
-                 alt="QR code for setting up two-factor authentication. Contains setup information for your authenticator app." 
-                 class="qr-code"
-                 aria-describedby="qr-help">
-            <div id="qr-description" class="sr-only">
-              QR code containing setup information for two-factor authentication
+          <!-- Enhanced QR Code with Skeleton Loading -->
+          <div class="auth-flow__qr-container" 
+               [ngClass]="{'auth-flow__qr-container--loading': qrCodeLoading || skeletonStates.qrCode}">
+            
+            <!-- QR Code Skeleton -->
+            <div *ngIf="qrCodeLoading || skeletonStates.qrCode" 
+                 class="auth-flow__skeleton auth-flow__skeleton--qr-code"
+                 role="status"
+                 aria-live="polite"
+                 aria-label="Loading QR code for authentication setup">
             </div>
-            <div id="qr-help" class="auth-flow__help-text">
-              Use your authenticator app to scan this QR code
+            
+            <!-- Actual QR Code -->
+            <div *ngIf="qrCodeDataUrl && !qrCodeLoading && !skeletonStates.qrCode" 
+                 role="img" 
+                 aria-labelledby="qr-description">
+              <img [src]="qrCodeDataUrl" 
+                   alt="QR code for setting up two-factor authentication. Contains setup information for your authenticator app." 
+                   class="qr-code"
+                   aria-describedby="qr-help">
+              <div id="qr-description" class="sr-only">
+                QR code containing setup information for two-factor authentication
+              </div>
+              <div id="qr-help" class="auth-flow__help-text">
+                Use your authenticator app to scan this QR code
+              </div>
+            </div>
+            
+            <!-- Loading message for QR code -->
+            <div *ngIf="qrCodeLoading" 
+                 class="auth-flow__qr-loading-text"
+                 aria-live="polite">
+              Generating your authentication QR code...
             </div>
           </div>
           <div class="auth-flow__secret-key" *ngIf="state.mfaSetupDetails.secretKey" role="region" aria-labelledby="secret-key-title">
@@ -753,23 +811,43 @@ description: HTML template file
         </div>
       </div>
 
-      <!-- Submit Button -->
+      <!-- Enhanced Submit Button with Progress -->
       <button type="submit"
               class="auth-flow__button"
               [disabled]="!authForm.valid || state.isLoading"
-              [ngClass]="{'auth-flow__button--loading': state.isLoading}"
-              [attr.aria-label]="state.isLoading ? 'Processing, please wait' : state.buttonText"
-              [attr.aria-describedby]="state.isLoading ? 'loading-status' : null">
-        {{ state.buttonText }}
+              [ngClass]="{
+                'auth-flow__button--loading': state.isLoading,
+                'auth-flow__button--progress': buttonProgress > 0 && buttonProgress < 100
+              }"
+              [style.--progress]="buttonProgress + '%'"
+              [attr.aria-label]="state.isLoading ? 'Processing, please wait' : getResponsiveButtonText(state.buttonText || '')"
+              [attr.aria-describedby]="state.isLoading ? 'loading-status' : null"
+              (click)="triggerHapticFeedback('medium')">
+        
+        <!-- Button text -->
+        <span *ngIf="!state.isLoading && buttonProgress === 0">
+          {{ getResponsiveButtonText(state.buttonText || '') }}
+        </span>
+        
+        <!-- Progress text -->
+        <span *ngIf="buttonProgress > 0 && buttonProgress < 100" 
+              class="auth-flow__button-progress-text">
+          {{ buttonProgress }}% Complete
+        </span>
+        
+        <!-- Loading spinner -->
         <div class="auth-flow__button-loader" 
-             *ngIf="state.isLoading" 
+             *ngIf="state.isLoading && buttonProgress === 0" 
              role="status" 
              aria-hidden="true"></div>
+             
+        <!-- Loading status for screen readers -->
         <span id="loading-status" 
               class="sr-only" 
               *ngIf="state.isLoading" 
               aria-live="polite">
-          Processing your request, please wait
+          <span *ngIf="buttonProgress === 0">Processing your request, please wait</span>
+          <span *ngIf="buttonProgress > 0">{{ buttonProgress }}% complete</span>
         </span>
       </button>
       
@@ -778,20 +856,20 @@ description: HTML template file
         <button *ngIf="canNavigateBack()" 
                 type="button" 
                 class="auth-flow__back-button"
-                (click)="navigateBack()"
+                (click)="navigateBack(); triggerHapticFeedback('light')"
                 aria-label="Go back to previous step"
                 [attr.aria-describedby]="'back-help'">
           <i class="fa fa-arrow-left" aria-hidden="true"></i>
-          <span>Back</span>
+          <span>{{ isTouchDevice ? 'Back' : 'Back' }}</span>
         </button>
         
         <button type="button" 
                 class="auth-flow__start-over-button"
-                (click)="startOver()"
+                (click)="startOver(); triggerHapticFeedback('medium')"
                 aria-label="Start authentication process over"
                 [attr.aria-describedby]="'start-over-help'">
           <i class="fa fa-refresh" aria-hidden="true"></i>
-          <span>Start Over</span>
+          <span>{{ isTouchDevice ? 'Reset' : 'Start Over' }}</span>
         </button>
         
         <div id="back-help" class="sr-only">

@@ -69,6 +69,28 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   private validationDebounceTimer: any;
   public fieldFocusStates: { [key: string]: boolean } = {};
 
+  // Touch interaction state
+  public isTouchDevice = false;
+  public isLandscapeMode = false;
+  private touchStartY = 0;
+  private lastTouchTime = 0;
+
+  // Loading and skeleton states
+  public isStepTransitioning = false;
+  public validationLoadingStates: { [key: string]: boolean } = {};
+  public qrCodeLoading = false;
+  public buttonProgress = 0;
+  public showSkeletonScreens = false;
+  public loadingMessage = '';
+  
+  // Skeleton screen visibility states
+  public skeletonStates = {
+    form: false,
+    qrCode: false,
+    progress: false,
+    validation: false
+  };
+
   authForm!: FormGroup;
   authSteps = AuthSteps;
   passwordVisible = false;
@@ -146,6 +168,9 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Initialize browser history management
     this.initializeHistoryManagement();
+    
+    // Initialize touch optimizations
+    this.initializeTouchOptimizations();
     
     // Always check existing session to load user data, but don't redirect
     this.loadUserSessionAndDetermineStep();
@@ -1268,6 +1293,425 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     return !nonRetryableErrors.some(nonRetryable => 
       error.toLowerCase().includes(nonRetryable.toLowerCase())
     );
+  }
+  
+  /**
+   * Initialize touch device detection and optimizations
+   */
+  private initializeTouchOptimizations(): void {
+    // Detect touch capability
+    this.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    
+    // Detect orientation changes
+    this.updateOrientationState();
+    
+    // Listen for orientation changes
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        this.updateOrientationState();
+        this.adjustViewportForKeyboard();
+      }, 100);
+    });
+    
+    // Listen for resize events (keyboard show/hide)
+    window.addEventListener('resize', () => {
+      if (this.isTouchDevice) {
+        this.adjustViewportForKeyboard();
+      }
+    });
+    
+    // Prevent double-tap zoom on buttons
+    if (this.isTouchDevice) {
+      this.preventDoubleTapZoom();
+    }
+  }
+  
+  /**
+   * Update orientation state for layout adjustments
+   */
+  private updateOrientationState(): void {
+    this.isLandscapeMode = window.innerWidth > window.innerHeight;
+  }
+  
+  /**
+   * Adjust viewport when virtual keyboard appears
+   */
+  private adjustViewportForKeyboard(): void {
+    const viewport = document.querySelector('meta[name=viewport]');
+    if (viewport && this.isTouchDevice) {
+      // Get the initial viewport height
+      const initialHeight = window.innerHeight;
+      
+      // Check if keyboard is likely open (significant height reduction)
+      const currentHeight = window.innerHeight;
+      const heightDifference = initialHeight - currentHeight;
+      const isKeyboardOpen = heightDifference > 150; // 150px threshold
+      
+      if (isKeyboardOpen) {
+        // Scroll focused element into view
+        const activeElement = document.activeElement as HTMLElement;
+        if (activeElement && activeElement.scrollIntoView) {
+          setTimeout(() => {
+            activeElement.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'center'
+            });
+          }, 300);
+        }
+      }
+    }
+  }
+  
+  /**
+   * Handle touch-specific focus behavior
+   */
+  private handleTouchFocus(fieldName: string): void {
+    const fieldElement = document.getElementById(`${fieldName}-input`);
+    if (fieldElement) {
+      // Add visual feedback for touch focus
+      fieldElement.classList.add('touch-focused');
+      
+      // Ensure field is visible when keyboard opens
+      setTimeout(() => {
+        this.ensureFieldVisibility(fieldElement);
+      }, 100);
+    }
+  }
+  
+  /**
+   * Handle touch-specific blur behavior
+   */
+  private handleTouchBlur(fieldName: string): void {
+    const fieldElement = document.getElementById(`${fieldName}-input`);
+    if (fieldElement) {
+      fieldElement.classList.remove('touch-focused');
+    }
+  }
+  
+  /**
+   * Ensure field remains visible when virtual keyboard opens
+   */
+  private ensureFieldVisibility(element: HTMLElement): void {
+    const rect = element.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    
+    // If field is below the fold when keyboard is open
+    if (rect.bottom > viewportHeight * 0.6) {
+      element.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center' 
+      });
+    }
+  }
+  
+  /**
+   * Prevent double-tap zoom on form elements
+   */
+  private preventDoubleTapZoom(): void {
+    document.addEventListener('touchend', (event) => {
+      const now = Date.now();
+      const timeSinceLastTouch = now - this.lastTouchTime;
+      
+      if (timeSinceLastTouch < 300 && timeSinceLastTouch > 0) {
+        // Potential double tap - prevent if on form element
+        const target = event.target as HTMLElement;
+        if (target && (
+          target.tagName === 'INPUT' || 
+          target.tagName === 'BUTTON' ||
+          target.closest('.auth-flow__input-group-field') ||
+          target.closest('.auth-flow__button')
+        )) {
+          event.preventDefault();
+        }
+      }
+      
+      this.lastTouchTime = now;
+    });
+  }
+  
+  /**
+   * Handle touch start for gesture detection
+   */
+  public onTouchStart(event: TouchEvent): void {
+    if (event.touches.length === 1) {
+      this.touchStartY = event.touches[0].clientY;
+    }
+  }
+  
+  /**
+   * Handle touch move for pull-to-refresh prevention
+   */
+  public onTouchMove(event: TouchEvent): void {
+    if (event.touches.length === 1) {
+      const touchY = event.touches[0].clientY;
+      const deltaY = touchY - this.touchStartY;
+      
+      // Prevent pull-to-refresh when at top of form
+      if (deltaY > 0 && window.scrollY === 0) {
+        event.preventDefault();
+      }
+    }
+  }
+  
+  /**
+   * Get device-appropriate button text
+   */
+  public getResponsiveButtonText(baseText: string): string {
+    if (this.isTouchDevice && baseText.length > 10) {
+      // Shorten button text on mobile for better UX
+      const shortTexts: { [key: string]: string } = {
+        'Submit': 'Submit',
+        'Continue': 'Next',
+        'Verify Code': 'Verify',
+        'Create Account': 'Sign Up',
+        'Sign In': 'Sign In'
+      };
+      
+      return shortTexts[baseText] || baseText;
+    }
+    
+    return baseText;
+  }
+  
+  /**
+   * Check if device supports haptic feedback
+   */
+  public triggerHapticFeedback(type: 'light' | 'medium' | 'heavy' = 'light'): void {
+    if ('vibrate' in navigator && this.isTouchDevice) {
+      // Different vibration patterns for different feedback types
+      const patterns = {
+        light: [10],
+        medium: [20],
+        heavy: [30]
+      };
+      
+      navigator.vibrate(patterns[type]);
+    }
+  }
+
+  // ============ Loading States and Skeleton Screens ============
+
+  /**
+   * Show step transition loading overlay
+   */
+  private showStepTransition(message: string = 'Loading...'): void {
+    this.isStepTransitioning = true;
+    this.loadingMessage = message;
+  }
+
+  /**
+   * Hide step transition loading overlay
+   */
+  private hideStepTransition(): void {
+    setTimeout(() => {
+      this.isStepTransitioning = false;
+      this.loadingMessage = '';
+    }, 300); // Small delay for smooth transition
+  }
+
+  /**
+   * Show skeleton screen for specific component
+   */
+  public showSkeleton(type: keyof typeof this.skeletonStates): void {
+    this.skeletonStates[type] = true;
+  }
+
+  /**
+   * Hide skeleton screen for specific component
+   */
+  public hideSkeleton(type: keyof typeof this.skeletonStates): void {
+    setTimeout(() => {
+      this.skeletonStates[type] = false;
+    }, 200);
+  }
+
+  /**
+   * Show validation loading state for specific field
+   */
+  public showValidationLoading(fieldName: string): void {
+    this.validationLoadingStates[fieldName] = true;
+  }
+
+  /**
+   * Hide validation loading state for specific field
+   */
+  public hideValidationLoading(fieldName: string): void {
+    setTimeout(() => {
+      this.validationLoadingStates[fieldName] = false;
+    }, 500);
+  }
+
+  /**
+   * Update button progress for long-running operations
+   */
+  public updateButtonProgress(progress: number): void {
+    this.buttonProgress = Math.max(0, Math.min(100, progress));
+  }
+
+  /**
+   * Reset all loading states
+   */
+  private resetLoadingStates(): void {
+    this.isStepTransitioning = false;
+    this.validationLoadingStates = {};
+    this.qrCodeLoading = false;
+    this.buttonProgress = 0;
+    this.showSkeletonScreens = false;
+    this.loadingMessage = '';
+    
+    Object.keys(this.skeletonStates).forEach(key => {
+      this.skeletonStates[key as keyof typeof this.skeletonStates] = false;
+    });
+  }
+
+  /**
+   * Enhanced step navigation with loading states
+   */
+  public navigateToStepWithLoading(step: AuthSteps, message?: string): void {
+    // Show loading state
+    this.showStepTransition(message || this.getStepTransitionMessage(step));
+    
+    // Small delay to show loading state
+    setTimeout(() => {
+      this.store.dispatch(AuthActions.setCurrentStep({ step }));
+      this.hideStepTransition();
+    }, 600);
+  }
+
+  /**
+   * Get appropriate loading message for step transition
+   */
+  private getStepTransitionMessage(step: AuthSteps): string {
+    const messages: Record<AuthSteps, string> = {
+      [AuthSteps.EMAIL]: 'Preparing email verification...',
+      [AuthSteps.PASSWORD]: 'Loading password form...',
+      [AuthSteps.PASSWORD_SETUP]: 'Setting up password...',
+      [AuthSteps.EMAIL_VERIFY]: 'Setting up verification...',
+      [AuthSteps.SIGNIN]: 'Preparing sign in...',
+      [AuthSteps.NAME_SETUP]: 'Loading name form...',
+      [AuthSteps.PHONE_SETUP]: 'Setting up phone verification...',
+      [AuthSteps.PHONE_VERIFY]: 'Loading phone verification...',
+      [AuthSteps.MFA_SETUP]: 'Preparing security setup...',
+      [AuthSteps.MFA_VERIFY]: 'Loading verification...',
+      [AuthSteps.PASSWORD_RESET]: 'Preparing password reset...',
+      [AuthSteps.PASSWORD_RESET_VERIFY]: 'Verifying reset code...',
+      [AuthSteps.PASSWORD_RESET_CONFIRM]: 'Confirming new password...',
+      [AuthSteps.COMPLETE]: 'Completing setup...'
+    };
+    
+    return messages[step] || 'Loading...';
+  }
+
+  /**
+   * Enhanced form submission with progress tracking
+   */
+  public submitFormWithProgress(): void {
+    if (!this.authForm.valid) return;
+    
+    // Start progress tracking
+    this.updateButtonProgress(10);
+    
+    // Simulate progress updates (replace with actual progress from API)
+    const progressInterval = setInterval(() => {
+      this.buttonProgress += 15;
+      if (this.buttonProgress >= 90) {
+        clearInterval(progressInterval);
+      }
+    }, 200);
+    
+    // Call original submit method
+    this.onSubmit();
+    
+    // Reset progress when loading completes
+    this.isLoading$.pipe(
+      filter(loading => !loading),
+      take(1)
+    ).subscribe(() => {
+      clearInterval(progressInterval);
+      this.updateButtonProgress(100);
+      setTimeout(() => this.updateButtonProgress(0), 500);
+    });
+  }
+
+  /**
+   * Generate QR code for MFA setup
+   */
+  public async generateQRCode(): Promise<void> {
+    try {
+      const QRCode = (await import('qrcode')).default;
+      const details = await this.mfaSetupDetails$.pipe(take(1)).toPromise();
+      
+      if (!details?.secretKey || !details?.qrCode) {
+        return;
+      }
+      
+      const qrUrl = details.setupUri?.toString() || '';
+      const options = {
+        width: 200,
+        margin: 2,
+        errorCorrectionLevel: 'M'
+      } as QRCodeToDataURLOptions;
+      
+      this.qrCodeDataUrl = await QRCode.toDataURL(qrUrl, options);
+    } catch (error) {
+      console.error('Error generating QR code:', error);
+    }
+  }
+
+  /**
+   * Enhanced QR code loading with skeleton
+   */
+  public loadQRCodeWithSkeleton(): void {
+    this.qrCodeLoading = true;
+    this.showSkeleton('qrCode');
+    
+    // Simulate QR code generation delay
+    setTimeout(() => {
+      this.generateQRCode();
+      this.qrCodeLoading = false;
+      this.hideSkeleton('qrCode');
+    }, 1500);
+  }
+
+  /**
+   * Enhanced field validation with loading indicators
+   */
+  public validateFieldWithLoading(fieldName: string): void {
+    this.showValidationLoading(fieldName);
+    
+    // Perform validation (existing logic)
+    const control = this.authForm.get(fieldName);
+    if (control) {
+      // Simulate async validation delay
+      setTimeout(() => {
+        control.updateValueAndValidity();
+        this.hideValidationLoading(fieldName);
+      }, 800);
+    }
+  }
+
+  /**
+   * Check if any loading state is active
+   */
+  public isAnyLoadingActive(): boolean {
+    return this.isStepTransitioning || 
+           this.qrCodeLoading || 
+           Object.values(this.validationLoadingStates).some(loading => loading) ||
+           Object.values(this.skeletonStates).some(skeleton => skeleton);
+  }
+
+  /**
+   * Get skeleton items for current step
+   */
+  public getSkeletonItems(): Array<{type: string, class: string}> {
+    const currentStep$ = this.currentStep$;
+    
+    // Return skeleton configuration based on current step
+    return [
+      { type: 'input', class: 'auth-flow__skeleton auth-flow__skeleton--input' },
+      { type: 'input', class: 'auth-flow__skeleton auth-flow__skeleton--input' },
+      { type: 'button', class: 'auth-flow__skeleton auth-flow__skeleton--button' }
+    ];
   }
 
 
