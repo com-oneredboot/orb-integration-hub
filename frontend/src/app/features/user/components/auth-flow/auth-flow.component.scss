@@ -13,6 +13,12 @@
   max-width: 1200px;
   margin: 0 auto;
 
+  // CSS Custom Properties for logo scaling configuration
+  // These values create smooth scaling from 160px (320px viewport) to 480px (6000px viewport)
+  --logo-min-width: 160px;    // Minimum logo size (small mobile ~320px viewport)
+  --logo-max-width: 480px;    // Maximum logo size (desktop ~6000px+ viewport)
+  --logo-viewport-scale: 8vw; // Viewport-based scaling (8% of viewport width)
+
   // Accessibility: Skip link for keyboard users
   &__skip-link {
     position: absolute;
@@ -49,8 +55,23 @@
     margin-bottom: v.$spacing-xl;
 
     &-logo {
-      width: 600px;
+      // Fallback for browsers without clamp() support (very rare, but defensive)
+      width: 320px; // Safe middle-ground fallback
+      
+      // Fluid logo scaling using CSS clamp() function for gradual responsive behavior
+      // Eliminates dramatic size jumps and maintains brand visibility across all devices
+      width: clamp(
+        var(--logo-min-width),     // 160px minimum (small mobile)
+        var(--logo-viewport-scale), // 8vw fluid scaling (viewport-based)
+        var(--logo-max-width)      // 480px maximum (desktop)
+      );
       height: auto;
+      max-width: 100%; // Prevent container overflow
+      transition: width 0.3s ease; // Smooth transitions for orientation changes
+      
+      // Ensure crisp rendering at all sizes
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
     }
 
     &-title {
@@ -62,27 +83,148 @@
 
   &__progress {
     width: 100%;
-    max-width: 400px;
-    display: flex;
-    justify-content: center;
-    gap: v.$spacing-sm;
-    margin-bottom: v.$spacing-lg;
+    max-width: 600px;
+    margin: 0 auto v.$spacing-xl;
+    position: relative;
 
+    // Progress bar background track
+    &-bar {
+      position: absolute;
+      top: 20px; // Center with step circles
+      left: 10%;
+      right: 10%;
+      height: 2px;
+      background-color: v.$input-border-color;
+      border-radius: 1px;
+      z-index: 1;
+
+      // Progress bar fill
+      &-fill {
+        height: 100%;
+        background: linear-gradient(90deg, v.$primary-color 0%, v.$success-color 100%);
+        border-radius: 1px;
+        transition: width 0.4s ease;
+        position: relative;
+        
+        &::after {
+          content: '';
+          position: absolute;
+          right: -6px;
+          top: -4px;
+          width: 10px;
+          height: 10px;
+          background: v.$primary-color;
+          border-radius: 50%;
+          border: 2px solid v.$orb-white;
+          transition: all 0.4s ease;
+        }
+      }
+    }
+
+    // Steps container
+    &-steps {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      position: relative;
+      z-index: 2;
+    }
+
+    // Individual step container
+    &-step-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      max-width: 120px;
+    }
+
+    // Step circle/indicator
     &-step {
-      width: 12px;
-      height: 12px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       background-color: v.$input-border-color;
-      margin: 0 4px;
-      transition: all 0.2s ease;
+      border: 3px solid v.$orb-white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.3s ease;
+      margin-bottom: v.$spacing-sm;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
-      &--active {
-        background-color: v.$primary-color;
-        transform: scale(1.2);
+      &-content {
+        font-weight: v.$font-weight-semibold;
+        font-size: v.$font-size-sm;
+        color: v.$orb-white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
+      // Pending state (future steps)
+      &--pending {
+        background-color: v.$gray-300;
+        color: v.$gray-600;
+        
+        .auth-flow__progress-step-content {
+          color: v.$gray-600;
+        }
+      }
+
+      // Active state (current step)
+      &--active {
+        background-color: v.$primary-color;
+        transform: scale(1.1);
+        box-shadow: 0 4px 8px rgba(v.$primary-color, 0.3);
+        animation: pulse 2s infinite;
+        
+        .auth-flow__progress-step-content {
+          color: v.$orb-white;
+        }
+      }
+
+      // Completed state
       &--completed {
         background-color: v.$success-color;
+        
+        .auth-flow__progress-step-content {
+          color: v.$orb-white;
+        }
+      }
+    }
+
+    // Step labels
+    &-step-label {
+      font-size: v.$font-size-xs;
+      font-weight: v.$font-weight-medium;
+      color: v.$text-secondary;
+      line-height: 1.3;
+      margin-top: v.$spacing-xs;
+      min-height: 2.6em; // Ensure consistent height for labels
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.3s ease, font-weight 0.3s ease;
+    }
+
+    // Step container state-based styling (more compatible approach)
+    &-step-container {
+      // Active step styling
+      &.step-active {
+        .auth-flow__progress-step-label {
+          color: v.$primary-color;
+          font-weight: v.$font-weight-semibold;
+        }
+      }
+      
+      // Completed step styling
+      &.step-completed {
+        .auth-flow__progress-step-label {
+          color: v.$success-color;
+        }
       }
     }
   }
@@ -408,18 +550,36 @@
   }
 }
 
+@keyframes pulse {
+  0% {
+    box-shadow: 0 4px 8px rgba(v.$primary-color, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 8px rgba(v.$primary-color, 0.5), 0 0 0 4px rgba(v.$primary-color, 0.2);
+  }
+  100% {
+    box-shadow: 0 4px 8px rgba(v.$primary-color, 0.3);
+  }
+}
+
 // Accessibility: Reduced motion preference
 @media (prefers-reduced-motion: reduce) {
   .auth-flow {
     &__progress-step,
+    &__progress-bar-fill,
     &__button,
     &__input-group-field,
     &__input-group-toggle {
       transition: none;
+      animation: none;
     }
 
     &__form-step {
       transition: none;
+    }
+
+    &__progress-step--active {
+      animation: none; // Disable pulse animation for reduced motion
     }
   }
 }
@@ -428,8 +588,29 @@
   .auth-flow {
     padding: v.$spacing-md;
 
-    &__header-logo {
-      width: 200px;
+    // Logo sizing now handled by clamp() function - no explicit breakpoint sizing needed
+
+    // Progress indicator mobile optimizations
+    &__progress {
+      max-width: 100%;
+
+      &-step-container {
+        max-width: 80px; // Reduce step container width on tablets
+      }
+
+      &-step {
+        width: 32px;  // Smaller step circles
+        height: 32px;
+        
+        &-content {
+          font-size: v.$font-size-xs;
+        }
+      }
+
+      &-step-label {
+        font-size: 10px; // Smaller label text
+        min-height: 2em;
+      }
     }
 
     // Larger touch targets on mobile
@@ -453,8 +634,45 @@
       max-width: 100%;
     }
 
-    &__header-logo {
-      width: 150px;
+    // Logo sizing now handled by clamp() function - no explicit breakpoint sizing needed
+
+    // Progress indicator mobile optimizations (small screens)
+    &__progress {
+      &-step-container {
+        max-width: 60px; // Even smaller containers on mobile
+      }
+
+      &-step {
+        width: 28px;  // Smaller step circles for mobile
+        height: 28px;
+        
+        &-content {
+          font-size: 10px;
+        }
+      }
+
+      &-step-label {
+        font-size: 9px; // Very small label text
+        min-height: 1.8em;
+        // Option to hide labels on very small screens (following best practices)
+        display: none; // Hide step labels on mobile for cleaner look
+      }
+
+      &-bar {
+        top: 14px; // Adjust bar position for smaller circles
+      }
+    }
+
+    // Show simplified progress info for mobile
+    &__progress::before {
+      content: "Step " attr(aria-valuenow) " of 4";
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: v.$font-size-xs;
+      color: v.$text-secondary;
+      font-weight: v.$font-weight-medium;
     }
 
     // Even larger touch targets on small screens

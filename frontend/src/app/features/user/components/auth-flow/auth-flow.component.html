@@ -29,16 +29,52 @@ description: HTML template file
          role="progressbar" 
          [attr.aria-valuenow]="getCurrentStepNumber(state.currentStep)"
          aria-valuemin="1" 
-         aria-valuemax="5"
-         [attr.aria-label]="'Registration Progress: Step ' + getCurrentStepNumber(state.currentStep) + ' of 5'">
-      <span class="sr-only">Step {{ getCurrentStepNumber(state.currentStep) }} of 5: {{ getStepLabel(state.currentStep) }}</span>
-      <div class="auth-flow__progress-step"
-           *ngFor="let progressStep of [1, 2, 3, 4, 5]; let i = index"
-           [ngClass]="{
-             'auth-flow__progress-step--active': getCurrentStepNumber(state.currentStep) === progressStep,
-             'auth-flow__progress-step--completed': getCurrentStepNumber(state.currentStep) > progressStep
-           }"
-           [attr.aria-label]="getProgressStepLabel(progressStep)">
+         aria-valuemax="4"
+         [attr.aria-label]="'Registration Progress: Step ' + getCurrentStepNumber(state.currentStep) + ' of 4'">
+      
+      <!-- Screen reader announcement -->
+      <span class="sr-only">Step {{ getCurrentStepNumber(state.currentStep) }} of 4: {{ getStepLabel(state.currentStep) }}</span>
+      
+      <!-- Progress percentage bar -->
+      <div class="auth-flow__progress-bar">
+        <div class="auth-flow__progress-bar-fill" 
+             [style.width.%]="(getCurrentStepNumber(state.currentStep) - 1) * 33.33">
+        </div>
+      </div>
+      
+      <!-- Progress steps with labels -->
+      <div class="auth-flow__progress-steps">
+        <div class="auth-flow__progress-step-container"
+             *ngFor="let progressStep of [1, 2, 3, 4]; let i = index"
+             [ngClass]="{
+               'step-active': getCurrentStepNumber(state.currentStep) === progressStep,
+               'step-completed': getCurrentStepNumber(state.currentStep) > progressStep,
+               'step-pending': getCurrentStepNumber(state.currentStep) < progressStep
+             }">
+          
+          <!-- Step circle/indicator -->
+          <div class="auth-flow__progress-step"
+               [ngClass]="{
+                 'auth-flow__progress-step--active': getCurrentStepNumber(state.currentStep) === progressStep,
+                 'auth-flow__progress-step--completed': getCurrentStepNumber(state.currentStep) > progressStep,
+                 'auth-flow__progress-step--pending': getCurrentStepNumber(state.currentStep) < progressStep
+               }"
+               [attr.aria-label]="getProgressStepLabel(progressStep)">
+            
+            <!-- Step number or check icon -->
+            <span class="auth-flow__progress-step-content">
+              <i *ngIf="getCurrentStepNumber(state.currentStep) > progressStep" 
+                 class="fa fa-check" 
+                 aria-hidden="true"></i>
+              <span *ngIf="getCurrentStepNumber(state.currentStep) <= progressStep">{{ progressStep }}</span>
+            </span>
+          </div>
+          
+          <!-- Step label -->
+          <div class="auth-flow__progress-step-label">
+            {{ getProgressStepLabel(progressStep) }}
+          </div>
+        </div>
       </div>
     </div>
 

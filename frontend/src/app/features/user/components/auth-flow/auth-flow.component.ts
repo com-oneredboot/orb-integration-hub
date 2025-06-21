@@ -147,7 +147,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     this.currentStep$
       .pipe(takeUntil(this.destroy$))
       .subscribe(step => {
-        console.log('[AuthFlow] Current step changed to:', step, 'AuthSteps.COMPLETE:', AuthSteps.COMPLETE);
         this.updateValidators(step);
         // Focus management and announcements for accessibility
         this.focusCurrentStepInput(step);
@@ -595,7 +594,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Get current step number for accessibility (5-step consolidated flow)
+   * Get current step number for accessibility (4-step consolidated flow)
    */
   getCurrentStepNumber(currentStep: AuthSteps | null): number {
     if (!currentStep) return 1;
@@ -605,24 +604,21 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     if (step === AuthSteps.EMAIL || step === AuthSteps.EMAIL_VERIFY) {
       return 1; // "Email Verification"
     }
-    if (step === AuthSteps.PASSWORD || step === AuthSteps.PASSWORD_SETUP || step === AuthSteps.NAME_SETUP || step === AuthSteps.SIGNIN) {
-      return 2; // "Password & Account Details"
-    }
-    if (step === AuthSteps.PHONE_SETUP || step === AuthSteps.PHONE_VERIFY) {
-      return 3; // "Phone Verification"
+    if (step === AuthSteps.PASSWORD || step === AuthSteps.PASSWORD_SETUP || step === AuthSteps.NAME_SETUP || step === AuthSteps.SIGNIN || step === AuthSteps.PHONE_SETUP || step === AuthSteps.PHONE_VERIFY) {
+      return 2; // "Identity & Contact Setup"
     }
     if (step === AuthSteps.MFA_SETUP || step === AuthSteps.MFA_VERIFY) {
-      return 4; // "Two-Factor Authentication"
+      return 3; // "Security Verification"
     }
     if (step === AuthSteps.COMPLETE) {
-      return 5; // "Complete"
+      return 4; // "Complete"
     }
     
     return 1; // Default fallback
   }
 
   /**
-   * Get step label for accessibility (5-step consolidated flow)
+   * Get step label for accessibility (4-step consolidated flow)
    */
   getStepLabel(step: AuthSteps | null): string {
     if (!step) return 'Step';
@@ -632,14 +628,11 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     if (authStep === AuthSteps.EMAIL || authStep === AuthSteps.EMAIL_VERIFY) {
       return 'Email Verification';
     }
-    if (authStep === AuthSteps.PASSWORD || authStep === AuthSteps.PASSWORD_SETUP || authStep === AuthSteps.NAME_SETUP || authStep === AuthSteps.SIGNIN) {
-      return 'Password & Account Details';
-    }
-    if (authStep === AuthSteps.PHONE_SETUP || authStep === AuthSteps.PHONE_VERIFY) {
-      return 'Phone Verification';
+    if (authStep === AuthSteps.PASSWORD || authStep === AuthSteps.PASSWORD_SETUP || authStep === AuthSteps.NAME_SETUP || authStep === AuthSteps.SIGNIN || authStep === AuthSteps.PHONE_SETUP || authStep === AuthSteps.PHONE_VERIFY) {
+      return 'Identity & Contact Setup';
     }
     if (authStep === AuthSteps.MFA_SETUP || authStep === AuthSteps.MFA_VERIFY) {
-      return 'Two-Factor Authentication';
+      return 'Security Verification';
     }
     if (authStep === AuthSteps.COMPLETE) {
       return 'Complete';
@@ -654,10 +647,10 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   getProgressStepLabel(stepNumber: number): string {
     switch (stepNumber) {
       case 1: return 'Email Verification';
-      case 2: return 'Password & Account Details';
-      case 3: return 'Phone Verification';
-      case 4: return 'Two-Factor Authentication';
-      case 5: return 'Complete';
+      case 2: return 'Identity & Contact Setup';
+      case 3: return 'Security Verification';
+      case 4: return 'Complete';
+      case 5: return 'Complete'; // Fallback for any edge cases
       default: return 'Step';
     }
   }
@@ -731,7 +724,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     announcement.setAttribute('aria-live', 'assertive');
     announcement.setAttribute('aria-atomic', 'true');
     announcement.className = 'sr-only';
-    announcement.textContent = `Step ${stepNumber} of 5: ${stepTitle}`;
+    announcement.textContent = `Step ${stepNumber} of 4: ${stepTitle}`;
     
     document.body.appendChild(announcement);
     
