@@ -8,7 +8,7 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {ActivatedRoute, Router} from '@angular/router';
 import {Store} from '@ngrx/store';
-import {map, Observable, Subject, take, takeUntil, tap, filter} from 'rxjs';
+import {map, Observable, Subject, take, takeUntil, tap, filter, firstValueFrom} from 'rxjs';
 import {Location} from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -16,7 +16,6 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faExclamationTriangle, faRedo, faSync } from '@fortawesome/free-solid-svg-icons';
 import { RouterModule } from '@angular/router';
 
-import {v4 as uuidv4} from 'uuid';
 
 // App Imports
 import {AuthActions} from './store/auth.actions';
@@ -30,6 +29,7 @@ import {InputValidationService} from "../../../../core/services/input-validation
 import {CsrfService} from "../../../../core/services/csrf.service";
 import {RateLimitingService} from "../../../../core/services/rate-limiting.service";
 import {AppErrorHandlerService} from "../../../../core/services/error-handler.service";
+import {SecureIdGenerationService} from "../../../../core/services/secure-id-generation.service";
 import {CustomValidators} from "../../../../core/validators/custom-validators";
 import { UserStatus } from "../../../../core/models/UserStatusEnum";
 import { UserGroup } from "../../../../core/models/UserGroupEnum";
@@ -151,7 +151,8 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     private inputValidationService: InputValidationService,
     private csrfService: CsrfService,
     private rateLimitingService: RateLimitingService,
-    private errorHandler: AppErrorHandlerService
+    private errorHandler: AppErrorHandlerService,
+    private secureIdService: SecureIdGenerationService
   ) {
 
     // Initialize the form with enhanced validation
@@ -796,27 +797,11 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             break;
 
           case AuthSteps.PASSWORD_SETUP:
-            const userInput = {
-              userId: uuidv4(),
-              cognitoId: uuidv4(),
-              cognitoSub: '', // Will be populated by user service with actual Cognito sub
-              email: this.authForm.value.email,
-              firstName: this.authForm.value.firstName,
-              lastName: this.authForm.value.lastName,
-              phoneNumber: this.authForm.value.phoneNumber,
-              groups: [UserGroup.USER],
-              status: UserStatus.PENDING,
-              createdAt: new Date().toISOString(),
-              phoneVerified: false,
-              emailVerified: false,
-              mfaEnabled: false,
-              mfaSetupComplete: false,
-              updatedAt: new Date().toISOString()
-            };
             if (!password) {
               return;
             }
-            this.store.dispatch(AuthActions.createUser({input: userInput, password: password } ));
+            // Generate secure IDs from backend service
+            this.createUserWithSecureIds(password);
             break;
 
           case AuthSteps.EMAIL_VERIFY:
@@ -2815,6 +2800,100 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         operation: 'focusFirstInvalidField',
         error
       });
+    }
+  }
+
+  /**
+   * Create user with secure backend-generated IDs
+   */
+  private async createUserWithSecureIds(password: string): Promise<void> {
+    try {
+      console.debug('[AuthFlowComponent] Creating user with secure backend IDs');
+      
+      // Request secure IDs from backend service
+      const secureIdRequests = [
+        {
+          type: 'user' as const,
+          context: 'user_registration',
+          metadata: {
+            email: this.authForm.value.email,
+            timestamp: Date.now()
+          }
+        },
+        {
+          type: 'cognito' as const,
+          context: 'cognito_authentication',
+          metadata: {
+            email: this.authForm.value.email,
+            timestamp: Date.now()
+          }
+        }
+      ];
+
+      // Generate secure IDs in batch for better performance
+      const secureIds = await firstValueFrom(this.secureIdService.generateSecureIdBatch(secureIdRequests));
+      
+      if (!secureIds || secureIds.length !== 2) {
+        throw new Error('Failed to generate required secure IDs');
+      }
+
+      const [userIdResponse, cognitoIdResponse] = secureIds;
+      
+      // Validate ID security
+      if (!this.secureIdService.validateIdFormat(userIdResponse.id) || 
+          !this.secureIdService.validateIdFormat(cognitoIdResponse.id)) {
+        console.warn('🚨 SECURITY WARNING: Generated IDs may not be secure!');
+        
+        this.errorHandler.captureSecurityError(
+          'createUserWithSecureIds',
+          new Error('Generated IDs failed security validation'),
+          'AuthFlowComponent',
+          this.authForm.value.email
+        );
+      }
+
+      // Create user input with secure backend-generated IDs
+      const userInput = {
+        userId: userIdResponse.id,
+        cognitoId: cognitoIdResponse.id,
+        cognitoSub: '', // Will be populated by user service with actual Cognito sub
+        email: this.authForm.value.email,
+        firstName: this.authForm.value.firstName,
+        lastName: this.authForm.value.lastName,
+        phoneNumber: this.authForm.value.phoneNumber,
+        groups: [UserGroup.USER],
+        status: UserStatus.PENDING,
+        createdAt: new Date().toISOString(),
+        phoneVerified: false,
+        emailVerified: false,
+        mfaEnabled: false,
+        mfaSetupComplete: false,
+        updatedAt: new Date().toISOString()
+      };
+
+      console.debug('[AuthFlowComponent] Dispatching createUser with secure IDs:', {
+        userId: userInput.userId,
+        cognitoId: userInput.cognitoId,
+        email: userInput.email
+      });
+
+      // Dispatch user creation action
+      this.store.dispatch(AuthActions.createUser({input: userInput, password: password}));
+      
+    } catch (error) {
+      const errorId = this.errorHandler.captureSecurityError(
+        'createUserWithSecureIds',
+        error,
+        'AuthFlowComponent',
+        this.authForm.value.email
+      );
+      
+      console.error('[AuthFlowComponent] Secure user creation failed:', errorId);
+      
+      // Show user-friendly error
+      this.store.dispatch(AuthActions.createUserFailure({ 
+        error: 'User registration failed due to security requirements. Please try again.' 
+      }));
     }
   }
 

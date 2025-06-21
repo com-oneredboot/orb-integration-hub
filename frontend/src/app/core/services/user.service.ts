@@ -6,7 +6,6 @@
 // 3rd Party Imports
 import { GraphQLResult} from "@aws-amplify/api-graphql";
 import { Injectable } from "@angular/core";
-import { v4 as uuidv4 } from "uuid";
 import { Store } from '@ngrx/store';
 import { BehaviorSubject, Observable } from 'rxjs';
 
@@ -24,6 +23,7 @@ import {
 import { UserGroup } from "../models/UserGroupEnum";
 import { UserStatus } from "../models/UserStatusEnum";
 import { CognitoService } from "./cognito.service";
+import { SecureIdGenerationService } from "./secure-id-generation.service";
 import { Auth, AuthResponse } from "../models/AuthModel";
 import { SmsVerificationResponse } from "../models/SmsVerificationModel";
 import { AuthActions } from '../../features/user/components/auth-flow/store/auth.actions';
@@ -44,6 +44,7 @@ export class UserService extends ApiService {
   constructor(
     private cognitoService: CognitoService,
     private store: Store,
+    private secureIdService: SecureIdGenerationService
   ) {
     super();
 
@@ -70,22 +71,34 @@ export class UserService extends ApiService {
       console.debug('createCognitoUser Response: ', cognitoResponse);
 
       const timestamp = new Date().toISOString();
+      
+      // Validate that secure IDs were provided by the calling component
+      if (!input.userId || !input.cognitoId) {
+        throw new Error('Secure user and cognito IDs must be provided by the calling component');
+      }
+      
+      // Validate ID format for security
+      if (!this.secureIdService.validateIdFormat(input.userId) || 
+          !this.secureIdService.validateIdFormat(input.cognitoId)) {
+        console.warn('🚨 SECURITY WARNING: Provided IDs may not be secure!');
+      }
+      
       const userCreateInput: UsersCreateInput = {
-        userId: uuidv4(),
-        cognitoId: input.cognitoId, // Store random UUID as cognitoId for authentication
+        userId: input.userId, // Use secure backend-generated ID
+        cognitoId: input.cognitoId, // Use secure backend-generated cognito ID
         cognitoSub: cognitoResponse.userId || '', // Store actual Cognito sub from signup response
         email: input.email,
-        firstName: '',
-        lastName: '',
-        phoneNumber: '',
-        groups: [UserGroup.USER] as string[],
-        status: UserStatus.PENDING,
-        createdAt: timestamp,
-        phoneVerified: false,
-        emailVerified: false,
-        updatedAt: timestamp,
-        mfaEnabled: false,
-        mfaSetupComplete: false
+        firstName: input.firstName || '',
+        lastName: input.lastName || '',
+        phoneNumber: input.phoneNumber || '',
+        groups: input.groups || [UserGroup.USER] as string[],
+        status: input.status || UserStatus.PENDING,
+        createdAt: input.createdAt || timestamp,
+        phoneVerified: input.phoneVerified || false,
+        emailVerified: input.emailVerified || false,
+        updatedAt: timestamp, // Always update with current timestamp
+        mfaEnabled: input.mfaEnabled || false,
+        mfaSetupComplete: input.mfaSetupComplete || false
       };
 
       const response = await this.mutate(UsersCreateMutation, {"input": userCreateInput}, "apiKey") as GraphQLResult<UsersCreateResponse>;
