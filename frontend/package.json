@@ -9,6 +9,7 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint",
+    "validate:debug": "node scripts/validate-debug-mode.js",
     "build:secure": "npm run build:secure:dev",
     "build:secure:dev": "npm run build:clean && npm run build:angular && npm run secrets:retrieve:dev && npm run secrets:replace:dev",
     "build:secure:staging": "npm run build:clean && npm run build:angular:prod && npm run secrets:retrieve:staging && npm run secrets:replace:staging",

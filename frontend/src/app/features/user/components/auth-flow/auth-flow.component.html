@@ -8,7 +8,35 @@ description: HTML template file
 <!-- Skip link for keyboard users -->
 <a class="auth-flow__skip-link" href="#main-content">Skip to main content</a>
 
-<div class="auth-flow" 
+<!-- ARIA live region for step announcements -->
+<div id="auth-step-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+<!-- Initialization Error Boundary -->
+<div *ngIf="hasInitializationError" class="auth-flow__error-boundary" role="alert" aria-live="assertive">
+  <div class="auth-flow__error-boundary-content">
+    <h2>System Initialization Failed</h2>
+    <p>{{ initializationErrorMessage }}</p>
+    <div class="auth-flow__error-boundary-actions">
+      <button 
+        *ngIf="canRetryInitialization"
+        type="button" 
+        class="btn btn-primary"
+        (click)="retryInitialization()"
+        [disabled]="!canRetryInitialization">
+        Retry Initialization
+      </button>
+      <button 
+        type="button" 
+        class="btn btn-secondary"
+        (click)="window.location.reload()">
+        Refresh Page
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Normal Authentication Flow -->
+<div *ngIf="!hasInitializationError" class="auth-flow" 
      (touchstart)="onTouchStart($event)"
      (touchmove)="onTouchMove($event)">
   <ng-container *ngIf="{
@@ -105,19 +133,12 @@ description: HTML template file
         </div>
       </div>
       
-      <!-- Enhanced Error Boundary -->
-      <app-auth-error-boundary 
-        *ngIf="state.error" 
-        [errorTitle]="'Authentication Error'"
-        [errorMessage]="getErrorBoundaryMessage(state.error)"
-        [technicalDetails]="state.error"
-        [showDetails]="true"
-        [allowRetry]="canRetryError(state.error)"
-        [allowGoBack]="canNavigateBack()"
-        (retry)="onErrorRetry()"
-        (goBack)="onErrorGoBack()"
-        (startOver)="onErrorStartOver()">
-      </app-auth-error-boundary>
+      <!-- Simple Error Display -->
+      <div *ngIf="state.error" class="auth-flow__error" role="alert" aria-live="assertive">
+        <h3>Authentication Error</h3>
+        <p>{{ state.error }}</p>
+        <button type="button" class="btn btn-primary" (click)="onErrorRetry()">Try Again</button>
+      </div>
       
       <form *ngIf="authForm && !state.error" [formGroup]="authForm" (ngSubmit)="onSubmit()" 
             class="auth-flow__form" 
@@ -850,7 +871,7 @@ description: HTML template file
     </form>
     </main>
   </ng-container>
-</div>
+</div> <!-- Close normal auth flow -->
 
 <!-- Add this after your form in auth-flow.component.html -->
 <ng-container *ngIf="debugMode$ | async">

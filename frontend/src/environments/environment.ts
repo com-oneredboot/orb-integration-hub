@@ -7,6 +7,7 @@
 export const environment = {
   appName: 'Integration Hub',
   production: false,
+  debugMode: false, // Debug mode disabled by default (overridden in local environment)
   loggingLevel: 'debug',
   cognito: {
     userPoolId: '{{COGNITO_USER_POOL_ID}}',

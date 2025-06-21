@@ -6,7 +6,10 @@
 // 3rd Party Imports
 import { generateClient } from 'aws-amplify/api';
 import { GraphQLResult } from '@aws-amplify/api-graphql';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+
+// Application Imports
+import { CsrfService } from './csrf.service';
 
 
 @Injectable({
@@ -15,9 +18,14 @@ import { Injectable } from '@angular/core';
 export abstract class ApiService {
   private apiKeyClient = generateClient({authMode: 'apiKey'});
   private userPoolClient = generateClient({authMode: 'userPool'});
+  private csrfService = inject(CsrfService);
 
   protected async query<T>(query: string, variables?: any, authMode: 'userPool' | 'apiKey' = 'userPool'): Promise<GraphQLResult<T>> {
-    console.debug('query:', query, 'variables:', variables, 'authMode:', authMode);
+    console.debug('[ApiService] GraphQL query initiated:', {
+      operation: query.substring(0, 50) + '...',
+      authMode,
+      hasVariables: !!variables
+    });
     
     try {
       const client = authMode === 'apiKey' ? this.apiKeyClient : this.userPoolClient;
@@ -28,7 +36,7 @@ export abstract class ApiService {
     } catch (error) {
       // If userPool auth fails and this isn't already an apiKey request, try with apiKey
       if (authMode === 'userPool' && this.isAuthError(error)) {
-        console.warn('🔄 userPool auth failed, falling back to apiKey for query:', { query: query.substring(0, 50), error });
+        console.warn('[ApiService] userPool auth failed, falling back to apiKey for query');
         return this.query(query, variables, 'apiKey');
       }
       throw error;
@@ -36,39 +44,50 @@ export abstract class ApiService {
   }
 
   protected async mutate<T>(mutation: string, variables?: any, authMode: 'userPool' | 'apiKey' = 'userPool'): Promise<GraphQLResult<T>> {
-    console.debug('mutation:', mutation, 'variables:', variables, 'authMode:', authMode);
+    console.debug('[ApiService] GraphQL mutation initiated:', {
+      operation: mutation.substring(0, 50) + '...',
+      authMode,
+      hasVariables: !!variables
+    });
     
-    // Debug JWT token for userPool auth
+    // Validate JWT token for userPool auth
     if (authMode === 'userPool') {
       try {
         const { fetchAuthSession } = await import('@aws-amplify/auth');
         const session = await fetchAuthSession();
-        console.debug('🔐 JWT Token Debug:', {
-          hasAccessToken: !!session.tokens?.accessToken,
-          hasIdToken: !!session.tokens?.idToken,
-          accessTokenExp: session.tokens?.accessToken?.payload?.exp,
-          idTokenExp: session.tokens?.idToken?.payload?.exp,
-          currentTime: Math.floor(Date.now() / 1000),
-          userGroups: session.tokens?.idToken?.payload?.['cognito:groups'],
-          tokenUse: session.tokens?.accessToken?.payload?.['token_use'],
-          clientId: session.tokens?.accessToken?.payload?.['client_id'],
-          username: session.tokens?.accessToken?.payload?.['username']
-        });
+        const hasValidTokens = !!session.tokens?.accessToken && !!session.tokens?.idToken;
+        console.debug('[ApiService] JWT token validation:', { hasValidTokens });
       } catch (tokenError) {
-        console.error('❌ Error checking JWT token:', tokenError);
+        console.error('[ApiService] JWT token validation failed');
       }
     }
     
     try {
       const client = authMode === 'apiKey' ? this.apiKeyClient : this.userPoolClient;
-      return client.graphql({
+      
+      // Add CSRF protection for state-changing mutations
+      const graphqlRequest: any = {
         query: mutation,
         variables: variables
-      }) as Promise<GraphQLResult<T>>;
+      };
+      
+      // Add CSRF token for authenticated mutations that change state
+      if (authMode === 'userPool' && this.isStateMutationOperation(mutation)) {
+        try {
+          const csrfToken = await this.csrfService.getCsrfToken();
+          graphqlRequest.authToken = csrfToken; // This will be passed to the GraphQL context
+          console.debug('[ApiService] CSRF token added to mutation request');
+        } catch (csrfError) {
+          console.error('[ApiService] Failed to obtain CSRF token:', csrfError);
+          throw new Error('CSRF protection failed - request blocked');
+        }
+      }
+      
+      return client.graphql(graphqlRequest) as Promise<GraphQLResult<T>>;
     } catch (error) {
       // For mutations, be more selective about fallback - only for read-only operations
       if (authMode === 'userPool' && this.isAuthError(error) && this.isReadOnlyMutation(mutation)) {
-        console.warn('🔄 userPool auth failed, falling back to apiKey for read-only mutation:', { mutation: mutation.substring(0, 50), error });
+        console.warn('[ApiService] userPool auth failed, falling back to apiKey for read-only mutation');
         return this.mutate(mutation, variables, 'apiKey');
       }
       throw error;
@@ -94,6 +113,37 @@ export abstract class ApiService {
       errorMessage.includes('access denied') ||
       error?.name === 'UnauthorizedException' ||
       error?.code === 'UnauthorizedException'
+    );
+  }
+
+  /**
+   * Check if a mutation is a state-changing operation requiring CSRF protection
+   */
+  private isStateMutationOperation(mutation: string): boolean {
+    const mutationLower = mutation.toLowerCase();
+    
+    // State-changing operations that require CSRF protection
+    const stateMutationPatterns = [
+      'create',
+      'update', 
+      'delete',
+      'insert',
+      'modify',
+      'change',
+      'set',
+      'add',
+      'remove',
+      'smsverification', // SMS verification changes state
+      'signup',          // User registration
+      'signin',          // Authentication state change
+      'signout',         // Authentication state change
+      'confirm',         // Confirmation operations
+      'reset',           // Password reset operations
+      'verify'           // Verification operations
+    ];
+    
+    return stateMutationPatterns.some(pattern => 
+      mutationLower.includes(pattern)
     );
   }
 

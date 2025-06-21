@@ -13,8 +13,8 @@ import {Location} from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { faExclamationTriangle, faRedo, faSync } from '@fortawesome/free-solid-svg-icons';
 import { RouterModule } from '@angular/router';
-import { AuthErrorBoundaryComponent } from './components/auth-error-boundary.component';
 
 import {v4 as uuidv4} from 'uuid';
 
@@ -27,6 +27,9 @@ import {QRCodeToDataURLOptions} from "qrcode";
 import {UserService} from "../../../../core/services/user.service";
 import {CognitoService} from "../../../../core/services/cognito.service";
 import {InputValidationService} from "../../../../core/services/input-validation.service";
+import {CsrfService} from "../../../../core/services/csrf.service";
+import {RateLimitingService} from "../../../../core/services/rate-limiting.service";
+import {AppErrorHandlerService} from "../../../../core/services/error-handler.service";
 import {CustomValidators} from "../../../../core/validators/custom-validators";
 import { UserStatus } from "../../../../core/models/UserStatusEnum";
 import { UserGroup } from "../../../../core/models/UserGroupEnum";
@@ -41,8 +44,7 @@ import { UserGroup } from "../../../../core/models/UserGroupEnum";
     CommonModule,
     ReactiveFormsModule,
     FontAwesomeModule,
-    RouterModule,
-    AuthErrorBoundaryComponent
+    RouterModule
     // Add any shared components, directives, or pipes used in the template here
   ]
 })
@@ -95,6 +97,30 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   public showSuccessMessage = false;
   public successMessage = '';
 
+  // CSRF protection state
+  public csrfProtectionEnabled = false;
+  public csrfError: string | null = null;
+
+  // Rate limiting and brute force protection state
+  public rateLimitActive = false;
+  public rateLimitMessage: string | null = null;
+  public remainingAttempts = 0;
+  public nextAttemptAllowedAt = 0;
+  public isUnderAttack = false;
+
+  // Error handling and recovery state
+  public hasInitializationError = false;
+  public initializationErrorMessage: string | null = null;
+  public canRetryInitialization = true;
+
+  // Font Awesome icons for error boundaries
+  faExclamationTriangle = faExclamationTriangle;
+  faRedo = faRedo;
+  faSync = faSync;
+
+  // Window reference for template
+  window = window;
+
   authForm!: FormGroup;
   authSteps = AuthSteps;
   passwordVisible = false;
@@ -122,7 +148,10 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     private location: Location,
     private userService: UserService,
     private cognitoService: CognitoService,
-    private inputValidationService: InputValidationService
+    private inputValidationService: InputValidationService,
+    private csrfService: CsrfService,
+    private rateLimitingService: RateLimitingService,
+    private errorHandler: AppErrorHandlerService
   ) {
 
     // Initialize the form with enhanced validation
@@ -170,63 +199,526 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Initialize browser history management
-    this.initializeHistoryManagement();
-    
-    // Initialize touch optimizations
-    this.initializeTouchOptimizations();
-    
-    // Always check existing session to load user data, but don't redirect
-    this.loadUserSessionAndDetermineStep();
-    
-    // Handle unauthenticated users
-    this.store.select(fromAuth.selectSessionActive)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(active => {
-        if (!active) {
-          // User is not authenticated, start from email step
-          this.store.dispatch(AuthActions.setCurrentStep({ step: AuthSteps.EMAIL }));
+    try {
+      // Initialize all systems with error boundaries
+      this.initializeAuthFlowSafely();
+    } catch (error) {
+      this.handleInitializationError(error, 'ngOnInit');
+    }
+  }
+
+  /**
+   * Initialize auth flow with comprehensive error handling
+   */
+  private async initializeAuthFlowSafely(): Promise<void> {
+    try {
+      // Initialize CSRF protection for secure form submissions
+      await this.initializeCsrfProtectionSafely();
+      
+      // Initialize rate limiting and brute force protection
+      await this.initializeRateLimitingSafely();
+      
+      // Initialize browser history management
+      await this.initializeHistoryManagementSafely();
+      
+      // Initialize touch optimizations
+      await this.initializeTouchOptimizationsSafely();
+      
+      // Always check existing session to load user data, but don't redirect
+      await this.loadUserSessionAndDetermineStepSafely();
+
+      // Set up reactive subscriptions with error boundaries
+      this.setupReactiveSubscriptionsSafely();
+
+      // Mark initialization as successful
+      this.hasInitializationError = false;
+      this.initializationErrorMessage = null;
+      
+    } catch (error) {
+      this.handleInitializationError(error, 'initializeAuthFlowSafely');
+    }
+  }
+
+  /**
+   * Initialize CSRF protection with error handling
+   */
+  private async initializeCsrfProtectionSafely(): Promise<void> {
+    try {
+      // Test CSRF service availability
+      const csrfToken = await this.csrfService.getCsrfToken();
+      this.csrfProtectionEnabled = !!csrfToken;
+      this.csrfError = null;
+      
+      console.debug('[AuthFlowComponent] CSRF protection initialized successfully');
+    } catch (error) {
+      const errorId = this.errorHandler.captureSecurityError(
+        'initializeCsrfProtection',
+        error,
+        'AuthFlowComponent'
+      );
+      
+      this.csrfProtectionEnabled = false;
+      this.csrfError = 'CSRF protection initialization failed';
+      
+      console.warn('[AuthFlowComponent] CSRF protection initialization failed:', errorId);
+    }
+  }
+
+  /**
+   * Initialize rate limiting with error handling
+   */
+  private async initializeRateLimitingSafely(): Promise<void> {
+    try {
+      // Test rate limiting service availability
+      const testResult = await this.rateLimitingService.isAttemptAllowed('test@example.com', 'email_check');
+      this.rateLimitActive = true;
+      
+      console.debug('[AuthFlowComponent] Rate limiting initialized successfully');
+    } catch (error) {
+      const errorId = this.errorHandler.captureSecurityError(
+        'initializeRateLimiting',
+        error,
+        'AuthFlowComponent'
+      );
+      
+      this.rateLimitActive = false;
+      this.rateLimitMessage = 'Rate limiting initialization failed';
+      
+      console.warn('[AuthFlowComponent] Rate limiting initialization failed:', errorId);
+    }
+  }
+
+  /**
+   * Initialize browser history management with error handling
+   */
+  private async initializeHistoryManagementSafely(): Promise<void> {
+    try {
+      // Set up browser history state
+      const currentUrl = this.router.url;
+      const currentStep = await this.currentStep$.pipe(take(1)).toPromise();
+      
+      // Initialize step history
+      this.stepHistory = [currentStep || AuthSteps.EMAIL];
+      
+      // Set up popstate listener for browser back/forward
+      window.addEventListener('popstate', this.handleBrowserNavigation.bind(this));
+      
+      console.debug('[AuthFlowComponent] History management initialized successfully');
+    } catch (error) {
+      const errorId = this.errorHandler.captureError({
+        type: 'system',
+        severity: 'low',
+        message: 'Browser history management initialization failed',
+        component: 'AuthFlowComponent',
+        operation: 'initializeHistoryManagement',
+        error,
+        recoverable: true
+      });
+      
+      // Fallback to basic navigation
+      this.stepHistory = [AuthSteps.EMAIL];
+      
+      console.warn('[AuthFlowComponent] History management initialization failed:', errorId);
+    }
+  }
+
+  /**
+   * Initialize touch optimizations with error handling
+   */
+  private async initializeTouchOptimizationsSafely(): Promise<void> {
+    try {
+      // Detect touch device
+      this.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      
+      if (this.isTouchDevice) {
+        // Set up touch event listeners
+        document.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: true });
+        document.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: true });
+        
+        // Detect orientation changes
+        window.addEventListener('orientationchange', this.handleOrientationChange.bind(this));
+        
+        // Initial orientation check
+        this.isLandscapeMode = window.innerWidth > window.innerHeight;
+      }
+      
+      console.debug('[AuthFlowComponent] Touch optimizations initialized successfully');
+    } catch (error) {
+      const errorId = this.errorHandler.captureError({
+        type: 'system',
+        severity: 'low',
+        message: 'Touch optimizations initialization failed',
+        component: 'AuthFlowComponent',
+        operation: 'initializeTouchOptimizations',
+        error,
+        recoverable: true
+      });
+      
+      // Fallback to desktop mode
+      this.isTouchDevice = false;
+      this.isLandscapeMode = false;
+      
+      console.warn('[AuthFlowComponent] Touch optimizations initialization failed:', errorId);
+    }
+  }
+
+  /**
+   * Load user session and determine initial step with error handling
+   */
+  private async loadUserSessionAndDetermineStepSafely(): Promise<void> {
+    try {
+      // Check if user is already authenticated
+      const sessionActive = await this.store.select(fromAuth.selectSessionActive).pipe(take(1)).toPromise();
+      
+      if (sessionActive) {
+        // User has active session, get current user data
+        const currentUser = await this.store.select(fromAuth.selectCurrentUser).pipe(take(1)).toPromise();
+        
+        if (currentUser?.email) {
+          // Pre-populate email field
+          this.authForm.patchValue({ email: currentUser.email });
+          
+          // Determine appropriate step based on user state
+          let nextStep = AuthSteps.COMPLETE;
+          
+          if (!currentUser.emailVerified) {
+            nextStep = AuthSteps.EMAIL_VERIFY;
+          } else if (!currentUser.firstName || !currentUser.lastName) {
+            nextStep = AuthSteps.NAME_SETUP;
+          } else if (!currentUser.phoneNumber) {
+            nextStep = AuthSteps.PHONE_SETUP;
+          } else if (!currentUser.phoneVerified) {
+            nextStep = AuthSteps.PHONE_VERIFY;
+          } else if (!currentUser.mfaEnabled) {
+            nextStep = AuthSteps.MFA_SETUP;
+          }
+          
+          this.store.dispatch(AuthActions.setCurrentStep({ step: nextStep }));
         }
-      });
+      } else {
+        // No active session, start from email step
+        this.store.dispatch(AuthActions.setCurrentStep({ step: AuthSteps.EMAIL }));
+      }
+      
+      console.debug('[AuthFlowComponent] User session loaded and step determined successfully');
+    } catch (error) {
+      const errorId = this.errorHandler.captureAuthError(
+        'loadUserSessionAndDetermineStep',
+        error,
+        'AuthFlowComponent',
+        undefined,
+        ['Refresh page', 'Clear browser cache', 'Try again']
+      );
+      
+      // Fallback to email step
+      this.store.dispatch(AuthActions.setCurrentStep({ step: AuthSteps.EMAIL }));
+      
+      console.warn('[AuthFlowComponent] User session loading failed:', errorId);
+    }
+  }
+
+  /**
+   * Handle initialization errors with user-friendly recovery options
+   */
+  private handleInitializationError(error: any, operation: string): void {
+    const errorId = this.errorHandler.captureError({
+      type: 'system',
+      severity: 'high',
+      message: `Initialization failed in ${operation}`,
+      userMessage: 'The authentication system failed to initialize properly. Please try refreshing the page.',
+      component: 'AuthFlowComponent',
+      operation,
+      error,
+      recoverable: true,
+      recoveryActions: [
+        'Refresh page',
+        'Clear browser cache', 
+        'Try incognito/private mode',
+        'Contact support if problem persists'
+      ]
+    });
     
-    // Pure component - only update form validators when step changes
-    this.currentStep$
-      .pipe(
-        takeUntil(this.destroy$),
-        filter(step => !!step)
-      )
-      .subscribe(step => {
-        this.updateValidators(step);
-        // Ensure form validation state is properly updated
-        this.authForm.updateValueAndValidity({ emitEvent: true });
-        // Track step history for navigation
-        this.trackStepHistory(step);
-        // Update browser history
-        this.updateBrowserHistory(step);
-        // Focus management and announcements for accessibility
-        this.focusCurrentStepInput(step);
-        this.announceStepChange(step);
-        // Note: Redirects are handled by auth.effects.ts, not components
+    this.hasInitializationError = true;
+    this.initializationErrorMessage = 'Authentication system initialization failed. Please refresh the page to try again.';
+    this.canRetryInitialization = true;
+    
+    console.error('[AuthFlowComponent] Initialization error:', errorId);
+  }
+
+  /**
+   * Retry initialization after error
+   */
+  public async retryInitialization(): Promise<void> {
+    try {
+      this.hasInitializationError = false;
+      this.initializationErrorMessage = null;
+      this.canRetryInitialization = false;
+      
+      await this.initializeAuthFlowSafely();
+      
+      this.canRetryInitialization = true;
+    } catch (error) {
+      this.handleInitializationError(error, 'retryInitialization');
+    }
+  }
+
+  /**
+   * Handle browser navigation events
+   */
+  private handleBrowserNavigation(event: PopStateEvent): void {
+    try {
+      // Handle browser back/forward buttons
+      if (this.stepHistory.length > 1) {
+        this.isNavigatingBack = true;
+        const previousStep = this.stepHistory[this.stepHistory.length - 2];
+        this.store.dispatch(AuthActions.setCurrentStep({ step: previousStep }));
+        this.stepHistory.pop();
+      }
+    } catch (error) {
+      this.errorHandler.captureError({
+        type: 'system',
+        severity: 'low',
+        message: 'Browser navigation handling failed',
+        component: 'AuthFlowComponent',
+        operation: 'handleBrowserNavigation',
+        error
       });
+    }
+  }
 
+  /**
+   * Handle touch start events
+   */
+  private handleTouchStart(event: TouchEvent): void {
+    try {
+      this.touchStartY = event.touches[0].clientY;
+      this.lastTouchTime = Date.now();
+    } catch (error) {
+      this.errorHandler.captureError({
+        type: 'system',
+        severity: 'low',
+        message: 'Touch start handling failed',
+        component: 'AuthFlowComponent',
+        operation: 'handleTouchStart',
+        error
+      });
+    }
+  }
 
-    this.mfaSetupDetails$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(async details => {
-        // No need to define issuer here as it's now set in the CognitoService
-        const QRCode = (await import('qrcode')).default;
-        if (!details?.secretKey || !details?.qrCode) {
-          return;
+  /**
+   * Handle touch end events
+   */
+  private handleTouchEnd(event: TouchEvent): void {
+    try {
+      const touchEndY = event.changedTouches[0].clientY;
+      const touchDuration = Date.now() - this.lastTouchTime;
+      const touchDistance = Math.abs(touchEndY - this.touchStartY);
+      
+      // Detect swipe gestures for form navigation
+      if (touchDuration < 500 && touchDistance > 50) {
+        if (touchEndY < this.touchStartY) {
+          // Swipe up - could trigger next step
+          this.handleSwipeUp();
+        } else {
+          // Swipe down - could trigger previous step
+          this.handleSwipeDown();
         }
-        const qrUrl = details.setupUri?.toString() || '';
-        const options = {
-          width: 200,
-          margin: 2,
-          errorCorrectionLevel: 'M'
-        } as QRCodeToDataURLOptions
-        this.qrCodeDataUrl = await QRCode.toDataURL(qrUrl, options);
+      }
+    } catch (error) {
+      this.errorHandler.captureError({
+        type: 'system',
+        severity: 'low',
+        message: 'Touch end handling failed',
+        component: 'AuthFlowComponent',
+        operation: 'handleTouchEnd',
+        error
       });
+    }
+  }
 
+  /**
+   * Handle orientation changes
+   */
+  private handleOrientationChange(): void {
+    try {
+      setTimeout(() => {
+        this.isLandscapeMode = window.innerWidth > window.innerHeight;
+      }, 100);
+    } catch (error) {
+      this.errorHandler.captureError({
+        type: 'system',
+        severity: 'low',
+        message: 'Orientation change handling failed',
+        component: 'AuthFlowComponent',
+        operation: 'handleOrientationChange',
+        error
+      });
+    }
+  }
+
+  /**
+   * Handle swipe up gesture
+   */
+  private handleSwipeUp(): void {
+    try {
+      // Could be used to advance to next step if form is valid
+      if (this.authForm.valid) {
+        this.onSubmit();
+      }
+    } catch (error) {
+      this.errorHandler.captureError({
+        type: 'user',
+        severity: 'low',
+        message: 'Swipe up gesture handling failed',
+        component: 'AuthFlowComponent',
+        operation: 'handleSwipeUp',
+        error
+      });
+    }
+  }
+
+  /**
+   * Handle swipe down gesture
+   */
+  private handleSwipeDown(): void {
+    try {
+      // Could be used to go back to previous step
+      this.goToPreviousStep();
+    } catch (error) {
+      this.errorHandler.captureError({
+        type: 'user',
+        severity: 'low',
+        message: 'Swipe down gesture handling failed',
+        component: 'AuthFlowComponent',
+        operation: 'handleSwipeDown',
+        error
+      });
+    }
+  }
+
+  /**
+   * Set up reactive subscriptions with error handling
+   */
+  private setupReactiveSubscriptionsSafely(): void {
+    try {
+      // Handle unauthenticated users
+      this.store.select(fromAuth.selectSessionActive)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (active) => {
+            try {
+              if (!active) {
+                // User is not authenticated, start from email step
+                this.store.dispatch(AuthActions.setCurrentStep({ step: AuthSteps.EMAIL }));
+              }
+            } catch (error) {
+              this.errorHandler.captureAuthError('handleSessionActive', error, 'AuthFlowComponent');
+            }
+          },
+          error: (error) => {
+            this.errorHandler.captureAuthError('selectSessionActive', error, 'AuthFlowComponent');
+          }
+        });
+      
+      // Pure component - only update form validators when step changes
+      this.currentStep$
+        .pipe(
+          takeUntil(this.destroy$),
+          filter(step => !!step)
+        )
+        .subscribe({
+          next: (step) => {
+            try {
+              this.updateValidators(step);
+              // Ensure form validation state is properly updated
+              this.authForm.updateValueAndValidity({ emitEvent: true });
+              // Track step history for navigation
+              this.trackStepHistory(step);
+              // Update browser history
+              this.updateBrowserHistory(step);
+              // Focus management and announcements for accessibility
+              this.focusCurrentStepInput(step);
+              this.announceStepChange(step);
+              // Note: Redirects are handled by auth.effects.ts, not components
+            } catch (error) {
+              this.errorHandler.captureError({
+                type: 'system',
+                severity: 'medium',
+                message: 'Error updating form validators',
+                component: 'AuthFlowComponent',
+                operation: 'updateValidators',
+                error
+              });
+            }
+          },
+          error: (error) => {
+            this.errorHandler.captureError({
+              type: 'system',
+              severity: 'high',
+              message: 'Error in step change subscription',
+              component: 'AuthFlowComponent',
+              operation: 'currentStep$',
+              error
+            });
+          }
+        });
+
+      // Handle MFA setup details with error boundaries
+      this.mfaSetupDetails$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: async (details) => {
+            try {
+              if (!details?.secretKey || !details?.qrCode) {
+                return;
+              }
+              
+              // Dynamic import with error handling
+              const QRCode = (await import('qrcode')).default;
+              const qrUrl = details.setupUri?.toString() || '';
+              const options = {
+                width: 200,
+                margin: 2,
+                errorCorrectionLevel: 'M'
+              } as QRCodeToDataURLOptions;
+              
+              this.qrCodeDataUrl = await QRCode.toDataURL(qrUrl, options);
+            } catch (error) {
+              this.errorHandler.captureError({
+                type: 'system',
+                severity: 'medium',
+                message: 'Failed to generate QR code',
+                userMessage: 'Unable to generate QR code. Please try refreshing the page.',
+                component: 'AuthFlowComponent',
+                operation: 'generateQRCode',
+                error,
+                recoverable: true,
+                recoveryActions: ['Refresh page', 'Try manual MFA setup', 'Contact support']
+              });
+            }
+          },
+          error: (error) => {
+            this.errorHandler.captureError({
+              type: 'authentication',
+              severity: 'medium',
+              message: 'Error in MFA setup subscription',
+              component: 'AuthFlowComponent',
+              operation: 'mfaSetupDetails$',
+              error
+            });
+          }
+        });
+        
+    } catch (error) {
+      this.errorHandler.captureError({
+        type: 'system',
+        severity: 'high',
+        message: 'Failed to setup reactive subscriptions',
+        component: 'AuthFlowComponent',
+        operation: 'setupReactiveSubscriptions',
+        error
+      });
+    }
   }
 
 
@@ -238,8 +730,47 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  onSubmit(): void {
-    if (!this.authForm.valid) {
+  async onSubmit(): Promise<void> {
+    try {
+      if (!this.authForm.valid) {
+        return;
+      }
+
+      // Get current step and email for rate limiting
+      const currentStep = await this.currentStep$.pipe(take(1)).toPromise();
+      let email = this.authForm.get('email')?.value;
+      
+      // If no email in form, try to get from current user
+      if (!email) {
+        const currentUser = await this.currentUser$.pipe(take(1)).toPromise();
+        email = currentUser?.email;
+      }
+      
+      // Only apply rate limiting if we have both step and email
+      if (currentStep && email) {
+        // Check rate limiting before processing form submission
+        const rateLimitCheck = await this.checkRateLimiting(email, currentStep);
+        if (!rateLimitCheck.allowed) {
+          console.warn('[AuthFlowComponent] Form submission blocked by rate limiting');
+          this.handleRateLimitBlocked(rateLimitCheck.delayMs, rateLimitCheck.reason);
+          return;
+        }
+    } else {
+      // Log debug message for missing data but don't block submission
+      console.debug('[AuthFlowComponent] Rate limiting skipped - missing email or step data', {
+        hasEmail: !!email,
+        hasStep: !!currentStep,
+        step: currentStep
+      });
+    }
+
+    // Validate CSRF protection before processing form submission
+    const csrfValid = await this.validateCsrfProtection();
+    if (!csrfValid) {
+      console.error('[AuthFlowComponent] Form submission blocked - CSRF validation failed');
+      this.store.dispatch(AuthActions.checkEmailFailure({ 
+        error: this.csrfError || 'Security validation failed. Please refresh the page.' 
+      }));
       return;
     }
 
@@ -343,28 +874,84 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             break;
         }
       });
+    } catch (error) {
+      let email = this.authForm.get('email')?.value || 'unknown';
+      const errorId = this.errorHandler.captureAuthError(
+        'onSubmit',
+        error,
+        'AuthFlowComponent',
+        email,
+        ['Try again', 'Refresh page', 'Contact support']
+      );
+      
+      console.error('[AuthFlowComponent] Form submission error:', errorId);
+      
+      // Show user-friendly error
+      this.store.dispatch(AuthActions.checkEmailFailure({ 
+        error: 'An error occurred while processing your request. Please try again.' 
+      }));
+    }
   }
 
   checkPasswordValidations(password: string): void {
-    // Use the enhanced validation service for password checking
-    const validation = this.inputValidationService.validatePassword(password);
-    
-    this.passwordValidations = {
-      minLength: validation.criteria.minLength,
-      hasUppercase: validation.criteria.hasUppercase,
-      hasLowercase: validation.criteria.hasLowercase,
-      hasNumber: validation.criteria.hasNumber,
-      hasSpecial: validation.criteria.hasSpecial
-    };
+    try {
+      // Use the enhanced validation service for password checking
+      const validation = this.inputValidationService.validatePassword(password);
+      
+      this.passwordValidations = {
+        minLength: validation.criteria.minLength,
+        hasUppercase: validation.criteria.hasUppercase,
+        hasLowercase: validation.criteria.hasLowercase,
+        hasNumber: validation.criteria.hasNumber,
+        hasSpecial: validation.criteria.hasSpecial
+      };
+    } catch (error) {
+      this.errorHandler.captureValidationError(
+        'checkPasswordValidations',
+        error,
+        'AuthFlowComponent',
+        'password'
+      );
+      
+      // Fallback to basic validation
+      this.passwordValidations = {
+        minLength: password.length >= 8,
+        hasUppercase: /[A-Z]/.test(password),
+        hasLowercase: /[a-z]/.test(password),
+        hasNumber: /\d/.test(password),
+        hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+      };
+    }
   }
 
   isFieldInvalid(fieldName: string): boolean {
-    const field = this.authForm.get(fieldName);
-    return field ? field.invalid && (field.dirty || field.touched) : false;
+    try {
+      const field = this.authForm.get(fieldName);
+      return field ? field.invalid && (field.dirty || field.touched) : false;
+    } catch (error) {
+      this.errorHandler.captureValidationError(
+        'isFieldInvalid',
+        error,
+        'AuthFlowComponent',
+        fieldName
+      );
+      return false;
+    }
   }
 
   togglePasswordVisibility(): void {
-    this.passwordVisible = !this.passwordVisible;
+    try {
+      this.passwordVisible = !this.passwordVisible;
+    } catch (error) {
+      this.errorHandler.captureError({
+        type: 'user',
+        severity: 'low',
+        message: 'Password visibility toggle failed',
+        component: 'AuthFlowComponent',
+        operation: 'togglePasswordVisibility',
+        error
+      });
+    }
   }
 
   getErrorMessage(fieldName: string): string {
@@ -441,9 +1028,20 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   }
 
   private initializeUIState(): void {
-    // Initialize derived observables
-    this.buttonText$ = this.deriveButtonText();
-    this.stepTitle$ = this.deriveStepTitle();
+    try {
+      // Initialize derived observables
+      this.buttonText$ = this.deriveButtonText();
+      this.stepTitle$ = this.deriveStepTitle();
+    } catch (error) {
+      this.errorHandler.captureError({
+        type: 'system',
+        severity: 'medium',
+        message: 'UI state initialization failed',
+        component: 'AuthFlowComponent',
+        operation: 'initializeUIState',
+        error
+      });
+    }
   }
 
   private deriveButtonText(): Observable<string> {
@@ -489,27 +1087,57 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   }
 
   private initializeForm(): void {
-
-    this.authForm.get('password')?.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(password => {
-        if (password) {
-          this.checkPasswordValidations(password);
-        } else {
-          this.resetPasswordValidations();
-        }
+    try {
+      this.authForm.get('password')?.valueChanges
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (password) => {
+            try {
+              if (password) {
+                this.checkPasswordValidations(password);
+              } else {
+                this.resetPasswordValidations();
+              }
+            } catch (error) {
+              this.errorHandler.captureValidationError(
+                'passwordValueChange',
+                error,
+                'AuthFlowComponent',
+                'password'
+              );
+            }
+          },
+          error: (error) => {
+            this.errorHandler.captureValidationError(
+              'passwordValueChanges',
+              error,
+              'AuthFlowComponent',
+              'password'
+            );
+          }
+        });
+    } catch (error) {
+      this.errorHandler.captureError({
+        type: 'system',
+        severity: 'medium',
+        message: 'Form initialization failed',
+        component: 'AuthFlowComponent',
+        operation: 'initializeForm',
+        error
       });
+    }
   }
 
   private updateValidators(step: AuthSteps): void {
-    const emailControl = this.authForm.get('email');
-    const passwordControl = this.authForm.get('password');
-    const firstNameControl = this.authForm.get('firstName');
-    const lastNameControl = this.authForm.get('lastName');
-    const phoneNumberControl = this.authForm.get('phoneNumber');
-    const phoneCodeControl = this.authForm.get('phoneCode');
-    const emailCodeControl = this.authForm.get('emailCode');
-    const mfaCodeControl = this.authForm.get('mfaCode');
+    try {
+      const emailControl = this.authForm.get('email');
+      const passwordControl = this.authForm.get('password');
+      const firstNameControl = this.authForm.get('firstName');
+      const lastNameControl = this.authForm.get('lastName');
+      const phoneNumberControl = this.authForm.get('phoneNumber');
+      const phoneCodeControl = this.authForm.get('phoneCode');
+      const emailCodeControl = this.authForm.get('emailCode');
+      const mfaCodeControl = this.authForm.get('mfaCode');
 
     // Reset all validators first
     emailControl?.clearValidators();
@@ -589,8 +1217,16 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         break;
     }
 
-    // Update form validation
-    this.authForm.updateValueAndValidity();
+      // Update form validation
+      this.authForm.updateValueAndValidity();
+    } catch (error) {
+      this.errorHandler.captureValidationError(
+        'updateValidators',
+        error,
+        'AuthFlowComponent',
+        `step-${step}`
+      );
+    }
   }
 
   private getPasswordErrorMessage(errors: any): string {
@@ -618,56 +1254,335 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
    * Initialize real-time validation with smart error display
    */
   private initializeRealTimeValidation(): void {
-    // Listen to all form control value changes for smart validation
-    Object.keys(this.authForm.controls).forEach(fieldName => {
-      const control = this.authForm.get(fieldName);
-      if (control) {
-        // Real-time validation with debouncing
-        control.valueChanges
-          .pipe(
-            takeUntil(this.destroy$),
-            tap(() => {
-              // Clear existing timer
-              if (this.validationDebounceTimer) {
-                clearTimeout(this.validationDebounceTimer);
+    try {
+      // Listen to all form control value changes for smart validation
+      Object.keys(this.authForm.controls).forEach(fieldName => {
+        const control = this.authForm.get(fieldName);
+        if (control) {
+          // Real-time validation with debouncing
+          control.valueChanges
+            .pipe(
+              takeUntil(this.destroy$),
+              tap(() => {
+                try {
+                  // Clear existing timer
+                  if (this.validationDebounceTimer) {
+                    clearTimeout(this.validationDebounceTimer);
+                  }
+                  
+                  // Set new timer for delayed validation
+                  this.validationDebounceTimer = setTimeout(() => {
+                    this.validateFieldRealTime(fieldName);
+                  }, 500); // 500ms delay for real-time validation
+                } catch (error) {
+                  this.errorHandler.captureValidationError(
+                    'validateFieldRealTime',
+                    error,
+                    'AuthFlowComponent',
+                    fieldName
+                  );
+                }
+              })
+            )
+            .subscribe({
+              error: (error) => {
+                this.errorHandler.captureValidationError(
+                  'valueChanges',
+                  error,
+                  'AuthFlowComponent',
+                  fieldName
+                );
               }
-              
-              // Set new timer for delayed validation
-              this.validationDebounceTimer = setTimeout(() => {
-                this.validateFieldRealTime(fieldName);
-              }, 500); // 500ms delay for real-time validation
-            })
-          )
-          .subscribe();
-        
-        // Track focus states for better UX
-        control.statusChanges
-          .pipe(takeUntil(this.destroy$))
-          .subscribe(() => {
-            // Enable validation display after user interaction
-            if (control.dirty || control.touched) {
-              this.showValidationErrors = true;
-            }
-          });
+            });
+          
+          // Track focus states for better UX
+          control.statusChanges
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: () => {
+                try {
+                  // Enable validation display after user interaction
+                  if (control.dirty || control.touched) {
+                    this.showValidationErrors = true;
+                  }
+                } catch (error) {
+                  this.errorHandler.captureValidationError(
+                    'statusChanges',
+                    error,
+                    'AuthFlowComponent',
+                    fieldName
+                  );
+                }
+              },
+              error: (error) => {
+                this.errorHandler.captureValidationError(
+                  'statusChanges',
+                  error,
+                  'AuthFlowComponent',
+                  fieldName
+                );
+              }
+            });
+        }
+      });
+    } catch (error) {
+      this.errorHandler.captureError({
+        type: 'system',
+        severity: 'medium',
+        message: 'Real-time validation initialization failed',
+        component: 'AuthFlowComponent',
+        operation: 'initializeRealTimeValidation',
+        error
+      });
+    }
+  }
+
+  /**
+   * Initialize CSRF protection for secure form submissions
+   */
+  private initializeCsrfProtection(): void {
+    console.debug('[AuthFlowComponent] Initializing CSRF protection');
+    
+    // Initialize CSRF token and handle any initialization errors
+    this.csrfService.getCsrfToken$()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (token) => {
+          if (token) {
+            this.csrfProtectionEnabled = true;
+            this.csrfError = null;
+            console.debug('[AuthFlowComponent] CSRF protection enabled');
+          } else {
+            this.csrfProtectionEnabled = false;
+            this.csrfError = 'CSRF protection initialization failed';
+            console.warn('[AuthFlowComponent] CSRF protection failed to initialize');
+          }
+        },
+        error: (error) => {
+          this.csrfProtectionEnabled = false;
+          this.csrfError = 'CSRF protection error: ' + (error.message || 'Unknown error');
+          console.error('[AuthFlowComponent] CSRF protection error:', error);
+        }
+      });
+
+    // Monitor CSRF token status for proactive error handling
+    this.csrfService.getCsrfToken$()
+      .pipe(
+        takeUntil(this.destroy$),
+        filter(token => !token) // Only when token becomes null
+      )
+      .subscribe(() => {
+        console.warn('[AuthFlowComponent] CSRF token lost - authentication may be required');
+        this.csrfError = 'Security token expired - please refresh';
+      });
+  }
+
+  /**
+   * Validate CSRF protection before form submission
+   */
+  private async validateCsrfProtection(): Promise<boolean> {
+    if (!this.csrfProtectionEnabled) {
+      console.error('[AuthFlowComponent] CSRF protection not enabled');
+      return false;
+    }
+
+    try {
+      const token = await this.csrfService.getCsrfToken();
+      if (!token) {
+        this.csrfError = 'Security validation failed - please refresh';
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('[AuthFlowComponent] CSRF validation failed:', error);
+      this.csrfError = 'Security validation error';
+      return false;
+    }
+  }
+
+  /**
+   * Initialize rate limiting and brute force protection
+   */
+  private initializeRateLimiting(): void {
+    console.debug('[AuthFlowComponent] Initializing rate limiting protection');
+    
+    // Monitor for attack status changes
+    this.currentUser$.pipe(
+      takeUntil(this.destroy$),
+      filter(user => !!user?.email)
+    ).subscribe(user => {
+      if (user?.email) {
+        this.isUnderAttack = this.rateLimitingService.isUnderAttack(user.email);
+        if (this.isUnderAttack) {
+          console.warn('[AuthFlowComponent] Account under attack detected:', user.email);
+        }
       }
     });
   }
-  
+
   /**
-   * Smart real-time field validation with progressive feedback
+   * Check rate limiting for current step and identifier
    */
-  private validateFieldRealTime(fieldName: string): void {
-    const control = this.authForm.get(fieldName);
-    if (!control || !this.fieldFocusStates[fieldName]) {
-      return; // Don't validate if field hasn't been focused
-    }
+  private async checkRateLimiting(
+    identifier: string, 
+    step: AuthSteps
+  ): Promise<{ allowed: boolean; delayMs: number; reason?: string }> {
+    try {
+    // Map auth steps to rate limiting attempt types
+    const attemptTypeMap: Partial<Record<AuthSteps, string | null>> = {
+      [AuthSteps.EMAIL]: 'email_check',
+      [AuthSteps.PASSWORD]: 'password_verify',
+      [AuthSteps.PASSWORD_SETUP]: null, // No rate limiting for setup
+      [AuthSteps.EMAIL_VERIFY]: null, // No rate limiting for email verification
+      [AuthSteps.NAME_SETUP]: null, // No rate limiting for name setup
+      [AuthSteps.PHONE_SETUP]: null, // No rate limiting for phone setup
+      [AuthSteps.PHONE_VERIFY]: 'phone_verify',
+      [AuthSteps.MFA_SETUP]: null, // No rate limiting for MFA setup
+      [AuthSteps.MFA_VERIFY]: 'mfa_verify',
+      [AuthSteps.SIGNIN]: 'password_verify',
+      [AuthSteps.PASSWORD_RESET]: 'password_verify',
+      [AuthSteps.PASSWORD_RESET_VERIFY]: null,
+      [AuthSteps.PASSWORD_RESET_CONFIRM]: 'password_verify',
+      [AuthSteps.COMPLETE]: null
+    };
+
+    const attemptType = attemptTypeMap[step];
     
-    // Only show errors if user has interacted with the field
-    if (control.dirty || control.touched) {
-      // Force validation update
-      control.updateValueAndValidity({ emitEvent: false });
+    // No rate limiting for certain steps
+    if (!attemptType) {
+      return { allowed: true, delayMs: 0 };
+    }
+
+    type AttemptType = 'email_check' | 'password_verify' | 'mfa_verify' | 'phone_verify';
+      return await this.rateLimitingService.isAttemptAllowed(
+        identifier, 
+        attemptType as AttemptType
+      );
+    } catch (error) {
+      const errorId = this.errorHandler.captureSecurityError(
+        'checkRateLimiting',
+        error,
+        'AuthFlowComponent',
+        identifier
+      );
+      
+      console.warn('[AuthFlowComponent] Rate limiting check failed:', errorId);
+      
+      // Fallback to allowing the attempt to avoid blocking legitimate users
+      return { allowed: true, delayMs: 0, reason: 'Rate limiting check failed' };
     }
   }
+
+  /**
+   * Handle rate limit blocked submission
+   */
+  private handleRateLimitBlocked(delayMs: number, reason?: string): void {
+    try {
+      this.rateLimitActive = true;
+      this.rateLimitMessage = reason || 'Too many attempts. Please wait before trying again.';
+      
+      // Calculate remaining time
+      this.nextAttemptAllowedAt = Date.now() + delayMs;
+      
+      // Start countdown timer
+      this.startRateLimitCountdown(delayMs);
+      
+      // Show error to user
+      this.store.dispatch(AuthActions.checkEmailFailure({ 
+        error: this.rateLimitMessage 
+      }));
+      
+      console.warn('[AuthFlowComponent] Rate limit active:', {
+        delayMs,
+        reason,
+        nextAttemptAt: new Date(this.nextAttemptAllowedAt).toLocaleTimeString()
+      });
+    } catch (error) {
+      this.errorHandler.captureSecurityError(
+        'handleRateLimitBlocked',
+        error,
+        'AuthFlowComponent'
+      );
+    }
+  }
+
+  /**
+   * Start countdown timer for rate limit
+   */
+  private startRateLimitCountdown(delayMs: number): void {
+    const endTime = Date.now() + delayMs;
+    
+    const updateCountdown = () => {
+      const now = Date.now();
+      const remaining = endTime - now;
+      
+      if (remaining <= 0) {
+        // Rate limit expired
+        this.rateLimitActive = false;
+        this.rateLimitMessage = null;
+        this.nextAttemptAllowedAt = 0;
+        console.debug('[AuthFlowComponent] Rate limit expired - attempts allowed');
+        return;
+      }
+      
+      // Update remaining time message
+      const seconds = Math.ceil(remaining / 1000);
+      this.rateLimitMessage = `Too many attempts. Try again in ${seconds} seconds.`;
+      
+      // Schedule next update
+      setTimeout(updateCountdown, 1000);
+    };
+    
+    // Start countdown
+    updateCountdown();
+  }
+
+  /**
+   * Record authentication attempt result for rate limiting
+   */
+  private recordAuthAttempt(
+    identifier: string, 
+    step: AuthSteps, 
+    success: boolean
+  ): void {
+    // Map auth steps to rate limiting attempt types
+    const attemptTypeMap: Partial<Record<AuthSteps, string | null>> = {
+      [AuthSteps.EMAIL]: 'email_check',
+      [AuthSteps.PASSWORD]: 'password_verify',
+      [AuthSteps.PASSWORD_SETUP]: null,
+      [AuthSteps.EMAIL_VERIFY]: null,
+      [AuthSteps.NAME_SETUP]: null,
+      [AuthSteps.PHONE_SETUP]: null,
+      [AuthSteps.PHONE_VERIFY]: 'phone_verify',
+      [AuthSteps.MFA_SETUP]: null,
+      [AuthSteps.MFA_VERIFY]: 'mfa_verify',
+      [AuthSteps.SIGNIN]: 'password_verify',
+      [AuthSteps.PASSWORD_RESET]: 'password_verify',
+      [AuthSteps.PASSWORD_RESET_VERIFY]: null,
+      [AuthSteps.PASSWORD_RESET_CONFIRM]: 'password_verify',
+      [AuthSteps.COMPLETE]: null
+    };
+
+    const attemptType = attemptTypeMap[step];
+    
+    if (attemptType) {
+      type AttemptType = 'email_check' | 'password_verify' | 'mfa_verify' | 'phone_verify';
+      this.rateLimitingService.recordAttempt(
+        identifier,
+        attemptType as AttemptType,
+        success,
+        navigator.userAgent
+      );
+      
+      console.debug('[AuthFlowComponent] Recorded auth attempt:', {
+        identifier: identifier.substring(0, 5) + '***', // Partial logging for privacy
+        step,
+        success,
+        attemptType
+      });
+    }
+  }
+  
   
   /**
    * Handle field focus for better validation UX
@@ -913,72 +1828,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     return stepNumber < currentStepNumber;
   }
 
-  /**
-   * Focus the first input of the current step for keyboard users
-   */
-  private focusCurrentStepInput(step: AuthSteps): void {
-    setTimeout(() => {
-      let selector: string;
-      switch (step) {
-        case AuthSteps.EMAIL:
-          selector = '#email-input';
-          break;
-        case AuthSteps.PASSWORD:
-          selector = '#password-input';
-          break;
-        case AuthSteps.PASSWORD_SETUP:
-          selector = '#password-setup-input';
-          break;
-        case AuthSteps.EMAIL_VERIFY:
-          selector = '#email-code-input';
-          break;
-        case AuthSteps.NAME_SETUP:
-          selector = '#first-name-input';
-          break;
-        case AuthSteps.PHONE_SETUP:
-          selector = '#phone-input';
-          break;
-        case AuthSteps.PHONE_VERIFY:
-          selector = '#phone-code-input';
-          break;
-        case AuthSteps.MFA_SETUP:
-          selector = '#mfa-setup-input';
-          break;
-        case AuthSteps.MFA_VERIFY:
-          selector = '#mfa-verify-input';
-          break;
-        default:
-          return;
-      }
-      
-      const element = document.querySelector(selector) as HTMLInputElement;
-      if (element) {
-        element.focus();
-      }
-    }, 100); // Small delay to ensure DOM is updated
-  }
 
-  /**
-   * Announce step changes to screen readers
-   */
-  private announceStepChange(step: AuthSteps): void {
-    const stepTitle = this.getStepLabel(step);
-    const stepNumber = this.getCurrentStepNumber(step);
-    
-    // Create a temporary live region for announcements
-    const announcement = document.createElement('div');
-    announcement.setAttribute('aria-live', 'assertive');
-    announcement.setAttribute('aria-atomic', 'true');
-    announcement.className = 'sr-only';
-    announcement.textContent = `Step ${stepNumber} of 4: ${stepTitle}`;
-    
-    document.body.appendChild(announcement);
-    
-    // Remove the announcement after screen readers have had time to read it
-    setTimeout(() => {
-      document.body.removeChild(announcement);
-    }, 1000);
-  }
 
   /**
    * Load user session data without automatic redirects
@@ -1044,37 +1894,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     });
   }
 
-  /**
-   * Track step history for navigation purposes
-   */
-  private trackStepHistory(step: AuthSteps): void {
-    if (!this.isNavigatingBack) {
-      // Only add to history if we're not navigating back
-      const lastStep = this.stepHistory[this.stepHistory.length - 1];
-      if (lastStep !== step) {
-        this.stepHistory.push(step);
-        
-        // Limit history to prevent memory issues
-        if (this.stepHistory.length > 10) {
-          this.stepHistory.shift();
-        }
-      }
-    }
-  }
 
-  /**
-   * Update browser history with current step
-   */
-  private updateBrowserHistory(step: AuthSteps): void {
-    if (!this.isNavigatingBack) {
-      const url = this.router.url.split('?')[0]; // Remove query params
-      const state = { authStep: step };
-      const title = this.getStepLabel(step);
-      
-      // Push new state to browser history
-      window.history.pushState(state, title, url);
-    }
-  }
 
   /**
    * Navigate back to previous step (if available and safe)
@@ -1191,18 +2011,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     window.history.replaceState({ authStep: AuthSteps.EMAIL }, 'Sign In', url);
   }
 
-  /**
-   * Handle error boundary retry action
-   */
-  public onErrorRetry(): void {
-    // Retry the current form submission
-    if (this.authForm.valid) {
-      this.onSubmit();
-    } else {
-      // If form is invalid, focus the first invalid field
-      this.focusFirstInvalidField();
-    }
-  }
 
   /**
    * Handle error boundary go back action
@@ -1218,18 +2026,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     this.startOver();
   }
 
-  /**
-   * Focus the first invalid field for error recovery
-   */
-  private focusFirstInvalidField(): void {
-    const formElement = document.querySelector('.auth-flow__form');
-    if (formElement) {
-      const firstInvalidField = formElement.querySelector('.auth-flow__input-group-field--error') as HTMLElement;
-      if (firstInvalidField) {
-        firstInvalidField.focus();
-      }
-    }
-  }
 
   /**
    * Clear form errors and reset field states for navigation
@@ -1745,6 +2541,281 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       this.showSuccessMessage = false;
       this.successMessage = '';
     }, duration);
+  }
+
+  /**
+   * Validate field in real-time with enhanced error handling
+   */
+  private validateFieldRealTime(fieldName: string): void {
+    try {
+      const control = this.authForm.get(fieldName);
+      if (!control) return;
+      
+      // Mark field as loading during validation
+      this.validationLoadingStates[fieldName] = true;
+      
+      // Perform validation
+      control.updateValueAndValidity({ emitEvent: false });
+      
+      // Clear loading state
+      setTimeout(() => {
+        this.validationLoadingStates[fieldName] = false;
+      }, 200);
+      
+    } catch (error) {
+      this.errorHandler.captureValidationError(
+        'validateFieldRealTime',
+        error,
+        'AuthFlowComponent',
+        fieldName
+      );
+      
+      // Clear loading state on error
+      this.validationLoadingStates[fieldName] = false;
+    }
+  }
+
+  /**
+   * Track step history for navigation
+   */
+  private trackStepHistory(step: AuthSteps): void {
+    try {
+      if (!this.isNavigatingBack) {
+        // Add to history if not navigating back
+        this.stepHistory.push(step);
+        
+        // Keep history reasonable size
+        if (this.stepHistory.length > 10) {
+          this.stepHistory = this.stepHistory.slice(-10);
+        }
+      } else {
+        this.isNavigatingBack = false;
+      }
+    } catch (error) {
+      this.errorHandler.captureError({
+        type: 'system',
+        severity: 'low',
+        message: 'Step history tracking failed',
+        component: 'AuthFlowComponent',
+        operation: 'trackStepHistory',
+        error
+      });
+    }
+  }
+
+  /**
+   * Update browser history for navigation
+   */
+  private updateBrowserHistory(step: AuthSteps): void {
+    try {
+      // Update URL without navigation to reflect current step
+      const stepUrl = this.getUrlForStep(step);
+      if (stepUrl && stepUrl !== this.router.url) {
+        this.location.replaceState(stepUrl);
+      }
+    } catch (error) {
+      this.errorHandler.captureError({
+        type: 'system',
+        severity: 'low',
+        message: 'Browser history update failed',
+        component: 'AuthFlowComponent',
+        operation: 'updateBrowserHistory',
+        error
+      });
+    }
+  }
+
+  /**
+   * Get URL for auth step
+   */
+  private getUrlForStep(step: AuthSteps): string {
+    const stepUrls: Record<AuthSteps, string> = {
+      [AuthSteps.EMAIL]: '/authenticate',
+      [AuthSteps.PASSWORD]: '/authenticate/password',
+      [AuthSteps.PASSWORD_SETUP]: '/authenticate/setup',
+      [AuthSteps.EMAIL_VERIFY]: '/authenticate/verify-email',
+      [AuthSteps.SIGNIN]: '/authenticate/signin',
+      [AuthSteps.NAME_SETUP]: '/authenticate/name',
+      [AuthSteps.PHONE_SETUP]: '/authenticate/phone',
+      [AuthSteps.PHONE_VERIFY]: '/authenticate/verify-phone',
+      [AuthSteps.MFA_SETUP]: '/authenticate/mfa-setup',
+      [AuthSteps.MFA_VERIFY]: '/authenticate/mfa-verify',
+      [AuthSteps.PASSWORD_RESET]: '/authenticate/reset',
+      [AuthSteps.PASSWORD_RESET_VERIFY]: '/authenticate/reset-verify',
+      [AuthSteps.PASSWORD_RESET_CONFIRM]: '/authenticate/reset-confirm',
+      [AuthSteps.COMPLETE]: '/authenticate/complete'
+    };
+    
+    return stepUrls[step] || '/authenticate';
+  }
+
+  /**
+   * Focus current step input for accessibility
+   */
+  private focusCurrentStepInput(step: AuthSteps): void {
+    try {
+      setTimeout(() => {
+        const focusMap: Record<AuthSteps, string> = {
+          [AuthSteps.EMAIL]: 'email',
+          [AuthSteps.PASSWORD]: 'password',
+          [AuthSteps.PASSWORD_SETUP]: 'password',
+          [AuthSteps.EMAIL_VERIFY]: 'emailCode',
+          [AuthSteps.SIGNIN]: 'password',
+          [AuthSteps.NAME_SETUP]: 'firstName',
+          [AuthSteps.PHONE_SETUP]: 'phoneNumber',
+          [AuthSteps.PHONE_VERIFY]: 'phoneCode',
+          [AuthSteps.MFA_SETUP]: 'submit',
+          [AuthSteps.MFA_VERIFY]: 'mfaCode',
+          [AuthSteps.PASSWORD_RESET]: 'email',
+          [AuthSteps.PASSWORD_RESET_VERIFY]: 'emailCode',
+          [AuthSteps.PASSWORD_RESET_CONFIRM]: 'password',
+          [AuthSteps.COMPLETE]: 'submit'
+        };
+        
+        const fieldToFocus = focusMap[step];
+        if (fieldToFocus && fieldToFocus !== 'submit') {
+          const element = document.querySelector(`[formControlName="${fieldToFocus}"]`) as HTMLElement;
+          if (element) {
+            element.focus();
+          }
+        }
+      }, 100);
+    } catch (error) {
+      this.errorHandler.captureError({
+        type: 'user',
+        severity: 'low',
+        message: 'Focus management failed',
+        component: 'AuthFlowComponent',
+        operation: 'focusCurrentStepInput',
+        error
+      });
+    }
+  }
+
+  /**
+   * Announce step change for screen readers
+   */
+  private announceStepChange(step: AuthSteps): void {
+    try {
+      const announcements: Record<AuthSteps, string> = {
+        [AuthSteps.EMAIL]: 'Email step loaded',
+        [AuthSteps.PASSWORD]: 'Password step loaded',
+        [AuthSteps.PASSWORD_SETUP]: 'Password setup step loaded',
+        [AuthSteps.EMAIL_VERIFY]: 'Email verification step loaded',
+        [AuthSteps.SIGNIN]: 'Sign in step loaded',
+        [AuthSteps.NAME_SETUP]: 'Name setup step loaded',
+        [AuthSteps.PHONE_SETUP]: 'Phone setup step loaded',
+        [AuthSteps.PHONE_VERIFY]: 'Phone verification step loaded',
+        [AuthSteps.MFA_SETUP]: 'MFA setup step loaded',
+        [AuthSteps.MFA_VERIFY]: 'MFA verification step loaded',
+        [AuthSteps.PASSWORD_RESET]: 'Password reset step loaded',
+        [AuthSteps.PASSWORD_RESET_VERIFY]: 'Password reset verification loaded',
+        [AuthSteps.PASSWORD_RESET_CONFIRM]: 'Password reset confirmation loaded',
+        [AuthSteps.COMPLETE]: 'Authentication complete'
+      };
+      
+      const announcement = announcements[step];
+      if (announcement) {
+        // Use ARIA live region for announcement
+        const liveRegion = document.getElementById('auth-step-announcer');
+        if (liveRegion) {
+          liveRegion.textContent = announcement;
+        }
+      }
+    } catch (error) {
+      this.errorHandler.captureError({
+        type: 'user',
+        severity: 'low',
+        message: 'Step announcement failed',
+        component: 'AuthFlowComponent',
+        operation: 'announceStepChange',
+        error
+      });
+    }
+  }
+
+  /**
+   * Go to previous step in authentication flow
+   */
+  public goToPreviousStep(): void {
+    try {
+      if (this.stepHistory.length > 1) {
+        // Remove current step
+        this.stepHistory.pop();
+        
+        // Get previous step
+        const previousStep = this.stepHistory[this.stepHistory.length - 1];
+        
+        // Mark as navigating back
+        this.isNavigatingBack = true;
+        
+        // Dispatch action to change step
+        this.store.dispatch(AuthActions.setCurrentStep({ step: previousStep }));
+      }
+    } catch (error) {
+      this.errorHandler.captureError({
+        type: 'user',
+        severity: 'medium',
+        message: 'Previous step navigation failed',
+        component: 'AuthFlowComponent',
+        operation: 'goToPreviousStep',
+        error,
+        recoverable: true,
+        recoveryActions: ['Refresh page', 'Try again']
+      });
+    }
+  }
+
+  /**
+   * Handle error retry action
+   */
+  public onErrorRetry(): void {
+    try {
+      // Retry the last attempted operation
+      if (this.authForm.valid) {
+        this.onSubmit();
+      } else {
+        // If form is invalid, focus the first invalid field
+        this.focusFirstInvalidField();
+      }
+    } catch (error) {
+      this.errorHandler.captureError({
+        type: 'user',
+        severity: 'medium',
+        message: 'Error retry failed',
+        component: 'AuthFlowComponent',
+        operation: 'onErrorRetry',
+        error
+      });
+    }
+  }
+
+  /**
+   * Focus the first invalid field for accessibility
+   */
+  private focusFirstInvalidField(): void {
+    try {
+      const invalidControl = Object.keys(this.authForm.controls).find(key => {
+        const control = this.authForm.get(key);
+        return control && control.invalid && control.enabled;
+      });
+      
+      if (invalidControl) {
+        const element = document.querySelector(`[formControlName="${invalidControl}"]`) as HTMLElement;
+        if (element) {
+          element.focus();
+        }
+      }
+    } catch (error) {
+      this.errorHandler.captureError({
+        type: 'user',
+        severity: 'low',
+        message: 'Focus invalid field failed',
+        component: 'AuthFlowComponent',
+        operation: 'focusFirstInvalidField',
+        error
+      });
+    }
   }
 
 

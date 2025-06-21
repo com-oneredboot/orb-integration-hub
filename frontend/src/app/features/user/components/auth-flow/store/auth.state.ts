@@ -6,6 +6,7 @@
 // Application Imports
 import { IUsers } from '../../../../../core/models/UsersModel';
 import { UserGroup } from "../../../../../core/models/UserGroupEnum";
+import { environment } from "../../../../../../environments/environment";
 
 export enum AuthSteps {
   EMAIL,
@@ -72,7 +73,7 @@ export interface AuthState {
 }
 
 export const initialState: AuthState = {
-  debugMode: true,
+  debugMode: environment.debugMode, // Use environment-based debug mode configuration
   isAuthenticated: false,
   isLoading: false,
   error: null,
