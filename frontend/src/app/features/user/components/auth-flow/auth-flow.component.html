@@ -84,6 +84,15 @@ description: HTML template file
 
     <main id="main-content" role="main">
       
+      <!-- WCAG 4.1.3 Status Messages - Comprehensive Screen Reader Announcements -->
+      <div aria-live="polite" aria-atomic="true" class="sr-only" role="status">
+        <span *ngIf="isStepTransitioning">{{ loadingMessage }}</span>
+        <span *ngIf="isValidationInProgress()">Validating your information, please wait...</span>
+        <span *ngIf="isFormProcessing()">Processing your authentication request...</span>
+        <span *ngIf="qrCodeLoading">Generating secure authentication code...</span>
+        <span *ngIf="showSuccessMessage">{{ successMessage }}</span>
+      </div>
+      
       <!-- Step Transition Loading Overlay -->
       <div *ngIf="isStepTransitioning" 
            class="auth-flow__step-loading" 

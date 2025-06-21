@@ -91,6 +91,10 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     validation: false
   };
 
+  // Success state for WCAG status messages
+  public showSuccessMessage = false;
+  public successMessage = '';
+
   authForm!: FormGroup;
   authSteps = AuthSteps;
   passwordVisible = false;
@@ -1706,6 +1710,41 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       { type: 'input', class: 'auth-flow__skeleton auth-flow__skeleton--input' },
       { type: 'button', class: 'auth-flow__skeleton auth-flow__skeleton--button' }
     ];
+  }
+
+  /**
+   * WCAG 4.1.3 Status Message Helper Methods for Screen Reader Announcements
+   */
+  
+  /**
+   * Check if any field validation is in progress
+   */
+  public isValidationInProgress(): boolean {
+    return Object.values(this.validationLoadingStates).some(loading => loading);
+  }
+
+  /**
+   * Check if form processing is active
+   */
+  public isFormProcessing(): boolean {
+    // Check if any authentication processing is active
+    let isProcessing = false;
+    this.isLoading$.pipe(take(1)).subscribe(loading => isProcessing = loading);
+    return isProcessing;
+  }
+
+  /**
+   * Announce success message for screen readers
+   */
+  public announceSuccess(message: string, duration: number = 3000): void {
+    this.successMessage = message;
+    this.showSuccessMessage = true;
+    
+    // Clear the message after specified duration
+    setTimeout(() => {
+      this.showSuccessMessage = false;
+      this.successMessage = '';
+    }, duration);
   }
 
 
