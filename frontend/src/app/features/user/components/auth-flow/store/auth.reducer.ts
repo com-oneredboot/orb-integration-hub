@@ -156,8 +156,11 @@ export const authReducer = createReducer(
   on(AuthActions.needsMFASuccess, (state) => ({
     ...state,
     mfaEnabled: true,
-    currentStep: AuthSteps.COMPLETE,
-    isLoading: false
+    isAuthenticated: true,
+    sessionActive: true,
+    isLoading: false,
+    error: null
+    // Note: currentStep will be set by authFlowComplete action
   })),
   on(AuthActions.needsMFAFailure, (state, { error }) => ({
     ...state,
@@ -274,6 +277,20 @@ export const authReducer = createReducer(
     error,
     isLoading: false
   })),
+
+  // Auth Flow Complete
+  on(AuthActions.authFlowComplete, (state, { user }) => {
+    console.log('[AuthReducer] authFlowComplete - Authentication flow completed for user:', user.email);
+    return {
+      ...state,
+      currentStep: AuthSteps.COMPLETE,
+      currentUser: user,
+      isAuthenticated: true,
+      sessionActive: true,
+      isLoading: false,
+      error: null
+    };
+  }),
 
   // Signout
   on(AuthActions.signout, (state) => ({

@@ -82,23 +82,7 @@ export class AuthContainerComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    // Redirect if session is active
-    this.store.select(fromAuth.selectSessionActive)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(active => {
-        if (active) {
-          this.router.navigate(['/dashboard']);
-        }
-      });
-    
-    // Handle auth complete step
-    this.currentStep$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(step => {
-        if (step === AuthSteps.COMPLETE) {
-          this.router.navigate(['/dashboard']);
-        }
-      });
+    // Note: All redirects are handled by auth.effects.ts, not components
   }
 
   ngOnDestroy(): void {

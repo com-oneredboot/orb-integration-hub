@@ -387,8 +387,8 @@
   
   // Debug section
   .dashboard__debug {
-    @include m.debug-container;
     grid-column: 1 / -1; // Full width
+    @include m.debug-container;
   }
 }
 

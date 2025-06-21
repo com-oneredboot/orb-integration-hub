@@ -147,7 +147,12 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     this.currentStep$
       .pipe(takeUntil(this.destroy$))
       .subscribe(step => {
+        console.log('[AuthFlow] Current step changed to:', step, 'AuthSteps.COMPLETE:', AuthSteps.COMPLETE);
         this.updateValidators(step);
+        // Focus management and announcements for accessibility
+        this.focusCurrentStepInput(step);
+        this.announceStepChange(step);
+        // Note: Redirects are handled by auth.effects.ts, not components
       });
 
 
@@ -587,6 +592,153 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       // Use the phone number from the form
       this.store.dispatch(AuthActions.setupPhone({ phoneNumber }));
     }
+  }
+
+  /**
+   * Get current step number for accessibility (5-step consolidated flow)
+   */
+  getCurrentStepNumber(currentStep: AuthSteps | null): number {
+    if (!currentStep) return 1;
+    
+    const step = currentStep as AuthSteps;
+    
+    if (step === AuthSteps.EMAIL || step === AuthSteps.EMAIL_VERIFY) {
+      return 1; // "Email Verification"
+    }
+    if (step === AuthSteps.PASSWORD || step === AuthSteps.PASSWORD_SETUP || step === AuthSteps.NAME_SETUP || step === AuthSteps.SIGNIN) {
+      return 2; // "Password & Account Details"
+    }
+    if (step === AuthSteps.PHONE_SETUP || step === AuthSteps.PHONE_VERIFY) {
+      return 3; // "Phone Verification"
+    }
+    if (step === AuthSteps.MFA_SETUP || step === AuthSteps.MFA_VERIFY) {
+      return 4; // "Two-Factor Authentication"
+    }
+    if (step === AuthSteps.COMPLETE) {
+      return 5; // "Complete"
+    }
+    
+    return 1; // Default fallback
+  }
+
+  /**
+   * Get step label for accessibility (5-step consolidated flow)
+   */
+  getStepLabel(step: AuthSteps | null): string {
+    if (!step) return 'Step';
+    
+    const authStep = step as AuthSteps;
+    
+    if (authStep === AuthSteps.EMAIL || authStep === AuthSteps.EMAIL_VERIFY) {
+      return 'Email Verification';
+    }
+    if (authStep === AuthSteps.PASSWORD || authStep === AuthSteps.PASSWORD_SETUP || authStep === AuthSteps.NAME_SETUP || authStep === AuthSteps.SIGNIN) {
+      return 'Password & Account Details';
+    }
+    if (authStep === AuthSteps.PHONE_SETUP || authStep === AuthSteps.PHONE_VERIFY) {
+      return 'Phone Verification';
+    }
+    if (authStep === AuthSteps.MFA_SETUP || authStep === AuthSteps.MFA_VERIFY) {
+      return 'Two-Factor Authentication';
+    }
+    if (authStep === AuthSteps.COMPLETE) {
+      return 'Complete';
+    }
+    
+    return 'Step';
+  }
+
+  /**
+   * Get progress step label by number for accessibility
+   */
+  getProgressStepLabel(stepNumber: number): string {
+    switch (stepNumber) {
+      case 1: return 'Email Verification';
+      case 2: return 'Password & Account Details';
+      case 3: return 'Phone Verification';
+      case 4: return 'Two-Factor Authentication';
+      case 5: return 'Complete';
+      default: return 'Step';
+    }
+  }
+
+  /**
+   * Check if consolidated step is completed for accessibility
+   */
+  isStepCompleted(step: AuthSteps, currentStep: AuthSteps | null): boolean {
+    if (!currentStep) return false;
+    
+    const stepNumber = this.getCurrentStepNumber(step);
+    const currentStepNumber = this.getCurrentStepNumber(currentStep);
+    
+    return stepNumber < currentStepNumber;
+  }
+
+  /**
+   * Focus the first input of the current step for keyboard users
+   */
+  private focusCurrentStepInput(step: AuthSteps): void {
+    setTimeout(() => {
+      let selector: string;
+      switch (step) {
+        case AuthSteps.EMAIL:
+          selector = '#email-input';
+          break;
+        case AuthSteps.PASSWORD:
+          selector = '#password-input';
+          break;
+        case AuthSteps.PASSWORD_SETUP:
+          selector = '#password-setup-input';
+          break;
+        case AuthSteps.EMAIL_VERIFY:
+          selector = '#email-code-input';
+          break;
+        case AuthSteps.NAME_SETUP:
+          selector = '#first-name-input';
+          break;
+        case AuthSteps.PHONE_SETUP:
+          selector = '#phone-input';
+          break;
+        case AuthSteps.PHONE_VERIFY:
+          selector = '#phone-code-input';
+          break;
+        case AuthSteps.MFA_SETUP:
+          selector = '#mfa-setup-input';
+          break;
+        case AuthSteps.MFA_VERIFY:
+          selector = '#mfa-verify-input';
+          break;
+        default:
+          return;
+      }
+      
+      const element = document.querySelector(selector) as HTMLInputElement;
+      if (element) {
+        element.focus();
+      }
+    }, 100); // Small delay to ensure DOM is updated
+  }
+
+  /**
+   * Announce step changes to screen readers
+   */
+  private announceStepChange(step: AuthSteps): void {
+    const stepTitle = this.getStepLabel(step);
+    const stepNumber = this.getCurrentStepNumber(step);
+    
+    // Create a temporary live region for announcements
+    const announcement = document.createElement('div');
+    announcement.setAttribute('aria-live', 'assertive');
+    announcement.setAttribute('aria-atomic', 'true');
+    announcement.className = 'sr-only';
+    announcement.textContent = `Step ${stepNumber} of 5: ${stepTitle}`;
+    
+    document.body.appendChild(announcement);
+    
+    // Remove the announcement after screen readers have had time to read it
+    setTimeout(() => {
+      document.body.removeChild(announcement);
+    }, 1000);
   }
 
   /**

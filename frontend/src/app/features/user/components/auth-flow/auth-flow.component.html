@@ -5,6 +5,9 @@ date: 2025-03-07
 description: HTML template file
 -->
 
+<!-- Skip link for keyboard users -->
+<a class="auth-flow__skip-link" href="#main-content">Skip to main content</a>
+
 <div class="auth-flow">
   <ng-container *ngIf="{
     currentStep: currentStep$ | async,
@@ -17,47 +20,70 @@ description: HTML template file
     stepTitle: stepTitle$ | async,
   } as state">
 
-    <div class="auth-flow__header">
+    <header class="auth-flow__header" role="banner">
       <img src="../../../../../assets/onredboot-logo.jpg" alt="OneRedBoot Logo" class="auth-flow__header-logo">
-      <h1 class="auth-flow__header-title">{{ state.stepTitle }}</h1>
-    </div>
+      <h1 id="form-title" class="auth-flow__header-title">{{ state.stepTitle }}</h1>
+    </header>
 
-    <div class="auth-flow__progress">
+    <div class="auth-flow__progress" 
+         role="progressbar" 
+         [attr.aria-valuenow]="getCurrentStepNumber(state.currentStep)"
+         aria-valuemin="1" 
+         aria-valuemax="5"
+         [attr.aria-label]="'Registration Progress: Step ' + getCurrentStepNumber(state.currentStep) + ' of 5'">
+      <span class="sr-only">Step {{ getCurrentStepNumber(state.currentStep) }} of 5: {{ getStepLabel(state.currentStep) }}</span>
       <div class="auth-flow__progress-step"
-           *ngFor="let step of [
-             authSteps.EMAIL,
-             authSteps.PASSWORD,
-             authSteps.PASSWORD_SETUP,
-             authSteps.EMAIL_VERIFY,
-             authSteps.PHONE_SETUP,
-             authSteps.PHONE_VERIFY,
-             authSteps.MFA_SETUP,
-             authSteps.MFA_VERIFY
-           ]"
+           *ngFor="let progressStep of [1, 2, 3, 4, 5]; let i = index"
            [ngClass]="{
-             'auth-flow__progress-step--active': state.currentStep === step
-           }">
+             'auth-flow__progress-step--active': getCurrentStepNumber(state.currentStep) === progressStep,
+             'auth-flow__progress-step--completed': getCurrentStepNumber(state.currentStep) > progressStep
+           }"
+           [attr.aria-label]="getProgressStepLabel(progressStep)">
       </div>
     </div>
 
-    <form *ngIf="authForm" [formGroup]="authForm" (ngSubmit)="onSubmit()" class="auth-flow__form">
+    <main id="main-content" role="main">
+      <form *ngIf="authForm" [formGroup]="authForm" (ngSubmit)="onSubmit()" 
+            class="auth-flow__form" 
+            role="form" 
+            aria-labelledby="form-title"
+            novalidate>
       <!-- Error Banner -->
-      <div class="auth-flow__error" *ngIf="state.error">
-        {{ state.error }}
+      <div class="auth-flow__error" 
+           *ngIf="state.error" 
+           role="alert" 
+           aria-live="assertive"
+           tabindex="-1">
+        <span class="sr-only">Error: </span>{{ state.error }}
       </div>
 
       <!-- Email Step -->
       <div class="auth-flow__form-step"
            [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.EMAIL}">
         <div class="auth-flow__input-group">
+          <label for="email-input" class="auth-flow__label">
+            Email Address <span class="auth-flow__required" aria-label="required">*</span>
+          </label>
           <div class="auth-flow__input-group-container">
             <input type="email"
+                   id="email-input"
                    formControlName="email"
                    class="auth-flow__input-group-field"
                    [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('email')}"
-                   placeholder="Email address">
-            <div *ngIf="isFieldInvalid('email')" class="auth-flow__input-error">
-              {{ getErrorMessage('email') }}
+                   placeholder="Enter your email address"
+                   aria-describedby="email-help email-error"
+                   [attr.aria-invalid]="isFieldInvalid('email')"
+                   aria-required="true"
+                   autocomplete="email">
+            <div id="email-help" class="auth-flow__help-text">
+              We'll send a verification code to this email address
+            </div>
+            <div *ngIf="isFieldInvalid('email')" 
+                 id="email-error" 
+                 class="auth-flow__input-error" 
+                 role="alert" 
+                 aria-live="polite">
+              <span class="sr-only">Error: </span>{{ getErrorMessage('email') }}
             </div>
           </div>
         </div>
@@ -67,19 +93,36 @@ description: HTML template file
       <div class="auth-flow__form-step"
            [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.PASSWORD}">
         <div class="auth-flow__input-group">
+          <label for="password-input" class="auth-flow__label">
+            Password <span class="auth-flow__required" aria-label="required">*</span>
+          </label>
           <div class="auth-flow__input-group-container">
             <input [type]="passwordVisible ? 'text' : 'password'"
+                   id="password-input"
                    formControlName="password"
                    class="auth-flow__input-group-field"
                    [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('password')}"
-                   placeholder="Password">
+                   placeholder="Enter your password"
+                   aria-describedby="password-help password-error"
+                   [attr.aria-invalid]="isFieldInvalid('password')"
+                   aria-required="true"
+                   autocomplete="current-password">
             <button type="button"
                     class="auth-flow__input-group-toggle"
-                    (click)="togglePasswordVisibility()">
-              <i class="fa" [class.fa-eye]="!passwordVisible" [class.fa-eye-slash]="passwordVisible"></i>
+                    (click)="togglePasswordVisibility()"
+                    [attr.aria-label]="passwordVisible ? 'Hide password' : 'Show password'"
+                    [attr.aria-pressed]="passwordVisible">
+              <i class="fa" [class.fa-eye]="!passwordVisible" [class.fa-eye-slash]="passwordVisible" aria-hidden="true"></i>
             </button>
-            <div *ngIf="isFieldInvalid('password')" class="auth-flow__input-error">
-              {{ getErrorMessage('password') }}
+            <div id="password-help" class="auth-flow__help-text">
+              Enter the password for your account
+            </div>
+            <div *ngIf="isFieldInvalid('password')" 
+                 id="password-error" 
+                 class="auth-flow__input-error" 
+                 role="alert" 
+                 aria-live="polite">
+              <span class="sr-only">Error: </span>{{ getErrorMessage('password') }}
             </div>
           </div>
         </div>
@@ -89,56 +132,98 @@ description: HTML template file
       <div class="auth-flow__form-step"
            [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.PASSWORD_SETUP}">
         <div class="auth-flow__input-group">
+          <label for="password-setup-input" class="auth-flow__label">
+            Create Password <span class="auth-flow__required" aria-label="required">*</span>
+          </label>
           <div class="auth-flow__input-group-container">
             <input [type]="passwordVisible ? 'text' : 'password'"
+                   id="password-setup-input"
                    formControlName="password"
                    class="auth-flow__input-group-field"
                    [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('password')}"
-                   placeholder="Create Password">
+                   placeholder="Create a strong password"
+                   aria-describedby="password-setup-help password-requirements"
+                   [attr.aria-invalid]="isFieldInvalid('password')"
+                   aria-required="true"
+                   autocomplete="new-password">
             <button type="button"
                     class="auth-flow__input-group-toggle"
-                    (click)="togglePasswordVisibility()">
-              <i class="fa" [class.fa-eye]="!passwordVisible" [class.fa-eye-slash]="passwordVisible"></i>
+                    (click)="togglePasswordVisibility()"
+                    [attr.aria-label]="passwordVisible ? 'Hide password' : 'Show password'"
+                    [attr.aria-pressed]="passwordVisible">
+              <i class="fa" [class.fa-eye]="!passwordVisible" [class.fa-eye-slash]="passwordVisible" aria-hidden="true"></i>
             </button>
+          </div>
+          
+          <div id="password-setup-help" class="auth-flow__help-text">
+            Create a strong password that meets all the requirements below
           </div>
 
           <!-- Password Requirements Checklist -->
-          <div class="auth-flow__password-requirements">
-            <div class="auth-flow__requirement"
-                 [ngClass]="{'auth-flow__requirement--valid': passwordValidations.minLength}">
-              <i class="fa fa-times auth-flow__requirement-icon"
-                 [class.fa-times]="!passwordValidations.minLength"
-                 [class.fa-check]="passwordValidations.minLength"></i>
-              <span>At least 8 characters</span>
-            </div>
-            <div class="auth-flow__requirement"
-                 [ngClass]="{'auth-flow__requirement--valid': passwordValidations.hasUppercase}">
-              <i class="fa fa-times auth-flow__requirement-icon"
-                 [class.fa-times]="!passwordValidations.hasUppercase"
-                 [class.fa-check]="passwordValidations.hasUppercase"></i>
-              <span>One uppercase letter</span>
-            </div>
-            <div class="auth-flow__requirement"
-                 [ngClass]="{'auth-flow__requirement--valid': passwordValidations.hasLowercase}">
-              <i class="fa fa-times auth-flow__requirement-icon"
-                 [class.fa-times]="!passwordValidations.hasLowercase"
-                 [class.fa-check]="passwordValidations.hasLowercase"></i>
-              <span>One lowercase letter</span>
-            </div>
-            <div class="auth-flow__requirement"
-                 [ngClass]="{'auth-flow__requirement--valid': passwordValidations.hasNumber}">
-              <i class="fa fa-times auth-flow__requirement-icon"
-                 [class.fa-times]="!passwordValidations.hasNumber"
-                 [class.fa-check]="passwordValidations.hasNumber"></i>
-              <span>One number</span>
-            </div>
-            <div class="auth-flow__requirement"
-                 [ngClass]="{'auth-flow__requirement--valid': passwordValidations.hasSpecial}">
-              <i class="fa fa-times auth-flow__requirement-icon"
-                 [class.fa-times]="!passwordValidations.hasSpecial"
-                 [class.fa-check]="passwordValidations.hasSpecial"></i>
-              <span>One special character (!&#64;#$%^&*)</span>
-            </div>
+          <div id="password-requirements" 
+               class="auth-flow__password-requirements" 
+               role="group" 
+               aria-labelledby="password-requirements-title">
+            <h3 id="password-requirements-title" class="auth-flow__requirements-title">
+              Password Requirements
+            </h3>
+            <ul class="auth-flow__requirements-list" role="list">
+              <li class="auth-flow__requirement"
+                  [ngClass]="{'auth-flow__requirement--valid': passwordValidations.minLength}"
+                  role="listitem">
+                <i class="fa auth-flow__requirement-icon"
+                   [class.fa-times]="!passwordValidations.minLength"
+                   [class.fa-check]="passwordValidations.minLength"
+                   [attr.aria-label]="passwordValidations.minLength ? 'Requirement met' : 'Requirement not met'"
+                   aria-hidden="true"></i>
+                <span>At least 8 characters</span>
+                <span class="sr-only">{{ passwordValidations.minLength ? 'met' : 'not met' }}</span>
+              </li>
+              <li class="auth-flow__requirement"
+                  [ngClass]="{'auth-flow__requirement--valid': passwordValidations.hasUppercase}"
+                  role="listitem">
+                <i class="fa auth-flow__requirement-icon"
+                   [class.fa-times]="!passwordValidations.hasUppercase"
+                   [class.fa-check]="passwordValidations.hasUppercase"
+                   [attr.aria-label]="passwordValidations.hasUppercase ? 'Requirement met' : 'Requirement not met'"
+                   aria-hidden="true"></i>
+                <span>One uppercase letter</span>
+                <span class="sr-only">{{ passwordValidations.hasUppercase ? 'met' : 'not met' }}</span>
+              </li>
+              <li class="auth-flow__requirement"
+                  [ngClass]="{'auth-flow__requirement--valid': passwordValidations.hasLowercase}"
+                  role="listitem">
+                <i class="fa auth-flow__requirement-icon"
+                   [class.fa-times]="!passwordValidations.hasLowercase"
+                   [class.fa-check]="passwordValidations.hasLowercase"
+                   [attr.aria-label]="passwordValidations.hasLowercase ? 'Requirement met' : 'Requirement not met'"
+                   aria-hidden="true"></i>
+                <span>One lowercase letter</span>
+                <span class="sr-only">{{ passwordValidations.hasLowercase ? 'met' : 'not met' }}</span>
+              </li>
+              <li class="auth-flow__requirement"
+                  [ngClass]="{'auth-flow__requirement--valid': passwordValidations.hasNumber}"
+                  role="listitem">
+                <i class="fa auth-flow__requirement-icon"
+                   [class.fa-times]="!passwordValidations.hasNumber"
+                   [class.fa-check]="passwordValidations.hasNumber"
+                   [attr.aria-label]="passwordValidations.hasNumber ? 'Requirement met' : 'Requirement not met'"
+                   aria-hidden="true"></i>
+                <span>One number</span>
+                <span class="sr-only">{{ passwordValidations.hasNumber ? 'met' : 'not met' }}</span>
+              </li>
+              <li class="auth-flow__requirement"
+                  [ngClass]="{'auth-flow__requirement--valid': passwordValidations.hasSpecial}"
+                  role="listitem">
+                <i class="fa auth-flow__requirement-icon"
+                   [class.fa-times]="!passwordValidations.hasSpecial"
+                   [class.fa-check]="passwordValidations.hasSpecial"
+                   [attr.aria-label]="passwordValidations.hasSpecial ? 'Requirement met' : 'Requirement not met'"
+                   aria-hidden="true"></i>
+                <span>One special character (!&#64;#$%^&*)</span>
+                <span class="sr-only">{{ passwordValidations.hasSpecial ? 'met' : 'not met' }}</span>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
@@ -147,13 +232,32 @@ description: HTML template file
       <div class="auth-flow__form-step"
            [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.EMAIL_VERIFY}">
         <div class="auth-flow__input-group">
-          <input type="text"
-                 formControlName="emailCode"
-                 class="auth-flow__input-group-field"
-                 [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('emailCode')}"
-                 placeholder="Enter 6-digit code">
-          <div *ngIf="isFieldInvalid('emailCode')" class="auth-flow__input-error">
-            {{ getErrorMessage('emailCode') }}
+          <label for="email-code-input" class="auth-flow__label">
+            Email Verification Code <span class="auth-flow__required" aria-label="required">*</span>
+          </label>
+          <div class="auth-flow__input-group-container">
+            <input type="text"
+                   id="email-code-input"
+                   formControlName="emailCode"
+                   class="auth-flow__input-group-field"
+                   [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('emailCode')}"
+                   placeholder="Enter 6-digit verification code"
+                   aria-describedby="email-code-help email-code-error"
+                   [attr.aria-invalid]="isFieldInvalid('emailCode')"
+                   aria-required="true"
+                   inputmode="numeric"
+                   pattern="[0-9]{6}"
+                   maxlength="6">
+            <div id="email-code-help" class="auth-flow__help-text">
+              Enter the 6-digit verification code sent to your email address
+            </div>
+            <div *ngIf="isFieldInvalid('emailCode')" 
+                 id="email-code-error" 
+                 class="auth-flow__input-error" 
+                 role="alert" 
+                 aria-live="polite">
+              <span class="sr-only">Error: </span>{{ getErrorMessage('emailCode') }}
+            </div>
           </div>
         </div>
       </div>
@@ -162,38 +266,89 @@ description: HTML template file
       <div class="auth-flow__form-step"
            [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.NAME_SETUP}">
         <div class="auth-flow__input-group">
+          <label for="first-name-input" class="auth-flow__label">
+            First Name <span class="auth-flow__required" aria-label="required">*</span>
+          </label>
+          <div class="auth-flow__input-group-container">
             <input type="text"
+                   id="first-name-input"
                    formControlName="firstName"
                    class="auth-flow__input-group-field"
                    [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('firstName')}"
-                   placeholder="First Name">
-            <div *ngIf="isFieldInvalid('firstName')" class="auth-flow__input-error">
-              {{ getErrorMessage('firstName') }}
+                   placeholder="Enter your first name"
+                   aria-describedby="first-name-help first-name-error"
+                   [attr.aria-invalid]="isFieldInvalid('firstName')"
+                   aria-required="true"
+                   autocomplete="given-name">
+            <div id="first-name-help" class="auth-flow__help-text">
+              Enter your legal first name as it appears on your ID
+            </div>
+            <div *ngIf="isFieldInvalid('firstName')" 
+                 id="first-name-error" 
+                 class="auth-flow__input-error" 
+                 role="alert" 
+                 aria-live="polite">
+              <span class="sr-only">Error: </span>{{ getErrorMessage('firstName') }}
             </div>
           </div>
-          <div class="auth-flow__input-group">
+        </div>
+        <div class="auth-flow__input-group">
+          <label for="last-name-input" class="auth-flow__label">
+            Last Name <span class="auth-flow__required" aria-label="required">*</span>
+          </label>
+          <div class="auth-flow__input-group-container">
             <input type="text"
+                   id="last-name-input"
                    formControlName="lastName"
                    class="auth-flow__input-group-field"
                    [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('lastName')}"
-                   placeholder="Last Name">
-            <div *ngIf="isFieldInvalid('lastName')" class="auth-flow__input-error">
-              {{ getErrorMessage('lastName') }}
+                   placeholder="Enter your last name"
+                   aria-describedby="last-name-help last-name-error"
+                   [attr.aria-invalid]="isFieldInvalid('lastName')"
+                   aria-required="true"
+                   autocomplete="family-name">
+            <div id="last-name-help" class="auth-flow__help-text">
+              Enter your legal last name as it appears on your ID
+            </div>
+            <div *ngIf="isFieldInvalid('lastName')" 
+                 id="last-name-error" 
+                 class="auth-flow__input-error" 
+                 role="alert" 
+                 aria-live="polite">
+              <span class="sr-only">Error: </span>{{ getErrorMessage('lastName') }}
             </div>
           </div>
+        </div>
       </div>
 
       <!-- Phone Setup Step -->
       <div class="auth-flow__form-step"
            [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.PHONE_SETUP}">
         <div class="auth-flow__input-group">
-          <input type="tel"
-                 formControlName="phoneNumber"
-                 class="auth-flow__input-group-field"
-                 [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('phoneNumber')}"
-                 placeholder="Phone Number">
-          <div *ngIf="isFieldInvalid('phoneNumber')" class="auth-flow__input-error">
-            {{ getErrorMessage('phoneNumber') }}
+          <label for="phone-input" class="auth-flow__label">
+            Phone Number <span class="auth-flow__required" aria-label="required">*</span>
+          </label>
+          <div class="auth-flow__input-group-container">
+            <input type="tel"
+                   id="phone-input"
+                   formControlName="phoneNumber"
+                   class="auth-flow__input-group-field"
+                   [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('phoneNumber')}"
+                   placeholder="+1 (555) 123-4567"
+                   aria-describedby="phone-help phone-error"
+                   [attr.aria-invalid]="isFieldInvalid('phoneNumber')"
+                   aria-required="true"
+                   autocomplete="tel">
+            <div id="phone-help" class="auth-flow__help-text">
+              Enter your phone number with country code (e.g., +1 for US)
+            </div>
+            <div *ngIf="isFieldInvalid('phoneNumber')" 
+                 id="phone-error" 
+                 class="auth-flow__input-error" 
+                 role="alert" 
+                 aria-live="polite">
+              <span class="sr-only">Error: </span>{{ getErrorMessage('phoneNumber') }}
+            </div>
           </div>
         </div>
       </div>
@@ -201,52 +356,110 @@ description: HTML template file
       <!-- Phone Verify Step -->
       <div class="auth-flow__form-step"
            [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.PHONE_VERIFY}">
-        <div class="auth-flow__verification-info">
+        <div class="auth-flow__verification-info" role="status" aria-live="polite">
           <p>A verification code has been sent to your phone number.</p>
           <p>Please enter the 6-digit code below to verify your phone.</p>
         </div>
         <div class="auth-flow__input-group">
-          <input type="text"
-                 formControlName="phoneCode"
-                 class="auth-flow__input-group-field"
-                 [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('phoneCode')}"
-                 placeholder="Verification Code">
-          <div *ngIf="isFieldInvalid('phoneCode')" class="auth-flow__input-error">
-            {{ getErrorMessage('verificationCode') }}
+          <label for="phone-code-input" class="auth-flow__label">
+            Phone Verification Code <span class="auth-flow__required" aria-label="required">*</span>
+          </label>
+          <div class="auth-flow__input-group-container">
+            <input type="text"
+                   id="phone-code-input"
+                   formControlName="phoneCode"
+                   class="auth-flow__input-group-field"
+                   [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('phoneCode')}"
+                   placeholder="Enter 6-digit verification code"
+                   aria-describedby="phone-code-help phone-code-error"
+                   [attr.aria-invalid]="isFieldInvalid('phoneCode')"
+                   aria-required="true"
+                   inputmode="numeric"
+                   pattern="[0-9]{6}"
+                   maxlength="6">
+            <div id="phone-code-help" class="auth-flow__help-text">
+              Enter the 6-digit verification code sent to your phone via SMS
+            </div>
+            <div *ngIf="isFieldInvalid('phoneCode')" 
+                 id="phone-code-error" 
+                 class="auth-flow__input-error" 
+                 role="alert" 
+                 aria-live="polite">
+              <span class="sr-only">Error: </span>{{ getErrorMessage('phoneCode') }}
+            </div>
           </div>
         </div>
         <div class="auth-flow__resend-code">
-          <button type="button" class="auth-flow__text-button" (click)="resendVerificationCode()">
+          <button type="button" 
+                  class="auth-flow__text-button" 
+                  (click)="resendVerificationCode()"
+                  aria-describedby="resend-help">
             Didn't receive a code? Send again
           </button>
+          <div id="resend-help" class="auth-flow__help-text sr-only">
+            Click to resend the verification code to your phone number
+          </div>
         </div>
       </div>
 
       <!-- MFA Setup Step -->
       <div class="auth-flow__form-step"
            [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.MFA_SETUP}">
-        <div class="auth-flow__mfa-options" *ngIf="state.mfaSetupDetails">
-          <div class="auth-flow__instructions">
+        <div class="auth-flow__mfa-options" *ngIf="state.mfaSetupDetails" role="region" aria-labelledby="mfa-setup-title">
+          <h2 id="mfa-setup-title" class="auth-flow__mfa-title">Set Up Two-Factor Authentication</h2>
+          <div class="auth-flow__instructions" role="status" aria-live="polite">
             <p>Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)</p>
             <p>This will be registered using your email address in your authenticator app.</p>
           </div>
-          <div class="auth-flow__qr-container" *ngIf="qrCodeDataUrl">
-            <img [src]="qrCodeDataUrl" alt="MFA QR Code" class="qr-code">
+          <div class="auth-flow__qr-container" *ngIf="qrCodeDataUrl" role="img" aria-labelledby="qr-description">
+            <img [src]="qrCodeDataUrl" 
+                 alt="QR code for setting up two-factor authentication. Contains setup information for your authenticator app." 
+                 class="qr-code"
+                 aria-describedby="qr-help">
+            <div id="qr-description" class="sr-only">
+              QR code containing setup information for two-factor authentication
+            </div>
+            <div id="qr-help" class="auth-flow__help-text">
+              Use your authenticator app to scan this QR code
+            </div>
           </div>
-          <div class="auth-flow__secret-key" *ngIf="state.mfaSetupDetails.secretKey">
-            <p class="secret-key">Secret Key: {{ state.mfaSetupDetails.secretKey }}</p>
-            <p class="instructions">
+          <div class="auth-flow__secret-key" *ngIf="state.mfaSetupDetails.secretKey" role="region" aria-labelledby="secret-key-title">
+            <h3 id="secret-key-title" class="auth-flow__secret-title">Manual Setup</h3>
+            <div class="secret-key" role="text" aria-labelledby="secret-key-label">
+              <label id="secret-key-label" for="secret-key-text">Secret Key:</label>
+              <span id="secret-key-text" aria-describedby="secret-key-instructions">{{ state.mfaSetupDetails.secretKey }}</span>
+            </div>
+            <p id="secret-key-instructions" class="instructions">
               Enter this secret key into your authenticator app if you cannot scan the QR code.
             </p>
           </div>
           <div class="auth-flow__input-group">
-            <input type="text"
-                   formControlName="mfaCode"
-                   class="auth-flow__input-group-field"
-                   [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('mfaCode')}"
-                   placeholder="Enter 6-digit code">
-            <div *ngIf="isFieldInvalid('mfaCode')" class="auth-flow__input-error">
-              {{ getErrorMessage('mfaCode') }}
+            <label for="mfa-setup-input" class="auth-flow__label">
+              Authenticator Code <span class="auth-flow__required" aria-label="required">*</span>
+            </label>
+            <div class="auth-flow__input-group-container">
+              <input type="text"
+                     id="mfa-setup-input"
+                     formControlName="mfaCode"
+                     class="auth-flow__input-group-field"
+                     [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('mfaCode')}"
+                     placeholder="Enter 6-digit code from app"
+                     aria-describedby="mfa-setup-help mfa-setup-error"
+                     [attr.aria-invalid]="isFieldInvalid('mfaCode')"
+                     aria-required="true"
+                     inputmode="numeric"
+                     pattern="[0-9]{6}"
+                     maxlength="6">
+              <div id="mfa-setup-help" class="auth-flow__help-text">
+                Enter the 6-digit code from your authenticator app to complete setup
+              </div>
+              <div *ngIf="isFieldInvalid('mfaCode')" 
+                   id="mfa-setup-error" 
+                   class="auth-flow__input-error" 
+                   role="alert" 
+                   aria-live="polite">
+                <span class="sr-only">Error: </span>{{ getErrorMessage('mfaCode') }}
+              </div>
             </div>
           </div>
         </div>
@@ -255,14 +468,36 @@ description: HTML template file
       <!-- MFA Verification Step -->
       <div class="auth-flow__form-step"
            [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.MFA_VERIFY}">
+        <div class="auth-flow__verification-info" role="status" aria-live="polite">
+          <p>Please enter the 6-digit code from your authenticator app to complete sign in.</p>
+        </div>
         <div class="auth-flow__input-group">
-          <input type="text"
-                 formControlName="mfaCode"
-                 class="auth-flow__input-group-field"
-                 [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('mfaCode')}"
-                 placeholder="Enter 6-digit code">
-          <div *ngIf="isFieldInvalid('mfaCode')" class="auth-flow__input-error">
-            {{ getErrorMessage('mfaCode') }}
+          <label for="mfa-verify-input" class="auth-flow__label">
+            Authenticator Code <span class="auth-flow__required" aria-label="required">*</span>
+          </label>
+          <div class="auth-flow__input-group-container">
+            <input type="text"
+                   id="mfa-verify-input"
+                   formControlName="mfaCode"
+                   class="auth-flow__input-group-field"
+                   [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('mfaCode')}"
+                   placeholder="Enter 6-digit code from app"
+                   aria-describedby="mfa-verify-help mfa-verify-error"
+                   [attr.aria-invalid]="isFieldInvalid('mfaCode')"
+                   aria-required="true"
+                   inputmode="numeric"
+                   pattern="[0-9]{6}"
+                   maxlength="6">
+            <div id="mfa-verify-help" class="auth-flow__help-text">
+              Enter the current 6-digit code from your authenticator app
+            </div>
+            <div *ngIf="isFieldInvalid('mfaCode')" 
+                 id="mfa-verify-error" 
+                 class="auth-flow__input-error" 
+                 role="alert" 
+                 aria-live="polite">
+              <span class="sr-only">Error: </span>{{ getErrorMessage('mfaCode') }}
+            </div>
           </div>
         </div>
       </div>
@@ -271,11 +506,23 @@ description: HTML template file
       <button type="submit"
               class="auth-flow__button"
               [disabled]="!authForm.valid || state.isLoading"
-              [ngClass]="{'auth-flow__button--loading': state.isLoading}">
+              [ngClass]="{'auth-flow__button--loading': state.isLoading}"
+              [attr.aria-label]="state.isLoading ? 'Processing, please wait' : state.buttonText"
+              [attr.aria-describedby]="state.isLoading ? 'loading-status' : null">
         {{ state.buttonText }}
-        <div class="auth-flow__button-loader" *ngIf="state.isLoading"></div>
+        <div class="auth-flow__button-loader" 
+             *ngIf="state.isLoading" 
+             role="status" 
+             aria-hidden="true"></div>
+        <span id="loading-status" 
+              class="sr-only" 
+              *ngIf="state.isLoading" 
+              aria-live="polite">
+          Processing your request, please wait
+        </span>
       </button>
     </form>
+    </main>
   </ng-container>
 </div>
 

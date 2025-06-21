@@ -538,19 +538,19 @@ export class AuthEffects {
     )
   );
 
-  // Auto-trigger signIn after successful MFA verification to load user data into store
-  autoSignInAfterMFA$ = createEffect(() =>
+  // Handle MFA verification success - complete the auth flow
+  handleMFASuccess$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.needsMFASuccess),
-      withLatestFrom(this.store.select(fromAuth.selectCurrentEmail)),
-      switchMap(([, email]) => {
-        if (email) {
-          return of(AuthActions.signIn({ 
-            email, 
-            password: '' // Password already verified, we just need to complete the sign-in and load user data
-          }));
+      withLatestFrom(this.store.select(fromAuth.selectCurrentUser)),
+      map(([, currentUser]) => {
+        if (!currentUser) {
+          console.error('[AuthEffects] MFA success but no current user available');
+          return AuthActions.needsMFAFailure({ error: 'User data not available' });
         }
-        return EMPTY; // No action needed if no email available
+        
+        console.log('[AuthEffects] MFA verification successful, completing auth flow for user:', currentUser.email);
+        return AuthActions.authFlowComplete({ user: currentUser });
       })
     )
   );
