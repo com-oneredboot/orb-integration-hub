@@ -420,6 +420,25 @@
 
       &--error {
         border-color: v.$danger-color;
+        animation: shake 0.5s ease-in-out;
+      }
+      
+      &--valid {
+        border-color: v.$success-color;
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23059669"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>');
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 16px 16px;
+        padding-right: 40px;
+      }
+      
+      &--pending {
+        border-color: v.$primary-color;
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%233B82F6"><circle cx="12" cy="12" r="3"><animate attributeName="r" values="3;5;3" dur="1s" repeatCount="indefinite"/></circle></svg>');
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 16px 16px;
+        padding-right: 40px;
       }
 
       // Add padding for password input
@@ -471,9 +490,48 @@
   }
 
   &__input-error {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-xs;
     font-size: v.$font-size-sm;
     color: v.$danger-color;
     margin-top: v.$spacing-xs;
+    padding: v.$spacing-xs v.$spacing-sm;
+    background-color: rgba(v.$danger-color, 0.05);
+    border-radius: v.$border-radius-sm;
+    border-left: 3px solid v.$danger-color;
+    animation: slideDown 0.3s ease-out;
+  }
+  
+  &__validation-status {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+    font-size: v.$font-size-sm;
+    margin-top: v.$spacing-xs;
+    padding: v.$spacing-xs v.$spacing-sm;
+    border-radius: v.$border-radius-sm;
+    animation: slideDown 0.3s ease-out;
+    
+    &--valid {
+      color: v.$success-color;
+      background-color: rgba(v.$success-color, 0.05);
+      border-left: 3px solid v.$success-color;
+    }
+    
+    &--pending {
+      color: v.$primary-color;
+      background-color: rgba(v.$primary-color, 0.05);
+      border-left: 3px solid v.$primary-color;
+    }
+  }
+  
+  &__validation-icon,
+  &__error-icon {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    font-size: v.$font-size-xs;
   }
 
   &__error {
@@ -626,6 +684,23 @@
   }
 }
 
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 // Accessibility: Reduced motion preference
 @media (prefers-reduced-motion: reduce) {
   .auth-flow {
@@ -633,7 +708,9 @@
     &__progress-bar-fill,
     &__button,
     &__input-group-field,
-    &__input-group-toggle {
+    &__input-group-toggle,
+    &__input-error,
+    &__validation-status {
       transition: none;
       animation: none;
     }

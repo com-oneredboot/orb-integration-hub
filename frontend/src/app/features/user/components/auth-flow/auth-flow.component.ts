@@ -63,6 +63,11 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   // UI State
   buttonText$!: Observable<string>;
   stepTitle$!: Observable<string>;
+  
+  // Real-time validation state
+  public showValidationErrors = false;
+  private validationDebounceTimer: any;
+  public fieldFocusStates: { [key: string]: boolean } = {};
 
   authForm!: FormGroup;
   authSteps = AuthSteps;
@@ -135,6 +140,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
 
     this.initializeForm();
     this.initializeUIState();
+    this.initializeRealTimeValidation();
   }
 
   ngOnInit(): void {
@@ -196,6 +202,9 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
 
 
   ngOnDestroy(): void {
+    if (this.validationDebounceTimer) {
+      clearTimeout(this.validationDebounceTimer);
+    }
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -574,6 +583,194 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       hasNumber: false,
       hasSpecial: false
     };
+  }
+  
+  /**
+   * Initialize real-time validation with smart error display
+   */
+  private initializeRealTimeValidation(): void {
+    // Listen to all form control value changes for smart validation
+    Object.keys(this.authForm.controls).forEach(fieldName => {
+      const control = this.authForm.get(fieldName);
+      if (control) {
+        // Real-time validation with debouncing
+        control.valueChanges
+          .pipe(
+            takeUntil(this.destroy$),
+            tap(() => {
+              // Clear existing timer
+              if (this.validationDebounceTimer) {
+                clearTimeout(this.validationDebounceTimer);
+              }
+              
+              // Set new timer for delayed validation
+              this.validationDebounceTimer = setTimeout(() => {
+                this.validateFieldRealTime(fieldName);
+              }, 500); // 500ms delay for real-time validation
+            })
+          )
+          .subscribe();
+        
+        // Track focus states for better UX
+        control.statusChanges
+          .pipe(takeUntil(this.destroy$))
+          .subscribe(() => {
+            // Enable validation display after user interaction
+            if (control.dirty || control.touched) {
+              this.showValidationErrors = true;
+            }
+          });
+      }
+    });
+  }
+  
+  /**
+   * Smart real-time field validation with progressive feedback
+   */
+  private validateFieldRealTime(fieldName: string): void {
+    const control = this.authForm.get(fieldName);
+    if (!control || !this.fieldFocusStates[fieldName]) {
+      return; // Don't validate if field hasn't been focused
+    }
+    
+    // Only show errors if user has interacted with the field
+    if (control.dirty || control.touched) {
+      // Force validation update
+      control.updateValueAndValidity({ emitEvent: false });
+    }
+  }
+  
+  /**
+   * Handle field focus for better validation UX
+   */
+  public onFieldFocus(fieldName: string): void {
+    this.fieldFocusStates[fieldName] = true;
+    
+    // Clear field errors on focus to reduce visual noise
+    const control = this.authForm.get(fieldName);
+    if (control && control.errors) {
+      // Temporarily hide errors while user is typing
+      this.clearFieldError(fieldName);
+    }
+  }
+  
+  /**
+   * Handle field blur for validation timing
+   */
+  public onFieldBlur(fieldName: string): void {
+    const control = this.authForm.get(fieldName);
+    if (control) {
+      // Mark as touched and validate on blur
+      control.markAsTouched();
+      control.updateValueAndValidity({ emitEvent: true });
+      this.showValidationErrors = true;
+    }
+  }
+  
+  /**
+   * Clear validation error for specific field temporarily
+   */
+  private clearFieldError(fieldName: string): void {
+    const control = this.authForm.get(fieldName);
+    if (control) {
+      // Store original errors
+      const originalErrors = control.errors;
+      
+      // Clear errors temporarily
+      control.setErrors(null);
+      
+      // Restore errors after a short delay if field is still invalid
+      setTimeout(() => {
+        if (control.dirty && originalErrors) {
+          control.setErrors(originalErrors);
+        }
+      }, 1000);
+    }
+  }
+  
+  /**
+   * Check if field should show validation errors
+   */
+  public shouldShowFieldError(fieldName: string): boolean {
+    const control = this.authForm.get(fieldName);
+    if (!control) return false;
+    
+    // Show errors only after user interaction and validation is enabled
+    return this.showValidationErrors && 
+           control.invalid && 
+           (control.dirty || control.touched) &&
+           this.fieldFocusStates[fieldName];
+  }
+  
+  /**
+   * Get validation status for progressive feedback
+   */
+  public getFieldValidationStatus(fieldName: string): 'valid' | 'invalid' | 'pending' | 'none' {
+    const control = this.authForm.get(fieldName);
+    if (!control) return 'none';
+    
+    // Don't show status until user has interacted
+    if (!this.fieldFocusStates[fieldName] || (!control.dirty && !control.touched)) {
+      return 'none';
+    }
+    
+    if (control.pending) return 'pending';
+    if (control.valid && control.value) return 'valid';
+    if (control.invalid && (control.dirty || control.touched)) return 'invalid';
+    
+    return 'none';
+  }
+  
+  /**
+   * Enhanced form validation with better user feedback
+   */
+  public validateFormStep(): { valid: boolean; errors: string[] } {
+    const errors: string[] = [];
+    
+    this.currentStep$
+      .pipe(take(1))
+      .subscribe(step => {
+        const requiredFields = this.getRequiredFieldsForStep(step);
+        
+        requiredFields.forEach(fieldName => {
+          const control = this.authForm.get(fieldName);
+          if (control && control.invalid) {
+            const errorMessage = this.getErrorMessage(fieldName);
+            if (errorMessage) {
+              errors.push(`${fieldName}: ${errorMessage}`);
+            }
+          }
+        });
+      });
+    
+    return {
+      valid: errors.length === 0,
+      errors
+    };
+  }
+  
+  /**
+   * Get required fields for current step
+   */
+  private getRequiredFieldsForStep(step: AuthSteps): string[] {
+    switch (step) {
+      case AuthSteps.EMAIL:
+        return ['email'];
+      case AuthSteps.PASSWORD:
+        return ['password'];
+      case AuthSteps.PASSWORD_SETUP:
+        return ['password', 'firstName', 'lastName'];
+      case AuthSteps.EMAIL_VERIFY:
+        return ['emailCode'];
+      case AuthSteps.PHONE_SETUP:
+        return ['phoneNumber'];
+      case AuthSteps.PHONE_VERIFY:
+        return ['phoneCode'];
+      case AuthSteps.MFA_VERIFY:
+        return ['mfaCode'];
+      default:
+        return [];
+    }
   }
   
   

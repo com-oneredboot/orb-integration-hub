@@ -117,17 +117,43 @@ description: HTML template file
                    id="email-input"
                    formControlName="email"
                    class="auth-flow__input-group-field"
-                   [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('email')}"
+                   [ngClass]="{
+                     'auth-flow__input-group-field--error': shouldShowFieldError('email'),
+                     'auth-flow__input-group-field--valid': getFieldValidationStatus('email') === 'valid',
+                     'auth-flow__input-group-field--pending': getFieldValidationStatus('email') === 'pending'
+                   }"
                    placeholder="Enter your email address"
-                   aria-describedby="email-error"
-                   [attr.aria-invalid]="isFieldInvalid('email')"
+                   aria-describedby="email-error email-status"
+                   [attr.aria-invalid]="shouldShowFieldError('email')"
                    aria-required="true"
-                   autocomplete="email">
-            <div *ngIf="isFieldInvalid('email')" 
+                   autocomplete="email"
+                   (focus)="onFieldFocus('email')"
+                   (blur)="onFieldBlur('email')">
+            <!-- Real-time validation feedback -->
+            <div id="email-status" 
+                 class="auth-flow__validation-status"
+                 [ngClass]="{
+                   'auth-flow__validation-status--valid': getFieldValidationStatus('email') === 'valid',
+                   'auth-flow__validation-status--pending': getFieldValidationStatus('email') === 'pending'
+                 }"
+                 *ngIf="getFieldValidationStatus('email') !== 'none' && !shouldShowFieldError('email')"
+                 aria-live="polite">
+              <i *ngIf="getFieldValidationStatus('email') === 'valid'" 
+                 class="fa fa-check auth-flow__validation-icon" 
+                 aria-hidden="true"></i>
+              <i *ngIf="getFieldValidationStatus('email') === 'pending'" 
+                 class="fa fa-spinner fa-spin auth-flow__validation-icon" 
+                 aria-hidden="true"></i>
+              <span *ngIf="getFieldValidationStatus('email') === 'valid'" class="sr-only">Email is valid</span>
+              <span *ngIf="getFieldValidationStatus('email') === 'pending'" class="sr-only">Validating email</span>
+            </div>
+            
+            <div *ngIf="shouldShowFieldError('email')" 
                  id="email-error" 
                  class="auth-flow__input-error" 
                  role="alert" 
                  aria-live="polite">
+              <i class="fa fa-exclamation-circle auth-flow__error-icon" aria-hidden="true"></i>
               <span class="sr-only">Error: </span>{{ getErrorMessage('email') }}
             </div>
           </div>
@@ -149,12 +175,18 @@ description: HTML template file
                    id="password-input"
                    formControlName="password"
                    class="auth-flow__input-group-field"
-                   [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('password')}"
+                   [ngClass]="{
+                     'auth-flow__input-group-field--error': shouldShowFieldError('password'),
+                     'auth-flow__input-group-field--valid': getFieldValidationStatus('password') === 'valid',
+                     'auth-flow__input-group-field--pending': getFieldValidationStatus('password') === 'pending'
+                   }"
                    placeholder="Enter your password"
-                   aria-describedby="password-error"
-                   [attr.aria-invalid]="isFieldInvalid('password')"
+                   aria-describedby="password-error password-status"
+                   [attr.aria-invalid]="shouldShowFieldError('password')"
                    aria-required="true"
-                   autocomplete="current-password">
+                   autocomplete="current-password"
+                   (focus)="onFieldFocus('password')"
+                   (blur)="onFieldBlur('password')">
             <button type="button"
                     class="auth-flow__input-group-toggle"
                     (click)="togglePasswordVisibility()"
@@ -162,11 +194,30 @@ description: HTML template file
                     [attr.aria-pressed]="passwordVisible">
               <i class="fa" [class.fa-eye]="!passwordVisible" [class.fa-eye-slash]="passwordVisible" aria-hidden="true"></i>
             </button>
-            <div *ngIf="isFieldInvalid('password')" 
+            <div id="password-status" 
+                 class="auth-flow__validation-status"
+                 [ngClass]="{
+                   'auth-flow__validation-status--valid': getFieldValidationStatus('password') === 'valid',
+                   'auth-flow__validation-status--pending': getFieldValidationStatus('password') === 'pending'
+                 }"
+                 *ngIf="getFieldValidationStatus('password') !== 'none' && !shouldShowFieldError('password')"
+                 aria-live="polite">
+              <i *ngIf="getFieldValidationStatus('password') === 'valid'" 
+                 class="fa fa-check auth-flow__validation-icon" 
+                 aria-hidden="true"></i>
+              <i *ngIf="getFieldValidationStatus('password') === 'pending'" 
+                 class="fa fa-spinner fa-spin auth-flow__validation-icon" 
+                 aria-hidden="true"></i>
+              <span *ngIf="getFieldValidationStatus('password') === 'valid'" class="sr-only">Password is valid</span>
+              <span *ngIf="getFieldValidationStatus('password') === 'pending'" class="sr-only">Validating password</span>
+            </div>
+            
+            <div *ngIf="shouldShowFieldError('password')" 
                  id="password-error" 
                  class="auth-flow__input-error" 
                  role="alert" 
                  aria-live="polite">
+              <i class="fa fa-exclamation-circle auth-flow__error-icon" aria-hidden="true"></i>
               <span class="sr-only">Error: </span>{{ getErrorMessage('password') }}
             </div>
           </div>
@@ -188,12 +239,18 @@ description: HTML template file
                    id="password-setup-input"
                    formControlName="password"
                    class="auth-flow__input-group-field"
-                   [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('password')}"
+                   [ngClass]="{
+                     'auth-flow__input-group-field--error': shouldShowFieldError('password'),
+                     'auth-flow__input-group-field--valid': getFieldValidationStatus('password') === 'valid',
+                     'auth-flow__input-group-field--pending': getFieldValidationStatus('password') === 'pending'
+                   }"
                    placeholder="Create a strong password"
-                   aria-describedby="password-requirements"
-                   [attr.aria-invalid]="isFieldInvalid('password')"
+                   aria-describedby="password-requirements password-setup-status"
+                   [attr.aria-invalid]="shouldShowFieldError('password')"
                    aria-required="true"
-                   autocomplete="new-password">
+                   autocomplete="new-password"
+                   (focus)="onFieldFocus('password')"
+                   (blur)="onFieldBlur('password')">
             <button type="button"
                     class="auth-flow__input-group-toggle"
                     (click)="togglePasswordVisibility()"
@@ -203,6 +260,21 @@ description: HTML template file
             </button>
           </div>
 
+          <!-- Real-time validation status for password setup -->
+          <div id="password-setup-status" 
+               class="auth-flow__validation-status"
+               [ngClass]="{
+                 'auth-flow__validation-status--valid': getFieldValidationStatus('password') === 'valid',
+                 'auth-flow__validation-status--pending': getFieldValidationStatus('password') === 'pending'
+               }"
+               *ngIf="getFieldValidationStatus('password') !== 'none' && !shouldShowFieldError('password')"
+               aria-live="polite">
+            <i *ngIf="getFieldValidationStatus('password') === 'valid'" 
+               class="fa fa-check auth-flow__validation-icon" 
+               aria-hidden="true"></i>
+            <span *ngIf="getFieldValidationStatus('password') === 'valid'" class="sr-only">Password meets all requirements</span>
+          </div>
+          
           <!-- Password Requirements Checklist -->
           <div id="password-requirements" 
                class="auth-flow__password-requirements" 
@@ -287,19 +359,40 @@ description: HTML template file
                    id="email-code-input"
                    formControlName="emailCode"
                    class="auth-flow__input-group-field"
-                   [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('emailCode')}"
+                   [ngClass]="{
+                     'auth-flow__input-group-field--error': shouldShowFieldError('emailCode'),
+                     'auth-flow__input-group-field--valid': getFieldValidationStatus('emailCode') === 'valid',
+                     'auth-flow__input-group-field--pending': getFieldValidationStatus('emailCode') === 'pending'
+                   }"
                    placeholder="Enter 6-digit verification code"
-                   aria-describedby="email-code-error"
-                   [attr.aria-invalid]="isFieldInvalid('emailCode')"
+                   aria-describedby="email-code-error email-code-status"
+                   [attr.aria-invalid]="shouldShowFieldError('emailCode')"
                    aria-required="true"
                    inputmode="numeric"
                    pattern="[0-9]{6}"
-                   maxlength="6">
-            <div *ngIf="isFieldInvalid('emailCode')" 
+                   maxlength="6"
+                   (focus)="onFieldFocus('emailCode')"
+                   (blur)="onFieldBlur('emailCode')">
+            <div id="email-code-status" 
+                 class="auth-flow__validation-status"
+                 [ngClass]="{
+                   'auth-flow__validation-status--valid': getFieldValidationStatus('emailCode') === 'valid',
+                   'auth-flow__validation-status--pending': getFieldValidationStatus('emailCode') === 'pending'
+                 }"
+                 *ngIf="getFieldValidationStatus('emailCode') !== 'none' && !shouldShowFieldError('emailCode')"
+                 aria-live="polite">
+              <i *ngIf="getFieldValidationStatus('emailCode') === 'valid'" 
+                 class="fa fa-check auth-flow__validation-icon" 
+                 aria-hidden="true"></i>
+              <span *ngIf="getFieldValidationStatus('emailCode') === 'valid'" class="sr-only">Code format is valid</span>
+            </div>
+            
+            <div *ngIf="shouldShowFieldError('emailCode')" 
                  id="email-code-error" 
                  class="auth-flow__input-error" 
                  role="alert" 
                  aria-live="polite">
+              <i class="fa fa-exclamation-circle auth-flow__error-icon" aria-hidden="true"></i>
               <span class="sr-only">Error: </span>{{ getErrorMessage('emailCode') }}
             </div>
           </div>
@@ -321,17 +414,38 @@ description: HTML template file
                    id="first-name-input"
                    formControlName="firstName"
                    class="auth-flow__input-group-field"
-                   [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('firstName')}"
+                   [ngClass]="{
+                     'auth-flow__input-group-field--error': shouldShowFieldError('firstName'),
+                     'auth-flow__input-group-field--valid': getFieldValidationStatus('firstName') === 'valid',
+                     'auth-flow__input-group-field--pending': getFieldValidationStatus('firstName') === 'pending'
+                   }"
                    placeholder="Enter your first name"
-                   aria-describedby="first-name-error"
-                   [attr.aria-invalid]="isFieldInvalid('firstName')"
+                   aria-describedby="first-name-error first-name-status"
+                   [attr.aria-invalid]="shouldShowFieldError('firstName')"
                    aria-required="true"
-                   autocomplete="given-name">
-            <div *ngIf="isFieldInvalid('firstName')" 
+                   autocomplete="given-name"
+                   (focus)="onFieldFocus('firstName')"
+                   (blur)="onFieldBlur('firstName')">
+            <div id="first-name-status" 
+                 class="auth-flow__validation-status"
+                 [ngClass]="{
+                   'auth-flow__validation-status--valid': getFieldValidationStatus('firstName') === 'valid',
+                   'auth-flow__validation-status--pending': getFieldValidationStatus('firstName') === 'pending'
+                 }"
+                 *ngIf="getFieldValidationStatus('firstName') !== 'none' && !shouldShowFieldError('firstName')"
+                 aria-live="polite">
+              <i *ngIf="getFieldValidationStatus('firstName') === 'valid'" 
+                 class="fa fa-check auth-flow__validation-icon" 
+                 aria-hidden="true"></i>
+              <span *ngIf="getFieldValidationStatus('firstName') === 'valid'" class="sr-only">First name is valid</span>
+            </div>
+            
+            <div *ngIf="shouldShowFieldError('firstName')" 
                  id="first-name-error" 
                  class="auth-flow__input-error" 
                  role="alert" 
                  aria-live="polite">
+              <i class="fa fa-exclamation-circle auth-flow__error-icon" aria-hidden="true"></i>
               <span class="sr-only">Error: </span>{{ getErrorMessage('firstName') }}
             </div>
           </div>
@@ -345,17 +459,38 @@ description: HTML template file
                    id="last-name-input"
                    formControlName="lastName"
                    class="auth-flow__input-group-field"
-                   [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('lastName')}"
+                   [ngClass]="{
+                     'auth-flow__input-group-field--error': shouldShowFieldError('lastName'),
+                     'auth-flow__input-group-field--valid': getFieldValidationStatus('lastName') === 'valid',
+                     'auth-flow__input-group-field--pending': getFieldValidationStatus('lastName') === 'pending'
+                   }"
                    placeholder="Enter your last name"
-                   aria-describedby="last-name-error"
-                   [attr.aria-invalid]="isFieldInvalid('lastName')"
+                   aria-describedby="last-name-error last-name-status"
+                   [attr.aria-invalid]="shouldShowFieldError('lastName')"
                    aria-required="true"
-                   autocomplete="family-name">
-            <div *ngIf="isFieldInvalid('lastName')" 
+                   autocomplete="family-name"
+                   (focus)="onFieldFocus('lastName')"
+                   (blur)="onFieldBlur('lastName')">
+            <div id="last-name-status" 
+                 class="auth-flow__validation-status"
+                 [ngClass]="{
+                   'auth-flow__validation-status--valid': getFieldValidationStatus('lastName') === 'valid',
+                   'auth-flow__validation-status--pending': getFieldValidationStatus('lastName') === 'pending'
+                 }"
+                 *ngIf="getFieldValidationStatus('lastName') !== 'none' && !shouldShowFieldError('lastName')"
+                 aria-live="polite">
+              <i *ngIf="getFieldValidationStatus('lastName') === 'valid'" 
+                 class="fa fa-check auth-flow__validation-icon" 
+                 aria-hidden="true"></i>
+              <span *ngIf="getFieldValidationStatus('lastName') === 'valid'" class="sr-only">Last name is valid</span>
+            </div>
+            
+            <div *ngIf="shouldShowFieldError('lastName')" 
                  id="last-name-error" 
                  class="auth-flow__input-error" 
                  role="alert" 
                  aria-live="polite">
+              <i class="fa fa-exclamation-circle auth-flow__error-icon" aria-hidden="true"></i>
               <span class="sr-only">Error: </span>{{ getErrorMessage('lastName') }}
             </div>
           </div>
@@ -377,17 +512,38 @@ description: HTML template file
                    id="phone-input"
                    formControlName="phoneNumber"
                    class="auth-flow__input-group-field"
-                   [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('phoneNumber')}"
+                   [ngClass]="{
+                     'auth-flow__input-group-field--error': shouldShowFieldError('phoneNumber'),
+                     'auth-flow__input-group-field--valid': getFieldValidationStatus('phoneNumber') === 'valid',
+                     'auth-flow__input-group-field--pending': getFieldValidationStatus('phoneNumber') === 'pending'
+                   }"
                    placeholder="+1 (555) 123-4567"
-                   aria-describedby="phone-error"
-                   [attr.aria-invalid]="isFieldInvalid('phoneNumber')"
+                   aria-describedby="phone-error phone-status"
+                   [attr.aria-invalid]="shouldShowFieldError('phoneNumber')"
                    aria-required="true"
-                   autocomplete="tel">
-            <div *ngIf="isFieldInvalid('phoneNumber')" 
+                   autocomplete="tel"
+                   (focus)="onFieldFocus('phoneNumber')"
+                   (blur)="onFieldBlur('phoneNumber')">
+            <div id="phone-status" 
+                 class="auth-flow__validation-status"
+                 [ngClass]="{
+                   'auth-flow__validation-status--valid': getFieldValidationStatus('phoneNumber') === 'valid',
+                   'auth-flow__validation-status--pending': getFieldValidationStatus('phoneNumber') === 'pending'
+                 }"
+                 *ngIf="getFieldValidationStatus('phoneNumber') !== 'none' && !shouldShowFieldError('phoneNumber')"
+                 aria-live="polite">
+              <i *ngIf="getFieldValidationStatus('phoneNumber') === 'valid'" 
+                 class="fa fa-check auth-flow__validation-icon" 
+                 aria-hidden="true"></i>
+              <span *ngIf="getFieldValidationStatus('phoneNumber') === 'valid'" class="sr-only">Phone number is valid</span>
+            </div>
+            
+            <div *ngIf="shouldShowFieldError('phoneNumber')" 
                  id="phone-error" 
                  class="auth-flow__input-error" 
                  role="alert" 
                  aria-live="polite">
+              <i class="fa fa-exclamation-circle auth-flow__error-icon" aria-hidden="true"></i>
               <span class="sr-only">Error: </span>{{ getErrorMessage('phoneNumber') }}
             </div>
           </div>
@@ -410,19 +566,40 @@ description: HTML template file
                    id="phone-code-input"
                    formControlName="phoneCode"
                    class="auth-flow__input-group-field"
-                   [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('phoneCode')}"
+                   [ngClass]="{
+                     'auth-flow__input-group-field--error': shouldShowFieldError('phoneCode'),
+                     'auth-flow__input-group-field--valid': getFieldValidationStatus('phoneCode') === 'valid',
+                     'auth-flow__input-group-field--pending': getFieldValidationStatus('phoneCode') === 'pending'
+                   }"
                    placeholder="Enter 6-digit verification code"
-                   aria-describedby="phone-code-error"
-                   [attr.aria-invalid]="isFieldInvalid('phoneCode')"
+                   aria-describedby="phone-code-error phone-code-status"
+                   [attr.aria-invalid]="shouldShowFieldError('phoneCode')"
                    aria-required="true"
                    inputmode="numeric"
                    pattern="[0-9]{6}"
-                   maxlength="6">
-            <div *ngIf="isFieldInvalid('phoneCode')" 
+                   maxlength="6"
+                   (focus)="onFieldFocus('phoneCode')"
+                   (blur)="onFieldBlur('phoneCode')">
+            <div id="phone-code-status" 
+                 class="auth-flow__validation-status"
+                 [ngClass]="{
+                   'auth-flow__validation-status--valid': getFieldValidationStatus('phoneCode') === 'valid',
+                   'auth-flow__validation-status--pending': getFieldValidationStatus('phoneCode') === 'pending'
+                 }"
+                 *ngIf="getFieldValidationStatus('phoneCode') !== 'none' && !shouldShowFieldError('phoneCode')"
+                 aria-live="polite">
+              <i *ngIf="getFieldValidationStatus('phoneCode') === 'valid'" 
+                 class="fa fa-check auth-flow__validation-icon" 
+                 aria-hidden="true"></i>
+              <span *ngIf="getFieldValidationStatus('phoneCode') === 'valid'" class="sr-only">Code format is valid</span>
+            </div>
+            
+            <div *ngIf="shouldShowFieldError('phoneCode')" 
                  id="phone-code-error" 
                  class="auth-flow__input-error" 
                  role="alert" 
                  aria-live="polite">
+              <i class="fa fa-exclamation-circle auth-flow__error-icon" aria-hidden="true"></i>
               <span class="sr-only">Error: </span>{{ getErrorMessage('phoneCode') }}
             </div>
           </div>
@@ -480,19 +657,40 @@ description: HTML template file
                      id="mfa-setup-input"
                      formControlName="mfaCode"
                      class="auth-flow__input-group-field"
-                     [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('mfaCode')}"
+                     [ngClass]="{
+                       'auth-flow__input-group-field--error': shouldShowFieldError('mfaCode'),
+                       'auth-flow__input-group-field--valid': getFieldValidationStatus('mfaCode') === 'valid',
+                       'auth-flow__input-group-field--pending': getFieldValidationStatus('mfaCode') === 'pending'
+                     }"
                      placeholder="Enter 6-digit code from app"
-                     aria-describedby="mfa-setup-error"
-                     [attr.aria-invalid]="isFieldInvalid('mfaCode')"
+                     aria-describedby="mfa-setup-error mfa-setup-status"
+                     [attr.aria-invalid]="shouldShowFieldError('mfaCode')"
                      aria-required="true"
                      inputmode="numeric"
                      pattern="[0-9]{6}"
-                     maxlength="6">
-              <div *ngIf="isFieldInvalid('mfaCode')" 
+                     maxlength="6"
+                     (focus)="onFieldFocus('mfaCode')"
+                     (blur)="onFieldBlur('mfaCode')">
+              <div id="mfa-setup-status" 
+                   class="auth-flow__validation-status"
+                   [ngClass]="{
+                     'auth-flow__validation-status--valid': getFieldValidationStatus('mfaCode') === 'valid',
+                     'auth-flow__validation-status--pending': getFieldValidationStatus('mfaCode') === 'pending'
+                   }"
+                   *ngIf="getFieldValidationStatus('mfaCode') !== 'none' && !shouldShowFieldError('mfaCode')"
+                   aria-live="polite">
+                <i *ngIf="getFieldValidationStatus('mfaCode') === 'valid'" 
+                   class="fa fa-check auth-flow__validation-icon" 
+                   aria-hidden="true"></i>
+                <span *ngIf="getFieldValidationStatus('mfaCode') === 'valid'" class="sr-only">Code format is valid</span>
+              </div>
+              
+              <div *ngIf="shouldShowFieldError('mfaCode')" 
                    id="mfa-setup-error" 
                    class="auth-flow__input-error" 
                    role="alert" 
                    aria-live="polite">
+                <i class="fa fa-exclamation-circle auth-flow__error-icon" aria-hidden="true"></i>
                 <span class="sr-only">Error: </span>{{ getErrorMessage('mfaCode') }}
               </div>
             </div>
@@ -515,19 +713,40 @@ description: HTML template file
                    id="mfa-verify-input"
                    formControlName="mfaCode"
                    class="auth-flow__input-group-field"
-                   [ngClass]="{'auth-flow__input-group-field--error': isFieldInvalid('mfaCode')}"
+                   [ngClass]="{
+                     'auth-flow__input-group-field--error': shouldShowFieldError('mfaCode'),
+                     'auth-flow__input-group-field--valid': getFieldValidationStatus('mfaCode') === 'valid',
+                     'auth-flow__input-group-field--pending': getFieldValidationStatus('mfaCode') === 'pending'
+                   }"
                    placeholder="Enter 6-digit code from app"
-                   aria-describedby="mfa-verify-error"
-                   [attr.aria-invalid]="isFieldInvalid('mfaCode')"
+                   aria-describedby="mfa-verify-error mfa-verify-status"
+                   [attr.aria-invalid]="shouldShowFieldError('mfaCode')"
                    aria-required="true"
                    inputmode="numeric"
                    pattern="[0-9]{6}"
-                   maxlength="6">
-            <div *ngIf="isFieldInvalid('mfaCode')" 
+                   maxlength="6"
+                   (focus)="onFieldFocus('mfaCode')"
+                   (blur)="onFieldBlur('mfaCode')">
+            <div id="mfa-verify-status" 
+                 class="auth-flow__validation-status"
+                 [ngClass]="{
+                   'auth-flow__validation-status--valid': getFieldValidationStatus('mfaCode') === 'valid',
+                   'auth-flow__validation-status--pending': getFieldValidationStatus('mfaCode') === 'pending'
+                 }"
+                 *ngIf="getFieldValidationStatus('mfaCode') !== 'none' && !shouldShowFieldError('mfaCode')"
+                 aria-live="polite">
+              <i *ngIf="getFieldValidationStatus('mfaCode') === 'valid'" 
+                 class="fa fa-check auth-flow__validation-icon" 
+                 aria-hidden="true"></i>
+              <span *ngIf="getFieldValidationStatus('mfaCode') === 'valid'" class="sr-only">Code format is valid</span>
+            </div>
+            
+            <div *ngIf="shouldShowFieldError('mfaCode')" 
                  id="mfa-verify-error" 
                  class="auth-flow__input-error" 
                  role="alert" 
                  aria-live="polite">
+              <i class="fa fa-exclamation-circle auth-flow__error-icon" aria-hidden="true"></i>
               <span class="sr-only">Error: </span>{{ getErrorMessage('mfaCode') }}
             </div>
           </div>
