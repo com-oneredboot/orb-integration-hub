@@ -13,11 +13,7 @@
   max-width: 1200px;
   margin: 0 auto;
 
-  // CSS Custom Properties for logo scaling configuration
-  // These values create smooth scaling from 160px (320px viewport) to 480px (6000px viewport)
-  --logo-min-width: 160px;    // Minimum logo size (small mobile ~320px viewport)
-  --logo-max-width: 480px;    // Maximum logo size (desktop ~6000px+ viewport)
-  --logo-viewport-scale: 8vw; // Viewport-based scaling (8% of viewport width)
+  // Logo sizing to match dashboard and profile pages
 
   // Accessibility: Skip link for keyboard users
   &__skip-link {
@@ -53,20 +49,26 @@
   &__header {
     text-align: center;
     margin-bottom: v.$spacing-xl;
+    
+    // Logo section container for consistent sizing with dashboard/profile
+    &-logo-section {
+      flex: 1;
+      max-width: 600px; // Match dashboard/profile sizing
+      margin: 0 auto; // Center the logo section
+      
+      @media (max-width: 1024px) {
+        max-width: 400px; // Tablet sizing
+      }
+      
+      @media (max-width: 768px) {
+        max-width: 300px; // Mobile sizing
+      }
+    }
 
     &-logo {
-      // Fallback for browsers without clamp() support (very rare, but defensive)
-      width: 320px; // Safe middle-ground fallback
-      
-      // Fluid logo scaling using CSS clamp() function for gradual responsive behavior
-      // Eliminates dramatic size jumps and maintains brand visibility across all devices
-      width: clamp(
-        var(--logo-min-width),     // 160px minimum (small mobile)
-        var(--logo-viewport-scale), // 8vw fluid scaling (viewport-based)
-        var(--logo-max-width)      // 480px maximum (desktop)
-      );
-      height: auto;
-      max-width: 100%; // Prevent container overflow
+      width: 100%; // Take full width of container
+      height: auto; // Maintain aspect ratio
+      object-fit: contain; // Ensure logo fits without distortion
       transition: width 0.3s ease; // Smooth transitions for orientation changes
       
       // Ensure crisp rendering at all sizes
@@ -588,7 +590,7 @@
   .auth-flow {
     padding: v.$spacing-md;
 
-    // Logo sizing now handled by clamp() function - no explicit breakpoint sizing needed
+    // Logo sizing now handled by responsive container approach - consistent with dashboard/profile
 
     // Progress indicator mobile optimizations
     &__progress {
@@ -634,7 +636,7 @@
       max-width: 100%;
     }
 
-    // Logo sizing now handled by clamp() function - no explicit breakpoint sizing needed
+    // Logo sizing now handled by responsive container approach - consistent with dashboard/profile
 
     // Progress indicator mobile optimizations (small screens)
     &__progress {
