@@ -9,9 +9,9 @@ import { Store } from '@ngrx/store';
 import { of } from 'rxjs';
 import { AuthFlowComponent } from './auth-flow.component';
 import { UserService } from '../../../../core/services/user.service';
-import { IUsers, UsersCreateInput, UsersResponse } from '../../../../core/models/Users.model';
-import { UserStatus } from '../../../../core/models/UserStatus.enum';
-import { UserGroup } from '../../../../core/models/UserGroup.enum';
+import { IUsers, Users, UsersCreateInput, UsersResponse } from '../../../../core/models/UsersModel';
+import { UserStatus } from '../../../../core/models/UserStatusEnum';
+import { UserGroup } from '../../../../core/models/UserGroupEnum';
 import { Router } from '@angular/router';
 
 describe('AuthFlowComponent', () => {
@@ -24,6 +24,7 @@ describe('AuthFlowComponent', () => {
   const mockUser: IUsers = {
     userId: '123',
     cognitoId: 'abc123',
+    cognitoSub: 'cognito-sub-123',
     email: 'test@example.com',
     emailVerified: true,
     phoneNumber: '+12345678901',
@@ -32,6 +33,8 @@ describe('AuthFlowComponent', () => {
     lastName: 'User',
     groups: [UserGroup.USER],
     status: UserStatus.ACTIVE,
+    mfaEnabled: false,
+    mfaSetupComplete: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -39,6 +42,7 @@ describe('AuthFlowComponent', () => {
   const mockCreateInput: UsersCreateInput = {
     userId: '123',
     cognitoId: 'abc123',
+    cognitoSub: 'cognito-sub-123',
     email: 'test@example.com',
     emailVerified: true,
     phoneNumber: '+12345678901',
@@ -46,15 +50,17 @@ describe('AuthFlowComponent', () => {
     firstName: 'Test',
     lastName: 'User',
     groups: [UserGroup.USER],
-    status: UserStatus.ACTIVE,
+    status: 'ACTIVE',
+    mfaEnabled: false,
+    mfaSetupComplete: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
 
   const mockResponse: UsersResponse = {
-    statusCode: 200,
-    message: 'Success',
-    data: mockUser
+    StatusCode: 200,
+    Message: 'Success',
+    Data: new Users(mockUser)
   };
 
   beforeEach(async () => {
@@ -131,7 +137,7 @@ describe('AuthFlowComponent', () => {
           firstName: 'Test',
           lastName: 'User',
           phoneNumber: '+12345678901',
-          groups: [require('../../../../core/models/UserGroup.enum').UserGroup.USER],
+          groups: [UserGroup.USER],
           status: 'PENDING',
           userId: jasmine.any(String),
           cognitoId: jasmine.any(String),
@@ -233,9 +239,9 @@ describe('AuthFlowComponent', () => {
   it('should handle unauthorized error from UsersCreate mutation', async () => {
     // Simulate Unauthorized error from userCreate
     userService.userCreate.and.returnValue(Promise.resolve({
-      statusCode: 401,
-      message: 'Not Authorized to access UsersCreate on type Mutation',
-      data: null
+      StatusCode: 401,
+      Message: 'Not Authorized to access UsersCreate on type Mutation',
+      Data: null
     }));
 
     store.select.and.callFake((selector: any) => {

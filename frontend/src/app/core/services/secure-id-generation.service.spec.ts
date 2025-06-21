@@ -69,8 +69,8 @@ describe('SecureIdGenerationService', () => {
         next: (response: SecureIdResponse) => {
           expect(response).toBeTruthy();
           expect(response.type).toBe('user');
-          expect(response.metadata?.insecure).toBe(true);
-          expect(response.metadata?.warning).toContain('Generated client-side');
+          expect(response.metadata?.['insecure']).toBe(true);
+          expect(response.metadata?.['warning']).toContain('Generated client-side');
           expect(mockErrorHandler.captureSecurityError).toHaveBeenCalled();
           done();
         },

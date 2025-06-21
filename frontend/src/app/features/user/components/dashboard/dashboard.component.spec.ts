@@ -6,9 +6,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { DashboardComponent } from './dashboard.component';
-import { IUsers } from '../../../../core/models/Users.model';
-import { UserStatus } from '../../../../core/models/UserStatus.enum';
-import { UserGroup } from '../../../../core/models/UserGroup.enum';
+import { IUsers } from '../../../../core/models/UsersModel';
+import { UserStatus } from '../../../../core/models/UserStatusEnum';
+import { UserGroup } from '../../../../core/models/UserGroupEnum';
 
 describe('DashboardComponent', () => {
   let component: DashboardComponent;
@@ -18,6 +18,7 @@ describe('DashboardComponent', () => {
   const mockUser: IUsers = {
     userId: '123',
     cognitoId: 'abc123',
+    cognitoSub: 'cognito-sub-123',
     email: 'test@example.com',
     emailVerified: true,
     phoneNumber: '+12345678901',
@@ -26,6 +27,8 @@ describe('DashboardComponent', () => {
     lastName: 'User',
     groups: [UserGroup.USER],
     status: UserStatus.ACTIVE,
+    mfaEnabled: false,
+    mfaSetupComplete: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
