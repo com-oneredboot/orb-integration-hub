@@ -1503,10 +1503,8 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
    * Hide step transition loading overlay
    */
   private hideStepTransition(): void {
-    setTimeout(() => {
-      this.isStepTransitioning = false;
-      this.loadingMessage = '';
-    }, 300); // Small delay for smooth transition
+    this.isStepTransitioning = false;
+    this.loadingMessage = '';
   }
 
   /**
@@ -1520,9 +1518,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
    * Hide skeleton screen for specific component
    */
   public hideSkeleton(type: keyof typeof this.skeletonStates): void {
-    setTimeout(() => {
-      this.skeletonStates[type] = false;
-    }, 200);
+    this.skeletonStates[type] = false;
   }
 
   /**
@@ -1536,9 +1532,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
    * Hide validation loading state for specific field
    */
   public hideValidationLoading(fieldName: string): void {
-    setTimeout(() => {
-      this.validationLoadingStates[fieldName] = false;
-    }, 500);
+    this.validationLoadingStates[fieldName] = false;
   }
 
   /**

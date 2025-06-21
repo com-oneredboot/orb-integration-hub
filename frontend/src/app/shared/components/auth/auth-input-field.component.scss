@@ -1,0 +1,455 @@
+// file: frontend/src/app/shared/components/auth/auth-input-field.component.scss
+// author: Corey Dale Peters
+// date: 2025-06-21
+// description: Styles for reusable authentication input field component
+
+@use '../../../../styles/variables' as v;
+@use '../../../../styles/mixins' as m;
+@use 'sass:color';
+
+.auth-input {
+  position: relative;
+  width: 100%;
+  margin-bottom: v.$spacing-md;
+
+  // ============ Label Styles ============
+  &__label {
+    display: block;
+    font-weight: v.$font-weight-medium;
+    color: v.$text-primary;
+    margin-bottom: v.$spacing-xs;
+    font-size: v.$font-size-sm;
+    line-height: 1.4;
+    transition: color 0.2s ease;
+
+    &--required {
+      .auth-input__required {
+        color: v.$danger-color;
+        font-weight: v.$font-weight-bold;
+        margin-left: 2px;
+      }
+    }
+  }
+
+  // ============ Container Styles ============
+  &__container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: v.$input-bg;
+    border: 1px solid v.$input-border-color;
+    border-radius: v.$border-radius;
+    transition: all 0.2s ease;
+    overflow: hidden;
+
+    &--focused {
+      border-color: v.$primary-color;
+      box-shadow: 0 0 0 3px rgba(v.$primary-color, 0.1);
+    }
+
+    &:hover:not(.auth-input--disabled) {
+      border-color: color.adjust(v.$input-border-color, $lightness: -10%);
+    }
+  }
+
+  // ============ Input Field Styles ============
+  &__field {
+    flex: 1;
+    padding: v.$spacing-sm v.$spacing-md;
+    border: none;
+    background: transparent;
+    font-family: v.$font-family-base;
+    font-size: v.$input-font-size;
+    color: v.$input-color;
+    line-height: 1.5;
+    transition: all 0.2s ease;
+
+    &::placeholder {
+      color: v.$text-secondary;
+      opacity: 1;
+    }
+
+    &:focus {
+      outline: none;
+    }
+
+    &:disabled {
+      color: v.$text-muted;
+      cursor: not-allowed;
+    }
+
+    // Remove browser styling
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    &[type="number"] {
+      -moz-appearance: textfield;
+    }
+
+    // Password field spacing
+    &[type="password"] {
+      letter-spacing: 0.1em;
+    }
+  }
+
+  // ============ Icon Styles ============
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 v.$spacing-sm;
+    color: v.$text-secondary;
+    transition: color 0.2s ease;
+
+    &--leading {
+      order: -1;
+      border-right: 1px solid transparent;
+    }
+
+    &--trailing {
+      order: 1;
+      border-left: 1px solid transparent;
+    }
+
+    i {
+      font-size: v.$font-size-base;
+    }
+  }
+
+  // ============ Toggle Button (Password) ============
+  &__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 100%;
+    background: transparent;
+    border: none;
+    color: v.$text-secondary;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      color: v.$text-primary;
+      background: rgba(v.$primary-color, 0.05);
+    }
+
+    &:focus {
+      outline: 2px solid v.$primary-color;
+      outline-offset: -2px;
+    }
+
+    i {
+      font-size: v.$font-size-sm;
+    }
+  }
+
+  // ============ Validation Icons ============
+  &__validation-icon {
+    font-size: v.$font-size-sm;
+    
+    &--valid {
+      color: v.$success-color;
+    }
+    
+    &--pending {
+      color: v.$primary-color;
+    }
+    
+    &--invalid {
+      color: v.$danger-color;
+    }
+  }
+
+  // ============ Help Text ============
+  &__help {
+    margin-top: v.$spacing-xs;
+    font-size: v.$font-size-xs;
+    color: v.$text-secondary;
+    line-height: 1.4;
+  }
+
+  // ============ Error Message ============
+  &__error {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+    margin-top: v.$spacing-xs;
+    padding: v.$spacing-xs v.$spacing-sm;
+    background: rgba(v.$danger-color, 0.05);
+    border: 1px solid rgba(v.$danger-color, 0.2);
+    border-radius: v.$border-radius-sm;
+    color: v.$danger-color;
+    font-size: v.$font-size-xs;
+    line-height: 1.4;
+    animation: slide-in 0.2s ease-out;
+
+    &-icon {
+      flex-shrink: 0;
+      font-size: v.$font-size-xs;
+    }
+  }
+
+  // ============ Success Message ============
+  &__success {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+    margin-top: v.$spacing-xs;
+    padding: v.$spacing-xs v.$spacing-sm;
+    background: rgba(v.$success-color, 0.05);
+    border: 1px solid rgba(v.$success-color, 0.2);
+    border-radius: v.$border-radius-sm;
+    color: v.$success-color;
+    font-size: v.$font-size-xs;
+    line-height: 1.4;
+    animation: slide-in 0.2s ease-out;
+
+    &-icon {
+      flex-shrink: 0;
+      font-size: v.$font-size-xs;
+    }
+  }
+
+  // ============ Loading State ============
+  &__loading {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+    margin-top: v.$spacing-xs;
+    padding: v.$spacing-xs v.$spacing-sm;
+    background: rgba(v.$primary-color, 0.05);
+    border: 1px solid rgba(v.$primary-color, 0.2);
+    border-radius: v.$border-radius-sm;
+    color: v.$primary-color;
+    font-size: v.$font-size-xs;
+    line-height: 1.4;
+
+    &-spinner {
+      width: 12px;
+      height: 12px;
+      border: 2px solid rgba(v.$primary-color, 0.3);
+      border-radius: 50%;
+      border-top-color: v.$primary-color;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+  }
+
+  // ============ Size Variants ============
+  &[data-size="small"] {
+    .auth-input__field {
+      padding: v.$spacing-xs v.$spacing-sm;
+      font-size: v.$font-size-sm;
+    }
+
+    .auth-input__icon {
+      padding: 0 v.$spacing-xs;
+
+      i {
+        font-size: v.$font-size-sm;
+      }
+    }
+
+    .auth-input__toggle {
+      width: 32px;
+    }
+  }
+
+  &[data-size="large"] {
+    .auth-input__field {
+      padding: v.$spacing-md v.$spacing-lg;
+      font-size: v.$font-size-lg;
+    }
+
+    .auth-input__icon {
+      padding: 0 v.$spacing-md;
+
+      i {
+        font-size: v.$font-size-lg;
+      }
+    }
+
+    .auth-input__toggle {
+      width: 48px;
+    }
+  }
+
+  // ============ Variant Styles ============
+  &[data-variant="outlined"] {
+    .auth-input__container {
+      background: transparent;
+      border-width: 2px;
+
+      &--focused {
+        border-color: v.$primary-color;
+        box-shadow: none;
+      }
+    }
+  }
+
+  &[data-variant="filled"] {
+    .auth-input__container {
+      background: v.$bg-secondary;
+      border: 1px solid transparent;
+
+      &--focused {
+        background: v.$input-bg;
+        border-color: v.$primary-color;
+      }
+    }
+  }
+
+  // ============ State Modifiers ============
+  &--valid {
+    .auth-input__container {
+      border-color: v.$success-color;
+
+      &--focused {
+        box-shadow: 0 0 0 3px rgba(v.$success-color, 0.1);
+      }
+    }
+
+    .auth-input__label {
+      color: v.$success-color;
+    }
+  }
+
+  &--invalid {
+    .auth-input__container {
+      border-color: v.$danger-color;
+
+      &--focused {
+        box-shadow: 0 0 0 3px rgba(v.$danger-color, 0.1);
+      }
+    }
+
+    .auth-input__label {
+      color: v.$danger-color;
+    }
+  }
+
+  &--pending {
+    .auth-input__container {
+      border-color: v.$primary-color;
+
+      &--focused {
+        box-shadow: 0 0 0 3px rgba(v.$primary-color, 0.1);
+      }
+    }
+  }
+
+  &--disabled {
+    .auth-input__container {
+      background: v.$gray-100;
+      border-color: v.$gray-300;
+      cursor: not-allowed;
+    }
+
+    .auth-input__label {
+      color: v.$text-secondary;
+    }
+
+    .auth-input__icon {
+      color: v.$text-secondary;
+    }
+  }
+
+  &--readonly {
+    .auth-input__container {
+      background: v.$bg-secondary;
+    }
+
+    .auth-input__field {
+      cursor: default;
+    }
+  }
+
+  // ============ Touch Optimizations ============
+  @media (hover: none) and (pointer: coarse) {
+    .auth-input__field {
+      min-height: 44px;
+      padding: v.$spacing-md;
+      font-size: v.$font-size-base;
+    }
+
+    .auth-input__toggle {
+      min-width: 44px;
+      min-height: 44px;
+    }
+
+    &[data-size="small"] {
+      .auth-input__field {
+        min-height: 40px;
+        padding: v.$spacing-sm;
+      }
+    }
+
+    &[data-size="large"] {
+      .auth-input__field {
+        min-height: 48px;
+        padding: v.$spacing-lg;
+      }
+    }
+  }
+
+  // ============ High Contrast Support ============
+  @media (prefers-contrast: high) {
+    .auth-input__container {
+      border-width: 2px;
+
+      &--focused {
+        box-shadow: 0 0 0 2px v.$primary-color;
+      }
+    }
+
+    &--invalid .auth-input__container {
+      &--focused {
+        box-shadow: 0 0 0 2px v.$danger-color;
+      }
+    }
+
+    &--valid .auth-input__container {
+      &--focused {
+        box-shadow: 0 0 0 2px v.$success-color;
+      }
+    }
+  }
+
+  // ============ Reduced Motion Support ============
+  @media (prefers-reduced-motion: reduce) {
+    .auth-input__container,
+    .auth-input__field,
+    .auth-input__icon,
+    .auth-input__toggle,
+    .auth-input__error,
+    .auth-input__success {
+      transition: none;
+    }
+
+    .auth-input__loading-spinner {
+      animation: none;
+    }
+  }
+}
+
+// ============ Animations ============
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

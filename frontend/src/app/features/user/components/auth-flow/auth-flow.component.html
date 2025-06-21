@@ -166,21 +166,11 @@ description: HTML template file
             
             <!-- Real-time validation feedback -->
             <div id="email-status" 
-                 class="auth-flow__validation-status"
-                 [ngClass]="{
-                   'auth-flow__validation-status--valid': getFieldValidationStatus('email') === 'valid',
-                   'auth-flow__validation-status--pending': getFieldValidationStatus('email') === 'pending'
-                 }"
-                 *ngIf="getFieldValidationStatus('email') !== 'none' && !shouldShowFieldError('email') && !validationLoadingStates['email']"
+                 class="auth-flow__validation-status auth-flow__validation-status--pending"
+                 *ngIf="getFieldValidationStatus('email') === 'pending' && !shouldShowFieldError('email') && !validationLoadingStates['email']"
                  aria-live="polite">
-              <i *ngIf="getFieldValidationStatus('email') === 'valid'" 
-                 class="fa fa-check auth-flow__validation-icon" 
-                 aria-hidden="true"></i>
-              <i *ngIf="getFieldValidationStatus('email') === 'pending'" 
-                 class="fa fa-spinner fa-spin auth-flow__validation-icon" 
-                 aria-hidden="true"></i>
-              <span *ngIf="getFieldValidationStatus('email') === 'valid'" class="sr-only">Email is valid</span>
-              <span *ngIf="getFieldValidationStatus('email') === 'pending'" class="sr-only">Validating email</span>
+              <i class="fa fa-spinner fa-spin auth-flow__validation-icon" aria-hidden="true"></i>
+              <span class="sr-only">Validating email</span>
             </div>
             
             <div *ngIf="shouldShowFieldError('email')" 
@@ -232,19 +222,12 @@ description: HTML template file
             <div id="password-status" 
                  class="auth-flow__validation-status"
                  [ngClass]="{
-                   'auth-flow__validation-status--valid': getFieldValidationStatus('password') === 'valid',
                    'auth-flow__validation-status--pending': getFieldValidationStatus('password') === 'pending'
                  }"
-                 *ngIf="getFieldValidationStatus('password') !== 'none' && !shouldShowFieldError('password')"
+                 *ngIf="getFieldValidationStatus('password') === 'pending' && !shouldShowFieldError('password')"
                  aria-live="polite">
-              <i *ngIf="getFieldValidationStatus('password') === 'valid'" 
-                 class="fa fa-check auth-flow__validation-icon" 
-                 aria-hidden="true"></i>
-              <i *ngIf="getFieldValidationStatus('password') === 'pending'" 
-                 class="fa fa-spinner fa-spin auth-flow__validation-icon" 
-                 aria-hidden="true"></i>
-              <span *ngIf="getFieldValidationStatus('password') === 'valid'" class="sr-only">Password is valid</span>
-              <span *ngIf="getFieldValidationStatus('password') === 'pending'" class="sr-only">Validating password</span>
+              <i class="fa fa-spinner fa-spin auth-flow__validation-icon" aria-hidden="true"></i>
+              <span class="sr-only">Validating password</span>
             </div>
             
             <div *ngIf="shouldShowFieldError('password')" 
@@ -295,20 +278,6 @@ description: HTML template file
             </button>
           </div>
 
-          <!-- Real-time validation status for password setup -->
-          <div id="password-setup-status" 
-               class="auth-flow__validation-status"
-               [ngClass]="{
-                 'auth-flow__validation-status--valid': getFieldValidationStatus('password') === 'valid',
-                 'auth-flow__validation-status--pending': getFieldValidationStatus('password') === 'pending'
-               }"
-               *ngIf="getFieldValidationStatus('password') !== 'none' && !shouldShowFieldError('password')"
-               aria-live="polite">
-            <i *ngIf="getFieldValidationStatus('password') === 'valid'" 
-               class="fa fa-check auth-flow__validation-icon" 
-               aria-hidden="true"></i>
-            <span *ngIf="getFieldValidationStatus('password') === 'valid'" class="sr-only">Password meets all requirements</span>
-          </div>
           
           <!-- Password Requirements Checklist -->
           <div id="password-requirements" 
@@ -411,14 +380,10 @@ description: HTML template file
             <div id="email-code-status" 
                  class="auth-flow__validation-status"
                  [ngClass]="{
-                   'auth-flow__validation-status--valid': getFieldValidationStatus('emailCode') === 'valid',
                    'auth-flow__validation-status--pending': getFieldValidationStatus('emailCode') === 'pending'
                  }"
-                 *ngIf="getFieldValidationStatus('emailCode') !== 'none' && !shouldShowFieldError('emailCode')"
+                 *ngIf="getFieldValidationStatus('emailCode') === 'pending' && !shouldShowFieldError('emailCode')"
                  aria-live="polite">
-              <i *ngIf="getFieldValidationStatus('emailCode') === 'valid'" 
-                 class="fa fa-check auth-flow__validation-icon" 
-                 aria-hidden="true"></i>
               <span *ngIf="getFieldValidationStatus('emailCode') === 'valid'" class="sr-only">Code format is valid</span>
             </div>
             
@@ -464,10 +429,9 @@ description: HTML template file
             <div id="first-name-status" 
                  class="auth-flow__validation-status"
                  [ngClass]="{
-                   'auth-flow__validation-status--valid': getFieldValidationStatus('firstName') === 'valid',
                    'auth-flow__validation-status--pending': getFieldValidationStatus('firstName') === 'pending'
                  }"
-                 *ngIf="getFieldValidationStatus('firstName') !== 'none' && !shouldShowFieldError('firstName')"
+                 *ngIf="getFieldValidationStatus('firstName') === 'pending' && !shouldShowFieldError('firstName')"
                  aria-live="polite">
               <i *ngIf="getFieldValidationStatus('firstName') === 'valid'" 
                  class="fa fa-check auth-flow__validation-icon" 
@@ -509,10 +473,9 @@ description: HTML template file
             <div id="last-name-status" 
                  class="auth-flow__validation-status"
                  [ngClass]="{
-                   'auth-flow__validation-status--valid': getFieldValidationStatus('lastName') === 'valid',
                    'auth-flow__validation-status--pending': getFieldValidationStatus('lastName') === 'pending'
                  }"
-                 *ngIf="getFieldValidationStatus('lastName') !== 'none' && !shouldShowFieldError('lastName')"
+                 *ngIf="getFieldValidationStatus('lastName') === 'pending' && !shouldShowFieldError('lastName')"
                  aria-live="polite">
               <i *ngIf="getFieldValidationStatus('lastName') === 'valid'" 
                  class="fa fa-check auth-flow__validation-icon" 
@@ -562,10 +525,9 @@ description: HTML template file
             <div id="phone-status" 
                  class="auth-flow__validation-status"
                  [ngClass]="{
-                   'auth-flow__validation-status--valid': getFieldValidationStatus('phoneNumber') === 'valid',
                    'auth-flow__validation-status--pending': getFieldValidationStatus('phoneNumber') === 'pending'
                  }"
-                 *ngIf="getFieldValidationStatus('phoneNumber') !== 'none' && !shouldShowFieldError('phoneNumber')"
+                 *ngIf="getFieldValidationStatus('phoneNumber') === 'pending' && !shouldShowFieldError('phoneNumber')"
                  aria-live="polite">
               <i *ngIf="getFieldValidationStatus('phoneNumber') === 'valid'" 
                  class="fa fa-check auth-flow__validation-icon" 
@@ -618,10 +580,9 @@ description: HTML template file
             <div id="phone-code-status" 
                  class="auth-flow__validation-status"
                  [ngClass]="{
-                   'auth-flow__validation-status--valid': getFieldValidationStatus('phoneCode') === 'valid',
                    'auth-flow__validation-status--pending': getFieldValidationStatus('phoneCode') === 'pending'
                  }"
-                 *ngIf="getFieldValidationStatus('phoneCode') !== 'none' && !shouldShowFieldError('phoneCode')"
+                 *ngIf="getFieldValidationStatus('phoneCode') === 'pending' && !shouldShowFieldError('phoneCode')"
                  aria-live="polite">
               <i *ngIf="getFieldValidationStatus('phoneCode') === 'valid'" 
                  class="fa fa-check auth-flow__validation-icon" 
@@ -732,10 +693,9 @@ description: HTML template file
               <div id="mfa-setup-status" 
                    class="auth-flow__validation-status"
                    [ngClass]="{
-                     'auth-flow__validation-status--valid': getFieldValidationStatus('mfaCode') === 'valid',
                      'auth-flow__validation-status--pending': getFieldValidationStatus('mfaCode') === 'pending'
                    }"
-                   *ngIf="getFieldValidationStatus('mfaCode') !== 'none' && !shouldShowFieldError('mfaCode')"
+                   *ngIf="getFieldValidationStatus('mfaCode') === 'pending' && !shouldShowFieldError('mfaCode')"
                    aria-live="polite">
                 <i *ngIf="getFieldValidationStatus('mfaCode') === 'valid'" 
                    class="fa fa-check auth-flow__validation-icon" 
@@ -788,10 +748,9 @@ description: HTML template file
             <div id="mfa-verify-status" 
                  class="auth-flow__validation-status"
                  [ngClass]="{
-                   'auth-flow__validation-status--valid': getFieldValidationStatus('mfaCode') === 'valid',
                    'auth-flow__validation-status--pending': getFieldValidationStatus('mfaCode') === 'pending'
                  }"
-                 *ngIf="getFieldValidationStatus('mfaCode') !== 'none' && !shouldShowFieldError('mfaCode')"
+                 *ngIf="getFieldValidationStatus('mfaCode') === 'pending' && !shouldShowFieldError('mfaCode')"
                  aria-live="polite">
               <i *ngIf="getFieldValidationStatus('mfaCode') === 'valid'" 
                  class="fa fa-check auth-flow__validation-icon" 

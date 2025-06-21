@@ -1,0 +1,533 @@
+// file: frontend/src/app/shared/components/auth/auth-button.component.scss
+// author: Corey Dale Peters
+// date: 2025-06-21
+// description: Styles for reusable authentication button component with variants, states, and accessibility
+
+@use '../../../../styles/variables' as v;
+@use '../../../../styles/mixins' as m;
+@use 'sass:color';
+
+.auth-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: v.$spacing-xs;
+  font-family: v.$font-family-base;
+  font-weight: v.$font-weight-medium;
+  font-size: v.$font-size-base;
+  line-height: 1.5;
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: v.$border-radius;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+  user-select: none;
+  white-space: nowrap;
+
+  // Remove default button styles
+  background: none;
+  appearance: none;
+  -webkit-appearance: none;
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid v.$primary-color;
+    outline-offset: 2px;
+  }
+
+  // ============ Spinner Component ============
+  &__spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: rgba(255, 255, 255, 0.8);
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+
+  // ============ Icon Styles ============
+  &__icon {
+    flex-shrink: 0;
+    font-size: v.$font-size-sm;
+    transition: transform 0.2s ease;
+
+    &--leading {
+      order: -1;
+    }
+
+    &--trailing {
+      order: 1;
+    }
+  }
+
+  // ============ Text Styles ============
+  &__text {
+    flex: 1;
+    transition: opacity 0.2s ease;
+
+    &--hidden {
+      opacity: 0;
+    }
+  }
+
+  // ============ Progress Indicator ============
+  &__progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 0 0 v.$border-radius v.$border-radius;
+    transition: width 0.3s ease;
+    z-index: 1;
+  }
+
+  // ============ Success Overlay ============
+  &__success-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: v.$spacing-xs;
+    background: v.$success-color;
+    color: white;
+    border-radius: inherit;
+    animation: success-slide-in 0.3s ease-out;
+    z-index: 2;
+  }
+
+  &__success-icon {
+    font-size: v.$font-size-sm;
+    animation: success-bounce 0.5s ease-out;
+  }
+
+  &__success-text {
+    font-size: v.$font-size-sm;
+    font-weight: v.$font-weight-medium;
+  }
+
+  // ============ Ripple Effect ============
+  &__ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    pointer-events: none;
+    transform: scale(0);
+    animation: ripple 0.6s linear;
+    z-index: 1;
+  }
+
+  // ============ Size Variants ============
+  &[data-size="small"] {
+    padding: v.$spacing-xs v.$spacing-sm;
+    font-size: v.$font-size-sm;
+    min-height: 32px;
+
+    .auth-button__spinner {
+      width: 14px;
+      height: 14px;
+    }
+
+    .auth-button__icon {
+      font-size: v.$font-size-xs;
+    }
+  }
+
+  &[data-size="medium"] {
+    padding: v.$spacing-sm v.$spacing-md;
+    font-size: v.$font-size-base;
+    min-height: 40px;
+  }
+
+  &[data-size="large"] {
+    padding: v.$spacing-md v.$spacing-lg;
+    font-size: v.$font-size-lg;
+    min-height: 48px;
+
+    .auth-button__spinner {
+      width: 18px;
+      height: 18px;
+    }
+
+    .auth-button__icon {
+      font-size: v.$font-size-base;
+    }
+  }
+
+  // ============ Color Variants ============
+  &[data-variant="primary"] {
+    background: v.$primary-color;
+    color: white;
+    border-color: v.$primary-color;
+
+    &:hover:not(.auth-button--disabled):not(.auth-button--loading) {
+      background: color.adjust(v.$primary-color, $lightness: -5%);
+      border-color: color.adjust(v.$primary-color, $lightness: -5%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(v.$primary-color, 0.3);
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 6px rgba(v.$primary-color, 0.2);
+    }
+
+    .auth-button__progress {
+      background: rgba(255, 255, 255, 0.6);
+    }
+  }
+
+  &[data-variant="secondary"] {
+    background: v.$bg-secondary;
+    color: v.$text-primary;
+    border-color: v.$border-color;
+
+    &:hover:not(.auth-button--disabled):not(.auth-button--loading) {
+      background: color.adjust(v.$bg-secondary, $lightness: -5%);
+      border-color: color.adjust(v.$border-color, $lightness: -10%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .auth-button__spinner {
+      border-color: rgba(v.$text-primary, 0.3);
+      border-top-color: v.$text-primary;
+    }
+
+    .auth-button__progress {
+      background: v.$primary-color;
+    }
+
+    .auth-button__ripple {
+      background: rgba(v.$primary-color, 0.2);
+    }
+  }
+
+  &[data-variant="outline"] {
+    background: transparent;
+    color: v.$primary-color;
+    border-color: v.$primary-color;
+
+    &:hover:not(.auth-button--disabled):not(.auth-button--loading) {
+      background: rgba(v.$primary-color, 0.05);
+      border-color: color.adjust(v.$primary-color, $lightness: -10%);
+      color: color.adjust(v.$primary-color, $lightness: -10%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(v.$primary-color, 0.15);
+    }
+
+    &:active {
+      background: rgba(v.$primary-color, 0.1);
+      transform: translateY(0);
+    }
+
+    .auth-button__spinner {
+      border-color: rgba(v.$primary-color, 0.3);
+      border-top-color: v.$primary-color;
+    }
+
+    .auth-button__progress {
+      background: v.$primary-color;
+    }
+
+    .auth-button__ripple {
+      background: rgba(v.$primary-color, 0.2);
+    }
+  }
+
+  &[data-variant="ghost"] {
+    background: transparent;
+    color: v.$text-primary;
+    border-color: transparent;
+
+    &:hover:not(.auth-button--disabled):not(.auth-button--loading) {
+      background: v.$bg-secondary;
+      color: v.$text-primary;
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      background: color.adjust(v.$bg-secondary, $lightness: -5%);
+      transform: translateY(0);
+    }
+
+    .auth-button__spinner {
+      border-color: rgba(v.$text-primary, 0.3);
+      border-top-color: v.$text-primary;
+    }
+
+    .auth-button__progress {
+      background: v.$primary-color;
+    }
+
+    .auth-button__ripple {
+      background: rgba(v.$text-primary, 0.15);
+    }
+  }
+
+  &[data-variant="danger"] {
+    background: v.$danger-color;
+    color: white;
+    border-color: v.$danger-color;
+
+    &:hover:not(.auth-button--disabled):not(.auth-button--loading) {
+      background: color.adjust(v.$danger-color, $lightness: -5%);
+      border-color: color.adjust(v.$danger-color, $lightness: -5%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(v.$danger-color, 0.3);
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 6px rgba(v.$danger-color, 0.2);
+    }
+
+    .auth-button__progress {
+      background: rgba(255, 255, 255, 0.6);
+    }
+  }
+
+  &[data-variant="success"] {
+    background: v.$success-color;
+    color: white;
+    border-color: v.$success-color;
+
+    &:hover:not(.auth-button--disabled):not(.auth-button--loading) {
+      background: color.adjust(v.$success-color, $lightness: -5%);
+      border-color: color.adjust(v.$success-color, $lightness: -5%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(v.$success-color, 0.3);
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 6px rgba(v.$success-color, 0.2);
+    }
+
+    .auth-button__progress {
+      background: rgba(255, 255, 255, 0.6);
+    }
+  }
+
+  // ============ State Modifiers ============
+  &--loading {
+    cursor: default;
+    pointer-events: none;
+    
+    .auth-button__icon {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+  }
+
+  &--disabled {
+    background: v.$gray-100 !important;
+    color: v.$text-secondary !important;
+    border-color: v.$gray-300 !important;
+    cursor: not-allowed !important;
+    pointer-events: none;
+    box-shadow: none !important;
+    transform: none !important;
+    
+    .auth-button__spinner {
+      border-color: rgba(v.$text-muted, 0.3) !important;
+      border-top-color: v.$text-muted !important;
+    }
+  }
+
+  &--full-width {
+    width: 100%;
+    justify-content: center;
+  }
+
+  &--focused {
+    .auth-button__icon {
+      transform: scale(1.1);
+    }
+  }
+
+  &--success {
+    pointer-events: none;
+  }
+
+  &--progress {
+    .auth-button__text {
+      opacity: 0.8;
+    }
+  }
+
+  // ============ Touch Optimizations ============
+  @media (hover: none) and (pointer: coarse) {
+    min-height: 44px;
+    padding: v.$spacing-sm v.$spacing-md;
+
+    &[data-size="small"] {
+      min-height: 40px;
+      padding: v.$spacing-xs v.$spacing-sm;
+    }
+
+    &[data-size="large"] {
+      min-height: 48px;
+      padding: v.$spacing-md v.$spacing-lg;
+    }
+
+    // Disable hover effects on touch devices
+    &:hover {
+      transform: none !important;
+      box-shadow: none !important;
+      background: var(--original-bg) !important;
+    }
+
+    // Enhanced touch feedback
+    &:active {
+      transform: scale(0.98);
+      transition: transform 0.1s ease;
+    }
+  }
+
+  // ============ High Contrast Support ============
+  @media (prefers-contrast: high) {
+    border-width: 2px;
+    font-weight: v.$font-weight-bold;
+
+    &:focus-visible {
+      outline-width: 3px;
+      outline-offset: 3px;
+    }
+
+    &[data-variant="outline"] {
+      border-width: 3px;
+    }
+
+    .auth-button__progress {
+      height: 4px;
+    }
+  }
+
+  // ============ Reduced Motion Support ============
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    .auth-button__spinner,
+    .auth-button__icon,
+    .auth-button__text,
+    .auth-button__progress,
+    .auth-button__success-overlay,
+    .auth-button__success-icon {
+      transition: none;
+      animation: none;
+    }
+
+    &:hover {
+      transform: none;
+    }
+
+    &:active {
+      transform: none;
+    }
+
+    .auth-button__ripple {
+      display: none;
+    }
+  }
+
+  // ============ Dark Mode Support ============
+  @media (prefers-color-scheme: dark) {
+    &[data-variant="secondary"] {
+      background: v.$bg-secondary-dark;
+      color: v.$text-primary-dark;
+      border-color: v.$border-color-dark;
+
+      &:hover:not(.auth-button--disabled):not(.auth-button--loading) {
+        background: color.adjust(v.$bg-secondary-dark, $lightness: 5%);
+        border-color: color.adjust(v.$border-color-dark, $lightness: 10%);
+      }
+    }
+
+    &[data-variant="ghost"] {
+      color: v.$text-primary-dark;
+
+      &:hover:not(.auth-button--disabled):not(.auth-button--loading) {
+        background: v.$bg-secondary-dark;
+        color: v.$text-primary-dark;
+      }
+    }
+
+    &--disabled {
+      background: v.$gray-800 !important;
+      color: v.$gray-400 !important;
+      border-color: v.$gray-600 !important;
+    }
+  }
+}
+
+// ============ Animations ============
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+@keyframes success-slide-in {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes success-bounce {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+// ============ Focus Ring Utilities ============
+.auth-button-focus-ring {
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border: 2px solid v.$primary-color;
+  border-radius: calc(v.$border-radius + 3px);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  z-index: -1;
+
+  &--visible {
+    opacity: 1;
+  }
+}
