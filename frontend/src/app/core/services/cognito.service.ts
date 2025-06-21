@@ -74,7 +74,7 @@ export class CognitoService {
    */
   public async createCognitoUser(input: UsersCreateInput, password:string): Promise<SignUpOutput> {
 
-      console.debug('Creating Cognito user:', input);
+      console.debug('[CognitoService] Creating Cognito user');
 
       return await signUp({
         username: input.cognitoId,
@@ -94,7 +94,7 @@ export class CognitoService {
    * @param code
    */
   public async emailVerify(cognitoId: string, code: string): Promise<AuthResponse> {
-    console.debug('[CognitoService][emailVerify] called with', { cognitoId, code });
+    console.debug('[CognitoService] Email verification initiated');
     try {
       await confirmSignUp({ username: cognitoId, confirmationCode: code });
       console.debug('[CognitoService][emailVerify] confirmSignUp success');
@@ -104,7 +104,7 @@ export class CognitoService {
         Data: new Auth({ isSignedIn: false })
       };
     } catch (error) {
-      console.error('[CognitoService][emailVerify] threw error', error);
+      console.error('[CognitoService][emailVerify] Email verification failed');
       return {
         StatusCode: 500,
         Message: error instanceof Error ? error.message : 'Confirmation failed',
@@ -120,11 +120,11 @@ export class CognitoService {
    * @param email (optional) User's email for better MFA labeling
    */
   public async signIn(username: string, password: string, email?: string): Promise<AuthResponse> {
-    console.info('Starting sign in process for:', username);
+    console.debug('[CognitoService] Starting sign in process');
     const signInResponse = await signIn({ username, password });
 
     if (signInResponse.isSignedIn) {
-      console.info('Sign in successful for cognitoId:', username);
+      console.debug('[CognitoService] Sign in successful');
       return {
         StatusCode: 200,
         Message: 'Sign in successful',
@@ -133,7 +133,7 @@ export class CognitoService {
     }
 
     const nextStep = signInResponse.nextStep;
-    console.debug('Sign in next step:', nextStep);
+    console.debug('[CognitoService] Processing sign in next step');
 
     switch(nextStep.signInStep) {
       case 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP':
@@ -166,7 +166,7 @@ export class CognitoService {
           Data: new Auth({ isSignedIn: false, needsMFASetup: false, needsMFA: true, mfaType: 'totp' })
         };
       default:
-        console.error('Sign in failed:', signInResponse);
+        console.error('[CognitoService] Sign in failed - unexpected response type');
     }
 
     return {
@@ -183,15 +183,15 @@ export class CognitoService {
    */
   async mfaVerify(code: string, rememberDevice = false): Promise<AuthResponse> {
     try {
-      console.info('Verifying MFA code');
+      console.debug('[CognitoService] Verifying MFA code');
       const result = await confirmSignIn({
         challengeResponse: code,
         options: { rememberDevice }
       });
-      console.debug('MFA verification result:', result);
+      console.debug('[CognitoService] MFA verification completed');
 
       if (result.isSignedIn) {
-        console.info('MFA verification successful');
+        console.debug('[CognitoService] MFA verification successful');
 
         return {
           StatusCode: 200,
@@ -207,7 +207,7 @@ export class CognitoService {
       };
 
     } catch (error) {
-      console.error('MFA verification error:', error);
+      console.error('[CognitoService] MFA verification failed');
       return {
         StatusCode: 500,
         Message: error instanceof Error ? error.message : 'MFA verification failed',
@@ -236,7 +236,7 @@ export class CognitoService {
       // Step 1: Check if session and tokens exist
       const session = await fetchAuthSession();
       if (!session.tokens?.accessToken || !session.tokens?.idToken) {
-        console.debug('checkIsAuthenticated: No valid tokens found');
+        console.debug('[CognitoService] No valid tokens found');
         this.isAuthenticatedSubject.next(false);
         return false;
       }
@@ -247,19 +247,13 @@ export class CognitoService {
       const idTokenExp = session.tokens.idToken.payload?.exp;
 
       if (!accessTokenExp || !idTokenExp) {
-        console.debug('checkIsAuthenticated: Tokens missing expiration data');
+        console.debug('[CognitoService] Tokens missing expiration data');
         this.isAuthenticatedSubject.next(false);
         return false;
       }
 
       if (accessTokenExp <= currentTime || idTokenExp <= currentTime) {
-        console.debug('checkIsAuthenticated: Tokens are expired', {
-          currentTime,
-          accessTokenExp,
-          idTokenExp,
-          accessExpired: accessTokenExp <= currentTime,
-          idExpired: idTokenExp <= currentTime
-        });
+        console.debug('[CognitoService] Tokens are expired');
         this.isAuthenticatedSubject.next(false);
         return false;
       }
@@ -269,12 +263,12 @@ export class CognitoService {
       try {
         currentUser = await getCurrentUser();
         if (!currentUser.username) {
-          console.debug('checkIsAuthenticated: Unable to retrieve current user');
+          console.debug('[CognitoService] Unable to retrieve current user');
           this.isAuthenticatedSubject.next(false);
           return false;
         }
       } catch (userError) {
-        console.debug('checkIsAuthenticated: Error retrieving current user:', userError);
+        console.debug('[CognitoService] Error retrieving current user');
         this.isAuthenticatedSubject.next(false);
         return false;
       }
@@ -285,29 +279,19 @@ export class CognitoService {
       const hasBasicAccess = userGroups.includes('USER') || userGroups.includes('OWNER');
       
       if (!hasBasicAccess) {
-        console.debug('checkIsAuthenticated: User lacks required groups for app access', {
-          userGroups,
-          requiredGroups: ['USER', 'OWNER']
-        });
+        console.debug('[CognitoService] User lacks required groups for app access');
         this.isAuthenticatedSubject.next(false);
         return false;
       }
 
       // All checks passed
-      console.debug('checkIsAuthenticated: User is properly authenticated', {
-        username: currentUser?.username,
-        groups: userGroups,
-        tokenExpiry: {
-          access: new Date(accessTokenExp * 1000).toISOString(),
-          id: new Date(idTokenExp * 1000).toISOString()
-        }
-      });
+      console.debug('[CognitoService] User is properly authenticated');
 
       this.isAuthenticatedSubject.next(true);
       return true;
 
     } catch (error) {
-      console.debug('checkIsAuthenticated: Error during authentication check:', error);
+      console.debug('[CognitoService] Error during authentication check');
       this.isAuthenticatedSubject.next(false);
       return false;
     }
@@ -333,7 +317,7 @@ export class CognitoService {
       const session = await fetchAuthSession();
 
       if (!session.tokens?.idToken?.payload) {
-        console.debug('No valid session found');
+        console.debug('[CognitoService] No valid session found');
         return null;
       }
 
@@ -354,7 +338,7 @@ export class CognitoService {
       };
 
     } catch (error) {
-      console.error('Error fetching Cognito profile:', error);
+      console.error('[CognitoService] Failed to fetch user profile');
       return null;
     }
   }
@@ -365,7 +349,7 @@ export class CognitoService {
       this.currentUserSubject.next(null);
       this.isAuthenticatedSubject.next(false);
     } catch (error) {
-      console.error('Sign out error:', error);
+      console.error('[CognitoService] Sign out failed');
       throw new AuthError({ message: error instanceof Error ? error.message : 'Sign out failed' });
     }
   }
@@ -377,7 +361,7 @@ export class CognitoService {
    */
   async initiatePasswordReset(username: string): Promise<AuthResponse> {
     try {
-      console.info('Initiating password reset for:', username);
+      console.debug('[CognitoService] Initiating password reset');
       await resetPassword({ username });
       
       return {
@@ -386,7 +370,7 @@ export class CognitoService {
         Data: new Auth({ isSignedIn: false })
       };
     } catch (error) {
-      console.error('Password reset initiation error:', error);
+      console.error('[CognitoService] Password reset initiation failed');
       return {
         StatusCode: 500,
         Message: error instanceof Error ? error.message : 'Password reset failed',
@@ -404,7 +388,7 @@ export class CognitoService {
    */
   async confirmPasswordReset(username: string, code: string, newPassword: string): Promise<AuthResponse> {
     try {
-      console.info('Confirming password reset for:', username);
+      console.debug('[CognitoService] Confirming password reset');
       await confirmResetPassword({ 
         username, 
         confirmationCode: code,
@@ -417,7 +401,7 @@ export class CognitoService {
         Data: new Auth({ isSignedIn: false })
       };
     } catch (error) {
-      console.error('Password reset confirmation error:', error);
+      console.error('[CognitoService] Password reset confirmation failed');
       return {
         StatusCode: 500,
         Message: error instanceof Error ? error.message : 'Password reset confirmation failed',
@@ -435,16 +419,16 @@ export class CognitoService {
       const session = await fetchAuthSession();
       
       if (!session.tokens?.idToken?.payload) {
-        console.debug('No valid session found for group retrieval');
+        console.debug('[CognitoService] No valid session found for group retrieval');
         return [];
       }
 
       const groupsRaw = session.tokens.idToken.payload['cognito:groups'];
       const groups = Array.isArray(groupsRaw) ? groupsRaw.filter(g => typeof g === 'string') : [];
-      console.debug('Current user groups:', groups);
+      console.debug('[CognitoService] Current user groups retrieved');
       return groups as string[];
     } catch (error) {
-      console.error('Error fetching user groups:', error);
+      console.error('[CognitoService] Failed to fetch user groups');
       return [];
     }
   }
@@ -458,10 +442,10 @@ export class CognitoService {
     try {
       const userGroups = await this.getCurrentUserGroups();
       const hasGroup = requiredGroups.some(group => userGroups.includes(group));
-      console.debug(`User groups: ${userGroups}, Required: ${requiredGroups}, Has access: ${hasGroup}`);
+      console.debug('[CognitoService] User group access validation completed');
       return hasGroup;
     } catch (error) {
-      console.error('Error checking user groups:', error);
+      console.error('[CognitoService] Failed to check user groups');
       return false;
     }
   }
@@ -475,13 +459,13 @@ export class CognitoService {
   async validateGraphQLAccess(requiredGroups: string[]): Promise<boolean> {
     const isAuthenticated = await this.checkIsAuthenticated();
     if (!isAuthenticated) {
-      console.error('User is not authenticated');
+      console.error('[CognitoService] User authentication required');
       return false;
     }
 
     const hasAccess = await this.hasRequiredGroups(requiredGroups);
     if (!hasAccess) {
-      console.error(`User does not have required groups for operation. Required: ${requiredGroups}`);
+      console.error('[CognitoService] User lacks required permissions for operation');
     }
 
     return hasAccess;
@@ -561,7 +545,7 @@ export class CognitoService {
       
       return { mfaEnabled, mfaSetupComplete };
     } catch (error) {
-      console.error('[CognitoService][checkMFAPreferences] Error checking MFA status:', error);
+      console.error('[CognitoService] Failed to check MFA preferences');
       return { mfaEnabled: false, mfaSetupComplete: false };
     }
   }
@@ -571,53 +555,47 @@ export class CognitoService {
    * Call this from browser console: window.cognitoService.debugUserStatus()
    */
   async debugUserStatus(): Promise<void> {
-    console.log('🔍 === COGNITO USER DEBUG STATUS ===');
+    console.debug('🔍 === COGNITO USER DEBUG STATUS ===');
     
     try {
       // Check authentication
       const isAuth = await this.checkIsAuthenticated();
-      console.log('✅ Is Authenticated:', isAuth);
+      console.debug('✅ Is Authenticated:', isAuth);
       
       if (!isAuth) {
-        console.log('❌ User is not authenticated - cannot check groups');
+        console.debug('❌ User is not authenticated - cannot check groups');
         return;
       }
       
       // Get user profile
       const profile = await this.getCognitoProfile();
-      console.log('👤 User Profile:', {
-        username: profile?.username,
-        email: profile?.email,
-        email_verified: profile?.email_verified,
-        phone_number: profile?.phone_number,
-        phone_number_verified: profile?.phone_number_verified
-      });
+      console.debug('👤 User Profile: Basic profile information retrieved');
       
       // Get groups
       const groups = await this.getCurrentUserGroups();
-      console.log('👥 Current Cognito Groups:', groups);
+      console.debug('👥 Current Cognito Groups: Group information retrieved');
       
       // Check SMS verification access
       const hasAccess = await this.hasRequiredGroups(['USER', 'OWNER']);
-      console.log('📱 Has SMS Verification Access:', hasAccess);
+      console.debug('📱 Has SMS Verification Access:', hasAccess);
       
       // Check MFA status
       const mfaStatus = await this.checkMFAPreferences();
-      console.log('🔐 MFA Status:', mfaStatus);
+      console.debug('🔐 MFA Status: MFA configuration retrieved');
       
       if (!hasAccess) {
-        console.log('❌ User needs to be added to USER or OWNER group for SMS verification');
-        console.log('💡 Required groups: ["USER", "OWNER"]');
-        console.log('💡 Current groups:', groups);
+        console.debug('❌ User needs to be added to USER or OWNER group for SMS verification');
+        console.debug('💡 Required groups: ["USER", "OWNER"]');
+        console.debug('💡 Current groups: Group information available');
       } else {
-        console.log('✅ User has proper group membership for SMS verification');
+        console.debug('✅ User has proper group membership for SMS verification');
       }
       
     } catch (error) {
-      console.error('❌ Error checking user status:', error);
+      console.error('[CognitoService] Failed to check user status');
     }
     
-    console.log('🔍 === END DEBUG STATUS ===');
+    console.debug('🔍 === END DEBUG STATUS ===');
   }
 
   /**
@@ -656,7 +634,7 @@ export class CognitoService {
       };
       
     } catch (error) {
-      console.error('[CognitoService][setupMFA] Error setting up MFA:', error);
+      console.error('[CognitoService] Failed to setup MFA');
       return {
         StatusCode: 500,
         Message: 'Failed to set up MFA',
