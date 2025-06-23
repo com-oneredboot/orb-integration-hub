@@ -18,6 +18,18 @@ sys.path.append('/opt/python')
 from security_manager import OrganizationSecurityManager
 from kms_manager import OrganizationKMSManager
 from rbac_manager import OrganizationRBACManager, OrganizationPermissions
+from context_middleware import (
+    organization_context_required, 
+    requires_permission, 
+    requires_organization_owner,
+    allows_platform_override
+)
+from aws_audit_logger import (
+    AuditEventType, 
+    ComplianceFlag, 
+    log_organization_audit_event,
+    state_tracker
+)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -110,6 +122,41 @@ class OrganizationsResolver:
                 ConditionExpression='attribute_not_exists(organizationId)'
             )
             
+            # Log audit event for organization creation
+            try:
+                user_context = {
+                    'user_id': user_id,
+                    'session_id': event.get('requestContext', {}).get('requestId'),
+                    'ip_address': event.get('requestContext', {}).get('identity', {}).get('sourceIp'),
+                    'user_agent': event.get('requestContext', {}).get('identity', {}).get('userAgent'),
+                    'cognito_groups': cognito_groups
+                }
+                
+                action_details = {
+                    'operation': 'CREATE',
+                    'method': 'POST',
+                    'endpoint': 'createOrganization',
+                    'success': True,
+                    'permission_used': 'organization.create',
+                    'request_id': event.get('requestContext', {}).get('requestId'),
+                    'changes': {
+                        'resource_created': organization_data,
+                        'kms_key_created': kms_key_info
+                    }
+                }
+                
+                log_organization_audit_event(
+                    event_type=AuditEventType.ORGANIZATION_CREATED,
+                    user_context=user_context,
+                    organization_id=organization_id,
+                    action_details=action_details,
+                    compliance_flags=[ComplianceFlag.SOX, ComplianceFlag.GDPR, ComplianceFlag.SOC_2]
+                )
+                
+            except Exception as audit_error:
+                # Critical: Audit logging failure should be logged but not fail the operation
+                logger.critical(f"AUDIT_LOGGING_FAILURE for organization creation {organization_id}: {str(audit_error)}")
+            
             logger.info(f"Created organization {organization_id} for user {user_id}")
             
             return {
@@ -139,43 +186,18 @@ class OrganizationsResolver:
             logger.error(f"Error creating organization: {str(e)}")
             return self._error_response(f"Internal error: {str(e)}")
     
-    def get_organization(self, event: Dict[str, Any]) -> Dict[str, Any]:
-        """Get an organization with security validation."""
+    @requires_permission(OrganizationPermissions.ORGANIZATION_READ.key)
+    def get_organization(self, event: Dict[str, Any], org_context) -> Dict[str, Any]:
+        """Get an organization with automatic security validation."""
         try:
-            # Extract user context
-            user_id = event.get('identity', {}).get('sub')
-            cognito_groups = event.get('identity', {}).get('groups', [])
-            
-            # Extract arguments
-            organization_id = event.get('arguments', {}).get('organizationId')
-            
-            if not organization_id:
-                return self._error_response('Organization ID is required')
-            
-            # RBAC permission check
-            has_permission, rbac_context = self.rbac_manager.check_permission(
-                user_id, organization_id, OrganizationPermissions.ORGANIZATION_READ.key, cognito_groups
-            )
-            
-            if not has_permission:
-                return self._error_response('Access denied - insufficient permissions', rbac_context)
-            
-            # Get organization data
-            response = self.organizations_table.get_item(
-                Key={'organizationId': organization_id}
-            )
-            
-            if not response.get('Item'):
-                return self._error_response('Organization not found')
-            
-            organization = response['Item']
+            organization = org_context.organization_data
             
             # Decrypt sensitive fields if they exist and are encrypted
             if organization.get('description'):
                 try:
                     # Try to decrypt description (will fail gracefully if not encrypted)
                     decrypted_description = self.kms_manager.decrypt_organization_data(
-                        organization_id=organization_id,
+                        organization_id=org_context.organization_id,
                         encrypted_data=organization['description'],
                         encryption_context={'field': 'description', 'action': 'create'}
                     )
@@ -226,49 +248,100 @@ class OrganizationsResolver:
             logger.error(f"Error listing organizations: {str(e)}")
             return self._error_response(f"Internal error: {str(e)}")
     
-    def update_organization(self, event: Dict[str, Any]) -> Dict[str, Any]:
-        """Update an organization with security validation."""
+    @requires_permission(OrganizationPermissions.ORGANIZATION_UPDATE.key)
+    def update_organization(self, event: Dict[str, Any], org_context) -> Dict[str, Any]:
+        """Update an organization with automatic security validation."""
         try:
-            # Extract user context
-            user_id = event.get('identity', {}).get('sub')
-            cognito_groups = event.get('identity', {}).get('groups', [])
-            
             # Extract arguments
             args = event.get('arguments', {})
-            organization_id = args.get('organizationId')
+            organization_id = org_context.organization_id
             
-            if not organization_id:
-                return self._error_response('Organization ID is required')
-            
-            # RBAC permission check
-            has_permission, rbac_context = self.rbac_manager.check_permission(
-                user_id, organization_id, OrganizationPermissions.ORGANIZATION_UPDATE.key, cognito_groups
-            )
-            
-            if not has_permission:
-                return self._error_response('Access denied - insufficient permissions', rbac_context)
+            # Capture current state for audit logging
+            old_state = dict(org_context.organization_data)
             
             # Build update expression
             update_expression = "SET updatedAt = :updatedAt"
             expression_values = {':updatedAt': datetime.utcnow().isoformat()}
+            expression_names = {}
             
             if 'name' in args:
                 update_expression += ", #name = :name"
                 expression_values[':name'] = args['name']
+                expression_names['#name'] = 'name'
             
             if 'description' in args:
+                # Encrypt description with organization-specific KMS key
+                encrypted_description = args['description']
+                if args['description']:
+                    try:
+                        encrypted_description = self.kms_manager.encrypt_organization_data(
+                            organization_id=organization_id,
+                            plaintext_data=args['description'],
+                            encryption_context={'field': 'description', 'action': 'update'}
+                        )
+                    except Exception as e:
+                        logger.warning(f"Failed to encrypt description: {str(e)}")
+                        # Fallback to plain text
+                
                 update_expression += ", description = :description"
-                expression_values[':description'] = args['description']
+                expression_values[':description'] = encrypted_description
             
-            # Update organization
-            response = self.organizations_table.update_item(
-                Key={'organizationId': organization_id},
-                UpdateExpression=update_expression,
-                ExpressionAttributeValues=expression_values,
-                ExpressionAttributeNames={'#name': 'name'} if 'name' in args else None,
-                ReturnValues='ALL_NEW',
-                ConditionExpression='attribute_exists(organizationId)'
-            )
+            # Update organization with condition to ensure it exists
+            update_params = {
+                'Key': {'organizationId': organization_id},
+                'UpdateExpression': update_expression,
+                'ExpressionAttributeValues': expression_values,
+                'ReturnValues': 'ALL_NEW',
+                'ConditionExpression': 'attribute_exists(organizationId)'
+            }
+            
+            if expression_names:
+                update_params['ExpressionAttributeNames'] = expression_names
+            
+            response = self.organizations_table.update_item(**update_params)
+            
+            # Log audit event for organization update with state changes
+            try:
+                new_state = dict(response['Attributes'])
+                
+                # Calculate state changes using the state tracker
+                state_changes = state_tracker.capture_state_change(
+                    resource_type='ORGANIZATION',
+                    resource_id=organization_id,
+                    old_state=old_state,
+                    new_state=new_state
+                )
+                
+                user_context = {
+                    'user_id': org_context.user_id,
+                    'session_id': event.get('requestContext', {}).get('requestId'),
+                    'ip_address': event.get('requestContext', {}).get('identity', {}).get('sourceIp'),
+                    'user_agent': event.get('requestContext', {}).get('identity', {}).get('userAgent'),
+                    'cognito_groups': getattr(org_context, 'cognito_groups', [])
+                }
+                
+                action_details = {
+                    'operation': 'UPDATE',
+                    'method': 'PUT',
+                    'endpoint': 'updateOrganization',
+                    'success': True,
+                    'permission_used': OrganizationPermissions.ORGANIZATION_UPDATE.key,
+                    'request_id': event.get('requestContext', {}).get('requestId'),
+                    'changes': state_changes,
+                    'fields_modified': list(args.keys())
+                }
+                
+                log_organization_audit_event(
+                    event_type=AuditEventType.ORGANIZATION_UPDATED,
+                    user_context=user_context,
+                    organization_id=organization_id,
+                    action_details=action_details,
+                    compliance_flags=[ComplianceFlag.SOX, ComplianceFlag.GDPR, ComplianceFlag.SOC_2]
+                )
+                
+            except Exception as audit_error:
+                # Critical: Audit logging failure should be logged but not fail the operation
+                logger.critical(f"AUDIT_LOGGING_FAILURE for organization update {organization_id}: {str(audit_error)}")
             
             return {
                 'statusCode': 200,
@@ -285,26 +358,14 @@ class OrganizationsResolver:
             logger.error(f"Error updating organization: {str(e)}")
             return self._error_response(f"Internal error: {str(e)}")
     
-    def delete_organization(self, event: Dict[str, Any]) -> Dict[str, Any]:
-        """Delete an organization with security validation."""
+    @requires_organization_owner()
+    def delete_organization(self, event: Dict[str, Any], org_context) -> Dict[str, Any]:
+        """Delete an organization with automatic security validation."""
         try:
-            # Extract user context
-            user_id = event.get('identity', {}).get('sub')
-            cognito_groups = event.get('identity', {}).get('groups', [])
+            organization_id = org_context.organization_id
             
-            # Extract arguments
-            organization_id = event.get('arguments', {}).get('organizationId')
-            
-            if not organization_id:
-                return self._error_response('Organization ID is required')
-            
-            # RBAC permission check (only OWNER can delete)
-            has_permission, rbac_context = self.rbac_manager.check_permission(
-                user_id, organization_id, OrganizationPermissions.ORGANIZATION_DELETE.key, cognito_groups
-            )
-            
-            if not has_permission:
-                return self._error_response('Access denied - only organization owner can delete', rbac_context)
+            # Capture current state for audit logging before deletion
+            old_state = dict(org_context.organization_data)
             
             # Soft delete - update status to DELETED
             response = self.organizations_table.update_item(
@@ -333,6 +394,50 @@ class OrganizationsResolver:
                 # Log KMS cleanup error but don't fail organization deletion
                 logger.error(f"KMS key cleanup error for organization {organization_id}: {str(kms_error)}")
             
+            # Log audit event for organization deletion
+            try:
+                new_state = dict(response['Attributes'])
+                
+                # Calculate state changes using the state tracker
+                state_changes = state_tracker.capture_state_change(
+                    resource_type='ORGANIZATION',
+                    resource_id=organization_id,
+                    old_state=old_state,
+                    new_state=new_state
+                )
+                
+                user_context = {
+                    'user_id': org_context.user_id,
+                    'session_id': event.get('requestContext', {}).get('requestId'),
+                    'ip_address': event.get('requestContext', {}).get('identity', {}).get('sourceIp'),
+                    'user_agent': event.get('requestContext', {}).get('identity', {}).get('userAgent'),
+                    'cognito_groups': getattr(org_context, 'cognito_groups', [])
+                }
+                
+                action_details = {
+                    'operation': 'DELETE',
+                    'method': 'DELETE',
+                    'endpoint': 'deleteOrganization',
+                    'success': True,
+                    'permission_used': 'organization.delete',
+                    'request_id': event.get('requestContext', {}).get('requestId'),
+                    'changes': state_changes,
+                    'kms_key_scheduled_deletion': True,
+                    'deletion_type': 'SOFT_DELETE'
+                }
+                
+                log_organization_audit_event(
+                    event_type=AuditEventType.ORGANIZATION_DELETED,
+                    user_context=user_context,
+                    organization_id=organization_id,
+                    action_details=action_details,
+                    compliance_flags=[ComplianceFlag.SOX, ComplianceFlag.GDPR, ComplianceFlag.SOC_2]
+                )
+                
+            except Exception as audit_error:
+                # Critical: Audit logging failure should be logged but not fail the operation
+                logger.critical(f"AUDIT_LOGGING_FAILURE for organization deletion {organization_id}: {str(audit_error)}")
+            
             return {
                 'statusCode': 200,
                 'body': {
@@ -352,23 +457,19 @@ class OrganizationsResolver:
             logger.error(f"Error deleting organization: {str(e)}")
             return self._error_response(f"Internal error: {str(e)}")
     
-    def get_user_permissions(self, event: Dict[str, Any]) -> Dict[str, Any]:
+    @organization_context_required()
+    def get_user_permissions(self, event: Dict[str, Any], org_context) -> Dict[str, Any]:
         """Get user's permissions for an organization."""
         try:
-            # Extract user context
-            user_id = event.get('identity', {}).get('sub')
-            cognito_groups = event.get('identity', {}).get('groups', [])
-            
-            # Extract arguments
-            organization_id = event.get('arguments', {}).get('organizationId')
-            
-            if not organization_id:
-                return self._error_response('Organization ID is required')
-            
-            # Get user permissions
-            permissions_data = self.rbac_manager.get_user_permissions(
-                user_id, organization_id, cognito_groups
-            )
+            # Return permissions from organization context
+            permissions_data = {
+                'userId': org_context.user_id,
+                'organizationId': org_context.organization_id,
+                'role': org_context.user_role,
+                'permissions': org_context.user_permissions,
+                'membershipStatus': org_context.membership_status,
+                'isPlatformAdmin': org_context.is_platform_admin
+            }
             
             return {
                 'statusCode': 200,
@@ -379,33 +480,28 @@ class OrganizationsResolver:
             logger.error(f"Error getting user permissions: {str(e)}")
             return self._error_response(f"Internal error: {str(e)}")
     
-    def check_permission(self, event: Dict[str, Any]) -> Dict[str, Any]:
+    @organization_context_required()
+    def check_permission(self, event: Dict[str, Any], org_context) -> Dict[str, Any]:
         """Check if user has a specific permission."""
         try:
-            # Extract user context
-            user_id = event.get('identity', {}).get('sub')
-            cognito_groups = event.get('identity', {}).get('groups', [])
-            
             # Extract arguments
             args = event.get('arguments', {})
-            organization_id = args.get('organizationId')
             permission_key = args.get('permission')
             
-            if not organization_id or not permission_key:
-                return self._error_response('Organization ID and permission are required')
+            if not permission_key:
+                return self._error_response('Permission key is required')
             
-            # Check permission
-            has_permission, context = self.rbac_manager.check_permission(
-                user_id, organization_id, permission_key, cognito_groups
-            )
+            # Check if user has the specified permission
+            has_permission = permission_key in org_context.user_permissions
             
             return {
                 'statusCode': 200,
                 'body': {
                     'hasPermission': has_permission,
-                    'organizationId': organization_id,
+                    'organizationId': org_context.organization_id,
                     'permission': permission_key,
-                    'context': context
+                    'userRole': org_context.user_role,
+                    'userPermissions': org_context.user_permissions
                 }
             }
             

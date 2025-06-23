@@ -1,6 +1,6 @@
 """
 Generated Python models for SmsRateLimit
-Generated at 2025-06-23T13:00:09.575248
+Generated at 2025-06-23T16:03:31.263294
 """
 
 from typing import Optional, List
