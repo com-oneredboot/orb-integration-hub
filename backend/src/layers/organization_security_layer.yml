@@ -1,0 +1,47 @@
+# file: backend/src/layers/organization_security_layer.yml
+# author: AI Assistant
+# created: 2025-06-22
+# description: CloudFormation template for Organization Security Lambda layer
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Organization Security Lambda Layer for multi-tenant access control'
+
+Parameters:
+  CustomerID:
+    Type: String
+    Default: 'orb'
+    Description: Customer identifier for resource naming
+  ProjectID:
+    Type: String
+    Default: 'integration-hub'
+    Description: Project identifier for resource naming
+
+Resources:
+  OrganizationSecurityLayer:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      LayerName: !Sub '${CustomerID}-${ProjectID}-organization-security-layer'
+      Description: 'Organization security middleware for multi-tenant access control'
+      Content:
+        S3Bucket: !Sub '${CustomerID}-${ProjectID}-build-artifacts'
+        S3Key: 'layers/organization-security-layer.zip'
+      CompatibleRuntimes:
+        - python3.9
+        - python3.10
+        - python3.11
+      CompatibleArchitectures:
+        - x86_64
+        - arm64
+
+Outputs:
+  OrganizationSecurityLayerArn:
+    Description: 'ARN of the Organization Security Lambda Layer'
+    Value: !Ref OrganizationSecurityLayer
+    Export:
+      Name: !Sub '${CustomerID}-${ProjectID}-organization-security-layer-arn'
+  
+  OrganizationSecurityLayerVersion:
+    Description: 'Version of the Organization Security Lambda Layer'
+    Value: !GetAtt OrganizationSecurityLayer.Version
+    Export:
+      Name: !Sub '${CustomerID}-${ProjectID}-organization-security-layer-version'

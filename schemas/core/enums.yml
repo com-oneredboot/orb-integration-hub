@@ -59,6 +59,43 @@ ApplicationRoleStatus:
   - REJECTED
   - DELETED
 
+# Organization status enums
+OrganizationStatus:
+  - ACTIVE
+  - INACTIVE
+  - PENDING
+  - SUSPENDED
+  - DELETED
+
+# Organization user role enums (OWNER is determined by Organizations.ownerId field, not role assignment)
+OrganizationUserRole:
+  - ADMINISTRATOR
+  - VIEWER
+
+# Organization user status enums
+OrganizationUserStatus:
+  - ACTIVE
+  - INACTIVE
+  - INVITED
+  - PENDING
+  - REJECTED
+  - REMOVED
+
+# Notification type enums
+NotificationType:
+  - APPLICATION_TRANSFER_REQUEST
+  - APPLICATION_TRANSFER_COMPLETED
+  - ORGANIZATION_INVITATION_RECEIVED
+  - ORGANIZATION_INVITATION_ACCEPTED
+  - ORGANIZATION_INVITATION_REJECTED
+
+# Notification status enums
+NotificationStatus:
+  - PENDING
+  - READ
+  - DISMISSED
+  - EXPIRED
+
 SchemaType:
   - standard        # Standard model (plain object), not tied to a data source or API
   - dynamodb        # AWS DynamoDB table
@@ -67,6 +104,7 @@ SchemaType:
   - mssql           # Microsoft SQL Server table
   - sqlite          # SQLite table (for local/dev/testing)
   - lambda          # AWS Lambda-backed resolver
+  - lambda-secured  # AWS Lambda resolver with DynamoDB backend for enhanced security
   - graphql         # GraphQL-only type (not backed by a data source)
   - registry        # Static registry or enum
   - graph           # Graph database (e.g., AWS Neptune, Neo4j)

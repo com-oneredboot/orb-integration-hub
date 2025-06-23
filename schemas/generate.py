@@ -1324,6 +1324,44 @@ def load_schemas() -> dict:
             # Attach referenced models for use in template rendering
             setattr(schema_obj, 'model_imports', sorted(referenced_models))
             schemas[schema_name] = schema_obj
+        elif schema_type == 'lambda-secured':
+            # lambda-secured type: combines DynamoDB table generation with Lambda resolver
+            model = schema_dict['model']
+            attributes = []
+            for attr_name, attr_info in model['attributes'].items():
+                dto_type = attr_info['type']
+                if attr_name in ['emailVerified', 'phoneVerified', 'isSignedIn', 'needsMFA', 'needsMFASetup']:
+                    dto_type = 'string | boolean'
+                attr = Attribute(
+                    name=attr_name,
+                    type=attr_info['type'],
+                    description=attr_info.get('description', ''),
+                    required=attr_info.get('required', True),
+                    enum_type=attr_info.get('enum_type'),
+                    enum_values=attr_info.get('enum_values')
+                )
+                setattr(attr, 'dto_type', dto_type)
+                # Patch: mark as model_reference if type matches a known model
+                if attr.type in model_names:
+                    setattr(attr, 'model_reference', attr.type)
+                attributes.append(attr)
+            keys = model['keys']
+            partition_key = keys['primary']['partition']
+            sort_key = keys['primary'].get('sort', 'None')
+            secondary_indexes = keys.get('secondary', [])
+            auth_config = model.get('authConfig')
+            stream_config = model.get('stream')
+            schema_obj = TableSchema(
+                name=schema_name,
+                attributes=attributes,
+                partition_key=partition_key,
+                sort_key=sort_key,
+                secondary_indexes=secondary_indexes,
+                auth_config=auth_config,
+                type='lambda-secured',
+                stream=stream_config
+            )
+            schemas[schema_name] = schema_obj
         else:
             # Fallback: treat as GraphQLType
             model = schema_dict['model']
@@ -1445,6 +1483,13 @@ def main():
                 logger.debug(f'Generating lambda model for type: {table}')
                 generate_python_model(table, schema, template_name='python_lambda.jinja')
                 generate_typescript_model(table, schema, template_name='typescript_lambda_model.jinja', all_model_names=all_model_names)
+                generate_typescript_lambda_graphql_ops(table, schema)
+            elif schema_type == 'lambda-secured':
+                logger.debug(f'Generating lambda-secured model for type: {table}')
+                # Generate DynamoDB table (like dynamodb type)
+                generate_python_model(table, schema)
+                generate_typescript_model(table, schema, template_name='typescript_dynamodb.jinja', all_model_names=all_model_names)
+                # Generate Lambda GraphQL operations (like lambda type)
                 generate_typescript_lambda_graphql_ops(table, schema)
             else:
                 logger.error(f'Unknown or unsupported schema type: {schema_type} for {table}')

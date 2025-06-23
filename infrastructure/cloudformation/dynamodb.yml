@@ -29,6 +29,114 @@ Parameters:
 
 # --------------------------------------------------- #
 Resources:
+  OrganizationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-organizations
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: organizationId
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: organizationId
+          AttributeType: S
+        - AttributeName: ownerId
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: N
+        - AttributeName: status
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: OwnerIndex
+          KeySchema:
+            - AttributeName: ownerId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: StatusIndex
+          KeySchema:
+            - AttributeName: status
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: StatusOwnerIndex
+          KeySchema:
+            - AttributeName: status
+              KeyType: HASH
+            - AttributeName: ownerId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  OrganizationsTableArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-organizations-table-arn
+      Type: String
+      Value: !GetAtt OrganizationsTable.Arn
+
+  OrganizationsTableName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-organizations-table-name
+      Type: String
+      Value: !Ref OrganizationsTable
+
+    
+  NotificationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-notifications
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: notificationId
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: notificationId
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: N
+        - AttributeName: recipientUserId
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+        - AttributeName: type
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: UserNotificationsIndex
+          KeySchema:
+            - AttributeName: recipientUserId
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: TypeStatusIndex
+          KeySchema:
+            - AttributeName: type
+              KeyType: HASH
+            - AttributeName: status
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  NotificationsTableArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-notifications-table-arn
+      Type: String
+      Value: !GetAtt NotificationsTable.Arn
+
+  NotificationsTableName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-notifications-table-name
+      Type: String
+      Value: !Ref NotificationsTable
+
+    
   ApplicationUsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -75,6 +183,83 @@ Resources:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users-table-name
       Type: String
       Value: !Ref ApplicationUsersTable
+
+    
+  SmsRateLimitTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: phoneNumber
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: phoneNumber
+          AttributeType: S
+
+  SmsRateLimitTableArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit-table-arn
+      Type: String
+      Value: !GetAtt SmsRateLimitTable.Arn
+
+  SmsRateLimitTableName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit-table-name
+      Type: String
+      Value: !Ref SmsRateLimitTable
+
+    
+  OrganizationUsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-organization-users
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: organizationId
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: organizationId
+          AttributeType: S
+        - AttributeName: role
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: OrganizationMembersIndex
+          KeySchema:
+            - AttributeName: organizationId
+              KeyType: HASH
+            - AttributeName: role
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: UserOrganizationsIndex
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: role
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  OrganizationUsersTableArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-organization-users-table-arn
+      Type: String
+      Value: !GetAtt OrganizationUsersTable.Arn
+
+  OrganizationUsersTableName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-organization-users-table-name
+      Type: String
+      Value: !Ref OrganizationUsersTable
 
     
   ApplicationRolesTable:
@@ -188,6 +373,19 @@ Resources:
       AttributeDefinitions:
         - AttributeName: applicationId
           AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: N
+        - AttributeName: organizationId
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: OrganizationAppsIndex
+          KeySchema:
+            - AttributeName: organizationId
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
 
   ApplicationsTableArn:
     Type: AWS::SSM::Parameter
@@ -263,39 +461,34 @@ Resources:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-users-table-stream-arn
       Type: String
       Value: !GetAtt UsersTable.StreamArn
-
-  SmsRateLimitTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit
-      BillingMode: PAY_PER_REQUEST
-      KeySchema:
-        - AttributeName: phoneNumber
-          KeyType: HASH
-      AttributeDefinitions:
-        - AttributeName: phoneNumber
-          AttributeType: S
-      TimeToLiveSpecification:
-        AttributeName: ttl
-        Enabled: true
-
-  SmsRateLimitTableArn:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit-table-arn
-      Type: String
-      Value: !GetAtt SmsRateLimitTable.Arn
-
-  SmsRateLimitTableName:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit-table-name
-      Type: String
-      Value: !Ref SmsRateLimitTable
     
 
 # --------------------------------------------------- #
 Outputs:
+  OrganizationsTableArn:
+    Description: The ARN of the Organizations table
+    Value: !GetAtt OrganizationsTable.Arn
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-organizations-table-arn
+
+  OrganizationsTableName:
+    Description: The name of the Organizations table
+    Value: !Ref OrganizationsTable
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-organizations-table-name
+
+  NotificationsTableArn:
+    Description: The ARN of the Notifications table
+    Value: !GetAtt NotificationsTable.Arn
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-notifications-table-arn
+
+  NotificationsTableName:
+    Description: The name of the Notifications table
+    Value: !Ref NotificationsTable
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-notifications-table-name
+
   ApplicationUsersTableArn:
     Description: The ARN of the ApplicationUsers table
     Value: !GetAtt ApplicationUsersTable.Arn
@@ -307,6 +500,30 @@ Outputs:
     Value: !Ref ApplicationUsersTable
     Export:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users-table-name
+
+  SmsRateLimitTableArn:
+    Description: The ARN of the SmsRateLimit table
+    Value: !GetAtt SmsRateLimitTable.Arn
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit-table-arn
+
+  SmsRateLimitTableName:
+    Description: The name of the SmsRateLimit table
+    Value: !Ref SmsRateLimitTable
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit-table-name
+
+  OrganizationUsersTableArn:
+    Description: The ARN of the OrganizationUsers table
+    Value: !GetAtt OrganizationUsersTable.Arn
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-organization-users-table-arn
+
+  OrganizationUsersTableName:
+    Description: The name of the OrganizationUsers table
+    Value: !Ref OrganizationUsersTable
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-organization-users-table-name
 
   ApplicationRolesTableArn:
     Description: The ARN of the ApplicationRoles table
@@ -361,15 +578,3 @@ Outputs:
     Value: !GetAtt UsersTable.StreamArn
     Export:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-users-table-stream-arn
-
-  SmsRateLimitTableArn:
-    Description: The ARN of the SMS Rate Limit table
-    Value: !GetAtt SmsRateLimitTable.Arn
-    Export:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit-table-arn
-
-  SmsRateLimitTableName:
-    Description: The name of the SMS Rate Limit table
-    Value: !Ref SmsRateLimitTable
-    Export:
-      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit-table-name

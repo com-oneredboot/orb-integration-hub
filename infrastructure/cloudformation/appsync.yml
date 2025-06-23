@@ -134,6 +134,17 @@ Resources:
 
   # DynamoDB DataSources
   # Jinja template for AppSync DynamoDB DataSources
+  NotificationsDynamoDbDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      Name: NotificationsDynamoDbDataSource
+      Type: AMAZON_DYNAMODB
+      DynamoDBConfig:
+        TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-notifications-table-name}}'
+        AwsRegion: !Ref AWS::Region
+        UseCallerCredentials: false
+      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
   ApplicationUsersDynamoDbDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -142,6 +153,28 @@ Resources:
       Type: AMAZON_DYNAMODB
       DynamoDBConfig:
         TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-application-users-table-name}}'
+        AwsRegion: !Ref AWS::Region
+        UseCallerCredentials: false
+      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+  SmsRateLimitDynamoDbDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      Name: SmsRateLimitDynamoDbDataSource
+      Type: AMAZON_DYNAMODB
+      DynamoDBConfig:
+        TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit-table-name}}'
+        AwsRegion: !Ref AWS::Region
+        UseCallerCredentials: false
+      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+  OrganizationUsersDynamoDbDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      Name: OrganizationUsersDynamoDbDataSource
+      Type: AMAZON_DYNAMODB
+      DynamoDBConfig:
+        TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-organization-users-table-name}}'
         AwsRegion: !Ref AWS::Region
         UseCallerCredentials: false
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
@@ -203,6 +236,278 @@ Resources:
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
  
   # DynamoDB Resolvers
+  NotificationsCreateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: NotificationsDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: NotificationsCreate
+      DataSourceName: NotificationsDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "PutItem",
+          "key": {
+            "notificationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.notificationId)
+          },
+          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
+  NotificationsUpdateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: NotificationsDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: NotificationsUpdate
+      DataSourceName: NotificationsDynamoDbDataSource
+      RequestMappingTemplate: |
+        #set($input = $ctx.args.input)
+        #set($key = "notificationId")
+        #set($updateExpression = "")
+        #set($expressionNames = {})
+        #set($expressionValues = {})
+        #set($separator = "")
+        
+        ## Automatically set updatedAt to current timestamp
+        #set($updateExpression = "updatedAt = :updatedAt")
+        $!expressionValues.put(":updatedAt", $util.dynamodb.toDynamoDB($util.time.nowISO8601()))
+        #set($separator = ", ")
+        
+        #foreach($entry in $input.entrySet())
+          #if($entry.key != $key && $entry.key != "updatedAt")
+            #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
+            $!expressionNames.put("#$entry.key", "$entry.key")
+            $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
+            #set($separator = ", ")
+          #end
+        #end
+        
+        {
+          "version": "2018-05-29",
+          "operation": "UpdateItem",
+          "key": {
+            "notificationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.notificationId)
+          },
+          "update": {
+            "expression": "SET $updateExpression",
+            "expressionNames": $util.toJson($expressionNames),
+            "expressionValues": $util.toJson($expressionValues)
+          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
+  NotificationsDeleteResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: NotificationsDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: NotificationsDelete
+      DataSourceName: NotificationsDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "DeleteItem",
+          "key": {
+            "notificationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.notificationId)          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
+  NotificationsDisableResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: NotificationsDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: NotificationsDisable
+      DataSourceName: NotificationsDynamoDbDataSource
+      RequestMappingTemplate: |
+        #set($input = $ctx.args.input)
+        #set($key = "notificationId")
+        #set($updateExpression = "")
+        #set($expressionNames = {})
+        #set($expressionValues = {})
+        #set($separator = "")
+        
+        ## Automatically set updatedAt to current timestamp
+        #set($updateExpression = "updatedAt = :updatedAt")
+        $!expressionValues.put(":updatedAt", $util.dynamodb.toDynamoDB($util.time.nowISO8601()))
+        #set($separator = ", ")
+        
+        #foreach($entry in $input.entrySet())
+          #if($entry.key != $key && $entry.key != "updatedAt")
+            #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
+            $!expressionNames.put("#$entry.key", "$entry.key")
+            $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
+            #set($separator = ", ")
+          #end
+        #end
+        
+        {
+          "version": "2018-05-29",
+          "operation": "UpdateItem",
+          "key": {
+            "notificationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.notificationId)
+          },
+          "update": {
+            "expression": "SET $updateExpression",
+            "expressionNames": $util.toJson($expressionNames),
+            "expressionValues": $util.toJson($expressionValues)
+          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
+  NotificationsQueryByNotificationIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: NotificationsDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: NotificationsQueryByNotificationId
+      DataSourceName: NotificationsDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "query": {
+            "expression": "notificationId = :notificationId",
+            "expressionValues": {
+              ":notificationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.notificationId)            }
+          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
+  NotificationsQueryByRecipientUserIdAndCreatedAtResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: NotificationsDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: NotificationsQueryByRecipientUserIdAndCreatedAt
+      DataSourceName: NotificationsDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "index": "UserNotificationsIndex",
+          "query": {
+            "expression": "recipientUserId = :recipientUserId AND createdAt = :createdAt",
+            "expressionValues": {
+              ":recipientUserId": $util.dynamodb.toDynamoDBJson($ctx.args.input.recipientUserId),
+              ":createdAt": $util.dynamodb.toDynamoDBJson($ctx.args.input.createdAt)            }
+          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
+  NotificationsQueryByTypeAndStatusResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: NotificationsDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: NotificationsQueryByTypeAndStatus
+      DataSourceName: NotificationsDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "index": "TypeStatusIndex",
+          "query": {
+            "expression": "type = :type AND status = :status",
+            "expressionValues": {
+              ":type": $util.dynamodb.toDynamoDBJson($ctx.args.input.type),
+              ":status": $util.dynamodb.toDynamoDBJson($ctx.args.input.status)            }
+          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
   ApplicationUsersCreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn: ApplicationUsersDynamoDbDataSource
@@ -459,6 +764,547 @@ Resources:
             "expressionValues": {
               ":applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId),
               ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)            }
+          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
+  SmsRateLimitCreateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: SmsRateLimitDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: SmsRateLimitCreate
+      DataSourceName: SmsRateLimitDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "PutItem",
+          "key": {
+            "phoneNumber": $util.dynamodb.toDynamoDBJson($ctx.args.input.phoneNumber)
+          },
+          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
+  SmsRateLimitUpdateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: SmsRateLimitDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: SmsRateLimitUpdate
+      DataSourceName: SmsRateLimitDynamoDbDataSource
+      RequestMappingTemplate: |
+        #set($input = $ctx.args.input)
+        #set($key = "phoneNumber")
+        #set($updateExpression = "")
+        #set($expressionNames = {})
+        #set($expressionValues = {})
+        #set($separator = "")
+        
+        ## Automatically set updatedAt to current timestamp
+        #set($updateExpression = "updatedAt = :updatedAt")
+        $!expressionValues.put(":updatedAt", $util.dynamodb.toDynamoDB($util.time.nowISO8601()))
+        #set($separator = ", ")
+        
+        #foreach($entry in $input.entrySet())
+          #if($entry.key != $key && $entry.key != "updatedAt")
+            #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
+            $!expressionNames.put("#$entry.key", "$entry.key")
+            $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
+            #set($separator = ", ")
+          #end
+        #end
+        
+        {
+          "version": "2018-05-29",
+          "operation": "UpdateItem",
+          "key": {
+            "phoneNumber": $util.dynamodb.toDynamoDBJson($ctx.args.input.phoneNumber)
+          },
+          "update": {
+            "expression": "SET $updateExpression",
+            "expressionNames": $util.toJson($expressionNames),
+            "expressionValues": $util.toJson($expressionValues)
+          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
+  SmsRateLimitDeleteResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: SmsRateLimitDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: SmsRateLimitDelete
+      DataSourceName: SmsRateLimitDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "DeleteItem",
+          "key": {
+            "phoneNumber": $util.dynamodb.toDynamoDBJson($ctx.args.input.phoneNumber)          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
+  SmsRateLimitDisableResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: SmsRateLimitDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: SmsRateLimitDisable
+      DataSourceName: SmsRateLimitDynamoDbDataSource
+      RequestMappingTemplate: |
+        #set($input = $ctx.args.input)
+        #set($key = "phoneNumber")
+        #set($updateExpression = "")
+        #set($expressionNames = {})
+        #set($expressionValues = {})
+        #set($separator = "")
+        
+        ## Automatically set updatedAt to current timestamp
+        #set($updateExpression = "updatedAt = :updatedAt")
+        $!expressionValues.put(":updatedAt", $util.dynamodb.toDynamoDB($util.time.nowISO8601()))
+        #set($separator = ", ")
+        
+        #foreach($entry in $input.entrySet())
+          #if($entry.key != $key && $entry.key != "updatedAt")
+            #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
+            $!expressionNames.put("#$entry.key", "$entry.key")
+            $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
+            #set($separator = ", ")
+          #end
+        #end
+        
+        {
+          "version": "2018-05-29",
+          "operation": "UpdateItem",
+          "key": {
+            "phoneNumber": $util.dynamodb.toDynamoDBJson($ctx.args.input.phoneNumber)
+          },
+          "update": {
+            "expression": "SET $updateExpression",
+            "expressionNames": $util.toJson($expressionNames),
+            "expressionValues": $util.toJson($expressionValues)
+          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
+  SmsRateLimitQueryByPhoneNumberResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: SmsRateLimitDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: SmsRateLimitQueryByPhoneNumber
+      DataSourceName: SmsRateLimitDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "query": {
+            "expression": "phoneNumber = :phoneNumber",
+            "expressionValues": {
+              ":phoneNumber": $util.dynamodb.toDynamoDBJson($ctx.args.input.phoneNumber)            }
+          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
+  OrganizationUsersCreateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: OrganizationUsersDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: OrganizationUsersCreate
+      DataSourceName: OrganizationUsersDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "PutItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          },
+          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
+  OrganizationUsersUpdateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: OrganizationUsersDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: OrganizationUsersUpdate
+      DataSourceName: OrganizationUsersDynamoDbDataSource
+      RequestMappingTemplate: |
+        #set($input = $ctx.args.input)
+        #set($key = "userId")
+        #set($updateExpression = "")
+        #set($expressionNames = {})
+        #set($expressionValues = {})
+        #set($separator = "")
+        
+        ## Automatically set updatedAt to current timestamp
+        #set($updateExpression = "updatedAt = :updatedAt")
+        $!expressionValues.put(":updatedAt", $util.dynamodb.toDynamoDB($util.time.nowISO8601()))
+        #set($separator = ", ")
+        
+        #foreach($entry in $input.entrySet())
+          #if($entry.key != $key && $entry.key != "updatedAt")
+            #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
+            $!expressionNames.put("#$entry.key", "$entry.key")
+            $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
+            #set($separator = ", ")
+          #end
+        #end
+        
+        {
+          "version": "2018-05-29",
+          "operation": "UpdateItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          },
+          "update": {
+            "expression": "SET $updateExpression",
+            "expressionNames": $util.toJson($expressionNames),
+            "expressionValues": $util.toJson($expressionValues)
+          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
+  OrganizationUsersDeleteResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: OrganizationUsersDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: OrganizationUsersDelete
+      DataSourceName: OrganizationUsersDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "DeleteItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
+  OrganizationUsersDisableResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: OrganizationUsersDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: OrganizationUsersDisable
+      DataSourceName: OrganizationUsersDynamoDbDataSource
+      RequestMappingTemplate: |
+        #set($input = $ctx.args.input)
+        #set($key = "userId")
+        #set($updateExpression = "")
+        #set($expressionNames = {})
+        #set($expressionValues = {})
+        #set($separator = "")
+        
+        ## Automatically set updatedAt to current timestamp
+        #set($updateExpression = "updatedAt = :updatedAt")
+        $!expressionValues.put(":updatedAt", $util.dynamodb.toDynamoDB($util.time.nowISO8601()))
+        #set($separator = ", ")
+        
+        #foreach($entry in $input.entrySet())
+          #if($entry.key != $key && $entry.key != "updatedAt")
+            #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
+            $!expressionNames.put("#$entry.key", "$entry.key")
+            $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
+            #set($separator = ", ")
+          #end
+        #end
+        
+        {
+          "version": "2018-05-29",
+          "operation": "UpdateItem",
+          "key": {
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          },
+          "update": {
+            "expression": "SET $updateExpression",
+            "expressionNames": $util.toJson($expressionNames),
+            "expressionValues": $util.toJson($expressionValues)
+          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
+  OrganizationUsersQueryByUserIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: OrganizationUsersDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: OrganizationUsersQueryByUserId
+      DataSourceName: OrganizationUsersDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "query": {
+            "expression": "userId = :userId",
+            "expressionValues": {
+              ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)            }
+          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
+  OrganizationUsersQueryByOrganizationIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: OrganizationUsersDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: OrganizationUsersQueryByOrganizationId
+      DataSourceName: OrganizationUsersDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "query": {
+            "expression": "organizationId = :organizationId",
+            "expressionValues": {
+              ":organizationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.organizationId)            }
+          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
+  OrganizationUsersQueryByBothResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: OrganizationUsersDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: OrganizationUsersQueryByBoth
+      DataSourceName: OrganizationUsersDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "query": {
+            "expression": "userId = :userId AND organizationId = :organizationId",
+            "expressionValues": {
+              ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId),
+              ":organizationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.organizationId)            }
+          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
+  OrganizationUsersQueryByOrganizationIdAndRoleResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: OrganizationUsersDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: OrganizationUsersQueryByOrganizationIdAndRole
+      DataSourceName: OrganizationUsersDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "index": "OrganizationMembersIndex",
+          "query": {
+            "expression": "organizationId = :organizationId AND role = :role",
+            "expressionValues": {
+              ":organizationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.organizationId),
+              ":role": $util.dynamodb.toDynamoDBJson($ctx.args.input.role)            }
+          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
+  OrganizationUsersQueryByUserIdAndRoleResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: OrganizationUsersDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: OrganizationUsersQueryByUserIdAndRole
+      DataSourceName: OrganizationUsersDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "index": "UserOrganizationsIndex",
+          "query": {
+            "expression": "userId = :userId AND role = :role",
+            "expressionValues": {
+              ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId),
+              ":role": $util.dynamodb.toDynamoDBJson($ctx.args.input.role)            }
           }
         }
       ResponseMappingTemplate: |
@@ -1207,6 +2053,40 @@ Resources:
             "expression": "applicationId = :applicationId",
             "expressionValues": {
               ":applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)            }
+          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
+  ApplicationsQueryByOrganizationIdAndCreatedAtResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: ApplicationsDynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: ApplicationsQueryByOrganizationIdAndCreatedAt
+      DataSourceName: ApplicationsDynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Query",
+          "index": "OrganizationAppsIndex",
+          "query": {
+            "expression": "organizationId = :organizationId AND createdAt = :createdAt",
+            "expressionValues": {
+              ":organizationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.organizationId),
+              ":createdAt": $util.dynamodb.toDynamoDBJson($ctx.args.input.createdAt)            }
           }
         }
       ResponseMappingTemplate: |

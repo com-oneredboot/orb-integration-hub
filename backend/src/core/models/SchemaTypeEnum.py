@@ -13,6 +13,7 @@ class SchemaType(Enum):
     mssql = "mssql"
     sqlite = "sqlite"
     lambda = "lambda"
+    lambda-secured = "lambda-secured"
     graphql = "graphql"
     registry = "registry"
     graph = "graph"
