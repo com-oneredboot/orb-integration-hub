@@ -123,13 +123,9 @@ export class OrganizationTestDataFactory {
     const users: Users[] = [];
     const organizationUsers: OrganizationUsers[] = [];
     
-    // Create owner membership
-    organizationUsers.push(this.createOrganizationUserRecord({
-      userId: owner.userId,
-      organizationId: orgId,
-      role: OrganizationUserRole.OWNER,
-      status: OrganizationUserStatus.ACTIVE
-    }));
+    // Note: Organization ownership is determined by userId matching organization.ownerId
+    // The owner doesn't need an OrganizationUsers record as they own the organization
+    // They can invite users with ADMINISTRATOR or VIEWER roles
     
     // Create additional users
     for (let i = 0; i < sizeConfig.userCount - 1; i++) {
@@ -142,9 +138,8 @@ export class OrganizationTestDataFactory {
       const userStatus = includeInactiveUsers && i % 5 === 0 ? 
         OrganizationUserStatus.INACTIVE : OrganizationUserStatus.ACTIVE;
       
-      // Determine role
-      const role = i === 0 ? OrganizationUserRole.ADMIN : 
-                  i < 3 ? OrganizationUserRole.MEMBER : OrganizationUserRole.GUEST;
+      // Determine role (only ADMINISTRATOR and VIEWER are valid)
+      const role = i === 0 ? OrganizationUserRole.ADMINISTRATOR : OrganizationUserRole.VIEWER;
       
       organizationUsers.push(this.createOrganizationUserRecord({
         userId: user.userId,
@@ -200,7 +195,7 @@ export class OrganizationTestDataFactory {
     // Create organization memberships
     const memberships: OrganizationUsers[] = [];
     organizationIds.forEach(orgId => {
-      const role = roles[orgId] || OrganizationUserRole.MEMBER;
+      const role = roles[orgId] || OrganizationUserRole.VIEWER;
       memberships.push(this.createOrganizationUserRecord({
         userId,
         organizationId: orgId,
@@ -363,26 +358,18 @@ export class OrganizationTestDataFactory {
     });
     const orgId = testOrg.organization.organizationId;
     
-    // Define role permissions mapping
+    // Define role permissions mapping (only ADMINISTRATOR and VIEWER are valid roles)
     const rolePermissions: Record<OrganizationUserRole, {
       permissions: string[];
       restrictions: string[];
     }> = {
-      [OrganizationUserRole.OWNER]: {
-        permissions: ['CREATE_ORG', 'DELETE_ORG', 'MANAGE_USERS', 'MANAGE_APPS', 'VIEW_BILLING'],
-        restrictions: []
+      [OrganizationUserRole.ADMINISTRATOR]: {
+        permissions: ['MANAGE_APPS', 'VIEW_APPS', 'INVITE_USERS'],
+        restrictions: ['DELETE_ORG', 'VIEW_BILLING', 'MANAGE_ORG']
       },
-      [OrganizationUserRole.ADMIN]: {
-        permissions: ['MANAGE_USERS', 'MANAGE_APPS', 'VIEW_ANALYTICS'],
-        restrictions: ['DELETE_ORG', 'VIEW_BILLING']
-      },
-      [OrganizationUserRole.MEMBER]: {
-        permissions: ['VIEW_APPS', 'USE_APPS'],
-        restrictions: ['MANAGE_USERS', 'MANAGE_APPS', 'DELETE_ORG']
-      },
-      [OrganizationUserRole.GUEST]: {
+      [OrganizationUserRole.VIEWER]: {
         permissions: ['VIEW_APPS'],
-        restrictions: ['USE_APPS', 'MANAGE_USERS', 'MANAGE_APPS']
+        restrictions: ['MANAGE_APPS', 'INVITE_USERS', 'DELETE_ORG', 'VIEW_BILLING', 'MANAGE_ORG']
       }
     };
     
@@ -715,8 +702,8 @@ export class OrganizationTestDataFactory {
     environment.scenarios.multiOrgUser = this.createMultiOrganizationUser({
       organizationIds: orgIds,
       roles: {
-        [orgIds[0]]: OrganizationUserRole.ADMIN,
-        [orgIds[1]]: OrganizationUserRole.MEMBER
+        [orgIds[0]]: OrganizationUserRole.ADMINISTRATOR,
+        [orgIds[1]]: OrganizationUserRole.VIEWER
       }
     });
     

@@ -10,6 +10,8 @@ import { ActionReducerMap } from '@ngrx/store';
 import {AppState} from "./app.state";
 import { userReducer } from "../features/user/store/user.reducer";
 
+export { AppState } from "./app.state";
+
 export const reducers: ActionReducerMap<AppState> = {
     user: userReducer
 };

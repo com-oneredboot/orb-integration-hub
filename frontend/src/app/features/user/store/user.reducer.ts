@@ -5,7 +5,9 @@
 
 import {createReducer, on} from '@ngrx/store';
 import {UserActions} from './user.actions';
-import {AuthSteps, initialState} from './user.state';
+import {AuthSteps, initialState, UserState} from './user.state';
+
+export { UserState } from './user.state';
 
 export const userReducer = createReducer(
   initialState,

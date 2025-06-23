@@ -2,4 +2,6 @@
 // Generated at 
 
 export enum OrganizationUserRole {
-  ADMINISTRATOR = 'ADMINISTRATOR',  VIEWER = 'VIEWER'} 
+  ADMINISTRATOR = 'ADMINISTRATOR',
+  VIEWER = 'VIEWER'
+} 

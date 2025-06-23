@@ -87,7 +87,7 @@ export interface IOrganizationUsers {
 export class OrganizationUsers implements IOrganizationUsers {
   userId = '';
   organizationId = '';
-  role = OrganizationUserRole.UNKNOWN;
+  role = OrganizationUserRole.VIEWER;
   status = OrganizationUserStatus.UNKNOWN;
   invitedBy = '';
   createdAt = '';
@@ -97,7 +97,7 @@ export class OrganizationUsers implements IOrganizationUsers {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
         if (key === 'role' && typeof value === 'string') {
-          this.role = OrganizationUserRole[value as keyof typeof OrganizationUserRole] ?? OrganizationUserRole.UNKNOWN;
+          this.role = OrganizationUserRole[value as keyof typeof OrganizationUserRole] ?? OrganizationUserRole.VIEWER;
         } else 
         if (key === 'status' && typeof value === 'string') {
           this.status = OrganizationUserStatus[value as keyof typeof OrganizationUserStatus] ?? OrganizationUserStatus.UNKNOWN;
