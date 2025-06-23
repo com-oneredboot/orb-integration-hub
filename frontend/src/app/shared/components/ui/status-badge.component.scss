@@ -1,0 +1,282 @@
+// file: frontend/src/app/shared/components/ui/status-badge.component.scss
+// author: Claude Code Assistant
+// date: 2025-06-23
+// description: Styles for status badge component
+
+@use '../../../styles/variables' as v;
+@use '../../../styles/mixins' as m;
+@use 'sass:color';
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: v.$border-radius;
+  font-weight: v.$font-weight-medium;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  vertical-align: middle;
+
+  &__icon {
+    flex-shrink: 0;
+  }
+
+  &__label {
+    flex-shrink: 0;
+  }
+
+  // Size variants
+  &--small {
+    gap: v.$spacing-xs;
+    padding: 2px 6px;
+    font-size: v.$font-size-xs;
+    border-radius: v.$border-radius-sm;
+
+    .status-badge__icon {
+      font-size: v.$font-size-xs;
+    }
+  }
+
+  &--medium {
+    gap: v.$spacing-xs;
+    padding: 4px 8px;
+    font-size: v.$font-size-sm;
+
+    .status-badge__icon {
+      font-size: v.$font-size-sm;
+    }
+  }
+
+  &--large {
+    gap: v.$spacing-sm;
+    padding: 6px 12px;
+    font-size: v.$font-size-base;
+    border-radius: v.$border-radius-lg;
+
+    .status-badge__icon {
+      font-size: v.$font-size-base;
+    }
+  }
+
+  // Variant styles
+  &--badge {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+
+  &--chip {
+    border: none;
+    border-radius: 50px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  &--text {
+    background: transparent !important;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+    font-weight: v.$font-weight-semibold;
+  }
+
+  &--indicator {
+    width: 12px;
+    height: 12px;
+    padding: 0;
+    border-radius: 50%;
+    border: 2px solid v.$white;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+
+    .status-badge__label {
+      display: none;
+    }
+
+    .status-badge__icon {
+      display: none;
+    }
+
+    &.status-badge--small {
+      width: 8px;
+      height: 8px;
+    }
+
+    &.status-badge--large {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  // Theme variants
+  &--compact {
+    padding: 2px 4px;
+    font-size: v.$font-size-xs;
+    border-radius: v.$border-radius-sm;
+
+    .status-badge__icon {
+      font-size: 10px;
+    }
+  }
+
+  &--minimal {
+    background: transparent !important;
+    border: 1px solid currentColor;
+    padding: 2px 6px;
+
+    .status-badge__icon {
+      margin-right: 0;
+    }
+  }
+
+  // Status-based utility classes
+  &--healthy {
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
+    }
+  }
+
+  &--warning {
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+    }
+  }
+
+  &--error {
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+    }
+  }
+
+  // Specific status configurations (fallback if service doesn't provide colors)
+  &.status-active,
+  &.org-status-active,
+  &.app-status-active,
+  &.verification-verified {
+    background-color: #dcfce7;
+    color: #16a34a;
+    border-color: #bbf7d0;
+  }
+
+  &.status-pending,
+  &.org-status-pending,
+  &.app-status-pending,
+  &.verification-pending {
+    background-color: #fef3c7;
+    color: #d97706;
+    border-color: #fed7aa;
+  }
+
+  &.status-suspended,
+  &.status-cancelled,
+  &.app-status-error,
+  &.verification-unverified {
+    background-color: #fee2e2;
+    color: #dc2626;
+    border-color: #fecaca;
+  }
+
+  &.status-inactive,
+  &.org-status-inactive,
+  &.app-status-stopped {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    border-color: #d1d5db;
+  }
+
+  &.app-status-maintenance {
+    background-color: #ede9fe;
+    color: #7c3aed;
+    border-color: #ddd6fe;
+  }
+
+  // Interactive states
+  &[role="button"],
+  &.status-badge--interactive {
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    &:focus {
+      outline: 2px solid v.$primary-color;
+      outline-offset: 2px;
+    }
+  }
+
+  // Accessibility
+  &:focus-visible {
+    outline: 2px solid v.$primary-color;
+    outline-offset: 2px;
+    border-radius: v.$border-radius;
+  }
+
+  // Animation for status changes
+  &.status-badge--animated {
+    transition: all 0.3s ease;
+
+    .status-badge__icon {
+      transition: transform 0.2s ease;
+    }
+
+    &:hover .status-badge__icon {
+      transform: scale(1.1);
+    }
+  }
+
+  // Responsive adjustments
+  @media (max-width: 768px) {
+    &--large {
+      padding: 4px 8px;
+      font-size: v.$font-size-sm;
+
+      .status-badge__icon {
+        font-size: v.$font-size-sm;
+      }
+    }
+
+    // Stack icon and label on very small screens for large badges
+    &--large {
+      @media (max-width: 480px) {
+        flex-direction: column;
+        gap: 2px;
+        padding: 4px 6px;
+
+        .status-badge__icon {
+          font-size: v.$font-size-xs;
+        }
+
+        .status-badge__label {
+          font-size: 10px;
+          line-height: 1;
+        }
+      }
+    }
+  }
+
+  // Print styles
+  @media print {
+    background: transparent !important;
+    color: #000 !important;
+    border: 1px solid #000 !important;
+    box-shadow: none !important;
+
+    .status-badge__icon {
+      display: none;
+    }
+
+    &::after {
+      content: ' (' attr(aria-label) ')';
+      font-size: 0.8em;
+      font-weight: normal;
+    }
+  }
+}

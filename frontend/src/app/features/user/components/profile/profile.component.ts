@@ -3,8 +3,8 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Observable, Subject, takeUntil } from 'rxjs';
 import { IUsers, UsersUpdateInput, UsersResponse, UsersQueryByUserIdInput } from '../../../../core/models/UsersModel';
-import * as fromAuth from '../../components/auth-flow/store/auth.selectors';
-import { AuthActions } from '../../components/auth-flow/store/auth.actions';
+import * as fromUser from '../../store/user.selectors';
+import { UserActions } from '../../store/user.actions';
 import { UserService } from '../../../../core/services/user.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -41,8 +41,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private router: Router,
     private library: FaIconLibrary
   ) {
-    this.currentUser$ = this.store.select(fromAuth.selectCurrentUser);
-    this.debugMode$ = this.store.select(fromAuth.selectDebugMode);
+    this.currentUser$ = this.store.select(fromUser.selectCurrentUser);
+    this.debugMode$ = this.store.select(fromUser.selectDebugMode);
     
     // Add FontAwesome icons to library
     this.library.addIcons(faUser, faEdit, faCheckCircle, faClock);
@@ -219,7 +219,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       
       if (response.StatusCode === 200 && response.Data) {
         // Update the store with the updated user data
-        this.store.dispatch(AuthActions.signInSuccess({
+        this.store.dispatch(UserActions.signInSuccess({
           user: new Users(response.Data),
           message: 'Profile updated successfully'
         }));
@@ -265,7 +265,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
    * Sign out the current user
    */
   public signOut(): void {
-    this.store.dispatch(AuthActions.signout());
+    this.store.dispatch(UserActions.signout());
   }
 
   /**

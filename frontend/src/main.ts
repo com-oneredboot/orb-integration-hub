@@ -11,8 +11,8 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app/app.routes';
 import { provideStore } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
-import { authReducer } from './app/features/user/components/auth-flow/store/auth.reducer';
-import { AuthEffects } from './app/features/user/components/auth-flow/store/auth.effects';
+import { userReducer } from './app/features/user/store/user.reducer';
+import { UserEffects } from './app/features/user/store/user.effects';
 import { BrowserModule } from '@angular/platform-browser';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -76,8 +76,8 @@ if (typeof document !== 'undefined') {
 bootstrapApplication(AppComponent, {
   providers: [
     provideRouter(routes),
-    provideStore({ auth: authReducer }),
-    provideEffects([AuthEffects]),
+    provideStore({ user: userReducer }),
+    provideEffects([UserEffects]),
     provideHttpClient(withInterceptorsFromDi()), // Enable HTTP client for CSRF functionality
     importProvidersFrom(BrowserModule, ReactiveFormsModule, FontAwesomeModule, NgOptimizedImage)
   ]

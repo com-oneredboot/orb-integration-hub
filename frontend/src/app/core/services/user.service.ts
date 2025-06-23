@@ -26,7 +26,7 @@ import { CognitoService } from "./cognito.service";
 import { SecureIdGenerationService } from "./secure-id-generation.service";
 import { Auth, AuthResponse } from "../models/AuthModel";
 import { SmsVerificationResponse } from "../models/SmsVerificationModel";
-import { AuthActions } from '../../features/user/components/auth-flow/store/auth.actions';
+import { UserActions } from '../../features/user/store/user.actions';
 
 @Injectable({
   providedIn: 'root'
@@ -52,7 +52,7 @@ export class UserService extends ApiService {
     this.cognitoService.currentUser.subscribe(user => {
       if (user) {
         this.currentUser.next(user);
-        this.store.dispatch(AuthActions.signInSuccess({ user, message: 'User found' }));
+        this.store.dispatch(UserActions.signInSuccess({ user, message: 'User found' }));
       }
     });
   }
@@ -477,7 +477,7 @@ export class UserService extends ApiService {
         
         if (isAuth) {
           // User is authenticated, dispatch success and redirect will be handled by auth component
-          this.store.dispatch(AuthActions.signInSuccess({ user: user, message: 'User already signed in' }));
+          this.store.dispatch(UserActions.signInSuccess({ user: user, message: 'User already signed in' }));
           this.currentUser.next(user);
           return {
             StatusCode: 200,
@@ -495,7 +495,7 @@ export class UserService extends ApiService {
 
       // Only dispatch signInSuccess if authentication is successful
       if (userSignInResponse.StatusCode === 200) {
-        this.store.dispatch(AuthActions.signInSuccess({ user: user, message: 'User found' }));
+        this.store.dispatch(UserActions.signInSuccess({ user: user, message: 'User found' }));
         this.currentUser.next(user);
       }
 
@@ -529,7 +529,7 @@ export class UserService extends ApiService {
               updatedAt: ''
             });
             
-            this.store.dispatch(AuthActions.signInSuccess({ user: userFromProfile, message: 'User already signed in' }));
+            this.store.dispatch(UserActions.signInSuccess({ user: userFromProfile, message: 'User already signed in' }));
             this.currentUser.next(userFromProfile);
             return {
               StatusCode: 200,

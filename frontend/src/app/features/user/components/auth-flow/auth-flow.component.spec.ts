@@ -70,10 +70,10 @@ describe('AuthFlowComponent', () => {
 
     const storeSpy = jasmine.createSpyObj('Store', ['select', 'dispatch']);
     storeSpy.select.and.callFake((selector: any) => {
-      if (selector === require('./store/auth.selectors').selectCurrentStep) {
-        return of(require('./store/auth.state').AuthSteps.PASSWORD_SETUP);
+      if (selector === require('../../store/user.selectors').selectCurrentStep) {
+        return of(require('../../store/user.state').AuthSteps.PASSWORD_SETUP);
       }
-      if (selector === require('./store/auth.selectors').selectCurrentUser) {
+      if (selector === require('../../store/user.selectors').selectCurrentUser) {
         return of(mockUser);
       }
       return of(null);

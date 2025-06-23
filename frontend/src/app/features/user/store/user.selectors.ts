@@ -1,134 +1,134 @@
-// file: frontend/src/app/features/user/store/auth.selectors.ts
+// file: frontend/src/app/features/user/store/user.selectors.ts
 // author: Corey Dale Peters
 // date: 2025-01-03
-// description: Contains all selectors for the Auth feature
+// description: Contains all selectors for the User feature
 import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { AuthState, AuthSteps } from './auth.state';
+import { UserState, AuthSteps } from './user.state';
 
-export const selectAuthState = createFeatureSelector<AuthState>('auth');
+export const selectUserState = createFeatureSelector<UserState>('user');
 
 export const selectCurrentStep = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.currentStep
 );
 
 export const selectIsLoading = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.isLoading
 );
 
 export const selectError = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.error
 );
 
 export const selectUserExists = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.userExists
 );
 
 export const selectCurrentUser = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.currentUser
 );
 
 export const selectNeedsMfa = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.mfaRequired
 );
 
 export const selectMfaType = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.mfaType
 );
 
 export const selectIsAuthenticated = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.isAuthenticated
 );
 
 // Base selectors
 export const selectPhoneValidationId = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.phoneValidationId
 );
 
 export const selectPhoneValidationCode = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.phoneValidationCode
 );
 
 export const selectPhoneValidationExpiration = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.phoneValidationExpiration
 );
 
 // Group-related selectors
 export const selectUserGroup = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.currentGroup
 );
 
 export const selectAvailableGroups = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.availableGroups
 );
 
 export const selectGroupPriority = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.groupPriority
 );
 
 // MFA-related selectors
 export const selectMFAEnabled = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.mfaEnabled
 );
 
 export const selectMFASetupRequired = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.mfaSetupRequired
 );
 
 export const selectMFAPreferences = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.mfaPreferences
 );
 
 export const selectMFADetails = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.mfaSetupDetails
 );
 
 // User attribute selectors
 export const selectEmailVerified = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.emailVerified
 );
 
 export const selectPhoneVerified = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.phoneVerified
 );
 
 // Session selectors
 export const selectSessionActive = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.sessionActive
 );
 
 export const selectLastActivity = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.lastActivity
 );
 
 export const selectDebugMode = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.debugMode
 );
 
 export const selectCurrentEmail = createSelector(
-  selectAuthState,
+  selectUserState,
   (state) => state.currentEmail || ''
 );
 

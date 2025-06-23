@@ -9,8 +9,8 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { IUsers } from '../../../../core/models/UsersModel';
-import * as fromAuth from '../../components/auth-flow/store/auth.selectors';
-import { AuthActions } from '../../components/auth-flow/store/auth.actions';
+import * as fromUser from '../../store/user.selectors';
+import { UserActions } from '../../store/user.actions';
 import { UserService } from '../../../../core/services/user.service';
 import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -56,9 +56,9 @@ export class DashboardComponent implements OnInit {
     private library: FaIconLibrary,
     private router: Router
   ) {
-    this.currentUser$ = this.store.select(fromAuth.selectCurrentUser);
-    this.debugMode$ = this.store.select(fromAuth.selectDebugMode);
-    this.isLoading$ = this.store.select(fromAuth.selectIsLoading);
+    this.currentUser$ = this.store.select(fromUser.selectCurrentUser);
+    this.debugMode$ = this.store.select(fromUser.selectDebugMode);
+    this.isLoading$ = this.store.select(fromUser.selectIsLoading);
     this.isNotLoading$ = this.isLoading$.pipe(map(loading => !loading));
     
     // Add FontAwesome icons to library
@@ -172,7 +172,7 @@ export class DashboardComponent implements OnInit {
     this.isLoading$.subscribe(isLoading => {
       if (!isLoading) {
         console.log('[Dashboard] Triggering MFA check...');
-        this.store.dispatch(AuthActions.checkMFASetup());
+        this.store.dispatch(UserActions.checkMFASetup());
       }
     }).unsubscribe();
   }
@@ -182,7 +182,7 @@ export class DashboardComponent implements OnInit {
    */
   goToSecuritySettings(): void {
     // Use the new explicit MFA setup flow action to avoid redirect loops
-    this.store.dispatch(AuthActions.beginMFASetupFlow());
+    this.store.dispatch(UserActions.beginMFASetupFlow());
     this.router.navigate(['/authenticate']);
   }
 

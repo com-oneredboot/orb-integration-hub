@@ -9,17 +9,17 @@ import { Store } from '@ngrx/store';
 import { Observable, of } from 'rxjs';
 import { map, take, catchError, switchMap } from 'rxjs/operators';
 
-import { AuthState } from '../components/auth-flow/store/auth.state';
-import { selectCurrentUser, selectIsAuthenticated } from '../components/auth-flow/store/auth.selectors';
-import { AuthActions } from '../components/auth-flow/store/auth.actions';
-import { UserService } from '../../../core/services/user.service';
+import { UserState } from '../../features/user/store/user.state';
+import { selectCurrentUser, selectIsAuthenticated } from '../../features/user/store/user.selectors';
+import { UserActions } from '../../features/user/store/user.actions';
+import { UserService } from '../services/user.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DashboardGuard implements CanActivate {
   constructor(
-    private store: Store<{ auth: AuthState }>,
+    private store: Store<{ user: UserState }>,
     private router: Router,
     private userService: UserService
   ) {}
@@ -43,7 +43,7 @@ export class DashboardGuard implements CanActivate {
             if (!user) {
               // User is authenticated but no user data in store - refresh session
               console.debug('DashboardGuard: No user data, dispatching refreshSession');
-              this.store.dispatch(AuthActions.refreshSession());
+              this.store.dispatch(UserActions.refreshSession());
               // Allow navigation to continue, the layout will handle loading user data
               return true;
             }
