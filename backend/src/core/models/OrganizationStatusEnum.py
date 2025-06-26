@@ -11,4 +11,5 @@ class OrganizationStatus(Enum):
     PENDING = "PENDING"
     SUSPENDED = "SUSPENDED"
     DELETED = "DELETED"
+    UNKNOWN = "UNKNOWN"
  

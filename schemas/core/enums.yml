@@ -66,6 +66,7 @@ OrganizationStatus:
   - PENDING
   - SUSPENDED
   - DELETED
+  - UNKNOWN
 
 # Organization user role enums (OWNER is determined by Organizations.ownerId field, not role assignment)
 OrganizationUserRole:

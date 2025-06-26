@@ -25,20 +25,15 @@ model:
       - name: OwnerIndex
         type: GSI
         partition: ownerId
+        sort: createdAt
         projection_type: ALL
-        description: Index for querying organizations by owner (for multi-org customers)
-      - name: StatusIndex
+        description: Index for querying organizations by owner with creation time ordering
+      - name: StatusCreatedIndex
         type: GSI
         partition: status
         sort: createdAt
         projection_type: ALL
         description: Index for querying organizations by status with creation time ordering (admin operations)
-      - name: StatusOwnerIndex
-        type: GSI
-        partition: status
-        sort: ownerId
-        projection_type: ALL
-        description: Index for efficient status-based queries scoped by owner (compliance and audit)
   attributes:
     organizationId:
       type: string
@@ -66,6 +61,7 @@ model:
         - PENDING
         - SUSPENDED
         - DELETED
+        - UNKNOWN
       description: Current status of the organization
     createdAt:
       type: timestamp

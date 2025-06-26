@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { FormsModule } from '@angular/forms';
+import { StatusBadgeComponent } from '../ui/status-badge.component';
 import { Organizations } from '../../../core/models/OrganizationsModel';
 import { OrganizationUserRole } from '../../../core/models/OrganizationUserRoleEnum';
 import { OrganizationStatus } from '../../../core/models/OrganizationStatusEnum';
@@ -28,7 +29,7 @@ export type SortDirection = 'asc' | 'desc';
 @Component({
   selector: 'app-organization-table',
   standalone: true,
-  imports: [CommonModule, RouterModule, FontAwesomeModule, FormsModule],
+  imports: [CommonModule, RouterModule, FontAwesomeModule, FormsModule, StatusBadgeComponent],
   template: `
     <div class="org-table-container">
       
@@ -129,7 +130,21 @@ export type SortDirection = 'asc' | 'desc';
           <tbody class="org-table__body">
             <tr class="org-table__row" 
                 *ngFor="let row of paginatedRows; trackBy: trackByOrgId"
-                [class.org-table__row--inactive]="row.organization.status !== 'ACTIVE'">
+                [class.org-table__row--inactive]="row.organization.status !== 'ACTIVE'"
+                [class.org-table__row--selected]="selectionMode === 'radio' && selectedOrganization?.organizationId === row.organization.organizationId"
+                [class.org-table__row--clickable]="selectionMode === 'radio'"
+                (click)="onRowClick(row)">
+              
+              <!-- Radio Selection -->
+              <td class="org-table__td org-table__td--select" *ngIf="selectionMode === 'radio'">
+                <input type="radio" 
+                       name="selectedOrganization"
+                       class="org-table__radio"
+                       [value]="row.organization.organizationId"
+                       [checked]="selectedOrganization?.organizationId === row.organization.organizationId"
+                       (change)="onOrganizationSelected(row.organization)"
+                       (click)="$event.stopPropagation()">
+              </td>
               
               <!-- Organization Name -->
               <td class="org-table__td org-table__td--name">
@@ -318,11 +333,14 @@ export class OrganizationTableComponent implements OnInit, OnChanges {
   @Input() pageSize: number = 10;
   @Input() showCreateButton: boolean = true;
   @Input() loading: boolean = false;
+  @Input() selectionMode: 'none' | 'radio' = 'none';
+  @Input() selectedOrganization: Organizations | null = null;
 
   @Output() enterOrganization = new EventEmitter<Organizations>();
   @Output() manageOrganization = new EventEmitter<Organizations>();
   @Output() viewOrganization = new EventEmitter<Organizations>();
   @Output() createOrganization = new EventEmitter<void>();
+  @Output() organizationSelected = new EventEmitter<Organizations>();
 
   // Filtering and search
   searchTerm: string = '';
@@ -621,7 +639,25 @@ export class OrganizationTableComponent implements OnInit, OnChanges {
   /**
    * Track by function for performance
    */
-  trackByOrgId(index: number, row: OrganizationTableRow): string {
+  trackByOrgId(_index: number, row: OrganizationTableRow): string {
     return row.organization.organizationId;
+  }
+
+  /**
+   * Handle row click events
+   */
+  onRowClick(row: OrganizationTableRow): void {
+    if (this.selectionMode === 'radio') {
+      this.onOrganizationSelected(row.organization);
+    } else {
+      this.onViewOrganization(row);
+    }
+  }
+
+  /**
+   * Handle organization selection for radio mode
+   */
+  onOrganizationSelected(organization: Organizations): void {
+    this.organizationSelected.emit(organization);
   }
 }

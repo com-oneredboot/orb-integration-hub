@@ -29,7 +29,8 @@ import {
   faClock, 
   faExclamationTriangle, 
   faInfoCircle,
-  faArrowRight
+  faArrowRight,
+  faBuilding
 } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
@@ -75,7 +76,8 @@ export class DashboardComponent implements OnInit {
       faClock, 
       faExclamationTriangle, 
       faInfoCircle,
-      faArrowRight
+      faArrowRight,
+      faBuilding
     );
   }
   
@@ -145,6 +147,15 @@ export class DashboardComponent implements OnInit {
    */
   goToProfile(): void {
     this.router.navigate(['/profile']);
+  }
+
+  /**
+   * Check if user is a CUSTOMER user (should see organizations features)
+   * @param user The user object
+   * @returns true if user has CUSTOMER group membership
+   */
+  isCustomerUser(user: any): boolean {
+    return user?.groups?.includes('CUSTOMER') || false;
   }
 
   /**

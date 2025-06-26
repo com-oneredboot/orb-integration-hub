@@ -9,7 +9,8 @@ import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { CognitoService } from '../../core/services/cognito.service';
 import { UserActions } from '../../features/user/store/user.actions';
-import { selectIsAuthenticated } from '../../features/user/store/user.selectors';
+import { selectIsAuthenticated, selectCurrentUser } from '../../features/user/store/user.selectors';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-user-layout',
@@ -20,6 +21,9 @@ import { selectIsAuthenticated } from '../../features/user/store/user.selectors'
 })
 export class UserLayoutComponent implements OnInit {
   isAuthenticated$ = this.store.select(selectIsAuthenticated);
+  isCustomerUser$ = this.store.select(selectCurrentUser).pipe(
+    map(user => user?.groups?.includes('CUSTOMER') || false)
+  );
 
   constructor(
     private authService: CognitoService,

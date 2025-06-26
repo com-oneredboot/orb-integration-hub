@@ -1,6 +1,6 @@
 """
 Generated Python models for Organizations
-Generated at 2025-06-23T16:03:31.168417
+Generated at 2025-06-23T23:45:49.327143
 """
 
 from typing import Optional, List
@@ -47,9 +47,6 @@ class OrganizationsQueryByOrganizationIdInput(BaseModel):
 
 class OrganizationsQueryByOwnerIdInput(BaseModel):
     owner_id: str
-
-class OrganizationsQueryByStatusInput(BaseModel):
-    status: str
 
 class OrganizationsQueryByStatusInput(BaseModel):
     status: str

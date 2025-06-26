@@ -46,9 +46,9 @@ if (typeof document !== 'undefined') {
   meta.content = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // Required for Angular and AWS Amplify
-    "style-src 'self' 'unsafe-inline'", // Required for Angular component styles
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // Required for Angular component styles and Google Fonts
     "img-src 'self' data: https:", // Allow images from self, data URLs, and HTTPS
-    "font-src 'self' data:",
+    "font-src 'self' data: https://fonts.gstatic.com", // Allow Google Fonts
     "connect-src 'self' https://*.amazonaws.com https://*.amplifyapp.com", // AWS services
     "base-uri 'self'",
     "form-action 'self'"

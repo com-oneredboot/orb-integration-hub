@@ -99,6 +99,17 @@ description: HTML template file
               <div class="action-button__subtitle">Connect your tools</div>
             </div>
           </button>
+          
+          <!-- Organizations button - Only show for CUSTOMER users -->
+          <a *ngIf="isCustomerUser(user)" 
+             routerLink="/customers/organizations" 
+             class="action-button action-button--secondary">
+            <fa-icon icon="building" class="action-button__icon"></fa-icon>
+            <div class="action-button__content">
+              <div class="action-button__title">Organizations</div>
+              <div class="action-button__subtitle">Manage teams & access</div>
+            </div>
+          </a>
         </div>
       </div>
     </div>

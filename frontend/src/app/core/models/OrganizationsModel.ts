@@ -45,9 +45,6 @@ export type OrganizationsQueryByOwnerIdInput = {
 export type OrganizationsQueryByStatusInput = {
   status: string;
 };
-export type OrganizationsQueryByStatusInput = {
-  status: string;
-};
 
 // Response types
 export type OrganizationsResponse = {

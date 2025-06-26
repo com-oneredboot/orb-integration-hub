@@ -22,28 +22,30 @@ Based on existing dashboard and profile components:
 
 ## 1. User Dashboard Integration (CUSTOMER Users Only)
 
-### 1.1 Organizations Widget on User Dashboard
-*Only displayed for users with CUSTOMER group membership*
+### 1.1 Enhanced Quick Actions (CUSTOMER users only)
+*"Edit Organizations" button added to existing Quick Actions section*
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ <!-- Existing Dashboard Content --> 
-│ <!-- Account Health Card -->
-│ <!-- Recent Activity Card -->
 │
-│ <!-- NEW: Organizations Widget (CUSTOMER users only) -->
+│ <!-- Enhanced Quick Actions Card (with Organizations for CUSTOMERS) -->
 │ ┌─────────────────────────────────────────────────────────┐ │
-│ │ 🏢 Your Organizations                 [Edit Organizations] │ │
+│ │ ⚡ Quick Actions                                        │ │
 │ │                                                         │ │
 │ │ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐        │ │
-│ │ │ Acme Corp   │ │ Beta Tech   │ │ DevCorp     │        │ │
-│ │ │ Owner       │ │ Admin       │ │ Viewer      │        │ │
-│ │ │ 15 members  │ │ 8 members   │ │ 25 members  │        │ │
-│ │ │ [Active]    │ │ [Active]    │ │ [Pending]   │        │ │
+│ │ │ 👤 Edit     │ │ 🛡️ Security │ │ 💳 Payment  │        │ │
+│ │ │ Profile     │ │ Settings    │ │ Methods     │        │ │
 │ │ └─────────────┘ └─────────────┘ └─────────────┘        │ │
 │ │                                                         │ │
-│ │ Manage your organizations, members, and applications    │ │
+│ │ ┌─────────────┐ ┌─────────────┐ <!-- CUSTOMER only --> │ │
+│ │ │ ⚙️ Settings │ │ 🏢 Edit     │                        │ │
+│ │ │ & Integrations│ │ Organizations│                      │ │
+│ │ └─────────────┘ └─────────────┘                        │ │
 │ └─────────────────────────────────────────────────────────┘ │
+│
+│ <!-- Account Health Card -->
+│ <!-- Recent Activity Card -->
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -326,7 +328,32 @@ Based on existing dashboard and profile components:
 - `viewer` - Green with eye icon
 - `owner` - Gold with crown icon (display only)
 
-### 5.3 Organization Table Component
+### 5.3 Dashboard Integration
+
+#### Quick Actions Enhancement
+The "Edit Organizations" button is added to the existing Quick Actions section on the user dashboard, but only shown for users with CUSTOMER group membership:
+
+```html
+<!-- In dashboard Quick Actions grid -->
+<a *ngIf="isCustomerUser(user)" 
+   routerLink="/applications" 
+   class="action-button action-button--secondary">
+  <fa-icon icon="building" class="action-button__icon"></fa-icon>
+  <div class="action-button__content">
+    <div class="action-button__title">Edit Organizations</div>
+    <div class="action-button__subtitle">Manage teams & applications</div>
+  </div>
+</a>
+```
+
+#### User Permission Check
+```typescript
+isCustomerUser(user: any): boolean {
+  return user?.groups?.includes('CUSTOMER') || false;
+}
+```
+
+### 5.4 Organization Table Component
 ```html
 <table class="org-table">
   <thead class="org-table__header">

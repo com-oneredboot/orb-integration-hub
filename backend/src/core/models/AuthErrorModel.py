@@ -1,6 +1,6 @@
 """
 AuthError standard model.
-Generated at 2025-06-23T16:03:31.436220
+Generated at 2025-06-23T23:45:49.595417
 """
 
 from typing import Optional

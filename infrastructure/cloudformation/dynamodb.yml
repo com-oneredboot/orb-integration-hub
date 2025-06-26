@@ -110,10 +110,10 @@ Resources:
       AttributeDefinitions:
         - AttributeName: organizationId
           AttributeType: S
-        - AttributeName: ownerId
-          AttributeType: S
         - AttributeName: createdAt
           AttributeType: N
+        - AttributeName: ownerId
+          AttributeType: S
         - AttributeName: status
           AttributeType: S
       GlobalSecondaryIndexes:
@@ -121,21 +121,15 @@ Resources:
           KeySchema:
             - AttributeName: ownerId
               KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-        - IndexName: StatusIndex
-          KeySchema:
-            - AttributeName: status
-              KeyType: HASH
             - AttributeName: createdAt
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
-        - IndexName: StatusOwnerIndex
+        - IndexName: StatusCreatedIndex
           KeySchema:
             - AttributeName: status
               KeyType: HASH
-            - AttributeName: ownerId
+            - AttributeName: createdAt
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
