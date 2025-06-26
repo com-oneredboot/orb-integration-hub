@@ -9,10 +9,9 @@ import { UserService } from '../../../../core/services/user.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
-import { FontAwesomeModule, FaIconLibrary } from '@fortawesome/angular-fontawesome';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { RouterModule } from '@angular/router';
 import { Users } from '../../../../core/models/UsersModel';
-import { faUser, faEdit, faCheckCircle, faClock } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-profile',
@@ -38,14 +37,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private store: Store,
     private userService: UserService,
     private fb: FormBuilder,
-    private router: Router,
-    private library: FaIconLibrary
+    private router: Router
   ) {
     this.currentUser$ = this.store.select(fromUser.selectCurrentUser);
     this.debugMode$ = this.store.select(fromUser.selectDebugMode);
-    
-    // Add FontAwesome icons to library
-    this.library.addIcons(faUser, faEdit, faCheckCircle, faClock);
     
     // Initialize the form with empty values and properly disabled controls
     this.profileForm = this.fb.group({

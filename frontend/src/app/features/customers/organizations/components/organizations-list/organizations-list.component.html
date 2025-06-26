@@ -1,0 +1,127 @@
+<!-- Organizations List Component Template -->
+<div class="organizations-list">
+  <!-- Organizations Overview Card - Full Width -->
+  <div class="organizations-overview-section">
+    <div class="organizations-card organizations-card--overview">
+      <div class="organizations-card__header">
+        <h2 class="organizations-card__title">
+          <fa-icon icon="building" class="organizations-card__icon"></fa-icon>
+          Organizations Overview
+        </h2>
+        <div class="organizations-card__header-actions">
+          <button class="organizations-card__edit-btn"
+                  (click)="onCreateOrganization()">
+            <fa-icon icon="plus" class="organizations-card__edit-icon"></fa-icon>
+            Create Organization
+          </button>
+        </div>
+      </div>
+      
+      <div class="organizations-card__content">
+        <div class="organizations-table">
+          <div class="organizations-table__container">
+            <table class="organizations-table__element">
+              <thead>
+                <tr>
+                  <th class="organizations-table__header organizations-table__header--select"></th>
+                  <th class="organizations-table__header">Organization</th>
+                  <th class="organizations-table__header">Role</th>
+                  <th class="organizations-table__header">Members</th>
+                  <th class="organizations-table__header">Applications</th>
+                  <th class="organizations-table__header organizations-table__header--actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of organizationRows; trackBy: trackByOrganizationId"
+                    class="organizations-table__row"
+                    [class.organizations-table__row--selected]="row.organization.organizationId === selectedOrganization?.organizationId">
+                  
+                  <!-- Radio Selection -->
+                  <td class="organizations-table__cell organizations-table__cell--select">
+                    <input 
+                      type="radio" 
+                      name="selectedOrganization"
+                      class="organizations-table__radio"
+                      [value]="row.organization.organizationId"
+                      [checked]="row.organization.organizationId === selectedOrganization?.organizationId"
+                      (change)="onOrganizationSelected(row.organization)">
+                  </td>
+                  
+                  <!-- Organization Info -->
+                  <td class="organizations-table__cell">
+                    <div class="organizations-table__org-info">
+                      <div class="organizations-table__org-name">{{ row.organization.name }}</div>
+                      <div class="organizations-table__org-id">{{ row.organization.organizationId }}</div>
+                    </div>
+                  </td>
+                  
+                  <!-- Role -->
+                  <td class="organizations-table__cell">
+                    <span class="organizations-table__role-badge organizations-table__role-badge--{{ getRoleClass(row.userRole) }}">
+                      {{ row.userRole }}
+                    </span>
+                  </td>
+                  
+                  <!-- Member Count -->
+                  <td class="organizations-table__cell">
+                    <div class="organizations-table__count">
+                      <fa-icon icon="users" class="organizations-table__count-icon"></fa-icon>
+                      {{ row.memberCount }}
+                    </div>
+                  </td>
+                  
+                  <!-- Application Count -->
+                  <td class="organizations-table__cell">
+                    <div class="organizations-table__count">
+                      <fa-icon icon="rocket" class="organizations-table__count-icon"></fa-icon>
+                      {{ row.applicationCount }}
+                    </div>
+                  </td>
+                  
+                  <!-- Actions -->
+                  <td class="organizations-table__cell organizations-table__cell--actions">
+                    <div class="organizations-table__actions">
+                      <button class="organizations-table__action organizations-table__action--primary"
+                              (click)="onManageOrganization(row.organization)"
+                              title="Manage Organization">
+                        <fa-icon icon="cog"></fa-icon>
+                      </button>
+                      <button class="organizations-table__action organizations-table__action--secondary"
+                              (click)="onViewOrganization(row.organization)"
+                              title="View Details">
+                        <fa-icon icon="eye"></fa-icon>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                
+                <!-- Loading State -->
+                <tr *ngIf="isLoading" class="organizations-table__row organizations-table__row--loading">
+                  <td colspan="6" class="organizations-table__cell organizations-table__cell--loading">
+                    <div class="organizations-table__loading">
+                      <fa-icon icon="spinner" class="organizations-table__loading-icon fa-spin"></fa-icon>
+                      Loading organizations...
+                    </div>
+                  </td>
+                </tr>
+                
+                <!-- Empty State -->
+                <tr *ngIf="!isLoading && organizationRows.length === 0" 
+                    class="organizations-table__row organizations-table__row--empty">
+                  <td colspan="6" class="organizations-table__cell organizations-table__cell--empty">
+                    <div class="organizations-table__empty">
+                      <fa-icon icon="building" class="organizations-table__empty-icon"></fa-icon>
+                      <p class="organizations-table__empty-text">
+                        No organizations found
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

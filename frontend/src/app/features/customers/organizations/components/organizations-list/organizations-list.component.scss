@@ -1,244 +1,230 @@
-.organizations-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  height: 100%;
+@use '../../../../../../styles/variables' as v;
+@use '../../../../../../styles/mixins' as m;
+@use "sass:color";
 
-  &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--surface-border);
+// Organizations styles using same structure as profile but with organizations class names  
+.organizations-container {
+  @include m.page-container;
+  
+  & {
+    font-family: v.$font-family-base;
   }
 
-  &__title-section {
-    flex: 1;
+  .organizations-overview-section {
+    max-width: 1400px;
+    margin: 0 auto v.$spacing-xl auto;
+    padding: 0 v.$spacing-lg;
+    width: 100%;
+  }
+}
+
+.organizations-header {
+  background: v.$orb-white;
+  padding: v.$spacing-xl * 2 0;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: v.$spacing-xl;
+
+  &__content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 v.$spacing-lg;
   }
 
-  &__title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--text-color);
-    margin: 0 0 0.5rem 0;
+  &__flex-container {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: v.$spacing-xl * 3;
+    justify-content: center;
+
+    @media (max-width: 1024px) {
+      flex-direction: column;
+      text-align: center;
+      gap: v.$spacing-xl;
+    }
   }
 
-  &__subtitle {
-    font-size: 0.875rem;
-    color: var(--text-color-secondary);
-    margin: 0;
-    line-height: 1.4;
+  &__logo-section {
+    flex: 1;
+    max-width: 600px;
+    
+    @media (max-width: 1024px) {
+      max-width: 400px;
+    }
+    
+    @media (max-width: 768px) {
+      max-width: 300px;
+    }
+  }
+  
+  &__logo {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+
+  &__text-section {
+    flex: 1;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    gap: v.$spacing-lg;
+    align-items: flex-start;
+
+    @media (max-width: 1024px) {
+      align-items: center;
+      text-align: center;
+    }
+  }
+
+  &__greeting {
+    display: flex;
+    flex-direction: column;
+    gap: v.$spacing-md;
+    width: 100%;
+  }
+
+  &__icon-title {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-md;
+    margin-bottom: v.$spacing-sm;
+
+    @media (max-width: 1024px) {
+      justify-content: center;
+    }
   }
 
   &__icon {
-    font-size: 1.25rem;
-    color: var(--primary-color);
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    border-radius: v.$border-radius;
   }
-
-  &__actions {
-    display: flex;
-    gap: 0.75rem;
-    flex-shrink: 0;
-  }
-
-  &__action {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1rem;
-    border-radius: var(--border-radius);
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: 1px solid transparent;
-
-    &--primary {
-      background-color: var(--primary-color);
-      color: white;
-
-      &:hover {
-        background-color: var(--primary-color-dark);
-        transform: translateY(-1px);
-      }
-    }
-
-    &--secondary {
-      background-color: var(--surface-ground);
-      color: var(--text-color);
-      border-color: var(--surface-border);
-
-      &:hover {
-        background-color: var(--surface-hover);
-        border-color: var(--primary-color);
-      }
-    }
-  }
-
-  &__action-icon {
-    font-size: 0.875rem;
-  }
-
-  // Filters
-  &__filters {
-    display: flex;
-    gap: 1rem;
-    padding: 1.5rem;
-    background: linear-gradient(135deg, var(--surface-section) 0%, var(--surface-card) 100%);
-    border-radius: var(--border-radius);
-    border: 1px solid var(--surface-border);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    flex-wrap: wrap;
-    position: relative;
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, var(--primary-color), var(--primary-color-dark));
-      border-radius: var(--border-radius) var(--border-radius) 0 0;
-    }
-  }
-
-  &__filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    min-width: 200px;
-    flex: 1;
-  }
-
-  &__filter-label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--text-color);
+  
+  &__title {
+    font-family: v.$font-family-heading;
+    font-size: 1.5rem;
+    font-weight: v.$font-weight-bold;
+    color: v.$orb-dark-blue;
     margin: 0;
-  }
+    line-height: 1.2;
 
-  &__filter-input-group {
-    position: relative;
+    @media (max-width: 768px) {
+      font-size: 2rem;
+    }
+
+    @media (max-width: 480px) {
+      font-size: 1.75rem;
+    }
+  }
+  
+  &__subtitle {
+    font-size: v.$font-size-lg;
+    color: v.$orb-dark-blue;
+    margin: 0;
+    line-height: 1.6;
+    text-align: left;
+
+    @media (max-width: 1024px) {
+      text-align: center;
+    }
+  }
+}
+
+// Organizations Card Styles (exact same structure as profile card)
+.organizations-card {
+  @include m.card;
+  margin-bottom: v.$spacing-lg;
+  
+  &__header {
+    @include m.card-header;
+  }
+  
+  &__header-actions {
     display: flex;
     align-items: center;
+    gap: v.$spacing-md;
   }
-
-  &__filter-icon {
-    position: absolute;
-    left: 0.75rem;
-    color: var(--text-color-secondary);
-    font-size: 0.875rem;
-    z-index: 1;
+  
+  &__title {
+    @include m.card-title;
   }
-
-  &__filter-input {
-    width: 100%;
-    padding: 0.625rem 0.75rem 0.625rem 2.25rem;
-    border: 1px solid var(--surface-border);
-    border-radius: var(--border-radius);
-    background-color: var(--surface-ground);
-    color: var(--text-color);
-    font-size: 0.875rem;
-    transition: all 0.2s ease;
-
-    &:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px var(--primary-color-alpha), 0 2px 8px rgba(0, 0, 0, 0.1);
-      transform: translateY(-1px);
-    }
-
-    &::placeholder {
-      color: var(--text-color-secondary);
-    }
-
-    &:hover {
-      border-color: var(--primary-color-light);
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  
+  &__icon {
+    @include m.card-icon;
+  }
+  
+  &__content {
+    @include m.card-content;
+    
+    // Ensure the organization table is visible and has proper styling
+    app-organization-table {
+      display: block;
+      width: 100%;
+      min-height: 300px;
+      border: 2px solid red; // Temporary debug border
     }
   }
-
-  &__filter-select {
-    width: 100%;
-    padding: 0.625rem 0.75rem;
-    border: 1px solid var(--surface-border);
-    border-radius: var(--border-radius);
-    background-color: var(--surface-ground);
-    color: var(--text-color);
-    font-size: 0.875rem;
+  
+  &__edit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+    padding: v.$spacing-xs v.$spacing-sm;
+    background-color: v.$primary-color;
+    color: v.$white;
+    border: none;
+    border-radius: v.$border-radius;
+    font-size: v.$font-size-sm;
+    font-weight: v.$font-weight-medium;
     cursor: pointer;
     transition: all 0.2s ease;
-
-    &:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px var(--primary-color-alpha), 0 2px 8px rgba(0, 0, 0, 0.1);
+    
+    &:hover {
+      background-color: color.adjust(v.$primary-color, $lightness: -10%);
       transform: translateY(-1px);
     }
-
-    &:hover {
-      border-color: var(--primary-color-light);
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    
+    &:active {
+      transform: translateY(0);
     }
   }
-
-  // Table
-  &__table {
-    flex: 1;
-    min-height: 0;
-    background-color: var(--surface-card);
-    border-radius: var(--border-radius);
-    border: 1px solid var(--surface-border);
-    overflow: hidden;
+  
+  &__edit-icon {
+    font-size: v.$font-size-xs;
   }
+}
 
-  // Responsive Design
-  @media (max-width: 768px) {
-    &__header {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 1rem;
-    }
-
-    &__actions {
-      width: 100%;
-      justify-content: flex-start;
-    }
-
-    &__filters {
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    &__filter-group {
-      min-width: auto;
-    }
-
-    &__action {
-      flex: 1;
-      justify-content: center;
-      min-width: 0;
+@media (max-width: 768px) {
+  .organizations-container {
+    padding: v.$spacing-md;
+    
+    .organizations-overview-section {
+      padding: 0 v.$spacing-md;
     }
   }
+}
 
-  @media (max-width: 480px) {
-    gap: 1rem;
-
-    &__title {
-      font-size: 1.25rem;
+@media (max-width: 480px) {
+  .organizations-container {
+    padding: v.$spacing-sm;
+    
+    .organizations-overview-section {
+      max-width: 100%;
     }
-
-    &__actions {
-      flex-direction: column;
-    }
-
-    &__filter-group {
-      min-width: auto;
+    
+    .organizations-card {
+      &__header {
+        padding: v.$spacing-md;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: v.$spacing-sm;
+      }
+      
+      &__content {
+        padding: v.$spacing-md;
+      }
     }
   }
 }

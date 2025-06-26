@@ -17,7 +17,14 @@ import { Users } from '../../../../../core/models/UsersModel';
 import { OrganizationStatus } from '../../../../../core/models/OrganizationStatusEnum';
 import { OrganizationUserRole } from '../../../../../core/models/OrganizationUserRoleEnum';
 import { UserService } from '../../../../../core/services/user.service';
-import { OrganizationTableComponent, OrganizationTableRow } from '../../../../../shared/components/organizations/organization-table.component';
+
+export interface OrganizationTableRow {
+  organization: Organizations;
+  userRole: string;
+  isOwner: boolean;
+  memberCount: number;
+  applicationCount: number;
+}
 
 @Component({
   selector: 'app-organizations-list',
@@ -25,93 +32,9 @@ import { OrganizationTableComponent, OrganizationTableRow } from '../../../../..
   imports: [
     CommonModule, 
     FormsModule,
-    FontAwesomeModule,
-    OrganizationTableComponent
+    FontAwesomeModule
   ],
-  template: `
-    <div class="organizations-list">
-      
-      <!-- Header -->
-      <div class="organizations-list__header">
-        <div class="organizations-list__title-section">
-          <h2 class="organizations-list__title">
-            <fa-icon icon="building" class="organizations-list__icon"></fa-icon>
-            Organizations
-          </h2>
-          <p class="organizations-list__subtitle">
-            Manage your organizations and team access
-          </p>
-        </div>
-        <div class="organizations-list__actions">
-          <button class="organizations-list__action organizations-list__action--primary"
-                  (click)="onCreateOrganization()">
-            <fa-icon icon="plus" class="organizations-list__action-icon"></fa-icon>
-            Create Organization
-          </button>
-        </div>
-      </div>
-
-      <!-- Filters -->
-      <div class="organizations-list__filters">
-        <div class="organizations-list__filter-group">
-          <label class="organizations-list__filter-label">Search</label>
-          <div class="organizations-list__filter-input-group">
-            <fa-icon icon="search" class="organizations-list__filter-icon"></fa-icon>
-            <input 
-              type="text" 
-              class="organizations-list__filter-input"
-              placeholder="Search organizations..."
-              [(ngModel)]="searchTerm"
-              (input)="onSearchChange()">
-          </div>
-        </div>
-        
-        <div class="organizations-list__filter-group">
-          <label class="organizations-list__filter-label">Status</label>
-          <select 
-            class="organizations-list__filter-select"
-            [(ngModel)]="statusFilter"
-            (change)="onFilterChange()">
-            <option value="">All Status</option>
-            <option value="ACTIVE">Active</option>
-            <option value="INACTIVE">Inactive</option>
-            <option value="PENDING">Pending</option>
-          </select>
-        </div>
-
-        <div class="organizations-list__filter-group">
-          <label class="organizations-list__filter-label">Role</label>
-          <select 
-            class="organizations-list__filter-select"
-            [(ngModel)]="roleFilter"
-            (change)="onFilterChange()">
-            <option value="">All Roles</option>
-            <option value="OWNER">Owner</option>
-            <option value="ADMINISTRATOR">Administrator</option>
-            <option value="MEMBER">Member</option>
-            <option value="VIEWER">Viewer</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Organizations Table -->
-      <div class="organizations-list__table">
-        <app-organization-table
-          [rows]="filteredOrganizationRows"
-          [pageSize]="10"
-          [showCreateButton]="false"
-          [loading]="isLoading"
-          [selectionMode]="'radio'"
-          [selectedOrganization]="selectedOrganization"
-          (enterOrganization)="onEnterOrganization($event)"
-          (manageOrganization)="onManageOrganization($event)"
-          (viewOrganization)="onViewOrganization($event)"
-          (organizationSelected)="onOrganizationSelected($event)">
-        </app-organization-table>
-      </div>
-
-    </div>
-  `,
+  templateUrl: './organizations-list.component.html',
   styleUrls: ['./organizations-list.component.scss']
 })
 export class OrganizationsListComponent implements OnInit, OnDestroy {
@@ -120,13 +43,7 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
 
   currentUser$: Observable<Users | null>;
   organizationRows: OrganizationTableRow[] = [];
-  filteredOrganizationRows: OrganizationTableRow[] = [];
   isLoading: boolean = false;
-  
-  // Filters
-  searchTerm: string = '';
-  statusFilter: string = '';
-  roleFilter: string = '';
   
   private destroy$ = new Subject<void>();
 
@@ -151,7 +68,6 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
     // TODO: Replace with actual organization service call
     setTimeout(() => {
       this.organizationRows = this.getMockOrganizations();
-      this.applyFilters();
       this.isLoading = false;
     }, 1000);
   }
@@ -211,33 +127,28 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
         isOwner: false,
         memberCount: 25,
         applicationCount: 18
+      },
+      {
+        organization: {
+          organizationId: 'no_org',
+          name: 'No Organization',
+          description: 'Work without an organization context',
+          ownerId: '',
+          status: OrganizationStatus.ACTIVE,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          kmsKeyId: '',
+          kmsKeyArn: '',
+          kmsAlias: ''
+        },
+        userRole: 'NONE' as any,
+        isOwner: false,
+        memberCount: 0,
+        applicationCount: 0
       }
     ];
   }
 
-  onSearchChange(): void {
-    this.applyFilters();
-  }
-
-  onFilterChange(): void {
-    this.applyFilters();
-  }
-
-  private applyFilters(): void {
-    this.filteredOrganizationRows = this.organizationRows.filter(row => {
-      const matchesSearch = !this.searchTerm || 
-        row.organization.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        row.organization.description?.toLowerCase().includes(this.searchTerm.toLowerCase());
-      
-      const matchesStatus = !this.statusFilter || 
-        row.organization.status === this.statusFilter;
-      
-      const matchesRole = !this.roleFilter || 
-        row.userRole === this.roleFilter;
-      
-      return matchesSearch && matchesStatus && matchesRole;
-    });
-  }
 
   onOrganizationSelected(organization: Organizations): void {
     this.organizationSelected.emit(organization);
@@ -260,5 +171,26 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
   onCreateOrganization(): void {
     console.log('Creating new organization');
     // TODO: Navigate to organization creation page
+  }
+
+  trackByOrganizationId(index: number, row: OrganizationTableRow): string {
+    return row.organization.organizationId;
+  }
+
+  getRoleClass(role: string): string {
+    return role.toLowerCase().replace('_', '-');
+  }
+
+  getStatusClass(status: OrganizationStatus): string {
+    switch (status) {
+      case OrganizationStatus.ACTIVE:
+        return 'active';
+      case OrganizationStatus.INACTIVE:
+        return 'inactive';
+      case OrganizationStatus.PENDING:
+        return 'pending';
+      default:
+        return 'inactive';
+    }
   }
 }

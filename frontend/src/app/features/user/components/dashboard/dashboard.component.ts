@@ -15,23 +15,6 @@ import { UserService } from '../../../../core/services/user.service';
 import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { RouterModule } from '@angular/router';
-import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
-import { 
-  faUser, 
-  faBolt, 
-  faHeartbeat, 
-  faHistory, 
-  faUserEdit, 
-  faShieldAlt, 
-  faCreditCard, 
-  faCog, 
-  faCheckCircle, 
-  faClock, 
-  faExclamationTriangle, 
-  faInfoCircle,
-  faArrowRight,
-  faBuilding
-} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-dashboard',
@@ -54,31 +37,12 @@ export class DashboardComponent implements OnInit {
   constructor(
     private store: Store,
     private userService: UserService,
-    private library: FaIconLibrary,
     private router: Router
   ) {
     this.currentUser$ = this.store.select(fromUser.selectCurrentUser);
     this.debugMode$ = this.store.select(fromUser.selectDebugMode);
     this.isLoading$ = this.store.select(fromUser.selectIsLoading);
     this.isNotLoading$ = this.isLoading$.pipe(map(loading => !loading));
-    
-    // Add FontAwesome icons to library
-    this.library.addIcons(
-      faUser, 
-      faBolt, 
-      faHeartbeat, 
-      faHistory, 
-      faUserEdit, 
-      faShieldAlt, 
-      faCreditCard, 
-      faCog, 
-      faCheckCircle, 
-      faClock, 
-      faExclamationTriangle, 
-      faInfoCircle,
-      faArrowRight,
-      faBuilding
-    );
   }
   
   /**

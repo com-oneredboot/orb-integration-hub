@@ -8,6 +8,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 import { Applications } from '../../../core/models/ApplicationsModel';
 import { ApplicationsListComponent } from './components/applications-list/applications-list.component';
@@ -19,61 +20,11 @@ import { ApplicationDetailComponent } from './components/application-detail/appl
   imports: [
     CommonModule,
     RouterModule,
+    FontAwesomeModule,
     ApplicationsListComponent,
     ApplicationDetailComponent
   ],
-  template: `
-    <div class="applications-page">
-      
-      <!-- Page Header -->
-      <div class="applications-page__header">
-        <div class="applications-page__header-content">
-          <div class="applications-page__header-flex">
-            <div class="applications-page__logo-section">
-              <img src="../../../../../assets/onredboot-logo.jpg" alt="OneRedBoot Logo" class="applications-page__logo">
-            </div>
-            <div class="applications-page__text-section">
-              <div class="applications-page__greeting">
-                <div class="applications-page__icon-title">
-                  <img src="../../../../../assets/hardhat.jpg" alt="Engineering" class="applications-page__icon">
-                  <h1 class="applications-page__title">Applications</h1>
-                </div>
-                <p class="applications-page__subtitle">
-                  Manage your applications, environments, and API configurations
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Main Content -->
-      <div class="applications-page__content">
-        <div class="applications-page__layout">
-          
-          <!-- Applications List -->
-          <div class="applications-page__list-panel">
-            <app-applications-list
-              [selectedApplication]="selectedApplication"
-              (applicationSelected)="onApplicationSelected($event)">
-            </app-applications-list>
-          </div>
-
-          <!-- Application Detail -->
-          <div class="applications-page__detail-panel">
-            <app-application-detail
-              [application]="selectedApplication"
-              [organizationName]="selectedApplicationOrganizationName"
-              [environmentCount]="selectedApplicationEnvironmentCount"
-              [apiCallsToday]="selectedApplicationApiCallsToday"
-              [lastActivity]="selectedApplicationLastActivity">
-            </app-application-detail>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  `,
+  templateUrl: './applications.component.html',
   styleUrls: ['./applications.component.scss']
 })
 export class ApplicationsComponent implements OnInit {

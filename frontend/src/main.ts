@@ -15,11 +15,12 @@ import { userReducer } from './app/features/user/store/user.reducer';
 import { UserEffects } from './app/features/user/store/user.effects';
 import { BrowserModule } from '@angular/platform-browser';
 import { ReactiveFormsModule } from '@angular/forms';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { FontAwesomeModule, FaIconLibrary } from '@fortawesome/angular-fontawesome';
 import { NgOptimizedImage } from '@angular/common';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { Amplify } from 'aws-amplify';
 import { environment } from './environments/environment';
+import { configureFontAwesome } from './app/core/config/fontawesome-icons';
 
 Amplify.configure({
   Auth: {
@@ -73,12 +74,18 @@ if (typeof document !== 'undefined') {
   console.info('[Security] Note: X-Frame-Options and frame-ancestors directives should be set via HTTP headers at server level for full protection');
 }
 
+// Configure FontAwesome icons globally
+const iconLibrary = new FaIconLibrary();
+configureFontAwesome(iconLibrary);
+
 bootstrapApplication(AppComponent, {
   providers: [
     provideRouter(routes),
     provideStore({ user: userReducer }),
     provideEffects([UserEffects]),
     provideHttpClient(withInterceptorsFromDi()), // Enable HTTP client for CSRF functionality
-    importProvidersFrom(BrowserModule, ReactiveFormsModule, FontAwesomeModule, NgOptimizedImage)
+    importProvidersFrom(BrowserModule, ReactiveFormsModule, FontAwesomeModule, NgOptimizedImage),
+    // Provide the configured icon library
+    { provide: FaIconLibrary, useValue: iconLibrary }
   ]
 }).catch(err => console.error(err));

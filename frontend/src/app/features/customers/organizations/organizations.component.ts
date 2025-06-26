@@ -8,6 +8,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 import { Organizations } from '../../../core/models/OrganizationsModel';
 import { OrganizationsListComponent } from './components/organizations-list/organizations-list.component';
@@ -19,59 +20,11 @@ import { OrganizationDetailComponent } from './components/organization-detail/or
   imports: [
     CommonModule,
     RouterModule,
+    FontAwesomeModule,
     OrganizationsListComponent,
     OrganizationDetailComponent
   ],
-  template: `
-    <div class="organizations-page">
-      
-      <!-- Page Header -->
-      <div class="organizations-page__header">
-        <div class="organizations-page__header-content">
-          <div class="organizations-page__header-flex">
-            <div class="organizations-page__logo-section">
-              <img src="../../../../../assets/onredboot-logo.jpg" alt="OneRedBoot Logo" class="organizations-page__logo">
-            </div>
-            <div class="organizations-page__text-section">
-              <div class="organizations-page__greeting">
-                <div class="organizations-page__icon-title">
-                  <img src="../../../../../assets/hardhat.jpg" alt="Engineering" class="organizations-page__icon">
-                  <h1 class="organizations-page__title">Organizations</h1>
-                </div>
-                <p class="organizations-page__subtitle">
-                  Manage your organizations, teams, and access controls
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Main Content -->
-      <div class="organizations-page__content">
-        <div class="organizations-page__layout">
-          
-          <!-- Organizations List -->
-          <div class="organizations-page__list-panel">
-            <app-organizations-list
-              [selectedOrganization]="selectedOrganization"
-              (organizationSelected)="onOrganizationSelected($event)">
-            </app-organizations-list>
-          </div>
-
-          <!-- Organization Detail -->
-          <div class="organizations-page__detail-panel">
-            <app-organization-detail
-              [organization]="selectedOrganization"
-              [memberCount]="selectedOrganizationMemberCount"
-              [applicationCount]="selectedOrganizationApplicationCount">
-            </app-organization-detail>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  `,
+  templateUrl: './organizations.component.html',
   styleUrls: ['./organizations.component.scss']
 })
 export class OrganizationsComponent implements OnInit {

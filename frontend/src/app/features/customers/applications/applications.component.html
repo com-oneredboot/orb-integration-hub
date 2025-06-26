@@ -1,0 +1,66 @@
+<!-- 
+file: frontend/src/app/features/customers/applications/applications.component.html
+author: Corey Dale Peters
+date: 2025-03-07
+description: HTML template file for applications management
+-->
+
+<div class="applications-container">
+  <div class="applications-header">
+    <div class="applications-header__content">
+      <div class="applications-header__flex-container">
+        <div class="applications-header__logo-section">
+          <img src="../../../../../assets/onredboot-logo.jpg" alt="OneRedBoot Logo" class="applications-header__logo">
+        </div>
+        <div class="applications-header__text-section">
+          <div class="applications-header__greeting">
+            <div class="applications-header__icon-title">
+              <img src="../../../../../assets/hardhat.jpg" alt="Engineering" class="applications-header__icon">
+              <h1 class="applications-header__title">Applications Management</h1>
+            </div>
+            <p class="applications-header__subtitle">
+              Manage your applications and monitor performance metrics
+            </p>
+            <div class="applications-header__status">
+              <span class="applications-header__status-badge applications-header__status-badge--active">
+                <fa-icon icon="desktop" class="applications-header__status-icon"></fa-icon>
+                Applications Active
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Applications Content -->
+  <div class="applications-content">
+    <div class="applications-page">
+      <!-- Main Content -->
+      <div class="applications-page__content">
+        <div class="applications-page__layout">
+          
+          <!-- Applications List -->
+          <div class="applications-page__list-panel">
+            <app-applications-list
+              [selectedApplication]="selectedApplication"
+              (applicationSelected)="onApplicationSelected($event)">
+            </app-applications-list>
+          </div>
+
+          <!-- Application Detail -->
+          <div class="applications-page__detail-panel">
+            <app-application-detail
+              [application]="selectedApplication"
+              [organizationName]="selectedApplicationOrganizationName"
+              [environmentCount]="selectedApplicationEnvironmentCount"
+              [apiCallsToday]="selectedApplicationApiCallsToday"
+              [lastActivity]="selectedApplicationLastActivity">
+            </app-application-detail>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
