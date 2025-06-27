@@ -58,9 +58,9 @@ export class OrganizationDetailComponent implements OnChanges {
   getStatusIcon(status: OrganizationStatus): string {
     switch (status) {
       case OrganizationStatus.ACTIVE:
-        return 'check-circle';
+        return 'heartbeat';
       case OrganizationStatus.INACTIVE:
-        return 'times-circle';
+        return 'question-circle';
       case OrganizationStatus.PENDING:
         return 'clock';
       default:
@@ -86,5 +86,15 @@ export class OrganizationDetailComponent implements OnChanges {
   onManageMembers(): void {
     console.log('Manage members for:', this.organization?.name);
     // TODO: Navigate to member management page
+  }
+
+  onDisableOrganization(): void {
+    console.log('Disable organization:', this.organization?.name);
+    // TODO: Implement organization disable functionality
+  }
+
+  onDeleteOrganization(): void {
+    console.log('Delete organization:', this.organization?.name);
+    // TODO: Implement organization delete functionality with confirmation
   }
 }

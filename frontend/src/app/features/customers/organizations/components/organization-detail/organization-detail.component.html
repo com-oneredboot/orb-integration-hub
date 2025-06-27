@@ -8,25 +8,15 @@
         <fa-icon icon="building" class="organization-detail__icon"></fa-icon>
         {{ organization.name }}
       </h3>
-      <div class="organization-detail__status">
-        <span class="organization-detail__status-badge" 
-              [ngClass]="'organization-detail__status-badge--' + getStatusClass(organization.status)">
-          <fa-icon [icon]="getStatusIcon(organization.status)" 
-                   class="organization-detail__status-icon"></fa-icon>
-          {{ organization.status }}
-        </span>
-      </div>
     </div>
     <div class="organization-detail__actions">
-      <button class="organization-detail__action organization-detail__action--secondary"
+      <fa-icon [icon]="getStatusIcon(organization.status)" 
+               class="organization-detail__status-icon organization-detail__status-icon--{{ getStatusClass(organization.status) }}"
+               [title]="organization.status"></fa-icon>
+      <button class="organization-detail__action organization-detail__action--primary"
               (click)="onEditOrganization()">
         <fa-icon icon="edit" class="organization-detail__action-icon"></fa-icon>
         Edit
-      </button>
-      <button class="organization-detail__action organization-detail__action--primary"
-              (click)="onManageMembers()">
-        <fa-icon icon="users" class="organization-detail__action-icon"></fa-icon>
-        Manage Members
       </button>
     </div>
   </div>
@@ -52,10 +42,16 @@
       Stats
     </button>
     <button class="organization-detail__tab"
-            [class.organization-detail__tab--active]="activeTab === 'upcoming'"
-            (click)="setActiveTab('upcoming')">
-      <fa-icon icon="plus-circle" class="organization-detail__tab-icon"></fa-icon>
-      Coming Soon
+            [class.organization-detail__tab--active]="activeTab === 'members'"
+            (click)="setActiveTab('members')">
+      <fa-icon icon="users" class="organization-detail__tab-icon"></fa-icon>
+      Members
+    </button>
+    <button class="organization-detail__tab"
+            [class.organization-detail__tab--active]="activeTab === 'danger'"
+            (click)="setActiveTab('danger')">
+      <fa-icon icon="exclamation-triangle" class="organization-detail__tab-icon"></fa-icon>
+      Danger Zone
     </button>
   </div>
 
@@ -138,20 +134,64 @@
       </div>
     </div>
 
-    <!-- Coming Soon Tab -->
-    <div class="organization-detail__tab-panel organization-detail__tab-panel--placeholder"
-         [class.organization-detail__tab-panel--active]="activeTab === 'upcoming'">
+    <!-- Members Tab -->
+    <div class="organization-detail__tab-panel"
+         [class.organization-detail__tab-panel--active]="activeTab === 'members'">
       <div class="organization-detail__placeholder">
-        <fa-icon icon="tools" class="organization-detail__placeholder-icon"></fa-icon>
+        <fa-icon icon="users" class="organization-detail__placeholder-icon"></fa-icon>
         <p class="organization-detail__placeholder-text">
-          Additional organization management features will be available here soon.
+          Member management features will be available here.
         </p>
         <ul class="organization-detail__placeholder-list">
-          <li>Member management and invitations</li>
-          <li>Application access control</li>
-          <li>Audit logs and activity history</li>
-          <li>Organization settings and preferences</li>
+          <li>View organization members</li>
+          <li>Manage member roles and permissions</li>
+          <li>Invite new members</li>
+          <li>Remove members from organization</li>
         </ul>
+      </div>
+    </div>
+
+    <!-- Danger Zone Tab -->
+    <div class="organization-detail__tab-panel"
+         [class.organization-detail__tab-panel--active]="activeTab === 'danger'">
+      <div class="organization-detail__danger-zone">
+        <div class="organization-detail__danger-header">
+          <fa-icon icon="exclamation-triangle" class="organization-detail__danger-icon"></fa-icon>
+          <h4 class="organization-detail__danger-title">Danger Zone</h4>
+          <p class="organization-detail__danger-description">
+            These actions are permanent and cannot be undone. Please proceed with caution.
+          </p>
+        </div>
+        
+        <div class="organization-detail__danger-actions">
+          <div class="organization-detail__danger-action">
+            <div class="organization-detail__danger-action-info">
+              <h5 class="organization-detail__danger-action-title">Disable Organization</h5>
+              <p class="organization-detail__danger-action-description">
+                Temporarily disable this organization. Members will lose access but data is preserved.
+              </p>
+            </div>
+            <button class="organization-detail__danger-btn organization-detail__danger-btn--warning"
+                    (click)="onDisableOrganization()">
+              <fa-icon icon="exclamation-triangle" class="organization-detail__danger-btn-icon"></fa-icon>
+              Disable
+            </button>
+          </div>
+          
+          <div class="organization-detail__danger-action">
+            <div class="organization-detail__danger-action-info">
+              <h5 class="organization-detail__danger-action-title">Delete Organization</h5>
+              <p class="organization-detail__danger-action-description">
+                Permanently delete this organization and all associated data. This action cannot be undone.
+              </p>
+            </div>
+            <button class="organization-detail__danger-btn organization-detail__danger-btn--danger"
+                    (click)="onDeleteOrganization()">
+              <fa-icon icon="exclamation-triangle" class="organization-detail__danger-btn-icon"></fa-icon>
+              Delete
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 

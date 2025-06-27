@@ -66,6 +66,7 @@
   &__create-icon {
     font-size: v.$font-size-xs;
   }
+
   
   &__content {
     flex: 1;
@@ -188,21 +189,25 @@
         &--owner {
           background-color: rgba(v.$success-color, 0.1);
           color: v.$success-color;
+          border: 1px solid v.$success-color;
         }
         
         &--administrator {
           background-color: rgba(v.$primary-color, 0.1);
           color: v.$primary-color;
+          border: 1px solid v.$primary-color;
         }
         
         &--viewer {
           background-color: rgba(v.$gray-500, 0.1);
           color: v.$gray-500;
+          border: 1px solid v.$gray-500;
         }
         
         &--none {
           background-color: rgba(v.$gray-400, 0.1);
           color: v.$gray-400;
+          border: 1px solid v.$gray-400;
         }
       }
       

@@ -173,7 +173,7 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
     // TODO: Navigate to organization creation page
   }
 
-  trackByOrganizationId(index: number, row: OrganizationTableRow): string {
+  trackByOrganizationId(_index: number, row: OrganizationTableRow): string {
     return row.organization.organizationId;
   }
 
