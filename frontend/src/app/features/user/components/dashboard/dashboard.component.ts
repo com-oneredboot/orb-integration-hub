@@ -163,4 +163,58 @@ export class DashboardComponent implements OnInit {
     // Return true if ANY requirement is not met
     return !hasValidName || !emailVerified || !phoneVerified || !mfaComplete;
   }
+
+  /**
+   * Get status class for header badge styling
+   * @param status The user status
+   * @returns CSS class name for status
+   */
+  getStatusClass(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'active':
+        return 'active';
+      case 'pending':
+        return 'pending';
+      case 'suspended':
+        return 'suspended';
+      default:
+        return 'unknown';
+    }
+  }
+
+  /**
+   * Get status icon for header badge
+   * @param status The user status
+   * @returns Font Awesome icon name
+   */
+  getStatusIcon(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'active':
+        return 'check-circle';
+      case 'pending':
+        return 'clock';
+      case 'suspended':
+        return 'ban';
+      default:
+        return 'question-circle';
+    }
+  }
+
+  /**
+   * Get status label for header badge
+   * @param status The user status
+   * @returns Human readable status label
+   */
+  getStatusLabel(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'active':
+        return 'Account Active';
+      case 'pending':
+        return 'Account Pending';
+      case 'suspended':
+        return 'Account Suspended';
+      default:
+        return 'Account Status Unknown';
+    }
+  }
 }

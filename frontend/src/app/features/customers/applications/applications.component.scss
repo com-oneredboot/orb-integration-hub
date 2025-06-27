@@ -2,174 +2,18 @@
 @use '../../../../styles/mixins' as m;
 
 .applications-container {
-  @include m.page-container;
+  max-width: v.$page-max-width;
+  margin: 0 auto;
+  padding: 0; // No padding - header handles all spacing
   
   & {
     font-family: v.$font-family-base;
   }
   
-  .applications-header {
-    background: v.$orb-white;
-    padding: v.$spacing-xl 0;
-    position: relative;
-    overflow: hidden;
-    margin-bottom: 0;
-
-    &__content {
-      max-width: v.$page-max-width;
-      margin: 0 auto;
-      padding: 0 v.$spacing-lg;
-    }
-
-    &__flex-container {
-      display: flex;
-      align-items: center;
-      gap: v.$spacing-xl * 3;
-      justify-content: center;
-
-      @media (max-width: 1024px) {
-        flex-direction: column;
-        text-align: center;
-        gap: v.$spacing-xl;
-      }
-    }
-
-    &__logo-section {
-      flex: 1;
-      max-width: 600px;
-      
-      @media (max-width: 1024px) {
-        max-width: 400px;
-      }
-      
-      @media (max-width: 768px) {
-        max-width: 300px;
-      }
-    }
-    
-    &__logo {
-      width: 100%;
-      height: auto;
-      object-fit: contain;
-    }
-
-    &__text-section {
-      flex: 1;
-      max-width: 600px;
-      display: flex;
-      flex-direction: column;
-      gap: v.$spacing-lg;
-      align-items: flex-start;
-
-      @media (max-width: 1024px) {
-        align-items: center;
-        text-align: center;
-      }
-    }
-
-    &__greeting {
-      display: flex;
-      flex-direction: column;
-      gap: v.$spacing-md;
-      width: 100%;
-    }
-
-    &__icon-title {
-      display: flex;
-      align-items: center;
-      gap: v.$spacing-md;
-      margin-bottom: v.$spacing-sm;
-
-      @media (max-width: 1024px) {
-        justify-content: center;
-      }
-    }
-
-    &__icon {
-      width: 48px;
-      height: 48px;
-      object-fit: contain;
-      border-radius: v.$border-radius;
-    }
-    
-    &__title {
-      font-family: v.$font-family-heading;
-      font-size: 1.5rem;
-      font-weight: v.$font-weight-bold;
-      color: v.$orb-dark-blue;
-      margin: 0;
-      line-height: 1.2;
-
-      @media (max-width: 768px) {
-        font-size: 2rem;
-      }
-
-      @media (max-width: 480px) {
-        font-size: 1.75rem;
-      }
-    }
-    
-    &__subtitle {
-      font-size: v.$font-size-lg;
-      color: v.$orb-dark-blue;
-      margin: 0;
-      line-height: 1.6;
-      text-align: left;
-
-      @media (max-width: 1024px) {
-        text-align: center;
-      }
-    }
-
-    &__hint {
-      font-size: v.$font-size-base;
-      color: v.$text-secondary;
-      margin: v.$spacing-xs 0 0 0;
-      line-height: 1.5;
-      text-align: left;
-      font-style: italic;
-
-      @media (max-width: 1024px) {
-        text-align: center;
-      }
-    }
-
-    &__status {
-      display: flex;
-      align-items: center;
-      gap: v.$spacing-lg;
-      flex-wrap: wrap;
-
-      @media (max-width: 1024px) {
-        justify-content: center;
-      }
-    }
-
-    &__status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: v.$spacing-xs;
-      padding: v.$spacing-sm v.$spacing-md;
-      border-radius: v.$border-radius-lg;
-      font-size: v.$font-size-sm;
-      font-weight: v.$font-weight-medium;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-
-      &--active {
-        background-color: rgba(v.$success-color, 0.1);
-        color: v.$success-color;
-        border: 1px solid rgba(v.$success-color, 0.2);
-      }
-    }
-
-    &__status-icon {
-      font-size: v.$font-size-xs;
-    }
-  }
+  // Applications header now uses global .orb-page-header class
 
   .applications-content {
-    @include m.page-content;
+    padding: 0 v.$spacing-lg; // Only horizontal padding
   }
 
   .applications__debug {
@@ -190,7 +34,7 @@
   // Content
   &__content {
     @include m.page-content;
-    padding-top: v.$spacing-md; // Reduce top padding to minimize gap
+    padding-top: 0; // No top padding - header handles spacing
   }
 
   &__layout {

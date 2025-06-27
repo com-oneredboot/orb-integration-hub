@@ -567,6 +567,204 @@
   }
 }
 
+// Header Status Badge (used in page headers)
+.orb-header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: v.$spacing-xs;
+  padding: v.$spacing-sm v.$spacing-md;
+  border-radius: v.$border-radius-lg;
+  font-size: v.$font-size-sm;
+  font-weight: v.$font-weight-medium;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid transparent;
+
+  &__icon {
+    font-size: v.$font-size-xs;
+  }
+
+  // Status variants
+  &--active {
+    background-color: rgba(v.$success-color, 0.1);
+    color: v.$success-color;
+    border: 1px solid rgba(v.$success-color, 0.2);
+  }
+
+  &--pending {
+    background-color: rgba(v.$warning-color, 0.1);
+    color: v.$warning-color;
+    border: 1px solid rgba(v.$warning-color, 0.2);
+  }
+
+  &--suspended {
+    background-color: rgba(v.$danger-color, 0.1);
+    color: v.$danger-color;
+    border: 1px solid rgba(v.$danger-color, 0.2);
+  }
+
+  &--unknown {
+    background-color: rgba(v.$gray-500, 0.1);
+    color: v.$gray-500;
+    border: 1px solid rgba(v.$gray-500, 0.2);
+  }
+}
+
+// Global Page Header (based on organizations/applications design)
+.orb-page-header {
+  background: v.$orb-white;
+  padding: v.$spacing-xl 0;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: v.$spacing-xl;
+
+  &__content {
+    max-width: v.$page-max-width;
+    margin: 0 auto;
+    padding: 0 v.$spacing-lg;
+  }
+
+  &__flex-container {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-xl * 3;
+    justify-content: center;
+
+    @media (max-width: 1024px) {
+      flex-direction: column;
+      text-align: center;
+      gap: v.$spacing-xl;
+    }
+  }
+
+  &__logo-section {
+    flex: 1;
+    max-width: 600px;
+    
+    @media (max-width: 1024px) {
+      max-width: 400px;
+    }
+    
+    @media (max-width: 768px) {
+      max-width: 300px;
+    }
+  }
+  
+  &__logo {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+
+  &__text-section {
+    flex: 1;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    gap: v.$spacing-lg;
+    align-items: flex-start;
+
+    @media (max-width: 1024px) {
+      align-items: center;
+      text-align: center;
+    }
+  }
+
+  &__greeting {
+    display: flex;
+    flex-direction: column;
+    gap: v.$spacing-md;
+    width: 100%;
+  }
+
+  &__icon-title {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-md;
+    margin-bottom: v.$spacing-sm;
+
+    @media (max-width: 1024px) {
+      justify-content: center;
+    }
+  }
+
+  &__icon {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    border-radius: v.$border-radius;
+  }
+  
+  &__title {
+    font-family: v.$font-family-heading;
+    font-size: 1.5rem;
+    font-weight: v.$font-weight-bold;
+    color: v.$orb-dark-blue;
+    margin: 0;
+    line-height: 1.2;
+
+    @media (max-width: 768px) {
+      font-size: 2rem;
+    }
+
+    @media (max-width: 480px) {
+      font-size: 1.75rem;
+    }
+  }
+  
+  &__subtitle {
+    font-size: v.$font-size-lg;
+    color: v.$orb-dark-blue;
+    margin: 0;
+    line-height: 1.6;
+    text-align: left;
+
+    @media (max-width: 1024px) {
+      text-align: center;
+    }
+    
+    &--warning {
+      color: v.$warning-color;
+      font-weight: v.$font-weight-semibold;
+      font-style: italic;
+      border-left: 3px solid v.$warning-color;
+      background: rgba(v.$warning-color, 0.05);
+      border-radius: v.$border-radius-sm;
+      padding: v.$spacing-sm v.$spacing-md;
+      margin-top: v.$spacing-xs;
+    }
+  }
+
+  &__hint {
+    font-size: v.$font-size-base;
+    color: v.$text-secondary;
+    margin: v.$spacing-xs 0 0 0;
+    line-height: 1.5;
+    text-align: left;
+    font-style: italic;
+
+    @media (max-width: 1024px) {
+      text-align: center;
+    }
+  }
+
+  &__status {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-lg;
+    flex-wrap: wrap;
+
+    @media (max-width: 1024px) {
+      justify-content: center;
+    }
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      gap: v.$spacing-sm;
+    }
+  }
+}
+
 
 // Responsive Styles
 @media (max-width: 768px) {

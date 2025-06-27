@@ -6,33 +6,33 @@ description: HTML template file
 -->
 
 <div class="profile-container">
-  <div class="profile-header">
-    <div class="profile-header__content">
-      <div class="profile-header__flex-container">
-        <div class="profile-header__logo-section">
-          <img src="../../../../../assets/onredboot-logo.jpg" alt="OneRedBoot Logo" class="profile-header__logo">
+  <div class="orb-page-header">
+    <div class="orb-page-header__content">
+      <div class="orb-page-header__flex-container">
+        <div class="orb-page-header__logo-section">
+          <img src="../../../../../assets/onredboot-logo.jpg" alt="OneRedBoot Logo" class="orb-page-header__logo">
         </div>
-        <div class="profile-header__text-section" *ngIf="currentUser$ | async as user">
-          <div class="profile-header__greeting">
-            <div class="profile-header__icon-title">
-              <img src="../../../../../assets/hardhat.jpg" alt="Engineering" class="profile-header__icon">
-              <h1 class="profile-header__title">Profile Settings</h1>
+        <div class="orb-page-header__text-section" *ngIf="currentUser$ | async as user">
+          <div class="orb-page-header__greeting">
+            <div class="orb-page-header__icon-title">
+              <img src="../../../../../assets/hardhat.jpg" alt="Engineering" class="orb-page-header__icon">
+              <h1 class="orb-page-header__title">Profile Settings</h1>
             </div>
-            <p class="profile-header__subtitle" *ngIf="isAccountComplete(user); else pendingMessage">
+            <p class="orb-page-header__subtitle" *ngIf="isAccountComplete(user); else pendingMessage">
               Your profile is complete and ready for engineering work
             </p>
             <ng-template #pendingMessage>
-              <p class="profile-header__subtitle profile-header__subtitle--warning">
+              <p class="orb-page-header__subtitle orb-page-header__subtitle--warning">
                 Complete your profile setup to activate your account
               </p>
             </ng-template>
-            <p class="profile-header__hint">
+            <p class="orb-page-header__hint">
               Review your personal information below and click the edit button to make changes. Ensure all verification steps are completed for full account access.
             </p>
-            <div class="profile-header__status">
-              <span class="profile-header__status-badge" 
-                    [ngClass]="'profile-header__status-badge--' + getStatusClass(user.status)">
-                <fa-icon [icon]="isAccountComplete(user) ? 'check-circle' : 'exclamation-triangle'" class="profile-header__status-icon"></fa-icon>
+            <div class="orb-page-header__status">
+              <span class="orb-header-badge" 
+                    [ngClass]="'orb-header-badge--' + getStatusClass(user.status)">
+                <fa-icon [icon]="isAccountComplete(user) ? 'check-circle' : 'exclamation-triangle'" class="orb-header-badge__icon"></fa-icon>
                 {{ isAccountComplete(user) ? 'Account Complete' : 'Profile Incomplete' }}
               </span>
             </div>

@@ -6,27 +6,27 @@ description: HTML template file for applications management
 -->
 
 <div class="applications-container">
-  <div class="applications-header">
-    <div class="applications-header__content">
-      <div class="applications-header__flex-container">
-        <div class="applications-header__logo-section">
-          <img src="../../../../../assets/onredboot-logo.jpg" alt="OneRedBoot Logo" class="applications-header__logo">
+  <div class="orb-page-header">
+    <div class="orb-page-header__content">
+      <div class="orb-page-header__flex-container">
+        <div class="orb-page-header__logo-section">
+          <img src="../../../../../assets/onredboot-logo.jpg" alt="OneRedBoot Logo" class="orb-page-header__logo">
         </div>
-        <div class="applications-header__text-section">
-          <div class="applications-header__greeting">
-            <div class="applications-header__icon-title">
-              <img src="../../../../../assets/hardhat.jpg" alt="Engineering" class="applications-header__icon">
-              <h1 class="applications-header__title">Applications Management</h1>
+        <div class="orb-page-header__text-section">
+          <div class="orb-page-header__greeting">
+            <div class="orb-page-header__icon-title">
+              <img src="../../../../../assets/hardhat.jpg" alt="Engineering" class="orb-page-header__icon">
+              <h1 class="orb-page-header__title">Applications Management</h1>
             </div>
-            <p class="applications-header__subtitle">
+            <p class="orb-page-header__subtitle">
               Manage your applications and monitor performance metrics
             </p>
-            <p class="applications-header__hint">
+            <p class="orb-page-header__hint">
               Choose an application from the list to view its details and manage settings.
             </p>
-            <div class="applications-header__status">
-              <span class="applications-header__status-badge applications-header__status-badge--active">
-                <fa-icon icon="rocket" class="applications-header__status-icon"></fa-icon>
+            <div class="orb-page-header__status">
+              <span class="orb-header-badge orb-header-badge--active">
+                <fa-icon icon="rocket" class="orb-header-badge__icon"></fa-icon>
                 {{ totalApplications || 8 }} Applications Available
               </span>
             </div>

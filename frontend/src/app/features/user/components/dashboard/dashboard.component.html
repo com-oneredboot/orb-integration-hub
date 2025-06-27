@@ -20,40 +20,37 @@ description: HTML template file
     <div class="orb-loading-mask"></div>
   </div>
 
-  <div class="dashboard-header">
-    <div class="dashboard-header__content">
-      <div class="dashboard-header__flex-container">
-        <div class="dashboard-header__logo-section">
-          <img src="../../../../../assets/onredboot-logo.jpg" alt="OneRedBoot Logo" class="dashboard-header__logo">
+  <div class="orb-page-header">
+    <div class="orb-page-header__content">
+      <div class="orb-page-header__flex-container">
+        <div class="orb-page-header__logo-section">
+          <img src="../../../../../assets/onredboot-logo.jpg" alt="OneRedBoot Logo" class="orb-page-header__logo">
         </div>
-        <div class="dashboard-header__text-section" *ngIf="currentUser$ | async as user">
-          <div class="dashboard-header__greeting">
-            <div class="dashboard-header__icon-title">
-              <img src="../../../../../assets/hardhat.jpg" alt="Engineering" class="dashboard-header__icon">
-              <h1 class="dashboard-header__title">
+        <div class="orb-page-header__text-section" *ngIf="currentUser$ | async as user">
+          <div class="orb-page-header__greeting">
+            <div class="orb-page-header__icon-title">
+              <img src="../../../../../assets/hardhat.jpg" alt="Engineering" class="orb-page-header__icon">
+              <h1 class="orb-page-header__title">
                 Integration Hub
               </h1>
             </div>
-            <p class="dashboard-header__subtitle" *ngIf="user.status === 'ACTIVE'; else pendingDashboardMessage">
+            <p class="orb-page-header__subtitle" *ngIf="user.status === 'ACTIVE'; else pendingDashboardMessage">
               Your integration hub is ready for action
             </p>
             <ng-template #pendingDashboardMessage>
-              <p class="dashboard-header__subtitle dashboard-header__subtitle--warning">
+              <p class="orb-page-header__subtitle orb-page-header__subtitle--warning">
                 Complete your profile setup to activate your account
               </p>
             </ng-template>
-            <p class="dashboard-header__hint">
+            <p class="orb-page-header__hint">
               Use the quick actions below to manage your profile, security settings, and integrations. Access your organizations and applications from the navigation menu.
             </p>
-            <div class="dashboard-header__status">
-              <app-status-badge 
-                [status]="user.status" 
-                type="user"
-                [showIcon]="true"
-                [showLabel]="true"
-                size="medium"
-                variant="badge">
-              </app-status-badge>
+            <div class="orb-page-header__status">
+              <span class="orb-header-badge" 
+                    [ngClass]="'orb-header-badge--' + getStatusClass(user.status)">
+                <fa-icon [icon]="getStatusIcon(user.status)" class="orb-header-badge__icon"></fa-icon>
+                {{ getStatusLabel(user.status) }}
+              </span>
             </div>
           </div>
         </div>
@@ -74,7 +71,7 @@ description: HTML template file
       
       <div class="orb-card__content orb-card__content--padded">
         <div class="orb-action-grid">
-          <a routerLink="/profile" class="orb-action-button orb-action-button--primary">
+          <a routerLink="/profile" class="orb-action-button orb-action-button--secondary">
             <fa-icon icon="user-edit" class="orb-action-button__icon"></fa-icon>
             <div class="orb-action-button__content">
               <div class="orb-action-button__title">Edit Profile</div>
