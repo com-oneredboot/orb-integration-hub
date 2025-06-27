@@ -10,15 +10,7 @@
   padding: 0;
   background: v.$orb-white;
   border-radius: v.$border-radius-lg;
-  border: 1px solid v.$border-color;
-  box-shadow: v.$shadow-md;
   overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(0, 0, 0, 0.08);
-  }
 
   // Header
   &__header {
