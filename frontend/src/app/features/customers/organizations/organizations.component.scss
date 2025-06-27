@@ -121,6 +121,19 @@
       }
     }
 
+    &__hint {
+      font-size: v.$font-size-base;
+      color: v.$text-secondary;
+      margin: v.$spacing-xs 0 0 0;
+      line-height: 1.5;
+      text-align: left;
+      font-style: italic;
+
+      @media (max-width: 1024px) {
+        text-align: center;
+      }
+    }
+
     &__status {
       display: flex;
       align-items: center;

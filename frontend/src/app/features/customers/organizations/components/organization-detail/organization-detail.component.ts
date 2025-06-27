@@ -27,10 +27,19 @@ export class OrganizationDetailComponent implements OnChanges {
   @Input() memberCount: number = 0;
   @Input() applicationCount: number = 0;
 
+  // Tab management
+  activeTab: string = 'overview';
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['organization'] && this.organization) {
       console.log('Organization selected:', this.organization.name);
+      // Reset to overview tab when organization changes
+      this.activeTab = 'overview';
     }
+  }
+
+  setActiveTab(tab: string): void {
+    this.activeTab = tab;
   }
 
   getStatusClass(status: OrganizationStatus): string {

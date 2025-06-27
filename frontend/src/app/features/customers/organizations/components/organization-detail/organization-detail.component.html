@@ -31,118 +31,127 @@
     </div>
   </div>
 
-  <!-- Content -->
+  <!-- Tabs Navigation -->
+  <div class="organization-detail__tabs">
+    <button class="organization-detail__tab" 
+            [class.organization-detail__tab--active]="activeTab === 'overview'"
+            (click)="setActiveTab('overview')">
+      <fa-icon icon="info-circle" class="organization-detail__tab-icon"></fa-icon>
+      Overview
+    </button>
+    <button class="organization-detail__tab"
+            [class.organization-detail__tab--active]="activeTab === 'security'"
+            (click)="setActiveTab('security')">
+      <fa-icon icon="shield-alt" class="organization-detail__tab-icon"></fa-icon>
+      Security
+    </button>
+    <button class="organization-detail__tab"
+            [class.organization-detail__tab--active]="activeTab === 'stats'"
+            (click)="setActiveTab('stats')">
+      <fa-icon icon="chart-bar" class="organization-detail__tab-icon"></fa-icon>
+      Stats
+    </button>
+    <button class="organization-detail__tab"
+            [class.organization-detail__tab--active]="activeTab === 'upcoming'"
+            (click)="setActiveTab('upcoming')">
+      <fa-icon icon="plus-circle" class="organization-detail__tab-icon"></fa-icon>
+      Coming Soon
+    </button>
+  </div>
+
+  <!-- Tab Content -->
   <div class="organization-detail__content">
     
-    <!-- Overview Section -->
-    <div class="organization-detail__section">
-      <h4 class="organization-detail__section-title">
-        <fa-icon icon="info-circle" class="organization-detail__section-icon"></fa-icon>
-        Overview
-      </h4>
-      <div class="organization-detail__section-content">
-        <div class="organization-detail__info-grid">
-          <div class="organization-detail__info-item">
-            <label class="organization-detail__info-label">Description</label>
-            <p class="organization-detail__info-value">
-              {{ organization.description || 'No description provided' }}
-            </p>
+    <!-- Overview Tab -->
+    <div class="organization-detail__tab-panel" 
+         [class.organization-detail__tab-panel--active]="activeTab === 'overview'">
+      <div class="organization-detail__info-grid">
+        <div class="organization-detail__info-item">
+          <label class="organization-detail__info-label">Description</label>
+          <input type="text" class="organization-detail__info-input"
+                 [value]="organization.description || ''"
+                 placeholder="No description provided"
+                 disabled>
+        </div>
+        <div class="organization-detail__info-item">
+          <label class="organization-detail__info-label">Organization ID</label>
+          <input type="text" class="organization-detail__info-input organization-detail__info-input--code"
+                 [value]="organization.organizationId"
+                 disabled>
+        </div>
+        <div class="organization-detail__info-item">
+          <label class="organization-detail__info-label">Created</label>
+          <input type="text" class="organization-detail__info-input"
+                 [value]="formatDate(organization.createdAt)"
+                 disabled>
+        </div>
+        <div class="organization-detail__info-item">
+          <label class="organization-detail__info-label">Last Updated</label>
+          <input type="text" class="organization-detail__info-input"
+                 [value]="formatDate(organization.updatedAt)"
+                 disabled>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Tab -->
+    <div class="organization-detail__tab-panel"
+         [class.organization-detail__tab-panel--active]="activeTab === 'security'">
+      <div class="organization-detail__info-grid">
+        <div class="organization-detail__info-item">
+          <label class="organization-detail__info-label">Encryption Key ID</label>
+          <input type="text" class="organization-detail__info-input organization-detail__info-input--code"
+                 [value]="organization.kmsKeyId"
+                 disabled>
+        </div>
+        <div class="organization-detail__info-item">
+          <label class="organization-detail__info-label">Key Alias</label>
+          <input type="text" class="organization-detail__info-input organization-detail__info-input--code"
+                 [value]="organization.kmsAlias"
+                 disabled>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Tab -->
+    <div class="organization-detail__tab-panel"
+         [class.organization-detail__tab-panel--active]="activeTab === 'stats'">
+      <div class="organization-detail__stats-grid">
+        <div class="organization-detail__stat-card">
+          <div class="organization-detail__stat-icon">
+            <fa-icon icon="users" class="organization-detail__stat-icon-element"></fa-icon>
           </div>
-          <div class="organization-detail__info-item">
-            <label class="organization-detail__info-label">Organization ID</label>
-            <p class="organization-detail__info-value organization-detail__info-value--code">
-              {{ organization.organizationId }}
-            </p>
+          <div class="organization-detail__stat-content">
+            <span class="organization-detail__stat-value">{{ memberCount || 0 }}</span>
+            <span class="organization-detail__stat-label">Members</span>
           </div>
-          <div class="organization-detail__info-item">
-            <label class="organization-detail__info-label">Created</label>
-            <p class="organization-detail__info-value">
-              {{ formatDate(organization.createdAt) }}
-            </p>
+        </div>
+        <div class="organization-detail__stat-card">
+          <div class="organization-detail__stat-icon">
+            <fa-icon icon="rocket" class="organization-detail__stat-icon-element"></fa-icon>
           </div>
-          <div class="organization-detail__info-item">
-            <label class="organization-detail__info-label">Last Updated</label>
-            <p class="organization-detail__info-value">
-              {{ formatDate(organization.updatedAt) }}
-            </p>
+          <div class="organization-detail__stat-content">
+            <span class="organization-detail__stat-value">{{ applicationCount || 0 }}</span>
+            <span class="organization-detail__stat-label">Applications</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Security Section -->
-    <div class="organization-detail__section">
-      <h4 class="organization-detail__section-title">
-        <fa-icon icon="shield-alt" class="organization-detail__section-icon"></fa-icon>
-        Security
-      </h4>
-      <div class="organization-detail__section-content">
-        <div class="organization-detail__info-grid">
-          <div class="organization-detail__info-item">
-            <label class="organization-detail__info-label">Encryption Key ID</label>
-            <p class="organization-detail__info-value organization-detail__info-value--code">
-              {{ organization.kmsKeyId }}
-            </p>
-          </div>
-          <div class="organization-detail__info-item">
-            <label class="organization-detail__info-label">Key Alias</label>
-            <p class="organization-detail__info-value organization-detail__info-value--code">
-              {{ organization.kmsAlias }}
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Quick Stats Section -->
-    <div class="organization-detail__section">
-      <h4 class="organization-detail__section-title">
-        <fa-icon icon="chart-bar" class="organization-detail__section-icon"></fa-icon>
-        Quick Stats
-      </h4>
-      <div class="organization-detail__section-content">
-        <div class="organization-detail__stats-grid">
-          <div class="organization-detail__stat-card">
-            <div class="organization-detail__stat-icon">
-              <fa-icon icon="users" class="organization-detail__stat-icon-element"></fa-icon>
-            </div>
-            <div class="organization-detail__stat-content">
-              <span class="organization-detail__stat-value">{{ memberCount || 0 }}</span>
-              <span class="organization-detail__stat-label">Members</span>
-            </div>
-          </div>
-          <div class="organization-detail__stat-card">
-            <div class="organization-detail__stat-icon">
-              <fa-icon icon="rocket" class="organization-detail__stat-icon-element"></fa-icon>
-            </div>
-            <div class="organization-detail__stat-content">
-              <span class="organization-detail__stat-value">{{ applicationCount || 0 }}</span>
-              <span class="organization-detail__stat-label">Applications</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Placeholder for Future Features -->
-    <div class="organization-detail__section organization-detail__section--placeholder">
-      <h4 class="organization-detail__section-title">
-        <fa-icon icon="plus-circle" class="organization-detail__section-icon"></fa-icon>
-        Coming Soon
-      </h4>
-      <div class="organization-detail__section-content">
-        <div class="organization-detail__placeholder">
-          <fa-icon icon="tools" class="organization-detail__placeholder-icon"></fa-icon>
-          <p class="organization-detail__placeholder-text">
-            Additional organization management features will be available here soon.
-          </p>
-          <ul class="organization-detail__placeholder-list">
-            <li>Member management and invitations</li>
-            <li>Application access control</li>
-            <li>Audit logs and activity history</li>
-            <li>Organization settings and preferences</li>
-          </ul>
-        </div>
+    <!-- Coming Soon Tab -->
+    <div class="organization-detail__tab-panel organization-detail__tab-panel--placeholder"
+         [class.organization-detail__tab-panel--active]="activeTab === 'upcoming'">
+      <div class="organization-detail__placeholder">
+        <fa-icon icon="tools" class="organization-detail__placeholder-icon"></fa-icon>
+        <p class="organization-detail__placeholder-text">
+          Additional organization management features will be available here soon.
+        </p>
+        <ul class="organization-detail__placeholder-list">
+          <li>Member management and invitations</li>
+          <li>Application access control</li>
+          <li>Audit logs and activity history</li>
+          <li>Organization settings and preferences</li>
+        </ul>
       </div>
     </div>
 
@@ -154,10 +163,7 @@
   <div class="organization-detail__empty">
     <div class="organization-detail__empty-content">
       <fa-icon icon="building" class="organization-detail__empty-icon"></fa-icon>
-      <h3 class="organization-detail__empty-title">Select an Organization</h3>
-      <p class="organization-detail__empty-text">
-        Choose an organization from the list to view its details and manage settings.
-      </p>
+      <h3 class="organization-detail__empty-title">No Organization Selected</h3>
     </div>
   </div>
 </ng-template>
