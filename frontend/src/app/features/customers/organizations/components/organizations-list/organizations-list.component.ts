@@ -45,7 +45,13 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
 
   currentUser$: Observable<Users | null>;
   organizationRows: OrganizationTableRow[] = [];
+  filteredOrganizationRows: OrganizationTableRow[] = [];
   isLoading: boolean = false;
+  
+  // Filters
+  searchTerm: string = '';
+  statusFilter: string = '';
+  roleFilter: string = '';
   
   private destroy$ = new Subject<void>();
 
@@ -70,6 +76,7 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
     // TODO: Replace with actual organization service call
     setTimeout(() => {
       this.organizationRows = this.getMockOrganizations();
+      this.applyFilters();
       this.isLoading = false;
     }, 1000);
   }
@@ -173,6 +180,30 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
   onCreateOrganization(): void {
     console.log('Creating new organization');
     // TODO: Navigate to organization creation page
+  }
+
+  onSearchChange(): void {
+    this.applyFilters();
+  }
+
+  onFilterChange(): void {
+    this.applyFilters();
+  }
+
+  private applyFilters(): void {
+    this.filteredOrganizationRows = this.organizationRows.filter(row => {
+      const matchesSearch = !this.searchTerm || 
+        row.organization.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        row.organization.organizationId.toLowerCase().includes(this.searchTerm.toLowerCase());
+      
+      const matchesStatus = !this.statusFilter || 
+        row.organization.status === this.statusFilter;
+      
+      const matchesRole = !this.roleFilter || 
+        row.userRole === this.roleFilter;
+      
+      return matchesSearch && matchesStatus && matchesRole;
+    });
   }
 
   trackByOrganizationId(_index: number, row: OrganizationTableRow): string {

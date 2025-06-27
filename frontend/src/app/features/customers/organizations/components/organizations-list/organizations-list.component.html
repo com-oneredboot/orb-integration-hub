@@ -2,16 +2,64 @@
 <div class="orb-card">
   <!-- Header -->
   <div class="orb-card__header">
-    <h2 class="orb-card__title">
-      <fa-icon icon="building" class="orb-card__icon"></fa-icon>
-      Organizations Overview
-    </h2>
+    <div class="orb-card__title-section">
+      <h2 class="orb-card__title">
+        <fa-icon icon="building" class="orb-card__icon"></fa-icon>
+        Organizations
+      </h2>
+      <p class="orb-card__subtitle">
+        Manage your organizations and member details
+      </p>
+    </div>
     <div class="orb-card__header-actions">
       <button class="orb-card-btn"
               (click)="onCreateOrganization()">
         <fa-icon icon="plus" class="orb-card-btn__icon"></fa-icon>
-        Create
+        Create Organization
       </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="orb-filters">
+    <div class="orb-filters__group">
+      <label class="orb-filters__label">Search</label>
+      <div class="orb-filters__input-group">
+        <fa-icon icon="search" class="orb-filters__icon"></fa-icon>
+        <input 
+          type="text" 
+          class="orb-filters__input"
+          placeholder="Search organizations..."
+          [(ngModel)]="searchTerm"
+          (input)="onSearchChange()">
+      </div>
+    </div>
+    
+    <div class="orb-filters__group">
+      <label class="orb-filters__label">Status</label>
+      <select 
+        class="orb-filters__select"
+        [(ngModel)]="statusFilter"
+        (change)="onFilterChange()">
+        <option value="">All Statuses</option>
+        <option value="ACTIVE">Active</option>
+        <option value="INACTIVE">Inactive</option>
+        <option value="PENDING">Pending</option>
+        <option value="SUSPENDED">Suspended</option>
+      </select>
+    </div>
+
+    <div class="orb-filters__group">
+      <label class="orb-filters__label">My Role</label>
+      <select 
+        class="orb-filters__select"
+        [(ngModel)]="roleFilter"
+        (change)="onFilterChange()">
+        <option value="">All Roles</option>
+        <option value="OWNER">Owner</option>
+        <option value="EMPLOYEE">Employee</option>
+        <option value="CUSTOMER">Customer</option>
+      </select>
     </div>
   </div>
   
@@ -31,7 +79,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let row of organizationRows; trackBy: trackByOrganizationId"
+                <tr *ngFor="let row of filteredOrganizationRows; trackBy: trackByOrganizationId"
                     class="orb-table__row"
                     [class.orb-table__row--selected]="row.organization.organizationId === selectedOrganization?.organizationId">
                   
@@ -93,7 +141,7 @@
                 
                 <!-- Loading State -->
                 <tr *ngIf="isLoading" class="orb-table__row orb-table__row--loading">
-                  <td colspan="5" class="orb-table__cell orb-table__cell--loading">
+                  <td colspan="6" class="orb-table__cell orb-table__cell--loading">
                     <div class="orb-table__loading">
                       <fa-icon icon="spinner" class="orb-table__loading-icon fa-spin"></fa-icon>
                       Loading organizations...
@@ -102,13 +150,13 @@
                 </tr>
                 
                 <!-- Empty State -->
-                <tr *ngIf="!isLoading && organizationRows.length === 0" 
+                <tr *ngIf="!isLoading && filteredOrganizationRows.length === 0" 
                     class="orb-table__row orb-table__row--empty">
-                  <td colspan="5" class="orb-table__cell orb-table__cell--empty">
+                  <td colspan="6" class="orb-table__cell orb-table__cell--empty">
                     <div class="orb-table__empty">
                       <fa-icon icon="building" class="orb-table__empty-icon"></fa-icon>
                       <p class="orb-table__empty-text">
-                        No organizations found
+                        {{ organizationRows.length === 0 ? 'No organizations found' : 'No organizations match your filters' }}
                       </p>
                     </div>
                   </td>
