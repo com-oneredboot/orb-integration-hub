@@ -15,7 +15,7 @@
     align-items: center;
     padding: v.$spacing-lg;
     border-bottom: 1px solid v.$border-color;
-    background: rgba(v.$primary-color, 0.02);
+    background: v.$orb-red;
   }
   
   &__title {
@@ -25,12 +25,12 @@
     margin: 0;
     font-size: v.$font-size-lg;
     font-weight: v.$font-weight-semibold;
-    color: v.$orb-dark-blue;
+    color: white;
   }
   
   &__icon {
     font-size: v.$font-size-lg;
-    color: v.$primary-color;
+    color: white;
   }
   
   &__header-actions {
@@ -44,8 +44,8 @@
     align-items: center;
     gap: v.$spacing-sm;
     padding: v.$spacing-sm v.$spacing-lg;
-    background-color: v.$primary-color;
-    color: v.$white;
+    background-color: white;
+    color: v.$orb-red;
     border: none;
     border-radius: v.$border-radius;
     font-size: v.$font-size-sm;
@@ -54,7 +54,7 @@
     transition: all 0.2s ease;
     
     &:hover {
-      background-color: color.adjust(v.$primary-color, $lightness: -10%);
+      background-color: color.adjust(white, $lightness: -5%);
       transform: translateY(-1px);
     }
     
@@ -65,6 +65,7 @@
   
   &__create-icon {
     font-size: v.$font-size-xs;
+    color: inherit;
   }
 
   
@@ -93,7 +94,7 @@
         
         thead tr {
           background-color: v.$gray-50;
-          border-bottom: 2px solid v.$border-color;
+          border-bottom: 1px solid v.$border-color;
         }
         
         tbody tr {
