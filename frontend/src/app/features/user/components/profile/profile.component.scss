@@ -22,7 +22,7 @@
     margin-bottom: v.$spacing-xl;
 
     &__content {
-      max-width: 1400px;
+      max-width: v.$page-max-width;
       margin: 0 auto;
       padding: 0 v.$spacing-lg;
     }
@@ -138,6 +138,19 @@
       }
     }
 
+    &__hint {
+      font-size: v.$font-size-base;
+      color: v.$text-secondary;
+      margin: v.$spacing-xs 0 0 0;
+      line-height: 1.5;
+      text-align: left;
+      font-style: italic;
+
+      @media (max-width: 1024px) {
+        text-align: center;
+      }
+    }
+
     &__status {
       display: flex;
       align-items: center;
@@ -166,9 +179,9 @@
       letter-spacing: 0.5px;
 
       &--active {
-        background: rgba(v.$success-color, 0.1);
+        background: v.$orb-white;
         color: v.$success-color;
-        border: 1px solid rgba(v.$success-color, 0.2);
+        border: 1px solid rgba(v.$success-color, 0.3);
       }
       
       &--pending {
@@ -196,21 +209,21 @@
   }
 
   .profile-overview-section {
-    max-width: 1400px;
+    max-width: v.$page-max-width;
     margin: 0 auto v.$spacing-xl auto;
     padding: 0 v.$spacing-lg;
     width: 100%;
   }
 
   .profile-debug-section {
-    max-width: 1400px;
+    max-width: v.$page-max-width;
     margin: v.$spacing-xl auto 0 auto;
     padding: 0 v.$spacing-lg;
     width: 100%;
   }
 
   .profile-content {
-    max-width: 1400px;
+    max-width: v.$page-max-width;
     margin: 0 auto;
     padding: 0 v.$spacing-lg;
     width: 100%;
@@ -382,10 +395,6 @@
     
     &-section {
       @include m.debug-section;
-    }
-    
-    &-button {
-      @include m.debug-button;
     }
   }
 }

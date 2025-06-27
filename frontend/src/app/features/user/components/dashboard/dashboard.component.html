@@ -7,17 +7,17 @@ description: HTML template file
 
 <div class="dashboard-container">
   <!-- Global Loading Indicator -->
-  <div *ngIf="isLoading$ | async" class="global-loading-overlay">
+  <div *ngIf="isLoading$ | async" class="orb-loading-overlay">
     <!-- Loading Bar -->
-    <div class="global-loading-indicator">
-      <div class="global-loading-indicator__content">
-        <fa-icon icon="clock" class="global-loading-indicator__icon"></fa-icon>
-        <span class="global-loading-indicator__text">Processing...</span>
+    <div class="orb-loading-indicator">
+      <div class="orb-loading-indicator__content">
+        <fa-icon icon="clock" class="orb-loading-indicator__icon"></fa-icon>
+        <span class="orb-loading-indicator__text">Processing...</span>
       </div>
     </div>
     
     <!-- Overlay Mask -->
-    <div class="global-loading-mask"></div>
+    <div class="orb-loading-mask"></div>
   </div>
 
   <div class="dashboard-header">
@@ -42,6 +42,9 @@ description: HTML template file
                 Complete your profile setup to activate your account
               </p>
             </ng-template>
+            <p class="dashboard-header__hint">
+              Use the quick actions below to manage your profile, security settings, and integrations. Access your organizations and applications from the navigation menu.
+            </p>
             <div class="dashboard-header__status">
               <app-status-badge 
                 [status]="user.status" 
@@ -70,47 +73,47 @@ description: HTML template file
       </div>
       
       <div class="orb-card__content orb-card__content--padded">
-        <div class="action-grid">
-          <a routerLink="/profile" class="action-button action-button--primary">
-            <fa-icon icon="user-edit" class="action-button__icon"></fa-icon>
-            <div class="action-button__content">
-              <div class="action-button__title">Edit Profile</div>
-              <div class="action-button__subtitle">Update your information</div>
+        <div class="orb-action-grid">
+          <a routerLink="/profile" class="orb-action-button orb-action-button--primary">
+            <fa-icon icon="user-edit" class="orb-action-button__icon"></fa-icon>
+            <div class="orb-action-button__content">
+              <div class="orb-action-button__title">Edit Profile</div>
+              <div class="orb-action-button__subtitle">Update your information</div>
             </div>
           </a>
           
-          <button class="action-button action-button--secondary" (click)="goToSecuritySettings()">
-            <fa-icon icon="shield-alt" class="action-button__icon"></fa-icon>
-            <div class="action-button__content">
-              <div class="action-button__title">Security Settings</div>
-              <div class="action-button__subtitle">Manage MFA & passwords</div>
+          <button class="orb-action-button orb-action-button--secondary" (click)="goToSecuritySettings()">
+            <fa-icon icon="shield-alt" class="orb-action-button__icon"></fa-icon>
+            <div class="orb-action-button__content">
+              <div class="orb-action-button__title">Security Settings</div>
+              <div class="orb-action-button__subtitle">Manage MFA & passwords</div>
             </div>
           </button>
           
-          <button class="action-button action-button--secondary">
-            <fa-icon icon="credit-card" class="action-button__icon"></fa-icon>
-            <div class="action-button__content">
-              <div class="action-button__title">Payment Methods</div>
-              <div class="action-button__subtitle">Billing & subscriptions</div>
+          <button class="orb-action-button orb-action-button--secondary">
+            <fa-icon icon="credit-card" class="orb-action-button__icon"></fa-icon>
+            <div class="orb-action-button__content">
+              <div class="orb-action-button__title">Payment Methods</div>
+              <div class="orb-action-button__subtitle">Billing & subscriptions</div>
             </div>
           </button>
           
-          <button class="action-button action-button--secondary">
-            <fa-icon icon="cog" class="action-button__icon"></fa-icon>
-            <div class="action-button__content">
-              <div class="action-button__title">Integrations</div>
-              <div class="action-button__subtitle">Connect your tools</div>
+          <button class="orb-action-button orb-action-button--secondary">
+            <fa-icon icon="cog" class="orb-action-button__icon"></fa-icon>
+            <div class="orb-action-button__content">
+              <div class="orb-action-button__title">Integrations</div>
+              <div class="orb-action-button__subtitle">Connect your tools</div>
             </div>
           </button>
           
           <!-- Organizations button - Only show for CUSTOMER users -->
           <a *ngIf="isCustomerUser(user)" 
              routerLink="/customers/organizations" 
-             class="action-button action-button--secondary">
-            <fa-icon icon="building" class="action-button__icon"></fa-icon>
-            <div class="action-button__content">
-              <div class="action-button__title">Organizations</div>
-              <div class="action-button__subtitle">Manage teams & access</div>
+             class="orb-action-button orb-action-button--secondary">
+            <fa-icon icon="building" class="orb-action-button__icon"></fa-icon>
+            <div class="orb-action-button__content">
+              <div class="orb-action-button__title">Organizations</div>
+              <div class="orb-action-button__subtitle">Manage teams & access</div>
             </div>
           </a>
         </div>
@@ -127,72 +130,72 @@ description: HTML template file
       </div>
       
       <div class="orb-card__content orb-card__content--padded">
-        <div class="health-check">
-          <div class="health-item health-item--clickable" 
-               [ngClass]="hasValidName(user) ? 'health-item--healthy' : 'health-item--warning'"
+        <div class="orb-health-check">
+          <div class="orb-health-item orb-health-item--clickable" 
+               [ngClass]="hasValidName(user) ? 'orb-health-item--healthy' : 'orb-health-item--warning'"
                (click)="goToProfile()"
                [title]="hasValidName(user) ? 'Name complete' : 'Click to update your name in profile'">
             <fa-icon [icon]="hasValidName(user) ? 'check-circle' : 'exclamation-triangle'" 
-                     class="health-item__icon"></fa-icon>
-            <div class="health-item__content">
-              <div class="health-item__title">Full Name</div>
-              <div class="health-item__status">
+                     class="orb-health-item__icon"></fa-icon>
+            <div class="orb-health-item__content">
+              <div class="orb-health-item__title">Full Name</div>
+              <div class="orb-health-item__status">
                 {{ hasValidName(user) ? 'Complete' : 'First & Last Name Required' }}
               </div>
-              <div class="health-item__action" *ngIf="!hasValidName(user)">
-                <fa-icon icon="arrow-right" class="health-item__action-icon"></fa-icon>
+              <div class="orb-health-item__action" *ngIf="!hasValidName(user)">
+                <fa-icon icon="arrow-right" class="orb-health-item__action-icon"></fa-icon>
                 Update Profile
               </div>
             </div>
           </div>
           
-          <div class="health-item health-item--clickable" 
-               [ngClass]="user.emailVerified ? 'health-item--healthy' : 'health-item--warning'"
+          <div class="orb-health-item orb-health-item--clickable" 
+               [ngClass]="user.emailVerified ? 'orb-health-item--healthy' : 'orb-health-item--warning'"
                (click)="!user.emailVerified && goToEmailVerification()"
                [title]="user.emailVerified ? 'Email verified' : 'Click to verify your email'">
             <fa-icon [icon]="user.emailVerified ? 'check-circle' : 'exclamation-triangle'" 
-                     class="health-item__icon"></fa-icon>
-            <div class="health-item__content">
-              <div class="health-item__title">Email Verification</div>
-              <div class="health-item__status">
+                     class="orb-health-item__icon"></fa-icon>
+            <div class="orb-health-item__content">
+              <div class="orb-health-item__title">Email Verification</div>
+              <div class="orb-health-item__status">
                 {{ user.emailVerified ? 'Verified' : 'Email verification required' }}
               </div>
-              <div class="health-item__action" *ngIf="!user.emailVerified">
-                <fa-icon icon="arrow-right" class="health-item__action-icon"></fa-icon>
+              <div class="orb-health-item__action" *ngIf="!user.emailVerified">
+                <fa-icon icon="arrow-right" class="orb-health-item__action-icon"></fa-icon>
                 Verify Email
               </div>
             </div>
           </div>
           
-          <div class="health-item health-item--clickable" 
-               [ngClass]="user.phoneVerified ? 'health-item--healthy' : 'health-item--warning'"
+          <div class="orb-health-item orb-health-item--clickable" 
+               [ngClass]="user.phoneVerified ? 'orb-health-item--healthy' : 'orb-health-item--warning'"
                (click)="!user.phoneVerified && goToPhoneVerification()"
                [title]="user.phoneVerified ? 'Phone verified' : 'Click to verify your phone'">
             <fa-icon [icon]="user.phoneVerified ? 'check-circle' : 'exclamation-triangle'" 
-                     class="health-item__icon"></fa-icon>
-            <div class="health-item__content">
-              <div class="health-item__title">Phone Verification</div>
-              <div class="health-item__status">
+                     class="orb-health-item__icon"></fa-icon>
+            <div class="orb-health-item__content">
+              <div class="orb-health-item__title">Phone Verification</div>
+              <div class="orb-health-item__status">
                 {{ user.phoneVerified ? 'Verified' : (user.phoneNumber ? 'Phone verification required' : 'Phone number required') }}
               </div>
-              <div class="health-item__action" *ngIf="!user.phoneVerified">
-                <fa-icon icon="arrow-right" class="health-item__action-icon"></fa-icon>
+              <div class="orb-health-item__action" *ngIf="!user.phoneVerified">
+                <fa-icon icon="arrow-right" class="orb-health-item__action-icon"></fa-icon>
                 {{ user.phoneNumber ? 'Verify Phone' : 'Add Phone' }}
               </div>
             </div>
           </div>
           
-          <div class="health-item health-item--clickable" 
-               [ngClass]="(user.mfaEnabled && user.mfaSetupComplete) ? 'health-item--healthy' : 'health-item--warning'"
+          <div class="orb-health-item orb-health-item--clickable" 
+               [ngClass]="(user.mfaEnabled && user.mfaSetupComplete) ? 'orb-health-item--healthy' : 'orb-health-item--warning'"
                (click)="checkMFASetup()"
-               [class.health-item--loading]="isLoading$ | async"
+               [class.orb-health-item--loading]="isLoading$ | async"
                [style.pointer-events]="(isLoading$ | async) ? 'none' : 'auto'"
                [title]="(user.mfaEnabled && user.mfaSetupComplete) ? 'MFA enabled - click to recheck' : 'Click to check MFA setup'">
             <fa-icon [icon]="(user.mfaEnabled && user.mfaSetupComplete) ? 'check-circle' : 'exclamation-triangle'" 
-                     class="health-item__icon"></fa-icon>
-            <div class="health-item__content">
-              <div class="health-item__title">Multi-Factor Authentication</div>
-              <div class="health-item__status">
+                     class="orb-health-item__icon"></fa-icon>
+            <div class="orb-health-item__content">
+              <div class="orb-health-item__title">Multi-Factor Authentication</div>
+              <div class="orb-health-item__status">
                 <ng-container *ngIf="isNotLoading$ | async">
                   {{ (user.mfaEnabled && user.mfaSetupComplete) ? 'Enabled' : 'Status unknown - check setup' }}
                 </ng-container>
@@ -200,9 +203,9 @@ description: HTML template file
                   Checking MFA status...
                 </ng-container>
               </div>
-              <div class="health-item__action">
-                <fa-icon *ngIf="isNotLoading$ | async" icon="arrow-right" class="health-item__action-icon"></fa-icon>
-                <fa-icon *ngIf="isLoading$ | async" icon="clock" class="health-item__action-icon health-item__action-icon--loading"></fa-icon>
+              <div class="orb-health-item__action">
+                <fa-icon *ngIf="isNotLoading$ | async" icon="arrow-right" class="orb-health-item__action-icon"></fa-icon>
+                <fa-icon *ngIf="isLoading$ | async" icon="clock" class="orb-health-item__action-icon orb-health-item__action-icon--loading"></fa-icon>
                 <ng-container *ngIf="isNotLoading$ | async">Check MFA Setup</ng-container>
                 <ng-container *ngIf="isLoading$ | async">Checking...</ng-container>
               </div>
@@ -222,14 +225,14 @@ description: HTML template file
       </div>
       
       <div class="orb-card__content orb-card__content--padded">
-        <div class="activity-list">
-          <div class="activity-item">
-            <div class="activity-item__time">{{ formatDate(user.updatedAt) }}</div>
-            <div class="activity-item__description">Profile information updated</div>
+        <div class="orb-activity-list">
+          <div class="orb-activity-item">
+            <div class="orb-activity-item__time">{{ formatDate(user.updatedAt) }}</div>
+            <div class="orb-activity-item__description">Profile information updated</div>
           </div>
-          <div class="activity-item">
-            <div class="activity-item__time">{{ formatDate(user.createdAt) }}</div>
-            <div class="activity-item__description">Account created</div>
+          <div class="orb-activity-item">
+            <div class="orb-activity-item__time">{{ formatDate(user.createdAt) }}</div>
+            <div class="orb-activity-item__description">Account created</div>
           </div>
           <div class="empty-state">
             <fa-icon icon="info-circle" class="empty-state__icon"></fa-icon>
@@ -251,8 +254,8 @@ description: HTML template file
     </div>
   </ng-template>
   
-  <!-- Debug section - Always show for troubleshooting -->
-  <div class="dashboard__debug">
+  <!-- Debug section -->
+  <div class="dashboard__debug" *ngIf="debugMode$ | async">
     <h3>Debug Information</h3>
     
     <div class="dashboard__debug-section">

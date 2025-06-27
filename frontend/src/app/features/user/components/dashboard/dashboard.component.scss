@@ -24,7 +24,7 @@
     overflow: hidden;
 
     &__content {
-      max-width: 1400px;
+      max-width: v.$page-max-width;
       margin: 0 auto;
       padding: 0 v.$spacing-lg;
     }
@@ -139,6 +139,19 @@
         margin-top: v.$spacing-xs;
       }
     }
+
+    &__hint {
+      font-size: v.$font-size-base;
+      color: v.$text-secondary;
+      margin: v.$spacing-xs 0 0 0;
+      line-height: 1.5;
+      text-align: left;
+      font-style: italic;
+
+      @media (max-width: 1024px) {
+        text-align: center;
+      }
+    }
   }
   
   .dashboard-header {
@@ -236,153 +249,12 @@
     }
   }
   
-  // Profile Grid
-  .profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: v.$spacing-lg; }
-  
-  .profile-item {
-    &__label {
-      font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; color: v.$text-secondary;
-      margin-bottom: v.$spacing-xs; text-transform: uppercase; letter-spacing: 0.5px;
-    }
-    &__value {
-      font-size: v.$font-size-base; color: v.$text-primary; font-weight: v.$font-weight-medium;
-      display: flex; align-items: center; flex-wrap: wrap; gap: v.$spacing-sm;
-    }
-  }
-  
-  // Verification & Role Badges
-  .verification-badge {
-    display: inline-flex; align-items: center; gap: v.$spacing-xs; padding: v.$spacing-xs v.$spacing-sm;
-    border-radius: v.$border-radius; font-size: v.$font-size-xs; font-weight: v.$font-weight-medium; text-transform: uppercase;
-    
-    &--verified { @include status-badge-color(v.$success-color); }
-    &--pending { @include status-badge-color(v.$warning-color); }
-    &__icon { font-size: v.$font-size-xs; }
-  }
-  
-  .role-badge {
-    padding: v.$spacing-xs v.$spacing-sm; background: v.$orb-red; color: v.$orb-white;
-    border-radius: v.$border-radius; font-size: v.$font-size-xs; font-weight: v.$font-weight-medium; text-transform: uppercase;
-  }
-  
-  // Action Grid
-  .action-grid {
+  // Dashboard-specific content grid
+  .dashboard-content {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: v.$spacing-md;
-  }
-  
-  .action-button {
-    display: flex;
-    align-items: center;
-    gap: v.$spacing-md;
-    padding: v.$spacing-lg;
-    border-radius: v.$border-radius-lg;
-    border: none;
-    cursor: pointer;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    font-family: inherit;
-    
-    &--primary {
-      background: v.$orb-red;
-      color: v.$orb-white;
-      
-      &:hover {
-        background: color.adjust(v.$orb-red, $lightness: -10%);
-        transform: translateY(-1px);
-      }
-    }
-    
-    &--secondary {
-      background: v.$bg-secondary;
-      color: v.$text-primary;
-      border: 1px solid v.$border-color;
-      
-      &:hover {
-        background: v.$bg-tertiary;
-        border-color: v.$orb-red;
-        transform: translateY(-1px);
-      }
-    }
-    
-    &__icon {
-      font-size: v.$font-size-xl;
-      flex-shrink: 0;
-    }
-    
-    &__content {
-      text-align: left;
-    }
-    
-    &__title {
-      font-weight: v.$font-weight-semibold;
-      margin-bottom: v.$spacing-xs;
-    }
-    
-    &__subtitle {
-      font-size: v.$font-size-sm;
-      opacity: 0.8;
-    }
-  }
-  
-  // Health Check - simplified
-  .health-check { display: flex; flex-direction: column; gap: v.$spacing-md; }
-  
-  .health-item {
-    display: flex; align-items: center; gap: v.$spacing-md; padding: v.$spacing-md;
-    border-radius: v.$border-radius; transition: all 0.2s ease;
-    
-    &--healthy { background: rgba(v.$success-color, 0.05); border-left: 4px solid v.$success-color; }
-    &--warning { background: rgba(v.$warning-color, 0.05); border-left: 4px solid v.$warning-color; }
-    
-    &--clickable {
-      cursor: pointer;
-      
-      &:hover {
-        transform: translateY(-1px);
-        box-shadow: v.$shadow-sm;
-        background: rgba(v.$warning-color, 0.1);
-      }
-    }
-    
-    &__icon { font-size: v.$font-size-lg; flex-shrink: 0; }
-    &__content { flex: 1; }
-    &__title { font-weight: v.$font-weight-medium; margin-bottom: v.$spacing-xs; }
-    &__status { font-size: v.$font-size-sm; color: v.$text-secondary; }
-    &__action { 
-      font-size: v.$font-size-xs; 
-      color: v.$warning-color; 
-      font-weight: v.$font-weight-medium;
-      display: flex;
-      align-items: center;
-      gap: v.$spacing-xs;
-      margin-top: v.$spacing-xs;
-    }
-    &__action-icon { font-size: v.$font-size-xs; }
-  }
-  
-  // Activity List
-  .activity-list { display: flex; flex-direction: column; gap: v.$spacing-md; }
-  
-  .activity-item {
-    padding: v.$spacing-md;
-    border-radius: v.$border-radius;
-    background: v.$bg-secondary;
-    border-left: 3px solid v.$orb-red;
-    
-    &__time { font-size: v.$font-size-sm; color: v.$text-secondary; margin-bottom: v.$spacing-xs; }
-    &__description { font-weight: v.$font-weight-medium; color: v.$text-primary; }
-  }
-  
-  // Empty State
-  .empty-state {
-    text-align: center;
-    padding: v.$spacing-xl;
-    color: v.$text-secondary;
-    
-    &__icon { font-size: v.$font-size-xl; margin-bottom: v.$spacing-md; color: v.$gray-400; }
-    &__text { font-size: v.$font-size-sm; font-style: italic; }
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: v.$spacing-xl;
+    width: 100%;
   }
   
   // Debug section
@@ -397,14 +269,9 @@
   .dashboard-container {
     padding: v.$spacing-md;
     
-    .dashboard-content, .profile-grid, .action-grid {
+    .dashboard-content {
       grid-template-columns: 1fr;
       gap: v.$spacing-md;
-    }
-    
-    .action-button {
-      padding: v.$spacing-md;
-      &__content { text-align: center; }
     }
     
     .dashboard-header {
@@ -454,92 +321,7 @@
   }
 }
 
-// Loading States
-.global-loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1000;
-  pointer-events: none; // Allow clicks on loading elements only
-}
-
-.global-loading-indicator {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: rgba(v.$orb-red, 0.95);
-  color: v.$orb-white;
-  padding: v.$spacing-sm 0;
-  z-index: 1001;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  pointer-events: auto;
-
-  &__content {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 v.$spacing-lg;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: v.$spacing-sm;
-  }
-
-  &__icon {
-    animation: spin 2s linear infinite;
-    font-size: 1rem;
-  }
-
-  &__text {
-    font-size: v.$font-size-sm;
-    font-weight: 500;
-  }
-}
-
-.global-loading-mask {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(2px);
-  z-index: 999;
-  pointer-events: auto;
-  cursor: wait;
-  
-  // Subtle animation to make it feel more dynamic
-  animation: fadeIn 0.2s ease-out;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.health-item {
-  &--loading {
-    opacity: 0.7;
-    pointer-events: none;
-    cursor: not-allowed;
-  }
-
-  &__action-icon--loading {
-    animation: pulse 1.5s ease-in-out infinite;
-  }
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
-}
+// Dashboard component no longer needs custom loading styles - using global orb-loading-* classes
 
 // Debug Styles
 .dashboard__debug {

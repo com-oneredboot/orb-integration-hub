@@ -9,10 +9,13 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { Store } from '@ngrx/store';
+import { Observable } from 'rxjs';
 
 import { Applications } from '../../../core/models/ApplicationsModel';
 import { ApplicationsListComponent } from './components/applications-list/applications-list.component';
 import { ApplicationDetailComponent } from './components/application-detail/application-detail.component';
+import * as fromUser from '../../user/store/user.selectors';
 
 @Component({
   selector: 'app-applications',
@@ -34,8 +37,11 @@ export class ApplicationsComponent implements OnInit {
   selectedApplicationApiCallsToday: number = 0;
   selectedApplicationLastActivity: string = '';
   totalApplications: number = 8; // Will be updated when applications are loaded
+  debugMode$: Observable<boolean>;
 
-  constructor() {}
+  constructor(private store: Store) {
+    this.debugMode$ = this.store.select(fromUser.selectDebugMode);
+  }
 
   ngOnInit(): void {
     // Component initialization

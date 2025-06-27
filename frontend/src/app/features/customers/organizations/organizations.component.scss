@@ -16,7 +16,7 @@
     margin-bottom: 0;
 
     &__content {
-      max-width: 1400px;
+      max-width: v.$page-max-width;
       margin: 0 auto;
       padding: 0 v.$spacing-lg;
     }
@@ -170,6 +170,14 @@
 
   .organizations-content {
     @include m.page-content;
+  }
+
+  .organizations__debug {
+    @include m.debug-container;
+    
+    &-section {
+      @include m.debug-section;
+    }
   }
 }
 

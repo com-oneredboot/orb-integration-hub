@@ -35,7 +35,7 @@
   font-size: v.$font-size-sm;
   color: v.$text-primary;
   width: 100%;
-  max-width: 800px;
+  max-width: v.$page-max-width;
   margin-left: auto;
   margin-right: auto;
 
@@ -165,7 +165,7 @@
 @mixin page-container {
   // Define styles for page-container
   padding: v.$spacing-lg;
-  max-width: 960px;
+  max-width: v.$page-max-width;
   margin: 0 auto;
 }
 
@@ -224,7 +224,7 @@
 }
 
 @mixin header-content {
-  max-width: 1400px;
+  max-width: v.$page-max-width;
   margin: 0 auto;
   padding: 0 2rem;
 }

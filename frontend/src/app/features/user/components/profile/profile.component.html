@@ -26,6 +26,9 @@ description: HTML template file
                 Complete your profile setup to activate your account
               </p>
             </ng-template>
+            <p class="profile-header__hint">
+              Review your personal information below and click the edit button to make changes. Ensure all verification steps are completed for full account access.
+            </p>
             <div class="profile-header__status">
               <span class="profile-header__status-badge" 
                     [ngClass]="'profile-header__status-badge--' + getStatusClass(user.status)">
@@ -110,7 +113,7 @@ description: HTML template file
             <div class="profile-overview-item__value">
               <span *ngFor="let group of user.groups; let last = last" 
                     class="role-badge">
-                {{ group }}{{ !last ? ', ' : '' }}
+                {{ group }}<span *ngIf="!last">, </span>
               </span>
             </div>
           </div>
@@ -218,45 +221,43 @@ description: HTML template file
   </div>
   
   <!-- Debug section -->
-  <div class="profile-debug-section" *ngIf="debugMode$ | async">
-    <div class="profile__debug">
-      <h3>Profile Debug Information</h3>
-      
-      <div class="profile__debug-section">
-        <h4>Current User Observable Status</h4>
-        <ng-container *ngIf="currentUser$ | async as user; else noUser">
-          <p><strong>User Data Found:</strong></p>
-          <pre>{{ user | json }}</pre>
-          <p><strong>User Is Valid:</strong> {{ isUserValid(user) }}</p>
-          <p><strong>Required Attributes Check:</strong></p>
-          <ul>
-            <li>Email: {{ !!user.email }} ({{ user.email }})</li>
-            <li>First Name: {{ !!user.firstName }} ({{ user.firstName }})</li>
-            <li>Last Name: {{ !!user.lastName}} ({{ user.lastName }})</li>
-            <li>Phone Number: {{ !!user.phoneNumber}} ({{ user.phoneNumber }})</li>
-            <li>Status Is Active: {{ user.status === 'ACTIVE' }} ({{ user.status }})</li>
-          </ul>
-        </ng-container>
-        <ng-template #noUser>
-          <p class="error"><strong>No User Data Found</strong></p>
-          <p>currentUser$ observable is emitting null or undefined</p>
-        </ng-template>
-      </div>
-      
-      <div class="profile__debug-section" *ngIf="isEditMode">
-        <h4>Form Debug Status</h4>
-        <p><strong>Form Valid:</strong> {{ profileForm.valid }}</p>
-        <p><strong>Form Pristine:</strong> {{ profileForm.pristine }}</p>
-        <p><strong>Form Touched:</strong> {{ profileForm.touched }}</p>
-        <p><strong>Form Values:</strong></p>
-        <pre>{{ profileForm.value | json }}</pre>
-      </div>
-      
-      <div class="profile__debug-section">
-        <h4>Edit Mode Status</h4>
-        <p><strong>Edit Mode:</strong> {{ isEditMode ? 'ON' : 'OFF' }}</p>
-        <p><strong>Loading:</strong> {{ isLoading ? 'YES' : 'NO' }}</p>
-      </div>
+  <div class="profile__debug" *ngIf="debugMode$ | async">
+    <h3>Profile Debug Information</h3>
+    
+    <div class="profile__debug-section">
+      <h4>Current User Observable Status</h4>
+      <ng-container *ngIf="currentUser$ | async as user; else noUser">
+        <p><strong>User Data Found:</strong></p>
+        <pre>{{ user | json }}</pre>
+        <p><strong>User Is Valid:</strong> {{ isUserValid(user) }}</p>
+        <p><strong>Required Attributes Check:</strong></p>
+        <ul>
+          <li>Email: {{ !!user.email }} ({{ user.email }})</li>
+          <li>First Name: {{ !!user.firstName }} ({{ user.firstName }})</li>
+          <li>Last Name: {{ !!user.lastName}} ({{ user.lastName }})</li>
+          <li>Phone Number: {{ !!user.phoneNumber}} ({{ user.phoneNumber }})</li>
+          <li>Status Is Active: {{ user.status === 'ACTIVE' }} ({{ user.status }})</li>
+        </ul>
+      </ng-container>
+      <ng-template #noUser>
+        <p class="error"><strong>No User Data Found</strong></p>
+        <p>currentUser$ observable is emitting null or undefined</p>
+      </ng-template>
+    </div>
+    
+    <div class="profile__debug-section" *ngIf="isEditMode">
+      <h4>Form Debug Status</h4>
+      <p><strong>Form Valid:</strong> {{ profileForm.valid }}</p>
+      <p><strong>Form Pristine:</strong> {{ profileForm.pristine }}</p>
+      <p><strong>Form Touched:</strong> {{ profileForm.touched }}</p>
+      <p><strong>Form Values:</strong></p>
+      <pre>{{ profileForm.value | json }}</pre>
+    </div>
+    
+    <div class="profile__debug-section">
+      <h4>Edit Mode Status</h4>
+      <p><strong>Edit Mode:</strong> {{ isEditMode ? 'ON' : 'OFF' }}</p>
+      <p><strong>Loading:</strong> {{ isLoading ? 'YES' : 'NO' }}</p>
     </div>
   </div>
 </div>
