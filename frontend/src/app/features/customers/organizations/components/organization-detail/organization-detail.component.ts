@@ -11,15 +11,13 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 import { Organizations } from '../../../../../core/models/OrganizationsModel';
 import { OrganizationStatus } from '../../../../../core/models/OrganizationStatusEnum';
-import { StatusBadgeComponent } from '../../../../../shared/components/ui/status-badge.component';
 
 @Component({
   selector: 'app-organization-detail',
   standalone: true,
   imports: [
     CommonModule,
-    FontAwesomeModule,
-    StatusBadgeComponent
+    FontAwesomeModule
   ],
   templateUrl: './organization-detail.component.html',
   styleUrls: ['./organization-detail.component.scss']

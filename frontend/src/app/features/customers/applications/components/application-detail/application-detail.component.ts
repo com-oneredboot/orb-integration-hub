@@ -28,6 +28,9 @@ export class ApplicationDetailComponent implements OnChanges {
   @Input() apiCallsToday: number = 0;
   @Input() lastActivity: string = '';
 
+  // Tab management
+  activeTab: string = 'overview';
+
   mockEnvironments = [
     { name: 'Production', status: 'ACTIVE' },
     { name: 'Staging', status: 'ACTIVE' },
@@ -37,7 +40,13 @@ export class ApplicationDetailComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['application'] && this.application) {
       console.log('Application selected:', this.application.name);
+      // Reset to overview tab when application changes
+      this.activeTab = 'overview';
     }
+  }
+
+  setActiveTab(tab: string): void {
+    this.activeTab = tab;
   }
 
   formatDate(dateString: string): string {
@@ -88,5 +97,15 @@ export class ApplicationDetailComponent implements OnChanges {
   onViewEnvironment(environment: any): void {
     console.log('View environment:', environment.name);
     // TODO: Navigate to environment details
+  }
+
+  onDisableApplication(): void {
+    console.log('Disable application:', this.application?.name);
+    // TODO: Implement application disable functionality
+  }
+
+  onDeleteApplication(): void {
+    console.log('Delete application:', this.application?.name);
+    // TODO: Implement application delete functionality with confirmation
   }
 }
