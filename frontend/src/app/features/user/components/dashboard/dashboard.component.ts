@@ -15,6 +15,7 @@ import { UserService } from '../../../../core/services/user.service';
 import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { RouterModule } from '@angular/router';
+import { StatusBadgeComponent } from '../../../../shared/components/ui/status-badge.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -24,7 +25,8 @@ import { RouterModule } from '@angular/router';
   imports: [
     CommonModule,
     FontAwesomeModule,
-    RouterModule
+    RouterModule,
+    StatusBadgeComponent
     // Add any shared components, directives, or pipes used in the template here
   ]
 })
@@ -58,24 +60,7 @@ export class DashboardComponent implements OnInit {
     // Additional initialization if needed
   }
 
-  /**
-   * Get CSS class for user status badge
-   * @param status The user status
-   * @returns CSS class name
-   */
-  getStatusClass(status: string): string {
-    switch (status?.toLowerCase()) {
-      case 'active':
-        return 'success';
-      case 'pending':
-        return 'warning';
-      case 'suspended':
-      case 'inactive':
-        return 'error';
-      default:
-        return 'default';
-    }
-  }
+  // Status handling now uses global StatusBadgeComponent
 
   /**
    * Format date string for display

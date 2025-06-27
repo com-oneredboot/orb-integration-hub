@@ -16,9 +16,9 @@
   
   &--organization {
     &-active {
-      background: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
+      background: rgba(43, 138, 62, 0.1);
+      color: #2B8A3E;
+      border: 1px solid rgba(43, 138, 62, 0.2);
     }
     
     &-inactive {
@@ -54,9 +54,9 @@
   
   &--user {
     &-active {
-      background: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
+      background: rgba(43, 138, 62, 0.1);
+      color: #2B8A3E;
+      border: 1px solid rgba(43, 138, 62, 0.2);
     }
     
     &-pending {

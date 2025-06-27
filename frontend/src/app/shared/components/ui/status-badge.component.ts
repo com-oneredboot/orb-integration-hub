@@ -16,6 +16,7 @@ import { StatusDisplayService, StatusConfig, StatusDisplayOptions } from '../../
       [class]="getStatusClasses()"
       [style.color]="statusConfig.color"
       [style.background-color]="statusConfig.bgColor"
+      [style.border]="statusConfig.borderColor ? '1px solid ' + statusConfig.borderColor : null"
       role="status"
       [attr.aria-label]="statusConfig.label + ' status'">
       

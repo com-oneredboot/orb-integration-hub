@@ -41,29 +41,33 @@ description: HTML template file
 
   <!-- Profile Overview Card - Full Width -->
   <div class="profile-overview-section" *ngIf="(currentUser$ | async) as user">
-    <div class="profile-card profile-card--overview">
-      <div class="profile-card__header">
-        <h2 class="profile-card__title">
-          <fa-icon icon="user" class="profile-card__icon"></fa-icon>
+    <div class="orb-card">
+      <div class="orb-card__header">
+        <h2 class="orb-card__title">
+          <fa-icon icon="user" class="orb-card__icon"></fa-icon>
           Profile Overview
         </h2>
-        <div class="profile-card__header-actions">
-          <div class="profile-card__badge" 
-               [ngClass]="'profile-card__badge--' + getStatusClass(user.status)">
-            {{ user.status }}
-          </div>
+        <div class="orb-card__header-actions">
+          <app-status-badge 
+            [status]="user.status" 
+            type="user"
+            [showIcon]="true"
+            [showLabel]="true"
+            size="medium"
+            variant="badge">
+          </app-status-badge>
           <button 
             *ngIf="!isEditMode"
-            class="profile-card__edit-btn"
+            class="orb-card-btn"
             (click)="enterEditMode()"
             type="button">
-            <fa-icon icon="edit" class="profile-card__edit-icon"></fa-icon>
+            <fa-icon icon="edit" class="orb-card-btn__icon"></fa-icon>
             Edit Profile
           </button>
         </div>
       </div>
       
-      <div class="profile-card__content">
+      <div class="orb-card__content orb-card__content--padded">
         <div class="profile-overview-grid">
           <div class="profile-overview-item">
             <div class="profile-overview-item__label">Full Name</div>
@@ -74,11 +78,14 @@ description: HTML template file
             <div class="profile-overview-item__label">Email Address</div>
             <div class="profile-overview-item__value">
               {{ user.email }}
-              <span class="verification-badge" 
-                    [ngClass]="user.emailVerified ? 'verification-badge--verified' : 'verification-badge--pending'">
-                <fa-icon [icon]="user.emailVerified ? 'check-circle' : 'clock'" class="verification-badge__icon"></fa-icon>
-                {{ user.emailVerified ? 'Verified' : 'Pending' }}
-              </span>
+              <app-status-badge 
+                [status]="user.emailVerified ? 'VERIFIED' : 'PENDING'" 
+                type="verification"
+                [showIcon]="true"
+                [showLabel]="true"
+                size="small"
+                variant="badge">
+              </app-status-badge>
             </div>
           </div>
           
@@ -86,12 +93,15 @@ description: HTML template file
             <div class="profile-overview-item__label">Phone Number</div>
             <div class="profile-overview-item__value">
               {{ user.phoneNumber || 'Not provided' }}
-              <span class="verification-badge" 
-                    *ngIf="user.phoneNumber"
-                    [ngClass]="user.phoneVerified ? 'verification-badge--verified' : 'verification-badge--pending'">
-                <fa-icon [icon]="user.phoneVerified ? 'check-circle' : 'clock'" class="verification-badge__icon"></fa-icon>
-                {{ user.phoneVerified ? 'Verified' : 'Pending' }}
-              </span>
+              <app-status-badge 
+                *ngIf="user.phoneNumber"
+                [status]="user.phoneVerified ? 'VERIFIED' : 'PENDING'" 
+                type="verification"
+                [showIcon]="true"
+                [showLabel]="true"
+                size="small"
+                variant="badge">
+              </app-status-badge>
             </div>
           </div>
           

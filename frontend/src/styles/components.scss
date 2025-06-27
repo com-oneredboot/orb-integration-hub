@@ -1,0 +1,596 @@
+@use 'variables' as v;
+@use 'mixins' as m;
+@use "sass:color";
+
+// Global Card Component Styles
+// Based on the clean design from organizations page
+
+// Standard Card Layout
+.orb-card {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0; // Allow natural height expansion
+  background: v.$white;
+  border-radius: v.$border-radius-lg;
+  box-shadow: v.$shadow-md;
+  border: 1px solid v.$border-color;
+  overflow: visible; // Allow content to extend past
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: v.$shadow-lg;
+  }
+  
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: v.$spacing-lg;
+    border-bottom: 1px solid v.$border-color;
+    background: v.$orb-red;
+  }
+  
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-sm;
+    margin: 0;
+    font-size: v.$font-size-lg;
+    font-weight: v.$font-weight-semibold;
+    color: white;
+  }
+  
+  &__icon {
+    font-size: v.$font-size-lg;
+    color: white;
+  }
+  
+  &__header-actions {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-md;
+  }
+  
+  &__title-section {
+    flex: 1;
+  }
+  
+  &__subtitle {
+    font-size: v.$font-size-sm;
+    color: rgba(white, 0.9);
+    margin: v.$spacing-xs 0 0 0;
+    line-height: 1.4;
+  }
+  
+  &__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    
+    // Content variants for different layouts
+    &--padded {
+      padding: v.$spacing-lg;
+    }
+    
+    &--table {
+      padding: 0; // No padding for table content
+    }
+  }
+}
+
+// Filter Section Styles
+.orb-filters {
+  display: flex;
+  gap: v.$spacing-lg;
+  padding: v.$spacing-lg;
+  flex-wrap: wrap;
+  border-bottom: 1px solid v.$border-color;
+  background: v.$gray-50;
+  
+  &__group {
+    display: flex;
+    flex-direction: column;
+    gap: v.$spacing-sm;
+    min-width: 200px;
+    flex: 1;
+  }
+  
+  &__label {
+    font-size: v.$font-size-sm;
+    font-weight: v.$font-weight-medium;
+    color: v.$text-primary;
+    margin: 0;
+  }
+  
+  &__input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  &__icon {
+    position: absolute;
+    left: v.$spacing-sm;
+    color: v.$text-secondary;
+    font-size: v.$font-size-sm;
+    z-index: 1;
+  }
+  
+  &__input {
+    width: 100%;
+    padding: v.$spacing-sm v.$spacing-sm v.$spacing-sm calc(v.$spacing-sm * 2.5);
+    border: 1px solid v.$border-color;
+    border-radius: v.$border-radius;
+    background-color: v.$white;
+    color: v.$text-primary;
+    font-size: v.$font-size-sm;
+    transition: all 0.2s ease;
+    
+    &:focus {
+      outline: none;
+      border-color: v.$primary-color;
+      box-shadow: 0 0 0 3px rgba(v.$primary-color, 0.1);
+    }
+    
+    &::placeholder {
+      color: v.$text-secondary;
+    }
+    
+    &:hover {
+      border-color: color.adjust(v.$primary-color, $lightness: 10%);
+    }
+  }
+  
+  &__select {
+    width: 100%;
+    padding: v.$spacing-sm;
+    border: 1px solid v.$border-color;
+    border-radius: v.$border-radius;
+    background-color: v.$white;
+    color: v.$text-primary;
+    font-size: v.$font-size-sm;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:focus {
+      outline: none;
+      border-color: v.$primary-color;
+      box-shadow: 0 0 0 3px rgba(v.$primary-color, 0.1);
+    }
+    
+    &:hover {
+      border-color: color.adjust(v.$primary-color, $lightness: 10%);
+    }
+  }
+  
+  // Responsive filters
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: v.$spacing-md;
+    
+    &__group {
+      min-width: auto;
+    }
+  }
+}
+
+// Standard Button Styles for Card Headers
+.orb-card-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: v.$spacing-sm;
+  padding: v.$spacing-sm v.$spacing-lg;
+  background-color: white;
+  color: v.$orb-red;
+  border: none;
+  border-radius: v.$border-radius;
+  font-size: v.$font-size-sm;
+  font-weight: v.$font-weight-medium;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  
+  &:hover {
+    background-color: color.adjust(white, $lightness: -5%);
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  &__icon {
+    font-size: v.$font-size-xs;
+    color: inherit;
+  }
+}
+
+// Table Container for Card Content
+.orb-table {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  
+  &__container {
+    overflow-x: auto;
+    border-radius: v.$border-radius;
+    flex: 1;
+  }
+  
+  &__element {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: v.$font-size-sm;
+    
+    thead tr {
+      background-color: v.$gray-50;
+      border-bottom: 1px solid v.$border-color;
+    }
+    
+    tbody tr {
+      border-bottom: 1px solid v.$border-color;
+      transition: background-color 0.2s ease;
+      
+      &:nth-child(even) {
+        background-color: v.$gray-50;
+      }
+      
+      &:hover {
+        background-color: v.$gray-100;
+      }
+      
+      &--selected {
+        background-color: rgba(v.$primary-color, 0.1) !important;
+      }
+      
+      &--loading, &--empty {
+        background-color: v.$white !important;
+      }
+    }
+  }
+  
+  &__header {
+    padding: v.$spacing-sm v.$spacing-md;
+    text-align: left;
+    font-weight: v.$font-weight-semibold;
+    color: v.$gray-700;
+    
+    &--select {
+      width: 40px;
+      text-align: center;
+    }
+    
+    &--actions {
+      width: 100px;
+      text-align: center;
+    }
+  }
+  
+  &__cell {
+    padding: v.$spacing-sm v.$spacing-md;
+    vertical-align: middle;
+    
+    &--select {
+      text-align: center;
+      width: 40px;
+    }
+    
+    &--actions {
+      text-align: center;
+      width: 100px;
+    }
+    
+    &--loading, &--empty {
+      text-align: center;
+      padding: v.$spacing-xl;
+      color: v.$gray-500;
+    }
+  }
+  
+  &__radio {
+    margin: 0;
+    cursor: pointer;
+  }
+  
+  &__actions {
+    display: flex;
+    gap: v.$spacing-xs;
+    justify-content: center;
+  }
+  
+  &__action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: v.$border-radius;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: v.$font-size-sm;
+    
+    &--primary {
+      background-color: v.$primary-color;
+      color: v.$white;
+      
+      &:hover {
+        background-color: color.adjust(v.$primary-color, $lightness: -10%);
+      }
+    }
+    
+    &--secondary {
+      background-color: v.$gray-100;
+      color: v.$gray-600;
+      
+      &:hover {
+        background-color: v.$gray-200;
+        color: v.$gray-700;
+      }
+    }
+  }
+  
+  &__loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: v.$spacing-sm;
+    color: v.$gray-500;
+  }
+  
+  &__loading-icon {
+    font-size: v.$font-size-lg;
+  }
+  
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: v.$spacing-sm;
+    color: v.$gray-500;
+  }
+  
+  &__empty-icon {
+    font-size: 2rem;
+    color: v.$gray-400;
+  }
+  
+  &__empty-text {
+    margin: 0;
+    font-size: v.$font-size-sm;
+  }
+}
+
+// Info Item Styles for entity display
+.orb-info {
+  display: flex;
+  flex-direction: column;
+  gap: v.$spacing-xs;
+  
+  &__name {
+    font-weight: v.$font-weight-medium;
+    color: v.$orb-dark-blue;
+  }
+  
+  &__id {
+    font-size: v.$font-size-xs;
+    color: v.$gray-500;
+    font-family: v.$font-family-monospace;
+  }
+}
+
+// Role Badge Styles
+.orb-role-badge {
+  display: inline-block;
+  padding: v.$spacing-xs v.$spacing-sm;
+  border-radius: v.$border-radius;
+  font-size: v.$font-size-xs;
+  font-weight: v.$font-weight-semibold;
+  text-transform: uppercase;
+  
+  &--owner {
+    background-color: rgba(v.$role-owner, 0.1);
+    color: v.$role-owner;
+    border: 1px solid v.$role-owner;
+  }
+  
+  &--administrator {
+    background-color: rgba(v.$role-admin, 0.1);
+    color: v.$role-admin;
+    border: 1px solid v.$role-admin;
+  }
+  
+  &--developer {
+    background-color: rgba(v.$role-developer, 0.1);
+    color: v.$role-developer;
+    border: 1px solid v.$role-developer;
+  }
+  
+  &--viewer {
+    background-color: rgba(v.$role-viewer, 0.1);
+    color: v.$role-viewer;
+    border: 1px solid v.$role-viewer;
+  }
+  
+  &--none {
+    background-color: rgba(v.$gray-400, 0.1);
+    color: v.$gray-400;
+    border: 1px solid v.$gray-400;
+  }
+}
+
+// Count Display Styles
+.orb-count {
+  display: flex;
+  align-items: center;
+  gap: v.$spacing-xs;
+  color: v.$gray-600;
+  
+  &__icon {
+    font-size: v.$font-size-xs;
+  }
+}
+
+// Global Empty State Styles
+.orb-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 400px;
+  background-color: v.$bg-secondary;
+  border-radius: v.$border-radius;
+  border: 2px dashed v.$gray-300;
+  
+  &__content {
+    text-align: center;
+    padding: 2rem;
+    max-width: 400px;
+  }
+  
+  &__icon {
+    font-size: 4rem;
+    color: v.$gray-400;
+    margin-bottom: 1rem;
+  }
+  
+  &__title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: v.$text-primary;
+    margin: 0 0 0.5rem 0;
+  }
+  
+  &__text {
+    font-size: 0.875rem;
+    color: v.$text-secondary;
+    margin: 0;
+    line-height: 1.5;
+  }
+  
+  // Responsive empty state
+  @media (max-width: 768px) {
+    min-height: 300px;
+    
+    &__content {
+      padding: 1.5rem;
+    }
+  }
+}
+
+// Global Status Badge Styles
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: v.$spacing-xs;
+  padding: v.$spacing-xs v.$spacing-sm;
+  border-radius: v.$border-radius;
+  font-size: v.$font-size-xs;
+  font-weight: v.$font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  border: 1px solid transparent;
+  
+  &__icon {
+    font-size: v.$font-size-xs;
+  }
+  
+  &__label {
+    white-space: nowrap;
+  }
+  
+  // Size variants
+  &--small {
+    padding: calc(v.$spacing-xs * 0.5) v.$spacing-xs;
+    font-size: calc(v.$font-size-xs * 0.85);
+    
+    .status-badge__icon {
+      font-size: calc(v.$font-size-xs * 0.85);
+    }
+  }
+  
+  &--medium {
+    padding: v.$spacing-xs v.$spacing-sm;
+    font-size: v.$font-size-xs;
+  }
+  
+  &--large {
+    padding: v.$spacing-sm v.$spacing-md;
+    font-size: v.$font-size-sm;
+    
+    .status-badge__icon {
+      font-size: v.$font-size-sm;
+    }
+  }
+  
+  // Display variants
+  &--badge {
+    border-radius: v.$border-radius;
+  }
+  
+  &--chip {
+    border-radius: v.$border-radius-lg;
+  }
+  
+  &--text {
+    background: transparent !important;
+    padding: 0;
+    border: none;
+  }
+  
+  &--indicator {
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    border-radius: 50%;
+    
+    .status-badge__label,
+    .status-badge__icon {
+      display: none;
+    }
+  }
+  
+  // Theme variants
+  &--compact {
+    padding: calc(v.$spacing-xs * 0.5) v.$spacing-xs;
+    gap: calc(v.$spacing-xs * 0.5);
+  }
+  
+  &--minimal {
+    background: transparent !important;
+    border: 1px solid currentColor;
+  }
+}
+
+// Responsive Styles
+@media (max-width: 768px) {
+  .orb-card {
+    &__header {
+      padding: v.$spacing-md;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: v.$spacing-sm;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .orb-card {
+    &__header {
+      padding: v.$spacing-sm;
+    }
+    
+    &__title {
+      font-size: v.$font-size-base;
+    }
+  }
+  
+  .orb-card-btn {
+    padding: v.$spacing-xs;
+    font-size: v.$font-size-xs;
+  }
+}

@@ -11,13 +11,15 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 import { Organizations } from '../../../../../core/models/OrganizationsModel';
 import { OrganizationStatus } from '../../../../../core/models/OrganizationStatusEnum';
+import { StatusBadgeComponent } from '../../../../../shared/components/ui/status-badge.component';
 
 @Component({
   selector: 'app-organization-detail',
   standalone: true,
   imports: [
     CommonModule,
-    FontAwesomeModule
+    FontAwesomeModule,
+    StatusBadgeComponent
   ],
   templateUrl: './organization-detail.component.html',
   styleUrls: ['./organization-detail.component.scss']
@@ -42,31 +44,7 @@ export class OrganizationDetailComponent implements OnChanges {
     this.activeTab = tab;
   }
 
-  getStatusClass(status: OrganizationStatus): string {
-    switch (status) {
-      case OrganizationStatus.ACTIVE:
-        return 'active';
-      case OrganizationStatus.INACTIVE:
-        return 'inactive';
-      case OrganizationStatus.PENDING:
-        return 'pending';
-      default:
-        return 'inactive';
-    }
-  }
-
-  getStatusIcon(status: OrganizationStatus): string {
-    switch (status) {
-      case OrganizationStatus.ACTIVE:
-        return 'heartbeat';
-      case OrganizationStatus.INACTIVE:
-        return 'question-circle';
-      case OrganizationStatus.PENDING:
-        return 'clock';
-      default:
-        return 'question-circle';
-    }
-  }
+  // Status handling now uses global StatusBadgeComponent
 
   formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString('en-US', {

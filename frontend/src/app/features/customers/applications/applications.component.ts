@@ -33,6 +33,7 @@ export class ApplicationsComponent implements OnInit {
   selectedApplicationEnvironmentCount: number = 0;
   selectedApplicationApiCallsToday: number = 0;
   selectedApplicationLastActivity: string = '';
+  totalApplications: number = 8; // Will be updated when applications are loaded
 
   constructor() {}
 
@@ -52,23 +53,53 @@ export class ApplicationsComponent implements OnInit {
     // TODO: Replace with actual service calls
     // Mock data for demonstration
     switch (application.applicationId) {
-      case 'app_1':
+      case 'app_001':
         this.selectedApplicationOrganizationName = 'Acme Corporation';
         this.selectedApplicationEnvironmentCount = 3;
         this.selectedApplicationApiCallsToday = 1247;
         this.selectedApplicationLastActivity = '2 hours ago';
         break;
-      case 'app_2':
+      case 'app_002':
         this.selectedApplicationOrganizationName = 'Acme Corporation';
         this.selectedApplicationEnvironmentCount = 2;
         this.selectedApplicationApiCallsToday = 856;
         this.selectedApplicationLastActivity = '1 day ago';
         break;
-      case 'app_3':
+      case 'app_003':
         this.selectedApplicationOrganizationName = 'Beta Industries';
         this.selectedApplicationEnvironmentCount = 4;
         this.selectedApplicationApiCallsToday = 2103;
         this.selectedApplicationLastActivity = '3 hours ago';
+        break;
+      case 'app_004':
+        this.selectedApplicationOrganizationName = 'Acme Corporation';
+        this.selectedApplicationEnvironmentCount = 5;
+        this.selectedApplicationApiCallsToday = 3250;
+        this.selectedApplicationLastActivity = '6 hours ago';
+        break;
+      case 'app_005':
+        this.selectedApplicationOrganizationName = 'Gamma Solutions';
+        this.selectedApplicationEnvironmentCount = 3;
+        this.selectedApplicationApiCallsToday = 892;
+        this.selectedApplicationLastActivity = '4 hours ago';
+        break;
+      case 'app_006':
+        this.selectedApplicationOrganizationName = 'Beta Industries';
+        this.selectedApplicationEnvironmentCount = 6;
+        this.selectedApplicationApiCallsToday = 5621;
+        this.selectedApplicationLastActivity = '12 hours ago';
+        break;
+      case 'app_007':
+        this.selectedApplicationOrganizationName = 'Gamma Solutions';
+        this.selectedApplicationEnvironmentCount = 2;
+        this.selectedApplicationApiCallsToday = 1834;
+        this.selectedApplicationLastActivity = '30 minutes ago';
+        break;
+      case 'app_008':
+        this.selectedApplicationOrganizationName = 'Acme Corporation';
+        this.selectedApplicationEnvironmentCount = 4;
+        this.selectedApplicationApiCallsToday = 742;
+        this.selectedApplicationLastActivity = '18 hours ago';
         break;
       default:
         this.selectedApplicationOrganizationName = '';

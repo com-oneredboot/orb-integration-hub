@@ -11,6 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { StatusBadgeComponent } from '../../../../../shared/components/ui/status-badge.component';
 
 import { Organizations } from '../../../../../core/models/OrganizationsModel';
 import { Users } from '../../../../../core/models/UsersModel';
@@ -32,7 +33,8 @@ export interface OrganizationTableRow {
   imports: [
     CommonModule, 
     FormsModule,
-    FontAwesomeModule
+    FontAwesomeModule,
+    StatusBadgeComponent
   ],
   templateUrl: './organizations-list.component.html',
   styleUrls: ['./organizations-list.component.scss']

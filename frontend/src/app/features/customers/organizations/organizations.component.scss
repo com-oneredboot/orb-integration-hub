@@ -190,10 +190,7 @@
   }
 
   &__list-panel {
-    @include m.card;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
+    // Now uses global orb-card class in HTML, no card mixin needed
     
     app-organizations-list {
       flex: 1;
@@ -203,25 +200,10 @@
   }
 
   &__detail-panel {
-    @include m.card;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
+    // Now uses global orb-card class in HTML, no card mixin needed
   }
 
   // Responsive Design
-  @media (max-width: 1200px) {
-    &__layout {
-      grid-template-columns: 1fr;
-      grid-template-rows: auto 1fr;
-      gap: 1.5rem;
-    }
-
-    &__list-panel {
-      max-height: 400px;
-    }
-  }
-
   @media (max-width: 768px) {
     &__content {
       padding: 1rem;
@@ -229,10 +211,6 @@
 
     &__layout {
       gap: 1rem;
-    }
-
-    &__list-panel {
-      max-height: 350px;
     }
   }
 
@@ -242,12 +220,7 @@
     }
 
     &__layout {
-      grid-template-columns: 1fr;
       gap: 1rem;
-    }
-
-    &__list-panel {
-      max-height: 300px;
     }
   }
 }

@@ -10,6 +10,8 @@
   padding: 0;
   background: v.$orb-white;
   border-radius: v.$border-radius-lg;
+  box-shadow: v.$shadow-md;
+  border: 1px solid v.$border-color;
   overflow: hidden;
 
   // Header
@@ -487,43 +489,7 @@
     }
   }
 
-  // Empty State
-  &__empty {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    min-height: 400px;
-    background-color: v.$bg-secondary;
-    border-radius: v.$border-radius;
-    border: 2px dashed v.$gray-300;
-  }
-
-  &__empty-content {
-    text-align: center;
-    padding: 2rem;
-  }
-
-  &__empty-icon {
-    font-size: 4rem;
-    color: v.$gray-400;
-    margin-bottom: 1rem;
-  }
-
-  &__empty-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: v.$text-primary;
-    margin: 0 0 0.5rem 0;
-  }
-
-  &__empty-text {
-    font-size: 0.875rem;
-    color: v.$text-secondary;
-    margin: 0;
-    line-height: 1.5;
-    max-width: 300px;
-  }
+  // Empty state now uses global orb-empty-state class
 
   // Responsive Design
   @media (max-width: 768px) {

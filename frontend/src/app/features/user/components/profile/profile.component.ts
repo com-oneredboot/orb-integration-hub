@@ -12,6 +12,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { RouterModule } from '@angular/router';
 import { Users } from '../../../../core/models/UsersModel';
+import { StatusBadgeComponent } from '../../../../shared/components/ui/status-badge.component';
 
 @Component({
   selector: 'app-profile',
@@ -22,7 +23,8 @@ import { Users } from '../../../../core/models/UsersModel';
     CommonModule,
     ReactiveFormsModule,
     FontAwesomeModule,
-    RouterModule
+    RouterModule,
+    StatusBadgeComponent
   ]
 })
 export class ProfileComponent implements OnInit, OnDestroy {

@@ -1,11 +1,11 @@
 <!-- Application Detail Component Template -->
-<div class="application-detail" *ngIf="application; else emptyState">
+<div class="orb-card" *ngIf="application; else emptyState">
   
   <!-- Header -->
-  <div class="application-detail__header">
-    <div class="application-detail__title-section">
-      <h3 class="application-detail__title">
-        <fa-icon icon="rocket" class="application-detail__icon"></fa-icon>
+  <div class="orb-card__header">
+    <div class="orb-card__title-section">
+      <h3 class="orb-card__title">
+        <fa-icon icon="rocket" class="orb-card__icon"></fa-icon>
         {{ application.name }}
       </h3>
       <div class="application-detail__meta">
@@ -15,22 +15,22 @@
         </span>
       </div>
     </div>
-    <div class="application-detail__actions">
-      <button class="application-detail__action application-detail__action--secondary"
+    <div class="orb-card__header-actions">
+      <button class="orb-card-btn"
               (click)="onEditApplication()">
-        <fa-icon icon="edit" class="application-detail__action-icon"></fa-icon>
+        <fa-icon icon="edit" class="orb-card-btn__icon"></fa-icon>
         Edit
       </button>
-      <button class="application-detail__action application-detail__action--primary"
+      <button class="orb-card-btn"
               (click)="onManageEnvironments()">
-        <fa-icon icon="server" class="application-detail__action-icon"></fa-icon>
+        <fa-icon icon="server" class="orb-card-btn__icon"></fa-icon>
         Manage Environments
       </button>
     </div>
   </div>
 
   <!-- Content -->
-  <div class="application-detail__content">
+  <div class="orb-card__content orb-card__content--padded">
     
     <!-- Overview Section -->
     <div class="application-detail__section">
@@ -205,13 +205,10 @@
 
 <!-- Empty State -->
 <ng-template #emptyState>
-  <div class="application-detail__empty">
-    <div class="application-detail__empty-content">
-      <fa-icon icon="rocket" class="application-detail__empty-icon"></fa-icon>
-      <h3 class="application-detail__empty-title">Select an Application</h3>
-      <p class="application-detail__empty-text">
-        Choose an application from the list to view its details and manage settings.
-      </p>
+  <div class="orb-empty-state">
+    <div class="orb-empty-state__content">
+      <fa-icon icon="rocket" class="orb-empty-state__icon"></fa-icon>
+      <h3 class="orb-empty-state__title">No Application Selected</h3>
     </div>
   </div>
 </ng-template>

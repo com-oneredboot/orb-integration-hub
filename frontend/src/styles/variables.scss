@@ -64,6 +64,12 @@ $text-primary: $orb-black;
 $text-secondary: $orb-gray;
 $white: $orb-white;
 
+// Role Colors (distinct from status colors)
+$role-owner: #3b82f6;      // Blue - authority without status confusion
+$role-admin: #8b5cf6;      // Purple - elevated permissions
+$role-developer: #0d9488;  // Teal - technical work
+$role-viewer: #6b7280;     // Gray - neutral, read-only
+
 // Input styles
 $input-color: $orb-black;
 $input-bg: $orb-white;

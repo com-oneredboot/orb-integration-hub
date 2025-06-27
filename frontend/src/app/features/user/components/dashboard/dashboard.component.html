@@ -43,11 +43,14 @@ description: HTML template file
               </p>
             </ng-template>
             <div class="dashboard-header__status">
-              <span class="dashboard-header__status-badge" 
-                    [ngClass]="'dashboard-header__status-badge--' + getStatusClass(user.status)">
-                <fa-icon [icon]="user.status === 'ACTIVE' ? 'check-circle' : 'clock'" class="dashboard-header__status-icon"></fa-icon>
-                Account {{ user.status }}
-              </span>
+              <app-status-badge 
+                [status]="user.status" 
+                type="user"
+                [showIcon]="true"
+                [showLabel]="true"
+                size="medium"
+                variant="badge">
+              </app-status-badge>
             </div>
           </div>
         </div>
@@ -58,15 +61,15 @@ description: HTML template file
   <div class="dashboard-content" *ngIf="currentUser$ | async as user; else loadingUser">
     
     <!-- Quick Actions Card -->
-    <div class="dashboard-card dashboard-card--actions">
-      <div class="dashboard-card__header">
-        <h2 class="dashboard-card__title">
-          <fa-icon icon="bolt" class="dashboard-card__icon"></fa-icon>
+    <div class="orb-card">
+      <div class="orb-card__header">
+        <h2 class="orb-card__title">
+          <fa-icon icon="bolt" class="orb-card__icon"></fa-icon>
           Quick Actions
         </h2>
       </div>
       
-      <div class="dashboard-card__content">
+      <div class="orb-card__content orb-card__content--padded">
         <div class="action-grid">
           <a routerLink="/profile" class="action-button action-button--primary">
             <fa-icon icon="user-edit" class="action-button__icon"></fa-icon>
@@ -115,15 +118,15 @@ description: HTML template file
     </div>
 
     <!-- Account Health Card - Only show if there are warnings -->
-    <div class="dashboard-card dashboard-card--health" *ngIf="hasHealthWarnings(user)">
-      <div class="dashboard-card__header">
-        <h2 class="dashboard-card__title">
-          <fa-icon icon="heartbeat" class="dashboard-card__icon"></fa-icon>
+    <div class="orb-card" *ngIf="hasHealthWarnings(user)">
+      <div class="orb-card__header">
+        <h2 class="orb-card__title">
+          <fa-icon icon="heartbeat" class="orb-card__icon"></fa-icon>
           Account Health
         </h2>
       </div>
       
-      <div class="dashboard-card__content">
+      <div class="orb-card__content orb-card__content--padded">
         <div class="health-check">
           <div class="health-item health-item--clickable" 
                [ngClass]="hasValidName(user) ? 'health-item--healthy' : 'health-item--warning'"
@@ -210,15 +213,15 @@ description: HTML template file
     </div>
 
     <!-- Recent Activity Card -->
-    <div class="dashboard-card dashboard-card--activity">
-      <div class="dashboard-card__header">
-        <h2 class="dashboard-card__title">
-          <fa-icon icon="history" class="dashboard-card__icon"></fa-icon>
+    <div class="orb-card">
+      <div class="orb-card__header">
+        <h2 class="orb-card__title">
+          <fa-icon icon="history" class="orb-card__icon"></fa-icon>
           Recent Activity
         </h2>
       </div>
       
-      <div class="dashboard-card__content">
+      <div class="orb-card__content orb-card__content--padded">
         <div class="activity-list">
           <div class="activity-item">
             <div class="activity-item__time">{{ formatDate(user.updatedAt) }}</div>

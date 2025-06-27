@@ -275,16 +275,9 @@
 // Panel Layout Mixins
 @mixin panel-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  height: 100%;
-  min-height: 0;
-
-  @media (max-width: 1200px) {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
-    gap: 1.5rem;
-  }
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  align-items: start; // Align to start to allow natural expansion
 }
 
 @mixin page-content {

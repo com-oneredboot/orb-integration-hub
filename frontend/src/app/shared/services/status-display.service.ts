@@ -11,6 +11,7 @@ export interface StatusConfig {
   icon?: string;
   color: string;
   bgColor?: string;
+  borderColor?: string;
   priority: number; // Higher number = higher priority
 }
 
@@ -31,9 +32,10 @@ export class StatusDisplayService {
     'ACTIVE': {
       label: 'Active',
       cssClass: 'status-active',
-      icon: 'check-circle',
-      color: '#22c55e',
-      bgColor: '#dcfce7',
+      icon: 'heartbeat',
+      color: '#2B8A3E',
+      bgColor: 'rgba(43, 138, 62, 0.1)',
+      borderColor: 'rgba(43, 138, 62, 0.2)',
       priority: 5
     },
     'PENDING': {
@@ -55,7 +57,7 @@ export class StatusDisplayService {
     'INACTIVE': {
       label: 'Inactive',
       cssClass: 'status-inactive',
-      icon: 'x-circle',
+      icon: 'question-circle',
       color: '#6b7280',
       bgColor: '#f3f4f6',
       priority: 2
@@ -63,7 +65,7 @@ export class StatusDisplayService {
     'CANCELLED': {
       label: 'Cancelled',
       cssClass: 'status-cancelled',
-      icon: 'x-circle',
+      icon: 'times-circle',
       color: '#ef4444',
       bgColor: '#fee2e2',
       priority: 1
@@ -75,9 +77,10 @@ export class StatusDisplayService {
     'ACTIVE': {
       label: 'Active',
       cssClass: 'org-status-active',
-      icon: 'check-circle',
-      color: '#22c55e',
-      bgColor: '#dcfce7',
+      icon: 'heartbeat',
+      color: '#2B8A3E',
+      bgColor: 'rgba(43, 138, 62, 0.1)',
+      borderColor: 'rgba(43, 138, 62, 0.2)',
       priority: 5
     },
     'PENDING': {
@@ -99,7 +102,7 @@ export class StatusDisplayService {
     'INACTIVE': {
       label: 'Inactive',
       cssClass: 'org-status-inactive',
-      icon: 'x-circle',
+      icon: 'question-circle',
       color: '#6b7280',
       bgColor: '#f3f4f6',
       priority: 1
@@ -111,9 +114,10 @@ export class StatusDisplayService {
     'ACTIVE': {
       label: 'Running',
       cssClass: 'app-status-active',
-      icon: 'check-circle',
-      color: '#22c55e',
-      bgColor: '#dcfce7',
+      icon: 'heartbeat',
+      color: '#2B8A3E',
+      bgColor: 'rgba(43, 138, 62, 0.1)',
+      borderColor: 'rgba(43, 138, 62, 0.2)',
       priority: 5
     },
     'PENDING': {
@@ -135,7 +139,7 @@ export class StatusDisplayService {
     'ERROR': {
       label: 'Error',
       cssClass: 'app-status-error',
-      icon: 'exclamation-circle',
+      icon: 'exclamation-triangle',
       color: '#ef4444',
       bgColor: '#fee2e2',
       priority: 2
@@ -147,6 +151,14 @@ export class StatusDisplayService {
       color: '#8b5cf6',
       bgColor: '#ede9fe',
       priority: 1
+    },
+    'INACTIVE': {
+      label: 'Inactive',
+      cssClass: 'app-status-inactive',
+      icon: 'question-circle',
+      color: '#6b7280',
+      bgColor: '#f3f4f6',
+      priority: 0
     }
   };
 

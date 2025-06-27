@@ -10,9 +10,6 @@
       </h3>
     </div>
     <div class="organization-detail__actions">
-      <fa-icon [icon]="getStatusIcon(organization.status)" 
-               class="organization-detail__status-icon organization-detail__status-icon--{{ getStatusClass(organization.status) }}"
-               [title]="organization.status"></fa-icon>
       <button class="organization-detail__action organization-detail__action--primary"
               (click)="onEditOrganization()">
         <fa-icon icon="edit" class="organization-detail__action-icon"></fa-icon>
@@ -200,10 +197,10 @@
 
 <!-- Empty State -->
 <ng-template #emptyState>
-  <div class="organization-detail__empty">
-    <div class="organization-detail__empty-content">
-      <fa-icon icon="building" class="organization-detail__empty-icon"></fa-icon>
-      <h3 class="organization-detail__empty-title">No Organization Selected</h3>
+  <div class="orb-empty-state">
+    <div class="orb-empty-state__content">
+      <fa-icon icon="building" class="orb-empty-state__icon"></fa-icon>
+      <h3 class="orb-empty-state__title">No Organization Selected</h3>
     </div>
   </div>
 </ng-template>

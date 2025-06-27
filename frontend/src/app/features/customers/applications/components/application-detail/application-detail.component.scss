@@ -1,521 +1,291 @@
+@use '../../../../../../styles/variables' as v;
+
+// Application detail now uses global orb-card styles
+// Component-specific styles for content sections only
+
 .application-detail {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  height: 100%;
-  padding: 1.5rem;
-  background-color: var(--surface-card);
-  border-radius: var(--border-radius);
-  border: 1px solid var(--surface-border);
-
-  // Header
-  &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--surface-border);
-  }
-
-  &__title-section {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  &__title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-color);
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  &__icon {
-    font-size: 1.125rem;
-    color: var(--primary-color);
-  }
-
   &__meta {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: v.$spacing-sm;
+    margin-top: v.$spacing-xs;
   }
 
   &__org-name {
     display: flex;
     align-items: center;
-    gap: 0.375rem;
-    font-size: 0.875rem;
-    color: var(--text-color-secondary);
+    gap: v.$spacing-xs;
+    font-size: v.$font-size-sm;
+    color: rgba(white, 0.8);
   }
 
   &__meta-icon {
-    font-size: 0.75rem;
+    font-size: v.$font-size-xs;
   }
 
-  &__actions {
-    display: flex;
-    gap: 0.75rem;
-    flex-shrink: 0;
-  }
-
-  &__action {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    border-radius: var(--border-radius);
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: 1px solid transparent;
-
-    &--primary {
-      background-color: var(--primary-color);
-      color: white;
-
-      &:hover {
-        background-color: var(--primary-color-dark);
-      }
-    }
-
-    &--secondary {
-      background-color: var(--surface-ground);
-      color: var(--text-color);
-      border-color: var(--surface-border);
-
-      &:hover {
-        background-color: var(--surface-hover);
-        border-color: var(--primary-color);
-      }
-    }
-  }
-
-  &__action-icon {
-    font-size: 0.875rem;
-  }
-
-  // Content
-  &__content {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    flex: 1;
-    overflow-y: auto;
-  }
-
-  // Sections
   &__section {
-    background-color: var(--surface-section);
-    border-radius: var(--border-radius);
-    border: 1px solid var(--surface-border);
-    overflow: hidden;
-
+    margin-bottom: v.$spacing-xl;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
     &--placeholder {
-      border-style: dashed;
-      border-color: var(--surface-300);
+      border: 2px dashed v.$border-color;
+      border-radius: v.$border-radius;
+      padding: v.$spacing-lg;
+      background: v.$gray-50;
     }
   }
 
   &__section-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-color);
-    margin: 0;
-    padding: 1rem 1.5rem;
-    background-color: var(--surface-50);
-    border-bottom: 1px solid var(--surface-border);
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: v.$spacing-sm;
+    font-size: v.$font-size-lg;
+    font-weight: v.$font-weight-semibold;
+    color: v.$text-primary;
+    margin: 0 0 v.$spacing-md 0;
   }
 
   &__section-icon {
-    font-size: 0.875rem;
-    color: var(--primary-color);
+    font-size: v.$font-size-base;
+    color: v.$primary-color;
   }
 
   &__section-content {
-    padding: 1.5rem;
+    padding-left: calc(v.$font-size-base + v.$spacing-sm);
   }
 
-  // Info Grid
   &__info-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
+    gap: v.$spacing-lg;
   }
 
   &__info-item {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: v.$spacing-xs;
   }
 
   &__info-label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--text-color-secondary);
+    font-size: v.$font-size-sm;
+    font-weight: v.$font-weight-medium;
+    color: v.$text-secondary;
     margin: 0;
   }
 
   &__info-value {
-    font-size: 0.875rem;
-    color: var(--text-color);
+    font-size: v.$font-size-base;
+    color: v.$text-primary;
     margin: 0;
-    line-height: 1.4;
-
+    
     &--code {
-      font-family: var(--font-family-mono);
-      background-color: var(--surface-100);
-      padding: 0.25rem 0.5rem;
-      border-radius: var(--border-radius-sm);
-      font-size: 0.8125rem;
+      font-family: v.$font-family-monospace;
+      background: v.$gray-100;
+      padding: v.$spacing-xs v.$spacing-sm;
+      border-radius: v.$border-radius-sm;
+      font-size: v.$font-size-sm;
     }
-
+    
     &--masked {
-      letter-spacing: 0.05em;
+      letter-spacing: 0.1em;
     }
   }
 
-  // API Key Management
   &__api-key {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: v.$spacing-sm;
   }
 
   &__api-key-action {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    border-radius: var(--border-radius);
-    border: 1px solid var(--surface-border);
-    background-color: var(--surface-ground);
-    color: var(--text-color-secondary);
+    width: 32px;
+    height: 32px;
+    border: 1px solid v.$border-color;
+    border-radius: v.$border-radius;
+    background: v.$white;
+    color: v.$text-secondary;
     cursor: pointer;
     transition: all 0.2s ease;
-
+    
     &:hover {
-      border-color: var(--primary-color);
-      color: var(--primary-color);
-      background-color: var(--primary-50);
+      border-color: v.$primary-color;
+      color: v.$primary-color;
     }
   }
 
-  // Stats Grid
   &__stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: v.$spacing-md;
   }
 
   &__stat-card {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    background-color: var(--surface-ground);
-    border-radius: var(--border-radius);
-    border: 1px solid var(--surface-border);
+    gap: v.$spacing-md;
+    padding: v.$spacing-lg;
+    background: v.$white;
+    border: 1px solid v.$border-color;
+    border-radius: v.$border-radius;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      border-color: v.$primary-color;
+      transform: translateY(-1px);
+    }
   }
 
   &__stat-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 3rem;
-    height: 3rem;
-    background-color: var(--primary-50);
-    border-radius: var(--border-radius);
+    width: 48px;
+    height: 48px;
+    background: rgba(v.$primary-color, 0.1);
+    border-radius: v.$border-radius;
   }
 
   &__stat-icon-element {
-    font-size: 1.25rem;
-    color: var(--primary-color);
+    font-size: v.$font-size-lg;
+    color: v.$primary-color;
   }
 
   &__stat-content {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: v.$spacing-xs;
   }
 
   &__stat-value {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--text-color);
-    line-height: 1;
+    font-size: v.$font-size-xl;
+    font-weight: v.$font-weight-bold;
+    color: v.$text-primary;
   }
 
   &__stat-label {
-    font-size: 0.875rem;
-    color: var(--text-color-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.025em;
+    font-size: v.$font-size-sm;
+    color: v.$text-secondary;
   }
 
-  // Environments
   &__environments {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: v.$spacing-md;
   }
 
   &__env-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 1rem;
-    background-color: var(--surface-ground);
-    border-radius: var(--border-radius);
-    border: 1px solid var(--surface-border);
+    justify-content: space-between;
+    padding: v.$spacing-md;
+    background: v.$white;
+    border: 1px solid v.$border-color;
+    border-radius: v.$border-radius;
     transition: all 0.2s ease;
-
+    
     &:hover {
-      border-color: var(--primary-color);
-      background-color: var(--primary-50);
+      border-color: v.$primary-color;
     }
   }
 
   &__env-info {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    flex: 1;
+    gap: v.$spacing-md;
   }
 
   &__env-name {
-    font-weight: 500;
-    color: var(--text-color);
+    font-weight: v.$font-weight-medium;
+    color: v.$text-primary;
   }
 
   &__env-status {
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: 0.75rem;
-    font-weight: 600;
+    padding: v.$spacing-xs v.$spacing-sm;
+    border-radius: v.$border-radius;
+    font-size: v.$font-size-xs;
+    font-weight: v.$font-weight-semibold;
     text-transform: uppercase;
-    letter-spacing: 0.025em;
-
+    
     &--active {
-      background-color: var(--green-50);
-      color: var(--green-700);
+      background: rgba(v.$success-color, 0.1);
+      color: v.$success-color;
     }
-
+    
     &--inactive {
-      background-color: var(--red-50);
-      color: var(--red-700);
-    }
-
-    &--pending {
-      background-color: var(--yellow-50);
-      color: var(--yellow-700);
+      background: rgba(v.$gray-500, 0.1);
+      color: v.$gray-500;
     }
   }
 
   &__env-actions {
     display: flex;
-    gap: 0.5rem;
+    gap: v.$spacing-xs;
   }
 
   &__env-action {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    border-radius: var(--border-radius);
-    border: 1px solid var(--surface-border);
-    background-color: var(--surface-ground);
-    color: var(--text-color-secondary);
+    width: 32px;
+    height: 32px;
+    border: 1px solid v.$border-color;
+    border-radius: v.$border-radius;
+    background: v.$white;
+    color: v.$text-secondary;
     cursor: pointer;
     transition: all 0.2s ease;
-
+    
     &:hover {
-      border-color: var(--primary-color);
-      color: var(--primary-color);
-      background-color: var(--primary-50);
+      border-color: v.$primary-color;
+      color: v.$primary-color;
     }
   }
 
-  // Placeholder
   &__placeholder {
     text-align: center;
-    padding: 2rem;
-  }
-
-  &__placeholder-icon {
-    font-size: 3rem;
-    color: var(--surface-400);
-    margin-bottom: 1rem;
-  }
-
-  &__placeholder-text {
-    font-size: 0.875rem;
-    color: var(--text-color-secondary);
-    margin: 0 0 1.5rem 0;
-    line-height: 1.5;
-  }
-
-  &__placeholder-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-
-    li {
-      font-size: 0.875rem;
-      color: var(--text-color-secondary);
-      position: relative;
-      padding-left: 1.5rem;
-
-      &:before {
-        content: '•';
-        position: absolute;
-        left: 0;
-        color: var(--primary-color);
+    
+    &-icon {
+      font-size: 3rem;
+      color: v.$gray-400;
+      margin-bottom: v.$spacing-md;
+    }
+    
+    &-text {
+      font-size: v.$font-size-base;
+      color: v.$text-secondary;
+      margin-bottom: v.$spacing-lg;
+    }
+    
+    &-list {
+      text-align: left;
+      max-width: 400px;
+      margin: 0 auto;
+      color: v.$text-secondary;
+      
+      li {
+        margin-bottom: v.$spacing-xs;
       }
     }
   }
 
-  // Empty State
-  &__empty {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    min-height: 400px;
-    background-color: var(--surface-section);
-    border-radius: var(--border-radius);
-    border: 2px dashed var(--surface-300);
-  }
+  // Empty state now uses global orb-empty-state class
+}
 
-  &__empty-content {
-    text-align: center;
-    padding: 2rem;
-  }
-
-  &__empty-icon {
-    font-size: 4rem;
-    color: var(--surface-400);
-    margin-bottom: 1rem;
-  }
-
-  &__empty-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-color);
-    margin: 0 0 0.5rem 0;
-  }
-
-  &__empty-text {
-    font-size: 0.875rem;
-    color: var(--text-color-secondary);
-    margin: 0;
-    line-height: 1.5;
-    max-width: 300px;
-  }
-
-  // Responsive Design
-  @media (max-width: 768px) {
-    padding: 1rem;
-    gap: 1rem;
-
-    &__header {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 1rem;
-    }
-
-    &__actions {
-      width: 100%;
-      justify-content: flex-start;
-    }
-
-    &__action {
-      flex: 1;
-      justify-content: center;
-    }
-
+// Responsive design
+@media (max-width: 768px) {
+  .application-detail {
     &__info-grid {
       grid-template-columns: 1fr;
-      gap: 1rem;
     }
-
+    
     &__stats-grid {
       grid-template-columns: 1fr;
-    }
-
-    &__section-content {
-      padding: 1rem;
-    }
-
-    &__placeholder {
-      padding: 1.5rem;
-    }
-
-    &__empty {
-      min-height: 300px;
-    }
-
-    &__empty-content {
-      padding: 1.5rem;
-    }
-
-    &__env-item {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 0.75rem;
-    }
-
-    &__env-actions {
-      align-self: flex-end;
-    }
-  }
-
-  @media (max-width: 480px) {
-    &__title {
-      font-size: 1.125rem;
-    }
-
-    &__actions {
-      flex-direction: column;
-    }
-
-    &__stat-card {
-      flex-direction: column;
-      text-align: center;
-      gap: 0.75rem;
-    }
-
-    &__stat-icon {
-      width: 2.5rem;
-      height: 2.5rem;
-    }
-
-    &__stat-icon-element {
-      font-size: 1rem;
-    }
-
-    &__stat-value {
-      font-size: 1.25rem;
-    }
-
-    &__api-key {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 0.75rem;
     }
   }
 }
