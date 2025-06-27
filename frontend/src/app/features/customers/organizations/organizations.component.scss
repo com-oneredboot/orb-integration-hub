@@ -10,10 +10,10 @@
   
   .organizations-header {
     background: v.$orb-white;
-    padding: v.$spacing-xl * 2 0;
+    padding: v.$spacing-xl 0;
     position: relative;
     overflow: hidden;
-    margin-bottom: v.$spacing-xl;
+    margin-bottom: v.$spacing-lg;
 
     &__content {
       max-width: 1400px;
@@ -164,11 +164,12 @@
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 60px); // Account for user-layout header
-  background-color: #F8FAFC !important;
+  background-color: v.$orb-white !important;
 
   // Content
   &__content {
     @include m.page-content;
+    padding-top: v.$spacing-md; // Reduce top padding to minimize gap
   }
 
   &__layout {
@@ -180,6 +181,12 @@
     display: flex;
     flex-direction: column;
     min-height: 0;
+    
+    app-organizations-list {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
   }
 
   &__detail-panel {

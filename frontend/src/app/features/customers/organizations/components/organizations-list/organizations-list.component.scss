@@ -3,142 +3,34 @@
 @use "sass:color";
 
 // Organizations styles using same structure as profile but with organizations class names  
-.organizations-container {
-  @include m.page-container;
+.organizations-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
   
-  & {
-    font-family: v.$font-family-base;
-  }
-
-  .organizations-overview-section {
-    max-width: 1400px;
-    margin: 0 auto v.$spacing-xl auto;
-    padding: 0 v.$spacing-lg;
-    width: 100%;
-  }
-}
-
-.organizations-header {
-  background: v.$orb-white;
-  padding: v.$spacing-xl * 2 0;
-  position: relative;
-  overflow: hidden;
-  margin-bottom: v.$spacing-xl;
-
-  &__content {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 v.$spacing-lg;
-  }
-
-  &__flex-container {
+  &__header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: v.$spacing-xl * 3;
-    justify-content: center;
-
-    @media (max-width: 1024px) {
-      flex-direction: column;
-      text-align: center;
-      gap: v.$spacing-xl;
-    }
-  }
-
-  &__logo-section {
-    flex: 1;
-    max-width: 600px;
-    
-    @media (max-width: 1024px) {
-      max-width: 400px;
-    }
-    
-    @media (max-width: 768px) {
-      max-width: 300px;
-    }
-  }
-  
-  &__logo {
-    width: 100%;
-    height: auto;
-    object-fit: contain;
-  }
-
-  &__text-section {
-    flex: 1;
-    max-width: 600px;
-    display: flex;
-    flex-direction: column;
-    gap: v.$spacing-lg;
-    align-items: flex-start;
-
-    @media (max-width: 1024px) {
-      align-items: center;
-      text-align: center;
-    }
-  }
-
-  &__greeting {
-    display: flex;
-    flex-direction: column;
-    gap: v.$spacing-md;
-    width: 100%;
-  }
-
-  &__icon-title {
-    display: flex;
-    align-items: center;
-    gap: v.$spacing-md;
-    margin-bottom: v.$spacing-sm;
-
-    @media (max-width: 1024px) {
-      justify-content: center;
-    }
-  }
-
-  &__icon {
-    width: 48px;
-    height: 48px;
-    object-fit: contain;
-    border-radius: v.$border-radius;
+    padding: v.$spacing-lg;
+    border-bottom: 1px solid v.$border-color;
+    background: rgba(v.$primary-color, 0.02);
   }
   
   &__title {
-    font-family: v.$font-family-heading;
-    font-size: 1.5rem;
-    font-weight: v.$font-weight-bold;
-    color: v.$orb-dark-blue;
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-sm;
     margin: 0;
-    line-height: 1.2;
-
-    @media (max-width: 768px) {
-      font-size: 2rem;
-    }
-
-    @media (max-width: 480px) {
-      font-size: 1.75rem;
-    }
-  }
-  
-  &__subtitle {
     font-size: v.$font-size-lg;
+    font-weight: v.$font-weight-semibold;
     color: v.$orb-dark-blue;
-    margin: 0;
-    line-height: 1.6;
-    text-align: left;
-
-    @media (max-width: 1024px) {
-      text-align: center;
-    }
   }
-}
-
-// Organizations Card Styles (exact same structure as profile card)
-.organizations-card {
-  @include m.card;
-  margin-bottom: v.$spacing-lg;
   
-  &__header {
-    @include m.card-header;
+  &__icon {
+    font-size: v.$font-size-lg;
+    color: v.$primary-color;
   }
   
   &__header-actions {
@@ -147,31 +39,11 @@
     gap: v.$spacing-md;
   }
   
-  &__title {
-    @include m.card-title;
-  }
-  
-  &__icon {
-    @include m.card-icon;
-  }
-  
-  &__content {
-    @include m.card-content;
-    
-    // Ensure the organization table is visible and has proper styling
-    app-organization-table {
-      display: block;
-      width: 100%;
-      min-height: 300px;
-      border: 2px solid red; // Temporary debug border
-    }
-  }
-  
-  &__edit-btn {
+  &__create-btn {
     display: inline-flex;
     align-items: center;
-    gap: v.$spacing-xs;
-    padding: v.$spacing-xs v.$spacing-sm;
+    gap: v.$spacing-sm;
+    padding: v.$spacing-sm v.$spacing-lg;
     background-color: v.$primary-color;
     color: v.$white;
     border: none;
@@ -191,40 +63,256 @@
     }
   }
   
-  &__edit-icon {
+  &__create-icon {
     font-size: v.$font-size-xs;
+  }
+  
+  &__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    
+    .organizations-table {
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      
+      &__container {
+        overflow-x: auto;
+        border-radius: v.$border-radius;
+        flex: 1;
+      }
+      
+      &__element {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: v.$font-size-sm;
+        
+        thead tr {
+          background-color: v.$gray-50;
+          border-bottom: 2px solid v.$border-color;
+        }
+        
+        tbody tr {
+          border-bottom: 1px solid v.$border-color;
+          transition: background-color 0.2s ease;
+          
+          &:nth-child(even) {
+            background-color: v.$gray-50;
+          }
+          
+          &:hover {
+            background-color: v.$gray-100;
+          }
+          
+          &--selected {
+            background-color: rgba(v.$primary-color, 0.1) !important;
+          }
+          
+          &--loading, &--empty {
+            background-color: v.$white !important;
+          }
+        }
+      }
+      
+      &__header {
+        padding: v.$spacing-sm v.$spacing-md;
+        text-align: left;
+        font-weight: v.$font-weight-semibold;
+        color: v.$gray-700;
+        
+        &--select {
+          width: 40px;
+          text-align: center;
+        }
+        
+        &--actions {
+          width: 100px;
+          text-align: center;
+        }
+      }
+      
+      &__cell {
+        padding: v.$spacing-sm v.$spacing-md;
+        vertical-align: middle;
+        
+        &--select {
+          text-align: center;
+          width: 40px;
+        }
+        
+        &--actions {
+          text-align: center;
+          width: 100px;
+        }
+        
+        &--loading, &--empty {
+          text-align: center;
+          padding: v.$spacing-xl;
+          color: v.$gray-500;
+        }
+      }
+      
+      &__radio {
+        margin: 0;
+        cursor: pointer;
+      }
+      
+      &__org-info {
+        display: flex;
+        flex-direction: column;
+        gap: v.$spacing-xs;
+      }
+      
+      &__org-name {
+        font-weight: v.$font-weight-medium;
+        color: v.$orb-dark-blue;
+      }
+      
+      &__org-id {
+        font-size: v.$font-size-xs;
+        color: v.$gray-500;
+        font-family: v.$font-family-monospace;
+      }
+      
+      &__role-badge {
+        display: inline-block;
+        padding: v.$spacing-xs v.$spacing-sm;
+        border-radius: v.$border-radius;
+        font-size: v.$font-size-xs;
+        font-weight: v.$font-weight-semibold;
+        text-transform: uppercase;
+        
+        &--owner {
+          background-color: rgba(v.$success-color, 0.1);
+          color: v.$success-color;
+        }
+        
+        &--administrator {
+          background-color: rgba(v.$primary-color, 0.1);
+          color: v.$primary-color;
+        }
+        
+        &--viewer {
+          background-color: rgba(v.$gray-500, 0.1);
+          color: v.$gray-500;
+        }
+        
+        &--none {
+          background-color: rgba(v.$gray-400, 0.1);
+          color: v.$gray-400;
+        }
+      }
+      
+      &__count {
+        display: flex;
+        align-items: center;
+        gap: v.$spacing-xs;
+        color: v.$gray-600;
+      }
+      
+      &__count-icon {
+        font-size: v.$font-size-xs;
+      }
+      
+      &__actions {
+        display: flex;
+        gap: v.$spacing-xs;
+        justify-content: center;
+      }
+      
+      &__action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: v.$border-radius;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: v.$font-size-sm;
+        
+        &--primary {
+          background-color: v.$primary-color;
+          color: v.$white;
+          
+          &:hover {
+            background-color: color.adjust(v.$primary-color, $lightness: -10%);
+          }
+        }
+        
+        &--secondary {
+          background-color: v.$gray-100;
+          color: v.$gray-600;
+          
+          &:hover {
+            background-color: v.$gray-200;
+            color: v.$gray-700;
+          }
+        }
+      }
+      
+      &__loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: v.$spacing-sm;
+        color: v.$gray-500;
+      }
+      
+      &__loading-icon {
+        font-size: v.$font-size-lg;
+      }
+      
+      &__empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: v.$spacing-sm;
+        color: v.$gray-500;
+      }
+      
+      &__empty-icon {
+        font-size: 2rem;
+        color: v.$gray-400;
+      }
+      
+      &__empty-text {
+        margin: 0;
+        font-size: v.$font-size-sm;
+      }
+    }
   }
 }
 
+// Responsive styles
 @media (max-width: 768px) {
-  .organizations-container {
-    padding: v.$spacing-md;
-    
-    .organizations-overview-section {
-      padding: 0 v.$spacing-md;
+  .organizations-list {
+    &__header {
+      padding: v.$spacing-md;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: v.$spacing-sm;
     }
   }
 }
 
 @media (max-width: 480px) {
-  .organizations-container {
-    padding: v.$spacing-sm;
-    
-    .organizations-overview-section {
-      max-width: 100%;
+  .organizations-list {
+    &__header {
+      padding: v.$spacing-sm;
     }
     
-    .organizations-card {
-      &__header {
-        padding: v.$spacing-md;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: v.$spacing-sm;
-      }
-      
-      &__content {
-        padding: v.$spacing-md;
-      }
+    &__title {
+      font-size: v.$font-size-base;
+    }
+    
+    &__create-btn {
+      padding: v.$spacing-xs;
+      font-size: v.$font-size-xs;
     }
   }
 }

@@ -15,8 +15,10 @@
     justify-content: space-between;
     align-items: flex-start;
     gap: 1rem;
+    padding: v.$spacing-lg;
     padding-bottom: 1rem;
     border-bottom: 1px solid v.$border-color;
+    background: rgba(v.$primary-color, 0.02);
   }
 
   &__title-section {

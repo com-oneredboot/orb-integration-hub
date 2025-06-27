@@ -1,23 +1,22 @@
 <!-- Organizations List Component Template -->
 <div class="organizations-list">
-  <!-- Organizations Overview Card - Full Width -->
-  <div class="organizations-overview-section">
-    <div class="organizations-card organizations-card--overview">
-      <div class="organizations-card__header">
-        <h2 class="organizations-card__title">
-          <fa-icon icon="building" class="organizations-card__icon"></fa-icon>
-          Organizations Overview
-        </h2>
-        <div class="organizations-card__header-actions">
-          <button class="organizations-card__edit-btn"
-                  (click)="onCreateOrganization()">
-            <fa-icon icon="plus" class="organizations-card__edit-icon"></fa-icon>
-            Create Organization
-          </button>
-        </div>
-      </div>
-      
-      <div class="organizations-card__content">
+  <!-- Header -->
+  <div class="organizations-list__header">
+    <h2 class="organizations-list__title">
+      <fa-icon icon="building" class="organizations-list__icon"></fa-icon>
+      Organizations Overview
+    </h2>
+    <div class="organizations-list__header-actions">
+      <button class="organizations-list__create-btn"
+              (click)="onCreateOrganization()">
+        <fa-icon icon="plus" class="organizations-list__create-icon"></fa-icon>
+        Create Organization
+      </button>
+    </div>
+  </div>
+  
+  <!-- Content -->
+  <div class="organizations-list__content">
         <div class="organizations-table">
           <div class="organizations-table__container">
             <table class="organizations-table__element">
@@ -121,7 +120,5 @@
             </table>
           </div>
         </div>
-      </div>
-    </div>
   </div>
 </div>
