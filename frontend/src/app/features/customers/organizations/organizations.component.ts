@@ -34,6 +34,7 @@ export class OrganizationsComponent implements OnInit {
   selectedOrganization: Organizations | null = null;
   selectedOrganizationMemberCount: number = 0;
   selectedOrganizationApplicationCount: number = 0;
+  isInCreateMode: boolean = false;
   debugMode$: Observable<boolean>;
 
   constructor(private store: Store) {
@@ -46,10 +47,18 @@ export class OrganizationsComponent implements OnInit {
 
   onOrganizationSelected(organization: Organizations): void {
     this.selectedOrganization = organization;
+    this.isInCreateMode = false; // Exit create mode on normal selection
     
     // TODO: Load actual member and application counts from service
     // For now, use mock data based on organization
     this.loadOrganizationStats(organization);
+  }
+
+  onCreateModeRequested(organization: Organizations): void {
+    this.selectedOrganization = organization;
+    this.isInCreateMode = true;
+    this.selectedOrganizationMemberCount = 0;
+    this.selectedOrganizationApplicationCount = 0;
   }
 
   private loadOrganizationStats(organization: Organizations): void {

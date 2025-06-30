@@ -15,7 +15,6 @@ import { UserService } from '../../../../core/services/user.service';
 import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { RouterModule } from '@angular/router';
-import { StatusBadgeComponent } from '../../../../shared/components/ui/status-badge.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -25,8 +24,7 @@ import { StatusBadgeComponent } from '../../../../shared/components/ui/status-ba
   imports: [
     CommonModule,
     FontAwesomeModule,
-    RouterModule,
-    StatusBadgeComponent
+    RouterModule
     // Add any shared components, directives, or pipes used in the template here
   ]
 })

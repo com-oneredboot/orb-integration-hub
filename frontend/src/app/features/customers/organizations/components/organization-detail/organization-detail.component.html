@@ -6,15 +6,36 @@
     <div class="organization-detail__title-section">
       <h3 class="organization-detail__title">
         <fa-icon icon="building" class="organization-detail__icon"></fa-icon>
-        {{ organization.name }}
+        {{ organization.name || 'New Organization' }}
       </h3>
     </div>
     <div class="organization-detail__actions">
-      <button class="organization-detail__action organization-detail__action--primary"
-              (click)="onEditOrganization()">
-        <fa-icon icon="edit" class="organization-detail__action-icon"></fa-icon>
-        Edit
-      </button>
+      <!-- Edit Mode Actions -->
+      <ng-container *ngIf="isEditing">
+        <button class="organization-detail__action organization-detail__action--primary"
+                [disabled]="isSaving$ | async"
+                (click)="onSaveOrganization()">
+          <fa-icon *ngIf="!(isSaving$ | async)" icon="save" class="organization-detail__action-icon"></fa-icon>
+          <fa-icon *ngIf="isSaving$ | async" icon="spinner" class="organization-detail__action-icon fa-spin"></fa-icon>
+          {{ (isSaving$ | async) ? 'Saving...' : 'Save' }}
+        </button>
+        <span class="organization-detail__action organization-detail__action--cancel-link"
+              style="color: white; text-decoration: underline; cursor: pointer;"
+              [style.opacity]="(isSaving$ | async) ? '0.5' : '1'"
+              [style.pointer-events]="(isSaving$ | async) ? 'none' : 'auto'"
+              (click)="onCancelEdit()">
+          Cancel
+        </span>
+      </ng-container>
+      
+      <!-- View Mode Actions -->
+      <ng-container *ngIf="!isEditing">
+        <button class="organization-detail__action organization-detail__action--primary"
+                (click)="onEditOrganization()">
+          <fa-icon icon="edit" class="organization-detail__action-icon"></fa-icon>
+          Edit
+        </button>
+      </ng-container>
     </div>
   </div>
 
@@ -52,6 +73,12 @@
     </button>
   </div>
 
+  <!-- Error Display -->
+  <div class="organization-detail__error-banner" *ngIf="saveError$ | async as saveError">
+    <fa-icon icon="exclamation-triangle" class="organization-detail__error-icon"></fa-icon>
+    <span class="organization-detail__error-text">{{ saveError }}</span>
+  </div>
+
   <!-- Tab Content -->
   <div class="organization-detail__content">
     
@@ -59,26 +86,55 @@
     <div class="organization-detail__tab-panel" 
          [class.organization-detail__tab-panel--active]="activeTab === 'overview'">
       <div class="organization-detail__info-grid">
+        <!-- Organization Name (editable) -->
+        <div class="organization-detail__info-item">
+          <label class="organization-detail__info-label">
+            Organization Name *
+          </label>
+          <input type="text" 
+                 class="organization-detail__info-input"
+                 [class.organization-detail__info-input--error]="validationErrors.name"
+                 [(ngModel)]="editForm.name"
+                 [disabled]="!isEditing"
+                 placeholder="Enter organization name">
+          <div class="organization-detail__error" *ngIf="validationErrors.name">
+            {{ validationErrors.name }}
+          </div>
+        </div>
+        
+        <!-- Description (editable) -->
         <div class="organization-detail__info-item">
           <label class="organization-detail__info-label">Description</label>
-          <input type="text" class="organization-detail__info-input"
-                 [value]="organization.description || ''"
-                 placeholder="No description provided"
-                 disabled>
+          <textarea class="organization-detail__info-input organization-detail__info-input--textarea"
+                    [(ngModel)]="editForm.description"
+                    [disabled]="!isEditing"
+                    maxlength="500"
+                    rows="3"
+                    placeholder="Enter organization description (optional)">
+          </textarea>
+          <div class="organization-detail__char-count" *ngIf="isEditing">
+            {{ editForm.description.length || 0 }}/500
+          </div>
         </div>
-        <div class="organization-detail__info-item">
+        
+        <!-- Organization ID (read-only) -->
+        <div class="organization-detail__info-item" *ngIf="!isInCreateMode">
           <label class="organization-detail__info-label">Organization ID</label>
           <input type="text" class="organization-detail__info-input organization-detail__info-input--code"
                  [value]="organization.organizationId"
                  disabled>
         </div>
-        <div class="organization-detail__info-item">
+        
+        <!-- Created (read-only) -->
+        <div class="organization-detail__info-item" *ngIf="!isInCreateMode">
           <label class="organization-detail__info-label">Created</label>
           <input type="text" class="organization-detail__info-input"
                  [value]="formatDate(organization.createdAt)"
                  disabled>
         </div>
-        <div class="organization-detail__info-item">
+        
+        <!-- Last Updated (read-only) -->
+        <div class="organization-detail__info-item" *ngIf="!isInCreateMode">
           <label class="organization-detail__info-label">Last Updated</label>
           <input type="text" class="organization-detail__info-input"
                  [value]="formatDate(organization.updatedAt)"

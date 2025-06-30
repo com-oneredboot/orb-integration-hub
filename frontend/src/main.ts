@@ -13,6 +13,8 @@ import { provideStore } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 import { userReducer } from './app/features/user/store/user.reducer';
 import { UserEffects } from './app/features/user/store/user.effects';
+import { organizationsReducer } from './app/features/customers/organizations/store/organizations.reducer';
+import { OrganizationsEffects } from './app/features/customers/organizations/store/organizations.effects';
 import { BrowserModule } from '@angular/platform-browser';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule, FaIconLibrary } from '@fortawesome/angular-fontawesome';
@@ -81,8 +83,11 @@ configureFontAwesome(iconLibrary);
 bootstrapApplication(AppComponent, {
   providers: [
     provideRouter(routes),
-    provideStore({ user: userReducer }),
-    provideEffects([UserEffects]),
+    provideStore({ 
+      user: userReducer,
+      organizations: organizationsReducer
+    }),
+    provideEffects([UserEffects, OrganizationsEffects]),
     provideHttpClient(withInterceptorsFromDi()), // Enable HTTP client for CSRF functionality
     importProvidersFrom(BrowserModule, ReactiveFormsModule, FontAwesomeModule, NgOptimizedImage),
     // Provide the configured icon library

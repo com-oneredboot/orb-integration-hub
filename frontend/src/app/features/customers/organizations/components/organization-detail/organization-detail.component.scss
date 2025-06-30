@@ -14,6 +14,29 @@
   border: 1px solid v.$border-color;
   overflow: hidden;
 
+  // Error Banner
+  &__error-banner {
+    background: color.adjust(v.$orb-red, $lightness: 40%);
+    border: 1px solid v.$orb-red;
+    color: v.$orb-red;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0;
+  }
+
+  &__error-icon {
+    font-size: 1rem;
+    color: v.$orb-red;
+  }
+
+  &__error-text {
+    flex: 1;
+  }
+
   // Header
   &__header {
     display: flex;

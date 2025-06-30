@@ -662,6 +662,26 @@ export class UserService extends ApiService {
   }
 
   /**
+   * Check if the current user is a paying customer
+   * @returns boolean indicating if user has CUSTOMER group
+   */
+  public isCustomer(): boolean {
+    const currentUser = this.currentUser.value;
+    const groups = currentUser?.groups || [];
+    return groups.includes('CUSTOMER');
+  }
+
+  /**
+   * Check if a specific user is a paying customer
+   * @param user User object to check
+   * @returns boolean indicating if user has CUSTOMER group
+   */
+  public isUserCustomer(user: any): boolean {
+    const groups = user?.groups || [];
+    return groups.includes('CUSTOMER');
+  }
+
+  /**
    * Calculate the correct user status based on completion requirements
    * @param user The user to check
    * @returns The status the user should have ('PENDING' or 'ACTIVE')

@@ -15,6 +15,7 @@ import {
   faSortDown,
   faSort,
   faEdit,
+  faSave,
   faCopy,
   faSyncAlt,
   
@@ -79,6 +80,7 @@ export function configureFontAwesome(library: FaIconLibrary): void {
     faSortDown,
     faSort,
     faEdit,
+    faSave,
     faCopy,
     faSyncAlt,
     
@@ -142,6 +144,7 @@ export const registeredIcons = [
   'sort-down',
   'sort',
   'edit',
+  'save',
   'copy',
   'sync-alt',
   

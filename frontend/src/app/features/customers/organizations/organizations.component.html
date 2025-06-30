@@ -46,8 +46,10 @@ description: HTML template file for organizations management
           <!-- Organizations List -->
           <div class="organizations-page__list-panel">
             <app-organizations-list
+              #organizationsList
               [selectedOrganization]="selectedOrganization"
-              (organizationSelected)="onOrganizationSelected($event)">
+              (organizationSelected)="onOrganizationSelected($event)"
+              (createModeRequested)="onCreateModeRequested($event)">
             </app-organizations-list>
           </div>
 
@@ -56,7 +58,10 @@ description: HTML template file for organizations management
             <app-organization-detail
               [organization]="selectedOrganization"
               [memberCount]="selectedOrganizationMemberCount"
-              [applicationCount]="selectedOrganizationApplicationCount">
+              [applicationCount]="selectedOrganizationApplicationCount"
+              [isInCreateMode]="isInCreateMode"
+              (organizationSaved)="organizationsList.onOrganizationSaved($event)"
+              (createCancelled)="organizationsList.onCreateCancelled()">
             </app-organization-detail>
           </div>
 

@@ -234,6 +234,15 @@ Resources:
       DisplayName: !Sub "${CustomerID} ${ProjectID} Security Incidents (${Environment})"
       KmsMasterKeyId: !Ref AuditLogEncryptionKey
 
+  # SSM Parameter for Layer ARN (so other stacks can reference it)
+  OrganizationSecurityLayerArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${CustomerID}-${ProjectID}-${Environment}-organization-security-layer-arn"
+      Type: String
+      Value: !Ref OrganizationSecurityLayer
+      Description: "ARN of the Organization Security Lambda Layer"
+
 Outputs:
   OrganizationSecurityLayerArn:
     Description: 'ARN of the Organization Security Lambda Layer'

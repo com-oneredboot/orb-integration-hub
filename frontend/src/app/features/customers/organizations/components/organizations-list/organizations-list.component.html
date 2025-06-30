@@ -13,9 +13,11 @@
     </div>
     <div class="orb-card__header-actions">
       <button class="orb-card-btn"
+              [class.orb-card-btn--disabled]="!(currentUser$ | async)?.groups?.includes('CUSTOMER')"
+              [title]="!(currentUser$ | async)?.groups?.includes('CUSTOMER') ? 'Only paying customers can create organizations (DEBUG: Click anyway)' : ''"
               (click)="onCreateOrganization()">
         <fa-icon icon="plus" class="orb-card-btn__icon"></fa-icon>
-        Create Organization
+        Create Organization {{ !(currentUser$ | async)?.groups?.includes('CUSTOMER') ? '(DEBUG)' : '' }}
       </button>
     </div>
   </div>
@@ -79,7 +81,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let row of filteredOrganizationRows; trackBy: trackByOrganizationId"
+                <tr *ngFor="let row of filteredOrganizationRows$ | async; trackBy: trackByOrganizationId"
                     class="orb-table__row"
                     [class.orb-table__row--selected]="row.organization.organizationId === selectedOrganization?.organizationId">
                   
@@ -140,7 +142,7 @@
                 </tr>
                 
                 <!-- Loading State -->
-                <tr *ngIf="isLoading" class="orb-table__row orb-table__row--loading">
+                <tr *ngIf="isLoading$ | async" class="orb-table__row orb-table__row--loading">
                   <td colspan="6" class="orb-table__cell orb-table__cell--loading">
                     <div class="orb-table__loading">
                       <fa-icon icon="spinner" class="orb-table__loading-icon fa-spin"></fa-icon>
@@ -150,13 +152,13 @@
                 </tr>
                 
                 <!-- Empty State -->
-                <tr *ngIf="!isLoading && filteredOrganizationRows.length === 0" 
+                <tr *ngIf="!(isLoading$ | async) && (filteredOrganizationRows$ | async)?.length === 0" 
                     class="orb-table__row orb-table__row--empty">
                   <td colspan="6" class="orb-table__cell orb-table__cell--empty">
                     <div class="orb-table__empty">
                       <fa-icon icon="building" class="orb-table__empty-icon"></fa-icon>
                       <p class="orb-table__empty-text">
-                        {{ organizationRows.length === 0 ? 'No organizations found' : 'No organizations match your filters' }}
+                        {{ (organizationRows$ | async)?.length === 0 ? 'No organizations found' : 'No organizations match your filters' }}
                       </p>
                     </div>
                   </td>
