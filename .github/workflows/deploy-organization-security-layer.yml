@@ -34,6 +34,13 @@ jobs:
         aws-region: ${{ secrets.AWS_REGION }}
 
     # Build Layer
+    - name: Cache Python dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
     - name: Build Organization Security Layer
       run: |
         pip install --upgrade pip
