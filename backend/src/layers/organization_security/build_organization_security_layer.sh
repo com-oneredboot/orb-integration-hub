@@ -13,7 +13,9 @@ pipenv install --deploy --ignore-pipfile
 # Copy dependencies to build directory
 echo "Copying dependencies to build directory..."
 VENV_PATH=$(pipenv --venv)
-cp -r "$VENV_PATH/lib/python3.9/site-packages/"* build/python/
+PYTHON_VERSION=$(pipenv run python --version | cut -d' ' -f2 | cut -d'.' -f1,2)
+echo "Detected Python version: $PYTHON_VERSION"
+cp -r "$VENV_PATH/lib/python$PYTHON_VERSION/site-packages/"* build/python/
 
 # Copy layer source code
 echo "Copying layer source code..."
