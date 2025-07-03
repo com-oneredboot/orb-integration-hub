@@ -32,7 +32,7 @@ Resources:
         S3Bucket: !Sub '${CustomerId}-${ProjectId}-build-artifacts-${Environment}'
         S3Key: 'layers/organization-security-layer.zip'
       CompatibleRuntimes:
-        - python3.13
+        - python3.12
       CompatibleArchitectures:
         - x86_64
         - arm64
