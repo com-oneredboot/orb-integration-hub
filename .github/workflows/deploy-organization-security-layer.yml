@@ -8,6 +8,9 @@ on:
         required: true
         type: environment
 
+permissions:
+  contents: read
+
 jobs:
   deploy-organization-security-layer:
     runs-on: ubuntu-latest
