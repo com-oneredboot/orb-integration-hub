@@ -57,8 +57,34 @@ jobs:
 
       working-directory: backend/src/layers/stripe
 
-    # Deploy Consolidated Layers
+    # Check for changes before deploying
+    - name: Check Layer Changes
+      id: check-changes
+      run: |
+        # Generate content hashes for both layers
+        ORG_HASH=$(find backend/src/layers/organization_security -type f -name "*.py" -exec sha256sum {} + | sha256sum | cut -d' ' -f1)
+        STRIPE_HASH=$(find backend/src/layers/stripe -type f \( -name "*.py" -o -name "Pipfile*" \) -exec sha256sum {} + | sha256sum | cut -d' ' -f1)
+        
+        echo "organization_hash=${ORG_HASH}" >> $GITHUB_OUTPUT
+        echo "stripe_hash=${STRIPE_HASH}" >> $GITHUB_OUTPUT
+        
+        # Check if hashes changed from last deployment
+        aws s3 cp s3://orb-integration-hub-build-artifacts/layer-hashes.json ./previous-hashes.json 2>/dev/null || echo '{"organization_hash":"","stripe_hash":""}' > ./previous-hashes.json
+        
+        PREV_ORG_HASH=$(jq -r '.organization_hash' previous-hashes.json)
+        PREV_STRIPE_HASH=$(jq -r '.stripe_hash' previous-hashes.json)
+        
+        if [[ "$ORG_HASH" != "$PREV_ORG_HASH" || "$STRIPE_HASH" != "$PREV_STRIPE_HASH" ]]; then
+          echo "changes_detected=true" >> $GITHUB_OUTPUT
+          echo "Layer changes detected, will deploy new versions"
+        else
+          echo "changes_detected=false" >> $GITHUB_OUTPUT
+          echo "No layer changes detected, skipping deployment"
+        fi
+
+    # Deploy Consolidated Layers (only if changes detected)
     - name: Deploy Consolidated Layers
+      if: steps.check-changes.outputs.changes_detected == 'true'
       run: |
         sam build \
         --template layers.yml
@@ -77,5 +103,9 @@ jobs:
         
         aws s3 cp layers-packaged.yml \
         s3://orb-integration-hub-build-templates/layers-packaged.yml
+        
+        # Store new hashes
+        echo "{\"organization_hash\":\"${{ steps.check-changes.outputs.organization_hash }}\",\"stripe_hash\":\"${{ steps.check-changes.outputs.stripe_hash }}\"}" > layer-hashes.json
+        aws s3 cp layer-hashes.json s3://orb-integration-hub-build-artifacts/layer-hashes.json
 
       working-directory: infrastructure/cloudformation
