@@ -1,4 +1,4 @@
-name: deploy-stripe-layer
+name: deploy-layers
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
         type: environment
 
 jobs:
-  deploy-api-stack:
+  deploy-layers:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
 
@@ -33,39 +33,49 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
 
-    # Fetch Requirements
-    - name: Build and Deploy Layer
+    # Build Organization Security Layer
+    - name: Build Organization Security Layer
       run: |
-
         pip install --upgrade pip
         pip install pipenv --user
         
-        echo "Build Layer"
+        echo "Building Organization Security Layer"
+        chmod +x build_organization_security_layer.sh
+        bash build_organization_security_layer.sh
+
+      working-directory: backend/src/layers/organization_security
+
+    # Build Stripe Layer
+    - name: Build Stripe Layer
+      run: |
+        pip install --upgrade pip
+        pip install pipenv --user
+        
+        echo "Building Stripe Layer"
         chmod +x build_stripe_layer.sh
         bash build_stripe_layer.sh
 
       working-directory: backend/src/layers/stripe
 
-    # Build
-    - name: Build and Deploy Layer
+    # Deploy Consolidated Layers
+    - name: Deploy Consolidated Layers
       run: |
-
         sam build \
-        --template stripe_layer.yml
+        --template layers.yml
         
         sam package \
-        --template-file stripe_layer.yml \
+        --template-file layers.yml \
         --s3-bucket orb-integration-hub-build-artifacts \
-        --output-template-file stripe_layer-packaged.yml
+        --output-template-file layers-packaged.yml
         
         sam deploy \
-        --template-file stripe_layer-packaged.yml \
+        --template-file layers-packaged.yml \
         --s3-bucket orb-integration-hub-build-artifacts \
-        --stack-name orb-integration-hub-stripe-layer \
+        --stack-name orb-integration-hub-layers \
         --capabilities CAPABILITY_NAMED_IAM \
         --no-fail-on-empty-changeset
         
-        aws s3 cp stripe_layer-packaged.yml \
-        s3://orb-integration-hub-build-templates/stripe_layer-packaged.yml
+        aws s3 cp layers-packaged.yml \
+        s3://orb-integration-hub-build-templates/layers-packaged.yml
 
-      working-directory: backend/src/layers
+      working-directory: infrastructure/cloudformation
