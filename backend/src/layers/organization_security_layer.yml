@@ -1,18 +1,17 @@
 # file: backend/src/layers/organization_security_layer.yml
 # author: AI Assistant
-# created: 2025-06-22
-# updated: 2025-06-23
-# description: CloudFormation template for Organization Security Lambda layer with comprehensive audit logging
+# created: 2025-07-03
+# description: Organization Security Lambda Layer - just the layer, no monitoring infrastructure
 
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Organization Security Lambda Layer with Comprehensive Audit Logging for multi-tenant access control'
+Description: 'Organization Security Lambda Layer - reusable security functions and RBAC utilities'
 
 Parameters:
-  CustomerID:
+  CustomerId:
     Type: String
     Default: 'orb'
     Description: Customer identifier for resource naming
-  ProjectID:
+  ProjectId:
     Type: String
     Default: 'integration-hub'
     Description: Project identifier for resource naming
@@ -27,285 +26,27 @@ Resources:
   OrganizationSecurityLayer:
     Type: AWS::Lambda::LayerVersion
     Properties:
-      LayerName: !Sub '${CustomerID}-${ProjectID}-organization-security-layer-${Environment}'
-      Description: 'Organization security middleware with audit logging for multi-tenant access control'
+      LayerName: !Sub '${CustomerId}-${ProjectId}-organization-security-layer-${Environment}'
+      Description: 'Organization security middleware with audit logging and RBAC utilities'
       Content:
-        S3Bucket: !Sub '${CustomerID}-${ProjectID}-build-artifacts-${Environment}'
+        S3Bucket: !Sub '${CustomerId}-${ProjectId}-build-artifacts-${Environment}'
         S3Key: 'layers/organization-security-layer.zip'
       CompatibleRuntimes:
-        - python3.9
-        - python3.10
-        - python3.11
+        - python3.13
       CompatibleArchitectures:
         - x86_64
         - arm64
       LicenseInfo: MIT
-  
-  # CloudWatch Log Groups for Audit Logging
-  OrganizationAuditLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub "/audit/organizations/${Environment}"
-      RetentionInDays: 2557  # 7 years for SOX compliance
-      KmsKeyId: !Ref AuditLogEncryptionKey
-  
-  SecurityAuditLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub "/audit/security/${Environment}"
-      RetentionInDays: 2557  # 7 years for security incidents
-      KmsKeyId: !Ref AuditLogEncryptionKey
-  
-  FinancialAuditLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub "/audit/financial/${Environment}"
-      RetentionInDays: 2557  # 7 years for SOX compliance
-      KmsKeyId: !Ref AuditLogEncryptionKey
-  
-  AccessAuditLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub "/audit/access/${Environment}"
-      RetentionInDays: 2190  # 6 years for HIPAA compliance
-      KmsKeyId: !Ref AuditLogEncryptionKey
-  
-  ApiAuditLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub "/audit/api/${Environment}"
-      RetentionInDays: 365  # 1 year for PCI DSS compliance
-      KmsKeyId: !Ref AuditLogEncryptionKey
-  
-  # KMS Key for Audit Log Encryption
-  AuditLogEncryptionKey:
-    Type: AWS::KMS::Key
-    Properties:
-      Description: !Sub "KMS key for audit log encryption in ${Environment}"
-      KeyPolicy:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: Enable IAM policies
-            Effect: Allow
-            Principal:
-              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
-            Action: "kms:*"
-            Resource: "*"
-          - Sid: Allow CloudWatch Logs
-            Effect: Allow
-            Principal:
-              Service: !Sub "logs.${AWS::Region}.amazonaws.com"
-            Action:
-              - kms:Encrypt
-              - kms:Decrypt
-              - kms:ReEncrypt*
-              - kms:GenerateDataKey*
-              - kms:DescribeKey
-            Resource: "*"
-            Condition:
-              ArnEquals:
-                kms:EncryptionContext:aws:logs:arn: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/audit/*"
-          - Sid: Allow Lambda Functions
-            Effect: Allow
-            Principal:
-              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:role/lambda-execution-role-*"
-            Action:
-              - kms:Encrypt
-              - kms:Decrypt
-              - kms:ReEncrypt*
-              - kms:GenerateDataKey*
-              - kms:DescribeKey
-            Resource: "*"
-  
-  # KMS Key Alias
-  AuditLogEncryptionKeyAlias:
-    Type: AWS::KMS::Alias
-    Properties:
-      AliasName: !Sub "alias/audit-logs-${Environment}"
-      TargetKeyId: !Ref AuditLogEncryptionKey
-  
-  # S3 Bucket for Long-Term Audit Archive
-  AuditArchiveBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub "${CustomerID}-${ProjectID}-audit-archive-${Environment}-${AWS::AccountId}"
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: aws:kms
-              KMSMasterKeyID: !Ref AuditLogEncryptionKey
-            BucketKeyEnabled: true
-      VersioningConfiguration:
-        Status: Enabled
-      LifecycleConfiguration:
-        Rules:
-          - Id: AuditLogLifecycle
-            Status: Enabled
-            Transitions:
-              - TransitionInDays: 30
-                StorageClass: STANDARD_IA
-              - TransitionInDays: 90
-                StorageClass: GLACIER
-              - TransitionInDays: 365
-                StorageClass: DEEP_ARCHIVE
-            ExpirationInDays: 2557  # 7 years
-          - Id: IncompleteMultipartUploads
-            Status: Enabled
-            AbortIncompleteMultipartUpload:
-              DaysAfterInitiation: 7
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-  
-  # CloudWatch Metric Filters for Security Monitoring
-  SecurityViolationMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref SecurityAuditLogGroup
-      FilterPattern: '[timestamp, event_id, event_type="SECURITY_VIOLATION" || event_type="FRAUD_DETECTED" || event_type="UNAUTHORIZED_ACCESS_ATTEMPT"]'
-      MetricTransformations:
-        - MetricNamespace: !Sub "${CustomerID}/${ProjectID}/AuditMetrics/${Environment}"
-          MetricName: SecurityViolations
-          MetricValue: "1"
-          DefaultValue: 0
-  
-  FailedLoginMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref AccessAuditLogGroup
-      FilterPattern: '[timestamp, event_id, event_type="LOGIN_FAILED" || event_type="MFA_CHALLENGE_FAILED"]'
-      MetricTransformations:
-        - MetricNamespace: !Sub "${CustomerID}/${ProjectID}/AuditMetrics/${Environment}"
-          MetricName: FailedLogins
-          MetricValue: "1"
-          DefaultValue: 0
-  
-  OrganizationChangesMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref OrganizationAuditLogGroup
-      FilterPattern: '[timestamp, event_id, event_type="ORGANIZATION_CREATED" || event_type="ORGANIZATION_UPDATED" || event_type="ORGANIZATION_DELETED" || event_type="ORGANIZATION_OWNERSHIP_TRANSFERRED"]'
-      MetricTransformations:
-        - MetricNamespace: !Sub "${CustomerID}/${ProjectID}/AuditMetrics/${Environment}"
-          MetricName: OrganizationChanges
-          MetricValue: "1"
-          DefaultValue: 0
-  
-  # CloudWatch Alarms for Security Monitoring
-  SecurityViolationAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmName: !Sub "${CustomerID}-${ProjectID}-security-violations-${Environment}"
-      AlarmDescription: "Alert on security violations"
-      MetricName: SecurityViolations
-      Namespace: !Sub "${CustomerID}/${ProjectID}/AuditMetrics/${Environment}"
-      Statistic: Sum
-      Period: 300
-      EvaluationPeriods: 1
-      Threshold: 1
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      TreatMissingData: notBreaching
-      AlarmActions:
-        - !Ref SecurityIncidentTopic
-  
-  FailedLoginAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmName: !Sub "${CustomerID}-${ProjectID}-failed-logins-${Environment}"
-      AlarmDescription: "Alert on multiple failed login attempts"
-      MetricName: FailedLogins
-      Namespace: !Sub "${CustomerID}/${ProjectID}/AuditMetrics/${Environment}"
-      Statistic: Sum
-      Period: 300
-      EvaluationPeriods: 2
-      Threshold: 10
-      ComparisonOperator: GreaterThanThreshold
-      TreatMissingData: notBreaching
-      AlarmActions:
-        - !Ref SecurityIncidentTopic
-  
-  # SNS Topic for Security Incidents
-  SecurityIncidentTopic:
-    Type: AWS::SNS::Topic
-    Properties:
-      TopicName: !Sub "${CustomerID}-${ProjectID}-security-incidents-${Environment}"
-      DisplayName: !Sub "${CustomerID} ${ProjectID} Security Incidents (${Environment})"
-      KmsMasterKeyId: !Ref AuditLogEncryptionKey
-
-  # SSM Parameter for Layer ARN (so other stacks can reference it)
-  OrganizationSecurityLayerArnParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub "${CustomerID}-${ProjectID}-${Environment}-organization-security-layer-arn"
-      Type: String
-      Value: !Ref OrganizationSecurityLayer
-      Description: "ARN of the Organization Security Lambda Layer"
 
 Outputs:
   OrganizationSecurityLayerArn:
     Description: 'ARN of the Organization Security Lambda Layer'
     Value: !Ref OrganizationSecurityLayer
     Export:
-      Name: !Sub '${CustomerID}-${ProjectID}-organization-security-layer-arn-${Environment}'
+      Name: !Sub '${CustomerId}-${ProjectId}-organization-security-layer-arn-${Environment}'
   
   OrganizationSecurityLayerVersion:
     Description: 'Version of the Organization Security Lambda Layer'
     Value: !GetAtt OrganizationSecurityLayer.Version
     Export:
-      Name: !Sub '${CustomerID}-${ProjectID}-organization-security-layer-version-${Environment}'
-  
-  AuditLogEncryptionKeyId:
-    Description: "KMS Key ID for audit log encryption"
-    Value: !Ref AuditLogEncryptionKey
-    Export:
-      Name: !Sub "${CustomerID}-${ProjectID}-audit-kms-key-id-${Environment}"
-  
-  AuditLogEncryptionKeyArn:
-    Description: "KMS Key ARN for audit log encryption"
-    Value: !GetAtt AuditLogEncryptionKey.Arn
-    Export:
-      Name: !Sub "${CustomerID}-${ProjectID}-audit-kms-key-arn-${Environment}"
-  
-  AuditArchiveBucketName:
-    Description: "S3 bucket for audit log archive"
-    Value: !Ref AuditArchiveBucket
-    Export:
-      Name: !Sub "${CustomerID}-${ProjectID}-audit-archive-bucket-${Environment}"
-  
-  SecurityIncidentTopicArn:
-    Description: "SNS topic for security incident alerts"
-    Value: !Ref SecurityIncidentTopic
-    Export:
-      Name: !Sub "${CustomerID}-${ProjectID}-security-incident-topic-${Environment}"
-  
-  OrganizationAuditLogGroupName:
-    Description: "CloudWatch log group for organization audit events"
-    Value: !Ref OrganizationAuditLogGroup
-    Export:
-      Name: !Sub "${CustomerID}-${ProjectID}-organization-audit-log-group-${Environment}"
-  
-  SecurityAuditLogGroupName:
-    Description: "CloudWatch log group for security audit events"
-    Value: !Ref SecurityAuditLogGroup
-    Export:
-      Name: !Sub "${CustomerID}-${ProjectID}-security-audit-log-group-${Environment}"
-  
-  FinancialAuditLogGroupName:
-    Description: "CloudWatch log group for financial audit events"
-    Value: !Ref FinancialAuditLogGroup
-    Export:
-      Name: !Sub "${CustomerID}-${ProjectID}-financial-audit-log-group-${Environment}"
-  
-  AccessAuditLogGroupName:
-    Description: "CloudWatch log group for access audit events"
-    Value: !Ref AccessAuditLogGroup
-    Export:
-      Name: !Sub "${CustomerID}-${ProjectID}-access-audit-log-group-${Environment}"
-  
-  ApiAuditLogGroupName:
-    Description: "CloudWatch log group for API audit events"
-    Value: !Ref ApiAuditLogGroup
-    Export:
-      Name: !Sub "${CustomerID}-${ProjectID}-api-audit-log-group-${Environment}"
+      Name: !Sub '${CustomerId}-${ProjectId}-organization-security-layer-version-${Environment}'

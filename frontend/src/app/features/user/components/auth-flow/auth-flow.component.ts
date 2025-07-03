@@ -2776,6 +2776,52 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Check if error message is a session refresh message
+   */
+  public isSessionRefreshMessage(error: string): boolean {
+    if (!error) return false;
+    const lowerError = error.toLowerCase();
+    return lowerError.includes('refreshing your session') || 
+           lowerError.includes('please wait while we sign you in');
+  }
+
+  /**
+   * Check if error message is actually a success message
+   */
+  public isSuccessMessage(error: string): boolean {
+    if (!error) return false;
+    const lowerError = error.toLowerCase();
+    return lowerError.includes('welcome back') || 
+           lowerError.includes('successfully signed in');
+  }
+
+  /**
+   * Get appropriate title for error display
+   */
+  public getErrorTitle(error: string): string {
+    if (this.isSessionRefreshMessage(error)) {
+      return 'Refreshing Session';
+    } else if (this.isSuccessMessage(error)) {
+      return 'Success';
+    } else {
+      return 'Authentication Error';
+    }
+  }
+
+  /**
+   * Get appropriate button text for error display
+   */
+  public getRetryButtonText(error: string): string {
+    if (this.isSessionRefreshMessage(error)) {
+      return 'Please Wait...';
+    } else if (this.isSuccessMessage(error)) {
+      return 'Continue';
+    } else {
+      return 'Try Again';
+    }
+  }
+
+  /**
    * Focus the first invalid field for accessibility
    */
   private focusFirstInvalidField(): void {

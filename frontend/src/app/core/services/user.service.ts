@@ -476,7 +476,7 @@ export class UserService extends ApiService {
         
         // Show helpful message to user about cleaning up sessions
         this.store.dispatch(UserActions.signInFailure({ 
-          error: 'Cleaning up existing sessions and signing you out... Please wait.'
+          error: 'Refreshing your session... Please wait while we sign you in.'
         }));
         
         try {
@@ -491,12 +491,12 @@ export class UserService extends ApiService {
           const retrySignInResponse = await this.cognitoService.signIn(user.cognitoId, password, user.email);
           
           if (retrySignInResponse.StatusCode === 200) {
-            this.store.dispatch(UserActions.signInSuccess({ user: user, message: 'Successfully signed in after cleanup' }));
+            this.store.dispatch(UserActions.signInSuccess({ user: user, message: 'Welcome back! Successfully signed in.' }));
             this.currentUser.next(user);
             return {
               StatusCode: 200,
-              Message: 'Successfully signed in after cleanup',
-              Data: new Auth({ isSignedIn: true, message: 'Successfully signed in after cleanup', user: user })
+              Message: 'Welcome back! Successfully signed in.',
+              Data: new Auth({ isSignedIn: true, message: 'Welcome back! Successfully signed in.', user: user })
             };
           } else {
             return retrySignInResponse;
@@ -505,8 +505,8 @@ export class UserService extends ApiService {
           console.error('Error during sign out and retry:', signOutError);
           return {
             StatusCode: 500,
-            Message: 'Unable to clean up existing session. Please refresh the page and try again.',
-            Data: new Auth({ isSignedIn: false, message: 'Unable to clean up existing session. Please refresh the page and try again.' })
+            Message: 'Session refresh failed. Please refresh the page and try signing in again.',
+            Data: new Auth({ isSignedIn: false, message: 'Session refresh failed. Please refresh the page and try signing in again.' })
           };
         }
       }
@@ -548,12 +548,12 @@ export class UserService extends ApiService {
             const retrySignInResponse = await this.cognitoService.signIn(user.cognitoId, password, user.email);
             
             if (retrySignInResponse.StatusCode === 200) {
-              this.store.dispatch(UserActions.signInSuccess({ user: user, message: 'Successfully signed in after cleanup' }));
+              this.store.dispatch(UserActions.signInSuccess({ user: user, message: 'Welcome back! Successfully signed in.' }));
               this.currentUser.next(user);
               return {
                 StatusCode: 200,
-                Message: 'Successfully signed in after cleanup',
-                Data: new Auth({ isSignedIn: true, message: 'Successfully signed in after cleanup', user: user })
+                Message: 'Welcome back! Successfully signed in.',
+                Data: new Auth({ isSignedIn: true, message: 'Welcome back! Successfully signed in.', user: user })
               };
             } else {
               return retrySignInResponse;

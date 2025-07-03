@@ -14,6 +14,13 @@ Parameters:
   ProjectId:
     Type: String
     Default: integration-hub
+  AlertEmail:
+    Type: String
+    Description: Email address for security alerts (optional)
+    Default: ''
+
+Conditions:
+  HasAlertEmail: !Not [!Equals [!Ref AlertEmail, '']]
 
 Resources:
   AppSyncMonitoringDashboard:
@@ -289,3 +296,129 @@ Resources:
       ActionsEnabled: true
       AlarmDescription: 'AppSync latency anomaly detected'
       TreatMissingData: breaching
+
+  # ===== AUDIT LOGGING AND SECURITY MONITORING =====
+  
+  # Single consolidated audit log group
+  AuditLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/audit/${Environment}"
+      RetentionInDays: 1095  # 3 years - good balance for growing companies
+      KmsKeyId: !Ref AuditEncryptionKey
+  
+  # Simple KMS key for audit encryption
+  AuditEncryptionKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: !Sub "KMS key for audit log encryption in ${Environment}"
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: Enable IAM policies
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action: "kms:*"
+            Resource: "*"
+          - Sid: Allow CloudWatch Logs
+            Effect: Allow
+            Principal:
+              Service: !Sub "logs.${AWS::Region}.amazonaws.com"
+            Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:DescribeKey
+            Resource: "*"
+  
+  # KMS Key Alias for easy reference
+  AuditEncryptionKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/${CustomerId}-${ProjectId}-audit-${Environment}"
+      TargetKeyId: !Ref AuditEncryptionKey
+  
+  # Real-time security monitoring - consolidated metric filter
+  SecurityEventsMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref AuditLogGroup
+      FilterPattern: '[timestamp, event_id, event_type="SECURITY_VIOLATION" || event_type="UNAUTHORIZED_ACCESS" || event_type="LOGIN_FAILED" || event_type="PERMISSION_DENIED" || event_type="DATA_BREACH" || event_type="FRAUD_DETECTED"]'
+      MetricTransformations:
+        - MetricNamespace: !Sub "${CustomerId}/${ProjectId}/Security/${Environment}"
+          MetricName: SecurityEvents
+          MetricValue: "1"
+          DefaultValue: 0
+  
+  # Organization activity monitoring
+  OrganizationEventsMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref AuditLogGroup
+      FilterPattern: '[timestamp, event_id, event_type="ORGANIZATION_CREATED" || event_type="ORGANIZATION_UPDATED" || event_type="ORGANIZATION_DELETED" || event_type="ORGANIZATION_OWNERSHIP_TRANSFERRED" || event_type="USER_INVITED" || event_type="USER_REMOVED"]'
+      MetricTransformations:
+        - MetricNamespace: !Sub "${CustomerId}/${ProjectId}/Organizations/${Environment}"
+          MetricName: OrganizationEvents
+          MetricValue: "1"
+          DefaultValue: 0
+  
+  # CloudWatch alarm for security incidents
+  SecurityEventsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${CustomerId}-${ProjectId}-security-events-${Environment}"
+      AlarmDescription: "Alert on security violations and unauthorized access attempts"
+      MetricName: SecurityEvents
+      Namespace: !Sub "${CustomerId}/${ProjectId}/Security/${Environment}"
+      Statistic: Sum
+      Period: 300  # 5 minutes
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref SecurityAlertTopic
+  
+  # SNS topic for security alerts
+  SecurityAlertTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub "${CustomerId}-${ProjectId}-security-alerts-${Environment}"
+      DisplayName: !Sub "${CustomerId} Security Alerts (${Environment})"
+      KmsMasterKeyId: !Ref AuditEncryptionKey
+
+  # Email subscription for security alerts (if provided)
+  SecurityAlertEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Condition: HasAlertEmail
+    Properties:
+      TopicArn: !Ref SecurityAlertTopic
+      Protocol: email
+      Endpoint: !Ref AlertEmail
+
+Outputs:
+  AuditLogGroupName:
+    Description: "CloudWatch log group for audit events"
+    Value: !Ref AuditLogGroup
+    Export:
+      Name: !Sub "${CustomerId}-${ProjectId}-audit-log-group-${Environment}"
+  
+  AuditEncryptionKeyId:
+    Description: "KMS Key ID for audit log encryption"
+    Value: !Ref AuditEncryptionKey
+    Export:
+      Name: !Sub "${CustomerId}-${ProjectId}-audit-kms-key-${Environment}"
+  
+  AuditEncryptionKeyArn:
+    Description: "KMS Key ARN for audit log encryption"
+    Value: !GetAtt AuditEncryptionKey.Arn
+    Export:
+      Name: !Sub "${CustomerId}-${ProjectId}-audit-kms-key-arn-${Environment}"
+  
+  SecurityAlertTopicArn:
+    Description: "SNS topic for security alerts"
+    Value: !Ref SecurityAlertTopic
+    Export:
+      Name: !Sub "${CustomerId}-${ProjectId}-security-alert-topic-${Environment}"

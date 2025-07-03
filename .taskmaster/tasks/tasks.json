@@ -1915,7 +1915,7 @@
         "description": "Develop the complete manual organization creation feature, including frontend form design, backend API, database operations, validation, error handling, and basic CRUD endpoints for organizations, establishing the foundation for future invitation workflows.",
         "details": "Design and implement a user-facing form for creating organizations, ensuring a modern, accessible UI with clear field validation and error messaging. On the backend, build REST or GraphQL endpoints to support create, read, update, and delete (CRUD) operations for organizations, including input validation, duplicate checks, and secure data handling. Define and migrate the necessary database schema (e.g., organizations table with unique constraints, timestamps, and ownership fields). Integrate robust validation logic both client- and server-side, leveraging existing validation and error handling frameworks. Ensure all errors are logged and surfaced to the user in a user-friendly manner. Implement basic organization listing and detail retrieval to support CRUD completeness. Prepare the codebase for seamless integration with future invitation and membership workflows, but do not implement those flows yet.",
         "testStrategy": "1. Unit test frontend form validation, error display, and submission logic. 2. Backend unit and integration tests for all CRUD endpoints, including edge cases (e.g., duplicate names, missing fields, invalid input). 3. Database migration tests to verify schema correctness and data integrity. 4. End-to-end tests covering the full organization creation flow, including error scenarios and successful creation. 5. Manual exploratory testing to ensure usability and accessibility of the form. 6. Verify error handling and logging through simulated backend failures and invalid requests.",
-        "status": "in-progress",
+        "status": "done",
         "dependencies": [
           5,
           6,
@@ -1938,7 +1938,7 @@
             "description": "Design and implement the database schema for organizations, including unique constraints, timestamps, and ownership fields, and perform necessary migrations.",
             "dependencies": [],
             "details": "Create the organizations table with fields for name, unique identifiers, timestamps, and owner references. Ensure schema supports future invitation and membership features.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write and execute migration tests, verify schema constraints, and confirm data integrity through database inspection."
           },
           {
@@ -1949,7 +1949,7 @@
               2
             ],
             "details": "Build backend logic for all CRUD operations, integrating server-side validation and error handling frameworks. Ensure all errors are logged and returned in a user-friendly format.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write unit and integration tests for each endpoint, covering success, validation failure, and error scenarios."
           },
           {
@@ -1961,7 +1961,7 @@
               3
             ],
             "details": "Implement API calls from the frontend to backend endpoints, handle responses and errors, and display relevant messages to users. Ensure loading states and error boundaries are managed.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Conduct end-to-end tests simulating user interactions, network failures, and backend errors to verify correct error surfacing and user experience."
           },
           {
@@ -1973,7 +1973,7 @@
               4
             ],
             "details": "Create UI components and backend logic for listing organizations and viewing details, ensuring data consistency and readiness for future invitation features.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test listing and detail views for accuracy, performance, and correct handling of edge cases (e.g., empty states, permission errors)."
           }
         ]
@@ -1981,7 +1981,7 @@
     ],
     "metadata": {
       "created": "2025-06-20T19:07:50.957Z",
-      "updated": "2025-06-28T18:59:30.859Z",
+      "updated": "2025-07-03T19:16:07.228Z",
       "description": "Tasks for master context"
     }
   }
