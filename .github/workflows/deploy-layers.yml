@@ -1,4 +1,4 @@
-name: deploy-authentication-dynamodb-layer
+name: deploy-layers
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
         type: environment
 
 jobs:
-  deploy-api-stack:
+  deploy-layers:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
 
@@ -20,10 +20,10 @@ jobs:
       uses: actions/checkout@v2
 
     # Setup Python environment
-    - name: Set up Python 3.13
+    - name: Set up Python 3.12
       uses: actions/setup-python@v4
       with:
-        python-version: '3.13'
+        python-version: '3.12'
 
     # Fetch AWS Credentials
     - name: Configure AWS Credentials
@@ -33,39 +33,49 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
 
-    # Fetch Requirements
-    - name: Build and Deploy Layer
+    # Build Organization Security Layer
+    - name: Build Organization Security Layer
       run: |
-
         pip install --upgrade pip
         pip install pipenv --user
         
-        echo "Build Layer"
-        chmod +x build_au.sh
+        echo "Building Organization Security Layer"
+        chmod +x build_organization_security_layer.sh
+        bash build_organization_security_layer.sh
+
+      working-directory: backend/src/layers/organization_security
+
+    # Build Stripe Layer
+    - name: Build Stripe Layer
+      run: |
+        pip install --upgrade pip
+        pip install pipenv --user
+        
+        echo "Building Stripe Layer"
+        chmod +x build_stripe_layer.sh
         bash build_stripe_layer.sh
 
-      working-directory: backend/src/layers/authentication_dynamodb
+      working-directory: backend/src/layers/stripe
 
-    # Build
-    - name: Build and Deploy Layer
+    # Deploy Consolidated Layers
+    - name: Deploy Consolidated Layers
       run: |
-
         sam build \
-        --template stripe_layer.yml
+        --template layers.yml
         
         sam package \
-        --template-file authentication_dynamodb.yml \
+        --template-file layers.yml \
         --s3-bucket orb-integration-hub-build-artifacts \
-        --output-template-file authentication_dynamodb-packaged.yml
+        --output-template-file layers-packaged.yml
         
         sam deploy \
-        --template-file authentication_dynamodb-packaged.yml \
+        --template-file layers-packaged.yml \
         --s3-bucket orb-integration-hub-build-artifacts \
-        --stack-name orb-integration-hub-authentication-dynamodb-layer \
+        --stack-name orb-integration-hub-layers \
         --capabilities CAPABILITY_NAMED_IAM \
         --no-fail-on-empty-changeset
         
-        aws s3 cp authentication_dynamodb-packaged.yml \
-        s3://orb-integration-hub-build-templates/authentication_dynamodb-packaged.yml
+        aws s3 cp layers-packaged.yml \
+        s3://orb-integration-hub-build-templates/layers-packaged.yml
 
-      working-directory: backend/src/layers
+      working-directory: infrastructure/cloudformation
