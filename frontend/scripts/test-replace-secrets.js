@@ -150,7 +150,8 @@ function testReplacement() {
     }
 
     const configJsonContent = fs.readFileSync(path.join(TEST_CONFIG.testDir, 'config.json'), 'utf8');
-    if (configJsonContent.includes('test-api.amazonaws.com') && !configJsonContent.includes('{{GRAPHQL_API_URL}}')) {
+    const configJsonUrl = new URL(configJsonContent);
+    if (configJsonUrl.host === 'test-api.amazonaws.com' && !configJsonContent.includes('{{GRAPHQL_API_URL}}')) {
       console.log('✓ Token replacement verified in config.json');
     } else {
       throw new Error('Token replacement failed in config.json');
