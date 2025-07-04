@@ -23,25 +23,19 @@ Parameters:
     Description: Deployment environment
 
 Resources:
-  # ===== ORGANIZATION SECURITY LAYER =====
-  
   OrganizationSecurityLayer:
-    Type: AWS::Lambda::LayerVersion
     Properties:
       LayerName: !Sub '${CustomerId}-${ProjectId}-${Environment}-organization-security-layer'
       Description: 'Organization security middleware with audit logging and RBAC utilities'
-      Content:
-        S3Bucket: !Sub '${CustomerId}-${ProjectId}-${Environment}-build-artifacts'
-        S3Key: 'layers/organization-security-layer.zip'
+      ContentUri: ../../backend/src/layers/organization_security/
       CompatibleRuntimes:
         - python3.12
       CompatibleArchitectures:
         - x86_64
         - arm64
       LicenseInfo: MIT
+    Type: AWS::Serverless::LayerVersion
 
-  # ===== STRIPE PAYMENT LAYER =====
-  
   StripeLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
@@ -53,11 +47,8 @@ Resources:
       CompatibleArchitectures:
         - x86_64
         - arm64
-    Metadata:
-      BuildMethod: python3.12
+    Type: AWS::Serverless::LayerVersion
 
-  # ===== SSM PARAMETERS FOR CROSS-STACK REFERENCES =====
-  
   OrganizationSecurityLayerArnParameter:
     Type: AWS::SSM::Parameter
     Properties:
@@ -75,7 +66,6 @@ Resources:
       Description: "ARN of the Stripe Payment Lambda Layer"
 
 Outputs:
-  # Organization Security Layer Outputs
   OrganizationSecurityLayerArn:
     Description: 'ARN of the Organization Security Lambda Layer'
     Value: !Ref OrganizationSecurityLayer
@@ -88,7 +78,6 @@ Outputs:
     Export:
       Name: !Sub '${CustomerId}-${ProjectId}-organization-security-layer-version-${Environment}'
 
-  # Stripe Layer Outputs
   StripeLayerArn:
     Description: 'ARN of the Stripe Payment Lambda Layer'
     Value: !Ref StripeLayer
