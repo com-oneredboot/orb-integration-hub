@@ -160,7 +160,8 @@ def lambda_handler(event, context):
         
         # If code is provided, verify it
         if provided_code is not None:
-            logger.info(f"Verifying code for phone number: {phone_number}")
+            masked_phone_number = f"******{phone_number[-4:]}" if len(phone_number) > 4 else phone_number
+            logger.info(f"Verifying code for phone number: {masked_phone_number}")
             is_valid = verify_code(phone_number, str(provided_code), secret)
             
             response = {
@@ -175,7 +176,8 @@ def lambda_handler(event, context):
             return response
         
         # Check rate limiting before generating/sending SMS
-        logger.info(f"Checking rate limit for phone number: {phone_number}")
+        masked_phone_number = f"******{phone_number[-4:]}" if len(phone_number) > 4 else phone_number
+        logger.info(f"Checking rate limit for phone number: {masked_phone_number}")
         is_allowed, rate_limit_message = check_rate_limit(phone_number)
         
         if not is_allowed:
@@ -217,12 +219,14 @@ def lambda_handler(event, context):
                 'StringValue': ORIGINATION_NUMBER
             }
         
-        logger.info(f"Sending SMS to {phone_number}")
+        masked_phone_number = f"******{phone_number[-4:]}" if len(phone_number) > 4 else phone_number
+        logger.info(f"Sending SMS to {masked_phone_number}")
         logger.debug(f"SMS parameters: {sns_parameters}")
 
         response = sns_client.publish(**sns_parameters)
         logger.info(f"SNS response: {response}")
-        logger.info(f"Verification code sent to {phone_number}")
+        masked_phone_number = f"******{phone_number[-4:]}" if len(phone_number) > 4 else phone_number
+        logger.info(f"Verification code sent to {masked_phone_number}")
 
         return {
             "StatusCode": 200,
