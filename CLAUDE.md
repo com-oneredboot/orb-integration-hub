@@ -1,5 +1,17 @@
 # Task Master AI - Claude Development Workflow
 
+## CRITICAL: Change Approval Process
+
+**ALWAYS ASK BEFORE MAKING ANY CHANGES TO:**
+- File names or directory structures
+- Schema entity names 
+- Database table names
+- GraphQL field names
+- API endpoint names
+- Any naming conventions
+
+**EXAMPLE**: "I need to rename X to Y. Should I proceed?"
+
 ## Quick Start for New Projects
 
 1. **Initialize**: `initialize_project` (MCP) or `task-master init`

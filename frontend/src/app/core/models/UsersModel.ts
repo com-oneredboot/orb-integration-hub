@@ -113,7 +113,7 @@ export class Users implements IUsers {
   createdAt = '';
   updatedAt = '';
   phoneNumber = '';
-  groups: string[] = [];
+  groups = [];
   emailVerified = false;
   phoneVerified = false;
   mfaEnabled = false;

@@ -7,23 +7,31 @@
       {% if not has_sort %}
         {% set op_name = schema.name ~ 'QueryBy' ~ index.partition|to_pascal_case %}
         {% if op_name not in seen_ops %}
-  {{ op_name }}(input: {{ op_name }}Input!): {{ schema.name }}Response{% if schema.query_auth_directives and op_name in schema.query_auth_directives and schema.query_auth_directives[op_name] %} {{ schema.query_auth_directives[op_name]|join(' ') }}{% endif %}{% set _ = seen_ops.append(op_name) %}{% endif %}
+  {{ op_name }}(input: {{ op_name }}Input!): {{ schema.name }}Response{% if schema.query_auth_directives and op_name in schema.query_auth_directives and schema.query_auth_directives[op_name] %} {{ schema.query_auth_directives[op_name]|join(' ') }}{% endif %}
+          {% set _ = seen_ops.append(op_name) %}
+        {% endif %}
       {% else %}
         {% set op_name = schema.name ~ 'QueryBy' ~ index.partition|to_pascal_case %}
         {% if op_name not in seen_ops %}
-  {{ op_name }}(input: {{ op_name }}Input!): {{ schema.name }}ListResponse{% if schema.query_auth_directives and op_name in schema.query_auth_directives and schema.query_auth_directives[op_name] %} {{ schema.query_auth_directives[op_name]|join(' ') }}{% endif %}{% set _ = seen_ops.append(op_name) %}{% endif %}
+  {{ op_name }}(input: {{ op_name }}Input!): {{ schema.name }}ListResponse{% if schema.query_auth_directives and op_name in schema.query_auth_directives and schema.query_auth_directives[op_name] %} {{ schema.query_auth_directives[op_name]|join(' ') }}{% endif %}
+          {% set _ = seen_ops.append(op_name) %}
+        {% endif %}
         {% set op_name_and = schema.name ~ 'QueryBy' ~ index.partition|to_pascal_case ~ 'And' ~ index.sort|to_pascal_case %}
         {% if op_name_and not in seen_ops %}
-  {{ op_name_and }}(input: {{ op_name_and }}Input!): {{ schema.name }}Response{% if schema.query_auth_directives and op_name_and in schema.query_auth_directives and schema.query_auth_directives[op_name_and] %} {{ schema.query_auth_directives[op_name_and]|join(' ') }}{% endif %}{% set _ = seen_ops.append(op_name_and) %}{% endif %}
+  {{ op_name_and }}(input: {{ op_name_and }}Input!): {{ schema.name }}Response{% if schema.query_auth_directives and op_name_and in schema.query_auth_directives and schema.query_auth_directives[op_name_and] %} {{ schema.query_auth_directives[op_name_and]|join(' ') }}{% endif %}
+          {% set _ = seen_ops.append(op_name_and) %}
+        {% endif %}
       {% endif %}
     {% else %}
       {% set op_name = schema.name ~ 'QueryBy' ~ index.partition|to_pascal_case %}
       {% if op_name not in seen_ops %}
-  {{ op_name }}(input: {{ op_name }}Input!): {{ schema.name }}ListResponse{% if schema.query_auth_directives and op_name in schema.query_auth_directives and schema.query_auth_directives[op_name] %} {{ schema.query_auth_directives[op_name]|join(' ') }}{% endif %}{% set _ = seen_ops.append(op_name) %}{% endif %}
+  {{ op_name }}(input: {{ op_name }}Input!): {{ schema.name }}ListResponse{% if schema.query_auth_directives and op_name in schema.query_auth_directives and schema.query_auth_directives[op_name] %} {{ schema.query_auth_directives[op_name]|join(' ') }}{% endif %}
+{% set _ = seen_ops.append(op_name) %}{% endif %}
       {% if has_sort %}
         {% set op_name_and = schema.name ~ 'QueryBy' ~ index.partition|to_pascal_case ~ 'And' ~ index.sort|to_pascal_case %}
         {% if op_name_and not in seen_ops %}
-  {{ op_name_and }}(input: {{ op_name_and }}Input!): {{ schema.name }}Response{% if schema.query_auth_directives and op_name_and in schema.query_auth_directives and schema.query_auth_directives[op_name_and] %} {{ schema.query_auth_directives[op_name_and]|join(' ') }}{% endif %}{% set _ = seen_ops.append(op_name_and) %}{% endif %}
+  {{ op_name_and }}(input: {{ op_name_and }}Input!): {{ schema.name }}Response{% if schema.query_auth_directives and op_name_and in schema.query_auth_directives and schema.query_auth_directives[op_name_and] %} {{ schema.query_auth_directives[op_name_and]|join(' ') }}{% endif %}
+{% set _ = seen_ops.append(op_name_and) %}{% endif %}
       {% endif %}
     {% endif %}
 
