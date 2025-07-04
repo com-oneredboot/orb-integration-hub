@@ -4,6 +4,7 @@
 // description: Comprehensive input validation service with RFC 5322 email validation, E.164 phone validation, and XSS prevention
 
 import { Injectable } from '@angular/core';
+import DOMPurify from 'dompurify';
 
 // Interface for validation results
 export interface ValidationResult {
@@ -53,20 +54,10 @@ export class InputValidationService {
     'getnada.com'
   ]);
 
-  // XSS prevention patterns
-  private readonly xssPatterns = [
-    /<script[^>]*>.*?<\/script>/gi,
-    /<iframe[^>]*>.*?<\/iframe>/gi,
-    /<object[^>]*>.*?<\/object>/gi,
-    /<embed[^>]*>/gi,
-    /<link[^>]*>/gi,
-    /javascript:/gi,
-    /vbscript:/gi,
-    /onload=/gi,
-    /onerror=/gi,
-    /onclick=/gi,
-    /onmouseover=/gi
-  ];
+  // XSS prevention using DOMPurify
+  private sanitizeInput(input: string): string {
+    return DOMPurify.sanitize(input);
+  }
 
   constructor() {}
 
