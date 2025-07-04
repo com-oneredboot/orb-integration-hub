@@ -83,7 +83,7 @@ def verify_code(phone_number: str, code: str, secret: str) -> bool:
     for i in range(2):  # 0 = current window, 1 = previous window
         window_time = current_time - (i * 300)
         expected_code = generate_verification_code(phone_number, window_time, secret)
-        logger.debug(f"Checking window {i}: expected={expected_code}, provided={code}")
+        logger.debug(f"Checking window {i}: Verification process initiated.")
         if expected_code == code:
             return True
     return False
