@@ -10,16 +10,16 @@ Description: 'Lambda Layers - Organization Security and Stripe Payment layers'
 Parameters:
   CustomerId:
     Type: String
-    Default: 'orb'
+    Default: orb
     Description: Customer identifier for resource naming
   Environment:
     Type: String
-    Default: production
-    AllowedValues: [development, staging, production]
+    Default: dev
+    AllowedValues: [dev]
     Description: Deployment environment
   ProjectId:
     Type: String
-    Default: 'integration-hub'
+    Default: integration-hub
     Description: Project identifier for resource naming
   Runtime:
     Default: python3.12

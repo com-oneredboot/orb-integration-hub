@@ -1,4 +1,4 @@
-name: deploy-layers
+name: deploy-lambda-layers
 
 on:
   workflow_dispatch:
@@ -7,9 +7,25 @@ on:
         description: 'Environment to deploy to'
         required: true
         type: environment
+      region:
+        description: 'AWS Region'
+        required: true
+        type: choice
+        options:
+          - 'us-east-1'
+      customer_id:
+        description: 'Customer ID'
+        required: true
+        type: string
+        default: 'orb'
+      project_id:
+        description: 'Project ID'
+        required: true
+        type: string
+        default: 'integration-hub'
 
 jobs:
-  deploy-layers:
+  deploy-lambda-layers:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
 
@@ -69,7 +85,7 @@ jobs:
         echo "stripe_hash=${STRIPE_HASH}" >> $GITHUB_OUTPUT
         
         # Check if hashes changed from last deployment
-        aws s3 cp s3://orb-integration-hub-build-artifacts/layer-hashes.json ./previous-hashes.json 2>/dev/null || echo '{"organization_hash":"","stripe_hash":""}' > ./previous-hashes.json
+        aws s3 cp s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts/layer-hashes.json ./previous-hashes.json 2>/dev/null || echo '{"organization_hash":"","stripe_hash":""}' > ./previous-hashes.json
         
         PREV_ORG_HASH=$(jq -r '.organization_hash' previous-hashes.json)
         PREV_STRIPE_HASH=$(jq -r '.stripe_hash' previous-hashes.json)
@@ -87,25 +103,25 @@ jobs:
       if: steps.check-changes.outputs.changes_detected == 'true'
       run: |
         sam build \
-        --template layers.yml
+        --template lambda-layers.yml
         
         sam package \
-        --template-file layers.yml \
-        --s3-bucket orb-integration-hub-build-artifacts \
-        --output-template-file layers-packaged.yml
+        --template-file lambda-layers.yml \
+        --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
+        --output-template-file lambda-layers-packaged.yml
         
         sam deploy \
-        --template-file layers-packaged.yml \
-        --s3-bucket orb-integration-hub-build-artifacts \
-        --stack-name orb-integration-hub-layers \
+        --template-file lambda-layers-packaged.yml \
+        --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
+        --stack-name ${{ inputs.customer_id }}-${{ inputs.project_id }}-${{ inputs.environment }}-lambda-layers \
         --capabilities CAPABILITY_NAMED_IAM \
         --no-fail-on-empty-changeset
         
-        aws s3 cp layers-packaged.yml \
-        s3://orb-integration-hub-build-templates/layers-packaged.yml
+        aws s3 cp lambda-layers-packaged.yml \
+        s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/lambda-layers-packaged.yml
         
         # Store new hashes
-        echo "{\"organization_hash\":\"${{ steps.check-changes.outputs.organization_hash }}\",\"stripe_hash\":\"${{ steps.check-changes.outputs.stripe_hash }}\"}" > layer-hashes.json
-        aws s3 cp layer-hashes.json s3://orb-integration-hub-build-artifacts/layer-hashes.json
+        echo "{\"organization_hash\":\"${{ steps.check-changes.outputs.organization_hash }}\",\"stripe_hash\":\"${{ steps.check-changes.outputs.stripe_hash }}\"}" > lambda-layer-hashes.json
+        aws s3 cp layer-hashes.json s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts/lambda-layer-hashes.json
 
       working-directory: infrastructure/cloudformation
