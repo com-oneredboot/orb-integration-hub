@@ -1,6 +1,6 @@
 """
 Generated Python models for Organizations
-Generated at 2025-07-04T19:09:46.970410
+Generated at 2025-07-04T20:00:46.478046
 """
 
 from typing import Optional, List

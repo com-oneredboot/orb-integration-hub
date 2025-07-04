@@ -1270,7 +1270,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
-  OrganizationUsersQueryByBothResolver:
+  OrganizationUsersQueryByUserIdAndOrganizationIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
       - OrganizationUsersDynamoDbDataSource
@@ -1278,7 +1278,7 @@ Resources:
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
-      FieldName: OrganizationUsersQueryByBoth
+      FieldName: OrganizationUsersQueryByUserIdAndOrganizationId
       DataSourceName: OrganizationUsersDynamoDbDataSource
       RequestMappingTemplate: |
         {

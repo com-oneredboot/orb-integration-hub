@@ -109,9 +109,9 @@ query OrganizationUsersQueryByOrganizationId($input: OrganizationUsersQueryByOrg
 }
 `;
 
-export const OrganizationUsersQueryByBoth = /* GraphQL */ `
-query OrganizationUsersQueryByBoth($input: OrganizationUsersQueryByBothInput!) {
-  OrganizationUsersQueryByBoth(input: $input) {
+export const OrganizationUsersQueryByUserIdAndOrganizationId = /* GraphQL */ `
+query OrganizationUsersQueryByUserIdAndOrganizationId($input: OrganizationUsersQueryByUserIdAndOrganizationIdInput!) {
+  OrganizationUsersQueryByUserIdAndOrganizationId(input: $input) {
     StatusCode
     Message
     Data {

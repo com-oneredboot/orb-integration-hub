@@ -581,16 +581,18 @@ def build_crud_operations_for_table(schema: TableSchema):
             'index_name': None,
             'response_auth_directives': get_response_auth_directives(f'{schema.name}QueryBy{sk_pascal}'),
         })
-        # QueryByBoth
+        # QueryBy{Partition}And{Sort} for primary key
+        pk_pascal = to_pascal_case(schema.partition_key)
+        sk_pascal = to_pascal_case(schema.sort_key)
         schema.operations.append({
-            'name': 'QueryByBoth',
+            'name': f'QueryBy{pk_pascal}And{sk_pascal}',
             'type': 'Query',
-            'field': f'{schema.name}QueryByBoth',
+            'field': f'{schema.name}QueryBy{pk_pascal}And{sk_pascal}',
             'dynamodb_op': 'Query',
             'index_partition': schema.partition_key,
             'index_sort': schema.sort_key,
             'index_name': None,
-            'response_auth_directives': get_response_auth_directives(f'{schema.name}QueryByBoth'),
+            'response_auth_directives': get_response_auth_directives(f'{schema.name}QueryBy{pk_pascal}And{sk_pascal}'),
         })
     # Add QueryBy for each secondary index
     if schema.secondary_indexes:
@@ -1001,12 +1003,12 @@ query {table}QueryBy{sk_pascal}($input: {table}QueryBy{sk_pascal}Input!) {{
   }}
 }}'''
             })
-            # QueryByBoth
+            # QueryBy{Partition}And{Sort} for primary key
             operations.append({
-                'name': f'{table}QueryByBoth',
+                'name': f'{table}QueryBy{pk_pascal}And{sk_pascal}',
                 'gql': f'''
-query {table}QueryByBoth($input: {table}QueryByBothInput!) {{
-  {table}QueryByBoth(input: $input) {{
+query {table}QueryBy{pk_pascal}And{sk_pascal}($input: {table}QueryBy{pk_pascal}And{sk_pascal}Input!) {{
+  {table}QueryBy{pk_pascal}And{sk_pascal}(input: $input) {{
     StatusCode
     Message
     Data {{
