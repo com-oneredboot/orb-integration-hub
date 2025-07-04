@@ -12,15 +12,19 @@ Parameters:
     Type: String
     Default: 'orb'
     Description: Customer identifier for resource naming
-  ProjectId:
-    Type: String
-    Default: 'integration-hub'
-    Description: Project identifier for resource naming
   Environment:
     Type: String
     Default: production
     AllowedValues: [development, staging, production]
     Description: Deployment environment
+  ProjectId:
+    Type: String
+    Default: 'integration-hub'
+    Description: Project identifier for resource naming
+  Runtime:
+    Default: python3.12
+    Type: String
+
 
 Resources:
   OrganizationSecurityLayer:
@@ -30,9 +34,6 @@ Resources:
       ContentUri: ../../backend/src/layers/organization_security/
       CompatibleRuntimes:
         - python3.12
-      CompatibleArchitectures:
-        - x86_64
-        - arm64
       LicenseInfo: MIT
     Type: AWS::Serverless::LayerVersion
 
@@ -43,10 +44,9 @@ Resources:
       Description: 'Stripe Payment processing layer'
       ContentUri: ../../backend/src/layers/stripe/
       CompatibleRuntimes:
-        - python3.12
-      CompatibleArchitectures:
-        - x86_64
-        - arm64
+        - !Ref Runtime
+      Metadata:
+        BuildMethod: !Ref Runtime
     Type: AWS::Serverless::LayerVersion
 
   OrganizationSecurityLayerArnParameter:
@@ -69,23 +69,8 @@ Outputs:
   OrganizationSecurityLayerArn:
     Description: 'ARN of the Organization Security Lambda Layer'
     Value: !Ref OrganizationSecurityLayer
-    Export:
-      Name: !Sub '${CustomerId}-${ProjectId}-organization-security-layer-arn-${Environment}'
   
-  OrganizationSecurityLayerVersion:
-    Description: 'Version of the Organization Security Lambda Layer'
-    Value: !GetAtt OrganizationSecurityLayer.Version
-    Export:
-      Name: !Sub '${CustomerId}-${ProjectId}-organization-security-layer-version-${Environment}'
-
   StripeLayerArn:
     Description: 'ARN of the Stripe Payment Lambda Layer'
     Value: !Ref StripeLayer
-    Export:
-      Name: !Sub '${CustomerId}-${ProjectId}-stripe-layer-arn-${Environment}'
   
-  StripeLayerVersion:
-    Description: 'Version of the Stripe Payment Lambda Layer'
-    Value: !GetAtt StripeLayer.Version
-    Export:
-      Name: !Sub '${CustomerId}-${ProjectId}-stripe-layer-version-${Environment}'
