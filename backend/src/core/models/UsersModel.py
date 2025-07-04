@@ -1,6 +1,6 @@
 """
 Generated Python models for Users
-Generated at 2025-07-04T20:19:47.439801
+Generated at 2025-07-04T22:06:45.961863
 """
 
 from typing import Optional, List

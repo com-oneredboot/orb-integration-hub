@@ -1,12 +1,13 @@
 """
 Generated Python models for OwnershipTransferRequests
-Generated at 2025-07-04T20:19:47.172998
+Generated at 2025-07-04T22:06:45.695629
 """
 
 from typing import Optional, List
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
 from enum import Enum
+from .OwnershipTransferStatusEnum import OwnershipTransferStatus
 
 # CRUD Input Types
 class OwnershipTransferRequestsCreateInput(BaseModel):
@@ -14,7 +15,7 @@ class OwnershipTransferRequestsCreateInput(BaseModel):
     current_owner_id: str = Field(..., description="Current organization owner user ID")
     new_owner_id: str = Field(..., description="Prospective new owner user ID")
     organization_id: str = Field(..., description="Organization being transferred")
-    status: str = Field(..., description="Current transfer status")
+    status: OwnershipTransferStatus = Field(..., description="Current transfer status")
     required_billing_plan: str = Field(..., description="Billing plan required for organization")
     monthly_cost: str = Field(..., description="Monthly cost in cents")
     payment_validation_token: str = Field(..., description="Encrypted single-use token for payment validation")
@@ -32,7 +33,7 @@ class OwnershipTransferRequestsUpdateInput(BaseModel):
     current_owner_id: Optional[str] = Field(None, description="Current organization owner user ID")
     new_owner_id: Optional[str] = Field(None, description="Prospective new owner user ID")
     organization_id: Optional[str] = Field(None, description="Organization being transferred")
-    status: Optional[str] = Field(None, description="Current transfer status")
+    status: Optional[OwnershipTransferStatus] = Field(None, description="Current transfer status")
     required_billing_plan: Optional[str] = Field(None, description="Billing plan required for organization")
     monthly_cost: Optional[str] = Field(None, description="Monthly cost in cents")
     payment_validation_token: Optional[str] = Field(None, description="Encrypted single-use token for payment validation")
@@ -81,7 +82,7 @@ class OwnershipTransferRequests(BaseModel):
             current_owner_id=dto.get('current_owner_id'),
             new_owner_id=dto.get('new_owner_id'),
             organization_id=dto.get('organization_id'),
-            status=dto.get('status'),
+            status=OwnershipTransferStatus[dto.get('status', 'OwnershipTransferStatus.UNKNOWN')] if dto.get('status') else OwnershipTransferStatus.UNKNOWN,
             required_billing_plan=dto.get('required_billing_plan'),
             monthly_cost=dto.get('monthly_cost'),
             payment_validation_token=dto.get('payment_validation_token'),
@@ -101,7 +102,7 @@ class OwnershipTransferRequests(BaseModel):
             'current_owner_id': self.current_owner_id,
             'new_owner_id': self.new_owner_id,
             'organization_id': self.organization_id,
-            'status': self.status,
+            'status': self.status.value if self.status else 'OwnershipTransferStatus.UNKNOWN',
             'required_billing_plan': self.required_billing_plan,
             'monthly_cost': self.monthly_cost,
             'payment_validation_token': self.payment_validation_token,

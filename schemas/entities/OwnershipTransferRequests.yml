@@ -67,10 +67,11 @@ model:
       required: true
       
     status:
-      type: enum
+      type: string
       description: "Current transfer status"
       required: true
-      values:
+      enum_type: OwnershipTransferStatus
+      enum_values:
         - PAYMENT_VALIDATION_REQUIRED
         - PAYMENT_IN_PROGRESS
         - PAYMENT_VALIDATED

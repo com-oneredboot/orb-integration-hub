@@ -3,6 +3,7 @@
  */
 
 // Import enums and models used in this model
+import { OwnershipTransferStatus } from './OwnershipTransferStatusEnum';
 
 // CreateInput
 export type OwnershipTransferRequestsCreateInput = {
@@ -10,7 +11,7 @@ export type OwnershipTransferRequestsCreateInput = {
   currentOwnerId: string;
   newOwnerId: string;
   organizationId: string;
-  status: enum;
+  status: string;
   requiredBillingPlan: string;
   monthlyCost: number;
   paymentValidationToken: string;
@@ -30,7 +31,7 @@ export type OwnershipTransferRequestsUpdateInput = {
   currentOwnerId: string;
   newOwnerId: string;
   organizationId: string;
-  status: enum;
+  status: string;
   requiredBillingPlan: string;
   monthlyCost: number;
   paymentValidationToken: string;
@@ -93,7 +94,7 @@ export interface IOwnershipTransferRequests {
   currentOwnerId: string;
   newOwnerId: string;
   organizationId: string;
-  status: enum;
+  status: OwnershipTransferStatus;
   requiredBillingPlan: string;
   monthlyCost: number;
   paymentValidationToken: string;
@@ -112,7 +113,7 @@ export class OwnershipTransferRequests implements IOwnershipTransferRequests {
   currentOwnerId = '';
   newOwnerId = '';
   organizationId = '';
-  status = undefined;
+  status = OwnershipTransferStatus.UNKNOWN;
   requiredBillingPlan = '';
   monthlyCost = 0;
   paymentValidationToken = '';
@@ -128,6 +129,9 @@ export class OwnershipTransferRequests implements IOwnershipTransferRequests {
   constructor(data: Partial<IOwnershipTransferRequests> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
+        if (key === 'status' && typeof value === 'string') {
+          this.status = OwnershipTransferStatus[value as keyof typeof OwnershipTransferStatus] ?? OwnershipTransferStatus.UNKNOWN;
+        } else 
         {
           this[key as keyof this] = value as this[keyof this];
         }
