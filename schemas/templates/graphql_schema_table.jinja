@@ -61,7 +61,7 @@ type {{ schema.name }} {
 
 {#-- Input types for table schemas --#}
 {% for schema_name, schema in table_schemas.items() %}
-{% if schema.type == 'dynamodb' %}
+{% if schema.type == 'dynamodb' or schema.type == 'lambda-secured' %}
 input {{ schema.name }}CreateInput {
 {% for field_name, field_type in schema.fields.items() %}
   {{ field_name }}: {{ field_type|graphql_type }}
