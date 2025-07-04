@@ -45,8 +45,6 @@ Resources:
       ContentUri: ../../backend/src/layers/stripe/
       CompatibleRuntimes:
         - !Ref Runtime
-      Metadata:
-        BuildMethod: !Ref Runtime
     Type: AWS::Serverless::LayerVersion
 
   OrganizationSecurityLayerArnParameter:
