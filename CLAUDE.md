@@ -75,6 +75,9 @@ monorepo/
 ├── .taskmaster/
 │   ├── tasks/tasks.json      # Main task database
 │   ├── docs/prd.txt         # Your PRD files
+│   ├── security/            # Security vulnerability management
+│   │   ├── security_issues.json      # GitHub security issues data
+│   │   └── create_security_issues.sh # Script to create GitHub issues
 │   └── config.json          # AI model config
 ├── .mcp.json               # MCP server config
 ├── CLAUDE.md              # This file
@@ -152,3 +155,44 @@ set_task_status(id, "done");
 // Use Context7 for code examples
 // Use expand_task for complex tasks
 ```
+
+## Security Vulnerability Management
+
+### Security Workflow
+When GitHub reports security vulnerabilities (Dependabot alerts), follow this process:
+
+1. **Access Security Report**: Check GitHub's Dependabot security page
+2. **Parse Vulnerabilities**: Extract findings and organize by package/severity
+3. **Create Issues**: Use automated script to generate GitHub issues
+
+### Security Files Location
+```
+.taskmaster/security/
+├── security_issues.json          # Structured vulnerability data
+└── create_security_issues.sh     # GitHub issue creation script
+```
+
+### Creating Security Issues
+```bash
+# Navigate to project root
+cd /path/to/project
+
+# Run security issue creation script
+./.taskmaster/security/create_security_issues.sh
+```
+
+### Security Issue Template
+Each security issue includes:
+- **Severity level** (High/Moderate/Low)
+- **Affected packages** and file paths
+- **CVE references** and issue numbers
+- **Remediation steps** and recommended fixes
+- **Priority assessment** based on impact
+- **Proper labels** for organization
+
+### Security Best Practices
+- **Regular monitoring**: Check Dependabot alerts weekly
+- **Immediate triage**: Address moderate+ vulnerabilities within 48 hours
+- **Documentation**: Always update security_issues.json with new findings
+- **Testing**: Verify fixes don't break functionality
+- **Automation**: Use scripts for consistent issue creation
