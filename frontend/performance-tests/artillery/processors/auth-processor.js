@@ -2,6 +2,8 @@
  * Artillery processor for authentication flow performance testing
  */
 
+const crypto = require('crypto');
+
 module.exports = {
   generateTestUser,
   validateResponse,
@@ -13,7 +15,7 @@ module.exports = {
 function generateTestUser(requestParams, context, ee, next) {
   // Generate unique test user data
   const timestamp = Date.now();
-  const randomId = Math.floor(Math.random() * 10000);
+  const randomId = crypto.randomBytes(2).readUInt16BE(0) % 10000; // Generate a secure random number between 0 and 9999
   
   context.vars.email = `testuser${timestamp}${randomId}@performance.test`;
   context.vars.password = 'TestPassword123!';
