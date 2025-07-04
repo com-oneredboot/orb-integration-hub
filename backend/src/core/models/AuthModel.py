@@ -1,6 +1,6 @@
 """
 Auth standard model.
-Generated at 2025-07-04T17:54:56.159888
+Generated at 2025-07-04T18:44:31.460925
 """
 
 from typing import Optional
