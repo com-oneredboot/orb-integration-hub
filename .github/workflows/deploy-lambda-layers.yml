@@ -1,0 +1,130 @@
+name: deploy-lambda-layers
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: environment
+      region:
+        description: 'AWS Region'
+        required: true
+        type: choice
+        options:
+          - 'us-east-1'
+      customer_id:
+        description: 'Customer ID'
+        required: true
+        type: string
+        default: 'orb'
+      project_id:
+        description: 'Project ID'
+        required: true
+        type: string
+        default: 'integration-hub'
+
+jobs:
+  deploy-lambda-layers:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+
+    # Checkout code
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # Setup Python environment
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    # Fetch AWS Credentials
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    # Build Organization Security Layer
+    - name: Build Organization Security Layer
+      run: |
+        pip install --upgrade pip
+        pip install pipenv --user
+        
+        echo "Building Organization Security Layer"
+        chmod +x build_organization_security_layer.sh
+        bash build_organization_security_layer.sh
+
+      working-directory: backend/src/layers/organization_security
+
+    # Build Stripe Layer
+    - name: Build Stripe Layer
+      run: |
+        pip install --upgrade pip
+        pip install pipenv --user
+        
+        echo "Building Stripe Layer"
+        chmod +x build_stripe_layer.sh
+        bash build_stripe_layer.sh
+
+      working-directory: backend/src/layers/stripe
+
+    # Check for changes before deploying
+    - name: Check Layer Changes
+      id: check-changes
+      run: |
+        # Generate content hashes for both layers
+        ORG_HASH=$(find backend/src/layers/organization_security -type f -name "*.py" -exec sha256sum {} + | sha256sum | cut -d' ' -f1)
+        STRIPE_HASH=$(find backend/src/layers/stripe -type f \( -name "*.py" -o -name "Pipfile*" \) -exec sha256sum {} + | sha256sum | cut -d' ' -f1)
+        
+        echo "organization_hash=${ORG_HASH}" >> $GITHUB_OUTPUT
+        echo "stripe_hash=${STRIPE_HASH}" >> $GITHUB_OUTPUT
+        
+        # Check if hashes changed from last deployment
+        aws s3 cp s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts/layer-hashes.json ./previous-hashes.json 2>/dev/null || echo '{"organization_hash":"","stripe_hash":""}' > ./previous-hashes.json
+        
+        PREV_ORG_HASH=$(jq -r '.organization_hash' previous-hashes.json)
+        PREV_STRIPE_HASH=$(jq -r '.stripe_hash' previous-hashes.json)
+        
+        if [[ "$ORG_HASH" != "$PREV_ORG_HASH" || "$STRIPE_HASH" != "$PREV_STRIPE_HASH" ]]; then
+          echo "changes_detected=true" >> $GITHUB_OUTPUT
+          echo "Layer changes detected, will deploy new versions"
+        else
+          echo "changes_detected=false" >> $GITHUB_OUTPUT
+          echo "No layer changes detected, skipping deployment"
+        fi
+
+    # Deploy Consolidated Layers (only if changes detected)
+    - name: Deploy Consolidated Layers
+      if: steps.check-changes.outputs.changes_detected == 'true'
+      run: |
+        sam build \
+        --template lambda-layers.yml
+        
+        sam package \
+        --template-file lambda-layers.yml \
+        --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
+        --output-template-file lambda-layers-packaged.yml
+        
+        sam deploy \
+        --template-file lambda-layers-packaged.yml \
+        --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
+        --stack-name ${{ inputs.customer_id }}-${{ inputs.project_id }}-${{ inputs.environment }}-lambda-layers \
+        --capabilities CAPABILITY_NAMED_IAM \
+        --no-fail-on-empty-changeset
+        
+        aws s3 cp lambda-layers-packaged.yml \
+        s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/lambda-layers-packaged.yml
+        
+        # Store new hashes
+        echo "{\"organization_hash\":\"${{ steps.check-changes.outputs.organization_hash }}\",\"stripe_hash\":\"${{ steps.check-changes.outputs.stripe_hash }}\"}" > lambda-layer-hashes.json
+        aws s3 cp layer-hashes.json s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts/lambda-layer-hashes.json
+
+      working-directory: infrastructure/cloudformation
