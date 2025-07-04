@@ -1,8 +1,5 @@
 name: deploy-lambda-layers
 
-permissions:
-  contents: read
-
 on:
   workflow_dispatch:
     inputs:
@@ -88,7 +85,7 @@ jobs:
         echo "stripe_hash=${STRIPE_HASH}" >> $GITHUB_OUTPUT
         
         # Check if hashes changed from last deployment
-        aws s3 cp s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts/layer-hashes.json ./previous-hashes.json 2>/dev/null || echo '{"organization_hash":"","stripe_hash":""}' > ./previous-hashes.json
+        aws s3 cp s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts/lambda-layer-hashes.json ./previous-hashes.json 2>/dev/null || echo '{"organization_hash":"","stripe_hash":""}' > ./previous-hashes.json
         
         PREV_ORG_HASH=$(jq -r '.organization_hash' previous-hashes.json)
         PREV_STRIPE_HASH=$(jq -r '.stripe_hash' previous-hashes.json)
@@ -125,6 +122,6 @@ jobs:
         
         # Store new hashes
         echo "{\"organization_hash\":\"${{ steps.check-changes.outputs.organization_hash }}\",\"stripe_hash\":\"${{ steps.check-changes.outputs.stripe_hash }}\"}" > lambda-layer-hashes.json
-        aws s3 cp layer-hashes.json s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts/lambda-layer-hashes.json
+        aws s3 cp lambda-layer-hashes.json s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts/lambda-layer-hashes.json
 
       working-directory: infrastructure/cloudformation
