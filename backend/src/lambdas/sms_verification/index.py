@@ -113,7 +113,8 @@ def check_rate_limit(phone_number: str) -> tuple:
                 'firstRequestTime': current_time,
                 'ttl': current_time + 3600  # 1 hour TTL
             })
-            logger.info(f"Rate limit: First request for {phone_number}")
+            masked_phone_number = phone_number[-4:]  # Retain only the last 4 digits
+            logger.info(f"Rate limit: First request for phone ending in {masked_phone_number}")
             return True, "First request allowed"
         
         item = response['Item']
