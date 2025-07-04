@@ -193,7 +193,8 @@ def lambda_handler(event, context):
             }
         
         # Generate and send new verification code
-        logger.info(f"Generating verification code for phone number: {phone_number}")
+        masked_phone_number = f"******{phone_number[-4:]}" if len(phone_number) > 4 else phone_number
+        logger.info(f"Generating verification code for phone number: {masked_phone_number}")
         logger.debug(f"Rate limit status: {rate_limit_message}")
         code = generate_verification_code(phone_number, current_time, secret)
         
