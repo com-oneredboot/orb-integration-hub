@@ -1,4 +1,4 @@
-# file: backend/src/layers/organization_security/kms_manager.py
+# file: backend/src/layers/organizations_security/kms_manager.py
 # author: AI Assistant
 # created: 2025-06-23
 # description: Organization-specific KMS encryption key management

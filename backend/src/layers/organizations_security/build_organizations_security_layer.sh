@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "Building Organization Security Layer..."
+echo "Building Organizations Security Layer..."
 
 # Create build directory
 mkdir -p build/python
@@ -24,8 +24,8 @@ cp *.py build/python/
 # Create layer zip
 echo "Creating layer zip file..."
 cd build
-zip -r ../organization-security-layer.zip python/
+zip -r ../organizations-security-layer.zip python/
 cd ..
 
-echo "Organization Security Layer build complete!"
-echo "Layer file: organization-security-layer.zip"
+echo "Organizations Security Layer build complete!"
+echo "Layer file: organizations-security-layer.zip"

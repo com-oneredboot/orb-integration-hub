@@ -331,12 +331,12 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${CustomerId}-${ProjectId}-${Environment}-organizations"
-      Description: "Lambda function to handle organization CRUD operations"
+      Description: "Lambda function to handle organizations CRUD operations"
       Handler: index.lambda_handler
       Role: !GetAtt LambdaExecutionRole.Arn
       CodeUri: ../../backend/src/lambdas/organizations/
       Layers:
-        - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-organization-security-layer-arn}}'
+        - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-organizations-security-layer-arn}}'
       Environment:
         Variables:
           ORGANIZATIONS_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-organizations-table-name}}'

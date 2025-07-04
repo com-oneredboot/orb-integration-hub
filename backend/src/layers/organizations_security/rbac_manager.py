@@ -1,4 +1,4 @@
-# file: backend/src/layers/organization_security/rbac_manager.py
+# file: backend/src/layers/organizations_security/rbac_manager.py
 # author: AI Assistant
 # created: 2025-06-23
 # description: Hierarchical Role-Based Access Control (RBAC) system for organization security

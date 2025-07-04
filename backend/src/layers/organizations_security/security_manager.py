@@ -1,4 +1,4 @@
-# file: backend/src/layers/organization_security/security_manager.py
+# file: backend/src/layers/organizations_security/security_manager.py
 # author: AI Assistant
 # created: 2025-06-22
 # description: Organization security manager for multi-tenant access control

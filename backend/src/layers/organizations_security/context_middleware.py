@@ -1,4 +1,4 @@
-# file: backend/src/layers/organization_security/context_middleware.py
+# file: backend/src/layers/organizations_security/context_middleware.py
 # author: AI Assistant  
 # created: 2025-06-23
 # description: Organization Context Middleware for automatic multi-tenant security

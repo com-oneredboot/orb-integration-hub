@@ -1,4 +1,4 @@
-# file: backend/src/layers/organization_security/aws_audit_logger.py
+# file: backend/src/layers/organizations_security/aws_audit_logger.py
 # author: AI Assistant
 # created: 2025-06-23
 # description: AWS-managed audit logging service with automatic retention and compliance

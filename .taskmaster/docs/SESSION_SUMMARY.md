@@ -35,7 +35,7 @@
 ### **Privacy Rights System**
 - **Schema**: `schemas/entities/PrivacyRequests.yml` (lambda-secured with enums)
 - **Lambda resolver**: `backend/src/lambdas/privacy_rights_resolver/index.py` 
-- **Privacy manager**: `backend/src/layers/organization_security/privacy_rights_manager.py`
+- **Privacy manager**: `backend/src/layers/organizations_security/privacy_rights_manager.py`
 - **Generated models**: Python, TypeScript, and GraphQL schemas for privacy rights
 
 ### **Security Monitoring** 
@@ -121,7 +121,7 @@
 ### **Key Files Modified/Created**
 - `schemas/entities/PrivacyRequests.yml` - Privacy rights schema with enums
 - `infrastructure/cloudformation/monitoring.yml` - Enhanced security monitoring
-- `backend/src/layers/organization_security/privacy_rights_manager.py` - GDPR/CCPA engine
+- `backend/src/layers/organizations_security/privacy_rights_manager.py` - GDPR/CCPA engine
 - `backend/src/lambdas/privacy_rights_resolver/index.py` - Privacy rights API
 - Generated privacy rights models (Python, TypeScript, GraphQL)
 

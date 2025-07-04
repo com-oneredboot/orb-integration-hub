@@ -1,4 +1,4 @@
-# file: backend/src/layers/organization_security/privacy_rights_manager.py
+# file: backend/src/layers/organizations_security/privacy_rights_manager.py
 # author: AI Assistant
 # created: 2025-06-23
 # description: GDPR/CCPA compliance framework with automated privacy rights management

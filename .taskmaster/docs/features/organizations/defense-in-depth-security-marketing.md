@@ -154,7 +154,7 @@ def delete_application(org_id, app_id):
         )
         
         # LAYER 2: Organization security
-        org_access = organization_security.validate_organization_access(
+        org_access = organizations_security.validate_organization_access(
             user=current_user,
             organization_id=org_id,
             required_role=OrganizationRole.ADMINISTRATOR
@@ -248,7 +248,7 @@ lambda_config = {
 @cache.memoize(timeout=300)  # 5-minute cache
 def get_user_organization_permissions(user_id, org_id):
     """Cache expensive permission lookups"""
-    return organization_security.get_user_permissions(user_id, org_id)
+    return organizations_security.get_user_permissions(user_id, org_id)
 ```
 
 **3. Provisioned Concurrency**
@@ -283,7 +283,7 @@ security_audit_entry = {
         'checks': ['account_active', 'rate_limit_ok', 'cognito_group_valid'],
         'duration_ms': 12
     },
-    'organization_security': {
+    'organizations_security': {
         'result': 'PASSED', 
         'checks': ['membership_active', 'role_sufficient', 'organization_status_ok'],
         'user_role': 'ADMINISTRATOR',

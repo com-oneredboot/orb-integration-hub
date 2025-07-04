@@ -49,17 +49,17 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
 
-    # Build Organization Security Layer
-    - name: Build Organization Security Layer
+    # Build Organizations Security Layer
+    - name: Build Organizations Security Layer
       run: |
         pip install --upgrade pip
         pip install pipenv --user
         
-        echo "Building Organization Security Layer"
-        chmod +x build_organization_security_layer.sh
-        bash build_organization_security_layer.sh
+        echo "Building Organizations Security Layer"
+        chmod +x build_organizations_security_layer.sh
+        bash build_organizations_security_layer.sh
 
-      working-directory: backend/src/layers/organization_security
+      working-directory: backend/src/layers/organizations_security
 
     # Build Stripe Layer
     - name: Build Stripe Layer
@@ -78,7 +78,7 @@ jobs:
       id: check-changes
       run: |
         # Generate content hashes for both layers
-        ORG_HASH=$(find backend/src/layers/organization_security -type f -name "*.py" -exec sha256sum {} + | sha256sum | cut -d' ' -f1)
+        ORG_HASH=$(find backend/src/layers/organizations_security -type f -name "*.py" -exec sha256sum {} + | sha256sum | cut -d' ' -f1)
         STRIPE_HASH=$(find backend/src/layers/stripe -type f \( -name "*.py" -o -name "Pipfile*" \) -exec sha256sum {} + | sha256sum | cut -d' ' -f1)
         
         echo "organization_hash=${ORG_HASH}" >> $GITHUB_OUTPUT

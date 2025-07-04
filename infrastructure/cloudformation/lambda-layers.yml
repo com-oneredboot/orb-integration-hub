@@ -27,11 +27,11 @@ Parameters:
 
 
 Resources:
-  OrganizationSecurityLayer:
+  OrganizationsSecurityLayer:
     Properties:
-      LayerName: !Sub '${CustomerId}-${ProjectId}-${Environment}-organization-security-layer'
+      LayerName: !Sub '${CustomerId}-${ProjectId}-${Environment}-organizations-security-layer'
       Description: 'Organization security middleware with audit logging and RBAC utilities'
-      ContentUri: ../../backend/src/layers/organization_security/
+      ContentUri: ../../backend/src/layers/organizations_security/
       CompatibleRuntimes:
         - python3.12
       LicenseInfo: MIT
@@ -47,12 +47,12 @@ Resources:
         - !Ref Runtime
     Type: AWS::Serverless::LayerVersion
 
-  OrganizationSecurityLayerArnParameter:
+  OrganizationsSecurityLayerArnParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-organization-security-layer-arn'
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-organizations-security-layer-arn'
       Type: String
-      Value: !Ref OrganizationSecurityLayer
+      Value: !Ref OrganizationsSecurityLayer
       Description: "ARN of the Organization Security Lambda Layer"
 
   StripeLayerArnParameter:
@@ -64,9 +64,9 @@ Resources:
       Description: "ARN of the Stripe Payment Lambda Layer"
 
 Outputs:
-  OrganizationSecurityLayerArn:
+  OrganizationsSecurityLayerArn:
     Description: 'ARN of the Organization Security Lambda Layer'
-    Value: !Ref OrganizationSecurityLayer
+    Value: !Ref OrganizationsSecurityLayer
   
   StripeLayerArn:
     Description: 'ARN of the Stripe Payment Lambda Layer'
