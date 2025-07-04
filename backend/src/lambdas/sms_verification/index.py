@@ -181,7 +181,8 @@ def lambda_handler(event, context):
         is_allowed, rate_limit_message = check_rate_limit(phone_number)
         
         if not is_allowed:
-            logger.warning(f"Rate limit exceeded for {phone_number}: {rate_limit_message}")
+            masked_phone_number = f"******{phone_number[-4:]}" if len(phone_number) > 4 else phone_number
+            logger.warning(f"Rate limit exceeded for {masked_phone_number}: {rate_limit_message}")
             return {
                 "StatusCode": 429,
                 "Message": rate_limit_message,
