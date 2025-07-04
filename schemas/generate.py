@@ -1161,23 +1161,97 @@ def generate_all_enums():
     logger.debug('Completed generate_all_enums')
 
 def prevalidate_appsync_sdl(sdl_path):
-    """Extra validation for AppSync-incompatible SDL patterns."""
+    """Validate GraphQL SDL syntax using GraphQL-core library and check AppSync-specific constraints."""
+    try:
+        from graphql import build_schema, GraphQLError
+    except ImportError:
+        logger.warning("GraphQL-core not available, falling back to basic validation")
+        return _basic_sdl_validation(sdl_path)
+    
     with open(sdl_path, 'r', encoding='utf-8') as f:
         sdl = f.read()
-    # Check for triple-quoted docstrings
+    
+    errors = []
+    
+    # Strip AppSync-specific directives for standard GraphQL validation
+    # AppSync supports @aws_auth, @aws_api_key, @aws_iam, @aws_oidc, @aws_cognito_user_pools, etc.
+    sdl_for_validation = sdl
+    
+    # Remove all AWS directives with their arguments: @aws_auth(cognito_groups: ["USER"])
+    pattern = r'@aws_\w+(\([^)]*\))?'
+    sdl_for_validation = re.sub(pattern, '', sdl_for_validation)
+    
+    # Clean up extra whitespace
+    sdl_for_validation = re.sub(r'\s+', ' ', sdl_for_validation)
+    sdl_for_validation = re.sub(r'\s*\n\s*', '\n', sdl_for_validation)
+    
+    # First, try to parse with GraphQL-core for proper SDL validation
+    try:
+        schema = build_schema(sdl_for_validation)
+        logger.info(f"✅ GraphQL SDL syntax validation passed for {sdl_path}")
+    except GraphQLError as e:
+        errors.append(f"GraphQL SDL syntax error: {str(e)}")
+    except Exception as e:
+        errors.append(f"GraphQL schema parsing failed: {str(e)}")
+    
+    # Additional AppSync-specific checks
+    lines = sdl.split('\n')
+    
+    # Check for triple-quoted docstrings (AppSync doesn't support them)
     if '"""' in sdl:
-        logger.error(f"[ERROR] AppSync SDL prevalidation failed: triple-quoted docstrings (\"\"\" ... \"\"\") are not allowed in {sdl_path}")
-        sys.exit(1)
-    # Check for top-level # comments (lines starting with #)
-    for line in sdl.splitlines():
-        if line.strip().startswith('#'):
-            logger.error(f"[ERROR] AppSync SDL prevalidation failed: top-level # comments are not allowed in {sdl_path} (line: {line.strip()})")
-            sys.exit(1)
+        errors.append("Triple-quoted docstrings (\"\"\" ... \"\"\") are not supported by AppSync")
+    
     # Check for leading or trailing backticks
     if sdl.strip().startswith('```') or sdl.strip().endswith('```'):
-        logger.error(f"[ERROR] AppSync SDL prevalidation failed: leading or trailing backticks (```) are not allowed in {sdl_path}")
+        errors.append("Leading or trailing backticks (```) are not allowed")
+    
+    # Check for top-level # comments (AppSync doesn't support them)
+    for line_num, line in enumerate(lines, 1):
+        line_stripped = line.strip()
+        if line_stripped.startswith('#'):
+            errors.append(f"Line {line_num}: Top-level # comments are not supported by AppSync: {line_stripped}")
+        
+        # Check for very long lines that might cause parsing issues
+        if len(line) > 500:
+            errors.append(f"Line {line_num}: Very long line ({len(line)} chars) - may cause parsing issues")
+    
+    if errors:
+        logger.error(f"[ERROR] AppSync SDL validation failed for {sdl_path}:")
+        for error in errors:
+            logger.error(f"  • {error}")
         sys.exit(1)
-    # Optionally: check for other known AppSync-incompatible patterns here
+    
+    logger.info(f"✅ AppSync SDL validation passed for {sdl_path}")
+
+def _basic_sdl_validation(sdl_path):
+    """Fallback basic validation when GraphQL-core is not available."""
+    with open(sdl_path, 'r', encoding='utf-8') as f:
+        sdl = f.read()
+    
+    errors = []
+    
+    # Basic checks
+    if '"""' in sdl:
+        errors.append("Triple-quoted docstrings are not allowed")
+    
+    if sdl.strip().startswith('```') or sdl.strip().endswith('```'):
+        errors.append("Leading or trailing backticks are not allowed")
+    
+    if 'schema {' not in sdl:
+        errors.append("Missing schema definition block")
+    
+    # Check for top-level comments
+    for line_num, line in enumerate(sdl.split('\n'), 1):
+        if line.strip().startswith('#'):
+            errors.append(f"Line {line_num}: Top-level # comments are not allowed")
+    
+    if errors:
+        logger.error(f"[ERROR] Basic SDL validation failed for {sdl_path}:")
+        for error in errors:
+            logger.error(f"  • {error}")
+        sys.exit(1)
+    
+    logger.info(f"Basic SDL validation passed for {sdl_path}")
 
 def generate_python_registry(name: str, schema: RegistryType) -> None:
     try:

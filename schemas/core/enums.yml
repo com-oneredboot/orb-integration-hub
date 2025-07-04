@@ -125,19 +125,19 @@ PrivacyRequestStatus:
   - PARTIALLY_COMPLETED
 
 SchemaType:
-  - standard        # Standard model (plain object), not tied to a data source or API
-  - dynamodb        # AWS DynamoDB table
-  - postgres        # PostgreSQL table
-  - mysql           # MySQL table
-  - mssql           # Microsoft SQL Server table
-  - sqlite          # SQLite table (for local/dev/testing)
-  - lambda          # AWS Lambda-backed resolver
-  - lambda-secured  # AWS Lambda resolver with DynamoDB backend for enhanced security
-  - graphql         # GraphQL-only type (not backed by a data source)
-  - registry        # Static registry or enum
-  - graph           # Graph database (e.g., AWS Neptune, Neo4j)
-  - rest            # REST API-backed type (future)
-  - elasticsearch   # Elasticsearch/OpenSearch index (future)
+  - STANDARD        # Standard model (plain object), not tied to a data source or API
+  - DYNAMODB        # AWS DynamoDB table
+  - POSTGRES        # PostgreSQL table
+  - MYSQL           # MySQL table
+  - MSSQL           # Microsoft SQL Server table
+  - SQLITE          # SQLite table (for local/dev/testing)
+  - LAMBDA          # AWS Lambda-backed resolver
+  - LAMBDA_SECURED  # AWS Lambda resolver with DynamoDB backend for enhanced security
+  - GRAPHQL         # GraphQL-only type (not backed by a data source)
+  - REGISTRY        # Static registry or enum
+  - GRAPH           # Graph database (e.g., AWS Neptune, Neo4j)
+  - REST            # REST API-backed type (future)
+  - ELASTICSEARCH   # Elasticsearch/OpenSearch index (future)
 
 OwnershipTransferStatus:
   - PAYMENT_VALIDATION_REQUIRED

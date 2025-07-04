@@ -1,6 +1,6 @@
 """
 Generated Python models for Notifications
-Generated at 2025-07-04T22:25:07.707498
+Generated at 2025-07-04T23:06:49.540502
 """
 
 from typing import Optional, List
