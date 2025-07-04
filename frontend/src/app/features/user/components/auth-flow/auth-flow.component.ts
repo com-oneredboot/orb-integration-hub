@@ -1563,7 +1563,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         identifier: identifier.substring(0, 5) + '***', // Partial logging for privacy
         step,
         success,
-        attemptType
+        attemptType: attemptType === 'password_verify' ? '***' : attemptType // Redact sensitive attempt types
       });
     }
   }

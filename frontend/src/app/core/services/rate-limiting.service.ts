@@ -176,7 +176,7 @@ export class RateLimitingService {
     // If successful, reset rate limiting for this type
     if (success) {
       this.resetRateLimitState(rateLimitKey);
-      console.debug(`[RateLimitingService] Successful ${attemptType} for ${identifier} - rate limit reset`);
+      console.debug(`[RateLimitingService] Successful ${attemptType === 'password_verify' ? '***' : attemptType} for ${identifier.substring(0, 5) + '***'} - rate limit reset`);
       return;
     }
 
@@ -194,7 +194,7 @@ export class RateLimitingService {
       state.isLocked = true;
       state.lockoutEndsAt = currentTime + config.lockoutDurationMs;
       state.remainingAttempts = 0;
-      console.warn(`[RateLimitingService] Account lockout triggered for ${identifier} (${attemptType})`);
+      console.warn(`[RateLimitingService] Account lockout triggered for ${identifier.substring(0, 5) + '***'} (${attemptType === 'password_verify' ? '***' : attemptType})`);
     } else {
       state.remainingAttempts = config.maxAttempts - state.totalFailedAttempts;
     }
@@ -202,7 +202,7 @@ export class RateLimitingService {
     // Persist state
     this.setRateLimitState(rateLimitKey, state);
     
-    console.debug(`[RateLimitingService] Failed ${attemptType} for ${identifier}`, {
+    console.debug(`[RateLimitingService] Failed ${attemptType === 'password_verify' ? '***' : attemptType} for ${identifier.substring(0, 5) + '***'}`, {
       remainingAttempts: state.remainingAttempts,
       delayMs: delayMs,
       isLocked: state.isLocked

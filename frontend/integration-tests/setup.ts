@@ -89,7 +89,11 @@ console.warn = (...args: any[]) => {
   ) {
     return;
   }
-  originalConsoleWarn(...args);
+  // Redact sensitive data from logs
+  const sanitizedArgs = args.map(arg => 
+    typeof arg === 'string' && arg.includes('password_verify') ? arg.replace(/password_verify/g, '***') : arg
+  );
+  originalConsoleWarn(...sanitizedArgs);
 };
 
 // Increase timeout for integration tests
