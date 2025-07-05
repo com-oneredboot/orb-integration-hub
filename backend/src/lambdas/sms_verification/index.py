@@ -218,9 +218,9 @@ def lambda_handler(event, context):
         masked_phone_number = f"******{phone_number[-4:]}" if len(phone_number) > 4 else phone_number
         logger.info(f"Sending SMS to {masked_phone_number}")
         sanitized_sns_parameters = sns_parameters.copy()
-        sanitized_sns_parameters['PhoneNumber'] = f"******{sns_parameters['PhoneNumber'][-4:]}" if len(sns_parameters['PhoneNumber']) > 4 else sns_parameters['PhoneNumber']
+        sanitized_sns_parameters.pop('PhoneNumber', None)  # Remove sensitive phone number
         sanitized_sns_parameters.pop('Message', None)  # Remove sensitive message content
-        logger.debug(f"SMS parameters: {sanitized_sns_parameters}")
+        logger.debug(f"Sanitized SMS parameters: {json.dumps(sanitized_sns_parameters)}")
 
         response = sns_client.publish(**sns_parameters)
         logger.info(f"SNS response: {response}")
