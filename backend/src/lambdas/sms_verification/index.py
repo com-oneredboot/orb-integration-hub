@@ -157,8 +157,7 @@ def lambda_handler(event, context):
         
         # If code is provided, verify it
         if provided_code is not None:
-            masked_phone_number = f"******{phone_number[-4:]}" if len(phone_number) > 4 else phone_number
-            logger.info(f"Verifying code for phone number: {masked_phone_number}")
+            logger.info("Verifying code for a phone number.")
             is_valid = verify_code(phone_number, str(provided_code), secret)
             
             response = {
