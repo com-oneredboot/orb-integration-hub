@@ -208,6 +208,8 @@ Resources:
               - kms:DeleteAlias
               - kms:TagResource
               - kms:UntagResource
+              - kms:ScheduleKeyDeletion
+              - kms:CancelKeyDeletion
             Resource: "*"
           - Effect: Allow
             Action:

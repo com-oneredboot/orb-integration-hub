@@ -157,11 +157,11 @@ Resources:
       Enable: true
       FindingPublishingFrequency: FIFTEEN_MINUTES
 
-  SecurityHub:
-    Type: AWS::SecurityHub::Hub
-    DependsOn: GuardDutyDetector
-    Properties:
-      EnableDefaultStandards: true
+  # SecurityHub:
+  #   Type: AWS::SecurityHub::Hub
+  #   DependsOn: GuardDutyDetector
+  #   Properties:
+  #     EnableDefaultStandards: true
 
   SecurityDashboard:
     Type: AWS::CloudWatch::Dashboard
@@ -255,7 +255,7 @@ Resources:
       EvaluationPeriods: 2
       Metrics:
         - Id: m1
-          ReturnData: true
+          ReturnData: false
           MetricStat:
             Metric:
               MetricName: RequestCount
@@ -266,7 +266,7 @@ Resources:
             Period: 300
             Stat: Average
         - Id: ad1
-          Expression: ANOMALY_DETECTION_FUNCTION(m1, 2)
+          Expression: ANOMALY_DETECTION_BAND(m1, 2)
       ThresholdMetricId: ad1
       ActionsEnabled: true
       AlarmDescription: 'AppSync request count anomaly detected'
@@ -280,7 +280,7 @@ Resources:
       EvaluationPeriods: 2
       Metrics:
         - Id: m1
-          ReturnData: true
+          ReturnData: false
           MetricStat:
             Metric:
               MetricName: Latency
@@ -291,7 +291,7 @@ Resources:
             Period: 300
             Stat: Average
         - Id: ad1
-          Expression: ANOMALY_DETECTION_FUNCTION(m1, 2)
+          Expression: ANOMALY_DETECTION_BAND(m1, 2)
       ThresholdMetricId: ad1
       ActionsEnabled: true
       AlarmDescription: 'AppSync latency anomaly detected'
