@@ -6,6 +6,7 @@
 import { AbstractControl, ValidationErrors, ValidatorFn, AsyncValidatorFn } from '@angular/forms';
 import { Observable, of, timer } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
+import DOMPurify from 'dompurify';
 
 /**
  * Custom validators class with comprehensive validation methods
@@ -277,25 +278,9 @@ export class CustomValidators {
       }
 
       const value = control.value;
-      
-      // XSS prevention patterns
-      const xssPatterns = [
-        /<script[^>]*>.*?<\/script>/gi,
-        /<iframe[^>]*>.*?<\/iframe>/gi,
-        /<object[^>]*>.*?<\/object>/gi,
-        /<embed[^>]*>/gi,
-        /<link[^>]*>/gi,
-        /javascript:/gi,
-        /vbscript:/gi,
-        /onload=/gi,
-        /onerror=/gi,
-        /onclick=/gi,
-        /onmouseover=/gi
-      ];
+      const sanitizedValue = DOMPurify.sanitize(value);
 
-      const hasXSS = xssPatterns.some(pattern => pattern.test(value));
-
-      if (hasXSS) {
+      if (sanitizedValue !== value) {
         return {
           xss: {
             value: control.value,
