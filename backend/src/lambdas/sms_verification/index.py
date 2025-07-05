@@ -219,7 +219,7 @@ def lambda_handler(event, context):
         sanitized_sns_parameters = sns_parameters.copy()
         sanitized_sns_parameters.pop('PhoneNumber', None)  # Remove sensitive phone number
         sanitized_sns_parameters.pop('Message', None)  # Remove sensitive message content
-        logger.debug(f"Sanitized SMS parameters: {json.dumps(sanitized_sns_parameters)}")
+        logger.debug("Sanitized SMS parameters prepared successfully.")
 
         response = sns_client.publish(**sns_parameters)
         logger.info(f"SNS response: {response}")
