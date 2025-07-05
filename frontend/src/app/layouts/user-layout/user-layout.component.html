@@ -1,0 +1,26 @@
+<!-- 
+file: frontend/src/app/layouts/user-layout/user-layout.component.html
+author: Corey Dale Peters
+date: 2025-03-07
+description: HTML template file for user pages
+-->
+
+<div class="user-container">
+  <header class="header">
+    <nav class="nav-menu">
+      <a routerLink="/platform" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">Platform</a>
+      <ng-container *ngIf="isAuthenticated$ | async">
+        <a routerLink="dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">Dashboard</a>
+        <a routerLink="profile" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">Profile</a>
+        <a (click)="signOut()" class="nav-link" style="cursor: pointer;">Sign Out</a>
+      </ng-container>
+      <ng-container *ngIf="!(isAuthenticated$ | async)">
+        <a routerLink="/authenticate" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">Sign In</a>
+      </ng-container>
+    </nav>
+  </header>
+
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div> 

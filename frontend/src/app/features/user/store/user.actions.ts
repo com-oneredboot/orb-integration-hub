@@ -1,8 +1,13 @@
+// file: frontend/src/app/features/user/store/user.actions.ts
+// author: Corey Dale Peters
+// date: 2025-03-07
+// description: TypeScript file
+
 // user.actions.ts
 
 import { createAction, props } from '@ngrx/store';
-import { CognitoUser } from "../../../core/models/cognito.model"
-import { User } from "../../../core/models/user.model"
+import { IAuth } from "../../../core/models/Auth.model";
+import { IUsers } from "../../../core/models/Users.model";
 
 export const signIn = createAction(
     '[Auth] Sign In',
@@ -11,7 +16,7 @@ export const signIn = createAction(
 
 export const signInSuccess = createAction(
     '[Auth] Sign In Success',
-    props<{ cognitoUser: CognitoUser, user: User }>()
+    props<{ auth: IAuth, user: IUsers }>()
 );
 
 export const signInFailure = createAction(
@@ -19,14 +24,22 @@ export const signInFailure = createAction(
     props<{ error: any }>()
 );
 
-export const updateCognitoUser = createAction(
-    '[Auth] Update Cognito User',
-    props<{ cognitoUser: CognitoUser }>()
+export const updateAuth = createAction(
+    '[Auth] Update Auth',
+    props<{ auth: IAuth }>()
 );
 
 export const updateUser = createAction(
     '[Auth] Update User',
-    props<{ user: User }>()
+    props<{ user: IUsers }>()
 );
+
+export const UserActions = {
+  signIn,
+  signInSuccess,
+  signInFailure,
+  updateAuth,
+  updateUser
+};
 
 

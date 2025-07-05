@@ -1,0 +1,66 @@
+// file: frontend/src/app/features/user/components/auth-flow/containers/auth-container.component.scss
+// author: Corey Dale Peters
+// date: 2025-03-07
+// description: SCSS style file
+
+@use '../../../../../../../styles/variables' as v;
+@use '../../../../../../../styles/mixins' as m;
+
+.auth-container {
+  @include m.auth-container;
+  
+  &__header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: v.$spacing-xl * 2;
+    width: 100%;
+    text-align: center;
+
+    &-logo {
+      width: 120px;
+      height: auto;
+      margin-bottom: v.$spacing-lg;
+    }
+
+    &-title {
+      font-size: v.$font-size-xl;
+      font-weight: v.$font-weight-semibold;
+      color: v.$text-primary;
+    }
+  }
+
+  &__progress {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: v.$spacing-xl * 2;
+
+    &-step {
+      width: 12px;
+      height: 12px;
+      margin: 0 v.$spacing-xs;
+      border-radius: 50%;
+      background-color: v.$orb-light-gray;
+      transition: background-color 0.3s ease;
+
+      &--active {
+        background-color: v.$primary-color;
+      }
+    }
+  }
+
+  &__content {
+    width: 100%;
+  }
+
+  &__error {
+    width: 100%;
+    padding: v.$spacing-md;
+    margin-bottom: v.$spacing-lg;
+    color: v.$danger-color;
+    background-color: rgba(v.$danger-color, 0.1);
+    border-radius: v.$border-radius;
+    text-align: center;
+  }
+}

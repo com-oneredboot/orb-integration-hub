@@ -1,3 +1,8 @@
+// file: frontend/src/app/features/user/components/auth-flow/store/auth.reducer.ts
+// author: Corey Dale Peters
+// date: 2025-03-07
+// description: TypeScript file
+
 import {createReducer, on} from '@ngrx/store';
 import {AuthActions} from './auth.actions';
 import {AuthSteps, initialState} from './auth.state';
@@ -5,24 +10,22 @@ import {AuthSteps, initialState} from './auth.state';
 export const authReducer = createReducer(
   initialState,
 
+  // Navigation
+  on(AuthActions.setCurrentStep, (state, { step }) => ({
+    ...state,
+    currentStep: step
+  })),
+
   // Check Email
-  on(AuthActions.checkEmail, (state) => {
-    console.debug('Reducer: checkEmail', {
-      currentState: state,
-      action: 'checkEmail'
-    });
+  on(AuthActions.checkEmail, (state, { email }) => {
     return {
       ...state,
+      currentEmail: email,
       isLoading: true,
       error: null
     };
   }),
   on(AuthActions.checkEmailSuccess, (state, { userExists }) => {
-    console.debug('Reducer handling checkEmailSuccess:', {
-      currentState: state,
-      userExists,
-      newStep: userExists ? AuthSteps.PASSWORD : AuthSteps.PASSWORD_SETUP
-    });
     return {
       ...state,
       userExists,
@@ -35,6 +38,12 @@ export const authReducer = createReducer(
     ...state,
     error,
     isLoading: false
+  })),
+  on(AuthActions.checkEmailUserNotFound, (state) => ({
+    ...state,
+    currentStep: AuthSteps.PASSWORD_SETUP,
+    isLoading: false,
+    error: null
   })),
 
   // Create User
@@ -79,12 +88,9 @@ export const authReducer = createReducer(
     error: null
   })),
   on(AuthActions.verifyCognitoPasswordSuccess, (state, { message, needsMFA, needsMFASetup, mfaSetupDetails }) => {
-    console.debug('Reducer handling verifyCognitoPasswordSuccess:', { message, needsMFA, needsMFASetup });
-
     // decide on next step.  NeedsMFASetup trumps all
     let nextStep = (needsMFA)? AuthSteps.MFA_VERIFY: AuthSteps.SIGNIN;
     nextStep = (needsMFASetup) ? AuthSteps.MFA_SETUP : nextStep;
-    console.debug('Reducer handling verifyCognitoPasswordSuccess:', { nextStep });
 
     return {
       ...state,
@@ -107,7 +113,7 @@ export const authReducer = createReducer(
   })),
   on(AuthActions.signInSuccess, (state, { user }) => {
     // Check if phone verification is needed
-    const phoneVerificationNeeded = !user.phone_number;
+    const phoneVerificationNeeded = !user.phoneNumber;
     
     return {
       ...state,
@@ -150,8 +156,11 @@ export const authReducer = createReducer(
   on(AuthActions.needsMFASuccess, (state) => ({
     ...state,
     mfaEnabled: true,
-    currentStep: AuthSteps.COMPLETE,
-    isLoading: false
+    isAuthenticated: true,
+    sessionActive: true,
+    isLoading: false,
+    error: null
+    // Note: currentStep will be set by authFlowComplete action
   })),
   on(AuthActions.needsMFAFailure, (state, { error }) => ({
     ...state,
@@ -237,8 +246,8 @@ export const authReducer = createReducer(
     ...state,
     isLoading: false,
     error: null,
-    phoneVerified: true,
-    currentStep: AuthSteps.COMPLETE
+    phoneVerified: true
+    // Don't set currentStep to COMPLETE yet - wait for user update to complete
   })),
   on(AuthActions.verifyPhoneFailure, (state, { error }) => ({
     ...state,
@@ -252,6 +261,37 @@ export const authReducer = createReducer(
     isLoading: false
   })),
 
+  // Check MFA Setup
+  on(AuthActions.checkMFASetup, (state) => ({
+    ...state,
+    isLoading: true,
+    error: null
+  })),
+  on(AuthActions.checkMFASetupSuccess, (state) => ({
+    ...state,
+    isLoading: false,
+    error: null
+  })),
+  on(AuthActions.checkMFASetupFailure, (state, { error }) => ({
+    ...state,
+    error,
+    isLoading: false
+  })),
+
+  // Auth Flow Complete
+  on(AuthActions.authFlowComplete, (state, { user }) => {
+    console.log('[AuthReducer] authFlowComplete - Authentication flow completed for user:', user.email);
+    return {
+      ...state,
+      currentStep: AuthSteps.COMPLETE,
+      currentUser: user,
+      isAuthenticated: true,
+      sessionActive: true,
+      isLoading: false,
+      error: null
+    };
+  }),
+
   // Signout
   on(AuthActions.signout, (state) => ({
     ...state,
@@ -263,6 +303,27 @@ export const authReducer = createReducer(
     return {...initialState};
   }),
   on(AuthActions.signoutFailure, (state, { error }) => ({
+    ...state,
+    error,
+    isLoading: false
+  })),
+
+  // User update after phone verification
+  on(AuthActions.updateUserAfterPhoneVerification, (state) => ({
+    ...state,
+    isLoading: true,
+    error: null
+  })),
+  on(AuthActions.updateUserAfterPhoneVerificationSuccess, (state, { user }) => ({
+    ...state,
+    isLoading: false,
+    error: null,
+    currentUser: user,
+    sessionActive: true,
+    isAuthenticated: true,
+    currentStep: AuthSteps.COMPLETE
+  })),
+  on(AuthActions.updateUserAfterPhoneVerificationFailure, (state, { error }) => ({
     ...state,
     error,
     isLoading: false

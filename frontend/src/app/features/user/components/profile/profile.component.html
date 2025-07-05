@@ -1,19 +1,131 @@
+<!-- 
+file: frontend/src/app/features/user/components/profile/profile.component.html
+author: Corey Dale Peters
+date: 2025-03-07
+description: HTML template file
+-->
+
 <div class="profile-container">
   <div class="profile-header">
-    <h1>Profile</h1>
-    <div class="profile-header__welcome" *ngIf="currentUser$ | async as user">
-      <p class="profile-header__welcome-text">
-        <i class="profile-header__icon">⚙️</i> 
-        Ready to build, {{ user.first_name || 'Engineer' }}? Your integration hub is operational.
-      </p>
-      <p class="profile-header__tagline">
-        <strong>OneRedBoot</strong> — Software that works
-      </p>
+    <div class="profile-header__content">
+      <div class="profile-header__flex-container">
+        <div class="profile-header__logo-section">
+          <img src="../../../../../assets/onredboot-logo.jpg" alt="OneRedBoot Logo" class="profile-header__logo">
+        </div>
+        <div class="profile-header__text-section" *ngIf="currentUser$ | async as user">
+          <div class="profile-header__greeting">
+            <div class="profile-header__icon-title">
+              <img src="../../../../../assets/hardhat.jpg" alt="Engineering" class="profile-header__icon">
+              <h1 class="profile-header__title">Profile Settings</h1>
+            </div>
+            <p class="profile-header__subtitle" *ngIf="isAccountComplete(user); else pendingMessage">
+              Your profile is complete and ready for engineering work
+            </p>
+            <ng-template #pendingMessage>
+              <p class="profile-header__subtitle profile-header__subtitle--warning">
+                Complete your profile setup to activate your account
+              </p>
+            </ng-template>
+            <div class="profile-header__status">
+              <span class="profile-header__status-badge" 
+                    [ngClass]="'profile-header__status-badge--' + getStatusClass(user.status)">
+                <fa-icon [icon]="isAccountComplete(user) ? 'check-circle' : 'exclamation-triangle'" class="profile-header__status-icon"></fa-icon>
+                {{ isAccountComplete(user) ? 'Account Complete' : 'Profile Incomplete' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="profile-content" *ngIf="(currentUser$ | async) as user">
-    <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="profile-form">
+  <!-- Profile Overview Card - Full Width -->
+  <div class="profile-overview-section" *ngIf="(currentUser$ | async) as user">
+    <div class="profile-card profile-card--overview">
+      <div class="profile-card__header">
+        <h2 class="profile-card__title">
+          <fa-icon icon="user" class="profile-card__icon"></fa-icon>
+          Profile Overview
+        </h2>
+        <div class="profile-card__header-actions">
+          <div class="profile-card__badge" 
+               [ngClass]="'profile-card__badge--' + getStatusClass(user.status)">
+            {{ user.status }}
+          </div>
+          <button 
+            *ngIf="!isEditMode"
+            class="profile-card__edit-btn"
+            (click)="enterEditMode()"
+            type="button">
+            <fa-icon icon="edit" class="profile-card__edit-icon"></fa-icon>
+            Edit Profile
+          </button>
+        </div>
+      </div>
+      
+      <div class="profile-card__content">
+        <div class="profile-overview-grid">
+          <div class="profile-overview-item">
+            <div class="profile-overview-item__label">Full Name</div>
+            <div class="profile-overview-item__value">{{ user.firstName }} {{ user.lastName }}</div>
+          </div>
+          
+          <div class="profile-overview-item">
+            <div class="profile-overview-item__label">Email Address</div>
+            <div class="profile-overview-item__value">
+              {{ user.email }}
+              <span class="verification-badge" 
+                    [ngClass]="user.emailVerified ? 'verification-badge--verified' : 'verification-badge--pending'">
+                <fa-icon [icon]="user.emailVerified ? 'check-circle' : 'clock'" class="verification-badge__icon"></fa-icon>
+                {{ user.emailVerified ? 'Verified' : 'Pending' }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="profile-overview-item">
+            <div class="profile-overview-item__label">Phone Number</div>
+            <div class="profile-overview-item__value">
+              {{ user.phoneNumber || 'Not provided' }}
+              <span class="verification-badge" 
+                    *ngIf="user.phoneNumber"
+                    [ngClass]="user.phoneVerified ? 'verification-badge--verified' : 'verification-badge--pending'">
+                <fa-icon [icon]="user.phoneVerified ? 'check-circle' : 'clock'" class="verification-badge__icon"></fa-icon>
+                {{ user.phoneVerified ? 'Verified' : 'Pending' }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="profile-overview-item">
+            <div class="profile-overview-item__label">Account Type</div>
+            <div class="profile-overview-item__value">
+              <span *ngFor="let group of user.groups; let last = last" 
+                    class="role-badge">
+                {{ group }}{{ !last ? ', ' : '' }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="profile-overview-item">
+            <div class="profile-overview-item__label">Member Since</div>
+            <div class="profile-overview-item__value">{{ formatDate(user.createdAt) }}</div>
+          </div>
+          
+          <div class="profile-overview-item">
+            <div class="profile-overview-item__label">Last Updated</div>
+            <div class="profile-overview-item__value">{{ formatDate(user.updatedAt) }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Form Section - Constrained Width -->
+  <div class="profile-content" *ngIf="isEditMode && (currentUser$ | async) as user">
+    <form 
+      [formGroup]="profileForm" 
+      (ngSubmit)="onSubmit()" 
+      class="profile-form"
+      id="profile-edit-form">
       <!-- Personal Information Section -->
       <div class="profile-form__section">
         <h2 class="profile-form__section-title">Personal Information</h2>
@@ -75,39 +187,12 @@
         </div>
       </div>
       
-      <!-- Account Information Section (Read-only) -->
-      <div class="profile-form__section">
-        <h2 class="profile-form__section-title">Account Information</h2>
-        
-        <div class="profile-form__row">
-          <!-- Account Status -->
-          <div class="profile-form__field">
-            <label class="profile-form__field-label">Account Status</label>
-            <div class="profile-form__field-value">{{ user.status }}</div>
-          </div>
-          
-          <!-- Member Since -->
-          <div class="profile-form__field">
-            <label class="profile-form__field-label">Member Since</label>
-            <div class="profile-form__field-value">{{ formatDate(user.created_at) }}</div>
-          </div>
-        </div>
-        
-        <!-- User Groups -->
-        <div class="profile-form__field">
-          <label class="profile-form__field-label">Account Type</label>
-          <div class="profile-form__field-value">
-            <span *ngFor="let group of user.groups" class="profile-form__badge">{{ group }}</span>
-          </div>
-        </div>
-      </div>
-      
       <!-- Form Actions -->
       <div class="profile-form__actions">
         <button 
           type="button" 
           class="profile-form__button profile-form__button--secondary"
-          (click)="resetForm()"
+          (click)="cancelEdit()"
         >
           Cancel
         </button>
@@ -122,54 +207,46 @@
     </form>
   </div>
   
-  <!-- User debug panel - Only visible in debug mode -->
-  <div class="profile__debug" *ngIf="debugMode$ | async">
-    <h3 class="profile__debug-title">User Debug Info</h3>
-    
-    <div class="profile__debug-section">
-      <h4>User Controls</h4>
-      <ng-container *ngIf="currentUser$ | async as user">
-        <div class="profile__debug-status">
-          <div>User ID: <code>{{ user.user_id }}</code></div>
-        </div>
-        
-        <div class="profile__debug-actions">
-          <button 
-            class="profile__debug-button"
-            (click)="signOut()"
-          >
-            Sign Out
-          </button>
-        </div>
-      </ng-container>
-    </div>
-  </div>
-  
-  <!-- Debug section for Form - Only visible in debug mode -->
-  <ng-container *ngIf="debugMode$ | async">
+  <!-- Debug section -->
+  <div class="profile-debug-section" *ngIf="debugMode$ | async">
     <div class="profile__debug">
-      <h3 class="profile__debug-title">Form Debug Information</h3>
+      <h3>Profile Debug Information</h3>
       
       <div class="profile__debug-section">
-        <h4>Form State</h4>
-        <pre>Form Valid: {{ profileForm.valid }}</pre>
-        <pre>Form Pristine: {{ profileForm.pristine }}</pre>
-        <pre>Form Touched: {{ profileForm.touched }}</pre>
-        <pre>Form Values: {{ profileForm.value | json }}</pre>
-        <pre>Form Errors: {{ profileForm.errors | json }}</pre>
+        <h4>Current User Observable Status</h4>
+        <ng-container *ngIf="currentUser$ | async as user; else noUser">
+          <p><strong>User Data Found:</strong></p>
+          <pre>{{ user | json }}</pre>
+          <p><strong>User Is Valid:</strong> {{ isUserValid(user) }}</p>
+          <p><strong>Required Attributes Check:</strong></p>
+          <ul>
+            <li>Email: {{ !!user.email }} ({{ user.email }})</li>
+            <li>First Name: {{ !!user.firstName }} ({{ user.firstName }})</li>
+            <li>Last Name: {{ !!user.lastName}} ({{ user.lastName }})</li>
+            <li>Phone Number: {{ !!user.phoneNumber}} ({{ user.phoneNumber }})</li>
+            <li>Status Is Active: {{ user.status === 'ACTIVE' }} ({{ user.status }})</li>
+          </ul>
+        </ng-container>
+        <ng-template #noUser>
+          <p class="error"><strong>No User Data Found</strong></p>
+          <p>currentUser$ observable is emitting null or undefined</p>
+        </ng-template>
       </div>
       
-      <div class="profile__debug-section" *ngIf="currentUser$ | async as user">
-        <h4>User Data</h4>
-        <pre>User Object: {{ user | json }}</pre>
-        <pre>User Is Valid: {{ isUserValid(user) | json }}</pre>
-        <pre>Required Attributes Check:
-  - Email: {{ !!user.email }}
-  - First Name: {{ !!user.first_name }}
-  - Last Name: {{ !!user.last_name }}
-  - Phone Number: {{ !!user.phone_number }}
-  - Status Is Active: {{ user.status === 'ACTIVE' }}</pre>
+      <div class="profile__debug-section" *ngIf="isEditMode">
+        <h4>Form Debug Status</h4>
+        <p><strong>Form Valid:</strong> {{ profileForm.valid }}</p>
+        <p><strong>Form Pristine:</strong> {{ profileForm.pristine }}</p>
+        <p><strong>Form Touched:</strong> {{ profileForm.touched }}</p>
+        <p><strong>Form Values:</strong></p>
+        <pre>{{ profileForm.value | json }}</pre>
+      </div>
+      
+      <div class="profile__debug-section">
+        <h4>Edit Mode Status</h4>
+        <p><strong>Edit Mode:</strong> {{ isEditMode ? 'ON' : 'OFF' }}</p>
+        <p><strong>Loading:</strong> {{ isLoading ? 'YES' : 'NO' }}</p>
       </div>
     </div>
-  </ng-container>
+  </div>
 </div>

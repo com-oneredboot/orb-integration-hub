@@ -1,0 +1,214 @@
+@use 'variables' as v;
+@use "sass:color";
+
+@mixin button-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: v.$spacing-sm;
+  padding: v.$spacing-md v.$spacing-lg;
+  border-radius: v.$border-radius;
+  font-weight: v.$font-weight-medium;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: v.$orb-red;
+  color: v.$orb-white;
+  border: none;
+  text-decoration: none;
+
+  &:hover {
+    background: color.adjust(v.$orb-red, $lightness: -10%);
+  }
+
+  fa-icon {
+    font-size: v.$font-size-lg;
+  }
+}
+
+// Enhanced Global Debug Section Mixin
+@mixin debug-container {
+  border: 2px dashed v.$orb-gray;
+  background-color: v.$orb-white;
+  padding: v.$spacing-lg;
+  margin: v.$spacing-xl 0;
+  border-radius: v.$border-radius-lg;
+  font-family: v.$font-family-monospace;
+  font-size: v.$font-size-sm;
+  color: v.$text-primary;
+  width: 100%;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+
+  // Debug title styling
+  h3 {
+    color: v.$orb-red;
+    font-weight: v.$font-weight-bold;
+    margin: 0 0 v.$spacing-lg 0;
+    font-size: v.$font-size-lg;
+    font-family: v.$font-family-heading;
+    text-align: center;
+    border-bottom: 1px solid v.$orb-light-gray;
+    padding-bottom: v.$spacing-sm;
+  }
+
+  // Debug section headers
+  h4 {
+    color: v.$orb-dark-blue;
+    font-weight: v.$font-weight-semibold;
+    margin: v.$spacing-lg 0 v.$spacing-sm 0;
+    font-size: v.$font-size-base;
+    font-family: v.$font-family-heading;
+    
+    &:first-of-type {
+      margin-top: 0;
+    }
+  }
+
+  // Pre-formatted debug output
+  pre {
+    background: rgba(v.$orb-light-gray, 0.3);
+    border: 1px solid v.$orb-light-gray;
+    padding: v.$spacing-sm;
+    border-radius: v.$border-radius-sm;
+    margin: v.$spacing-xs 0;
+    font-family: v.$font-family-monospace;
+    font-size: v.$font-size-sm;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  // Debug section containers
+  .debug-section,
+  &-section {
+    margin-bottom: v.$spacing-lg;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  // Error states
+  p.error, .error {
+    color: v.$danger-color;
+    font-weight: v.$font-weight-semibold;
+  }
+
+  // Lists
+  ul {
+    margin: v.$spacing-sm 0;
+    padding-left: v.$spacing-lg;
+  }
+
+  li {
+    margin-bottom: v.$spacing-xs;
+  }
+}
+
+@mixin debug-section {
+  margin-bottom: v.$spacing-lg;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+@mixin debug-button {
+  background: v.$primary-color;
+  color: v.$white;
+  border: none;
+  padding: v.$spacing-xs v.$spacing-md;
+  border-radius: v.$border-radius-sm;
+  cursor: pointer;
+  font-weight: v.$font-weight-medium;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background: color.adjust(v.$primary-color, $lightness: -10%);
+  }
+}
+
+// Common Mixins
+
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin box-shadow($color, $blur) {
+  -webkit-box-shadow: 0px 0px $blur $color;
+  -moz-box-shadow: 0px 0px $blur $color;
+  box-shadow: 0px 0px $blur $color;
+}
+
+
+@mixin auth-container {
+  // Define styles for auth-container
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: v.$spacing-xl;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+@mixin form-container {
+  width: 100%;
+  max-width: 600px;
+  padding: v.$spacing-xl;
+  background-color: v.$orb-white;
+  border-radius: v.$border-radius-lg;
+  box-shadow: v.$shadow-md;
+}
+
+@mixin page-container {
+  // Define styles for page-container
+  padding: v.$spacing-lg;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+// Card Component Mixin
+@mixin card {
+  background: v.$bg-primary;
+  border-radius: v.$border-radius-lg;
+  box-shadow: v.$shadow-md;
+  border: 1px solid v.$border-color;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: v.$shadow-lg;
+  }
+}
+
+@mixin card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: v.$spacing-lg;
+  border-bottom: 1px solid v.$border-color;
+  background: rgba(v.$primary-color, 0.02);
+}
+
+@mixin card-title {
+  display: flex;
+  align-items: center;
+  gap: v.$spacing-sm;
+  font-family: v.$font-family-heading;
+  font-size: v.$font-size-lg;
+  color: v.$text-primary;
+  margin: 0;
+  font-weight: v.$font-weight-semibold;
+}
+
+@mixin card-icon {
+  color: v.$primary-color;
+  font-size: v.$font-size-lg;
+}
+
+@mixin card-content {
+  padding: v.$spacing-lg;
+} 

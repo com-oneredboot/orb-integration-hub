@@ -1,1 +1,0 @@
-Please provide the complete context for the project with updated sections for tasks completed, next steps, and any current issues.  Also please provide the current project structure in a format it was given

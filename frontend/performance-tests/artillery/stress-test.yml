@@ -1,0 +1,87 @@
+config:
+  target: 'http://localhost:4200'
+  phases:
+    # Gradual stress ramp-up
+    - duration: 60
+      arrivalRate: 50
+      rampTo: 200
+      name: "Stress ramp-up to 200 users"
+    # Peak stress load
+    - duration: 300
+      arrivalRate: 200
+      name: "Peak stress - 200 concurrent users"
+    # Spike test
+    - duration: 30
+      arrivalRate: 500
+      name: "Spike test - 500 users"
+    # Recovery phase
+    - duration: 60
+      arrivalRate: 500
+      rampTo: 50
+      name: "Recovery phase"
+  processor: "./processors/stress-processor.js"
+  defaults:
+    headers:
+      Accept: "application/json, text/plain, */*"
+      Content-Type: "application/json"
+      User-Agent: "Artillery/StressTest"
+  plugins:
+    metrics-by-endpoint:
+      useOnlyRequestNames: true
+    expect:
+      outputFormat: json
+      
+scenarios:
+  - name: "Authentication Stress Test"
+    weight: 60
+    flow:
+      - function: "generateStressUser"
+      - get:
+          url: "/user/auth"
+          name: "Load Auth Page Under Stress"
+          expect:
+            - statusCode: 200
+            - hasProperty: "body"
+            - contentType: "text/html"
+        think: 0.5
+      
+      - post:
+          url: "/api/auth/login"
+          name: "Login Under High Load"
+          json:
+            email: "{{ email }}"
+            password: "{{ password }}"
+          expect:
+            - statusCode: [200, 429] # Accept rate limiting
+        think: 1
+      
+      - function: "validateStressResponse"
+
+  - name: "Rate Limiting Test"
+    weight: 30
+    flow:
+      - loop:
+          - post:
+              url: "/api/auth/login"
+              name: "Rapid Login Attempts"
+              json:
+                email: "stress@test.com"
+                password: "wrong-password"
+          - think: 0.1
+        count: 10
+      
+      - function: "checkRateLimiting"
+
+  - name: "Resource Exhaustion Test"
+    weight: 10
+    flow:
+      - get:
+          url: "/user/auth"
+          name: "Page Load Under Stress"
+      - get:
+          url: "/assets/onredboot-logo.jpg"
+          name: "Asset Load Under Stress"
+      - get:
+          url: "/favicon.ico"
+          name: "Favicon Load Under Stress"
+      - function: "monitorResourceUsage"

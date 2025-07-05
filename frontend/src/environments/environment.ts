@@ -1,16 +1,22 @@
+// file: frontend/src/environments/environment.ts
+// author: Corey Dale Peters
+// date: 2025-06-20
+// description: Development environment configuration with secure placeholder tokens
+
 // src/environments/environment.ts
 export const environment = {
-  appName: 'OneRedBoot.com (Development)',
+  appName: 'Integration Hub',
   production: false,
+  debugMode: false, // Debug mode disabled by default (overridden in local environment)
   loggingLevel: 'debug',
   cognito: {
-    userPoolId: 'us-east-1_YRI3K0Ijp',
-    userPoolClientId: '1tfddnvolaq04ufmcimq35mlkl',
-    qrCodeIssuer: 'OneRedBoot.com'
+    userPoolId: '{{COGNITO_USER_POOL_ID}}',
+    userPoolClientId: '{{COGNITO_CLIENT_ID}}',
+    qrCodeIssuer: '{{COGNITO_QR_ISSUER}}'
   },
   graphql: {
-    url: 'https://yolw2em6xjeodcgupkav3ler54.appsync-api.us-east-1.amazonaws.com/graphql',
-    region: 'us-east-1',
-    apiKey: 'da2-5dj3hg3ym5exbdmcjnht3bpara'
+    url: '{{GRAPHQL_API_URL}}',
+    region: '{{AWS_REGION}}',
+    apiKey: '{{GRAPHQL_API_KEY}}'
   }
 };

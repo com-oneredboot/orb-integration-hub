@@ -4,8 +4,9 @@
 // description: Contains the Auth reducer
 
 // Application Imports
-import { User } from "../../../../../core/models/user.model";
-import { UserGroups } from "../../../../../core/models/user.enum";
+import { IUsers } from '../../../../../core/models/UsersModel';
+import { UserGroup } from "../../../../../core/models/UserGroupEnum";
+import { environment } from "../../../../../../environments/environment";
 
 export enum AuthSteps {
   EMAIL,
@@ -13,11 +14,14 @@ export enum AuthSteps {
   PASSWORD_SETUP,     // For new users
   EMAIL_VERIFY,       // Verifies the email code
   SIGNIN,             // For users who have verified their email
-  NAME_SETUP,         // for users without first_name, last_name
-  PHONE_SETUP,        // for users without phone_number
+  NAME_SETUP,         // for users without firstName, lastName
+  PHONE_SETUP,        // for users without phoneNumber
   PHONE_VERIFY,       // verifies the phone number
   MFA_SETUP,          // for users without MFA
   MFA_VERIFY,         // verifies the MFA code
+  PASSWORD_RESET,     // initiates password reset
+  PASSWORD_RESET_VERIFY, // verifies password reset code
+  PASSWORD_RESET_CONFIRM, // confirms new password
   COMPLETE            // User setup is complete
 }
 
@@ -27,8 +31,9 @@ export interface AuthState {
   isLoading: boolean;
   error: string | null;
   currentStep: AuthSteps;
-  currentUser: User | null;
+  currentUser: IUsers | null;
   userExists: boolean;
+  currentEmail: string | null;
 
   // Phone validation
   phoneValidationId: string | null;
@@ -48,13 +53,13 @@ export interface AuthState {
   mfaSetupDetails?: {
     qrCode: string;
     secretKey: string;
-    setupUri?: URL;
+    setupUri?: string;
   };
 
   // Group related
-  currentGroup: UserGroups | null;
-  availableGroups: UserGroups[];
-  groupPriority: UserGroups[];
+  currentGroup: UserGroup | null;
+  availableGroups: UserGroup[];
+  groupPriority: UserGroup[];
 
   // Email
   emailVerified: boolean;
@@ -62,16 +67,20 @@ export interface AuthState {
   // Session
   sessionActive: boolean;
   lastActivity: number | null;
+
+  userGroups: UserGroup[];
+  phoneValidationExpiresAt: number | null;
 }
 
 export const initialState: AuthState = {
-  debugMode: true,
+  debugMode: environment.debugMode, // Use environment-based debug mode configuration
   isAuthenticated: false,
   isLoading: false,
   error: null,
   currentUser: null,
   currentStep: AuthSteps.EMAIL,
   userExists: false,
+  currentEmail: null,
 
   phoneValidationId: null,
   phoneValidationCode: null,
@@ -95,5 +104,8 @@ export const initialState: AuthState = {
   emailVerified: false,
 
   sessionActive: false,
-  lastActivity: null
+  lastActivity: null,
+
+  userGroups: [],
+  phoneValidationExpiresAt: null
 };

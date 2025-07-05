@@ -1,102 +1,137 @@
-  # DynamoDB table for {{ model_name }}
-  {{ table_name|capitalize }}Table:
-    Properties:
-      AttributeDefinitions:{%- set all_attrs = [keys.primary.partition] -%}
-        {%- if keys.primary.sort -%}
-          {%- set all_attrs = all_attrs + [keys.primary.sort] -%}
-        {%- endif -%}
-        {%- for gsi in keys.secondary -%}
-          {%- if gsi.partition and gsi.partition not in all_attrs -%}
-            {%- set all_attrs = all_attrs + [gsi.partition] -%}
-          {%- endif -%}
-          {%- if gsi.sort and gsi.sort not in all_attrs -%}
-            {%- set all_attrs = all_attrs + [gsi.sort] -%}
-          {%- endif -%}
-        {%- endfor %}
-        -
-          AttributeName: {{ keys.primary.partition }}
-          AttributeType: S
-        {%- if keys.primary.sort %}
-        -
-          AttributeName: {{ keys.primary.sort }}
-          AttributeType: S
-        {%- endif -%}
-        {%- for gsi in keys.secondary -%}
-          {%- if gsi.partition and gsi.partition != keys.primary.partition and gsi.partition != keys.primary.sort %}
-        -
-          AttributeName: {{ gsi.partition }}
-          AttributeType: S
-          {%- endif -%}
-          {%- if gsi.sort and gsi.sort != keys.primary.partition and gsi.sort != keys.primary.sort and gsi.sort != gsi.partition %}
-        -
-          AttributeName: {{ gsi.sort }}
-          AttributeType: S
-          {%- endif -%}
-        {%- endfor %}
-      BillingMode: PAY_PER_REQUEST
-      KeySchema:
-        -
-          AttributeName: {{ keys.primary.partition }}
-          KeyType: HASH
-        {%- if keys.primary.sort %}
-        -
-          AttributeName: {{ keys.primary.sort }}
-          KeyType: RANGE
-        {%- endif %}
-        {%- if keys.secondary %}
-      GlobalSecondaryIndexes:
-        {%- for gsi in keys.secondary %}
-        -
-          IndexName: {{ gsi.name }}
-          KeySchema:
-            -
-              AttributeName: {{ gsi.partition }}
-              KeyType: HASH
-            {%- if gsi.sort %}
-            -
-              AttributeName: {{ gsi.sort }}
-              KeyType: RANGE
-            {%- endif %}
-          Projection:
-            ProjectionType: ALL
-        {%- endfor %}
-        {%- endif %}
-      TableName: !Sub "${CustomerId}-${ProjectId}-${Environment}-{{ table_name }}"
-      Tags:
-        - Key: Billable
-          Value: "true"
-        - Key: CustomerId
-          Value: !Ref CustomerId
-        - Key: Environment
-          Value: !Ref Environment
-        - Key: ProjectId
-          Value: !Ref ProjectId
+# --------------------------------------------------- #
+AWSTemplateFormatVersion: 2010-09-09
+
+# --------------------------------------------------- #
+Transform: AWS::Serverless-2016-10-31
+
+# --------------------------------------------------- #
+Description: >
+ Application Infrastructure - DynamoDB Tables
+
+# --------------------------------------------------- #
+Parameters:
+  Environment:
+    Default: dev
+    Type: String
+    Description: Environment name (dev, staging, prod)
+  CustomerId:
+    Default: orb
+    Type: String
+    Description: Customer identifier
+  ProjectId:
+    Default: integration-hub
+    Type: String
+    Description: Project identifier
+  TracingIs:
+    Default: Active
+    Type: String
+    Description: Whether tracing is enabled
+
+# --------------------------------------------------- #
+Resources:
+  {% for schema in schemas.values() %}
+  {{ schema.name }}Table:
     Type: AWS::DynamoDB::Table
-
-  # Parameter Store for table name
-  {{ table_name|capitalize }}TableNameParameter:
     Properties:
-      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-{{ table_name }}-table-name"
-      Type: String
-      Value: !Ref {{ table_name|capitalize }}Table
-      Description: DynamoDB {{ model_name }} Table Name
-      Tags:
-        Billable: true
-        CustomerId: !Ref CustomerId
-        Environment: !Ref Environment
-        ProjectId: !Ref ProjectId
-    Type: AWS::SSM::Parameter
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}
+      BillingMode: PAY_PER_REQUEST
+      {% if schema.stream and schema.stream.enabled %}
+      StreamSpecification:
+        StreamViewType: {{ schema.stream.viewType }}
+      {% endif %}
+      KeySchema:
+        {% for key in schema.key_schema %}
+        - AttributeName: {{ key.name }}
+          KeyType: {{ key.type }}
+        {% endfor %}
+      AttributeDefinitions:
+        {% for attr in schema.attribute_definitions %}
+        - AttributeName: {{ attr.AttributeName }}
+          AttributeType: {{ attr.AttributeType }}
+        {% endfor %}
+      {% if schema.global_secondary_indexes %}
+      GlobalSecondaryIndexes:
+        {% for gsi in schema.global_secondary_indexes %}
+        - IndexName: {{ gsi.IndexName }}
+          KeySchema:
+            {% for key in gsi.KeySchema %}
+            - AttributeName: {{ key.AttributeName }}
+              KeyType: {{ key.KeyType }}
+            {% endfor %}
+          Projection:
+            ProjectionType: {{ gsi.Projection.ProjectionType }}
+            {% if gsi.Projection.NonKeyAttributes %}
+            NonKeyAttributes:
+              {% for attr in gsi.Projection.NonKeyAttributes %}
+              - {{ attr }}
+              {% endfor %}
+            {% endif %}
+        {% endfor %}
+      {% endif %}
+      {% if schema.local_secondary_indexes %}
+      LocalSecondaryIndexes:
+        {% for lsi in schema.local_secondary_indexes %}
+        - IndexName: {{ lsi.IndexName }}
+          KeySchema:
+            {% for key in lsi.KeySchema %}
+            - AttributeName: {{ key.AttributeName }}
+              KeyType: {{ key.KeyType }}
+            {% endfor %}
+          Projection:
+            ProjectionType: {{ lsi.Projection.ProjectionType }}
+            {% if lsi.Projection.NonKeyAttributes %}
+            NonKeyAttributes:
+              {% for attr in lsi.Projection.NonKeyAttributes %}
+              - {{ attr }}
+              {% endfor %}
+            {% endif %}
+        {% endfor %}
+      {% endif %}
 
-  # Parameter Store for table ARN
-  {{ table_name|capitalize }}TableArnParameter:
-    Properties:
-      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-{{ table_name }}-table-arn"
-      Type: String
-      Value: !GetAtt {{ table_name|capitalize }}Table.Arn
-      Description: DynamoDB {{ model_name }} Table Arn
-      Tags:
-        Billable: true
-        CustomerId: !Ref CustomerId
-        Environment: !Ref Environment
-        ProjectId: !Ref ProjectId
+  {{ schema.name }}TableArn:
     Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}-table-arn
+      Type: String
+      Value: !GetAtt {{ schema.name }}Table.Arn
+
+  {{ schema.name }}TableName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}-table-name
+      Type: String
+      Value: !Ref {{ schema.name }}Table
+
+  {% if schema.stream %}
+  {{ schema.name }}TableStreamArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}-table-stream-arn
+      Type: String
+      Value: !GetAtt {{ schema.name }}Table.StreamArn
+  {% endif %}    
+  {% endfor %}
+
+# --------------------------------------------------- #
+Outputs:
+  {% for schema in schemas.values() %}
+  {{ schema.name }}TableArn:
+    Description: The ARN of the {{ schema.name }} table
+    Value: !GetAtt {{ schema.name }}Table.Arn
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}-table-arn
+
+  {{ schema.name }}TableName:
+    Description: The name of the {{ schema.name }} table
+    Value: !Ref {{ schema.name }}Table
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}-table-name
+
+  {% if schema.stream and schema.stream.enabled %}
+  {{ schema.name }}TableStreamArn:
+    Description: The Stream ARN of the {{ schema.name }} table
+    Value: !GetAtt {{ schema.name }}Table.StreamArn
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-{{ schema.name | to_kebab_case }}-table-stream-arn
+  {% endif %}
+  {% endfor %}

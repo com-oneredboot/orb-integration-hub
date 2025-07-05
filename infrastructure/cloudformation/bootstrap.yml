@@ -1,0 +1,484 @@
+# --------------------------------------------------- #
+AWSTemplateFormatVersion: 2010-09-09
+
+# --------------------------------------------------- #
+Transform: AWS::Serverless-2016-10-31
+
+# --------------------------------------------------- #
+Description: >
+ Application Infrastructure - Bootstrap Stack
+
+# --------------------------------------------------- #
+Parameters:
+  Environment:
+    Default: dev
+    Type: String
+  CustomerId:
+    Default: orb
+    Type: String
+  ProjectId:
+    Default: integration-hub
+    Type: String
+  TracingIs:
+    Default: Active
+    Type: String
+
+# --------------------------------------------------- #
+Resources:
+  # S3 Buckets
+  # BuildArtifactBucket: Stores build artifacts for deployment.
+  BuildArtifactBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${CustomerId}-${ProjectId}-build-artifacts'
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
+  # BuildTemplatesBucket: Stores build templates with versioning enabled for tracking changes.
+  BuildTemplatesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${CustomerId}-${ProjectId}-build-templates'
+      VersioningConfiguration:
+        Status: Enabled
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
+
+  # IAM User for GitHub Actions
+  # GitHubActionsUser: IAM user for GitHub Actions to interact with AWS resources.
+  GitHubActionsUser:
+    Properties:
+      UserName: !Sub "${CustomerId}-${ProjectId}-${Environment}-github-actions"
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
+    Type: AWS::IAM::User
+
+  # IAM Policy for GitHub Actions User
+  # GitHubActionsUserPolicy: Grants necessary permissions to the GitHubActionsUser for deployment tasks.
+  GitHubActionsUserPolicy:
+    Properties:
+      PolicyName: !Sub "${CustomerId}-${ProjectId}-${Environment}-github-actions-user"
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - sts:GetCallerIdentity
+            Resource: '*'
+      Users:
+        - !Ref GitHubActionsUser
+    Type: AWS::IAM::Policy
+
+  # Access Keys for GitHub Actions User
+  # GitHubActionsAccessKey: Access keys for the GitHubActionsUser to authenticate API requests.
+  GitHubActionsAccessKey:
+    Properties:
+      UserName: !Ref GitHubActionsUser
+    Type: AWS::IAM::AccessKey
+  GitHubActionsSecretAccessKeyParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-github-actions-secret-access-key"
+      Type: String
+      Value: !GetAtt GitHubActionsAccessKey.SecretAccessKey
+    Type: AWS::SSM::Parameter
+  GitHubActionsAccessKeyIdParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-github-actions-access-key-id"
+      Type: String
+      Value: !Ref GitHubActionsAccessKey
+    Type: AWS::SSM::Parameter
+
+  # IAM Group for GitHub Actions Deployment
+  # GitHubActionsDeploymentGroup: IAM group for managing deployment permissions for GitHub Actions.
+  GitHubActionsDeploymentGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: !Sub "${CustomerId}-${ProjectId}-${Environment}-github-actions-deployment"
+      ManagedPolicyArns:
+        - !Ref CloudWatchLoggingPolicy
+        - !Ref CloudWatchDashboardPolicy
+        - !Ref DeployPolicy
+  # DeployPolicy: Managed policy granting permissions for deployment-related actions across various AWS services.
+  DeployPolicy:
+    Properties:
+      ManagedPolicyName: !Sub "${CustomerId}-${ProjectId}-${Environment}-deploy"
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - iam:*
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - cloudformation:GetTemplateSummary
+              - cloudformation:CreateStack
+              - cloudformation:DescribeStacks
+              - cloudformation:DeleteStack
+              - cloudformation:UpdateStack
+              - cloudformation:CreateChangeSet
+              - cloudformation:DeleteChangeSet
+              - cloudformation:DescribeChangeSet
+              - cloudformation:ExecuteChangeSet
+              - cloudformation:UpdateChangeSet
+              - cloudformation:SetStackPolicy
+              - cloudformation:DescribeStackEvents
+              - cloudwatch:DeleteAlarms
+              - cloudwatch:DescribeAlarms
+              - cloudwatch:PutMetricAlarm
+              - cloudwatch:UpdateAlarms
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - lambda:AddLayerVersionPermission
+              - lambda:DeleteLayerVersion
+              - lambda:GetLayerVersion
+              - lambda:GetLayerVersionPolicy
+              - lambda:ListLayerVersions
+              - lambda:ListLayers
+              - lambda:PublishLayerVersion
+              - lambda:RemoveLayerVersionPermission
+            Resource:
+              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:${CustomerId}-${ProjectId}-*"
+          - Effect: Allow
+            Action:
+              - lambda:CreateEventSourceMapping
+              - lambda:GetEventSourceMapping
+              - lambda:TagResource
+              - lambda:UntagResource
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - appsync:*
+              - events:PutRule
+              - events:DescribeRule
+              - events:DeleteRule
+              - events:UpdateRule
+              - events:PutTargets
+              - events:RemoveTargets
+              - events:UpdateTargets
+              - s3:*
+              - secretsmanager:CreateSecret
+              - secretsmanager:GetRandomPassword
+              - secretsmanager:GetSecretValue
+              - secretsmanager:DeleteSecret
+              - secretsmanager:TagResource
+              - secretsmanager:UpdateSecret
+              - states:*
+              - cloudfront:*
+              - route53:*
+              - ssm:*
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - cognito-identity:CreateIdentityPool
+              - cognito-identity:DeleteIdentityPool
+              - cognito-identity:UpdateIdentityPool
+              - cognito-identity:SetIdentityPoolRoles
+              - cognito-idp:AddCustomAttributes
+              - cognito-idp:GetGroup
+              - cognito-idp:CreateGroup
+              - cognito-idp:DeleteGroup
+              - cognito-idp:CreateUserPool
+              - cognito-idp:AdminCreateUser
+              - cognito-idp:AdminDeleteUser
+              - cognito-idp:AdminDeleteUserAttributes
+              - cognito-idp:AdminAddUserToGroup
+              - cognito-idp:AdminGetUser
+              - cognito-idp:AdminRemoveUserFromGroup
+              - cognito-idp:AdminUpdateUserAttributes
+              - cognito-idp:UpdateGroup
+              - cognito-idp:CreateUserPoolClient
+              - cognito-idp:UpdateUserPoolClient
+              - cognito-idp:DeleteUserPool
+              - cognito-idp:DeleteUserPoolClient
+              - cognito-idp:DescribeUserPool
+              - cognito-idp:UpdateUserPool
+              - cognito-idp:ListTagsForResource
+              - cognito-idp:SetUserPoo
+              - cognito-idp:SetUserPoolMfaConfig
+            Resource:
+              - !Sub "arn:aws:cognito-identity:${AWS::Region}:${AWS::AccountId}:identitypool/*"
+              - !Sub "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/*"
+          - Effect: Allow
+            Action:
+              - dynamodb:ListTables
+              - dynamodb:CreateTable
+              - dynamodb:DeleteTable
+              - dynamodb:DescribeTable
+              - dynamodb:UpdateTable
+              - dynamodb:UpdateTimeToLive
+              - dynamodb:DescribeTimeToLive
+              - dynamodb:ListTagsOfResource
+              - dynamodb:TagResource
+              - dynamodb:UntagResource
+            Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${CustomerId}-${ProjectId}-*"
+          - Effect: Allow
+            Action:
+              - ecr:*
+            Resource: !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${CustomerId}-${ProjectId}-*"
+          - Effect: Allow
+            Action:
+              - lambda:AddPermission
+              - lambda:CreateAlias
+              - lambda:CreateFunction
+              - lambda:CreateEventSourceMapping
+              - lambda:DeleteAlias
+              - lambda:DeleteEventSourceMapping
+              - lambda:DescribeEventSourceMapping
+              - lambda:DeleteFunction
+              - lambda:GetAlias
+              - lambda:GetEventSourceMapping
+              - lambda:GetFunction
+              - lambda:GetFunctionConfiguration
+              - lambda:GetLayerVersion
+              - lambda:InvokeFunction
+              - lambda:ListVersionsByFunction
+              - lambda:ListTags
+              - lambda:TagResource
+              - lambda:UntagResource
+              - lambda:PublishVersion
+              - lambda:RemovePermission
+              - lambda:UpdateAlias
+              - lambda:UpdateFunction
+              - lambda:UpdateFunctionCode
+              - lambda:UpdateFunctionConfiguration
+              - lambda:PublishLayerVersion
+              - logs:*
+            Resource: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${CustomerId}-${ProjectId}-*"
+          - Effect: Allow
+            Action:
+              - sns:*
+              - sqs:*
+            Resource:
+              - !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${CustomerId}-${ProjectId}-*"
+              - !Sub "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${CustomerId}-${ProjectId}-*"
+    Type: AWS::IAM::ManagedPolicy
+
+  # IAM User to Group Addition
+  GitHubActionsUserToGitHubActionsDeploymentGroupAddition:
+    Type: AWS::IAM::UserToGroupAddition
+    Properties:
+      GroupName: !Ref GitHubActionsDeploymentGroup
+      Users:
+        - !Ref GitHubActionsUser
+
+  # Alert Queues
+  AlertsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "${CustomerId}-${ProjectId}-${Environment}-alerts-queue"
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
+  AlertsQueueArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-alerts-queue-arn"
+      Tags:
+        Billable: "true"
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+      Type: String
+      Value: !GetAtt AlertsQueue.Arn
+
+  DeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "${CustomerId}-${ProjectId}-${Environment}-dead-letter-queue"
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
+  DeadLetterQueueArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-dead-letter-queue-arn"
+      Tags:
+        Billable: "true"
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+      Type: String
+      Value: !GetAtt DeadLetterQueue.Arn
+
+  #
+  # Policies
+  #
+
+  # Cloud Watch
+  CloudWatchLoggingPolicy:
+    Properties:
+      ManagedPolicyName: !Sub "${CustomerId}-${ProjectId}-${Environment}-cloudwatch-logging"
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "logs:CreateLogGroup"
+              - "logs:CreateLogStream"
+              - "logs:PutLogEvents"
+            Resource:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${CustomerId}-${ProjectId}-${Environment}-*"
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${CustomerId}-${ProjectId}-${Environment}-*:log-stream:*"
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${CustomerId}-${ProjectId}-*-${Environment}-*"
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${CustomerId}-${ProjectId}-*-${Environment}-*:log-stream:*"
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/appsync/apis/${CustomerId}-${ProjectId}-${Environment}-*"
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/appsync/apis/${CustomerId}-${ProjectId}-${Environment}-*:log-stream:*"
+    Type: AWS::IAM::ManagedPolicy
+  CloudWatchLoggingPolicyArnParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-cloudwatch-logging-policy-arn"
+      Type: String
+      Value: !Ref CloudWatchLoggingPolicy
+    Type: AWS::SSM::Parameter
+
+  # Cloud Watch Dashboard
+  CloudWatchDashboardPolicy:
+    Properties:
+      ManagedPolicyName: !Sub "${CustomerId}-${ProjectId}-${Environment}-cloudwatch-dashboard"
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "cloudwatch:PutDashboard"
+              - "cloudwatch:DeleteDashboards"
+            Resource:
+              - !Sub "arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:dashboard/*"
+              - !Sub "arn:aws:cloudwatch::${AWS::AccountId}:dashboard/*"
+    Type: AWS::IAM::ManagedPolicy
+  CloudWatchDashboardPolicyArnParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-cloudwatch-dashboard-policy-arn"
+      Type: String
+      Value: !Ref CloudWatchDashboardPolicy
+    Type: AWS::SSM::Parameter
+
+  #Alerts Queue Policy
+  AlertsQueuePolicy:
+    Properties:
+      ManagedPolicyName: !Sub "${CustomerId}-${ProjectId}-${Environment}-alerts-queue-policy"
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "sqs:SendMessage"
+              - "sqs:ReceiveMessage"
+              - "sqs:DeleteMessage"
+              - "sqs:GetQueueAttributes"
+              - "sqs:ChangeMessageVisibility"
+            Resource: !Sub "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${CustomerId}-${ProjectId}-${Environment}-alerts-queue"
+    Type: AWS::IAM::ManagedPolicy
+  AlertsQueuePolicyArnParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-alerts-queue-policy-arn"
+      Type: String
+      Value: !Ref AlertsQueuePolicy
+    Type: AWS::SSM::Parameter
+
+  # Dead Letter Queue Policy
+  DeadLetterQueuePolicy:
+    Properties:
+      ManagedPolicyName: !Sub "${CustomerId}-${ProjectId}-${Environment}-dead-letter-queue"
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "sqs:SendMessage"
+              - "sqs:ReceiveMessage"
+              - "sqs:DeleteMessage"
+              - "sqs:GetQueueAttributes"
+              - "sqs:ChangeMessageVisibility"
+            Resource: !Sub "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${CustomerId}-${ProjectId}-${Environment}-dead-letter-queue"
+    Type: AWS::IAM::ManagedPolicy
+  DeadLetterQueuePolicyArnParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-dead-letter-queue-policy-arn"
+      Type: String
+      Value: !Ref DeadLetterQueuePolicy
+    Type: AWS::SSM::Parameter
+
+  LambdaEventPolicy:
+    Properties:
+      ManagedPolicyName: !Sub "${CustomerId}-${ProjectId}-${Environment}-lambda-event"
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "lambda:GetEventSourceMapping"
+            Resource: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:event-source-mapping:*"
+    Type: AWS::IAM::ManagedPolicy
+  LambdaEventPolicyArnParameter:
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}--lambda-event-policy-arn"
+      Type: String
+      Value: !Ref LambdaEventPolicy
+    Type: AWS::SSM::Parameter
+  
+
+  # SMS Verification Secret for HMAC-based code generation
+  SmsVerificationSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-sms-verification-secret'
+      Description: 'Secret key for SMS verification code generation'
+      GenerateSecretString:
+        SecretStringTemplate: '{}'
+        GenerateStringKey: 'secret_key'
+        PasswordLength: 32
+        ExcludeCharacters: '"@/\'
+      Tags:
+        - Key: Billable
+          Value: "true"
+        - Key: CustomerId
+          Value: !Ref CustomerId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ProjectId
+          Value: !Ref ProjectId
+
+  # Store SMS Verification Secret Name in Parameter Store
+  SmsVerificationSecretNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-sms-verification-secret-name"
+      Type: String
+      Value: !Ref SmsVerificationSecret
+      Description: "Name of the SMS verification secret for lambda access"
+

@@ -5,28 +5,66 @@
 
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { AppLayoutComponent } from "./layouts/app-layout/app-layout.component";
+import { PlatformLayoutComponent } from "./layouts/platform-layout/platform-layout.component";
+import { AuthGuard } from './core/guards/auth.guard';
+import { PlatformComponent } from './features/platform/platform.component';
+import { AuthFlowComponent } from './features/user/components/auth-flow/auth-flow.component';
+import { ProfileComponent } from './features/user/components/profile/profile.component';
+import { DashboardComponent } from './features/user/components/dashboard/dashboard.component';
+import { UserLayoutComponent } from './layouts/user-layout/user-layout.component';
+import { ThisIsNotThePageComponent } from './features/user/components/this-is-not-the-page/this-is-not-the-page.component';
 
 export const routes: Routes = [
   {
     path: '',
-    component: AppLayoutComponent,
+    component: PlatformLayoutComponent,
     children: [
       {
         path: '',
-        redirectTo: 'home',
+        redirectTo: 'platform',
         pathMatch: 'full'
       },
       {
-        path: '',
-        loadChildren: () => import('./features/user/user.module').then(m => m.UserModule),
-        data: { requiresAuth: false, group: 'USER' }
+        path: 'platform',
+        component: PlatformComponent
       }
     ]
+  },
+  {
+    path: 'authenticate',
+    component: AuthFlowComponent
+  },
+  {
+    path: 'signout',
+    component: AuthFlowComponent,
+    data: { forceSignOut: true }
+  },
+  {
+    path: '',
+    component: UserLayoutComponent,
+    children: [
+      {
+        path: 'dashboard',
+        component: DashboardComponent,
+        canActivate: [AuthGuard],
+        data: { requiresAuth: true }
+      },
+      {
+        path: 'profile',
+        component: ProfileComponent,
+        canActivate: [AuthGuard],
+        data: { requiresAuth: true }
+      }
+    ]
+  },
+  {
+    path: '**',
+    component: ThisIsNotThePageComponent
   }
 ];
 
 @NgModule({
+  providers: [AuthGuard],
   imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule]
 })

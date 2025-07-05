@@ -1,4 +1,7 @@
 name: deploy-backend
+# Description: Deploys backend resources to the selected environment. 
+# Allows selection of branch for deployment - choose 'main' for production deployments 
+# or a feature branch for testing.
 
 on:
   workflow_dispatch:
@@ -23,69 +26,87 @@ on:
         required: true
         type: string
         default: 'integration-hub'
+      sms_origination_number:
+        description: 'SMS Origination Number'
+        required: true
+        type: string
+        default: '+12898190331'
 
 jobs:
+
   deploy-backend-stacks:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v2
+      - name: Checkout repo for branch listing
+        uses: actions/checkout@v3
         with:
-          python-version: '3.12'
+          fetch-depth: 0
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyyaml jinja2
+          pip install pipenv
+          cd schemas
+          pipenv install
 
       - name: Generate schema files
         run: |
           cd schemas
-          python generate.py
-          
+          pipenv run python generate.py
+          cd ..
+
+      - name: Find latest schema file and set env
+        id: find_schema
+        run: |
+          cd infrastructure/cloudformation
+          SCHEMA_FILE=$(find . -name "appsync_*.graphql" | sort -r | head -1)
+          if [ -z "$SCHEMA_FILE" ]; then
+            echo "ERROR: No schema file found"
+            exit 1
+          fi
+          SCHEMA_FILE=$(basename "$SCHEMA_FILE")
+          echo "schema_file=$SCHEMA_FILE" >> $GITHUB_OUTPUT
+          cd ../../..
+
       - name: Validate GraphQL schema
         run: |
           echo "Validating GraphQL schema..."
-          
-          # Schema generator now creates timestamped appsync_TIMESTAMP.graphql file
-          
-          # Find the latest generated appsync schema file
-          SCHEMA_FILE=$(find ./backend/infrastructure/cloudformation -name "appsync_*.graphql" | sort -r | head -1)
-          
-          if [ -z "$SCHEMA_FILE" ]; then
-            echo "ERROR: No appsync_*.graphql file found. Schema generation may have failed."
+          cd infrastructure/cloudformation
+          SCHEMA_FILE="${{ steps.find_schema.outputs.schema_file }}"
+          if [ ! -f "$SCHEMA_FILE" ]; then
+            echo "ERROR: $SCHEMA_FILE not found. Schema generation may have failed."
             exit 1
           fi
-          
           echo "Using schema file: $SCHEMA_FILE"
-          
           # Basic syntax check - if the file has GraphQL type definitions
           if ! grep -q "type " "$SCHEMA_FILE"; then
             echo "ERROR: Schema file appears to be empty or invalid. Missing type definitions."
             exit 1
           fi
-          
           # Check for other required GraphQL elements
           if ! grep -q "schema {" "$SCHEMA_FILE"; then
             echo "WARNING: Schema file may be missing schema definition."
           fi
-          
           # Check file size is reasonable (not empty, not too small)
           FILE_SIZE=$(wc -c < "$SCHEMA_FILE")
           if [ "$FILE_SIZE" -lt 100 ]; then
             echo "WARNING: Schema file is suspiciously small ($FILE_SIZE bytes)."
           fi
-          
-          # Extract the filename for use in later steps
-          SCHEMA_FILENAME=$(basename "$SCHEMA_FILE")
-          echo "::set-output name=schema_filename::$SCHEMA_FILENAME"
-          
           echo "Schema validation complete."
+          cd ../../..
+
+      - name: Upload generated GraphQL schema as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.find_schema.outputs.schema_file }}
+          path: infrastructure/cloudformation/${{ steps.find_schema.outputs.schema_file }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -94,52 +115,81 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.region }}
 
+      - name: Install AWS SAM CLI
+        run: |
+          # Add AWS SAM CLI repository
+          curl -L https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-x86_64.zip -o aws-sam-cli-linux-x86_64.zip
+          unzip aws-sam-cli-linux-x86_64.zip -d sam-installation
+          sudo ./sam-installation/install --update
+          sam --version
+          # Clean up
+          rm -rf aws-sam-cli-linux-x86_64.zip sam-installation
+
       - name: Upload schema to S3
         run: |
-          # Find the latest generated appsync schema file
-          SCHEMA_FILE=$(find . -name "appsync_*.graphql" | sort -r | head -1)
-          SCHEMA_FILENAME=$(basename "$SCHEMA_FILE")
-          
-          echo "Uploading schema file: $SCHEMA_FILENAME"
-          
-          # Upload the schema file to S3
+          SCHEMA_FILE="${{ steps.find_schema.outputs.schema_file }}"
+          if [ ! -f "$SCHEMA_FILE" ]; then
+            echo "ERROR: $SCHEMA_FILE not found"
+            exit 1
+          fi
+          echo "Uploading schema file: $SCHEMA_FILE"
           aws s3 cp "$SCHEMA_FILE" \
-            s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/$SCHEMA_FILENAME
-
-        working-directory: ./backend/infrastructure/cloudformation
+            s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/$SCHEMA_FILE
+        working-directory: ./infrastructure/cloudformation
 
       - name: Deploy All Stacks
         run: |
-          for stack in bootstrap cognito dynamodb lambdas appsync; do
+          SCHEMA_FILE="${{ steps.find_schema.outputs.schema_file }}"
+          for stack in bootstrap cognito dynamodb lambdas appsync monitoring; do
             echo "Deploying $stack stack..."
-          
-            sam build --template ${stack}.yml
-          
+            PARAMS="Environment=${{ inputs.environment }} CustomerId=${{ inputs.customer_id }} ProjectId=${{ inputs.project_id }}"
+            case "$stack" in
+              "appsync")
+                if [ ! -f "$SCHEMA_FILE" ]; then
+                  echo "ERROR: $SCHEMA_FILE not found for AppSync deployment"
+                  exit 1
+                fi
+                PARAMS="$PARAMS SchemaS3Key=$SCHEMA_FILE"
+                echo "Using schema: $SCHEMA_FILE for AppSync stack"
+                ;;
+              "lambdas")
+                PARAMS="$PARAMS SMSOriginationNumber=${{ inputs.sms_origination_number }}"
+                echo "Using SMS Origination Number: ${{ inputs.sms_origination_number }} for Lambdas stack"
+                ;;
+              "monitoring")
+                PARAMS="$PARAMS AppSyncApiId=${{ inputs.customer_id }}-${{ inputs.project_id }}-${{ inputs.environment }}-appsync-api-id"
+                ;;
+
+            esac
+            echo "Building ${stack} stack..."
+            sam build --template ${stack}.yml --parameter-overrides $PARAMS || {
+              echo "ERROR: Failed to build ${stack} stack"
+              exit 1
+            }
+            echo "Packaging ${stack} stack..."
             sam package \
               --template-file ${stack}.yml \
               --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
-              --output-template-file ${stack}-packaged.yml
-          
-            # Add an override for the schema location
-            PARAMS="Environment=${{ inputs.environment }} CustomerId=${{ inputs.customer_id }} ProjectId=${{ inputs.project_id }}"
-            if [ "$stack" == "appsync" ]; then
-              # Find the latest generated schema file
-              SCHEMA_FILE=$(find . -name "appsync_*.graphql" | sort -r | head -1)
-              SCHEMA_FILENAME=$(basename "$SCHEMA_FILE")
-              PARAMS="$PARAMS SchemaS3Key=$SCHEMA_FILENAME"
-              echo "Using schema: $SCHEMA_FILENAME for AppSync stack"
-            fi
-                    
+              --output-template-file ${stack}-packaged.yml || {
+                echo "ERROR: Failed to package ${stack} stack"
+                exit 1
+              }
+            echo "Deploying ${stack} stack with parameters: $PARAMS"
             sam deploy \
               --template-file ${stack}-packaged.yml \
               --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
               --stack-name ${{ inputs.customer_id }}-${{ inputs.project_id }}-${stack} \
               --capabilities CAPABILITY_NAMED_IAM \
               --no-fail-on-empty-changeset \
-              --parameter-overrides $PARAMS
-          
+              --parameter-overrides $PARAMS || {
+                echo "ERROR: Failed to deploy ${stack} stack"
+                exit 1
+              }
+            echo "Uploading packaged template to S3..."
             aws s3 cp ${stack}-packaged.yml \
-              s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/${stack}-packaged.yml
-          
+              s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/${stack}-packaged.yml || {
+                echo "ERROR: Failed to upload packaged template for ${stack} stack"
+                exit 1
+              }
           done
-        working-directory: ./backend/infrastructure/cloudformation
+        working-directory: ./infrastructure/cloudformation

@@ -1,0 +1,258 @@
+// file: frontend/src/app/features/user/components/this-is-not-the-page/this-is-not-the-page.component.scss
+// author: Corey Dale Peters
+// date: 2025-03-07
+// description: SCSS style file
+
+@use '../../../../../styles/variables' as v;
+@use '../../../../../styles/mixins' as m;
+@use 'sass:color';
+
+.not-found-container {
+  @include m.page-container;
+  
+  font-family: v.$font-family-base;
+  
+  .not-found-header {
+    background: v.$orb-white;
+    padding: v.$spacing-xl * 2 0;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: v.$spacing-xl;
+
+    &__content {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 v.$spacing-lg;
+    }
+
+    &__flex-container {
+      display: flex;
+      align-items: center;
+      gap: v.$spacing-xl * 3;
+      justify-content: center;
+
+      @media (max-width: 1024px) {
+        flex-direction: column;
+        text-align: center;
+        gap: v.$spacing-xl;
+      }
+    }
+
+    &__logo-section {
+      flex: 1;
+      max-width: 600px;
+      
+      @media (max-width: 1024px) {
+        max-width: 400px;
+      }
+    }
+
+    &__logo {
+      width: 100%;
+      height: auto;
+    }
+
+    &__text-section {
+      flex: 1;
+      max-width: 600px;
+    }
+
+    &__message {
+      display: flex;
+      flex-direction: column;
+      gap: v.$spacing-md;
+    }
+
+    &__icon-title {
+      display: flex;
+      align-items: center;
+      gap: v.$spacing-md;
+      margin-bottom: v.$spacing-sm;
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+        gap: v.$spacing-sm;
+      }
+    }
+
+    &__icon {
+      width: 48px;
+      height: 48px;
+      border-radius: v.$border-radius;
+      box-shadow: v.$shadow-sm;
+      
+      @media (max-width: 768px) {
+        width: 40px;
+        height: 40px;
+      }
+    }
+
+    &__title {
+      font-family: v.$font-family-heading;
+      font-size: 1.5rem;
+      font-weight: v.$font-weight-bold;
+      color: v.$orb-dark-blue;
+      margin: 0;
+      line-height: 1.2;
+
+      @media (max-width: 768px) {
+        font-size: 2rem;
+      }
+
+      @media (max-width: 480px) {
+        font-size: 1.75rem;
+      }
+    }
+
+    &__subtitle {
+      font-size: v.$font-size-lg;
+      color: v.$orb-dark-blue;
+      margin: 0;
+      font-weight: v.$font-weight-medium;
+      line-height: 1.6;
+      text-align: left;
+
+      @media (max-width: 1024px) {
+        text-align: center;
+      }
+      
+      &--warning {
+        color: v.$warning-color;
+        font-weight: v.$font-weight-semibold;
+        font-style: italic;
+        border-left: 3px solid v.$warning-color;
+        background: rgba(v.$warning-color, 0.05);
+        border-radius: v.$border-radius-sm;
+        padding: v.$spacing-sm v.$spacing-md;
+        margin-top: v.$spacing-xs;
+      }
+    }
+
+    &__description {
+      font-size: v.$font-size-base;
+      color: v.$text-secondary;
+      margin: 0;
+      line-height: 1.6;
+    }
+  }
+
+  .not-found-actions {
+    display: flex;
+    justify-content: center;
+    margin-bottom: v.$spacing-xl * 2;
+
+    &__card {
+      @include m.card;
+      width: 100%;
+      max-width: 600px;
+      padding: v.$spacing-xl;
+    }
+
+    &__content {
+      text-align: center;
+    }
+
+    &__title {
+      font-size: v.$font-size-lg;
+      font-weight: v.$font-weight-semibold;
+      color: v.$orb-dark-blue;
+      margin: 0 0 v.$spacing-lg 0;
+    }
+
+    &__options {
+      display: flex;
+      flex-direction: column;
+      gap: v.$spacing-md;
+      align-items: center;
+
+      @media (min-width: 768px) {
+        flex-direction: row;
+        justify-content: center;
+        gap: v.$spacing-lg;
+      }
+    }
+
+    &__button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: v.$spacing-md v.$spacing-lg;
+      border-radius: v.$border-radius;
+      font-weight: v.$font-weight-medium;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border: 2px solid transparent;
+      cursor: pointer;
+      font-size: v.$font-size-base;
+      min-width: 140px;
+
+      &--primary {
+        background: v.$primary-color;
+        color: v.$white;
+
+        &:hover {
+          background: color.adjust(v.$primary-color, $lightness: -10%);
+          transform: translateY(-1px);
+          box-shadow: v.$shadow-md;
+        }
+      }
+
+      &--secondary {
+        background: v.$orb-red;
+        color: v.$white;
+
+        &:hover {
+          background: color.adjust(v.$orb-red, $lightness: -10%);
+          transform: translateY(-1px);
+          box-shadow: v.$shadow-md;
+        }
+      }
+
+      &--outline {
+        background: transparent;
+        color: v.$text-primary;
+        border-color: v.$border-color;
+
+        &:hover {
+          background: v.$bg-secondary;
+          border-color: v.$primary-color;
+          color: v.$primary-color;
+          transform: translateY(-1px);
+        }
+      }
+
+      @media (max-width: 767px) {
+        width: 100%;
+        max-width: 250px;
+      }
+    }
+  }
+
+  // Debug section (uses global debug-container mixin)
+  .not-found__debug {
+    @include m.debug-container;
+  }
+
+  // Responsive adjustments
+  @media (max-width: 768px) {
+    padding: v.$spacing-md;
+  }
+
+  @media (max-width: 480px) {
+    padding: v.$spacing-sm;
+    
+    .not-found-header {
+      padding: v.$spacing-xl 0;
+      
+      &__content {
+        padding: 0 v.$spacing-md;
+      }
+    }
+    
+    .not-found-actions {
+      &__card {
+        padding: v.$spacing-lg;
+      }
+    }
+  }
+}

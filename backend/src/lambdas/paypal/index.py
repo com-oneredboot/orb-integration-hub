@@ -41,7 +41,7 @@ def process_paypal_payment(paypal_account, amount):
         payload = {
             "intent": "sale",
             "payer": {
-                "payment_method": "paypal"
+                "paymentMethod": "paypal"
             },
             "transactions": [{
                 "amount": {
@@ -50,9 +50,9 @@ def process_paypal_payment(paypal_account, amount):
                 },
                 "description": "Payment description"
             }],
-            "redirect_urls": {
-                "return_url": "https://example.com/return",
-                "cancel_url": "https://example.com/cancel"
+            "redirectUrls": {
+                "returnUrl": "https://example.com/return",
+                "cancelUrl": "https://example.com/cancel"
             }
         }
 
@@ -73,12 +73,12 @@ def lambda_handler(event, context):
 
     try:
         body = json.loads(event.get('body'))
-        amount = body.ge('amount')
-        paypal_account = body.get('paypal_account')
+        amount = body.get('amount')
+        paypal_account = body.get('paypalAccount')
 
         # Validate input data
         if not paypal_account or not amount:
-            message = "Missing required payment_id or amount"
+            message = "Missing required paymentId or amount"
             logger.error(message)
             raise ValueError(message)
 
@@ -100,7 +100,7 @@ def lambda_handler(event, context):
 
         return {
             "statusCode": 200,
-            "body": json.dumps({"message": "Payment processed successfully", "paypal_response": paypal_response})
+            "body": json.dumps({"message": "Payment processed successfully", "paypalResponse": paypal_response})
         }
 
     except ValueError as ve:

@@ -1,0 +1,65 @@
+# file: schemas/entities/ApplicationUsers.yml
+# author: Corey Dale Peters
+# date: 2025-02-17
+# description: yaml file containing the ApplicationUsers table schema
+# This is the join table mapping users to applications.
+
+# GROUP_TYPES: OWNER, ADMIN, SUPPORT, USER (see enum definition)
+
+type: dynamodb
+version: '1.0'
+name: ApplicationUsers
+model:
+  authConfig:
+    cognitoAuthentication:
+      groups:
+        OWNER:
+          - '*'
+  keys:
+    primary:
+      partition: applicationUserId
+      description: Primary key for application user membership (unique for each user/application pair)
+    secondary:
+      - name: UserAppIndex
+        type: GSI
+        partition: userId
+        sort: applicationId
+        projection_type: ALL
+        description: Index for querying applications by user
+      - name: AppUserIndex
+        type: GSI
+        partition: applicationId
+        sort: userId
+        projection_type: ALL
+        description: Index for querying users by application
+  attributes:
+    applicationUserId:
+      type: string
+      required: true
+      description: Unique identifier for the application user membership (primary key)
+    userId:
+      type: string
+      required: true
+      description: ID of the user (foreign key to Users)
+    applicationId:
+      type: string
+      required: true
+      description: ID of the application (foreign key to Applications)
+    status:
+      type: string
+      required: true
+      enum_type: ApplicationUserStatus
+      enum_values:
+        - ACTIVE
+        - INACTIVE
+        - INVITED
+        - REMOVED
+      description: Current status of the user in the application
+    createdAt:
+      type: timestamp
+      required: true
+      description: When the user was added to the application
+    updatedAt:
+      type: timestamp
+      required: true
+      description: When the membership was last updated 

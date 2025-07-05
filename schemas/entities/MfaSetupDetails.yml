@@ -1,0 +1,21 @@
+# file: schemas/entities/MfaSetupDetails.yml
+# author: Corey Dale Peters
+# date: 2025-02-17
+# description: yaml file containing the MfaSetupDetails GraphQL type schema
+
+type: standard
+name: MfaSetupDetails
+model:
+  attributes:
+    qrCode:
+      type: string
+      required: true
+      description: The QR code value or label for the authenticator app
+    secretKey:
+      type: string
+      required: true
+      description: The secret key for TOTP setup
+    setupUri:
+      type: string
+      required: false
+      description: The setup URI for the authenticator app (optional, as string) 

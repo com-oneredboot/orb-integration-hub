@@ -1,0 +1,375 @@
+# --------------------------------------------------- #
+AWSTemplateFormatVersion: 2010-09-09
+
+# --------------------------------------------------- #
+Transform: AWS::Serverless-2016-10-31
+
+# --------------------------------------------------- #
+Description: >
+ Application Infrastructure - DynamoDB Tables
+
+# --------------------------------------------------- #
+Parameters:
+  Environment:
+    Default: dev
+    Type: String
+    Description: Environment name (dev, staging, prod)
+  CustomerId:
+    Default: orb
+    Type: String
+    Description: Customer identifier
+  ProjectId:
+    Default: integration-hub
+    Type: String
+    Description: Project identifier
+  TracingIs:
+    Default: Active
+    Type: String
+    Description: Whether tracing is enabled
+
+# --------------------------------------------------- #
+Resources:
+  ApplicationUsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: applicationUserId
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: applicationUserId
+          AttributeType: S
+        - AttributeName: applicationId
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: UserAppIndex
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: applicationId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: AppUserIndex
+          KeySchema:
+            - AttributeName: applicationId
+              KeyType: HASH
+            - AttributeName: userId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  ApplicationUsersTableArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users-table-arn
+      Type: String
+      Value: !GetAtt ApplicationUsersTable.Arn
+
+  ApplicationUsersTableName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users-table-name
+      Type: String
+      Value: !Ref ApplicationUsersTable
+
+    
+  ApplicationRolesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: applicationRoleId
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: applicationRoleId
+          AttributeType: S
+        - AttributeName: roleId
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: applicationId
+          AttributeType: S
+        - AttributeName: roleType
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: UserRoleIndex
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: roleId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: ApplicationRoleIndex
+          KeySchema:
+            - AttributeName: applicationId
+              KeyType: HASH
+            - AttributeName: roleId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: RoleTypeIndex
+          KeySchema:
+            - AttributeName: roleId
+              KeyType: HASH
+            - AttributeName: roleType
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  ApplicationRolesTableArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles-table-arn
+      Type: String
+      Value: !GetAtt ApplicationRolesTable.Arn
+
+  ApplicationRolesTableName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles-table-name
+      Type: String
+      Value: !Ref ApplicationRolesTable
+
+    
+  RolesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-roles
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: roleId
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: roleId
+          AttributeType: S
+        - AttributeName: roleType
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: UserRoleIndex
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: roleType
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  RolesTableArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-roles-table-arn
+      Type: String
+      Value: !GetAtt RolesTable.Arn
+
+  RolesTableName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-roles-table-name
+      Type: String
+      Value: !Ref RolesTable
+
+    
+  ApplicationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: applicationId
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: applicationId
+          AttributeType: S
+
+  ApplicationsTableArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-arn
+      Type: String
+      Value: !GetAtt ApplicationsTable.Arn
+
+  ApplicationsTableName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-name
+      Type: String
+      Value: !Ref ApplicationsTable
+
+    
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-users
+      BillingMode: PAY_PER_REQUEST
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: email
+          AttributeType: S
+        - AttributeName: cognitoId
+          AttributeType: S
+        - AttributeName: cognitoSub
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: EmailIndex
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: CognitoIdIndex
+          KeySchema:
+            - AttributeName: cognitoId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: CognitoSubIndex
+          KeySchema:
+            - AttributeName: cognitoSub
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  UsersTableArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-users-table-arn
+      Type: String
+      Value: !GetAtt UsersTable.Arn
+
+  UsersTableName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-users-table-name
+      Type: String
+      Value: !Ref UsersTable
+
+  UsersTableStreamArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-users-table-stream-arn
+      Type: String
+      Value: !GetAtt UsersTable.StreamArn
+
+  SmsRateLimitTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: phoneNumber
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: phoneNumber
+          AttributeType: S
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  SmsRateLimitTableArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit-table-arn
+      Type: String
+      Value: !GetAtt SmsRateLimitTable.Arn
+
+  SmsRateLimitTableName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit-table-name
+      Type: String
+      Value: !Ref SmsRateLimitTable
+    
+
+# --------------------------------------------------- #
+Outputs:
+  ApplicationUsersTableArn:
+    Description: The ARN of the ApplicationUsers table
+    Value: !GetAtt ApplicationUsersTable.Arn
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users-table-arn
+
+  ApplicationUsersTableName:
+    Description: The name of the ApplicationUsers table
+    Value: !Ref ApplicationUsersTable
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-users-table-name
+
+  ApplicationRolesTableArn:
+    Description: The ARN of the ApplicationRoles table
+    Value: !GetAtt ApplicationRolesTable.Arn
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles-table-arn
+
+  ApplicationRolesTableName:
+    Description: The name of the ApplicationRoles table
+    Value: !Ref ApplicationRolesTable
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-application-roles-table-name
+
+  RolesTableArn:
+    Description: The ARN of the Roles table
+    Value: !GetAtt RolesTable.Arn
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-roles-table-arn
+
+  RolesTableName:
+    Description: The name of the Roles table
+    Value: !Ref RolesTable
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-roles-table-name
+
+  ApplicationsTableArn:
+    Description: The ARN of the Applications table
+    Value: !GetAtt ApplicationsTable.Arn
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-arn
+
+  ApplicationsTableName:
+    Description: The name of the Applications table
+    Value: !Ref ApplicationsTable
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-applications-table-name
+
+  UsersTableArn:
+    Description: The ARN of the Users table
+    Value: !GetAtt UsersTable.Arn
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-users-table-arn
+
+  UsersTableName:
+    Description: The name of the Users table
+    Value: !Ref UsersTable
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-users-table-name
+
+  UsersTableStreamArn:
+    Description: The Stream ARN of the Users table
+    Value: !GetAtt UsersTable.StreamArn
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-users-table-stream-arn
+
+  SmsRateLimitTableArn:
+    Description: The ARN of the SMS Rate Limit table
+    Value: !GetAtt SmsRateLimitTable.Arn
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit-table-arn
+
+  SmsRateLimitTableName:
+    Description: The name of the SMS Rate Limit table
+    Value: !Ref SmsRateLimitTable
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit-table-name

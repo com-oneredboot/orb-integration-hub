@@ -1,4 +1,4 @@
-# file: backend/infrastructure/layers/database/python/database/models.py
+# file: infrastructure/layers/database/python/database/models.py
 # author: Corey Dale Peters
 # created: 2025-02-17
 # description: This file contains the models used by the database layer.

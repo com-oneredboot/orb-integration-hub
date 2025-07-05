@@ -1,0 +1,9 @@
+{
+  "currentTag": "master",
+  "lastSwitched": "2025-06-20T12:24:55.250Z",
+  "branchTagMapping": {
+    "auth-flow-creation-feature": "auth-flow-creation",
+    "main": "master"
+  },
+  "migrationNoticeShown": true
+}

@@ -4,20 +4,25 @@
 // description: Unit tests for the profile component
 
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { of } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { Router } from '@angular/router';
 
 import { ProfileComponent } from './profile.component';
 import { UserService } from '../../../../core/services/user.service';
-import { User } from '../../../../core/models/user.model';
-import { UserStatus, UserGroups } from '../../../../core/models/user.enum';
+import { IUsers, Users, UsersUpdateInput, UsersResponse } from '../../../../core/models/UsersModel';
+import { UserStatus } from '../../../../core/models/UserStatusEnum';
+import { UserGroup } from '../../../../core/models/UserGroupEnum';
 
 describe('ProfileComponent', () => {
   let component: ProfileComponent;
   let fixture: ComponentFixture<ProfileComponent>;
   let mockStore: MockStore;
   let mockUserService: jasmine.SpyObj<UserService>;
+  let store: MockStore;
+  let router: jasmine.SpyObj<Router>;
 
   const initialState = {
     auth: {
@@ -26,67 +31,82 @@ describe('ProfileComponent', () => {
     }
   };
 
-  const mockUser: User = {
-    user_id: '123',
-    cognito_id: 'abc123',
+  const mockUser: IUsers = { userId: '123', cognitoId: 'abc123', cognitoSub: 'cognito-sub-123', email: 'test@example.com', emailVerified: true, phoneNumber: '+12345678901', phoneVerified: true, firstName: 'Test', lastName: 'User', groups: [UserGroup.USER], status: UserStatus.ACTIVE, mfaEnabled: false, mfaSetupComplete: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+
+  const mockUpdateInput: UsersUpdateInput = {
+    userId: '123',
+    cognitoId: 'abc123',
+    cognitoSub: 'cognito-sub-123',
     email: 'test@example.com',
-    first_name: 'Test',
-    last_name: 'User',
-    phone_number: '+12345678901',
-    groups: [UserGroups.USER] as UserGroups[],
+    emailVerified: true,
+    phoneNumber: '+12345678901',
+    phoneVerified: true,
+    firstName: 'Test',
+    lastName: 'User',
+    groups: [UserGroup.USER],
     status: UserStatus.ACTIVE,
-    created_at: Date.now()
+    mfaEnabled: false,
+    mfaSetupComplete: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 
-  const mockIncompleteUser: User = {
-    user_id: '123',
-    cognito_id: 'abc123',
-    email: 'test@example.com',
-    first_name: '',
-    last_name: '',
-    phone_number: '',
-    groups: [UserGroups.USER] as UserGroups[],
-    status: UserStatus.ACTIVE,
-    created_at: Date.now()
+  const mockResponse: UsersResponse = {
+    StatusCode: 200,
+    Message: 'Success',
+    Data: new Users(mockUser)
   };
+
+  const mockIncompleteUser: IUsers = { userId: '123', cognitoId: 'abc123', cognitoSub: 'cognito-sub-123', email: 'test@example.com', emailVerified: false, phoneNumber: '', phoneVerified: false, firstName: '', lastName: '', groups: [], status: UserStatus.INACTIVE, mfaEnabled: false, mfaSetupComplete: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
 
   beforeEach(async () => {
-    mockUserService = jasmine.createSpyObj('UserService', ['isUserValid', 'userUpdate']);
+    mockUserService = jasmine.createSpyObj('UserService', ['isUserValid', 'userUpdate', 'userQueryByUserId']);
     mockUserService.isUserValid.and.callFake(user => {
-      return !!(user?.first_name && user?.last_name && user?.email && user?.phone_number);
+      return !!(user?.firstName && user?.lastName && user?.email && user?.phoneNumber);
     });
     
     // Mock the userUpdate method
     mockUserService.userUpdate.and.callFake(async (input) => {
-      // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Return a mock response
       return {
-        userQueryById: {
-          status_code: 200,
-          user: {
+        StatusCode: 200,
+        Message: 'Profile updated successfully',
+        Data: new Users({
             ...mockUser,
-            first_name: input.first_name || mockUser.first_name,
-            last_name: input.last_name || mockUser.last_name
-          },
-          message: 'Profile updated successfully'
-        }
+          firstName: input.firstName || mockUser.firstName,
+          lastName: input.lastName || mockUser.lastName
+        })
       };
     });
 
+    mockUserService.userQueryByUserId.and.callFake((input) => Promise.resolve({ StatusCode: 200, Message: 'OK', Data: new Users(mockUser) }));
+
+    const storeSpy = jasmine.createSpyObj('Store', ['select']);
+    storeSpy.select.and.returnValue(of(mockUser));
+
+    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+
     await TestBed.configureTestingModule({
-      declarations: [ProfileComponent],
-      imports: [ReactiveFormsModule],
+      imports: [ ProfileComponent ],
       providers: [
         provideMockStore({ initialState }),
-        { provide: UserService, useValue: mockUserService }
+        { provide: UserService, useValue: mockUserService },
+        { provide: Router, useValue: routerSpy },
+        FormBuilder
       ]
     }).compileComponents();
 
     mockStore = TestBed.inject(MockStore);
     fixture = TestBed.createComponent(ProfileComponent);
     component = fixture.componentInstance;
+    store = mockStore;
+    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+  });
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(ProfileComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
   });
 
   it('should create', () => {
@@ -101,28 +121,29 @@ describe('ProfileComponent', () => {
   });
 
   describe('Form initialization', () => {
-    it('should initialize form with empty values', () => {
-      fixture.detectChanges();
-      expect(component.profileForm.get('firstName')?.value).toBe('');
-      expect(component.profileForm.get('lastName')?.value).toBe('');
-      // Note: email and phoneNumber are disabled fields, so they aren't in form.value
-    });
-
-    it('should populate form with user data when available', () => {
-      // Set up the store with mock user
+    it('should initialize form with user data when user exists', () => {
       mockStore.setState({
         auth: {
           currentUser: mockUser,
           debugMode: false
         }
       });
-      
       fixture.detectChanges();
-      
       expect(component.profileForm.get('firstName')?.value).toBe('Test');
       expect(component.profileForm.get('lastName')?.value).toBe('User');
       expect(component.profileForm.get('email')?.value).toBe('test@example.com');
       expect(component.profileForm.get('phoneNumber')?.value).toBe('+12345678901');
+    });
+    it('should initialize form with empty values when no user exists', () => {
+      mockStore.setState({
+        auth: {
+          currentUser: null,
+          debugMode: false
+        }
+      });
+      fixture.detectChanges();
+      expect(component.profileForm.get('firstName')?.value).toBe('');
+      expect(component.profileForm.get('lastName')?.value).toBe('');
     });
   });
 

@@ -1,0 +1,10 @@
+{% for type_name, type_def in graphql_types.items() %}
+{% if type_def.type != 'lambda' %}
+type {{ type_name }} {
+{% for attr in type_def.attributes %}
+  {{ attr.name }}: {{ attr.type|graphql_type }}{% if attr.required %}!{% endif %}
+{% endfor %}
+}
+
+{% endif %}
+{% endfor %} 

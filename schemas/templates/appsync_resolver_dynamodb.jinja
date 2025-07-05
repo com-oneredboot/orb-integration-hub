@@ -1,0 +1,123 @@
+  {% for schema in schemas.values() if schema.type == 'dynamodb' %}
+  {%- if schema.operations is defined and schema.operations|length > 0 %}
+    {%- set all_ops = schema.operations %}
+  {%- else %}
+    {% set all_ops = [
+      {"name": "Create", "type": "Mutation", "field": schema.name + 'Create', "dynamodb_op": "PutItem"},
+      {"name": "Update", "type": "Mutation", "field": schema.name + 'Update', "dynamodb_op": "UpdateItem"},
+      {"name": "Delete", "type": "Mutation", "field": schema.name + 'Delete', "dynamodb_op": "DeleteItem"},
+      {"name": "Get",    "type": "Query",    "field": schema.name + 'Get',    "dynamodb_op": "GetItem"},
+      {"name": "List",   "type": "Query",    "field": schema.name + 'List',   "dynamodb_op": "Query"}
+    ] %}
+  {%- endif %}
+  {%- for operation in all_ops %}
+  {{ schema.name }}{{ operation.name }}Resolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: {{ schema.name }}DynamoDbDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: {{ operation.type }}
+      FieldName: {{ operation.field }}
+      DataSourceName: {{ schema.name }}DynamoDbDataSource
+      RequestMappingTemplate: |
+      {% set pk = operation.index_partition if operation.index_partition is defined else schema.partition_key %}
+      {% set sk = operation.index_sort if operation.index_sort is defined and operation.index_sort and operation.index_sort != 'None' else None %}
+      {% if operation.dynamodb_op == 'PutItem' %}
+        {
+          "version": "2018-05-29",
+          "operation": "PutItem",
+          "key": {
+            "{{ pk }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ pk }})
+          {% if sk %},
+            "{{ sk }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ sk }})
+          {% endif %}
+          },
+          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
+        }
+      {% elif operation.dynamodb_op == 'UpdateItem' %}
+        #set($input = $ctx.args.input)
+        #set($key = "{{ pk }}")
+        #set($updateExpression = "")
+        #set($expressionNames = {})
+        #set($expressionValues = {})
+        #set($separator = "")
+        
+        ## Automatically set updatedAt to current timestamp
+        #set($updateExpression = "updatedAt = :updatedAt")
+        $!expressionValues.put(":updatedAt", $util.dynamodb.toDynamoDB($util.time.nowISO8601()))
+        #set($separator = ", ")
+        
+        #foreach($entry in $input.entrySet())
+          #if($entry.key != $key && $entry.key != "updatedAt")
+            #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
+            $!expressionNames.put("#$entry.key", "$entry.key")
+            $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
+            #set($separator = ", ")
+          #end
+        #end
+        
+        {
+          "version": "2018-05-29",
+          "operation": "UpdateItem",
+          "key": {
+            "{{ pk }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ pk }})
+            {% if sk %},
+            "{{ sk }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ sk }})
+            {% endif %}
+          },
+          "update": {
+            "expression": "SET $updateExpression",
+            "expressionNames": $util.toJson($expressionNames),
+            "expressionValues": $util.toJson($expressionValues)
+          }
+        }
+      {% elif operation.dynamodb_op == 'DeleteItem' %}
+        {
+          "version": "2018-05-29",
+          "operation": "DeleteItem",
+          "key": {
+            "{{ pk }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ pk }}){% if sk %},
+            "{{ sk }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ sk }}){% endif %}
+          }
+        }
+      {% elif operation.dynamodb_op == 'Query' %}
+        {
+          "version": "2018-05-29",
+          "operation": "Query"{% if operation.index_name is defined and operation.index_name %},
+          "index": "{{ operation.index_name }}"{% endif %},
+          "query": {
+            "expression": "{{ pk }} = :{{ pk }}{% if sk %} AND {{ sk }} = :{{ sk }}{% endif %}",
+            "expressionValues": {
+              ":{{ pk }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ pk }}){% if sk %},
+              ":{{ sk }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ sk }}){% endif %}
+            }
+          }
+        }
+      {% elif operation.dynamodb_op == 'GetItem' %}
+        {
+          "version": "2018-05-29",
+          "operation": "GetItem",
+          "key": {
+            "{{ pk }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ pk }}){% if sk %},
+            "{{ sk }}": $util.dynamodb.toDynamoDBJson($ctx.args.input.{{ sk }}){% endif %}
+          }
+        }
+      {% else %}
+        # WARNING: dynamodb_op is missing or unrecognized for this operation!
+      {% endif %}
+      ResponseMappingTemplate: |
+        #if($ctx.error)
+          {
+            "StatusCode": 500,
+            "Message": "$ctx.error.message",
+            "Data": null
+          }
+        #else
+          {
+            "StatusCode": 200,
+            "Message": null,
+            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
+          }
+        #end
+    {% endfor %}
+    {% endfor %} 

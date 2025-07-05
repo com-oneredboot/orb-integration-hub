@@ -1,65 +1,270 @@
+<!-- 
+file: frontend/src/app/features/user/components/dashboard/dashboard.component.html
+author: Corey Dale Peters
+date: 2025-03-07
+description: HTML template file
+-->
+
 <div class="dashboard-container">
-  <div class="dashboard-header">
-    <h1>Dashboard</h1>
-    <p *ngIf="currentUser$ | async as user">Welcome, {{ user.first_name }}!</p>
+  <!-- Global Loading Indicator -->
+  <div *ngIf="isLoading$ | async" class="global-loading-overlay">
+    <!-- Loading Bar -->
+    <div class="global-loading-indicator">
+      <div class="global-loading-indicator__content">
+        <fa-icon icon="clock" class="global-loading-indicator__icon"></fa-icon>
+        <span class="global-loading-indicator__text">Processing...</span>
+      </div>
+    </div>
+    
+    <!-- Overlay Mask -->
+    <div class="global-loading-mask"></div>
   </div>
 
-  <div class="dashboard-content" *ngIf="currentUser$ | async as user">
-    <div class="user-profile-summary">
-      <h2>Your Profile</h2>
-      <div class="profile-info">
-        <div class="info-item">
-          <span class="label">Name:</span>
-          <span class="value">{{ user.first_name }} {{ user.last_name }}</span>
+  <div class="dashboard-header">
+    <div class="dashboard-header__content">
+      <div class="dashboard-header__flex-container">
+        <div class="dashboard-header__logo-section">
+          <img src="../../../../../assets/onredboot-logo.jpg" alt="OneRedBoot Logo" class="dashboard-header__logo">
         </div>
-        <div class="info-item">
-          <span class="label">Email:</span>
-          <span class="value">{{ user.email }}</span>
+        <div class="dashboard-header__text-section" *ngIf="currentUser$ | async as user">
+          <div class="dashboard-header__greeting">
+            <div class="dashboard-header__icon-title">
+              <img src="../../../../../assets/hardhat.jpg" alt="Engineering" class="dashboard-header__icon">
+              <h1 class="dashboard-header__title">
+                Integration Hub
+              </h1>
+            </div>
+            <p class="dashboard-header__subtitle" *ngIf="user.status === 'ACTIVE'; else pendingDashboardMessage">
+              Your integration hub is ready for action
+            </p>
+            <ng-template #pendingDashboardMessage>
+              <p class="dashboard-header__subtitle dashboard-header__subtitle--warning">
+                Complete your profile setup to activate your account
+              </p>
+            </ng-template>
+            <div class="dashboard-header__status">
+              <span class="dashboard-header__status-badge" 
+                    [ngClass]="'dashboard-header__status-badge--' + getStatusClass(user.status)">
+                <fa-icon [icon]="user.status === 'ACTIVE' ? 'check-circle' : 'clock'" class="dashboard-header__status-icon"></fa-icon>
+                Account {{ user.status }}
+              </span>
+            </div>
+          </div>
         </div>
-        <div class="info-item">
-          <span class="label">Phone:</span>
-          <span class="value">{{ user.phone_number }}</span>
-        </div>
-        <div class="info-item">
-          <span class="label">Account Status:</span>
-          <span class="value">{{ user.status }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-content" *ngIf="currentUser$ | async as user; else loadingUser">
+    
+    <!-- Quick Actions Card -->
+    <div class="dashboard-card dashboard-card--actions">
+      <div class="dashboard-card__header">
+        <h2 class="dashboard-card__title">
+          <fa-icon icon="bolt" class="dashboard-card__icon"></fa-icon>
+          Quick Actions
+        </h2>
+      </div>
+      
+      <div class="dashboard-card__content">
+        <div class="action-grid">
+          <a routerLink="/profile" class="action-button action-button--primary">
+            <fa-icon icon="user-edit" class="action-button__icon"></fa-icon>
+            <div class="action-button__content">
+              <div class="action-button__title">Edit Profile</div>
+              <div class="action-button__subtitle">Update your information</div>
+            </div>
+          </a>
+          
+          <button class="action-button action-button--secondary" (click)="goToSecuritySettings()">
+            <fa-icon icon="shield-alt" class="action-button__icon"></fa-icon>
+            <div class="action-button__content">
+              <div class="action-button__title">Security Settings</div>
+              <div class="action-button__subtitle">Manage MFA & passwords</div>
+            </div>
+          </button>
+          
+          <button class="action-button action-button--secondary">
+            <fa-icon icon="credit-card" class="action-button__icon"></fa-icon>
+            <div class="action-button__content">
+              <div class="action-button__title">Payment Methods</div>
+              <div class="action-button__subtitle">Billing & subscriptions</div>
+            </div>
+          </button>
+          
+          <button class="action-button action-button--secondary">
+            <fa-icon icon="cog" class="action-button__icon"></fa-icon>
+            <div class="action-button__content">
+              <div class="action-button__title">Integrations</div>
+              <div class="action-button__subtitle">Connect your tools</div>
+            </div>
+          </button>
         </div>
       </div>
     </div>
 
-    <div class="dashboard-actions">
-      <h2>Quick Actions</h2>
-      <div class="action-buttons">
-        <button class="action-button">Edit Profile</button>
-        <button class="action-button">Security Settings</button>
-        <button class="action-button">Payment Methods</button>
+    <!-- Account Health Card - Only show if there are warnings -->
+    <div class="dashboard-card dashboard-card--health" *ngIf="hasHealthWarnings(user)">
+      <div class="dashboard-card__header">
+        <h2 class="dashboard-card__title">
+          <fa-icon icon="heartbeat" class="dashboard-card__icon"></fa-icon>
+          Account Health
+        </h2>
+      </div>
+      
+      <div class="dashboard-card__content">
+        <div class="health-check">
+          <div class="health-item health-item--clickable" 
+               [ngClass]="hasValidName(user) ? 'health-item--healthy' : 'health-item--warning'"
+               (click)="goToProfile()"
+               [title]="hasValidName(user) ? 'Name complete' : 'Click to update your name in profile'">
+            <fa-icon [icon]="hasValidName(user) ? 'check-circle' : 'exclamation-triangle'" 
+                     class="health-item__icon"></fa-icon>
+            <div class="health-item__content">
+              <div class="health-item__title">Full Name</div>
+              <div class="health-item__status">
+                {{ hasValidName(user) ? 'Complete' : 'First & Last Name Required' }}
+              </div>
+              <div class="health-item__action" *ngIf="!hasValidName(user)">
+                <fa-icon icon="arrow-right" class="health-item__action-icon"></fa-icon>
+                Update Profile
+              </div>
+            </div>
+          </div>
+          
+          <div class="health-item health-item--clickable" 
+               [ngClass]="user.emailVerified ? 'health-item--healthy' : 'health-item--warning'"
+               (click)="!user.emailVerified && goToEmailVerification()"
+               [title]="user.emailVerified ? 'Email verified' : 'Click to verify your email'">
+            <fa-icon [icon]="user.emailVerified ? 'check-circle' : 'exclamation-triangle'" 
+                     class="health-item__icon"></fa-icon>
+            <div class="health-item__content">
+              <div class="health-item__title">Email Verification</div>
+              <div class="health-item__status">
+                {{ user.emailVerified ? 'Verified' : 'Email verification required' }}
+              </div>
+              <div class="health-item__action" *ngIf="!user.emailVerified">
+                <fa-icon icon="arrow-right" class="health-item__action-icon"></fa-icon>
+                Verify Email
+              </div>
+            </div>
+          </div>
+          
+          <div class="health-item health-item--clickable" 
+               [ngClass]="user.phoneVerified ? 'health-item--healthy' : 'health-item--warning'"
+               (click)="!user.phoneVerified && goToPhoneVerification()"
+               [title]="user.phoneVerified ? 'Phone verified' : 'Click to verify your phone'">
+            <fa-icon [icon]="user.phoneVerified ? 'check-circle' : 'exclamation-triangle'" 
+                     class="health-item__icon"></fa-icon>
+            <div class="health-item__content">
+              <div class="health-item__title">Phone Verification</div>
+              <div class="health-item__status">
+                {{ user.phoneVerified ? 'Verified' : (user.phoneNumber ? 'Phone verification required' : 'Phone number required') }}
+              </div>
+              <div class="health-item__action" *ngIf="!user.phoneVerified">
+                <fa-icon icon="arrow-right" class="health-item__action-icon"></fa-icon>
+                {{ user.phoneNumber ? 'Verify Phone' : 'Add Phone' }}
+              </div>
+            </div>
+          </div>
+          
+          <div class="health-item health-item--clickable" 
+               [ngClass]="(user.mfaEnabled && user.mfaSetupComplete) ? 'health-item--healthy' : 'health-item--warning'"
+               (click)="checkMFASetup()"
+               [class.health-item--loading]="isLoading$ | async"
+               [style.pointer-events]="(isLoading$ | async) ? 'none' : 'auto'"
+               [title]="(user.mfaEnabled && user.mfaSetupComplete) ? 'MFA enabled - click to recheck' : 'Click to check MFA setup'">
+            <fa-icon [icon]="(user.mfaEnabled && user.mfaSetupComplete) ? 'check-circle' : 'exclamation-triangle'" 
+                     class="health-item__icon"></fa-icon>
+            <div class="health-item__content">
+              <div class="health-item__title">Multi-Factor Authentication</div>
+              <div class="health-item__status">
+                <ng-container *ngIf="isNotLoading$ | async">
+                  {{ (user.mfaEnabled && user.mfaSetupComplete) ? 'Enabled' : 'Status unknown - check setup' }}
+                </ng-container>
+                <ng-container *ngIf="isLoading$ | async">
+                  Checking MFA status...
+                </ng-container>
+              </div>
+              <div class="health-item__action">
+                <fa-icon *ngIf="isNotLoading$ | async" icon="arrow-right" class="health-item__action-icon"></fa-icon>
+                <fa-icon *ngIf="isLoading$ | async" icon="clock" class="health-item__action-icon health-item__action-icon--loading"></fa-icon>
+                <ng-container *ngIf="isNotLoading$ | async">Check MFA Setup</ng-container>
+                <ng-container *ngIf="isLoading$ | async">Checking...</ng-container>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="recent-activity">
-      <h2>Recent Activity</h2>
-      <p>Your recent activity will appear here.</p>
+    <!-- Recent Activity Card -->
+    <div class="dashboard-card dashboard-card--activity">
+      <div class="dashboard-card__header">
+        <h2 class="dashboard-card__title">
+          <fa-icon icon="history" class="dashboard-card__icon"></fa-icon>
+          Recent Activity
+        </h2>
+      </div>
+      
+      <div class="dashboard-card__content">
+        <div class="activity-list">
+          <div class="activity-item">
+            <div class="activity-item__time">{{ formatDate(user.updatedAt) }}</div>
+            <div class="activity-item__description">Profile information updated</div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-item__time">{{ formatDate(user.createdAt) }}</div>
+            <div class="activity-item__description">Account created</div>
+          </div>
+          <div class="empty-state">
+            <fa-icon icon="info-circle" class="empty-state__icon"></fa-icon>
+            <p class="empty-state__text">More activity will appear here as you use the platform</p>
+          </div>
+        </div>
+      </div>
     </div>
+
   </div>
   
-  <!-- Debug section -->
-  <ng-container *ngIf="debugMode$ | async">
-    <div class="dashboard__debug">
-      <h3 class="dashboard__debug-title">Debug Information</h3>
-      
-      <div class="dashboard__debug-section">
-        <h4>User Data</h4>
-        <ng-container *ngIf="currentUser$ | async as user">
-          <pre>User: {{ user | json }}</pre>
-          <pre>User Is Valid: {{ isUserValid(user) | json }}</pre>
-          <pre>Required Attributes Check:
-  - Email: {{ !!user.email }}
-  - First Name: {{ !!user.first_name }}
-  - Last Name: {{ !!user.last_name }}
-  - Phone Number: {{ !!user.phone_number }}
-  - Status Is Active: {{ user.status === 'ACTIVE' }}</pre>
-        </ng-container>
+  <!-- Loading template when no user data is available -->
+  <ng-template #loadingUser>
+    <div class="dashboard-content" style="text-align: center; padding: 40px;">
+      <div class="loading-state">
+        <h2>Loading your dashboard...</h2>
+        <p>Please wait while we fetch your user information.</p>
       </div>
     </div>
-  </ng-container>
+  </ng-template>
+  
+  <!-- Debug section - Always show for troubleshooting -->
+  <div class="dashboard__debug">
+    <h3>Debug Information</h3>
+    
+    <div class="dashboard__debug-section">
+      <h4>Current User Observable Status</h4>
+      <ng-container *ngIf="currentUser$ | async as user; else noUser">
+        <p><strong>User Data Found:</strong></p>
+        <pre>{{ user | json }}</pre>
+        <p><strong>User Is Valid:</strong> {{ isUserValid(user) }}</p>
+        <p><strong>Required Attributes Check:</strong></p>
+        <ul>
+          <li>Email: {{ !!user.email }} ({{ user.email }})</li>
+          <li>First Name: {{ !!user.firstName }} ({{ user.firstName }})</li>
+          <li>Last Name: {{ !!user.lastName}} ({{ user.lastName }})</li>
+          <li>Phone Number: {{ !!user.phoneNumber}} ({{ user.phoneNumber }})</li>
+          <li>Status Is Active: {{ user.status === 'ACTIVE' }} ({{ user.status }})</li>
+        </ul>
+      </ng-container>
+      <ng-template #noUser>
+        <p class="error"><strong>No User Data Found</strong></p>
+        <p>currentUser$ observable is emitting null or undefined</p>
+      </ng-template>
+    </div>
+    
+    <div class="dashboard__debug-section">
+      <h4>Debug Mode Status</h4>
+      <p>Debug Mode: {{ (debugMode$ | async) ? 'ON' : 'OFF' }}</p>
+    </div>
+  </div>
 </div>

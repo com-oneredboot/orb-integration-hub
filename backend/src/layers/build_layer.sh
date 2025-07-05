@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the packages path variable
-layer_path="./python/lib/python3.12/site-packages"
+layer_path="./python/lib/python3.13/site-packages"
 
 # Step 1: Create the directory structure
 echo "Creating directory structure"

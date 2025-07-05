@@ -1,0 +1,58 @@
+{% for type_name, type_def in graphql_types.items() %}
+{% if type_def.type == 'lambda' %}
+{#-- Generate auth directives for the lambda type --#}
+{% set type_auth_directives = [] %}
+{% if type_def.auth_config and type_def.auth_config.get('cognitoAuthentication') %}
+  {% set cognito_groups = [] %}
+  {% for group_name, type_list in type_def.auth_config.cognitoAuthentication.groups.items() %}
+    {% if type_name in type_list %}
+      {% do cognito_groups.append(group_name) %}
+    {% endif %}
+  {% endfor %}
+  {% if cognito_groups %}
+    {% set sorted_groups = cognito_groups | sort %}
+    {% set directive = '@aws_auth(cognito_groups: ["' + '","'.join(sorted_groups) + '"])' %}
+    {% do type_auth_directives.append(directive) %}
+  {% endif %}
+{% endif %}
+
+{#-- Generate auth directives for the response type --#}
+{% set response_auth_directives = [] %}
+{% if type_def.auth_config and type_def.auth_config.get('cognitoAuthentication') %}
+  {% set cognito_groups = [] %}
+  {% for group_name, type_list in type_def.auth_config.cognitoAuthentication.groups.items() %}
+    {% if (type_name + 'Response') in type_list %}
+      {% do cognito_groups.append(group_name) %}
+    {% endif %}
+  {% endfor %}
+  {% if cognito_groups %}
+    {% set sorted_groups = cognito_groups | sort %}
+    {% set directive = '@aws_auth(cognito_groups: ["' + '","'.join(sorted_groups) + '"])' %}
+    {% do response_auth_directives.append(directive) %}
+  {% endif %}
+{% endif %}
+
+type {{ type_name }} {
+{% for attr in type_def.attributes %}
+  {{ attr.name }}: {{ attr.type|graphql_type }}{% if attr.required %}!{% endif %}{% if type_auth_directives %} {{ type_auth_directives[0] }}{% endif %}
+
+{% endfor %}
+}
+
+input {{ type_name }}Input {
+{% for attr in type_def.attributes %}
+  {{ attr.name }}: {{ attr.type|graphql_type }}{% if attr.required %}!{% endif %}
+
+{% endfor %}
+}
+
+type {{ type_name }}Response {
+  StatusCode: Int!{% if response_auth_directives %} {{ response_auth_directives[0] }}{% endif %}
+
+  Message: String{% if response_auth_directives %} {{ response_auth_directives[0] }}{% endif %}
+
+  Data: {{ type_name }}{% if response_auth_directives %} {{ response_auth_directives[0] }}{% endif %}
+
+}
+{% endif %}
+{% endfor %}

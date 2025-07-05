@@ -1,0 +1,108 @@
+# file: schemas/entities/Users.yml
+# author: Corey Dale Peters
+# date: 2025-02-17
+# description: yaml file containing the Users table schema
+# Note: Roles are managed via ApplicationRoles table, not directly on the user.
+
+# GROUP_TYPES: OWNER, ADMIN, SUPPORT, USER (see enum definition)
+
+type: dynamodb
+version: '1.0'
+name: Users
+model:
+  stream:
+    enabled: true
+    viewType: NEW_AND_OLD_IMAGES
+  authConfig:
+    apiKeyAuthentication:
+    - Users
+    - UsersQueryByEmail
+    - UsersCreate
+    - UsersUpdate
+    - UsersResponse
+    cognitoAuthentication:
+      groups:
+        OWNER:
+          - '*'
+        USER:
+          - '*'
+  keys:
+    primary:
+      partition: userId
+    secondary:
+      - name: EmailIndex
+        type: GSI
+        partition: email
+        projection_type: ALL
+      - name: CognitoIdIndex
+        type: GSI
+        partition: cognitoId
+        projection_type: ALL
+      - name: CognitoSubIndex
+        type: GSI
+        partition: cognitoSub
+        projection_type: ALL
+  attributes:
+    userId:
+      type: string
+      required: true
+      description: Unique identifier for the user (primary key)
+    cognitoId:
+      type: string
+      required: true
+      description: Cognito username (used for authentication)
+    cognitoSub:
+      type: string
+      required: true
+      description: Cognito user sub (unique identifier from tokens)
+    email:
+      type: string
+      required: true
+      description: User's email address
+    firstName:
+      type: string
+      required: true
+      description: User's first name
+    lastName:
+      type: string
+      required: true
+      description: User's last name
+    status:
+      type: string
+      required: true
+      enum_type: UserStatus
+      description: Current status of the user
+    createdAt:
+      type: timestamp
+      required: true
+      description: When the user was created
+    updatedAt:
+      type: timestamp
+      required: true
+      description: When the user was last updated
+    phoneNumber:
+      type: string
+      required: false
+      description: User's phone number
+    groups:
+      type: array
+      items: string
+      required: false
+      description: List of Cognito groups the user belongs to (used for AppSync @aws_auth)
+    emailVerified:
+      type: boolean
+      required: false
+      description: Whether the user's email is verified
+    phoneVerified:
+      type: boolean
+      required: false
+      description: Whether the user's phone number is verified
+    mfaEnabled:
+      type: boolean
+      required: false
+      description: Whether multi-factor authentication is enabled for the user
+    mfaSetupComplete:
+      type: boolean
+      required: false
+      description: Whether MFA setup has been completed successfully
+    # Note: User roles for the IntegrationHub and customer applications are managed via ApplicationRoles table.

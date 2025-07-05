@@ -2,34 +2,50 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Observable, Subject, takeUntil } from 'rxjs';
-import { User } from '../../../../core/models/user.model';
-import { UserUpdateInput } from '../../../../core/graphql/user.graphql';
+import { IUsers, UsersUpdateInput, UsersResponse, UsersQueryByUserIdInput } from '../../../../core/models/UsersModel';
 import * as fromAuth from '../../components/auth-flow/store/auth.selectors';
 import { AuthActions } from '../../components/auth-flow/store/auth.actions';
 import { UserService } from '../../../../core/services/user.service';
 import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
+import { FontAwesomeModule, FaIconLibrary } from '@fortawesome/angular-fontawesome';
+import { RouterModule } from '@angular/router';
+import { Users } from '../../../../core/models/UsersModel';
+import { faUser, faEdit, faCheckCircle, faClock } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-profile',
   templateUrl: './profile.component.html',
-  styleUrl: './profile.component.scss',
-  standalone: false
+  styleUrls: ['./profile.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FontAwesomeModule,
+    RouterModule
+  ]
 })
 export class ProfileComponent implements OnInit, OnDestroy {
-  currentUser$: Observable<User | null>;
+  currentUser$: Observable<IUsers | null>;
   debugMode$: Observable<boolean>;
   profileForm: FormGroup;
   isLoading = false;
+  isEditMode = false;
   private destroy$ = new Subject<void>();
 
   constructor(
     private store: Store,
     private userService: UserService,
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private library: FaIconLibrary
   ) {
     this.currentUser$ = this.store.select(fromAuth.selectCurrentUser);
     this.debugMode$ = this.store.select(fromAuth.selectDebugMode);
+    
+    // Add FontAwesome icons to library
+    this.library.addIcons(faUser, faEdit, faCheckCircle, faClock);
     
     // Initialize the form with empty values and properly disabled controls
     this.profileForm = this.fb.group({
@@ -48,10 +64,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
         if (user) {
           // User exists, update the form
           this.profileForm.patchValue({
-            firstName: user.first_name || '',
-            lastName: user.last_name || '',
+            firstName: user.firstName || '',
+            lastName: user.lastName || '',
             email: user.email || '',
-            phoneNumber: user.phone_number || ''
+            phoneNumber: user.phoneNumber || ''
           });
         } else {
           // No user, redirect to authentication page
@@ -144,8 +160,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
       .subscribe(user => {
         if (user) {
           this.profileForm.patchValue({
-            firstName: user.first_name || '',
-            lastName: user.last_name || ''
+            firstName: user.firstName || '',
+            lastName: user.lastName || ''
           });
           this.profileForm.markAsPristine();
         }
@@ -168,47 +184,56 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     
     try {
-      // Get current user to retrieve the user_id
+      // Get current user to retrieve the userId
       const user = await this.getCurrentUser();
       
-      if (!user || !user.user_id) {
+      if (!user || !user.userId) {
         console.error('Cannot update profile: No user ID available');
         return;
       }
       
       // Create update input from form values
-      const updateInput: UserUpdateInput = {
-        user_id: user.user_id,
-        first_name: this.profileForm.get('firstName')?.value,
-        last_name: this.profileForm.get('lastName')?.value
+      const formValues = this.profileForm.value;
+      const updateInput: UsersUpdateInput = {
+        userId: user.userId,
+        cognitoId: user.cognitoId,
+        cognitoSub: user.cognitoSub,
+        email: user.email,
+        emailVerified: user.emailVerified,
+        phoneNumber: user.phoneNumber,
+        phoneVerified: user.phoneVerified,
+        firstName: formValues.firstName?.trim() || user.firstName,
+        lastName: formValues.lastName?.trim() || user.lastName,
+        groups: user.groups,
+        status: user.status,
+        mfaEnabled: false,
+        mfaSetupComplete: false,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
       };
       
       // Call the userService to update the profile
       console.log('Updating user profile:', updateInput);
       
-      // Make API call to update the user
-      // Access the method via bracket notation to avoid compiler errors
-      const response = await this.userService['userUpdate'](updateInput);
+      const response = await this.userService.userUpdate(updateInput);
       
-      // Handle the response
-      if (response?.userQueryById?.status_code !== 200) {
-        const errorMessage = response?.userQueryById?.message || 'Failed to update profile';
-        console.error('Profile update error:', errorMessage);
-        throw new Error(errorMessage);
-      }
-      
-      // Update the store with the updated user data
-      if (response?.userQueryById?.user) {
+      if (response.StatusCode === 200 && response.Data) {
+        // Update the store with the updated user data
         this.store.dispatch(AuthActions.signInSuccess({
-          user: response.userQueryById.user,
+          user: new Users(response.Data),
           message: 'Profile updated successfully'
         }));
+        
+        // Mark form as pristine after successful update
+        this.profileForm.markAsPristine();
+        
+        // Exit edit mode
+        this.onFormSuccess();
+        
+        console.log('Profile updated successfully');
+      } else {
+        console.error('Failed to update profile:', response.Message);
       }
-      
-      // Mark form as pristine after successful update
-      this.profileForm.markAsPristine();
-      
-      console.log('Profile updated successfully');
     } catch (error) {
       console.error('Error updating profile:', error);
     } finally {
@@ -219,7 +244,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   /**
    * Get the current user as a promise
    */
-  private async getCurrentUser(): Promise<User | null> {
+  private async getCurrentUser(): Promise<IUsers | null> {
     return new Promise((resolve) => {
       this.currentUser$
         .pipe(takeUntil(this.destroy$))
@@ -241,5 +266,51 @@ export class ProfileComponent implements OnInit, OnDestroy {
    */
   public signOut(): void {
     this.store.dispatch(AuthActions.signout());
+  }
+
+  /**
+   * Get status class for styling
+   */
+  getStatusClass(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'active':
+        return 'active';
+      case 'pending':
+        return 'pending';
+      case 'suspended':
+        return 'suspended';
+      default:
+        return 'unknown';
+    }
+  }
+
+  /**
+   * Check if account setup is complete
+   * Account is complete when status is ACTIVE
+   */
+  isAccountComplete(user: any): boolean {
+    return user?.status === 'ACTIVE';
+  }
+
+  /**
+   * Enter edit mode
+   */
+  enterEditMode(): void {
+    this.isEditMode = true;
+  }
+
+  /**
+   * Cancel edit mode and reset form
+   */
+  cancelEdit(): void {
+    this.isEditMode = false;
+    this.resetForm();
+  }
+
+  /**
+   * Handle successful form submission
+   */
+  onFormSuccess(): void {
+    this.isEditMode = false;
   }
 }

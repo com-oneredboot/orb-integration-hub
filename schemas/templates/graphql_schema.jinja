@@ -1,83 +1,20 @@
-# GraphQL schema for {{ model_name }}
-# Generated from database model
-# Do not modify directly
-
-# Main {{ model_name }} type
-{% if auth_config and model_name in auth_config.api_key_operations %}
-type {{ model_name }} @aws_api_key @aws_cognito_user_pools {
-{% else %}
-type {{ model_name }} @aws_cognito_user_pools {
-{% endif %}
-{%- for attr, details in attributes.items() %}
-  {{ attr }}: {% if details.graphql_type %}[{{ details.graphql_type }}{% if details.required %}!{% endif %}]{% if details.required %}!{% endif %}{% elif details.type == 'array' %}[{% if details.items and details.items.type %}{% if details.items.type == 'string' %}String{% else %}{{ details.items.type|capitalize }}{% endif %}{% else %}String{% endif %}{% if details.required %}!{% endif %}]{% if details.required %}!{% endif %}{% elif details.type == 'string' %}String{% if details.required %}!{% endif %}{% elif details.type == 'number' %}Float{% if details.required %}!{% endif %}{% elif details.type == 'boolean' %}Boolean{% if details.required %}!{% endif %}{% else %}{{ details.type }}{% if details.required %}!{% endif %}{% endif %}
-{%- endfor %}
+schema {
+  query: Query
+  mutation: Mutation
 }
 
-# Response type for {{ model_name }} operations
-{% if auth_config and model_name+'Response' in auth_config.api_key_operations %}
-type {{ model_name }}Response @aws_api_key @aws_cognito_user_pools {
-{% else %}
-type {{ model_name }}Response @aws_cognito_user_pools {
-{% endif %}
-  status_code: Float!
-  message: String
-  {{ model_name_lowercase }}: {{ model_name }}
+{% include 'appsync_enums.jinja' -%}
+
+{% include 'graphql_schema_type.jinja' %}
+
+{% include 'graphql_schema_table.jinja' %}
+
+{% include 'graphql_schema_lambda.jinja' %}
+
+type Query {
+{% include 'graphql_schema_queries.jinja' %}
 }
 
-# Response type for multiple {{ model_name }} operations
-{% if auth_config and model_name+'sResponse' in auth_config.api_key_operations %}
-type {{ model_name }}sResponse @aws_api_key @aws_cognito_user_pools {
-{% else %}
-type {{ model_name }}sResponse @aws_cognito_user_pools {
-{% endif %}
-  status_code: Float!
-  message: String
-  {{ model_name_lowercase }}s: [{{ model_name }}]
+type Mutation {
+{% include 'graphql_schema_mutations.jinja' %}
 }
-
-# Input for {{ model_name }} creation
-{% if auth_config and model_name+'CreateInput' in auth_config.api_key_operations %}
-input {{ model_name }}CreateInput @aws_api_key @aws_cognito_user_pools {
-{% else %}
-input {{ model_name }}CreateInput {
-{% endif %}
-{%- for attr, details in attributes.items() %}
-  {{ attr }}: {% if details.graphql_type %}[{{ details.graphql_type }}{% if details.required %}!{% endif %}]{% if details.required %}!{% endif %}{% elif details.type == 'array' %}[{% if details.items and details.items.type %}{% if details.items.type == 'string' %}String{% else %}{{ details.items.type|capitalize }}{% endif %}{% else %}String{% endif %}{% if details.required %}!{% endif %}]{% if details.required %}!{% endif %}{% elif details.type == 'string' %}String{% if details.required %}!{% endif %}{% elif details.type == 'number' %}Float{% if details.required %}!{% endif %}{% elif details.type == 'boolean' %}Boolean{% if details.required %}!{% endif %}{% else %}{{ details.type }}{% if details.required %}!{% endif %}{% endif %}
-{%- endfor %}
-}
-
-# Input for {{ model_name }} query operations
-{% if auth_config and model_name+'QueryInput' in auth_config.api_key_operations %}
-input {{ model_name }}QueryInput @aws_api_key @aws_cognito_user_pools {
-{% else %}
-input {{ model_name }}QueryInput {
-{% endif %}
-{%- if partition_key %}
-  {{ partition_key }}: String
-{%- endif %}
-{%- if sort_key %}
-  {{ sort_key }}: String
-{%- endif %}
-}
-
-# Input for {{ model_name }} update operations
-{% if auth_config and model_name+'UpdateInput' in auth_config.api_key_operations %}
-input {{ model_name }}UpdateInput @aws_api_key @aws_cognito_user_pools {
-{% else %}
-input {{ model_name }}UpdateInput {
-{% endif %}
-{%- if partition_key %}
-  {{ partition_key }}: String!
-{%- endif %}
-{%- if sort_key %}
-  {{ sort_key }}: String!
-{%- endif %}
-{%- for attr, details in attributes.items() %}
-{%- if attr != partition_key and attr != sort_key %}
-  {{ attr }}: {% if details.graphql_type %}[{{ details.graphql_type }}]{% elif details.type == 'array' %}[{% if details.items and details.items.type %}{% if details.items.type == 'string' %}String{% else %}{{ details.items.type|capitalize }}{% endif %}{% else %}String{% endif %}]{% elif details.type == 'string' %}String{% elif details.type == 'number' %}Float{% elif details.type == 'boolean' %}Boolean{% else %}{{ details.type }}{% endif %}
-{%- endif %}
-{%- endfor %}
-}
-
-# Operations for {{ model_name }}
-# These will be merged with the root Query and Mutation types in the base schema

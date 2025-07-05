@@ -1,17 +1,79 @@
+// file: frontend/src/app/features/user/components/auth-flow/auth-flow.component.scss
+// author: Corey Dale Peters
+// date: 2025-03-07
+// description: SCSS style file
+
 @use '../../../../../styles/variables' as v;
 @use '../../../../../styles/mixins' as m;
 @use 'sass:color';
 
 .auth-flow {
   @include m.auth-container;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  // Logo sizing to match dashboard and profile pages
+
+  // Accessibility: Skip link for keyboard users
+  &__skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: v.$primary-color;
+    color: v.$white;
+    padding: 8px;
+    border-radius: v.$border-radius;
+    text-decoration: none;
+    z-index: 100;
+    transition: top 0.3s;
+    
+    &:focus {
+      top: 6px;
+    }
+  }
+
+  // Screen reader only content
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
 
   &__header {
     text-align: center;
     margin-bottom: v.$spacing-xl;
+    
+    // Logo section container for consistent sizing with dashboard/profile
+    &-logo-section {
+      flex: 1;
+      max-width: 600px; // Match dashboard/profile sizing
+      margin: 0 auto; // Center the logo section
+      
+      @media (max-width: 1024px) {
+        max-width: 400px; // Tablet sizing
+      }
+      
+      @media (max-width: 768px) {
+        max-width: 300px; // Mobile sizing
+      }
+    }
 
     &-logo {
-      width: 600px;
-      height: auto;
+      width: 100%; // Take full width of container
+      height: auto; // Maintain aspect ratio
+      object-fit: contain; // Ensure logo fits without distortion
+      transition: width 0.3s ease; // Smooth transitions for orientation changes
+      
+      // Ensure crisp rendering at all sizes
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
     }
 
     &-title {
@@ -21,29 +83,203 @@
     }
   }
 
+
+  &__back-button,
+  &__start-over-button {
+    display: inline-flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+    padding: v.$spacing-xs v.$spacing-sm;
+    background: none;
+    border: none;
+    color: v.$text-secondary;
+    font-size: v.$font-size-xs;
+    font-family: v.$font-family-base;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    text-decoration: underline;
+    min-height: auto;
+
+    &:hover {
+      color: v.$primary-color;
+    }
+
+    &:focus {
+      outline: 2px solid v.$primary-color;
+      outline-offset: 2px;
+      border-radius: v.$border-radius-sm;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      
+      &:hover {
+        color: v.$text-secondary;
+      }
+    }
+
+    i {
+      font-size: v.$font-size-xs;
+    }
+
+    span {
+      font-weight: v.$font-weight-normal;
+    }
+  }
+
+  &__start-over-button {
+    color: v.$danger-color;
+
+    &:hover {
+      color: color.adjust(v.$danger-color, $lightness: -10%);
+    }
+  }
+
   &__progress {
     width: 100%;
-    max-width: 400px;
-    display: flex;
-    justify-content: center;
-    gap: v.$spacing-sm;
-    margin-bottom: v.$spacing-lg;
+    max-width: 600px;
+    margin: 0 auto v.$spacing-xl;
+    position: relative;
 
+    // Progress bar background track
+    &-bar {
+      position: absolute;
+      top: 20px; // Center with step circles
+      left: 10%;
+      right: 10%;
+      height: 2px;
+      background-color: v.$input-border-color;
+      border-radius: 1px;
+      z-index: 1;
+
+      // Progress bar fill
+      &-fill {
+        height: 100%;
+        background: linear-gradient(90deg, v.$primary-color 0%, v.$success-color 100%);
+        border-radius: 1px;
+        transition: width 0.4s ease;
+        position: relative;
+        
+        &::after {
+          content: '';
+          position: absolute;
+          right: -6px;
+          top: -4px;
+          width: 10px;
+          height: 10px;
+          background: v.$primary-color;
+          border-radius: 50%;
+          border: 2px solid v.$orb-white;
+          transition: all 0.4s ease;
+        }
+      }
+    }
+
+    // Steps container
+    &-steps {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      position: relative;
+      z-index: 2;
+    }
+
+    // Individual step container
+    &-step-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      max-width: 120px;
+    }
+
+    // Step circle/indicator
     &-step {
-      width: 12px;
-      height: 12px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       background-color: v.$input-border-color;
-      margin: 0 4px;
-      transition: all 0.2s ease;
+      border: 3px solid v.$orb-white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.3s ease;
+      margin-bottom: v.$spacing-sm;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
-      &--active {
-        background-color: v.$primary-color;
-        transform: scale(1.2);
+      &-content {
+        font-weight: v.$font-weight-semibold;
+        font-size: v.$font-size-sm;
+        color: v.$orb-white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
+      // Pending state (future steps)
+      &--pending {
+        background-color: v.$gray-300;
+        color: v.$gray-600;
+        
+        .auth-flow__progress-step-content {
+          color: v.$gray-600;
+        }
+      }
+
+      // Active state (current step)
+      &--active {
+        background-color: v.$primary-color;
+        transform: scale(1.1);
+        box-shadow: 0 4px 8px rgba(v.$primary-color, 0.3);
+        animation: pulse 2s infinite;
+        
+        .auth-flow__progress-step-content {
+          color: v.$orb-white;
+        }
+      }
+
+      // Completed state
       &--completed {
         background-color: v.$success-color;
+        
+        .auth-flow__progress-step-content {
+          color: v.$orb-white;
+        }
+      }
+    }
+
+    // Step labels
+    &-step-label {
+      font-size: v.$font-size-xs;
+      font-weight: v.$font-weight-medium;
+      color: v.$text-secondary;
+      line-height: 1.3;
+      margin-top: v.$spacing-xs;
+      min-height: 2.6em; // Ensure consistent height for labels
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.3s ease, font-weight 0.3s ease;
+    }
+
+    // Step container state-based styling (more compatible approach)
+    &-step-container {
+      // Active step styling
+      &.step-active {
+        .auth-flow__progress-step-label {
+          color: v.$primary-color;
+          font-weight: v.$font-weight-semibold;
+        }
+      }
+      
+      // Completed step styling
+      &.step-completed {
+        .auth-flow__progress-step-label {
+          color: v.$success-color;
+        }
       }
     }
   }
@@ -55,6 +291,15 @@
     flex-direction: column;
     align-items: center;
     gap: v.$spacing-md;
+  }
+
+  &__form-footer {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: v.$spacing-lg;
+    margin-top: v.$spacing-sm;
   }
 
   &__form-step {
@@ -74,6 +319,21 @@
     padding: v.$spacing-sm;
     border-radius: v.$border-radius;
     margin-top: v.$spacing-xs;
+    border: 1px solid v.$border-color;
+    background-color: v.$bg-secondary;
+  }
+
+  &__requirements-title {
+    font-size: v.$font-size-base;
+    font-weight: v.$font-weight-semibold;
+    color: v.$text-primary;
+    margin: 0 0 v.$spacing-sm 0;
+  }
+
+  &__requirements-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
   }
 
   &__requirement {
@@ -83,6 +343,7 @@
     padding: v.$spacing-xs 0;
     color: v.$danger-color;
     text-align: left;
+    list-style: none;
 
     &--valid {
       color: v.$success-color;
@@ -92,9 +353,35 @@
       }
     }
 
+    &-icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
     span {
       font-size: v.$font-size-sm;
     }
+  }
+
+  &__label {
+    display: block;
+    font-weight: v.$font-weight-medium;
+    color: v.$text-primary;
+    margin-bottom: v.$spacing-xs;
+    font-size: v.$font-size-base;
+  }
+
+  &__required {
+    color: v.$danger-color;
+    font-weight: v.$font-weight-bold;
+  }
+
+  &__help-text {
+    font-size: v.$font-size-sm;
+    color: v.$text-secondary;
+    margin-top: v.$spacing-xs;
+    line-height: 1.4;
   }
 
   &__input-group {
@@ -120,11 +407,38 @@
       &:focus {
         outline: none;
         border-color: v.$primary-color;
-        box-shadow: 0 0 0 2px rgba(v.$primary-color, 0.2);
+        box-shadow: 0 0 0 3px rgba(v.$primary-color, 0.3);
+      }
+
+      // High contrast focus for accessibility
+      @media (prefers-contrast: high) {
+        &:focus {
+          box-shadow: 0 0 0 3px v.$primary-color;
+          border-color: v.$primary-color;
+        }
       }
 
       &--error {
         border-color: v.$danger-color;
+        animation: shake 0.5s ease-in-out;
+      }
+      
+      &--valid {
+        border-color: v.$success-color;
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23059669"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>');
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 16px 16px;
+        padding-right: 40px;
+      }
+      
+      &--pending {
+        border-color: v.$primary-color;
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%233B82F6"><circle cx="12" cy="12" r="3"><animate attributeName="r" values="3;5;3" dur="1s" repeatCount="indefinite"/></circle></svg>');
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 16px 16px;
+        padding-right: 40px;
       }
 
       // Add padding for password input
@@ -149,9 +463,22 @@
       padding: 0;
       color: v.$text-secondary;
       transition: color 0.2s ease;
+      border-radius: v.$border-radius-sm;
 
       &:hover {
         color: v.$text-primary;
+      }
+
+      &:focus {
+        outline: 2px solid v.$primary-color;
+        outline-offset: 2px;
+      }
+
+      // High contrast focus for accessibility
+      @media (prefers-contrast: high) {
+        &:focus {
+          outline: 3px solid v.$primary-color;
+        }
       }
 
       .eye-icon,
@@ -163,9 +490,48 @@
   }
 
   &__input-error {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-xs;
     font-size: v.$font-size-sm;
     color: v.$danger-color;
     margin-top: v.$spacing-xs;
+    padding: v.$spacing-xs v.$spacing-sm;
+    background-color: rgba(v.$danger-color, 0.05);
+    border-radius: v.$border-radius-sm;
+    border-left: 3px solid v.$danger-color;
+    animation: slideDown 0.3s ease-out;
+  }
+  
+  &__validation-status {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+    font-size: v.$font-size-sm;
+    margin-top: v.$spacing-xs;
+    padding: v.$spacing-xs v.$spacing-sm;
+    border-radius: v.$border-radius-sm;
+    animation: slideDown 0.3s ease-out;
+    
+    &--valid {
+      color: v.$success-color;
+      background-color: rgba(v.$success-color, 0.05);
+      border-left: 3px solid v.$success-color;
+    }
+    
+    &--pending {
+      color: v.$primary-color;
+      background-color: rgba(v.$primary-color, 0.05);
+      border-left: 3px solid v.$primary-color;
+    }
+  }
+  
+  &__validation-icon,
+  &__error-icon {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    font-size: v.$font-size-xs;
   }
 
   &__error {
@@ -191,15 +557,28 @@
     cursor: pointer;
     transition: background-color 0.2s ease, transform 0.2s ease;
     position: relative;
+    min-height: 48px; // Accessibility: Minimum touch target size
 
     &:hover:not(:disabled) {
       background-color: color.adjust(v.$primary-color, $lightness: -10%);
       transform: translateY(-1px);
     }
 
+    &:focus {
+      outline: 3px solid rgba(v.$primary-color, 0.5);
+      outline-offset: 2px;
+    }
+
     &:disabled {
       opacity: 0.7;
       cursor: not-allowed;
+    }
+
+    // High contrast focus for accessibility
+    @media (prefers-contrast: high) {
+      &:focus {
+        outline: 3px solid v.$white;
+      }
     }
 
     &--loading {
@@ -226,6 +605,270 @@
     background-color: v.$bg-secondary;
     border-radius: v.$border-radius;
     text-align: center;
+    border: 1px solid v.$border-color;
+  }
+
+  &__mfa-title {
+    font-size: v.$font-size-lg;
+    font-weight: v.$font-weight-semibold;
+    color: v.$text-primary;
+    margin: 0 0 v.$spacing-md 0;
+  }
+
+  &__secret-title {
+    font-size: v.$font-size-base;
+    font-weight: v.$font-weight-medium;
+    color: v.$text-primary;
+    margin: v.$spacing-md 0 v.$spacing-sm 0;
+  }
+
+  &__verification-info {
+    margin-bottom: v.$spacing-md;
+    padding: v.$spacing-sm;
+    background-color: v.$bg-secondary;
+    border-radius: v.$border-radius;
+    border-left: 4px solid v.$primary-color;
+
+    p {
+      margin: 0 0 v.$spacing-xs 0;
+      color: v.$text-primary;
+      font-size: v.$font-size-base;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  &__text-button {
+    background: none;
+    border: none;
+    color: v.$primary-color;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: v.$font-size-sm;
+    padding: v.$spacing-xs;
+    border-radius: v.$border-radius-sm;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: color.adjust(v.$primary-color, $lightness: -10%);
+    }
+
+    &:focus {
+      outline: 2px solid v.$primary-color;
+      outline-offset: 2px;
+    }
+  }
+
+  // Skeleton Screens and Loading States
+  &__skeleton {
+    background: linear-gradient(90deg, 
+      rgba(v.$gray-200, 0.8) 25%, 
+      rgba(v.$gray-100, 0.6) 37%, 
+      rgba(v.$gray-200, 0.8) 63%
+    );
+    background-size: 400% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+    border-radius: v.$border-radius;
+
+    &--input {
+      height: 48px;
+      width: 100%;
+      margin-bottom: v.$spacing-md;
+    }
+
+    &--button {
+      height: 48px;
+      width: 100%;
+      margin-top: v.$spacing-md;
+    }
+
+    &--qr-code {
+      width: 200px;
+      height: 200px;
+      margin: 0 auto v.$spacing-md;
+    }
+
+    &--text {
+      height: 16px;
+      margin-bottom: v.$spacing-xs;
+      
+      &.short {
+        width: 60%;
+      }
+      
+      &.medium {
+        width: 80%;
+      }
+      
+      &.long {
+        width: 100%;
+      }
+    }
+
+    &--title {
+      height: 24px;
+      width: 70%;
+      margin: 0 auto v.$spacing-md;
+    }
+
+    &--progress-step {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+  }
+
+  // Step transition loading overlay
+  &__step-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(v.$white, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border-radius: v.$border-radius;
+
+    &-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(v.$primary-color, 0.3);
+      border-radius: 50%;
+      border-top-color: v.$primary-color;
+      animation: spin 1s linear infinite;
+    }
+
+    &-text {
+      margin-top: v.$spacing-sm;
+      color: v.$text-secondary;
+      font-size: v.$font-size-sm;
+      text-align: center;
+    }
+  }
+
+  // Enhanced form step loading states
+  &__form-step {
+    position: relative;
+
+    &--loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    &--skeleton {
+      .auth-flow__input-group {
+        opacity: 0;
+      }
+    }
+  }
+
+  // QR Code loading skeleton
+  &__qr-container {
+    position: relative;
+    display: inline-block;
+
+    &--loading {
+      .auth-flow__qr-code {
+        opacity: 0;
+      }
+    }
+  }
+
+  // Progress bar loading enhancement
+  &__progress {
+    &--loading {
+      .auth-flow__progress-bar-fill {
+        background: linear-gradient(90deg, 
+          rgba(v.$primary-color, 0.3) 25%, 
+          rgba(v.$primary-color, 0.6) 37%, 
+          rgba(v.$primary-color, 0.3) 63%
+        );
+        background-size: 400% 100%;
+        animation: skeleton-loading 1.5s ease-in-out infinite;
+      }
+    }
+  }
+
+  // Validation loading states
+  &__validation-loading {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+    font-size: v.$font-size-sm;
+    color: v.$primary-color;
+    margin-top: v.$spacing-xs;
+    padding: v.$spacing-xs v.$spacing-sm;
+    background-color: rgba(v.$primary-color, 0.05);
+    border-radius: v.$border-radius-sm;
+    border-left: 3px solid v.$primary-color;
+
+    &-spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(v.$primary-color, 0.3);
+      border-radius: 50%;
+      border-top-color: v.$primary-color;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+  }
+
+  // Enhanced button loading with progress
+  &__button {
+    &--progress {
+      background: linear-gradient(90deg, 
+        v.$primary-color 0%, 
+        v.$primary-color var(--progress, 0%), 
+        color.adjust(v.$primary-color, $lightness: 20%) var(--progress, 0%), 
+        color.adjust(v.$primary-color, $lightness: 20%) 100%
+      );
+      transition: background 0.3s ease;
+    }
+
+    &-progress-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: v.$white;
+      font-size: v.$font-size-sm;
+      font-weight: v.$font-weight-medium;
+    }
+  }
+
+  // Additional skeleton and loading styles
+  &__skeleton-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(v.$white, 0.9);
+    z-index: 5;
+    padding: v.$spacing-md;
+    border-radius: v.$border-radius;
+  }
+
+  &__qr-loading-text {
+    text-align: center;
+    color: v.$text-secondary;
+    font-size: v.$font-size-sm;
+    margin-top: v.$spacing-sm;
+    font-style: italic;
+  }
+
+  // Step loading content layout
+  &__step-loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 120px;
   }
 
   &__debug {
@@ -239,12 +882,119 @@
   }
 }
 
+@keyframes skeleton-loading {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 4px 8px rgba(v.$primary-color, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 8px rgba(v.$primary-color, 0.5), 0 0 0 4px rgba(v.$primary-color, 0.2);
+  }
+  100% {
+    box-shadow: 0 4px 8px rgba(v.$primary-color, 0.3);
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Accessibility: Reduced motion preference
+@media (prefers-reduced-motion: reduce) {
+  .auth-flow {
+    &__progress-step,
+    &__progress-bar-fill,
+    &__button,
+    &__input-group-field,
+    &__input-group-toggle,
+    &__input-error,
+    &__validation-status {
+      transition: none;
+      animation: none;
+    }
+
+    &__form-step {
+      transition: none;
+    }
+
+    &__progress-step--active {
+      animation: none; // Disable pulse animation for reduced motion
+    }
+  }
+}
+
 @media (max-width: 768px) {
   .auth-flow {
     padding: v.$spacing-md;
 
-    &__header-logo {
-      width: 200px;
+    // Logo sizing now handled by responsive container approach - consistent with dashboard/profile
+
+    // Form footer mobile optimizations
+    &__form-footer {
+      flex-direction: column;
+      gap: v.$spacing-sm;
+    }
+
+    &__back-button,
+    &__start-over-button {
+      min-height: 44px; // Better touch targets
+      padding: v.$spacing-sm v.$spacing-md;
+      font-size: v.$font-size-sm;
+    }
+
+    // Progress indicator mobile optimizations
+    &__progress {
+      max-width: 100%;
+
+      &-step-container {
+        max-width: 80px; // Reduce step container width on tablets
+      }
+
+      &-step {
+        width: 32px;  // Smaller step circles
+        height: 32px;
+        
+        &-content {
+          font-size: v.$font-size-xs;
+        }
+      }
+
+      &-step-label {
+        font-size: 10px; // Smaller label text
+        min-height: 2em;
+      }
+    }
+
+    // Larger touch targets on mobile
+    &__input-group-field {
+      min-height: 44px;
+      padding: v.$spacing-md;
+    }
+
+    &__button {
+      min-height: 52px;
+      padding: v.$spacing-md v.$spacing-lg;
     }
   }
 }
@@ -256,5 +1006,88 @@
     &__form {
       max-width: 100%;
     }
+
+    // Logo sizing now handled by responsive container approach - consistent with dashboard/profile
+
+    // Progress indicator mobile optimizations (small screens)
+    &__progress {
+      &-step-container {
+        max-width: 60px; // Even smaller containers on mobile
+      }
+
+      &-step {
+        width: 28px;  // Smaller step circles for mobile
+        height: 28px;
+        
+        &-content {
+          font-size: 10px;
+        }
+      }
+
+      &-step-label {
+        font-size: 9px; // Very small label text
+        min-height: 1.8em;
+        // Option to hide labels on very small screens (following best practices)
+        display: none; // Hide step labels on mobile for cleaner look
+      }
+
+      &-bar {
+        top: 14px; // Adjust bar position for smaller circles
+      }
+    }
+
+    // Show simplified progress info for mobile
+    &__progress::before {
+      content: "Step " attr(aria-valuenow) " of 4";
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: v.$font-size-xs;
+      color: v.$text-secondary;
+      font-weight: v.$font-weight-medium;
+    }
+
+    // Even larger touch targets on small screens
+    &__input-group-field {
+      min-height: 48px;
+    }
+
+    &__button {
+      min-height: 56px;
+    }
   }
+}
+
+// Add support for safe area insets (iPhone X+ notch handling)
+@supports (padding: max(0px)) {
+  .auth-flow {
+    padding-left: max(v.$spacing-md, env(safe-area-inset-left));
+    padding-right: max(v.$spacing-md, env(safe-area-inset-right));
+    padding-bottom: max(v.$spacing-md, env(safe-area-inset-bottom));
+  }
+}
+
+// High contrast mode support for touch targets
+@media (prefers-contrast: high) {
+  .auth-flow {
+    &__button,
+    &__back-button,
+    &__start-over-button,
+    &__text-button {
+      border: 2px solid currentColor;
+    }
+    
+    &__input-group-field {
+      border-width: 2px;
+    }
+  }
+}
+
+
+// Touch-focused state for enhanced visual feedback
+.auth-flow__input-group-field.touch-focused {
+  border-color: v.$primary-color;
+  box-shadow: 0 0 0 3px rgba(v.$primary-color, 0.2);
+  background-color: rgba(v.$primary-color, 0.02);
 }

@@ -1,0 +1,92 @@
+// file: frontend/src/app/layouts/user-layout/user-layout.component.scss
+// author: Corey Dale Peters
+// date: 2025-03-07
+// description: SCSS style file for user pages
+
+@use '../../../styles/variables' as v;
+
+:host {
+  --orb-red: #E31837;
+  --orb-black: #000000;
+  --orb-gray: #666666;
+  --orb-light-gray: #e5e5e5;
+  --orb-white: #FFFFFF;
+}
+
+.user-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: v.$orb-white;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 1rem 2rem;
+  background-color: v.$orb-white;
+
+  .nav-menu {
+    display: flex;
+    gap: 2rem;
+
+    .nav-link {
+      color: v.$orb-dark-blue;
+      text-decoration: none;
+      position: relative;
+      padding: 0.5rem 0;
+
+      &:hover {
+        color: v.$orb-red;
+      }
+
+      &.active {
+        color: v.$orb-dark-blue;
+
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: -4px;
+          left: 0;
+          width: 100%;
+          height: 2px;
+          background-color: v.$orb-red;
+          animation: underline 0.3s ease-in-out;
+        }
+      }
+    }
+  }
+}
+
+@keyframes underline {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.user-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  overflow-y: auto;
+  background-color: transparent;
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 1rem;
+
+    .nav-menu {
+      gap: 1rem;
+    }
+  }
+} 

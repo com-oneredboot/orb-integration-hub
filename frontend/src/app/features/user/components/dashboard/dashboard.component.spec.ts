@@ -6,41 +6,54 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { DashboardComponent } from './dashboard.component';
-import { User } from '../../../../core/models/user.model';
-import { UserGroups, UserStatus } from '../../../../core/models/user.enum';
+import { IUsers } from '../../../../core/models/UsersModel';
+import { UserStatus } from '../../../../core/models/UserStatusEnum';
+import { UserGroup } from '../../../../core/models/UserGroupEnum';
 
 describe('DashboardComponent', () => {
   let component: DashboardComponent;
   let fixture: ComponentFixture<DashboardComponent>;
   let mockStore: MockStore;
 
-  const mockUser: User = {
-    user_id: '123',
-    cognito_id: 'abc123',
+  const mockUser: IUsers = {
+    userId: '123',
+    cognitoId: 'abc123',
+    cognitoSub: 'cognito-sub-123',
     email: 'test@example.com',
-    first_name: 'Test',
-    last_name: 'User',
-    phone_number: '+12345678901',
-    groups: [UserGroups.USER] as UserGroups[],
+    emailVerified: true,
+    phoneNumber: '+12345678901',
+    phoneVerified: true,
+    firstName: 'Test',
+    lastName: 'User',
+    groups: [UserGroup.USER],
     status: UserStatus.ACTIVE,
-    created_at: Date.now()
+    mfaEnabled: false,
+    mfaSetupComplete: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
 
   const initialState = {
     auth: {
-      currentUser: mockUser
+      currentUser: mockUser,
+      error: null,
+      isLoading: false
     }
   };
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [DashboardComponent],
+      imports: [ DashboardComponent ],
       providers: [
         provideMockStore({ initialState })
       ]
-    }).compileComponents();
+    })
+    .compileComponents();
 
     mockStore = TestBed.inject(MockStore);
+  });
+
+  beforeEach(() => {
     fixture = TestBed.createComponent(DashboardComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -50,21 +63,13 @@ describe('DashboardComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should display user information from the store', () => {
-    // Update the store with user info
-    const userSelector = mockStore.overrideSelector('auth.currentUser', mockUser);
-    mockStore.refreshState();
-    fixture.detectChanges();
-
-    // Get the component instance and check it gets the data
-    expect(component).toBeTruthy();
-    
+  it('should have currentUser$ Observable', (done) => {
     // Subscribe to the Observable to check its value
-    let receivedUser: User | null = null;
+    let receivedUser: IUsers | null = null;
     component.currentUser$.subscribe(user => {
       receivedUser = user;
+      expect(receivedUser).toEqual(mockUser);
+      done();
     });
-    
-    expect(receivedUser).not.toBeNull();
   });
 });

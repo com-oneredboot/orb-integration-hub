@@ -1,16 +1,21 @@
+// file: frontend/src/environments/environment.prod.ts
+// author: Claude Code
+// date: 2025-06-21
+// description: Production environment configuration with debug mode disabled
 
-// src/environments/environment.prod.ts
 export const environment = {
-  appName: 'OneRedBoot.com',
+  appName: 'Integration Hub',
   production: true,
+  debugMode: false, // Debug mode DISABLED for production security
+  loggingLevel: 'error', // Only error logging in production
   cognito: {
-    userPoolId: 'orb-integration-hub-prod-user-pool-id',
-    userPoolClientId: 'orb-integration-hub-prod-user-pool-client-id',
-    qrCodeIssuer: 'OneRedBoot.com'
+    userPoolId: '{{COGNITO_USER_POOL_ID}}',
+    userPoolClientId: '{{COGNITO_CLIENT_ID}}',
+    qrCodeIssuer: '{{COGNITO_QR_ISSUER}}'
   },
   graphql: {
-    url: 'https://jtl26ovh4vf27ehd5kslhsmyxy.appsync-api.us-east-1.amazonaws.com/graphql', // Replace with production URL
-    region: 'us-east-1',
-    apiKey: 'da2-p5p56xpjibahvn22tuvx2aihtm' // Replace with production API key
+    url: '{{GRAPHQL_API_URL}}',
+    region: '{{AWS_REGION}}',
+    apiKey: '{{GRAPHQL_API_KEY}}'
   }
 };

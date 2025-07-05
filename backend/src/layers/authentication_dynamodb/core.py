@@ -1,18 +1,18 @@
-# file: backend/infrastructure/layers/database/python/database/core.py
+# file: infrastructure/layers/database/python/database/core.py
 # author: Corey Dale Peters
 # created: 2025-02-17
 # description: Service class for database operations
 
 # 3rd Party Imports
 import boto3
-import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Tuple
 from boto3.dynamodb.conditions import Key
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 # Local Imports
 from .models import RoleData, UserRoles
-from .exceptions import DatabaseError, RecordNotFoundError
+from .exceptions import AuthDynamoDBError
+
 
 class CoreDynamoDBService:
     """Service class for authentication DynamoDB operations"""
@@ -33,7 +33,9 @@ class CoreDynamoDBService:
         wait=wait_exponential(multiplier=1, min=4, max=10),
         reraise=True
     )
-    async def get_user_roles(self, user_id: str, application_id: str) -> Tuple[UserRoles, Dict[str, Any]]:
+    async def get_user_roles(
+        self, user_id: str, application_id: str
+    ) -> Tuple[UserRoles, Dict[str, Any]]:
         """Fetch user roles and permissions from DynamoDB
 
         Args:
@@ -54,7 +56,10 @@ class CoreDynamoDBService:
         try:
             log_messages.append({
                 'level': 'DEBUG',
-                'message': f"Attempting to fetch roles for user: {user_id}, application: {application_id}"
+                'message': (
+                    f"Attempting to fetch roles for user: {user_id}, "
+                    f"application: {application_id}"
+                )
             })
 
             response = self.table.query(

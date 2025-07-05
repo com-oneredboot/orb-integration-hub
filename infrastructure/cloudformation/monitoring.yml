@@ -1,0 +1,144 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Monitoring and Dashboard resources for Orb Integration Hub
+
+Parameters:
+  AppSyncApiId:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Description: The AppSync API ID from SSM Parameter Store
+  Environment:
+    Type: String
+    Default: dev
+  CustomerId:
+    Type: String
+    Default: orb
+  ProjectId:
+    Type: String
+    Default: integration-hub
+
+Resources:
+  AppSyncMonitoringDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Sub '${CustomerId}-${ProjectId}-${Environment}-appsync-dashboard'
+      DashboardBody: !Sub |
+        {
+          "widgets": [
+            {
+              "type": "metric",
+              "x": 0,
+              "y": 0,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "AWS/AppSync", "4XXError", "GraphQLAPIId", "${AppSyncApiId}" ],
+                  [ ".", "5XXError", ".", "." ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "AppSync 4XX/5XX Errors"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12,
+              "y": 0,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "AWS/AppSync", "Latency", "GraphQLAPIId", "${AppSyncApiId}" ],
+                  [ ".", "IntegrationLatency", ".", "." ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "AppSync Latency"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0,
+              "y": 6,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "AWS/AppSync", "RequestCount", "GraphQLAPIId", "${AppSyncApiId}" ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "AppSync Request Count"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12,
+              "y": 6,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "AWS/AppSync", "ThrottledRequests", "GraphQLAPIId", "${AppSyncApiId}" ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "AppSync Throttled Requests"
+              }
+            }
+          ]
+        }
+
+  AppSync4XXErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${CustomerId}-${ProjectId}-${Environment}-appsync-4xx-error-alarm'
+      MetricName: 4XXError
+      Namespace: AWS/AppSync
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: GraphQLAPIId
+          Value: !Ref AppSyncApiId
+      AlarmDescription: 'AppSync 4XX error rate is high.'
+      TreatMissingData: notBreaching
+
+  AppSync5XXErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${CustomerId}-${ProjectId}-${Environment}-appsync-5xx-error-alarm'
+      MetricName: 5XXError
+      Namespace: AWS/AppSync
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: GraphQLAPIId
+          Value: !Ref AppSyncApiId
+      AlarmDescription: 'AppSync 5XX error rate is high.'
+      TreatMissingData: notBreaching
+
+  AppSyncLatencyAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${CustomerId}-${ProjectId}-${Environment}-appsync-latency-alarm'
+      MetricName: Latency
+      Namespace: AWS/AppSync
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 2000
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: GraphQLAPIId
+          Value: !Ref AppSyncApiId
+      AlarmDescription: 'AppSync average latency is high (ms).'
+      TreatMissingData: notBreaching

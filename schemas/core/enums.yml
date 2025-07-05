@@ -1,0 +1,74 @@
+# file: schemas/core/enums.yml
+# author: AI Assistant
+# date: 2024-03-21
+# description: Centralized enum definitions for the schema generator
+
+# User Groups enums
+UserGroup:
+  - USER
+  - CUSTOMER
+  - EMPLOYEE
+  - OWNER
+
+# User status enums
+UserStatus:
+  - UNKNOWN
+  - ACTIVE
+  - INACTIVE
+  - PENDING
+  - REJECTED
+  - DELETED
+
+# Role type and status enums
+RoleType:
+  - UNKNOWN
+  - ADMIN
+  - USER
+  - GUEST
+  - CUSTOM
+
+RoleStatus:
+  - UNKNOWN
+  - ACTIVE
+  - INACTIVE
+  - DELETED
+
+# Application status enums
+ApplicationStatus:
+  - UNKNOWN
+  - ACTIVE
+  - INACTIVE
+  - PENDING
+  - DELETED
+
+# Application user status enums
+ApplicationUserStatus:
+  - UNKNOWN
+  - ACTIVE
+  - INACTIVE
+  - PENDING
+  - REJECTED
+  - DELETED
+
+# Application role status enums
+ApplicationRoleStatus:
+  - UNKNOWN
+  - ACTIVE
+  - INACTIVE
+  - PENDING
+  - REJECTED
+  - DELETED
+
+SchemaType:
+  - standard        # Standard model (plain object), not tied to a data source or API
+  - dynamodb        # AWS DynamoDB table
+  - postgres        # PostgreSQL table
+  - mysql           # MySQL table
+  - mssql           # Microsoft SQL Server table
+  - sqlite          # SQLite table (for local/dev/testing)
+  - lambda          # AWS Lambda-backed resolver
+  - graphql         # GraphQL-only type (not backed by a data source)
+  - registry        # Static registry or enum
+  - graph           # Graph database (e.g., AWS Neptune, Neo4j)
+  - rest            # REST API-backed type (future)
+  - elasticsearch   # Elasticsearch/OpenSearch index (future) 

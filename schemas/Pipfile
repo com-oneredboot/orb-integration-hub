@@ -6,8 +6,16 @@ name = "pypi"
 [packages]
 pyyaml = "*"
 jinja2 = "*"
+pydantic = "*"
+aws-sam-cli = "*"
+graphql-core = "*"
+cfn-lint = "*"
+dotenv = "*"
 
 [dev-packages]
+black = "*"
+flake8 = "*"
+isort = "*"
 
 [requires]
 python_version = "3.12"

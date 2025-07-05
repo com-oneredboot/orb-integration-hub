@@ -26,7 +26,7 @@ Parameters:
     Default: integration-hub
     Type: String
   Runtime:
-    Default: python3.12
+    Default: python3.13
     Type: String
 
 # --------------------------------------------------- #

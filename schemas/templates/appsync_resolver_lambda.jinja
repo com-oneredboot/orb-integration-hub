@@ -1,0 +1,18 @@
+{% for schema in schemas.values() if schema.type == 'lambda' %}
+  {{ schema.name }}Resolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: {{ schema.name }}LambdaDataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation  # or Query, adjust as needed
+      FieldName: {{ schema.name }}  # or the actual field name
+      DataSourceName: {{ schema.name }}LambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": $util.toJson($ctx.args)
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+{% endfor %} 

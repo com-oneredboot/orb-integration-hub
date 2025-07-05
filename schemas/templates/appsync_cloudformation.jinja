@@ -1,0 +1,159 @@
+# --------------------------------------------------- #
+AWSTemplateFormatVersion: 2010-09-09
+
+# --------------------------------------------------- #
+Transform: AWS::Serverless-2016-10-31
+
+# --------------------------------------------------- #
+Description: >
+  Application Infrastructure - AppSync Stack
+
+# --------------------------------------------------- #
+Parameters:
+  Environment:
+    Default: dev
+    Type: String
+  CustomerId:
+    Default: orb
+    Type: String
+  ProjectId:
+    Default: integration-hub
+    Type: String
+  TracingIs:
+    Default: Active
+    Type: String
+  SchemaS3Key:
+    Type: String
+    Description: Name of the GraphQL schema file in S3
+
+# --------------------------------------------------- #
+Resources:
+  AppSyncServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: appsync.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+      Policies:
+        - PolicyName: SSMParameterAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Environment}/${CustomerId}/${ProjectId}/*'
+        - PolicyName: LambdaInvokeAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${CustomerId}-${ProjectId}-${Environment}-*'
+
+  AppSyncLoggingServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: appsync.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSAppSyncPushToCloudWatchLogs
+
+  IntegrationHubApi:
+    Type: AWS::AppSync::GraphQLApi
+    Properties:
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-appsync'
+      AuthenticationType: AMAZON_COGNITO_USER_POOLS
+      UserPoolConfig:
+        UserPoolId: !Sub "resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-cognito-user-pool-id"
+        AwsRegion: !Ref AWS::Region
+        DefaultAction: ALLOW
+      AdditionalAuthenticationProviders:
+        - AuthenticationType: API_KEY
+      LogConfig:
+        CloudWatchLogsRoleArn: !GetAtt AppSyncLoggingServiceRole.Arn
+        FieldLogLevel: ALL
+        ExcludeVerboseContent: false
+
+  IntegrationHubApiKey:
+    Type: AWS::AppSync::ApiKey
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      Description: "API Key for unauthenticated access"
+      Expires: 1767211838
+
+  ApiKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-graphql-api-key'
+      Description: "GraphQL API Key for frontend authentication"
+      SecretString: !Sub |
+        {
+          "api_key": "${IntegrationHubApiKey.ApiKey}",
+          "description": "GraphQL API key for frontend access"
+        }
+
+  IntegrationHubSchema:
+    Type: AWS::AppSync::GraphQLSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      DefinitionS3Location: !Sub 's3://${CustomerId}-${ProjectId}-build-templates/${SchemaS3Key}'
+
+  IntegrationHubApiId:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-appsync-api-id
+      Type: String
+      Value: !GetAtt IntegrationHubApi.ApiId
+
+  GraphqlApiUrlParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-graphql-api-url"
+      Type: String
+      Value: !GetAtt IntegrationHubApi.GraphQLUrl
+      Description: "GraphQL API URL for frontend API calls"
+      Tags:
+        Billable: "true"
+        CustomerId: !Ref CustomerId
+        Environment: !Ref Environment
+        ProjectId: !Ref ProjectId
+
+  # DynamoDB DataSources
+  {% include 'appsync_datasource_dynamodb.jinja' %}
+
+  # Lambda DataSources
+  {% include 'appsync_datasource_lambda.jinja' %}
+
+  # DynamoDB Resolvers
+  {% include 'appsync_resolver_dynamodb.jinja' %}
+
+  # Lambda Resolvers
+  {% include 'appsync_resolver_lambda.jinja' %}
+
+# --------------------------------------------------- #
+Outputs:
+  IntegrationHubApiId:
+    Description: The ID of the AppSync API
+    Value: !GetAtt IntegrationHubApi.ApiId
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-appsync-api-id
+
+  IntegrationHubApiEndpoint:
+    Description: The endpoint URL of the AppSync API
+    Value: !GetAtt IntegrationHubApi.GraphQLUrl
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-appsync-api-endpoint 

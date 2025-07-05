@@ -1,0 +1,98 @@
+# file: schemas/entities/ApplicationRoles.yml
+# author: Corey Dale Peters
+# date: 2025-02-17
+# description: yaml file containing the ApplicationRoles table schema
+# This is the join table mapping users to roles within applications.
+
+# GROUP_TYPES: OWNER, ADMIN, SUPPORT, USER (see enum definition)
+
+type: dynamodb
+version: '1.0'
+name: ApplicationRoles
+model:
+  authConfig:
+    cognitoAuthentication:
+      groups:
+        OWNER:
+          - '*'
+  keys:
+    primary:
+      partition: applicationRoleId
+      description: Primary key for application roles (unique for each user/application/role)
+    secondary:
+      - name: UserRoleIndex
+        type: GSI
+        partition: userId
+        sort: roleId
+        projection_type: ALL
+        projectedAttributes:
+          - roleName
+          - roleType
+          - permissions
+        description: Index for querying roles by user with essential role attributes projected
+      - name: ApplicationRoleIndex
+        type: GSI
+        partition: applicationId
+        sort: roleId
+        projection_type: ALL
+        description: Index for querying roles by application with minimal projection
+      - name: RoleTypeIndex
+        type: GSI
+        partition: roleId
+        sort: roleType
+        projection_type: ALL
+        description: Global secondary index for filtering roles by type
+  attributes:
+    applicationRoleId:
+      type: string
+      required: true
+      description: Unique identifier for the application role assignment (primary key)
+    userId:
+      type: string
+      required: true
+      description: ID of the user this role assignment belongs to (foreign key to Users)
+    applicationId:
+      type: string
+      required: true
+      description: ID of the application this role assignment belongs to (foreign key to Applications)
+    roleId:
+      type: string
+      required: true
+      description: ID of the role (foreign key to Roles)
+    roleName:
+      type: string
+      required: true
+      description: Name of the role
+    roleType:
+      type: string
+      required: true
+      enum_type: RoleType
+      enum_values:
+        - ADMIN
+        - USER
+        - GUEST
+        - CUSTOM
+      description: Type of the role
+    permissions:
+      type: array
+      items:
+        type: string
+      required: true
+      description: List of permissions granted to this role
+    status:
+      type: string
+      required: true
+      enum_type: RoleStatus
+      enum_values:
+        - ACTIVE
+        - INACTIVE
+        - DELETED
+      description: Current status of the role assignment
+    createdAt:
+      type: timestamp
+      required: true
+      description: When the role assignment was created
+    updatedAt:
+      type: timestamp
+      required: true
+      description: When the role assignment was last updated
