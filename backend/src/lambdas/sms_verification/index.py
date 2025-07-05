@@ -131,8 +131,7 @@ def check_rate_limit(phone_number: str) -> tuple:
             ExpressionAttributeValues={':inc': 1}
         )
         
-        masked_phone_number = phone_number[-4:]  # Retain only the last 4 digits
-        logger.info(f"Rate limit: Request allowed for phone ending in {masked_phone_number} ({request_count + 1}/3)")
+        logger.info(f"Rate limit: Request allowed ({request_count + 1}/3)")
         return True, f"Request allowed ({request_count + 1}/3)"
         
     except Exception as e:
