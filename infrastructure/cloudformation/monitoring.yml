@@ -249,13 +249,14 @@ Resources:
   # Anomaly Detection Alarms
   AppSyncRequestAnomalyAlarm:
     Type: AWS::CloudWatch::Alarm
+    DependsOn: AppSyncRequestCountAnomalyDetector
     Properties:
       AlarmName: !Sub '${CustomerId}-${ProjectId}-${Environment}-appsync-request-anomaly'
       ComparisonOperator: LessThanLowerOrGreaterThanUpperThreshold
       EvaluationPeriods: 2
       Metrics:
         - Id: m1
-          ReturnData: false
+          ReturnData: true
           MetricStat:
             Metric:
               MetricName: RequestCount
@@ -267,6 +268,7 @@ Resources:
             Stat: Average
         - Id: ad1
           Expression: ANOMALY_DETECTION_BAND(m1, 2)
+          ReturnData: true
       ThresholdMetricId: ad1
       ActionsEnabled: true
       AlarmDescription: 'AppSync request count anomaly detected'
@@ -274,13 +276,14 @@ Resources:
 
   AppSyncLatencyAnomalyAlarm:
     Type: AWS::CloudWatch::Alarm
+    DependsOn: AppSyncLatencyAnomalyDetector
     Properties:
       AlarmName: !Sub '${CustomerId}-${ProjectId}-${Environment}-appsync-latency-anomaly'
       ComparisonOperator: LessThanLowerOrGreaterThanUpperThreshold
       EvaluationPeriods: 2
       Metrics:
         - Id: m1
-          ReturnData: false
+          ReturnData: true
           MetricStat:
             Metric:
               MetricName: Latency
@@ -292,6 +295,7 @@ Resources:
             Stat: Average
         - Id: ad1
           Expression: ANOMALY_DETECTION_BAND(m1, 2)
+          ReturnData: true
       ThresholdMetricId: ad1
       ActionsEnabled: true
       AlarmDescription: 'AppSync latency anomaly detected'
