@@ -175,13 +175,11 @@ def lambda_handler(event, context):
             return response
         
         # Check rate limiting before generating/sending SMS
-        masked_phone_number = f"******{phone_number[-4:]}" if len(phone_number) > 4 else phone_number
-        logger.info(f"Checking rate limit for phone number: {masked_phone_number}")
+        logger.info("Checking rate limit for a phone number.")
         is_allowed, rate_limit_message = check_rate_limit(phone_number)
         
         if not is_allowed:
-            masked_phone_number = f"******{phone_number[-4:]}" if len(phone_number) > 4 else phone_number
-            logger.warning(f"Rate limit exceeded for {masked_phone_number}: {rate_limit_message}")
+            logger.warning(f"Rate limit exceeded for a phone number: {rate_limit_message}")
             return {
                 "StatusCode": 429,
                 "Message": rate_limit_message,
