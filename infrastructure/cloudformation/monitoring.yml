@@ -306,10 +306,11 @@ Resources:
   # Single consolidated audit log group
   AuditLogGroup:
     Type: AWS::Logs::LogGroup
+    DependsOn: AuditEncryptionKey
     Properties:
       LogGroupName: !Sub "/audit/${Environment}"
-      RetentionInDays: 1095  # 3 years - good balance for growing companies
-      KmsKeyId: !Ref AuditEncryptionKey
+      RetentionInDays: 1096  # 3 years - valid CloudWatch Logs retention period
+      KmsKeyId: !GetAtt AuditEncryptionKey.Arn
   
   # Simple KMS key for audit encryption
   AuditEncryptionKey:
@@ -347,6 +348,7 @@ Resources:
   # Real-time security monitoring - consolidated metric filter
   SecurityEventsMetricFilter:
     Type: AWS::Logs::MetricFilter
+    DependsOn: AuditLogGroup
     Properties:
       LogGroupName: !Ref AuditLogGroup
       FilterPattern: '[timestamp, event_id, event_type="SECURITY_VIOLATION" || event_type="UNAUTHORIZED_ACCESS" || event_type="LOGIN_FAILED" || event_type="PERMISSION_DENIED" || event_type="DATA_BREACH" || event_type="FRAUD_DETECTED"]'
@@ -359,6 +361,7 @@ Resources:
   # Organization activity monitoring
   OrganizationEventsMetricFilter:
     Type: AWS::Logs::MetricFilter
+    DependsOn: AuditLogGroup
     Properties:
       LogGroupName: !Ref AuditLogGroup
       FilterPattern: '[timestamp, event_id, event_type="ORGANIZATION_CREATED" || event_type="ORGANIZATION_UPDATED" || event_type="ORGANIZATION_DELETED" || event_type="ORGANIZATION_OWNERSHIP_TRANSFERRED" || event_type="USER_INVITED" || event_type="USER_REMOVED"]'
