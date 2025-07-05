@@ -10,7 +10,7 @@ export default defineConfig({
     viewportWidth: 1280,
     viewportHeight: 720,
     video: true,
-    screenshot: true,
+    screenshotOnRunFailure: true,
     chromeWebSecurity: false,
     setupNodeEvents(on, config) {
       // implement node event listeners here
