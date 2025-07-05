@@ -134,6 +134,7 @@ Resources:
 
   # DynamoDB DataSources
   # Jinja template for AppSync DynamoDB DataSources
+<<<<<<< HEAD
   NotificationsDynamoDbDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -145,6 +146,8 @@ Resources:
         AwsRegion: !Ref AWS::Region
         UseCallerCredentials: false
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+=======
+>>>>>>> main
   ApplicationUsersDynamoDbDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -156,6 +159,7 @@ Resources:
         AwsRegion: !Ref AWS::Region
         UseCallerCredentials: false
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+<<<<<<< HEAD
   SmsRateLimitDynamoDbDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -178,6 +182,8 @@ Resources:
         AwsRegion: !Ref AWS::Region
         UseCallerCredentials: false
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+=======
+>>>>>>> main
   ApplicationRolesDynamoDbDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -236,6 +242,7 @@ Resources:
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
  
   # DynamoDB Resolvers
+<<<<<<< HEAD
   NotificationsCreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -527,6 +534,11 @@ Resources:
     DependsOn:
       - ApplicationUsersDynamoDbDataSource
       - IntegrationHubSchema
+=======
+  ApplicationUsersCreateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: ApplicationUsersDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -557,9 +569,13 @@ Resources:
         #end
   ApplicationUsersUpdateResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - ApplicationUsersDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: ApplicationUsersDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -615,9 +631,13 @@ Resources:
         #end
   ApplicationUsersDeleteResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - ApplicationUsersDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: ApplicationUsersDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -646,9 +666,13 @@ Resources:
         #end
   ApplicationUsersDisableResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - ApplicationUsersDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: ApplicationUsersDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -704,9 +728,13 @@ Resources:
         #end
   ApplicationUsersQueryByApplicationUserIdResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - ApplicationUsersDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: ApplicationUsersDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
@@ -738,9 +766,13 @@ Resources:
         #end
   ApplicationUsersQueryByUserIdAndApplicationIdResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - ApplicationUsersDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: ApplicationUsersDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
@@ -774,9 +806,13 @@ Resources:
         #end
   ApplicationUsersQueryByApplicationIdAndUserIdResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - ApplicationUsersDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: ApplicationUsersDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
@@ -808,6 +844,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+<<<<<<< HEAD
   SmsRateLimitCreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1382,6 +1419,11 @@ Resources:
     DependsOn:
       - ApplicationRolesDynamoDbDataSource
       - IntegrationHubSchema
+=======
+  ApplicationRolesCreateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: ApplicationRolesDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -1412,9 +1454,13 @@ Resources:
         #end
   ApplicationRolesUpdateResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - ApplicationRolesDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: ApplicationRolesDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -1470,9 +1516,13 @@ Resources:
         #end
   ApplicationRolesDeleteResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - ApplicationRolesDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: ApplicationRolesDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -1501,9 +1551,13 @@ Resources:
         #end
   ApplicationRolesDisableResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - ApplicationRolesDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: ApplicationRolesDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -1559,9 +1613,13 @@ Resources:
         #end
   ApplicationRolesQueryByApplicationRoleIdResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - ApplicationRolesDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: ApplicationRolesDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
@@ -1593,9 +1651,13 @@ Resources:
         #end
   ApplicationRolesQueryByUserIdAndRoleIdResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - ApplicationRolesDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: ApplicationRolesDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
@@ -1629,9 +1691,13 @@ Resources:
         #end
   ApplicationRolesQueryByApplicationIdAndRoleIdResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - ApplicationRolesDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: ApplicationRolesDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
@@ -1665,9 +1731,13 @@ Resources:
         #end
   ApplicationRolesQueryByRoleIdAndRoleTypeResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - ApplicationRolesDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: ApplicationRolesDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
@@ -1701,9 +1771,13 @@ Resources:
         #end
   RolesCreateResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - RolesDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: RolesDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -1734,9 +1808,13 @@ Resources:
         #end
   RolesUpdateResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - RolesDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: RolesDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -1792,9 +1870,13 @@ Resources:
         #end
   RolesDeleteResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - RolesDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: RolesDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -1823,9 +1905,13 @@ Resources:
         #end
   RolesDisableResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - RolesDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: RolesDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -1881,9 +1967,13 @@ Resources:
         #end
   RolesQueryByRoleIdResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - RolesDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: RolesDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
@@ -1915,9 +2005,13 @@ Resources:
         #end
   RolesQueryByUserIdAndRoleTypeResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - RolesDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: RolesDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
@@ -1951,9 +2045,13 @@ Resources:
         #end
   ApplicationsCreateResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - ApplicationsDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: ApplicationsDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -1984,9 +2082,13 @@ Resources:
         #end
   ApplicationsUpdateResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - ApplicationsDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: ApplicationsDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -2042,9 +2144,13 @@ Resources:
         #end
   ApplicationsDeleteResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - ApplicationsDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: ApplicationsDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -2073,9 +2179,13 @@ Resources:
         #end
   ApplicationsDisableResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - ApplicationsDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: ApplicationsDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -2131,9 +2241,13 @@ Resources:
         #end
   ApplicationsQueryByApplicationIdResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - ApplicationsDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: ApplicationsDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
@@ -2163,6 +2277,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+<<<<<<< HEAD
   ApplicationsQueryByOrganizationIdAndCreatedAtResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -2204,6 +2319,11 @@ Resources:
     DependsOn:
       - UsersDynamoDbDataSource
       - IntegrationHubSchema
+=======
+  UsersCreateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: UsersDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -2234,9 +2354,13 @@ Resources:
         #end
   UsersUpdateResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - UsersDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: UsersDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -2292,9 +2416,13 @@ Resources:
         #end
   UsersDeleteResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - UsersDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: UsersDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -2323,9 +2451,13 @@ Resources:
         #end
   UsersDisableResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - UsersDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: UsersDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation
@@ -2381,9 +2513,13 @@ Resources:
         #end
   UsersQueryByUserIdResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - UsersDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: UsersDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
@@ -2415,9 +2551,13 @@ Resources:
         #end
   UsersQueryByEmailResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - UsersDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: UsersDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
@@ -2450,9 +2590,13 @@ Resources:
         #end
   UsersQueryByCognitoIdResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - UsersDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: UsersDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
@@ -2485,9 +2629,13 @@ Resources:
         #end
   UsersQueryByCognitoSubResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - UsersDynamoDbDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: UsersDynamoDbDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Query
@@ -2522,9 +2670,13 @@ Resources:
   # Lambda Resolvers
   SmsVerificationResolver:
     Type: AWS::AppSync::Resolver
+<<<<<<< HEAD
     DependsOn:
       - SmsVerificationLambdaDataSource
       - IntegrationHubSchema
+=======
+    DependsOn: SmsVerificationLambdaDataSource
+>>>>>>> main
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation  # or Query, adjust as needed

@@ -3,7 +3,11 @@
 // date: 2025-01-03
 // description: Contains all selectors for the User feature
 import { createFeatureSelector, createSelector } from '@ngrx/store';
+<<<<<<< HEAD:frontend/src/app/features/user/store/user.selectors.ts
 import { UserState, AuthSteps } from './user.state';
+=======
+import { AuthState, AuthSteps } from './auth.state';
+>>>>>>> main:frontend/src/app/features/user/components/auth-flow/store/auth.selectors.ts
 
 export const selectUserState = createFeatureSelector<UserState>('user');
 
@@ -128,7 +132,11 @@ export const selectDebugMode = createSelector(
 );
 
 export const selectCurrentEmail = createSelector(
+<<<<<<< HEAD:frontend/src/app/features/user/store/user.selectors.ts
   selectUserState,
+=======
+  selectAuthState,
+>>>>>>> main:frontend/src/app/features/user/components/auth-flow/store/auth.selectors.ts
   (state) => state.currentEmail || ''
 );
 

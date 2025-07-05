@@ -14,6 +14,7 @@ Parameters:
   ProjectId:
     Type: String
     Default: integration-hub
+<<<<<<< HEAD
   AlertEmail:
     Type: String
     Description: Email address for security alerts (optional)
@@ -21,6 +22,8 @@ Parameters:
 
 Conditions:
   HasAlertEmail: !Not [!Equals [!Ref AlertEmail, '']]
+=======
+>>>>>>> main
 
 Resources:
   AppSyncMonitoringDashboard:
@@ -149,6 +152,7 @@ Resources:
           Value: !Ref AppSyncApiId
       AlarmDescription: 'AppSync average latency is high (ms).'
       TreatMissingData: notBreaching
+<<<<<<< HEAD
 
   # Security Monitoring Resources
   GuardDutyDetector:
@@ -429,3 +433,5 @@ Outputs:
     Value: !Ref SecurityAlertTopic
     Export:
       Name: !Sub "${CustomerId}-${ProjectId}-security-alert-topic-${Environment}"
+=======
+>>>>>>> main

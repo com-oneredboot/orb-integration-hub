@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "@types/aws-sdk": "^0.0.42",
+    "aws-sdk-mock": "^6.2.1",
+    "localstack": "^1.0.0",
+    "pact": "^4.3.1"
+  }
+}
