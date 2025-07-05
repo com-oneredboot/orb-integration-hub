@@ -15,7 +15,11 @@ module.exports = {
 function generateTestUser(requestParams, context, ee, next) {
   // Generate unique test user data
   const timestamp = Date.now();
-  const randomId = crypto.randomBytes(2).readUInt16BE(0) % 10000; // Generate a secure random number between 0 and 9999
+  let randomId;
+  do {
+    randomId = crypto.randomBytes(2).readUInt16BE(0);
+  } while (randomId >= 65536 - (65536 % 10000)); // Discard biased values
+  randomId = randomId % 10000; // Generate a secure random number between 0 and 9999
   
   context.vars.email = `testuser${timestamp}${randomId}@performance.test`;
   context.vars.password = 'TestPassword123!';
