@@ -121,8 +121,7 @@ def check_rate_limit(phone_number: str) -> tuple:
         
         if request_count >= 3:
             # Rate limit exceeded
-            masked_phone_number = phone_number[-4:]  # Retain only the last 4 digits
-            logger.warning(f"Rate limit exceeded for phone ending in {masked_phone_number}: {request_count}/3 requests")
+            logger.warning(f"Rate limit exceeded: {request_count}/3 requests")
             return False, "Rate limit exceeded: Maximum 3 SMS per hour"
         
         # Increment counter
