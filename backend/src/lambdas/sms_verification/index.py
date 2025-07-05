@@ -224,8 +224,7 @@ def lambda_handler(event, context):
 
         response = sns_client.publish(**sns_parameters)
         logger.info(f"SNS response: {response}")
-        masked_phone_number = f"******{phone_number[-4:]}" if len(phone_number) > 4 else phone_number
-        logger.info(f"Verification code sent to {masked_phone_number}")
+        logger.info("Verification code sent successfully to the user.")
 
         return {
             "StatusCode": 200,
