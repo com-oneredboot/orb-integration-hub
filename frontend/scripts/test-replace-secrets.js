@@ -160,11 +160,23 @@ function testReplacement() {
         throw new Error('Token replacement failed in config.json');
       }
     } catch (urlError) {
-      // Fallback to substring check if URL parsing fails
-      if (configJsonContent.includes('test-api.amazonaws.com') && !configJsonContent.includes('{{GRAPHQL_API_URL}}')) {
-        console.log('✓ Token replacement verified in config.json');
-      } else {
-        throw new Error('Token replacement failed in config.json');
+      // The config.json should contain JSON, not a raw URL. Let's parse it properly.
+      try {
+        const configData = JSON.parse(configJsonContent);
+        const graphqlUrl = configData?.aws?.graphql?.url;
+        
+        if (!graphqlUrl) {
+          throw new Error('GraphQL URL not found in config.json structure');
+        }
+        
+        const parsedUrl = new URL(graphqlUrl);
+        if (allowedHosts.includes(parsedUrl.host) && !configJsonContent.includes('{{GRAPHQL_API_URL}}')) {
+          console.log('✓ Token replacement verified in config.json');
+        } else {
+          throw new Error('Token replacement failed in config.json');
+        }
+      } catch (jsonError) {
+        throw new Error('Invalid JSON format in config.json and unsafe to validate');
       }
     }
 
