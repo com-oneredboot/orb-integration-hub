@@ -10,8 +10,8 @@ import { Store } from '@ngrx/store';
 import { Observable, Subject, takeUntil } from 'rxjs';
 
 // App Imports
-import { AuthState, AuthSteps } from '../store/auth.state';
-import * as fromAuth from '../store/auth.selectors';
+import { AuthState, AuthSteps } from '.../../store/user.state';
+import * as fromAuth from '.../../store/user.selectors';
 
 @Component({
   selector: 'app-auth-container',

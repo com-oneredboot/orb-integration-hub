@@ -2,4 +2,4 @@
 // Generated at 
 
 export enum SchemaType {
-  standard = 'standard',  dynamodb = 'dynamodb',  postgres = 'postgres',  mysql = 'mysql',  mssql = 'mssql',  sqlite = 'sqlite',  lambda = 'lambda',  graphql = 'graphql',  registry = 'registry',  graph = 'graph',  rest = 'rest',  elasticsearch = 'elasticsearch'} 
+  STANDARD = 'STANDARD',  DYNAMODB = 'DYNAMODB',  POSTGRES = 'POSTGRES',  MYSQL = 'MYSQL',  MSSQL = 'MSSQL',  SQLITE = 'SQLITE',  LAMBDA = 'LAMBDA',  LAMBDA_SECURED = 'LAMBDA_SECURED',  GRAPHQL = 'GRAPHQL',  REGISTRY = 'REGISTRY',  GRAPH = 'GRAPH',  REST = 'REST',  ELASTICSEARCH = 'ELASTICSEARCH'} 

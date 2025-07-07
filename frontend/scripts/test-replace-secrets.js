@@ -150,11 +150,34 @@ function testReplacement() {
     }
 
     const configJsonContent = fs.readFileSync(path.join(TEST_CONFIG.testDir, 'config.json'), 'utf8');
-    const configJsonUrl = new URL(configJsonContent);
-    if (configJsonUrl.host === 'test-api.amazonaws.com' && !configJsonContent.includes('{{GRAPHQL_API_URL}}')) {
-      console.log('✓ Token replacement verified in config.json');
-    } else {
-      throw new Error('Token replacement failed in config.json');
+    const allowedHosts = ['test-api.amazonaws.com'];
+    
+    try {
+      const configJsonUrl = new URL(configJsonContent.trim());
+      if (allowedHosts.includes(configJsonUrl.host) && !configJsonContent.includes('{{GRAPHQL_API_URL}}')) {
+        console.log('✓ Token replacement verified in config.json');
+      } else {
+        throw new Error('Token replacement failed in config.json');
+      }
+    } catch (urlError) {
+      // The config.json should contain JSON, not a raw URL. Let's parse it properly.
+      try {
+        const configData = JSON.parse(configJsonContent);
+        const graphqlUrl = configData?.aws?.graphql?.url;
+        
+        if (!graphqlUrl) {
+          throw new Error('GraphQL URL not found in config.json structure');
+        }
+        
+        const parsedUrl = new URL(graphqlUrl);
+        if (allowedHosts.includes(parsedUrl.host) && !configJsonContent.includes('{{GRAPHQL_API_URL}}')) {
+          console.log('✓ Token replacement verified in config.json');
+        } else {
+          throw new Error('Token replacement failed in config.json');
+        }
+      } catch (jsonError) {
+        throw new Error('Invalid JSON format in config.json and unsafe to validate');
+      }
     }
 
     console.log('\n✅ All tests passed!');

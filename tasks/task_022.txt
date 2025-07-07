@@ -1,0 +1,338 @@
+# Task ID: 22
+# Title: Migrate from DynamoDbCrud Lambda to Direct AppSync DynamoDB Resolvers
+# Status: done
+# Dependencies: None
+# Priority: medium
+# Description: Refactor the application architecture to replace the current DynamoDbCrud Lambda with direct AppSync DynamoDB resolvers for all CRUD and query operations, improving performance and reducing operational complexity.
+# Details:
+This task involves a significant architectural change to optimize our data access patterns:
+
+1. **Analysis and Planning**:
+   - Document all current Lambda-based CRUD operations and their usage patterns
+   - Map out the schema changes needed for direct resolver compatibility
+   - Create a migration plan with rollback options
+
+2. **Implementation Steps**:
+   - Remove the DynamoDbCrud Lambda and related files (handlers, tests, IAM roles)
+   - Update GraphQL schema to align with direct resolver requirements
+   - Modify codegen logic to support direct resolver generation
+   - Create or update Jinja templates for DynamoDB data sources and resolvers
+   - Update generate.py to emit direct resolvers with proper request/response mapping templates
+   - Implement a consistent return object pattern across all resolvers
+   - Update frontend services to handle the new response format
+
+3. **Technical Considerations**:
+   - Direct resolvers have different error handling patterns than Lambda
+   - Transaction support differs between Lambda and direct resolvers
+   - Pagination and filtering capabilities may need adjustments
+   - Authentication and authorization flows must be preserved
+   - Performance characteristics will change (typically improve)
+
+4. **Dependencies**:
+   - This task builds on the schema generator work from Task #21
+   - Frontend components will need updates to handle new response formats
+   - CI/CD pipelines may need adjustments for the new architecture
+
+5. **Deliverables**:
+   - Updated GraphQL schema
+   - New Jinja templates for direct resolvers
+   - Modified generate.py with direct resolver support
+   - Updated frontend services
+   - Documentation of the new architecture and patterns
+   - Performance comparison metrics (before/after)
+
+# Test Strategy:
+Testing will be comprehensive to ensure the architectural change maintains all functionality:
+
+1. **Unit Testing**:
+   - Create unit tests for all new resolver templates
+   - Verify generate.py correctly produces resolver templates
+   - Test frontend service adaptations to new response formats
+
+2. **Integration Testing**:
+   - Create test cases for each CRUD operation type
+   - Test complex queries that previously used Lambda
+   - Verify pagination, filtering, and sorting still work correctly
+   - Test error handling scenarios (validation errors, not found, etc.)
+   - Verify transactions work as expected (if used)
+
+3. **Performance Testing**:
+   - Measure and compare latency between old Lambda approach and new direct resolvers
+   - Test under load to verify scalability characteristics
+   - Monitor DynamoDB consumption metrics before and after
+
+4. **Security Testing**:
+   - Verify authorization rules are correctly applied in direct resolvers
+   - Test access patterns to ensure proper data isolation
+   - Review IAM permissions to ensure least privilege
+
+5. **Validation Approach**:
+   - Create a test environment with both implementations
+   - Run parallel tests against both implementations
+   - Compare results to ensure functional equivalence
+   - Use CloudWatch metrics to compare performance
+   - Conduct staged rollout with monitoring
+
+6. **Acceptance Criteria**:
+   - All CRUD operations function correctly with direct resolvers
+   - No Lambda invocations for standard database operations
+   - Response formats are consistent across all operations
+   - All frontend functionality works without regression
+   - Performance metrics show improvement over Lambda approach
+   - Documentation is updated to reflect the new architecture
+
+# Subtasks:
+## 1. Document Current Lambda CRUD Operations [done]
+### Dependencies: None
+### Description: Create comprehensive documentation of all existing DynamoDbCrud Lambda operations, including usage patterns, input/output formats, and error handling mechanisms.
+### Details:
+Analyze codebase to identify all Lambda functions that interact with DynamoDB. Document each operation type (create, read, update, delete, query), their parameters, response formats, and any special handling. Include frequency of use and performance metrics if available. This documentation will serve as the reference for implementing equivalent direct resolvers.
+<info added on 2025-05-24T12:32:46.503Z>
+# Documentation: Current Lambda CRUD Operations (DynamoDbCrud Lambda)
+
+## Overview
+The `DynamoDbCrud` Lambda is a universal handler for all CRUD and query operations on DynamoDB tables, invoked by AppSync resolvers. It is responsible for routing, executing, and formatting responses for all entity operations.
+
+## Supported Operations
+- **Create**: Insert a new item into a table.
+- **Read**: Retrieve an item by primary key.
+- **Update**: Replace an item (full put) in a table.
+- **Delete**: Remove an item by primary key.
+- **Disable**: Soft-delete by setting `status` to `DISABLED` and adding a `disabledAt` timestamp.
+
+## Operation Routing
+- The Lambda parses the AppSync field name (e.g., `UsersCreate`, `RolesUpdate`) to determine the entity and operation.
+- It uses the `ENTITY_TABLE_ENV` mapping to resolve the correct DynamoDB table.
+
+## Input/Output Patterns
+- **Input**: Each operation expects an `input` object (for create/update) or key fields (for read/delete/disable).
+- **Output**: Returns a JSON object:
+  - `StatusCode`: 200 on success, 500 on error
+  - `Message`: Success or error message
+  - `Data`: The item (for create/read/update/disable) or key (for delete)
+
+## Error Handling
+- On error, returns `StatusCode: 500`, `Message: <error message>`, `Data: null`.
+- If the field is not recognized, returns an error with `StatusCode: 500`.
+
+## Usage Patterns
+- Invoked by AppSync resolvers for all CRUD operations on entities: Users, Roles, Applications, ApplicationUsers, ApplicationRoles, etc.
+- Each entity's CRUD operation is mapped to a Lambda resolver in CloudFormation (see `appsync.yml`).
+
+## Example Response
+```json
+{
+  "StatusCode": 200,
+  "Message": "Create succeeded",
+  "Data": { ...item... }
+}
+```
+
+## Special Notes
+- No support for advanced queries (e.g., GSI/LSI queries) or batch operations.
+- All business logic is centralized in this Lambda, which is being replaced by direct resolvers for simplicity and performance.
+
+---
+
+This documentation is based on the Lambda handler code and the entity schemas. All CRUD operations and their patterns are now captured for migration reference.
+</info added on 2025-05-24T12:32:46.503Z>
+<info added on 2025-05-24T12:34:05.143Z>
+# Correction: Lambda GSI/LSI Query Support
+
+Upon further review of the generated GraphQL files, AppSync CloudFormation, and generate.py, it is clear that the current Lambda-based architecture **does support GSI/LSI (secondary index) queries**. These are exposed as QueryBy... operations (e.g., UsersQueryByEmail, RolesQueryByUserId, ApplicationUsersQueryByApplicationId, etc.).
+
+## Evidence
+- **GraphQL Files**: Numerous QueryBy... operations exist for secondary indexes (e.g., UsersQueryByEmail, UsersQueryByCognitoId, RolesQueryByUserId, etc.).
+- **AppSync CloudFormation**: Resolvers are defined for these QueryBy... fields, all routed to the DynamoDbCrud Lambda.
+- **generate.py**: The codegen logic emits QueryBy... operations for all primary and secondary indexes.
+
+## Updated Documentation Note
+- The Lambda is invoked for all CRUD and QueryBy... operations, including those that use GSIs/LSIs.
+- The migration plan must ensure that all GSI/LSI queries are supported by the new direct resolvers.
+
+---
+
+This correction is now recorded in the subtask documentation.
+</info added on 2025-05-24T12:34:05.143Z>
+
+## 2. Create Schema Compatibility Analysis [done]
+### Dependencies: 22.1
+### Description: Analyze current GraphQL schema and identify changes needed to support direct DynamoDB resolvers, including type definitions and resolver requirements.
+### Details:
+Review GraphQL schema for compatibility with AppSync direct resolvers. Identify fields that may require different handling, complex nested objects, and any custom logic currently implemented in Lambda that needs to be replicated in VTL. Document required schema modifications and create a detailed mapping between current Lambda operations and future direct resolver implementations.
+<info added on 2025-05-24T12:37:16.336Z>
+# Schema Compatibility Analysis for Direct DynamoDB Resolvers
+
+## 1. Entity Schema Review
+- All entity schemas (Users, Roles, Applications, ApplicationUsers, ApplicationRoles) use `type: dynamodb` and define primary and secondary indexes (GSI/LSI) in a compatible way for direct DynamoDB resolvers.
+- Field types are simple (string, number, boolean, array, timestamp) and map directly to DynamoDB and GraphQL types.
+- No complex nested objects or unsupported types detected in current schemas.
+
+## 2. Generated GraphQL Schema Review
+- All CRUD and QueryBy... operations are present for each entity, including GSI/LSI queries (e.g., UsersQueryByEmail, RolesQueryByUserId).
+- Input/output types are flat and suitable for direct VTL mapping.
+- Response types follow a `{ StatusCode, Message, Data }` pattern, which can be replicated in VTL.
+
+## 3. Gaps or Special Cases
+- No multi-table transactions or computed fields requiring Lambda detected.
+- All current operations can be mapped to direct DynamoDB resolvers.
+- If future schemas introduce nested objects or require aggregation, additional VTL or Lambda logic may be needed.
+
+## 4. Mapping Lambda Operations to Direct Resolvers
+- Each Lambda-based operation (Create, Read, Update, Delete, Disable, QueryBy...) has a direct DynamoDB equivalent:
+  - Create → PutItem
+  - Read → GetItem
+  - Update → UpdateItem/PutItem
+  - Delete → DeleteItem
+  - Disable → UpdateItem (set status, disabledAt)
+  - QueryBy... → Query (with GSI/LSI as needed)
+- All of these can be generated by `generate.py` and Jinja templates.
+
+## 5. Required Updates to Codegen
+- `generate.py` must:
+  - Emit direct DynamoDB resolver resources for all CRUD and QueryBy... operations.
+  - Use new/updated Jinja templates for VTL request/response mapping.
+  - Ensure all index-based queries (GSI/LSI) are supported.
+  - Generate response mapping templates that wrap results in `{ StatusCode, Message, Data }`.
+- Jinja templates must:
+  - Cover all DynamoDB operations (PutItem, GetItem, UpdateItem, DeleteItem, Query).
+  - Handle error cases and return the standard response format.
+
+## 6. Output
+- All current schemas are compatible with direct DynamoDB resolvers.
+- No manual resolver or schema editing is required; all changes can be handled by `generate.py` and Jinja templates.
+- Future schema changes should be reviewed for compatibility, especially if introducing nested objects or advanced logic.
+</info added on 2025-05-24T12:37:16.336Z>
+
+## 3. Develop Migration and Rollback Plan [done]
+### Dependencies: 22.1, 22.2
+### Description: Create a detailed migration strategy with phased implementation approach and comprehensive rollback procedures in case of issues.
+### Details:
+Define migration phases, starting with low-risk operations. Include testing strategy for each phase, metrics to monitor, and specific criteria for success/failure. Document detailed rollback procedures for each phase, including scripts or commands needed. Plan should include communication strategy for stakeholders and users during migration.
+<info added on 2025-05-24T12:38:29.000Z>
+# Migration Plan: Lambda to Direct DynamoDB Resolvers (POC Context)
+
+## Context
+- This is a proof-of-concept (POC) environment, so a formal rollback plan is not required.
+- The focus is on a clean, complete migration with validation at each step.
+
+## Migration Steps
+
+### 1. Remove Lambda and Related Infrastructure
+- Delete the `DynamoDbCrud` Lambda function and all related files (handler, tests, IAM roles, CloudFormation resources).
+- Remove the Lambda data source and all Lambda-based resolvers from AppSync CloudFormation.
+
+### 2. Update Jinja Templates
+- Create or update Jinja templates to generate direct DynamoDB data sources and VTL resolvers for all CRUD and QueryBy... operations.
+- Ensure templates cover all index types (primary, GSI, LSI) and handle error cases, pagination, and the standard response format.
+
+### 3. Update generate.py
+- Refactor `generate.py` to:
+  - Emit direct DynamoDB data sources and resolvers for all operations.
+  - Use the new/updated Jinja templates for VTL mapping.
+  - Remove any Lambda-specific code or logic.
+  - Validate that all CRUD and QueryBy... operations are covered.
+
+### 4. Regenerate Infrastructure and Models
+- Run `generate.py` to produce the new CloudFormation, GraphQL schema, and models.
+- Review generated files for completeness and correctness.
+
+### 5. Update Frontend/Backend
+- Update frontend and backend services to use the new direct resolvers.
+- Ensure all CRUD and QueryBy... operations are tested against the new endpoints.
+- Update error handling and response normalization as needed.
+
+### 6. Validate End-to-End
+- Test all operations (create, read, update, delete, disable, QueryBy...) for all entities.
+- Validate error handling, pagination, and auth flows.
+- Confirm that the standard response format is preserved.
+
+### 7. Clean Up and Document
+- Remove any obsolete files, configs, or documentation related to the old Lambda approach.
+- Update architecture docs to reflect the new direct resolver pattern.
+</info added on 2025-05-24T12:38:29.000Z>
+<info added on 2025-05-24T14:09:41.635Z>
+# Migration Plan: Lambda to Direct DynamoDB Resolvers (POC Context)
+
+## Context
+- This is a proof-of-concept (POC) environment, so a formal rollback plan is not required.
+- The focus is on a clean, complete migration with validation at each step.
+
+## Migration Steps
+
+### 1. Remove Lambda and Related Infrastructure
+- Delete the `DynamoDbCrud` Lambda function and all related files (handler, tests, IAM roles, CloudFormation resources).
+- Remove the Lambda data source and all Lambda-based resolvers from AppSync CloudFormation.
+
+### 2. Update Jinja Templates
+- Create or update Jinja templates to generate direct DynamoDB data sources and VTL resolvers for all CRUD and QueryBy... operations.
+- Ensure templates cover all index types (primary, GSI, LSI) and handle error cases, pagination, and the standard response format.
+
+### 3. Update generate.py
+- Refactor `generate.py` to:
+  - Emit direct DynamoDB data sources and resolvers for all operations.
+  - Use the new/updated Jinja templates for VTL mapping.
+  - Remove any Lambda-specific code or logic.
+  - Validate that all CRUD and QueryBy... operations are covered.
+
+### 4. Regenerate Infrastructure and Models
+- Run `generate.py` to produce the new CloudFormation, GraphQL schema, and models.
+- Review generated files for completeness and correctness.
+
+### 5. Update Frontend/Backend
+- Update frontend and backend services to use the new direct resolvers.
+- Ensure all CRUD and QueryBy... operations are tested against the new endpoints.
+- Update error handling and response normalization as needed.
+
+### 6. Validate End-to-End
+- Test all operations (create, read, update, delete, disable, QueryBy...) for all entities.
+- Validate error handling, pagination, and auth flows.
+- Confirm that the standard response format is preserved.
+
+### 7. Clean Up and Document
+- Remove any obsolete files, configs, or documentation related to the old Lambda approach.
+- Update architecture docs to reflect the new direct resolver pattern.
+</info added on 2025-05-24T14:09:41.635Z>
+
+## 4. Create Jinja Templates for Direct Resolvers [done]
+### Dependencies: 22.2
+### Description: Develop or update Jinja templates to generate AppSync VTL mapping templates for request and response handling with DynamoDB direct resolvers.
+### Details:
+Create Jinja templates for all CRUD operations (GetItem, PutItem, UpdateItem, DeleteItem, Query, Scan) that generate appropriate VTL mapping templates. Templates should handle primary and secondary indexes, condition expressions, filtering, and pagination. Include error handling patterns consistent with application requirements.
+
+## 5. Update Generate.py for Direct Resolver Support [done]
+### Dependencies: 22.4
+### Description: Modify the code generation script to emit direct DynamoDB resolvers with proper request/response mapping templates based on the new Jinja templates.
+### Details:
+Update generate.py to process GraphQL schema and generate AppSync resolver configurations for direct DynamoDB integration. Implement logic to determine appropriate resolver type based on operation. Ensure generated code includes proper IAM permissions, data source configurations, and resolver mappings. Add validation to verify generated resolvers match schema requirements.
+
+## 6. Implement Consistent Return Object Pattern [done]
+### Dependencies: 22.4, 22.5
+### Description: Design and implement a standardized response format for all direct resolvers to ensure consistent error handling and data structure.
+### Details:
+Define a standard response format that includes success/error indicators, data payload, and metadata (pagination tokens, counts). Implement this pattern in VTL response mapping templates. Document the format for frontend developers. Consider backward compatibility with existing Lambda responses to minimize frontend changes.
+
+## 7. Remove DynamoDbCrud Lambda and Related Infrastructure [done]
+### Dependencies: 22.3, 22.5, 22.6
+### Description: Safely remove the DynamoDbCrud Lambda function, associated IAM roles, and CloudFormation resources after direct resolvers are implemented.
+### Details:
+Identify all Lambda functions, IAM roles, CloudWatch Log groups, and other resources related to DynamoDbCrud. Create CloudFormation template modifications or CDK code changes to remove these resources. Implement changes in a way that allows for phased removal to support the migration plan.
+
+## 8. Update Frontend Services for New Response Format [done]
+### Dependencies: 22.6
+### Description: Modify frontend services to handle the new direct resolver response format, including error handling and pagination.
+### Details:
+Update GraphQL query/mutation handling in frontend services to process the new response format. Implement appropriate error handling for the direct resolver error patterns. Update pagination logic to work with AppSync pagination tokens. Test all CRUD operations from frontend against new resolvers.
+
+## 9. Implement Performance Monitoring and Comparison [done]
+### Dependencies: 22.7, 22.8
+### Description: Set up metrics collection to compare performance between Lambda-based and direct resolver approaches, documenting improvements.
+### Details:
+Implement CloudWatch metrics or custom logging to measure resolver performance. Collect data on response times, error rates, and cost before and after migration. Create dashboards to visualize performance differences. Document findings in a performance comparison report with recommendations for further optimization if needed.
+
+## 10. Create Updated Architecture Documentation [done]
+### Dependencies: 22.9
+### Description: Develop comprehensive documentation of the new architecture, including resolver patterns, error handling, and best practices for future development.
+### Details:
+Create architecture diagrams showing the new direct resolver approach. Document VTL patterns used in resolvers, error handling strategies, and authorization mechanisms. Include performance findings and lessons learned from the migration. Provide guidelines for developers on implementing new resolvers following the established patterns.
+

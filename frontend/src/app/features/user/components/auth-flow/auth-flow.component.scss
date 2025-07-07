@@ -536,12 +536,102 @@
 
   &__error {
     width: 100%;
-    padding: v.$spacing-sm;
-    background-color: rgba(v.$danger-color, 0.1);
-    color: v.$danger-color;
+    padding: v.$spacing-lg;
+    background-color: rgba(v.$danger-color, 0.05);
+    border: 1px solid rgba(v.$danger-color, 0.2);
+    border-left: 4px solid v.$danger-color;
     border-radius: v.$border-radius;
     margin-bottom: v.$spacing-md;
-    text-align: center;
+    box-shadow: 0 2px 8px rgba(v.$danger-color, 0.1);
+
+    h3 {
+      color: v.$danger-color;
+      font-size: v.$font-size-lg;
+      font-weight: v.$font-weight-semibold;
+      margin: 0 0 v.$spacing-sm 0;
+      display: flex;
+      align-items: center;
+      gap: v.$spacing-xs;
+
+      &::before {
+        content: '\f071'; // FontAwesome exclamation-triangle
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        font-size: v.$font-size-base;
+      }
+    }
+
+    p {
+      color: v.$text-primary;
+      font-size: v.$font-size-base;
+      line-height: 1.5;
+      margin: 0 0 v.$spacing-md 0;
+      text-align: left;
+    }
+
+    // Special styling for session refresh messages
+    &.auth-flow__error--session-refresh {
+      background-color: rgba(v.$primary-color, 0.05);
+      border-color: rgba(v.$primary-color, 0.2);
+      border-left-color: v.$primary-color;
+      box-shadow: 0 2px 8px rgba(v.$primary-color, 0.1);
+
+      h3 {
+        color: v.$primary-color;
+
+        &::before {
+          content: '\f021'; // FontAwesome sync icon
+          color: v.$primary-color;
+        }
+      }
+    }
+
+    // Special styling for success messages
+    &.auth-flow__error--success {
+      background-color: rgba(v.$success-color, 0.05);
+      border-color: rgba(v.$success-color, 0.2);
+      border-left-color: v.$success-color;
+      box-shadow: 0 2px 8px rgba(v.$success-color, 0.1);
+
+      h3 {
+        color: v.$success-color;
+
+        &::before {
+          content: '\f00c'; // FontAwesome check icon
+          color: v.$success-color;
+        }
+      }
+    }
+
+    button {
+      background-color: v.$primary-color;
+      color: v.$white;
+      border: none;
+      padding: v.$spacing-sm v.$spacing-lg;
+      border-radius: v.$border-radius;
+      font-family: v.$font-family-base;
+      font-size: v.$font-size-sm;
+      font-weight: v.$font-weight-medium;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: v.$spacing-xs;
+
+      &:hover {
+        background-color: color.adjust(v.$primary-color, $lightness: -10%);
+      }
+
+      &:focus {
+        outline: 2px solid v.$primary-color;
+        outline-offset: 2px;
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
   }
 
   &__button {

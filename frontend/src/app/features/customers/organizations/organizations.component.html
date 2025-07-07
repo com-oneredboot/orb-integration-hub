@@ -1,0 +1,99 @@
+<!-- 
+file: frontend/src/app/features/customers/organizations/organizations.component.html
+author: Corey Dale Peters
+date: 2025-03-07
+description: HTML template file for organizations management
+-->
+
+<div class="organizations-container">
+  <div class="orb-page-header">
+    <div class="orb-page-header__content">
+      <div class="orb-page-header__flex-container">
+        <div class="orb-page-header__logo-section">
+          <img src="../../../../../assets/onredboot-logo.jpg" alt="OneRedBoot Logo" class="orb-page-header__logo">
+        </div>
+        <div class="orb-page-header__text-section">
+          <div class="orb-page-header__greeting">
+            <div class="orb-page-header__icon-title">
+              <img src="../../../../../assets/hardhat.jpg" alt="Engineering" class="orb-page-header__icon">
+              <h1 class="orb-page-header__title">Organizations Management</h1>
+            </div>
+            <p class="orb-page-header__subtitle">
+              Manage your organizations and view member details
+            </p>
+            <p class="orb-page-header__hint">
+              Choose an organization from the list to view its details and manage settings.
+            </p>
+            <div class="orb-page-header__status">
+              <span class="orb-header-badge orb-header-badge--active">
+                <fa-icon icon="building" class="orb-header-badge__icon"></fa-icon>
+                Organizations Active
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Organizations Content -->
+  <div class="organizations-content">
+    <div class="organizations-page">
+      <!-- Main Content -->
+      <div class="organizations-page__content">
+        <div class="organizations-page__layout">
+          
+          <!-- Organizations List -->
+          <div class="organizations-page__list-panel">
+            <app-organizations-list
+              #organizationsList
+              [selectedOrganization]="selectedOrganization"
+              (organizationSelected)="onOrganizationSelected($event)"
+              (createModeRequested)="onCreateModeRequested($event)">
+            </app-organizations-list>
+          </div>
+
+          <!-- Organization Detail -->
+          <div class="organizations-page__detail-panel">
+            <app-organization-detail
+              [organization]="selectedOrganization"
+              [memberCount]="selectedOrganizationMemberCount"
+              [applicationCount]="selectedOrganizationApplicationCount"
+              [isInCreateMode]="isInCreateMode"
+              (organizationSaved)="organizationsList.onOrganizationSaved($event)"
+              (createCancelled)="organizationsList.onCreateCancelled()">
+            </app-organization-detail>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Debug section -->
+  <div class="organizations__debug" *ngIf="debugMode$ | async">
+    <h3>Organizations Debug Information</h3>
+    
+    <div class="organizations__debug-section">
+      <h4>Selected Organization</h4>
+      <ng-container *ngIf="selectedOrganization; else noOrgSelected">
+        <p><strong>Organization Data:</strong></p>
+        <pre>{{ selectedOrganization | json }}</pre>
+        <p><strong>Member Count:</strong> {{ selectedOrganizationMemberCount }}</p>
+        <p><strong>Application Count:</strong> {{ selectedOrganizationApplicationCount }}</p>
+      </ng-container>
+      <ng-template #noOrgSelected>
+        <p class="error"><strong>No Organization Selected</strong></p>
+        <p>Select an organization from the list to view debug information</p>
+      </ng-template>
+    </div>
+    
+    <div class="organizations__debug-section">
+      <h4>Component State</h4>
+      <p><strong>Selected Organization ID:</strong> {{ selectedOrganization?.organizationId || 'None' }}</p>
+      <p><strong>Selected Organization Name:</strong> {{ selectedOrganization?.name || 'None' }}</p>
+      <p><strong>Selected Organization Status:</strong> {{ selectedOrganization?.status || 'None' }}</p>
+      <p><strong>Component Initialized:</strong> YES</p>
+    </div>
+  </div>
+</div>

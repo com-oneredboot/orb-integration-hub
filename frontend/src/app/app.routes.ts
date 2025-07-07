@@ -13,6 +13,7 @@ import { ProfileComponent } from './features/user/components/profile/profile.com
 import { DashboardComponent } from './features/user/components/dashboard/dashboard.component';
 import { UserLayoutComponent } from './layouts/user-layout/user-layout.component';
 import { ThisIsNotThePageComponent } from './features/user/components/this-is-not-the-page/this-is-not-the-page.component';
+import { CUSTOMER_ROUTES } from './features/customers/customers.routes';
 
 export const routes: Routes = [
   {
@@ -54,6 +55,17 @@ export const routes: Routes = [
         component: ProfileComponent,
         canActivate: [AuthGuard],
         data: { requiresAuth: true }
+      },
+      {
+        path: 'customers',
+        children: CUSTOMER_ROUTES,
+        canActivate: [AuthGuard],
+        data: { requiresAuth: true, requiresCustomer: true }
+      },
+      {
+        path: 'applications',
+        redirectTo: 'customers/applications',
+        pathMatch: 'full'
       }
     ]
   },

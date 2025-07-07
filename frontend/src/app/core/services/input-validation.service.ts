@@ -55,7 +55,7 @@ export class InputValidationService {
   ]);
 
   // XSS prevention using DOMPurify
-  private sanitizeInput(input: string): string {
+  private sanitizeHtml(input: string): string {
     return DOMPurify.sanitize(input);
   }
 
@@ -338,28 +338,13 @@ export class InputValidationService {
   }
 
   /**
-   * Sanitize input to prevent XSS attacks
+   * Sanitize input to prevent XSS attacks using DOMPurify
    */
   sanitizeInput(input: string): string {
     if (!input) return '';
 
-    let sanitized = input;
-
-    // Remove potential XSS patterns
-    this.xssPatterns.forEach(pattern => {
-      sanitized = sanitized.replace(pattern, '');
-    });
-
-    // HTML entity encoding for common characters
-    sanitized = sanitized
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#x27;')
-      .replace(/\//g, '&#x2F;');
-
-    return sanitized;
+    // Use DOMPurify for robust XSS prevention
+    return this.sanitizeHtml(input);
   }
 
   /**

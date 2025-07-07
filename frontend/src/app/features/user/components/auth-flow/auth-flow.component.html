@@ -134,10 +134,22 @@ description: HTML template file
       </div>
       
       <!-- Simple Error Display -->
-      <div *ngIf="state.error" class="auth-flow__error" role="alert" aria-live="assertive">
-        <h3>Authentication Error</h3>
+      <div *ngIf="state.error" 
+           class="auth-flow__error" 
+           [ngClass]="{
+             'auth-flow__error--session-refresh': isSessionRefreshMessage(state.error),
+             'auth-flow__error--success': isSuccessMessage(state.error)
+           }"
+           role="alert" 
+           aria-live="assertive">
+        <h3>{{ getErrorTitle(state.error) }}</h3>
         <p>{{ state.error }}</p>
-        <button type="button" class="btn btn-primary" (click)="onErrorRetry()">Try Again</button>
+        <button type="button" 
+                class="btn btn-primary" 
+                (click)="onErrorRetry()"
+                [disabled]="isSessionRefreshMessage(state.error)">
+          {{ getRetryButtonText(state.error) }}
+        </button>
       </div>
       
       <form *ngIf="authForm && !state.error" [formGroup]="authForm" (ngSubmit)="onSubmit()" 

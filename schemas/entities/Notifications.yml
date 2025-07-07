@@ -1,0 +1,94 @@
+# file: schemas/entities/Notifications.yml
+# author: AI Assistant
+# date: 2025-06-22
+# description: Notifications table for organization and application events
+# Supports application transfers, organization invitations, and other business events
+
+type: dynamodb
+version: '1.0'
+name: Notifications
+model:
+  authConfig:
+    cognitoAuthentication:
+      groups:
+        OWNER:
+          - '*'
+        EMPLOYEE:
+          - '*'
+        CUSTOMER:
+          - '*'
+  keys:
+    primary:
+      partition: notificationId
+      description: Primary key for notifications (unique for each notification)
+    secondary:
+      - name: UserNotificationsIndex
+        type: GSI
+        partition: recipientUserId
+        sort: createdAt
+        projection_type: ALL
+        description: Index for querying notifications by recipient user ordered by creation time
+      - name: TypeStatusIndex
+        type: GSI
+        partition: type
+        sort: status
+        projection_type: ALL
+        description: Index for querying notifications by type and status
+  attributes:
+    notificationId:
+      type: string
+      required: true
+      description: Unique identifier for the notification (primary key)
+    recipientUserId:
+      type: string
+      required: true
+      description: ID of the user who should receive this notification (foreign key to Users)
+    senderUserId:
+      type: string
+      required: false
+      description: ID of the user who triggered this notification (foreign key to Users)
+    type:
+      type: string
+      required: true
+      enum_type: NotificationType
+      enum_values:
+        - APPLICATION_TRANSFER_REQUEST
+        - APPLICATION_TRANSFER_COMPLETED
+        - ORGANIZATION_INVITATION_RECEIVED
+        - ORGANIZATION_INVITATION_ACCEPTED
+        - ORGANIZATION_INVITATION_REJECTED
+      description: Type of notification
+    status:
+      type: string
+      required: true
+      enum_type: NotificationStatus
+      enum_values:
+        - PENDING
+        - READ
+        - DISMISSED
+        - EXPIRED
+      description: Current status of the notification
+    title:
+      type: string
+      required: true
+      description: Title/subject of the notification
+    message:
+      type: string
+      required: true
+      description: Content/body of the notification
+    metadata:
+      type: object
+      required: false
+      description: Additional context data (applicationId, organizationId, etc.)
+    expiresAt:
+      type: timestamp
+      required: false
+      description: When the notification expires (for time-sensitive actions)
+    createdAt:
+      type: timestamp
+      required: true
+      description: When the notification was created
+    updatedAt:
+      type: timestamp
+      required: true
+      description: When the notification was last updated

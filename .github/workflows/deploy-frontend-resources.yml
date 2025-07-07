@@ -1,5 +1,9 @@
 name: deploy-frontend-resources
 
+permissions:
+  contents: read
+  security-events: write
+
 on:
   workflow_dispatch:
 

@@ -1,0 +1,78 @@
+# file: schemas/entities/OrganizationUsers.yml
+# author: AI Assistant
+# date: 2025-06-22
+# description: Organization users membership table with role-based access control
+# Maps users to organizations with specific roles (OWNER, ADMINISTRATOR, VIEWER)
+
+type: dynamodb
+version: '1.0'
+name: OrganizationUsers
+model:
+  authConfig:
+    cognitoAuthentication:
+      groups:
+        OWNER:
+          - '*'
+        EMPLOYEE:
+          - '*'
+        CUSTOMER:
+          - '*'
+  keys:
+    primary:
+      partition: userId
+      sort: organizationId
+      description: Composite primary key for organization membership (user + organization)
+    secondary:
+      - name: OrganizationMembersIndex
+        type: GSI
+        partition: organizationId
+        sort: role
+        projection_type: ALL
+        description: Index for querying all members of an organization by role
+      - name: UserOrganizationsIndex
+        type: GSI
+        partition: userId
+        sort: role
+        projection_type: ALL
+        description: Index for querying all organizations a user belongs to by role
+  attributes:
+    userId:
+      type: string
+      required: true
+      description: ID of the user (foreign key to Users, partition key)
+    organizationId:
+      type: string
+      required: true
+      description: ID of the organization (foreign key to Organizations, sort key)
+    role:
+      type: string
+      required: true
+      enum_type: OrganizationUserRole
+      enum_values:
+        - ADMINISTRATOR
+        - VIEWER
+      description: Role of the user within the organization (OWNER is determined by Organizations.ownerId field)
+    status:
+      type: string
+      required: true
+      enum_type: OrganizationUserStatus
+      enum_values:
+        - ACTIVE
+        - INACTIVE
+        - INVITED
+        - PENDING
+        - REJECTED
+        - REMOVED
+      description: Current status of the user's membership in the organization
+    invitedBy:
+      type: string
+      required: false
+      description: ID of the user who sent the invitation (for audit trail)
+    createdAt:
+      type: timestamp
+      required: true
+      description: When the membership was created
+    updatedAt:
+      type: timestamp
+      required: true
+      description: When the membership was last updated

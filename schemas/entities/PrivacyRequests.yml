@@ -1,0 +1,175 @@
+# file: schemas/entities/PrivacyRequests.yml
+# author: AI Assistant
+# created: 2025-06-23
+# description: Schema for GDPR/CCPA privacy rights requests management
+
+type: lambda-secured
+version: '1.0'
+name: PrivacyRequests
+description: "GDPR/CCPA privacy rights requests with automated processing and compliance tracking"
+
+model:
+  authConfig:
+    cognitoAuthentication:
+      groups:
+        OWNER:
+          - '*'
+        EMPLOYEE:
+          - '*'
+        CUSTOMER:
+          - '*'
+        USER:
+          - '*'
+  keys:
+    primary:
+      partition: requestId
+      description: Primary key for privacy requests (unique for each request)
+    secondary:
+      - name: RequestTypeIndex
+        type: GSI
+        partition: requestType
+        sort: receivedAt
+        projection_type: ALL
+        description: Index for querying privacy requests by type and date
+      - name: DataSubjectIndex
+        type: GSI
+        partition: dataSubjectEmail
+        sort: receivedAt
+        projection_type: ALL
+        description: Index for querying privacy requests by data subject email
+      - name: OrganizationIndex
+        type: GSI
+        partition: organizationId
+        sort: receivedAt
+        projection_type: ALL
+        description: Index for querying privacy requests by organization
+      - name: StatusIndex
+        type: GSI
+        partition: status
+        sort: deadline
+        projection_type: ALL
+        description: Index for querying privacy requests by status and deadline
+  attributes:
+    requestId:
+      type: string
+      required: true
+      description: "Unique identifier for the privacy request (primary key)"
+    
+    requestType:
+      type: string
+      required: true
+      description: "Type of privacy request (DATA_ACCESS, DATA_DELETION, DATA_PORTABILITY, etc.)"
+      enum_type: PrivacyRequestType
+      enum_values:
+        - DATA_ACCESS
+        - DATA_DELETION
+        - DATA_PORTABILITY
+        - DATA_RECTIFICATION
+        - PROCESSING_RESTRICTION
+        - MARKETING_OPT_OUT
+    
+    dataSubjectEmail:
+      type: string
+      required: true
+      description: "Email address of the data subject making the request"
+    
+    legalBasis:
+      type: string
+      required: true
+      description: "Legal basis for the privacy request (GDPR Article, CCPA Right, etc.)"
+      enum_type: LegalBasis
+      enum_values:
+        - GDPR_ARTICLE_15_RIGHT_OF_ACCESS
+        - GDPR_ARTICLE_17_RIGHT_TO_ERASURE
+        - GDPR_ARTICLE_20_DATA_PORTABILITY
+        - CCPA_RIGHT_TO_KNOW
+        - CCPA_RIGHT_TO_DELETE
+        - CCPA_RIGHT_TO_OPT_OUT
+    
+    organizationId:
+      type: string
+      required: false
+      description: "Organization ID if request is scoped to specific organization"
+    
+    requesterId:
+      type: string
+      required: true
+      description: "User ID of the person who submitted the request"
+    
+    status:
+      type: string
+      required: true
+      description: "Current status of the privacy request"
+      enum_type: PrivacyRequestStatus
+      enum_values:
+        - RECEIVED
+        - PROCESSING
+        - COMPLETED
+        - REJECTED
+        - FAILED
+        - PARTIALLY_COMPLETED
+    
+    receivedAt:
+      type: timestamp
+      required: true
+      description: "When the privacy request was received"
+    
+    deadline:
+      type: timestamp
+      required: true
+      description: "Legal deadline for completing the request (30 days GDPR, 45 days CCPA)"
+    
+    completedAt:
+      type: timestamp
+      required: false
+      description: "When the privacy request was completed"
+    
+    estimatedCompletion:
+      type: timestamp
+      required: false
+      description: "Estimated completion time for the request"
+    
+    automatedProcessing:
+      type: boolean
+      required: true
+      description: "Whether the request is being processed automatically"
+    
+    accessReport:
+      type: string
+      required: false
+      description: "Data access report for GDPR Article 15 requests (JSON)"
+    
+    deletionResult:
+      type: string
+      required: false
+      description: "Data deletion results with cryptographic proof (JSON)"
+    
+    portableData:
+      type: string
+      required: false
+      description: "Portable data export for GDPR Article 20 requests (JSON)"
+    
+    rejectionReason:
+      type: string
+      required: false
+      description: "Reason for request rejection if applicable"
+    
+    errorDetails:
+      type: string
+      required: false
+      description: "Error details if request processing failed"
+    
+    complianceNotes:
+      type: string
+      required: false
+      description: "Additional compliance notes or special handling instructions"
+    
+    createdAt:
+      type: timestamp
+      required: true
+      description: "When the privacy request record was created"
+    
+    updatedAt:
+      type: timestamp
+      required: true
+      description: "When the privacy request was last updated"

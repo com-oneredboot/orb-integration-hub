@@ -4,9 +4,9 @@
 
 module.exports = {
   preset: 'jest-preset-angular',
-  roots: ['<rootDir>/frontend/integration-tests'],
+  roots: ['<rootDir>/integration-tests'],
   testMatch: [
-    '<rootDir>/frontend/integration-tests/**/*.spec.ts'
+    '<rootDir>/integration-tests/**/*.spec.ts'
   ],
   collectCoverageFrom: [
     'src/**/*.{ts,js}',

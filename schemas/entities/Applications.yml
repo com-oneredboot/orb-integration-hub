@@ -14,10 +14,27 @@ model:
       groups:
         OWNER:
           - '*'
+<<<<<<< HEAD
+        EMPLOYEE:
+          - '*'
+        CUSTOMER:
+          - '*'
+=======
+>>>>>>> main
   keys:
     primary:
       partition: applicationId
       description: Primary key for applications (unique for each application)
+<<<<<<< HEAD
+    secondary:
+      - name: OrganizationAppsIndex
+        type: GSI
+        partition: organizationId
+        sort: createdAt
+        projection_type: ALL
+        description: Index for querying applications by organization with creation time ordering
+=======
+>>>>>>> main
   attributes:
     applicationId:
       type: string
@@ -27,6 +44,13 @@ model:
       type: string
       required: true
       description: Name of the application
+<<<<<<< HEAD
+    organizationId:
+      type: string
+      required: true
+      description: ID of the organization this application belongs to (foreign key to Organizations)
+=======
+>>>>>>> main
     ownerId:
       type: string
       required: true
@@ -47,4 +71,27 @@ model:
     updatedAt:
       type: timestamp
       required: true
+<<<<<<< HEAD
+      description: When the application was last updated
+    apiKey:
+      type: string
+      required: true
+      description: Current active API key for the application
+    apiKeyNext:
+      type: string
+      required: false
+      description: Next API key for rotation (dual key system)
+    environments:
+      type: array
+      items: string
+      required: true
+      enum_values:
+        - PRODUCTION
+        - STAGING
+        - DEVELOPMENT
+        - TEST
+        - PREVIEW
+      description: List of available environments for this application (max 5 for starter plan)
+=======
       description: When the application was last updated 
+>>>>>>> main

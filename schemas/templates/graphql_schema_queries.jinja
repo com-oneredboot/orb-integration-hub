@@ -1,3 +1,11 @@
+<<<<<<< HEAD
+{% for schema in table_schemas.values() %}
+{% for operation in schema.operations if operation.type == 'Query' %}
+  {{ operation.field }}(input: {{ operation.field }}Input!): {{ schema.name }}{{ 'Response' if 'And' in operation.field else 'ListResponse' }}{% if operation.response_auth_directives and operation.response_auth_directives|length > 0 %} {{ operation.response_auth_directives|join(' ') }}{% endif %}
+
+{% endfor %}
+{% endfor %}
+=======
 {% set seen_ops = [] %}
 {% for schema_name, schema in table_schemas.items() %}
   {% for index in schema.indexes %}
@@ -29,3 +37,4 @@
 
   {% endfor %}
   {% endfor %}
+>>>>>>> main
