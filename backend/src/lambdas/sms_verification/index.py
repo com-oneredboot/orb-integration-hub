@@ -40,7 +40,7 @@ def get_secret():
         return secret_cache['secret']
     
     try:
-        logger.debug(f"Retrieving secret: {SECRET_NAME}")
+        logger.debug("Retrieving SMS verification secret")
         response = secrets_client.get_secret_value(SecretId=SECRET_NAME)
         secret_data = json.loads(response['SecretString'])
         secret_key = secret_data['secret_key']
@@ -53,7 +53,7 @@ def get_secret():
         return secret_key
         
     except Exception as e:
-        logger.error(f"Error retrieving secret: {str(e)}")
+        logger.error("Failed to retrieve SMS verification secret")
         raise
 
 
@@ -135,13 +135,13 @@ def check_rate_limit(phone_number: str) -> tuple:
         return True, f"Request allowed ({request_count + 1}/3)"
         
     except Exception as e:
-        logger.error(f"Rate limit check failed: {str(e)}")
+        logger.error("Rate limit check failed")
         # Fail open - allow request if rate limiting fails
         return True, "Rate limiting unavailable"
 
 
 def lambda_handler(event, context):
-    logger.debug(f"Event received: {json.dumps(event)}")
+    logger.debug("SMS verification event received")
 
     # Get data
     input_data = event['input']
@@ -218,7 +218,7 @@ def lambda_handler(event, context):
         logger.debug("SMS parameters configured for sending")
 
         response = sns_client.publish(**sns_parameters)
-        logger.info(f"SNS response: {response}")
+        logger.info("SMS sent successfully via SNS")
         logger.info("Verification code sent successfully")
 
         return {
@@ -230,9 +230,9 @@ def lambda_handler(event, context):
         }
 
     except Exception as e:
-        logger.error(f"Error in SMS verification: {str(e)}")
+        logger.error("Error in SMS verification processing")
         return {
             "StatusCode": 500,
-            "Message": f"Error processing SMS verification: {str(e)}",
+            "Message": "Error processing SMS verification request",
             "Data": None
         }
