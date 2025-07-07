@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // file: frontend/src/app/features/auth/store/user.actions.ts
 // author: Corey Dale Peters
 // date: 2024-12-27
@@ -5,11 +6,24 @@
 
 // 3rd Party Imports
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
+=======
+// file: frontend/src/app/features/user/store/user.actions.ts
+// author: Corey Dale Peters
+// date: 2025-03-07
+// description: TypeScript file
+
+// user.actions.ts
+
+import { createAction, props } from '@ngrx/store';
+import { IAuth } from "../../../core/models/Auth.model";
+import { IUsers } from "../../../core/models/Users.model";
+>>>>>>> main
 
 // Application Imports
 import { IUsers, UsersQueryByEmailInput, UsersCreateInput } from '../../../core/models/UsersModel';
 import { MfaSetupDetails } from '../../../core/models/MfaSetupDetailsModel';
 
+<<<<<<< HEAD
 /**
  * User Actions (includes Auth functionality)
  */
@@ -24,6 +38,12 @@ export const UserActions = createActionGroup({
     'Redirect To Dashboard': emptyProps(),
     'Redirect To Profile': emptyProps(),
     'Begin MFA Setup Flow': emptyProps(),
+=======
+export const signInSuccess = createAction(
+    '[Auth] Sign In Success',
+    props<{ auth: IAuth, user: IUsers }>()
+);
+>>>>>>> main
 
     // State 0 - Email
     'Check Email': props<{ email: string }>(),
@@ -31,6 +51,7 @@ export const UserActions = createActionGroup({
     'Check Email Failure': props<{ error: string }>(),
     'Check Email User Not Found': emptyProps(),
 
+<<<<<<< HEAD
     'Verify Cognito Password': props<{ email: string; password: string }>(),
     'Verify Cognito Password Success': props<{ message?: string, needsMFA?: boolean, needsMFASetup?:boolean, mfaSetupDetails?: MfaSetupDetails }>(),
     'Verify Cognito Password Failure': props<{ error: string }>(),
@@ -42,6 +63,26 @@ export const UserActions = createActionGroup({
     'Setup Password': props<{ password: string }>(),
     'Setup Password Success': emptyProps(),
     'Setup Password Failure': props<{ error: string }>(),
+=======
+export const updateAuth = createAction(
+    '[Auth] Update Auth',
+    props<{ auth: IAuth }>()
+);
+
+export const updateUser = createAction(
+    '[Auth] Update User',
+    props<{ user: IUsers }>()
+);
+
+export const UserActions = {
+  signIn,
+  signInSuccess,
+  signInFailure,
+  updateAuth,
+  updateUser
+};
+
+>>>>>>> main
 
     // Phone verification
     'Setup Phone': props<{ phoneNumber: string }>(),

@@ -581,6 +581,7 @@ def build_crud_operations_for_table(schema: TableSchema):
             'index_name': None,
             'response_auth_directives': get_response_auth_directives(f'{schema.name}QueryBy{sk_pascal}'),
         })
+<<<<<<< HEAD
         # QueryBy{Partition}And{Sort} for primary key
         pk_pascal = to_pascal_case(schema.partition_key)
         sk_pascal = to_pascal_case(schema.sort_key)
@@ -588,11 +589,22 @@ def build_crud_operations_for_table(schema: TableSchema):
             'name': f'QueryBy{pk_pascal}And{sk_pascal}',
             'type': 'Query',
             'field': f'{schema.name}QueryBy{pk_pascal}And{sk_pascal}',
+=======
+        # QueryByBoth
+        schema.operations.append({
+            'name': 'QueryByBoth',
+            'type': 'Query',
+            'field': f'{schema.name}QueryByBoth',
+>>>>>>> main
             'dynamodb_op': 'Query',
             'index_partition': schema.partition_key,
             'index_sort': schema.sort_key,
             'index_name': None,
+<<<<<<< HEAD
             'response_auth_directives': get_response_auth_directives(f'{schema.name}QueryBy{pk_pascal}And{sk_pascal}'),
+=======
+            'response_auth_directives': get_response_auth_directives(f'{schema.name}QueryByBoth'),
+>>>>>>> main
         })
     # Add QueryBy for each secondary index
     if schema.secondary_indexes:
@@ -876,14 +888,22 @@ def generate_dynamodb_cloudformation_template(schemas: Dict[str, Union[TableSche
         logger.error(f'Failed to generate DynamoDB CloudFormation template: {str(e)}')
         raise
 
+<<<<<<< HEAD
 def generate_appsync_cloudformation_template(schemas: Dict[str, Union[TableSchema, GraphQLType, StandardType, LambdaType]], output_path: str, schema_filename: str = None) -> None:
+=======
+def generate_appsync_cloudformation_template(schemas: Dict[str, Union[TableSchema, GraphQLType, StandardType, LambdaType]], output_path: str) -> None:
+>>>>>>> main
     """Generate CloudFormation template for AppSync, including DynamoDB and Lambda data sources and resolvers."""
     logger.debug('Starting generate_appsync_cloudformation_template')
     try:
         jinja_env = setup_jinja_env()
         # Render the main AppSync CloudFormation template, which now includes both DynamoDB and Lambda data sources/resolvers
         template = jinja_env.get_template('appsync_cloudformation.jinja')
+<<<<<<< HEAD
         content = template.render(schemas=schemas, schema_filename=schema_filename)
+=======
+        content = template.render(schemas=schemas)
+>>>>>>> main
         write_file(output_path, content)
         logger.info(f'Generated AppSync CloudFormation template at {output_path}')
     except Exception as e:
@@ -1003,12 +1023,21 @@ query {table}QueryBy{sk_pascal}($input: {table}QueryBy{sk_pascal}Input!) {{
   }}
 }}'''
             })
+<<<<<<< HEAD
             # QueryBy{Partition}And{Sort} for primary key
             operations.append({
                 'name': f'{table}QueryBy{pk_pascal}And{sk_pascal}',
                 'gql': f'''
 query {table}QueryBy{pk_pascal}And{sk_pascal}($input: {table}QueryBy{pk_pascal}And{sk_pascal}Input!) {{
   {table}QueryBy{pk_pascal}And{sk_pascal}(input: $input) {{
+=======
+            # QueryByBoth
+            operations.append({
+                'name': f'{table}QueryByBoth',
+                'gql': f'''
+query {table}QueryByBoth($input: {table}QueryByBothInput!) {{
+  {table}QueryByBoth(input: $input) {{
+>>>>>>> main
     StatusCode
     Message
     Data {{
@@ -1161,6 +1190,7 @@ def generate_all_enums():
     logger.debug('Completed generate_all_enums')
 
 def prevalidate_appsync_sdl(sdl_path):
+<<<<<<< HEAD
     """Validate GraphQL SDL syntax using GraphQL-core library and check AppSync-specific constraints."""
     try:
         from graphql import build_schema, GraphQLError
@@ -1252,6 +1282,25 @@ def _basic_sdl_validation(sdl_path):
         sys.exit(1)
     
     logger.info(f"Basic SDL validation passed for {sdl_path}")
+=======
+    """Extra validation for AppSync-incompatible SDL patterns."""
+    with open(sdl_path, 'r', encoding='utf-8') as f:
+        sdl = f.read()
+    # Check for triple-quoted docstrings
+    if '"""' in sdl:
+        logger.error(f"[ERROR] AppSync SDL prevalidation failed: triple-quoted docstrings (\"\"\" ... \"\"\") are not allowed in {sdl_path}")
+        sys.exit(1)
+    # Check for top-level # comments (lines starting with #)
+    for line in sdl.splitlines():
+        if line.strip().startswith('#'):
+            logger.error(f"[ERROR] AppSync SDL prevalidation failed: top-level # comments are not allowed in {sdl_path} (line: {line.strip()})")
+            sys.exit(1)
+    # Check for leading or trailing backticks
+    if sdl.strip().startswith('```') or sdl.strip().endswith('```'):
+        logger.error(f"[ERROR] AppSync SDL prevalidation failed: leading or trailing backticks (```) are not allowed in {sdl_path}")
+        sys.exit(1)
+    # Optionally: check for other known AppSync-incompatible patterns here
+>>>>>>> main
 
 def generate_python_registry(name: str, schema: RegistryType) -> None:
     try:
@@ -1400,6 +1449,7 @@ def load_schemas() -> dict:
             # Attach referenced models for use in template rendering
             setattr(schema_obj, 'model_imports', sorted(referenced_models))
             schemas[schema_name] = schema_obj
+<<<<<<< HEAD
         elif schema_type == 'lambda-secured':
             # lambda-secured type: combines DynamoDB table generation with Lambda resolver
             model = schema_dict['model']
@@ -1438,6 +1488,8 @@ def load_schemas() -> dict:
                 stream=stream_config
             )
             schemas[schema_name] = schema_obj
+=======
+>>>>>>> main
         else:
             # Fallback: treat as GraphQLType
             model = schema_dict['model']
@@ -1560,6 +1612,7 @@ def main():
                 generate_python_model(table, schema, template_name='python_lambda.jinja')
                 generate_typescript_model(table, schema, template_name='typescript_lambda_model.jinja', all_model_names=all_model_names)
                 generate_typescript_lambda_graphql_ops(table, schema)
+<<<<<<< HEAD
             elif schema_type == 'lambda-secured':
                 logger.debug(f'Generating lambda-secured model for type: {table}')
                 # Generate DynamoDB table (like dynamodb type)
@@ -1567,6 +1620,8 @@ def main():
                 generate_typescript_model(table, schema, template_name='typescript_dynamodb.jinja', all_model_names=all_model_names)
                 # Generate Lambda GraphQL operations (like lambda type)
                 generate_typescript_lambda_graphql_ops(table, schema)
+=======
+>>>>>>> main
             else:
                 logger.error(f'Unknown or unsupported schema type: {schema_type} for {table}')
                 raise ValueError(f"Unknown schema type: {schema_type} for {table}")
@@ -1588,7 +1643,11 @@ def main():
         # Generate AppSync CloudFormation template
         logger.debug('Generating AppSync CloudFormation template')
         appsync_output_path = os.path.join(SCRIPT_DIR, '..', 'infrastructure', 'cloudformation', 'appsync.yml')
+<<<<<<< HEAD
         generate_appsync_cloudformation_template(schemas, appsync_output_path, timestamped_schema)
+=======
+        generate_appsync_cloudformation_template(schemas, appsync_output_path)
+>>>>>>> main
         logger.info('Schema generation completed successfully')
     except Exception as e:
         logger.error(f"DEBUG: Exception in main(): {e}")
