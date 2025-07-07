@@ -1977,11 +1977,183 @@
             "testStrategy": "Test listing and detail views for accuracy, performance, and correct handling of edge cases (e.g., empty states, permission errors)."
           }
         ]
+      },
+      {
+        "id": 42,
+        "title": "Fix Critical NPM Security Vulnerabilities",
+        "description": "Address the three critical severity vulnerabilities in npm packages: Prototype Pollution in minimist, Arbitrary Code Execution in underscore, and Path Traversal in decompress",
+        "details": "Update package-lock.json to fix critical vulnerabilities:\n1. minimist (#40) - Update to version >=1.2.6 to fix prototype pollution\n2. underscore (#35) - Update to version >=1.13.0-2 to fix arbitrary code execution\n3. decompress (#34) - Update to version >=4.2.1 to fix path traversal\n\nImplementation steps:\n- Run 'npm audit' to identify current versions\n- Update package.json dependencies to safe versions\n- Run 'npm install' to update package-lock.json\n- Verify fixes with 'npm audit --audit-level critical'\n- Test application startup and core functionality",
+        "testStrategy": "Run npm audit to verify critical vulnerabilities are resolved. Execute smoke tests on core application features. Verify no new vulnerabilities introduced. Test application builds successfully.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Audit Current Vulnerabilities and Update Package Dependencies",
+            "description": "Identify current vulnerable package versions and update package.json with secure versions for minimist, underscore, and decompress packages",
+            "dependencies": [],
+            "details": "Run 'npm audit' to document current vulnerable versions. Update package.json dependencies: minimist to >=1.2.6, underscore to >=1.13.0-2, and decompress to >=4.2.1. Check for any direct dependencies in package.json that need updating, and also review devDependencies section for these packages.",
+            "status": "done",
+            "testStrategy": "Compare npm audit output before and after package.json changes to confirm targeted vulnerabilities are addressed"
+          },
+          {
+            "id": 2,
+            "title": "Install Updated Packages and Regenerate Lock File",
+            "description": "Execute npm install to update package-lock.json with the new secure package versions and resolve dependency tree",
+            "dependencies": [
+              1
+            ],
+            "details": "Run 'npm install' to update package-lock.json with the new secure versions. This will resolve the dependency tree and ensure all transitive dependencies are updated appropriately. If there are any peer dependency warnings or conflicts, resolve them by updating related packages or using npm install --legacy-peer-deps if necessary.",
+            "status": "done",
+            "testStrategy": "Verify package-lock.json contains the updated versions and run 'npm audit --audit-level critical' to confirm no critical vulnerabilities remain"
+          },
+          {
+            "id": 3,
+            "title": "Validate Security Fixes and Application Functionality",
+            "description": "Confirm all critical vulnerabilities are resolved and verify application functionality remains intact after package updates",
+            "dependencies": [
+              2
+            ],
+            "details": "Run 'npm audit --audit-level critical' to verify zero critical vulnerabilities. Test application startup process and core functionality that may use the updated packages. Pay special attention to any code that processes user input (minimist), data manipulation (underscore), or file operations (decompress). Document the vulnerability resolution in commit message with specific CVE numbers if available.",
+            "status": "done",
+            "testStrategy": "Execute full application test suite, perform manual testing of key features, and run security audit tools to ensure no new vulnerabilities were introduced"
+          }
+        ]
+      },
+      {
+        "id": 43,
+        "title": "Fix High Severity NPM Vulnerabilities",
+        "description": "Resolve high severity vulnerabilities in tar packages and axios SSRF/credential leakage issues across package-lock.json and frontend/package-lock.json",
+        "details": "Update both package-lock.json and frontend/package-lock.json:\n1. tar package vulnerabilities (#44, #43, #39, #38, #37, #32) - Update to version >=6.1.2\n2. axios SSRF and Credential Leakage (#31) - Update to version >=0.21.2\n\nImplementation steps:\n- Navigate to root directory and run 'npm update tar axios'\n- Navigate to frontend/ directory and run 'npm update axios'\n- Regenerate lock files with 'npm install'\n- Run 'npm audit --audit-level high' in both directories\n- Test HTTP requests and file operations functionality",
+        "testStrategy": "Verify npm audit shows no high severity vulnerabilities. Test API calls using axios work correctly. Test file upload/download features that use tar. Run integration tests for frontend-backend communication.",
+        "priority": "high",
+        "dependencies": [
+          42
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Update tar package vulnerabilities in root directory",
+            "description": "Resolve high severity tar package vulnerabilities (#44, #43, #39, #38, #37, #32) by updating to version >=6.1.2 in the root package-lock.json",
+            "dependencies": [],
+            "details": "Navigate to the root directory and run 'npm update tar' to update the tar package to version >=6.1.2. Then run 'npm install' to regenerate the package-lock.json file. Verify the updated version in package-lock.json and ensure all tar-related vulnerabilities are resolved.",
+            "status": "done",
+            "testStrategy": "Run 'npm audit --audit-level high' to verify tar vulnerabilities are resolved. Test any file compression/extraction functionality that uses tar packages."
+          },
+          {
+            "id": 2,
+            "title": "Update axios SSRF vulnerabilities in root directory",
+            "description": "Resolve axios SSRF and credential leakage vulnerability (#31) by updating to version >=0.21.2 in the root package-lock.json",
+            "dependencies": [
+              1
+            ],
+            "details": "In the root directory, run 'npm update axios' to update axios to version >=0.21.2. Run 'npm install' to regenerate the package-lock.json file. Verify the updated axios version addresses the SSRF and credential leakage issues.",
+            "status": "done",
+            "testStrategy": "Run 'npm audit --audit-level high' to confirm axios vulnerability is resolved. Test HTTP request functionality to ensure no regression in API calls."
+          },
+          {
+            "id": 3,
+            "title": "Update axios vulnerabilities in frontend directory",
+            "description": "Resolve axios SSRF and credential leakage vulnerability in the frontend package by updating to version >=0.21.2 in frontend/package-lock.json",
+            "dependencies": [
+              2
+            ],
+            "details": "Navigate to the frontend/ directory and run 'npm update axios' to update axios to version >=0.21.2. Run 'npm install' to regenerate the frontend/package-lock.json file. Ensure the frontend axios package is properly updated and isolated from root dependencies.",
+            "status": "done",
+            "testStrategy": "Run 'npm audit --audit-level high' in the frontend directory to verify axios vulnerability is resolved. Test frontend HTTP requests and API integrations."
+          },
+          {
+            "id": 4,
+            "title": "Validate vulnerability resolution and functionality",
+            "description": "Perform comprehensive validation to ensure all high severity vulnerabilities are resolved and application functionality remains intact",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Run 'npm audit --audit-level high' in both root and frontend directories to confirm no high severity vulnerabilities remain. Verify tar package version >=6.1.2 and axios version >=0.21.2 in both package-lock.json files. Test critical application functionality including file operations, HTTP requests, and API integrations.",
+            "status": "done",
+            "testStrategy": "Execute full test suite covering file operations (tar functionality), HTTP requests (axios functionality), and run security audit scans. Verify no new vulnerabilities introduced and all targeted CVEs are resolved."
+          }
+        ]
+      },
+      {
+        "id": 44,
+        "title": "Fix Python Security Vulnerabilities",
+        "description": "Address moderate severity vulnerabilities in urllib3 and requests packages across multiple Pipfile.lock files in backend directories",
+        "details": "Update Pipfile.lock files in backend/, schemas/, and backend/src/layers/stripe/:\n1. urllib3 redirect control issues (#48, #47, #29, #28, #8, #5) - Update to version >=1.26.5\n2. requests .netrc credentials leak (#46, #7, #4) - Update to version >=2.25.1\n\nImplementation steps:\n- Update Pipfile in each directory to specify minimum safe versions\n- Run 'pipenv update urllib3 requests' in each directory\n- Regenerate Pipfile.lock with 'pipenv lock'\n- Run 'pipenv check' to verify security fixes\n- Test Python services and API endpoints",
+        "testStrategy": "Run 'pipenv check' in all directories to confirm no security vulnerabilities. Test Python backend services start correctly. Verify HTTP requests from Python services work properly. Test Stripe integration functionality.",
+        "priority": "medium",
+        "dependencies": [
+          43
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Update Pipfile Dependencies and Regenerate Lock Files",
+            "description": "Update the Pipfile in each affected directory (backend/, schemas/, backend/src/layers/stripe/) to specify minimum safe versions for urllib3 (>=1.26.5) and requests (>=2.25.1), then regenerate the Pipfile.lock files",
+            "dependencies": [],
+            "details": "Navigate to each directory: backend/, schemas/, and backend/src/layers/stripe/. In each Pipfile, update the [packages] section to specify urllib3 = '>=1.26.5' and requests = '>=2.25.1'. Run 'pipenv update urllib3 requests' in each directory to update the packages. Then run 'pipenv lock' to regenerate the Pipfile.lock with the new versions. Ensure all three directories have updated lock files with the secure versions.",
+            "status": "done",
+            "testStrategy": "Verify that each Pipfile.lock contains urllib3 version 1.26.5 or higher and requests version 2.25.1 or higher by examining the lock file contents"
+          },
+          {
+            "id": 2,
+            "title": "Verify Security Vulnerabilities Are Resolved",
+            "description": "Run security checks to confirm that the urllib3 redirect control issues and requests .netrc credentials leak vulnerabilities have been addressed",
+            "dependencies": [
+              1
+            ],
+            "details": "In each of the three directories (backend/, schemas/, backend/src/layers/stripe/), run 'pipenv check' to scan for known security vulnerabilities. Verify that the specific vulnerabilities mentioned (urllib3 issues #48, #47, #29, #28, #8, #5 and requests issue #46, #7, #4) are no longer reported. Document any remaining vulnerabilities that may need separate attention. Cross-reference with security advisory databases to ensure the updated versions address the identified CVEs.",
+            "status": "done",
+            "testStrategy": "Run 'pipenv check' in all three directories and confirm zero security vulnerabilities are reported for urllib3 and requests packages"
+          },
+          {
+            "id": 3,
+            "title": "Test Python Services and API Endpoints",
+            "description": "Perform comprehensive testing of Python services and API endpoints to ensure the security updates do not break existing functionality",
+            "dependencies": [
+              2
+            ],
+            "details": "Execute the existing test suites for all Python services in the backend directories. Test critical API endpoints that rely on urllib3 and requests libraries, including HTTP requests, redirects, and authentication flows. Pay special attention to any services that handle external API calls, file downloads, or authentication mechanisms. Run integration tests to verify that the updated packages maintain compatibility with existing code. Monitor for any deprecation warnings or behavioral changes introduced by the version updates.",
+            "status": "done",
+            "testStrategy": "Run full test suite for Python services, execute manual API endpoint tests, and perform smoke tests on critical user flows that involve HTTP requests and external service integrations"
+          }
+        ]
+      },
+      {
+        "id": 45,
+        "title": "Fix Moderate NPM Security Vulnerabilities",
+        "description": "Resolve remaining moderate severity vulnerabilities in tough-cookie, request, ajv, and additional minimist/axios issues",
+        "details": "Update package-lock.json and frontend/package-lock.json for moderate vulnerabilities:\n1. tough-cookie Prototype Pollution (#42) - Update to version >=4.0.0\n2. Server-Side Request Forgery in Request (#41) - Replace with axios or node-fetch\n3. Prototype Pollution in Ajv (#36) - Update to version >=6.12.3\n4. Prototype Pollution in minimist (older CVE) (#33) - Ensure version >=1.2.6\n5. Axios Cross-Site Request Forgery (#30) - Update to version >=0.21.2\n\nImplementation steps:\n- Update package.json dependencies to safe versions\n- Replace deprecated 'request' package with modern alternatives\n- Run 'npm install' to update lock files\n- Run 'npm audit --audit-level moderate' to verify fixes",
+        "testStrategy": "Verify npm audit shows no moderate vulnerabilities in production dependencies. Test cookie handling functionality. Test JSON schema validation with ajv. Verify HTTP client functionality after request package replacement.",
+        "priority": "medium",
+        "dependencies": [
+          44
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 46,
+        "title": "Security Audit and Regression Testing",
+        "description": "Perform comprehensive security audits and regression testing to ensure all vulnerabilities are resolved without breaking functionality",
+        "details": "Comprehensive validation and testing:\n1. Run final security audits: 'npm audit' and 'pipenv check' in all directories\n2. Execute full test suite to ensure no regressions\n3. Perform manual testing of critical user journeys\n4. Document any breaking changes or required code modifications\n5. Update CI/CD pipeline security checks if needed\n\nImplementation steps:\n- Run 'npm audit --production' in root and frontend directories\n- Run 'pipenv check' in all Python directories\n- Execute automated test suites\n- Perform smoke tests on key application features\n- Document changes in CHANGELOG.md\n- Commit updated lock files to repository",
+        "testStrategy": "All security audits pass with zero critical/high vulnerabilities. Full test suite passes without failures. Manual testing confirms no functional regressions. Security scanning tools show improved security posture.",
+        "priority": "high",
+        "dependencies": [
+          45
+        ],
+        "status": "done",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-06-20T19:07:50.957Z",
-      "updated": "2025-07-03T19:16:07.228Z",
+      "updated": "2025-07-07T19:34:43.672Z",
       "description": "Tasks for master context"
     }
   }
