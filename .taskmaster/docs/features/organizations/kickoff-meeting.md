@@ -6,11 +6,11 @@
 
 ---
 
-## =Ë Feature Overview
+## Feature Overview
 
 The Organizations feature introduces a comprehensive multi-tenant system for managing customer organizations, applications, environments, and user roles. This feature enables customers to create organizations, invite users, manage applications across environments, and handle notifications.
 
-## <¯ Core Concept Summary
+## Core Concept Summary
 
 - **Organizations:** Customer-owned entities with hierarchical user management
 - **Applications:** Environment-specific application management (prod/stage/test)
@@ -19,7 +19,7 @@ The Organizations feature introduces a comprehensive multi-tenant system for man
 
 ---
 
-## <× Proposed Data Model
+## <ï¿½ Proposed Data Model
 
 ### Organizations Table
 - **Hash Key:** organizationId
@@ -84,7 +84,7 @@ Below are comprehensive questions from each expert perspective to ensure we deve
    - What approval workflows are needed for production access requests?
    - How do we audit and log environment-specific access changes?
 
-## =» Principal Software Engineer Questions
+## =ï¿½ Principal Software Engineer Questions
 
 ### Architecture & Technical Implementation:
 
@@ -123,7 +123,7 @@ Below are comprehensive questions from each expert perspective to ensure we deve
    - What retry mechanisms for invitation and notification workflows?
    - How do we ensure data consistency across related tables?
 
-## <¨ Senior UX/UI Engineer Questions
+## <ï¿½ Senior UX/UI Engineer Questions
 
 ### User Experience & Interface Design:
 
@@ -183,7 +183,7 @@ Below are comprehensive questions from each expert perspective to ensure we deve
 
 3. **Integration Testing:**
    - How do we test the invitation flow end-to-end including email delivery?
-   - What scenarios cover payment’organization creation’user invitation chains?
+   - What scenarios cover paymentï¿½organization creationï¿½user invitation chains?
    - How do we test cross-organization data isolation?
 
 4. **Performance Testing:**
@@ -218,7 +218,7 @@ Below are comprehensive questions from each expert perspective to ensure we deve
 
 ---
 
-## =€ Next Steps
+## =ï¿½ Next Steps
 
 After reviewing these expert questions, we need to:
 
