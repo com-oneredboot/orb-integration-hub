@@ -661,11 +661,16 @@ export class OrganizationTestDataFactory {
   }
   
   private generateTestSessionId(): string {
-    return `test_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`;
+    const array = new Uint8Array(8);
+    crypto.getRandomValues(array);
+    const randomPart = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('').substr(0, 8);
+    return `test_${Date.now()}_${randomPart}`;
   }
   
   private generateId(): string {
-    return Math.random().toString(36).substr(2, 16);
+    const array = new Uint8Array(12);
+    crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('').substr(0, 16);
   }
   
   // =============================================================================

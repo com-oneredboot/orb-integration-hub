@@ -211,6 +211,13 @@ export class CsrfService {
    * Generate session identifier
    */
   private generateSessionId(): string {
+    if (crypto && crypto.getRandomValues) {
+      const array = new Uint8Array(16);
+      crypto.getRandomValues(array);
+      const randomHex = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+      return `csrf_${Date.now()}_${randomHex}`;
+    }
+    // Fallback for older browsers
     return `csrf_${Date.now()}_${Math.random().toString(36).substring(2)}`;
   }
 

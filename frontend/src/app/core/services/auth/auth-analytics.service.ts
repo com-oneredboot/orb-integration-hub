@@ -494,7 +494,10 @@ export class AuthAnalyticsService {
    */
 
   private generateSessionId(): string {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    const randomBytes = new Uint32Array(1);
+    crypto.getRandomValues(randomBytes);
+    const randomSuffix = randomBytes[0].toString(36);
+    return Date.now().toString(36) + randomSuffix;
   }
 
   private getDeviceType(): 'mobile' | 'tablet' | 'desktop' {

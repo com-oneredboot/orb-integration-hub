@@ -4,6 +4,7 @@
 // description: Comprehensive input validation service with RFC 5322 email validation, E.164 phone validation, and XSS prevention
 
 import { Injectable } from '@angular/core';
+import DOMPurify from 'dompurify';
 
 // Interface for validation results
 export interface ValidationResult {
@@ -53,20 +54,10 @@ export class InputValidationService {
     'getnada.com'
   ]);
 
-  // XSS prevention patterns
-  private readonly xssPatterns = [
-    /<script[^>]*>.*?<\/script>/gi,
-    /<iframe[^>]*>.*?<\/iframe>/gi,
-    /<object[^>]*>.*?<\/object>/gi,
-    /<embed[^>]*>/gi,
-    /<link[^>]*>/gi,
-    /javascript:/gi,
-    /vbscript:/gi,
-    /onload=/gi,
-    /onerror=/gi,
-    /onclick=/gi,
-    /onmouseover=/gi
-  ];
+  // XSS prevention using DOMPurify
+  private sanitizeHtml(input: string): string {
+    return DOMPurify.sanitize(input);
+  }
 
   constructor() {}
 
@@ -347,28 +338,13 @@ export class InputValidationService {
   }
 
   /**
-   * Sanitize input to prevent XSS attacks
+   * Sanitize input to prevent XSS attacks using DOMPurify
    */
   sanitizeInput(input: string): string {
     if (!input) return '';
 
-    let sanitized = input;
-
-    // Remove potential XSS patterns
-    this.xssPatterns.forEach(pattern => {
-      sanitized = sanitized.replace(pattern, '');
-    });
-
-    // HTML entity encoding for common characters
-    sanitized = sanitized
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#x27;')
-      .replace(/\//g, '&#x2F;');
-
-    return sanitized;
+    // Use DOMPurify for robust XSS prevention
+    return this.sanitizeHtml(input);
   }
 
   /**

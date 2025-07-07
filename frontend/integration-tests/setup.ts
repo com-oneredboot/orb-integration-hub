@@ -89,7 +89,10 @@ console.warn = (...args: any[]) => {
   ) {
     return;
   }
-  originalConsoleWarn(...args);
+  const sanitizedArgs = args.map(arg => 
+    typeof arg === 'string' && arg.includes('password') ? '[REDACTED]' : arg
+  );
+  originalConsoleWarn(...sanitizedArgs);
 };
 
 // Increase timeout for integration tests

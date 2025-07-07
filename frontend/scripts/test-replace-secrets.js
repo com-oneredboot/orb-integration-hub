@@ -150,10 +150,22 @@ function testReplacement() {
     }
 
     const configJsonContent = fs.readFileSync(path.join(TEST_CONFIG.testDir, 'config.json'), 'utf8');
-    if (configJsonContent.includes('test-api.amazonaws.com') && !configJsonContent.includes('{{GRAPHQL_API_URL}}')) {
-      console.log('✓ Token replacement verified in config.json');
-    } else {
-      throw new Error('Token replacement failed in config.json');
+    const allowedHosts = ['test-api.amazonaws.com'];
+    
+    try {
+      const configJsonUrl = new URL(configJsonContent.trim());
+      if (allowedHosts.includes(configJsonUrl.host) && !configJsonContent.includes('{{GRAPHQL_API_URL}}')) {
+        console.log('✓ Token replacement verified in config.json');
+      } else {
+        throw new Error('Token replacement failed in config.json');
+      }
+    } catch (urlError) {
+      // Fallback to substring check if URL parsing fails
+      if (configJsonContent.includes('test-api.amazonaws.com') && !configJsonContent.includes('{{GRAPHQL_API_URL}}')) {
+        console.log('✓ Token replacement verified in config.json');
+      } else {
+        throw new Error('Token replacement failed in config.json');
+      }
     }
 
     console.log('\n✅ All tests passed!');

@@ -4,6 +4,7 @@
 // description: Custom Angular validators for comprehensive input validation with security focus
 
 import { AbstractControl, ValidationErrors, ValidatorFn, AsyncValidatorFn } from '@angular/forms';
+import { DomSanitizer, SecurityContext } from '@angular/platform-browser';
 import { Observable, of, timer } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
@@ -270,32 +271,16 @@ export class CustomValidators {
   /**
    * Input sanitization validator to prevent XSS
    */
-  static noXSS(): ValidatorFn {
+  static noXSS(sanitizer: DomSanitizer): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       if (!control.value) {
         return null;
       }
 
       const value = control.value;
-      
-      // XSS prevention patterns
-      const xssPatterns = [
-        /<script[^>]*>.*?<\/script>/gi,
-        /<iframe[^>]*>.*?<\/iframe>/gi,
-        /<object[^>]*>.*?<\/object>/gi,
-        /<embed[^>]*>/gi,
-        /<link[^>]*>/gi,
-        /javascript:/gi,
-        /vbscript:/gi,
-        /onload=/gi,
-        /onerror=/gi,
-        /onclick=/gi,
-        /onmouseover=/gi
-      ];
+      const sanitizedValue = sanitizer.sanitize(SecurityContext.HTML, value);
 
-      const hasXSS = xssPatterns.some(pattern => pattern.test(value));
-
-      if (hasXSS) {
+      if (sanitizedValue !== value) {
         return {
           xss: {
             value: control.value,

@@ -74,7 +74,8 @@
     "qrcode": "^1.5.4",
     "rxjs": "^7.8.1",
     "typescript": "^5.6.3",
-    "zone.js": "^0.15.0"
+    "zone.js": "^0.15.0",
+    "dompurify": "^3.2.6"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^19.0.6",
