@@ -83,7 +83,7 @@ def verify_code(phone_number: str, code: str, secret: str) -> bool:
     for i in range(2):  # 0 = current window, 1 = previous window
         window_time = current_time - (i * 300)
         expected_code = generate_verification_code(phone_number, window_time, secret)
-        logger.debug(f"Checking window {i}: expected={expected_code}, provided={code}")
+        logger.debug(f"Checking time window {i} for verification code match")
         if expected_code == code:
             return True
     return False
@@ -113,7 +113,7 @@ def check_rate_limit(phone_number: str) -> tuple:
                 'firstRequestTime': current_time,
                 'ttl': current_time + 3600  # 1 hour TTL
             })
-            logger.info(f"Rate limit: First request for {phone_number}")
+            logger.info("Rate limit: First request for phone number")
             return True, "First request allowed"
         
         item = response['Item']
@@ -121,7 +121,7 @@ def check_rate_limit(phone_number: str) -> tuple:
         
         if request_count >= 3:
             # Rate limit exceeded
-            logger.warning(f"Rate limit exceeded for {phone_number}: {request_count}/3 requests")
+            logger.warning(f"Rate limit exceeded: {request_count}/3 requests")
             return False, "Rate limit exceeded: Maximum 3 SMS per hour"
         
         # Increment counter
@@ -131,11 +131,11 @@ def check_rate_limit(phone_number: str) -> tuple:
             ExpressionAttributeValues={':inc': 1}
         )
         
-        logger.info(f"Rate limit: Request allowed for {phone_number} ({request_count + 1}/3)")
+        logger.info(f"Rate limit: Request allowed ({request_count + 1}/3)")
         return True, f"Request allowed ({request_count + 1}/3)"
         
     except Exception as e:
-        logger.error(f"Rate limit check failed for {phone_number}: {str(e)}")
+        logger.error(f"Rate limit check failed: {str(e)}")
         # Fail open - allow request if rate limiting fails
         return True, "Rate limiting unavailable"
 
@@ -148,7 +148,7 @@ def lambda_handler(event, context):
     phone_number = input_data['phoneNumber']
     provided_code = input_data.get('code')  # Optional for verification
     
-    logger.info(f"Processing request - Phone: {phone_number}, Code provided: {provided_code is not None}, Code value: {provided_code}")
+    logger.info(f"Processing SMS verification request - Code provided: {provided_code is not None}")
 
     try:
         # Get the secret key
@@ -157,7 +157,7 @@ def lambda_handler(event, context):
         
         # If code is provided, verify it
         if provided_code is not None:
-            logger.info(f"Verifying code for phone number: {phone_number}")
+            logger.info("Verifying code for phone number")
             is_valid = verify_code(phone_number, str(provided_code), secret)
             
             response = {
@@ -168,15 +168,15 @@ def lambda_handler(event, context):
                     "valid": is_valid
                 }
             }
-            logger.info(f"Verification response: {json.dumps(response)}")
+            logger.info(f"Verification completed - Valid: {is_valid}")
             return response
         
         # Check rate limiting before generating/sending SMS
-        logger.info(f"Checking rate limit for phone number: {phone_number}")
+        logger.info("Checking rate limit for phone number")
         is_allowed, rate_limit_message = check_rate_limit(phone_number)
         
         if not is_allowed:
-            logger.warning(f"Rate limit exceeded for {phone_number}: {rate_limit_message}")
+            logger.warning(f"Rate limit exceeded: {rate_limit_message}")
             return {
                 "StatusCode": 429,
                 "Message": rate_limit_message,
@@ -187,7 +187,7 @@ def lambda_handler(event, context):
             }
         
         # Generate and send new verification code
-        logger.info(f"Generating verification code for phone number: {phone_number}")
+        logger.info("Generating verification code for phone number")
         logger.debug(f"Rate limit status: {rate_limit_message}")
         code = generate_verification_code(phone_number, current_time, secret)
         
@@ -214,12 +214,12 @@ def lambda_handler(event, context):
                 'StringValue': ORIGINATION_NUMBER
             }
         
-        logger.info(f"Sending SMS to {phone_number}")
-        logger.debug(f"SMS parameters: {sns_parameters}")
+        logger.info("Sending SMS to phone number")
+        logger.debug("SMS parameters configured for sending")
 
         response = sns_client.publish(**sns_parameters)
         logger.info(f"SNS response: {response}")
-        logger.info(f"Verification code sent to {phone_number}")
+        logger.info("Verification code sent successfully")
 
         return {
             "StatusCode": 200,
