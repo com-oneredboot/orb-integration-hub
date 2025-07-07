@@ -1,7 +1,8 @@
 name: deploy-backend
-# Description: Deploys backend resources to the selected environment. 
-# Allows selection of branch for deployment - choose 'main' for production deployments 
-# or a feature branch for testing.
+
+permissions:
+  contents: read
+  security-events: write
 
 on:
   workflow_dispatch:

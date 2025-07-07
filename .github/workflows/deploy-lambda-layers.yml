@@ -1,5 +1,9 @@
 name: deploy-lambda-layers
 
+permissions:
+  contents: read
+  security-events: write
+
 on:
   workflow_dispatch:
     inputs:
