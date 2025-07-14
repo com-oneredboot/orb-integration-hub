@@ -29,13 +29,10 @@
   justify-content: flex-end;
   padding: 1rem 2rem;
   background-color: v.$orb-white;
-<<<<<<< HEAD
   position: sticky;
   top: 0;
   z-index: 1000;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-=======
->>>>>>> main
 
   .nav-menu {
     display: flex;
@@ -46,7 +43,6 @@
       text-decoration: none;
       position: relative;
       padding: 0.5rem 0;
-<<<<<<< HEAD
       
       // Remove browser defaults that cause blue flashes
       -webkit-tap-highlight-color: transparent;
@@ -68,8 +64,6 @@
       &:visited {
         color: v.$orb-dark-blue;
       }
-=======
->>>>>>> main
 
       &:hover {
         color: v.$orb-red;

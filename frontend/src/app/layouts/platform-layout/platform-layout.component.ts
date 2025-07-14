@@ -9,13 +9,8 @@ import {Router} from "@angular/router";
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
-<<<<<<< HEAD
 import { UserActions } from '../../features/user/store/user.actions';
 import { selectIsAuthenticated } from '../../features/user/store/user.selectors';
-=======
-import { AuthActions } from '../../features/user/components/auth-flow/store/auth.actions';
-import { selectIsAuthenticated } from '../../features/user/components/auth-flow/store/auth.selectors';
->>>>>>> main
 
 @Component({
     selector: 'app-platform-layout',
@@ -37,10 +32,6 @@ export class PlatformLayoutComponent {
 
   signOut(): void {
     // Use NgRx action - navigation will be handled by the effect
-<<<<<<< HEAD
     this.store.dispatch(UserActions.signout());
-=======
-    this.store.dispatch(AuthActions.signout());
->>>>>>> main
   }
 }

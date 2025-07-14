@@ -302,6 +302,17 @@ export class CognitoService {
       const userGroups = Array.isArray(userGroupsRaw) ? userGroupsRaw : [];
       const hasBasicAccess = userGroups.includes('USER') || userGroups.includes('OWNER');
       
+      console.debug('[CognitoService] Token analysis:', {
+        userGroups: userGroups,
+        userGroupsRaw: userGroupsRaw,
+        hasBasicAccess,
+        tokenAud: session.tokens.idToken.payload.aud,
+        tokenIss: session.tokens.idToken.payload.iss,
+        tokenSub: session.tokens.idToken.payload.sub,
+        tokenExp: session.tokens.idToken.payload.exp,
+        currentTime: Math.floor(Date.now() / 1000)
+      });
+      
       if (!hasBasicAccess) {
         console.debug('[CognitoService] User lacks required groups for app access');
         this.isAuthenticatedSubject.next(false);

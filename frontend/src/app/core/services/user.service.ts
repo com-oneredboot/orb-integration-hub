@@ -157,7 +157,7 @@ export class UserService extends ApiService {
           'userPool'
         ) as any;
       } catch (userPoolError) {
-        console.debug('userExists: userPool auth failed, trying apiKey', userPoolError);
+        console.warn('userExists: userPool auth failed, trying apiKey. Full error:', userPoolError);
         // Fallback to apiKey authentication
         response = await this.query(
           query,

@@ -61,7 +61,6 @@ type {{ schema.name }} {
 
 {#-- Input types for table schemas --#}
 {% for schema_name, schema in table_schemas.items() %}
-<<<<<<< HEAD
 {% if schema.type == 'dynamodb' or schema.type == 'lambda-secured' %}
 input {{ schema.name }}CreateInput {
 {% for attr in schema.attributes -%}
@@ -72,18 +71,6 @@ input {{ schema.name }}UpdateInput {
 {% for attr in schema.attributes -%}
   {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{{ attr.type|graphql_type }}{% endif %}{{ "\n" }}
 {%- endfor %}}
-=======
-{% if schema.type == 'dynamodb' %}
-input {{ schema.name }}CreateInput {
-{% for field_name, field_type in schema.fields.items() %}
-  {{ field_name }}: {{ field_type|graphql_type }}
-{% endfor %}}
-
-input {{ schema.name }}UpdateInput {
-{% for field_name, field_type in schema.fields.items() %}
-  {{ field_name }}: {{ field_type|graphql_type }}
-{% endfor %}}
->>>>>>> main
 
 input {{ schema.name }}DeleteInput {
   {{ schema.partition_key }}: {{ schema.fields[schema.partition_key]|graphql_type }}

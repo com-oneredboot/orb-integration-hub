@@ -5,12 +5,9 @@ $spacing-md: 1rem;       // 16px
 $spacing-lg: 1.5rem;     // 24px
 $spacing-xl: 2rem;       // 32px
 
-<<<<<<< HEAD
 // Layout
 $page-max-width: 1400px;  // Global maximum width for page content
 
-=======
->>>>>>> main
 // Typography
 $font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 $font-family-heading: $font-family-base;  // Using base font for headings
@@ -70,15 +67,11 @@ $text-primary: $orb-black;
 $text-secondary: $orb-gray;
 $white: $orb-white;
 
-<<<<<<< HEAD
 // Role Colors (distinct from status colors)
 $role-owner: #3b82f6;      // Blue - authority without status confusion
 $role-admin: #8b5cf6;      // Purple - elevated permissions
 $role-developer: #0d9488;  // Teal - technical work
 $role-viewer: #6b7280;     // Gray - neutral, read-only
-
-=======
->>>>>>> main
 // Input styles
 $input-color: $orb-black;
 $input-bg: $orb-white;

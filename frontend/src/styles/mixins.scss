@@ -35,11 +35,7 @@
   font-size: v.$font-size-sm;
   color: v.$text-primary;
   width: 100%;
-<<<<<<< HEAD
   max-width: v.$page-max-width;
-=======
-  max-width: 800px;
->>>>>>> main
   margin-left: auto;
   margin-right: auto;
 
@@ -169,11 +165,7 @@
 @mixin page-container {
   // Define styles for page-container
   padding: v.$spacing-lg;
-<<<<<<< HEAD
   max-width: v.$page-max-width;
-=======
-  max-width: 960px;
->>>>>>> main
   margin: 0 auto;
 }
 
@@ -219,7 +211,6 @@
 
 @mixin card-content {
   padding: v.$spacing-lg;
-<<<<<<< HEAD
 }
 
 // Professional Header Mixins for Dashboard/Profile Style
@@ -321,6 +312,4 @@
   @include status-badge;
   background-color: rgba(v.$danger-color, 0.1);
   color: v.$danger-color;
-=======
->>>>>>> main
 } 

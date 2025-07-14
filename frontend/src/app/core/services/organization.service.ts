@@ -198,7 +198,7 @@ export class OrganizationService extends ApiService {
             data: updateInput
           }
         },
-        'userPool'
+        'userPool' // Use userPool auth for authenticated operations
       ) as Promise<GraphQLResult<OrganizationsUpdateResponse>>
     ).pipe(
       map(response => {
@@ -253,7 +253,7 @@ export class OrganizationService extends ApiService {
             }
           }
         },
-        'userPool'
+        'userPool' // Use userPool auth for authenticated operations
       ) as Promise<GraphQLResult<OrganizationsResponse>>
     ).pipe(
       map(response => {
@@ -300,7 +300,7 @@ export class OrganizationService extends ApiService {
             action: 'LIST_USER_ORGANIZATIONS'
           }
         },
-        'userPool'
+        'userPool' // Use userPool auth for authenticated operations
       ) as Promise<GraphQLResult<OrganizationsListResponse>>
     ).pipe(
       map(response => {
@@ -354,7 +354,7 @@ export class OrganizationService extends ApiService {
             }
           }
         },
-        'userPool'
+        'userPool' // Use userPool auth for authenticated operations
       ) as Promise<GraphQLResult<OrganizationsResponse>>
     ).pipe(
       map(response => {

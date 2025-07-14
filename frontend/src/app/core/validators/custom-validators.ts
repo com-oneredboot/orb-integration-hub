@@ -4,7 +4,8 @@
 // description: Custom Angular validators for comprehensive input validation with security focus
 
 import { AbstractControl, ValidationErrors, ValidatorFn, AsyncValidatorFn } from '@angular/forms';
-import { DomSanitizer, SecurityContext } from '@angular/platform-browser';
+import { SecurityContext } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 import { Observable, of, timer } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 

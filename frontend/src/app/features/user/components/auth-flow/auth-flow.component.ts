@@ -11,6 +11,7 @@ import {Store} from '@ngrx/store';
 import {map, Observable, Subject, take, takeUntil, tap, filter, firstValueFrom} from 'rxjs';
 import {Location} from '@angular/common';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer } from '@angular/platform-browser';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faExclamationTriangle, faRedo, faSync } from '@fortawesome/free-solid-svg-icons';
@@ -152,7 +153,8 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     private csrfService: CsrfService,
     private rateLimitingService: RateLimitingService,
     private errorHandler: AppErrorHandlerService,
-    private secureIdService: SecureIdGenerationService
+    private secureIdService: SecureIdGenerationService,
+    private sanitizer: DomSanitizer
   ) {
 
     // Initialize the form with enhanced validation
@@ -161,36 +163,36 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         Validators.required,
         CustomValidators.email(),
         CustomValidators.noDisposableEmail(),
-        CustomValidators.noXSS()
+        CustomValidators.noXSS(this.sanitizer)
       ]],
       // Make other fields not required initially
       firstName: ['', [
         CustomValidators.validateName('First name'),
-        CustomValidators.noXSS()
+        CustomValidators.noXSS(this.sanitizer)
       ]],
       lastName: ['', [
         CustomValidators.validateName('Last name'),
-        CustomValidators.noXSS()
+        CustomValidators.noXSS(this.sanitizer)
       ]],
       phoneNumber: ['', [
         CustomValidators.phoneNumber(),
-        CustomValidators.noXSS()
+        CustomValidators.noXSS(this.sanitizer)
       ]],
       password: ['', [
         CustomValidators.password(),
-        CustomValidators.noXSS()
+        CustomValidators.noXSS(this.sanitizer)
       ]],
       emailCode: ['', [
         CustomValidators.verificationCode(),
-        CustomValidators.noXSS()
+        CustomValidators.noXSS(this.sanitizer)
       ]],
       mfaCode: ['', [
         CustomValidators.verificationCode(),
-        CustomValidators.noXSS()
+        CustomValidators.noXSS(this.sanitizer)
       ]],
       phoneCode: ['', [
         CustomValidators.verificationCode(),
-        CustomValidators.noXSS()
+        CustomValidators.noXSS(this.sanitizer)
       ]]
     });
 
@@ -1141,58 +1143,58 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           Validators.required,
           CustomValidators.email(),
           CustomValidators.noDisposableEmail(),
-          CustomValidators.noXSS()
+          CustomValidators.noXSS(this.sanitizer)
         ]);
         break;
       case AuthSteps.PASSWORD:
         passwordControl?.setValidators([
           Validators.required,
-          CustomValidators.noXSS()
+          CustomValidators.noXSS(this.sanitizer)
         ]);
         break;
       case AuthSteps.PASSWORD_SETUP:
         passwordControl?.setValidators([
           Validators.required,
           CustomValidators.password(),
-          CustomValidators.noXSS()
+          CustomValidators.noXSS(this.sanitizer)
         ]);
         firstNameControl?.setValidators([
           Validators.required,
           CustomValidators.validateName('First name'),
-          CustomValidators.noXSS()
+          CustomValidators.noXSS(this.sanitizer)
         ]);
         lastNameControl?.setValidators([
           Validators.required,
           CustomValidators.validateName('Last name'),
-          CustomValidators.noXSS()
+          CustomValidators.noXSS(this.sanitizer)
         ]);
         break;
       case AuthSteps.PHONE_SETUP:
         phoneNumberControl?.setValidators([
           Validators.required,
           CustomValidators.phoneNumber(),
-          CustomValidators.noXSS()
+          CustomValidators.noXSS(this.sanitizer)
         ]);
         break;
       case AuthSteps.PHONE_VERIFY:
         phoneCodeControl?.setValidators([
           Validators.required,
           CustomValidators.verificationCode(),
-          CustomValidators.noXSS()
+          CustomValidators.noXSS(this.sanitizer)
         ]);
         break;
       case AuthSteps.EMAIL_VERIFY:
         emailCodeControl?.setValidators([
           Validators.required,
           CustomValidators.verificationCode(),
-          CustomValidators.noXSS()
+          CustomValidators.noXSS(this.sanitizer)
         ]);
         break;
       case AuthSteps.MFA_VERIFY:
         mfaCodeControl?.setValidators([
           Validators.required,
           CustomValidators.verificationCode(),
-          CustomValidators.noXSS()
+          CustomValidators.noXSS(this.sanitizer)
         ]);
         break;
       case AuthSteps.MFA_SETUP:
