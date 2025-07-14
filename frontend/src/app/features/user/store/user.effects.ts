@@ -1,6 +1,5 @@
 // file: frontend/src/app/features/user/store/user.effects.ts
 // author: Corey Dale Peters
-<<<<<<< HEAD
 // date: 2024-12-20
 // description: Contains all GraphQL queries and mutations for the User service
 
@@ -1042,8 +1041,3 @@ export class UserEffects {
     private router: Router
   ) {}
 }
-=======
-// date: 2025-03-07
-// description: TypeScript file
-
->>>>>>> main
