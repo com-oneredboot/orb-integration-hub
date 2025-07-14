@@ -55,7 +55,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install pipenv
           cd schemas
-          pipenv install
+          pipenv install --system --deploy
 
       - name: Generate schema files
         run: |
