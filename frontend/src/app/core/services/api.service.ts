@@ -34,11 +34,7 @@ export abstract class ApiService {
         variables: variables
       }) as Promise<GraphQLResult<T>>;
     } catch (error) {
-      // If userPool auth fails and this isn't already an apiKey request, try with apiKey
-      if (authMode === 'userPool' && this.isAuthError(error)) {
-        console.warn('[ApiService] userPool auth failed, falling back to apiKey for query. Error details:', error);
-        return this.query(query, variables, 'apiKey');
-      }
+      // No fallback - expose authentication errors directly
       throw error;
     }
   }
@@ -71,49 +67,25 @@ export abstract class ApiService {
         variables: variables
       };
       
-      // Add CSRF token for authenticated mutations that change state
-      if (authMode === 'userPool' && this.isStateMutationOperation(mutation)) {
-        try {
-          const csrfToken = await this.csrfService.getCsrfToken();
-          graphqlRequest.authToken = csrfToken; // This will be passed to the GraphQL context
-          console.debug('[ApiService] CSRF token added to mutation request');
-        } catch (csrfError) {
-          console.error('[ApiService] Failed to obtain CSRF token:', csrfError);
-          throw new Error('CSRF protection failed - request blocked');
-        }
-      }
+      // Note: CSRF protection disabled for GraphQL requests 
+      // AppSync handles authentication through Cognito userPool tokens
+      // Custom authToken field causes "Valid authorization header not provided" error
+      // if (authMode === 'userPool' && this.isStateMutationOperation(mutation)) {
+      //   try {
+      //     const csrfToken = await this.csrfService.getCsrfToken();
+      //     graphqlRequest.authToken = csrfToken; // This will be passed to the GraphQL context
+      //     console.debug('[ApiService] CSRF token added to mutation request');
+      //   } catch (csrfError) {
+      //     console.error('[ApiService] Failed to obtain CSRF token:', csrfError);
+      //     throw new Error('CSRF protection failed - request blocked');
+      //   }
+      // }
       
       return client.graphql(graphqlRequest) as Promise<GraphQLResult<T>>;
     } catch (error) {
-      // For mutations, be more selective about fallback - only for read-only operations
-      if (authMode === 'userPool' && this.isAuthError(error) && this.isReadOnlyMutation(mutation)) {
-        console.warn('[ApiService] userPool auth failed, falling back to apiKey for read-only mutation');
-        return this.mutate(mutation, variables, 'apiKey');
-      }
+      // No fallback - expose authentication errors directly  
       throw error;
     }
-  }
-
-  /**
-   * Check if an error is authentication-related
-   */
-  private isAuthError(error: any): boolean {
-    if (!error) return false;
-    
-    const errorString = String(error).toLowerCase();
-    const errorMessage = error?.message?.toLowerCase() || '';
-    
-    return (
-      errorString.includes('unauthorized') ||
-      errorString.includes('invalid authorization') ||
-      errorString.includes('access denied') ||
-      errorString.includes('authentication') ||
-      errorMessage.includes('unauthorized') ||
-      errorMessage.includes('invalid authorization') ||
-      errorMessage.includes('access denied') ||
-      error?.name === 'UnauthorizedException' ||
-      error?.code === 'UnauthorizedException'
-    );
   }
 
   /**
@@ -145,39 +117,5 @@ export abstract class ApiService {
     return stateMutationPatterns.some(pattern => 
       mutationLower.includes(pattern)
     );
-  }
-
-  /**
-   * Check if a mutation is read-only (safe to fallback to apiKey)
-   * Read-only mutations are typically queries disguised as mutations
-   */
-  private isReadOnlyMutation(mutation: string): boolean {
-    const mutationLower = mutation.toLowerCase();
-    
-    // List of read-only operation patterns that are safe to fallback
-    const readOnlyPatterns = [
-      'query',          // Some operations may be labeled as mutations but are actually queries
-      'get',            // Get operations
-      'fetch',          // Fetch operations  
-      'list',           // List operations
-      'search'          // Search operations
-    ];
-    
-    // Check if this mutation contains only read-only operation keywords
-    const hasWriteOperations = (
-      mutationLower.includes('create') ||
-      mutationLower.includes('update') || 
-      mutationLower.includes('delete') ||
-      mutationLower.includes('insert') ||
-      mutationLower.includes('modify') ||
-      mutationLower.includes('smsverification') // SMS verification requires userPool auth
-    );
-    
-    const hasReadOnlyPatterns = readOnlyPatterns.some(pattern => 
-      mutationLower.includes(pattern)
-    );
-    
-    // Only allow fallback if it has read-only patterns and no write operations
-    return hasReadOnlyPatterns && !hasWriteOperations;
   }
 }
