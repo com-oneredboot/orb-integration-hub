@@ -8,7 +8,7 @@ import { Location, CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import * as fromAuth from '../auth-flow/store/auth.selectors';
+import * as fromUser from '../../store/user.selectors';
 
 @Component({
   selector: 'app-this-is-not-the-page',
@@ -27,7 +27,7 @@ export class ThisIsNotThePageComponent {
     private store: Store
   ) {
     console.debug('ThisIsNotThePageComponent::constructor');
-    this.debugMode$ = this.store.select(fromAuth.selectDebugMode);
+    this.debugMode$ = this.store.select(fromUser.selectDebugMode);
     this.currentUrl = window.location.href;
     this.timestamp = new Date();
   }

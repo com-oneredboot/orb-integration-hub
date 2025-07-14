@@ -1,0 +1,173 @@
+<!-- Applications List Component Template -->
+<div class="orb-card">
+  
+  <!-- Header -->
+  <div class="orb-card__header">
+    <div class="orb-card__title-section">
+      <h2 class="orb-card__title">
+        <fa-icon icon="rocket" class="orb-card__icon"></fa-icon>
+        Applications
+      </h2>
+      <p class="orb-card__subtitle">
+        Manage your applications and environments
+      </p>
+    </div>
+    <div class="orb-card__header-actions">
+      <button class="orb-card-btn"
+              (click)="onCreateApplication()">
+        <fa-icon icon="plus" class="orb-card-btn__icon"></fa-icon>
+        Create Application
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="orb-filters">
+    <div class="orb-filters__group">
+      <label class="orb-filters__label">Search</label>
+      <div class="orb-filters__input-group">
+        <fa-icon icon="search" class="orb-filters__icon"></fa-icon>
+        <input 
+          type="text" 
+          class="orb-filters__input"
+          placeholder="Search applications..."
+          [(ngModel)]="searchTerm"
+          (input)="onSearchChange()">
+      </div>
+    </div>
+    
+    <div class="orb-filters__group">
+      <label class="orb-filters__label">Organization</label>
+      <select 
+        class="orb-filters__select"
+        [(ngModel)]="organizationFilter"
+        (change)="onFilterChange()">
+        <option value="">All Organizations</option>
+        <option value="Acme Corporation">Acme Corporation</option>
+        <option value="Beta Industries">Beta Industries</option>
+        <option value="Gamma Solutions">Gamma Solutions</option>
+      </select>
+    </div>
+
+    <div class="orb-filters__group">
+      <label class="orb-filters__label">Role</label>
+      <select 
+        class="orb-filters__select"
+        [(ngModel)]="roleFilter"
+        (change)="onFilterChange()">
+        <option value="">All Roles</option>
+        <option value="OWNER">Owner</option>
+        <option value="ADMINISTRATOR">Administrator</option>
+        <option value="DEVELOPER">Developer</option>
+        <option value="VIEWER">Viewer</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Applications Table -->
+  <div class="orb-card__content orb-card__content--table">
+    <div class="orb-table">
+      <div class="orb-table__container">
+        <table class="orb-table__element">
+        <thead>
+          <tr>
+            <th class="orb-table__header orb-table__header--select"></th>
+            <th class="orb-table__header">Application</th>
+            <th class="orb-table__header">Status</th>
+            <th class="orb-table__header">Organization</th>
+            <th class="orb-table__header">Environments</th>
+            <th class="orb-table__header">Role</th>
+            <th class="orb-table__header">Last Activity</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of filteredApplicationRows; trackBy: trackByApplicationId"
+              class="orb-table__row"
+              [class.orb-table__row--selected]="row.application.applicationId === selectedApplication?.applicationId">
+            
+            <!-- Radio Selection -->
+            <td class="orb-table__cell orb-table__cell--select">
+              <input 
+                type="radio" 
+                name="selectedApplication"
+                class="orb-table__radio"
+                [value]="row.application.applicationId"
+                [checked]="row.application.applicationId === selectedApplication?.applicationId"
+                (change)="onApplicationSelected(row.application)">
+            </td>
+            
+            <!-- Application Info -->
+            <td class="orb-table__cell">
+              <div class="orb-info">
+                <div class="orb-info__name">{{ row.application.name }}</div>
+                <div class="orb-info__id">{{ row.application.applicationId }}</div>
+              </div>
+            </td>
+            
+            <!-- Status -->
+            <td class="orb-table__cell">
+              <app-status-badge 
+                [status]="row.application.status || 'ACTIVE'" 
+                type="application"
+                [showIcon]="true"
+                [showLabel]="true"
+                size="small"
+                variant="chip">
+              </app-status-badge>
+            </td>
+            
+            <!-- Organization -->
+            <td class="orb-table__cell">
+              <span class="orb-info__name">{{ row.organizationName }}</span>
+            </td>
+            
+            <!-- Environment Count -->
+            <td class="orb-table__cell">
+              <div class="orb-count">
+                <fa-icon icon="server" class="orb-count__icon"></fa-icon>
+                {{ row.environmentCount }}
+              </div>
+            </td>
+            
+            <!-- Role -->
+            <td class="orb-table__cell">
+              <span class="orb-role-badge orb-role-badge--{{ getRoleClass(row.userRole) }}">
+                {{ row.userRole }}
+              </span>
+            </td>
+            
+            <!-- Last Activity -->
+            <td class="orb-table__cell">
+              <span class="orb-info__id">{{ row.lastActivity }}</span>
+            </td>
+            
+          </tr>
+          
+          <!-- Loading State -->
+          <tr *ngIf="isLoading" class="orb-table__row orb-table__row--loading">
+            <td colspan="6" class="orb-table__cell orb-table__cell--loading">
+              <div class="orb-table__loading">
+                <fa-icon icon="spinner" class="orb-table__loading-icon fa-spin"></fa-icon>
+                Loading applications...
+              </div>
+            </td>
+          </tr>
+          
+          <!-- Empty State -->
+          <tr *ngIf="!isLoading && filteredApplicationRows.length === 0" 
+              class="orb-table__row orb-table__row--empty">
+            <td colspan="6" class="orb-table__cell orb-table__cell--empty">
+              <div class="orb-table__empty">
+                <fa-icon icon="rocket" class="orb-table__empty-icon"></fa-icon>
+                <p class="orb-table__empty-text">
+                  {{ applicationRows.length === 0 ? 'No applications found' : 'No applications match your filters' }}
+                </p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  </div>
+</div>

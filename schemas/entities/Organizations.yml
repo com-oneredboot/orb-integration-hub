@@ -1,0 +1,85 @@
+# file: schemas/entities/Organizations.yml
+# author: AI Assistant  
+# date: 2025-06-22
+# description: Organizations table schema for multi-tenant organization management
+# Linked to CUSTOMER status users who have subscribed to the service
+
+type: lambda-secured
+version: '1.0'
+name: Organizations
+model:
+  authConfig:
+    cognitoAuthentication:
+      groups:
+        OWNER:
+          - '*'
+        EMPLOYEE:
+          - '*'
+        CUSTOMER:
+          - '*'
+  keys:
+    primary:
+      partition: organizationId
+      description: Primary key for organizations (unique for each organization)
+    secondary:
+      - name: OwnerIndex
+        type: GSI
+        partition: ownerId
+        sort: createdAt
+        projection_type: ALL
+        description: Index for querying organizations by owner with creation time ordering
+      - name: StatusCreatedIndex
+        type: GSI
+        partition: status
+        sort: createdAt
+        projection_type: ALL
+        description: Index for querying organizations by status with creation time ordering (admin operations)
+  attributes:
+    organizationId:
+      type: string
+      required: true
+      description: Unique identifier for the organization (primary key)
+    name:
+      type: string
+      required: true
+      description: Name of the organization (required field)
+    description:
+      type: string
+      required: false
+      description: Optional description of the organization
+    ownerId:
+      type: string
+      required: true
+      description: ID of the CUSTOMER user who owns the organization (foreign key to Users)
+    status:
+      type: string
+      required: true
+      enum_type: OrganizationStatus
+      enum_values:
+        - ACTIVE
+        - INACTIVE
+        - PENDING
+        - SUSPENDED
+        - DELETED
+        - UNKNOWN
+      description: Current status of the organization
+    createdAt:
+      type: timestamp
+      required: true
+      description: When the organization was created (on payment completion)
+    updatedAt:
+      type: timestamp
+      required: true
+      description: When the organization was last updated
+    kmsKeyId:
+      type: string
+      required: false
+      description: Organization-specific KMS key ID for encryption
+    kmsKeyArn:
+      type: string
+      required: false
+      description: Organization-specific KMS key ARN
+    kmsAlias:
+      type: string
+      required: false
+      description: Organization-specific KMS key alias name

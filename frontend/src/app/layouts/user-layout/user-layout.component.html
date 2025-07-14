@@ -12,6 +12,15 @@ description: HTML template file for user pages
       <ng-container *ngIf="isAuthenticated$ | async">
         <a routerLink="dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">Dashboard</a>
         <a routerLink="profile" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">Profile</a>
+        <!-- Customer tabs - Only show for CUSTOMER users -->
+        <a *ngIf="isCustomerUser$ | async" 
+           routerLink="customers/organizations" 
+           routerLinkActive="active" 
+           class="nav-link">Organizations</a>
+        <a *ngIf="isCustomerUser$ | async" 
+           routerLink="customers/applications" 
+           routerLinkActive="active" 
+           class="nav-link">Applications</a>
         <a (click)="signOut()" class="nav-link" style="cursor: pointer;">Sign Out</a>
       </ng-container>
       <ng-container *ngIf="!(isAuthenticated$ | async)">

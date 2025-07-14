@@ -8,10 +8,10 @@ import { ActionReducerMap } from '@ngrx/store';
 
 // Application Imports
 import {AppState} from "./app.state";
-import { authReducer } from "../features/user/components/auth-flow/store/auth.reducer";
 import { userReducer } from "../features/user/store/user.reducer";
 
+export { AppState } from "./app.state";
+
 export const reducers: ActionReducerMap<AppState> = {
-    authenticate: authReducer,
     user: userReducer
 };

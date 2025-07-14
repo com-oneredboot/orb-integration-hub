@@ -1,0 +1,262 @@
+<!-- Organization Detail Component Template -->
+<div class="organization-detail" *ngIf="organization; else emptyState">
+  
+  <!-- Header -->
+  <div class="organization-detail__header">
+    <div class="organization-detail__title-section">
+      <h3 class="organization-detail__title">
+        <fa-icon icon="building" class="organization-detail__icon"></fa-icon>
+        {{ organization.name || 'New Organization' }}
+      </h3>
+    </div>
+    <div class="organization-detail__actions">
+      <!-- Edit Mode Actions -->
+      <ng-container *ngIf="isEditing">
+        <button class="organization-detail__action organization-detail__action--primary"
+                [disabled]="isSaving$ | async"
+                (click)="onSaveOrganization()">
+          <fa-icon *ngIf="!(isSaving$ | async)" icon="save" class="organization-detail__action-icon"></fa-icon>
+          <fa-icon *ngIf="isSaving$ | async" icon="spinner" class="organization-detail__action-icon fa-spin"></fa-icon>
+          {{ (isSaving$ | async) ? 'Saving...' : 'Save' }}
+        </button>
+        <span class="organization-detail__action organization-detail__action--cancel-link"
+              style="color: white; text-decoration: underline; cursor: pointer;"
+              [style.opacity]="(isSaving$ | async) ? '0.5' : '1'"
+              [style.pointer-events]="(isSaving$ | async) ? 'none' : 'auto'"
+              (click)="onCancelEdit()">
+          Cancel
+        </span>
+      </ng-container>
+      
+      <!-- View Mode Actions -->
+      <ng-container *ngIf="!isEditing">
+        <button class="organization-detail__action organization-detail__action--primary"
+                (click)="onEditOrganization()">
+          <fa-icon icon="edit" class="organization-detail__action-icon"></fa-icon>
+          Edit
+        </button>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <div class="organization-detail__tabs">
+    <button class="organization-detail__tab" 
+            [class.organization-detail__tab--active]="activeTab === 'overview'"
+            (click)="setActiveTab('overview')">
+      <fa-icon icon="info-circle" class="organization-detail__tab-icon"></fa-icon>
+      Overview
+    </button>
+    <button class="organization-detail__tab"
+            [class.organization-detail__tab--active]="activeTab === 'security'"
+            (click)="setActiveTab('security')">
+      <fa-icon icon="shield-alt" class="organization-detail__tab-icon"></fa-icon>
+      Security
+    </button>
+    <button class="organization-detail__tab"
+            [class.organization-detail__tab--active]="activeTab === 'stats'"
+            (click)="setActiveTab('stats')">
+      <fa-icon icon="chart-bar" class="organization-detail__tab-icon"></fa-icon>
+      Stats
+    </button>
+    <button class="organization-detail__tab"
+            [class.organization-detail__tab--active]="activeTab === 'members'"
+            (click)="setActiveTab('members')">
+      <fa-icon icon="users" class="organization-detail__tab-icon"></fa-icon>
+      Members
+    </button>
+    <button class="organization-detail__tab"
+            [class.organization-detail__tab--active]="activeTab === 'danger'"
+            (click)="setActiveTab('danger')">
+      <fa-icon icon="exclamation-triangle" class="organization-detail__tab-icon"></fa-icon>
+      Danger Zone
+    </button>
+  </div>
+
+  <!-- Error Display -->
+  <div class="organization-detail__error-banner" *ngIf="saveError$ | async as saveError">
+    <fa-icon icon="exclamation-triangle" class="organization-detail__error-icon"></fa-icon>
+    <span class="organization-detail__error-text">{{ saveError }}</span>
+  </div>
+
+  <!-- Tab Content -->
+  <div class="organization-detail__content">
+    
+    <!-- Overview Tab -->
+    <div class="organization-detail__tab-panel" 
+         [class.organization-detail__tab-panel--active]="activeTab === 'overview'">
+      <div class="organization-detail__info-grid">
+        <!-- Organization Name (editable) -->
+        <div class="organization-detail__info-item">
+          <label class="organization-detail__info-label">
+            Organization Name *
+          </label>
+          <input type="text" 
+                 class="organization-detail__info-input"
+                 [class.organization-detail__info-input--error]="validationErrors.name"
+                 [(ngModel)]="editForm.name"
+                 [disabled]="!isEditing"
+                 placeholder="Enter organization name">
+          <div class="organization-detail__error" *ngIf="validationErrors.name">
+            {{ validationErrors.name }}
+          </div>
+        </div>
+        
+        <!-- Description (editable) -->
+        <div class="organization-detail__info-item">
+          <label class="organization-detail__info-label">Description</label>
+          <textarea class="organization-detail__info-input organization-detail__info-input--textarea"
+                    [(ngModel)]="editForm.description"
+                    [disabled]="!isEditing"
+                    maxlength="500"
+                    rows="3"
+                    placeholder="Enter organization description (optional)">
+          </textarea>
+          <div class="organization-detail__char-count" *ngIf="isEditing">
+            {{ editForm.description.length || 0 }}/500
+          </div>
+        </div>
+        
+        <!-- Organization ID (read-only) -->
+        <div class="organization-detail__info-item" *ngIf="!isInCreateMode">
+          <label class="organization-detail__info-label">Organization ID</label>
+          <input type="text" class="organization-detail__info-input organization-detail__info-input--code"
+                 [value]="organization.organizationId"
+                 disabled>
+        </div>
+        
+        <!-- Created (read-only) -->
+        <div class="organization-detail__info-item" *ngIf="!isInCreateMode">
+          <label class="organization-detail__info-label">Created</label>
+          <input type="text" class="organization-detail__info-input"
+                 [value]="formatDate(organization.createdAt)"
+                 disabled>
+        </div>
+        
+        <!-- Last Updated (read-only) -->
+        <div class="organization-detail__info-item" *ngIf="!isInCreateMode">
+          <label class="organization-detail__info-label">Last Updated</label>
+          <input type="text" class="organization-detail__info-input"
+                 [value]="formatDate(organization.updatedAt)"
+                 disabled>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Tab -->
+    <div class="organization-detail__tab-panel"
+         [class.organization-detail__tab-panel--active]="activeTab === 'security'">
+      <div class="organization-detail__info-grid">
+        <div class="organization-detail__info-item">
+          <label class="organization-detail__info-label">Encryption Key ID</label>
+          <input type="text" class="organization-detail__info-input organization-detail__info-input--code"
+                 [value]="organization.kmsKeyId"
+                 disabled>
+        </div>
+        <div class="organization-detail__info-item">
+          <label class="organization-detail__info-label">Key Alias</label>
+          <input type="text" class="organization-detail__info-input organization-detail__info-input--code"
+                 [value]="organization.kmsAlias"
+                 disabled>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Tab -->
+    <div class="organization-detail__tab-panel"
+         [class.organization-detail__tab-panel--active]="activeTab === 'stats'">
+      <div class="organization-detail__stats-grid">
+        <div class="organization-detail__stat-card">
+          <div class="organization-detail__stat-icon">
+            <fa-icon icon="users" class="organization-detail__stat-icon-element"></fa-icon>
+          </div>
+          <div class="organization-detail__stat-content">
+            <span class="organization-detail__stat-value">{{ memberCount || 0 }}</span>
+            <span class="organization-detail__stat-label">Members</span>
+          </div>
+        </div>
+        <div class="organization-detail__stat-card">
+          <div class="organization-detail__stat-icon">
+            <fa-icon icon="rocket" class="organization-detail__stat-icon-element"></fa-icon>
+          </div>
+          <div class="organization-detail__stat-content">
+            <span class="organization-detail__stat-value">{{ applicationCount || 0 }}</span>
+            <span class="organization-detail__stat-label">Applications</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Members Tab -->
+    <div class="organization-detail__tab-panel"
+         [class.organization-detail__tab-panel--active]="activeTab === 'members'">
+      <div class="organization-detail__placeholder">
+        <fa-icon icon="users" class="organization-detail__placeholder-icon"></fa-icon>
+        <p class="organization-detail__placeholder-text">
+          Member management features will be available here.
+        </p>
+        <ul class="organization-detail__placeholder-list">
+          <li>View organization members</li>
+          <li>Manage member roles and permissions</li>
+          <li>Invite new members</li>
+          <li>Remove members from organization</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Danger Zone Tab -->
+    <div class="organization-detail__tab-panel"
+         [class.organization-detail__tab-panel--active]="activeTab === 'danger'">
+      <div class="organization-detail__danger-zone">
+        <div class="organization-detail__danger-header">
+          <fa-icon icon="exclamation-triangle" class="organization-detail__danger-icon"></fa-icon>
+          <h4 class="organization-detail__danger-title">Danger Zone</h4>
+          <p class="organization-detail__danger-description">
+            These actions are permanent and cannot be undone. Please proceed with caution.
+          </p>
+        </div>
+        
+        <div class="organization-detail__danger-actions">
+          <div class="organization-detail__danger-action">
+            <div class="organization-detail__danger-action-info">
+              <h5 class="organization-detail__danger-action-title">Disable Organization</h5>
+              <p class="organization-detail__danger-action-description">
+                Temporarily disable this organization. Members will lose access but data is preserved.
+              </p>
+            </div>
+            <button class="organization-detail__danger-btn organization-detail__danger-btn--warning"
+                    (click)="onDisableOrganization()">
+              <fa-icon icon="exclamation-triangle" class="organization-detail__danger-btn-icon"></fa-icon>
+              Disable
+            </button>
+          </div>
+          
+          <div class="organization-detail__danger-action">
+            <div class="organization-detail__danger-action-info">
+              <h5 class="organization-detail__danger-action-title">Delete Organization</h5>
+              <p class="organization-detail__danger-action-description">
+                Permanently delete this organization and all associated data. This action cannot be undone.
+              </p>
+            </div>
+            <button class="organization-detail__danger-btn organization-detail__danger-btn--danger"
+                    (click)="onDeleteOrganization()">
+              <fa-icon icon="exclamation-triangle" class="organization-detail__danger-btn-icon"></fa-icon>
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Empty State -->
+<ng-template #emptyState>
+  <div class="orb-empty-state">
+    <div class="orb-empty-state__content">
+      <fa-icon icon="building" class="orb-empty-state__icon"></fa-icon>
+      <h3 class="orb-empty-state__title">No Organization Selected</h3>
+    </div>
+  </div>
+</ng-template>

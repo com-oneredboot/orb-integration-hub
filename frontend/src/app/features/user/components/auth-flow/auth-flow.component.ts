@@ -11,6 +11,7 @@ import {Store} from '@ngrx/store';
 import {map, Observable, Subject, take, takeUntil, tap, filter, firstValueFrom} from 'rxjs';
 import {Location} from '@angular/common';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer } from '@angular/platform-browser';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faExclamationTriangle, faRedo, faSync } from '@fortawesome/free-solid-svg-icons';
@@ -18,9 +19,9 @@ import { RouterModule } from '@angular/router';
 
 
 // App Imports
-import {AuthActions} from './store/auth.actions';
-import {AuthState, AuthSteps} from './store/auth.state';
-import * as fromAuth from './store/auth.selectors';
+import {UserActions} from '../../store/user.actions';
+import {UserState, AuthSteps} from '../../store/user.state';
+import * as fromUser from '../../store/user.selectors';
 import { UsersCreateInput } from "../../../../core/models/UsersModel";
 import {QRCodeToDataURLOptions} from "qrcode";
 import {UserService} from "../../../../core/services/user.service";
@@ -51,16 +52,16 @@ import { UserGroup } from "../../../../core/models/UserGroupEnum";
 export class AuthFlowComponent implements OnInit, OnDestroy {
 
   // Store Selectors
-  currentStep$: Observable<AuthSteps> = this.store.select(fromAuth.selectCurrentStep);
-  currentUser$: Observable<any> = this.store.select(fromAuth.selectCurrentUser);
-  isLoading$ = this.store.select(fromAuth.selectIsLoading);
-  error$ = this.store.select(fromAuth.selectError);
-  userExists$ = this.store.select(fromAuth.selectUserExists);
-  needsMFA$ = this.store.select(fromAuth.selectNeedsMfa);
-  mfaSetupDetails$ = this.store.select(fromAuth.selectMFADetails);
-  phoneVerified$ = this.store.select(fromAuth.selectPhoneVerified);
-  emailVerified$ = this.store.select(fromAuth.selectEmailVerified);
-  debugMode$ = this.store.select(fromAuth.selectDebugMode);
+  currentStep$: Observable<AuthSteps> = this.store.select(fromUser.selectCurrentStep);
+  currentUser$: Observable<any> = this.store.select(fromUser.selectCurrentUser);
+  isLoading$ = this.store.select(fromUser.selectIsLoading);
+  error$ = this.store.select(fromUser.selectError);
+  userExists$ = this.store.select(fromUser.selectUserExists);
+  needsMFA$ = this.store.select(fromUser.selectNeedsMfa);
+  mfaSetupDetails$ = this.store.select(fromUser.selectMFADetails);
+  phoneVerified$ = this.store.select(fromUser.selectPhoneVerified);
+  emailVerified$ = this.store.select(fromUser.selectEmailVerified);
+  debugMode$ = this.store.select(fromUser.selectDebugMode);
 
   // UI State
   buttonText$!: Observable<string>;
@@ -142,7 +143,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
-    private store: Store<{ auth: AuthState }>,
+    private store: Store<{ user: UserState }>,
     private router: Router,
     private route: ActivatedRoute,
     private location: Location,
@@ -152,7 +153,8 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     private csrfService: CsrfService,
     private rateLimitingService: RateLimitingService,
     private errorHandler: AppErrorHandlerService,
-    private secureIdService: SecureIdGenerationService
+    private secureIdService: SecureIdGenerationService,
+    private sanitizer: DomSanitizer
   ) {
 
     // Initialize the form with enhanced validation
@@ -161,36 +163,36 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         Validators.required,
         CustomValidators.email(),
         CustomValidators.noDisposableEmail(),
-        CustomValidators.noXSS()
+        CustomValidators.noXSS(this.sanitizer)
       ]],
       // Make other fields not required initially
       firstName: ['', [
         CustomValidators.validateName('First name'),
-        CustomValidators.noXSS()
+        CustomValidators.noXSS(this.sanitizer)
       ]],
       lastName: ['', [
         CustomValidators.validateName('Last name'),
-        CustomValidators.noXSS()
+        CustomValidators.noXSS(this.sanitizer)
       ]],
       phoneNumber: ['', [
         CustomValidators.phoneNumber(),
-        CustomValidators.noXSS()
+        CustomValidators.noXSS(this.sanitizer)
       ]],
       password: ['', [
         CustomValidators.password(),
-        CustomValidators.noXSS()
+        CustomValidators.noXSS(this.sanitizer)
       ]],
       emailCode: ['', [
         CustomValidators.verificationCode(),
-        CustomValidators.noXSS()
+        CustomValidators.noXSS(this.sanitizer)
       ]],
       mfaCode: ['', [
         CustomValidators.verificationCode(),
-        CustomValidators.noXSS()
+        CustomValidators.noXSS(this.sanitizer)
       ]],
       phoneCode: ['', [
         CustomValidators.verificationCode(),
-        CustomValidators.noXSS()
+        CustomValidators.noXSS(this.sanitizer)
       ]]
     });
 
@@ -369,11 +371,11 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   private async loadUserSessionAndDetermineStepSafely(): Promise<void> {
     try {
       // Check if user is already authenticated
-      const sessionActive = await this.store.select(fromAuth.selectSessionActive).pipe(take(1)).toPromise();
+      const sessionActive = await this.store.select(fromUser.selectSessionActive).pipe(take(1)).toPromise();
       
       if (sessionActive) {
         // User has active session, get current user data
-        const currentUser = await this.store.select(fromAuth.selectCurrentUser).pipe(take(1)).toPromise();
+        const currentUser = await this.store.select(fromUser.selectCurrentUser).pipe(take(1)).toPromise();
         
         if (currentUser?.email) {
           // Pre-populate email field
@@ -394,11 +396,11 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             nextStep = AuthSteps.MFA_SETUP;
           }
           
-          this.store.dispatch(AuthActions.setCurrentStep({ step: nextStep }));
+          this.store.dispatch(UserActions.setCurrentStep({ step: nextStep }));
         }
       } else {
         // No active session, start from email step
-        this.store.dispatch(AuthActions.setCurrentStep({ step: AuthSteps.EMAIL }));
+        this.store.dispatch(UserActions.setCurrentStep({ step: AuthSteps.EMAIL }));
       }
       
       console.debug('[AuthFlowComponent] User session loaded and step determined successfully');
@@ -412,7 +414,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       );
       
       // Fallback to email step
-      this.store.dispatch(AuthActions.setCurrentStep({ step: AuthSteps.EMAIL }));
+      this.store.dispatch(UserActions.setCurrentStep({ step: AuthSteps.EMAIL }));
       
       console.warn('[AuthFlowComponent] User session loading failed:', errorId);
     }
@@ -472,7 +474,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       if (this.stepHistory.length > 1) {
         this.isNavigatingBack = true;
         const previousStep = this.stepHistory[this.stepHistory.length - 2];
-        this.store.dispatch(AuthActions.setCurrentStep({ step: previousStep }));
+        this.store.dispatch(UserActions.setCurrentStep({ step: previousStep }));
         this.stepHistory.pop();
       }
     } catch (error) {
@@ -603,14 +605,14 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   private setupReactiveSubscriptionsSafely(): void {
     try {
       // Handle unauthenticated users
-      this.store.select(fromAuth.selectSessionActive)
+      this.store.select(fromUser.selectSessionActive)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (active) => {
             try {
               if (!active) {
                 // User is not authenticated, start from email step
-                this.store.dispatch(AuthActions.setCurrentStep({ step: AuthSteps.EMAIL }));
+                this.store.dispatch(UserActions.setCurrentStep({ step: AuthSteps.EMAIL }));
               }
             } catch (error) {
               this.errorHandler.captureAuthError('handleSessionActive', error, 'AuthFlowComponent');
@@ -769,7 +771,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     const csrfValid = await this.validateCsrfProtection();
     if (!csrfValid) {
       console.error('[AuthFlowComponent] Form submission blocked - CSRF validation failed');
-      this.store.dispatch(AuthActions.checkEmailFailure({ 
+      this.store.dispatch(UserActions.checkEmailFailure({ 
         error: this.csrfError || 'Security validation failed. Please refresh the page.' 
       }));
       return;
@@ -786,14 +788,14 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         const mfaCode = this.authForm.get('mfaCode')?.value;
         switch (step) {
           case AuthSteps.EMAIL:
-            this.store.dispatch(AuthActions.checkEmail({ email }));
+            this.store.dispatch(UserActions.checkEmail({ email }));
             break;
 
           case AuthSteps.PASSWORD:
             if (!password) {
               return;
             }
-            this.store.dispatch(AuthActions.verifyCognitoPassword({ email, password }));
+            this.store.dispatch(UserActions.verifyCognitoPassword({ email, password }));
             break;
 
           case AuthSteps.PASSWORD_SETUP:
@@ -808,7 +810,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             if (!emailCode) {
               return;
             }
-            this.store.dispatch(AuthActions.verifyEmail({
+            this.store.dispatch(UserActions.verifyEmail({
               code: emailCode,
               email: email
             }));
@@ -821,7 +823,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             if (!email) {
               return;
             }
-            this.store.dispatch(AuthActions.signIn({
+            this.store.dispatch(UserActions.signIn({
               email,
               password
             }));
@@ -832,7 +834,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             if (!setupPhoneNumber) {
               return;
             }
-            this.store.dispatch(AuthActions.setupPhone({ phoneNumber: setupPhoneNumber }));
+            this.store.dispatch(UserActions.setupPhone({ phoneNumber: setupPhoneNumber }));
             break;
 
           case AuthSteps.PHONE_VERIFY:
@@ -840,19 +842,19 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             if (!phoneCode) {
               return;
             }
-            this.store.dispatch(AuthActions.verifyPhone({ code: phoneCode }));
+            this.store.dispatch(UserActions.verifyPhone({ code: phoneCode }));
             break;
 
           case AuthSteps.MFA_SETUP:
             // First check Cognito MFA status to see if user record needs updating
-            this.store.dispatch(AuthActions.checkMFAStatus());
+            this.store.dispatch(UserActions.checkMFAStatus());
             break;
 
           case AuthSteps.MFA_VERIFY:
             if(!mfaCode) {
               return;
             }
-            this.store.dispatch(AuthActions.needsMFA( {code: mfaCode, rememberDevice: false}));
+            this.store.dispatch(UserActions.needsMFA( {code: mfaCode, rememberDevice: false}));
             break;
 
           default:
@@ -872,7 +874,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       console.error('[AuthFlowComponent] Form submission error:', errorId);
       
       // Show user-friendly error
-      this.store.dispatch(AuthActions.checkEmailFailure({ 
+      this.store.dispatch(UserActions.checkEmailFailure({ 
         error: 'An error occurred while processing your request. Please try again.' 
       }));
     }
@@ -1141,58 +1143,58 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           Validators.required,
           CustomValidators.email(),
           CustomValidators.noDisposableEmail(),
-          CustomValidators.noXSS()
+          CustomValidators.noXSS(this.sanitizer)
         ]);
         break;
       case AuthSteps.PASSWORD:
         passwordControl?.setValidators([
           Validators.required,
-          CustomValidators.noXSS()
+          CustomValidators.noXSS(this.sanitizer)
         ]);
         break;
       case AuthSteps.PASSWORD_SETUP:
         passwordControl?.setValidators([
           Validators.required,
           CustomValidators.password(),
-          CustomValidators.noXSS()
+          CustomValidators.noXSS(this.sanitizer)
         ]);
         firstNameControl?.setValidators([
           Validators.required,
           CustomValidators.validateName('First name'),
-          CustomValidators.noXSS()
+          CustomValidators.noXSS(this.sanitizer)
         ]);
         lastNameControl?.setValidators([
           Validators.required,
           CustomValidators.validateName('Last name'),
-          CustomValidators.noXSS()
+          CustomValidators.noXSS(this.sanitizer)
         ]);
         break;
       case AuthSteps.PHONE_SETUP:
         phoneNumberControl?.setValidators([
           Validators.required,
           CustomValidators.phoneNumber(),
-          CustomValidators.noXSS()
+          CustomValidators.noXSS(this.sanitizer)
         ]);
         break;
       case AuthSteps.PHONE_VERIFY:
         phoneCodeControl?.setValidators([
           Validators.required,
           CustomValidators.verificationCode(),
-          CustomValidators.noXSS()
+          CustomValidators.noXSS(this.sanitizer)
         ]);
         break;
       case AuthSteps.EMAIL_VERIFY:
         emailCodeControl?.setValidators([
           Validators.required,
           CustomValidators.verificationCode(),
-          CustomValidators.noXSS()
+          CustomValidators.noXSS(this.sanitizer)
         ]);
         break;
       case AuthSteps.MFA_VERIFY:
         mfaCodeControl?.setValidators([
           Validators.required,
           CustomValidators.verificationCode(),
-          CustomValidators.noXSS()
+          CustomValidators.noXSS(this.sanitizer)
         ]);
         break;
       case AuthSteps.MFA_SETUP:
@@ -1473,7 +1475,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       this.startRateLimitCountdown(delayMs);
       
       // Show error to user
-      this.store.dispatch(AuthActions.checkEmailFailure({ 
+      this.store.dispatch(UserActions.checkEmailFailure({ 
         error: this.rateLimitMessage 
       }));
       
@@ -1563,7 +1565,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         identifier: identifier.substring(0, 5) + '***', // Partial logging for privacy
         step,
         success,
-        attemptType: attemptType === 'password_verify' ? '***' : attemptType // Redact sensitive attempt types
+        attemptType
       });
     }
   }
@@ -1725,17 +1727,17 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         .pipe(take(1))
         .subscribe(user => {
           if (user?.phoneNumber) {
-            this.store.dispatch(AuthActions.setupPhone({ phoneNumber: user.phoneNumber }));
+            this.store.dispatch(UserActions.setupPhone({ phoneNumber: user.phoneNumber }));
           } else {
             // Display error
-            this.store.dispatch(AuthActions.setupPhoneFailure({
+            this.store.dispatch(UserActions.setupPhoneFailure({
               error: 'No phone number found. Please go back and enter your phone number.'
             }));
           }
         });
     } else {
       // Use the phone number from the form
-      this.store.dispatch(AuthActions.setupPhone({ phoneNumber }));
+      this.store.dispatch(UserActions.setupPhone({ phoneNumber }));
     }
   }
 
@@ -1826,7 +1828,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       if (signoutParam === 'true') {
         try {
           // Dispatch signout action to clear auth state
-          this.store.dispatch(AuthActions.signout());
+          this.store.dispatch(UserActions.signout());
           
           // Clear cognito session
           await this.cognitoService.signOut();
@@ -1850,14 +1852,14 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       if (isAuthenticated) {
         // Always load user profile data regardless of authentication
         // The effects will handle determining the next verification step
-        this.store.dispatch(AuthActions.refreshSession());
+        this.store.dispatch(UserActions.refreshSession());
         return;
       }
       
-      this.store.dispatch(AuthActions.setCurrentStep({ step: AuthSteps.EMAIL }));
+      this.store.dispatch(UserActions.setCurrentStep({ step: AuthSteps.EMAIL }));
     } catch (error) {
       // If there's an error checking the session, start with email step
-      this.store.dispatch(AuthActions.setCurrentStep({ step: AuthSteps.EMAIL }));
+      this.store.dispatch(UserActions.setCurrentStep({ step: AuthSteps.EMAIL }));
     }
   }
 
@@ -1869,7 +1871,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     window.addEventListener('popstate', (event) => {
       if (event.state && event.state.authStep) {
         this.isNavigatingBack = true;
-        this.store.dispatch(AuthActions.setCurrentStep({ step: event.state.authStep }));
+        this.store.dispatch(UserActions.setCurrentStep({ step: event.state.authStep }));
         
         // Reset flag after state change
         setTimeout(() => {
@@ -1899,7 +1901,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         // Clear any form errors before navigation
         this.clearFormErrors();
         
-        this.store.dispatch(AuthActions.setCurrentStep({ step: previousStep }));
+        this.store.dispatch(UserActions.setCurrentStep({ step: previousStep }));
         this.location.back();
         
         // Reset flag and update validators
@@ -1929,7 +1931,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       // Clear any form errors before navigation
       this.clearFormErrors();
       
-      this.store.dispatch(AuthActions.setCurrentStep({ step: targetStep }));
+      this.store.dispatch(UserActions.setCurrentStep({ step: targetStep }));
       
       // Reset flag and update validators
       setTimeout(() => {
@@ -1982,8 +1984,8 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     this.clearFormErrors();
     
     // Clear auth state and start from beginning
-    this.store.dispatch(AuthActions.signout());
-    this.store.dispatch(AuthActions.setCurrentStep({ step: AuthSteps.EMAIL }));
+    this.store.dispatch(UserActions.signout());
+    this.store.dispatch(UserActions.setCurrentStep({ step: AuthSteps.EMAIL }));
     
     // Update validators for the email step and ensure form is properly reset
     setTimeout(() => {
@@ -2352,7 +2354,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     
     // Small delay to show loading state
     setTimeout(() => {
-      this.store.dispatch(AuthActions.setCurrentStep({ step }));
+      this.store.dispatch(UserActions.setCurrentStep({ step }));
       this.hideStepTransition();
     }, 600);
   }
@@ -2735,7 +2737,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         this.isNavigatingBack = true;
         
         // Dispatch action to change step
-        this.store.dispatch(AuthActions.setCurrentStep({ step: previousStep }));
+        this.store.dispatch(UserActions.setCurrentStep({ step: previousStep }));
       }
     } catch (error) {
       this.errorHandler.captureError({
@@ -2772,6 +2774,52 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         operation: 'onErrorRetry',
         error
       });
+    }
+  }
+
+  /**
+   * Check if error message is a session refresh message
+   */
+  public isSessionRefreshMessage(error: string): boolean {
+    if (!error) return false;
+    const lowerError = error.toLowerCase();
+    return lowerError.includes('refreshing your session') || 
+           lowerError.includes('please wait while we sign you in');
+  }
+
+  /**
+   * Check if error message is actually a success message
+   */
+  public isSuccessMessage(error: string): boolean {
+    if (!error) return false;
+    const lowerError = error.toLowerCase();
+    return lowerError.includes('welcome back') || 
+           lowerError.includes('successfully signed in');
+  }
+
+  /**
+   * Get appropriate title for error display
+   */
+  public getErrorTitle(error: string): string {
+    if (this.isSessionRefreshMessage(error)) {
+      return 'Refreshing Session';
+    } else if (this.isSuccessMessage(error)) {
+      return 'Success';
+    } else {
+      return 'Authentication Error';
+    }
+  }
+
+  /**
+   * Get appropriate button text for error display
+   */
+  public getRetryButtonText(error: string): string {
+    if (this.isSessionRefreshMessage(error)) {
+      return 'Please Wait...';
+    } else if (this.isSuccessMessage(error)) {
+      return 'Continue';
+    } else {
+      return 'Try Again';
     }
   }
 
@@ -2878,7 +2926,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       });
 
       // Dispatch user creation action
-      this.store.dispatch(AuthActions.createUser({input: userInput, password: password}));
+      this.store.dispatch(UserActions.createUser({input: userInput, password: password}));
       
     } catch (error) {
       const errorId = this.errorHandler.captureSecurityError(
@@ -2891,7 +2939,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       console.error('[AuthFlowComponent] Secure user creation failed:', errorId);
       
       // Show user-friendly error
-      this.store.dispatch(AuthActions.createUserFailure({ 
+      this.store.dispatch(UserActions.createUserFailure({ 
         error: 'User registration failed due to security requirements. Please try again.' 
       }));
     }

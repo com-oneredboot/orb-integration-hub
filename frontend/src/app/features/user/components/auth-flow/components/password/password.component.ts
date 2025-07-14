@@ -10,9 +10,9 @@ import { Store } from '@ngrx/store';
 import { Observable, Subject, takeUntil } from 'rxjs';
 
 // App Imports
-import { AuthActions } from '../../store/auth.actions';
-import { AuthState } from '../../store/auth.state';
-import * as fromAuth from '../../store/auth.selectors';
+import { AuthActions } from '../.../../store/user.actions';
+import { AuthState } from '../.../../store/user.state';
+import * as fromAuth from '../.../../store/user.selectors';
 
 @Component({
   selector: 'app-password',

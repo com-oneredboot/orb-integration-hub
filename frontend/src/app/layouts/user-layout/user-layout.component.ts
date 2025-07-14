@@ -8,8 +8,9 @@ import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { CognitoService } from '../../core/services/cognito.service';
-import { AuthActions } from '../../features/user/components/auth-flow/store/auth.actions';
-import { selectIsAuthenticated } from '../../features/user/components/auth-flow/store/auth.selectors';
+import { UserActions } from '../../features/user/store/user.actions';
+import { selectIsAuthenticated, selectCurrentUser } from '../../features/user/store/user.selectors';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-user-layout',
@@ -20,6 +21,9 @@ import { selectIsAuthenticated } from '../../features/user/components/auth-flow/
 })
 export class UserLayoutComponent implements OnInit {
   isAuthenticated$ = this.store.select(selectIsAuthenticated);
+  isCustomerUser$ = this.store.select(selectCurrentUser).pipe(
+    map(user => user?.groups?.includes('CUSTOMER') || false)
+  );
 
   constructor(
     private authService: CognitoService,
@@ -29,11 +33,11 @@ export class UserLayoutComponent implements OnInit {
 
   ngOnInit(): void {
     // Dispatch refresh session to ensure user data is loaded
-    this.store.dispatch(AuthActions.refreshSession());
+    this.store.dispatch(UserActions.refreshSession());
   }
 
   signOut(): void {
     // Use NgRx action - navigation will be handled by the effect
-    this.store.dispatch(AuthActions.signout());
+    this.store.dispatch(UserActions.signout());
   }
 } 

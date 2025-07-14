@@ -1,0 +1,69 @@
+# Task ID: 1
+# Title: Setup AWS Cognito User Pool
+# Status: in-progress
+# Dependencies: None
+# Priority: high
+# Description: Configure AWS Cognito User Pool as the centralized authentication service for the Orb Integration Hub, with custom Angular UI for authentication flows.
+# Details:
+Create and configure an AWS Cognito User Pool with the following settings:
+- Enable self-service sign-up
+- Configure password policies according to security requirements
+- Set up required attributes (email, name)
+- Configure MFA options (SMS, TOTP)
+- Set up email verification
+- Create app clients for different application integrations
+- Set up identity providers if needed (social logins)
+
+Implementation steps:
+1. Use AWS SDK or CloudFormation to create the User Pool
+2. Configure all required settings programmatically
+3. Store User Pool ID and App Client IDs in AWS Secrets Manager
+4. Document the User Pool configuration for reference
+5. Ensure Cognito configuration supports the custom Angular UI authentication flows
+6. Verify that backend APIs properly integrate with Cognito for custom auth flows
+7. Configure Cognito to work with the custom auth-flow.component that handles account creation, email verification, phone verification, and MFA setup
+8. Document the custom user journey and authentication flow
+
+# Test Strategy:
+1. Unit tests for User Pool creation and configuration code
+2. Integration tests to verify User Pool settings
+3. Manual verification of User Pool configuration in AWS Console
+4. Test user registration, login, and MFA flows using the custom Angular UI
+5. Verify password policies and attribute validation
+6. Test email verification process through custom UI
+7. Verify that custom UI flows correctly interact with Cognito User Pool
+8. End-to-end testing of the complete user journey through the custom auth-flow.component
+9. Verify that security requirements are properly enforced in both UI and backend
+10. Test that user attributes and MFA settings are correctly synchronized between UI and Cognito
+
+# Subtasks:
+## 1.1. Create CloudFormation template for Cognito User Pool [done]
+### Dependencies: None
+### Description: Develop CloudFormation template to provision and configure the Cognito User Pool with all required settings
+### Details:
+
+
+## 1.2. Implement backend APIs for custom authentication flows [done]
+### Dependencies: None
+### Description: Create backend endpoints that interface with Cognito for custom authentication flows including signup, verification, and MFA setup
+### Details:
+
+
+## 1.3. Verify auth-flow.component integration [to-do]
+### Dependencies: None
+### Description: Ensure the custom Angular auth-flow.component correctly interfaces with Cognito for all authentication steps
+### Details:
+
+
+## 1.4. Document custom authentication flows [to-do]
+### Dependencies: None
+### Description: Create comprehensive documentation of the custom user journey and how it interacts with Cognito User Pool
+### Details:
+
+
+## 1.5. Configure Cognito User Groups [to-do]
+### Dependencies: None
+### Description: Set up appropriate user groups in Cognito to support authorization requirements
+### Details:
+
+

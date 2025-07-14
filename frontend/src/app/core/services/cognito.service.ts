@@ -120,59 +120,83 @@ export class CognitoService {
    * @param email (optional) User's email for better MFA labeling
    */
   public async signIn(username: string, password: string, email?: string): Promise<AuthResponse> {
-    console.debug('[CognitoService] Starting sign in process');
-    const signInResponse = await signIn({ username, password });
+    try {
+      console.debug('[CognitoService] Starting sign in process');
+      const signInResponse = await signIn({ username, password });
 
-    if (signInResponse.isSignedIn) {
-      console.debug('[CognitoService] Sign in successful');
-      return {
-        StatusCode: 200,
-        Message: 'Sign in successful',
-        Data: new Auth({ isSignedIn: true })
-      };
-    }
-
-    const nextStep = signInResponse.nextStep;
-    console.debug('[CognitoService] Processing sign in next step');
-
-    switch(nextStep.signInStep) {
-      case 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP':
-        const totpSetupDetails = nextStep.totpSetupDetails;
-        // Use the custom issuer format with email if available
-        const issuer = email ? `${appName}:${email}` : appName;
-        const setupUri = totpSetupDetails.getSetupUri(issuer);
-        this.mfaSetupRequiredSubject.next(true);
+      if (signInResponse.isSignedIn) {
+        console.debug('[CognitoService] Sign in successful');
         return {
           StatusCode: 200,
-          Message: 'MFA setup required',
-          Data: new Auth(
-            { 
-              isSignedIn: false,
-              needsMFASetup: true,
-              mfaType: 'totp',
-              mfaSetupDetails: new MfaSetupDetails({ 
-                qrCode: email || username,
-                secretKey: nextStep.totpSetupDetails?.sharedSecret,
-                setupUri: setupUri.toString()
+          Message: 'Sign in successful',
+          Data: new Auth({ isSignedIn: true })
+        };
+      }
+
+      const nextStep = signInResponse.nextStep;
+      console.debug('[CognitoService] Processing sign in next step');
+
+      switch(nextStep.signInStep) {
+        case 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP':
+          const totpSetupDetails = nextStep.totpSetupDetails;
+          // Use the custom issuer format with email if available
+          const issuer = email ? `${appName}:${email}` : appName;
+          const setupUri = totpSetupDetails.getSetupUri(issuer);
+          this.mfaSetupRequiredSubject.next(true);
+          return {
+            StatusCode: 200,
+            Message: 'MFA setup required',
+            Data: new Auth(
+              { 
+                isSignedIn: false,
+                needsMFASetup: true,
+                mfaType: 'totp',
+                mfaSetupDetails: new MfaSetupDetails({ 
+                  qrCode: email || username,
+                  secretKey: nextStep.totpSetupDetails?.sharedSecret,
+                  setupUri: setupUri.toString()
+                })
               })
-            })
-        };
+          };
 
-      case 'CONFIRM_SIGN_IN_WITH_TOTP_CODE':
-        this.mfaSetupRequiredSubject.next(true);
+        case 'CONFIRM_SIGN_IN_WITH_TOTP_CODE':
+          this.mfaSetupRequiredSubject.next(true);
+          return {
+            StatusCode: 200,
+            Message: 'MFA setup not required',
+            Data: new Auth({ isSignedIn: false, needsMFASetup: false, needsMFA: true, mfaType: 'totp' })
+          };
+        default:
+          console.error('[CognitoService] Sign in failed - unexpected response type');
+      }
+
+      return {
+        StatusCode: 401,
+        Message: 'Sign in failed',
+        Data: new Auth({ isSignedIn: false })
+      }
+
+    } catch (error) {
+      console.error('[CognitoService] Sign in error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Sign in failed';
+      
+      // Check for "already signed in" or related error messages
+      if (errorMessage.toLowerCase().includes('already signed in') || 
+          errorMessage.toLowerCase().includes('already authenticated') ||
+          errorMessage.toLowerCase().includes('user already exists')) {
         return {
-          StatusCode: 200,
-          Message: 'MFA setup not required',
-          Data: new Auth({ isSignedIn: false, needsMFASetup: false, needsMFA: true, mfaType: 'totp' })
+          StatusCode: 401,
+          Message: errorMessage,
+          Data: new Auth({ isSignedIn: false, message: errorMessage })
         };
-      default:
-        console.error('[CognitoService] Sign in failed - unexpected response type');
-    }
+      }
 
-    return {
-      StatusCode: 401,
-      Message: 'Sign in failed',
-      Data: new Auth({ isSignedIn: false })
+      // Handle other authentication errors
+      return {
+        StatusCode: 500,
+        Message: errorMessage,
+        Data: new Auth({ isSignedIn: false, message: errorMessage })
+      };
     }
   }
 
@@ -277,6 +301,17 @@ export class CognitoService {
       const userGroupsRaw = session.tokens.idToken.payload['cognito:groups'];
       const userGroups = Array.isArray(userGroupsRaw) ? userGroupsRaw : [];
       const hasBasicAccess = userGroups.includes('USER') || userGroups.includes('OWNER');
+      
+      console.debug('[CognitoService] Token analysis:', {
+        userGroups: userGroups,
+        userGroupsRaw: userGroupsRaw,
+        hasBasicAccess,
+        tokenAud: session.tokens.idToken.payload.aud,
+        tokenIss: session.tokens.idToken.payload.iss,
+        tokenSub: session.tokens.idToken.payload.sub,
+        tokenExp: session.tokens.idToken.payload.exp,
+        currentTime: Math.floor(Date.now() / 1000)
+      });
       
       if (!hasBasicAccess) {
         console.debug('[CognitoService] User lacks required groups for app access');

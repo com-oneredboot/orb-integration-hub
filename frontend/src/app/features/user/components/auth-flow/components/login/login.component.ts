@@ -9,8 +9,8 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 
 // App Imports
-import { AuthActions } from '../../store/auth.actions';
-import { AuthState } from '../../store/auth.state';
+import { AuthActions } from '../.../../store/user.actions';
+import { AuthState } from '../.../../store/user.state';
 
 @Component({
   selector: 'app-login',

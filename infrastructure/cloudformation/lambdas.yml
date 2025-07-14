@@ -30,7 +30,7 @@ Parameters:
     Default: integration-hub
     Type: String
   Runtime:
-    Default: python3.13
+    Default: python3.12
     Type: String
   SystemLoggingLevel:
     Default: WARN
@@ -97,9 +97,13 @@ Resources:
                   - dynamodb:PutItem
                   - dynamodb:GetItem
                   - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
                 Resource:
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-table-arn}}'
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit-table-arn}}'
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-organizations-table-arn}}'
         - PolicyName: DynamoDBStreamAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -191,6 +195,30 @@ Resources:
                 Action:
                   - lambda:GetEventSourceMapping
                 Resource: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:event-source-mapping:*"
+        - PolicyName: KMSAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kms:CreateKey
+                  - kms:CreateAlias
+                  - kms:DeleteAlias
+                  - kms:DescribeKey
+                  - kms:Encrypt
+                  - kms:Decrypt
+                  - kms:GenerateDataKey
+                  - kms:GenerateDataKeyWithoutPlaintext
+                  - kms:ReEncryptFrom
+                  - kms:ReEncryptTo
+                  - kms:ScheduleKeyDeletion
+                  - kms:CancelKeyDeletion
+                  - kms:GetKeyPolicy
+                  - kms:PutKeyPolicy
+                  - kms:TagResource
+                  - kms:UntagResource
+                  - kms:ListResourceTags
+                Resource: "*"
   # IAM Policies
   # CloudWatchLoggingPolicy: Allows logging to CloudWatch for monitoring and debugging.
   CloudWatchLoggingPolicy:
@@ -298,6 +326,22 @@ Resources:
             BatchSize: 10
             MaximumBatchingWindowInSeconds: 5
 
+  # Organizations Lambda
+  OrganizationsLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${CustomerId}-${ProjectId}-${Environment}-organizations"
+      Description: "Lambda function to handle organizations CRUD operations"
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      CodeUri: ../../backend/src/lambdas/organizations/
+      Layers:
+        - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-organizations-security-layer-arn}}'
+      Environment:
+        Variables:
+          ORGANIZATIONS_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-organizations-table-name}}'
+          USER_POOL_ID: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-cognito-user-pool-id}}'
+
   # SSM Parameters
 
   # Parameter Store for the Cognito Group Manager Lambda ARN
@@ -323,6 +367,14 @@ Resources:
       Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-user-status-calculator-lambda-arn"
       Type: String
       Value: !GetAtt UserStatusCalculatorLambda.Arn
+
+  # Parameter Store for the Organizations Lambda ARN
+  OrganizationsLambdaArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-organizations-lambda-arn"
+      Type: String
+      Value: !GetAtt OrganizationsLambda.Arn
 
   # Paramter Store for the SMS Origination Number
   SMSOriginationNumberParemeter:

@@ -9,28 +9,12 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { IUsers } from '../../../../core/models/UsersModel';
-import * as fromAuth from '../../components/auth-flow/store/auth.selectors';
-import { AuthActions } from '../../components/auth-flow/store/auth.actions';
+import * as fromUser from '../../store/user.selectors';
+import { UserActions } from '../../store/user.actions';
 import { UserService } from '../../../../core/services/user.service';
 import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { RouterModule } from '@angular/router';
-import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
-import { 
-  faUser, 
-  faBolt, 
-  faHeartbeat, 
-  faHistory, 
-  faUserEdit, 
-  faShieldAlt, 
-  faCreditCard, 
-  faCog, 
-  faCheckCircle, 
-  faClock, 
-  faExclamationTriangle, 
-  faInfoCircle,
-  faArrowRight
-} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-dashboard',
@@ -53,30 +37,12 @@ export class DashboardComponent implements OnInit {
   constructor(
     private store: Store,
     private userService: UserService,
-    private library: FaIconLibrary,
     private router: Router
   ) {
-    this.currentUser$ = this.store.select(fromAuth.selectCurrentUser);
-    this.debugMode$ = this.store.select(fromAuth.selectDebugMode);
-    this.isLoading$ = this.store.select(fromAuth.selectIsLoading);
+    this.currentUser$ = this.store.select(fromUser.selectCurrentUser);
+    this.debugMode$ = this.store.select(fromUser.selectDebugMode);
+    this.isLoading$ = this.store.select(fromUser.selectIsLoading);
     this.isNotLoading$ = this.isLoading$.pipe(map(loading => !loading));
-    
-    // Add FontAwesome icons to library
-    this.library.addIcons(
-      faUser, 
-      faBolt, 
-      faHeartbeat, 
-      faHistory, 
-      faUserEdit, 
-      faShieldAlt, 
-      faCreditCard, 
-      faCog, 
-      faCheckCircle, 
-      faClock, 
-      faExclamationTriangle, 
-      faInfoCircle,
-      faArrowRight
-    );
   }
   
   /**
@@ -92,24 +58,7 @@ export class DashboardComponent implements OnInit {
     // Additional initialization if needed
   }
 
-  /**
-   * Get CSS class for user status badge
-   * @param status The user status
-   * @returns CSS class name
-   */
-  getStatusClass(status: string): string {
-    switch (status?.toLowerCase()) {
-      case 'active':
-        return 'success';
-      case 'pending':
-        return 'warning';
-      case 'suspended':
-      case 'inactive':
-        return 'error';
-      default:
-        return 'default';
-    }
-  }
+  // Status handling now uses global StatusBadgeComponent
 
   /**
    * Format date string for display
@@ -148,6 +97,15 @@ export class DashboardComponent implements OnInit {
   }
 
   /**
+   * Check if user is a CUSTOMER user (should see organizations features)
+   * @param user The user object
+   * @returns true if user has CUSTOMER group membership
+   */
+  isCustomerUser(user: any): boolean {
+    return user?.groups?.includes('CUSTOMER') || false;
+  }
+
+  /**
    * Navigate to email verification in auth flow
    */
   goToEmailVerification(): void {
@@ -172,7 +130,7 @@ export class DashboardComponent implements OnInit {
     this.isLoading$.subscribe(isLoading => {
       if (!isLoading) {
         console.log('[Dashboard] Triggering MFA check...');
-        this.store.dispatch(AuthActions.checkMFASetup());
+        this.store.dispatch(UserActions.checkMFASetup());
       }
     }).unsubscribe();
   }
@@ -182,7 +140,7 @@ export class DashboardComponent implements OnInit {
    */
   goToSecuritySettings(): void {
     // Use the new explicit MFA setup flow action to avoid redirect loops
-    this.store.dispatch(AuthActions.beginMFASetupFlow());
+    this.store.dispatch(UserActions.beginMFASetupFlow());
     this.router.navigate(['/authenticate']);
   }
 
@@ -202,5 +160,59 @@ export class DashboardComponent implements OnInit {
     
     // Return true if ANY requirement is not met
     return !hasValidName || !emailVerified || !phoneVerified || !mfaComplete;
+  }
+
+  /**
+   * Get status class for header badge styling
+   * @param status The user status
+   * @returns CSS class name for status
+   */
+  getStatusClass(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'active':
+        return 'active';
+      case 'pending':
+        return 'pending';
+      case 'suspended':
+        return 'suspended';
+      default:
+        return 'unknown';
+    }
+  }
+
+  /**
+   * Get status icon for header badge
+   * @param status The user status
+   * @returns Font Awesome icon name
+   */
+  getStatusIcon(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'active':
+        return 'check-circle';
+      case 'pending':
+        return 'clock';
+      case 'suspended':
+        return 'ban';
+      default:
+        return 'question-circle';
+    }
+  }
+
+  /**
+   * Get status label for header badge
+   * @param status The user status
+   * @returns Human readable status label
+   */
+  getStatusLabel(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'active':
+        return 'Account Active';
+      case 'pending':
+        return 'Account Pending';
+      case 'suspended':
+        return 'Account Suspended';
+      default:
+        return 'Account Status Unknown';
+    }
   }
 }

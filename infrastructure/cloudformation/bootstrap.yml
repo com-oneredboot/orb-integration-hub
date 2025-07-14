@@ -147,6 +147,12 @@ Resources:
               - cloudwatch:DescribeAlarms
               - cloudwatch:PutMetricAlarm
               - cloudwatch:UpdateAlarms
+              - cloudwatch:PutAnomalyDetector
+              - cloudwatch:DeleteAnomalyDetector
+              - cloudwatch:DescribeAnomalyDetectors
+              - logs:PutMetricFilter
+              - logs:DeleteMetricFilter
+              - logs:DescribeMetricFilters
             Resource: "*"
           - Effect: Allow
             Action:
@@ -188,6 +194,25 @@ Resources:
               - cloudfront:*
               - route53:*
               - ssm:*
+              - guardduty:CreateDetector
+              - guardduty:DeleteDetector
+              - guardduty:GetDetector
+              - guardduty:UpdateDetector
+              - guardduty:ListDetectors
+              - guardduty:TagResource
+              - guardduty:UntagResource
+              - kms:CreateKey
+              - kms:DeleteKey
+              - kms:DescribeKey
+              - kms:GetKeyPolicy
+              - kms:PutKeyPolicy
+              - kms:EnableKeyRotation
+              - kms:CreateAlias
+              - kms:DeleteAlias
+              - kms:TagResource
+              - kms:UntagResource
+              - kms:ScheduleKeyDeletion
+              - kms:CancelKeyDeletion
             Resource: "*"
           - Effect: Allow
             Action:
@@ -350,6 +375,12 @@ Resources:
               - "logs:CreateLogGroup"
               - "logs:CreateLogStream"
               - "logs:PutLogEvents"
+              - "logs:DeleteLogGroup"
+              - "logs:DeleteLogStream"
+              - "logs:DescribeLogGroups"
+              - "logs:DescribeLogStreams"
+              - "logs:PutRetentionPolicy"
+              - "logs:DeleteRetentionPolicy"
             Resource:
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${CustomerId}-${ProjectId}-${Environment}-*"
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${CustomerId}-${ProjectId}-${Environment}-*:log-stream:*"
@@ -357,6 +388,8 @@ Resources:
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${CustomerId}-${ProjectId}-*-${Environment}-*:log-stream:*"
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/appsync/apis/${CustomerId}-${ProjectId}-${Environment}-*"
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/appsync/apis/${CustomerId}-${ProjectId}-${Environment}-*:log-stream:*"
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/audit/${Environment}"
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/audit/${Environment}:log-stream:*"
     Type: AWS::IAM::ManagedPolicy
   CloudWatchLoggingPolicyArnParameter:
     Properties:

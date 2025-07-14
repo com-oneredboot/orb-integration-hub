@@ -1,5 +1,6 @@
 @use 'variables' as v;
 @use 'mixins' as m;
+@use 'components';
 
 // Global styles
 :root {
@@ -59,4 +60,46 @@ h1, h2, h3, h4, h5, h6 {
   margin-top: 0;
 }
 
+// Global radio button styling using red color scheme
+input[type="radio"] {
+  accent-color: v.$orb-red;
+  
+  // Custom radio styling for browsers that don't support accent-color
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid v.$orb-light-gray;
+  border-radius: 50%;
+  position: relative;
+  background: v.$orb-white;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  
+  &:checked {
+    border-color: v.$orb-red;
+    background: v.$orb-white;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: v.$orb-red;
+    }
+  }
+  
+  &:focus {
+    outline: 2px solid rgba(227, 24, 55, 0.2); // Using orb-red with transparency
+    outline-offset: 2px;
+  }
+  
+  &:hover {
+    border-color: v.$orb-red;
+  }
+}
 // Add any additional global styles here 

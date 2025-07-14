@@ -1,0 +1,38 @@
+# Task ID: 15
+# Title: Implement Schema-Driven Code Generation
+# Status: pending
+# Dependencies: 3
+# Priority: medium
+# Description: Create a schema-driven code generation system to automatically generate backend and frontend models from YAML schemas.
+# Details:
+Develop a comprehensive code generation system:
+1. Define schema format and validation rules
+2. Create parsers for YAML schema files
+3. Implement code generators for different languages and frameworks
+4. Add template customization options
+5. Create build pipeline integration
+
+Implementation details:
+- Generate Python models for backend
+- Generate TypeScript interfaces for frontend
+- Create GraphQL schema generation
+- Implement database schema generation
+- Add validation code generation
+- Create documentation generation
+
+Code generation targets:
+- Data models and interfaces
+- API clients and services
+- Form validation rules
+- Database access objects
+- Mock data generators
+- Test fixtures and utilities
+
+# Test Strategy:
+1. Unit tests for schema parsing
+2. Integration tests for code generation
+3. Validation tests for generated code
+4. Compilation tests for generated code
+5. Performance tests for large schemas
+6. Regression tests for schema changes
+7. End-to-end tests with generated code

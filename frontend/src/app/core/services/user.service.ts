@@ -26,7 +26,7 @@ import { CognitoService } from "./cognito.service";
 import { SecureIdGenerationService } from "./secure-id-generation.service";
 import { Auth, AuthResponse } from "../models/AuthModel";
 import { SmsVerificationResponse } from "../models/SmsVerificationModel";
-import { AuthActions } from '../../features/user/components/auth-flow/store/auth.actions';
+import { UserActions } from '../../features/user/store/user.actions';
 
 @Injectable({
   providedIn: 'root'
@@ -52,7 +52,7 @@ export class UserService extends ApiService {
     this.cognitoService.currentUser.subscribe(user => {
       if (user) {
         this.currentUser.next(user);
-        this.store.dispatch(AuthActions.signInSuccess({ user, message: 'User found' }));
+        this.store.dispatch(UserActions.signInSuccess({ user, message: 'User found' }));
       }
     });
   }
@@ -157,7 +157,7 @@ export class UserService extends ApiService {
           'userPool'
         ) as any;
       } catch (userPoolError) {
-        console.debug('userExists: userPool auth failed, trying apiKey', userPoolError);
+        console.warn('userExists: userPool auth failed, trying apiKey. Full error:', userPoolError);
         // Fallback to apiKey authentication
         response = await this.query(
           query,
@@ -472,30 +472,48 @@ export class UserService extends ApiService {
 
       if (userSignInResponse.StatusCode === 401 &&
         userSignInResponse.Message?.toLowerCase().includes('already signed in')) {
-        console.debug('User is already signed in, checking authentication status');
-        const isAuth = await this.cognitoService.checkIsAuthenticated();
+        console.debug('User is already signed in, initiating cleanup and sign out process');
         
-        if (isAuth) {
-          // User is authenticated, dispatch success and redirect will be handled by auth component
-          this.store.dispatch(AuthActions.signInSuccess({ user: user, message: 'User already signed in' }));
-          this.currentUser.next(user);
+        // Show helpful message to user about cleaning up sessions
+        this.store.dispatch(UserActions.signInFailure({ 
+          error: 'Refreshing your session... Please wait while we sign you in.'
+        }));
+        
+        try {
+          // Sign out the existing user
+          await this.cognitoService.signOut();
+          console.debug('Successfully signed out existing user');
+          
+          // Small delay to let the user see the cleanup message
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          // Try signing in again
+          const retrySignInResponse = await this.cognitoService.signIn(user.cognitoId, password, user.email);
+          
+          if (retrySignInResponse.StatusCode === 200) {
+            this.store.dispatch(UserActions.signInSuccess({ user: user, message: 'Welcome back! Successfully signed in.' }));
+            this.currentUser.next(user);
+            return {
+              StatusCode: 200,
+              Message: 'Welcome back! Successfully signed in.',
+              Data: new Auth({ isSignedIn: true, message: 'Welcome back! Successfully signed in.', user: user })
+            };
+          } else {
+            return retrySignInResponse;
+          }
+        } catch (signOutError) {
+          console.error('Error during sign out and retry:', signOutError);
           return {
-            StatusCode: 200,
-            Message: 'User already signed in',
-            Data: new Auth({ isSignedIn: true, message: 'User already signed in', user: user })
+            StatusCode: 500,
+            Message: 'Session refresh failed. Please refresh the page and try signing in again.',
+            Data: new Auth({ isSignedIn: false, message: 'Session refresh failed. Please refresh the page and try signing in again.' })
           };
         }
-        
-        return {
-          StatusCode: 500,
-          Message: 'Error signing in: There is already a signed in user.',
-          Data: new Auth({ isSignedIn: false, message: 'Error signing in: There is already a signed in user.' })
-        };
       }
 
       // Only dispatch signInSuccess if authentication is successful
       if (userSignInResponse.StatusCode === 200) {
-        this.store.dispatch(AuthActions.signInSuccess({ user: user, message: 'User found' }));
+        this.store.dispatch(UserActions.signInSuccess({ user: user, message: 'User found' }));
         this.currentUser.next(user);
       }
 
@@ -506,44 +524,55 @@ export class UserService extends ApiService {
       console.warn('Sign in error:', error_message);
 
       if (error_message.toLowerCase().includes('already signed in')) {
-        console.debug('Caught already signed in error, checking authentication status');
-        const isAuth = await this.cognitoService.checkIsAuthenticated();
+        console.debug('Caught already signed in error, initiating cleanup and sign out process');
         
-        if (isAuth) {
-          // Try to get user profile and dispatch success
-          const profile = await this.cognitoService.getCognitoProfile();
-          if (profile) {
-            // Create a user object from the profile for consistency
-            const userFromProfile = new Users({
-              userId: profile.sub,
-              cognitoId: profile.username,
-              email: profile.email || '',
-              firstName: profile.given_name || '',
-              lastName: profile.family_name || '',
-              phoneNumber: profile.phone_number || '',
-              groups: profile.groups || [],
-              status: UserStatus.PENDING,
-              phoneVerified: profile.phone_number_verified === 'true',
-              emailVerified: profile.email_verified === 'true',
-              createdAt: '',
-              updatedAt: ''
-            });
+        // Show helpful message to user about cleaning up sessions
+        this.store.dispatch(UserActions.signInFailure({ 
+          error: 'Cleaning up existing sessions and signing you out... Please wait.'
+        }));
+        
+        try {
+          // Sign out the existing user
+          await this.cognitoService.signOut();
+          console.debug('Successfully signed out existing user');
+          
+          // Small delay to let the user see the cleanup message
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          // Get the user data from the earlier query to retry sign in
+          const userResult = await this.userQueryByEmail(email);
+          if (userResult.StatusCode === 200 && userResult.Data && userResult.Data.length > 0) {
+            const user = new Users(userResult.Data[0]);
             
-            this.store.dispatch(AuthActions.signInSuccess({ user: userFromProfile, message: 'User already signed in' }));
-            this.currentUser.next(userFromProfile);
+            // Try signing in again
+            const retrySignInResponse = await this.cognitoService.signIn(user.cognitoId, password, user.email);
+            
+            if (retrySignInResponse.StatusCode === 200) {
+              this.store.dispatch(UserActions.signInSuccess({ user: user, message: 'Welcome back! Successfully signed in.' }));
+              this.currentUser.next(user);
+              return {
+                StatusCode: 200,
+                Message: 'Welcome back! Successfully signed in.',
+                Data: new Auth({ isSignedIn: true, message: 'Welcome back! Successfully signed in.', user: user })
+              };
+            } else {
+              return retrySignInResponse;
+            }
+          } else {
             return {
-              StatusCode: 200,
-              Message: 'User already signed in',
-              Data: new Auth({ isSignedIn: true, message: 'User already signed in', user: userFromProfile })
+              StatusCode: 500,
+              Message: 'Unable to retrieve user data for retry. Please try signing in again.',
+              Data: new Auth({ isSignedIn: false, message: 'Unable to retrieve user data for retry. Please try signing in again.' })
             };
           }
+        } catch (signOutError) {
+          console.error('Error during sign out and retry:', signOutError);
+          return {
+            StatusCode: 500,
+            Message: 'Unable to clean up existing session. Please refresh the page and try again.',
+            Data: new Auth({ isSignedIn: false, message: 'Unable to clean up existing session. Please refresh the page and try again.' })
+          };
         }
-        
-        return {
-          StatusCode: 500,
-          Message: 'Error signing in: There is already a signed in user.',
-          Data: new Auth({ isSignedIn: false, message: 'Error signing in: There is already a signed in user.' })
-        };
       }
 
       return {
@@ -630,6 +659,26 @@ export class UserService extends ApiService {
    */
   public getCurrentUser$(): Observable<any> {
     return this.currentUser.asObservable();
+  }
+
+  /**
+   * Check if the current user is a paying customer
+   * @returns boolean indicating if user has CUSTOMER group
+   */
+  public isCustomer(): boolean {
+    const currentUser = this.currentUser.value;
+    const groups = currentUser?.groups || [];
+    return groups.includes('CUSTOMER');
+  }
+
+  /**
+   * Check if a specific user is a paying customer
+   * @param user User object to check
+   * @returns boolean indicating if user has CUSTOMER group
+   */
+  public isUserCustomer(user: any): boolean {
+    const groups = user?.groups || [];
+    return groups.includes('CUSTOMER');
   }
 
   /**
