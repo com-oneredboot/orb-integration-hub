@@ -26,9 +26,12 @@ Parameters:
   CustomerId:
     Default: orb
     Type: String
+  ForceLambdaLayerVersionCheck:
+    Default: no
+    Type: String
   ProjectId:
     Default: integration-hub
-    Type: String
+    Type: String  
   Runtime:
     Default: python3.12
     Type: String
@@ -53,6 +56,7 @@ Globals:
     Environment:
       Variables:
         ALERTS_QUEUE: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-alerts-queue-arn}}'
+        FORCE_LAMBDA_LAYER_VERSION_CHECK: !Ref ForceLambdaLayerVersionCheck
         LOGGING_LEVEL: INFO
         VERSION: 1
     Handler: index.lambda_handler
