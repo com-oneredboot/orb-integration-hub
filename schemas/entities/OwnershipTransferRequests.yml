@@ -1,6 +1,6 @@
 type: lambda-dynamodb
 version: '1.0'
-name: OwnershipTransferRequests1
+name: OwnershipTransferRequests
 description: Tracks pending organization ownership transfers requiring payment validation
 
 model:
