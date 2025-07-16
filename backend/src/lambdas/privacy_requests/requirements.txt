@@ -1,0 +1,2 @@
+# Requirements for Privacy Requests Lambda
+# Currently no additional requirements beyond AWS SDK (boto3)

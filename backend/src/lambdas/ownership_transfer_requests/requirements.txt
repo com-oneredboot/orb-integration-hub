@@ -1,0 +1,2 @@
+# Requirements for Ownership Transfer Requests Lambda
+# Currently no additional requirements beyond AWS SDK (boto3)

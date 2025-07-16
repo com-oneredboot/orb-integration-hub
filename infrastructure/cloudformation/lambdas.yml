@@ -342,6 +342,34 @@ Resources:
           ORGANIZATIONS_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-organizations-table-name}}'
           USER_POOL_ID: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-cognito-user-pool-id}}'
 
+  # Ownership Transfer Requests Lambda
+  OwnershipTransferRequestsLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${CustomerId}-${ProjectId}-${Environment}-ownership-transfer-requests"
+      Description: "Lambda function to handle ownership transfer requests CRUD operations"
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      CodeUri: ../../backend/src/lambdas/ownership_transfer_requests/
+      Environment:
+        Variables:
+          OWNERSHIP_TRANSFER_REQUESTS_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-ownership-transfer-requests-table-name}}'
+          USER_POOL_ID: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-cognito-user-pool-id}}'
+
+  # Privacy Requests Lambda
+  PrivacyRequestsLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${CustomerId}-${ProjectId}-${Environment}-privacy-requests"
+      Description: "Lambda function to handle privacy requests CRUD operations"
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      CodeUri: ../../backend/src/lambdas/privacy_requests/
+      Environment:
+        Variables:
+          PRIVACY_REQUESTS_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-privacy-requests-table-name}}'
+          USER_POOL_ID: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-cognito-user-pool-id}}'
+
   # SSM Parameters
 
   # Parameter Store for the Cognito Group Manager Lambda ARN
@@ -375,6 +403,22 @@ Resources:
       Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-organizations-lambda-arn"
       Type: String
       Value: !GetAtt OrganizationsLambda.Arn
+
+  # Parameter Store for the Ownership Transfer Requests Lambda ARN
+  OwnershipTransferRequestsLambdaArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-ownership-transfer-requests-lambda-arn"
+      Type: String
+      Value: !GetAtt OwnershipTransferRequestsLambda.Arn
+
+  # Parameter Store for the Privacy Requests Lambda ARN
+  PrivacyRequestsLambdaArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-privacy-requests-lambda-arn"
+      Type: String
+      Value: !GetAtt PrivacyRequestsLambda.Arn
 
   # Paramter Store for the SMS Origination Number
   SMSOriginationNumberParemeter:
