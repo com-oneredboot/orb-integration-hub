@@ -236,6 +236,7 @@ Resources:
                   - kms:TagResource
                   - kms:UntagResource
                   - kms:ListResourceTags
+                  - kms:EnableKeyRotation
                 Resource: "*"
   # IAM Policies
   # CloudWatchLoggingPolicy: Allows logging to CloudWatch for monitoring and debugging.
