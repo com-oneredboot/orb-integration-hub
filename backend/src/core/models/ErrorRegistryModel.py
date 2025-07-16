@@ -1,6 +1,6 @@
 """
 Generated Python registry model for ErrorRegistry
-Generated at 2025-07-16T17:41:30.498575
+Generated at 2025-07-16T18:12:43.097902
 """
 
 from typing import Dict, Any, Optional

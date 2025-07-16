@@ -597,26 +597,39 @@ def build_crud_operations_for_table(schema: TableSchema):
     # Add QueryBy for each secondary index
     if schema.secondary_indexes:
         for index in schema.secondary_indexes:
-            if index.get('sort') and index['sort'] != 'None':
-                idx_pascal = to_pascal_case(index['partition'])
-                sk_pascal = to_pascal_case(index['sort'])
-                op_name = f'QueryBy{idx_pascal}And{sk_pascal}'
-                field_name = f'{schema.name}{op_name}'
-            else:
-                idx_pascal = to_pascal_case(index['partition'])
-                op_name = f'QueryBy{idx_pascal}'
-                field_name = f'{schema.name}{op_name}'
+            idx_pascal = to_pascal_case(index['partition'])
+            
+            # Always add query by partition key only
+            op_name = f'QueryBy{idx_pascal}'
+            field_name = f'{schema.name}{op_name}'
             op = {
                 'name': op_name,
                 'type': 'Query',
                 'field': field_name,
                 'dynamodb_op': 'Query',
                 'index_partition': index['partition'],
-                'index_sort': index.get('sort'),
+                'index_sort': None,
                 'index_name': index['name'],
                 'response_auth_directives': get_response_auth_directives(field_name),
             }
             schema.operations.append(op)
+            
+            # If there's a sort key, also add query by partition AND sort key
+            if index.get('sort') and index['sort'] != 'None':
+                sk_pascal = to_pascal_case(index['sort'])
+                op_name = f'QueryBy{idx_pascal}And{sk_pascal}'
+                field_name = f'{schema.name}{op_name}'
+                op = {
+                    'name': op_name,
+                    'type': 'Query',
+                    'field': field_name,
+                    'dynamodb_op': 'Query',
+                    'index_partition': index['partition'],
+                    'index_sort': index.get('sort'),
+                    'index_name': index['name'],
+                    'response_auth_directives': get_response_auth_directives(field_name),
+                }
+                schema.operations.append(op)
 
     # VALIDATION: Ensure every operation has at least one auth directive
     for op in schema.operations:
