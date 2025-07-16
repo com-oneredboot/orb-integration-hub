@@ -100,20 +100,20 @@ class OrganizationKMSManager:
                         'TagValue': organization_id
                     },
                     {
-                        'TagKey': 'OrganizationName',
-                        'TagValue': organization_name
+                        'TagKey': 'Environment',
+                        'TagValue': os.environ.get('ENVIRONMENT', 'dev')
                     },
                     {
-                        'TagKey': 'OwnerUserId',
-                        'TagValue': owner_user_id
+                        'TagKey': 'CustomerId',
+                        'TagValue': os.environ.get('CUSTOMER_ID', 'orb')
+                    },
+                    {
+                        'TagKey': 'ProjectId',
+                        'TagValue': os.environ.get('PROJECT_ID', 'integration-hub')
                     },
                     {
                         'TagKey': 'Purpose',
-                        'TagValue': 'OrganizationEncryption'
-                    },
-                    {
-                        'TagKey': 'Environment',
-                        'TagValue': os.environ.get('ENVIRONMENT', 'dev')
+                        'TagValue': 'organization-encryption'
                     }
                 ]
             )

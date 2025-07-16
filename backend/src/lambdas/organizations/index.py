@@ -39,7 +39,8 @@ class OrganizationsResolver:
     
     def __init__(self):
         self.dynamodb = boto3.resource('dynamodb')
-        self.organizations_table = self.dynamodb.Table('Organizations')
+        table_name = os.environ.get('ORGANIZATIONS_TABLE_NAME', 'Organizations')
+        self.organizations_table = self.dynamodb.Table(table_name)
         self.security_manager = OrganizationSecurityManager()
         self.kms_manager = OrganizationKMSManager()
         self.rbac_manager = OrganizationRBACManager()
