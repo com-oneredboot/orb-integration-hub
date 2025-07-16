@@ -556,6 +556,170 @@ class OrganizationsResolver:
         }
         return descriptions.get(role.value, 'Unknown role')
     
+    def query_organizations_by_owner(self, event: Dict[str, Any]) -> Dict[str, Any]:
+        """Query organizations by owner ID."""
+        try:
+            # Extract arguments
+            args = event.get('arguments', {})
+            input_data = args.get('input', {})
+            owner_id = input_data.get('ownerId')
+            
+            if not owner_id:
+                return {
+                    'StatusCode': 400,
+                    'Message': 'Owner ID is required',
+                    'Data': []
+                }
+            
+            # Use the GSI to query by owner
+            response = self.organizations_table.query(
+                IndexName='OwnerIndex',
+                KeyConditionExpression='ownerId = :ownerId',
+                ExpressionAttributeValues={
+                    ':ownerId': owner_id
+                }
+            )
+            
+            organizations = response.get('Items', [])
+            
+            # Decrypt descriptions for each organization
+            for org in organizations:
+                if org.get('description'):
+                    try:
+                        decrypted_description = self.kms_manager.decrypt_organization_data(
+                            organization_id=org['organizationId'],
+                            encrypted_data=org['description'],
+                            encryption_context={'field': 'description', 'action': 'create'}
+                        )
+                        org['description'] = decrypted_description
+                    except Exception as e:
+                        logger.debug(f"Description decryption failed for org {org['organizationId']}: {str(e)}")
+            
+            return {
+                'StatusCode': 200,
+                'Message': 'Success',
+                'Data': organizations
+            }
+            
+        except Exception as e:
+            logger.error(f"Error querying organizations by owner: {str(e)}")
+            return {
+                'StatusCode': 500,
+                'Message': f'Internal error: {str(e)}',
+                'Data': []
+            }
+    
+    def query_organizations_by_status(self, event: Dict[str, Any]) -> Dict[str, Any]:
+        """Query organizations by status."""
+        try:
+            # Extract arguments
+            args = event.get('arguments', {})
+            input_data = args.get('input', {})
+            status = input_data.get('status')
+            
+            if not status:
+                return {
+                    'StatusCode': 400,
+                    'Message': 'Status is required',
+                    'Data': []
+                }
+            
+            # Use the GSI to query by status
+            response = self.organizations_table.query(
+                IndexName='StatusCreatedIndex',
+                KeyConditionExpression='#status = :status',
+                ExpressionAttributeNames={
+                    '#status': 'status'
+                },
+                ExpressionAttributeValues={
+                    ':status': status
+                }
+            )
+            
+            organizations = response.get('Items', [])
+            
+            # Decrypt descriptions for each organization
+            for org in organizations:
+                if org.get('description'):
+                    try:
+                        decrypted_description = self.kms_manager.decrypt_organization_data(
+                            organization_id=org['organizationId'],
+                            encrypted_data=org['description'],
+                            encryption_context={'field': 'description', 'action': 'create'}
+                        )
+                        org['description'] = decrypted_description
+                    except Exception as e:
+                        logger.debug(f"Description decryption failed for org {org['organizationId']}: {str(e)}")
+            
+            return {
+                'StatusCode': 200,
+                'Message': 'Success',
+                'Data': organizations
+            }
+            
+        except Exception as e:
+            logger.error(f"Error querying organizations by status: {str(e)}")
+            return {
+                'StatusCode': 500,
+                'Message': f'Internal error: {str(e)}',
+                'Data': []
+            }
+    
+    def query_organization_by_id(self, event: Dict[str, Any]) -> Dict[str, Any]:
+        """Query organization by ID."""
+        try:
+            # Extract arguments
+            args = event.get('arguments', {})
+            input_data = args.get('input', {})
+            organization_id = input_data.get('organizationId')
+            
+            if not organization_id:
+                return {
+                    'StatusCode': 400,
+                    'Message': 'Organization ID is required',
+                    'Data': None
+                }
+            
+            # Get the organization
+            response = self.organizations_table.get_item(
+                Key={'organizationId': organization_id}
+            )
+            
+            organization = response.get('Item')
+            
+            if not organization:
+                return {
+                    'StatusCode': 404,
+                    'Message': 'Organization not found',
+                    'Data': None
+                }
+            
+            # Decrypt description if present
+            if organization.get('description'):
+                try:
+                    decrypted_description = self.kms_manager.decrypt_organization_data(
+                        organization_id=organization_id,
+                        encrypted_data=organization['description'],
+                        encryption_context={'field': 'description', 'action': 'create'}
+                    )
+                    organization['description'] = decrypted_description
+                except Exception as e:
+                    logger.debug(f"Description decryption failed: {str(e)}")
+            
+            return {
+                'StatusCode': 200,
+                'Message': 'Success',
+                'Data': organization
+            }
+            
+        except Exception as e:
+            logger.error(f"Error querying organization by ID: {str(e)}")
+            return {
+                'StatusCode': 500,
+                'Message': f'Internal error: {str(e)}',
+                'Data': None
+            }
+    
     def _get_user_organizations(self, user_id: str) -> list:
         """Get organizations owned by user (for starter plan limit checking)."""
         try:
@@ -611,10 +775,18 @@ def lambda_handler(event, context):
             return resolver.check_permission(event)
         elif field_name == 'OrganizationsGetRoles':
             return resolver.get_organization_roles(event)
+        elif field_name == 'OrganizationsQueryByOwnerId':
+            return resolver.query_organizations_by_owner(event)
+        elif field_name == 'OrganizationsQueryByStatus':
+            return resolver.query_organizations_by_status(event)
+        elif field_name == 'OrganizationsQueryByOrganizationId':
+            return resolver.query_organization_by_id(event)
         else:
+            logger.error(f'Unknown GraphQL operation: {field_name}')
             return {
-                'statusCode': 400,
-                'body': {'error': f'Unknown operation: {field_name}'}
+                'StatusCode': 400,
+                'Message': f'Unknown operation: {field_name}',
+                'Data': None
             }
             
     except Exception as e:
