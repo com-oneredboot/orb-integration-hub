@@ -10,7 +10,7 @@ import sys
 import logging
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Union
-from datetime import datetime
+from datetime import datetime, timezone
 from dataclasses import dataclass
 import re
 import copy
@@ -596,40 +596,50 @@ def build_crud_operations_for_table(schema: TableSchema):
         })
     # Add QueryBy for each secondary index
     if schema.secondary_indexes:
+        # Track which queries we've already added to avoid duplicates
+        existing_queries = set()
+        for op in schema.operations:
+            if op['type'] == 'Query':
+                existing_queries.add(op['field'])
+        
         for index in schema.secondary_indexes:
             idx_pascal = to_pascal_case(index['partition'])
             
-            # Always add query by partition key only
+            # Always add query by partition key only (if not already added)
             op_name = f'QueryBy{idx_pascal}'
             field_name = f'{schema.name}{op_name}'
-            op = {
-                'name': op_name,
-                'type': 'Query',
-                'field': field_name,
-                'dynamodb_op': 'Query',
-                'index_partition': index['partition'],
-                'index_sort': None,
-                'index_name': index['name'],
-                'response_auth_directives': get_response_auth_directives(field_name),
-            }
-            schema.operations.append(op)
-            
-            # If there's a sort key, also add query by partition AND sort key
-            if index.get('sort') and index['sort'] != 'None':
-                sk_pascal = to_pascal_case(index['sort'])
-                op_name = f'QueryBy{idx_pascal}And{sk_pascal}'
-                field_name = f'{schema.name}{op_name}'
+            if field_name not in existing_queries:
                 op = {
                     'name': op_name,
                     'type': 'Query',
                     'field': field_name,
                     'dynamodb_op': 'Query',
                     'index_partition': index['partition'],
-                    'index_sort': index.get('sort'),
+                    'index_sort': None,
                     'index_name': index['name'],
                     'response_auth_directives': get_response_auth_directives(field_name),
                 }
                 schema.operations.append(op)
+                existing_queries.add(field_name)
+            
+            # If there's a sort key, also add query by partition AND sort key
+            if index.get('sort') and index['sort'] != 'None':
+                sk_pascal = to_pascal_case(index['sort'])
+                op_name = f'QueryBy{idx_pascal}And{sk_pascal}'
+                field_name = f'{schema.name}{op_name}'
+                if field_name not in existing_queries:
+                    op = {
+                        'name': op_name,
+                        'type': 'Query',
+                        'field': field_name,
+                        'dynamodb_op': 'Query',
+                        'index_partition': index['partition'],
+                        'index_sort': index.get('sort'),
+                        'index_name': index['name'],
+                        'response_auth_directives': get_response_auth_directives(field_name),
+                    }
+                    schema.operations.append(op)
+                    existing_queries.add(field_name)
 
     # VALIDATION: Ensure every operation has at least one auth directive
     for op in schema.operations:
@@ -653,7 +663,7 @@ def generate_python_model(table: str, schema: Union[TableSchema, GraphQLType], t
     try:
         jinja_env = setup_jinja_env()
         template = jinja_env.get_template(template_name)
-        content = template.render(schema=schema, timestamp=datetime.utcnow().isoformat())
+        content = template.render(schema=schema, timestamp=datetime.now(timezone.utc).isoformat())
         file_name = f'{table}Model.py'
         output_path = os.path.join(SCRIPT_DIR, '..', 'backend', 'src', 'core', 'models', file_name)
         write_file(output_path, content)
@@ -670,7 +680,7 @@ def generate_typescript_model(table: str, schema: Union[TableSchema, GraphQLType
         # Use model_imports from schema if not explicitly provided
         if model_imports is None and hasattr(schema, 'model_imports'):
             model_imports = getattr(schema, 'model_imports')
-        content = template.render(schema=schema, timestamp=datetime.utcnow().isoformat(), all_model_names=all_model_names, model_imports=model_imports or [])
+        content = template.render(schema=schema, timestamp=datetime.now(timezone.utc).isoformat(), all_model_names=all_model_names, model_imports=model_imports or [])
         file_name = f'{table}Model.ts'
         output_path = os.path.join(SCRIPT_DIR, '..', 'frontend', 'src', 'app', 'core', 'models', file_name)
         write_file(output_path, content)
