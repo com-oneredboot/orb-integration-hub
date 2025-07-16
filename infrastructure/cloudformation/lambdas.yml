@@ -27,7 +27,6 @@ Parameters:
     Default: orb
     Type: String
   ForceLambdaLayerVersionCheck:
-    Default: no
     Type: String
   ProjectId:
     Default: integration-hub

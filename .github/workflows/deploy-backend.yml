@@ -11,6 +11,11 @@ on:
         description: 'Environment to deploy to'
         required: true
         type: environment
+      force_lambda_layer_version_check:
+        description: 'Forces Lambda Layer to get curreent version from SSM'
+        required: true
+        type: string
+        default: 'no'
       region:
         description: 'AWS Region'
         required: true
@@ -154,7 +159,7 @@ jobs:
                 echo "Using schema: $SCHEMA_FILE for AppSync stack"
                 ;;
               "lambdas")
-                PARAMS="$PARAMS SMSOriginationNumber=${{ inputs.sms_origination_number }}"
+                PARAMS="$PARAMS SMSOriginationNumber=${{ inputs.sms_origination_number }} ForceLambdaLayerVersionCheck=${{inputs.force_lambda_layer_version_check}}"
                 echo "Using SMS Origination Number: ${{ inputs.sms_origination_number }} for Lambdas stack"
                 ;;
               "monitoring")
