@@ -1,31 +1,28 @@
 #!/bin/bash
 set -e
 
-echo "Building Organizations Security Layer..."
+# Define the packages path variable
+layer_path="./python/lib/python3.12/site-packages"
 
-# Create build directory
-mkdir -p build/python
+# Step 1: Create the directory structure
+echo "Creating directory structure"
+mkdir -p $layer_path
 
-# Install dependencies using pipenv
-echo "Installing dependencies with pipenv..."
-pipenv install --deploy --ignore-pipfile
+# Step 2: Install dependencies in a virtual environment and generate requirements.txt
+echo "Installing dependencies and generating requirements.txt"
+pipenv install
+pipenv run pip freeze > requirements.txt
 
-# Copy dependencies to build directory
-echo "Copying dependencies to build directory..."
-VENV_PATH=$(pipenv --venv)
-PYTHON_VERSION=$(pipenv run python --version | cut -d' ' -f2 | cut -d'.' -f1,2)
-echo "Detected Python version: $PYTHON_VERSION"
-cp -r "$VENV_PATH/lib/python$PYTHON_VERSION/site-packages/"* build/python/
+# Step 3: Fetch the required libraries using the generated requirements.txt
+echo "Fetching libraries"
+pipenv run pip install -r requirements.txt --target $layer_path
 
-# Copy layer source code
+# Step 4: Copy layer source code to the site-packages directory
 echo "Copying layer source code..."
-cp *.py build/python/
+cp *.py $layer_path/
 
-# Create layer zip
-echo "Creating layer zip file..."
-cd build
-zip -r ../organizations-security-layer.zip python/
-cd ..
+# Step 5: List the contents of the site-packages directory
+echo "Contents of the site-packages directory:"
+ls -ltrh $layer_path
 
 echo "Organizations Security Layer build complete!"
-echo "Layer file: organizations-security-layer.zip"

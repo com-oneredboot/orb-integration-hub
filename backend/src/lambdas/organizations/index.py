@@ -14,7 +14,6 @@ from botocore.exceptions import ClientError
 # Import from organization security layer
 import sys
 import os
-sys.path.append('/opt/python')
 from security_manager import OrganizationSecurityManager
 from kms_manager import OrganizationKMSManager
 from rbac_manager import OrganizationRBACManager, OrganizationPermissions
