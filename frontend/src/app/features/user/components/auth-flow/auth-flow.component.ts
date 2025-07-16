@@ -2911,12 +2911,12 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         phoneNumber: this.authForm.value.phoneNumber,
         groups: [UserGroup.USER],
         status: UserStatus.PENDING,
-        createdAt: new Date().toISOString(),
+        createdAt: Math.floor(Date.now() / 1000), // Epoch seconds
         phoneVerified: false,
         emailVerified: false,
         mfaEnabled: false,
         mfaSetupComplete: false,
-        updatedAt: new Date().toISOString()
+        updatedAt: Math.floor(Date.now() / 1000) // Epoch seconds
       };
 
       console.debug('[AuthFlowComponent] Dispatching createUser with secure IDs:', {

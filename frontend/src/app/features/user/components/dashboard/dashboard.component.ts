@@ -62,14 +62,15 @@ export class DashboardComponent implements OnInit {
 
   /**
    * Format date string for display
-   * @param dateString The ISO date string
+   * @param timestamp The epoch timestamp in seconds
    * @returns Formatted date
    */
-  formatDate(dateString: string): string {
-    if (!dateString) return 'Not available';
+  formatDate(timestamp: number): string {
+    if (!timestamp) return 'Not available';
     
     try {
-      const date = new Date(dateString);
+      // Convert epoch seconds to milliseconds
+      const date = new Date(timestamp * 1000);
       return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',

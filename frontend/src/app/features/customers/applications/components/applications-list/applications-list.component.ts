@@ -92,8 +92,8 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
           apiKey: 'ak_live_cp_84f3d2a1...',
           apiKeyNext: '',
           environments: [],
-          createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+          createdAt: Math.floor((Date.now() - 30 * 24 * 60 * 60 * 1000) / 1000),
+          updatedAt: Math.floor((Date.now() - 2 * 60 * 60 * 1000) / 1000)
         },
         organizationName: 'Acme Corporation',
         environmentCount: 3,
@@ -110,8 +110,8 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
           apiKey: 'ak_live_ad_2b8f5c47...',
           apiKeyNext: '',
           environments: [],
-          createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+          createdAt: Math.floor((Date.now() - 15 * 24 * 60 * 60 * 1000) / 1000),
+          updatedAt: Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000)
         },
         organizationName: 'Acme Corporation',
         environmentCount: 2,
@@ -128,8 +128,8 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
           apiKey: 'ak_live_mb_7c9e1f33...',
           apiKeyNext: '',
           environments: [],
-          createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString()
+          createdAt: Math.floor((Date.now() - 45 * 24 * 60 * 60 * 1000) / 1000),
+          updatedAt: Math.floor((Date.now() - 3 * 60 * 60 * 1000) / 1000)
         },
         organizationName: 'Beta Industries',
         environmentCount: 4,
@@ -146,8 +146,8 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
           apiKey: 'ak_live_ec_4d6b8e91...',
           apiKeyNext: '',
           environments: [],
-          createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString()
+          createdAt: Math.floor((Date.now() - 60 * 24 * 60 * 60 * 1000) / 1000),
+          updatedAt: Math.floor((Date.now() - 6 * 60 * 60 * 1000) / 1000)
         },
         organizationName: 'Acme Corporation',
         environmentCount: 5,
@@ -164,8 +164,8 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
           apiKey: 'ak_live_as_9f2c5b67...',
           apiKeyNext: '',
           environments: [],
-          createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
+          createdAt: Math.floor((Date.now() - 20 * 24 * 60 * 60 * 1000) / 1000),
+          updatedAt: Math.floor((Date.now() - 4 * 60 * 60 * 1000) / 1000)
         },
         organizationName: 'Gamma Solutions',
         environmentCount: 3,
@@ -182,8 +182,8 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
           apiKey: 'ak_live_pg_1a3e7f42...',
           apiKeyNext: '',
           environments: [],
-          createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
+          createdAt: Math.floor((Date.now() - 90 * 24 * 60 * 60 * 1000) / 1000),
+          updatedAt: Math.floor((Date.now() - 12 * 60 * 60 * 1000) / 1000)
         },
         organizationName: 'Beta Industries',
         environmentCount: 6,
@@ -200,8 +200,8 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
           apiKey: 'ak_live_ns_5e8d2c76...',
           apiKeyNext: '',
           environments: [],
-          createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString()
+          createdAt: Math.floor((Date.now() - 10 * 24 * 60 * 60 * 1000) / 1000),
+          updatedAt: Math.floor((Date.now() - 30 * 60 * 1000) / 1000)
         },
         organizationName: 'Gamma Solutions',
         environmentCount: 2,
@@ -218,8 +218,8 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
           apiKey: 'ak_live_im_8b4f6a92...',
           apiKeyNext: '',
           environments: [],
-          createdAt: new Date(Date.now() - 75 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString()
+          createdAt: Math.floor((Date.now() - 75 * 24 * 60 * 60 * 1000) / 1000),
+          updatedAt: Math.floor((Date.now() - 18 * 60 * 60 * 1000) / 1000)
         },
         organizationName: 'Acme Corporation',
         environmentCount: 4,

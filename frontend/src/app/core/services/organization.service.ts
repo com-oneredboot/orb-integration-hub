@@ -112,7 +112,7 @@ export class OrganizationService extends ApiService {
 
         console.debug('[OrganizationService] User is authenticated, proceeding with organization creation');
 
-        const timestamp = new Date().toISOString();
+        const timestamp = Math.floor(Date.now() / 1000); // Epoch seconds
 
         // Build the create input with required fields
         const createInput: OrganizationsCreateInput = {
@@ -190,8 +190,8 @@ export class OrganizationService extends ApiService {
       description: input.description || '',
       ownerId: input.ownerId || '',
       status: input.status || OrganizationStatus.ACTIVE,
-      createdAt: input.createdAt || '',
-      updatedAt: new Date().toISOString(), // Always update timestamp
+      createdAt: input.createdAt || 0,
+      updatedAt: Math.floor(Date.now() / 1000), // Always update timestamp in epoch seconds
       kmsKeyId: input.kmsKeyId || '',
       kmsKeyArn: input.kmsKeyArn || '',
       kmsAlias: input.kmsAlias || ''

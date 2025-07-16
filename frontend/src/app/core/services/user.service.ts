@@ -70,7 +70,7 @@ export class UserService extends ApiService {
       const cognitoResponse = await this.cognitoService.createCognitoUser(input, password);
       console.debug('createCognitoUser Response: ', cognitoResponse);
 
-      const timestamp = new Date().toISOString();
+      const timestamp = Math.floor(Date.now() / 1000); // Epoch seconds
       
       // Validate that secure IDs were provided by the calling component
       if (!input.userId || !input.cognitoId) {
@@ -804,7 +804,7 @@ export class UserService extends ApiService {
         groups: input.groups,
         status: input.status,
         createdAt: input.createdAt,
-        updatedAt: new Date().toISOString(),
+        updatedAt: Math.floor(Date.now() / 1000), // Epoch seconds
         mfaEnabled: input.mfaEnabled,
         mfaSetupComplete: input.mfaSetupComplete
       };

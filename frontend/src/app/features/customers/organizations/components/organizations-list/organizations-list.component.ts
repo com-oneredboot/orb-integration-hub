@@ -148,8 +148,8 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
       description: '',
       ownerId: '', // Will be filled by backend
       status: OrganizationStatus.PENDING,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: Math.floor(Date.now() / 1000), // Epoch seconds
+      updatedAt: Math.floor(Date.now() / 1000), // Epoch seconds
       kmsKeyId: '',
       kmsKeyArn: '',
       kmsAlias: ''

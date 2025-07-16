@@ -49,8 +49,9 @@ export class ApplicationDetailComponent implements OnChanges {
     this.activeTab = tab;
   }
 
-  formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  formatDate(timestamp: number): string {
+    // Convert epoch seconds to milliseconds
+    return new Date(timestamp * 1000).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',

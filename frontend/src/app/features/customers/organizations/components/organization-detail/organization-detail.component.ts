@@ -146,8 +146,9 @@ export class OrganizationDetailComponent implements OnChanges, OnDestroy {
 
   // Status handling now uses global StatusBadgeComponent
 
-  formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  formatDate(timestamp: number): string {
+    // Convert epoch seconds to milliseconds
+    return new Date(timestamp * 1000).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
