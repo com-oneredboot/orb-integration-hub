@@ -96,22 +96,22 @@ model:
       required: true
       
     createdAt:
-      type: string
+      type: number
       description: "Transfer request creation timestamp"
       required: true
       
     expiresAt:
-      type: string
+      type: number
       description: "Transfer request expiration timestamp (7 days)"
       required: true
       
     updatedAt:
-      type: string
+      type: number
       description: "Last update timestamp"
       required: true
       
     completedAt:
-      type: string
+      type: number
       description: "Transfer completion timestamp"
       required: false
       

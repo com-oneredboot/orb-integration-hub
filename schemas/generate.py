@@ -1327,8 +1327,9 @@ def prevalidate_appsync_sdl(sdl_path):
     try:
         from graphql import build_schema, GraphQLError
     except ImportError:
-        logger.warning("GraphQL-core not available, falling back to basic validation")
-        return _basic_sdl_validation(sdl_path)
+        logger.error("GraphQL-core is required for schema validation. Please install it with: pip install graphql-core")
+        logger.error("Add 'graphql-core' to your Pipfile or requirements.txt")
+        sys.exit(1)
     
     with open(sdl_path, 'r', encoding='utf-8') as f:
         sdl = f.read()

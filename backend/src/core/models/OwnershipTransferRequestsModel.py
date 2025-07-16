@@ -1,6 +1,6 @@
 """
 Generated Python models for OwnershipTransferRequests
-Generated at 2025-07-16T22:31:57.694791+00:00
+Generated at 2025-07-16T22:39:49.963300+00:00
 """
 
 from typing import Optional, List
@@ -73,7 +73,7 @@ class OwnershipTransferRequestsQueryByStatusInput(BaseModel):
 # Properties: Field(...) = required (from schema), Optional[...] = optional (from schema)
 class OwnershipTransferRequests(BaseModel):
     """OwnershipTransferRequests model."""
-    transfer_id: str = Field(..., description="Unique transfer request identifier")    current_owner_id: str = Field(..., description="Current organization owner user ID")    new_owner_id: str = Field(..., description="Prospective new owner user ID")    organization_id: str = Field(..., description="Organization being transferred")    status: str = Field(..., description="Current transfer status")    required_billing_plan: str = Field(..., description="Billing plan required for organization")    monthly_cost: float = Field(..., description="Monthly cost in cents")    payment_validation_token: str = Field(..., description="Encrypted single-use token for payment validation")    created_at: str = Field(..., description="Transfer request creation timestamp")    expires_at: str = Field(..., description="Transfer request expiration timestamp (7 days)")    updated_at: str = Field(..., description="Last update timestamp")    completed_at: str = Field(None, description="Transfer completion timestamp")    failure_reason: str = Field(None, description="Reason for transfer failure or cancellation")    billing_transition_details: str = Field(None, description="Details of billing transition during transfer")    fraud_assessment: str = Field(None, description="Fraud detection assessment results")    notifications_sent: List[str] = Field(None, description="Track notifications sent for this transfer")
+    transfer_id: str = Field(..., description="Unique transfer request identifier")    current_owner_id: str = Field(..., description="Current organization owner user ID")    new_owner_id: str = Field(..., description="Prospective new owner user ID")    organization_id: str = Field(..., description="Organization being transferred")    status: str = Field(..., description="Current transfer status")    required_billing_plan: str = Field(..., description="Billing plan required for organization")    monthly_cost: float = Field(..., description="Monthly cost in cents")    payment_validation_token: str = Field(..., description="Encrypted single-use token for payment validation")    created_at: float = Field(..., description="Transfer request creation timestamp")    expires_at: float = Field(..., description="Transfer request expiration timestamp (7 days)")    updated_at: float = Field(..., description="Last update timestamp")    completed_at: float = Field(None, description="Transfer completion timestamp")    failure_reason: str = Field(None, description="Reason for transfer failure or cancellation")    billing_transition_details: str = Field(None, description="Details of billing transition during transfer")    fraud_assessment: str = Field(None, description="Fraud detection assessment results")    notifications_sent: List[str] = Field(None, description="Track notifications sent for this transfer")
 
     @classmethod
     def from_dto(cls, dto: dict) -> "OwnershipTransferRequests":

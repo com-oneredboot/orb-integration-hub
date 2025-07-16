@@ -41,7 +41,7 @@ Resources:
         - AttributeName: transferId
           AttributeType: S
         - AttributeName: createdAt
-          AttributeType: S
+          AttributeType: N
         - AttributeName: currentOwnerId
           AttributeType: S
         - AttributeName: newOwnerId
@@ -49,7 +49,7 @@ Resources:
         - AttributeName: status
           AttributeType: S
         - AttributeName: expiresAt
-          AttributeType: S
+          AttributeType: N
       GlobalSecondaryIndexes:
         - IndexName: CurrentOwnerIndex
           KeySchema:
