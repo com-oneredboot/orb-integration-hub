@@ -47,17 +47,24 @@ class OrganizationsResolver:
     def create_organization(self, event: Dict[str, Any]) -> Dict[str, Any]:
         """Create a new organization with security validation."""
         try:
+            logger.info("Starting organization creation process")
+            
             # Extract user context
             user_id = event.get('identity', {}).get('sub')
             cognito_groups = event.get('identity', {}).get('groups', [])
+            
+            logger.info(f"User authenticated, Groups count: {len(cognito_groups)}")
             
             if not user_id:
                 return self._error_response('User ID not found in request context')
             
             # Extract arguments
             args = event.get('arguments', {})
-            name = args.get('name')
-            description = args.get('description', '')
+            input_data = args.get('input', {})
+            name = input_data.get('name')
+            description = input_data.get('description', '')
+            
+            logger.info(f"Organization creation requested with name length: {len(name) if name else 0}")
             
             if not name:
                 return self._error_response('Organization name is required')
@@ -115,11 +122,15 @@ class OrganizationsResolver:
                 'updatedAt': now
             }
             
+            logger.info(f"About to write organization {organization_id} to DynamoDB")
+            
             # Write to DynamoDB with condition to prevent overwrites
             self.organizations_table.put_item(
                 Item=organization_data,
                 ConditionExpression='attribute_not_exists(organizationId)'
             )
+            
+            logger.info(f"Successfully wrote organization {organization_id} to DynamoDB")
             
             # Log audit event for organization creation
             try:
