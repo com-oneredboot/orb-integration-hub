@@ -393,7 +393,7 @@ export class UserEffects {
           lastName: currentUser.lastName,
           status: currentUser.status,
           createdAt: currentUser.createdAt,
-          updatedAt: new Date().toISOString(),
+          updatedAt: Math.floor(Date.now() / 1000), // Epoch seconds
           phoneNumber: currentUser.phoneNumber,
           phoneVerified: currentUser.phoneVerified,
           emailVerified: currentUser.emailVerified,
@@ -483,7 +483,7 @@ export class UserEffects {
           lastName: currentUser.lastName,
           status: currentUser.status,
           createdAt: currentUser.createdAt,
-          updatedAt: new Date().toISOString(),
+          updatedAt: Math.floor(Date.now() / 1000), // Epoch seconds
           phoneNumber: currentUser.phoneNumber,
           phoneVerified: currentUser.phoneVerified,
           emailVerified: currentUser.emailVerified,
@@ -710,7 +710,7 @@ export class UserEffects {
           lastName: currentUser.lastName,
           status: currentUser.status,
           createdAt: currentUser.createdAt,
-          updatedAt: new Date().toISOString(),
+          updatedAt: Math.floor(Date.now() / 1000), // Epoch seconds
           phoneNumber: phoneNumber,
           phoneVerified: true,
           groups: currentUser.groups,
