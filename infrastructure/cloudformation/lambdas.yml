@@ -147,6 +147,15 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${CustomerId}-${ProjectId}-${Environment}-*'
+              - Effect: Allow
+                Action:
+                  - logs:DescribeLogGroups
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: 
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/audit/*'
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group::log-stream:'
         - PolicyName: SQSAccess
           PolicyDocument:
             Version: '2012-10-17'

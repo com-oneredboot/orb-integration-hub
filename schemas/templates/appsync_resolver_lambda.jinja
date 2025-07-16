@@ -56,8 +56,18 @@
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "{{ operation.field }}",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "{{ operation.field }}",
+              "parentTypeName": "{{ operation.type }}",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": "$ctx.info.selectionSetGraphQL"
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
