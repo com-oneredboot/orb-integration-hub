@@ -3,7 +3,7 @@
 # created: 2025-06-23
 # description: Schema for GDPR/CCPA privacy rights requests management
 
-type: lambda-secured
+type: lambda-dynamodb
 version: '1.0'
 name: PrivacyRequests
 description: "GDPR/CCPA privacy rights requests with automated processing and compliance tracking"

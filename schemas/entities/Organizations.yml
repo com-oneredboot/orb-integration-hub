@@ -4,7 +4,7 @@
 # description: Organizations table schema for multi-tenant organization management
 # Linked to CUSTOMER status users who have subscribed to the service
 
-type: lambda-secured
+type: lambda-dynamodb
 version: '1.0'
 name: Organizations
 model:

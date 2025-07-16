@@ -908,7 +908,7 @@ def write_file(output_path: str, content: str) -> None:
 def generate_typescript_graphql_ops(table: str, schema: TableSchema) -> None:
     try:
         jinja_env = setup_jinja_env()
-        template = jinja_env.get_template('typescript_graphql_ops.jinja')
+        template = jinja_env.get_template('typescript_dynamodb_graphql_operations.jinja')
         processed_schema = copy.deepcopy(schema)
         if not hasattr(processed_schema, 'secondary_indexes') or processed_schema.secondary_indexes is None:
             processed_schema.secondary_indexes = []
@@ -1046,15 +1046,153 @@ def generate_typescript_lambda_graphql_ops(type_name: str, lambda_type) -> None:
     """Generate TypeScript GraphQL operations for lambda types."""
     try:
         jinja_env = setup_jinja_env()
-        template = jinja_env.get_template('typescript_lambda_graphql_ops.jinja')
+        template = jinja_env.get_template('typescript_lambda_dynamodb_graphql_operations.jinja')
         
-        # Create a schema-like object for the template
-        schema_data = {
-            'name': type_name,
-            'attributes': lambda_type.attributes
-        }
-        
-        content = template.render(schema=schema_data)
+        # For lambda-dynamodb types (which are TableSchema instances), build full CRUD operations
+        if hasattr(lambda_type, 'partition_key'):
+            # This is a lambda-dynamodb type with DynamoDB backing
+            processed_schema = copy.deepcopy(lambda_type)
+            if not hasattr(processed_schema, 'secondary_indexes') or processed_schema.secondary_indexes is None:
+                processed_schema.secondary_indexes = []
+            
+            pk_pascal = to_pascal_case(lambda_type.partition_key)
+            sk_pascal = to_pascal_case(lambda_type.sort_key) if lambda_type.sort_key and lambda_type.sort_key != 'None' else None
+            
+            # Build CRUD operations
+            operations = []
+            field_list = "\n      ".join([to_camel_case(attr.name) for attr in lambda_type.attributes])
+            
+            # Create
+            operations.append({
+                'name': f'{type_name}CreateMutation',
+                'gql': f'''
+mutation {type_name}Create($input: {type_name}CreateInput!) {{
+  {type_name}Create(input: $input) {{
+    StatusCode
+    Message
+    Data {{
+      {field_list}
+    }}
+  }}
+}}'''
+            })
+            
+            # Update
+            operations.append({
+                'name': f'{type_name}UpdateMutation',
+                'gql': f'''
+mutation {type_name}Update($input: {type_name}UpdateInput!) {{
+  {type_name}Update(input: $input) {{
+    StatusCode
+    Message
+    Data {{
+      {field_list}
+    }}
+  }}
+}}'''
+            })
+            
+            # Delete
+            operations.append({
+                'name': f'{type_name}DeleteMutation',
+                'gql': f'''
+mutation {type_name}Delete($id: ID!) {{
+  {type_name}Delete(id: $id) {{
+    StatusCode
+    Message
+    Data {{
+      {field_list}
+    }}
+  }}
+}}'''
+            })
+            
+            # Disable
+            operations.append({
+                'name': f'{type_name}DisableMutation',
+                'gql': f'''
+mutation {type_name}Disable($id: ID!) {{
+  {type_name}Disable(id: $id) {{
+    StatusCode
+    Message
+    Data {{
+      {field_list}
+    }}
+  }}
+}}'''
+            })
+            
+            # Query by primary key
+            operations.append({
+                'name': f'{type_name}QueryBy{pk_pascal}',
+                'gql': f'''
+query {type_name}QueryBy{pk_pascal}($input: {type_name}QueryBy{pk_pascal}Input!) {{
+  {type_name}QueryBy{pk_pascal}(input: $input) {{
+    StatusCode
+    Message
+    Data {{
+      {field_list}
+    }}
+  }}
+}}'''
+            })
+            
+            # Query by sort key (if present)
+            if sk_pascal:
+                operations.append({
+                    'name': f'{type_name}QueryBy{sk_pascal}',
+                    'gql': f'''
+query {type_name}QueryBy{sk_pascal}($input: {type_name}QueryBy{sk_pascal}Input!) {{
+  {type_name}QueryBy{sk_pascal}(input: $input) {{
+    StatusCode
+    Message
+    Data {{
+      {field_list}
+    }}
+  }}
+}}'''
+                })
+                
+                # QueryBy{Partition}And{Sort}
+                operations.append({
+                    'name': f'{type_name}QueryBy{pk_pascal}And{sk_pascal}',
+                    'gql': f'''
+query {type_name}QueryBy{pk_pascal}And{sk_pascal}($input: {type_name}QueryBy{pk_pascal}And{sk_pascal}Input!) {{
+  {type_name}QueryBy{pk_pascal}And{sk_pascal}(input: $input) {{
+    StatusCode
+    Message
+    Data {{
+      {field_list}
+    }}
+  }}
+}}'''
+                })
+            
+            # Query by secondary indexes
+            for index in processed_schema.secondary_indexes:
+                idx_pascal = to_pascal_case(index['partition'])
+                operations.append({
+                    'name': f'{type_name}QueryBy{idx_pascal}',
+                    'gql': f'''
+query {type_name}QueryBy{idx_pascal}($input: {type_name}QueryBy{idx_pascal}Input!) {{
+  {type_name}QueryBy{idx_pascal}(input: $input) {{
+    StatusCode
+    Message
+    Data {{
+      {field_list}
+    }}
+  }}
+}}'''
+                })
+            
+            content = template.render(schema=processed_schema, operations=operations)
+        else:
+            # This is a simple lambda type without DynamoDB backing
+            schema_data = {
+                'name': type_name,
+                'attributes': lambda_type.attributes
+            }
+            content = template.render(schema=schema_data)
         
         # Write to the GraphQL operations file
         output_path = os.path.join(
@@ -1400,8 +1538,8 @@ def load_schemas() -> dict:
             # Attach referenced models for use in template rendering
             setattr(schema_obj, 'model_imports', sorted(referenced_models))
             schemas[schema_name] = schema_obj
-        elif schema_type == 'lambda-secured':
-            # lambda-secured type: combines DynamoDB table generation with Lambda resolver
+        elif schema_type == 'lambda-dynamodb':
+            # lambda-dynamodb type: combines DynamoDB table generation with Lambda resolver
             model = schema_dict['model']
             attributes = []
             for attr_name, attr_info in model['attributes'].items():
@@ -1434,7 +1572,7 @@ def load_schemas() -> dict:
                 sort_key=sort_key,
                 secondary_indexes=secondary_indexes,
                 auth_config=auth_config,
-                type='lambda-secured',
+                type='lambda-dynamodb',
                 stream=stream_config
             )
             schemas[schema_name] = schema_obj
@@ -1560,8 +1698,8 @@ def main():
                 generate_python_model(table, schema, template_name='python_lambda.jinja')
                 generate_typescript_model(table, schema, template_name='typescript_lambda_model.jinja', all_model_names=all_model_names)
                 generate_typescript_lambda_graphql_ops(table, schema)
-            elif schema_type == 'lambda-secured':
-                logger.debug(f'Generating lambda-secured model for type: {table}')
+            elif schema_type == 'lambda-dynamodb':
+                logger.debug(f'Generating lambda-dynamodb model for type: {table}')
                 # Generate DynamoDB table (like dynamodb type)
                 generate_python_model(table, schema)
                 generate_typescript_model(table, schema, template_name='typescript_dynamodb.jinja', all_model_names=all_model_names)
