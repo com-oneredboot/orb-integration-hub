@@ -149,7 +149,7 @@ class AWSAuditLogger:
             '/audit/organizations': 2557,   # 7 years (SOX, GDPR compliant)
             '/audit/security': 2557,        # 7 years (Security incidents)
             '/audit/financial': 2557,       # 7 years (SOX compliant)
-            '/audit/access': 2190,          # 6 years (HIPAA compliant)
+            '/audit/access': 2192,          # 6 years (HIPAA compliant) - fixed to valid value
             '/audit/api': 365               # 1 year (PCI DSS compliant)
         }
         
