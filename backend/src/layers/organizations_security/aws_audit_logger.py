@@ -137,10 +137,10 @@ class AWSAuditLogger:
         # Get project identifiers from environment variables
         customer_id = os.getenv('CUSTOMER_ID', 'orb')
         project_id = os.getenv('PROJECT_ID', 'integration-hub') 
-        environment = os.getenv('ENVIRONMENT', 'dev')
+        self.environment = os.getenv('ENVIRONMENT', 'dev')
         
         # Define audit log group paths with proper project scoping
-        log_prefix = f"/audit/{customer_id}-{project_id}-{environment}"
+        log_prefix = f"/audit/{customer_id}-{project_id}-{self.environment}"
         self.log_groups = {
             'organizations': f'{log_prefix}-organizations',
             'security': f'{log_prefix}-security', 

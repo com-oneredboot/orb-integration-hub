@@ -8,7 +8,8 @@
 import { Injectable } from '@angular/core';
 import { GraphQLResult } from '@aws-amplify/api-graphql';
 import { Observable, from } from 'rxjs';
-import { map, catchError, switchMap } from 'rxjs/operators';
+import { map, catchError, switchMap, take } from 'rxjs/operators';
+import { Store } from '@ngrx/store';
 
 import { ApiService } from './api.service';
 import { 
@@ -34,6 +35,7 @@ import {
   OrganizationsQueryByOwnerIdResponse
 } from '../models/OrganizationsModel';
 import { OrganizationStatus } from '../models/OrganizationStatusEnum';
+import * as fromUser from '../../features/user/store/user.selectors';
 
 interface AuthCheckResult {
   isAuthenticated: boolean;
@@ -45,7 +47,7 @@ interface AuthCheckResult {
 })
 export class OrganizationService extends ApiService {
 
-  constructor() {
+  constructor(private store: Store) {
     super();
   }
 
@@ -294,19 +296,29 @@ export class OrganizationService extends ApiService {
   public getUserOrganizations(): Observable<OrganizationsListResponse> {
     console.debug('[OrganizationService] Getting user organizations');
 
-    // This would need to get the current user's ID and use OrganizationsQueryByOwnerId
-    // For now, returning empty as the query needs ownerId parameter
-    return from(
-      this.query(
-        OrganizationsQueryByOwnerId,
-        { 
-          input: {
-            ownerId: '' // This needs to be populated with current user ID
-          }
-        },
-        'userPool' // Use userPool auth for authenticated operations
-      ) as Promise<GraphQLResult<OrganizationsQueryByOwnerIdResponse>>
-    ).pipe(
+    // First get the current user from the store
+    return this.store.select(fromUser.selectCurrentUser).pipe(
+      take(1), // Take only the current value
+      switchMap(currentUser => {
+        if (!currentUser || !currentUser.userId) {
+          throw new Error('No user found in store. Please ensure you are logged in.');
+        }
+
+        const userId = currentUser.userId;
+        console.debug('[OrganizationService] Querying organizations for user:', userId);
+
+        return from(
+          this.query(
+            OrganizationsQueryByOwnerId,
+            { 
+              input: {
+                ownerId: userId
+              }
+            },
+            'userPool' // Use userPool auth for authenticated operations
+          ) as Promise<GraphQLResult<OrganizationsQueryByOwnerIdResponse>>
+        );
+      }),
       map(response => {
         console.debug('[OrganizationService] Get user organizations response:', response);
         
