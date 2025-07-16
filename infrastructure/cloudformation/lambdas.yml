@@ -58,6 +58,9 @@ Globals:
         FORCE_LAMBDA_LAYER_VERSION_CHECK: !Ref ForceLambdaLayerVersionCheck
         LOGGING_LEVEL: INFO
         VERSION: 1
+        CUSTOMER_ID: !Ref CustomerId
+        PROJECT_ID: !Ref ProjectId
+        ENVIRONMENT: !Ref Environment
     Handler: index.lambda_handler
     MemorySize: 256
     Runtime: !Ref Runtime
@@ -107,6 +110,8 @@ Resources:
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-table-arn}}'
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit-table-arn}}'
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-organizations-table-arn}}'
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-ownership-transfer-requests-table-arn}}'
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-privacy-requests-table-arn}}'
         - PolicyName: DynamoDBStreamAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -155,7 +160,7 @@ Resources:
                   - logs:PutLogEvents
                   - logs:PutRetentionPolicy
                 Resource: 
-                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/audit/*'
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/audit/${CustomerId}-${ProjectId}-${Environment}-*'
                   - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group::log-stream:'
         - PolicyName: SQSAccess
           PolicyDocument:

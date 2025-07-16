@@ -94,7 +94,7 @@ class OrganizationKMSManager:
             response = self.kms_client.create_key(
                 Policy=json.dumps(key_policy),
                 Description=f"Organization-specific encryption key for {organization_name} ({organization_id})",
-                Usage='ENCRYPT_DECRYPT',
+                KeyUsage='ENCRYPT_DECRYPT',
                 KeySpec='SYMMETRIC_DEFAULT',
                 Origin='AWS_KMS',
                 Tags=[

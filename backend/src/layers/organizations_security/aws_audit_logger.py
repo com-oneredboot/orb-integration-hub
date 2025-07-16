@@ -133,24 +133,29 @@ class AWSAuditLogger:
     
     def __init__(self):
         self.cloudwatch_logs = boto3.client('logs')
-        self.environment = os.getenv('ENVIRONMENT', 'production')
         
-        # AWS-managed log groups with automatic retention
+        # Get project identifiers from environment variables
+        customer_id = os.getenv('CUSTOMER_ID', 'orb')
+        project_id = os.getenv('PROJECT_ID', 'integration-hub') 
+        environment = os.getenv('ENVIRONMENT', 'dev')
+        
+        # Define audit log group paths with proper project scoping
+        log_prefix = f"/audit/{customer_id}-{project_id}-{environment}"
         self.log_groups = {
-            'organizations': '/audit/organizations',
-            'security': '/audit/security', 
-            'financial': '/audit/financial',
-            'access': '/audit/access',
-            'api': '/audit/api'
+            'organizations': f'{log_prefix}-organizations',
+            'security': f'{log_prefix}-security', 
+            'financial': f'{log_prefix}-financial',
+            'access': f'{log_prefix}-access',
+            'api': f'{log_prefix}-api'
         }
         
         # AWS automatically manages retention based on these policies
         self.retention_policies = {
-            '/audit/organizations': 2557,   # 7 years (SOX, GDPR compliant)
-            '/audit/security': 2557,        # 7 years (Security incidents)
-            '/audit/financial': 2557,       # 7 years (SOX compliant)
-            '/audit/access': 2192,          # 6 years (HIPAA compliant) - fixed to valid value
-            '/audit/api': 365               # 1 year (PCI DSS compliant)
+            f'{log_prefix}-organizations': 2557,   # 7 years (SOX, GDPR compliant)
+            f'{log_prefix}-security': 2557,        # 7 years (Security incidents)
+            f'{log_prefix}-financial': 2557,       # 7 years (SOX compliant)
+            f'{log_prefix}-access': 2192,          # 6 years (HIPAA compliant)
+            f'{log_prefix}-api': 365               # 1 year (PCI DSS compliant)
         }
         
         # Ensure log groups exist with proper retention
