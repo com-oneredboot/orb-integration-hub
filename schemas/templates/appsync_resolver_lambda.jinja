@@ -17,4 +17,50 @@
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-{% endfor %} 
+{% endfor %}
+
+{# Lambda-DynamoDB resolvers - these have multiple operations like DynamoDB types #}
+{% for schema in schemas.values() if schema.type == 'lambda-dynamodb' %}
+  {%- if schema.operations is defined and schema.operations|length > 0 %}
+    {%- set all_ops = schema.operations %}
+  {%- else %}
+    {# Default operations if none are defined #}
+    {% set all_ops = [
+      {"name": "Create", "type": "Mutation", "field": schema.name + 'Create'},
+      {"name": "Update", "type": "Mutation", "field": schema.name + 'Update'},
+      {"name": "Delete", "type": "Mutation", "field": schema.name + 'Delete'},
+      {"name": "Disable", "type": "Mutation", "field": schema.name + 'Disable'},
+      {"name": "QueryBy" + schema.partition_key|to_pascal_case, "type": "Query", "field": schema.name + 'QueryBy' + schema.partition_key|to_pascal_case}
+    ] %}
+    {# Add queries for secondary indexes #}
+    {% if schema.secondary_indexes %}
+      {% for index in schema.secondary_indexes %}
+        {% set _ = all_ops.append({"name": "QueryBy" + index.partition|to_pascal_case, "type": "Query", "field": schema.name + 'QueryBy' + index.partition|to_pascal_case}) %}
+      {% endfor %}
+    {% endif %}
+  {%- endif %}
+  
+  {%- for operation in all_ops %}
+  {{ schema.name }}{{ operation.name }}Resolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - {{ schema.name }}LambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: {{ operation.type }}
+      FieldName: {{ operation.field }}
+      DataSourceName: {{ schema.name }}LambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "{{ operation.field }}",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  {% endfor %}
+{% endfor %}

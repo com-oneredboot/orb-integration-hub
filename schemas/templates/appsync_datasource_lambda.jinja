@@ -1,5 +1,5 @@
   # Jinja template for AppSync Lambda DataSources
-  {% for schema in schemas.values() if schema.type == 'lambda' %}
+  {% for schema in schemas.values() if schema.type == 'lambda' or schema.type == 'lambda-dynamodb' %}
   {{ schema.name }}LambdaDataSource:
     Type: AWS::AppSync::DataSource
     Properties:

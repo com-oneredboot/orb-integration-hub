@@ -225,6 +225,33 @@ Resources:
  
   # Lambda DataSources
   # Jinja template for AppSync Lambda DataSources
+  OwnershipTransferRequestsLambdaDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      Name: OwnershipTransferRequestsLambdaDataSource
+      Type: AWS_LAMBDA
+      LambdaConfig:
+        LambdaFunctionArn: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-ownership-transfer-requests-lambda-arn}}'
+      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+  OrganizationsLambdaDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      Name: OrganizationsLambdaDataSource
+      Type: AWS_LAMBDA
+      LambdaConfig:
+        LambdaFunctionArn: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-organizations-lambda-arn}}'
+      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+  PrivacyRequestsLambdaDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      Name: PrivacyRequestsLambdaDataSource
+      Type: AWS_LAMBDA
+      LambdaConfig:
+        LambdaFunctionArn: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-privacy-requests-lambda-arn}}'
+      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
   SmsVerificationLambdaDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -2538,7 +2565,533 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
- 
+
+  OwnershipTransferRequestsCreateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - OwnershipTransferRequestsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: OwnershipTransferRequestsCreate
+      DataSourceName: OwnershipTransferRequestsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "OwnershipTransferRequestsCreate",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OwnershipTransferRequestsUpdateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - OwnershipTransferRequestsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: OwnershipTransferRequestsUpdate
+      DataSourceName: OwnershipTransferRequestsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "OwnershipTransferRequestsUpdate",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OwnershipTransferRequestsDeleteResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - OwnershipTransferRequestsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: OwnershipTransferRequestsDelete
+      DataSourceName: OwnershipTransferRequestsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "OwnershipTransferRequestsDelete",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OwnershipTransferRequestsDisableResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - OwnershipTransferRequestsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: OwnershipTransferRequestsDisable
+      DataSourceName: OwnershipTransferRequestsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "OwnershipTransferRequestsDisable",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OwnershipTransferRequestsQueryByTransferIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - OwnershipTransferRequestsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: OwnershipTransferRequestsQueryByTransferId
+      DataSourceName: OwnershipTransferRequestsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "OwnershipTransferRequestsQueryByTransferId",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OwnershipTransferRequestsQueryByCurrentOwnerIdAndCreatedAtResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - OwnershipTransferRequestsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: OwnershipTransferRequestsQueryByCurrentOwnerIdAndCreatedAt
+      DataSourceName: OwnershipTransferRequestsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "OwnershipTransferRequestsQueryByCurrentOwnerIdAndCreatedAt",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OwnershipTransferRequestsQueryByNewOwnerIdAndCreatedAtResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - OwnershipTransferRequestsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: OwnershipTransferRequestsQueryByNewOwnerIdAndCreatedAt
+      DataSourceName: OwnershipTransferRequestsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "OwnershipTransferRequestsQueryByNewOwnerIdAndCreatedAt",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OwnershipTransferRequestsQueryByStatusAndCreatedAtResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - OwnershipTransferRequestsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: OwnershipTransferRequestsQueryByStatusAndCreatedAt
+      DataSourceName: OwnershipTransferRequestsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "OwnershipTransferRequestsQueryByStatusAndCreatedAt",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OwnershipTransferRequestsQueryByStatusAndExpiresAtResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - OwnershipTransferRequestsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: OwnershipTransferRequestsQueryByStatusAndExpiresAt
+      DataSourceName: OwnershipTransferRequestsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "OwnershipTransferRequestsQueryByStatusAndExpiresAt",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OrganizationsCreateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - OrganizationsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: OrganizationsCreate
+      DataSourceName: OrganizationsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "OrganizationsCreate",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OrganizationsUpdateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - OrganizationsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: OrganizationsUpdate
+      DataSourceName: OrganizationsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "OrganizationsUpdate",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OrganizationsDeleteResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - OrganizationsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: OrganizationsDelete
+      DataSourceName: OrganizationsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "OrganizationsDelete",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OrganizationsDisableResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - OrganizationsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: OrganizationsDisable
+      DataSourceName: OrganizationsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "OrganizationsDisable",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OrganizationsQueryByOrganizationIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - OrganizationsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: OrganizationsQueryByOrganizationId
+      DataSourceName: OrganizationsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "OrganizationsQueryByOrganizationId",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OrganizationsQueryByOwnerIdAndCreatedAtResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - OrganizationsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: OrganizationsQueryByOwnerIdAndCreatedAt
+      DataSourceName: OrganizationsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "OrganizationsQueryByOwnerIdAndCreatedAt",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OrganizationsQueryByStatusAndCreatedAtResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - OrganizationsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: OrganizationsQueryByStatusAndCreatedAt
+      DataSourceName: OrganizationsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "OrganizationsQueryByStatusAndCreatedAt",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  PrivacyRequestsCreateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - PrivacyRequestsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: PrivacyRequestsCreate
+      DataSourceName: PrivacyRequestsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "PrivacyRequestsCreate",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  PrivacyRequestsUpdateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - PrivacyRequestsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: PrivacyRequestsUpdate
+      DataSourceName: PrivacyRequestsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "PrivacyRequestsUpdate",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  PrivacyRequestsDeleteResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - PrivacyRequestsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: PrivacyRequestsDelete
+      DataSourceName: PrivacyRequestsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "PrivacyRequestsDelete",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  PrivacyRequestsDisableResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - PrivacyRequestsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: PrivacyRequestsDisable
+      DataSourceName: PrivacyRequestsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "PrivacyRequestsDisable",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  PrivacyRequestsQueryByRequestIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - PrivacyRequestsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: PrivacyRequestsQueryByRequestId
+      DataSourceName: PrivacyRequestsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "PrivacyRequestsQueryByRequestId",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  PrivacyRequestsQueryByRequestTypeAndReceivedAtResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - PrivacyRequestsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: PrivacyRequestsQueryByRequestTypeAndReceivedAt
+      DataSourceName: PrivacyRequestsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "PrivacyRequestsQueryByRequestTypeAndReceivedAt",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  PrivacyRequestsQueryByDataSubjectEmailAndReceivedAtResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - PrivacyRequestsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: PrivacyRequestsQueryByDataSubjectEmailAndReceivedAt
+      DataSourceName: PrivacyRequestsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "PrivacyRequestsQueryByDataSubjectEmailAndReceivedAt",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  PrivacyRequestsQueryByOrganizationIdAndReceivedAtResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - PrivacyRequestsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: PrivacyRequestsQueryByOrganizationIdAndReceivedAt
+      DataSourceName: PrivacyRequestsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "PrivacyRequestsQueryByOrganizationIdAndReceivedAt",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  PrivacyRequestsQueryByStatusAndDeadlineResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - PrivacyRequestsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: PrivacyRequestsQueryByStatusAndDeadline
+      DataSourceName: PrivacyRequestsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "action": "PrivacyRequestsQueryByStatusAndDeadline",
+            "arguments": $util.toJson($ctx.args)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+
 # --------------------------------------------------- #
 Outputs:
   IntegrationHubApiId:
