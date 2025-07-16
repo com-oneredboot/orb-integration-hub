@@ -60,7 +60,7 @@
               "fieldName": "{{ operation.field }}",
               "parentTypeName": "{{ operation.type }}",
               "selectionSetList": $util.toJson($ctx.info.selectionSetList),
-              "selectionSetGraphQL": "$ctx.info.selectionSetGraphQL"
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
             },
             "arguments": $util.toJson($ctx.args),
             "identity": $util.toJson($ctx.identity),
