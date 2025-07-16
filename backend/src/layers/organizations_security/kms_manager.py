@@ -65,13 +65,10 @@ class OrganizationKMSManager:
                         "Resource": "*"
                     },
                     {
-                        "Sid": "Allow organization service access",
+                        "Sid": "Allow Lambda service access for DynamoDB encryption",
                         "Effect": "Allow",
                         "Principal": {
-                            "AWS": [
-                                f"arn:aws:iam::{self._get_account_id()}:role/OrganizationLambdaRole",
-                                f"arn:aws:iam::{self._get_account_id()}:role/OrganizationServiceRole"
-                            ]
+                            "AWS": f"arn:aws:iam::{self._get_account_id()}:root"
                         },
                         "Action": [
                             "kms:Encrypt",

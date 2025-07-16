@@ -558,9 +558,12 @@ class OrganizationsResolver:
     def _get_user_organizations(self, user_id: str) -> list:
         """Get organizations owned by user (for starter plan limit checking)."""
         try:
+            # Use scan with ProjectionExpression to minimize data transfer
             response = self.organizations_table.scan(
                 FilterExpression=boto3.dynamodb.conditions.Attr('ownerId').eq(user_id) & 
-                               boto3.dynamodb.conditions.Attr('status').eq('ACTIVE')
+                               boto3.dynamodb.conditions.Attr('status').eq('ACTIVE'),
+                ProjectionExpression='organizationId, ownerId, #status',
+                ExpressionAttributeNames={'#status': 'status'}
             )
             return response.get('Items', [])
         except Exception as e:
