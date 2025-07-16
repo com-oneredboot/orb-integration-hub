@@ -11,7 +11,13 @@ import { Observable, from } from 'rxjs';
 import { map, catchError, switchMap } from 'rxjs/operators';
 
 import { ApiService } from './api.service';
-import { OrganizationsMutation } from '../graphql/Organizations.graphql';
+import { 
+  OrganizationsCreateMutation,
+  OrganizationsUpdateMutation,
+  OrganizationsDeleteMutation,
+  OrganizationsQueryByOrganizationId,
+  OrganizationsQueryByOwnerId
+} from '../graphql/Organizations.graphql';
 import {
   Organizations,
   OrganizationsCreateInput,
@@ -20,7 +26,12 @@ import {
   OrganizationsCreateResponse,
   OrganizationsUpdateResponse,
   OrganizationsListResponse,
-  IOrganizations
+  IOrganizations,
+  OrganizationsCreateMutationResponse,
+  OrganizationsUpdateMutationResponse,
+  OrganizationsDeleteMutationResponse,
+  OrganizationsQueryByOrganizationIdResponse,
+  OrganizationsQueryByOwnerIdResponse
 } from '../models/OrganizationsModel';
 import { OrganizationStatus } from '../models/OrganizationStatusEnum';
 
@@ -119,15 +130,12 @@ export class OrganizationService extends ApiService {
 
         return from(
           this.mutate(
-            OrganizationsMutation,
+            OrganizationsCreateMutation,
             { 
-              input: {
-                action: 'CREATE',
-                data: createInput
-              }
+              input: createInput
             },
             'userPool' // Use userPool auth for authenticated operations
-          ) as Promise<GraphQLResult<OrganizationsCreateResponse>>
+          ) as Promise<GraphQLResult<OrganizationsCreateMutationResponse>>
         );
       })
     ).pipe(
@@ -138,7 +146,7 @@ export class OrganizationService extends ApiService {
           throw new Error('No data in create organization response');
         }
 
-        const organizationsData = response.data.Organizations;
+        const organizationsData = response.data.OrganizationsCreate;
         return {
           StatusCode: organizationsData?.StatusCode ?? 200,
           Message: organizationsData?.Message ?? 'Organization created successfully',
@@ -191,15 +199,12 @@ export class OrganizationService extends ApiService {
 
     return from(
       this.mutate(
-        OrganizationsMutation,
+        OrganizationsUpdateMutation,
         { 
-          input: {
-            action: 'UPDATE',
-            data: updateInput
-          }
+          input: updateInput
         },
         'userPool' // Use userPool auth for authenticated operations
-      ) as Promise<GraphQLResult<OrganizationsUpdateResponse>>
+      ) as Promise<GraphQLResult<OrganizationsUpdateMutationResponse>>
     ).pipe(
       map(response => {
         console.debug('[OrganizationService] Update organization response:', response);
@@ -208,10 +213,11 @@ export class OrganizationService extends ApiService {
           throw new Error('No data in update organization response');
         }
 
+        const updateData = response.data.OrganizationsUpdate;
         return {
-          StatusCode: response.data.StatusCode ?? 200,
-          Message: response.data.Message ?? 'Organization updated successfully',
-          Data: response.data.Data ? new Organizations(response.data.Data) : null
+          StatusCode: updateData?.StatusCode ?? 200,
+          Message: updateData?.Message ?? 'Organization updated successfully',
+          Data: updateData?.Data ? new Organizations(updateData.Data) : null
         } as OrganizationsUpdateResponse;
       }),
       catchError((error) => {
@@ -244,17 +250,12 @@ export class OrganizationService extends ApiService {
 
     return from(
       this.mutate(
-        OrganizationsMutation,
+        OrganizationsDeleteMutation,
         { 
-          input: {
-            action: 'DELETE',
-            data: {
-              organizationId: organizationId
-            }
-          }
+          id: organizationId
         },
         'userPool' // Use userPool auth for authenticated operations
-      ) as Promise<GraphQLResult<OrganizationsResponse>>
+      ) as Promise<GraphQLResult<OrganizationsDeleteMutationResponse>>
     ).pipe(
       map(response => {
         console.debug('[OrganizationService] Delete organization response:', response);
@@ -263,10 +264,11 @@ export class OrganizationService extends ApiService {
           throw new Error('No data in delete organization response');
         }
 
+        const deleteData = response.data.OrganizationsDelete;
         return {
-          StatusCode: response.data.StatusCode ?? 200,
-          Message: response.data.Message ?? 'Organization deleted successfully',
-          Data: response.data.Data ? new Organizations(response.data.Data) : null
+          StatusCode: deleteData?.StatusCode ?? 200,
+          Message: deleteData?.Message ?? 'Organization deleted successfully',
+          Data: deleteData?.Data ? new Organizations(deleteData.Data) : null
         } as OrganizationsResponse;
       }),
       catchError((error) => {
@@ -292,16 +294,18 @@ export class OrganizationService extends ApiService {
   public getUserOrganizations(): Observable<OrganizationsListResponse> {
     console.debug('[OrganizationService] Getting user organizations');
 
+    // This would need to get the current user's ID and use OrganizationsQueryByOwnerId
+    // For now, returning empty as the query needs ownerId parameter
     return from(
-      this.mutate(
-        OrganizationsMutation,
+      this.query(
+        OrganizationsQueryByOwnerId,
         { 
           input: {
-            action: 'LIST_USER_ORGANIZATIONS'
+            ownerId: '' // This needs to be populated with current user ID
           }
         },
         'userPool' // Use userPool auth for authenticated operations
-      ) as Promise<GraphQLResult<OrganizationsListResponse>>
+      ) as Promise<GraphQLResult<OrganizationsQueryByOwnerIdResponse>>
     ).pipe(
       map(response => {
         console.debug('[OrganizationService] Get user organizations response:', response);
@@ -310,12 +314,13 @@ export class OrganizationService extends ApiService {
           throw new Error('No data in get organizations response');
         }
 
+        const queryData = response.data.OrganizationsQueryByOwnerId;
         // Convert raw data to Organizations instances
-        const organizations = (response.data.Data || []).map(org => new Organizations(org));
+        const organizations = (queryData?.Data || []).map((org: any) => new Organizations(org));
 
         return {
-          StatusCode: response.data.StatusCode ?? 200,
-          Message: response.data.Message ?? 'Organizations retrieved successfully',
+          StatusCode: queryData?.StatusCode ?? 200,
+          Message: queryData?.Message ?? 'Organizations retrieved successfully',
           Data: organizations
         } as OrganizationsListResponse;
       }),
@@ -344,18 +349,15 @@ export class OrganizationService extends ApiService {
     }
 
     return from(
-      this.mutate(
-        OrganizationsMutation,
+      this.query(
+        OrganizationsQueryByOrganizationId,
         { 
           input: {
-            action: 'GET',
-            data: {
-              organizationId: organizationId
-            }
+            organizationId: organizationId
           }
         },
         'userPool' // Use userPool auth for authenticated operations
-      ) as Promise<GraphQLResult<OrganizationsResponse>>
+      ) as Promise<GraphQLResult<OrganizationsQueryByOrganizationIdResponse>>
     ).pipe(
       map(response => {
         console.debug('[OrganizationService] Get organization response:', response);
@@ -364,10 +366,11 @@ export class OrganizationService extends ApiService {
           throw new Error('No data in get organization response');
         }
 
+        const queryData = response.data.OrganizationsQueryByOrganizationId;
         return {
-          StatusCode: response.data.StatusCode ?? 200,
-          Message: response.data.Message ?? 'Organization retrieved successfully',
-          Data: response.data.Data ? new Organizations(response.data.Data) : null
+          StatusCode: queryData?.StatusCode ?? 200,
+          Message: queryData?.Message ?? 'Organization retrieved successfully',
+          Data: queryData?.Data ? new Organizations(queryData.Data) : null
         } as OrganizationsResponse;
       }),
       catchError((error) => {

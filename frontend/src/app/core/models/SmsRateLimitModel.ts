@@ -52,6 +52,24 @@ export type SmsRateLimitListResponse = {
   Data: SmsRateLimit[] | null;
 };
 
+// GraphQL Response Wrappers
+export type SmsRateLimitCreateMutationResponse = {
+  SmsRateLimitCreate: SmsRateLimitCreateResponse;
+};
+
+export type SmsRateLimitUpdateMutationResponse = {
+  SmsRateLimitUpdate: SmsRateLimitUpdateResponse;
+};
+
+export type SmsRateLimitDeleteMutationResponse = {
+  SmsRateLimitDelete: SmsRateLimitResponse;
+};
+
+export type SmsRateLimitQueryByPhoneNumberResponse = {
+  SmsRateLimitQueryByPhoneNumber: SmsRateLimitResponse;
+};
+
+
 export interface ISmsRateLimit {
   phoneNumber: string;
   requestCount: number;

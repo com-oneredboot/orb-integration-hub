@@ -61,6 +61,27 @@ export type RolesListResponse = {
   Data: Roles[] | null;
 };
 
+// GraphQL Response Wrappers
+export type RolesCreateMutationResponse = {
+  RolesCreate: RolesCreateResponse;
+};
+
+export type RolesUpdateMutationResponse = {
+  RolesUpdate: RolesUpdateResponse;
+};
+
+export type RolesDeleteMutationResponse = {
+  RolesDelete: RolesResponse;
+};
+
+export type RolesQueryByRoleIdResponse = {
+  RolesQueryByRoleId: RolesResponse;
+};
+
+export type RolesQueryByUserIdResponse = {
+  RolesQueryByUserId: RolesListResponse;
+};
+
 export interface IRoles {
   roleId: string;
   userId: string | undefined;

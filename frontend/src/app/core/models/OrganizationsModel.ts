@@ -71,6 +71,30 @@ export type OrganizationsListResponse = {
   Data: Organizations[] | null;
 };
 
+// GraphQL Response Wrappers
+export type OrganizationsCreateMutationResponse = {
+  OrganizationsCreate: OrganizationsCreateResponse;
+};
+
+export type OrganizationsUpdateMutationResponse = {
+  OrganizationsUpdate: OrganizationsUpdateResponse;
+};
+
+export type OrganizationsDeleteMutationResponse = {
+  OrganizationsDelete: OrganizationsResponse;
+};
+
+export type OrganizationsQueryByOrganizationIdResponse = {
+  OrganizationsQueryByOrganizationId: OrganizationsResponse;
+};
+
+export type OrganizationsQueryByOwnerIdResponse = {
+  OrganizationsQueryByOwnerId: OrganizationsListResponse;
+};
+export type OrganizationsQueryByStatusResponse = {
+  OrganizationsQueryByStatus: OrganizationsListResponse;
+};
+
 export interface IOrganizations {
   organizationId: string;
   name: string;

@@ -74,6 +74,30 @@ export type NotificationsListResponse = {
   Data: Notifications[] | null;
 };
 
+// GraphQL Response Wrappers
+export type NotificationsCreateMutationResponse = {
+  NotificationsCreate: NotificationsCreateResponse;
+};
+
+export type NotificationsUpdateMutationResponse = {
+  NotificationsUpdate: NotificationsUpdateResponse;
+};
+
+export type NotificationsDeleteMutationResponse = {
+  NotificationsDelete: NotificationsResponse;
+};
+
+export type NotificationsQueryByNotificationIdResponse = {
+  NotificationsQueryByNotificationId: NotificationsResponse;
+};
+
+export type NotificationsQueryByRecipientUserIdResponse = {
+  NotificationsQueryByRecipientUserId: NotificationsListResponse;
+};
+export type NotificationsQueryByTypeResponse = {
+  NotificationsQueryByType: NotificationsListResponse;
+};
+
 export interface INotifications {
   notificationId: string;
   recipientUserId: string;

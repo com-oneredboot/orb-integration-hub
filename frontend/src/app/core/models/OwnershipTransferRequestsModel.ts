@@ -89,6 +89,36 @@ export type OwnershipTransferRequestsListResponse = {
   Data: OwnershipTransferRequests[] | null;
 };
 
+// GraphQL Response Wrappers
+export type OwnershipTransferRequestsCreateMutationResponse = {
+  OwnershipTransferRequestsCreate: OwnershipTransferRequestsCreateResponse;
+};
+
+export type OwnershipTransferRequestsUpdateMutationResponse = {
+  OwnershipTransferRequestsUpdate: OwnershipTransferRequestsUpdateResponse;
+};
+
+export type OwnershipTransferRequestsDeleteMutationResponse = {
+  OwnershipTransferRequestsDelete: OwnershipTransferRequestsResponse;
+};
+
+export type OwnershipTransferRequestsQueryByTransferIdResponse = {
+  OwnershipTransferRequestsQueryByTransferId: OwnershipTransferRequestsResponse;
+};
+
+export type OwnershipTransferRequestsQueryByCurrentOwnerIdResponse = {
+  OwnershipTransferRequestsQueryByCurrentOwnerId: OwnershipTransferRequestsListResponse;
+};
+export type OwnershipTransferRequestsQueryByNewOwnerIdResponse = {
+  OwnershipTransferRequestsQueryByNewOwnerId: OwnershipTransferRequestsListResponse;
+};
+export type OwnershipTransferRequestsQueryByStatusResponse = {
+  OwnershipTransferRequestsQueryByStatus: OwnershipTransferRequestsListResponse;
+};
+export type OwnershipTransferRequestsQueryByStatusResponse = {
+  OwnershipTransferRequestsQueryByStatus: OwnershipTransferRequestsListResponse;
+};
+
 export interface IOwnershipTransferRequests {
   transferId: string;
   currentOwnerId: string;

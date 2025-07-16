@@ -99,6 +99,36 @@ export type PrivacyRequestsListResponse = {
   Data: PrivacyRequests[] | null;
 };
 
+// GraphQL Response Wrappers
+export type PrivacyRequestsCreateMutationResponse = {
+  PrivacyRequestsCreate: PrivacyRequestsCreateResponse;
+};
+
+export type PrivacyRequestsUpdateMutationResponse = {
+  PrivacyRequestsUpdate: PrivacyRequestsUpdateResponse;
+};
+
+export type PrivacyRequestsDeleteMutationResponse = {
+  PrivacyRequestsDelete: PrivacyRequestsResponse;
+};
+
+export type PrivacyRequestsQueryByRequestIdResponse = {
+  PrivacyRequestsQueryByRequestId: PrivacyRequestsResponse;
+};
+
+export type PrivacyRequestsQueryByRequestTypeResponse = {
+  PrivacyRequestsQueryByRequestType: PrivacyRequestsListResponse;
+};
+export type PrivacyRequestsQueryByDataSubjectEmailResponse = {
+  PrivacyRequestsQueryByDataSubjectEmail: PrivacyRequestsListResponse;
+};
+export type PrivacyRequestsQueryByOrganizationIdResponse = {
+  PrivacyRequestsQueryByOrganizationId: PrivacyRequestsListResponse;
+};
+export type PrivacyRequestsQueryByStatusResponse = {
+  PrivacyRequestsQueryByStatus: PrivacyRequestsListResponse;
+};
+
 export interface IPrivacyRequests {
   requestId: string;
   requestType: PrivacyRequestType;

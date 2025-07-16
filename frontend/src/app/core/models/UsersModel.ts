@@ -84,6 +84,33 @@ export type UsersListResponse = {
   Data: Users[] | null;
 };
 
+// GraphQL Response Wrappers
+export type UsersCreateMutationResponse = {
+  UsersCreate: UsersCreateResponse;
+};
+
+export type UsersUpdateMutationResponse = {
+  UsersUpdate: UsersUpdateResponse;
+};
+
+export type UsersDeleteMutationResponse = {
+  UsersDelete: UsersResponse;
+};
+
+export type UsersQueryByUserIdResponse = {
+  UsersQueryByUserId: UsersResponse;
+};
+
+export type UsersQueryByEmailResponse = {
+  UsersQueryByEmail: UsersListResponse;
+};
+export type UsersQueryByCognitoIdResponse = {
+  UsersQueryByCognitoId: UsersListResponse;
+};
+export type UsersQueryByCognitoSubResponse = {
+  UsersQueryByCognitoSub: UsersListResponse;
+};
+
 export interface IUsers {
   userId: string;
   cognitoId: string;

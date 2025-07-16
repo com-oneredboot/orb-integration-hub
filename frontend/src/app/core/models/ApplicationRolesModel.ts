@@ -75,6 +75,33 @@ export type ApplicationRolesListResponse = {
   Data: ApplicationRoles[] | null;
 };
 
+// GraphQL Response Wrappers
+export type ApplicationRolesCreateMutationResponse = {
+  ApplicationRolesCreate: ApplicationRolesCreateResponse;
+};
+
+export type ApplicationRolesUpdateMutationResponse = {
+  ApplicationRolesUpdate: ApplicationRolesUpdateResponse;
+};
+
+export type ApplicationRolesDeleteMutationResponse = {
+  ApplicationRolesDelete: ApplicationRolesResponse;
+};
+
+export type ApplicationRolesQueryByApplicationRoleIdResponse = {
+  ApplicationRolesQueryByApplicationRoleId: ApplicationRolesResponse;
+};
+
+export type ApplicationRolesQueryByUserIdResponse = {
+  ApplicationRolesQueryByUserId: ApplicationRolesListResponse;
+};
+export type ApplicationRolesQueryByApplicationIdResponse = {
+  ApplicationRolesQueryByApplicationId: ApplicationRolesListResponse;
+};
+export type ApplicationRolesQueryByRoleIdResponse = {
+  ApplicationRolesQueryByRoleId: ApplicationRolesListResponse;
+};
+
 export interface IApplicationRoles {
   applicationRoleId: string;
   userId: string;

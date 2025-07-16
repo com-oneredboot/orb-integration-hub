@@ -68,6 +68,27 @@ export type ApplicationsListResponse = {
   Data: Applications[] | null;
 };
 
+// GraphQL Response Wrappers
+export type ApplicationsCreateMutationResponse = {
+  ApplicationsCreate: ApplicationsCreateResponse;
+};
+
+export type ApplicationsUpdateMutationResponse = {
+  ApplicationsUpdate: ApplicationsUpdateResponse;
+};
+
+export type ApplicationsDeleteMutationResponse = {
+  ApplicationsDelete: ApplicationsResponse;
+};
+
+export type ApplicationsQueryByApplicationIdResponse = {
+  ApplicationsQueryByApplicationId: ApplicationsResponse;
+};
+
+export type ApplicationsQueryByOrganizationIdResponse = {
+  ApplicationsQueryByOrganizationId: ApplicationsListResponse;
+};
+
 export interface IApplications {
   applicationId: string;
   name: string;

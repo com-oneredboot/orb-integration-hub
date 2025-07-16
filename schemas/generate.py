@@ -1046,10 +1046,10 @@ def generate_typescript_lambda_graphql_ops(type_name: str, lambda_type) -> None:
     """Generate TypeScript GraphQL operations for lambda types."""
     try:
         jinja_env = setup_jinja_env()
-        template = jinja_env.get_template('typescript_lambda_dynamodb_graphql_operations.jinja')
         
         # For lambda-dynamodb types (which are TableSchema instances), build full CRUD operations
         if hasattr(lambda_type, 'partition_key'):
+            template = jinja_env.get_template('typescript_lambda_dynamodb_graphql_operations.jinja')
             # This is a lambda-dynamodb type with DynamoDB backing
             processed_schema = copy.deepcopy(lambda_type)
             if not hasattr(processed_schema, 'secondary_indexes') or processed_schema.secondary_indexes is None:
@@ -1188,6 +1188,7 @@ query {type_name}QueryBy{idx_pascal}($input: {type_name}QueryBy{idx_pascal}Input
             content = template.render(schema=processed_schema, operations=operations)
         else:
             # This is a simple lambda type without DynamoDB backing
+            template = jinja_env.get_template('typescript_lambda_graphql_operations.jinja')
             schema_data = {
                 'name': type_name,
                 'attributes': lambda_type.attributes

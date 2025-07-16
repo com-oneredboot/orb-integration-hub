@@ -76,6 +76,29 @@ export type {{ schema.name }}ListResponse = {
   Data: {{ schema.name }}[] | null;
 };
 
+// GraphQL Response Wrappers
+export type {{ schema.name }}CreateMutationResponse = {
+  {{ schema.name }}Create: {{ schema.name }}CreateResponse;
+};
+
+export type {{ schema.name }}UpdateMutationResponse = {
+  {{ schema.name }}Update: {{ schema.name }}UpdateResponse;
+};
+
+export type {{ schema.name }}DeleteMutationResponse = {
+  {{ schema.name }}Delete: {{ schema.name }}Response;
+};
+
+export type {{ schema.name }}QueryBy{{ schema.partition_key|to_pascal_case }}Response = {
+  {{ schema.name }}QueryBy{{ schema.partition_key|to_pascal_case }}: {{ schema.name }}Response;
+};
+
+{% for index in schema.secondary_indexes %}
+export type {{ schema.name }}QueryBy{{ index.partition|to_pascal_case }}Response = {
+  {{ schema.name }}QueryBy{{ index.partition|to_pascal_case }}: {{ schema.name }}ListResponse;
+};
+{% endfor %}
+
 export interface I{{ schema.name }} {
 {% for attr in schema.attributes %}
   {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{{ attr.type|to_typescript_type }}{% endif %}{% if not attr.required %} | undefined{% endif %};

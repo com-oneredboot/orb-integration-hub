@@ -63,6 +63,30 @@ export type ApplicationUsersListResponse = {
   Data: ApplicationUsers[] | null;
 };
 
+// GraphQL Response Wrappers
+export type ApplicationUsersCreateMutationResponse = {
+  ApplicationUsersCreate: ApplicationUsersCreateResponse;
+};
+
+export type ApplicationUsersUpdateMutationResponse = {
+  ApplicationUsersUpdate: ApplicationUsersUpdateResponse;
+};
+
+export type ApplicationUsersDeleteMutationResponse = {
+  ApplicationUsersDelete: ApplicationUsersResponse;
+};
+
+export type ApplicationUsersQueryByApplicationUserIdResponse = {
+  ApplicationUsersQueryByApplicationUserId: ApplicationUsersResponse;
+};
+
+export type ApplicationUsersQueryByUserIdResponse = {
+  ApplicationUsersQueryByUserId: ApplicationUsersListResponse;
+};
+export type ApplicationUsersQueryByApplicationIdResponse = {
+  ApplicationUsersQueryByApplicationId: ApplicationUsersListResponse;
+};
+
 export interface IApplicationUsers {
   applicationUserId: string;
   userId: string;
