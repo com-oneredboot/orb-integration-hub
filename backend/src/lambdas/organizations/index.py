@@ -580,21 +580,21 @@ def lambda_handler(event, context):
         field_name = event.get('info', {}).get('fieldName')
         
         # Route to appropriate method based on GraphQL field
-        if field_name == 'createOrganization':
+        if field_name == 'OrganizationsCreate':
             return resolver.create_organization(event)
-        elif field_name == 'getOrganization':
+        elif field_name == 'OrganizationsGet':
             return resolver.get_organization(event)
-        elif field_name == 'listOrganizations':
+        elif field_name == 'OrganizationsList':
             return resolver.list_organizations(event)
-        elif field_name == 'updateOrganization':
+        elif field_name == 'OrganizationsUpdate':
             return resolver.update_organization(event)
-        elif field_name == 'deleteOrganization':
+        elif field_name == 'OrganizationsDelete':
             return resolver.delete_organization(event)
-        elif field_name == 'getUserPermissions':
+        elif field_name == 'OrganizationsGetUserPermissions':
             return resolver.get_user_permissions(event)
-        elif field_name == 'checkPermission':
+        elif field_name == 'OrganizationsCheckPermission':
             return resolver.check_permission(event)
-        elif field_name == 'getOrganizationRoles':
+        elif field_name == 'OrganizationsGetRoles':
             return resolver.get_organization_roles(event)
         else:
             return {
