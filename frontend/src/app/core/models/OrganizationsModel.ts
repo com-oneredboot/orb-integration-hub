@@ -12,8 +12,8 @@ export type OrganizationsCreateInput = {
   description: string | undefined;
   ownerId: string;
   status: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
   kmsKeyId: string | undefined;
   kmsKeyArn: string | undefined;
   kmsAlias: string | undefined;
@@ -26,8 +26,8 @@ export type OrganizationsUpdateInput = {
   description: string | undefined;
   ownerId: string;
   status: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
   kmsKeyId: string | undefined;
   kmsKeyArn: string | undefined;
   kmsAlias: string | undefined;
@@ -101,8 +101,8 @@ export interface IOrganizations {
   description: string | undefined;
   ownerId: string;
   status: OrganizationStatus;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
   kmsKeyId: string | undefined;
   kmsKeyArn: string | undefined;
   kmsAlias: string | undefined;
@@ -114,8 +114,8 @@ export class Organizations implements IOrganizations {
   description = '';
   ownerId = '';
   status = OrganizationStatus.UNKNOWN;
-  createdAt = '';
-  updatedAt = '';
+  createdAt = 0;
+  updatedAt = 0;
   kmsKeyId = '';
   kmsKeyArn = '';
   kmsAlias = '';

@@ -1,11 +1,11 @@
 """
 Generated Python models for Applications
-Generated at 2025-07-16T17:14:15.726640
+Generated at 2025-07-16T21:41:30.575410
 """
 
 from typing import Optional, List
 from pydantic import BaseModel, Field, validator
-from datetime import datetime
+from datetime import datetime  # Still needed for timestamp parsing
 from enum import Enum
 from .ApplicationStatusEnum import ApplicationStatus
 
@@ -16,8 +16,8 @@ class ApplicationsCreateInput(BaseModel):
     organization_id: str = Field(..., description="ID of the organization this application belongs to (foreign key to Organizations)")
     owner_id: str = Field(..., description="ID of the user who owns the application (foreign key to Users)")
     status: ApplicationStatus = Field(..., description="Current status of the application")
-    created_at: datetime = Field(..., description="When the application was created")
-    updated_at: datetime = Field(..., description="When the application was last updated")
+    created_at: int = Field(..., description="When the application was created")
+    updated_at: int = Field(..., description="When the application was last updated")
     api_key: str = Field(..., description="Current active API key for the application")
     api_key_next: str = Field(..., description="Next API key for rotation (dual key system)")
     environments: List[str] = Field(..., description="List of available environments for this application (max 5 for starter plan)")
@@ -28,8 +28,8 @@ class ApplicationsUpdateInput(BaseModel):
     organization_id: Optional[str] = Field(None, description="ID of the organization this application belongs to (foreign key to Organizations)")
     owner_id: Optional[str] = Field(None, description="ID of the user who owns the application (foreign key to Users)")
     status: Optional[ApplicationStatus] = Field(None, description="Current status of the application")
-    created_at: Optional[datetime] = Field(None, description="When the application was created")
-    updated_at: Optional[datetime] = Field(None, description="When the application was last updated")
+    created_at: Optional[int] = Field(None, description="When the application was created")
+    updated_at: Optional[int] = Field(None, description="When the application was last updated")
     api_key: Optional[str] = Field(None, description="Current active API key for the application")
     api_key_next: Optional[str] = Field(None, description="Next API key for rotation (dual key system)")
     environments: Optional[List[str]] = Field(None, description="List of available environments for this application (max 5 for starter plan)")
@@ -52,29 +52,45 @@ class ApplicationsQueryByOrganizationIdInput(BaseModel):
 # Properties: Field(...) = required (from schema), Optional[...] = optional (from schema)
 class Applications(BaseModel):
     """Applications model."""
-    application_id: str = Field(..., description="Unique identifier for the application (primary key)")    name: str = Field(..., description="Name of the application")    organization_id: str = Field(..., description="ID of the organization this application belongs to (foreign key to Organizations)")    owner_id: str = Field(..., description="ID of the user who owns the application (foreign key to Users)")    status: str = Field(..., description="Current status of the application")    created_at: datetime = Field(..., description="When the application was created")    updated_at: datetime = Field(..., description="When the application was last updated")    api_key: str = Field(..., description="Current active API key for the application")    api_key_next: str = Field(None, description="Next API key for rotation (dual key system)")    environments: List[str] = Field(..., description="List of available environments for this application (max 5 for starter plan)")
-    @validator('createdAt', pre=True)
-    def parse_createdAt(cls, value):
-        """Parse timestamp to ISO format."""
+    application_id: str = Field(..., description="Unique identifier for the application (primary key)")    name: str = Field(..., description="Name of the application")    organization_id: str = Field(..., description="ID of the organization this application belongs to (foreign key to Organizations)")    owner_id: str = Field(..., description="ID of the user who owns the application (foreign key to Users)")    status: str = Field(..., description="Current status of the application")    created_at: int = Field(..., description="When the application was created")    updated_at: int = Field(..., description="When the application was last updated")    api_key: str = Field(..., description="Current active API key for the application")    api_key_next: str = Field(None, description="Next API key for rotation (dual key system)")    environments: List[str] = Field(..., description="List of available environments for this application (max 5 for starter plan)")
+    @validator('created_at', pre=True)
+    def parse_created_at(cls, value):
+        """Parse timestamp to epoch seconds."""
         if value is None:
             return None
-        if isinstance(value, datetime):
+        if isinstance(value, int):
             return value
-        try:
-            return datetime.fromisoformat(value.replace('Z', '+00:00'))
-        except (ValueError, TypeError):
-            return None
-    @validator('updatedAt', pre=True)
-    def parse_updatedAt(cls, value):
-        """Parse timestamp to ISO format."""
+        if isinstance(value, float):
+            return int(value)
+        if isinstance(value, datetime):
+            return int(value.timestamp())
+        if isinstance(value, str):
+            try:
+                # Try to parse ISO format string
+                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                return int(dt.timestamp())
+            except (ValueError, TypeError):
+                pass
+        return value
+    @validator('updated_at', pre=True)
+    def parse_updated_at(cls, value):
+        """Parse timestamp to epoch seconds."""
         if value is None:
             return None
-        if isinstance(value, datetime):
+        if isinstance(value, int):
             return value
-        try:
-            return datetime.fromisoformat(value.replace('Z', '+00:00'))
-        except (ValueError, TypeError):
-            return None
+        if isinstance(value, float):
+            return int(value)
+        if isinstance(value, datetime):
+            return int(value.timestamp())
+        if isinstance(value, str):
+            try:
+                # Try to parse ISO format string
+                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                return int(dt.timestamp())
+            except (ValueError, TypeError):
+                pass
+        return value
 
     @classmethod
     def from_dto(cls, dto: dict) -> "Applications":
@@ -108,9 +124,6 @@ class Applications(BaseModel):
     class Config:
         """Model configuration."""
         from_attributes = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
 
 # ProperCase Response Types
 class ApplicationsResponse(BaseModel):

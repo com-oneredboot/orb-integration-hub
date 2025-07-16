@@ -16,9 +16,9 @@ export type NotificationsCreateInput = {
   title: string;
   message: string;
   metadata: Record<string, any> | undefined;
-  expiresAt: string | undefined;
-  createdAt: string;
-  updatedAt: string;
+  expiresAt: number | undefined;
+  createdAt: number;
+  updatedAt: number;
 };
 
 // UpdateInput
@@ -31,9 +31,9 @@ export type NotificationsUpdateInput = {
   title: string;
   message: string;
   metadata: Record<string, any> | undefined;
-  expiresAt: string | undefined;
-  createdAt: string;
-  updatedAt: string;
+  expiresAt: number | undefined;
+  createdAt: number;
+  updatedAt: number;
 };
 
 // QueryInput
@@ -107,9 +107,9 @@ export interface INotifications {
   title: string;
   message: string;
   metadata: Record<string, any> | undefined;
-  expiresAt: string | undefined;
-  createdAt: string;
-  updatedAt: string;
+  expiresAt: number | undefined;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export class Notifications implements INotifications {
@@ -121,9 +121,9 @@ export class Notifications implements INotifications {
   title = '';
   message = '';
   metadata = {};
-  expiresAt = '';
-  createdAt = '';
-  updatedAt = '';
+  expiresAt = 0;
+  createdAt = 0;
+  updatedAt = 0;
 
   constructor(data: Partial<INotifications> = {}) {
     Object.entries(data).forEach(([key, value]) => {

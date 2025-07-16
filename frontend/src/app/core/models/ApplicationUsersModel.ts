@@ -11,8 +11,8 @@ export type ApplicationUsersCreateInput = {
   userId: string;
   applicationId: string;
   status: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
 };
 
 // UpdateInput
@@ -21,8 +21,8 @@ export type ApplicationUsersUpdateInput = {
   userId: string;
   applicationId: string;
   status: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
 };
 
 // QueryInput
@@ -92,8 +92,8 @@ export interface IApplicationUsers {
   userId: string;
   applicationId: string;
   status: ApplicationUserStatus;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export class ApplicationUsers implements IApplicationUsers {
@@ -101,8 +101,8 @@ export class ApplicationUsers implements IApplicationUsers {
   userId = '';
   applicationId = '';
   status = ApplicationUserStatus.UNKNOWN;
-  createdAt = '';
-  updatedAt = '';
+  createdAt = 0;
+  updatedAt = 0;
 
   constructor(data: Partial<IApplicationUsers> = {}) {
     Object.entries(data).forEach(([key, value]) => {

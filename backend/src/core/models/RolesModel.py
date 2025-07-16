@@ -1,11 +1,11 @@
 """
 Generated Python models for Roles
-Generated at 2025-07-16T17:14:15.690738
+Generated at 2025-07-16T21:41:30.539236
 """
 
 from typing import Optional, List
 from pydantic import BaseModel, Field, validator
-from datetime import datetime
+from datetime import datetime  # Still needed for timestamp parsing
 from enum import Enum
 from .RoleTypeEnum import RoleType
 from .RoleStatusEnum import RoleStatus
@@ -16,16 +16,16 @@ class RolesCreateInput(BaseModel):
     user_id: str = Field(..., description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.")
     role_type: RoleType = Field(..., description="Type of the role")
     status: RoleStatus = Field(..., description="Current status of the role")
-    created_at: datetime = Field(..., description="When the role was created")
-    updated_at: datetime = Field(..., description="When the role was last updated")
+    created_at: int = Field(..., description="When the role was created")
+    updated_at: int = Field(..., description="When the role was last updated")
 
 class RolesUpdateInput(BaseModel):
     role_id: Optional[str] = Field(None, description="Unique identifier for the role (primary key)")
     user_id: Optional[str] = Field(None, description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.")
     role_type: Optional[RoleType] = Field(None, description="Type of the role")
     status: Optional[RoleStatus] = Field(None, description="Current status of the role")
-    created_at: Optional[datetime] = Field(None, description="When the role was created")
-    updated_at: Optional[datetime] = Field(None, description="When the role was last updated")
+    created_at: Optional[int] = Field(None, description="When the role was created")
+    updated_at: Optional[int] = Field(None, description="When the role was last updated")
 
 class RolesDeleteInput(BaseModel):
     role_id: str
@@ -45,29 +45,45 @@ class RolesQueryByUserIdInput(BaseModel):
 # Properties: Field(...) = required (from schema), Optional[...] = optional (from schema)
 class Roles(BaseModel):
     """Roles model."""
-    role_id: str = Field(..., description="Unique identifier for the role (primary key)")    user_id: str = Field(None, description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.")    role_type: str = Field(..., description="Type of the role")    status: str = Field(..., description="Current status of the role")    created_at: datetime = Field(..., description="When the role was created")    updated_at: datetime = Field(..., description="When the role was last updated")
-    @validator('createdAt', pre=True)
-    def parse_createdAt(cls, value):
-        """Parse timestamp to ISO format."""
+    role_id: str = Field(..., description="Unique identifier for the role (primary key)")    user_id: str = Field(None, description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.")    role_type: str = Field(..., description="Type of the role")    status: str = Field(..., description="Current status of the role")    created_at: int = Field(..., description="When the role was created")    updated_at: int = Field(..., description="When the role was last updated")
+    @validator('created_at', pre=True)
+    def parse_created_at(cls, value):
+        """Parse timestamp to epoch seconds."""
         if value is None:
             return None
-        if isinstance(value, datetime):
+        if isinstance(value, int):
             return value
-        try:
-            return datetime.fromisoformat(value.replace('Z', '+00:00'))
-        except (ValueError, TypeError):
-            return None
-    @validator('updatedAt', pre=True)
-    def parse_updatedAt(cls, value):
-        """Parse timestamp to ISO format."""
+        if isinstance(value, float):
+            return int(value)
+        if isinstance(value, datetime):
+            return int(value.timestamp())
+        if isinstance(value, str):
+            try:
+                # Try to parse ISO format string
+                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                return int(dt.timestamp())
+            except (ValueError, TypeError):
+                pass
+        return value
+    @validator('updated_at', pre=True)
+    def parse_updated_at(cls, value):
+        """Parse timestamp to epoch seconds."""
         if value is None:
             return None
-        if isinstance(value, datetime):
+        if isinstance(value, int):
             return value
-        try:
-            return datetime.fromisoformat(value.replace('Z', '+00:00'))
-        except (ValueError, TypeError):
-            return None
+        if isinstance(value, float):
+            return int(value)
+        if isinstance(value, datetime):
+            return int(value.timestamp())
+        if isinstance(value, str):
+            try:
+                # Try to parse ISO format string
+                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                return int(dt.timestamp())
+            except (ValueError, TypeError):
+                pass
+        return value
 
     @classmethod
     def from_dto(cls, dto: dict) -> "Roles":
@@ -93,9 +109,6 @@ class Roles(BaseModel):
     class Config:
         """Model configuration."""
         from_attributes = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
 
 # ProperCase Response Types
 class RolesResponse(BaseModel):

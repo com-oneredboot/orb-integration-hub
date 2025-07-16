@@ -1,11 +1,11 @@
 """
 Generated Python models for ApplicationUsers
-Generated at 2025-07-16T17:14:15.572766
+Generated at 2025-07-16T21:41:30.420698
 """
 
 from typing import Optional, List
 from pydantic import BaseModel, Field, validator
-from datetime import datetime
+from datetime import datetime  # Still needed for timestamp parsing
 from enum import Enum
 from .ApplicationUserStatusEnum import ApplicationUserStatus
 
@@ -15,16 +15,16 @@ class ApplicationUsersCreateInput(BaseModel):
     user_id: str = Field(..., description="ID of the user (foreign key to Users)")
     application_id: str = Field(..., description="ID of the application (foreign key to Applications)")
     status: ApplicationUserStatus = Field(..., description="Current status of the user in the application")
-    created_at: datetime = Field(..., description="When the user was added to the application")
-    updated_at: datetime = Field(..., description="When the membership was last updated")
+    created_at: int = Field(..., description="When the user was added to the application")
+    updated_at: int = Field(..., description="When the membership was last updated")
 
 class ApplicationUsersUpdateInput(BaseModel):
     application_user_id: Optional[str] = Field(None, description="Unique identifier for the application user membership (primary key)")
     user_id: Optional[str] = Field(None, description="ID of the user (foreign key to Users)")
     application_id: Optional[str] = Field(None, description="ID of the application (foreign key to Applications)")
     status: Optional[ApplicationUserStatus] = Field(None, description="Current status of the user in the application")
-    created_at: Optional[datetime] = Field(None, description="When the user was added to the application")
-    updated_at: Optional[datetime] = Field(None, description="When the membership was last updated")
+    created_at: Optional[int] = Field(None, description="When the user was added to the application")
+    updated_at: Optional[int] = Field(None, description="When the membership was last updated")
 
 class ApplicationUsersDeleteInput(BaseModel):
     application_user_id: str
@@ -47,29 +47,45 @@ class ApplicationUsersQueryByApplicationIdInput(BaseModel):
 # Properties: Field(...) = required (from schema), Optional[...] = optional (from schema)
 class ApplicationUsers(BaseModel):
     """ApplicationUsers model."""
-    application_user_id: str = Field(..., description="Unique identifier for the application user membership (primary key)")    user_id: str = Field(..., description="ID of the user (foreign key to Users)")    application_id: str = Field(..., description="ID of the application (foreign key to Applications)")    status: str = Field(..., description="Current status of the user in the application")    created_at: datetime = Field(..., description="When the user was added to the application")    updated_at: datetime = Field(..., description="When the membership was last updated")
-    @validator('createdAt', pre=True)
-    def parse_createdAt(cls, value):
-        """Parse timestamp to ISO format."""
+    application_user_id: str = Field(..., description="Unique identifier for the application user membership (primary key)")    user_id: str = Field(..., description="ID of the user (foreign key to Users)")    application_id: str = Field(..., description="ID of the application (foreign key to Applications)")    status: str = Field(..., description="Current status of the user in the application")    created_at: int = Field(..., description="When the user was added to the application")    updated_at: int = Field(..., description="When the membership was last updated")
+    @validator('created_at', pre=True)
+    def parse_created_at(cls, value):
+        """Parse timestamp to epoch seconds."""
         if value is None:
             return None
-        if isinstance(value, datetime):
+        if isinstance(value, int):
             return value
-        try:
-            return datetime.fromisoformat(value.replace('Z', '+00:00'))
-        except (ValueError, TypeError):
-            return None
-    @validator('updatedAt', pre=True)
-    def parse_updatedAt(cls, value):
-        """Parse timestamp to ISO format."""
+        if isinstance(value, float):
+            return int(value)
+        if isinstance(value, datetime):
+            return int(value.timestamp())
+        if isinstance(value, str):
+            try:
+                # Try to parse ISO format string
+                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                return int(dt.timestamp())
+            except (ValueError, TypeError):
+                pass
+        return value
+    @validator('updated_at', pre=True)
+    def parse_updated_at(cls, value):
+        """Parse timestamp to epoch seconds."""
         if value is None:
             return None
-        if isinstance(value, datetime):
+        if isinstance(value, int):
             return value
-        try:
-            return datetime.fromisoformat(value.replace('Z', '+00:00'))
-        except (ValueError, TypeError):
-            return None
+        if isinstance(value, float):
+            return int(value)
+        if isinstance(value, datetime):
+            return int(value.timestamp())
+        if isinstance(value, str):
+            try:
+                # Try to parse ISO format string
+                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                return int(dt.timestamp())
+            except (ValueError, TypeError):
+                pass
+        return value
 
     @classmethod
     def from_dto(cls, dto: dict) -> "ApplicationUsers":
@@ -95,9 +111,6 @@ class ApplicationUsers(BaseModel):
     class Config:
         """Model configuration."""
         from_attributes = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
 
 # ProperCase Response Types
 class ApplicationUsersResponse(BaseModel):

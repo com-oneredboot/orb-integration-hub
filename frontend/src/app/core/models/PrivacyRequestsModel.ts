@@ -16,10 +16,10 @@ export type PrivacyRequestsCreateInput = {
   organizationId: string | undefined;
   requesterId: string;
   status: string;
-  receivedAt: string;
-  deadline: string;
-  completedAt: string | undefined;
-  estimatedCompletion: string | undefined;
+  receivedAt: number;
+  deadline: number;
+  completedAt: number | undefined;
+  estimatedCompletion: number | undefined;
   automatedProcessing: boolean;
   accessReport: string | undefined;
   deletionResult: string | undefined;
@@ -27,8 +27,8 @@ export type PrivacyRequestsCreateInput = {
   rejectionReason: string | undefined;
   errorDetails: string | undefined;
   complianceNotes: string | undefined;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
 };
 
 // UpdateInput
@@ -40,10 +40,10 @@ export type PrivacyRequestsUpdateInput = {
   organizationId: string | undefined;
   requesterId: string;
   status: string;
-  receivedAt: string;
-  deadline: string;
-  completedAt: string | undefined;
-  estimatedCompletion: string | undefined;
+  receivedAt: number;
+  deadline: number;
+  completedAt: number | undefined;
+  estimatedCompletion: number | undefined;
   automatedProcessing: boolean;
   accessReport: string | undefined;
   deletionResult: string | undefined;
@@ -51,8 +51,8 @@ export type PrivacyRequestsUpdateInput = {
   rejectionReason: string | undefined;
   errorDetails: string | undefined;
   complianceNotes: string | undefined;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
 };
 
 // QueryInput
@@ -137,10 +137,10 @@ export interface IPrivacyRequests {
   organizationId: string | undefined;
   requesterId: string;
   status: PrivacyRequestStatus;
-  receivedAt: string;
-  deadline: string;
-  completedAt: string | undefined;
-  estimatedCompletion: string | undefined;
+  receivedAt: number;
+  deadline: number;
+  completedAt: number | undefined;
+  estimatedCompletion: number | undefined;
   automatedProcessing: boolean;
   accessReport: string | undefined;
   deletionResult: string | undefined;
@@ -148,8 +148,8 @@ export interface IPrivacyRequests {
   rejectionReason: string | undefined;
   errorDetails: string | undefined;
   complianceNotes: string | undefined;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export class PrivacyRequests implements IPrivacyRequests {
@@ -160,10 +160,10 @@ export class PrivacyRequests implements IPrivacyRequests {
   organizationId = '';
   requesterId = '';
   status = PrivacyRequestStatus.UNKNOWN;
-  receivedAt = '';
-  deadline = '';
-  completedAt = '';
-  estimatedCompletion = '';
+  receivedAt = 0;
+  deadline = 0;
+  completedAt = 0;
+  estimatedCompletion = 0;
   automatedProcessing = false;
   accessReport = '';
   deletionResult = '';
@@ -171,8 +171,8 @@ export class PrivacyRequests implements IPrivacyRequests {
   rejectionReason = '';
   errorDetails = '';
   complianceNotes = '';
-  createdAt = '';
-  updatedAt = '';
+  createdAt = 0;
+  updatedAt = 0;
 
   constructor(data: Partial<IPrivacyRequests> = {}) {
     Object.entries(data).forEach(([key, value]) => {

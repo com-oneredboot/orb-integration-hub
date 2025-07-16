@@ -109,7 +109,7 @@ class OrganizationsResolver:
                     encrypted_description = description  # Fallback to plain text
             
             # Prepare organization data
-            now = datetime.utcnow().isoformat()
+            now = int(datetime.utcnow().timestamp())  # Numeric timestamp for DynamoDB
             organization_data = {
                 'organizationId': organization_id,
                 'name': name,  # Name stays unencrypted for searching
@@ -272,7 +272,7 @@ class OrganizationsResolver:
             
             # Build update expression
             update_expression = "SET updatedAt = :updatedAt"
-            expression_values = {':updatedAt': datetime.utcnow().isoformat()}
+            expression_values = {':updatedAt': int(datetime.utcnow().timestamp())}
             expression_names = {}
             
             if 'name' in args:
@@ -385,7 +385,7 @@ class OrganizationsResolver:
                 ExpressionAttributeNames={'#status': 'status'},
                 ExpressionAttributeValues={
                     ':deleted_status': 'DELETED',
-                    ':updatedAt': datetime.utcnow().isoformat()
+                    ':updatedAt': int(datetime.utcnow().timestamp())
                 },
                 ReturnValues='ALL_NEW',
                 ConditionExpression='attribute_exists(organizationId) AND #status <> :deleted_status'

@@ -1,6 +1,6 @@
 /**
  * AuthError standard model.
- * Generated at 2025-07-16T17:14:15.787132
+ * Generated at 2025-07-16T21:41:30.636292
  */
 
 // Import enums and models used in this model

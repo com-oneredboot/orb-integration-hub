@@ -12,8 +12,8 @@ export type ApplicationsCreateInput = {
   organizationId: string;
   ownerId: string;
   status: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
   apiKey: string;
   apiKeyNext: string | undefined;
   environments: string[];
@@ -26,8 +26,8 @@ export type ApplicationsUpdateInput = {
   organizationId: string;
   ownerId: string;
   status: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
   apiKey: string;
   apiKeyNext: string | undefined;
   environments: string[];
@@ -95,8 +95,8 @@ export interface IApplications {
   organizationId: string;
   ownerId: string;
   status: ApplicationStatus;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
   apiKey: string;
   apiKeyNext: string | undefined;
   environments: string[];
@@ -108,8 +108,8 @@ export class Applications implements IApplications {
   organizationId = '';
   ownerId = '';
   status = ApplicationStatus.UNKNOWN;
-  createdAt = '';
-  updatedAt = '';
+  createdAt = 0;
+  updatedAt = 0;
   apiKey = '';
   apiKeyNext = '';
   environments = [];

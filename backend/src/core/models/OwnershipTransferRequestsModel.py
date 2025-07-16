@@ -1,11 +1,11 @@
 """
 Generated Python models for OwnershipTransferRequests
-Generated at 2025-07-16T17:14:15.465600
+Generated at 2025-07-16T21:41:30.311444
 """
 
 from typing import Optional, List
 from pydantic import BaseModel, Field, validator
-from datetime import datetime
+from datetime import datetime  # Still needed for timestamp parsing
 from enum import Enum
 from .OwnershipTransferStatusEnum import OwnershipTransferStatus
 
@@ -119,9 +119,6 @@ class OwnershipTransferRequests(BaseModel):
     class Config:
         """Model configuration."""
         from_attributes = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
 
 # ProperCase Response Types
 class OwnershipTransferRequestsResponse(BaseModel):

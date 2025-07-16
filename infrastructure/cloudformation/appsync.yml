@@ -2581,8 +2581,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "OwnershipTransferRequestsCreate",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "OwnershipTransferRequestsCreate",
+              "parentTypeName": "Mutation",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -2602,8 +2612,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "OwnershipTransferRequestsUpdate",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "OwnershipTransferRequestsUpdate",
+              "parentTypeName": "Mutation",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -2623,8 +2643,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "OwnershipTransferRequestsDelete",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "OwnershipTransferRequestsDelete",
+              "parentTypeName": "Mutation",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -2644,8 +2674,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "OwnershipTransferRequestsDisable",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "OwnershipTransferRequestsDisable",
+              "parentTypeName": "Mutation",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -2665,8 +2705,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "OwnershipTransferRequestsQueryByTransferId",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "OwnershipTransferRequestsQueryByTransferId",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -2686,8 +2736,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "OwnershipTransferRequestsQueryByCurrentOwnerIdAndCreatedAt",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "OwnershipTransferRequestsQueryByCurrentOwnerIdAndCreatedAt",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -2707,8 +2767,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "OwnershipTransferRequestsQueryByNewOwnerIdAndCreatedAt",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "OwnershipTransferRequestsQueryByNewOwnerIdAndCreatedAt",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -2728,8 +2798,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "OwnershipTransferRequestsQueryByStatusAndCreatedAt",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "OwnershipTransferRequestsQueryByStatusAndCreatedAt",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -2749,8 +2829,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "OwnershipTransferRequestsQueryByStatusAndExpiresAt",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "OwnershipTransferRequestsQueryByStatusAndExpiresAt",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -2770,8 +2860,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "OrganizationsCreate",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "OrganizationsCreate",
+              "parentTypeName": "Mutation",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -2791,8 +2891,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "OrganizationsUpdate",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "OrganizationsUpdate",
+              "parentTypeName": "Mutation",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -2812,8 +2922,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "OrganizationsDelete",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "OrganizationsDelete",
+              "parentTypeName": "Mutation",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -2833,8 +2953,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "OrganizationsDisable",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "OrganizationsDisable",
+              "parentTypeName": "Mutation",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -2854,8 +2984,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "OrganizationsQueryByOrganizationId",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "OrganizationsQueryByOrganizationId",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -2875,8 +3015,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "OrganizationsQueryByOwnerIdAndCreatedAt",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "OrganizationsQueryByOwnerIdAndCreatedAt",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -2896,8 +3046,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "OrganizationsQueryByStatusAndCreatedAt",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "OrganizationsQueryByStatusAndCreatedAt",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -2917,8 +3077,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "PrivacyRequestsCreate",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "PrivacyRequestsCreate",
+              "parentTypeName": "Mutation",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -2938,8 +3108,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "PrivacyRequestsUpdate",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "PrivacyRequestsUpdate",
+              "parentTypeName": "Mutation",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -2959,8 +3139,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "PrivacyRequestsDelete",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "PrivacyRequestsDelete",
+              "parentTypeName": "Mutation",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -2980,8 +3170,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "PrivacyRequestsDisable",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "PrivacyRequestsDisable",
+              "parentTypeName": "Mutation",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -3001,8 +3201,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "PrivacyRequestsQueryByRequestId",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "PrivacyRequestsQueryByRequestId",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -3022,8 +3232,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "PrivacyRequestsQueryByRequestTypeAndReceivedAt",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "PrivacyRequestsQueryByRequestTypeAndReceivedAt",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -3043,8 +3263,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "PrivacyRequestsQueryByDataSubjectEmailAndReceivedAt",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "PrivacyRequestsQueryByDataSubjectEmailAndReceivedAt",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -3064,8 +3294,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "PrivacyRequestsQueryByOrganizationIdAndReceivedAt",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "PrivacyRequestsQueryByOrganizationIdAndReceivedAt",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |
@@ -3085,8 +3325,18 @@ Resources:
           "version": "2018-05-29",
           "operation": "Invoke",
           "payload": {
-            "action": "PrivacyRequestsQueryByStatusAndDeadline",
-            "arguments": $util.toJson($ctx.args)
+            "info": {
+              "fieldName": "PrivacyRequestsQueryByStatusAndDeadline",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
           }
         }
       ResponseMappingTemplate: |

@@ -14,8 +14,8 @@ export type UsersCreateInput = {
   firstName: string;
   lastName: string;
   status: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
   phoneNumber: string | undefined;
   groups: string[] | undefined;
   emailVerified: boolean | undefined;
@@ -33,8 +33,8 @@ export type UsersUpdateInput = {
   firstName: string;
   lastName: string;
   status: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
   phoneNumber: string | undefined;
   groups: string[] | undefined;
   emailVerified: boolean | undefined;
@@ -119,8 +119,8 @@ export interface IUsers {
   firstName: string;
   lastName: string;
   status: UserStatus;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
   phoneNumber: string | undefined;
   groups: string[] | undefined;
   emailVerified: boolean | undefined;
@@ -137,8 +137,8 @@ export class Users implements IUsers {
   firstName = '';
   lastName = '';
   status = UserStatus.UNKNOWN;
-  createdAt = '';
-  updatedAt = '';
+  createdAt = 0;
+  updatedAt = 0;
   phoneNumber = '';
   groups = [];
   emailVerified = false;

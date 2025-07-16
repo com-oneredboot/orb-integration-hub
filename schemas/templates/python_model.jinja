@@ -5,7 +5,7 @@ Generated at {{ timestamp }}
 
 from typing import Optional, List
 from pydantic import BaseModel, Field, validator
-from datetime import datetime
+from datetime import datetime  # Still needed for timestamp parsing
 from enum import Enum
 {% for attr in schema.attributes %}
 {% if attr.enum_type %}
@@ -28,12 +28,12 @@ class {{ enum_name }}(str, Enum):
 # CRUD Input Types
 class {{ schema.name }}CreateInput(BaseModel):
 {% for attr in schema.attributes %}
-    {{ attr.name | to_snake_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}datetime{% elif attr.type == 'boolean' %}bool{% elif attr.type == 'array' %}List[str]{% else %}str{% endif %}{% endif %} = Field(..., description="{{ attr.description }}")
+    {{ attr.name | to_snake_case }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}int{% elif attr.type == 'boolean' %}bool{% elif attr.type == 'array' %}List[str]{% else %}str{% endif %}{% endif %} = Field(..., description="{{ attr.description }}")
 {% endfor %}
 
 class {{ schema.name }}UpdateInput(BaseModel):
 {% for attr in schema.attributes %}
-    {{ attr.name | to_snake_case }}: Optional[{% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}datetime{% elif attr.type == 'boolean' %}bool{% elif attr.type == 'array' %}List[str]{% else %}str{% endif %}{% endif %}] = Field(None, description="{{ attr.description }}")
+    {{ attr.name | to_snake_case }}: Optional[{% if attr.enum_type %}{{ attr.enum_type }}{% else %}{% if attr.type == 'timestamp' %}int{% elif attr.type == 'boolean' %}bool{% elif attr.type == 'array' %}List[str]{% else %}str{% endif %}{% endif %}] = Field(None, description="{{ attr.description }}")
 {% endfor %}
 
 class {{ schema.name }}DeleteInput(BaseModel):
@@ -69,22 +69,30 @@ class {{ schema.name }}QueryBy{{ index.partition|to_pascal_case }}Input(BaseMode
 class {{ schema.name }}(BaseModel):
     """{{ schema.name }} model."""
 {% for attr in schema.attributes %}
-    {{ attr.name | to_snake_case }}: {% if attr.enum_type %}str{% elif attr.model_reference %}{{ attr.model_reference }}{% else %}{% if attr.type == 'timestamp' %}datetime{% elif attr.type == 'boolean' %}bool{% elif attr.type == 'array' %}List[str]{% elif attr.type == 'number' %}float{% else %}str{% endif %}{% endif %}{% if not attr.required %} = Field(None, description="{{ attr.description }}"){% else %} = Field(..., description="{{ attr.description }}"){% endif %}
+    {{ attr.name | to_snake_case }}: {% if attr.enum_type %}str{% elif attr.model_reference %}{{ attr.model_reference }}{% else %}{% if attr.type == 'timestamp' %}int{% elif attr.type == 'boolean' %}bool{% elif attr.type == 'array' %}List[str]{% elif attr.type == 'number' %}float{% else %}str{% endif %}{% endif %}{% if not attr.required %} = Field(None, description="{{ attr.description }}"){% else %} = Field(..., description="{{ attr.description }}"){% endif %}
 {% endfor %}
 
 {% for attr in schema.attributes %}
 {% if attr.type == 'timestamp' %}
-    @validator('{{ attr.name }}', pre=True)
-    def parse_{{ attr.name }}(cls, value):
-        """Parse timestamp to ISO format."""
+    @validator('{{ attr.name | to_snake_case }}', pre=True)
+    def parse_{{ attr.name | to_snake_case }}(cls, value):
+        """Parse timestamp to epoch seconds."""
         if value is None:
             return None
-        if isinstance(value, datetime):
+        if isinstance(value, int):
             return value
-        try:
-            return datetime.fromisoformat(value.replace('Z', '+00:00'))
-        except (ValueError, TypeError):
-            return None
+        if isinstance(value, float):
+            return int(value)
+        if isinstance(value, datetime):
+            return int(value.timestamp())
+        if isinstance(value, str):
+            try:
+                # Try to parse ISO format string
+                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                return int(dt.timestamp())
+            except (ValueError, TypeError):
+                pass
+        return value
 {% endif %}
 {% if attr.type == 'boolean' %}
     @validator('{{ attr.name }}', pre=True, always=True)
@@ -120,9 +128,6 @@ class {{ schema.name }}(BaseModel):
     class Config:
         """Model configuration."""
         from_attributes = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
 
 # ProperCase Response Types
 class {{ schema.name }}Response(BaseModel):

@@ -1,11 +1,11 @@
 """
 Generated Python models for PrivacyRequests
-Generated at 2025-07-16T17:14:15.545941
+Generated at 2025-07-16T21:41:30.393714
 """
 
 from typing import Optional, List
 from pydantic import BaseModel, Field, validator
-from datetime import datetime
+from datetime import datetime  # Still needed for timestamp parsing
 from enum import Enum
 from .PrivacyRequestTypeEnum import PrivacyRequestType
 from .LegalBasisEnum import LegalBasis
@@ -20,10 +20,10 @@ class PrivacyRequestsCreateInput(BaseModel):
     organization_id: str = Field(..., description="Organization ID if request is scoped to specific organization")
     requester_id: str = Field(..., description="User ID of the person who submitted the request")
     status: PrivacyRequestStatus = Field(..., description="Current status of the privacy request")
-    received_at: datetime = Field(..., description="When the privacy request was received")
-    deadline: datetime = Field(..., description="Legal deadline for completing the request (30 days GDPR, 45 days CCPA)")
-    completed_at: datetime = Field(..., description="When the privacy request was completed")
-    estimated_completion: datetime = Field(..., description="Estimated completion time for the request")
+    received_at: int = Field(..., description="When the privacy request was received")
+    deadline: int = Field(..., description="Legal deadline for completing the request (30 days GDPR, 45 days CCPA)")
+    completed_at: int = Field(..., description="When the privacy request was completed")
+    estimated_completion: int = Field(..., description="Estimated completion time for the request")
     automated_processing: bool = Field(..., description="Whether the request is being processed automatically")
     access_report: str = Field(..., description="Data access report for GDPR Article 15 requests (JSON)")
     deletion_result: str = Field(..., description="Data deletion results with cryptographic proof (JSON)")
@@ -31,8 +31,8 @@ class PrivacyRequestsCreateInput(BaseModel):
     rejection_reason: str = Field(..., description="Reason for request rejection if applicable")
     error_details: str = Field(..., description="Error details if request processing failed")
     compliance_notes: str = Field(..., description="Additional compliance notes or special handling instructions")
-    created_at: datetime = Field(..., description="When the privacy request record was created")
-    updated_at: datetime = Field(..., description="When the privacy request was last updated")
+    created_at: int = Field(..., description="When the privacy request record was created")
+    updated_at: int = Field(..., description="When the privacy request was last updated")
 
 class PrivacyRequestsUpdateInput(BaseModel):
     request_id: Optional[str] = Field(None, description="Unique identifier for the privacy request (primary key)")
@@ -42,10 +42,10 @@ class PrivacyRequestsUpdateInput(BaseModel):
     organization_id: Optional[str] = Field(None, description="Organization ID if request is scoped to specific organization")
     requester_id: Optional[str] = Field(None, description="User ID of the person who submitted the request")
     status: Optional[PrivacyRequestStatus] = Field(None, description="Current status of the privacy request")
-    received_at: Optional[datetime] = Field(None, description="When the privacy request was received")
-    deadline: Optional[datetime] = Field(None, description="Legal deadline for completing the request (30 days GDPR, 45 days CCPA)")
-    completed_at: Optional[datetime] = Field(None, description="When the privacy request was completed")
-    estimated_completion: Optional[datetime] = Field(None, description="Estimated completion time for the request")
+    received_at: Optional[int] = Field(None, description="When the privacy request was received")
+    deadline: Optional[int] = Field(None, description="Legal deadline for completing the request (30 days GDPR, 45 days CCPA)")
+    completed_at: Optional[int] = Field(None, description="When the privacy request was completed")
+    estimated_completion: Optional[int] = Field(None, description="Estimated completion time for the request")
     automated_processing: Optional[bool] = Field(None, description="Whether the request is being processed automatically")
     access_report: Optional[str] = Field(None, description="Data access report for GDPR Article 15 requests (JSON)")
     deletion_result: Optional[str] = Field(None, description="Data deletion results with cryptographic proof (JSON)")
@@ -53,8 +53,8 @@ class PrivacyRequestsUpdateInput(BaseModel):
     rejection_reason: Optional[str] = Field(None, description="Reason for request rejection if applicable")
     error_details: Optional[str] = Field(None, description="Error details if request processing failed")
     compliance_notes: Optional[str] = Field(None, description="Additional compliance notes or special handling instructions")
-    created_at: Optional[datetime] = Field(None, description="When the privacy request record was created")
-    updated_at: Optional[datetime] = Field(None, description="When the privacy request was last updated")
+    created_at: Optional[int] = Field(None, description="When the privacy request record was created")
+    updated_at: Optional[int] = Field(None, description="When the privacy request was last updated")
 
 class PrivacyRequestsDeleteInput(BaseModel):
     request_id: str
@@ -83,51 +83,83 @@ class PrivacyRequestsQueryByStatusInput(BaseModel):
 # Properties: Field(...) = required (from schema), Optional[...] = optional (from schema)
 class PrivacyRequests(BaseModel):
     """PrivacyRequests model."""
-    request_id: str = Field(..., description="Unique identifier for the privacy request (primary key)")    request_type: str = Field(..., description="Type of privacy request (DATA_ACCESS, DATA_DELETION, DATA_PORTABILITY, etc.)")    data_subject_email: str = Field(..., description="Email address of the data subject making the request")    legal_basis: str = Field(..., description="Legal basis for the privacy request (GDPR Article, CCPA Right, etc.)")    organization_id: str = Field(None, description="Organization ID if request is scoped to specific organization")    requester_id: str = Field(..., description="User ID of the person who submitted the request")    status: str = Field(..., description="Current status of the privacy request")    received_at: datetime = Field(..., description="When the privacy request was received")    deadline: datetime = Field(..., description="Legal deadline for completing the request (30 days GDPR, 45 days CCPA)")    completed_at: datetime = Field(None, description="When the privacy request was completed")    estimated_completion: datetime = Field(None, description="Estimated completion time for the request")    automated_processing: bool = Field(..., description="Whether the request is being processed automatically")    access_report: str = Field(None, description="Data access report for GDPR Article 15 requests (JSON)")    deletion_result: str = Field(None, description="Data deletion results with cryptographic proof (JSON)")    portable_data: str = Field(None, description="Portable data export for GDPR Article 20 requests (JSON)")    rejection_reason: str = Field(None, description="Reason for request rejection if applicable")    error_details: str = Field(None, description="Error details if request processing failed")    compliance_notes: str = Field(None, description="Additional compliance notes or special handling instructions")    created_at: datetime = Field(..., description="When the privacy request record was created")    updated_at: datetime = Field(..., description="When the privacy request was last updated")
-    @validator('receivedAt', pre=True)
-    def parse_receivedAt(cls, value):
-        """Parse timestamp to ISO format."""
+    request_id: str = Field(..., description="Unique identifier for the privacy request (primary key)")    request_type: str = Field(..., description="Type of privacy request (DATA_ACCESS, DATA_DELETION, DATA_PORTABILITY, etc.)")    data_subject_email: str = Field(..., description="Email address of the data subject making the request")    legal_basis: str = Field(..., description="Legal basis for the privacy request (GDPR Article, CCPA Right, etc.)")    organization_id: str = Field(None, description="Organization ID if request is scoped to specific organization")    requester_id: str = Field(..., description="User ID of the person who submitted the request")    status: str = Field(..., description="Current status of the privacy request")    received_at: int = Field(..., description="When the privacy request was received")    deadline: int = Field(..., description="Legal deadline for completing the request (30 days GDPR, 45 days CCPA)")    completed_at: int = Field(None, description="When the privacy request was completed")    estimated_completion: int = Field(None, description="Estimated completion time for the request")    automated_processing: bool = Field(..., description="Whether the request is being processed automatically")    access_report: str = Field(None, description="Data access report for GDPR Article 15 requests (JSON)")    deletion_result: str = Field(None, description="Data deletion results with cryptographic proof (JSON)")    portable_data: str = Field(None, description="Portable data export for GDPR Article 20 requests (JSON)")    rejection_reason: str = Field(None, description="Reason for request rejection if applicable")    error_details: str = Field(None, description="Error details if request processing failed")    compliance_notes: str = Field(None, description="Additional compliance notes or special handling instructions")    created_at: int = Field(..., description="When the privacy request record was created")    updated_at: int = Field(..., description="When the privacy request was last updated")
+    @validator('received_at', pre=True)
+    def parse_received_at(cls, value):
+        """Parse timestamp to epoch seconds."""
         if value is None:
             return None
-        if isinstance(value, datetime):
+        if isinstance(value, int):
             return value
-        try:
-            return datetime.fromisoformat(value.replace('Z', '+00:00'))
-        except (ValueError, TypeError):
-            return None
+        if isinstance(value, float):
+            return int(value)
+        if isinstance(value, datetime):
+            return int(value.timestamp())
+        if isinstance(value, str):
+            try:
+                # Try to parse ISO format string
+                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                return int(dt.timestamp())
+            except (ValueError, TypeError):
+                pass
+        return value
     @validator('deadline', pre=True)
     def parse_deadline(cls, value):
-        """Parse timestamp to ISO format."""
+        """Parse timestamp to epoch seconds."""
         if value is None:
             return None
-        if isinstance(value, datetime):
+        if isinstance(value, int):
             return value
-        try:
-            return datetime.fromisoformat(value.replace('Z', '+00:00'))
-        except (ValueError, TypeError):
-            return None
-    @validator('completedAt', pre=True)
-    def parse_completedAt(cls, value):
-        """Parse timestamp to ISO format."""
+        if isinstance(value, float):
+            return int(value)
+        if isinstance(value, datetime):
+            return int(value.timestamp())
+        if isinstance(value, str):
+            try:
+                # Try to parse ISO format string
+                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                return int(dt.timestamp())
+            except (ValueError, TypeError):
+                pass
+        return value
+    @validator('completed_at', pre=True)
+    def parse_completed_at(cls, value):
+        """Parse timestamp to epoch seconds."""
         if value is None:
             return None
-        if isinstance(value, datetime):
+        if isinstance(value, int):
             return value
-        try:
-            return datetime.fromisoformat(value.replace('Z', '+00:00'))
-        except (ValueError, TypeError):
-            return None
-    @validator('estimatedCompletion', pre=True)
-    def parse_estimatedCompletion(cls, value):
-        """Parse timestamp to ISO format."""
+        if isinstance(value, float):
+            return int(value)
+        if isinstance(value, datetime):
+            return int(value.timestamp())
+        if isinstance(value, str):
+            try:
+                # Try to parse ISO format string
+                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                return int(dt.timestamp())
+            except (ValueError, TypeError):
+                pass
+        return value
+    @validator('estimated_completion', pre=True)
+    def parse_estimated_completion(cls, value):
+        """Parse timestamp to epoch seconds."""
         if value is None:
             return None
-        if isinstance(value, datetime):
+        if isinstance(value, int):
             return value
-        try:
-            return datetime.fromisoformat(value.replace('Z', '+00:00'))
-        except (ValueError, TypeError):
-            return None
+        if isinstance(value, float):
+            return int(value)
+        if isinstance(value, datetime):
+            return int(value.timestamp())
+        if isinstance(value, str):
+            try:
+                # Try to parse ISO format string
+                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                return int(dt.timestamp())
+            except (ValueError, TypeError):
+                pass
+        return value
     @validator('automatedProcessing', pre=True, always=True)
     def parse_automatedProcessing_bool(cls, value):
         if value is None:
@@ -140,28 +172,44 @@ class PrivacyRequests(BaseModel):
             if value.lower() == 'false':
                 return False
         return bool(value)
-    @validator('createdAt', pre=True)
-    def parse_createdAt(cls, value):
-        """Parse timestamp to ISO format."""
+    @validator('created_at', pre=True)
+    def parse_created_at(cls, value):
+        """Parse timestamp to epoch seconds."""
         if value is None:
             return None
-        if isinstance(value, datetime):
+        if isinstance(value, int):
             return value
-        try:
-            return datetime.fromisoformat(value.replace('Z', '+00:00'))
-        except (ValueError, TypeError):
-            return None
-    @validator('updatedAt', pre=True)
-    def parse_updatedAt(cls, value):
-        """Parse timestamp to ISO format."""
+        if isinstance(value, float):
+            return int(value)
+        if isinstance(value, datetime):
+            return int(value.timestamp())
+        if isinstance(value, str):
+            try:
+                # Try to parse ISO format string
+                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                return int(dt.timestamp())
+            except (ValueError, TypeError):
+                pass
+        return value
+    @validator('updated_at', pre=True)
+    def parse_updated_at(cls, value):
+        """Parse timestamp to epoch seconds."""
         if value is None:
             return None
-        if isinstance(value, datetime):
+        if isinstance(value, int):
             return value
-        try:
-            return datetime.fromisoformat(value.replace('Z', '+00:00'))
-        except (ValueError, TypeError):
-            return None
+        if isinstance(value, float):
+            return int(value)
+        if isinstance(value, datetime):
+            return int(value.timestamp())
+        if isinstance(value, str):
+            try:
+                # Try to parse ISO format string
+                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                return int(dt.timestamp())
+            except (ValueError, TypeError):
+                pass
+        return value
 
     @classmethod
     def from_dto(cls, dto: dict) -> "PrivacyRequests":
@@ -215,9 +263,6 @@ class PrivacyRequests(BaseModel):
     class Config:
         """Model configuration."""
         from_attributes = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
 
 # ProperCase Response Types
 class PrivacyRequestsResponse(BaseModel):

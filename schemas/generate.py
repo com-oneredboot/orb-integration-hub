@@ -213,8 +213,8 @@ def to_typescript_type(attr_type: str) -> str:
         'boolean': 'boolean',
         'array': 'string[]',  # Default to string[]
         'object': 'Record<string, any>',
-        'timestamp': 'string',  # Changed to string for ISO 8601 format
-        'date': 'string',      # Changed to string for ISO 8601 format
+        'timestamp': 'number',  # Changed to number for epoch timestamps
+        'date': 'number',      # Changed to number for epoch timestamps
         'map': 'Record<string, any>',
         'set': 'Set<string>',
         'binary': 'Buffer',
@@ -284,7 +284,7 @@ def setup_jinja_env() -> Environment:
             'boolean': 'Boolean',
             'object': 'String',
             'array': '[String]',
-            'timestamp': 'String',
+            'timestamp': 'Int',  # Changed from String to Int for numeric timestamps
             'ID': 'ID',
             'int': 'Int',
             'float': 'Float',

@@ -8,7 +8,7 @@
 export type SmsRateLimitCreateInput = {
   phoneNumber: string;
   requestCount: number;
-  firstRequestTime: string;
+  firstRequestTime: number;
   ttl: number;
 };
 
@@ -16,7 +16,7 @@ export type SmsRateLimitCreateInput = {
 export type SmsRateLimitUpdateInput = {
   phoneNumber: string;
   requestCount: number;
-  firstRequestTime: string;
+  firstRequestTime: number;
   ttl: number;
 };
 
@@ -73,14 +73,14 @@ export type SmsRateLimitQueryByPhoneNumberResponse = {
 export interface ISmsRateLimit {
   phoneNumber: string;
   requestCount: number;
-  firstRequestTime: string;
+  firstRequestTime: number;
   ttl: number;
 }
 
 export class SmsRateLimit implements ISmsRateLimit {
   phoneNumber = '';
   requestCount = 0;
-  firstRequestTime = '';
+  firstRequestTime = 0;
   ttl = 0;
 
   constructor(data: Partial<ISmsRateLimit> = {}) {

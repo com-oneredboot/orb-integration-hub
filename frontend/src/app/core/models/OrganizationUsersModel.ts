@@ -13,8 +13,8 @@ export type OrganizationUsersCreateInput = {
   role: string;
   status: string;
   invitedBy: string | undefined;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
 };
 
 // UpdateInput
@@ -24,8 +24,8 @@ export type OrganizationUsersUpdateInput = {
   role: string;
   status: string;
   invitedBy: string | undefined;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
 };
 
 // QueryInput
@@ -104,8 +104,8 @@ export interface IOrganizationUsers {
   role: OrganizationUserRole;
   status: OrganizationUserStatus;
   invitedBy: string | undefined;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export class OrganizationUsers implements IOrganizationUsers {
@@ -114,8 +114,8 @@ export class OrganizationUsers implements IOrganizationUsers {
   role = OrganizationUserRole.UNKNOWN;
   status = OrganizationUserStatus.UNKNOWN;
   invitedBy = '';
-  createdAt = '';
-  updatedAt = '';
+  createdAt = 0;
+  updatedAt = 0;
 
   constructor(data: Partial<IOrganizationUsers> = {}) {
     Object.entries(data).forEach(([key, value]) => {

@@ -1,24 +1,24 @@
 """
 Generated Python models for SmsRateLimit
-Generated at 2025-07-16T17:14:15.599137
+Generated at 2025-07-16T21:41:30.447094
 """
 
 from typing import Optional, List
 from pydantic import BaseModel, Field, validator
-from datetime import datetime
+from datetime import datetime  # Still needed for timestamp parsing
 from enum import Enum
 
 # CRUD Input Types
 class SmsRateLimitCreateInput(BaseModel):
     phone_number: str = Field(..., description="Phone number used as the rate limit key (primary key)")
     request_count: str = Field(..., description="Number of SMS requests made within the rate limit window")
-    first_request_time: datetime = Field(..., description="Timestamp of the first request in the current rate limit window")
+    first_request_time: int = Field(..., description="Timestamp of the first request in the current rate limit window")
     ttl: str = Field(..., description="Time-to-live timestamp for automatic record cleanup")
 
 class SmsRateLimitUpdateInput(BaseModel):
     phone_number: Optional[str] = Field(None, description="Phone number used as the rate limit key (primary key)")
     request_count: Optional[str] = Field(None, description="Number of SMS requests made within the rate limit window")
-    first_request_time: Optional[datetime] = Field(None, description="Timestamp of the first request in the current rate limit window")
+    first_request_time: Optional[int] = Field(None, description="Timestamp of the first request in the current rate limit window")
     ttl: Optional[str] = Field(None, description="Time-to-live timestamp for automatic record cleanup")
 
 class SmsRateLimitDeleteInput(BaseModel):
@@ -36,18 +36,26 @@ class SmsRateLimitQueryByPhoneNumberInput(BaseModel):
 # Properties: Field(...) = required (from schema), Optional[...] = optional (from schema)
 class SmsRateLimit(BaseModel):
     """SmsRateLimit model."""
-    phone_number: str = Field(..., description="Phone number used as the rate limit key (primary key)")    request_count: float = Field(..., description="Number of SMS requests made within the rate limit window")    first_request_time: datetime = Field(..., description="Timestamp of the first request in the current rate limit window")    ttl: float = Field(..., description="Time-to-live timestamp for automatic record cleanup")
-    @validator('firstRequestTime', pre=True)
-    def parse_firstRequestTime(cls, value):
-        """Parse timestamp to ISO format."""
+    phone_number: str = Field(..., description="Phone number used as the rate limit key (primary key)")    request_count: float = Field(..., description="Number of SMS requests made within the rate limit window")    first_request_time: int = Field(..., description="Timestamp of the first request in the current rate limit window")    ttl: float = Field(..., description="Time-to-live timestamp for automatic record cleanup")
+    @validator('first_request_time', pre=True)
+    def parse_first_request_time(cls, value):
+        """Parse timestamp to epoch seconds."""
         if value is None:
             return None
-        if isinstance(value, datetime):
+        if isinstance(value, int):
             return value
-        try:
-            return datetime.fromisoformat(value.replace('Z', '+00:00'))
-        except (ValueError, TypeError):
-            return None
+        if isinstance(value, float):
+            return int(value)
+        if isinstance(value, datetime):
+            return int(value.timestamp())
+        if isinstance(value, str):
+            try:
+                # Try to parse ISO format string
+                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                return int(dt.timestamp())
+            except (ValueError, TypeError):
+                pass
+        return value
 
     @classmethod
     def from_dto(cls, dto: dict) -> "SmsRateLimit":
@@ -69,9 +77,6 @@ class SmsRateLimit(BaseModel):
     class Config:
         """Model configuration."""
         from_attributes = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
 
 # ProperCase Response Types
 class SmsRateLimitResponse(BaseModel):

@@ -12,8 +12,8 @@ export type RolesCreateInput = {
   userId: string | undefined;
   roleType: string;
   status: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
 };
 
 // UpdateInput
@@ -22,8 +22,8 @@ export type RolesUpdateInput = {
   userId: string | undefined;
   roleType: string;
   status: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
 };
 
 // QueryInput
@@ -87,8 +87,8 @@ export interface IRoles {
   userId: string | undefined;
   roleType: RoleType;
   status: RoleStatus;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export class Roles implements IRoles {
@@ -96,8 +96,8 @@ export class Roles implements IRoles {
   userId = '';
   roleType = RoleType.UNKNOWN;
   status = RoleStatus.UNKNOWN;
-  createdAt = '';
-  updatedAt = '';
+  createdAt = 0;
+  updatedAt = 0;
 
   constructor(data: Partial<IRoles> = {}) {
     Object.entries(data).forEach(([key, value]) => {

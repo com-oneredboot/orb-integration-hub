@@ -1,11 +1,11 @@
 """
 Generated Python models for Users
-Generated at 2025-07-16T17:14:15.752976
+Generated at 2025-07-16T21:41:30.601926
 """
 
 from typing import Optional, List
 from pydantic import BaseModel, Field, validator
-from datetime import datetime
+from datetime import datetime  # Still needed for timestamp parsing
 from enum import Enum
 from .UserStatusEnum import UserStatus
 
@@ -18,8 +18,8 @@ class UsersCreateInput(BaseModel):
     first_name: str = Field(..., description="User's first name")
     last_name: str = Field(..., description="User's last name")
     status: UserStatus = Field(..., description="Current status of the user")
-    created_at: datetime = Field(..., description="When the user was created")
-    updated_at: datetime = Field(..., description="When the user was last updated")
+    created_at: int = Field(..., description="When the user was created")
+    updated_at: int = Field(..., description="When the user was last updated")
     phone_number: str = Field(..., description="User's phone number")
     groups: List[str] = Field(..., description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)")
     email_verified: bool = Field(..., description="Whether the user's email is verified")
@@ -35,8 +35,8 @@ class UsersUpdateInput(BaseModel):
     first_name: Optional[str] = Field(None, description="User's first name")
     last_name: Optional[str] = Field(None, description="User's last name")
     status: Optional[UserStatus] = Field(None, description="Current status of the user")
-    created_at: Optional[datetime] = Field(None, description="When the user was created")
-    updated_at: Optional[datetime] = Field(None, description="When the user was last updated")
+    created_at: Optional[int] = Field(None, description="When the user was created")
+    updated_at: Optional[int] = Field(None, description="When the user was last updated")
     phone_number: Optional[str] = Field(None, description="User's phone number")
     groups: Optional[List[str]] = Field(None, description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)")
     email_verified: Optional[bool] = Field(None, description="Whether the user's email is verified")
@@ -68,29 +68,45 @@ class UsersQueryByCognitoSubInput(BaseModel):
 # Properties: Field(...) = required (from schema), Optional[...] = optional (from schema)
 class Users(BaseModel):
     """Users model."""
-    user_id: str = Field(..., description="Unique identifier for the user (primary key)")    cognito_id: str = Field(..., description="Cognito username (used for authentication)")    cognito_sub: str = Field(..., description="Cognito user sub (unique identifier from tokens)")    email: str = Field(..., description="User's email address")    first_name: str = Field(..., description="User's first name")    last_name: str = Field(..., description="User's last name")    status: str = Field(..., description="Current status of the user")    created_at: datetime = Field(..., description="When the user was created")    updated_at: datetime = Field(..., description="When the user was last updated")    phone_number: str = Field(None, description="User's phone number")    groups: List[str] = Field(None, description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)")    email_verified: bool = Field(None, description="Whether the user's email is verified")    phone_verified: bool = Field(None, description="Whether the user's phone number is verified")    mfa_enabled: bool = Field(None, description="Whether multi-factor authentication is enabled for the user")    mfa_setup_complete: bool = Field(None, description="Whether MFA setup has been completed successfully")
-    @validator('createdAt', pre=True)
-    def parse_createdAt(cls, value):
-        """Parse timestamp to ISO format."""
+    user_id: str = Field(..., description="Unique identifier for the user (primary key)")    cognito_id: str = Field(..., description="Cognito username (used for authentication)")    cognito_sub: str = Field(..., description="Cognito user sub (unique identifier from tokens)")    email: str = Field(..., description="User's email address")    first_name: str = Field(..., description="User's first name")    last_name: str = Field(..., description="User's last name")    status: str = Field(..., description="Current status of the user")    created_at: int = Field(..., description="When the user was created")    updated_at: int = Field(..., description="When the user was last updated")    phone_number: str = Field(None, description="User's phone number")    groups: List[str] = Field(None, description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)")    email_verified: bool = Field(None, description="Whether the user's email is verified")    phone_verified: bool = Field(None, description="Whether the user's phone number is verified")    mfa_enabled: bool = Field(None, description="Whether multi-factor authentication is enabled for the user")    mfa_setup_complete: bool = Field(None, description="Whether MFA setup has been completed successfully")
+    @validator('created_at', pre=True)
+    def parse_created_at(cls, value):
+        """Parse timestamp to epoch seconds."""
         if value is None:
             return None
-        if isinstance(value, datetime):
+        if isinstance(value, int):
             return value
-        try:
-            return datetime.fromisoformat(value.replace('Z', '+00:00'))
-        except (ValueError, TypeError):
-            return None
-    @validator('updatedAt', pre=True)
-    def parse_updatedAt(cls, value):
-        """Parse timestamp to ISO format."""
+        if isinstance(value, float):
+            return int(value)
+        if isinstance(value, datetime):
+            return int(value.timestamp())
+        if isinstance(value, str):
+            try:
+                # Try to parse ISO format string
+                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                return int(dt.timestamp())
+            except (ValueError, TypeError):
+                pass
+        return value
+    @validator('updated_at', pre=True)
+    def parse_updated_at(cls, value):
+        """Parse timestamp to epoch seconds."""
         if value is None:
             return None
-        if isinstance(value, datetime):
+        if isinstance(value, int):
             return value
-        try:
-            return datetime.fromisoformat(value.replace('Z', '+00:00'))
-        except (ValueError, TypeError):
-            return None
+        if isinstance(value, float):
+            return int(value)
+        if isinstance(value, datetime):
+            return int(value.timestamp())
+        if isinstance(value, str):
+            try:
+                # Try to parse ISO format string
+                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                return int(dt.timestamp())
+            except (ValueError, TypeError):
+                pass
+        return value
     @validator('emailVerified', pre=True, always=True)
     def parse_emailVerified_bool(cls, value):
         if value is None:
@@ -182,9 +198,6 @@ class Users(BaseModel):
     class Config:
         """Model configuration."""
         from_attributes = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
 
 # ProperCase Response Types
 class UsersResponse(BaseModel):
