@@ -111,12 +111,14 @@ Resources:
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-sms-rate-limit-table-arn}}'
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-organizations-table-arn}}'
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-organization-users-table-arn}}'
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-applications-table-arn}}'
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-ownership-transfer-requests-table-arn}}'
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-privacy-requests-table-arn}}'
                   # Include indexes for all tables
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-table-arn}}/index/*'
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-organizations-table-arn}}/index/*'
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-organization-users-table-arn}}/index/*'
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-applications-table-arn}}/index/*'
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-ownership-transfer-requests-table-arn}}/index/*'
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-privacy-requests-table-arn}}/index/*'
         - PolicyName: DynamoDBStreamAccess
@@ -366,6 +368,8 @@ Resources:
       Environment:
         Variables:
           ORGANIZATIONS_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-organizations-table-name}}'
+          ORGANIZATION_USERS_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-organization-users-table-name}}'
+          APPLICATIONS_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-applications-table-name}}'
           USER_POOL_ID: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-cognito-user-pool-id}}'
 
   # Ownership Transfer Requests Lambda

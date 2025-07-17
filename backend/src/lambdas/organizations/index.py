@@ -40,6 +40,8 @@ class OrganizationsResolver:
     def __init__(self):
         self.dynamodb = boto3.resource('dynamodb')
         table_name = os.environ.get('ORGANIZATIONS_TABLE_NAME', 'Organizations')
+        logger.info(f"Initializing with table name: {table_name}")
+        logger.info(f"Environment variables: ORGANIZATIONS_TABLE_NAME={os.environ.get('ORGANIZATIONS_TABLE_NAME')}")
         self.organizations_table = self.dynamodb.Table(table_name)
         self.security_manager = OrganizationSecurityManager()
         self.kms_manager = OrganizationKMSManager()
@@ -773,7 +775,9 @@ class OrganizationsResolver:
             organizations = org_response.get('Items', [])
             
             # Initialize other tables
-            org_users_table = self.dynamodb.Table(os.environ.get('ORGANIZATION_USERS_TABLE_NAME', 'OrganizationUsers'))
+            org_users_table_name = os.environ.get('ORGANIZATION_USERS_TABLE_NAME', 'OrganizationUsers')
+            logger.info(f"Using OrganizationUsers table: {org_users_table_name}")
+            org_users_table = self.dynamodb.Table(org_users_table_name)
             applications_table = self.dynamodb.Table(os.environ.get('APPLICATIONS_TABLE_NAME', 'Applications'))
             
             # Build enriched results
