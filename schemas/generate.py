@@ -22,13 +22,17 @@ from jinja2 import Template, Environment, FileSystemLoader, select_autoescape
 from pydantic import BaseModel, Field
 from pydantic import field_validator
 
+# Get the directory where this script is located
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # Set up logging
 logger = logging.getLogger('schema_generator')
 logger.setLevel(logging.WARN)
 
 # Create handlers
 console_handler = logging.StreamHandler(sys.stdout)
-file_handler = logging.FileHandler('schema_generator.log')
+log_file_path = os.path.join(SCRIPT_DIR, 'schema_generator.log')
+file_handler = logging.FileHandler(log_file_path)
 
 # Create formatters and add to handlers
 log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -38,9 +42,6 @@ file_handler.setFormatter(logging.Formatter(log_format))
 # Add handlers to logger
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
-
-# Get the directory where this script is located
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class SchemaValidationError(Exception):
     """Raised when schema validation fails"""
