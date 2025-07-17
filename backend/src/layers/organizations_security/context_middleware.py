@@ -123,17 +123,27 @@ class OrganizationContextExtractor:
             if not organization_data:
                 raise SecurityViolationError(f"Organization {organization_id} not found or inactive")
             
+            # Check if user is the organization owner first
+            is_organization_owner = organization_data.get('ownerId') == user_id
+            
             # Check user membership and get role
             membership_data = self._get_user_membership(user_id, organization_id)
             if not membership_data:
-                # Check if user is platform admin
-                is_platform_admin = any(group in cognito_groups for group in ['OWNER', 'EMPLOYEE'])
-                if not is_platform_admin:
-                    raise SecurityViolationError(f"User {user_id} is not a member of organization {organization_id}")
-                
-                # Platform admin gets viewer permissions
-                user_role = 'VIEWER'
-                membership_status = 'PLATFORM_ADMIN'
+                # Check if user is organization owner
+                if is_organization_owner:
+                    # Owner has implicit membership
+                    user_role = 'OWNER'
+                    membership_status = 'ACTIVE'
+                    is_platform_admin = False
+                else:
+                    # Check if user is platform admin
+                    is_platform_admin = any(group in cognito_groups for group in ['OWNER', 'EMPLOYEE'])
+                    if not is_platform_admin:
+                        raise SecurityViolationError(f"User {user_id} is not a member of organization {organization_id}")
+                    
+                    # Platform admin gets viewer permissions
+                    user_role = 'VIEWER'
+                    membership_status = 'PLATFORM_ADMIN'
             else:
                 user_role = membership_data.get('role', 'VIEWER')
                 membership_status = membership_data.get('status', 'UNKNOWN')
