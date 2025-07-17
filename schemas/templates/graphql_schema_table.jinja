@@ -106,6 +106,39 @@ input {{ input_name_and }} {
 {% endif %}
 {% endif %}
 {% endfor %}
+
+{#-- Custom query input types --#}
+{% if schema.custom_queries %}
+{% for custom_query in schema.custom_queries %}
+input {{ custom_query.name }}Input {
+{% for input_name, input_def in custom_query.input.items() %}
+  {{ input_name }}: {{ input_def.type }}
+{% endfor %}
+}
+
+{% endfor %}
+{% endif %}
+{% endif %}
+{% endfor %}
+
+{#-- Custom query return types --#}
+{% for schema in table_schemas.values() %}
+{% if schema.custom_queries %}
+{% for custom_query in schema.custom_queries %}
+{% if custom_query.type == 'aggregation' and custom_query.returns == '[OrganizationWithDetails]' %}
+type OrganizationWithDetails {
+  organization: {{ schema.name }}!
+{% for enrichment in custom_query.enrichments %}
+{% if enrichment.type == 'lookup' %}
+  {{ enrichment.field }}: String!
+{% elif enrichment.type == 'count' %}
+  {{ enrichment.field }}: Int!
+{% endif %}
+{% endfor %}
+}
+
+{% endif %}
+{% endfor %}
 {% endif %}
 {% endfor %}
 

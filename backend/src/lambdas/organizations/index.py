@@ -735,6 +735,139 @@ class OrganizationsResolver:
             logger.error(f"Error getting user organizations: {str(e)}")
             return []
     
+    def query_organizations_with_details(self, event: Dict[str, Any]) -> Dict[str, Any]:
+        """Query organizations with user role, member count, and application count."""
+        try:
+            # Extract arguments
+            args = event.get('arguments', {})
+            input_data = args.get('input', {})
+            owner_id = input_data.get('ownerId')
+            
+            # Get current user ID for role lookup
+            current_user_id = event.get('identity', {}).get('sub')
+            
+            if not owner_id:
+                return {
+                    'StatusCode': 400,
+                    'Message': 'Owner ID is required',
+                    'Data': []
+                }
+            
+            # First, get all organizations for the owner
+            org_response = self.organizations_table.query(
+                IndexName='OwnerIndex',
+                KeyConditionExpression='ownerId = :ownerId',
+                ExpressionAttributeValues={
+                    ':ownerId': owner_id
+                }
+            )
+            
+            organizations = org_response.get('Items', [])
+            
+            # Initialize other tables
+            org_users_table = self.dynamodb.Table(os.environ.get('ORGANIZATION_USERS_TABLE_NAME', 'OrganizationUsers'))
+            applications_table = self.dynamodb.Table(os.environ.get('APPLICATIONS_TABLE_NAME', 'Applications'))
+            
+            # Build enriched results
+            enriched_results = []
+            
+            for org in organizations:
+                org_id = org['organizationId']
+                
+                # Decrypt description if present
+                if org.get('description'):
+                    try:
+                        decrypted_description = self.kms_manager.decrypt_organization_data(
+                            organization_id=org_id,
+                            encrypted_data=org['description'],
+                            encryption_context={'field': 'description', 'action': 'create'}
+                        )
+                        org['description'] = decrypted_description
+                    except Exception as e:
+                        logger.debug(f"Description decryption failed for org {org_id}: {str(e)}")
+                
+                # Get user role (default to OWNER if user is the owner)
+                user_role = 'OWNER' if current_user_id == org['ownerId'] else 'NONE'
+                
+                # Try to get actual role from OrganizationUsers
+                if current_user_id and current_user_id != org['ownerId']:
+                    try:
+                        role_response = org_users_table.get_item(
+                            Key={
+                                'userId': current_user_id,
+                                'organizationId': org_id
+                            }
+                        )
+                        if 'Item' in role_response:
+                            user_role = role_response['Item'].get('role', 'NONE')
+                    except Exception as e:
+                        logger.debug(f"Failed to get user role for org {org_id}: {str(e)}")
+                
+                # Get member count
+                member_count = 0
+                try:
+                    members_response = org_users_table.query(
+                        IndexName='OrganizationMembersIndex',
+                        KeyConditionExpression='organizationId = :orgId',
+                        FilterExpression='#status = :active',
+                        ExpressionAttributeValues={
+                            ':orgId': org_id,
+                            ':active': 'ACTIVE'
+                        },
+                        ExpressionAttributeNames={
+                            '#status': 'status'
+                        },
+                        Select='COUNT'
+                    )
+                    member_count = members_response.get('Count', 0)
+                    # Add 1 for the owner (not in OrganizationUsers table)
+                    member_count += 1
+                except Exception as e:
+                    logger.debug(f"Failed to get member count for org {org_id}: {str(e)}")
+                
+                # Get application count
+                application_count = 0
+                try:
+                    apps_response = applications_table.query(
+                        IndexName='OrganizationAppsIndex',
+                        KeyConditionExpression='organizationId = :orgId',
+                        FilterExpression='#status IN (:active, :pending)',
+                        ExpressionAttributeValues={
+                            ':orgId': org_id,
+                            ':active': 'ACTIVE',
+                            ':pending': 'PENDING'
+                        },
+                        ExpressionAttributeNames={
+                            '#status': 'status'
+                        },
+                        Select='COUNT'
+                    )
+                    application_count = apps_response.get('Count', 0)
+                except Exception as e:
+                    logger.debug(f"Failed to get application count for org {org_id}: {str(e)}")
+                
+                # Build enriched result
+                enriched_results.append({
+                    'organization': org,
+                    'userRole': user_role,
+                    'memberCount': member_count,
+                    'applicationCount': application_count
+                })
+            
+            return {
+                'StatusCode': 200,
+                'Message': 'Success',
+                'Data': enriched_results
+            }
+            
+        except Exception as e:
+            logger.error(f"Error querying organizations with details: {str(e)}")
+            return {
+                'StatusCode': 500,
+                'Message': f'Internal error: {str(e)}',
+                'Data': []
+            }
+    
     def _error_response(self, message: str, context: Optional[Dict] = None) -> Dict[str, Any]:
         """Generate standardized error response."""
         error_data = {'error': message}
@@ -781,6 +914,8 @@ def lambda_handler(event, context):
             return resolver.query_organizations_by_status(event)
         elif field_name == 'OrganizationsQueryByOrganizationId':
             return resolver.query_organization_by_id(event)
+        elif field_name == 'OrganizationsWithDetailsQueryByOwnerId':
+            return resolver.query_organizations_with_details(event)
         else:
             logger.error(f'Unknown GraphQL operation: {field_name}')
             return {

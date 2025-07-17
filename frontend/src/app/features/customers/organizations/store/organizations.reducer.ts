@@ -40,6 +40,27 @@ export const organizationsReducer = createReducer(
     };
   }),
 
+  on(OrganizationsActions.loadOrganizationsWithDetailsSuccess, (state, { organizationsWithDetails }): OrganizationsState => {
+    // Extract organizations and create table rows with real data
+    const organizations = organizationsWithDetails.map(item => item.organization);
+    const organizationRows: OrganizationTableRow[] = organizationsWithDetails.map(item => ({
+      organization: item.organization,
+      userRole: item.userRole,
+      isOwner: item.userRole === 'OWNER',
+      memberCount: item.memberCount,
+      applicationCount: item.applicationCount
+    }));
+
+    return {
+      ...state,
+      isLoading: false,
+      organizations,
+      organizationRows,
+      filteredOrganizationRows: organizationRows,
+      error: null
+    };
+  }),
+
   on(OrganizationsActions.loadOrganizationsFailure, (state, { error }): OrganizationsState => ({
     ...state,
     isLoading: false,

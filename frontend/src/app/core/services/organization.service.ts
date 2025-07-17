@@ -17,7 +17,8 @@ import {
   OrganizationsUpdateMutation,
   OrganizationsDeleteMutation,
   OrganizationsQueryByOrganizationId,
-  OrganizationsQueryByOwnerId
+  OrganizationsQueryByOwnerId,
+  OrganizationsWithDetailsQueryByOwnerId
 } from '../graphql/Organizations.graphql';
 import {
   Organizations,
@@ -338,6 +339,59 @@ export class OrganizationService extends ApiService {
       }),
       catchError((error) => {
         console.error('[OrganizationService] Error getting organizations:', error);
+        
+        if (error?.message?.includes('Not Authorized') || error?.message?.includes('Unauthorized')) {
+          throw new Error('You are not authorized to view organizations.');
+        }
+        
+        throw new Error('Failed to retrieve organizations. Please try again later.');
+      })
+    );
+  }
+
+  /**
+   * Get organizations with details for the current user
+   * @returns Observable<any> - Returns organizations with userRole, memberCount, and applicationCount
+   */
+  public getUserOrganizationsWithDetails(): Observable<any> {
+    console.debug('[OrganizationService] Getting user organizations with details');
+
+    // First get the current user from the store
+    return this.store.select(fromUser.selectCurrentUser).pipe(
+      take(1), // Take only the current value
+      switchMap(currentUser => {
+        if (!currentUser || !currentUser.userId) {
+          throw new Error('No user found in store. Please ensure you are logged in.');
+        }
+
+        const userId = currentUser.userId;
+        console.debug('[OrganizationService] Querying organizations with details for user:', userId);
+
+        return from(
+          this.query(
+            OrganizationsWithDetailsQueryByOwnerId,
+            { 
+              input: {
+                ownerId: userId
+              }
+            },
+            'userPool' // Use userPool auth for authenticated operations
+          ) as Promise<GraphQLResult<any>>
+        );
+      }),
+      map(response => {
+        console.debug('[OrganizationService] Get user organizations with details response:', response);
+        
+        if (!response.data) {
+          throw new Error('No data in get organizations response');
+        }
+
+        const queryData = response.data.OrganizationsWithDetailsQueryByOwnerId;
+        // The response is an array of OrganizationWithDetails objects
+        return queryData || [];
+      }),
+      catchError((error) => {
+        console.error('[OrganizationService] Error getting organizations with details:', error);
         
         if (error?.message?.includes('Not Authorized') || error?.message?.includes('Unauthorized')) {
           throw new Error('You are not authorized to view organizations.');

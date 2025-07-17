@@ -126,6 +126,17 @@ class Attribute:
     enum_values: Optional[List[str]] = None
 
 @dataclass
+class CustomQuery:
+    """Custom query definition."""
+    name: str
+    type: str  # 'aggregation' or 'custom'
+    description: str
+    input: Dict[str, Any]
+    returns: str
+    enrichments: Optional[List[Dict[str, Any]]] = None
+    implementationPath: Optional[str] = None
+
+@dataclass
 class TableSchema:
     """Table schema definition."""
     name: str
@@ -136,6 +147,7 @@ class TableSchema:
     auth_config: Optional[Dict[str, Any]] = None
     type: str = 'dynamodb'  # Default to 'dynamodb' per new SchemaType
     stream: Optional[Dict[str, Any]] = None
+    custom_queries: Optional[List[CustomQuery]] = None
 
     def __post_init__(self):
         """Post-initialization validation and defaults."""
@@ -641,6 +653,22 @@ def build_crud_operations_for_table(schema: TableSchema):
                     schema.operations.append(op)
                     existing_queries.add(field_name)
 
+    # Add custom queries to operations
+    if hasattr(schema, 'custom_queries') and schema.custom_queries:
+        for custom_query in schema.custom_queries:
+            op = {
+                'name': custom_query.name,
+                'type': 'Query',
+                'field': custom_query.name,
+                'custom_type': custom_query.type,
+                'enrichments': custom_query.enrichments,
+                'returns': custom_query.returns,
+                'description': custom_query.description,
+                'input': custom_query.input,
+                'response_auth_directives': get_response_auth_directives(custom_query.name),
+            }
+            schema.operations.append(op)
+    
     # VALIDATION: Ensure every operation has at least one auth directive
     for op in schema.operations:
         if not op.get('response_auth_directives') or len(op['response_auth_directives']) == 0:
@@ -1208,6 +1236,33 @@ query {type_name}QueryBy{idx_pascal}($input: {type_name}QueryBy{idx_pascal}Input
 }}'''
                 })
             
+            # Add custom queries to operations
+            if hasattr(lambda_type, 'custom_queries') and lambda_type.custom_queries:
+                for custom_query in lambda_type.custom_queries:
+                    if custom_query.type == 'aggregation':
+                        # Build the response structure based on return type
+                        if custom_query.returns == '[OrganizationWithDetails]':
+                            response_fields = f'''
+      organization {{
+        {field_list}
+      }}
+      userRole
+      memberCount
+      applicationCount'''
+                        else:
+                            response_fields = f'''
+      {field_list}'''
+                        
+                        operations.append({
+                            'name': custom_query.name,
+                            'gql': f'''
+query {custom_query.name}($input: {custom_query.name}Input!) {{
+  {custom_query.name}(input: $input) {{
+    {response_fields}
+  }}
+}}'''
+                        })
+            
             content = template.render(schema=processed_schema, operations=operations)
         else:
             # This is a simple lambda type without DynamoDB backing
@@ -1485,6 +1540,22 @@ def load_schemas() -> dict:
             secondary_indexes = keys.get('secondary', [])
             auth_config = model.get('authConfig')
             stream_config = model.get('stream')
+            
+            # Parse custom queries if present
+            custom_queries = []
+            if 'customQueries' in schema_dict:
+                for query_def in schema_dict['customQueries']:
+                    custom_query = CustomQuery(
+                        name=query_def['name'],
+                        type=query_def['type'],
+                        description=query_def.get('description', ''),
+                        input=query_def.get('input', {}),
+                        returns=query_def.get('returns', 'String'),
+                        enrichments=query_def.get('enrichments', []),
+                        implementationPath=query_def.get('implementationPath')
+                    )
+                    custom_queries.append(custom_query)
+            
             schema_obj = TableSchema(
                 name=schema_name,
                 attributes=attributes,
@@ -1493,7 +1564,8 @@ def load_schemas() -> dict:
                 secondary_indexes=secondary_indexes,
                 auth_config=auth_config,
                 type='dynamodb',
-                stream=stream_config
+                stream=stream_config,
+                custom_queries=custom_queries if custom_queries else None
             )
             schemas[schema_name] = schema_obj
         elif schema_type == 'registry':
@@ -1590,6 +1662,22 @@ def load_schemas() -> dict:
             secondary_indexes = keys.get('secondary', [])
             auth_config = model.get('authConfig')
             stream_config = model.get('stream')
+            
+            # Parse custom queries if present
+            custom_queries = []
+            if 'customQueries' in schema_dict:
+                for query_def in schema_dict['customQueries']:
+                    custom_query = CustomQuery(
+                        name=query_def['name'],
+                        type=query_def['type'],
+                        description=query_def.get('description', ''),
+                        input=query_def.get('input', {}),
+                        returns=query_def.get('returns', 'String'),
+                        enrichments=query_def.get('enrichments', []),
+                        implementationPath=query_def.get('implementationPath')
+                    )
+                    custom_queries.append(custom_query)
+            
             schema_obj = TableSchema(
                 name=schema_name,
                 attributes=attributes,
@@ -1598,7 +1686,8 @@ def load_schemas() -> dict:
                 secondary_indexes=secondary_indexes,
                 auth_config=auth_config,
                 type='lambda-dynamodb',
-                stream=stream_config
+                stream=stream_config,
+                custom_queries=custom_queries if custom_queries else None
             )
             schemas[schema_name] = schema_obj
         else:

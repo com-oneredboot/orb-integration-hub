@@ -14,6 +14,7 @@ export const OrganizationsActions = createActionGroup({
     // Load Organizations
     'Load Organizations': emptyProps(),
     'Load Organizations Success': props<{ organizations: Organizations[] }>(),
+    'Load Organizations With Details Success': props<{ organizationsWithDetails: any[] }>(),
     'Load Organizations Failure': props<{ error: string }>(),
 
     // Create Organization

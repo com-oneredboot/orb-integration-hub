@@ -2149,11 +2149,153 @@
         ],
         "status": "done",
         "subtasks": []
+      },
+      {
+        "id": 47,
+        "title": "Implement Custom Query Architecture for GraphQL",
+        "description": "Create a hybrid architecture that allows custom GraphQL queries to be defined in YAML entity schemas while maintaining the automated generation system",
+        "details": "Implement Option A architecture where all queries are defined in entity YAML files with a 'type' field that determines if they are auto-generated (aggregation) or point to custom implementations. This maintains a single source of truth while keeping generate.py simple and extensible. The implementation should support the OrganizationsWithDetailsQueryByOwnerId use case to retrieve organizations with user roles, member counts, and application counts in a single GraphQL query.",
+        "testStrategy": "Test YAML schema parsing for custom queries, validate generated GraphQL schema includes custom queries, test aggregation resolver generation, verify custom resolver registration, integration test for OrganizationsWithDetails query",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Update YAML Schema to Support Custom Query Definitions",
+            "description": "Extend the existing entity YAML schema to include a 'queries' section that supports both auto-generated and custom query definitions with a 'type' field discriminator",
+            "dependencies": [],
+            "details": "Modify the YAML schema validation to accept a new 'queries' section in entity files. Add support for query objects with fields: name, type ('aggregation' or 'custom'), description, arguments, returnType, and customResolver (for custom types). Update schema validation to ensure required fields are present based on query type. Create example YAML structures for both aggregation and custom query types.",
+            "status": "done",
+            "testStrategy": "Unit tests for YAML schema validation with valid and invalid query definitions, test parsing of both aggregation and custom query types"
+          },
+          {
+            "id": 2,
+            "title": "Create Query Type Enum and Validation Logic",
+            "description": "Implement query type enumeration and validation logic to distinguish between auto-generated aggregation queries and custom implementation queries",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a QueryType enum with values AGGREGATION and CUSTOM. Implement validation functions to verify query definitions match their declared type. For aggregation queries, validate that standard aggregation fields are present. For custom queries, validate that customResolver field points to an existing resolver function. Add error handling for malformed query definitions.",
+            "status": "done",
+            "testStrategy": "Unit tests for query type validation logic, test error handling for invalid query configurations"
+          },
+          {
+            "id": 3,
+            "title": "Modify generate.py to Parse Custom Query Definitions",
+            "description": "Update the generate.py script to parse custom query definitions from YAML files and prepare them for template processing",
+            "dependencies": [
+              2
+            ],
+            "details": "Extend the YAML parsing logic in generate.py to extract query definitions from entity files. Create data structures to hold parsed query information including type, arguments, return types, and resolver references. Implement logic to separate aggregation queries from custom queries for different processing paths. Add validation to ensure custom queries reference valid resolver functions.",
+            "status": "done",
+            "testStrategy": "Unit tests for YAML parsing logic, integration tests with sample entity files containing custom queries"
+          },
+          {
+            "id": 4,
+            "title": "Create Jinja Templates for Custom Query Schema Generation",
+            "description": "Develop Jinja templates to generate GraphQL schema definitions for custom queries alongside existing aggregation queries",
+            "dependencies": [
+              3
+            ],
+            "details": "Create new Jinja templates for generating GraphQL query type definitions that include custom queries. Template should handle argument definitions, return type specifications, and proper GraphQL syntax. Ensure templates can distinguish between aggregation and custom queries and generate appropriate schema code. Include support for complex argument types and nested return types.",
+            "status": "done",
+            "testStrategy": "Template rendering tests with various custom query configurations, validate generated GraphQL schema syntax"
+          },
+          {
+            "id": 5,
+            "title": "Implement Custom Resolver Registration System",
+            "description": "Create a system to register and manage custom resolver functions that will handle custom GraphQL queries",
+            "dependencies": [
+              4
+            ],
+            "details": "Implement a resolver registry system that maps custom query names to their implementation functions. Create a decorator or registration mechanism for custom resolvers. Implement resolver discovery logic that scans for custom resolver implementations. Add validation to ensure all custom queries defined in YAML have corresponding resolver implementations. Include error handling for missing or invalid resolvers.",
+            "status": "done",
+            "testStrategy": "Unit tests for resolver registration and discovery, test error handling for missing resolvers"
+          },
+          {
+            "id": 6,
+            "title": "Update GraphQL Schema Generation to Include Custom Queries",
+            "description": "Modify the GraphQL schema generation process to include custom queries in the final schema output",
+            "dependencies": [
+              5
+            ],
+            "details": "Update the schema generation logic to merge custom query definitions with auto-generated aggregation queries. Ensure proper GraphQL syntax and type definitions for custom queries. Implement logic to handle argument types, return types, and resolver bindings. Add validation to prevent naming conflicts between custom and aggregation queries. Generate proper imports and resolver bindings in the output schema.",
+            "status": "done",
+            "testStrategy": "Integration tests for complete schema generation, validate GraphQL schema syntax and resolver bindings"
+          },
+          {
+            "id": 7,
+            "title": "Create OrganizationsWithDetails Custom Query YAML Definition",
+            "description": "Define the OrganizationsWithDetailsQueryByOwnerId custom query in the organizations entity YAML file",
+            "dependencies": [
+              6
+            ],
+            "details": "Add the OrganizationsWithDetailsQueryByOwnerId query definition to the organizations.yaml entity file. Define query arguments (ownerId), return type (OrganizationsWithDetailsResponse), and specify type as 'custom'. Include proper documentation and field descriptions. Define the complex return type structure including organization details, user roles, member counts, and application counts.",
+            "status": "done",
+            "testStrategy": "YAML validation tests, schema generation tests with the new query definition"
+          },
+          {
+            "id": 8,
+            "title": "Implement OrganizationsWithDetails Custom Resolver",
+            "description": "Create the custom resolver implementation for the OrganizationsWithDetailsQueryByOwnerId query",
+            "dependencies": [
+              7
+            ],
+            "details": "Implement the custom resolver function that queries organizations by owner ID and enriches them with user roles, member counts, and application counts. Use efficient database queries to minimize N+1 problems. Implement proper error handling and data validation. Include logging for debugging and monitoring. Structure the response to match the defined GraphQL return type.",
+            "status": "done",
+            "testStrategy": "Unit tests for resolver logic, integration tests with database, performance tests for query efficiency"
+          },
+          {
+            "id": 9,
+            "title": "Create GraphQL Response Types for OrganizationsWithDetails",
+            "description": "Define the GraphQL response types and schema definitions for the OrganizationsWithDetails query response",
+            "dependencies": [
+              8
+            ],
+            "details": "Create GraphQL type definitions for OrganizationsWithDetailsResponse, including nested types for organization details, user roles, and count fields. Ensure proper type relationships and nullable field handling. Add field descriptions and deprecation notices where appropriate. Include proper scalar type definitions for counts and IDs.\n<info added on 2025-07-17T12:59:02.360Z>\nSuccessfully implemented custom query support in generate.py. The system now:\n1. Parses customQueries from YAML files\n2. Adds custom queries to GraphQL schema generation\n3. Generates TypeScript GraphQL operations for custom queries\n4. Created OrganizationsWithDetailsQueryByOwnerId query that returns organization data with userRole, memberCount, and applicationCount\n\nThe GraphQL schema and TypeScript files are being generated correctly. Next step is to implement the Lambda resolver that will handle the aggregation logic.\n</info added on 2025-07-17T12:59:02.360Z>",
+            "status": "done",
+            "testStrategy": "GraphQL schema validation tests, type definition syntax tests"
+          },
+          {
+            "id": 10,
+            "title": "Update Frontend GraphQL Client to Support Custom Queries",
+            "description": "Modify the frontend GraphQL client configuration to support the new custom query architecture",
+            "dependencies": [
+              9
+            ],
+            "details": "Update GraphQL client configuration to include the new custom queries in code generation. Modify query definitions and TypeScript types to support the OrganizationsWithDetails query. Update any existing organization queries to use the new custom query where appropriate. Ensure proper error handling and loading states for the new query.",
+            "status": "done",
+            "testStrategy": "Frontend integration tests, TypeScript compilation tests, GraphQL query execution tests"
+          },
+          {
+            "id": 11,
+            "title": "Implement Frontend Components for OrganizationsWithDetails",
+            "description": "Create or update frontend components to use the new OrganizationsWithDetailsQueryByOwnerId query",
+            "dependencies": [
+              10
+            ],
+            "details": "Update organization listing components to use the new custom query instead of multiple separate queries. Implement proper data handling for the enriched organization data including user roles, member counts, and application counts. Add loading states and error handling specific to the custom query. Optimize component rendering to take advantage of the single query approach.",
+            "status": "pending",
+            "testStrategy": "Component unit tests, integration tests with GraphQL client, E2E tests for organization listing functionality"
+          },
+          {
+            "id": 12,
+            "title": "Add Integration Tests and Documentation for Custom Query Architecture",
+            "description": "Create comprehensive integration tests and documentation for the new custom query architecture",
+            "dependencies": [
+              11
+            ],
+            "details": "Implement end-to-end integration tests that validate the complete custom query flow from YAML definition to frontend consumption. Create documentation explaining how to define custom queries in YAML files, implement custom resolvers, and use them in the frontend. Add examples and best practices for custom query development. Include troubleshooting guides for common issues.",
+            "status": "pending",
+            "testStrategy": "End-to-end integration tests covering the complete custom query lifecycle, documentation validation tests"
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-06-20T19:07:50.957Z",
-      "updated": "2025-07-07T19:34:43.672Z",
+      "updated": "2025-07-17T13:25:00.646Z",
       "description": "Tasks for master context"
     }
   }

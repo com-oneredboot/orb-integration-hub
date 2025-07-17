@@ -28,17 +28,12 @@ export class OrganizationsEffects {
     this.actions$.pipe(
       ofType(OrganizationsActions.loadOrganizations, OrganizationsActions.refreshOrganizations),
       switchMap(() =>
-        this.organizationService.getUserOrganizations().pipe(
-          map(response => {
-            if (response.StatusCode === 200 && response.Data) {
-              return OrganizationsActions.loadOrganizationsSuccess({ 
-                organizations: response.Data 
-              });
-            } else {
-              return OrganizationsActions.loadOrganizationsFailure({ 
-                error: response.Message || 'Failed to load organizations' 
-              });
-            }
+        this.organizationService.getUserOrganizationsWithDetails().pipe(
+          map(organizationsWithDetails => {
+            // The new query returns an array of objects with organization, userRole, memberCount, applicationCount
+            return OrganizationsActions.loadOrganizationsWithDetailsSuccess({ 
+              organizationsWithDetails 
+            });
           }),
           catchError(error => 
             of(OrganizationsActions.loadOrganizationsFailure({ 

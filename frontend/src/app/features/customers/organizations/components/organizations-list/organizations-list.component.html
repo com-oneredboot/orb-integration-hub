@@ -17,7 +17,7 @@
               [title]="!(currentUser$ | async)?.groups?.includes('CUSTOMER') ? 'Only paying customers can create organizations (DEBUG: Click anyway)' : ''"
               (click)="onCreateOrganization()">
         <fa-icon icon="plus" class="orb-card-btn__icon"></fa-icon>
-        Create Organization {{ !(currentUser$ | async)?.groups?.includes('CUSTOMER') ? '(DEBUG)' : '' }}
+        Create {{ !(currentUser$ | async)?.groups?.includes('CUSTOMER') ? '(DEBUG)' : '' }}
       </button>
     </div>
   </div>

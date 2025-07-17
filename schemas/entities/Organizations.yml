@@ -83,3 +83,38 @@ model:
       type: string
       required: false
       description: Organization-specific KMS key alias name
+
+# Custom queries for aggregated data
+customQueries:
+  - name: OrganizationsWithDetailsQueryByOwnerId
+    type: aggregation
+    description: Get organizations with user role, member count, and application count
+    input:
+      ownerId:
+        type: String!
+        description: ID of the user to get organizations for
+    returns: '[OrganizationWithDetails]'
+    enrichments:
+      - field: userRole
+        type: lookup
+        source: OrganizationUsers
+        lookupKey:
+          userId: $context.identity.sub
+          organizationId: $item.organizationId
+        extract: role
+        default: NONE
+        
+      - field: memberCount
+        type: count
+        source: OrganizationUsers
+        countWhere:
+          organizationId: $item.organizationId
+          status: ACTIVE
+          
+      - field: applicationCount
+        type: count
+        source: Applications
+        countWhere:
+          organizationId: $item.organizationId
+          status:
+            in: [ACTIVE, PENDING]
