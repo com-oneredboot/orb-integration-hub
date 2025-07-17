@@ -2275,8 +2275,8 @@
             "dependencies": [
               10
             ],
-            "details": "Update organization listing components to use the new custom query instead of multiple separate queries. Implement proper data handling for the enriched organization data including user roles, member counts, and application counts. Add loading states and error handling specific to the custom query. Optimize component rendering to take advantage of the single query approach.",
-            "status": "pending",
+            "details": "Update organization listing components to use the new custom query instead of multiple separate queries. Implement proper data handling for the enriched organization data including user roles, member counts, and application counts. Add loading states and error handling specific to the custom query. Optimize component rendering to take advantage of the single query approach.\n<info added on 2025-07-17T16:52:49.252Z>\nSuccessfully deployed OrganizationsWithDetailsQueryByOwnerId resolver after fixing CloudFormation deployment issues. The query is working correctly and returning organization data with userRole (currently \"NONE\" as expected), memberCount, and applicationCount. Identified security concern: KMS key details (kmsKeyId, kmsKeyArn, kmsAlias) are being exposed in the GraphQL response and need to be removed from the query response to prevent sensitive infrastructure information leakage.\n</info added on 2025-07-17T16:52:49.252Z>",
+            "status": "done",
             "testStrategy": "Component unit tests, integration tests with GraphQL client, E2E tests for organization listing functionality"
           },
           {
@@ -2295,7 +2295,7 @@
     ],
     "metadata": {
       "created": "2025-06-20T19:07:50.957Z",
-      "updated": "2025-07-17T14:05:21.595Z",
+      "updated": "2025-07-17T16:52:35.138Z",
       "description": "Tasks for master context"
     }
   }

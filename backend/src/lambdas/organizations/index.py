@@ -171,8 +171,9 @@ class OrganizationsResolver:
             logger.info(f"Created organization {organization_id} for user {user_id}")
             
             return {
-                'statusCode': 200,
-                'body': organization_data
+                'StatusCode': 200,
+                'Message': 'Organization created successfully',
+                'Data': organization_data
             }
             
         except ClientError as e:
@@ -218,8 +219,9 @@ class OrganizationsResolver:
                     logger.debug(f"Description decryption failed (likely plain text): {str(e)}")
             
             return {
-                'statusCode': 200,
-                'body': organization
+                'StatusCode': 200,
+                'Message': 'Organization retrieved successfully',
+                'Data': organization
             }
             
         except Exception as e:
@@ -251,8 +253,9 @@ class OrganizationsResolver:
             organizations = response.get('Items', [])
             
             return {
-                'statusCode': 200,
-                'body': organizations
+                'StatusCode': 200,
+                'Message': 'Organizations retrieved successfully',
+                'Data': organizations
             }
             
         except Exception as e:
@@ -355,8 +358,9 @@ class OrganizationsResolver:
                 logger.critical(f"AUDIT_LOGGING_FAILURE for organization update {organization_id}: {str(audit_error)}")
             
             return {
-                'statusCode': 200,
-                'body': response['Attributes']
+                'StatusCode': 200,
+                'Message': 'Organization updated successfully',
+                'Data': response['Attributes']
             }
             
         except ClientError as e:
@@ -450,11 +454,12 @@ class OrganizationsResolver:
                 logger.critical(f"AUDIT_LOGGING_FAILURE for organization deletion {organization_id}: {str(audit_error)}")
             
             return {
-                'statusCode': 200,
-                'body': {
-                    'message': 'Organization deleted successfully', 
+                'StatusCode': 200,
+                'Message': 'Organization deleted successfully',
+                'Data': {
                     'organizationId': organization_id,
-                    'kmsKeyScheduledForDeletion': True
+                    'kmsKeyScheduledForDeletion': True,
+                    'deletedOrganization': response['Attributes']
                 }
             }
             
@@ -484,7 +489,8 @@ class OrganizationsResolver:
             
             return {
                 'statusCode': 200,
-                'body': permissions_data
+                'Message': 'Permissions retrieved successfully',
+                'Data': permissions_data
             }
             
         except Exception as e:
@@ -506,8 +512,9 @@ class OrganizationsResolver:
             has_permission = permission_key in org_context.user_permissions
             
             return {
-                'statusCode': 200,
-                'body': {
+                'StatusCode': 200,
+                'Message': 'Permission check completed',
+                'Data': {
                     'hasPermission': has_permission,
                     'organizationId': org_context.organization_id,
                     'permission': permission_key,
@@ -536,8 +543,9 @@ class OrganizationsResolver:
                 }
             
             return {
-                'statusCode': 200,
-                'body': {
+                'StatusCode': 200,
+                'Message': 'Roles retrieved successfully',
+                'Data': {
                     'roles': roles_data,
                     'permissions': [p.key for p in OrganizationPermissions.get_all_permissions()]
                 }
@@ -875,8 +883,9 @@ class OrganizationsResolver:
             error_data['context'] = context
         
         return {
-            'statusCode': 400,
-            'body': error_data
+            'StatusCode': 400,
+            'Message': message,
+            'Data': error_data
         }
 
 
@@ -927,6 +936,7 @@ def lambda_handler(event, context):
     except Exception as e:
         logger.error(f"Unhandled error in Organizations resolver: {str(e)}")
         return {
-            'statusCode': 500,
-            'body': {'error': 'Internal server error'}
+            'StatusCode': 500,
+            'Message': 'Internal server error',
+            'Data': None
         }

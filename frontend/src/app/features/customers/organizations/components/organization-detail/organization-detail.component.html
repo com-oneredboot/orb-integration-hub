@@ -146,19 +146,17 @@
     <!-- Security Tab -->
     <div class="organization-detail__tab-panel"
          [class.organization-detail__tab-panel--active]="activeTab === 'security'">
-      <div class="organization-detail__info-grid">
-        <div class="organization-detail__info-item">
-          <label class="organization-detail__info-label">Encryption Key ID</label>
-          <input type="text" class="organization-detail__info-input organization-detail__info-input--code"
-                 [value]="organization.kmsKeyId"
-                 disabled>
-        </div>
-        <div class="organization-detail__info-item">
-          <label class="organization-detail__info-label">Key Alias</label>
-          <input type="text" class="organization-detail__info-input organization-detail__info-input--code"
-                 [value]="organization.kmsAlias"
-                 disabled>
-        </div>
+      <div class="organization-detail__placeholder">
+        <fa-icon icon="shield-alt" class="organization-detail__placeholder-icon"></fa-icon>
+        <p class="organization-detail__placeholder-text">
+          Security features will be available here.
+        </p>
+        <ul class="organization-detail__placeholder-list">
+          <li>Organization data is encrypted at rest</li>
+          <li>All communications are secured with TLS</li>
+          <li>Access is controlled through role-based permissions</li>
+          <li>Audit logs track all organization activities</li>
+        </ul>
       </div>
     </div>
 

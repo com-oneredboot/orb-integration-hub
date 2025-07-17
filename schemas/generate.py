@@ -1243,9 +1243,13 @@ query {type_name}QueryBy{idx_pascal}($input: {type_name}QueryBy{idx_pascal}Input
                     if custom_query.type == 'aggregation':
                         # Build the response structure based on return type
                         if custom_query.returns == '[OrganizationWithDetails]':
+                            # Exclude sensitive KMS fields from organization data
+                            safe_attributes = [attr for attr in lambda_type.attributes 
+                                             if attr.name not in ['kmsKeyId', 'kmsKeyArn', 'kmsAlias']]
+                            safe_field_list = "\n      ".join([to_camel_case(attr.name) for attr in safe_attributes])
                             response_fields = f'''
       organization {{
-        {field_list}
+        {safe_field_list}
       }}
       userRole
       memberCount

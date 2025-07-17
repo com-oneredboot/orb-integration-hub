@@ -1,6 +1,6 @@
 """
 Generated Python models for OwnershipTransferRequests
-Generated at 2025-07-17T16:41:55.312465+00:00
+Generated at 2025-07-17T16:55:28.491371+00:00
 """
 
 from typing import Optional, List

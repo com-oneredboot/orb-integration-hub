@@ -160,9 +160,6 @@ query OrganizationsWithDetailsQueryByOwnerId($input: OrganizationsWithDetailsQue
       status
       createdAt
       updatedAt
-      kmsKeyId
-      kmsKeyArn
-      kmsAlias
       }
       userRole
       memberCount
