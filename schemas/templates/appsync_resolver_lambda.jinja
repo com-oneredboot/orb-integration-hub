@@ -38,6 +38,10 @@
     {% endif %}
   {% endif %}
   {% for operation in all_ops %}
+  {# Temporarily skip OrganizationsWithDetailsQueryByOwnerId to fix deployment issue #}
+  {% if operation.name == 'OrganizationsWithDetailsQueryByOwnerId' %}
+    {# Skipping resolver generation for deployment fix #}
+  {% else %}
   {% if operation.custom_type is defined %}
   {{ operation.name }}Resolver:
   {% else %}
@@ -81,5 +85,6 @@
         {% else %}
         $util.toJson($ctx.result)
         {% endif %}
+  {% endif %}{# end skip OrganizationsWithDetailsQueryByOwnerId #}
   {% endfor %}
 {% endfor %}
