@@ -3531,6 +3531,41 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
+  OrganizationsWithDetailsQueryByOwnerIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - OrganizationsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: OrganizationsWithDetailsQueryByOwnerId
+      DataSourceName: OrganizationsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "info": {
+              "fieldName": "OrganizationsWithDetailsQueryByOwnerId",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
+          }
+        }
+      ResponseMappingTemplate: |
+        #if($ctx.result.StatusCode == 200)
+          $util.toJson($ctx.result.Data)
+        #else
+          $util.error($ctx.result.Message)
+        #end
   PrivacyRequestsCreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
