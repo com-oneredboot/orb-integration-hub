@@ -41,7 +41,11 @@
   {%- endif %}
   
   {%- for operation in all_ops %}
+  {%- if operation.custom_type is defined %}
+  {{ operation.name }}Resolver:
+  {%- else %}
   {{ schema.name }}{{ operation.name }}Resolver:
+  {%- endif %}
     Type: AWS::AppSync::Resolver
     DependsOn:
       - {{ schema.name }}LambdaDataSource
@@ -71,6 +75,14 @@
           }
         }
       ResponseMappingTemplate: |
+        {%- if operation.returns is defined and operation.returns.startswith('[') %}
+        #if($ctx.result.StatusCode == 200)
+          $util.toJson($ctx.result.Data)
+        #else
+          $util.error($ctx.result.Message)
+        #end
+        {%- else %}
         $util.toJson($ctx.result)
+        {%- endif %}
   {% endfor %}
 {% endfor %}
