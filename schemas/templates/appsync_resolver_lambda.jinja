@@ -18,12 +18,10 @@
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
 {% endfor %}
-
-{# Lambda-DynamoDB resolvers - these have multiple operations like DynamoDB types #}
 {% for schema in schemas.values() if schema.type == 'lambda-dynamodb' %}
-  {%- if schema.operations is defined and schema.operations|length > 0 %}
-    {%- set all_ops = schema.operations %}
-  {%- else %}
+  {% if schema.operations is defined and schema.operations|length > 0 %}
+    {% set all_ops = schema.operations %}
+  {% else %}
     {# Default operations if none are defined #}
     {% set all_ops = [
       {"name": "Create", "type": "Mutation", "field": schema.name + 'Create'},
@@ -38,14 +36,13 @@
         {% set _ = all_ops.append({"name": "QueryBy" + index.partition|to_pascal_case, "type": "Query", "field": schema.name + 'QueryBy' + index.partition|to_pascal_case}) %}
       {% endfor %}
     {% endif %}
-  {%- endif %}
-  
-  {%- for operation in all_ops %}
-  {%- if operation.custom_type is defined %}
+  {% endif %}
+  {% for operation in all_ops %}
+  {% if operation.custom_type is defined %}
   {{ operation.name }}Resolver:
-  {%- else %}
+  {% else %}
   {{ schema.name }}{{ operation.name }}Resolver:
-  {%- endif %}
+  {% endif %}
     Type: AWS::AppSync::Resolver
     DependsOn:
       - {{ schema.name }}LambdaDataSource
@@ -75,14 +72,14 @@
           }
         }
       ResponseMappingTemplate: |
-        {%- if operation.returns is defined and operation.returns.startswith('[') %}
+        {% if operation.returns is defined and operation.returns.startswith('[') %}
         #if($ctx.result.StatusCode == 200)
           $util.toJson($ctx.result.Data)
         #else
           $util.error($ctx.result.Message)
         #end
-        {%- else %}
+        {% else %}
         $util.toJson($ctx.result)
-        {%- endif %}
+        {% endif %}
   {% endfor %}
 {% endfor %}

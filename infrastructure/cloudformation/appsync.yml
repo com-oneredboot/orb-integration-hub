@@ -2880,8 +2880,8 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
-
-  OwnershipTransferRequestsCreateResolver:    Type: AWS::AppSync::Resolver
+  OwnershipTransferRequestsCreateResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -2909,7 +2909,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  OwnershipTransferRequestsUpdateResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OwnershipTransferRequestsUpdateResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -2937,7 +2940,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  OwnershipTransferRequestsDeleteResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OwnershipTransferRequestsDeleteResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -2965,7 +2971,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  OwnershipTransferRequestsDisableResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OwnershipTransferRequestsDisableResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -2993,7 +3002,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  OwnershipTransferRequestsQueryByTransferIdResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OwnershipTransferRequestsQueryByTransferIdResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -3021,7 +3033,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  OwnershipTransferRequestsQueryByCurrentOwnerIdResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OwnershipTransferRequestsQueryByCurrentOwnerIdResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -3049,7 +3064,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  OwnershipTransferRequestsQueryByCurrentOwnerIdAndCreatedAtResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OwnershipTransferRequestsQueryByCurrentOwnerIdAndCreatedAtResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -3077,7 +3095,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  OwnershipTransferRequestsQueryByNewOwnerIdResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OwnershipTransferRequestsQueryByNewOwnerIdResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -3105,7 +3126,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  OwnershipTransferRequestsQueryByNewOwnerIdAndCreatedAtResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OwnershipTransferRequestsQueryByNewOwnerIdAndCreatedAtResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -3133,7 +3157,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  OwnershipTransferRequestsQueryByStatusResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OwnershipTransferRequestsQueryByStatusResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -3161,7 +3188,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  OwnershipTransferRequestsQueryByStatusAndCreatedAtResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OwnershipTransferRequestsQueryByStatusAndCreatedAtResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -3189,7 +3219,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  OwnershipTransferRequestsQueryByStatusAndExpiresAtResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OwnershipTransferRequestsQueryByStatusAndExpiresAtResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -3217,7 +3250,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  OrganizationsCreateResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OrganizationsCreateResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - OrganizationsLambdaDataSource
       - IntegrationHubSchema
@@ -3245,7 +3281,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  OrganizationsUpdateResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OrganizationsUpdateResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - OrganizationsLambdaDataSource
       - IntegrationHubSchema
@@ -3273,7 +3312,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  OrganizationsDeleteResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OrganizationsDeleteResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - OrganizationsLambdaDataSource
       - IntegrationHubSchema
@@ -3301,7 +3343,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  OrganizationsDisableResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OrganizationsDisableResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - OrganizationsLambdaDataSource
       - IntegrationHubSchema
@@ -3329,7 +3374,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  OrganizationsQueryByOrganizationIdResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OrganizationsQueryByOrganizationIdResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - OrganizationsLambdaDataSource
       - IntegrationHubSchema
@@ -3357,7 +3405,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  OrganizationsQueryByOwnerIdResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OrganizationsQueryByOwnerIdResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - OrganizationsLambdaDataSource
       - IntegrationHubSchema
@@ -3385,7 +3436,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  OrganizationsQueryByOwnerIdAndCreatedAtResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OrganizationsQueryByOwnerIdAndCreatedAtResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - OrganizationsLambdaDataSource
       - IntegrationHubSchema
@@ -3413,7 +3467,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  OrganizationsQueryByStatusResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OrganizationsQueryByStatusResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - OrganizationsLambdaDataSource
       - IntegrationHubSchema
@@ -3441,7 +3498,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  OrganizationsQueryByStatusAndCreatedAtResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OrganizationsQueryByStatusAndCreatedAtResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - OrganizationsLambdaDataSource
       - IntegrationHubSchema
@@ -3469,7 +3529,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  OrganizationsWithDetailsQueryByOwnerIdResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  OrganizationsWithDetailsQueryByOwnerIdResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - OrganizationsLambdaDataSource
       - IntegrationHubSchema
@@ -3497,11 +3560,14 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        #if($ctx.result.StatusCode == 200)
+      ResponseMappingTemplate: |
+        #if($ctx.result.StatusCode == 200)
           $util.toJson($ctx.result.Data)
         #else
           $util.error($ctx.result.Message)
-        #end  PrivacyRequestsCreateResolver:    Type: AWS::AppSync::Resolver
+        #end
+  PrivacyRequestsCreateResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -3529,7 +3595,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  PrivacyRequestsUpdateResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  PrivacyRequestsUpdateResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -3557,7 +3626,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  PrivacyRequestsDeleteResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  PrivacyRequestsDeleteResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -3585,7 +3657,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  PrivacyRequestsDisableResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  PrivacyRequestsDisableResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -3613,7 +3688,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  PrivacyRequestsQueryByRequestIdResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  PrivacyRequestsQueryByRequestIdResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -3641,7 +3719,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  PrivacyRequestsQueryByRequestTypeResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  PrivacyRequestsQueryByRequestTypeResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -3669,7 +3750,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  PrivacyRequestsQueryByRequestTypeAndReceivedAtResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  PrivacyRequestsQueryByRequestTypeAndReceivedAtResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -3697,7 +3781,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  PrivacyRequestsQueryByDataSubjectEmailResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  PrivacyRequestsQueryByDataSubjectEmailResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -3725,7 +3812,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  PrivacyRequestsQueryByDataSubjectEmailAndReceivedAtResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  PrivacyRequestsQueryByDataSubjectEmailAndReceivedAtResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -3753,7 +3843,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  PrivacyRequestsQueryByOrganizationIdResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  PrivacyRequestsQueryByOrganizationIdResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -3781,7 +3874,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  PrivacyRequestsQueryByOrganizationIdAndReceivedAtResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  PrivacyRequestsQueryByOrganizationIdAndReceivedAtResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -3809,7 +3905,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  PrivacyRequestsQueryByStatusResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  PrivacyRequestsQueryByStatusResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -3837,7 +3936,10 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)  PrivacyRequestsQueryByStatusAndDeadlineResolver:    Type: AWS::AppSync::Resolver
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  PrivacyRequestsQueryByStatusAndDeadlineResolver:
+    Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
       - IntegrationHubSchema
@@ -3865,7 +3967,9 @@ Resources:
             "stash": $util.toJson($ctx.stash)
           }
         }
-      ResponseMappingTemplate: |        $util.toJson($ctx.result)
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+
 # --------------------------------------------------- #
 Outputs:
   IntegrationHubApiId:
