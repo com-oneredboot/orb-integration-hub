@@ -30,7 +30,9 @@ class OrganizationKMSManager:
         """
         self.kms_client = boto3.client('kms', region_name=region)
         self.dynamodb = boto3.resource('dynamodb', region_name=region)
-        self.organizations_table = self.dynamodb.Table('Organizations')
+        import os
+        table_name = os.environ.get('ORGANIZATIONS_TABLE_NAME', 'Organizations')
+        self.organizations_table = self.dynamodb.Table(table_name)
         self.region = region or os.environ.get('AWS_REGION', 'us-east-1')
         
     def create_organization_kms_key(

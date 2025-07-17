@@ -187,8 +187,10 @@ class OrganizationContextExtractor:
         start_time = time.time()
         try:
             import boto3
+            import os
             dynamodb = boto3.resource('dynamodb')
-            organizations_table = dynamodb.Table('Organizations')
+            table_name = os.environ.get('ORGANIZATIONS_TABLE_NAME', 'Organizations')
+            organizations_table = dynamodb.Table(table_name)
             
             response = organizations_table.get_item(
                 Key={'organizationId': organization_id}
@@ -211,8 +213,10 @@ class OrganizationContextExtractor:
         start_time = time.time()
         try:
             import boto3
+            import os
             dynamodb = boto3.resource('dynamodb')
-            org_users_table = dynamodb.Table('OrganizationUsers')
+            table_name = os.environ.get('ORGANIZATION_USERS_TABLE_NAME', 'OrganizationUsers')
+            org_users_table = dynamodb.Table(table_name)
             
             response = org_users_table.get_item(
                 Key={

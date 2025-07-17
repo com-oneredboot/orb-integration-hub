@@ -26,8 +26,11 @@ class OrganizationSecurityManager:
             region: AWS region, defaults to None (uses AWS_REGION env var)
         """
         self.dynamodb = boto3.resource('dynamodb', region_name=region)
-        self.organizations_table = self.dynamodb.Table('Organizations')
-        self.org_users_table = self.dynamodb.Table('OrganizationUsers')
+        import os
+        table_name = os.environ.get('ORGANIZATIONS_TABLE_NAME', 'Organizations')
+        self.organizations_table = self.dynamodb.Table(table_name)
+        org_users_table_name = os.environ.get('ORGANIZATION_USERS_TABLE_NAME', 'OrganizationUsers')
+        self.org_users_table = self.dynamodb.Table(org_users_table_name)
         
     def validate_organization_access(
         self, 
