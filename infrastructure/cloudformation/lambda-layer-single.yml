@@ -58,7 +58,7 @@ Resources:
               - IsUsersSecurityLayer
               - 'User security middleware with authentication and authorization utilities'
               - 'Lambda layer'
-      ContentUri: !Sub '../../backend/src/layers/${LayerName}/${LayerName}_layer.zip'
+      ContentUri: !Sub '../../backend/src/layers/${LayerName}/'
       CompatibleRuntimes:
         - !Ref Runtime
       LicenseInfo: MIT

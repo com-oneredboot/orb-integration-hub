@@ -86,17 +86,10 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Build ${{ matrix.layer }} Layer
-      run: |
-        echo "Building ${{ matrix.layer }} Layer"
-        chmod +x build_layer.sh
-        ./build_layer.sh ${{ matrix.layer }}
-      working-directory: backend/src/layers
+    # Skip manual build - SAM will handle it
 
     - name: Deploy ${{ matrix.layer }} Layer
       run: |
-        # Copy the built layer zip to the expected location
-        cp backend/src/layers/${{ matrix.layer }}/${{ matrix.layer }}_layer.zip backend/src/layers/${{ matrix.layer }}/
         
         # Get the stack name for this specific layer
         LAYER_STACK_NAME="${{ inputs.customer_id }}-${{ inputs.project_id }}-${{ inputs.environment }}-${{ matrix.layer }}-layer"
