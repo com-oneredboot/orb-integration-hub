@@ -55,12 +55,15 @@ jobs:
         ./check_layer_changes.sh ${{ inputs.customer_id }} ${{ inputs.project_id }}
       working-directory: backend/src/layers
 
-  # Second job: Deploy all layers in single stack
-  deploy-layers-stack:
+  # Second job: Build and deploy only changed layers (individual stacks)
+  deploy-individual-layers:
     needs: check-layer-changes
     if: needs.check-layer-changes.outputs.any_changes == 'true'
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
+    strategy:
+      matrix:
+        layer: ${{ fromJson(needs.check-layer-changes.outputs.layers_to_build) }}
     
     steps:
     - name: Checkout code
@@ -83,43 +86,64 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Deploy Lambda Layers Stack
+    - name: Deploy ${{ matrix.layer }} Layer
       run: |
-        echo "Deploying lambda layers stack with changes: ${{ needs.check-layer-changes.outputs.layers_to_build }}"
+        echo "Deploying ${{ matrix.layer }} layer individually"
         
-        # Get the stack name
-        STACK_NAME="${{ inputs.customer_id }}-${{ inputs.project_id }}-${{ inputs.environment }}-lambda-layers"
+        # Get the stack name for this specific layer
+        # Using underscores in stack name to comply with CloudFormation naming rules
+        LAYER_STACK_NAME="${{ inputs.customer_id }}-${{ inputs.project_id }}-${{ inputs.environment }}-${{ matrix.layer }}"
+        LAYER_STACK_NAME="${LAYER_STACK_NAME//_/-}"  # Replace underscores with hyphens
         
         # Build the SAM application
         sam build \
-          --template-file lambda-layers.yml
+          --template-file lambda-layer-single.yml \
+          --parameter-overrides \
+            LayerName=${{ matrix.layer }} \
+            CustomerID=${{ inputs.customer_id }} \
+            ProjectID=${{ inputs.project_id }} \
+            Environment=${{ inputs.environment }}
         
-        # Package the layers
+        # Package the layer
         sam package \
           --template-file .aws-sam/build/template.yaml \
           --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
-          --output-template-file lambda-layers-packaged.yml
+          --output-template-file lambda-layer-${{ matrix.layer }}-packaged.yml
         
-        # Deploy the entire layers stack
+        # Deploy only this specific layer
         sam deploy \
-          --template-file lambda-layers-packaged.yml \
+          --template-file lambda-layer-${{ matrix.layer }}-packaged.yml \
           --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
-          --stack-name $STACK_NAME \
+          --stack-name $LAYER_STACK_NAME \
           --capabilities CAPABILITY_NAMED_IAM \
           --no-fail-on-empty-changeset \
           --parameter-overrides \
-            CustomerId=${{ inputs.customer_id }} \
-            ProjectId=${{ inputs.project_id }} \
+            LayerName=${{ matrix.layer }} \
+            CustomerID=${{ inputs.customer_id }} \
+            ProjectID=${{ inputs.project_id }} \
             Environment=${{ inputs.environment }}
         
         # Store the packaged template
-        aws s3 cp lambda-layers-packaged.yml \
-          s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/lambda-layers-packaged.yml
+        aws s3 cp lambda-layer-${{ matrix.layer }}-packaged.yml \
+          s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/lambda-layer-${{ matrix.layer }}-packaged.yml
+        
+        # Export the layer ARN to SSM Parameter Store for other stacks to use
+        LAYER_ARN=$(aws cloudformation describe-stacks \
+          --stack-name $LAYER_STACK_NAME \
+          --query 'Stacks[0].Outputs[?OutputKey==`LayerVersionArn`].OutputValue' \
+          --output text)
+        
+        aws ssm put-parameter \
+          --name "/${{ inputs.customer_id }}/${{ inputs.project_id }}/${{ inputs.environment }}/layers/${{ matrix.layer }}/arn" \
+          --value "$LAYER_ARN" \
+          --type String \
+          --overwrite
+        
       working-directory: infrastructure/cloudformation
 
   # Third job: Update hashes after successful deployment
   update-layer-hashes:
-    needs: [check-layer-changes, deploy-layers-stack]
+    needs: [check-layer-changes, deploy-individual-layers]
     if: needs.check-layer-changes.outputs.any_changes == 'true'
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
