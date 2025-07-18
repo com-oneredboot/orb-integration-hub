@@ -1,0 +1,22 @@
+# Task ID: 45
+# Title: Fix Moderate NPM Security Vulnerabilities
+# Status: done
+# Dependencies: 44
+# Priority: medium
+# Description: Resolve remaining moderate severity vulnerabilities in tough-cookie, request, ajv, and additional minimist/axios issues
+# Details:
+Update package-lock.json and frontend/package-lock.json for moderate vulnerabilities:
+1. tough-cookie Prototype Pollution (#42) - Update to version >=4.0.0
+2. Server-Side Request Forgery in Request (#41) - Replace with axios or node-fetch
+3. Prototype Pollution in Ajv (#36) - Update to version >=6.12.3
+4. Prototype Pollution in minimist (older CVE) (#33) - Ensure version >=1.2.6
+5. Axios Cross-Site Request Forgery (#30) - Update to version >=0.21.2
+
+Implementation steps:
+- Update package.json dependencies to safe versions
+- Replace deprecated 'request' package with modern alternatives
+- Run 'npm install' to update lock files
+- Run 'npm audit --audit-level moderate' to verify fixes
+
+# Test Strategy:
+Verify npm audit shows no moderate vulnerabilities in production dependencies. Test cookie handling functionality. Test JSON schema validation with ajv. Verify HTTP client functionality after request package replacement.

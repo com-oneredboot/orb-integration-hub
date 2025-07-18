@@ -372,6 +372,22 @@ Resources:
           APPLICATIONS_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-applications-table-name}}'
           USER_POOL_ID: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-cognito-user-pool-id}}'
 
+  # Users Lambda
+  UsersLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${CustomerId}-${ProjectId}-${Environment}-users"
+      Description: "Lambda function to handle Users CRUD operations with security"
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      CodeUri: ../../backend/src/lambdas/users/
+      Layers:
+        - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-security-layer-arn}}'
+      Environment:
+        Variables:
+          USERS_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-table-name}}'
+          USER_POOL_ID: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-cognito-user-pool-id}}'
+
   # Ownership Transfer Requests Lambda
   OwnershipTransferRequestsLambda:
     Type: AWS::Serverless::Function
@@ -425,6 +441,14 @@ Resources:
       Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-user-status-calculator-lambda-arn"
       Type: String
       Value: !GetAtt UserStatusCalculatorLambda.Arn
+
+  # Parameter Store for the Users Lambda ARN
+  UsersLambdaArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-users-lambda-arn"
+      Type: String
+      Value: !GetAtt UsersLambda.Arn
 
   # Parameter Store for the Organizations Lambda ARN
   OrganizationsLambdaArnParameter:

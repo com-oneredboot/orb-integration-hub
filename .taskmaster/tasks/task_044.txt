@@ -1,0 +1,40 @@
+# Task ID: 44
+# Title: Fix Python Security Vulnerabilities
+# Status: done
+# Dependencies: 43
+# Priority: medium
+# Description: Address moderate severity vulnerabilities in urllib3 and requests packages across multiple Pipfile.lock files in backend directories
+# Details:
+Update Pipfile.lock files in backend/, schemas/, and backend/src/layers/stripe/:
+1. urllib3 redirect control issues (#48, #47, #29, #28, #8, #5) - Update to version >=1.26.5
+2. requests .netrc credentials leak (#46, #7, #4) - Update to version >=2.25.1
+
+Implementation steps:
+- Update Pipfile in each directory to specify minimum safe versions
+- Run 'pipenv update urllib3 requests' in each directory
+- Regenerate Pipfile.lock with 'pipenv lock'
+- Run 'pipenv check' to verify security fixes
+- Test Python services and API endpoints
+
+# Test Strategy:
+Run 'pipenv check' in all directories to confirm no security vulnerabilities. Test Python backend services start correctly. Verify HTTP requests from Python services work properly. Test Stripe integration functionality.
+
+# Subtasks:
+## 1. Update Pipfile Dependencies and Regenerate Lock Files [done]
+### Dependencies: None
+### Description: Update the Pipfile in each affected directory (backend/, schemas/, backend/src/layers/stripe/) to specify minimum safe versions for urllib3 (>=1.26.5) and requests (>=2.25.1), then regenerate the Pipfile.lock files
+### Details:
+Navigate to each directory: backend/, schemas/, and backend/src/layers/stripe/. In each Pipfile, update the [packages] section to specify urllib3 = '>=1.26.5' and requests = '>=2.25.1'. Run 'pipenv update urllib3 requests' in each directory to update the packages. Then run 'pipenv lock' to regenerate the Pipfile.lock with the new versions. Ensure all three directories have updated lock files with the secure versions.
+
+## 2. Verify Security Vulnerabilities Are Resolved [done]
+### Dependencies: 44.1
+### Description: Run security checks to confirm that the urllib3 redirect control issues and requests .netrc credentials leak vulnerabilities have been addressed
+### Details:
+In each of the three directories (backend/, schemas/, backend/src/layers/stripe/), run 'pipenv check' to scan for known security vulnerabilities. Verify that the specific vulnerabilities mentioned (urllib3 issues #48, #47, #29, #28, #8, #5 and requests issue #46, #7, #4) are no longer reported. Document any remaining vulnerabilities that may need separate attention. Cross-reference with security advisory databases to ensure the updated versions address the identified CVEs.
+
+## 3. Test Python Services and API Endpoints [done]
+### Dependencies: 44.2
+### Description: Perform comprehensive testing of Python services and API endpoints to ensure the security updates do not break existing functionality
+### Details:
+Execute the existing test suites for all Python services in the backend directories. Test critical API endpoints that rely on urllib3 and requests libraries, including HTTP requests, redirects, and authentication flows. Pay special attention to any services that handle external API calls, file downloads, or authentication mechanisms. Run integration tests to verify that the updated packages maintain compatibility with existing code. Monitor for any deprecation warnings or behavioral changes introduced by the version updates.
+

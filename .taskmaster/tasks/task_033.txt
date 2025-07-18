@@ -1,0 +1,37 @@
+# Task ID: 33
+# Title: Phase 2 Layout Restructuring - Eliminate Tables in Cards and Implement Clean Container System
+# Status: done
+# Dependencies: 6, 27
+# Priority: high
+# Description: Restructure the application layout by eliminating problematic nested card styling from filter and table containers, implementing a clean single-card principle system with professional branding elements consistent with Dashboard patterns.
+# Details:
+Execute comprehensive layout restructuring across multiple critical areas: **1) Eliminate Tables in Cards Anti-Pattern:** Remove all nested card styling from data table containers, filter panels, and search interfaces that currently create visual hierarchy conflicts. Replace nested p-card components with clean container divs using CSS Grid and Flexbox layouts. Audit all existing components for card-in-card patterns and refactor to single-level card structures. **2) Implement Single Card Principle:** Apply consistent single card principle where each functional panel represents ONE main card container, not multiple nested cards. Create standardized card component variants (data-card, filter-card, content-card) with consistent padding, margins, and elevation. Establish clear visual hierarchy using typography, spacing, and subtle borders instead of nested card shadows. **3) Clean Container-Based Layouts:** Implement Dashboard-inspired container system using CSS Grid for main layout structure and Flexbox for component-level arrangements. Create responsive container classes (.main-container, .content-container, .sidebar-container) with consistent breakpoints and spacing. Replace table-specific card wrappers with semantic container elements that maintain accessibility while improving visual clarity. **4) Professional Branding Integration:** Add company logos and branding elements to match Dashboard header patterns, including primary logo placement, color scheme consistency, and typography hierarchy. Implement branded loading states, empty states, and error messages with consistent visual language. Create branded card headers with proper logo sizing and positioning guidelines. **5) Layout System Standardization:** Establish layout component library with reusable container components, standardized spacing tokens (8px grid system), and consistent elevation levels. Create layout documentation with before/after examples and implementation guidelines for developers.
+
+# Test Strategy:
+Execute comprehensive layout validation through multiple verification approaches: **1) Visual Regression Testing:** Capture before/after screenshots of all major application views to verify layout improvements, test responsive behavior across desktop, tablet, and mobile breakpoints, and validate consistent card styling throughout the application. **2) Component Audit Testing:** Systematically review all components to ensure elimination of nested card patterns, verify single card principle implementation across all functional panels, and validate proper container hierarchy in DOM structure. **3) Branding Consistency Testing:** Test logo placement and sizing across different screen resolutions, verify color scheme consistency with Dashboard patterns, and validate typography hierarchy implementation. **4) Accessibility Testing:** Ensure layout restructuring maintains proper semantic HTML structure, verify keyboard navigation works correctly with new container system, and test screen reader compatibility with restructured layouts. **5) Cross-Browser Testing:** Validate layout consistency across Chrome, Firefox, Safari, and Edge browsers, test CSS Grid and Flexbox fallbacks for older browser versions, and verify responsive behavior across different devices. **6) Performance Testing:** Measure layout rendering performance improvements from simplified card structure, test CSS bundle size reduction from eliminated nested styles, and validate smooth transitions and animations in new layout system.
+
+# Subtasks:
+## 1. Remove Nested Card Styling from Organizations Filters [done]
+### Dependencies: None
+### Description: Eliminate excessive card nesting in Organizations page filter sections
+### Details:
+Remove box-shadow, border-radius, and transform effects from organizations-list__filters and nested filter components. Implement flat, integrated design without competing visual elements.
+
+## 2. Remove Nested Card Styling from Applications Filters [pending]
+### Dependencies: None
+### Description: Eliminate excessive card nesting in Applications page filter sections
+### Details:
+Remove box-shadow, border-radius, and hover transform effects from applications-list__filters. Create clean, flat filter interface that integrates seamlessly with the main panel.
+
+## 3. Implement Single Card Panel Layouts [pending]
+### Dependencies: None
+### Description: Restructure main panels to follow Dashboard single-card principle
+### Details:
+Refactor organizations-page__list-panel and applications-page__list-panel to be single, clean cards without internal nested card styling. Follow Dashboard card design patterns with appropriate shadows and spacing.
+
+## 4. Add Professional Logo Integration [pending]
+### Dependencies: None
+### Description: Add OneRedBoot logo integration to Organizations and Applications headers
+### Details:
+Integrate OneRedBoot logo into both Organizations and Applications page headers following the Dashboard pattern with proper sizing, positioning, and responsive behavior.
+

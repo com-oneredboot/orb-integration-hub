@@ -1,0 +1,11 @@
+# Task ID: 8
+# Title: Develop Self-Service Account Management Features
+# Status: done
+# Dependencies: 2, 6
+# Priority: medium
+# Description: Create user-facing account management interface allowing end users to manage their profiles, security settings, MFA configuration, and view their activity history
+# Details:
+Build self-service features including: 1) User profile management with editable personal information, 2) Security settings page with password change and MFA setup, 3) Activity history viewer showing login attempts and account changes, 4) Account recovery workflows for forgotten passwords and locked accounts, 5) Notification preferences management, 6) Data export functionality for user data portability, 7) Account deletion with proper data cleanup. Ensure all changes are properly validated and logged for audit purposes.
+
+# Test Strategy:
+Unit tests for account management components, integration tests for profile update workflows, E2E tests for complete self-service journeys, security testing for account takeover scenarios, accessibility testing for all user-facing forms, data validation testing for all input fields

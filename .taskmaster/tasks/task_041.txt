@@ -1,0 +1,46 @@
+# Task ID: 41
+# Title: Implement Manual Organization Creation Functionality (Core CRUD)
+# Status: done
+# Dependencies: 5, 6, 30
+# Priority: medium
+# Description: Develop the complete manual organization creation feature, including frontend form design, backend API, database operations, validation, error handling, and basic CRUD endpoints for organizations, establishing the foundation for future invitation workflows.
+# Details:
+Design and implement a user-facing form for creating organizations, ensuring a modern, accessible UI with clear field validation and error messaging. On the backend, build REST or GraphQL endpoints to support create, read, update, and delete (CRUD) operations for organizations, including input validation, duplicate checks, and secure data handling. Define and migrate the necessary database schema (e.g., organizations table with unique constraints, timestamps, and ownership fields). Integrate robust validation logic both client- and server-side, leveraging existing validation and error handling frameworks. Ensure all errors are logged and surfaced to the user in a user-friendly manner. Implement basic organization listing and detail retrieval to support CRUD completeness. Prepare the codebase for seamless integration with future invitation and membership workflows, but do not implement those flows yet.
+
+# Test Strategy:
+1. Unit test frontend form validation, error display, and submission logic. 2. Backend unit and integration tests for all CRUD endpoints, including edge cases (e.g., duplicate names, missing fields, invalid input). 3. Database migration tests to verify schema correctness and data integrity. 4. End-to-end tests covering the full organization creation flow, including error scenarios and successful creation. 5. Manual exploratory testing to ensure usability and accessibility of the form. 6. Verify error handling and logging through simulated backend failures and invalid requests.
+
+# Subtasks:
+## 1. Design Organization Creation UI and Form Validation [done]
+### Dependencies: None
+### Description: Create a modern, accessible frontend form for manual organization creation, ensuring clear field validation, error messaging, and usability best practices.
+### Details:
+Develop the user interface for organization creation, including all required fields, real-time validation feedback, and accessible design. Integrate client-side validation logic to catch errors before submission.
+<info added on 2025-06-28T18:39:42.705Z>
+Completed UI design and form validation with successful refactoring. Key improvements implemented: Generalized create mode to edit mode by removing separate isInCreateMode checks and using single isEditing flag for both create and edit scenarios. Moved isCustomer() validation to UserService.isCustomer() making it reusable across components. All form validation is working with proper error display. Build successful with no compilation errors. Implementation follows best practices with clean separation of concerns.
+</info added on 2025-06-28T18:39:42.705Z>
+
+## 2. Define and Migrate Organization Database Schema [done]
+### Dependencies: None
+### Description: Design and implement the database schema for organizations, including unique constraints, timestamps, and ownership fields, and perform necessary migrations.
+### Details:
+Create the organizations table with fields for name, unique identifiers, timestamps, and owner references. Ensure schema supports future invitation and membership features.
+
+## 3. Implement Backend CRUD Endpoints with Validation and Error Handling [done]
+### Dependencies: 41.2
+### Description: Develop REST or GraphQL endpoints for create, read, update, and delete operations on organizations, including robust input validation, duplicate checks, and secure data handling.
+### Details:
+Build backend logic for all CRUD operations, integrating server-side validation and error handling frameworks. Ensure all errors are logged and returned in a user-friendly format.
+
+## 4. Integrate Frontend with Backend and Surface Errors to Users [done]
+### Dependencies: 41.1, 41.3
+### Description: Connect the frontend form to backend endpoints, ensuring seamless data flow, proper error handling, and user-friendly error display.
+### Details:
+Implement API calls from the frontend to backend endpoints, handle responses and errors, and display relevant messages to users. Ensure loading states and error boundaries are managed.
+
+## 5. Implement Organization Listing and Detail Retrieval [done]
+### Dependencies: 41.3, 41.4
+### Description: Develop frontend and backend functionality to list organizations and retrieve organization details, supporting CRUD completeness and future workflow integration.
+### Details:
+Create UI components and backend logic for listing organizations and viewing details, ensuring data consistency and readiness for future invitation features.
+

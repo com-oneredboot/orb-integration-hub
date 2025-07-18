@@ -1,0 +1,61 @@
+# Task ID: 31
+# Title: Reorganize Frontend Directory Structure Following Angular Best Practices
+# Status: done
+# Dependencies: 6
+# Priority: high
+# Description: Restructure the Angular frontend codebase to follow Angular best practices by consolidating duplicated directories, removing improper component-level stores, reorganizing testing structure, and resolving documentation folder duplication.
+# Details:
+Execute comprehensive frontend restructuring across multiple critical areas: **1) Services Directory Consolidation:** Merge scattered services from core/ and features/ directories into a unified src/app/core/services/ structure, eliminate duplicate service implementations, create service barrel exports (index.ts) for clean imports, and establish service categorization (auth, api, utility, business-logic). Move shared services to core/services/ and feature-specific services to respective feature modules. **2) Guards Directory Reorganization:** Consolidate guards from multiple locations into src/app/core/guards/, remove duplicate guard implementations, create guards barrel exports, and establish consistent guard naming conventions (auth.guard.ts, role.guard.ts). Ensure all guards follow Angular guard interface patterns and implement proper error handling. **3) Store Architecture Cleanup:** Remove improper component-level NgRx stores and move them to appropriate feature modules under src/app/store/ or feature-specific store directories, eliminate component-level state management that should be handled by services, consolidate duplicate store implementations, and establish proper store module structure with actions, effects, reducers, and selectors in separate files. **4) Testing Structure Reorganization:** Create unified testing structure with src/app/testing/ for shared test utilities, move component tests to sit alongside their components, consolidate duplicate test helpers and mocks, establish consistent test file naming conventions (.spec.ts), and create testing barrel exports for commonly used test utilities. **5) Documentation Consolidation:** Resolve duplication between root docs/ and .taskmaster/docs/ by establishing single source of truth in docs/, move scattered component documentation from individual directories to centralized docs/components/, create documentation index and navigation structure, and establish documentation standards for components, services, and features. **6) Directory Structure Standardization:** Implement Angular style guide directory structure with proper feature modules, shared modules, and core modules, establish consistent naming conventions across all directories and files, create proper barrel exports for clean imports, and ensure lazy-loaded feature modules are properly structured.
+
+# Test Strategy:
+Execute comprehensive restructuring validation through multiple verification approaches: **1) Build and Compilation Testing:** Verify all imports resolve correctly after directory restructuring by running ng build --prod, ensure no circular dependencies exist using madge or similar tools, validate all lazy-loaded modules load properly, and confirm TypeScript compilation succeeds without errors. **2) Service and Guard Functionality Testing:** Run existing unit tests to ensure services maintain functionality after consolidation, verify all guards protect routes correctly after reorganization, test service injection works properly with new directory structure, and validate NgRx store functionality remains intact after store cleanup. **3) Import Path Validation:** Audit all import statements throughout the codebase to ensure they use new consolidated paths, verify barrel exports work correctly and provide clean import syntax, check that relative imports are converted to absolute imports where appropriate, and ensure IDE auto-import suggestions work with new structure. **4) Documentation Accessibility Testing:** Verify all documentation is accessible from centralized location, test documentation links and cross-references work correctly, ensure component documentation matches actual component structure, and validate documentation build process works with new structure. **5) Performance Impact Assessment:** Measure bundle size before and after restructuring to ensure no negative impact, verify tree-shaking works correctly with new barrel exports, test application startup time remains consistent, and ensure lazy-loading performance is maintained or improved. **6) Developer Experience Validation:** Test that new developers can easily navigate the restructured codebase, verify IDE features (go-to-definition, find-references) work correctly with new structure, ensure linting rules pass with new directory organization, and validate that common development tasks (adding components, services) follow clear patterns.
+
+# Subtasks:
+## 1. Consolidate Documentation Folders and Establish Single Source of Truth [done]
+### Dependencies: None
+### Description: Resolve duplication between root docs/ and .taskmaster/docs/ directories by establishing a single centralized documentation structure in the root docs/ folder.
+### Details:
+Audit both documentation directories to identify duplicated content. Merge unique content from .taskmaster/docs/ into root docs/. Create organized subdirectories: docs/components/, docs/services/, docs/architecture/, docs/testing/. Remove .taskmaster/docs/ after migration. Update all documentation references in README files and configuration.
+
+## 2. Consolidate Authentication Services from Features to Core [done]
+### Dependencies: None
+### Description: Move all authentication-related services from scattered feature directories to a centralized src/app/core/services/auth/ structure following Angular best practices.
+### Details:
+Identify all auth services across features/ directories. Create src/app/core/services/auth/ directory structure. Move auth.service.ts, token.service.ts, and related authentication services to core. Update all imports throughout the application. Create barrel export (index.ts) for auth services. Remove duplicate auth service implementations.
+
+## 3. Reorganize Guards to Core Directory with Proper Structure [done]
+### Dependencies: 31.2
+### Description: Consolidate all route guards from multiple locations into src/app/core/guards/ with consistent naming conventions and proper Angular guard interfaces.
+### Details:
+Audit existing guards across the application. Create src/app/core/guards/ directory. Move all guards (auth.guard.ts, role.guard.ts, etc.) to core/guards/. Ensure guards implement proper Angular guard interfaces (CanActivate, CanLoad, etc.). Create guards barrel export. Update route configurations to use new guard locations. Remove duplicate guard implementations.
+
+## 4. Remove Component-Level Store Architecture and Consolidate State Management [done]
+### Dependencies: None
+### Description: Eliminate improper component-level NgRx stores and move state management to appropriate feature modules or services following Angular state management best practices.
+### Details:
+Identify components with embedded store logic. Create proper feature store modules under src/app/store/ or feature-specific directories. Move component-level state to services for simple state or NgRx stores for complex state. Restructure store files into actions/, effects/, reducers/, and selectors/ subdirectories. Remove store logic from component files. Update component dependencies to use proper state management.
+
+## 5. Reorganize Testing Structure and Separate Utilities from Test Files [done]
+### Dependencies: None
+### Description: Create a unified testing structure with centralized test utilities while keeping component tests alongside their respective components.
+### Details:
+Create src/app/testing/ directory for shared test utilities, mocks, and helpers. Move reusable test utilities from individual component directories to centralized testing folder. Ensure component .spec.ts files remain alongside their components. Create testing barrel exports for commonly used utilities. Establish consistent test file naming conventions. Remove duplicate test helpers and consolidate mock implementations.
+
+## 6. Clean Up Component Documentation and Centralize in Docs Directory [done]
+### Dependencies: 31.1
+### Description: Move scattered component documentation from individual component directories to the centralized docs/components/ structure established in subtask 1.
+### Details:
+Identify documentation files within component directories (README.md, component-specific docs). Move component documentation to docs/components/ with organized subdirectories by feature area. Create component documentation index in docs/components/index.md. Establish documentation standards template for components. Remove documentation files from component directories after migration. Update internal documentation links.
+
+## 7. Expand and Reorganize Shared Components Following Angular Module Structure [done]
+### Dependencies: 31.2, 31.3, 31.4
+### Description: Restructure shared components into proper Angular shared modules with clear organization and barrel exports for clean imports across the application.
+### Details:
+Audit existing shared components and identify components used across multiple features. Create src/app/shared/ module structure with components/, directives/, pipes/ subdirectories. Move reusable components to shared module. Create SharedModule with proper exports. Implement barrel exports for clean imports. Update feature modules to import SharedModule. Ensure shared components have no feature-specific dependencies.
+
+## 8. Validate and Test Complete Reorganized Directory Structure [done]
+### Dependencies: 31.1, 31.2, 31.3, 31.4, 31.5, 31.6, 31.7
+### Description: Perform comprehensive validation of the entire reorganized frontend structure to ensure all changes work together correctly and follow Angular best practices.
+### Details:
+Run complete application build to ensure no compilation errors. Execute full test suite including unit, integration, and e2e tests. Verify all imports and dependencies resolve correctly. Check that lazy-loaded modules function properly. Validate that all barrel exports work as expected. Ensure application functionality is preserved. Update any remaining documentation or configuration files to reflect new structure.
+

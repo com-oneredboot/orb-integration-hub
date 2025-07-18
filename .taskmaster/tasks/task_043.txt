@@ -1,0 +1,46 @@
+# Task ID: 43
+# Title: Fix High Severity NPM Vulnerabilities
+# Status: done
+# Dependencies: 42
+# Priority: high
+# Description: Resolve high severity vulnerabilities in tar packages and axios SSRF/credential leakage issues across package-lock.json and frontend/package-lock.json
+# Details:
+Update both package-lock.json and frontend/package-lock.json:
+1. tar package vulnerabilities (#44, #43, #39, #38, #37, #32) - Update to version >=6.1.2
+2. axios SSRF and Credential Leakage (#31) - Update to version >=0.21.2
+
+Implementation steps:
+- Navigate to root directory and run 'npm update tar axios'
+- Navigate to frontend/ directory and run 'npm update axios'
+- Regenerate lock files with 'npm install'
+- Run 'npm audit --audit-level high' in both directories
+- Test HTTP requests and file operations functionality
+
+# Test Strategy:
+Verify npm audit shows no high severity vulnerabilities. Test API calls using axios work correctly. Test file upload/download features that use tar. Run integration tests for frontend-backend communication.
+
+# Subtasks:
+## 1. Update tar package vulnerabilities in root directory [done]
+### Dependencies: None
+### Description: Resolve high severity tar package vulnerabilities (#44, #43, #39, #38, #37, #32) by updating to version >=6.1.2 in the root package-lock.json
+### Details:
+Navigate to the root directory and run 'npm update tar' to update the tar package to version >=6.1.2. Then run 'npm install' to regenerate the package-lock.json file. Verify the updated version in package-lock.json and ensure all tar-related vulnerabilities are resolved.
+
+## 2. Update axios SSRF vulnerabilities in root directory [done]
+### Dependencies: 43.1
+### Description: Resolve axios SSRF and credential leakage vulnerability (#31) by updating to version >=0.21.2 in the root package-lock.json
+### Details:
+In the root directory, run 'npm update axios' to update axios to version >=0.21.2. Run 'npm install' to regenerate the package-lock.json file. Verify the updated axios version addresses the SSRF and credential leakage issues.
+
+## 3. Update axios vulnerabilities in frontend directory [done]
+### Dependencies: 43.2
+### Description: Resolve axios SSRF and credential leakage vulnerability in the frontend package by updating to version >=0.21.2 in frontend/package-lock.json
+### Details:
+Navigate to the frontend/ directory and run 'npm update axios' to update axios to version >=0.21.2. Run 'npm install' to regenerate the frontend/package-lock.json file. Ensure the frontend axios package is properly updated and isolated from root dependencies.
+
+## 4. Validate vulnerability resolution and functionality [done]
+### Dependencies: 43.1, 43.2, 43.3
+### Description: Perform comprehensive validation to ensure all high severity vulnerabilities are resolved and application functionality remains intact
+### Details:
+Run 'npm audit --audit-level high' in both root and frontend directories to confirm no high severity vulnerabilities remain. Verify tar package version >=6.1.2 and axios version >=0.21.2 in both package-lock.json files. Test critical application functionality including file operations, HTTP requests, and API integrations.
+

@@ -266,7 +266,8 @@ class OrganizationContextMiddleware:
         
         try:
             # Extract user information
-            user_id = event.get('identity', {}).get('sub')
+            # Get the Cognito sub first
+            cognito_sub = event.get('identity', {}).get('sub')
             cognito_groups = event.get('identity', {}).get('groups', [])
             
             if not user_id:

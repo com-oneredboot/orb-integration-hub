@@ -1,0 +1,11 @@
+# Task ID: 1
+# Title: Setup YAML Schema-Driven Development Foundation
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: Establish the schema-driven development foundation by creating YAML schemas for all data models and implementing automated code generation for Python backend and TypeScript frontend models
+# Details:
+Create a comprehensive YAML schema definition system that includes: 1) User, Role, Application, and Permission entity schemas with proper validation rules and relationships, 2) Code generation scripts that produce Python Pydantic models for backend validation and TypeScript interfaces for frontend type safety, 3) Schema validation pipeline that ensures consistency across all models, 4) Automated build process that regenerates models when schemas change. Use tools like datamodel-code-generator for Python and json-schema-to-typescript for frontend generation. Implement proper naming conventions and ensure all generated code follows project standards.
+
+# Test Strategy:
+Unit tests for schema validation, integration tests for code generation pipeline, verify generated models match schema definitions exactly, test schema change detection and regeneration process

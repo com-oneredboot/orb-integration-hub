@@ -1,0 +1,37 @@
+# Task ID: 35
+# Title: Create SharedDataTableComponent with Modern Responsive Design
+# Status: pending
+# Dependencies: 1, 3, 6, 27
+# Priority: high
+# Description: Develop a comprehensive SharedDataTableComponent that provides consistent styling across both pages with built-in sorting, pagination, search functionality, and mobile-first responsive design that gracefully degrades from desktop tables to mobile card views.
+# Details:
+Implement a comprehensive SharedDataTableComponent with modern responsive design patterns: **1) Component Architecture & Styling:** Create reusable Angular component with PrimeNG Table integration, implement consistent design system with clean professional styling without excessive card wrapping, establish component API with configurable columns, data sources, and action handlers, and integrate with existing theme system for brand consistency. **2) Core Table Functionality:** Implement built-in client-side and server-side sorting with customizable sort indicators, develop pagination component with configurable page sizes and navigation controls, create global search functionality with debounced input and highlight matching results, and add column filtering capabilities with dropdown and text filters. **3) Mobile-First Responsive Design:** Design progressive enhancement strategy starting with mobile card layout, implement CSS Grid and Flexbox for responsive table layouts, create touch-friendly interactions with appropriate tap targets (minimum 44px), ensure proper spacing and typography scaling across devices, and implement horizontal scrolling for wide tables on mobile with sticky columns. **4) Mobile Card View Implementation:** Design clean card layout similar to Organizations page for mobile devices, implement card-based data display with proper information hierarchy, create swipe gestures for card navigation and actions, ensure accessibility with proper ARIA labels and keyboard navigation, and implement smooth transitions between table and card views. **5) Advanced Features:** Add row selection with bulk actions support, implement expandable rows for detailed information, create export functionality for table data, add loading states and skeleton screens, implement virtual scrolling for large datasets, and ensure proper error handling and empty states. **6) Integration & Performance:** Optimize component for performance with OnPush change detection, implement lazy loading for large datasets, ensure proper memory management and cleanup, integrate with NgRx for state management when needed, and provide comprehensive TypeScript interfaces for type safety.
+
+# Test Strategy:
+Execute comprehensive component validation through multiple testing approaches: **1) Component Testing:** Unit tests for SharedDataTableComponent covering all props, events, and state changes, test sorting functionality with various data types and custom comparators, validate pagination logic with different page sizes and edge cases, verify search functionality with special characters and empty results, test responsive behavior with viewport size changes, and validate mobile card view rendering and interactions. **2) Integration Testing:** Test component integration with PrimeNG Table and theme system, validate data binding with NgRx store and async data sources, test component reusability across different pages and contexts, verify accessibility compliance with screen readers and keyboard navigation, and test touch interactions on mobile devices with gesture recognition. **3) Visual Regression Testing:** Capture screenshots of table component across different screen sizes and devices, test component appearance with various data sets and loading states, validate consistent styling with design system and brand guidelines, test dark/light theme switching and color contrast ratios, and verify proper spacing and typography scaling. **4) Performance Testing:** Measure component rendering performance with large datasets (1000+ rows), test virtual scrolling implementation and memory usage, validate smooth animations and transitions between responsive states, test search and filter performance with debouncing, and measure bundle size impact of component and dependencies. **5) User Experience Testing:** Conduct usability testing for table interactions on desktop and mobile, test accessibility with assistive technologies and keyboard-only navigation, validate touch target sizes and gesture interactions on mobile devices, test component discoverability and intuitive usage patterns, and verify error handling and user feedback mechanisms.
+
+# Subtasks:
+## 1. Create SharedDataTableComponent Architecture [pending]
+### Dependencies: None
+### Description: Design and create a reusable table component for both Organizations and Applications
+### Details:
+Create a shared table component with configurable columns, data binding, sorting, pagination, and search functionality. Design clean, professional styling without excessive card wrapping that can be used across both pages.
+
+## 2. Implement Mobile-Responsive Card Views [pending]
+### Dependencies: None
+### Description: Create mobile card view that replaces table on small screens
+### Details:
+Implement clean mobile card view similar to Organizations page that displays data in touch-friendly cards on mobile devices. Ensure progressive enhancement from desktop table to mobile cards with appropriate breakpoints.
+
+## 3. Replace Applications Hardcoded Table [pending]
+### Dependencies: None
+### Description: Replace 403-line hardcoded table in Applications with SharedDataTableComponent
+### Details:
+Remove the hardcoded table template from applications-list.component.html and replace with the new SharedDataTableComponent. Configure columns and data binding for application-specific data display.
+
+## 4. Optimize Organizations Table Component [pending]
+### Dependencies: None
+### Description: Streamline the overly complex 663-line Organizations table component
+### Details:
+Refactor organization-table.component.ts to use the new SharedDataTableComponent as base, removing redundant functionality while maintaining organization-specific features. Reduce complexity and improve maintainability.
+

@@ -1,0 +1,11 @@
+# Task ID: 14
+# Title: Implement Rate Limiting for SMS Verification Endpoints
+# Status: done
+# Dependencies: 2, 3, 5
+# Priority: high
+# Description: Implement comprehensive rate limiting protection for SMS verification Lambda functions to prevent brute force attacks, SMS flooding, and resource exhaustion with phone number-based controls and security event logging.
+# Details:
+Build rate limiting system with: 1) Phone number-based rate limiting using DynamoDB to track SMS requests per phone number with configurable time windows (per minute, per hour, per day), 2) Lambda function middleware for rate limit enforcement before SMS sending operations, 3) Configurable rate limit thresholds supporting different limits for verified vs unverified numbers, 4) Redis/ElastiCache integration for high-performance rate limit counters with automatic expiration, 5) Security event logging integration capturing rate limit violations with phone numbers, IP addresses, and timestamps, 6) Proper HTTP error responses (429 Too Many Requests) with retry-after headers and user-friendly error messages, 7) Admin dashboard integration for monitoring SMS rate limit violations and adjusting thresholds, 8) Circuit breaker pattern implementation to protect SMS service providers from overload, 9) Whitelist/blacklist functionality for phone numbers requiring special handling. Implement sliding window rate limiting algorithm for more accurate control and include geographic-based rate limiting to handle regional SMS provider limitations. Configure CloudWatch alarms for rate limit threshold breaches and integrate with existing security monitoring systems.
+
+# Test Strategy:
+Unit tests for rate limiting algorithms and phone number validation logic, integration tests with mock DynamoDB and Redis for rate limit storage, load testing to verify rate limiting under high concurrent SMS requests, security testing for rate limit bypass attempts using different phone number formats, E2E tests for complete SMS verification workflows with rate limiting enabled, monitoring tests for CloudWatch alarm triggers and security event logging accuracy, performance testing for rate limit check latency impact on SMS sending operations, edge case testing for time window boundaries and counter reset scenarios
