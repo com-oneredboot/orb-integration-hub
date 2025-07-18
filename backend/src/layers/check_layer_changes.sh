@@ -70,8 +70,8 @@ else
     
     echo "any_changes=true" >> $GITHUB_OUTPUT
     
-    # Convert array to JSON array string
-    LAYERS_JSON=$(printf '%s\n' "${LAYERS_TO_BUILD[@]}" | jq -R . | jq -s .)
+    # Convert array to JSON array string (compact format for GitHub Actions)
+    LAYERS_JSON=$(printf '%s\n' "${LAYERS_TO_BUILD[@]}" | jq -R . | jq -s -c .)
     echo "layers_to_build=$LAYERS_JSON" >> $GITHUB_OUTPUT
 fi
 
