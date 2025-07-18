@@ -487,6 +487,147 @@ class UsersResolver:
                 'Data': None
             }
     
+    def query_by_cognito_sub(self, event: Dict[str, Any]) -> Dict[str, Any]:
+        """Query user by Cognito sub - commonly used by frontend after authentication."""
+        try:
+            args = event.get('arguments', {}).get('input', {})
+            cognito_sub = args.get('cognitoSub')
+            
+            if not cognito_sub:
+                return {
+                    'StatusCode': 400,
+                    'Message': 'cognitoSub is required',
+                    'Data': None
+                }
+            
+            # Query by GSI
+            response = self.users_table.query(
+                IndexName='CognitoSubIndex',
+                KeyConditionExpression=Key('cognitoSub').eq(cognito_sub)
+            )
+            
+            items = response.get('Items', [])
+            
+            logger.info(f"Found {len(items)} users for cognitoSub: {cognito_sub}")
+            
+            return {
+                'StatusCode': 200,
+                'Message': None,
+                'Data': items
+            }
+            
+        except Exception as e:
+            logger.error(f"Error querying user by cognitoSub: {str(e)}")
+            return {
+                'StatusCode': 500,
+                'Message': f'Failed to query user: {str(e)}',
+                'Data': None
+            }
+    
+    def query_by_user_id(self, event: Dict[str, Any]) -> Dict[str, Any]:
+        """Query user by userId."""
+        try:
+            args = event.get('arguments', {}).get('input', {})
+            user_id = args.get('userId')
+            
+            if not user_id:
+                return {
+                    'StatusCode': 400,
+                    'Message': 'userId is required',
+                    'Data': None
+                }
+            
+            # Direct query on primary key
+            response = self.users_table.query(
+                KeyConditionExpression=Key('userId').eq(user_id)
+            )
+            
+            items = response.get('Items', [])
+            
+            return {
+                'StatusCode': 200,
+                'Message': None,
+                'Data': items
+            }
+            
+        except Exception as e:
+            logger.error(f"Error querying user by userId: {str(e)}")
+            return {
+                'StatusCode': 500,
+                'Message': f'Failed to query user: {str(e)}',
+                'Data': None
+            }
+    
+    def query_by_email(self, event: Dict[str, Any]) -> Dict[str, Any]:
+        """Query user by email."""
+        try:
+            args = event.get('arguments', {}).get('input', {})
+            email = args.get('email')
+            
+            if not email:
+                return {
+                    'StatusCode': 400,
+                    'Message': 'email is required',
+                    'Data': None
+                }
+            
+            # Query by GSI
+            response = self.users_table.query(
+                IndexName='EmailIndex',
+                KeyConditionExpression=Key('email').eq(email)
+            )
+            
+            items = response.get('Items', [])
+            
+            return {
+                'StatusCode': 200,
+                'Message': None,
+                'Data': items
+            }
+            
+        except Exception as e:
+            logger.error(f"Error querying user by email: {str(e)}")
+            return {
+                'StatusCode': 500,
+                'Message': f'Failed to query user: {str(e)}',
+                'Data': None
+            }
+    
+    def query_by_cognito_id(self, event: Dict[str, Any]) -> Dict[str, Any]:
+        """Query user by Cognito ID."""
+        try:
+            args = event.get('arguments', {}).get('input', {})
+            cognito_id = args.get('cognitoId')
+            
+            if not cognito_id:
+                return {
+                    'StatusCode': 400,
+                    'Message': 'cognitoId is required',
+                    'Data': None
+                }
+            
+            # Query by GSI
+            response = self.users_table.query(
+                IndexName='CognitoIdIndex',
+                KeyConditionExpression=Key('cognitoId').eq(cognito_id)
+            )
+            
+            items = response.get('Items', [])
+            
+            return {
+                'StatusCode': 200,
+                'Message': None,
+                'Data': items
+            }
+            
+        except Exception as e:
+            logger.error(f"Error querying user by cognitoId: {str(e)}")
+            return {
+                'StatusCode': 500,
+                'Message': f'Failed to query user: {str(e)}',
+                'Data': None
+            }
+    
     def get_user_organizations(self, event: Dict[str, Any], user_context: UserContext) -> Dict[str, Any]:
         """Get organizations a user belongs to."""
         try:
@@ -552,6 +693,16 @@ def lambda_handler(event, context):
             return resolver.create_user(event)
         elif field_name == 'UsersDelete':
             return resolver.delete_user(event)
+        elif field_name == 'UsersDisable':
+            return resolver.delete_user(event)  # Uses same method with soft delete
+        elif field_name == 'UsersQueryByUserId':
+            return resolver.query_by_user_id(event)
+        elif field_name == 'UsersQueryByEmail':
+            return resolver.query_by_email(event)
+        elif field_name == 'UsersQueryByCognitoId':
+            return resolver.query_by_cognito_id(event)
+        elif field_name == 'UsersQueryByCognitoSub':
+            return resolver.query_by_cognito_sub(event)
         elif field_name == 'UserOrganizations':
             # This will need security context, so extract it first
             from users_security.user_context_middleware import UserContextExtractor
