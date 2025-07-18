@@ -35,7 +35,10 @@ for LAYER in "${LAYERS[@]}"; do
     # Check if layer directory exists
     if [ -d "$LAYER" ]; then
         # Generate hash for current layer
-        CURRENT_HASH=$(find "$LAYER" -type f \( -name "*.py" -o -name "Pipfile*" \) -exec sha256sum {} + | sha256sum | cut -d' ' -f1)
+        # Include all files in the layer directory AND all scripts in the parent layers directory
+        CURRENT_HASH=$({ find "$LAYER" -type f \( -name "*.py" -o -name "Pipfile*" \) -exec sha256sum {} + ; \
+                        find . -maxdepth 1 -type f \( -name "*.sh" -o -name "*.py" \) -exec sha256sum {} + ; } | \
+                        sort | sha256sum | cut -d' ' -f1)
         echo "Current hash: $CURRENT_HASH"
         
         # Get previous hash
