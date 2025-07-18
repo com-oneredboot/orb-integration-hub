@@ -95,7 +95,8 @@ jobs:
         LAYER_STACK_NAME="${{ inputs.customer_id }}-${{ inputs.project_id }}-${{ inputs.environment }}-${{ matrix.layer }}"
         LAYER_STACK_NAME="${LAYER_STACK_NAME//_/-}"  # Replace underscores with hyphens
         
-        # Build the SAM application
+        # Build and deploy using the original lambda-layers.yml approach
+        # but only for the specific layer we're deploying
         sam build \
           --template-file lambda-layer-single.yml \
           --parameter-overrides \
@@ -108,6 +109,7 @@ jobs:
         sam package \
           --template-file .aws-sam/build/template.yaml \
           --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
+          --s3-prefix layers/${{ matrix.layer }} \
           --output-template-file lambda-layer-${{ matrix.layer }}-packaged.yml
         
         # Deploy only this specific layer
