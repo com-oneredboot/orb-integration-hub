@@ -30,6 +30,14 @@ from aws_audit_logger import (
     state_tracker
 )
 
+# Import specific exceptions from common layer
+from common.security_exceptions import (
+    AuthenticationError,
+    DataValidationError,
+    ResourceNotFoundError,
+    ConflictError
+)
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -59,7 +67,7 @@ class OrganizationsResolver:
             logger.info(f"User authenticated, Groups count: {len(cognito_groups)}")
             
             if not user_id:
-                return self._error_response('User ID not found in request context')
+                raise AuthenticationError('User ID not found in request context')
             
             # Extract arguments
             args = event.get('arguments', {})
@@ -70,11 +78,11 @@ class OrganizationsResolver:
             logger.info(f"Organization creation requested with name length: {len(name) if name else 0}")
             
             if not name:
-                return self._error_response('Organization name is required')
+                raise DataValidationError('Organization name is required')
             
             # Validate platform access
             if not any(group in cognito_groups for group in ['OWNER', 'EMPLOYEE', 'CUSTOMER']):
-                return self._error_response('Insufficient permissions to create organization')
+                raise AuthenticationError('Insufficient permissions to create organization')
             
             # Check starter plan limits for CUSTOMER users
             if 'CUSTOMER' in cognito_groups and 'OWNER' not in cognito_groups and 'EMPLOYEE' not in cognito_groups:
@@ -186,7 +194,7 @@ class OrganizationsResolver:
                     logger.info(f"Cleaned up KMS key for failed organization {organization_id}")
                 except Exception as cleanup_error:
                     logger.error(f"Failed to cleanup KMS key: {cleanup_error}")
-                return self._error_response('Organization ID already exists')
+                raise ConflictError('Organization ID already exists')
             else:
                 logger.error(f"DynamoDB error creating organization: {str(e)}")
                 # Clean up KMS key on database error
@@ -367,7 +375,7 @@ class OrganizationsResolver:
             
         except ClientError as e:
             if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
-                return self._error_response('Organization not found')
+                raise ResourceNotFoundError('Organization not found')
             else:
                 logger.error(f"DynamoDB error updating organization: {str(e)}")
                 return self._error_response(f"Database error: {str(e)}")
@@ -937,6 +945,34 @@ def lambda_handler(event, context):
                 'Data': None
             }
             
+    except AuthenticationError as e:
+        logger.error(f"Authentication error: {str(e)}")
+        return {
+            'StatusCode': 401,
+            'Message': str(e),
+            'Data': None
+        }
+    except ResourceNotFoundError as e:
+        logger.error(f"Resource not found: {str(e)}")
+        return {
+            'StatusCode': 404,
+            'Message': str(e),
+            'Data': None
+        }
+    except ConflictError as e:
+        logger.error(f"Conflict error: {str(e)}")
+        return {
+            'StatusCode': 409,
+            'Message': str(e),
+            'Data': None
+        }
+    except DataValidationError as e:
+        logger.error(f"Validation error: {str(e)}")
+        return {
+            'StatusCode': 400,
+            'Message': str(e),
+            'Data': None
+        }
     except Exception as e:
         logger.error(f"Unhandled error in Organizations resolver: {str(e)}")
         return {
