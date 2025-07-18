@@ -15,13 +15,13 @@ from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 
 # Import security layer components
-from users_security.user_context_middleware import (
+from user_context_middleware import (
     user_context_required,
     requires_self_or_admin,
     admin_required,
     UserContext
 )
-from users_security.users_audit_logger import (
+from users_audit_logger import (
     UserAuditEventType,
     log_user_audit_event,
     ComplianceFlag
@@ -705,7 +705,7 @@ def lambda_handler(event, context):
             return resolver.query_by_cognito_sub(event)
         elif field_name == 'UserOrganizations':
             # This will need security context, so extract it first
-            from users_security.user_context_middleware import UserContextExtractor
+            from user_context_middleware import UserContextExtractor
             extractor = UserContextExtractor()
             user_context = extractor.extract_context(event)
             return resolver.get_user_organizations(event, user_context)
