@@ -58,13 +58,7 @@ fi
 echo "Contents of the site-packages directory:"
 ls -ltrh "python/lib/python3.12/site-packages" | head -20
 
-# Step 7: Create layer zip file
-echo "Creating layer zip file..."
-cd python
-zip -r9 "../${LAYER_NAME}_layer.zip" .
-cd ..
-
 echo "=========================================="
 echo "${LAYER_NAME} layer build complete!"
-echo "Layer package: ${LAYER_NAME}_layer.zip"
+echo "Layer structure ready at: ${LAYER_DIR}/python"
 echo "=========================================="
