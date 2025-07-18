@@ -1,0 +1,60 @@
+# file: infrastructure/cloudformation/lambda-layer-stripe.yml
+# author: AI Assistant
+# created: 2025-07-18
+# description: Stripe Payment Processing Lambda Layer
+
+# --------------------------------------------------- #
+AWSTemplateFormatVersion: '2010-09-09'
+
+# --------------------------------------------------- #
+Transform: AWS::Serverless-2016-10-31
+
+# --------------------------------------------------- #
+Description: 'Stripe Lambda Layer - Payment processing libraries and dependencies'
+
+# --------------------------------------------------- #
+Parameters:
+  CustomerId:
+    Type: String
+    Default: orb
+    Description: Customer identifier for resource naming
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, staging, prod]
+    Description: Deployment environment
+  ProjectId:
+    Type: String
+    Default: integration-hub
+    Description: Project identifier for resource naming
+  Runtime:
+    Default: python3.12
+    Type: String
+
+# --------------------------------------------------- #
+Resources:
+  StripeLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub '${CustomerId}-${ProjectId}-${Environment}-stripe-layer'
+      Description: 'Stripe payment processing libraries and dependencies'
+      ContentUri: ../../backend/src/layers/stripe/
+      CompatibleRuntimes:
+        - !Ref Runtime
+      LicenseInfo: MIT
+
+  StripeLayerArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-stripe-layer-arn'
+      Type: String
+      Value: !Ref StripeLayer
+      Description: "ARN of the Stripe Payment Lambda Layer"
+
+# --------------------------------------------------- #
+Outputs:
+  LayerVersionArn:
+    Description: ARN of the Stripe Lambda layer version
+    Value: !Ref StripeLayer
+    Export:
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-stripe-layer-arn'

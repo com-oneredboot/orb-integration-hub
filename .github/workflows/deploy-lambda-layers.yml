@@ -95,26 +95,26 @@ jobs:
         LAYER_STACK_NAME="${{ inputs.customer_id }}-${{ inputs.project_id }}-${{ inputs.environment }}-${{ matrix.layer }}"
         LAYER_STACK_NAME="${LAYER_STACK_NAME//_/-}"  # Replace underscores with hyphens
         
-        # Build and deploy using the original lambda-layers.yml approach
-        # but only for the specific layer we're deploying
+        # Get the template file name for this layer
+        TEMPLATE_NAME="lambda-layer-${{ matrix.layer }}.yml"
+        TEMPLATE_NAME="${TEMPLATE_NAME//_/-}"  # Replace underscores with hyphens
+        
+        echo "Using template: $TEMPLATE_NAME"
+        
+        # Build the layer
         sam build \
-          --template-file lambda-layer-single.yml \
-          --parameter-overrides \
-            LayerName=${{ matrix.layer }} \
-            CustomerID=${{ inputs.customer_id }} \
-            ProjectID=${{ inputs.project_id }} \
-            Environment=${{ inputs.environment }}
+          --template-file $TEMPLATE_NAME
         
         # Package the layer
         sam package \
           --template-file .aws-sam/build/template.yaml \
           --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
           --s3-prefix layers/${{ matrix.layer }} \
-          --output-template-file lambda-layer-${{ matrix.layer }}-packaged.yml
+          --output-template-file ${TEMPLATE_NAME%.yml}-packaged.yml
         
         # Deploy only this specific layer
         sam deploy \
-          --template-file lambda-layer-${{ matrix.layer }}-packaged.yml \
+          --template-file ${TEMPLATE_NAME%.yml}-packaged.yml \
           --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
           --stack-name $LAYER_STACK_NAME \
           --capabilities CAPABILITY_NAMED_IAM \
@@ -126,20 +126,8 @@ jobs:
             Environment=${{ inputs.environment }}
         
         # Store the packaged template
-        aws s3 cp lambda-layer-${{ matrix.layer }}-packaged.yml \
-          s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/lambda-layer-${{ matrix.layer }}-packaged.yml
-        
-        # Export the layer ARN to SSM Parameter Store for other stacks to use
-        LAYER_ARN=$(aws cloudformation describe-stacks \
-          --stack-name $LAYER_STACK_NAME \
-          --query 'Stacks[0].Outputs[?OutputKey==`LayerVersionArn`].OutputValue' \
-          --output text)
-        
-        aws ssm put-parameter \
-          --name "/${{ inputs.customer_id }}/${{ inputs.project_id }}/${{ inputs.environment }}/layers/${{ matrix.layer }}/arn" \
-          --value "$LAYER_ARN" \
-          --type String \
-          --overwrite
+        aws s3 cp ${TEMPLATE_NAME%.yml}-packaged.yml \
+          s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/
         
       working-directory: infrastructure/cloudformation
 

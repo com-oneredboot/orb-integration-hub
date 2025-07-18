@@ -1,0 +1,60 @@
+# file: infrastructure/cloudformation/lambda-layer-users-security.yml
+# author: AI Assistant
+# created: 2025-07-18
+# description: Users Security Lambda Layer
+
+# --------------------------------------------------- #
+AWSTemplateFormatVersion: '2010-09-09'
+
+# --------------------------------------------------- #
+Transform: AWS::Serverless-2016-10-31
+
+# --------------------------------------------------- #
+Description: 'Users Security Lambda Layer - User authentication and authorization utilities'
+
+# --------------------------------------------------- #
+Parameters:
+  CustomerId:
+    Type: String
+    Default: orb
+    Description: Customer identifier for resource naming
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, staging, prod]
+    Description: Deployment environment
+  ProjectId:
+    Type: String
+    Default: integration-hub
+    Description: Project identifier for resource naming
+  Runtime:
+    Default: python3.12
+    Type: String
+
+# --------------------------------------------------- #
+Resources:
+  UsersSecurityLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub '${CustomerId}-${ProjectId}-${Environment}-users-security-layer'
+      Description: 'User security middleware with authentication and authorization utilities'
+      ContentUri: ../../backend/src/layers/users_security/
+      CompatibleRuntimes:
+        - !Ref Runtime
+      LicenseInfo: MIT
+
+  UsersSecurityLayerArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-users-security-layer-arn'
+      Type: String
+      Value: !Ref UsersSecurityLayer
+      Description: "ARN of the User Security Lambda Layer"
+
+# --------------------------------------------------- #
+Outputs:
+  LayerVersionArn:
+    Description: ARN of the Users Security Lambda layer version
+    Value: !Ref UsersSecurityLayer
+    Export:
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-users-security-layer-arn'
