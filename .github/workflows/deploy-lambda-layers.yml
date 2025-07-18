@@ -32,6 +32,7 @@ jobs:
   # First job: Check which layers have changed
   check-layer-changes:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
     outputs:
       layers_to_build: ${{ steps.check-changes.outputs.layers_to_build }}
       any_changes: ${{ steps.check-changes.outputs.any_changes }}
