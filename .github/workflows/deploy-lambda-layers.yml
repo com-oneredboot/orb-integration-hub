@@ -109,7 +109,7 @@ jobs:
         sam package \
           --template-file .aws-sam/build/template.yaml \
           --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
-          --s3-prefix layers/${{ matrix.layer }} \
+          --s3-prefix sam-builds/layers \
           --output-template-file ${TEMPLATE_NAME%.yml}-packaged.yml
         
         # Deploy only this specific layer
@@ -127,7 +127,7 @@ jobs:
         
         # Store the packaged template
         aws s3 cp ${TEMPLATE_NAME%.yml}-packaged.yml \
-          s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/
+          s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts/templates/layers/
         
       working-directory: infrastructure/cloudformation
 

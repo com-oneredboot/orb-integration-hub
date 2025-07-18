@@ -24,7 +24,7 @@ echo "=========================================="
 
 # Download previous hashes if they exist
 echo "Downloading previous layer hashes..."
-aws s3 cp "s3://${CUSTOMER_ID}-${PROJECT_ID}-build-artifacts/lambda-layer-hashes.json" ./previous-hashes.json 2>/dev/null || echo '{}' > ./previous-hashes.json
+aws s3 cp "s3://${CUSTOMER_ID}-${PROJECT_ID}-build-artifacts/layers/hashes.json" ./previous-hashes.json 2>/dev/null || echo '{}' > ./previous-hashes.json
 
 # Check each layer for changes
 for LAYER in "${LAYERS[@]}"; do

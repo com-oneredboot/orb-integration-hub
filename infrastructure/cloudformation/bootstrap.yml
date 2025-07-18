@@ -31,22 +31,25 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub '${CustomerId}-${ProjectId}-build-artifacts'
-      Tags:
-        - Key: Billable
-          Value: "true"
-        - Key: CustomerId
-          Value: !Ref CustomerId
-        - Key: Environment
-          Value: !Ref Environment
-        - Key: ProjectId
-          Value: !Ref ProjectId
-  # BuildTemplatesBucket: Stores build templates with versioning enabled for tracking changes.
-  BuildTemplatesBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub '${CustomerId}-${ProjectId}-build-templates'
       VersioningConfiguration:
         Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteSAMBackendBuildsAfter7Days
+            Status: Enabled
+            Prefix: sam-builds/backend/
+            ExpirationInDays: 7
+            NoncurrentVersionExpirationInDays: 7
+          - Id: DeleteSAMFrontendBuildsAfter7Days
+            Status: Enabled
+            Prefix: sam-builds/frontend/
+            ExpirationInDays: 7
+            NoncurrentVersionExpirationInDays: 7
+          - Id: DeleteSAMLayerBuildsAfter7Days
+            Status: Enabled
+            Prefix: sam-builds/layers/
+            ExpirationInDays: 7
+            NoncurrentVersionExpirationInDays: 7
       Tags:
         - Key: Billable
           Value: "true"
@@ -56,6 +59,7 @@ Resources:
           Value: !Ref Environment
         - Key: ProjectId
           Value: !Ref ProjectId
+  # BuildTemplatesBucket: Removed - now using consolidated build-artifacts bucket with templates/ prefix
 
   # IAM User for GitHub Actions
   # GitHubActionsUser: IAM user for GitHub Actions to interact with AWS resources.

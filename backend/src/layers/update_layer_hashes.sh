@@ -22,7 +22,7 @@ echo "=========================================="
 
 # Download current hashes
 echo "Downloading current layer hashes..."
-aws s3 cp "s3://${CUSTOMER_ID}-${PROJECT_ID}-build-artifacts/lambda-layer-hashes.json" ./layer-hashes.json 2>/dev/null || echo '{}' > ./layer-hashes.json
+aws s3 cp "s3://${CUSTOMER_ID}-${PROJECT_ID}-build-artifacts/layers/hashes.json" ./layer-hashes.json 2>/dev/null || echo '{}' > ./layer-hashes.json
 
 echo ""
 echo "Updating hashes for deployed layers..."
@@ -46,7 +46,7 @@ done
 
 echo ""
 echo "Uploading updated hashes to S3..."
-aws s3 cp layer-hashes.json "s3://${CUSTOMER_ID}-${PROJECT_ID}-build-artifacts/lambda-layer-hashes.json"
+aws s3 cp layer-hashes.json "s3://${CUSTOMER_ID}-${PROJECT_ID}-build-artifacts/layers/hashes.json"
 
 echo ""
 echo "Final layer hashes:"

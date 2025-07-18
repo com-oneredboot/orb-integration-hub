@@ -140,7 +140,7 @@ jobs:
           fi
           echo "Uploading schema file: $SCHEMA_FILE"
           aws s3 cp "$SCHEMA_FILE" \
-            s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/$SCHEMA_FILE
+            s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts/templates/schemas/$SCHEMA_FILE
         working-directory: ./infrastructure/cloudformation
 
       - name: Deploy All Stacks
@@ -176,6 +176,7 @@ jobs:
             sam package \
               --template-file ${stack}.yml \
               --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
+              --s3-prefix sam-builds/backend \
               --output-template-file ${stack}-packaged.yml || {
                 echo "ERROR: Failed to package ${stack} stack"
                 exit 1
@@ -193,7 +194,7 @@ jobs:
               }
             echo "Uploading packaged template to S3..."
             aws s3 cp ${stack}-packaged.yml \
-              s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/${stack}-packaged.yml || {
+              s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts/templates/backend/${stack}-packaged.yml || {
                 echo "ERROR: Failed to upload packaged template for ${stack} stack"
                 exit 1
               }

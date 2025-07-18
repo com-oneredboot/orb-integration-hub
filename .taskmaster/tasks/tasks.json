@@ -2445,11 +2445,109 @@
             "parentTaskId": 48
           }
         ]
+      },
+      {
+        "id": 49,
+        "title": "Consolidate Deployment Artifacts into Single S3 Bucket with Organized Prefix Structure",
+        "description": "Consolidate all deployment artifacts from multiple S3 buckets (orb-integration-hub-build-artifacts and orb-integration-hub-build-templates) into a single bucket with organized prefix structure using sam-builds/, layers/, and templates/ prefixes for better organization and management.",
+        "details": "Implement comprehensive S3 bucket consolidation and reorganization:\n\n**1) S3 Bucket Analysis and Planning:**\n- Audit existing artifacts in orb-integration-hub-build-artifacts and orb-integration-hub-build-templates buckets\n- Catalog all artifact types, sizes, and access patterns to determine optimal prefix structure\n- Create migration plan with rollback strategy and minimal downtime approach\n- Design new bucket naming convention and lifecycle policies for consolidated storage\n\n**2) New Bucket Structure Implementation:**\n- Create new consolidated S3 bucket with appropriate IAM policies and versioning enabled\n- Implement organized prefix structure:\n  - `sam-builds/` - SAM application build artifacts, deployment packages, and CloudFormation templates\n  - `layers/` - Lambda layer zip files, shared libraries, and runtime dependencies\n  - `templates/` - CloudFormation templates, SAM templates, and infrastructure-as-code files\n- Configure bucket policies for cross-account access if needed and proper encryption settings\n\n**3) Artifact Migration Process:**\n- Develop migration scripts using AWS CLI/SDK to copy artifacts with proper prefix assignment\n- Implement parallel transfer optimization for large artifacts to minimize migration time\n- Maintain original timestamps and metadata during migration process\n- Create mapping documentation for old-to-new artifact locations\n\n**4) CI/CD Pipeline Updates:**\n- Update all build scripts, deployment pipelines, and GitHub Actions workflows to reference new bucket structure\n- Modify SAM templates and CloudFormation references to use new artifact locations\n- Update Lambda layer deployment scripts to use new layers/ prefix structure\n- Ensure all automated deployment processes use consolidated bucket paths\n\n**5) Access Control and Monitoring:**\n- Implement least-privilege IAM policies for different artifact types and deployment stages\n- Set up CloudWatch monitoring for bucket access patterns and cost optimization\n- Configure S3 event notifications for artifact lifecycle management\n- Implement automated cleanup policies for old build artifacts",
+        "testStrategy": "Execute comprehensive validation of S3 bucket consolidation:\n\n**1) Migration Verification:**\n- Verify all artifacts successfully copied to new bucket with correct prefixes and metadata preservation\n- Compare file counts, sizes, and checksums between source and destination buckets\n- Test artifact accessibility from all deployment environments and CI/CD pipelines\n- Validate that no artifacts were lost or corrupted during migration process\n\n**2) Deployment Pipeline Testing:**\n- Execute full deployment pipeline using artifacts from new consolidated bucket structure\n- Test SAM builds using sam-builds/ prefix artifacts in development and staging environments\n- Verify Lambda layer deployments work correctly with layers/ prefix structure\n- Validate CloudFormation template deployments using templates/ prefix artifacts\n\n**3) Access Control Validation:**\n- Test IAM policies ensure proper access restrictions for different artifact types\n- Verify cross-account access works correctly if applicable\n- Test that unauthorized access attempts are properly denied\n- Validate encryption and security settings are correctly applied\n\n**4) Performance and Monitoring:**\n- Monitor S3 access patterns and latency after migration to ensure no performance degradation\n- Verify CloudWatch metrics and alarms are properly configured for new bucket\n- Test automated cleanup policies work correctly without affecting active artifacts\n- Validate cost optimization through consolidated storage and lifecycle policies\n\n**5) Rollback Testing:**\n- Test rollback procedures to ensure ability to revert to original bucket structure if needed\n- Verify backup copies of critical artifacts are maintained during transition period\n- Document and test emergency recovery procedures for artifact restoration",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Audit and Analyze Existing S3 Buckets",
+            "description": "Perform comprehensive audit of existing artifacts in orb-integration-hub-build-artifacts and orb-integration-hub-build-templates buckets to catalog all artifact types, sizes, and access patterns.",
+            "dependencies": [],
+            "details": "Use AWS CLI and boto3 to inventory all objects in both buckets. Create detailed catalog including: object keys, sizes, last modified dates, storage classes, and metadata. Analyze access patterns using CloudTrail logs and S3 access logs. Document current folder structures and naming conventions. Generate size and cost analysis reports. Create artifact type classification (SAM builds, Lambda layers, CloudFormation templates, etc.). Export findings to CSV/JSON for migration planning.",
+            "status": "in-progress",
+            "testStrategy": "Verify inventory completeness by comparing object counts and total sizes. Validate access pattern analysis against actual CloudTrail data. Test catalog export formats for data integrity."
+          },
+          {
+            "id": 2,
+            "title": "Design Consolidated Bucket Structure and Migration Plan",
+            "description": "Create detailed migration plan with new bucket naming convention, prefix structure design, and rollback strategy for minimal downtime consolidation.",
+            "dependencies": [
+              1
+            ],
+            "details": "Design new bucket structure with sam-builds/, layers/, and templates/ prefixes. Map existing artifacts to new prefix structure based on audit results. Create migration timeline with phases to minimize downtime. Design rollback strategy with backup procedures. Define new bucket naming convention following AWS best practices. Plan lifecycle policies for automated cleanup of old artifacts. Document migration dependencies and potential conflicts. Create validation checkpoints throughout migration process.",
+            "status": "pending",
+            "testStrategy": "Review migration plan with stakeholders. Validate prefix mapping logic against artifact catalog. Test rollback procedures in development environment."
+          },
+          {
+            "id": 3,
+            "title": "Create New Consolidated S3 Bucket with Security Configuration",
+            "description": "Provision new consolidated S3 bucket with proper IAM policies, versioning, encryption, and cross-account access configuration.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create new S3 bucket using CloudFormation or Terraform with versioning enabled. Configure server-side encryption with KMS or S3-managed keys. Implement bucket policies for least-privilege access control. Set up cross-account access policies if required. Configure CORS settings for web access. Enable S3 access logging and CloudTrail integration. Set up bucket notifications for lifecycle events. Configure intelligent tiering for cost optimization. Implement bucket replication if needed for disaster recovery.",
+            "status": "pending",
+            "testStrategy": "Test bucket creation and policy application. Verify encryption settings and access controls. Validate cross-account access scenarios. Test bucket notification configuration."
+          },
+          {
+            "id": 4,
+            "title": "Develop Artifact Migration Scripts",
+            "description": "Create automated migration scripts using AWS CLI/SDK to copy artifacts from source buckets to consolidated bucket with proper prefix assignment and metadata preservation.",
+            "dependencies": [
+              3
+            ],
+            "details": "Develop Python scripts using boto3 for parallel artifact migration. Implement proper prefix assignment logic based on artifact type classification. Preserve original timestamps, metadata, and storage classes during copy operations. Add progress tracking and logging for migration monitoring. Implement retry logic for failed transfers. Create checksum verification for data integrity. Add support for large file multipart uploads. Include dry-run mode for testing. Generate migration reports with success/failure statistics.",
+            "status": "pending",
+            "testStrategy": "Test migration scripts with sample data sets. Verify metadata preservation and checksum validation. Test parallel transfer performance and error handling. Validate dry-run functionality."
+          },
+          {
+            "id": 5,
+            "title": "Execute Artifact Migration with Validation",
+            "description": "Run migration scripts to transfer all artifacts from source buckets to consolidated bucket while maintaining data integrity and creating mapping documentation.",
+            "dependencies": [
+              4
+            ],
+            "details": "Execute migration in phases starting with non-critical artifacts. Monitor transfer progress and handle any failures. Validate successful migration by comparing object counts, sizes, and checksums. Create detailed mapping documentation showing old-to-new artifact locations. Generate migration completion reports. Verify all metadata and timestamps preserved correctly. Test access to migrated artifacts from existing applications. Create rollback checkpoints at each phase completion.",
+            "status": "pending",
+            "testStrategy": "Verify migration completeness through automated validation scripts. Test random sample of migrated artifacts for integrity. Validate mapping documentation accuracy. Confirm rollback procedures work correctly."
+          },
+          {
+            "id": 6,
+            "title": "Update CI/CD Pipelines and Build Scripts",
+            "description": "Modify all build scripts, deployment pipelines, and GitHub Actions workflows to reference the new consolidated bucket structure and artifact locations.",
+            "dependencies": [
+              5
+            ],
+            "details": "Update GitHub Actions workflows to use new bucket paths for artifact uploads and downloads. Modify SAM templates and CloudFormation references to point to consolidated bucket. Update Lambda layer deployment scripts to use layers/ prefix. Change build scripts to publish artifacts to correct prefixes. Update deployment pipelines in CI/CD systems. Modify any hardcoded bucket references in application code. Update documentation and runbooks with new artifact locations. Test all pipeline changes in development environment first.\n<info added on 2025-07-18T14:37:13.951Z>\nCompleted deploy-lambda-layers.yml workflow migration to new S3 bucket structure. Updated workflow to use sam-builds/layers/ prefix for SAM build artifacts, templates/layers/ prefix for packaged CloudFormation templates, and layers/hashes.json for layer hash tracking. Modified supporting scripts check_layer_changes.sh and update_layer_hashes.sh to work with the new bucket paths and prefix structure.\n</info added on 2025-07-18T14:37:13.951Z>\n<info added on 2025-07-18T14:48:18.071Z>\nCompleted updating all deployment workflows to use consolidated S3 bucket structure. Updated deploy-backend.yml to use sam-builds/backend/ prefix for SAM build artifacts, templates/backend/ prefix for packaged CloudFormation templates, and templates/schemas/ prefix for schema files. Updated deploy-frontend.yml to use sam-builds/frontend/ prefix for frontend build artifacts and templates/frontend/ prefix for frontend-related templates. All three workflows (deploy-lambda-layers.yml, deploy-backend.yml, and deploy-frontend.yml) now successfully reference the single build-artifacts bucket with organized prefix structure.\n</info added on 2025-07-18T14:48:18.071Z>",
+            "status": "done",
+            "testStrategy": "Test updated pipelines in development environment. Verify all artifact references resolve correctly. Run end-to-end deployment tests. Validate build and deployment processes work with new bucket structure."
+          },
+          {
+            "id": 7,
+            "title": "Implement Monitoring and Access Control",
+            "description": "Set up comprehensive monitoring, logging, and refined IAM policies for the consolidated bucket with different access levels for various artifact types.",
+            "dependencies": [
+              6
+            ],
+            "details": "Implement CloudWatch monitoring for bucket access patterns, request metrics, and cost tracking. Set up CloudWatch alarms for unusual access patterns or errors. Configure detailed S3 access logging and integrate with CloudTrail. Create IAM policies with least-privilege access for different user roles and services. Implement separate policies for sam-builds/, layers/, and templates/ prefixes. Set up automated cost optimization reports. Configure S3 event notifications for artifact lifecycle management. Create monitoring dashboards for operational visibility.",
+            "status": "pending",
+            "testStrategy": "Test monitoring alerts and notifications. Verify IAM policies provide appropriate access levels. Validate cost tracking and reporting accuracy. Test event notification functionality."
+          },
+          {
+            "id": 8,
+            "title": "Implement Lifecycle Policies and Cleanup Legacy Buckets",
+            "description": "Configure automated lifecycle policies for artifact management and safely decommission old buckets after validation period.",
+            "dependencies": [
+              7
+            ],
+            "details": "Create S3 lifecycle policies for automatic transition to cheaper storage classes and deletion of old artifacts. Configure different retention periods for sam-builds/ (shorter), layers/ (medium), and templates/ (longer). Set up automated cleanup of build artifacts older than specified thresholds. After validation period, create final backup of legacy buckets and then delete them. Update any remaining references to old bucket names. Remove old bucket IAM policies and CloudFormation resources. Document final consolidated bucket structure and management procedures.",
+            "status": "pending",
+            "testStrategy": "Test lifecycle policy rules with sample data. Verify automated cleanup works correctly. Validate final migration by confirming no dependencies on old buckets. Test backup and restore procedures for legacy data."
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-06-20T19:07:50.957Z",
-      "updated": "2025-07-17T18:58:41.625Z",
+      "updated": "2025-07-18T14:48:25.782Z",
       "description": "Tasks for master context"
     }
   }

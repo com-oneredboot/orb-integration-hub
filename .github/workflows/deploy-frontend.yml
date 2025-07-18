@@ -66,9 +66,9 @@ jobs:
     - name: Deploy UI Stack
       run: |
         sam build --template cloudfront.yml
-        sam package --template-file cloudfront.yml --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts --output-template-file cloudfront-packaged.yml
+        sam package --template-file cloudfront.yml --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts --s3-prefix sam-builds/frontend --output-template-file cloudfront-packaged.yml
         sam deploy --template-file cloudfront-packaged.yml --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts --stack-name ${{ inputs.customer_id }}-${{ inputs.project_id }}-ui-cloudfront --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
-        aws s3 cp cloudfront-packaged.yml s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/cloudfront-packaged.yml
+        aws s3 cp cloudfront-packaged.yml s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts/templates/frontend/cloudfront-packaged.yml
       working-directory: ./ui
 
     # Deploy to S3
