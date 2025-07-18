@@ -1,0 +1,78 @@
+# file: infrastructure/cloudformation/lambda-layer-single.yml
+# author: AI Assistant
+# created: 2025-07-18
+# description: Single Lambda Layer CloudFormation Template for modular deployment
+
+# --------------------------------------------------- #
+AWSTemplateFormatVersion: '2010-09-09'
+
+# --------------------------------------------------- #
+Transform: AWS::Serverless-2016-10-31
+
+# --------------------------------------------------- #
+Description: 'Single Lambda Layer deployment template'
+
+# --------------------------------------------------- #
+Parameters:
+  CustomerID:
+    Type: String
+    Default: orb
+    Description: Customer identifier for resource naming
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, staging, prod]
+    Description: Deployment environment
+  ProjectID:
+    Type: String
+    Default: integration-hub
+    Description: Project identifier for resource naming
+  LayerName:
+    Type: String
+    Description: Name of the layer to deploy (e.g., organizations_security, stripe, users_security)
+  Runtime:
+    Default: python3.12
+    Type: String
+
+# --------------------------------------------------- #
+Conditions:
+  IsOrganizationsSecurityLayer: !Equals [!Ref LayerName, "organizations_security"]
+  IsStripeLayer: !Equals [!Ref LayerName, "stripe"]
+  IsUsersSecurityLayer: !Equals [!Ref LayerName, "users_security"]
+
+# --------------------------------------------------- #
+Resources:
+  LambdaLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub '${CustomerID}-${ProjectID}-${Environment}-${LayerName}-layer'
+      Description: !Sub
+        - '${Description}'
+        - Description: !If
+          - IsOrganizationsSecurityLayer
+          - 'Organization security middleware with audit logging and RBAC utilities'
+          - !If
+            - IsStripeLayer
+            - 'Stripe payment processing libraries and dependencies'
+            - !If
+              - IsUsersSecurityLayer
+              - 'User security middleware with authentication and authorization utilities'
+              - 'Lambda layer'
+      ContentUri: !Sub '../../backend/src/layers/${LayerName}/${LayerName}_layer.zip'
+      CompatibleRuntimes:
+        - !Ref Runtime
+      LicenseInfo: MIT
+
+# --------------------------------------------------- #
+Outputs:
+  LayerVersionArn:
+    Description: ARN of the deployed Lambda layer version
+    Value: !Ref LambdaLayer
+    Export:
+      Name: !Sub '${CustomerID}-${ProjectID}-${Environment}-${LayerName}-layer-arn'
+  
+  LayerVersion:
+    Description: Version number of the deployed Lambda layer
+    Value: !GetAtt LambdaLayer.Version
+    Export:
+      Name: !Sub '${CustomerID}-${ProjectID}-${Environment}-${LayerName}-layer-version'

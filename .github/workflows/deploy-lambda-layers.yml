@@ -29,23 +29,17 @@ on:
         default: 'integration-hub'
 
 jobs:
-  deploy-lambda-layers:
+  # First job: Check which layers have changed
+  check-layer-changes:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
-
+    outputs:
+      layers_to_build: ${{ steps.check-changes.outputs.layers_to_build }}
+      any_changes: ${{ steps.check-changes.outputs.any_changes }}
+    
     steps:
-
-    # Checkout code
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
-    # Setup Python environment
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.12'
-
-    # Fetch AWS Credentials
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
@@ -53,79 +47,115 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
 
-    # Build Organizations Security Layer
-    - name: Build Organizations Security Layer
-      run: |
-        pip install --upgrade pip
-        pip install pipenv --user
-        
-        echo "Building Organizations Security Layer"
-        chmod +x build_organizations_security_layer.sh
-        bash build_organizations_security_layer.sh
-
-      working-directory: backend/src/layers/organizations_security
-
-    # Build Stripe Layer
-    - name: Build Stripe Layer
-      run: |
-        pip install --upgrade pip
-        pip install pipenv --user
-        
-        echo "Building Stripe Layer"
-        chmod +x build_stripe_layer.sh
-        bash build_stripe_layer.sh
-
-      working-directory: backend/src/layers/stripe
-
-    # Check for changes before deploying
     - name: Check Layer Changes
       id: check-changes
       run: |
-        # Generate content hashes for both layers
-        ORG_HASH=$(find backend/src/layers/organizations_security -type f -name "*.py" -exec sha256sum {} + | sha256sum | cut -d' ' -f1)
-        STRIPE_HASH=$(find backend/src/layers/stripe -type f \( -name "*.py" -o -name "Pipfile*" \) -exec sha256sum {} + | sha256sum | cut -d' ' -f1)
-        
-        echo "organization_hash=${ORG_HASH}" >> $GITHUB_OUTPUT
-        echo "stripe_hash=${STRIPE_HASH}" >> $GITHUB_OUTPUT
-        
-        # Check if hashes changed from last deployment
-        aws s3 cp s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts/lambda-layer-hashes.json ./previous-hashes.json 2>/dev/null || echo '{"organization_hash":"","stripe_hash":""}' > ./previous-hashes.json
-        
-        PREV_ORG_HASH=$(jq -r '.organization_hash' previous-hashes.json)
-        PREV_STRIPE_HASH=$(jq -r '.stripe_hash' previous-hashes.json)
-        
-        if [[ "$ORG_HASH" != "$PREV_ORG_HASH" || "$STRIPE_HASH" != "$PREV_STRIPE_HASH" ]]; then
-          echo "changes_detected=true" >> $GITHUB_OUTPUT
-          echo "Layer changes detected, will deploy new versions"
-        else
-          echo "changes_detected=false" >> $GITHUB_OUTPUT
-          echo "No layer changes detected, skipping deployment"
-        fi
+        chmod +x check_layer_changes.sh
+        ./check_layer_changes.sh ${{ inputs.customer_id }} ${{ inputs.project_id }}
+      working-directory: backend/src/layers
 
-    # Deploy Consolidated Layers (only if changes detected)
-    - name: Deploy Consolidated Layers
-      if: steps.check-changes.outputs.changes_detected == 'true'
+  # Second job: Build and deploy only changed layers
+  build-and-deploy-layers:
+    needs: check-layer-changes
+    if: needs.check-layer-changes.outputs.any_changes == 'true'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    strategy:
+      matrix:
+        layer: ${{ fromJson(needs.check-layer-changes.outputs.layers_to_build) }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
       run: |
-        sam build \
-        --template lambda-layers.yml
-        
-        sam package \
-        --template-file lambda-layers.yml \
-        --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
-        --output-template-file lambda-layers-packaged.yml
-        
-        sam deploy \
-        --template-file lambda-layers-packaged.yml \
-        --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
-        --stack-name ${{ inputs.customer_id }}-${{ inputs.project_id }}-${{ inputs.environment }}-lambda-layers \
-        --capabilities CAPABILITY_NAMED_IAM \
-        --no-fail-on-empty-changeset
-        
-        aws s3 cp lambda-layers-packaged.yml \
-        s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/lambda-layers-packaged.yml
-        
-        # Store new hashes
-        echo "{\"organization_hash\":\"${{ steps.check-changes.outputs.organization_hash }}\",\"stripe_hash\":\"${{ steps.check-changes.outputs.stripe_hash }}\"}" > lambda-layer-hashes.json
-        aws s3 cp lambda-layer-hashes.json s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts/lambda-layer-hashes.json
+        pip install --upgrade pip
+        pip install pipenv
 
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Build ${{ matrix.layer }} Layer
+      run: |
+        echo "Building ${{ matrix.layer }} Layer"
+        chmod +x build_layer.sh
+        ./build_layer.sh ${{ matrix.layer }}
+      working-directory: backend/src/layers
+
+    - name: Deploy ${{ matrix.layer }} Layer
+      run: |
+        # Copy the built layer zip to the expected location
+        cp backend/src/layers/${{ matrix.layer }}/${{ matrix.layer }}_layer.zip backend/src/layers/${{ matrix.layer }}/
+        
+        # Get the stack name for this specific layer
+        LAYER_STACK_NAME="${{ inputs.customer_id }}-${{ inputs.project_id }}-${{ inputs.environment }}-${{ matrix.layer }}-layer"
+        
+        # Build the SAM application
+        sam build \
+          --template-file lambda-layer-single.yml \
+          --parameter-overrides \
+            LayerName=${{ matrix.layer }} \
+            CustomerID=${{ inputs.customer_id }} \
+            ProjectID=${{ inputs.project_id }} \
+            Environment=${{ inputs.environment }}
+        
+        # Package the layer
+        sam package \
+          --template-file .aws-sam/build/template.yaml \
+          --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
+          --output-template-file lambda-layer-${{ matrix.layer }}-packaged.yml
+        
+        # Deploy only this specific layer
+        sam deploy \
+          --template-file lambda-layer-${{ matrix.layer }}-packaged.yml \
+          --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
+          --stack-name $LAYER_STACK_NAME \
+          --capabilities CAPABILITY_NAMED_IAM \
+          --no-fail-on-empty-changeset \
+          --parameter-overrides \
+            LayerName=${{ matrix.layer }} \
+            CustomerID=${{ inputs.customer_id }} \
+            ProjectID=${{ inputs.project_id }} \
+            Environment=${{ inputs.environment }}
+        
+        # Store the packaged template
+        aws s3 cp lambda-layer-${{ matrix.layer }}-packaged.yml \
+          s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/lambda-layer-${{ matrix.layer }}-packaged.yml
       working-directory: infrastructure/cloudformation
+
+  # Third job: Update hashes after successful deployment
+  update-layer-hashes:
+    needs: [check-layer-changes, build-and-deploy-layers]
+    if: needs.check-layer-changes.outputs.any_changes == 'true'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Update Layer Hashes
+      run: |
+        chmod +x update_layer_hashes.sh
+        ./update_layer_hashes.sh \
+          ${{ inputs.customer_id }} \
+          ${{ inputs.project_id }} \
+          '${{ needs.check-layer-changes.outputs.layers_to_build }}'
+      working-directory: backend/src/layers
