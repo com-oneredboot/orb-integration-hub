@@ -3,10 +3,16 @@
 # created: 2025-07-03
 # description: Consolidated Lambda Layers CloudFormation Template
 
+# --------------------------------------------------- #
 AWSTemplateFormatVersion: '2010-09-09'
+
+# --------------------------------------------------- #
 Transform: AWS::Serverless-2016-10-31
+
+# --------------------------------------------------- #
 Description: 'Lambda Layers - Organization Security and Stripe Payment layers'
 
+# --------------------------------------------------- #
 Parameters:
   CustomerId:
     Type: String
@@ -25,8 +31,11 @@ Parameters:
     Default: python3.12
     Type: String
 
-
+# --------------------------------------------------- #
 Resources:
+
+  ## Lambda Functions
+
   OrganizationsSecurityLayer:
     Properties:
       LayerName: !Sub '${CustomerId}-${ProjectId}-${Environment}-organizations-security-layer'
@@ -38,7 +47,6 @@ Resources:
     Type: AWS::Serverless::LayerVersion
 
   StripeLayer:
-    Type: AWS::Serverless::LayerVersion
     Properties:
       LayerName: !Sub '${CustomerId}-${ProjectId}-${Environment}-stripe-layer'
       Description: 'Stripe Payment processing layer'
@@ -47,22 +55,43 @@ Resources:
         - !Ref Runtime
     Type: AWS::Serverless::LayerVersion
 
+  UserssSecurityLayer:
+    Properties:
+      LayerName: !Sub '${CustomerId}-${ProjectId}-${Environment}-users-security-layer'
+      Description: 'User security middleware with audit logging and RBAC utilities'
+      ContentUri: ../../backend/src/layers/users_security/
+      CompatibleRuntimes:
+        - python3.12
+      LicenseInfo: MIT
+    Type: AWS::Serverless::LayerVersion
+
+  ## Lambda Function Parameters
+
   OrganizationsSecurityLayerArnParameter:
-    Type: AWS::SSM::Parameter
     Properties:
       Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-organizations-security-layer-arn'
       Type: String
       Value: !Ref OrganizationsSecurityLayer
       Description: "ARN of the Organization Security Lambda Layer"
+    Type: AWS::SSM::Parameter
 
   StripeLayerArnParameter:
-    Type: AWS::SSM::Parameter
     Properties:
       Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-stripe-layer-arn'
       Type: String
       Value: !Ref StripeLayer
       Description: "ARN of the Stripe Payment Lambda Layer"
+    Type: AWS::SSM::Parameter
 
+  UsersSecurityLayerArnParameter:
+    Properties:
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-users-security-layer-arn'
+      Type: String
+      Value: !Ref UsersSecurityLayer
+      Description: "ARN of the User Security Lambda Layer"
+    Type: AWS::SSM::Parameter
+
+# --------------------------------------------------- #
 Outputs:
   OrganizationsSecurityLayerArn:
     Description: 'ARN of the Organization Security Lambda Layer'
@@ -71,4 +100,7 @@ Outputs:
   StripeLayerArn:
     Description: 'ARN of the Stripe Payment Lambda Layer'
     Value: !Ref StripeLayer
-  
+
+  UsersSecurityLayerArn:
+    Description: 'ARN of the User Security Lambda Layer'
+    Value: !Ref UsersSecurityLayer  
