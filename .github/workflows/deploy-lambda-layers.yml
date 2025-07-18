@@ -92,7 +92,7 @@ jobs:
         
         # Get the stack name for this specific layer
         # Using underscores in stack name to comply with CloudFormation naming rules
-        LAYER_STACK_NAME="${{ inputs.customer_id }}-${{ inputs.project_id }}-${{ inputs.environment }}-${{ matrix.layer }}"
+        LAYER_STACK_NAME="${{ inputs.customer_id }}-${{ inputs.project_id }}-${{ inputs.environment }}-${{ matrix.layer }}-layer"
         LAYER_STACK_NAME="${LAYER_STACK_NAME//_/-}"  # Replace underscores with hyphens
         
         # Get the template file name for this layer
