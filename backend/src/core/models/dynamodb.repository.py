@@ -7,5 +7,4 @@ ENTITY_TABLE_ENV = {
     "ApplicationRoles": "APPLICATIONROLES_TABLE",
     "Roles": "ROLES_TABLE",
     "Applications": "APPLICATIONS_TABLE",
-    "Users": "USERS_TABLE",
 }

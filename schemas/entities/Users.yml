@@ -6,7 +6,7 @@
 
 # GROUP_TYPES: OWNER, ADMIN, SUPPORT, USER (see enum definition)
 
-type: dynamodb
+type: lambda-dynamodb
 version: '1.0'
 name: Users
 model:

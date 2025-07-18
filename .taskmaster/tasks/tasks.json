@@ -2366,7 +2366,7 @@
               5
             ],
             "details": "Review existing Users GraphQL schema and ensure all queries and mutations are properly defined. Update resolver mapping templates to prepare for Lambda integration. Add any necessary schema extensions for enhanced functionality while maintaining exact backward compatibility. Document all schema changes and ensure proper versioning. Prepare resolver configuration for Lambda function integration with proper error handling and response transformation.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Schema validation tests, backward compatibility verification, and GraphQL query/mutation testing with existing client applications."
           },
           {
@@ -2377,7 +2377,7 @@
               6
             ],
             "details": "Replace all direct DynamoDB resolver configurations with Lambda function invocations. Update resolver mapping templates to handle Lambda request/response transformation. Implement proper error handling and response formatting to maintain exact compatibility with existing client expectations. Add caching strategies using AppSync caching capabilities where appropriate. Ensure all resolver configurations properly handle authentication context and pass user information to Lambda.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Integration tests comparing old vs new resolver responses, performance tests for caching effectiveness, and end-to-end GraphQL operation testing."
           },
           {
@@ -2452,7 +2452,7 @@
         "description": "Consolidate all deployment artifacts from multiple S3 buckets (orb-integration-hub-build-artifacts and orb-integration-hub-build-templates) into a single bucket with organized prefix structure using sam-builds/, layers/, and templates/ prefixes for better organization and management.",
         "details": "Implement comprehensive S3 bucket consolidation and reorganization:\n\n**1) S3 Bucket Analysis and Planning:**\n- Audit existing artifacts in orb-integration-hub-build-artifacts and orb-integration-hub-build-templates buckets\n- Catalog all artifact types, sizes, and access patterns to determine optimal prefix structure\n- Create migration plan with rollback strategy and minimal downtime approach\n- Design new bucket naming convention and lifecycle policies for consolidated storage\n\n**2) New Bucket Structure Implementation:**\n- Create new consolidated S3 bucket with appropriate IAM policies and versioning enabled\n- Implement organized prefix structure:\n  - `sam-builds/` - SAM application build artifacts, deployment packages, and CloudFormation templates\n  - `layers/` - Lambda layer zip files, shared libraries, and runtime dependencies\n  - `templates/` - CloudFormation templates, SAM templates, and infrastructure-as-code files\n- Configure bucket policies for cross-account access if needed and proper encryption settings\n\n**3) Artifact Migration Process:**\n- Develop migration scripts using AWS CLI/SDK to copy artifacts with proper prefix assignment\n- Implement parallel transfer optimization for large artifacts to minimize migration time\n- Maintain original timestamps and metadata during migration process\n- Create mapping documentation for old-to-new artifact locations\n\n**4) CI/CD Pipeline Updates:**\n- Update all build scripts, deployment pipelines, and GitHub Actions workflows to reference new bucket structure\n- Modify SAM templates and CloudFormation references to use new artifact locations\n- Update Lambda layer deployment scripts to use new layers/ prefix structure\n- Ensure all automated deployment processes use consolidated bucket paths\n\n**5) Access Control and Monitoring:**\n- Implement least-privilege IAM policies for different artifact types and deployment stages\n- Set up CloudWatch monitoring for bucket access patterns and cost optimization\n- Configure S3 event notifications for artifact lifecycle management\n- Implement automated cleanup policies for old build artifacts",
         "testStrategy": "Execute comprehensive validation of S3 bucket consolidation:\n\n**1) Migration Verification:**\n- Verify all artifacts successfully copied to new bucket with correct prefixes and metadata preservation\n- Compare file counts, sizes, and checksums between source and destination buckets\n- Test artifact accessibility from all deployment environments and CI/CD pipelines\n- Validate that no artifacts were lost or corrupted during migration process\n\n**2) Deployment Pipeline Testing:**\n- Execute full deployment pipeline using artifacts from new consolidated bucket structure\n- Test SAM builds using sam-builds/ prefix artifacts in development and staging environments\n- Verify Lambda layer deployments work correctly with layers/ prefix structure\n- Validate CloudFormation template deployments using templates/ prefix artifacts\n\n**3) Access Control Validation:**\n- Test IAM policies ensure proper access restrictions for different artifact types\n- Verify cross-account access works correctly if applicable\n- Test that unauthorized access attempts are properly denied\n- Validate encryption and security settings are correctly applied\n\n**4) Performance and Monitoring:**\n- Monitor S3 access patterns and latency after migration to ensure no performance degradation\n- Verify CloudWatch metrics and alarms are properly configured for new bucket\n- Test automated cleanup policies work correctly without affecting active artifacts\n- Validate cost optimization through consolidated storage and lifecycle policies\n\n**5) Rollback Testing:**\n- Test rollback procedures to ensure ability to revert to original bucket structure if needed\n- Verify backup copies of critical artifacts are maintained during transition period\n- Document and test emergency recovery procedures for artifact restoration",
-        "status": "pending",
+        "status": "done",
         "dependencies": [],
         "priority": "high",
         "subtasks": [
@@ -2462,7 +2462,7 @@
             "description": "Perform comprehensive audit of existing artifacts in orb-integration-hub-build-artifacts and orb-integration-hub-build-templates buckets to catalog all artifact types, sizes, and access patterns.",
             "dependencies": [],
             "details": "Use AWS CLI and boto3 to inventory all objects in both buckets. Create detailed catalog including: object keys, sizes, last modified dates, storage classes, and metadata. Analyze access patterns using CloudTrail logs and S3 access logs. Document current folder structures and naming conventions. Generate size and cost analysis reports. Create artifact type classification (SAM builds, Lambda layers, CloudFormation templates, etc.). Export findings to CSV/JSON for migration planning.",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "Verify inventory completeness by comparing object counts and total sizes. Validate access pattern analysis against actual CloudTrail data. Test catalog export formats for data integrity."
           },
           {
@@ -2473,7 +2473,7 @@
               1
             ],
             "details": "Design new bucket structure with sam-builds/, layers/, and templates/ prefixes. Map existing artifacts to new prefix structure based on audit results. Create migration timeline with phases to minimize downtime. Design rollback strategy with backup procedures. Define new bucket naming convention following AWS best practices. Plan lifecycle policies for automated cleanup of old artifacts. Document migration dependencies and potential conflicts. Create validation checkpoints throughout migration process.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Review migration plan with stakeholders. Validate prefix mapping logic against artifact catalog. Test rollback procedures in development environment."
           },
           {
@@ -2484,7 +2484,7 @@
               2
             ],
             "details": "Create new S3 bucket using CloudFormation or Terraform with versioning enabled. Configure server-side encryption with KMS or S3-managed keys. Implement bucket policies for least-privilege access control. Set up cross-account access policies if required. Configure CORS settings for web access. Enable S3 access logging and CloudTrail integration. Set up bucket notifications for lifecycle events. Configure intelligent tiering for cost optimization. Implement bucket replication if needed for disaster recovery.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test bucket creation and policy application. Verify encryption settings and access controls. Validate cross-account access scenarios. Test bucket notification configuration."
           },
           {
@@ -2495,7 +2495,7 @@
               3
             ],
             "details": "Develop Python scripts using boto3 for parallel artifact migration. Implement proper prefix assignment logic based on artifact type classification. Preserve original timestamps, metadata, and storage classes during copy operations. Add progress tracking and logging for migration monitoring. Implement retry logic for failed transfers. Create checksum verification for data integrity. Add support for large file multipart uploads. Include dry-run mode for testing. Generate migration reports with success/failure statistics.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test migration scripts with sample data sets. Verify metadata preservation and checksum validation. Test parallel transfer performance and error handling. Validate dry-run functionality."
           },
           {
@@ -2506,7 +2506,7 @@
               4
             ],
             "details": "Execute migration in phases starting with non-critical artifacts. Monitor transfer progress and handle any failures. Validate successful migration by comparing object counts, sizes, and checksums. Create detailed mapping documentation showing old-to-new artifact locations. Generate migration completion reports. Verify all metadata and timestamps preserved correctly. Test access to migrated artifacts from existing applications. Create rollback checkpoints at each phase completion.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify migration completeness through automated validation scripts. Test random sample of migrated artifacts for integrity. Validate mapping documentation accuracy. Confirm rollback procedures work correctly."
           },
           {
@@ -2528,7 +2528,7 @@
               6
             ],
             "details": "Implement CloudWatch monitoring for bucket access patterns, request metrics, and cost tracking. Set up CloudWatch alarms for unusual access patterns or errors. Configure detailed S3 access logging and integrate with CloudTrail. Create IAM policies with least-privilege access for different user roles and services. Implement separate policies for sam-builds/, layers/, and templates/ prefixes. Set up automated cost optimization reports. Configure S3 event notifications for artifact lifecycle management. Create monitoring dashboards for operational visibility.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test monitoring alerts and notifications. Verify IAM policies provide appropriate access levels. Validate cost tracking and reporting accuracy. Test event notification functionality."
           },
           {
@@ -2539,15 +2539,29 @@
               7
             ],
             "details": "Create S3 lifecycle policies for automatic transition to cheaper storage classes and deletion of old artifacts. Configure different retention periods for sam-builds/ (shorter), layers/ (medium), and templates/ (longer). Set up automated cleanup of build artifacts older than specified thresholds. After validation period, create final backup of legacy buckets and then delete them. Update any remaining references to old bucket names. Remove old bucket IAM policies and CloudFormation resources. Document final consolidated bucket structure and management procedures.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test lifecycle policy rules with sample data. Verify automated cleanup works correctly. Validate final migration by confirming no dependencies on old buckets. Test backup and restore procedures for legacy data."
           }
         ]
+      },
+      {
+        "id": 50,
+        "title": "Streamline Lambda Layer Build Process with Individual Layer Deployments and Change Detection",
+        "description": "Implement an optimized build and deployment system for Lambda layers that includes automated change detection, individual layer deployment capabilities, and streamlined build processes to reduce deployment time and improve development efficiency.",
+        "details": "Implement comprehensive Lambda layer optimization system across multiple phases: **Phase 1 - Build Process Optimization:** 1) Create automated build pipeline using AWS CodeBuild or GitHub Actions that analyzes layer dependencies and builds only changed layers, implement dependency graph analysis to determine which layers need rebuilding based on source code changes, establish parallel build processes for independent layers to reduce total build time, and create build caching mechanisms to reuse unchanged layer artifacts. 2) Implement layer versioning strategy with semantic versioning and automated version bumping based on change detection, create build manifest tracking layer dependencies and version compatibility, and establish rollback mechanisms for failed layer deployments. **Phase 2 - Change Detection System:** 1) Develop file-based change detection using Git diff analysis to identify modified layer source code, implement dependency tree analysis to detect transitive changes affecting multiple layers, create checksum-based validation for layer artifacts to ensure consistency, and establish change impact analysis reporting which layers are affected by code changes. 2) Implement intelligent rebuild logic that skips unchanged layers while ensuring dependent layers are properly updated, create change notification system for development teams about layer updates, and establish automated testing triggers for affected layers. **Phase 3 - Individual Layer Deployment:** 1) Create granular deployment system allowing individual layer updates without full stack redeployment, implement blue-green deployment strategy for layers with automatic rollback on failure, establish deployment orchestration ensuring proper layer version compatibility across Lambda functions, and create deployment validation testing for each layer before promotion. 2) Implement layer deployment monitoring with health checks and performance metrics, create automated rollback triggers based on error rates or performance degradation, establish deployment approval workflows for production layer updates, and create deployment history tracking with audit trails. **Phase 4 - Integration and Monitoring:** 1) Integrate with existing CI/CD pipeline ensuring seamless layer deployment as part of application deployment, create deployment dashboards showing layer build status, deployment progress, and health metrics, implement automated notifications for build failures and deployment issues, and establish performance monitoring for layer cold start times and memory usage.",
+        "testStrategy": "Execute comprehensive layer deployment system validation through multiple testing approaches: **1) Build Process Testing:** Validate change detection accuracy by creating test scenarios with various code changes and verifying only affected layers are rebuilt, test parallel build processes by measuring build time improvements and ensuring no race conditions, validate build caching by verifying unchanged layers reuse cached artifacts and reduce build time, and test dependency graph analysis by creating complex layer dependency scenarios and verifying correct build order. **2) Deployment Testing:** Test individual layer deployment by deploying single layers and verifying Lambda functions continue working with updated layers, validate blue-green deployment strategy by simulating deployment failures and verifying automatic rollback functionality, test deployment orchestration by deploying multiple interdependent layers and ensuring proper version compatibility, and validate deployment monitoring by triggering various failure scenarios and verifying alert systems. **3) Integration Testing:** Test CI/CD pipeline integration by running complete deployment workflows and verifying layer deployments occur at appropriate stages, validate deployment dashboard functionality by monitoring real deployments and verifying accurate status reporting, test automated notification systems by simulating various build and deployment scenarios, and validate performance monitoring by measuring layer performance before and after optimizations. **4) End-to-End Testing:** Conduct complete development workflow testing from code commit through layer deployment and Lambda function execution, test rollback scenarios by simulating production issues and verifying quick recovery capabilities, validate audit trail functionality by reviewing deployment history and change tracking, and perform load testing on optimized layer deployment system to ensure scalability under high deployment frequency.",
+        "status": "done",
+        "dependencies": [
+          5,
+          10
+        ],
+        "priority": "medium",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-06-20T19:07:50.957Z",
-      "updated": "2025-07-18T14:48:25.782Z",
+      "updated": "2025-07-18T15:53:08.572Z",
       "description": "Tasks for master context"
     }
   }

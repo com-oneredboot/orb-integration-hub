@@ -110,7 +110,7 @@ Resources:
     Type: AWS::AppSync::GraphQLSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
-      DefinitionS3Location: !Sub 's3://${CustomerId}-${ProjectId}-build-artifacts/templates/schemas/${SchemaS3Key}'
+      DefinitionS3Location: !Sub 's3://${CustomerId}-${ProjectId}-build-templates/${SchemaS3Key}'
 
   IntegrationHubApiId:
     Type: AWS::SSM::Parameter
@@ -211,17 +211,6 @@ Resources:
         AwsRegion: !Ref AWS::Region
         UseCallerCredentials: false
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
-  UsersDynamoDbDataSource:
-    Type: AWS::AppSync::DataSource
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      Name: UsersDynamoDbDataSource
-      Type: AMAZON_DYNAMODB
-      DynamoDBConfig:
-        TableName: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-table-name}}'
-        AwsRegion: !Ref AWS::Region
-        UseCallerCredentials: false
-      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
  
   # Lambda DataSources
   # Jinja template for AppSync Lambda DataSources
@@ -251,6 +240,15 @@ Resources:
       Type: AWS_LAMBDA
       LambdaConfig:
         LambdaFunctionArn: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-privacy-requests-lambda-arn}}'
+      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+  UsersLambdaDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      Name: UsersLambdaDataSource
+      Type: AWS_LAMBDA
+      LambdaConfig:
+        LambdaFunctionArn: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-lambda-arn}}'
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
   SmsVerificationLambdaDataSource:
     Type: AWS::AppSync::DataSource
@@ -2541,325 +2539,6 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
-  UsersCreateResolver:
-    Type: AWS::AppSync::Resolver
-    DependsOn:
-      - UsersDynamoDbDataSource
-      - IntegrationHubSchema
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: UsersCreate
-      DataSourceName: UsersDynamoDbDataSource
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "PutItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-          },
-          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
-        }
-      ResponseMappingTemplate: |
-        #if($ctx.error)
-          {
-            "StatusCode": 500,
-            "Message": "$ctx.error.message",
-            "Data": null
-          }
-        #else
-          {
-            "StatusCode": 200,
-            "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
-          }
-        #end
-  UsersUpdateResolver:
-    Type: AWS::AppSync::Resolver
-    DependsOn:
-      - UsersDynamoDbDataSource
-      - IntegrationHubSchema
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: UsersUpdate
-      DataSourceName: UsersDynamoDbDataSource
-      RequestMappingTemplate: |
-        #set($input = $ctx.args.input)
-        #set($key = "userId")
-        #set($updateExpression = "")
-        #set($expressionNames = {})
-        #set($expressionValues = {})
-        #set($separator = "")
-        
-        ## Automatically set updatedAt to current timestamp
-        #set($updateExpression = "updatedAt = :updatedAt")
-        $!expressionValues.put(":updatedAt", $util.dynamodb.toDynamoDB($util.time.nowISO8601()))
-        #set($separator = ", ")
-        
-        #foreach($entry in $input.entrySet())
-          #if($entry.key != $key && $entry.key != "updatedAt")
-            #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
-            $!expressionNames.put("#$entry.key", "$entry.key")
-            $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
-            #set($separator = ", ")
-          #end
-        #end
-        
-        {
-          "version": "2018-05-29",
-          "operation": "UpdateItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-          },
-          "update": {
-            "expression": "SET $updateExpression",
-            "expressionNames": $util.toJson($expressionNames),
-            "expressionValues": $util.toJson($expressionValues)
-          }
-        }
-      ResponseMappingTemplate: |
-        #if($ctx.error)
-          {
-            "StatusCode": 500,
-            "Message": "$ctx.error.message",
-            "Data": null
-          }
-        #else
-          {
-            "StatusCode": 200,
-            "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
-          }
-        #end
-  UsersDeleteResolver:
-    Type: AWS::AppSync::Resolver
-    DependsOn:
-      - UsersDynamoDbDataSource
-      - IntegrationHubSchema
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: UsersDelete
-      DataSourceName: UsersDynamoDbDataSource
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "DeleteItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)          }
-        }
-      ResponseMappingTemplate: |
-        #if($ctx.error)
-          {
-            "StatusCode": 500,
-            "Message": "$ctx.error.message",
-            "Data": null
-          }
-        #else
-          {
-            "StatusCode": 200,
-            "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
-          }
-        #end
-  UsersDisableResolver:
-    Type: AWS::AppSync::Resolver
-    DependsOn:
-      - UsersDynamoDbDataSource
-      - IntegrationHubSchema
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Mutation
-      FieldName: UsersDisable
-      DataSourceName: UsersDynamoDbDataSource
-      RequestMappingTemplate: |
-        #set($input = $ctx.args.input)
-        #set($key = "userId")
-        #set($updateExpression = "")
-        #set($expressionNames = {})
-        #set($expressionValues = {})
-        #set($separator = "")
-        
-        ## Automatically set updatedAt to current timestamp
-        #set($updateExpression = "updatedAt = :updatedAt")
-        $!expressionValues.put(":updatedAt", $util.dynamodb.toDynamoDB($util.time.nowISO8601()))
-        #set($separator = ", ")
-        
-        #foreach($entry in $input.entrySet())
-          #if($entry.key != $key && $entry.key != "updatedAt")
-            #set($updateExpression = "$updateExpression$separator#$entry.key = :$entry.key")
-            $!expressionNames.put("#$entry.key", "$entry.key")
-            $!expressionValues.put(":$entry.key", $util.dynamodb.toDynamoDB($entry.value))
-            #set($separator = ", ")
-          #end
-        #end
-        
-        {
-          "version": "2018-05-29",
-          "operation": "UpdateItem",
-          "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
-          },
-          "update": {
-            "expression": "SET $updateExpression",
-            "expressionNames": $util.toJson($expressionNames),
-            "expressionValues": $util.toJson($expressionValues)
-          }
-        }
-      ResponseMappingTemplate: |
-        #if($ctx.error)
-          {
-            "StatusCode": 500,
-            "Message": "$ctx.error.message",
-            "Data": null
-          }
-        #else
-          {
-            "StatusCode": 200,
-            "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
-          }
-        #end
-  UsersQueryByUserIdResolver:
-    Type: AWS::AppSync::Resolver
-    DependsOn:
-      - UsersDynamoDbDataSource
-      - IntegrationHubSchema
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Query
-      FieldName: UsersQueryByUserId
-      DataSourceName: UsersDynamoDbDataSource
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "Query",
-          "query": {
-            "expression": "userId = :userId",
-            "expressionValues": {
-              ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)            }
-          }
-        }
-      ResponseMappingTemplate: |
-        #if($ctx.error)
-          {
-            "StatusCode": 500,
-            "Message": "$ctx.error.message",
-            "Data": null
-          }
-        #else
-          {
-            "StatusCode": 200,
-            "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
-          }
-        #end
-  UsersQueryByEmailResolver:
-    Type: AWS::AppSync::Resolver
-    DependsOn:
-      - UsersDynamoDbDataSource
-      - IntegrationHubSchema
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Query
-      FieldName: UsersQueryByEmail
-      DataSourceName: UsersDynamoDbDataSource
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "Query",
-          "index": "EmailIndex",
-          "query": {
-            "expression": "email = :email",
-            "expressionValues": {
-              ":email": $util.dynamodb.toDynamoDBJson($ctx.args.input.email)            }
-          }
-        }
-      ResponseMappingTemplate: |
-        #if($ctx.error)
-          {
-            "StatusCode": 500,
-            "Message": "$ctx.error.message",
-            "Data": null
-          }
-        #else
-          {
-            "StatusCode": 200,
-            "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
-          }
-        #end
-  UsersQueryByCognitoIdResolver:
-    Type: AWS::AppSync::Resolver
-    DependsOn:
-      - UsersDynamoDbDataSource
-      - IntegrationHubSchema
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Query
-      FieldName: UsersQueryByCognitoId
-      DataSourceName: UsersDynamoDbDataSource
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "Query",
-          "index": "CognitoIdIndex",
-          "query": {
-            "expression": "cognitoId = :cognitoId",
-            "expressionValues": {
-              ":cognitoId": $util.dynamodb.toDynamoDBJson($ctx.args.input.cognitoId)            }
-          }
-        }
-      ResponseMappingTemplate: |
-        #if($ctx.error)
-          {
-            "StatusCode": 500,
-            "Message": "$ctx.error.message",
-            "Data": null
-          }
-        #else
-          {
-            "StatusCode": 200,
-            "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
-          }
-        #end
-  UsersQueryByCognitoSubResolver:
-    Type: AWS::AppSync::Resolver
-    DependsOn:
-      - UsersDynamoDbDataSource
-      - IntegrationHubSchema
-    Properties:
-      ApiId: !GetAtt IntegrationHubApi.ApiId
-      TypeName: Query
-      FieldName: UsersQueryByCognitoSub
-      DataSourceName: UsersDynamoDbDataSource
-      RequestMappingTemplate: |
-        {
-          "version": "2018-05-29",
-          "operation": "Query",
-          "index": "CognitoSubIndex",
-          "query": {
-            "expression": "cognitoSub = :cognitoSub",
-            "expressionValues": {
-              ":cognitoSub": $util.dynamodb.toDynamoDBJson($ctx.args.input.cognitoSub)            }
-          }
-        }
-      ResponseMappingTemplate: |
-        #if($ctx.error)
-          {
-            "StatusCode": 500,
-            "Message": "$ctx.error.message",
-            "Data": null
-          }
-        #else
-          {
-            "StatusCode": 200,
-            "Message": null,
-            "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
-          }
-        #end
  
   # Lambda Resolvers
   SmsVerificationResolver:
@@ -3955,6 +3634,254 @@ Resources:
           "payload": {
             "info": {
               "fieldName": "PrivacyRequestsQueryByStatusAndDeadline",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  UsersCreateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - UsersLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: UsersCreate
+      DataSourceName: UsersLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "info": {
+              "fieldName": "UsersCreate",
+              "parentTypeName": "Mutation",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  UsersUpdateResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - UsersLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: UsersUpdate
+      DataSourceName: UsersLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "info": {
+              "fieldName": "UsersUpdate",
+              "parentTypeName": "Mutation",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  UsersDeleteResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - UsersLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: UsersDelete
+      DataSourceName: UsersLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "info": {
+              "fieldName": "UsersDelete",
+              "parentTypeName": "Mutation",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  UsersDisableResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - UsersLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: UsersDisable
+      DataSourceName: UsersLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "info": {
+              "fieldName": "UsersDisable",
+              "parentTypeName": "Mutation",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  UsersQueryByUserIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - UsersLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: UsersQueryByUserId
+      DataSourceName: UsersLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "info": {
+              "fieldName": "UsersQueryByUserId",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  UsersQueryByEmailResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - UsersLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: UsersQueryByEmail
+      DataSourceName: UsersLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "info": {
+              "fieldName": "UsersQueryByEmail",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  UsersQueryByCognitoIdResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - UsersLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: UsersQueryByCognitoId
+      DataSourceName: UsersLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "info": {
+              "fieldName": "UsersQueryByCognitoId",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
+          }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($ctx.result)
+  UsersQueryByCognitoSubResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - UsersLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: UsersQueryByCognitoSub
+      DataSourceName: UsersLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "info": {
+              "fieldName": "UsersQueryByCognitoSub",
               "parentTypeName": "Query",
               "selectionSetList": $util.toJson($ctx.info.selectionSetList),
               "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
