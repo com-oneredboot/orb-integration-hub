@@ -110,7 +110,7 @@ Resources:
     Type: AWS::AppSync::GraphQLSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
-      DefinitionS3Location: !Sub 's3://${CustomerId}-${ProjectId}-build-templates/${SchemaS3Key}'
+      DefinitionS3Location: !Sub 's3://${CustomerId}-${ProjectId}-build-artifacts/templates/schemas/${SchemaS3Key}'
 
   IntegrationHubApiId:
     Type: AWS::SSM::Parameter
