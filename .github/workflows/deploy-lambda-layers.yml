@@ -55,15 +55,12 @@ jobs:
         ./check_layer_changes.sh ${{ inputs.customer_id }} ${{ inputs.project_id }}
       working-directory: backend/src/layers
 
-  # Second job: Build and deploy only changed layers
-  build-and-deploy-layers:
+  # Second job: Deploy all layers in single stack
+  deploy-layers-stack:
     needs: check-layer-changes
     if: needs.check-layer-changes.outputs.any_changes == 'true'
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    strategy:
-      matrix:
-        layer: ${{ fromJson(needs.check-layer-changes.outputs.layers_to_build) }}
     
     steps:
     - name: Checkout code
@@ -80,56 +77,49 @@ jobs:
         pip install pipenv
 
     - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
+      uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
 
-    # Skip manual build - SAM will handle it
-
-    - name: Deploy ${{ matrix.layer }} Layer
+    - name: Deploy Lambda Layers Stack
       run: |
+        echo "Deploying lambda layers stack with changes: ${{ needs.check-layer-changes.outputs.layers_to_build }}"
         
-        # Get the stack name for this specific layer
-        LAYER_STACK_NAME="${{ inputs.customer_id }}-${{ inputs.project_id }}-${{ inputs.environment }}-${{ matrix.layer }}-layer"
+        # Get the stack name
+        STACK_NAME="${{ inputs.customer_id }}-${{ inputs.project_id }}-${{ inputs.environment }}-lambda-layers"
         
         # Build the SAM application
         sam build \
-          --template-file lambda-layer-single.yml \
-          --parameter-overrides \
-            LayerName=${{ matrix.layer }} \
-            CustomerID=${{ inputs.customer_id }} \
-            ProjectID=${{ inputs.project_id }} \
-            Environment=${{ inputs.environment }}
+          --template-file lambda-layers.yml
         
-        # Package the layer
+        # Package the layers
         sam package \
           --template-file .aws-sam/build/template.yaml \
           --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
-          --output-template-file lambda-layer-${{ matrix.layer }}-packaged.yml
+          --output-template-file lambda-layers-packaged.yml
         
-        # Deploy only this specific layer
+        # Deploy the entire layers stack
         sam deploy \
-          --template-file lambda-layer-${{ matrix.layer }}-packaged.yml \
+          --template-file lambda-layers-packaged.yml \
           --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
-          --stack-name $LAYER_STACK_NAME \
+          --stack-name $STACK_NAME \
           --capabilities CAPABILITY_NAMED_IAM \
           --no-fail-on-empty-changeset \
           --parameter-overrides \
-            LayerName=${{ matrix.layer }} \
-            CustomerID=${{ inputs.customer_id }} \
-            ProjectID=${{ inputs.project_id }} \
+            CustomerId=${{ inputs.customer_id }} \
+            ProjectId=${{ inputs.project_id }} \
             Environment=${{ inputs.environment }}
         
         # Store the packaged template
-        aws s3 cp lambda-layer-${{ matrix.layer }}-packaged.yml \
-          s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/lambda-layer-${{ matrix.layer }}-packaged.yml
+        aws s3 cp lambda-layers-packaged.yml \
+          s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/lambda-layers-packaged.yml
       working-directory: infrastructure/cloudformation
 
   # Third job: Update hashes after successful deployment
   update-layer-hashes:
-    needs: [check-layer-changes, build-and-deploy-layers]
+    needs: [check-layer-changes, deploy-layers-stack]
     if: needs.check-layer-changes.outputs.any_changes == 'true'
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
@@ -139,7 +129,7 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
+      uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
