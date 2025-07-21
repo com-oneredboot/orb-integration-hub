@@ -127,8 +127,17 @@ jobs:
         # Get the layers array
         LAYERS='${{ steps.determine-layers.outputs.layers_to_build }}'
         
+        # Debug: Show the layers array
+        echo "Layers JSON: $LAYERS"
+        
         # Parse JSON array and iterate through layers
-        echo "$LAYERS" | jq -r '.[]' | while read -r layer; do
+        for layer in $(echo "$LAYERS" | jq -r '.[]'); do
+          # Skip empty values
+          if [ -z "$layer" ] || [ "$layer" == "null" ]; then
+            echo "Skipping empty layer value"
+            continue
+          fi
+          
           echo "Processing layer: $layer"
           
           # Build the layer
@@ -148,9 +157,17 @@ jobs:
           TEMPLATE_NAME="${TEMPLATE_NAME//_/-}"  # Replace underscores with hyphens
           
           echo "Using template: $TEMPLATE_NAME"
+          echo "Stack name: $LAYER_STACK_NAME"
           
           # Change to CloudFormation directory
           pushd ../../../infrastructure/cloudformation
+          
+          # Verify template exists
+          if [ ! -f "$TEMPLATE_NAME" ]; then
+            echo "Error: Template file not found: $TEMPLATE_NAME"
+            popd
+            exit 1
+          fi
           
           # Build the layer
           sam build \
