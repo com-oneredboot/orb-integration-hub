@@ -1,0 +1,9 @@
+# Ignore built layer directories
+*/python/
+*.zip
+
+# Ignore requirements.txt if generated
+*/requirements.txt
+
+# But keep requirements.txt in stripe layer since it's manually maintained
+!stripe/requirements.txt

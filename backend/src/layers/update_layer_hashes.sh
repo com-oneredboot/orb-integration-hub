@@ -32,8 +32,10 @@ echo "$DEPLOYED_LAYERS" | jq -r '.[]' | while read -r LAYER; do
     echo "Processing layer: $LAYER"
     
     if [ -d "$LAYER" ]; then
-        # Generate new hash
-        NEW_HASH=$(find "$LAYER" -type f \( -name "*.py" -o -name "Pipfile*" \) -exec sha256sum {} + | sha256sum | cut -d' ' -f1)
+        # Generate new hash (must match the logic in check_layer_changes.sh)
+        NEW_HASH=$({ find "$LAYER" -type f \( -name "*.py" -o -name "Pipfile*" \) -exec sha256sum {} + ; \
+                    find . -maxdepth 1 -type f \( -name "*.sh" -o -name "*.py" \) -exec sha256sum {} + ; } | \
+                    sort | sha256sum | cut -d' ' -f1)
         echo "  New hash: $NEW_HASH"
         
         # Update the hash in the JSON file
