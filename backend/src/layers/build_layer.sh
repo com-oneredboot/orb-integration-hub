@@ -63,10 +63,19 @@ else
 fi
 
 # Move subdirectories if any exist (excluding python/)
+# Note: We're already inside the layer directory, so only move actual subdirectories
+echo "Current directory: $(pwd)"
+echo "Looking for subdirectories to move..."
 for dir in */; do
     if [ -d "$dir" ] && [ "$dir" != "python/" ]; then
-        echo "Moving directory: $dir"
-        mv "$dir" "$LAYER_PATH/"
+        echo "Found directory: $dir"
+        # Check if this would create a recursive move
+        if [ "$(basename "$dir")" = "$LAYER_NAME" ]; then
+            echo "Skipping $dir - would create recursive move"
+        else
+            echo "Moving directory: $dir"
+            mv "$dir" "$LAYER_PATH/"
+        fi
     fi
 done
 
