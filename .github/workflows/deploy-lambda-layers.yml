@@ -27,43 +27,22 @@ on:
         required: true
         type: string
         default: 'integration-hub'
+      layers_to_deploy:
+        description: 'Select layers to deploy (comma-separated or "all")'
+        required: true
+        type: choice
+        options:
+          - 'all'
+          - 'common'
+          - 'organizations_security'
+          - 'stripe'
+          - 'users_security'
 
 jobs:
-  # First job: Check which layers have changed
-  check-layer-changes:
+  # Build and deploy selected layers
+  deploy-layers:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    outputs:
-      layers_to_build: ${{ steps.check-changes.outputs.layers_to_build }}
-      any_changes: ${{ steps.check-changes.outputs.any_changes }}
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ inputs.region }}
-
-    - name: Check Layer Changes
-      id: check-changes
-      run: |
-        chmod +x check_layer_changes.sh
-        ./check_layer_changes.sh ${{ inputs.customer_id }} ${{ inputs.project_id }}
-      working-directory: backend/src/layers
-
-  # Second job: Build and deploy only changed layers (individual stacks)
-  deploy-individual-layers:
-    needs: check-layer-changes
-    if: needs.check-layer-changes.outputs.any_changes == 'true'
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
-    strategy:
-      matrix:
-        layer: ${{ fromJson(needs.check-layer-changes.outputs.layers_to_build) }}
     
     steps:
     - name: Checkout code
@@ -84,83 +63,107 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+        aws-region: ${{ inputs.region }}
 
-    - name: Build ${{ matrix.layer }} Layer
+    - name: Determine layers to build
+      id: determine-layers
       run: |
-        echo "Building ${{ matrix.layer }} Layer"
-        chmod +x build_layer.sh
-        ./build_layer.sh ${{ matrix.layer }}
+        # Parse the layers_to_deploy input
+        LAYERS_INPUT="${{ inputs.layers_to_deploy }}"
+        
+        if [ "$LAYERS_INPUT" == "all" ]; then
+          LAYERS="common,organizations_security,stripe,users_security"
+        else
+          LAYERS="$LAYERS_INPUT"
+        fi
+        
+        # Convert comma-separated string to JSON array
+        LAYERS_JSON=$(echo "$LAYERS" | jq -R -s -c 'split(",") | map(select(length > 0))')
+        echo "layers_to_build=$LAYERS_JSON" >> $GITHUB_OUTPUT
+        echo "Layers to build: $LAYERS_JSON"
+
+    - name: Build and Deploy Layers
+      run: |
+        # Get the layers array
+        LAYERS='${{ steps.determine-layers.outputs.layers_to_build }}'
+        
+        # Parse JSON array and iterate through layers
+        echo "$LAYERS" | jq -r '.[]' | while read -r layer; do
+          echo "Processing layer: $layer"
+          
+          # Build the layer
+          echo "Building $layer Layer"
+          chmod +x build_layer.sh
+          ./build_layer.sh "$layer"
+          
+          # Deploy the layer
+          echo "Deploying $layer layer"
+          
+          # Get the stack name for this specific layer
+          LAYER_STACK_NAME="${{ inputs.customer_id }}-${{ inputs.project_id }}-${{ inputs.environment }}-${layer}-layer"
+          LAYER_STACK_NAME="${LAYER_STACK_NAME//_/-}"  # Replace underscores with hyphens
+          
+          # Get the template file name for this layer
+          TEMPLATE_NAME="lambda-layer-${layer}.yml"
+          TEMPLATE_NAME="${TEMPLATE_NAME//_/-}"  # Replace underscores with hyphens
+          
+          echo "Using template: $TEMPLATE_NAME"
+          
+          # Change to CloudFormation directory
+          pushd ../../infrastructure/cloudformation
+          
+          # Build the layer
+          sam build \
+            --template-file $TEMPLATE_NAME
+          
+          # Package the layer
+          sam package \
+            --template-file .aws-sam/build/template.yaml \
+            --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
+            --s3-prefix sam-builds/layers \
+            --output-template-file ${TEMPLATE_NAME%.yml}-packaged.yml
+          
+          # Deploy only this specific layer
+          sam deploy \
+            --template-file ${TEMPLATE_NAME%.yml}-packaged.yml \
+            --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
+            --stack-name $LAYER_STACK_NAME \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --no-fail-on-empty-changeset \
+            --force-upload \
+            --parameter-overrides \
+              CustomerId=${{ inputs.customer_id }} \
+              ProjectId=${{ inputs.project_id }} \
+              Environment=${{ inputs.environment }}
+          
+          # Store the packaged template
+          aws s3 cp ${TEMPLATE_NAME%.yml}-packaged.yml \
+            s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts/templates/layers/
+          
+          popd
+        done
       working-directory: backend/src/layers
 
-    - name: Deploy ${{ matrix.layer }} Layer
-      run: |
-        echo "Deploying ${{ matrix.layer }} layer individually"
-        
-        # Get the stack name for this specific layer
-        # Using underscores in stack name to comply with CloudFormation naming rules
-        LAYER_STACK_NAME="${{ inputs.customer_id }}-${{ inputs.project_id }}-${{ inputs.environment }}-${{ matrix.layer }}-layer"
-        LAYER_STACK_NAME="${LAYER_STACK_NAME//_/-}"  # Replace underscores with hyphens
-        
-        # Get the template file name for this layer
-        TEMPLATE_NAME="lambda-layer-${{ matrix.layer }}.yml"
-        TEMPLATE_NAME="${TEMPLATE_NAME//_/-}"  # Replace underscores with hyphens
-        
-        echo "Using template: $TEMPLATE_NAME"
-        
-        # Build the layer
-        sam build \
-          --template-file $TEMPLATE_NAME
-        
-        # Package the layer
-        sam package \
-          --template-file .aws-sam/build/template.yaml \
-          --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
-          --s3-prefix sam-builds/layers \
-          --output-template-file ${TEMPLATE_NAME%.yml}-packaged.yml
-        
-        # Deploy only this specific layer
-        sam deploy \
-          --template-file ${TEMPLATE_NAME%.yml}-packaged.yml \
-          --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
-          --stack-name $LAYER_STACK_NAME \
-          --capabilities CAPABILITY_NAMED_IAM \
-          --no-fail-on-empty-changeset \
-          --force-upload \
-          --parameter-overrides \
-            CustomerId=${{ inputs.customer_id }} \
-            ProjectId=${{ inputs.project_id }} \
-            Environment=${{ inputs.environment }}
-        
-        # Store the packaged template
-        aws s3 cp ${TEMPLATE_NAME%.yml}-packaged.yml \
-          s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts/templates/layers/
-        
-      working-directory: infrastructure/cloudformation
-
-  # Third job: Update hashes after successful deployment
-  update-layer-hashes:
-    needs: [check-layer-changes, deploy-individual-layers]
-    if: needs.check-layer-changes.outputs.any_changes == 'true'
+  # Optional: Summary job
+  deployment-summary:
+    needs: deploy-layers
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    if: always()
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
-
-    - name: Update Layer Hashes
+    - name: Summary
       run: |
-        chmod +x update_layer_hashes.sh
-        ./update_layer_hashes.sh \
-          ${{ inputs.customer_id }} \
-          ${{ inputs.project_id }} \
-          '${{ needs.check-layer-changes.outputs.layers_to_build }}'
-      working-directory: backend/src/layers
+        echo "## Lambda Layers Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Environment**: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Region**: ${{ inputs.region }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Customer**: ${{ inputs.customer_id }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Project**: ${{ inputs.project_id }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Layers**: ${{ inputs.layers_to_deploy }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ needs.deploy-layers.result }}" == "success" ]; then
+          echo "✅ **Status**: Deployment completed successfully" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Status**: Deployment failed" >> $GITHUB_STEP_SUMMARY
+        fi
