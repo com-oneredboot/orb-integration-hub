@@ -45,22 +45,28 @@ else
     echo "No Pipfile found, skipping dependency installation"
 fi
 
-# Step 5: Copy layer source code to the site-packages directory
-echo "Copying layer source code..."
+# Step 5: Move layer source code to the site-packages directory
+echo "Moving layer source code..."
 
-# Copy .py files to root
+# First, clean any existing python directory to ensure fresh build
+rm -rf python/
+
+# Recreate the directory structure
+mkdir -p "$LAYER_PATH"
+
+# Move .py files to site-packages
 if ls *.py 1> /dev/null 2>&1; then
-    cp *.py "python/lib/python3.12/site-packages/"
-    echo "Python files copied successfully"
+    mv *.py "$LAYER_PATH/"
+    echo "Python files moved successfully"
 else
-    echo "No Python files to copy"
+    echo "No Python files to move"
 fi
 
-# Copy subdirectories if any exist (excluding python/)
+# Move subdirectories if any exist (excluding python/)
 for dir in */; do
     if [ -d "$dir" ] && [ "$dir" != "python/" ]; then
-        echo "Copying directory: $dir"
-        cp -r "$dir" "python/lib/python3.12/site-packages/"
+        echo "Moving directory: $dir"
+        mv "$dir" "$LAYER_PATH/"
     fi
 done
 
