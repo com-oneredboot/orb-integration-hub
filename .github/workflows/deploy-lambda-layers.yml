@@ -27,16 +27,31 @@ on:
         required: true
         type: string
         default: 'integration-hub'
-      layers_to_deploy:
-        description: 'Select layers to deploy (comma-separated or "all")'
-        required: true
-        type: choice
-        options:
-          - 'all'
-          - 'common'
-          - 'organizations_security'
-          - 'stripe'
-          - 'users_security'
+      deploy_common:
+        description: 'Deploy common layer'
+        required: false
+        type: boolean
+        default: false
+      deploy_organizations_security:
+        description: 'Deploy organizations_security layer'
+        required: false
+        type: boolean
+        default: false
+      deploy_stripe:
+        description: 'Deploy stripe layer'
+        required: false
+        type: boolean
+        default: false
+      deploy_users_security:
+        description: 'Deploy users_security layer'
+        required: false
+        type: boolean
+        default: false
+      deploy_all:
+        description: 'Deploy all layers (overrides individual selections)'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   # Build and deploy selected layers
@@ -68,21 +83,46 @@ jobs:
     - name: Determine layers to build
       id: determine-layers
       run: |
-        # Parse the layers_to_deploy input
-        LAYERS_INPUT="${{ inputs.layers_to_deploy }}"
+        # Initialize empty array
+        LAYERS=""
         
-        if [ "$LAYERS_INPUT" == "all" ]; then
+        # Check if deploy_all is true
+        if [ "${{ inputs.deploy_all }}" == "true" ]; then
           LAYERS="common,organizations_security,stripe,users_security"
         else
-          LAYERS="$LAYERS_INPUT"
+          # Build layers list based on individual selections
+          if [ "${{ inputs.deploy_common }}" == "true" ]; then
+            LAYERS="${LAYERS}common,"
+          fi
+          if [ "${{ inputs.deploy_organizations_security }}" == "true" ]; then
+            LAYERS="${LAYERS}organizations_security,"
+          fi
+          if [ "${{ inputs.deploy_stripe }}" == "true" ]; then
+            LAYERS="${LAYERS}stripe,"
+          fi
+          if [ "${{ inputs.deploy_users_security }}" == "true" ]; then
+            LAYERS="${LAYERS}users_security,"
+          fi
+          
+          # Remove trailing comma
+          LAYERS="${LAYERS%,}"
         fi
         
-        # Convert comma-separated string to JSON array
-        LAYERS_JSON=$(echo "$LAYERS" | jq -R -s -c 'split(",") | map(select(length > 0))')
-        echo "layers_to_build=$LAYERS_JSON" >> $GITHUB_OUTPUT
-        echo "Layers to build: $LAYERS_JSON"
+        # Check if any layers were selected
+        if [ -z "$LAYERS" ]; then
+          echo "No layers selected for deployment"
+          echo "layers_to_build=[]" >> $GITHUB_OUTPUT
+          echo "has_layers=false" >> $GITHUB_OUTPUT
+        else
+          # Convert comma-separated string to JSON array
+          LAYERS_JSON=$(echo "$LAYERS" | jq -R -s -c 'split(",") | map(select(length > 0))')
+          echo "layers_to_build=$LAYERS_JSON" >> $GITHUB_OUTPUT
+          echo "has_layers=true" >> $GITHUB_OUTPUT
+          echo "Layers to build: $LAYERS_JSON"
+        fi
 
     - name: Build and Deploy Layers
+      if: steps.determine-layers.outputs.has_layers == 'true'
       run: |
         # Get the layers array
         LAYERS='${{ steps.determine-layers.outputs.layers_to_build }}'
@@ -110,7 +150,7 @@ jobs:
           echo "Using template: $TEMPLATE_NAME"
           
           # Change to CloudFormation directory
-          pushd ../../infrastructure/cloudformation
+          pushd ../../../infrastructure/cloudformation
           
           # Build the layer
           sam build \
@@ -159,11 +199,24 @@ jobs:
         echo "- **Region**: ${{ inputs.region }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Customer**: ${{ inputs.customer_id }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Project**: ${{ inputs.project_id }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Layers**: ${{ inputs.layers_to_deploy }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Display selected layers
+        echo "### Selected Layers:" >> $GITHUB_STEP_SUMMARY
+        if [ "${{ inputs.deploy_all }}" == "true" ]; then
+          echo "- ✅ All layers" >> $GITHUB_STEP_SUMMARY
+        else
+          [ "${{ inputs.deploy_common }}" == "true" ] && echo "- ✅ common" >> $GITHUB_STEP_SUMMARY
+          [ "${{ inputs.deploy_organizations_security }}" == "true" ] && echo "- ✅ organizations_security" >> $GITHUB_STEP_SUMMARY
+          [ "${{ inputs.deploy_stripe }}" == "true" ] && echo "- ✅ stripe" >> $GITHUB_STEP_SUMMARY
+          [ "${{ inputs.deploy_users_security }}" == "true" ] && echo "- ✅ users_security" >> $GITHUB_STEP_SUMMARY
+        fi
         echo "" >> $GITHUB_STEP_SUMMARY
         
         if [ "${{ needs.deploy-layers.result }}" == "success" ]; then
           echo "✅ **Status**: Deployment completed successfully" >> $GITHUB_STEP_SUMMARY
+        elif [ "${{ needs.deploy-layers.result }}" == "skipped" ]; then
+          echo "⏭️ **Status**: No layers selected for deployment" >> $GITHUB_STEP_SUMMARY
         else
           echo "❌ **Status**: Deployment failed" >> $GITHUB_STEP_SUMMARY
         fi
