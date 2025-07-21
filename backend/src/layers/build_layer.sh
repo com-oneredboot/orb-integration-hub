@@ -18,8 +18,8 @@ if [ ! -d "$LAYER_DIR" ]; then
     exit 1
 fi
 
-# Define the packages path variable
-LAYER_PATH="${LAYER_DIR}/python/lib/python3.12/site-packages"
+# Define the packages path variable (relative to where we'll be after cd)
+LAYER_PATH="./python/lib/python3.12/site-packages"
 
 echo "=========================================="
 echo "Building Lambda Layer: ${LAYER_NAME}"
@@ -69,13 +69,8 @@ echo "Looking for subdirectories to move..."
 for dir in */; do
     if [ -d "$dir" ] && [ "$dir" != "python/" ]; then
         echo "Found directory: $dir"
-        # Check if this would create a recursive move
-        if [ "$(basename "$dir")" = "$LAYER_NAME" ]; then
-            echo "Skipping $dir - would create recursive move"
-        else
-            echo "Moving directory: $dir"
-            mv "$dir" "$LAYER_PATH/"
-        fi
+        echo "Moving directory: $dir"
+        mv "$dir" "$LAYER_PATH/"
     fi
 done
 
