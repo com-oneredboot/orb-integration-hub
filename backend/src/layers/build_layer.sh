@@ -45,14 +45,24 @@ else
     echo "No Pipfile found, skipping dependency installation"
 fi
 
-# Step 5: Copy layer source code to the site-packages directory (only .py files)
+# Step 5: Copy layer source code to the site-packages directory
 echo "Copying layer source code..."
+
+# Copy .py files to root
 if ls *.py 1> /dev/null 2>&1; then
     cp *.py "python/lib/python3.12/site-packages/"
     echo "Python files copied successfully"
 else
     echo "No Python files to copy"
 fi
+
+# Copy subdirectories if any exist (excluding python/)
+for dir in */; do
+    if [ -d "$dir" ] && [ "$dir" != "python/" ]; then
+        echo "Copying directory: $dir"
+        cp -r "$dir" "python/lib/python3.12/site-packages/"
+    fi
+done
 
 # Step 6: List the contents of the site-packages directory
 echo "Contents of the site-packages directory:"

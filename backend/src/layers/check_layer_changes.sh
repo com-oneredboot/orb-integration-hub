@@ -15,7 +15,7 @@ CUSTOMER_ID=$1
 PROJECT_ID=$2
 
 # Define all available layers
-LAYERS=("common" "organizations_security" "stripe" "users_security")
+LAYERS=("common" "organizations_security" "stripe" "users_security" "common")
 LAYERS_TO_BUILD=()
 
 echo "=========================================="
