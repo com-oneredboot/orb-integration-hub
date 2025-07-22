@@ -28,27 +28,22 @@ on:
         type: string
         default: 'integration-hub'
       deploy_common:
-        description: 'Deploy common layer'
+        description: 'common'
         required: false
         type: boolean
         default: false
       deploy_organizations_security:
-        description: 'Deploy organizations_security layer'
+        description: 'organizations_security'
         required: false
         type: boolean
         default: false
       deploy_stripe:
-        description: 'Deploy stripe layer'
+        description: 'stripe'
         required: false
         type: boolean
         default: false
       deploy_users_security:
-        description: 'Deploy users_security layer'
-        required: false
-        type: boolean
-        default: false
-      deploy_all:
-        description: 'Deploy all layers (overrides individual selections)'
+        description: 'users_security'
         required: false
         type: boolean
         default: false

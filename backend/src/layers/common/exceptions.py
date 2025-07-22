@@ -122,6 +122,91 @@ class ExternalServiceError(OrbError):
         )
 
 
+class ConflictError(OrbError):
+    """Raised when a resource conflict occurs (e.g., duplicate entry)."""
+    
+    def __init__(
+        self,
+        message: str,
+        details: Optional[Dict[str, Any]] = None
+    ):
+        super().__init__(
+            message=message,
+            error_code="ORB-DATA-003",
+            status_code=409,
+            details=details
+        )
+
+
+class BadRequestError(OrbError):
+    """Raised when the request is malformed or invalid."""
+    
+    def __init__(
+        self,
+        message: str,
+        details: Optional[Dict[str, Any]] = None
+    ):
+        super().__init__(
+            message=message,
+            error_code="ORB-DATA-004",
+            status_code=400,
+            details=details
+        )
+
+
+class NotFoundError(OrbError):
+    """Raised when a resource is not found."""
+    
+    def __init__(
+        self,
+        message: str,
+        details: Optional[Dict[str, Any]] = None
+    ):
+        super().__init__(
+            message=message,
+            error_code="ORB-DATA-005",
+            status_code=404,
+            details=details
+        )
+
+
+class InternalServerError(OrbError):
+    """Raised when an internal server error occurs."""
+    
+    def __init__(
+        self,
+        message: str,
+        details: Optional[Dict[str, Any]] = None
+    ):
+        super().__init__(
+            message=message,
+            error_code="ORB-SYS-002",
+            status_code=500,
+            details=details
+        )
+
+
+class ServiceError(OrbError):
+    """Raised when a service encounters an error."""
+    
+    def __init__(
+        self,
+        message: str,
+        service_name: str = None,
+        details: Optional[Dict[str, Any]] = None
+    ):
+        service_details = details or {}
+        if service_name:
+            service_details['service'] = service_name
+            
+        super().__init__(
+            message=message,
+            error_code="ORB-SVC-001",
+            status_code=503,
+            details=service_details
+        )
+
+
 def format_error_response(error: OrbError) -> Dict[str, Any]:
     """
     Format an error response in a consistent way.

@@ -100,6 +100,35 @@ class RateLimitExceededError(SecurityException):
         self.retry_after = retry_after
 
 
+class RateLimitError(RateLimitExceededError):
+    """Alias for RateLimitExceededError for backward compatibility."""
+    pass
+
+
+class ResourceConflictError(SecurityException):
+    """Raised when there's a conflict with resource state."""
+    
+    def __init__(
+        self,
+        message: str = "Resource conflict",
+        resource_type: str = None,
+        resource_id: str = None,
+        details: Optional[Dict[str, Any]] = None
+    ):
+        conflict_details = details or {}
+        if resource_type:
+            conflict_details['resource_type'] = resource_type
+        if resource_id:
+            conflict_details['resource_id'] = resource_id
+            
+        super().__init__(
+            message=message,
+            error_code="ORB-SEC-013",
+            status_code=409,
+            details=conflict_details
+        )
+
+
 class DataValidationError(SecurityException):
     """Raised when security-related data validation fails."""
     

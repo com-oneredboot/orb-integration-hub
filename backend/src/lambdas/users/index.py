@@ -26,8 +26,8 @@ from users_audit_logger import (
     log_user_audit_event,
     ComplianceFlag
 )
-from common.security.audit import StateTracker, FieldClassification
-from common.security_exceptions import (
+from security.audit import StateTracker, FieldClassification
+from security_exceptions import (
     SecurityViolationError,
     DataValidationError,
     AuthenticationError

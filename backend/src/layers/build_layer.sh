@@ -47,7 +47,7 @@ fi
 
 # Move .py files to site-packages
 if ls *.py 1> /dev/null 2>&1; then
-    mv *.py "$LAYER_PATH/"
+    cp *.py "$LAYER_PATH/"
     echo "Python files moved successfully"
 else
     echo "No Python files to move"
@@ -60,7 +60,7 @@ for dir in */; do
     if [ -d "$dir" ] && [ "$dir" != "python/" ]; then
         echo "Found directory: $dir"
         echo "Moving directory: $dir"
-        mv "$dir" "$LAYER_PATH/"
+        cp -r "$dir" "$LAYER_PATH/"
     fi
 done
 
