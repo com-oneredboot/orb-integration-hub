@@ -15,7 +15,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 # Import from common layer
-from common.security_exceptions import (
+from security_exceptions import (
     SecurityViolationError,
     ContextExtractionError,
     AuthenticationError,

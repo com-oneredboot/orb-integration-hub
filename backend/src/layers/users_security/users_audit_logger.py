@@ -8,13 +8,13 @@ from enum import Enum
 from typing import Dict, Any, List, Optional
 
 # Import from common security layer
-from common.security import (
+from security import (
     BaseAuditLogger,
     BaseAuditEventType,
     ComplianceFlag,
     determine_compliance_flags
 )
-from common.security_exceptions import AuditLogError
+from security_exceptions import AuditLogError
 
 
 class UserAuditEventType(Enum):

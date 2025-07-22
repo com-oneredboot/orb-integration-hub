@@ -101,5 +101,10 @@
     "lighthouse": "^12.6.1",
     "typescript-eslint": "8.26.0",
     "webpack-bundle-analyzer": "^4.10.2"
+  },
+  "overrides": {
+    "form-data": ">=4.0.4",
+    "on-headers": ">=1.1.0",
+    "@eslint/plugin-kit": ">=0.3.3"
   }
 }
