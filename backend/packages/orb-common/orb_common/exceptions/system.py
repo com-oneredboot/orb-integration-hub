@@ -1,6 +1,6 @@
 """System-related exceptions."""
 
-from typing import Optional
+from typing import Optional, Dict, Any
 from .base import OrbError
 
 
