@@ -28,7 +28,7 @@ def time_ago(dt: datetime) -> str:
     """Get human-readable time ago string."""
     now = utc_now()
     delta = now - dt
-    
+
     if delta.days > 365:
         return f"{delta.days // 365} year(s) ago"
     elif delta.days > 30:

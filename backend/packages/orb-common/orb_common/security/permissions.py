@@ -1,6 +1,6 @@
 """Permission management utilities."""
 
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 
 def check_permissions(user_context: Dict[str, Any], required_permission: str) -> bool:

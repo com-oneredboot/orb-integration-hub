@@ -6,16 +6,14 @@ import pytest
 def test_main_package_import():
     """Test main package can be imported."""
     import orb_common
+
     assert orb_common.__version__ == "0.1.0"
 
 
 def test_module_imports():
     """Test all modules can be imported."""
-    from orb_common import exceptions
-    from orb_common import security
-    from orb_common import audit
-    from orb_common import utils
-    
+    from orb_common import audit, exceptions, security, utils
+
     assert exceptions is not None
     assert security is not None
     assert audit is not None
@@ -24,13 +22,10 @@ def test_module_imports():
 
 def test_exception_imports():
     """Test exception imports."""
-    from orb_common.exceptions import (
-        DataValidationError,
-        AuthenticationError,
-        ResourceNotFoundError,
-        ConflictError,
-    )
-    
+    from orb_common.exceptions import (AuthenticationError, ConflictError,
+                                       DataValidationError,
+                                       ResourceNotFoundError)
+
     # Test creating exceptions
     exc = DataValidationError("Test error")
     assert str(exc) == "Test error"
@@ -39,12 +34,9 @@ def test_exception_imports():
 
 def test_security_imports():
     """Test security function imports."""
-    from orb_common.security import (
-        validate_token,
-        check_permissions,
-        validate_email,
-    )
-    
+    from orb_common.security import (check_permissions, validate_email,
+                                     validate_token)
+
     # Test functions exist
     assert callable(validate_token)
     assert callable(check_permissions)
@@ -53,13 +45,9 @@ def test_security_imports():
 
 def test_audit_imports():
     """Test audit function imports."""
-    from orb_common.audit import (
-        log_audit_event,
-        AuditEventType,
-        ComplianceFlag,
-        StateTracker,
-    )
-    
+    from orb_common.audit import (AuditEventType, ComplianceFlag, StateTracker,
+                                  log_audit_event)
+
     # Test classes and enums exist
     assert AuditEventType.LOGIN_SUCCESS
     assert ComplianceFlag.GDPR
@@ -68,13 +56,9 @@ def test_audit_imports():
 
 def test_utils_imports():
     """Test utils function imports."""
-    from orb_common.utils import (
-        utc_now,
-        safe_json_dumps,
-        retry_with_backoff,
-        is_valid_uuid,
-    )
-    
+    from orb_common.utils import (is_valid_uuid, retry_with_backoff,
+                                  safe_json_dumps, utc_now)
+
     # Test functions exist
     assert callable(utc_now)
     assert callable(safe_json_dumps)
@@ -84,13 +68,9 @@ def test_utils_imports():
 
 def test_package_level_imports():
     """Test imports available at package level."""
-    from orb_common import (
-        DataValidationError,
-        AuthenticationError,
-        validate_token,
-        log_audit_event,
-    )
-    
+    from orb_common import (AuthenticationError, DataValidationError,
+                            log_audit_event, validate_token)
+
     # Test all are accessible
     assert DataValidationError is not None
     assert AuthenticationError is not None

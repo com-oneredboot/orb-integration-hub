@@ -1,17 +1,17 @@
 """Authentication utilities."""
 
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 
 def validate_token(token: str) -> Dict[str, Any]:
     """Validate authentication token.
-    
+
     Args:
         token: JWT token to validate
-        
+
     Returns:
         Decoded token claims
-        
+
     Raises:
         InvalidTokenError: If token is invalid
         TokenExpiredError: If token has expired
