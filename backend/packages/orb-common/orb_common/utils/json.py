@@ -4,7 +4,7 @@ import json
 from typing import Any, Dict, Optional
 
 
-def safe_json_dumps(obj: Any, default: Optional[str] = None, **kwargs) -> str:
+def safe_json_dumps(obj: Any, default: Optional[str] = None, **kwargs: Any) -> str:
     """Safely serialize object to JSON string."""
     try:
         return json.dumps(obj, **kwargs)
@@ -39,7 +39,7 @@ def merge_dicts(dict1: Dict[str, Any], dict2: Dict[str, Any]) -> Dict[str, Any]:
 
 def flatten_dict(d: Dict[str, Any], parent_key: str = "", sep: str = ".") -> Dict[str, Any]:
     """Flatten nested dictionary."""
-    items = []
+    items: list[tuple[str, Any]] = []
 
     for k, v in d.items():
         new_key = f"{parent_key}{sep}{k}" if parent_key else k
@@ -54,7 +54,7 @@ def flatten_dict(d: Dict[str, Any], parent_key: str = "", sep: str = ".") -> Dic
 
 def unflatten_dict(d: Dict[str, Any], sep: str = ".") -> Dict[str, Any]:
     """Unflatten dictionary."""
-    result = {}
+    result: Dict[str, Any] = {}
 
     for key, value in d.items():
         parts = key.split(sep)

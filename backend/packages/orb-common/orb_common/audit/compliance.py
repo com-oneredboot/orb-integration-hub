@@ -64,7 +64,7 @@ def apply_retention_policy(
 
 
 def determine_compliance_flags(
-    event_type: Enum, operation_context: Dict[str, Any] = None
+    event_type: Enum, operation_context: Optional[Dict[str, Any]] = None
 ) -> List[ComplianceFlag]:
     """Auto-determine applicable compliance flags based on event type."""
     flags = []

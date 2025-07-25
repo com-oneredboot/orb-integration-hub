@@ -5,5 +5,7 @@ This module provides common utility functions and helpers used across
 ORB Integration Hub services.
 """
 
+from typing import List
+
 # Placeholder for future utilities
-__all__ = []
+__all__: List[str] = []

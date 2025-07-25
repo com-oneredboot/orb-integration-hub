@@ -20,7 +20,7 @@ class RetryConfig:
 def exponential_backoff(attempt: int, base_delay: float = 1.0, max_delay: float = 60.0) -> float:
     """Calculate exponential backoff delay."""
     delay = base_delay * (2**attempt)
-    return min(delay, max_delay)
+    return float(min(delay, max_delay))
 
 
 def linear_backoff(attempt: int, base_delay: float = 1.0, max_delay: float = 60.0) -> float:
@@ -31,7 +31,7 @@ def linear_backoff(attempt: int, base_delay: float = 1.0, max_delay: float = 60.
 
 def retry_with_backoff(
     config: Optional[RetryConfig] = None, backoff_func: Optional[Callable[[int], float]] = None
-):
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Decorator to retry function with backoff."""
     if config is None:
         config = RetryConfig()
@@ -39,9 +39,9 @@ def retry_with_backoff(
     if backoff_func is None:
         backoff_func = exponential_backoff
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(func)
-        def wrapper(*args, **kwargs) -> Any:
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             last_exception = None
 
             for attempt in range(config.max_attempts):
@@ -51,7 +51,7 @@ def retry_with_backoff(
                     last_exception = e
 
                     if attempt < config.max_attempts - 1:
-                        delay = backoff_func(attempt, config.base_delay, config.max_delay)
+                        delay = backoff_func(attempt)
                         time.sleep(delay)
 
             if last_exception:

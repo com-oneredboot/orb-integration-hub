@@ -18,7 +18,7 @@ class FieldClassification(Enum):
 class StateTracker:
     """Track state changes for audit logging."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.changes: List[Dict[str, Any]] = []
 
     def track_change(

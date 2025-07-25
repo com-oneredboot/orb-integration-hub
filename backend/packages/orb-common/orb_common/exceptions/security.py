@@ -11,7 +11,7 @@ class SecurityException(OrbError):
     def __init__(
         self,
         message: str,
-        error_code: str = None,
+        error_code: Optional[str] = None,
         status_code: int = 403,
         details: Optional[Dict[str, Any]] = None,
         severity: str = "MEDIUM",
@@ -63,7 +63,7 @@ class SecurityViolationError(SecurityException):
     def __init__(
         self,
         message: str,
-        violation_type: str = None,
+        violation_type: Optional[str] = None,
         severity: str = "HIGH",
         details: Optional[Dict[str, Any]] = None,
     ):
@@ -87,7 +87,7 @@ class RateLimitExceededError(SecurityException):
     def __init__(
         self,
         message: str = "Rate limit exceeded",
-        retry_after: int = None,
+        retry_after: Optional[int] = None,
         details: Optional[Dict[str, Any]] = None,
     ):
         rate_limit_details = details or {}
@@ -113,7 +113,7 @@ class ComplianceViolationError(SecurityException):
         self,
         message: str,
         compliance_framework: str,
-        requirement: str = None,
+        requirement: Optional[str] = None,
         details: Optional[Dict[str, Any]] = None,
     ):
         compliance_details = details or {}
@@ -170,7 +170,7 @@ class InvalidTokenError(SecurityException):
     def __init__(
         self,
         message: str = "Invalid token",
-        token_type: str = None,
+        token_type: Optional[str] = None,
         details: Optional[Dict[str, Any]] = None,
     ):
         token_details = details or {}
@@ -185,7 +185,7 @@ class InvalidTokenError(SecurityException):
 class TokenExpiredError(InvalidTokenError):
     """Raised when authentication token has expired."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         super().__init__(message="Authentication token has expired", **kwargs)
 
 
@@ -195,8 +195,8 @@ class PermissionDeniedError(SecurityException):
     def __init__(
         self,
         message: str = "Permission denied",
-        required_permission: str = None,
-        user_permissions: List[str] = None,
+        required_permission: Optional[str] = None,
+        user_permissions: Optional[List[str]] = None,
         details: Optional[Dict[str, Any]] = None,
     ):
         permission_details = details or {}
@@ -248,7 +248,7 @@ class MFARequiredError(SecurityException):
     def __init__(
         self,
         message: str = "Multi-factor authentication required",
-        mfa_type: str = None,
+        mfa_type: Optional[str] = None,
         details: Optional[Dict[str, Any]] = None,
     ):
         mfa_details = details or {}
@@ -267,7 +267,7 @@ class SuspiciousActivityError(SecurityException):
         self,
         message: str,
         activity_type: str,
-        risk_score: float = None,
+        risk_score: Optional[float] = None,
         details: Optional[Dict[str, Any]] = None,
     ):
         activity_details = details or {}

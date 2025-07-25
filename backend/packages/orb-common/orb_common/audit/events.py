@@ -51,8 +51,12 @@ class BaseAuditEventType(Enum):
     AUDIT_LOG_ACCESSED = "AUDIT_LOG_ACCESSED"
 
 
-class AuditEventType(BaseAuditEventType):
-    """Extended audit event types - can be customized per service."""
+class AuditEventType(Enum):
+    """Extended audit event types - can be customized per service.
+
+    Note: Services should define their own event types by creating a new Enum
+    that includes both BaseAuditEventType values and service-specific events.
+    """
 
     pass
 
@@ -149,13 +153,13 @@ def log_audit_event(
     pass
 
 
-def log_event(event_type: str, **kwargs) -> None:
+def log_event(event_type: str, **kwargs: Any) -> None:
     """Simple event logging."""
     # Placeholder implementation
     pass
 
 
-def create_audit_event(event_type: AuditEventType, **kwargs) -> AuditEvent:
+def create_audit_event(event_type: AuditEventType, **kwargs: Any) -> AuditEvent:
     """Create audit event object."""
     return AuditEvent(
         event_type=event_type.value,

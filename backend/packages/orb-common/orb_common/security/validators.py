@@ -1,7 +1,7 @@
 """Security validation utilities."""
 
 import re
-from typing import Optional
+from typing import Any, Dict, Optional
 
 
 def validate_email(email: str) -> bool:
@@ -42,7 +42,7 @@ def sanitize_input(input_str: str) -> str:
     return sanitized.strip()
 
 
-def prevent_injection(query: str, params: Optional[dict] = None) -> str:
+def prevent_injection(query: str, params: Optional[Dict[str, Any]] = None) -> str:
     """Prevent SQL/NoSQL injection by parameterizing queries."""
     # Placeholder - in real implementation would use proper parameterization
     return query

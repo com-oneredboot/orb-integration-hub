@@ -23,7 +23,7 @@ class DataValidationError(OrbError):
     def __init__(
         self,
         message: str = "Data validation failed",
-        validation_errors: Dict[str, Any] = None,
+        validation_errors: Optional[Dict[str, Any]] = None,
         details: Optional[Dict[str, Any]] = None,
     ):
         validation_details = details or {}
@@ -44,7 +44,7 @@ class InvalidInputError(DataValidationError):
 class MissingRequiredFieldError(DataValidationError):
     """Raised when a required field is missing."""
 
-    def __init__(self, field_name: str, **kwargs):
+    def __init__(self, field_name: str, **kwargs: Any) -> None:
         message = f"Required field '{field_name}' is missing"
         super().__init__(message, **kwargs)
         self.field_name = field_name
@@ -53,7 +53,7 @@ class MissingRequiredFieldError(DataValidationError):
 class InvalidFormatError(DataValidationError):
     """Raised when data format is invalid."""
 
-    def __init__(self, field_name: str, expected_format: str, **kwargs):
+    def __init__(self, field_name: str, expected_format: str, **kwargs: Any) -> None:
         message = f"Invalid format for field '{field_name}'. Expected: {expected_format}"
         super().__init__(message, **kwargs)
         self.field_name = field_name
@@ -63,7 +63,9 @@ class InvalidFormatError(DataValidationError):
 class ValueOutOfRangeError(DataValidationError):
     """Raised when a value is outside acceptable range."""
 
-    def __init__(self, field_name: str, min_value=None, max_value=None, **kwargs):
+    def __init__(
+        self, field_name: str, min_value: Any = None, max_value: Any = None, **kwargs: Any
+    ) -> None:
         if min_value is not None and max_value is not None:
             message = f"Value for '{field_name}' must be between {min_value} and {max_value}"
         elif min_value is not None:
