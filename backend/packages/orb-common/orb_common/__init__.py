@@ -12,7 +12,7 @@ __email__ = "team@orb-integration-hub.com"
 # Import main modules for easy access
 from . import audit, exceptions, security, utils
 
-# Audit components
+# Import commonly used items at package level
 from .audit import (
     AuditEventType,
     BaseAuditEventType,
@@ -20,10 +20,6 @@ from .audit import (
     StateTracker,
     get_audit_logger,
 )
-
-# Security exceptions
-# Import commonly used items at package level
-# Standard exceptions
 from .exceptions import (
     AuditLogError,
     AuthenticationError,

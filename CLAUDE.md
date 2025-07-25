@@ -228,3 +228,60 @@ Each security issue includes:
 - **Documentation**: Always update security_issues.json with new findings
 - **Testing**: Verify fixes don't break functionality
 - **Automation**: Use scripts for consistent issue creation
+
+## Code Quality Standards
+
+### Python Code Quality Tools
+All Python code in this project must pass the following quality checks:
+
+1. **Black** - Code formatter (line-length: 100)
+   ```bash
+   black --check .
+   ```
+
+2. **isort** - Import organizer (profile: black)
+   ```bash
+   isort --check-only . --profile black --line-length 100
+   ```
+
+3. **mypy** - Type checker
+   ```bash
+   mypy <package> --ignore-missing-imports
+   ```
+
+4. **bandit** - Security linter
+   ```bash
+   bandit -r <package> -f json
+   ```
+
+### Configuration Files
+Each Python package should have a `pyproject.toml` with:
+
+```toml
+[tool.black]
+line-length = 100
+target-version = ['py312']
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.12"
+disallow_untyped_defs = true
+```
+
+### Pre-deployment Checklist
+Before deploying any Python code:
+- [ ] Run `black .` to format code
+- [ ] Run `isort .` to organize imports
+- [ ] Run `mypy` for type checking
+- [ ] Run `bandit` for security checks
+- [ ] All tests pass
+- [ ] CI/CD pipeline is green
+
+### Lambda Function Standards
+- All Lambda functions must use the orb-common package
+- Security layer integration is mandatory
+- Audit logging for all data modifications
+- Proper error handling with OrbError exceptions

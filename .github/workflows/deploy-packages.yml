@@ -68,13 +68,13 @@ jobs:
           cd backend/packages/orb-common
           python -m pip install --upgrade pip
           pip install -e .[test]
-          pip install pytest pytest-cov black isort mypy bandit safety
+          pip install pytest pytest-cov black==25.1.0 isort==6.0.1 mypy bandit safety
       
       - name: Lint with black and isort
         run: |
           cd backend/packages/orb-common
           black --check .
-          isort --check-only .
+          isort --check-only . --diff
       
       - name: Type check with mypy
         run: |
@@ -171,7 +171,7 @@ jobs:
           cd backend/packages/orb-models
           python -m pip install --upgrade pip
           pip install -e .[test]
-          pip install pytest pytest-cov black isort mypy
+          pip install pytest pytest-cov black==25.1.0 isort==6.0.1 mypy
       
       - name: Generate models from schemas
         run: |
@@ -183,7 +183,7 @@ jobs:
         run: |
           cd backend/packages/orb-models
           black --check .
-          isort --check-only .
+          isort --check-only . --diff
       
       - name: Type check with mypy
         run: |

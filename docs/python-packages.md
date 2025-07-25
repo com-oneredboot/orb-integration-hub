@@ -172,3 +172,48 @@ If packages won't install:
 1. Check that the package has a proper `pyproject.toml`
 2. Ensure relative paths in Pipfile are correct
 3. Try `pipenv install --skip-lock` for debugging
+
+## Code Quality Standards
+
+All Python packages must maintain high code quality standards:
+
+### Required Tools
+- **Black**: Code formatter with line-length=100
+- **isort**: Import organizer with black profile
+- **mypy**: Type checker for Python 3.12
+- **bandit**: Security vulnerability scanner
+- **pytest**: Testing framework
+
+### Package Configuration
+Each package must have a `pyproject.toml` with proper tool configurations:
+
+```toml
+[tool.black]
+line-length = 100
+target-version = ['py312']
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.12"
+disallow_untyped_defs = true
+```
+
+### CI/CD Integration
+The `deploy-packages.yml` workflow automatically:
+1. Runs all code quality checks
+2. Builds packages only when changes are detected
+3. Respects dependency order (orb-common → orb-models)
+4. Fails the build if any quality check fails
+
+### Development Workflow
+```bash
+# Before committing, run locally:
+cd backend/packages/orb-common
+black .
+isort .
+mypy orb_common --ignore-missing-imports
+pytest
+```

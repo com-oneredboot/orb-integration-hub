@@ -181,8 +181,68 @@ For comprehensive testing guidelines and best practices, see [Testing Guidelines
 
 ## 7. Coding Style & Conventions
 
-*   **Frontend:** Adheres to Angular standards and ESLint rules defined in `frontend/eslint.config.js`. Uses Prettier (likely via VS Code extension) for formatting.
-*   **Backend:** Uses **Black** for code formatting and **Flake8** for linting. Configuration is typically in `pyproject.toml`. Ensure these tools are run before committing.
+### Frontend
+* Adheres to Angular standards and ESLint rules defined in `frontend/eslint.config.js`
+* Uses Prettier (likely via VS Code extension) for formatting
+
+### Backend Python Code Quality Standards
+
+All Python code must pass the following quality checks before deployment:
+
+#### Required Tools
+1. **Black** - Code formatter (line-length: 100)
+   ```bash
+   black --check .
+   ```
+
+2. **isort** - Import organizer (profile: black)
+   ```bash
+   isort --check-only . --profile black --line-length 100
+   ```
+
+3. **mypy** - Type checker
+   ```bash
+   mypy <package> --ignore-missing-imports
+   ```
+
+4. **bandit** - Security linter
+   ```bash
+   bandit -r <package> -f json
+   ```
+
+#### Configuration
+Each Python package must have a `pyproject.toml` with:
+
+```toml
+[tool.black]
+line-length = 100
+target-version = ['py312']
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.12"
+disallow_untyped_defs = true
+```
+
+#### Pre-commit Workflow
+Before committing Python code:
+```bash
+# Format code
+black .
+isort .
+
+# Run checks
+black --check .
+isort --check-only .
+mypy <package> --ignore-missing-imports
+bandit -r <package>
+pytest
+```
+
+All CI/CD pipelines enforce these standards automatically.
 
 ## 8a. Using the MCP Memory Graph
 
