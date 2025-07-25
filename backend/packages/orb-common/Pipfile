@@ -8,6 +8,10 @@ name = "pypi"
 [dev-packages]
 pytest = "*"
 pytest-cov = "*"
+black = "*"
+isort = "*"
+mypy = "*"
+bandit = "*"
 
 [requires]
 python_version = "3.12"

@@ -66,30 +66,31 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend/packages/orb-common
-          python -m pip install --upgrade pip
-          pip install -e .[test]
-          pip install pytest pytest-cov black==25.1.0 isort==6.0.1 mypy bandit safety
+          pip install pipenv
+          pipenv install --dev
+          pipenv install -e .
       
       - name: Lint with black and isort
         run: |
           cd backend/packages/orb-common
-          black --check .
-          isort --check-only . --diff
+          pipenv run black --check .
+          pipenv run isort --check-only . --diff
       
       - name: Type check with mypy
         run: |
           cd backend/packages/orb-common
-          mypy orb_common --ignore-missing-imports
+          pipenv run mypy orb_common --ignore-missing-imports
       
       - name: Security check with bandit
         run: |
           cd backend/packages/orb-common
-          bandit -r orb_common -f json -o bandit-report.json || true
+          pipenv install bandit --dev
+          pipenv run bandit -r orb_common -f json -o bandit-report.json || true
       
       - name: Run tests
         run: |
           cd backend/packages/orb-common
-          pytest tests/ -v --cov=orb_common --cov-report=xml --cov-report=html
+          pipenv run pytest tests/ -v --cov=orb_common --cov-report=xml --cov-report=html
       
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
@@ -169,14 +170,15 @@ jobs:
         run: |
           cd backend/packages/orb-models
           python -m pip install --upgrade pip
-          pip install -e .[test]
-          pip install pytest pytest-cov black==25.1.0 isort==6.0.1 mypy
+          pip install -e .
+          pip install pytest pytest-cov black isort mypy
       
       - name: Generate models from schemas
         run: |
           cd schemas
-          pip install -r requirements.txt
-          python generate.py
+          pip install pipenv
+          pipenv install
+          pipenv run python generate.py
       
       - name: Lint with black and isort
         run: |
