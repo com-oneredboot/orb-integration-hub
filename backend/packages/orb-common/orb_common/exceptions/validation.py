@@ -3,6 +3,7 @@
 from typing import Any, Dict, Optional
 
 from .base import OrbError
+from .security import SecurityException
 
 
 class ValidationError(OrbError):
@@ -14,7 +15,7 @@ class ValidationError(OrbError):
         )
 
 
-class DataValidationError(OrbError):
+class DataValidationError(SecurityException):
     """Raised when security-related data validation fails.
 
     This is used specifically for security validation contexts.
@@ -31,7 +32,10 @@ class DataValidationError(OrbError):
             validation_details["validation_errors"] = validation_errors
 
         super().__init__(
-            message=message, error_code="ORB-SEC-004", status_code=400, details=validation_details
+            message=message,
+            error_code="DataValidationError",
+            status_code=400,
+            details=validation_details,
         )
 
 

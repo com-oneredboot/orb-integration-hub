@@ -22,6 +22,11 @@ from ..audit import (
     determine_severity,
 )
 
+# Security functions
+from .auth import validate_token
+from .permissions import check_permissions
+from .validators import validate_email
+
 # Re-export audit components for backward compatibility
 __all__ = [
     # Audit Events
@@ -37,4 +42,8 @@ __all__ = [
     # State Tracking
     "StateTracker",
     "FieldClassification",
+    # Security functions
+    "validate_token",
+    "check_permissions",
+    "validate_email",
 ]

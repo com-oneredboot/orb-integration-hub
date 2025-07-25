@@ -19,6 +19,7 @@ from .audit import (
     FieldClassification,
     StateTracker,
     get_audit_logger,
+    log_audit_event,
 )
 from .exceptions import (
     AuditLogError,
@@ -49,6 +50,7 @@ from .exceptions import (
     SuspiciousActivityError,
     ValidationError,
 )
+from .security import validate_token
 
 # Package metadata
 __all__ = [
@@ -96,4 +98,7 @@ __all__ = [
     "get_audit_logger",
     "StateTracker",
     "FieldClassification",
+    "log_audit_event",
+    # Security functions
+    "validate_token",
 ]
