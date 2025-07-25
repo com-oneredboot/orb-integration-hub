@@ -102,9 +102,8 @@ jobs:
     name: Build ORB Common
     needs: [detect-changes, test-common]
     if: |
-      always() && 
       needs.detect-changes.outputs.common-changed == 'true' &&
-      (needs.test-common.result == 'success' || needs.test-common.result == 'skipped')
+      needs.test-common.result == 'success'
     runs-on: ubuntu-latest
     
     steps:
@@ -133,7 +132,7 @@ jobs:
           twine check dist/*
       
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: orb-common-dist
           path: backend/packages/orb-common/dist/
@@ -142,11 +141,11 @@ jobs:
     name: Test ORB Models
     needs: [detect-changes, build-common]
     if: |
-      always() &&
-      (needs.detect-changes.outputs.models-changed == 'true' ||
-       needs.detect-changes.outputs.common-changed == 'true' ||
-       needs.detect-changes.outputs.schemas-changed == 'true') &&
-      (needs.build-common.result == 'success' || needs.build-common.result == 'skipped')
+      needs.build-common.result == 'success' || 
+      (needs.build-common.result == 'skipped' && 
+       needs.detect-changes.outputs.common-changed != 'true' &&
+       (needs.detect-changes.outputs.models-changed == 'true' ||
+        needs.detect-changes.outputs.schemas-changed == 'true'))
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -206,11 +205,10 @@ jobs:
     name: Build ORB Models
     needs: [detect-changes, test-models]
     if: |
-      always() &&
+      needs.test-models.result == 'success' &&
       (needs.detect-changes.outputs.models-changed == 'true' ||
        needs.detect-changes.outputs.common-changed == 'true' ||
-       needs.detect-changes.outputs.schemas-changed == 'true') &&
-      (needs.test-models.result == 'success' || needs.test-models.result == 'skipped')
+       needs.detect-changes.outputs.schemas-changed == 'true')
     runs-on: ubuntu-latest
     
     steps:
@@ -251,7 +249,7 @@ jobs:
           twine check dist/*
       
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: orb-models-dist
           path: backend/packages/orb-models/dist/
