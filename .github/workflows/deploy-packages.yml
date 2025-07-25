@@ -117,20 +117,18 @@ jobs:
         with:
           python-version: '3.12'
       
-      - name: Install build tools
-        run: |
-          python -m pip install --upgrade pip
-          pip install build twine
-      
-      - name: Build package
+      - name: Install build tools and build package
         run: |
           cd backend/packages/orb-common
-          python -m build
+          pip install pipenv
+          pipenv install --dev
+          pipenv install build twine
+          pipenv run python -m build
       
       - name: Check package
         run: |
           cd backend/packages/orb-common
-          twine check dist/*
+          pipenv run twine check dist/*
       
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -169,9 +167,9 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend/packages/orb-models
-          python -m pip install --upgrade pip
-          pip install -e .
-          pip install pytest pytest-cov black isort mypy
+          pip install pipenv
+          pipenv install --dev
+          pipenv install -e .
       
       - name: Generate models from schemas
         run: |
@@ -183,18 +181,18 @@ jobs:
       - name: Lint with black and isort
         run: |
           cd backend/packages/orb-models
-          black --check .
-          isort --check-only . --diff
+          pipenv run black --check .
+          pipenv run isort --check-only . --diff
       
       - name: Type check with mypy
         run: |
           cd backend/packages/orb-models
-          mypy orb_models --ignore-missing-imports || true
+          pipenv run mypy orb_models --ignore-missing-imports || true
       
       - name: Run tests
         run: |
           cd backend/packages/orb-models
-          pytest tests/ -v --cov=orb_models --cov-report=xml --cov-report=html || true
+          pipenv run pytest tests/ -v --cov=orb_models --cov-report=xml --cov-report=html || true
       
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
@@ -223,32 +221,33 @@ jobs:
         with:
           python-version: '3.12'
       
-      - name: Install build tools
-        run: |
-          python -m pip install --upgrade pip
-          pip install build twine
-      
       - name: Install orb-common from source if changed
         if: needs.detect-changes.outputs.common-changed == 'true'
         run: |
           cd backend/packages/orb-common
-          pip install -e .
+          pip install pipenv
+          pipenv install
+          pipenv install -e .
       
       - name: Generate models from schemas
         run: |
           cd schemas
-          pip install -r requirements.txt
-          python generate.py
+          pip install pipenv
+          pipenv install
+          pipenv run python generate.py
       
       - name: Build package
         run: |
           cd backend/packages/orb-models
-          python -m build
+          pip install pipenv
+          pipenv install --dev
+          pipenv install build twine
+          pipenv run python -m build
       
       - name: Check package
         run: |
           cd backend/packages/orb-models
-          twine check dist/*
+          pipenv run twine check dist/*
       
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
