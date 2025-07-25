@@ -1,0 +1,277 @@
+name: deploy-packages
+
+on:
+  push:
+    branches: [ main, develop, organizations-feature ]
+    paths:
+      - 'backend/packages/**'
+      - '.github/workflows/deploy-packages.yml'
+      - 'schemas/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/packages/**'
+      - '.github/workflows/deploy-packages.yml'
+      - 'schemas/**'
+  workflow_dispatch:
+
+jobs:
+  detect-changes:
+    name: Detect Package Changes
+    runs-on: ubuntu-latest
+    outputs:
+      common-changed: ${{ steps.changes.outputs.common }}
+      models-changed: ${{ steps.changes.outputs.models }}
+      schemas-changed: ${{ steps.changes.outputs.schemas }}
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            common:
+              - 'backend/packages/orb-common/**'
+            models:
+              - 'backend/packages/orb-models/**'
+            schemas:
+              - 'schemas/**'
+      
+      - name: Display detected changes
+        run: |
+          echo "Common changed: ${{ steps.changes.outputs.common }}"
+          echo "Models changed: ${{ steps.changes.outputs.models }}"
+          echo "Schemas changed: ${{ steps.changes.outputs.schemas }}"
+
+  test-common:
+    name: Test ORB Common
+    needs: detect-changes
+    if: needs.detect-changes.outputs.common-changed == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.12']
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Install dependencies
+        run: |
+          cd backend/packages/orb-common
+          python -m pip install --upgrade pip
+          pip install -e .[test]
+          pip install pytest pytest-cov black isort mypy bandit safety
+      
+      - name: Lint with black and isort
+        run: |
+          cd backend/packages/orb-common
+          black --check .
+          isort --check-only .
+      
+      - name: Type check with mypy
+        run: |
+          cd backend/packages/orb-common
+          mypy orb_common --ignore-missing-imports
+      
+      - name: Security check with bandit
+        run: |
+          cd backend/packages/orb-common
+          bandit -r orb_common -f json -o bandit-report.json || true
+      
+      - name: Run tests
+        run: |
+          cd backend/packages/orb-common
+          pytest tests/ -v --cov=orb_common --cov-report=xml --cov-report=html
+      
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./backend/packages/orb-common/coverage.xml
+          flags: orb-common
+          name: orb-common-${{ matrix.python-version }}
+
+  build-common:
+    name: Build ORB Common
+    needs: [detect-changes, test-common]
+    if: |
+      always() && 
+      needs.detect-changes.outputs.common-changed == 'true' &&
+      (needs.test-common.result == 'success' || needs.test-common.result == 'skipped')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+      
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+      
+      - name: Build package
+        run: |
+          cd backend/packages/orb-common
+          python -m build
+      
+      - name: Check package
+        run: |
+          cd backend/packages/orb-common
+          twine check dist/*
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: orb-common-dist
+          path: backend/packages/orb-common/dist/
+
+  test-models:
+    name: Test ORB Models
+    needs: [detect-changes, build-common]
+    if: |
+      always() &&
+      (needs.detect-changes.outputs.models-changed == 'true' ||
+       needs.detect-changes.outputs.common-changed == 'true' ||
+       needs.detect-changes.outputs.schemas-changed == 'true') &&
+      (needs.build-common.result == 'success' || needs.build-common.result == 'skipped')
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.12']
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Install orb-common from source if changed
+        if: needs.detect-changes.outputs.common-changed == 'true'
+        run: |
+          cd backend/packages/orb-common
+          pip install -e .
+      
+      - name: Install dependencies
+        run: |
+          cd backend/packages/orb-models
+          python -m pip install --upgrade pip
+          pip install -e .[test]
+          pip install pytest pytest-cov black isort mypy
+      
+      - name: Generate models from schemas
+        run: |
+          cd schemas
+          pip install -r requirements.txt
+          python generate.py
+      
+      - name: Lint with black and isort
+        run: |
+          cd backend/packages/orb-models
+          black --check .
+          isort --check-only .
+      
+      - name: Type check with mypy
+        run: |
+          cd backend/packages/orb-models
+          mypy orb_models --ignore-missing-imports || true
+      
+      - name: Run tests
+        run: |
+          cd backend/packages/orb-models
+          pytest tests/ -v --cov=orb_models --cov-report=xml --cov-report=html || true
+      
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./backend/packages/orb-models/coverage.xml
+          flags: orb-models
+          name: orb-models-${{ matrix.python-version }}
+
+  build-models:
+    name: Build ORB Models
+    needs: [detect-changes, test-models]
+    if: |
+      always() &&
+      (needs.detect-changes.outputs.models-changed == 'true' ||
+       needs.detect-changes.outputs.common-changed == 'true' ||
+       needs.detect-changes.outputs.schemas-changed == 'true') &&
+      (needs.test-models.result == 'success' || needs.test-models.result == 'skipped')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+      
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+      
+      - name: Install orb-common from source if changed
+        if: needs.detect-changes.outputs.common-changed == 'true'
+        run: |
+          cd backend/packages/orb-common
+          pip install -e .
+      
+      - name: Generate models from schemas
+        run: |
+          cd schemas
+          pip install -r requirements.txt
+          python generate.py
+      
+      - name: Build package
+        run: |
+          cd backend/packages/orb-models
+          python -m build
+      
+      - name: Check package
+        run: |
+          cd backend/packages/orb-models
+          twine check dist/*
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: orb-models-dist
+          path: backend/packages/orb-models/dist/
+
+  summary:
+    name: Deployment Summary
+    needs: [detect-changes, build-common, build-models]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Summary
+        run: |
+          echo "## Package Deployment Summary"
+          echo ""
+          echo "### Changes Detected:"
+          echo "- ORB Common: ${{ needs.detect-changes.outputs.common-changed }}"
+          echo "- ORB Models: ${{ needs.detect-changes.outputs.models-changed }}"
+          echo "- Schemas: ${{ needs.detect-changes.outputs.schemas-changed }}"
+          echo ""
+          echo "### Build Results:"
+          echo "- ORB Common: ${{ needs.build-common.result }}"
+          echo "- ORB Models: ${{ needs.build-models.result }}"
