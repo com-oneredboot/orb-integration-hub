@@ -9,10 +9,18 @@ This module provides shared security components including:
 """
 
 # Audit components
-from ..audit import (AuditEventCategory, AuditLogQuery, BaseAuditEventType,
-                     BaseAuditLogger, ComplianceFlag, FieldClassification,
-                     StateTracker, categorize_event,
-                     determine_compliance_flags, determine_severity)
+from ..audit import (
+    AuditEventCategory,
+    AuditLogQuery,
+    BaseAuditEventType,
+    BaseAuditLogger,
+    ComplianceFlag,
+    FieldClassification,
+    StateTracker,
+    categorize_event,
+    determine_compliance_flags,
+    determine_severity,
+)
 
 # Re-export audit components for backward compatibility
 __all__ = [

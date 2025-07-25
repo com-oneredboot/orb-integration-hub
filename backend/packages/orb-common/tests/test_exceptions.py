@@ -2,9 +2,16 @@
 
 import pytest
 
-from orb_common import (AuthenticationError, AuthorizationError, ConflictError,
-                        DataValidationError, OrbError, ResourceNotFoundError,
-                        SecurityException, ValidationError)
+from orb_common import (
+    AuthenticationError,
+    AuthorizationError,
+    ConflictError,
+    DataValidationError,
+    OrbError,
+    ResourceNotFoundError,
+    SecurityException,
+    ValidationError,
+)
 
 
 class TestExceptionHierarchy:
