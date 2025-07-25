@@ -8,6 +8,7 @@ This is the centralized technical documentation for the Orb Integration Hub proj
 - [System Architecture](./architecture.md) - Overall system design and component relationships
 - [Frontend Design](./frontend-design.md) - Frontend architecture patterns and conventions
 - [Schema Documentation](./schema.md) - Data models and schema definitions
+- [Python Packages](./python-packages.md) - Python package architecture and usage
 
 **API Documentation** 
 - [API Overview](./api.md) - REST and GraphQL API documentation
@@ -18,6 +19,7 @@ This is the centralized technical documentation for the Orb Integration Hub proj
 **Development**
 - [Development Guide](./development.md) - Setup, build, and development workflows
 - [Environment Configuration](./environment-configuration.md) - Environment setup and configuration
+- [Testing Guidelines](./testing-guidelines.md) - Testing best practices and structure
 
 ## 🎯 Project Management Documentation
 

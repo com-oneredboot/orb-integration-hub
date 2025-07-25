@@ -58,7 +58,8 @@ The schema generation process is handled by `schemas/generate.py`. This script:
 1. Reads entity definitions from YAML files
 2. Validates schema definitions
 3. Generates:
-   - Python models in `backend/src/models/`
+   - Python models in `backend/packages/orb-models/orb_models/models/`
+   - Python enums in `backend/packages/orb-models/orb_models/enums/`
    - TypeScript models in `frontend/src/models/`
    - GraphQL schema in `infrastructure/cloudformation/appsync_[timestamp].graphql`
    - DynamoDB template in `infrastructure/cloudformation/dynamodb.yml`

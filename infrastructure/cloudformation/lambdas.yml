@@ -364,7 +364,6 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       CodeUri: ../../backend/src/lambdas/organizations/
       Layers:
-        - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-common-layer-arn}}'
         - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-organizations-security-layer-arn}}'
       Environment:
         Variables:
@@ -383,7 +382,6 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       CodeUri: ../../backend/src/lambdas/users/
       Layers:
-        - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-common-layer-arn}}'
         - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-security-layer-arn}}'
       Environment:
         Variables:

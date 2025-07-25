@@ -7,14 +7,14 @@ import os
 from enum import Enum
 from typing import Dict, Any, List, Optional
 
-# Import from common security layer
-from security import (
+# Import from orb-common package
+from orb_common import (
     BaseAuditLogger,
     BaseAuditEventType,
     ComplianceFlag,
-    determine_compliance_flags
+    determine_compliance_flags,
+    AuditLogError
 )
-from security_exceptions import AuditLogError
 
 
 class UserAuditEventType(Enum):

@@ -4,6 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+orb-common = {path = "../../../packages/orb-common"}
 
 [dev-packages]
 

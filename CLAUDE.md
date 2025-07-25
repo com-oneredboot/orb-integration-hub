@@ -94,11 +94,26 @@ monorepo/
 ├── .mcp.json               # MCP server config
 ├── CLAUDE.md              # This file
 ├── backend/               # Python backend
+│   ├── src/
+│   │   ├── lambdas/      # Lambda functions
+│   │   └── layers/       # Lambda layers
+│   └── packages/         # Python packages
+│       ├── orb-common/   # Shared utilities
+│       └── orb-models/   # Auto-generated models
 ├── frontend/              # Angular frontend
+├── docs/                 # Technical documentation
+│   ├── testing-guidelines.md  # Testing best practices
+│   └── python-packages.md     # Package architecture
 └── .env                   # API keys
 ```
 
 ## Python/Angular Monorepo Patterns
+
+### Package Architecture
+- **orb-common**: Shared utilities (exceptions, security, audit, utils)
+- **orb-models**: Auto-generated models from schemas - DO NOT EDIT MANUALLY
+- **Lambda Functions**: Each has its own Pipfile with package dependencies
+- **Lambda Layers**: Package dependencies, no layer-to-layer imports
 
 ### Task Organization
 - **Infrastructure tasks**: Database, API setup, deployment
@@ -147,6 +162,11 @@ Required in `.env` and `.mcp.json`:
 - Use task dependencies for backend → frontend workflows
 - Log implementation details in subtasks for both Python and Angular code
 - Track API contracts and data models in task descriptions
+
+### Testing
+- Follow testing guidelines in `docs/testing-guidelines.md`
+- Keep tests alongside code, not in separate packages
+- Use pytest for Python, Jest/Karma for Angular
 
 ## Quick Reference
 

@@ -1,0 +1,14 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+orb-common = {path = "../../../packages/orb-common", editable = true}
+orb-models = {path = "../../../packages/orb-models", editable = true}
+boto3 = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.12"

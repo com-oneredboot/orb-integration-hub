@@ -11,6 +11,8 @@ Orb Integration Hub is a serverless application that provides a unified API for 
 - [Product Requirements (PRD)](.taskmaster/docs/prd.md) - Canonical requirements and feature planning document
 - [Architecture Documentation](docs/architecture.md) - System design and component interactions
 - [Development Guide](docs/development.md) - Setup and development workflow
+- [Testing Guidelines](docs/testing-guidelines.md) - Testing best practices and structure
+- [Python Packages](docs/python-packages.md) - Python package architecture guide
 - [Feature Registry](.taskmaster/docs/features/REGISTRY.md) - List of active and completed features
 - [Frontend Design Plan](docs/frontend-design.md) - Frontend architecture, UI/UX, and features
 - [Frontend Implementation Plan](.taskmaster/docs/frontend-implementation-plan.md) - Frontend development phases and tasks (feature-based)
@@ -29,17 +31,26 @@ Orb Integration Hub is a serverless application that provides a unified API for 
 
 ```
 orb-integration-hub/
-├── backend/           # Python backend services
-├── frontend/         # TypeScript frontend application
-├── docs/            # Technical documentation (API, architecture, dev guides)
-├── .taskmaster/      # Task management, planning, and feature docs
-│   ├── docs/        # Planning documents (PRD, implementation plans)
-│   └── tasks/       # Task definitions and tracking
-│   └── ...
-└── schemas/         # Schema definitions and generators
-    ├── entities/    # YAML schema definitions
-    ├── templates/   # Jinja templates for code generation
-    └── generate.py  # Schema generation script
+├── backend/                  # Python backend services
+│   ├── src/
+│   │   ├── lambdas/         # Lambda functions
+│   │   └── layers/          # Lambda layers
+│   └── packages/            # Python packages
+│       ├── orb-common/      # Shared utilities and security
+│       └── orb-models/      # Auto-generated data models
+├── frontend/                # TypeScript frontend application
+├── docs/                    # Technical documentation
+│   ├── architecture.md      # System architecture
+│   ├── development.md       # Development guide
+│   ├── testing-guidelines.md # Testing best practices
+│   └── python-packages.md   # Python package architecture
+├── .taskmaster/             # Task management and planning
+│   ├── docs/               # Planning documents (PRD, features)
+│   └── tasks/              # Task definitions and tracking
+└── schemas/                 # Schema definitions and generators
+    ├── entities/           # YAML schema definitions
+    ├── templates/          # Jinja templates for code generation
+    └── generate.py         # Schema generation script
 ```
 
 ## Task & Project Management (AI-Driven)

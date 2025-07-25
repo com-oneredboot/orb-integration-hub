@@ -29,9 +29,24 @@ This guide provides instructions for setting up the development environment and 
     ```
 3.  **Install Backend Dependencies:**
     ```bash
-    cd backend
-    pipenv install --dev
-    cd ..
+    # Install internal Python packages
+    cd backend/packages/orb-common
+    pip install -e .
+    cd ../orb-models
+    pip install -e .
+    cd ../../..
+    
+    # Install Lambda function dependencies
+    cd backend/src/lambdas
+    for dir in */; do
+        if [ -f "$dir/Pipfile" ]; then
+            echo "Installing dependencies for $dir"
+            cd "$dir"
+            pipenv install --dev
+            cd ..
+        fi
+    done
+    cd ../../..
     ```
 4.  **Install Schema Generator Dependencies:**
     ```bash
@@ -82,7 +97,8 @@ This guide provides instructions for setting up the development environment and 
     cd ..
     ```
 4.  Verify generated files:
-    - Check `backend/src/models/` for Python models
+    - Check `backend/packages/orb-models/orb_models/models/` for Python models
+    - Check `backend/packages/orb-models/orb_models/enums/` for Python enums
     - Check `frontend/src/models/` for TypeScript models
     - Check `infrastructure/cloudformation/` for:
       - Latest `appsync_*.graphql` file
@@ -130,6 +146,8 @@ This guide provides instructions for setting up the development environment and 
 
 ## 6. Running Tests
 
+For comprehensive testing guidelines and best practices, see [Testing Guidelines](./testing-guidelines.md).
+
 *   **Frontend:**
     ```bash
     cd frontend
@@ -141,13 +159,24 @@ This guide provides instructions for setting up the development environment and 
     ```
 *   **Backend:**
     ```bash
-    cd backend
-    # Testing: (Assuming pytest is configured in Pipfile/pyproject.toml)
-    pipenv run pytest
-    # Linting: (Using Black + Flake8 - see pyproject.toml)
-    pipenv run black --check .
-    pipenv run flake8 .
-    cd ..
+    # Test internal packages
+    cd backend/packages/orb-common
+    pytest
+    cd ../orb-models
+    pytest
+    cd ../../..
+    
+    # Test Lambda functions
+    cd backend/src/lambdas
+    for dir in */; do
+        if [ -f "$dir/Pipfile" ] && [ -d "$dir/tests" ]; then
+            echo "Testing $dir"
+            cd "$dir"
+            pipenv run pytest
+            cd ..
+        fi
+    done
+    cd ../../..
     ```
 
 ## 7. Coding Style & Conventions

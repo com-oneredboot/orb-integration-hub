@@ -27,11 +27,6 @@ on:
         required: true
         type: string
         default: 'integration-hub'
-      deploy_common:
-        description: 'common'
-        required: false
-        type: boolean
-        default: false
       deploy_organizations_security:
         description: 'organizations_security'
         required: false
@@ -83,12 +78,9 @@ jobs:
         
         # Check if deploy_all is true
         if [ "${{ inputs.deploy_all }}" == "true" ]; then
-          LAYERS="common,organizations_security,stripe,users_security"
+          LAYERS="organizations_security,stripe,users_security"
         else
           # Build layers list based on individual selections
-          if [ "${{ inputs.deploy_common }}" == "true" ]; then
-            LAYERS="${LAYERS}common,"
-          fi
           if [ "${{ inputs.deploy_organizations_security }}" == "true" ]; then
             LAYERS="${LAYERS}organizations_security,"
           fi
@@ -218,7 +210,6 @@ jobs:
         if [ "${{ inputs.deploy_all }}" == "true" ]; then
           echo "- ✅ All layers" >> $GITHUB_STEP_SUMMARY
         else
-          [ "${{ inputs.deploy_common }}" == "true" ] && echo "- ✅ common" >> $GITHUB_STEP_SUMMARY
           [ "${{ inputs.deploy_organizations_security }}" == "true" ] && echo "- ✅ organizations_security" >> $GITHUB_STEP_SUMMARY
           [ "${{ inputs.deploy_stripe }}" == "true" ] && echo "- ✅ stripe" >> $GITHUB_STEP_SUMMARY
           [ "${{ inputs.deploy_users_security }}" == "true" ] && echo "- ✅ users_security" >> $GITHUB_STEP_SUMMARY

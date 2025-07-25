@@ -1,6 +1,6 @@
 # Task ID: 47
 # Title: Implement Custom Query Architecture for GraphQL
-# Status: pending
+# Status: done
 # Dependencies: None
 # Priority: high
 # Description: Create a hybrid architecture that allows custom GraphQL queries to be defined in YAML entity schemas while maintaining the automated generation system
@@ -89,9 +89,21 @@ Update organization listing components to use the new custom query instead of mu
 Successfully deployed OrganizationsWithDetailsQueryByOwnerId resolver after fixing CloudFormation deployment issues. The query is working correctly and returning organization data with userRole (currently "NONE" as expected), memberCount, and applicationCount. Identified security concern: KMS key details (kmsKeyId, kmsKeyArn, kmsAlias) are being exposed in the GraphQL response and need to be removed from the query response to prevent sensitive infrastructure information leakage.
 </info added on 2025-07-17T16:52:49.252Z>
 
-## 12. Add Integration Tests and Documentation for Custom Query Architecture [pending]
+## 12. Add Integration Tests and Documentation for Custom Query Architecture [done]
 ### Dependencies: 47.11
 ### Description: Create comprehensive integration tests and documentation for the new custom query architecture
 ### Details:
 Implement end-to-end integration tests that validate the complete custom query flow from YAML definition to frontend consumption. Create documentation explaining how to define custom queries in YAML files, implement custom resolvers, and use them in the frontend. Add examples and best practices for custom query development. Include troubleshooting guides for common issues.
+<info added on 2025-07-22T19:39:36.543Z>
+Successfully completed comprehensive documentation and integration tests for custom query architecture. Delivered three key components:
+
+**Documentation Created:**
+- docs/custom-query-architecture.md: Complete architecture guide covering design components, YAML schema definition format, step-by-step implementation guide, best practices, security considerations, troubleshooting guide, and migration guide from multiple queries to custom queries
+- docs/examples/add-custom-query-example.md: Practical walkthrough example for adding ApplicationsWithUserCountsQuery, including YAML definition, Lambda implementation, frontend usage, common patterns for filtering/lookups/aggregations, and testing strategies
+
+**Integration Tests Implemented:**
+- backend/src/lambdas/organizations/tests/test_custom_queries.py: Comprehensive test suite covering success cases with enrichment data, error handling scenarios, performance testing with large datasets, authorization checks, and sensitive field filtering verification
+
+The documentation provides developers with complete guidance for creating and using custom queries effectively, while the integration tests ensure robust validation of the entire custom query flow from YAML definition to frontend consumption.
+</info added on 2025-07-22T19:39:36.543Z>
 

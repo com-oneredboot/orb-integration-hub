@@ -31,7 +31,7 @@ from aws_audit_logger import (
 )
 
 # Import specific exceptions from common layer
-from security_exceptions import (
+from orb_common.security_exceptions import (
     AuthenticationError,
     DataValidationError,
     ResourceNotFoundError,

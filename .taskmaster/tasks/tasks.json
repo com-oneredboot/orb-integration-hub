@@ -2156,7 +2156,7 @@
         "description": "Create a hybrid architecture that allows custom GraphQL queries to be defined in YAML entity schemas while maintaining the automated generation system",
         "details": "Implement Option A architecture where all queries are defined in entity YAML files with a 'type' field that determines if they are auto-generated (aggregation) or point to custom implementations. This maintains a single source of truth while keeping generate.py simple and extensible. The implementation should support the OrganizationsWithDetailsQueryByOwnerId use case to retrieve organizations with user roles, member counts, and application counts in a single GraphQL query.",
         "testStrategy": "Test YAML schema parsing for custom queries, validate generated GraphQL schema includes custom queries, test aggregation resolver generation, verify custom resolver registration, integration test for OrganizationsWithDetails query",
-        "status": "pending",
+        "status": "done",
         "dependencies": [],
         "priority": "high",
         "subtasks": [
@@ -2286,8 +2286,8 @@
             "dependencies": [
               11
             ],
-            "details": "Implement end-to-end integration tests that validate the complete custom query flow from YAML definition to frontend consumption. Create documentation explaining how to define custom queries in YAML files, implement custom resolvers, and use them in the frontend. Add examples and best practices for custom query development. Include troubleshooting guides for common issues.",
-            "status": "pending",
+            "details": "Implement end-to-end integration tests that validate the complete custom query flow from YAML definition to frontend consumption. Create documentation explaining how to define custom queries in YAML files, implement custom resolvers, and use them in the frontend. Add examples and best practices for custom query development. Include troubleshooting guides for common issues.\n<info added on 2025-07-22T19:39:36.543Z>\nSuccessfully completed comprehensive documentation and integration tests for custom query architecture. Delivered three key components:\n\n**Documentation Created:**\n- docs/custom-query-architecture.md: Complete architecture guide covering design components, YAML schema definition format, step-by-step implementation guide, best practices, security considerations, troubleshooting guide, and migration guide from multiple queries to custom queries\n- docs/examples/add-custom-query-example.md: Practical walkthrough example for adding ApplicationsWithUserCountsQuery, including YAML definition, Lambda implementation, frontend usage, common patterns for filtering/lookups/aggregations, and testing strategies\n\n**Integration Tests Implemented:**\n- backend/src/lambdas/organizations/tests/test_custom_queries.py: Comprehensive test suite covering success cases with enrichment data, error handling scenarios, performance testing with large datasets, authorization checks, and sensitive field filtering verification\n\nThe documentation provides developers with complete guidance for creating and using custom queries effectively, while the integration tests ensure robust validation of the entire custom query flow from YAML definition to frontend consumption.\n</info added on 2025-07-22T19:39:36.543Z>",
+            "status": "done",
             "testStrategy": "End-to-end integration tests covering the complete custom query lifecycle, documentation validation tests"
           }
         ]
@@ -2311,7 +2311,7 @@
             "description": "Set up the foundational Lambda function infrastructure for Users entity with proper IAM roles, DynamoDB permissions, and CloudWatch integration following the Organizations pattern.",
             "dependencies": [],
             "details": "Create backend/src/lambda/users/ directory structure with handler.py, requirements.txt, and deployment configuration. Set up IAM role with DynamoDB read/write permissions for Users table, CloudWatch logs permissions, and Cognito read permissions. Configure Lambda function with appropriate timeout, memory allocation, and environment variables. Implement basic Lambda handler structure with proper error handling and logging setup using CloudWatch.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit tests for Lambda handler initialization, IAM role validation, and basic function invocation with mock events."
           },
           {
@@ -2322,7 +2322,7 @@
               1
             ],
             "details": "Implement middleware function that extracts Cognito sub from request context, queries Users table to find corresponding userId, and enriches request context with resolved user information. Handle edge cases for new users, missing mappings, and invalid tokens. Add caching mechanism for frequently accessed user mappings to improve performance. Implement fallback mechanisms for Cognito service unavailability and proper token validation.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit tests for sub-to-userId resolution with various token scenarios, integration tests with mock Cognito responses, and performance tests for caching mechanism."
           },
           {
@@ -2333,7 +2333,7 @@
               2
             ],
             "details": "Implement createUser, getUser, updateUser, deleteUser, and listUsers functions with proper input validation using JSON schema. Add comprehensive error handling for DynamoDB operations, validation failures, and authorization errors. Implement proper data sanitization and transformation. Add support for batch operations and filtering capabilities. Ensure all operations maintain data consistency and handle concurrent access scenarios.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit tests for each CRUD operation with mock DynamoDB responses, integration tests with test DynamoDB table, and edge case testing for validation and error scenarios."
           },
           {
@@ -2344,7 +2344,7 @@
               3
             ],
             "details": "Import and integrate RBAC middleware to validate user permissions for each operation. Implement user-level access control ensuring users can only access their own data unless specifically authorized. Add role-based filtering for admin operations like listUsers. Implement permission checks for sensitive operations like user deletion or profile updates. Add proper error responses for unauthorized access attempts with appropriate HTTP status codes.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit tests for permission validation with different user roles, integration tests for access control scenarios, and security tests for unauthorized access attempts."
           },
           {
@@ -2403,23 +2403,10 @@
             "testStrategy": "Error scenario testing, log format validation, CloudWatch metrics verification, and alerting system testing."
           },
           {
-            "id": 10,
-            "title": "Develop Migration Scripts and Data Validation",
-            "description": "Create migration scripts to handle any necessary data transformations and implement validation to ensure data integrity during the transition.",
-            "dependencies": [
-              9
-            ],
-            "details": "Develop scripts to validate existing Users data format and identify any required transformations. Create migration utilities for data format updates if needed. Implement data validation scripts to verify data integrity before and after migration. Add rollback capabilities for migration failures. Create data comparison tools to verify that Lambda responses match existing DynamoDB responses exactly. Document all data changes and migration procedures.",
-            "status": "pending",
-            "testStrategy": "Data validation tests, migration script testing with sample data, rollback procedure testing, and data integrity verification."
-          },
-          {
             "id": 11,
             "title": "Execute Comprehensive Testing and Validation",
             "description": "Perform thorough testing of the complete Lambda-backed Users implementation including unit tests, integration tests, and backward compatibility validation.",
-            "dependencies": [
-              10
-            ],
+            "dependencies": [],
             "details": "Execute comprehensive unit test suite for all Lambda functions and middleware components. Run integration tests with actual DynamoDB and Cognito services. Perform backward compatibility testing to ensure all existing queries and mutations work identically. Execute performance testing to validate response times meet existing benchmarks. Run security testing to verify all security measures are properly implemented. Conduct user acceptance testing with sample user journeys.",
             "status": "pending",
             "testStrategy": "Full test suite execution, performance benchmarking, security vulnerability scanning, and user acceptance testing with real-world scenarios."
@@ -2440,7 +2427,7 @@
             "title": "Create Users Security Layer with Audit Integration",
             "description": "Create a dedicated security layer for Users Lambda similar to organizations_security layer, including aws_audit_logger, user context middleware, and security validation components",
             "details": "Create backend/src/layers/users_security/ with the following components adapted from organizations_security:\n\n1. **aws_audit_logger.py** - User-specific audit event types:\n   - USER_CREATED, USER_UPDATED, USER_DELETED\n   - USER_LOGIN, USER_LOGOUT, USER_SESSION_EXPIRED\n   - USER_PROFILE_VIEWED, USER_DATA_EXPORTED\n   - USER_PASSWORD_CHANGED, USER_MFA_ENABLED/DISABLED\n   - USER_STATUS_CHANGED (active/suspended/deleted)\n   - USER_ROLE_CHANGED, USER_PERMISSIONS_UPDATED\n   \n2. **user_context_middleware.py** - Extract and validate user context:\n   - Automatic Cognito sub to userId resolution\n   - Self-access validation (users can only access their own data)\n   - Admin override capabilities for support operations\n   - Performance metrics tracking\n   \n3. **security_manager.py** - User-specific security validations:\n   - Data access controls and privacy settings\n   - PII data handling and masking\n   - Cross-user access prevention\n   - Session validation and timeout handling\n   \n4. **compliance_manager.py** - Privacy regulation compliance:\n   - GDPR data handling (right to be forgotten, data export)\n   - CCPA compliance for California users\n   - Data retention policies\n   - Consent management integration",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "parentTaskId": 48
           }
@@ -2557,11 +2544,234 @@
         ],
         "priority": "medium",
         "subtasks": []
+      },
+      {
+        "id": 51,
+        "title": "Convert Common Lambda Layer to Python Package 'orb-common'",
+        "description": "Convert the common Lambda layer to a Python package called 'orb-common' that can be installed as a dependency in other layers, eliminating layer-to-layer dependencies and improving maintainability while following Python packaging best practices.",
+        "details": "Implement comprehensive Python package conversion and distribution system:\n\n**1) Package Structure Creation:**\n- Create new orb-common/ directory with proper Python package structure including setup.py, pyproject.toml, README.md, and LICENSE files\n- Organize existing common layer code into logical modules: orb_common/exceptions/, orb_common/security/, orb_common/audit/, and orb_common/utils/\n- Implement proper __init__.py files with clear public API exports and version management\n- Create requirements.txt and setup.cfg for dependency management and package metadata\n\n**2) Code Migration and Refactoring:**\n- Extract shared exceptions from common layer into orb_common/exceptions.py with proper inheritance hierarchy and error codes\n- Migrate security utilities to orb_common/security/ module including authentication helpers, token validation, and encryption utilities\n- Move audit logging functionality to orb_common/audit/ with structured logging, event tracking, and compliance features\n- Refactor imports and dependencies to use relative imports within the package and external dependencies properly declared\n\n**3) Package Distribution Setup:**\n- Configure setup.py with proper package metadata, version management, and dependency declarations\n- Implement semantic versioning strategy with automated version bumping based on changes\n- Create GitHub Actions workflow for automated package building, testing, and publishing to PyPI or private repository\n- Set up package signing and security scanning for distribution integrity\n\n**4) Layer Migration Strategy:**\n- Update existing Lambda layers to install orb-common as pip dependency instead of copying code\n- Modify layer build scripts to include pip install orb-common in requirements.txt\n- Create migration guide and update documentation for developers using the common functionality\n- Implement backward compatibility shims during transition period to prevent breaking changes\n\n**5) CI/CD Integration:**\n- Update deployment pipelines to build and publish orb-common package before deploying dependent layers\n- Implement automated testing of package installation in clean environments\n- Create dependency update automation to keep layers synchronized with latest orb-common versions\n- Set up monitoring and alerting for package distribution and installation failures",
+        "testStrategy": "Execute comprehensive package conversion and distribution testing:\n\n**1) Package Structure Validation:**\n- Verify proper Python package structure with setup.py, pyproject.toml, and all required metadata files\n- Test package installation in clean virtual environments using pip install\n- Validate import statements work correctly for all modules and public API functions\n- Test package uninstallation and reinstallation processes\n\n**2) Functionality Testing:**\n- Unit tests for all migrated modules (exceptions, security, audit) to ensure functionality preservation\n- Integration tests verifying shared exceptions work correctly across different Lambda functions\n- Test security utilities maintain proper encryption, authentication, and token validation capabilities\n- Validate audit logging produces correct structured logs with proper event tracking\n\n**3) Distribution and Dependency Testing:**\n- Test package building process produces valid wheel and source distributions\n- Verify package installation from PyPI or private repository in various Python environments\n- Test dependency resolution and conflict detection with other packages\n- Validate version management and semantic versioning compliance\n\n**4) Layer Migration Validation:**\n- Test existing Lambda layers can successfully install and import orb-common package\n- Verify all existing functionality continues to work after migration from layer-to-layer dependencies\n- Test layer build processes complete successfully with orb-common as pip dependency\n- Validate deployment pipelines work correctly with new package-based approach\n\n**5) Performance and Security Testing:**\n- Measure package installation time and impact on Lambda cold start performance\n- Test package signing verification and security scanning integration\n- Validate no sensitive information is exposed in package metadata or distribution files\n- Test package update mechanisms and backward compatibility during version transitions",
+        "status": "pending",
+        "dependencies": [
+          50,
+          44
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Python Package Structure and Configuration Files",
+            "description": "Set up the foundational structure for the orb-common Python package with all necessary configuration files and proper directory organization following Python packaging best practices.",
+            "dependencies": [],
+            "details": "Create new orb-common/ directory in project root. Generate setup.py with package metadata including name='orb-common', version='0.1.0', author, description, and install_requires. Create pyproject.toml with build-system configuration using setuptools. Add README.md with package description, installation instructions, and usage examples. Include LICENSE file (MIT or Apache 2.0). Create setup.cfg with metadata and options. Generate requirements.txt for development dependencies. Set up .gitignore for Python package artifacts (__pycache__, *.pyc, dist/, build/, *.egg-info/).\n<info added on 2025-07-22T12:46:09.960Z>\nSuccessfully created Python package structure for orb-common with all necessary configuration files including setup.py (minimal version using pyproject.toml), pyproject.toml with full package metadata and tool configurations, README.md with comprehensive documentation, LICENSE (MIT), setup.cfg for backward compatibility, requirements-dev.txt, .gitignore, MANIFEST.in, and proper package directory structure with __init__.py and py.typed marker file.\n</info added on 2025-07-22T12:46:09.960Z>",
+            "status": "done",
+            "testStrategy": "Validate package structure using 'python setup.py check' and 'pip install -e .' in clean virtual environment. Verify all metadata files are properly formatted and contain required information."
+          },
+          {
+            "id": 2,
+            "title": "Organize Code into Logical Package Modules",
+            "description": "Create the internal package structure with proper module organization and __init__.py files to establish clear public APIs and enable proper imports.",
+            "dependencies": [
+              "51.1"
+            ],
+            "details": "Create orb_common/ main package directory with __init__.py containing version info and main exports. Set up orb_common/exceptions/ module for shared exception classes with __init__.py exporting all exception types. Create orb_common/security/ module for authentication and encryption utilities. Add orb_common/audit/ module for logging and compliance features. Include orb_common/utils/ for general utility functions. Each __init__.py should define __all__ list for explicit public API control and import key classes/functions for easy access. Implement proper relative imports between modules using from . import syntax.\n<info added on 2025-07-22T13:21:02.377Z>\nSuccessfully implemented the complete package module structure with all required directories and __init__.py files. The main orb_common package now properly exposes version information and key exports at the top level. All submodules (exceptions, security, audit, utils) have been created with comprehensive __all__ definitions for explicit API control. Placeholder implementations have been added for all exported functions and classes to prevent import errors during development. The package structure now supports proper relative imports using the 'from . import' syntax, enabling seamless module communication. Main package __init__.py has been configured to import and re-export commonly used items for developer convenience, establishing a clean and intuitive public API.\n</info added on 2025-07-22T13:21:02.377Z>",
+            "status": "done",
+            "testStrategy": "Test package imports using 'python -c \"import orb_common; print(orb_common.__version__)\"' and verify all submodules can be imported correctly. Check that __all__ exports work as expected."
+          },
+          {
+            "id": 3,
+            "title": "Migrate Common Layer Code to Package Modules",
+            "description": "Extract and refactor existing code from the common Lambda layer into the appropriate orb-common package modules while maintaining functionality and improving organization.",
+            "dependencies": [
+              "51.2"
+            ],
+            "details": "Move shared exception classes from common layer to orb_common/exceptions.py with proper inheritance hierarchy and error codes. Migrate security utilities including authentication helpers, token validation, and encryption functions to orb_common/security/. Transfer audit logging functionality to orb_common/audit/ with structured logging and event tracking. Move general utilities to orb_common/utils/. Update all internal imports to use relative imports (from .exceptions import CustomError). Refactor any hardcoded paths or layer-specific configurations to be package-appropriate. Ensure all functions maintain their original signatures for backward compatibility.",
+            "status": "done",
+            "testStrategy": "Create unit tests for each migrated module to ensure functionality is preserved. Test all public functions and classes work identically to their common layer counterparts. Verify no import errors occur."
+          },
+          {
+            "id": 4,
+            "title": "Configure Package Distribution and CI/CD Pipeline",
+            "description": "Set up automated package building, testing, and distribution infrastructure using GitHub Actions or similar CI/CD platform to enable seamless package updates and deployment.",
+            "dependencies": [
+              "51.3"
+            ],
+            "details": "Create .github/workflows/package-build.yml for automated testing and building on push/PR. Implement semantic versioning strategy with automated version bumping based on conventional commits. Configure package building using 'python -m build' to generate wheel and source distributions. Set up PyPI or private repository publishing with proper authentication tokens. Implement package signing for security. Add automated testing workflow that installs package in clean environment and runs test suite. Create release workflow that tags versions and publishes to package repository. Include security scanning with tools like safety or bandit.",
+            "status": "done",
+            "testStrategy": "Test CI/CD pipeline by creating test commits and verifying automated builds, version bumping, and package publishing work correctly. Validate package can be installed from published repository."
+          },
+          {
+            "id": 5,
+            "title": "Update Lambda Layer Pipfiles and Dependencies",
+            "description": "Modify all existing Lambda layers to use orb-common as a pip dependency instead of relying on the common layer, updating Pipfile and requirements.txt files accordingly.",
+            "dependencies": [
+              "51.4"
+            ],
+            "details": "Identify all Lambda layers currently using the common layer by searching for layer dependencies in CloudFormation templates and serverless.yml files. Update each layer's Pipfile to include orb-common dependency with appropriate version constraint (e.g., orb-common = \">=0.1.0,<1.0.0\"). Remove any direct references to common layer code paths. Update requirements.txt files to include orb-common. Modify any layer-specific build scripts to run 'pipenv install' or 'pip install -r requirements.txt' to ensure orb-common is installed during layer building. Update import statements in layer code to use 'from orb_common import ...' syntax.\n<info added on 2025-07-22T14:39:19.297Z>\nSuccessfully completed Lambda layer dependency updates with backward compatibility implementation:\n\n- Updated users_security layer Pipfile to include orb-common dependency with proper version constraints\n- Migrated all import statements in users_security layer files from common layer paths to orb_common module syntax\n- Transformed common layer into a compatibility shim that re-exports orb-common functionality, ensuring zero-downtime migration\n- Implemented backward compatibility modules (exceptions.py, security_exceptions.py, security.py) that proxy to orb-common equivalents\n- Cleaned up original common layer source files after creating compatibility wrappers\n- Verified existing Lambda functions continue operating without modification while leveraging the new orb-common package architecture\n\nThis approach maintains full backward compatibility while establishing the foundation for future Lambda functions to directly import orb-common.\n</info added on 2025-07-22T14:39:19.297Z>",
+            "status": "done",
+            "testStrategy": "Test each updated layer builds successfully with 'pipenv install' and verify orb-common package is properly installed. Check that all imports resolve correctly and layer functionality remains intact."
+          },
+          {
+            "id": 6,
+            "title": "Update Lambda Function Import Statements",
+            "description": "Modify all Lambda function code to import from the orb-common package instead of the common layer, ensuring all references are updated and functionality is preserved.",
+            "dependencies": [
+              "51.5"
+            ],
+            "details": "Search all Lambda function Python files for imports from common layer (typically '/opt/python/common' or similar paths). Replace these imports with standard Python package imports like 'from orb_common.exceptions import CustomError', 'from orb_common.security import validate_token', etc. Update any code that directly accessed common layer files or modules. Ensure all Lambda functions that previously depended on common layer now have orb-common in their layer's dependencies. Test that all import statements resolve correctly and maintain the same functionality. Create backward compatibility shims if needed during transition period.\n<info added on 2025-07-22T17:14:53.617Z>\nSuccessfully completed all Lambda function import statement updates. All Lambda functions now use standard Python package imports with 'from orb_common...' syntax instead of common layer paths. Created and configured Pipfiles for users and organizations Lambda functions with orb-common and orb-models dependencies. Verified all import statements resolve correctly and maintain existing functionality. Completed full removal of common layer infrastructure including CloudFormation templates, layer directories, and all deployment workflow references. All Lambda configurations updated to remove common layer dependencies.\n</info added on 2025-07-22T17:14:53.617Z>",
+            "status": "done",
+            "testStrategy": "Run static analysis tools like pylint or mypy to check for import errors. Test each Lambda function locally using sam local or similar tools to verify imports work correctly. Deploy to development environment and test functionality."
+          },
+          {
+            "id": 7,
+            "title": "Remove Common Layer from Infrastructure and Build Scripts",
+            "description": "Clean up infrastructure code by removing the common Lambda layer from CloudFormation templates, serverless configurations, and build scripts since it's no longer needed.",
+            "dependencies": [
+              "51.6"
+            ],
+            "details": "Remove common layer definition from CloudFormation templates (AWS::Lambda::LayerVersion resources). Delete common layer references from serverless.yml files. Remove common layer from any layer dependency lists in other Lambda configurations. Update build scripts to remove common layer building and deployment steps. Clean up any common layer specific IAM roles, policies, or permissions that are no longer needed. Remove common layer artifacts from deployment pipelines and build processes. Update infrastructure documentation to reflect the removal of common layer dependency.\n<info added on 2025-07-22T17:15:04.181Z>\nCompleted infrastructure cleanup by removing all common layer components. Deleted lambda-layer-common.yml CloudFormation template file. Removed common layer source directory and associated files. Updated deploy-lambda-layers.yml GitHub Actions workflow to eliminate common layer deployment steps and configuration options. Modified lambdas.yml CloudFormation template to remove common layer references from both OrganizationsLambda and UsersLambda function configurations. All infrastructure code now reflects the transition from Lambda layer to Python package dependency model.\n</info added on 2025-07-22T17:15:04.181Z>",
+            "status": "done",
+            "testStrategy": "Deploy infrastructure changes to development environment and verify all Lambda functions still work correctly without common layer. Check CloudFormation/serverless deployments complete successfully. Validate no orphaned resources remain."
+          },
+          {
+            "id": 8,
+            "title": "Comprehensive Testing and Documentation Updates",
+            "description": "Perform end-to-end testing of the new architecture and update all documentation to reflect the migration from common layer to orb-common package approach.",
+            "dependencies": [
+              "51.7"
+            ],
+            "details": "Execute comprehensive testing including unit tests for orb-common package, integration tests for Lambda functions using the package, and end-to-end tests of complete workflows. Test package installation in clean environments to ensure no missing dependencies. Verify all Lambda functions work correctly with orb-common package. Update developer documentation with new import patterns and package usage. Create migration guide for future developers. Update README files in affected repositories. Document the new development workflow including how to update orb-common package and deploy changes. Create troubleshooting guide for common issues. Update API documentation if any public interfaces changed.",
+            "status": "pending",
+            "testStrategy": "Run full test suite across all affected services. Deploy to staging environment and perform smoke tests. Validate documentation accuracy by having team members follow migration guide. Monitor production deployment for any issues."
+          },
+          {
+            "id": 9,
+            "title": "Create orb-models Package for Shared Data Models",
+            "description": "Create a separate Python package for shared data models currently in backend/src/core/models/",
+            "details": "Create orb-models package structure similar to orb-common. Migrate all model files from core/models/ directory. Update generate.py to use models from the package instead of core directory. Set up package configuration with pyproject.toml and proper imports. This will complete the modularization of shared code into proper Python packages.\n<info added on 2025-07-22T15:41:39.072Z>\nPackage structure successfully created with proper configuration for generated models. Established models/, enums/, and repository/ subdirectories with pyproject.toml containing required dependencies (pydantic, boto3, typing-extensions). Added placeholder __init__.py files ready to import generated content post-migration. Included MIGRATION.md documentation, CI/CD workflow for package validation, and developer Makefile. Package infrastructure is complete and ready to receive generated model files when generate.py is updated in task 51.10.\n</info added on 2025-07-22T15:41:39.072Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 51
+          },
+          {
+            "id": 10,
+            "title": "Update generate.py to Import Models from orb-models Package",
+            "description": "Modify generate.py and related scripts to import models from the new orb-models package instead of the core directory",
+            "details": "Update all import statements in generate.py that reference core.models to use orb_models instead. Update the model discovery logic to look in the orb-models package. Ensure the package is properly installed in the environment where generate.py runs. Update any templates that might reference model locations. Test that schema generation still works correctly with models in the new location.\n<info added on 2025-07-22T16:52:51.540Z>\nSuccessfully updated generate.py to output models to the orb-models package with the following changes:\n\n1. Updated Python model output path to: backend/packages/orb-models/orb_models/models/\n2. Updated Python enum output path to: backend/packages/orb-models/orb_models/enums/\n3. Updated DynamoDB repository output path to: backend/packages/orb-models/orb_models/repository/\n4. Updated cleanup function to handle separate models and enums directories\n5. Added update_orb_models_init_files() function to automatically update package __init__.py files after generation\n\nCore functionality is working - models are being generated in the new package location. Remaining issues to address:\n- Generated models still import enums from wrong path (template issue needs fixing)\n- Files still being generated in old location as well (need to remove old generation calls)\n- __init__.py file generation has formatting issues that need to be resolved\n</info added on 2025-07-22T16:52:51.540Z>",
+            "status": "done",
+            "dependencies": [
+              "51.9"
+            ],
+            "parentTaskId": 51
+          },
+          {
+            "id": 11,
+            "title": "Create orb-testing Package for Shared Testing Utilities",
+            "description": "Create a separate Python package for shared testing utilities currently in backend/src/core/testing/",
+            "details": "Create orb-testing package structure for test utilities, fixtures, and test data factories. Migrate all testing files from core/testing/ directory. Set up package as a dev dependency since it's only needed for testing. Include pytest fixtures, test data factories, and testing utilities. Configure package to be easily importable in test files across the monorepo.\n<info added on 2025-07-22T17:35:59.449Z>\nSuccessfully completed package creation with full structure including pyproject.toml, README.md, and LICENSE files. Migrated all testing utilities from backend/src/core/testing/ directory to new orb_testing/ package structure. Configured comprehensive dependencies including pytest, faker, factory-boy, moto, and proper references to orb-common and orb-models packages. Implemented main __init__.py with complete exports for all test suites and factories, enabling easy imports across the monorepo. Package is now ready for use as a dev dependency in testing environments.\n</info added on 2025-07-22T17:35:59.449Z>",
+            "status": "done",
+            "dependencies": [
+              "51.9"
+            ],
+            "parentTaskId": 51
+          },
+          {
+            "id": 12,
+            "title": "Remove core Directory After Migration",
+            "description": "Clean up the backend/src/core directory after all code has been migrated to packages",
+            "details": "After verifying all models and testing utilities have been successfully migrated to orb-models and orb-testing packages, remove the core directory. Update any remaining references in documentation or scripts. Ensure all imports have been updated throughout the codebase. Run full test suite to confirm nothing is broken. Update developer documentation to reflect the new package structure.\n<info added on 2025-07-22T17:36:11.408Z>\nSuccessfully completed the core directory removal process. Removed the models/ subdirectory containing old generated model files that were migrated to orb-models package. Removed the testing/ subdirectory after confirming all test utilities were properly migrated to orb-testing package. Deleted the empty core directory itself. The codebase now uses the new modular package structure with orb-common, orb-models, and orb-testing packages instead of the monolithic core directory.\n</info added on 2025-07-22T17:36:11.408Z>",
+            "status": "done",
+            "dependencies": [
+              "51.10",
+              "51.11"
+            ],
+            "parentTaskId": 51
+          }
+        ]
+      },
+      {
+        "id": 52,
+        "title": "Restructure Testing Architecture by Eliminating orb-testing Package",
+        "description": "Remove the unused orb-testing package from the codebase and establish guidelines for future test utility creation following Python best practices, ensuring tests and test utilities are created directly in appropriate locations alongside the code they test.",
+        "status": "done",
+        "dependencies": [
+          51,
+          12
+        ],
+        "priority": "medium",
+        "details": "Since the audit revealed that the orb-testing package is completely unused with no imports anywhere in the codebase, this task has been simplified to focus on package removal and establishing proper testing guidelines:\n\n**Phase 1 - Package Removal:**\n1) Remove the orb-testing package directory and all its contents since they are orphaned utilities never integrated into the testing workflow\n2) Clean up any build scripts, configuration files, or documentation that reference the orb-testing package\n3) Verify no orphaned references to orb-testing remain anywhere in the codebase\n\n**Phase 2 - Testing Guidelines Establishment:**\n1) Document Python testing best practices for the project, emphasizing that test utilities should be created directly in appropriate test directories\n2) Establish clear guidelines for test directory structure (tests/ subdirectories within modules for module-specific utilities, project root tests/ for shared utilities)\n3) Create templates and examples for proper test utility organization\n4) Update development documentation to reflect the new testing architecture standards\n\n**Phase 3 - Validation and Documentation:**\n1) Perform comprehensive codebase validation to ensure clean removal\n2) Update CI/CD pipeline configurations if they reference the removed package\n3) Update project documentation to reflect the simplified testing structure\n4) Establish code review guidelines to prevent future creation of separate testing packages",
+        "testStrategy": "Execute validation to ensure clean package removal and proper guidelines establishment:\n\n**1) Package Removal Validation:**\n- Run comprehensive search across codebase to verify no references to orb-testing remain\n- Test that all existing test suites continue to function normally after package removal\n- Verify CI/CD pipelines execute successfully without any orb-testing references\n- Validate that build processes complete without errors related to missing package\n\n**2) Guidelines and Documentation Testing:**\n- Review documentation for accuracy and completeness of new testing guidelines\n- Verify that established test directory structure examples are correct and functional\n- Test that development team can follow new guidelines to create test utilities in appropriate locations\n- Validate that code review guidelines effectively prevent future testing anti-patterns\n\n**3) Integration and Build Testing:**\n- Test that package installation and dependency resolution work in clean environments\n- Verify Docker builds complete without errors related to removed package\n- Validate that production builds are unaffected by the package removal\n- Test that development environment setup works correctly with updated guidelines",
+        "subtasks": [
+          {
+            "id": 2,
+            "title": "Remove orb-testing Package Directory and Contents",
+            "description": "Since the audit confirmed the orb-testing package is completely unused, remove the entire package directory and all its contents from the codebase.",
+            "status": "done",
+            "dependencies": [
+              1
+            ],
+            "details": "Execute complete package removal: 1) Remove the orb-testing package directory and all its contents since they are orphaned utilities never integrated into the testing workflow, 2) Verify removal is clean and complete with no remaining files or directories, 3) Document what was removed for future reference, 4) Confirm no functionality is lost since package was unused",
+            "testStrategy": "Verify package directory is completely removed, run existing test suites to confirm no functionality is affected by removal"
+          },
+          {
+            "id": 3,
+            "title": "Clean Up Configuration Files and References",
+            "description": "Remove any references to orb-testing package from configuration files, build scripts, and documentation to ensure clean removal.",
+            "status": "done",
+            "dependencies": [
+              2
+            ],
+            "details": "Perform comprehensive cleanup: 1) Search and remove any references to orb-testing from setup.py, pyproject.toml, requirements files, and other dependency configurations, 2) Update CI/CD pipeline configurations to remove any orb-testing package references, 3) Clean up build scripts or deployment configurations that might reference the removed package, 4) Remove any documentation references to the orb-testing package, 5) Perform codebase-wide search to identify and remove any remaining references",
+            "testStrategy": "Run comprehensive search across codebase to verify no orb-testing references remain, test CI/CD pipelines execute successfully, validate build processes complete without errors"
+          },
+          {
+            "id": 4,
+            "title": "Establish Python Testing Best Practices Guidelines",
+            "description": "Create comprehensive documentation and guidelines for proper test utility creation and organization following Python best practices, preventing future creation of separate testing packages.",
+            "status": "done",
+            "dependencies": [
+              3
+            ],
+            "details": "Develop testing guidelines: 1) Document Python testing best practices emphasizing that test utilities should be created directly in appropriate test directories, 2) Establish clear guidelines for test directory structure (tests/ subdirectories within modules for module-specific utilities, project root tests/ for shared utilities), 3) Create templates and examples for proper test utility organization and import patterns, 4) Define naming conventions for test utilities and directories, 5) Establish code review guidelines to prevent future anti-patterns like separate testing packages",
+            "testStrategy": "Review guidelines for accuracy and completeness, verify examples are functional, test that guidelines can be followed by development team"
+          },
+          {
+            "id": 5,
+            "title": "Update Project Documentation and Development Standards",
+            "description": "Update all project documentation to reflect the new testing architecture standards and ensure development team understands proper test utility creation practices.",
+            "status": "done",
+            "dependencies": [
+              4
+            ],
+            "details": "Complete documentation updates: 1) Update README and developer guides to reflect new testing structure and standards, 2) Modify development setup instructions to exclude orb-testing package references, 3) Update code style guides and development standards to include testing best practices, 4) Create onboarding documentation for new developers explaining proper test utility creation, 5) Update any architectural documentation to reflect the simplified testing approach",
+            "testStrategy": "Validate documentation accuracy, test that new developers can follow updated guidelines, verify all references to old testing structure are removed"
+          },
+          {
+            "id": 6,
+            "title": "Perform Final Validation and Integration Testing",
+            "description": "Execute comprehensive validation to ensure clean package removal, verify all systems function correctly, and confirm new testing guidelines are properly established.",
+            "status": "done",
+            "dependencies": [
+              5
+            ],
+            "details": "Execute final validation: 1) Run full test suite across all modules to ensure no functionality is broken by package removal, 2) Perform integration testing to validate that development workflows work correctly, 3) Test CI/CD pipelines end-to-end to ensure they execute successfully with updated configuration, 4) Validate that package installation and dependency resolution work in clean environments, 5) Confirm that build processes complete without errors, 6) Verify new testing guidelines are accessible and usable by the development team",
+            "testStrategy": "Execute full test suite, run integration tests, validate CI/CD pipelines, test clean environment builds, verify development team can follow new guidelines"
+          },
+          {
+            "id": 1,
+            "title": "Audit and Catalog orb-testing Package Contents",
+            "description": "Perform comprehensive analysis of the orb-testing package to catalog all test utilities, fixtures, mocks, and helper functions, mapping each component to its corresponding production code location.",
+            "dependencies": [],
+            "details": "Create detailed inventory of orb-testing package contents including: 1) List all test utilities, fixtures, mocks, and helper functions with their current file paths, 2) Document the purpose and usage of each utility, 3) Map each utility to its corresponding production code module to determine optimal placement, 4) Identify shared utilities used across multiple modules that need common placement, 5) Generate dependency graph showing which test files import which utilities, 6) Create migration matrix showing source and target locations for each utility\n<info added on 2025-07-22T17:40:28.583Z>\n**AUDIT RESULTS COMPLETED:**\n\n**Component Inventory:**\n1. **Test Suite Classes** (5 files) - Module-specific testing utilities for API, security, performance, edge cases, and integration testing\n2. **Test Data Factories** (2 files) - Shared test data generation utilities for organizations and role-based testing\n3. **Test Infrastructure** (4 files) - Core testing framework components including pytest configuration, environment management, and specialized test suites\n\n**Critical Discovery:** Package is completely unused - no existing imports found across codebase, indicating these are orphaned test utilities that were created but never integrated into the testing workflow.\n\n**Import Analysis:** All utilities expect orb-models as sibling dependency, suggesting they were designed for a different project structure than currently exists.\n\n**Migration Recommendations:**\n- Test Suite Classes → Move to respective module test directories\n- Test Data Factories → Relocate to shared location (orb-common/tests or project root tests/)\n- Test Infrastructure → Distribute based on scope (conftest.py to project root, others to appropriate modules)\n\n**Next Steps:** Since package is unused, migration can proceed without risk of breaking existing functionality. Priority should be on evaluating utility value before relocation.\n</info added on 2025-07-22T17:40:28.583Z>",
+            "status": "done",
+            "testStrategy": "Validate inventory completeness by running grep searches for orb-testing imports across codebase, verify all utilities are documented and mapped correctly"
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-06-20T19:07:50.957Z",
-      "updated": "2025-07-18T15:53:08.572Z",
+      "updated": "2025-07-25T12:40:31.317Z",
       "description": "Tasks for master context"
     }
   }

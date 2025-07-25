@@ -82,25 +82,25 @@ Execute comprehensive testing strategy to ensure seamless migration:
 - Monitoring and alerting validation for the new Lambda-based architecture
 
 # Subtasks:
-## 1. Create Users Lambda Function Infrastructure [pending]
+## 1. Create Users Lambda Function Infrastructure [done]
 ### Dependencies: None
 ### Description: Set up the foundational Lambda function infrastructure for Users entity with proper IAM roles, DynamoDB permissions, and CloudWatch integration following the Organizations pattern.
 ### Details:
 Create backend/src/lambda/users/ directory structure with handler.py, requirements.txt, and deployment configuration. Set up IAM role with DynamoDB read/write permissions for Users table, CloudWatch logs permissions, and Cognito read permissions. Configure Lambda function with appropriate timeout, memory allocation, and environment variables. Implement basic Lambda handler structure with proper error handling and logging setup using CloudWatch.
 
-## 2. Implement Cognito Sub to UserId Resolution Middleware [pending]
+## 2. Implement Cognito Sub to UserId Resolution Middleware [done]
 ### Dependencies: 48.1
 ### Description: Create middleware component that automatically resolves Cognito sub tokens to internal userId values for seamless user identification across all operations.
 ### Details:
 Implement middleware function that extracts Cognito sub from request context, queries Users table to find corresponding userId, and enriches request context with resolved user information. Handle edge cases for new users, missing mappings, and invalid tokens. Add caching mechanism for frequently accessed user mappings to improve performance. Implement fallback mechanisms for Cognito service unavailability and proper token validation.
 
-## 3. Implement Users CRUD Operations in Lambda [pending]
+## 3. Implement Users CRUD Operations in Lambda [done]
 ### Dependencies: 48.2
 ### Description: Develop comprehensive CRUD operations (Create, Read, Update, Delete) for Users entity with proper validation, error handling, and DynamoDB integration.
 ### Details:
 Implement createUser, getUser, updateUser, deleteUser, and listUsers functions with proper input validation using JSON schema. Add comprehensive error handling for DynamoDB operations, validation failures, and authorization errors. Implement proper data sanitization and transformation. Add support for batch operations and filtering capabilities. Ensure all operations maintain data consistency and handle concurrent access scenarios.
 
-## 4. Integrate RBAC Security Layer [pending]
+## 4. Integrate RBAC Security Layer [done]
 ### Dependencies: 48.3
 ### Description: Integrate the existing RBAC system from Task 4 into the Users Lambda function to enforce role-based access control and user-level permissions.
 ### Details:
@@ -115,17 +115,20 @@ Implement input validation using JSON schema for all request payloads. Add reque
 Integrate aws_audit_logger with comprehensive AuditEventType events including USER_CREATED, USER_UPDATED, USER_DELETED, USER_LOGIN, USER_PROFILE_VIEWED, USER_PASSWORD_CHANGED, and USER_STATUS_CHANGED following the Organizations Lambda pattern. Implement state tracking for before/after changes on all user data modifications with proper JSON serialization of field-level changes. Add compliance flags for GDPR, SOX, and SOC_2 requirements with automatic tagging based on operation type and data sensitivity. Implement critical audit logging for security violations including failed authentication attempts, unauthorized access attempts, and suspicious activity patterns. Ensure all audit events capture complete user context including authenticated user ID, target user ID (for admin operations), IP addresses, user agent strings, session information, and request correlation IDs. Add structured logging for user data access patterns to support compliance reporting and security monitoring with proper log retention policies.
 </info added on 2025-07-17T19:45:27.582Z>
 
-## 6. Update GraphQL Schema and Resolver Definitions [pending]
+## 6. Update GraphQL Schema and Resolver Definitions [done]
 ### Dependencies: 48.5
 ### Description: Prepare GraphQL schema updates and resolver definitions to support the Lambda-backed implementation while maintaining backward compatibility.
 ### Details:
 Review existing Users GraphQL schema and ensure all queries and mutations are properly defined. Update resolver mapping templates to prepare for Lambda integration. Add any necessary schema extensions for enhanced functionality while maintaining exact backward compatibility. Document all schema changes and ensure proper versioning. Prepare resolver configuration for Lambda function integration with proper error handling and response transformation.
 
-## 7. Migrate AppSync Resolvers to Lambda Backend [pending]
+## 7. Migrate AppSync Resolvers to Lambda Backend [done]
 ### Dependencies: 48.6
 ### Description: Update all existing Users GraphQL resolvers to point to the new Lambda function instead of direct DynamoDB access while maintaining exact response formats.
 ### Details:
 Replace all direct DynamoDB resolver configurations with Lambda function invocations. Update resolver mapping templates to handle Lambda request/response transformation. Implement proper error handling and response formatting to maintain exact compatibility with existing client expectations. Add caching strategies using AppSync caching capabilities where appropriate. Ensure all resolver configurations properly handle authentication context and pass user information to Lambda.
+<info added on 2025-07-18T18:54:34.665Z>
+Added missing query methods to Users Lambda to handle UsersQueryByCognitoSub, UsersQueryByUserId, UsersQueryByEmail, and UsersQueryByCognitoId operations. The frontend uses UsersQueryByCognitoSub to find the user record after authentication. These query methods ensure complete compatibility with existing client expectations and support all user lookup patterns required by the application.
+</info added on 2025-07-18T18:54:34.665Z>
 
 ## 8. Implement Cognito Synchronization Logic [pending]
 ### Dependencies: 48.7
@@ -139,14 +142,8 @@ Implement event handlers for Cognito user pool triggers (pre-signup, post-confir
 ### Details:
 Implement structured error handling with proper error codes, messages, and HTTP status codes. Add comprehensive CloudWatch logging with proper log levels and structured log formatting. Set up CloudWatch metrics for operation success rates, response times, and error frequencies. Implement alerting for critical errors, high error rates, and performance degradation. Add distributed tracing capabilities for debugging complex user flows and performance optimization.
 
-## 10. Develop Migration Scripts and Data Validation [pending]
-### Dependencies: 48.9
-### Description: Create migration scripts to handle any necessary data transformations and implement validation to ensure data integrity during the transition.
-### Details:
-Develop scripts to validate existing Users data format and identify any required transformations. Create migration utilities for data format updates if needed. Implement data validation scripts to verify data integrity before and after migration. Add rollback capabilities for migration failures. Create data comparison tools to verify that Lambda responses match existing DynamoDB responses exactly. Document all data changes and migration procedures.
-
 ## 11. Execute Comprehensive Testing and Validation [pending]
-### Dependencies: 48.10
+### Dependencies: None
 ### Description: Perform thorough testing of the complete Lambda-backed Users implementation including unit tests, integration tests, and backward compatibility validation.
 ### Details:
 Execute comprehensive unit test suite for all Lambda functions and middleware components. Run integration tests with actual DynamoDB and Cognito services. Perform backward compatibility testing to ensure all existing queries and mutations work identically. Execute performance testing to validate response times meet existing benchmarks. Run security testing to verify all security measures are properly implemented. Conduct user acceptance testing with sample user journeys.
@@ -157,7 +154,7 @@ Execute comprehensive unit test suite for all Lambda functions and middleware co
 ### Details:
 Deploy Lambda function and updated resolvers to production environment with proper deployment pipeline. Implement gradual traffic migration using feature flags or canary deployment strategy. Set up comprehensive monitoring dashboards for Lambda performance, error rates, and user experience metrics. Prepare rollback procedures and emergency response plans. Monitor system performance and user feedback during initial deployment phase. Document deployment procedures and operational runbooks for ongoing maintenance.
 
-## 13. Create Users Security Layer with Audit Integration [pending]
+## 13. Create Users Security Layer with Audit Integration [done]
 ### Dependencies: None
 ### Description: Create a dedicated security layer for Users Lambda similar to organizations_security layer, including aws_audit_logger, user context middleware, and security validation components
 ### Details:

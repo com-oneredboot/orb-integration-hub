@@ -14,8 +14,8 @@ from dataclasses import dataclass
 import boto3
 from botocore.exceptions import ClientError
 
-# Import from common layer
-from security_exceptions import (
+# Import from orb-common package
+from orb_common import (
     SecurityViolationError,
     ContextExtractionError,
     AuthenticationError,
