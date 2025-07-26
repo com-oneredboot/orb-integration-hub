@@ -314,6 +314,8 @@ Resources:
               - codeartifact:UpdateRepository
               - codeartifact:GetRepositoryPermissionsPolicy
               - codeartifact:PutRepositoryPermissionsPolicy
+              - codeartifact:AssociateExternalConnection
+              - codeartifact:DisassociateExternalConnection
               - codeartifact:GetAuthorizationToken
               - codeartifact:GetRepositoryEndpoint
               - codeartifact:ReadFromRepository
