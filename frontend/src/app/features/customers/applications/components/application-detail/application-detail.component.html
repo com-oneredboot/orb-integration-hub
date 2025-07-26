@@ -1,0 +1,265 @@
+<!-- Application Detail Component Template -->
+<div class="application-detail" *ngIf="application; else emptyState">
+  
+  <!-- Header -->
+  <div class="application-detail__header">
+    <div class="application-detail__title-section">
+      <h3 class="application-detail__title">
+        <fa-icon icon="rocket" class="application-detail__icon"></fa-icon>
+        {{ application.name }}
+      </h3>
+      <div class="application-detail__meta">
+        <span class="application-detail__org-name">
+          <fa-icon icon="building" class="application-detail__meta-icon"></fa-icon>
+          {{ organizationName }}
+        </span>
+      </div>
+    </div>
+    <div class="application-detail__actions">
+      <button class="application-detail__action application-detail__action--primary"
+              (click)="onEditApplication()">
+        <fa-icon icon="edit" class="application-detail__action-icon"></fa-icon>
+        Edit
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <div class="application-detail__tabs">
+    <button class="application-detail__tab" 
+            [class.application-detail__tab--active]="activeTab === 'overview'"
+            (click)="setActiveTab('overview')">
+      <fa-icon icon="info-circle" class="application-detail__tab-icon"></fa-icon>
+      Overview
+    </button>
+    <button class="application-detail__tab"
+            [class.application-detail__tab--active]="activeTab === 'security'"
+            (click)="setActiveTab('security')">
+      <fa-icon icon="key" class="application-detail__tab-icon"></fa-icon>
+      API & Security
+    </button>
+    <button class="application-detail__tab"
+            [class.application-detail__tab--active]="activeTab === 'environments'"
+            (click)="setActiveTab('environments')">
+      <fa-icon icon="server" class="application-detail__tab-icon"></fa-icon>
+      Environments
+    </button>
+    <button class="application-detail__tab"
+            [class.application-detail__tab--active]="activeTab === 'stats'"
+            (click)="setActiveTab('stats')">
+      <fa-icon icon="chart-bar" class="application-detail__tab-icon"></fa-icon>
+      Stats
+    </button>
+    <button class="application-detail__tab"
+            [class.application-detail__tab--active]="activeTab === 'danger'"
+            (click)="setActiveTab('danger')">
+      <fa-icon icon="exclamation-triangle" class="application-detail__tab-icon"></fa-icon>
+      Danger Zone
+    </button>
+  </div>
+
+  <!-- Tab Content -->
+  <div class="application-detail__content">
+    
+    <!-- Overview Tab -->
+    <div class="application-detail__tab-panel" 
+         [class.application-detail__tab-panel--active]="activeTab === 'overview'">
+      <div class="application-detail__info-grid">
+        <div class="application-detail__info-item">
+          <label class="application-detail__info-label">Application Name</label>
+          <input type="text" class="application-detail__info-input"
+                 [value]="application.name || ''"
+                 placeholder="No name provided"
+                 disabled>
+        </div>
+        <div class="application-detail__info-item">
+          <label class="application-detail__info-label">Organization</label>
+          <input type="text" class="application-detail__info-input"
+                 [value]="organizationName || 'Unknown Organization'"
+                 disabled>
+        </div>
+        <div class="application-detail__info-item">
+          <label class="application-detail__info-label">Application ID</label>
+          <input type="text" class="application-detail__info-input application-detail__info-input--code"
+                 [value]="application.applicationId"
+                 disabled>
+        </div>
+        <div class="application-detail__info-item">
+          <label class="application-detail__info-label">Created</label>
+          <input type="text" class="application-detail__info-input"
+                 [value]="formatDate(application.createdAt)"
+                 disabled>
+        </div>
+        <div class="application-detail__info-item">
+          <label class="application-detail__info-label">Last Updated</label>
+          <input type="text" class="application-detail__info-input"
+                 [value]="formatDate(application.updatedAt)"
+                 disabled>
+        </div>
+      </div>
+    </div>
+
+    <!-- API & Security Tab -->
+    <div class="application-detail__tab-panel"
+         [class.application-detail__tab-panel--active]="activeTab === 'security'">
+      <div class="application-detail__api-section">
+        <div class="application-detail__info-grid">
+          <div class="application-detail__info-item">
+            <label class="application-detail__info-label">Current API Key</label>
+            <div class="application-detail__api-key">
+              <input type="text" class="application-detail__info-input application-detail__info-input--code"
+                     [value]="maskApiKey(application.apiKey)"
+                     disabled>
+              <button class="application-detail__api-key-action"
+                      (click)="onCopyApiKey()"
+                      title="Copy API Key">
+                <fa-icon icon="copy"></fa-icon>
+              </button>
+              <button class="application-detail__api-key-action"
+                      (click)="onRotateApiKey()"
+                      title="Rotate API Key">
+                <fa-icon icon="sync-alt"></fa-icon>
+              </button>
+            </div>
+          </div>
+          <div class="application-detail__info-item" *ngIf="application.apiKeyNext">
+            <label class="application-detail__info-label">Next API Key (Staged)</label>
+            <div class="application-detail__api-key">
+              <input type="text" class="application-detail__info-input application-detail__info-input--code"
+                     [value]="maskApiKey(application.apiKeyNext)"
+                     disabled>
+              <button class="application-detail__api-key-action"
+                      (click)="onActivateNextKey()"
+                      title="Activate Next Key">
+                <fa-icon icon="arrow-right"></fa-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Tab -->
+    <div class="application-detail__tab-panel"
+         [class.application-detail__tab-panel--active]="activeTab === 'stats'">
+      <div class="application-detail__stats-grid">
+        <div class="application-detail__stat-card">
+          <div class="application-detail__stat-icon">
+            <fa-icon icon="server" class="application-detail__stat-icon-element"></fa-icon>
+          </div>
+          <div class="application-detail__stat-content">
+            <span class="application-detail__stat-value">{{ environmentCount || 0 }}</span>
+            <span class="application-detail__stat-label">Environments</span>
+          </div>
+        </div>
+        <div class="application-detail__stat-card">
+          <div class="application-detail__stat-icon">
+            <fa-icon icon="code" class="application-detail__stat-icon-element"></fa-icon>
+          </div>
+          <div class="application-detail__stat-content">
+            <span class="application-detail__stat-value">{{ apiCallsToday || 0 }}</span>
+            <span class="application-detail__stat-label">API Calls Today</span>
+          </div>
+        </div>
+        <div class="application-detail__stat-card">
+          <div class="application-detail__stat-icon">
+            <fa-icon icon="clock" class="application-detail__stat-icon-element"></fa-icon>
+          </div>
+          <div class="application-detail__stat-content">
+            <span class="application-detail__stat-value">{{ lastActivity || 'Never' }}</span>
+            <span class="application-detail__stat-label">Last Activity</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Environments Tab -->
+    <div class="application-detail__tab-panel"
+         [class.application-detail__tab-panel--active]="activeTab === 'environments'">
+      <div class="application-detail__environments">
+        <div class="application-detail__env-item" *ngFor="let env of mockEnvironments">
+          <div class="application-detail__env-info">
+            <span class="application-detail__env-name">{{ env.name }}</span>
+            <span class="application-detail__env-status" 
+                  [ngClass]="'application-detail__env-status--' + env.status.toLowerCase()">
+              {{ env.status }}
+            </span>
+          </div>
+          <div class="application-detail__env-actions">
+            <button class="application-detail__env-action" 
+                    (click)="onViewEnvironment(env)"
+                    title="View Environment">
+              <fa-icon icon="eye"></fa-icon>
+            </button>
+          </div>
+        </div>
+        <div class="application-detail__env-placeholder" *ngIf="mockEnvironments.length === 0">
+          <fa-icon icon="server" class="application-detail__placeholder-icon"></fa-icon>
+          <p class="application-detail__placeholder-text">
+            No environments configured yet.
+          </p>
+          <button class="application-detail__action application-detail__action--primary"
+                  (click)="onManageEnvironments()">
+            <fa-icon icon="plus" class="application-detail__action-icon"></fa-icon>
+            Add Environment
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Danger Zone Tab -->
+    <div class="application-detail__tab-panel"
+         [class.application-detail__tab-panel--active]="activeTab === 'danger'">
+      <div class="application-detail__danger-zone">
+        <div class="application-detail__danger-header">
+          <fa-icon icon="exclamation-triangle" class="application-detail__danger-icon"></fa-icon>
+          <h4 class="application-detail__danger-title">Danger Zone</h4>
+          <p class="application-detail__danger-description">
+            These actions are permanent and cannot be undone. Please proceed with caution.
+          </p>
+        </div>
+        
+        <div class="application-detail__danger-actions">
+          <div class="application-detail__danger-action">
+            <div class="application-detail__danger-action-info">
+              <h5 class="application-detail__danger-action-title">Disable Application</h5>
+              <p class="application-detail__danger-action-description">
+                Temporarily disable this application. API access will be blocked but data is preserved.
+              </p>
+            </div>
+            <button class="application-detail__danger-btn application-detail__danger-btn--warning"
+                    (click)="onDisableApplication()">
+              <fa-icon icon="exclamation-triangle" class="application-detail__danger-btn-icon"></fa-icon>
+              Disable
+            </button>
+          </div>
+          
+          <div class="application-detail__danger-action">
+            <div class="application-detail__danger-action-info">
+              <h5 class="application-detail__danger-action-title">Delete Application</h5>
+              <p class="application-detail__danger-action-description">
+                Permanently delete this application and all associated data. This action cannot be undone.
+              </p>
+            </div>
+            <button class="application-detail__danger-btn application-detail__danger-btn--danger"
+                    (click)="onDeleteApplication()">
+              <fa-icon icon="exclamation-triangle" class="application-detail__danger-btn-icon"></fa-icon>
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Empty State -->
+<ng-template #emptyState>
+  <div class="orb-empty-state">
+    <div class="orb-empty-state__content">
+      <fa-icon icon="rocket" class="orb-empty-state__icon"></fa-icon>
+      <h3 class="orb-empty-state__title">No Application Selected</h3>
+    </div>
+  </div>
+</ng-template>

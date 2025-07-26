@@ -70,10 +70,10 @@ describe('AuthFlowComponent', () => {
 
     const storeSpy = jasmine.createSpyObj('Store', ['select', 'dispatch']);
     storeSpy.select.and.callFake((selector: any) => {
-      if (selector === require('./store/auth.selectors').selectCurrentStep) {
-        return of(require('./store/auth.state').AuthSteps.PASSWORD_SETUP);
+      if (selector === require('../../store/user.selectors').selectCurrentStep) {
+        return of(require('../../store/user.state').AuthSteps.PASSWORD_SETUP);
       }
-      if (selector === require('./store/auth.selectors').selectCurrentUser) {
+      if (selector === require('../../store/user.selectors').selectCurrentUser) {
         return of(mockUser);
       }
       return of(null);
@@ -109,10 +109,10 @@ describe('AuthFlowComponent', () => {
 
   it('should create user', async () => {
     store.select.and.callFake((selector: any) => {
-      if (selector === require('./store/auth.selectors').selectCurrentStep) {
-        return of(require('./store/auth.state').AuthSteps.PASSWORD_SETUP);
+      if (selector === require('../../store/user.selectors').selectCurrentStep) {
+        return of(require('../../store/user.state').AuthSteps.PASSWORD_SETUP);
       }
-      if (selector === require('./store/auth.selectors').selectCurrentUser) {
+      if (selector === require('../../store/user.selectors').selectCurrentUser) {
         return of(mockUser);
       }
       return of(null);
@@ -154,11 +154,11 @@ describe('AuthFlowComponent', () => {
   it('should display error banner when error is set in store', () => {
     // Simulate error in store
     store.select.and.callFake((selector: any) => {
-      if (selector === require('./store/auth.selectors').selectError) {
+      if (selector === require('../../store/user.selectors').selectError) {
         return of('Unable to connect to the server. Please check your connection and try again.');
       }
-      if (selector === require('./store/auth.selectors').selectCurrentStep) {
-        return of(require('./store/auth.state').AuthSteps.EMAIL);
+      if (selector === require('../../store/user.selectors').selectCurrentStep) {
+        return of(require('../../store/user.state').AuthSteps.EMAIL);
       }
       return of(null);
     });
@@ -173,11 +173,11 @@ describe('AuthFlowComponent', () => {
   it('should not advance to password step and should show error if userExists returns false', () => {
     // Simulate error in store for user not found or not authorized
     store.select.and.callFake((selector: any) => {
-      if (selector === require('./store/auth.selectors').selectError) {
+      if (selector === require('../../store/user.selectors').selectError) {
         return of('User not found or not authorized.');
       }
-      if (selector === require('./store/auth.selectors').selectCurrentStep) {
-        return of(require('./store/auth.state').AuthSteps.EMAIL);
+      if (selector === require('../../store/user.selectors').selectCurrentStep) {
+        return of(require('../../store/user.state').AuthSteps.EMAIL);
       }
       return of(null);
     });
@@ -197,10 +197,10 @@ describe('AuthFlowComponent', () => {
 
   it('should advance to password setup step if user is not found', () => {
     store.select.and.callFake((selector: any) => {
-      if (selector === require('./store/auth.selectors').selectCurrentStep) {
-        return of(require('./store/auth.state').AuthSteps.PASSWORD_SETUP);
+      if (selector === require('../../store/user.selectors').selectCurrentStep) {
+        return of(require('../../store/user.state').AuthSteps.PASSWORD_SETUP);
       }
-      if (selector === require('./store/auth.selectors').selectError) {
+      if (selector === require('../../store/user.selectors').selectError) {
         return of(null);
       }
       return of(null);
@@ -216,10 +216,10 @@ describe('AuthFlowComponent', () => {
 
   it('should show error and not advance if checkEmailFailure is dispatched', () => {
     store.select.and.callFake((selector: any) => {
-      if (selector === require('./store/auth.selectors').selectCurrentStep) {
-        return of(require('./store/auth.state').AuthSteps.EMAIL);
+      if (selector === require('../../store/user.selectors').selectCurrentStep) {
+        return of(require('../../store/user.state').AuthSteps.EMAIL);
       }
-      if (selector === require('./store/auth.selectors').selectError) {
+      if (selector === require('../../store/user.selectors').selectError) {
         return of('Some error occurred');
       }
       return of(null);
@@ -245,10 +245,10 @@ describe('AuthFlowComponent', () => {
     }));
 
     store.select.and.callFake((selector: any) => {
-      if (selector === require('./store/auth.selectors').selectCurrentStep) {
-        return of(require('./store/auth.state').AuthSteps.PASSWORD_SETUP);
+      if (selector === require('../../store/user.selectors').selectCurrentStep) {
+        return of(require('../../store/user.state').AuthSteps.PASSWORD_SETUP);
       }
-      if (selector === require('./store/auth.selectors').selectCurrentUser) {
+      if (selector === require('../../store/user.selectors').selectCurrentUser) {
         return of(null);
       }
       return of(null);

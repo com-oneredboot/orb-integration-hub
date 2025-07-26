@@ -4,9 +4,10 @@
 // description: Custom Angular validators for comprehensive input validation with security focus
 
 import { AbstractControl, ValidationErrors, ValidatorFn, AsyncValidatorFn } from '@angular/forms';
+import { SecurityContext } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 import { Observable, of, timer } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import DOMPurify from 'dompurify';
 
 /**
  * Custom validators class with comprehensive validation methods
@@ -271,14 +272,14 @@ export class CustomValidators {
   /**
    * Input sanitization validator to prevent XSS
    */
-  static noXSS(): ValidatorFn {
+  static noXSS(sanitizer: DomSanitizer): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       if (!control.value) {
         return null;
       }
 
       const value = control.value;
-      const sanitizedValue = DOMPurify.sanitize(value);
+      const sanitizedValue = sanitizer.sanitize(SecurityContext.HTML, value);
 
       if (sanitizedValue !== value) {
         return {

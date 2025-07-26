@@ -4,13 +4,13 @@
 // description: This guard is used to protect routes that require authentication or group membership
 
 import { Injectable } from '@angular/core';
-import { Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import { Router, ActivatedRouteSnapshot, RouterStateSnapshot, CanActivate } from '@angular/router';
 import { CognitoService } from '../services/cognito.service';
 
 @Injectable({
   providedIn: 'root'
 })
-export class AuthGuard {
+export class AuthGuard implements CanActivate {
   constructor(
     private cognitoService: CognitoService,
     private router: Router
@@ -57,9 +57,19 @@ export class AuthGuard {
     if (requiresAuth === true && isAuthenticated) {
       const profile = await this.cognitoService.getCognitoProfile();
       const requiredGroup = route.data?.['group'];
+      const requiresCustomer = route.data?.['requiresCustomer'];
 
+      // Check specific group requirement
       if (requiredGroup && !profile?.groups?.includes(requiredGroup)) {
         console.debug('AuthGuard: User does not have required group', { requiredGroup, userGroups: profile?.groups });
+        // Redirect to dashboard as default
+        await this.router.navigate(['/dashboard']);
+        return false;
+      }
+
+      // Check customer group requirement
+      if (requiresCustomer === true && !profile?.groups?.includes('CUSTOMER')) {
+        console.debug('AuthGuard: User does not have CUSTOMER group', { userGroups: profile?.groups });
         // Redirect to dashboard as default
         await this.router.navigate(['/dashboard']);
         return false;

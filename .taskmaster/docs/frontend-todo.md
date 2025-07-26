@@ -16,7 +16,7 @@
 *   [x] Final decisions made on UI Component Library (from `frontend-design.md`). => Status: PrimeNG
 *   [x] Final decisions made on State Management approach (from `frontend-design.md`). => Status: NgRx
 *   [ ] Basic wireframes/mockups available (Optional but recommended). => Status: None planned currently
-*   [/] Development environment set up as per [Development Guide](development.md). => Status: Guide created, needs details
+*   [ ] Development environment set up as per [Development Guide](development.md). => Status: Guide created, needs details
 
 ## Foundational Phase: Project Setup & Core Structure
 

@@ -36,7 +36,7 @@ export abstract class ApiService {
     } catch (error) {
       // If userPool auth fails and this isn't already an apiKey request, try with apiKey
       if (authMode === 'userPool' && this.isAuthError(error)) {
-        console.warn('[ApiService] userPool auth failed, falling back to apiKey for query');
+        console.warn('[ApiService] userPool auth failed, falling back to apiKey for query. Error details:', error);
         return this.query(query, variables, 'apiKey');
       }
       throw error;

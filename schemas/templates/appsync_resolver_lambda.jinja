@@ -1,7 +1,9 @@
 {% for schema in schemas.values() if schema.type == 'lambda' %}
   {{ schema.name }}Resolver:
     Type: AWS::AppSync::Resolver
-    DependsOn: {{ schema.name }}LambdaDataSource
+    DependsOn:
+      - {{ schema.name }}LambdaDataSource
+      - IntegrationHubSchema
     Properties:
       ApiId: !GetAtt IntegrationHubApi.ApiId
       TypeName: Mutation  # or Query, adjust as needed

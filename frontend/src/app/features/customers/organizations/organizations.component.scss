@@ -1,0 +1,78 @@
+@use '../../../../styles/variables' as v;
+@use '../../../../styles/mixins' as m;
+
+.organizations-container {
+  max-width: v.$page-max-width;
+  margin: 0 auto;
+  padding: 0; // No padding - header handles all spacing
+  
+  & {
+    font-family: v.$font-family-base;
+  }
+  
+  // Organizations header now uses global .orb-page-header class
+
+  .organizations-content {
+    padding: 0 v.$spacing-lg; // Only horizontal padding
+  }
+
+  .organizations__debug {
+    @include m.debug-container;
+    
+    &-section {
+      @include m.debug-section;
+    }
+  }
+}
+
+.organizations-page {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 60px); // Account for user-layout header
+  background-color: v.$orb-white !important;
+
+  // Content
+  &__content {
+    @include m.page-content;
+    padding-top: 0; // No top padding - header handles spacing
+  }
+
+  &__layout {
+    @include m.panel-layout;
+  }
+
+  &__list-panel {
+    // Now uses global orb-card class in HTML, no card mixin needed
+    
+    app-organizations-list {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+  }
+
+  &__detail-panel {
+    // Now uses global orb-card class in HTML, no card mixin needed
+  }
+
+  // Responsive Design
+  @media (max-width: 768px) {
+    &__content {
+      padding: 1rem;
+    }
+
+    &__layout {
+      gap: 1rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    &__content {
+      padding: 0.75rem;
+    }
+
+    &__layout {
+      gap: 1rem;
+    }
+  }
+}

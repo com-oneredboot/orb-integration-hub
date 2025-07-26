@@ -66,20 +66,6 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
   disconnect: jest.fn()
 }));
 
-
-// Utility function to sanitize log arguments
-function sanitizeLogArgs(args: any[]): any[] {
-  const sensitivePatterns = ['password_verify', 'email_check', 'mfa_verify', 'phone_verify'];
-  return args.map(arg => {
-    if (typeof arg === 'string') {
-      sensitivePatterns.forEach(pattern => {
-        arg = arg.replace(new RegExp(pattern, 'g'), '***');
-      });
-    }
-    return arg;
-  });
-}
-
 // Setup console to reduce noise in tests
 const originalConsoleError = console.error;
 const originalConsoleWarn = console.warn;
@@ -103,8 +89,9 @@ console.warn = (...args: any[]) => {
   ) {
     return;
   }
-  // Redact sensitive data from logs
-  const sanitizedArgs = sanitizeLogArgs(args);
+  const sanitizedArgs = args.map(arg => 
+    typeof arg === 'string' && arg.includes('password') ? '[REDACTED]' : arg
+  );
   originalConsoleWarn(...sanitizedArgs);
 };
 

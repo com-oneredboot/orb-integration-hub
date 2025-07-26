@@ -9,10 +9,14 @@ mutation ApplicationsCreate($input: ApplicationsCreateInput!) {
     Data {
       applicationId
       name
+      organizationId
       ownerId
       status
       createdAt
       updatedAt
+      apiKey
+      apiKeyNext
+      environments
     }
   }
 }
@@ -26,10 +30,14 @@ mutation ApplicationsUpdate($input: ApplicationsUpdateInput!) {
     Data {
       applicationId
       name
+      organizationId
       ownerId
       status
       createdAt
       updatedAt
+      apiKey
+      apiKeyNext
+      environments
     }
   }
 }
@@ -43,10 +51,14 @@ mutation ApplicationsDelete($id: ID!) {
     Data {
       applicationId
       name
+      organizationId
       ownerId
       status
       createdAt
       updatedAt
+      apiKey
+      apiKeyNext
+      environments
     }
   }
 }
@@ -60,10 +72,14 @@ mutation ApplicationsDisable($id: ID!) {
     Data {
       applicationId
       name
+      organizationId
       ownerId
       status
       createdAt
       updatedAt
+      apiKey
+      apiKeyNext
+      environments
     }
   }
 }
@@ -77,10 +93,35 @@ query ApplicationsQueryByApplicationId($input: ApplicationsQueryByApplicationIdI
     Data {
       applicationId
       name
+      organizationId
       ownerId
       status
       createdAt
       updatedAt
+      apiKey
+      apiKeyNext
+      environments
+    }
+  }
+}
+`;
+
+export const ApplicationsQueryByOrganizationId = /* GraphQL */ `
+query ApplicationsQueryByOrganizationId($input: ApplicationsQueryByOrganizationIdInput!) {
+  ApplicationsQueryByOrganizationId(input: $input) {
+    StatusCode
+    Message
+    Data {
+      applicationId
+      name
+      organizationId
+      ownerId
+      status
+      createdAt
+      updatedAt
+      apiKey
+      apiKeyNext
+      environments
     }
   }
 }

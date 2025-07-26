@@ -1,0 +1,74 @@
+# file: infrastructure/cloudformation/layers.yml
+# author: AI Assistant
+# created: 2025-07-03
+# description: Consolidated Lambda Layers CloudFormation Template
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'Lambda Layers - Organization Security and Stripe Payment layers'
+
+Parameters:
+  CustomerId:
+    Type: String
+    Default: orb
+    Description: Customer identifier for resource naming
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev]
+    Description: Deployment environment
+  ProjectId:
+    Type: String
+    Default: integration-hub
+    Description: Project identifier for resource naming
+  Runtime:
+    Default: python3.12
+    Type: String
+
+
+Resources:
+  OrganizationsSecurityLayer:
+    Properties:
+      LayerName: !Sub '${CustomerId}-${ProjectId}-${Environment}-organizations-security-layer'
+      Description: 'Organization security middleware with audit logging and RBAC utilities'
+      ContentUri: ../../backend/src/layers/organizations_security/
+      CompatibleRuntimes:
+        - python3.12
+      LicenseInfo: MIT
+    Type: AWS::Serverless::LayerVersion
+
+  StripeLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub '${CustomerId}-${ProjectId}-${Environment}-stripe-layer'
+      Description: 'Stripe Payment processing layer'
+      ContentUri: ../../backend/src/layers/stripe/
+      CompatibleRuntimes:
+        - !Ref Runtime
+    Type: AWS::Serverless::LayerVersion
+
+  OrganizationsSecurityLayerArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-organizations-security-layer-arn'
+      Type: String
+      Value: !Ref OrganizationsSecurityLayer
+      Description: "ARN of the Organization Security Lambda Layer"
+
+  StripeLayerArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '${CustomerId}-${ProjectId}-${Environment}-stripe-layer-arn'
+      Type: String
+      Value: !Ref StripeLayer
+      Description: "ARN of the Stripe Payment Lambda Layer"
+
+Outputs:
+  OrganizationsSecurityLayerArn:
+    Description: 'ARN of the Organization Security Lambda Layer'
+    Value: !Ref OrganizationsSecurityLayer
+  
+  StripeLayerArn:
+    Description: 'ARN of the Stripe Payment Lambda Layer'
+    Value: !Ref StripeLayer
+  
