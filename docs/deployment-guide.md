@@ -30,17 +30,34 @@ This creates:
 
 ## Regular Deployment Process
 
-### 1. Python Packages (Automatic)
+### 1. Python Packages (Manual)
 
-The `deploy-packages.yml` workflow runs automatically when you push changes to:
-- `backend/packages/orb-common/**`
-- `backend/packages/orb-models/**`
-- `schemas/**` (triggers model regeneration)
+The `deploy-packages.yml` workflow must be triggered manually:
+
+```bash
+# From GitHub Actions UI:
+# 1. Go to Actions tab
+# 2. Select "deploy-packages" workflow
+# 3. Click "Run workflow"
+# 4. Select environment (dev/staging/prod)
+# 5. Run
+
+# Or using GitHub CLI:
+gh workflow run deploy-packages.yml \
+  -f environment=dev \
+  -f skip_tests=false
+```
 
 **What it does:**
-- Runs code quality checks (black, isort, mypy, bandit)
-- Builds packages
-- Publishes to CodeArtifact with new version numbers
+- Detects which packages have changed
+- For orb-common:
+  - Runs quality checks → Builds → **Publishes to CodeArtifact**
+- For orb-models:
+  - Waits for orb-common to publish first
+  - Installs latest orb-common from CodeArtifact
+  - Runs quality checks → Builds → Publishes
+
+**Important**: The workflow ensures orb-models always uses the latest orb-common from CodeArtifact, not local paths!
 
 **Monitor the deployment:**
 ```bash

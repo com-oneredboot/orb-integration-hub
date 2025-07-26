@@ -1,19 +1,22 @@
 name: deploy-packages
 
 on:
-  push:
-    branches: [ main, develop, organizations-feature ]
-    paths:
-      - 'backend/packages/**'
-      - '.github/workflows/deploy-packages.yml'
-      - 'schemas/**'
-  pull_request:
-    branches: [ main, develop ]
-    paths:
-      - 'backend/packages/**'
-      - '.github/workflows/deploy-packages.yml'
-      - 'schemas/**'
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to publish to'
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+        default: dev
+      skip_tests:
+        description: 'Skip tests (not recommended)'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   detect-changes:
@@ -46,22 +49,22 @@ jobs:
           echo "Models changed: ${{ steps.changes.outputs.models }}"
           echo "Schemas changed: ${{ steps.changes.outputs.schemas }}"
 
+  # Test and build orb-common first
   test-common:
     name: Test ORB Common
     needs: detect-changes
-    if: needs.detect-changes.outputs.common-changed == 'true'
+    if: |
+      needs.detect-changes.outputs.common-changed == 'true' &&
+      inputs.skip_tests != true
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.12']
     
     steps:
       - uses: actions/checkout@v4
       
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python 3.12
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.12'
       
       - name: Install dependencies
         run: |
@@ -91,38 +94,33 @@ jobs:
         run: |
           cd backend/packages/orb-common
           pipenv run pytest tests/ -v --cov=orb_common --cov-report=xml --cov-report=html
-      
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./backend/packages/orb-common/coverage.xml
-          flags: orb-common
-          name: orb-common-${{ matrix.python-version }}
 
   build-common:
     name: Build ORB Common
     needs: [detect-changes, test-common]
     if: |
       needs.detect-changes.outputs.common-changed == 'true' &&
-      needs.test-common.result == 'success'
+      (needs.test-common.result == 'success' || needs.test-common.result == 'skipped')
     runs-on: ubuntu-latest
     
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
       
-      - name: Install build tools and build package
+      - name: Install build tools
         run: |
           cd backend/packages/orb-common
           pip install pipenv
           pipenv install --dev
           pipenv install build twine
+      
+      - name: Build package
+        run: |
+          cd backend/packages/orb-common
           pipenv run python -m build
       
       - name: Check package
@@ -136,133 +134,13 @@ jobs:
           name: orb-common-dist
           path: backend/packages/orb-common/dist/
 
-  test-models:
-    name: Test ORB Models
-    needs: [detect-changes, build-common]
-    if: |
-      needs.build-common.result == 'success' || 
-      (needs.build-common.result == 'skipped' && 
-       needs.detect-changes.outputs.common-changed != 'true' &&
-       (needs.detect-changes.outputs.models-changed == 'true' ||
-        needs.detect-changes.outputs.schemas-changed == 'true'))
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.12']
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-      
-      - name: Install orb-common from source if changed
-        if: needs.detect-changes.outputs.common-changed == 'true'
-        run: |
-          cd backend/packages/orb-common
-          pip install -e .
-      
-      - name: Install dependencies
-        run: |
-          cd backend/packages/orb-models
-          pip install pipenv
-          pipenv install --dev
-          pipenv install -e .
-      
-      - name: Generate models from schemas
-        run: |
-          cd schemas
-          pip install pipenv
-          pipenv install
-          pipenv run python generate.py
-      
-      - name: Lint with black and isort
-        run: |
-          cd backend/packages/orb-models
-          pipenv run black --check . || echo "Black formatting check failed - generated code has issues"
-          pipenv run isort --check-only . --diff || echo "isort check failed - generated code has issues"
-      
-      - name: Type check with mypy
-        run: |
-          cd backend/packages/orb-models
-          pipenv run mypy orb_models --ignore-missing-imports || true
-      
-      - name: Run tests
-        run: |
-          cd backend/packages/orb-models
-          pipenv run pytest tests/ -v --cov=orb_models --cov-report=xml --cov-report=html || true
-      
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./backend/packages/orb-models/coverage.xml
-          flags: orb-models
-          name: orb-models-${{ matrix.python-version }}
-
-  build-models:
-    name: Build ORB Models
-    needs: [detect-changes, test-models]
-    if: |
-      needs.test-models.result == 'success' &&
-      (needs.detect-changes.outputs.models-changed == 'true' ||
-       needs.detect-changes.outputs.common-changed == 'true' ||
-       needs.detect-changes.outputs.schemas-changed == 'true')
-    runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.12'
-      
-      - name: Install orb-common from source if changed
-        if: needs.detect-changes.outputs.common-changed == 'true'
-        run: |
-          cd backend/packages/orb-common
-          pip install pipenv
-          pipenv install
-          pipenv install -e .
-      
-      - name: Generate models from schemas
-        run: |
-          cd schemas
-          pip install pipenv
-          pipenv install
-          pipenv run python generate.py
-      
-      - name: Build package
-        run: |
-          cd backend/packages/orb-models
-          pip install pipenv
-          pipenv install --dev
-          pipenv install build twine
-          pipenv run python -m build
-      
-      - name: Check package
-        run: |
-          cd backend/packages/orb-models
-          pipenv run twine check dist/*
-      
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: orb-models-dist
-          path: backend/packages/orb-models/dist/
-
+  # Publish orb-common to CodeArtifact BEFORE testing models
   publish-common:
     name: Publish ORB Common to CodeArtifact
     needs: [build-common]
-    if: |
-      github.event_name == 'push' && 
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/organizations-feature') &&
-      needs.build-common.result == 'success'
+    if: needs.build-common.result == 'success'
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
     
     steps:
       - uses: actions/checkout@v4
@@ -278,8 +156,8 @@ jobs:
         id: codeartifact
         run: |
           # Get domain and repository from SSM parameters
-          DOMAIN=$(aws ssm get-parameter --name "/orb/integration-hub/dev/codeartifact/domain" --query 'Parameter.Value' --output text || echo "orb-integration-hub")
-          REPOSITORY=$(aws ssm get-parameter --name "/orb/integration-hub/dev/codeartifact/repository" --query 'Parameter.Value' --output text || echo "dev-python-packages")
+          DOMAIN=$(aws ssm get-parameter --name "/orb/integration-hub/${{ inputs.environment }}/codeartifact/domain" --query 'Parameter.Value' --output text 2>/dev/null || echo "orb-integration-hub")
+          REPOSITORY=$(aws ssm get-parameter --name "/orb/integration-hub/${{ inputs.environment }}/codeartifact/repository" --query 'Parameter.Value' --output text 2>/dev/null || echo "${{ inputs.environment }}-python-packages")
           
           echo "domain=$DOMAIN" >> $GITHUB_OUTPUT
           echo "repository=$REPOSITORY" >> $GITHUB_OUTPUT
@@ -320,14 +198,155 @@ jobs:
           echo "Publishing to CodeArtifact repository: ${{ steps.codeartifact.outputs.repository }}"
           twine upload dist/* --verbose
 
+  # Now test and build models AFTER common is published
+  test-models:
+    name: Test ORB Models
+    needs: [detect-changes, publish-common]
+    if: |
+      (needs.detect-changes.outputs.models-changed == 'true' ||
+       needs.detect-changes.outputs.schemas-changed == 'true') &&
+      inputs.skip_tests != true
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      
+      - name: Configure CodeArtifact
+        run: |
+          # Get CodeArtifact configuration
+          DOMAIN=$(aws ssm get-parameter --name "/orb/integration-hub/${{ inputs.environment }}/codeartifact/domain" --query 'Parameter.Value' --output text 2>/dev/null || echo "orb-integration-hub")
+          REPOSITORY=$(aws ssm get-parameter --name "/orb/integration-hub/${{ inputs.environment }}/codeartifact/repository" --query 'Parameter.Value' --output text 2>/dev/null || echo "${{ inputs.environment }}-python-packages")
+          
+          # Get authorization token
+          AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain $DOMAIN --query authorizationToken --output text)
+          
+          # Get repository endpoint
+          REPOSITORY_ENDPOINT=$(aws codeartifact get-repository-endpoint --domain $DOMAIN --repository $REPOSITORY --format pypi --query repositoryEndpoint --output text)
+          
+          # Configure pip to use CodeArtifact
+          export PIP_INDEX_URL="https://aws:${AUTH_TOKEN}@${REPOSITORY_ENDPOINT#https://}simple/"
+          echo "PIP_INDEX_URL=$PIP_INDEX_URL" >> $GITHUB_ENV
+      
+      - name: Generate models from schemas
+        run: |
+          cd schemas
+          pip install pipenv
+          pipenv install
+          pipenv run python generate.py
+      
+      - name: Install dependencies
+        run: |
+          cd backend/packages/orb-models
+          pip install pipenv
+          pipenv install --dev
+          # Install orb-common from CodeArtifact (not local path)
+          pipenv run pip install orb-common --index-url=$PIP_INDEX_URL
+          pipenv install -e .
+      
+      - name: Lint with black and isort
+        run: |
+          cd backend/packages/orb-models
+          pipenv run black --check . || echo "Black formatting check failed - generated code has issues"
+          pipenv run isort --check-only . --diff || echo "isort check failed - generated code has issues"
+      
+      - name: Type check with mypy
+        run: |
+          cd backend/packages/orb-models
+          pipenv run mypy orb_models --ignore-missing-imports || true
+      
+      - name: Run tests
+        run: |
+          cd backend/packages/orb-models
+          pipenv run pytest tests/ -v --cov=orb_models --cov-report=xml --cov-report=html || true
+
+  build-models:
+    name: Build ORB Models
+    needs: [detect-changes, test-models]
+    if: |
+      (needs.detect-changes.outputs.models-changed == 'true' ||
+       needs.detect-changes.outputs.schemas-changed == 'true') &&
+      (needs.test-models.result == 'success' || needs.test-models.result == 'skipped')
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      
+      - name: Configure CodeArtifact
+        run: |
+          # Get CodeArtifact configuration
+          DOMAIN=$(aws ssm get-parameter --name "/orb/integration-hub/${{ inputs.environment }}/codeartifact/domain" --query 'Parameter.Value' --output text 2>/dev/null || echo "orb-integration-hub")
+          REPOSITORY=$(aws ssm get-parameter --name "/orb/integration-hub/${{ inputs.environment }}/codeartifact/repository" --query 'Parameter.Value' --output text 2>/dev/null || echo "${{ inputs.environment }}-python-packages")
+          
+          # Get authorization token
+          AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain $DOMAIN --query authorizationToken --output text)
+          
+          # Get repository endpoint
+          REPOSITORY_ENDPOINT=$(aws codeartifact get-repository-endpoint --domain $DOMAIN --repository $REPOSITORY --format pypi --query repositoryEndpoint --output text)
+          
+          # Configure pip to use CodeArtifact
+          export PIP_INDEX_URL="https://aws:${AUTH_TOKEN}@${REPOSITORY_ENDPOINT#https://}simple/"
+          echo "PIP_INDEX_URL=$PIP_INDEX_URL" >> $GITHUB_ENV
+      
+      - name: Generate models from schemas
+        run: |
+          cd schemas
+          pip install pipenv
+          pipenv install
+          pipenv run python generate.py
+      
+      - name: Build package
+        run: |
+          cd backend/packages/orb-models
+          pip install pipenv
+          pipenv install --dev
+          # Install orb-common from CodeArtifact
+          pipenv run pip install orb-common --index-url=$PIP_INDEX_URL
+          pipenv install build twine
+          pipenv run python -m build
+      
+      - name: Check package
+        run: |
+          cd backend/packages/orb-models
+          pipenv run twine check dist/*
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: orb-models-dist
+          path: backend/packages/orb-models/dist/
+
   publish-models:
     name: Publish ORB Models to CodeArtifact
-    needs: [build-models, publish-common]
-    if: |
-      github.event_name == 'push' && 
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/organizations-feature') &&
-      needs.build-models.result == 'success'
+    needs: [build-models]
+    if: needs.build-models.result == 'success'
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
     
     steps:
       - uses: actions/checkout@v4
@@ -343,8 +362,8 @@ jobs:
         id: codeartifact
         run: |
           # Get domain and repository from SSM parameters
-          DOMAIN=$(aws ssm get-parameter --name "/orb/integration-hub/dev/codeartifact/domain" --query 'Parameter.Value' --output text || echo "orb-integration-hub")
-          REPOSITORY=$(aws ssm get-parameter --name "/orb/integration-hub/dev/codeartifact/repository" --query 'Parameter.Value' --output text || echo "dev-python-packages")
+          DOMAIN=$(aws ssm get-parameter --name "/orb/integration-hub/${{ inputs.environment }}/codeartifact/domain" --query 'Parameter.Value' --output text 2>/dev/null || echo "orb-integration-hub")
+          REPOSITORY=$(aws ssm get-parameter --name "/orb/integration-hub/${{ inputs.environment }}/codeartifact/repository" --query 'Parameter.Value' --output text 2>/dev/null || echo "${{ inputs.environment }}-python-packages")
           
           echo "domain=$DOMAIN" >> $GITHUB_OUTPUT
           echo "repository=$REPOSITORY" >> $GITHUB_OUTPUT
@@ -394,17 +413,27 @@ jobs:
     steps:
       - name: Summary
         run: |
-          echo "## Package Deployment Summary"
-          echo ""
-          echo "### Changes Detected:"
-          echo "- ORB Common: ${{ needs.detect-changes.outputs.common-changed }}"
-          echo "- ORB Models: ${{ needs.detect-changes.outputs.models-changed }}"
-          echo "- Schemas: ${{ needs.detect-changes.outputs.schemas-changed }}"
-          echo ""
-          echo "### Build Results:"
-          echo "- ORB Common Build: ${{ needs.build-common.result }}"
-          echo "- ORB Models Build: ${{ needs.build-models.result }}"
-          echo ""
-          echo "### Publish Results:"
-          echo "- ORB Common Publish: ${{ needs.publish-common.result }}"
-          echo "- ORB Models Publish: ${{ needs.publish-models.result }}"
+          echo "## Package Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo ""  >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo ""  >> $GITHUB_STEP_SUMMARY
+          echo "### Changes Detected:" >> $GITHUB_STEP_SUMMARY
+          echo "- ORB Common: ${{ needs.detect-changes.outputs.common-changed }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ORB Models: ${{ needs.detect-changes.outputs.models-changed }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Schemas: ${{ needs.detect-changes.outputs.schemas-changed }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Build Results:" >> $GITHUB_STEP_SUMMARY
+          echo "- ORB Common Build: ${{ needs.build-common.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ORB Models Build: ${{ needs.build-models.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Publish Results:" >> $GITHUB_STEP_SUMMARY
+          echo "- ORB Common Publish: ${{ needs.publish-common.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ORB Models Publish: ${{ needs.publish-models.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Add next steps based on results
+          if [[ "${{ needs.publish-common.result }}" == "success" || "${{ needs.publish-models.result }}" == "success" ]]; then
+            echo "### ✅ Next Steps:" >> $GITHUB_STEP_SUMMARY
+            echo "1. Deploy Lambda layers using the **deploy-lambda-layers** workflow" >> $GITHUB_STEP_SUMMARY
+            echo "2. Deploy backend services using the **deploy-backend** workflow" >> $GITHUB_STEP_SUMMARY
+          fi

@@ -49,15 +49,18 @@ When using CodeArtifact, deploy components in this order:
 **Purpose**: Build and publish Python packages (orb-common and orb-models) to CodeArtifact.
 
 **Triggers**:
-- Push to `main`, `develop`, or `organizations-feature` branches
-- Changes to `backend/packages/**`, `schemas/**`, or the workflow file itself
+- Manual workflow dispatch only
+- Select environment (dev/staging/prod)
+- Option to skip tests for emergency fixes
 
 **Features**:
 - Smart change detection for efficient builds
-- Dependency-aware build order (orb-common → orb-models)
+- **Proper dependency chain**: 
+  1. Test orb-common → Build → **Publish to CodeArtifact**
+  2. Test orb-models (using latest orb-common from CodeArtifact) → Build → Publish
 - Comprehensive code quality checks (black, isort, mypy, bandit)
-- Automatic publishing to AWS CodeArtifact
-- Version management for package releases
+- Environment-specific publishing (dev/staging/prod)
+- Models package always uses latest orb-common from CodeArtifact
 
 **Quality Checks**:
 - **Black**: Code formatting (line-length: 100)
