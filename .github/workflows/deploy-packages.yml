@@ -193,6 +193,17 @@ jobs:
       - name: Install twine
         run: pip install twine
       
+      - name: Debug wheel metadata
+        run: |
+          echo "=== Listing dist contents ==="
+          ls -la dist/
+          echo "=== Checking wheel contents ==="
+          unzip -l dist/*.whl | head -20
+          echo "=== Extracting METADATA file ==="
+          unzip -p dist/*.whl '*/METADATA' | head -50
+          echo "=== Checking for license-file in METADATA ==="
+          unzip -p dist/*.whl '*/METADATA' | grep -i "license" || true
+      
       - name: Publish to CodeArtifact
         env:
           TWINE_USERNAME: aws
@@ -402,6 +413,17 @@ jobs:
       
       - name: Install twine
         run: pip install twine
+      
+      - name: Debug wheel metadata
+        run: |
+          echo "=== Listing dist contents ==="
+          ls -la dist/
+          echo "=== Checking wheel contents ==="
+          unzip -l dist/*.whl | head -20
+          echo "=== Extracting METADATA file ==="
+          unzip -p dist/*.whl '*/METADATA' | head -50
+          echo "=== Checking for license-file in METADATA ==="
+          unzip -p dist/*.whl '*/METADATA' | grep -i "license" || true
       
       - name: Publish to CodeArtifact
         env:
