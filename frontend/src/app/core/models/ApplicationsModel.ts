@@ -3,34 +3,80 @@
  */
 
 // Import enums and models used in this model
+
+
+
+
+
+
+
+
+
+
 import { ApplicationStatus } from './ApplicationStatusEnum';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // CreateInput
 export type ApplicationsCreateInput = {
+
   applicationId: string;
+
   name: string;
+
   organizationId: string;
+
   ownerId: string;
+
   status: string;
+
   createdAt: number;
+
   updatedAt: number;
+
   apiKey: string;
+
   apiKeyNext: string | undefined;
+
   environments: string[];
+
 };
 
 // UpdateInput
 export type ApplicationsUpdateInput = {
+
   applicationId: string;
+
   name: string;
+
   organizationId: string;
+
   ownerId: string;
+
   status: string;
+
   createdAt: number;
+
   updatedAt: number;
+
   apiKey: string;
+
   apiKeyNext: string | undefined;
+
   environments: string[];
+
 };
 
 // QueryInput
@@ -39,9 +85,12 @@ export type ApplicationsQueryByApplicationIdInput = {
 };
 
 
+
+
 export type ApplicationsQueryByOrganizationIdInput = {
   organizationId: string;
 };
+
 
 // Response types
 export type ApplicationsResponse = {
@@ -85,41 +134,87 @@ export type ApplicationsQueryByApplicationIdResponse = {
   ApplicationsQueryByApplicationId: ApplicationsResponse;
 };
 
+
 export type ApplicationsQueryByOrganizationIdResponse = {
   ApplicationsQueryByOrganizationId: ApplicationsListResponse;
 };
 
+
 export interface IApplications {
+
   applicationId: string;
+
   name: string;
+
   organizationId: string;
+
   ownerId: string;
+
   status: ApplicationStatus;
+
   createdAt: number;
+
   updatedAt: number;
+
   apiKey: string;
+
   apiKeyNext: string | undefined;
+
   environments: string[];
+
 }
 
 export class Applications implements IApplications {
+
   applicationId = '';
+
   name = '';
+
   organizationId = '';
+
   ownerId = '';
+
   status = ApplicationStatus.UNKNOWN;
+
   createdAt = 0;
+
   updatedAt = 0;
+
   apiKey = '';
+
   apiKeyNext = '';
+
   environments = [];
+
 
   constructor(data: Partial<IApplications> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
+
+
+
+
+
+
+
+
+
+
         if (key === 'status' && typeof value === 'string') {
           this.status = ApplicationStatus[value as keyof typeof ApplicationStatus] ?? ApplicationStatus.UNKNOWN;
         } else 
+
+
+
+
+
+
+
+
+
+
+
+
         {
           this[key as keyof this] = value as this[keyof this];
         }

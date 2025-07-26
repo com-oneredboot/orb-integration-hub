@@ -1,28 +1,57 @@
 /**
  * AuthError standard model.
- * Generated at 2025-07-22T16:49:21.745800+00:00
+ * Generated at 2025-07-25T21:36:32.773252+00:00
  */
 
 // Import enums and models used in this model
 
+
+
+
+
+
+
+
+
+
+
 // Interface definition
 export interface IAuthError {
+
   code: string;
+
   message: string;
+
   description: string | undefined;
+
   details: Record<string, any> | undefined;
+
 }
 
 // Class definition
 export class AuthError implements IAuthError {
+
   code = '';
+
   message = '';
+
   description = '';
+
   details = {};
+
 
   constructor(data: Partial<IAuthError> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
+
+
+
+
+
+
+
+
+
         {
           this[key as keyof this] = value as this[keyof this];
         }

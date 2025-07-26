@@ -2,4 +2,13 @@
 // Generated at 
 
 export enum UserGroup {
-  USER = 'USER',  CUSTOMER = 'CUSTOMER',  EMPLOYEE = 'EMPLOYEE',  OWNER = 'OWNER'} 
+
+  USER = 'USER',
+
+  CUSTOMER = 'CUSTOMER',
+
+  EMPLOYEE = 'EMPLOYEE',
+
+  OWNER = 'OWNER'
+
+} 

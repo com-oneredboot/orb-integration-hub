@@ -3,46 +3,116 @@
  */
 
 // Import enums and models used in this model
+
+
+
+
+
+
+
+
+
+
 import { OwnershipTransferStatus } from './OwnershipTransferStatusEnum';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // CreateInput
 export type OwnershipTransferRequestsCreateInput = {
+
   transferId: string;
+
   currentOwnerId: string;
+
   newOwnerId: string;
+
   organizationId: string;
+
   status: string;
+
   requiredBillingPlan: string;
+
   monthlyCost: number;
+
   paymentValidationToken: string;
+
   createdAt: number;
+
   expiresAt: number;
+
   updatedAt: number;
+
   completedAt: number | undefined;
+
   failureReason: string | undefined;
+
   billingTransitionDetails: Record<string, any> | undefined;
+
   fraudAssessment: Record<string, any> | undefined;
+
   notificationsSent: string[] | undefined;
+
 };
 
 // UpdateInput
 export type OwnershipTransferRequestsUpdateInput = {
+
   transferId: string;
+
   currentOwnerId: string;
+
   newOwnerId: string;
+
   organizationId: string;
+
   status: string;
+
   requiredBillingPlan: string;
+
   monthlyCost: number;
+
   paymentValidationToken: string;
+
   createdAt: number;
+
   expiresAt: number;
+
   updatedAt: number;
+
   completedAt: number | undefined;
+
   failureReason: string | undefined;
+
   billingTransitionDetails: Record<string, any> | undefined;
+
   fraudAssessment: Record<string, any> | undefined;
+
   notificationsSent: string[] | undefined;
+
 };
 
 // QueryInput
@@ -51,18 +121,24 @@ export type OwnershipTransferRequestsQueryByTransferIdInput = {
 };
 
 
+
+
 export type OwnershipTransferRequestsQueryByCurrentOwnerIdInput = {
   currentOwnerId: string;
 };
+
 export type OwnershipTransferRequestsQueryByNewOwnerIdInput = {
   newOwnerId: string;
 };
+
 export type OwnershipTransferRequestsQueryByStatusInput = {
   status: string;
 };
+
 export type OwnershipTransferRequestsQueryByStatusInput = {
   status: string;
 };
+
 
 // Response types
 export type OwnershipTransferRequestsResponse = {
@@ -106,62 +182,135 @@ export type OwnershipTransferRequestsQueryByTransferIdResponse = {
   OwnershipTransferRequestsQueryByTransferId: OwnershipTransferRequestsResponse;
 };
 
+
 export type OwnershipTransferRequestsQueryByCurrentOwnerIdResponse = {
   OwnershipTransferRequestsQueryByCurrentOwnerId: OwnershipTransferRequestsListResponse;
 };
+
 export type OwnershipTransferRequestsQueryByNewOwnerIdResponse = {
   OwnershipTransferRequestsQueryByNewOwnerId: OwnershipTransferRequestsListResponse;
 };
-export type OwnershipTransferRequestsQueryByStatusResponse = {
-  OwnershipTransferRequestsQueryByStatus: OwnershipTransferRequestsListResponse;
-};
+
 export type OwnershipTransferRequestsQueryByStatusResponse = {
   OwnershipTransferRequestsQueryByStatus: OwnershipTransferRequestsListResponse;
 };
 
+export type OwnershipTransferRequestsQueryByStatusResponse = {
+  OwnershipTransferRequestsQueryByStatus: OwnershipTransferRequestsListResponse;
+};
+
+
 export interface IOwnershipTransferRequests {
+
   transferId: string;
+
   currentOwnerId: string;
+
   newOwnerId: string;
+
   organizationId: string;
+
   status: OwnershipTransferStatus;
+
   requiredBillingPlan: string;
+
   monthlyCost: number;
+
   paymentValidationToken: string;
+
   createdAt: number;
+
   expiresAt: number;
+
   updatedAt: number;
+
   completedAt: number | undefined;
+
   failureReason: string | undefined;
+
   billingTransitionDetails: Record<string, any> | undefined;
+
   fraudAssessment: Record<string, any> | undefined;
+
   notificationsSent: string[] | undefined;
+
 }
 
 export class OwnershipTransferRequests implements IOwnershipTransferRequests {
+
   transferId = '';
+
   currentOwnerId = '';
+
   newOwnerId = '';
+
   organizationId = '';
+
   status = OwnershipTransferStatus.UNKNOWN;
+
   requiredBillingPlan = '';
+
   monthlyCost = 0;
+
   paymentValidationToken = '';
+
   createdAt = 0;
+
   expiresAt = 0;
+
   updatedAt = 0;
+
   completedAt = 0;
+
   failureReason = '';
+
   billingTransitionDetails = {};
+
   fraudAssessment = {};
+
   notificationsSent = [];
+
 
   constructor(data: Partial<IOwnershipTransferRequests> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
+
+
+
+
+
+
+
+
+
+
         if (key === 'status' && typeof value === 'string') {
           this.status = OwnershipTransferStatus[value as keyof typeof OwnershipTransferStatus] ?? OwnershipTransferStatus.UNKNOWN;
         } else 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         {
           this[key as keyof this] = value as this[keyof this];
         }

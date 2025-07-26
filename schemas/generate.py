@@ -258,8 +258,8 @@ def setup_jinja_env() -> Environment:
     env = Environment(
         loader=FileSystemLoader(os.path.join(SCRIPT_DIR, 'templates')),
         autoescape=select_autoescape(['html', 'xml']),
-        trim_blocks=True,
-        lstrip_blocks=True,
+        trim_blocks=False,
+        lstrip_blocks=False,
         keep_trailing_newline=True,
         extensions=['jinja2.ext.do']
     )

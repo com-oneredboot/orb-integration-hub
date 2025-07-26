@@ -2,4 +2,13 @@
 // Generated at 
 
 export enum NotificationStatus {
-  PENDING = 'PENDING',  READ = 'READ',  DISMISSED = 'DISMISSED',  EXPIRED = 'EXPIRED'} 
+
+  PENDING = 'PENDING',
+
+  READ = 'READ',
+
+  DISMISSED = 'DISMISSED',
+
+  EXPIRED = 'EXPIRED'
+
+} 

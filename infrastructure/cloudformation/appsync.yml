@@ -133,7 +133,8 @@ Resources:
         ProjectId: !Ref ProjectId
 
   # DynamoDB DataSources
-  # Jinja template for AppSync DynamoDB DataSources
+    # Jinja template for AppSync DynamoDB DataSources
+  
   NotificationsDynamoDbDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -145,6 +146,7 @@ Resources:
         AwsRegion: !Ref AWS::Region
         UseCallerCredentials: false
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+    
   ApplicationUsersDynamoDbDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -156,6 +158,7 @@ Resources:
         AwsRegion: !Ref AWS::Region
         UseCallerCredentials: false
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+    
   SmsRateLimitDynamoDbDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -167,6 +170,7 @@ Resources:
         AwsRegion: !Ref AWS::Region
         UseCallerCredentials: false
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+    
   OrganizationUsersDynamoDbDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -178,6 +182,7 @@ Resources:
         AwsRegion: !Ref AWS::Region
         UseCallerCredentials: false
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+    
   ApplicationRolesDynamoDbDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -189,6 +194,7 @@ Resources:
         AwsRegion: !Ref AWS::Region
         UseCallerCredentials: false
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+    
   RolesDynamoDbDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -200,6 +206,7 @@ Resources:
         AwsRegion: !Ref AWS::Region
         UseCallerCredentials: false
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+    
   ApplicationsDynamoDbDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -211,9 +218,11 @@ Resources:
         AwsRegion: !Ref AWS::Region
         UseCallerCredentials: false
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
- 
+     
+
   # Lambda DataSources
-  # Jinja template for AppSync Lambda DataSources
+    # Jinja template for AppSync Lambda DataSources
+  
   OwnershipTransferRequestsLambdaDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -223,6 +232,7 @@ Resources:
       LambdaConfig:
         LambdaFunctionArn: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-ownership-transfer-requests-lambda-arn}}'
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+  
   OrganizationsLambdaDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -232,6 +242,7 @@ Resources:
       LambdaConfig:
         LambdaFunctionArn: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-organizations-lambda-arn}}'
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+  
   PrivacyRequestsLambdaDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -241,6 +252,7 @@ Resources:
       LambdaConfig:
         LambdaFunctionArn: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-privacy-requests-lambda-arn}}'
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+  
   UsersLambdaDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -250,6 +262,7 @@ Resources:
       LambdaConfig:
         LambdaFunctionArn: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-lambda-arn}}'
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+  
   SmsVerificationLambdaDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -259,8 +272,10 @@ Resources:
       LambdaConfig:
         LambdaFunctionArn: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-sms-verification-lambda-arn}}'
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
- 
+   
+
   # DynamoDB Resolvers
+    
   NotificationsCreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -272,14 +287,19 @@ Resources:
       FieldName: NotificationsCreate
       DataSourceName: NotificationsDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "PutItem",
           "key": {
             "notificationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.notificationId)
+          
           },
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -294,6 +314,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   NotificationsUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -305,6 +326,9 @@ Resources:
       FieldName: NotificationsUpdate
       DataSourceName: NotificationsDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         #set($input = $ctx.args.input)
         #set($key = "notificationId")
         #set($updateExpression = "")
@@ -331,6 +355,7 @@ Resources:
           "operation": "UpdateItem",
           "key": {
             "notificationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.notificationId)
+            
           },
           "update": {
             "expression": "SET $updateExpression",
@@ -338,6 +363,7 @@ Resources:
             "expressionValues": $util.toJson($expressionValues)
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -352,6 +378,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   NotificationsDeleteResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -363,12 +390,17 @@ Resources:
       FieldName: NotificationsDelete
       DataSourceName: NotificationsDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "DeleteItem",
           "key": {
-            "notificationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.notificationId)          }
+            "notificationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.notificationId)
+          }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -383,6 +415,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   NotificationsDisableResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -394,6 +427,9 @@ Resources:
       FieldName: NotificationsDisable
       DataSourceName: NotificationsDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         #set($input = $ctx.args.input)
         #set($key = "notificationId")
         #set($updateExpression = "")
@@ -420,6 +456,7 @@ Resources:
           "operation": "UpdateItem",
           "key": {
             "notificationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.notificationId)
+            
           },
           "update": {
             "expression": "SET $updateExpression",
@@ -427,6 +464,7 @@ Resources:
             "expressionValues": $util.toJson($expressionValues)
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -441,6 +479,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   NotificationsQueryByNotificationIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -452,15 +491,20 @@ Resources:
       FieldName: NotificationsQueryByNotificationId
       DataSourceName: NotificationsDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
           "query": {
             "expression": "notificationId = :notificationId",
             "expressionValues": {
-              ":notificationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.notificationId)            }
+              ":notificationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.notificationId)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -475,6 +519,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   NotificationsQueryByRecipientUserIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -486,6 +531,9 @@ Resources:
       FieldName: NotificationsQueryByRecipientUserId
       DataSourceName: NotificationsDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
@@ -493,9 +541,11 @@ Resources:
           "query": {
             "expression": "recipientUserId = :recipientUserId",
             "expressionValues": {
-              ":recipientUserId": $util.dynamodb.toDynamoDBJson($ctx.args.input.recipientUserId)            }
+              ":recipientUserId": $util.dynamodb.toDynamoDBJson($ctx.args.input.recipientUserId)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -510,6 +560,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   NotificationsQueryByRecipientUserIdAndCreatedAtResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -521,6 +572,9 @@ Resources:
       FieldName: NotificationsQueryByRecipientUserIdAndCreatedAt
       DataSourceName: NotificationsDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
@@ -529,9 +583,11 @@ Resources:
             "expression": "recipientUserId = :recipientUserId AND createdAt = :createdAt",
             "expressionValues": {
               ":recipientUserId": $util.dynamodb.toDynamoDBJson($ctx.args.input.recipientUserId),
-              ":createdAt": $util.dynamodb.toDynamoDBJson($ctx.args.input.createdAt)            }
+              ":createdAt": $util.dynamodb.toDynamoDBJson($ctx.args.input.createdAt)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -546,6 +602,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   NotificationsQueryByTypeResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -557,6 +614,9 @@ Resources:
       FieldName: NotificationsQueryByType
       DataSourceName: NotificationsDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
@@ -564,9 +624,11 @@ Resources:
           "query": {
             "expression": "type = :type",
             "expressionValues": {
-              ":type": $util.dynamodb.toDynamoDBJson($ctx.args.input.type)            }
+              ":type": $util.dynamodb.toDynamoDBJson($ctx.args.input.type)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -581,6 +643,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   NotificationsQueryByTypeAndStatusResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -592,6 +655,9 @@ Resources:
       FieldName: NotificationsQueryByTypeAndStatus
       DataSourceName: NotificationsDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
@@ -600,9 +666,11 @@ Resources:
             "expression": "type = :type AND status = :status",
             "expressionValues": {
               ":type": $util.dynamodb.toDynamoDBJson($ctx.args.input.type),
-              ":status": $util.dynamodb.toDynamoDBJson($ctx.args.input.status)            }
+              ":status": $util.dynamodb.toDynamoDBJson($ctx.args.input.status)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -617,6 +685,8 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
+    
   ApplicationUsersCreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -628,14 +698,19 @@ Resources:
       FieldName: ApplicationUsersCreate
       DataSourceName: ApplicationUsersDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "PutItem",
           "key": {
             "applicationUserId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationUserId)
+          
           },
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -650,6 +725,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationUsersUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -661,6 +737,9 @@ Resources:
       FieldName: ApplicationUsersUpdate
       DataSourceName: ApplicationUsersDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         #set($input = $ctx.args.input)
         #set($key = "applicationUserId")
         #set($updateExpression = "")
@@ -687,6 +766,7 @@ Resources:
           "operation": "UpdateItem",
           "key": {
             "applicationUserId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationUserId)
+            
           },
           "update": {
             "expression": "SET $updateExpression",
@@ -694,6 +774,7 @@ Resources:
             "expressionValues": $util.toJson($expressionValues)
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -708,6 +789,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationUsersDeleteResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -719,12 +801,17 @@ Resources:
       FieldName: ApplicationUsersDelete
       DataSourceName: ApplicationUsersDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "DeleteItem",
           "key": {
-            "applicationUserId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationUserId)          }
+            "applicationUserId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationUserId)
+          }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -739,6 +826,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationUsersDisableResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -750,6 +838,9 @@ Resources:
       FieldName: ApplicationUsersDisable
       DataSourceName: ApplicationUsersDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         #set($input = $ctx.args.input)
         #set($key = "applicationUserId")
         #set($updateExpression = "")
@@ -776,6 +867,7 @@ Resources:
           "operation": "UpdateItem",
           "key": {
             "applicationUserId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationUserId)
+            
           },
           "update": {
             "expression": "SET $updateExpression",
@@ -783,6 +875,7 @@ Resources:
             "expressionValues": $util.toJson($expressionValues)
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -797,6 +890,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationUsersQueryByApplicationUserIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -808,15 +902,20 @@ Resources:
       FieldName: ApplicationUsersQueryByApplicationUserId
       DataSourceName: ApplicationUsersDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
           "query": {
             "expression": "applicationUserId = :applicationUserId",
             "expressionValues": {
-              ":applicationUserId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationUserId)            }
+              ":applicationUserId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationUserId)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -831,6 +930,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationUsersQueryByUserIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -842,6 +942,9 @@ Resources:
       FieldName: ApplicationUsersQueryByUserId
       DataSourceName: ApplicationUsersDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
@@ -849,9 +952,11 @@ Resources:
           "query": {
             "expression": "userId = :userId",
             "expressionValues": {
-              ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)            }
+              ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -866,6 +971,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationUsersQueryByUserIdAndApplicationIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -877,6 +983,9 @@ Resources:
       FieldName: ApplicationUsersQueryByUserIdAndApplicationId
       DataSourceName: ApplicationUsersDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
@@ -885,9 +994,11 @@ Resources:
             "expression": "userId = :userId AND applicationId = :applicationId",
             "expressionValues": {
               ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId),
-              ":applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)            }
+              ":applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -902,6 +1013,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationUsersQueryByApplicationIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -913,6 +1025,9 @@ Resources:
       FieldName: ApplicationUsersQueryByApplicationId
       DataSourceName: ApplicationUsersDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
@@ -920,9 +1035,11 @@ Resources:
           "query": {
             "expression": "applicationId = :applicationId",
             "expressionValues": {
-              ":applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)            }
+              ":applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -937,6 +1054,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationUsersQueryByApplicationIdAndUserIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -948,6 +1066,9 @@ Resources:
       FieldName: ApplicationUsersQueryByApplicationIdAndUserId
       DataSourceName: ApplicationUsersDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
@@ -956,9 +1077,11 @@ Resources:
             "expression": "applicationId = :applicationId AND userId = :userId",
             "expressionValues": {
               ":applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId),
-              ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)            }
+              ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -973,6 +1096,8 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
+    
   SmsRateLimitCreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -984,14 +1109,19 @@ Resources:
       FieldName: SmsRateLimitCreate
       DataSourceName: SmsRateLimitDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "PutItem",
           "key": {
             "phoneNumber": $util.dynamodb.toDynamoDBJson($ctx.args.input.phoneNumber)
+          
           },
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1006,6 +1136,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   SmsRateLimitUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1017,6 +1148,9 @@ Resources:
       FieldName: SmsRateLimitUpdate
       DataSourceName: SmsRateLimitDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         #set($input = $ctx.args.input)
         #set($key = "phoneNumber")
         #set($updateExpression = "")
@@ -1043,6 +1177,7 @@ Resources:
           "operation": "UpdateItem",
           "key": {
             "phoneNumber": $util.dynamodb.toDynamoDBJson($ctx.args.input.phoneNumber)
+            
           },
           "update": {
             "expression": "SET $updateExpression",
@@ -1050,6 +1185,7 @@ Resources:
             "expressionValues": $util.toJson($expressionValues)
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1064,6 +1200,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   SmsRateLimitDeleteResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1075,12 +1212,17 @@ Resources:
       FieldName: SmsRateLimitDelete
       DataSourceName: SmsRateLimitDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "DeleteItem",
           "key": {
-            "phoneNumber": $util.dynamodb.toDynamoDBJson($ctx.args.input.phoneNumber)          }
+            "phoneNumber": $util.dynamodb.toDynamoDBJson($ctx.args.input.phoneNumber)
+          }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1095,6 +1237,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   SmsRateLimitDisableResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1106,6 +1249,9 @@ Resources:
       FieldName: SmsRateLimitDisable
       DataSourceName: SmsRateLimitDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         #set($input = $ctx.args.input)
         #set($key = "phoneNumber")
         #set($updateExpression = "")
@@ -1132,6 +1278,7 @@ Resources:
           "operation": "UpdateItem",
           "key": {
             "phoneNumber": $util.dynamodb.toDynamoDBJson($ctx.args.input.phoneNumber)
+            
           },
           "update": {
             "expression": "SET $updateExpression",
@@ -1139,6 +1286,7 @@ Resources:
             "expressionValues": $util.toJson($expressionValues)
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1153,6 +1301,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   SmsRateLimitQueryByPhoneNumberResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1164,15 +1313,20 @@ Resources:
       FieldName: SmsRateLimitQueryByPhoneNumber
       DataSourceName: SmsRateLimitDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
           "query": {
             "expression": "phoneNumber = :phoneNumber",
             "expressionValues": {
-              ":phoneNumber": $util.dynamodb.toDynamoDBJson($ctx.args.input.phoneNumber)            }
+              ":phoneNumber": $util.dynamodb.toDynamoDBJson($ctx.args.input.phoneNumber)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1187,6 +1341,8 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
+    
   OrganizationUsersCreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1198,14 +1354,19 @@ Resources:
       FieldName: OrganizationUsersCreate
       DataSourceName: OrganizationUsersDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "PutItem",
           "key": {
             "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          
           },
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1220,6 +1381,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   OrganizationUsersUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1231,6 +1393,9 @@ Resources:
       FieldName: OrganizationUsersUpdate
       DataSourceName: OrganizationUsersDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         #set($input = $ctx.args.input)
         #set($key = "userId")
         #set($updateExpression = "")
@@ -1257,6 +1422,7 @@ Resources:
           "operation": "UpdateItem",
           "key": {
             "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+            
           },
           "update": {
             "expression": "SET $updateExpression",
@@ -1264,6 +1430,7 @@ Resources:
             "expressionValues": $util.toJson($expressionValues)
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1278,6 +1445,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   OrganizationUsersDeleteResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1289,12 +1457,17 @@ Resources:
       FieldName: OrganizationUsersDelete
       DataSourceName: OrganizationUsersDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "DeleteItem",
           "key": {
-            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)          }
+            "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+          }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1309,6 +1482,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   OrganizationUsersDisableResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1320,6 +1494,9 @@ Resources:
       FieldName: OrganizationUsersDisable
       DataSourceName: OrganizationUsersDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         #set($input = $ctx.args.input)
         #set($key = "userId")
         #set($updateExpression = "")
@@ -1346,6 +1523,7 @@ Resources:
           "operation": "UpdateItem",
           "key": {
             "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+            
           },
           "update": {
             "expression": "SET $updateExpression",
@@ -1353,6 +1531,7 @@ Resources:
             "expressionValues": $util.toJson($expressionValues)
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1367,6 +1546,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   OrganizationUsersQueryByUserIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1378,15 +1558,20 @@ Resources:
       FieldName: OrganizationUsersQueryByUserId
       DataSourceName: OrganizationUsersDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
           "query": {
             "expression": "userId = :userId",
             "expressionValues": {
-              ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)            }
+              ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1401,6 +1586,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   OrganizationUsersQueryByOrganizationIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1412,15 +1598,20 @@ Resources:
       FieldName: OrganizationUsersQueryByOrganizationId
       DataSourceName: OrganizationUsersDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
           "query": {
             "expression": "organizationId = :organizationId",
             "expressionValues": {
-              ":organizationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.organizationId)            }
+              ":organizationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.organizationId)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1435,6 +1626,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   OrganizationUsersQueryByUserIdAndOrganizationIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1446,6 +1638,9 @@ Resources:
       FieldName: OrganizationUsersQueryByUserIdAndOrganizationId
       DataSourceName: OrganizationUsersDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
@@ -1453,9 +1648,11 @@ Resources:
             "expression": "userId = :userId AND organizationId = :organizationId",
             "expressionValues": {
               ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId),
-              ":organizationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.organizationId)            }
+              ":organizationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.organizationId)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1470,6 +1667,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   OrganizationUsersQueryByOrganizationIdAndRoleResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1481,6 +1679,9 @@ Resources:
       FieldName: OrganizationUsersQueryByOrganizationIdAndRole
       DataSourceName: OrganizationUsersDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
@@ -1489,9 +1690,11 @@ Resources:
             "expression": "organizationId = :organizationId AND role = :role",
             "expressionValues": {
               ":organizationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.organizationId),
-              ":role": $util.dynamodb.toDynamoDBJson($ctx.args.input.role)            }
+              ":role": $util.dynamodb.toDynamoDBJson($ctx.args.input.role)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1506,6 +1709,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   OrganizationUsersQueryByUserIdAndRoleResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1517,6 +1721,9 @@ Resources:
       FieldName: OrganizationUsersQueryByUserIdAndRole
       DataSourceName: OrganizationUsersDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
@@ -1525,9 +1732,11 @@ Resources:
             "expression": "userId = :userId AND role = :role",
             "expressionValues": {
               ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId),
-              ":role": $util.dynamodb.toDynamoDBJson($ctx.args.input.role)            }
+              ":role": $util.dynamodb.toDynamoDBJson($ctx.args.input.role)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1542,6 +1751,8 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
+    
   ApplicationRolesCreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1553,14 +1764,19 @@ Resources:
       FieldName: ApplicationRolesCreate
       DataSourceName: ApplicationRolesDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "PutItem",
           "key": {
             "applicationRoleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationRoleId)
+          
           },
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1575,6 +1791,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationRolesUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1586,6 +1803,9 @@ Resources:
       FieldName: ApplicationRolesUpdate
       DataSourceName: ApplicationRolesDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         #set($input = $ctx.args.input)
         #set($key = "applicationRoleId")
         #set($updateExpression = "")
@@ -1612,6 +1832,7 @@ Resources:
           "operation": "UpdateItem",
           "key": {
             "applicationRoleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationRoleId)
+            
           },
           "update": {
             "expression": "SET $updateExpression",
@@ -1619,6 +1840,7 @@ Resources:
             "expressionValues": $util.toJson($expressionValues)
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1633,6 +1855,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationRolesDeleteResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1644,12 +1867,17 @@ Resources:
       FieldName: ApplicationRolesDelete
       DataSourceName: ApplicationRolesDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "DeleteItem",
           "key": {
-            "applicationRoleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationRoleId)          }
+            "applicationRoleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationRoleId)
+          }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1664,6 +1892,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationRolesDisableResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1675,6 +1904,9 @@ Resources:
       FieldName: ApplicationRolesDisable
       DataSourceName: ApplicationRolesDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         #set($input = $ctx.args.input)
         #set($key = "applicationRoleId")
         #set($updateExpression = "")
@@ -1701,6 +1933,7 @@ Resources:
           "operation": "UpdateItem",
           "key": {
             "applicationRoleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationRoleId)
+            
           },
           "update": {
             "expression": "SET $updateExpression",
@@ -1708,6 +1941,7 @@ Resources:
             "expressionValues": $util.toJson($expressionValues)
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1722,6 +1956,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationRolesQueryByApplicationRoleIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1733,15 +1968,20 @@ Resources:
       FieldName: ApplicationRolesQueryByApplicationRoleId
       DataSourceName: ApplicationRolesDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
           "query": {
             "expression": "applicationRoleId = :applicationRoleId",
             "expressionValues": {
-              ":applicationRoleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationRoleId)            }
+              ":applicationRoleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationRoleId)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1756,6 +1996,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationRolesQueryByUserIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1767,6 +2008,9 @@ Resources:
       FieldName: ApplicationRolesQueryByUserId
       DataSourceName: ApplicationRolesDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
@@ -1774,9 +2018,11 @@ Resources:
           "query": {
             "expression": "userId = :userId",
             "expressionValues": {
-              ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)            }
+              ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1791,6 +2037,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationRolesQueryByUserIdAndRoleIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1802,6 +2049,9 @@ Resources:
       FieldName: ApplicationRolesQueryByUserIdAndRoleId
       DataSourceName: ApplicationRolesDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
@@ -1810,9 +2060,11 @@ Resources:
             "expression": "userId = :userId AND roleId = :roleId",
             "expressionValues": {
               ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId),
-              ":roleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)            }
+              ":roleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1827,6 +2079,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationRolesQueryByApplicationIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1838,6 +2091,9 @@ Resources:
       FieldName: ApplicationRolesQueryByApplicationId
       DataSourceName: ApplicationRolesDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
@@ -1845,9 +2101,11 @@ Resources:
           "query": {
             "expression": "applicationId = :applicationId",
             "expressionValues": {
-              ":applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)            }
+              ":applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1862,6 +2120,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationRolesQueryByApplicationIdAndRoleIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1873,6 +2132,9 @@ Resources:
       FieldName: ApplicationRolesQueryByApplicationIdAndRoleId
       DataSourceName: ApplicationRolesDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
@@ -1881,9 +2143,11 @@ Resources:
             "expression": "applicationId = :applicationId AND roleId = :roleId",
             "expressionValues": {
               ":applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId),
-              ":roleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)            }
+              ":roleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1898,6 +2162,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationRolesQueryByRoleIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1909,6 +2174,9 @@ Resources:
       FieldName: ApplicationRolesQueryByRoleId
       DataSourceName: ApplicationRolesDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
@@ -1916,9 +2184,11 @@ Resources:
           "query": {
             "expression": "roleId = :roleId",
             "expressionValues": {
-              ":roleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)            }
+              ":roleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1933,6 +2203,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationRolesQueryByRoleIdAndRoleTypeResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1944,6 +2215,9 @@ Resources:
       FieldName: ApplicationRolesQueryByRoleIdAndRoleType
       DataSourceName: ApplicationRolesDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
@@ -1952,9 +2226,11 @@ Resources:
             "expression": "roleId = :roleId AND roleType = :roleType",
             "expressionValues": {
               ":roleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId),
-              ":roleType": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleType)            }
+              ":roleType": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleType)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -1969,6 +2245,8 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
+    
   RolesCreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -1980,14 +2258,19 @@ Resources:
       FieldName: RolesCreate
       DataSourceName: RolesDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "PutItem",
           "key": {
             "roleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
+          
           },
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -2002,6 +2285,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   RolesUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -2013,6 +2297,9 @@ Resources:
       FieldName: RolesUpdate
       DataSourceName: RolesDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         #set($input = $ctx.args.input)
         #set($key = "roleId")
         #set($updateExpression = "")
@@ -2039,6 +2326,7 @@ Resources:
           "operation": "UpdateItem",
           "key": {
             "roleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
+            
           },
           "update": {
             "expression": "SET $updateExpression",
@@ -2046,6 +2334,7 @@ Resources:
             "expressionValues": $util.toJson($expressionValues)
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -2060,6 +2349,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   RolesDeleteResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -2071,12 +2361,17 @@ Resources:
       FieldName: RolesDelete
       DataSourceName: RolesDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "DeleteItem",
           "key": {
-            "roleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)          }
+            "roleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
+          }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -2091,6 +2386,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   RolesDisableResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -2102,6 +2398,9 @@ Resources:
       FieldName: RolesDisable
       DataSourceName: RolesDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         #set($input = $ctx.args.input)
         #set($key = "roleId")
         #set($updateExpression = "")
@@ -2128,6 +2427,7 @@ Resources:
           "operation": "UpdateItem",
           "key": {
             "roleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
+            
           },
           "update": {
             "expression": "SET $updateExpression",
@@ -2135,6 +2435,7 @@ Resources:
             "expressionValues": $util.toJson($expressionValues)
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -2149,6 +2450,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   RolesQueryByRoleIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -2160,15 +2462,20 @@ Resources:
       FieldName: RolesQueryByRoleId
       DataSourceName: RolesDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
           "query": {
             "expression": "roleId = :roleId",
             "expressionValues": {
-              ":roleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)            }
+              ":roleId": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleId)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -2183,6 +2490,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   RolesQueryByUserIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -2194,6 +2502,9 @@ Resources:
       FieldName: RolesQueryByUserId
       DataSourceName: RolesDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
@@ -2201,9 +2512,11 @@ Resources:
           "query": {
             "expression": "userId = :userId",
             "expressionValues": {
-              ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)            }
+              ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -2218,6 +2531,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   RolesQueryByUserIdAndRoleTypeResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -2229,6 +2543,9 @@ Resources:
       FieldName: RolesQueryByUserIdAndRoleType
       DataSourceName: RolesDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
@@ -2237,9 +2554,11 @@ Resources:
             "expression": "userId = :userId AND roleType = :roleType",
             "expressionValues": {
               ":userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId),
-              ":roleType": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleType)            }
+              ":roleType": $util.dynamodb.toDynamoDBJson($ctx.args.input.roleType)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -2254,6 +2573,8 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
+    
   ApplicationsCreateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -2265,14 +2586,19 @@ Resources:
       FieldName: ApplicationsCreate
       DataSourceName: ApplicationsDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "PutItem",
           "key": {
             "applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+          
           },
           "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input)
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -2287,6 +2613,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationsUpdateResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -2298,6 +2625,9 @@ Resources:
       FieldName: ApplicationsUpdate
       DataSourceName: ApplicationsDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         #set($input = $ctx.args.input)
         #set($key = "applicationId")
         #set($updateExpression = "")
@@ -2324,6 +2654,7 @@ Resources:
           "operation": "UpdateItem",
           "key": {
             "applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+            
           },
           "update": {
             "expression": "SET $updateExpression",
@@ -2331,6 +2662,7 @@ Resources:
             "expressionValues": $util.toJson($expressionValues)
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -2345,6 +2677,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationsDeleteResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -2356,12 +2689,17 @@ Resources:
       FieldName: ApplicationsDelete
       DataSourceName: ApplicationsDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "DeleteItem",
           "key": {
-            "applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)          }
+            "applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+          }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -2376,6 +2714,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationsDisableResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -2387,6 +2726,9 @@ Resources:
       FieldName: ApplicationsDisable
       DataSourceName: ApplicationsDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         #set($input = $ctx.args.input)
         #set($key = "applicationId")
         #set($updateExpression = "")
@@ -2413,6 +2755,7 @@ Resources:
           "operation": "UpdateItem",
           "key": {
             "applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+            
           },
           "update": {
             "expression": "SET $updateExpression",
@@ -2420,6 +2763,7 @@ Resources:
             "expressionValues": $util.toJson($expressionValues)
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -2434,6 +2778,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationsQueryByApplicationIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -2445,15 +2790,20 @@ Resources:
       FieldName: ApplicationsQueryByApplicationId
       DataSourceName: ApplicationsDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
           "query": {
             "expression": "applicationId = :applicationId",
             "expressionValues": {
-              ":applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)            }
+              ":applicationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.applicationId)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -2468,6 +2818,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationsQueryByOrganizationIdResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -2479,6 +2830,9 @@ Resources:
       FieldName: ApplicationsQueryByOrganizationId
       DataSourceName: ApplicationsDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
@@ -2486,9 +2840,11 @@ Resources:
           "query": {
             "expression": "organizationId = :organizationId",
             "expressionValues": {
-              ":organizationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.organizationId)            }
+              ":organizationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.organizationId)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -2503,6 +2859,7 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
+    
   ApplicationsQueryByOrganizationIdAndCreatedAtResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -2514,6 +2871,9 @@ Resources:
       FieldName: ApplicationsQueryByOrganizationIdAndCreatedAt
       DataSourceName: ApplicationsDynamoDbDataSource
       RequestMappingTemplate: |
+      
+      
+      
         {
           "version": "2018-05-29",
           "operation": "Query",
@@ -2522,9 +2882,11 @@ Resources:
             "expression": "organizationId = :organizationId AND createdAt = :createdAt",
             "expressionValues": {
               ":organizationId": $util.dynamodb.toDynamoDBJson($ctx.args.input.organizationId),
-              ":createdAt": $util.dynamodb.toDynamoDBJson($ctx.args.input.createdAt)            }
+              ":createdAt": $util.dynamodb.toDynamoDBJson($ctx.args.input.createdAt)
+            }
           }
         }
+      
       ResponseMappingTemplate: |
         #if($ctx.error)
           {
@@ -2539,8 +2901,11 @@ Resources:
             "Data": #if($ctx.result && $ctx.result.items) $util.toJson($ctx.result.items) #elseif($ctx.result) $util.toJson($ctx.result) #else null #end
           }
         #end
- 
+    
+     
+
   # Lambda Resolvers
+  
   SmsVerificationResolver:
     Type: AWS::AppSync::Resolver
     DependsOn:
@@ -2559,7 +2924,15 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($ctx.result)
+
+
+  
+    
+  
+  
+  
   OwnershipTransferRequestsCreateResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
@@ -2589,8 +2962,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   OwnershipTransferRequestsUpdateResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
@@ -2620,8 +2998,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   OwnershipTransferRequestsDeleteResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
@@ -2651,8 +3034,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   OwnershipTransferRequestsDisableResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
@@ -2682,8 +3070,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   OwnershipTransferRequestsQueryByTransferIdResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
@@ -2713,8 +3106,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   OwnershipTransferRequestsQueryByCurrentOwnerIdResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
@@ -2744,8 +3142,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   OwnershipTransferRequestsQueryByCurrentOwnerIdAndCreatedAtResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
@@ -2775,8 +3178,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   OwnershipTransferRequestsQueryByNewOwnerIdResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
@@ -2806,8 +3214,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   OwnershipTransferRequestsQueryByNewOwnerIdAndCreatedAtResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
@@ -2837,8 +3250,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   OwnershipTransferRequestsQueryByStatusResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
@@ -2868,8 +3286,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   OwnershipTransferRequestsQueryByStatusAndCreatedAtResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
@@ -2899,8 +3322,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   OwnershipTransferRequestsQueryByStatusAndExpiresAtResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - OwnershipTransferRequestsLambdaDataSource
@@ -2930,8 +3358,18 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+
+  
+    
+  
+  
+  
   OrganizationsCreateResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - OrganizationsLambdaDataSource
@@ -2961,8 +3399,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   OrganizationsUpdateResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - OrganizationsLambdaDataSource
@@ -2992,8 +3435,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   OrganizationsDeleteResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - OrganizationsLambdaDataSource
@@ -3023,8 +3471,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   OrganizationsDisableResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - OrganizationsLambdaDataSource
@@ -3054,8 +3507,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   OrganizationsQueryByOrganizationIdResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - OrganizationsLambdaDataSource
@@ -3085,8 +3543,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   OrganizationsQueryByOwnerIdResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - OrganizationsLambdaDataSource
@@ -3116,8 +3579,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   OrganizationsQueryByOwnerIdAndCreatedAtResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - OrganizationsLambdaDataSource
@@ -3147,8 +3615,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   OrganizationsQueryByStatusResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - OrganizationsLambdaDataSource
@@ -3178,8 +3651,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   OrganizationsQueryByStatusAndCreatedAtResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - OrganizationsLambdaDataSource
@@ -3209,8 +3687,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   OrganizationsWithDetailsQueryByOwnerIdResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - OrganizationsLambdaDataSource
@@ -3240,12 +3723,22 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         #if($ctx.result.StatusCode == 200)
           $util.toJson($ctx.result.Data)
         #else
           $util.error($ctx.result.Message)
         #end
+        
+  
+
+  
+    
+  
+  
+  
   PrivacyRequestsCreateResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
@@ -3275,8 +3768,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   PrivacyRequestsUpdateResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
@@ -3306,8 +3804,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   PrivacyRequestsDeleteResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
@@ -3337,8 +3840,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   PrivacyRequestsDisableResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
@@ -3368,8 +3876,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   PrivacyRequestsQueryByRequestIdResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
@@ -3399,8 +3912,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   PrivacyRequestsQueryByRequestTypeResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
@@ -3430,8 +3948,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   PrivacyRequestsQueryByRequestTypeAndReceivedAtResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
@@ -3461,8 +3984,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   PrivacyRequestsQueryByDataSubjectEmailResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
@@ -3492,8 +4020,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   PrivacyRequestsQueryByDataSubjectEmailAndReceivedAtResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
@@ -3523,8 +4056,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   PrivacyRequestsQueryByOrganizationIdResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
@@ -3554,8 +4092,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   PrivacyRequestsQueryByOrganizationIdAndReceivedAtResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
@@ -3585,8 +4128,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   PrivacyRequestsQueryByStatusResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
@@ -3616,8 +4164,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   PrivacyRequestsQueryByStatusAndDeadlineResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - PrivacyRequestsLambdaDataSource
@@ -3647,8 +4200,18 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+
+  
+    
+  
+  
+  
   UsersCreateResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - UsersLambdaDataSource
@@ -3678,8 +4241,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   UsersUpdateResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - UsersLambdaDataSource
@@ -3709,8 +4277,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   UsersDeleteResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - UsersLambdaDataSource
@@ -3740,8 +4313,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   UsersDisableResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - UsersLambdaDataSource
@@ -3771,8 +4349,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   UsersQueryByUserIdResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - UsersLambdaDataSource
@@ -3802,8 +4385,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   UsersQueryByEmailResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - UsersLambdaDataSource
@@ -3833,8 +4421,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   UsersQueryByCognitoIdResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - UsersLambdaDataSource
@@ -3864,8 +4457,13 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+  
   UsersQueryByCognitoSubResolver:
+  
     Type: AWS::AppSync::Resolver
     DependsOn:
       - UsersLambdaDataSource
@@ -3895,7 +4493,11 @@ Resources:
           }
         }
       ResponseMappingTemplate: |
+        
         $util.toJson($ctx.result)
+        
+  
+
 
 # --------------------------------------------------- #
 Outputs:

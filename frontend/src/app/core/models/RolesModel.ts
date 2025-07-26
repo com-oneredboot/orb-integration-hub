@@ -3,27 +3,58 @@
  */
 
 // Import enums and models used in this model
+
+
+
+
+
+
 import { RoleType } from './RoleTypeEnum';
+
+
+
 import { RoleStatus } from './RoleStatusEnum';
+
+
+
+
+
+
+
+
 
 // CreateInput
 export type RolesCreateInput = {
+
   roleId: string;
+
   userId: string | undefined;
+
   roleType: string;
+
   status: string;
+
   createdAt: number;
+
   updatedAt: number;
+
 };
 
 // UpdateInput
 export type RolesUpdateInput = {
+
   roleId: string;
+
   userId: string | undefined;
+
   roleType: string;
+
   status: string;
+
   createdAt: number;
+
   updatedAt: number;
+
 };
 
 // QueryInput
@@ -32,9 +63,12 @@ export type RolesQueryByRoleIdInput = {
 };
 
 
+
+
 export type RolesQueryByUserIdInput = {
   userId: string;
 };
+
 
 // Response types
 export type RolesResponse = {
@@ -78,36 +112,67 @@ export type RolesQueryByRoleIdResponse = {
   RolesQueryByRoleId: RolesResponse;
 };
 
+
 export type RolesQueryByUserIdResponse = {
   RolesQueryByUserId: RolesListResponse;
 };
 
+
 export interface IRoles {
+
   roleId: string;
+
   userId: string | undefined;
+
   roleType: RoleType;
+
   status: RoleStatus;
+
   createdAt: number;
+
   updatedAt: number;
+
 }
 
 export class Roles implements IRoles {
+
   roleId = '';
+
   userId = '';
+
   roleType = RoleType.UNKNOWN;
+
   status = RoleStatus.UNKNOWN;
+
   createdAt = 0;
+
   updatedAt = 0;
+
 
   constructor(data: Partial<IRoles> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
+
+
+
+
+
+
         if (key === 'roleType' && typeof value === 'string') {
           this.roleType = RoleType[value as keyof typeof RoleType] ?? RoleType.UNKNOWN;
         } else 
+
+
+
         if (key === 'status' && typeof value === 'string') {
           this.status = RoleStatus[value as keyof typeof RoleStatus] ?? RoleStatus.UNKNOWN;
         } else 
+
+
+
+
+
+
         {
           this[key as keyof this] = value as this[keyof this];
         }

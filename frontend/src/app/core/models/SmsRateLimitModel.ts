@@ -4,26 +4,49 @@
 
 // Import enums and models used in this model
 
+
+
+
+
+
+
+
+
+
+
+
 // CreateInput
 export type SmsRateLimitCreateInput = {
+
   phoneNumber: string;
+
   requestCount: number;
+
   firstRequestTime: number;
+
   ttl: number;
+
 };
 
 // UpdateInput
 export type SmsRateLimitUpdateInput = {
+
   phoneNumber: string;
+
   requestCount: number;
+
   firstRequestTime: number;
+
   ttl: number;
+
 };
 
 // QueryInput
 export type SmsRateLimitQueryByPhoneNumberInput = {
   phoneNumber: string;
 };
+
+
 
 
 
@@ -70,22 +93,42 @@ export type SmsRateLimitQueryByPhoneNumberResponse = {
 };
 
 
+
 export interface ISmsRateLimit {
+
   phoneNumber: string;
+
   requestCount: number;
+
   firstRequestTime: number;
+
   ttl: number;
+
 }
 
 export class SmsRateLimit implements ISmsRateLimit {
+
   phoneNumber = '';
+
   requestCount = 0;
+
   firstRequestTime = 0;
+
   ttl = 0;
+
 
   constructor(data: Partial<ISmsRateLimit> = {}) {
     Object.entries(data).forEach(([key, value]) => {
       if (key in this) {
+
+
+
+
+
+
+
+
+
         {
           this[key as keyof this] = value as this[keyof this];
         }
