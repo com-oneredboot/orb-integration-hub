@@ -335,6 +335,7 @@ Resources:
               - !Sub "arn:aws:codeartifact:${AWS::Region}:${AWS::AccountId}:domain/${CustomerId}-${ProjectId}"
               - !Sub "arn:aws:codeartifact:${AWS::Region}:${AWS::AccountId}:domain/${CustomerId}-${ProjectId}/*"
               - !Sub "arn:aws:codeartifact:${AWS::Region}:${AWS::AccountId}:repository/${CustomerId}-${ProjectId}/*"
+              - !Sub "arn:aws:codeartifact:${AWS::Region}:${AWS::AccountId}:package/${CustomerId}-${ProjectId}/*/*/*/*"
           - Effect: Allow
             Action:
               - sts:GetServiceBearerToken
