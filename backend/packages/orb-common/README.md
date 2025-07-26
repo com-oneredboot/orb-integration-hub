@@ -190,7 +190,7 @@ orb-common/
 
 ## License
 
-MIT License - See LICENSE file for details.
+MIT License - See LICENSE.txt file for details.
 
 ## CI/CD
 
