@@ -121,6 +121,10 @@ jobs:
       - name: Build package
         run: |
           cd backend/packages/orb-common
+          # Clean any existing build artifacts
+          rm -rf dist/ build/ *.egg-info/
+          # Ensure we have latest setuptools
+          pipenv run pip install --upgrade setuptools wheel
           pipenv run python -m build
       
       - name: Check package
@@ -323,11 +327,15 @@ jobs:
       - name: Build package
         run: |
           cd backend/packages/orb-models
+          # Clean any existing build artifacts
+          rm -rf dist/ build/ *.egg-info/
           pip install pipenv
           pipenv install --dev
           # Install orb-common from CodeArtifact
           pipenv run pip install orb-common --index-url=$PIP_INDEX_URL
           pipenv install build twine
+          # Ensure we have latest setuptools
+          pipenv run pip install --upgrade setuptools wheel
           pipenv run python -m build
       
       - name: Check package
