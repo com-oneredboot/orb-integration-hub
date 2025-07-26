@@ -302,6 +302,31 @@ Resources:
             Resource:
               - !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${CustomerId}-${ProjectId}-*"
               - !Sub "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${CustomerId}-${ProjectId}-*"
+          - Effect: Allow
+            Action:
+              - codeartifact:GetAuthorizationToken
+              - codeartifact:GetRepositoryEndpoint
+              - codeartifact:ReadFromRepository
+              - codeartifact:PublishPackageVersion
+              - codeartifact:PutPackageMetadata
+              - codeartifact:ListPackages
+              - codeartifact:ListPackageVersions
+              - codeartifact:ListPackageVersionAssets
+              - codeartifact:GetPackageVersionAsset
+              - codeartifact:GetPackageVersionReadme
+              - codeartifact:DescribeDomain
+              - codeartifact:DescribeRepository
+            Resource:
+              - !Sub "arn:aws:codeartifact:${AWS::Region}:${AWS::AccountId}:domain/${CustomerId}-${ProjectId}"
+              - !Sub "arn:aws:codeartifact:${AWS::Region}:${AWS::AccountId}:domain/${CustomerId}-${ProjectId}/*"
+              - !Sub "arn:aws:codeartifact:${AWS::Region}:${AWS::AccountId}:repository/${CustomerId}-${ProjectId}/*"
+          - Effect: Allow
+            Action:
+              - sts:GetServiceBearerToken
+            Resource: "*"
+            Condition:
+              StringEquals:
+                'sts:AWSServiceName': 'codeartifact.amazonaws.com'
     Type: AWS::IAM::ManagedPolicy
 
   # IAM User to Group Addition
