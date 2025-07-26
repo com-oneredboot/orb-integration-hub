@@ -191,7 +191,9 @@ jobs:
           path: ./dist
       
       - name: Install twine
-        run: pip install twine
+        run: |
+          pip install pipenv
+          pipenv install twine==6.0.1
       
       - name: Debug wheel metadata
         run: |
@@ -211,7 +213,7 @@ jobs:
           TWINE_REPOSITORY_URL: ${{ steps.codeartifact.outputs.repository_endpoint }}
         run: |
           echo "Publishing to CodeArtifact repository: ${{ steps.codeartifact.outputs.repository }}"
-          twine upload dist/* --verbose
+          pipenv run twine upload dist/* --verbose
 
   # Now test and build models AFTER common is published
   test-models:
