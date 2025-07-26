@@ -304,6 +304,16 @@ Resources:
               - !Sub "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${CustomerId}-${ProjectId}-*"
           - Effect: Allow
             Action:
+              - codeartifact:CreateDomain
+              - codeartifact:DeleteDomain
+              - codeartifact:UpdateDomain
+              - codeartifact:GetDomainPermissionsPolicy
+              - codeartifact:PutDomainPermissionsPolicy
+              - codeartifact:CreateRepository
+              - codeartifact:DeleteRepository
+              - codeartifact:UpdateRepository
+              - codeartifact:GetRepositoryPermissionsPolicy
+              - codeartifact:PutRepositoryPermissionsPolicy
               - codeartifact:GetAuthorizationToken
               - codeartifact:GetRepositoryEndpoint
               - codeartifact:ReadFromRepository
@@ -316,6 +326,9 @@ Resources:
               - codeartifact:GetPackageVersionReadme
               - codeartifact:DescribeDomain
               - codeartifact:DescribeRepository
+              - codeartifact:TagResource
+              - codeartifact:UntagResource
+              - codeartifact:ListTagsForResource
             Resource:
               - !Sub "arn:aws:codeartifact:${AWS::Region}:${AWS::AccountId}:domain/${CustomerId}-${ProjectId}"
               - !Sub "arn:aws:codeartifact:${AWS::Region}:${AWS::AccountId}:domain/${CustomerId}-${ProjectId}/*"
