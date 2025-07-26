@@ -69,6 +69,21 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ inputs.region }}
+    
+    - name: Setup CodeArtifact Configuration
+      run: |
+        # Get CodeArtifact domain from SSM or use default
+        CODEARTIFACT_DOMAIN=$(aws ssm get-parameter \
+          --name "/${{ inputs.customer_id }}/${{ inputs.project_id }}/${{ inputs.environment }}/codeartifact/domain" \
+          --query 'Parameter.Value' \
+          --output text 2>/dev/null || echo "${{ inputs.customer_id }}-${{ inputs.project_id }}")
+        
+        # Export for use in build scripts
+        echo "CODEARTIFACT_DOMAIN=$CODEARTIFACT_DOMAIN" >> $GITHUB_ENV
+        echo "ENVIRONMENT=${{ inputs.environment }}" >> $GITHUB_ENV
+        echo "AWS_REGION=${{ inputs.region }}" >> $GITHUB_ENV
+        
+        echo "CodeArtifact domain: $CODEARTIFACT_DOMAIN"
 
     - name: Determine layers to build
       id: determine-layers

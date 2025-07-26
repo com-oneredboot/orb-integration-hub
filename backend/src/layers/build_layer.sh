@@ -32,6 +32,35 @@ LAYER_PATH="./python/lib/python3.12/site-packages"
 echo "Creating directory structure..."
 mkdir -p "$LAYER_PATH"
 
+# Configure CodeArtifact if environment variables are set
+if [ -n "$CODEARTIFACT_DOMAIN" ] && [ -n "$AWS_REGION" ]; then
+    echo "Configuring CodeArtifact access..."
+    
+    # Get repository name from SSM or use default
+    CODEARTIFACT_REPOSITORY=$(aws ssm get-parameter \
+        --name "/orb/integration-hub/${ENVIRONMENT:-dev}/codeartifact/repository" \
+        --query 'Parameter.Value' \
+        --output text 2>/dev/null || echo "dev-python-packages")
+    
+    # Get authorization token
+    export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token \
+        --domain $CODEARTIFACT_DOMAIN \
+        --query authorizationToken \
+        --output text)
+    
+    # Get repository endpoint
+    REPOSITORY_ENDPOINT=$(aws codeartifact get-repository-endpoint \
+        --domain $CODEARTIFACT_DOMAIN \
+        --repository $CODEARTIFACT_REPOSITORY \
+        --format pypi \
+        --query repositoryEndpoint \
+        --output text)
+    
+    # Configure pip to use CodeArtifact
+    export PIP_INDEX_URL="https://aws:${CODEARTIFACT_AUTH_TOKEN}@${REPOSITORY_ENDPOINT#https://}simple/"
+    echo "CodeArtifact configured: $REPOSITORY_ENDPOINT"
+fi
+
 # Check if Pipfile exists (some layers might not have dependencies)
 if [ -f "Pipfile" ]; then
     echo "Installing dependencies and generating requirements.txt..."

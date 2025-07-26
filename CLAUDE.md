@@ -115,6 +115,13 @@ monorepo/
 - **Lambda Functions**: Each has its own Pipfile with package dependencies
 - **Lambda Layers**: Package dependencies, no layer-to-layer imports
 
+### Package Distribution with AWS CodeArtifact
+- **Private PyPI Repository**: Packages are published to AWS CodeArtifact
+- **Version Management**: Each build gets a unique version for rollback capability
+- **Local Development**: Run `./scripts/configure-codeartifact.sh` to set up
+- **CI/CD Integration**: Automatic publishing on main/develop branches
+- **Dependency Resolution**: Lambda layers pull latest versions from CodeArtifact
+
 ### Task Organization
 - **Infrastructure tasks**: Database, API setup, deployment
 - **Backend tasks**: Python API endpoints, data models, business logic

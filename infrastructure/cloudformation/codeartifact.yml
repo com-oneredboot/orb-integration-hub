@@ -1,0 +1,187 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AWS CodeArtifact repository for ORB Python packages'
+
+Parameters:
+  CustomerId:
+    Type: String
+    Default: orb
+    Description: Customer identifier
+    
+  ProjectId:
+    Type: String
+    Default: integration-hub
+    Description: Project identifier
+    
+  Environment:
+    Type: String
+    AllowedValues: [dev, staging, prod]
+    Description: Deployment environment
+    
+  GitHubOrg:
+    Type: String
+    Default: orb-integration-hub
+    Description: GitHub organization name for OIDC trust
+
+Resources:
+  # CodeArtifact Domain - shared across environments
+  CodeArtifactDomain:
+    Type: AWS::CodeArtifact::Domain
+    Properties:
+      DomainName: !Sub '${CustomerId}-${ProjectId}'
+      Tags:
+        - Key: Customer
+          Value: !Ref CustomerId
+        - Key: Project
+          Value: !Ref ProjectId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ManagedBy
+          Value: CloudFormation
+      
+  # CodeArtifact Repository
+  CodeArtifactRepository:
+    Type: AWS::CodeArtifact::Repository
+    Properties:
+      DomainName: !GetAtt CodeArtifactDomain.Name
+      RepositoryName: !Sub '${Environment}-python-packages'
+      Description: !Sub 'Python packages for ${CustomerId} ${ProjectId} (${Environment})'
+      ExternalConnections:
+        - public:pypi  # Allow fallback to public PyPI for external dependencies
+      Tags:
+        - Key: Customer
+          Value: !Ref CustomerId
+        - Key: Project
+          Value: !Ref ProjectId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ManagedBy
+          Value: CloudFormation
+      
+  # Repository policy for cross-service access
+  CodeArtifactRepositoryPolicy:
+    Type: AWS::CodeArtifact::RepositoryPermissionsPolicy
+    Properties:
+      DomainName: !GetAtt CodeArtifactDomain.Name
+      RepositoryName: !GetAtt CodeArtifactRepository.Name
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowLambdaServiceRead
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - 'codeartifact:GetPackageVersionAsset'
+              - 'codeartifact:GetPackageVersionReadme'
+              - 'codeartifact:GetRepositoryEndpoint'
+              - 'codeartifact:ListPackageVersionAssets'
+              - 'codeartifact:ListPackageVersions'
+              - 'codeartifact:ListPackages'
+              - 'codeartifact:ReadFromRepository'
+            Resource: '*'
+          - Sid: AllowAccountPrincipalsRead
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action:
+              - 'codeartifact:*'
+            Resource: '*'
+  
+  # IAM role for Lambda functions to access CodeArtifact
+  CodeArtifactLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${CustomerId}-${ProjectId}-${Environment}-codeartifact-lambda'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        - PolicyName: CodeArtifactReadPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'codeartifact:GetAuthorizationToken'
+                  - 'codeartifact:GetRepositoryEndpoint'
+                  - 'codeartifact:ReadFromRepository'
+                  - 'codeartifact:ListPackages'
+                  - 'codeartifact:ListPackageVersions'
+                Resource:
+                  - !GetAtt CodeArtifactDomain.Arn
+                  - !GetAtt CodeArtifactRepository.Arn
+              - Effect: Allow
+                Action:
+                  - 'sts:GetServiceBearerToken'
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    'sts:AWSServiceName': 'codeartifact.amazonaws.com'
+                    
+  # Parameter to store repository configuration for easy access
+  CodeArtifactDomainParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/${CustomerId}/${ProjectId}/${Environment}/codeartifact/domain'
+      Type: String
+      Value: !GetAtt CodeArtifactDomain.Name
+      Description: CodeArtifact domain name
+      
+  CodeArtifactRepositoryParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/${CustomerId}/${ProjectId}/${Environment}/codeartifact/repository'
+      Type: String
+      Value: !GetAtt CodeArtifactRepository.Name
+      Description: CodeArtifact repository name
+      
+  CodeArtifactRepositoryEndpointParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/${CustomerId}/${ProjectId}/${Environment}/codeartifact/endpoint'
+      Type: String
+      Value: !Sub 'https://${CodeArtifactDomain.Name}-${AWS::AccountId}.d.codeartifact.${AWS::Region}.amazonaws.com/pypi/${CodeArtifactRepository.Name}/'
+      Description: CodeArtifact repository PyPI endpoint
+
+Outputs:
+  DomainName:
+    Value: !GetAtt CodeArtifactDomain.Name
+    Description: CodeArtifact domain name
+    Export:
+      Name: !Sub '${AWS::StackName}-DomainName'
+      
+  DomainArn:
+    Value: !GetAtt CodeArtifactDomain.Arn
+    Description: CodeArtifact domain ARN
+    Export:
+      Name: !Sub '${AWS::StackName}-DomainArn'
+      
+  RepositoryName:
+    Value: !GetAtt CodeArtifactRepository.Name
+    Description: CodeArtifact repository name
+    Export:
+      Name: !Sub '${AWS::StackName}-RepositoryName'
+      
+  RepositoryArn:
+    Value: !GetAtt CodeArtifactRepository.Arn
+    Description: CodeArtifact repository ARN
+    Export:
+      Name: !Sub '${AWS::StackName}-RepositoryArn'
+      
+  RepositoryEndpoint:
+    Value: !Sub 'https://${CodeArtifactDomain.Name}-${AWS::AccountId}.d.codeartifact.${AWS::Region}.amazonaws.com/pypi/${CodeArtifactRepository.Name}/'
+    Description: Repository PyPI endpoint URL
+    Export:
+      Name: !Sub '${AWS::StackName}-RepositoryEndpoint'
+      
+  LambdaRoleArn:
+    Value: !GetAtt CodeArtifactLambdaRole.Arn
+    Description: IAM role ARN for Lambda functions to access CodeArtifact
+    Export:
+      Name: !Sub '${AWS::StackName}-LambdaRoleArn'

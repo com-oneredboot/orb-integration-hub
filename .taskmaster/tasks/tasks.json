@@ -2298,7 +2298,7 @@
         "description": "Migrate Users entity from direct DynamoDB access to a Lambda-backed implementation with comprehensive security layer, similar to Organizations, including automatic Cognito sub to userId resolution and maintaining backward compatibility for all existing queries and mutations.",
         "details": "Implement comprehensive Users Lambda migration following the Organizations pattern:\n\n**1) Users Lambda Function Creation:**\n- Create new Lambda function in backend/src/lambda/users/ with proper IAM roles and DynamoDB permissions\n- Implement CRUD operations (create, read, update, delete) with proper error handling and validation\n- Add automatic Cognito sub to userId resolution middleware for seamless user identification\n- Implement proper logging and monitoring with CloudWatch integration\n- Follow existing Lambda patterns from Organizations implementation for consistency\n\n**2) Security Layer Implementation:**\n- Integrate with existing RBAC system (Task 4) for role-based access control\n- Implement user-level permissions ensuring users can only access their own data unless authorized\n- Add request validation and sanitization to prevent injection attacks\n- Implement rate limiting for user operations to prevent abuse\n- Add audit logging for all user data modifications and access attempts\n- Ensure compliance with data privacy regulations (GDPR, CCPA)\n\n**3) AppSync Resolver Migration:**\n- Update all existing Users GraphQL resolvers to point to new Lambda function instead of direct DynamoDB\n- Maintain exact same GraphQL schema and response formats for backward compatibility\n- Implement proper error handling and response transformation in resolvers\n- Add caching strategies where appropriate to maintain performance\n- Update resolver mapping templates to handle Lambda responses correctly\n\n**4) Cognito Integration Enhancement:**\n- Implement automatic sub-to-userId mapping in Lambda middleware\n- Handle edge cases for user creation, updates, and deletions\n- Ensure proper synchronization between Cognito user pool and Users DynamoDB table\n- Add fallback mechanisms for Cognito service unavailability\n- Implement proper token validation and user context extraction\n\n**5) Backward Compatibility Assurance:**\n- Maintain all existing Users queries and mutations without breaking changes\n- Ensure response formats remain identical to current implementation\n- Implement comprehensive testing to verify no functional regressions\n- Add migration scripts if any data transformations are needed\n- Document any subtle behavioral changes for development team",
         "testStrategy": "Execute comprehensive testing strategy to ensure seamless migration:\n\n**1) Lambda Function Testing:**\n- Unit tests for all CRUD operations with mock DynamoDB responses\n- Integration tests with actual DynamoDB table using test data\n- Test Cognito sub to userId resolution with various user scenarios\n- Load testing to ensure Lambda performance meets current DynamoDB performance\n- Error handling tests for DynamoDB failures, timeouts, and invalid requests\n\n**2) Security Layer Validation:**\n- Test RBAC integration with different user roles and permissions\n- Verify user isolation - users cannot access other users' data\n- Security penetration testing for injection attacks and unauthorized access\n- Rate limiting validation with burst and sustained request patterns\n- Audit log verification for all user operations and access attempts\n\n**3) AppSync Resolver Testing:**\n- Test all existing Users GraphQL queries return identical responses\n- Test all existing Users GraphQL mutations work without changes\n- Performance testing to ensure resolver response times remain acceptable\n- Error handling validation for Lambda failures and timeouts\n- Cache behavior testing if caching is implemented\n\n**4) Cognito Integration Testing:**\n- Test automatic sub-to-userId resolution with new and existing users\n- Test user creation flow with Cognito user pool synchronization\n- Test edge cases like user deletion, account suspension, and reactivation\n- Test token validation and user context extraction accuracy\n- Test fallback behavior when Cognito services are unavailable\n\n**5) End-to-End Regression Testing:**\n- Execute full user journey testing from registration to data access\n- Test all user-related features in the application continue to work\n- Performance benchmarking against current direct DynamoDB implementation\n- Cross-browser and mobile testing for user-facing functionality\n- Monitoring and alerting validation for the new Lambda-based architecture",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           4,
           47
@@ -2355,7 +2355,7 @@
               4
             ],
             "details": "Implement input validation using JSON schema for all request payloads. Add request sanitization to prevent injection attacks and XSS vulnerabilities. Implement rate limiting using DynamoDB-based token bucket algorithm to prevent abuse. Add comprehensive audit logging for all user data modifications and access attempts with proper log formatting for compliance. Implement data privacy controls for GDPR and CCPA compliance including data anonymization capabilities.\n<info added on 2025-07-17T19:45:27.582Z>\nIntegrate aws_audit_logger with comprehensive AuditEventType events including USER_CREATED, USER_UPDATED, USER_DELETED, USER_LOGIN, USER_PROFILE_VIEWED, USER_PASSWORD_CHANGED, and USER_STATUS_CHANGED following the Organizations Lambda pattern. Implement state tracking for before/after changes on all user data modifications with proper JSON serialization of field-level changes. Add compliance flags for GDPR, SOX, and SOC_2 requirements with automatic tagging based on operation type and data sensitivity. Implement critical audit logging for security violations including failed authentication attempts, unauthorized access attempts, and suspicious activity patterns. Ensure all audit events capture complete user context including authenticated user ID, target user ID (for admin operations), IP addresses, user agent strings, session information, and request correlation IDs. Add structured logging for user data access patterns to support compliance reporting and security monitoring with proper log retention policies.\n</info added on 2025-07-17T19:45:27.582Z>",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Security tests for injection prevention, rate limiting tests with high-volume requests, audit log verification, and compliance validation tests."
           },
           {
@@ -2388,7 +2388,7 @@
               7
             ],
             "details": "Implement event handlers for Cognito user pool triggers (pre-signup, post-confirmation, pre-authentication). Add synchronization logic for user creation, updates, and deletions between Cognito and DynamoDB. Handle edge cases for user profile updates, password changes, and account status modifications. Implement conflict resolution for concurrent updates and proper rollback mechanisms for failed synchronizations. Add monitoring and alerting for synchronization failures.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Integration tests with Cognito user pool events, synchronization consistency tests, and failure recovery testing."
           },
           {
@@ -2399,7 +2399,7 @@
               8
             ],
             "details": "Implement structured error handling with proper error codes, messages, and HTTP status codes. Add comprehensive CloudWatch logging with proper log levels and structured log formatting. Set up CloudWatch metrics for operation success rates, response times, and error frequencies. Implement alerting for critical errors, high error rates, and performance degradation. Add distributed tracing capabilities for debugging complex user flows and performance optimization.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Error scenario testing, log format validation, CloudWatch metrics verification, and alerting system testing."
           },
           {
@@ -2408,7 +2408,7 @@
             "description": "Perform thorough testing of the complete Lambda-backed Users implementation including unit tests, integration tests, and backward compatibility validation.",
             "dependencies": [],
             "details": "Execute comprehensive unit test suite for all Lambda functions and middleware components. Run integration tests with actual DynamoDB and Cognito services. Perform backward compatibility testing to ensure all existing queries and mutations work identically. Execute performance testing to validate response times meet existing benchmarks. Run security testing to verify all security measures are properly implemented. Conduct user acceptance testing with sample user journeys.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Full test suite execution, performance benchmarking, security vulnerability scanning, and user acceptance testing with real-world scenarios."
           },
           {
@@ -2419,7 +2419,7 @@
               11
             ],
             "details": "Deploy Lambda function and updated resolvers to production environment with proper deployment pipeline. Implement gradual traffic migration using feature flags or canary deployment strategy. Set up comprehensive monitoring dashboards for Lambda performance, error rates, and user experience metrics. Prepare rollback procedures and emergency response plans. Monitor system performance and user feedback during initial deployment phase. Document deployment procedures and operational runbooks for ongoing maintenance.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Production deployment validation, monitoring system verification, rollback procedure testing, and post-deployment performance monitoring."
           },
           {
@@ -2551,7 +2551,7 @@
         "description": "Convert the common Lambda layer to a Python package called 'orb-common' that can be installed as a dependency in other layers, eliminating layer-to-layer dependencies and improving maintainability while following Python packaging best practices.",
         "details": "Implement comprehensive Python package conversion and distribution system:\n\n**1) Package Structure Creation:**\n- Create new orb-common/ directory with proper Python package structure including setup.py, pyproject.toml, README.md, and LICENSE files\n- Organize existing common layer code into logical modules: orb_common/exceptions/, orb_common/security/, orb_common/audit/, and orb_common/utils/\n- Implement proper __init__.py files with clear public API exports and version management\n- Create requirements.txt and setup.cfg for dependency management and package metadata\n\n**2) Code Migration and Refactoring:**\n- Extract shared exceptions from common layer into orb_common/exceptions.py with proper inheritance hierarchy and error codes\n- Migrate security utilities to orb_common/security/ module including authentication helpers, token validation, and encryption utilities\n- Move audit logging functionality to orb_common/audit/ with structured logging, event tracking, and compliance features\n- Refactor imports and dependencies to use relative imports within the package and external dependencies properly declared\n\n**3) Package Distribution Setup:**\n- Configure setup.py with proper package metadata, version management, and dependency declarations\n- Implement semantic versioning strategy with automated version bumping based on changes\n- Create GitHub Actions workflow for automated package building, testing, and publishing to PyPI or private repository\n- Set up package signing and security scanning for distribution integrity\n\n**4) Layer Migration Strategy:**\n- Update existing Lambda layers to install orb-common as pip dependency instead of copying code\n- Modify layer build scripts to include pip install orb-common in requirements.txt\n- Create migration guide and update documentation for developers using the common functionality\n- Implement backward compatibility shims during transition period to prevent breaking changes\n\n**5) CI/CD Integration:**\n- Update deployment pipelines to build and publish orb-common package before deploying dependent layers\n- Implement automated testing of package installation in clean environments\n- Create dependency update automation to keep layers synchronized with latest orb-common versions\n- Set up monitoring and alerting for package distribution and installation failures",
         "testStrategy": "Execute comprehensive package conversion and distribution testing:\n\n**1) Package Structure Validation:**\n- Verify proper Python package structure with setup.py, pyproject.toml, and all required metadata files\n- Test package installation in clean virtual environments using pip install\n- Validate import statements work correctly for all modules and public API functions\n- Test package uninstallation and reinstallation processes\n\n**2) Functionality Testing:**\n- Unit tests for all migrated modules (exceptions, security, audit) to ensure functionality preservation\n- Integration tests verifying shared exceptions work correctly across different Lambda functions\n- Test security utilities maintain proper encryption, authentication, and token validation capabilities\n- Validate audit logging produces correct structured logs with proper event tracking\n\n**3) Distribution and Dependency Testing:**\n- Test package building process produces valid wheel and source distributions\n- Verify package installation from PyPI or private repository in various Python environments\n- Test dependency resolution and conflict detection with other packages\n- Validate version management and semantic versioning compliance\n\n**4) Layer Migration Validation:**\n- Test existing Lambda layers can successfully install and import orb-common package\n- Verify all existing functionality continues to work after migration from layer-to-layer dependencies\n- Test layer build processes complete successfully with orb-common as pip dependency\n- Validate deployment pipelines work correctly with new package-based approach\n\n**5) Performance and Security Testing:**\n- Measure package installation time and impact on Lambda cold start performance\n- Test package signing verification and security scanning integration\n- Validate no sensitive information is exposed in package metadata or distribution files\n- Test package update mechanisms and backward compatibility during version transitions",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           50,
           44
@@ -2641,7 +2641,7 @@
               "51.7"
             ],
             "details": "Execute comprehensive testing including unit tests for orb-common package, integration tests for Lambda functions using the package, and end-to-end tests of complete workflows. Test package installation in clean environments to ensure no missing dependencies. Verify all Lambda functions work correctly with orb-common package. Update developer documentation with new import patterns and package usage. Create migration guide for future developers. Update README files in affected repositories. Document the new development workflow including how to update orb-common package and deploy changes. Create troubleshooting guide for common issues. Update API documentation if any public interfaces changed.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Run full test suite across all affected services. Deploy to staging environment and perform smoke tests. Validate documentation accuracy by having team members follow migration guide. Monitor production deployment for any issues."
           },
           {
@@ -2782,12 +2782,103 @@
           48
         ],
         "priority": "high",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Base pyproject.toml Template with Standardized Tool Configurations",
+            "description": "Create a comprehensive base pyproject.toml template that defines standardized configurations for black, isort, mypy, and bandit across all Python components in the project.",
+            "dependencies": [],
+            "details": "Create a base pyproject.toml file with: 1) Black configuration with line-length=88, target-version=['py39'], skip-string-normalization=false, and include/exclude patterns, 2) isort configuration with profile='black', multi_line_output=3, line_length=88, known_first_party settings, and import section definitions, 3) mypy configuration with strict=true, warn_return_any=true, warn_unused_configs=true, disallow_untyped_defs=true, and custom plugin settings, 4) bandit configuration with security scanning profiles, skips for false positives, and custom rules for serverless patterns. Include tool-specific sections and ensure all configurations are compatible with each other.",
+            "status": "done",
+            "testStrategy": "Validate configuration syntax using each tool's --check-config option, test on sample Python files to ensure all tools run without conflicts, verify black and isort produce consistent formatting results"
+          },
+          {
+            "id": 2,
+            "title": "Implement Pre-commit Hooks for Automatic Code Quality Enforcement",
+            "description": "Set up pre-commit hooks that automatically run black, isort, mypy, and bandit before each commit to ensure code quality standards are enforced at the developer level.",
+            "dependencies": [
+              "53.1"
+            ],
+            "details": "Create .pre-commit-config.yaml with hooks for: 1) black for automatic code formatting, 2) isort for import sorting, 3) mypy for type checking with --strict flag, 4) bandit for security scanning with medium severity threshold, 5) Additional hooks for trailing whitespace, end-of-file-fixer, and check-yaml. Configure hooks to run in the correct order (isort before black), set up automatic installation script for new developers, and include hook bypass mechanisms for emergency commits. Create developer setup documentation with installation and usage instructions.",
+            "status": "pending",
+            "testStrategy": "Test pre-commit hooks with intentionally poorly formatted code, verify hooks prevent commits when quality checks fail, test hook bypass functionality, validate hook performance on large codebases"
+          },
+          {
+            "id": 3,
+            "title": "Create GitHub Actions Workflow for CI Code Quality Validation",
+            "description": "Implement a comprehensive GitHub Actions workflow that runs all code quality checks on pull requests and main branch commits, providing detailed feedback and preventing merges of non-compliant code.",
+            "dependencies": [
+              "53.1"
+            ],
+            "details": "Create .github/workflows/code-quality.yml with: 1) Matrix strategy for multiple Python versions (3.9, 3.10, 3.11), 2) Separate jobs for black, isort, mypy, and bandit with detailed output formatting, 3) Artifact collection for quality reports and coverage data, 4) PR comment integration showing quality check results, 5) Branch protection rules requiring quality checks to pass, 6) Caching strategy for dependencies and mypy cache, 7) Parallel execution of quality checks for faster feedback. Include failure notifications and integration with GitHub status checks.",
+            "status": "done",
+            "testStrategy": "Test workflow with PRs containing various code quality issues, verify branch protection prevents merges when checks fail, validate caching improves workflow performance, test matrix strategy across Python versions"
+          },
+          {
+            "id": 4,
+            "title": "Setup IDE Integration for VSCode and PyCharm",
+            "description": "Configure IDE-specific settings and extensions to provide real-time code quality feedback and automatic formatting within development environments.",
+            "dependencies": [
+              "53.1"
+            ],
+            "details": "Create IDE configuration files: 1) .vscode/settings.json with Python extension settings, black and isort integration, mypy linting enabled, and format-on-save configuration, 2) .vscode/extensions.json recommending Python, Black Formatter, isort, and Pylance extensions, 3) .idea/codeStyles/Project.xml for PyCharm with black-compatible formatting rules, 4) .idea/inspectionProfiles/Project_Default.xml with mypy and bandit inspection settings. Include workspace-specific settings that override user preferences, configure automatic import organization, and set up real-time type checking feedback.",
+            "status": "pending",
+            "testStrategy": "Test IDE integration in fresh VSCode and PyCharm installations, verify format-on-save works correctly, validate real-time linting feedback appears, test extension recommendations are properly suggested"
+          },
+          {
+            "id": 5,
+            "title": "Integrate Code Quality Checks into Lambda Function Build Process",
+            "description": "Modify the Lambda function packaging and deployment process to include code quality validation, ensuring all Lambda functions meet quality standards before deployment.",
+            "dependencies": [
+              "53.1",
+              "53.2"
+            ],
+            "details": "Modify Lambda build scripts to: 1) Run quality checks during the packaging phase before creating deployment artifacts, 2) Create Lambda-specific pyproject.toml overrides for functions requiring different settings (e.g., relaxed mypy rules for AWS SDK usage), 3) Implement type checking for Lambda handler functions with proper AWS event type annotations, 4) Add bandit security scanning with serverless-specific rules and AWS security best practices, 5) Create quality check bypass mechanism for legacy Lambda functions with migration timeline, 6) Integrate quality metrics into deployment pipeline with failure thresholds.",
+            "status": "pending",
+            "testStrategy": "Test Lambda packaging with various quality violations, verify Lambda-specific overrides work correctly, validate handler function type checking, test deployment pipeline fails appropriately when quality checks fail"
+          },
+          {
+            "id": 6,
+            "title": "Implement Automated Fix Suggestions and Code Quality Metrics Collection",
+            "description": "Create automated systems for suggesting and applying code quality fixes, along with comprehensive metrics collection for tracking code quality trends over time.",
+            "dependencies": [
+              "53.2",
+              "53.3"
+            ],
+            "details": "Implement automated fix system with: 1) GitHub Actions workflow that creates PRs with automatic black and isort fixes for failing quality checks, 2) Automated mypy error categorization and fix suggestions using AST analysis, 3) Bandit security issue classification with remediation guidance, 4) Code quality metrics collection including complexity scores, type coverage percentages, security issue counts, and formatting compliance rates, 5) Integration with GitHub API for automated PR creation and review assignment, 6) Metrics storage in CloudWatch or similar for trend analysis and reporting.",
+            "status": "pending",
+            "testStrategy": "Test automated fix PR creation with various code quality issues, verify fix suggestions are accurate and safe, validate metrics collection accuracy, test automated PR review assignment workflow"
+          },
+          {
+            "id": 7,
+            "title": "Create Code Quality Monitoring Dashboard and Reporting System",
+            "description": "Build a comprehensive dashboard and reporting system that provides visibility into code quality metrics, trends, and team performance across all Python components.",
+            "dependencies": [
+              "53.6"
+            ],
+            "details": "Create monitoring dashboard with: 1) Real-time code quality metrics display showing current status across all repositories and components, 2) Historical trend analysis with charts for quality metrics over time, team performance comparisons, and improvement tracking, 3) Automated weekly/monthly quality reports sent to development teams with actionable insights, 4) Alert system for quality regression detection and threshold breaches, 5) Integration with existing project management tools for quality-based sprint planning, 6) Drill-down capabilities for investigating specific quality issues and their root causes, 7) Team and individual developer quality scorecards with improvement recommendations.",
+            "status": "pending",
+            "testStrategy": "Validate dashboard displays accurate real-time data, test historical trend calculations, verify automated report generation and delivery, test alert system with simulated quality regressions"
+          },
+          {
+            "id": 8,
+            "title": "Create Comprehensive Documentation and Developer Onboarding Materials",
+            "description": "Develop complete documentation covering setup procedures, usage guidelines, troubleshooting, and best practices to ensure smooth adoption of the code quality system across development teams.",
+            "dependencies": [
+              "53.2",
+              "53.4",
+              "53.7"
+            ],
+            "details": "Create comprehensive documentation including: 1) Developer setup guide with step-by-step instructions for local environment configuration, IDE setup, and pre-commit hook installation, 2) Code quality standards document defining formatting rules, type annotation requirements, and security guidelines, 3) Troubleshooting guide covering common issues with mypy type errors, bandit false positives, and configuration conflicts, 4) Override procedures documentation for special cases requiring quality check exemptions with approval workflows, 5) Best practices guide with examples of proper type annotations, security patterns, and code organization, 6) Migration guide for existing codebases with timeline and priority recommendations, 7) FAQ section addressing common developer questions and concerns.",
+            "status": "done",
+            "testStrategy": "Test documentation accuracy by following setup procedures on fresh development environments, validate troubleshooting solutions resolve common issues, verify override procedures work as documented, gather developer feedback on documentation clarity and completeness"
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-06-20T19:07:50.957Z",
-      "updated": "2025-07-25T14:38:14.186Z",
+      "updated": "2025-07-26T12:33:28.768Z",
       "description": "Tasks for master context"
     }
   }

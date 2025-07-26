@@ -255,9 +255,139 @@ jobs:
           name: orb-models-dist
           path: backend/packages/orb-models/dist/
 
+  publish-common:
+    name: Publish ORB Common to CodeArtifact
+    needs: [build-common]
+    if: |
+      github.event_name == 'push' && 
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/organizations-feature') &&
+      needs.build-common.result == 'success'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      
+      - name: Get CodeArtifact configuration
+        id: codeartifact
+        run: |
+          # Get domain and repository from SSM parameters
+          DOMAIN=$(aws ssm get-parameter --name "/orb/integration-hub/dev/codeartifact/domain" --query 'Parameter.Value' --output text || echo "orb-integration-hub")
+          REPOSITORY=$(aws ssm get-parameter --name "/orb/integration-hub/dev/codeartifact/repository" --query 'Parameter.Value' --output text || echo "dev-python-packages")
+          
+          echo "domain=$DOMAIN" >> $GITHUB_OUTPUT
+          echo "repository=$REPOSITORY" >> $GITHUB_OUTPUT
+          
+          # Get repository endpoint
+          REPOSITORY_ENDPOINT=$(aws codeartifact get-repository-endpoint \
+            --domain $DOMAIN \
+            --repository $REPOSITORY \
+            --format pypi \
+            --query repositoryEndpoint \
+            --output text)
+          
+          # Get authorization token
+          AUTH_TOKEN=$(aws codeartifact get-authorization-token \
+            --domain $DOMAIN \
+            --query authorizationToken \
+            --output text)
+          
+          echo "::add-mask::$AUTH_TOKEN"
+          echo "repository_endpoint=$REPOSITORY_ENDPOINT" >> $GITHUB_OUTPUT
+          echo "auth_token=$AUTH_TOKEN" >> $GITHUB_OUTPUT
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: orb-common-dist
+          path: ./dist
+      
+      - name: Install twine
+        run: pip install twine
+      
+      - name: Publish to CodeArtifact
+        env:
+          TWINE_USERNAME: aws
+          TWINE_PASSWORD: ${{ steps.codeartifact.outputs.auth_token }}
+          TWINE_REPOSITORY_URL: ${{ steps.codeartifact.outputs.repository_endpoint }}
+        run: |
+          echo "Publishing to CodeArtifact repository: ${{ steps.codeartifact.outputs.repository }}"
+          twine upload dist/* --verbose
+
+  publish-models:
+    name: Publish ORB Models to CodeArtifact
+    needs: [build-models, publish-common]
+    if: |
+      github.event_name == 'push' && 
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/organizations-feature') &&
+      needs.build-models.result == 'success'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      
+      - name: Get CodeArtifact configuration
+        id: codeartifact
+        run: |
+          # Get domain and repository from SSM parameters
+          DOMAIN=$(aws ssm get-parameter --name "/orb/integration-hub/dev/codeartifact/domain" --query 'Parameter.Value' --output text || echo "orb-integration-hub")
+          REPOSITORY=$(aws ssm get-parameter --name "/orb/integration-hub/dev/codeartifact/repository" --query 'Parameter.Value' --output text || echo "dev-python-packages")
+          
+          echo "domain=$DOMAIN" >> $GITHUB_OUTPUT
+          echo "repository=$REPOSITORY" >> $GITHUB_OUTPUT
+          
+          # Get repository endpoint
+          REPOSITORY_ENDPOINT=$(aws codeartifact get-repository-endpoint \
+            --domain $DOMAIN \
+            --repository $REPOSITORY \
+            --format pypi \
+            --query repositoryEndpoint \
+            --output text)
+          
+          # Get authorization token
+          AUTH_TOKEN=$(aws codeartifact get-authorization-token \
+            --domain $DOMAIN \
+            --query authorizationToken \
+            --output text)
+          
+          echo "::add-mask::$AUTH_TOKEN"
+          echo "repository_endpoint=$REPOSITORY_ENDPOINT" >> $GITHUB_OUTPUT
+          echo "auth_token=$AUTH_TOKEN" >> $GITHUB_OUTPUT
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: orb-models-dist
+          path: ./dist
+      
+      - name: Install twine
+        run: pip install twine
+      
+      - name: Publish to CodeArtifact
+        env:
+          TWINE_USERNAME: aws
+          TWINE_PASSWORD: ${{ steps.codeartifact.outputs.auth_token }}
+          TWINE_REPOSITORY_URL: ${{ steps.codeartifact.outputs.repository_endpoint }}
+        run: |
+          echo "Publishing to CodeArtifact repository: ${{ steps.codeartifact.outputs.repository }}"
+          twine upload dist/* --verbose
+
   summary:
     name: Deployment Summary
-    needs: [detect-changes, build-common, build-models]
+    needs: [detect-changes, build-common, build-models, publish-common, publish-models]
     if: always()
     runs-on: ubuntu-latest
     
@@ -272,5 +402,9 @@ jobs:
           echo "- Schemas: ${{ needs.detect-changes.outputs.schemas-changed }}"
           echo ""
           echo "### Build Results:"
-          echo "- ORB Common: ${{ needs.build-common.result }}"
-          echo "- ORB Models: ${{ needs.build-models.result }}"
+          echo "- ORB Common Build: ${{ needs.build-common.result }}"
+          echo "- ORB Models Build: ${{ needs.build-models.result }}"
+          echo ""
+          echo "### Publish Results:"
+          echo "- ORB Common Publish: ${{ needs.publish-common.result }}"
+          echo "- ORB Models Publish: ${{ needs.publish-models.result }}"

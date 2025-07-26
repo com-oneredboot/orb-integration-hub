@@ -11,6 +11,7 @@ Orb Integration Hub is a serverless application that provides a unified API for 
 - [Product Requirements (PRD)](.taskmaster/docs/prd.md) - Canonical requirements and feature planning document
 - [Architecture Documentation](docs/architecture.md) - System design and component interactions
 - [Development Guide](docs/development.md) - Setup and development workflow
+- [Deployment Guide](docs/deployment-guide.md) - How to deploy components individually
 - [Testing Guidelines](docs/testing-guidelines.md) - Testing best practices and structure
 - [Python Packages](docs/python-packages.md) - Python package architecture guide
 - [Feature Registry](.taskmaster/docs/features/REGISTRY.md) - List of active and completed features
@@ -119,7 +120,9 @@ This will:
 
 ## Deployment
 
-Deployment is handled via GitHub Actions. See the workflow files in `.github/workflows/` for details, specifically:
+Deployment is handled via GitHub Actions. See the [workflows documentation](.github/workflows/README.md) for details on all CI/CD pipelines, including:
+- Python packages: `.github/workflows/deploy-packages.yml`
+- Lambda layers: `.github/workflows/deploy-lambda-layers.yml`
 - Backend: `.github/workflows/deploy-backend.yml`
 - Frontend: `.github/workflows/deploy-frontend.yml`
 
