@@ -564,6 +564,8 @@ Resources:
   # CodeArtifact Domain - shared across environments
   CodeArtifactDomain:
     Type: AWS::CodeArtifact::Domain
+    DependsOn: 
+      - GitHubActionsUserToGitHubActionsDeploymentGroupAddition
     Properties:
       DomainName: !Sub '${CustomerId}-${ProjectId}'
       Tags:
