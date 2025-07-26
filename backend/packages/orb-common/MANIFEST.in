@@ -1,9 +1,0 @@
-include README.md
-include LICENSE
-include requirements-dev.txt
-include py.typed
-recursive-include orb_common *.py
-recursive-include tests *.py
-recursive-exclude * __pycache__
-recursive-exclude * *.py[co]
-recursive-exclude * .DS_Store
