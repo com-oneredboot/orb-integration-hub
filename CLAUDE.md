@@ -3,6 +3,7 @@
 ## CRITICAL: Change Approval Process
 
 **ALWAYS ASK BEFORE MAKING ANY CHANGES TO:**
+
 - File names or directory structures
 - Schema entity names 
 - Database table names
@@ -110,12 +111,14 @@ monorepo/
 ## Python/Angular Monorepo Patterns
 
 ### Package Architecture
+
 - **orb-common**: Shared utilities (exceptions, security, audit, utils)
 - **orb-models**: Auto-generated models from schemas - DO NOT EDIT MANUALLY
 - **Lambda Functions**: Each has its own Pipfile with package dependencies
 - **Lambda Layers**: Package dependencies, no layer-to-layer imports
 
 ### Package Distribution with AWS CodeArtifact
+
 - **Private PyPI Repository**: Packages are published to AWS CodeArtifact
 - **Version Management**: Each build gets a unique version for rollback capability
 - **Local Development**: Run `./scripts/configure-codeartifact.sh` to set up
@@ -123,18 +126,21 @@ monorepo/
 - **Dependency Resolution**: Lambda layers pull latest versions from CodeArtifact
 
 ### Task Organization
+
 - **Infrastructure tasks**: Database, API setup, deployment
 - **Backend tasks**: Python API endpoints, data models, business logic
 - **Frontend tasks**: Angular components, services, routing
 - **Integration tasks**: API integration, end-to-end testing
 
 ### Implementation Workflow
+
 1. Start with backend API design and data models
 2. Implement Python endpoints with proper testing
 3. Create Angular services and components
 4. Integration testing across the stack
 
 ### Using Research Tools
+
 - **Perplexity**: For technical research, best practices, troubleshooting
 - **Context7**: For accurate Python/Angular examples and documentation
 - **Task Master**: Track progress across both frontend and backend work
@@ -148,6 +154,7 @@ monorepo/
 ## Essential API Keys
 
 Required in `.env` and `.mcp.json`:
+
 - `ANTHROPIC_API_KEY` - Claude models (required)
 - `PERPLEXITY_API_KEY` - Research features (highly recommended)
 - `CONTEXT7_API_KEY` - Documentation and examples
@@ -155,22 +162,26 @@ Required in `.env` and `.mcp.json`:
 ## Common Issues & Solutions
 
 ### Task Management
+
 - **Stuck on complex task**: Use `expand_task(id)` to break it down
 - **Need research**: Ask Perplexity for technical guidance
 - **Need examples**: Use Context7 for Python/Angular patterns
 - **Progress tracking**: Always use `update_subtask` to log your approach
 
 ### MCP Connection
+
 - Check `.mcp.json` configuration matches your setup
 - Verify all API keys are properly set
 - Restart Claude Code if MCP servers aren't responding
 
 ### Monorepo Development
+
 - Use task dependencies for backend → frontend workflows
 - Log implementation details in subtasks for both Python and Angular code
 - Track API contracts and data models in task descriptions
 
 ### Testing
+
 - Follow testing guidelines in `docs/testing-guidelines.md`
 - Keep tests alongside code, not in separate packages
 - Use pytest for Python, Jest/Karma for Angular
@@ -198,6 +209,7 @@ set_task_status(id, "done");
 ## Security Vulnerability Management
 
 ### Security Workflow
+
 When GitHub reports security vulnerabilities (Dependabot alerts), follow this process:
 
 1. **Access Security Report**: Check GitHub's Dependabot security page
@@ -205,6 +217,7 @@ When GitHub reports security vulnerabilities (Dependabot alerts), follow this pr
 3. **Create Issues**: Use automated script to generate GitHub issues
 
 ### Security Files Location
+
 ```
 .taskmaster/security/
 ├── security_issues.json          # Structured vulnerability data
@@ -212,6 +225,7 @@ When GitHub reports security vulnerabilities (Dependabot alerts), follow this pr
 ```
 
 ### Creating Security Issues
+
 ```bash
 # Navigate to project root
 cd /path/to/project
@@ -221,6 +235,7 @@ cd /path/to/project
 ```
 
 ### Security Issue Template
+
 Each security issue includes:
 - **Severity level** (High/Moderate/Low)
 - **Affected packages** and file paths
@@ -230,6 +245,7 @@ Each security issue includes:
 - **Proper labels** for organization
 
 ### Security Best Practices
+
 - **Regular monitoring**: Check Dependabot alerts weekly
 - **Immediate triage**: Address moderate+ vulnerabilities within 48 hours
 - **Documentation**: Always update security_issues.json with new findings
@@ -239,29 +255,35 @@ Each security issue includes:
 ## Code Quality Standards
 
 ### Python Code Quality Tools
+
 All Python code in this project must pass the following quality checks:
 
 1. **Black** - Code formatter (line-length: 100)
+
    ```bash
    black --check .
    ```
 
 2. **isort** - Import organizer (profile: black)
+
    ```bash
    isort --check-only . --profile black --line-length 100
    ```
 
 3. **mypy** - Type checker
+
    ```bash
    mypy <package> --ignore-missing-imports
    ```
 
 4. **bandit** - Security linter
+
    ```bash
    bandit -r <package> -f json
    ```
 
 ### Configuration Files
+
 Each Python package should have a `pyproject.toml` with:
 
 ```toml
@@ -279,7 +301,9 @@ disallow_untyped_defs = true
 ```
 
 ### Pre-deployment Checklist
+
 Before deploying any Python code:
+
 - [ ] Run `black .` to format code
 - [ ] Run `isort .` to organize imports
 - [ ] Run `mypy` for type checking
@@ -288,7 +312,69 @@ Before deploying any Python code:
 - [ ] CI/CD pipeline is green
 
 ### Lambda Function Standards
+
 - All Lambda functions must use the orb-common package
 - Security layer integration is mandatory
 - Audit logging for all data modifications
 - Proper error handling with OrbError exceptions
+
+## AWS CodeArtifact Integration
+
+### Overview
+
+The project uses AWS CodeArtifact as a private PyPI repository for Python packages:
+
+- **Domain**: `orb-integration-hub`
+- **Repository**: `{environment}-python-packages` (e.g., `dev-python-packages`)
+- **Packages**: `orb-common` and `orb-models`
+
+### Architecture
+
+1. **Bootstrap Stack**: Creates CodeArtifact domain and repository
+2. **Package Publishing**: `deploy-packages.yml` builds and publishes packages
+3. **Layer Building**: `deploy-lambda-layers.yml` pulls packages from CodeArtifact
+4. **Lambda Functions**: Use packages from Lambda layers (no direct CodeArtifact access)
+
+### Local Development
+
+```bash
+# Configure local environment to use CodeArtifact
+./scripts/configure-codeartifact.sh
+
+# This script:
+# - Gets auth token (valid for 12 hours)
+# - Configures pip and pipenv to use CodeArtifact
+# - Creates .env.codeartifact with configuration
+```
+
+### Troubleshooting CodeArtifact
+
+#### License Metadata Error
+
+If you encounter `Invalid distribution metadata: unrecognized or malformed field 'license-file'`:
+- Use `twine==6.0.1` (not newer versions)
+- Remove `license_files` from setup.cfg
+- Use only `pyproject.toml` for package configuration
+
+#### Permission Errors
+
+Ensure IAM policy includes package-level permissions:
+
+```
+arn:aws:codeartifact:region:account:package/domain/*/format/namespace/package-name
+```
+
+### Package Configuration
+
+Modern Python packages should use only `pyproject.toml`:
+
+```toml
+[build-system]
+requires = ["setuptools>=69.0.3", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "package-name"
+version = "0.1.0"
+# Do NOT include license field if using private CodeArtifact
+```
