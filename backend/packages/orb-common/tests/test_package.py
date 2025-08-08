@@ -5,7 +5,7 @@ import orb_common
 
 def test_package_version():
     """Test that package version is accessible."""
-    assert orb_common.__version__ == "0.1.0"
+    assert orb_common.__version__ == "0.1.1"
 
 
 def test_package_metadata():

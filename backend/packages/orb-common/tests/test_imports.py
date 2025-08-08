@@ -7,7 +7,7 @@ def test_main_package_import():
     """Test main package can be imported."""
     import orb_common
 
-    assert orb_common.__version__ == "0.1.0"
+    assert orb_common.__version__ == "0.1.1"
 
 
 def test_module_imports():
