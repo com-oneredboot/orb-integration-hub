@@ -213,21 +213,26 @@ class UsersAuditLogger(BaseAuditLogger):
         
         return list(set(flags))
     
-    def _enrich_audit_event(self, event: Dict[str, Any]) -> Dict[str, Any]:
-        """Add user-specific enrichments to audit events."""
+    def _extend_audit_event(
+        self,
+        audit_event: Dict[str, Any],
+        user_context: Dict[str, Any],
+        action_details: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Extend audit event with user-specific data."""
         # Add user-specific metadata
-        event['metadata'] = event.get('metadata', {})
-        event['metadata']['entity_type'] = 'USER'
+        audit_event['metadata'] = audit_event.get('metadata', {})
+        audit_event['metadata']['entity_type'] = 'USER'
         
         # Add user pool information if available
         user_pool_id = os.environ.get('USER_POOL_ID')
         if user_pool_id:
-            event['metadata']['user_pool_id'] = user_pool_id
+            audit_event['metadata']['user_pool_id'] = user_pool_id
         
         # Add deployment environment
-        event['metadata']['environment'] = os.environ.get('ENVIRONMENT', 'unknown')
+        audit_event['metadata']['environment'] = os.environ.get('ENVIRONMENT', 'unknown')
         
-        return event
+        return audit_event
 
 
 # Global instance for convenience

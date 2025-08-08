@@ -147,20 +147,20 @@ class UsersResolver:
                 }
             
             # Track state changes
-            state_tracker = StateTracker()
-            state_tracker.track_changes(
-                before=current_user,
-                after={**current_user, **updates},
+            from orb_common.audit import track_state_change
+            state_tracker = track_state_change(
+                old_state=current_user,
+                new_state={**current_user, **updates},
                 field_classifications={
                     'email': FieldClassification.PII,
                     'phone': FieldClassification.PII,
                     'address': FieldClassification.PII,
                     'dateOfBirth': FieldClassification.PII,
                     'ssn': FieldClassification.SENSITIVE,
-                    'displayName': FieldClassification.NORMAL,
-                    'bio': FieldClassification.NORMAL,
-                    'website': FieldClassification.NORMAL,
-                    'location': FieldClassification.NORMAL
+                    'displayName': FieldClassification.INTERNAL,
+                    'bio': FieldClassification.INTERNAL,
+                    'website': FieldClassification.INTERNAL,
+                    'location': FieldClassification.INTERNAL
                 }
             )
             

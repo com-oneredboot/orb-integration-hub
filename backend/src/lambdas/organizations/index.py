@@ -23,12 +23,12 @@ from context_middleware import (
     requires_organization_owner,
     allows_platform_override
 )
-from aws_audit_logger import (
-    AuditEventType, 
-    ComplianceFlag, 
+from organizations_audit_logger import (
+    OrganizationAuditEventType,
     log_organization_audit_event,
-    state_tracker
+    ComplianceFlag
 )
+from orb_common.audit import StateTracker
 
 # Import specific exceptions from common layer
 from orb_common.exceptions import (
@@ -167,7 +167,7 @@ class OrganizationsResolver:
                 }
                 
                 log_organization_audit_event(
-                    event_type=AuditEventType.ORGANIZATION_CREATED,
+                    event_type=OrganizationAuditEventType.ORGANIZATION_CREATED,
                     user_context=user_context,
                     organization_id=organization_id,
                     action_details=action_details,
@@ -329,12 +329,13 @@ class OrganizationsResolver:
                 new_state = dict(response['Attributes'])
                 
                 # Calculate state changes using the state tracker
-                state_changes = state_tracker.capture_state_change(
-                    resource_type='ORGANIZATION',
-                    resource_id=organization_id,
+                from orb_common.audit import track_state_change
+                state_tracker = track_state_change(
                     old_state=old_state,
-                    new_state=new_state
+                    new_state=new_state,
+                    field_classifications={}
                 )
+                state_changes = state_tracker.get_changes()
                 
                 user_context = {
                     'user_id': org_context.user_id,
@@ -356,7 +357,7 @@ class OrganizationsResolver:
                 }
                 
                 log_organization_audit_event(
-                    event_type=AuditEventType.ORGANIZATION_UPDATED,
+                    event_type=OrganizationAuditEventType.ORGANIZATION_UPDATED,
                     user_context=user_context,
                     organization_id=organization_id,
                     action_details=action_details,
@@ -452,7 +453,7 @@ class OrganizationsResolver:
                 }
                 
                 log_organization_audit_event(
-                    event_type=AuditEventType.ORGANIZATION_DELETED,
+                    event_type=OrganizationAuditEventType.ORGANIZATION_DELETED,
                     user_context=user_context,
                     organization_id=organization_id,
                     action_details=action_details,
