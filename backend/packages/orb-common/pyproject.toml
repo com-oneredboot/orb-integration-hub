@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "orb-common"
-version = "0.1.2"
+dynamic = ["version"]
 description = "Common utilities and exceptions for ORB Integration Hub Lambda functions"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -45,7 +45,13 @@ Issues = "https://github.com/orb-integration-hub/orb-common/issues"
 
 [tool.setuptools]
 package-dir = {"" = "."}
-packages = ["orb_common"]
+
+[tool.setuptools.dynamic]
+version = {attr = "orb_common._version.__version__"}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["orb_common*"]
 
 [tool.setuptools.package-data]
 orb_common = ["py.typed"]

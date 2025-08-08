@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "orb-models"
-version = "0.1.1"
+dynamic = ["version"]
 description = "Shared data models for ORB Integration Hub"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -60,6 +60,9 @@ Issues = "https://github.com/orb-integration-hub/orb-integration-hub/issues"
 
 [tool.setuptools]
 packages = ["orb_models"]
+
+[tool.setuptools.dynamic]
+version = {attr = "orb_models._version.__version__"}
 
 [tool.setuptools.package-data]
 orb_models = ["py.typed"]

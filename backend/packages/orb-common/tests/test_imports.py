@@ -7,7 +7,10 @@ def test_main_package_import():
     """Test main package can be imported."""
     import orb_common
 
-    assert orb_common.__version__ == "0.1.1"
+    # Just verify version exists and is a string
+    assert hasattr(orb_common, '__version__')
+    assert isinstance(orb_common.__version__, str)
+    assert len(orb_common.__version__) > 0
 
 
 def test_module_imports():

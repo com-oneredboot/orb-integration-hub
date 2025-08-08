@@ -5,7 +5,8 @@ This package provides all data models, enums, and DynamoDB utilities
 used across the ORB Integration Hub platform.
 """
 
-__version__ = "0.1.0"
+from ._version import __version__
+
 __author__ = "ORB Integration Hub Team"
 __email__ = "team@orb-integration-hub.com"
 

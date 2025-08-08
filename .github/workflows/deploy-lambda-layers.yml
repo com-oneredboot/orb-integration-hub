@@ -242,12 +242,13 @@ jobs:
         
         # Display selected layers
         echo "### Selected Layers:" >> $GITHUB_STEP_SUMMARY
-        if [ "${{ inputs.deploy_all }}" == "true" ]; then
-          echo "- ✅ All layers" >> $GITHUB_STEP_SUMMARY
-        else
-          [ "${{ inputs.deploy_organizations_security }}" == "true" ] && echo "- ✅ organizations_security" >> $GITHUB_STEP_SUMMARY
-          [ "${{ inputs.deploy_stripe }}" == "true" ] && echo "- ✅ stripe" >> $GITHUB_STEP_SUMMARY
-          [ "${{ inputs.deploy_users_security }}" == "true" ] && echo "- ✅ users_security" >> $GITHUB_STEP_SUMMARY
+        [ "${{ inputs.deploy_organizations_security }}" == "true" ] && echo "- ✅ organizations_security" >> $GITHUB_STEP_SUMMARY
+        [ "${{ inputs.deploy_stripe }}" == "true" ] && echo "- ✅ stripe" >> $GITHUB_STEP_SUMMARY
+        [ "${{ inputs.deploy_users_security }}" == "true" ] && echo "- ✅ users_security" >> $GITHUB_STEP_SUMMARY
+        
+        # Check if no layers were selected
+        if [ "${{ inputs.deploy_organizations_security }}" != "true" ] && [ "${{ inputs.deploy_stripe }}" != "true" ] && [ "${{ inputs.deploy_users_security }}" != "true" ]; then
+          echo "- ⚠️ No layers selected" >> $GITHUB_STEP_SUMMARY
         fi
         echo "" >> $GITHUB_STEP_SUMMARY
         
