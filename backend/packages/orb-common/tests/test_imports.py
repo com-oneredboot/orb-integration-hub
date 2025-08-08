@@ -56,7 +56,7 @@ def test_utils_removed():
     """Test that utils module was removed."""
     with pytest.raises(ModuleNotFoundError):
         from orb_common import utils
-    
+
     with pytest.raises(ModuleNotFoundError):
         import orb_common.utils
 
