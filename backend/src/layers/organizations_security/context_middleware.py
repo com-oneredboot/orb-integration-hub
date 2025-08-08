@@ -270,7 +270,7 @@ class OrganizationContextMiddleware:
             cognito_sub = event.get('identity', {}).get('sub')
             cognito_groups = event.get('identity', {}).get('groups', [])
             
-            if not user_id:
+            if not cognito_sub:
                 raise SecurityViolationError("User ID not found in request context")
             
             # Extract organization ID
