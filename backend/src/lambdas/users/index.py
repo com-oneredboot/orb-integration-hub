@@ -510,6 +510,50 @@ class UsersResolver:
             
             logger.info(f"Found {len(items)} users for cognitoSub: {cognito_sub}")
             
+            # Log login event if user found
+            if items:
+                user = items[0]
+                user_context = {
+                    'user_id': user.get('userId'),
+                    'cognito_sub': cognito_sub,
+                    'email': user.get('email'),
+                    'ip_address': event.get('requestContext', {}).get('identity', {}).get('sourceIp'),
+                    'user_agent': event.get('requestContext', {}).get('identity', {}).get('userAgent'),
+                    'session_id': event.get('requestContext', {}).get('requestId')
+                }
+                
+                # Log successful login
+                log_user_audit_event(
+                    event_type=UserAuditEventType.USER_LOGIN_SUCCESS,
+                    acting_user_context=user_context,
+                    target_user_id=user.get('userId'),
+                    action_details={
+                        'operation': 'UsersQueryByCognitoSub',
+                        'auth_method': 'cognito',
+                        'login_source': 'web_app',
+                        'success': True
+                    },
+                    compliance_flags=[ComplianceFlag.SOX, ComplianceFlag.SOC_2]
+                )
+            else:
+                # Log failed login attempt
+                log_user_audit_event(
+                    event_type=UserAuditEventType.USER_LOGIN_FAILED,
+                    acting_user_context={
+                        'cognito_sub': cognito_sub,
+                        'ip_address': event.get('requestContext', {}).get('identity', {}).get('sourceIp'),
+                        'user_agent': event.get('requestContext', {}).get('identity', {}).get('userAgent')
+                    },
+                    target_user_id='UNKNOWN',
+                    action_details={
+                        'operation': 'UsersQueryByCognitoSub',
+                        'auth_method': 'cognito',
+                        'failure_reason': 'user_not_found',
+                        'cognito_sub': cognito_sub
+                    },
+                    compliance_flags=[ComplianceFlag.SOX, ComplianceFlag.SOC_2]
+                )
+            
             return {
                 'StatusCode': 200,
                 'Message': None,
