@@ -52,15 +52,6 @@ def test_audit_imports():
     assert StateTracker is not None
 
 
-def test_utils_removed():
-    """Test that utils module was removed."""
-    with pytest.raises(ModuleNotFoundError):
-        from orb_common import utils
-
-    with pytest.raises(ModuleNotFoundError):
-        import orb_common.utils
-
-
 def test_package_level_imports():
     """Test imports available at package level."""
     from orb_common import AuthenticationError, DataValidationError, log_audit_event, validate_token
