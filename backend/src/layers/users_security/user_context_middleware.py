@@ -24,7 +24,7 @@ from orb_common.exceptions import (
 )
 
 # Import from users security layer
-from .users_audit_logger import (
+from users_audit_logger import (
     UserAuditEventType,
     log_user_audit_event,
     ComplianceFlag

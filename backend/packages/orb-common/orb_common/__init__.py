@@ -5,7 +5,7 @@ This package provides shared functionality across all Lambda functions and layer
 in the ORB Integration Hub project.
 """
 
-from ._version import __version__
+from orb_common._version import __version__
 
 __author__ = "ORB Integration Hub Team"
 __email__ = "team@orb-integration-hub.com"
