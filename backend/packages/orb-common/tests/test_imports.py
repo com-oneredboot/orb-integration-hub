@@ -12,12 +12,11 @@ def test_main_package_import():
 
 def test_module_imports():
     """Test all modules can be imported."""
-    from orb_common import audit, exceptions, security, utils
+    from orb_common import audit, exceptions, security
 
     assert exceptions is not None
     assert security is not None
     assert audit is not None
-    assert utils is not None
 
 
 def test_exception_imports():
@@ -37,12 +36,10 @@ def test_exception_imports():
 
 def test_security_imports():
     """Test security function imports."""
-    from orb_common.security import check_permissions, validate_email, validate_token
+    from orb_common.security import validate_token
 
     # Test functions exist
     assert callable(validate_token)
-    assert callable(check_permissions)
-    assert callable(validate_email)
 
 
 def test_audit_imports():
@@ -55,15 +52,13 @@ def test_audit_imports():
     assert StateTracker is not None
 
 
-def test_utils_imports():
-    """Test utils function imports."""
-    from orb_common.utils import is_valid_uuid, retry_with_backoff, safe_json_dumps, utc_now
-
-    # Test functions exist
-    assert callable(utc_now)
-    assert callable(safe_json_dumps)
-    assert callable(retry_with_backoff)
-    assert callable(is_valid_uuid)
+def test_utils_removed():
+    """Test that utils module was removed."""
+    with pytest.raises(ModuleNotFoundError):
+        from orb_common import utils
+    
+    with pytest.raises(ModuleNotFoundError):
+        import orb_common.utils
 
 
 def test_package_level_imports():
