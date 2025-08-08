@@ -12,6 +12,16 @@ on:
           - staging
           - prod
         default: dev
+      deploy_common:
+        description: 'Deploy orb-common package'
+        required: false
+        type: boolean
+        default: true
+      deploy_models:
+        description: 'Deploy orb-models package'
+        required: false
+        type: boolean
+        default: true
       skip_tests:
         description: 'Skip tests (not recommended)'
         required: false
@@ -19,49 +29,11 @@ on:
         default: false
 
 jobs:
-  detect-changes:
-    name: Detect Package Changes
-    runs-on: ubuntu-latest
-    outputs:
-      common-changed: ${{ steps.changes.outputs.common }}
-      models-changed: ${{ steps.changes.outputs.models }}
-      schemas-changed: ${{ steps.changes.outputs.schemas }}
-    
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-      
-      - name: Get previous commit SHA
-        id: get-base-sha
-        run: |
-          echo "base_sha=$(git rev-parse HEAD~1)" >> $GITHUB_OUTPUT
-      
-      - uses: dorny/paths-filter@v2
-        id: changes
-        with:
-          # Compare against the previous commit to see what changed
-          base: ${{ steps.get-base-sha.outputs.base_sha }}
-          filters: |
-            common:
-              - 'backend/packages/orb-common/**'
-            models:
-              - 'backend/packages/orb-models/**'
-            schemas:
-              - 'schemas/**'
-      
-      - name: Display detected changes
-        run: |
-          echo "Common changed: ${{ steps.changes.outputs.common }}"
-          echo "Models changed: ${{ steps.changes.outputs.models }}"
-          echo "Schemas changed: ${{ steps.changes.outputs.schemas }}"
-
   # Test and build orb-common first
   test-common:
     name: Test ORB Common
-    needs: detect-changes
     if: |
-      needs.detect-changes.outputs.common-changed == 'true' &&
+      inputs.deploy_common == true &&
       inputs.skip_tests != true
     runs-on: ubuntu-latest
     
@@ -104,9 +76,9 @@ jobs:
 
   build-common:
     name: Build ORB Common
-    needs: [detect-changes, test-common]
+    needs: [test-common]
     if: |
-      needs.detect-changes.outputs.common-changed == 'true' &&
+      inputs.deploy_common == true &&
       (needs.test-common.result == 'success' || needs.test-common.result == 'skipped')
     runs-on: ubuntu-latest
     
@@ -225,10 +197,9 @@ jobs:
   # Now test and build models AFTER common is published
   test-models:
     name: Test ORB Models
-    needs: [detect-changes, publish-common]
+    needs: [publish-common]
     if: |
-      (needs.detect-changes.outputs.models-changed == 'true' ||
-       needs.detect-changes.outputs.schemas-changed == 'true') &&
+      inputs.deploy_models == true &&
       inputs.skip_tests != true
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
@@ -298,10 +269,9 @@ jobs:
 
   build-models:
     name: Build ORB Models
-    needs: [detect-changes, test-models]
+    needs: [test-models]
     if: |
-      (needs.detect-changes.outputs.models-changed == 'true' ||
-       needs.detect-changes.outputs.schemas-changed == 'true') &&
+      inputs.deploy_models == true &&
       (needs.test-models.result == 'success' || needs.test-models.result == 'skipped')
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
@@ -445,7 +415,7 @@ jobs:
 
   summary:
     name: Deployment Summary
-    needs: [detect-changes, build-common, build-models, publish-common, publish-models]
+    needs: [build-common, build-models, publish-common, publish-models]
     if: always()
     runs-on: ubuntu-latest
     
@@ -456,10 +426,10 @@ jobs:
           echo ""  >> $GITHUB_STEP_SUMMARY
           echo "**Environment:** ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
           echo ""  >> $GITHUB_STEP_SUMMARY
-          echo "### Changes Detected:" >> $GITHUB_STEP_SUMMARY
-          echo "- ORB Common: ${{ needs.detect-changes.outputs.common-changed }}" >> $GITHUB_STEP_SUMMARY
-          echo "- ORB Models: ${{ needs.detect-changes.outputs.models-changed }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Schemas: ${{ needs.detect-changes.outputs.schemas-changed }}" >> $GITHUB_STEP_SUMMARY
+          echo "### Deployment Requested:" >> $GITHUB_STEP_SUMMARY
+          echo "- Deploy ORB Common: ${{ inputs.deploy_common }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Deploy ORB Models: ${{ inputs.deploy_models }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Skip Tests: ${{ inputs.skip_tests }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Build Results:" >> $GITHUB_STEP_SUMMARY
           echo "- ORB Common Build: ${{ needs.build-common.result }}" >> $GITHUB_STEP_SUMMARY
