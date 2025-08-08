@@ -30,13 +30,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 2
+      
+      - name: Get previous commit SHA
+        id: get-base-sha
+        run: |
+          echo "base_sha=$(git rev-parse HEAD~1)" >> $GITHUB_OUTPUT
       
       - uses: dorny/paths-filter@v2
         id: changes
         with:
           # Compare against the previous commit to see what changed
-          base: HEAD~1
+          base: ${{ steps.get-base-sha.outputs.base_sha }}
           filters: |
             common:
               - 'backend/packages/orb-common/**'
