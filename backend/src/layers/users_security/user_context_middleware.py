@@ -15,7 +15,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 # Import from orb-common package
-from orb_common import (
+from orb_common.exceptions import (
     SecurityViolationError,
     ContextExtractionError,
     AuthenticationError,

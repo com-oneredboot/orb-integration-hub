@@ -8,13 +8,13 @@ from enum import Enum
 from typing import Dict, Any, List, Optional
 
 # Import from orb-common package
-from orb_common import (
+from orb_common.audit import (
     BaseAuditLogger,
     BaseAuditEventType,
     ComplianceFlag,
-    determine_compliance_flags,
-    AuditLogError
+    determine_compliance_flags
 )
+from orb_common.exceptions import AuditLogError
 
 
 class UserAuditEventType(Enum):

@@ -27,7 +27,7 @@ from users_audit_logger import (
     ComplianceFlag
 )
 from orb_common.security.audit import StateTracker, FieldClassification
-from orb_common.security_exceptions import (
+from orb_common.exceptions import (
     SecurityViolationError,
     DataValidationError,
     AuthenticationError
