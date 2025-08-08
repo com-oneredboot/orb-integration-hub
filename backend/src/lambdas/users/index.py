@@ -623,6 +623,32 @@ class UsersResolver:
             
             items = response.get('Items', [])
             
+            # Log this query - often used for login flows
+            if items:
+                user = items[0]
+                user_context = {
+                    'user_id': user.get('userId'),
+                    'email': email,
+                    'ip_address': event.get('request', {}).get('headers', {}).get('x-forwarded-for', '').split(',')[0].strip(),
+                    'user_agent': event.get('request', {}).get('headers', {}).get('user-agent'),
+                    'session_id': event.get('request', {}).get('headers', {}).get('x-amzn-requestid')
+                }
+                
+                # Log email query (potential login event)
+                logger.info(f"Email query for user: {email}, found: {user.get('userId')}")
+                log_user_audit_event(
+                    event_type=UserAuditEventType.USER_PROFILE_VIEWED,
+                    acting_user_context=user_context,
+                    target_user_id=user.get('userId'),
+                    action_details={
+                        'operation': 'UsersQueryByEmail',
+                        'query_type': 'email_lookup',
+                        'purpose': 'authentication_check',
+                        'email': email
+                    },
+                    compliance_flags=[ComplianceFlag.SOX]
+                )
+            
             return {
                 'StatusCode': 200,
                 'Message': None,

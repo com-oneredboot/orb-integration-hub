@@ -176,6 +176,7 @@ class BaseAuditLogger(ABC):
     def _write_to_cloudwatch(self, audit_event: Dict[str, Any], user_id: str) -> None:
         """Write audit event to CloudWatch."""
         if not self.logs_client:
+            logger.warning(f"No CloudWatch client available - audit event not written to CloudWatch: {audit_event.get('eventType')}")
             return
 
         log_stream_name = self._get_log_stream_name(user_id)
