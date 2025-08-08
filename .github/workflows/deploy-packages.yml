@@ -35,6 +35,8 @@ jobs:
       - uses: dorny/paths-filter@v2
         id: changes
         with:
+          # Compare against the previous commit to see what changed
+          base: HEAD~1
           filters: |
             common:
               - 'backend/packages/orb-common/**'
