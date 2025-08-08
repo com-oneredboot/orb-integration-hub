@@ -142,6 +142,26 @@ jobs:
           
           echo "Processing layer: $layer"
           
+          # Configure pipenv to use CodeArtifact before building
+          CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token \
+            --domain $CODEARTIFACT_DOMAIN \
+            --query authorizationToken \
+            --output text)
+          
+          CODEARTIFACT_REPOSITORY=$(aws ssm get-parameter \
+            --name "/${{ inputs.customer_id }}/${{ inputs.project_id }}/${{ inputs.environment }}/codeartifact/repository" \
+            --query 'Parameter.Value' \
+            --output text 2>/dev/null || echo "${{ inputs.environment }}-python-packages")
+          
+          REPOSITORY_ENDPOINT=$(aws codeartifact get-repository-endpoint \
+            --domain $CODEARTIFACT_DOMAIN \
+            --repository $CODEARTIFACT_REPOSITORY \
+            --format pypi \
+            --query repositoryEndpoint \
+            --output text)
+          
+          export PIPENV_PYPI_MIRROR="https://aws:${CODEARTIFACT_AUTH_TOKEN}@${REPOSITORY_ENDPOINT#https://}simple/"
+          
           # Build the layer
           echo "Building $layer Layer"
           chmod +x build_layer.sh
