@@ -9,9 +9,6 @@ __version__ = "0.1.0"
 __author__ = "ORB Integration Hub Team"
 __email__ = "team@orb-integration-hub.com"
 
-# Import main modules for easy access
-from . import audit, exceptions, security, utils
-
 # Import commonly used items at package level
 from .audit import (
     AuditEventType,
@@ -62,7 +59,6 @@ __all__ = [
     "exceptions",
     "security",
     "audit",
-    "utils",
     # Standard exceptions
     "OrbError",
     "ValidationError",
