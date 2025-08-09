@@ -273,6 +273,9 @@ class OrganizationContextMiddleware:
             if not cognito_sub:
                 raise SecurityViolationError("User ID not found in request context")
             
+            # Use cognito_sub as user_id for consistency
+            user_id = cognito_sub
+            
             # Extract organization ID
             organization_id = self.extractor.extract_organization_id(event)
             

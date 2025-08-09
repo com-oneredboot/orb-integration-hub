@@ -2918,11 +2918,80 @@
         ],
         "priority": "low",
         "subtasks": []
+      },
+      {
+        "id": 57,
+        "title": "Optimize Login Flow and Eliminate Duplicate Authentication Queries",
+        "description": "Streamline the user authentication flow to eliminate redundant queries and implement proper audit logging for login events. Currently, the login process triggers 3 duplicate email queries due to authentication fallback logic and potential component re-renders.",
+        "details": "The current login flow has several inefficiencies that need to be addressed:\n\n**Current Issues:**\n1. **Double Authentication Attempts**: The `userExists` method in `user.service.ts` tries userPool auth first (which always fails for unauthenticated users), then falls back to apiKey auth, causing 2 queries for every login attempt\n2. **Component Re-render Query**: A third query occurs ~17 seconds after initial login, possibly due to navigation/routing or state management\n3. **Improper Audit Event Types**: Login queries are logged as USER_PROFILE_VIEWED instead of dedicated login event types\n4. **No Request Deduplication**: Multiple identical queries can be triggered simultaneously\n\n**Implementation Requirements:**\n1. **Frontend Optimization**:\n   - Modify `userExists` method to use only apiKey auth for unauthenticated contexts (login/registration flows)\n   - Implement request caching/deduplication to prevent multiple identical queries within a short timeframe\n   - Add context parameter to distinguish between login checks and authenticated user lookups\n   - Review auth-flow component to eliminate unnecessary re-queries after successful authentication\n\n2. **Backend Audit Improvements**:\n   - Add new UserAuditEventType entries: USER_LOGIN_INITIATED, USER_LOGIN_SUCCESS, USER_LOGIN_FAILED\n   - Update query_by_email and query_by_cognito_sub methods to use appropriate event types based on context\n   - Add request correlation to link multiple queries from the same login attempt\n   - Implement rate limiting awareness in audit logs\n\n3. **Performance Optimizations**:\n   - Implement short-term caching (5-10 seconds) for email query results during login flow\n   - Add request debouncing to prevent rapid repeated queries\n   - Consider implementing a dedicated login GraphQL query that combines email check and authentication in a single request\n\n**Expected Outcomes:**\n- Reduce login queries from 3 to 1 per authentication attempt\n- Proper audit trail with accurate event types for security monitoring\n- Improved login performance and reduced Lambda invocations\n- Better visibility into actual vs duplicate authentication attempts",
+        "testStrategy": "Comprehensive testing strategy for login flow optimization:\n\n1. **Unit Tests**:\n   - Test userExists method with authentication context parameter\n   - Verify apiKey-only auth for unauthenticated contexts\n   - Test request caching/deduplication logic\n   - Validate proper audit event type selection\n\n2. **Integration Tests**:\n   - End-to-end login flow testing to ensure single query execution\n   - Verify audit logs contain correct event types and correlation IDs\n   - Test rapid login attempts to validate deduplication\n   - Measure query reduction (baseline 3 queries vs target 1 query)\n\n3. **Performance Tests**:\n   - Benchmark login time before/after optimization\n   - Load test with concurrent logins to verify deduplication under load\n   - Monitor Lambda invocation counts and CloudWatch logs\n\n4. **Security Tests**:\n   - Ensure rate limiting still functions correctly\n   - Verify audit trail completeness for compliance\n   - Test that authentication security is not compromised by optimizations\n   - Validate proper error handling for edge cases\n\n5. **User Experience Tests**:\n   - Verify no UI delays or freezes during login\n   - Test login flow across different network conditions\n   - Ensure error messages remain clear and actionable\n   - Validate smooth transition after successful authentication",
+        "status": "pending",
+        "dependencies": [
+          55
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Optimize Frontend userExists Method and Authentication Context",
+            "description": "Refactor the userExists method in user.service.ts to eliminate redundant authentication attempts by implementing context-aware authentication and removing the userPool auth fallback for unauthenticated contexts.",
+            "dependencies": [],
+            "details": "Modify the userExists method to accept an authentication context parameter (e.g., 'login', 'authenticated'). For login/registration flows, use only apiKey authentication instead of attempting userPool auth first. Update all calling components to pass appropriate context. Implement proper error handling for different authentication scenarios. Remove the double authentication attempt pattern that causes 2 queries per login attempt.",
+            "status": "pending",
+            "testStrategy": "Unit tests for userExists method with different context parameters, mock authentication scenarios to verify single query execution, integration tests for login flow authentication patterns"
+          },
+          {
+            "id": 2,
+            "title": "Implement Request Deduplication and Caching System",
+            "description": "Build a request deduplication and short-term caching mechanism to prevent multiple identical queries within a short timeframe during the login process.",
+            "dependencies": [
+              "57.1"
+            ],
+            "details": "Implement a request cache service with 5-10 second TTL for email query results during login flows. Add request debouncing to prevent rapid repeated queries. Create a request fingerprinting system to identify duplicate requests based on query parameters and user context. Implement cache invalidation strategies for successful authentication events. Add request correlation IDs to track related queries from the same login attempt.",
+            "status": "pending",
+            "testStrategy": "Unit tests for cache hit/miss scenarios, integration tests for request deduplication logic, performance tests to verify reduced query count, concurrent request testing to validate deduplication effectiveness"
+          },
+          {
+            "id": 3,
+            "title": "Add New Audit Event Types for Login Flow",
+            "description": "Extend the backend audit system with dedicated login event types and update query methods to use appropriate event types based on authentication context.",
+            "dependencies": [],
+            "details": "Add new UserAuditEventType entries: USER_LOGIN_INITIATED, USER_LOGIN_SUCCESS, USER_LOGIN_FAILED. Update query_by_email and query_by_cognito_sub methods to accept context parameters and use appropriate audit event types instead of USER_PROFILE_VIEWED. Implement request correlation in audit logs to link multiple queries from the same login attempt. Add rate limiting awareness in audit logs to distinguish between legitimate and potentially malicious repeated attempts.",
+            "status": "pending",
+            "testStrategy": "Unit tests for new audit event type creation, integration tests for context-based event type selection, audit log verification tests to ensure proper event categorization, security testing for audit trail completeness"
+          },
+          {
+            "id": 4,
+            "title": "Fix Component State Management and Re-render Issues",
+            "description": "Identify and resolve component re-render issues causing the third query approximately 17 seconds after initial login, likely related to navigation, routing, or state management.",
+            "dependencies": [
+              "57.1",
+              "57.2"
+            ],
+            "details": "Analyze auth-flow components and navigation logic to identify unnecessary re-queries after successful authentication. Implement proper state management to prevent component re-initialization during route transitions. Add component lifecycle logging to track re-render triggers. Optimize NgRx state updates to prevent unnecessary component re-subscriptions. Implement route guards that don't trigger additional authentication checks for already authenticated users.",
+            "status": "pending",
+            "testStrategy": "Component lifecycle testing to track re-render patterns, integration tests for navigation flows, state management testing to verify proper subscription handling, E2E tests to monitor query timing and frequency"
+          },
+          {
+            "id": 5,
+            "title": "Comprehensive Testing and Performance Validation",
+            "description": "Implement comprehensive testing suite to validate the optimized login flow, verify query reduction from 3 to 1 per authentication attempt, and ensure proper audit logging functionality.",
+            "dependencies": [
+              "57.1",
+              "57.2",
+              "57.3",
+              "57.4"
+            ],
+            "details": "Create end-to-end tests that monitor actual query count during login flows. Implement performance benchmarks to measure Lambda invocation reduction. Build audit log validation tests to verify proper event type usage and correlation IDs. Create load testing scenarios to validate request deduplication under concurrent user scenarios. Implement monitoring dashboards to track login flow performance metrics and audit event accuracy in production.",
+            "status": "pending",
+            "testStrategy": "E2E performance tests measuring query count reduction, load testing for concurrent login scenarios, audit log integrity tests, production monitoring setup for ongoing performance validation, regression testing to ensure no functionality loss"
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-06-20T19:07:50.957Z",
-      "updated": "2025-08-08T20:57:37.433Z",
+      "updated": "2025-08-08T21:57:33.310Z",
       "description": "Tasks for master context"
     }
   }
