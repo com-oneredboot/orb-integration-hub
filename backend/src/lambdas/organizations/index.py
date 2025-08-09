@@ -276,8 +276,12 @@ class OrganizationsResolver:
     def update_organization(self, event: Dict[str, Any], org_context) -> Dict[str, Any]:
         """Update an organization with automatic security validation."""
         try:
-            # Extract arguments
+            # Extract arguments - handle both direct args and nested input
             args = event.get('arguments', {})
+            input_data = args.get('input', {})
+            
+            # Use input data if available, otherwise fall back to direct args
+            update_data = input_data if input_data else args
             organization_id = org_context.organization_id
             
             # Capture current state for audit logging
@@ -288,19 +292,19 @@ class OrganizationsResolver:
             expression_values = {':updatedAt': int(datetime.utcnow().timestamp())}
             expression_names = {}
             
-            if 'name' in args:
+            if 'name' in update_data:
                 update_expression += ", #name = :name"
-                expression_values[':name'] = args['name']
+                expression_values[':name'] = update_data['name']
                 expression_names['#name'] = 'name'
             
-            if 'description' in args:
+            if 'description' in update_data:
                 # Encrypt description with organization-specific KMS key
-                encrypted_description = args['description']
-                if args['description']:
+                encrypted_description = update_data['description']
+                if update_data['description']:
                     try:
                         encrypted_description = self.kms_manager.encrypt_organization_data(
                             organization_id=organization_id,
-                            plaintext_data=args['description'],
+                            plaintext_data=update_data['description'],
                             encryption_context={'field': 'description', 'action': 'update'}
                         )
                     except Exception as e:
@@ -353,7 +357,7 @@ class OrganizationsResolver:
                     'permission_used': OrganizationPermissions.ORGANIZATION_UPDATE.key,
                     'request_id': event.get('requestContext', {}).get('requestId'),
                     'changes': state_changes,
-                    'fields_modified': list(args.keys())
+                    'fields_modified': list(update_data.keys())
                 }
                 
                 log_organization_audit_event(
