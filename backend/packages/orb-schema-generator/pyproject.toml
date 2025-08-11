@@ -1,0 +1,175 @@
+[build-system]
+requires = ["setuptools>=69.0.3", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "orb-schema-generator"
+version = "0.1.0"
+description = "A comprehensive schema-driven code generator for TypeScript, Python, GraphQL, and CloudFormation"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "ORB Integration Hub Team", email = "team@orb-integration-hub.com"}
+]
+maintainers = [
+    {name = "ORB Integration Hub Team", email = "team@orb-integration-hub.com"}
+]
+keywords = [
+    "schema", "code-generation", "typescript", "python", "graphql", 
+    "cloudformation", "aws", "mcp", "model-context-protocol"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Code Generators",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Framework :: Pydantic",
+    "Framework :: Pytest",
+]
+
+dependencies = [
+    "pyyaml>=6.0",
+    "jinja2>=3.1.2",
+    "pydantic>=2.0",
+    "click>=8.1.3",
+    "rich>=12.6.0",
+    "jsonschema>=4.17.3",
+    "toml>=0.10.2",
+    "mcp>=0.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.2.0",
+    "pytest-cov>=4.0.0",
+    "pytest-asyncio>=0.20.3",
+    "black>=23.1.0",
+    "isort>=5.12.0",
+    "mypy>=1.0.0",
+    "bandit>=1.7.5",
+    "pre-commit>=3.0.0",
+    "ruff>=0.1.0",
+]
+docs = [
+    "sphinx>=5.3.0",
+    "sphinx-rtd-theme>=1.2.0",
+    "sphinx-click>=4.4.0",
+    "myst-parser>=0.18.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/orb-integration-hub/orb-schema-generator"
+Documentation = "https://orb-schema-generator.readthedocs.io"
+Repository = "https://github.com/orb-integration-hub/orb-schema-generator"
+Issues = "https://github.com/orb-integration-hub/orb-schema-generator/issues"
+
+[project.scripts]
+orb-schema-gen = "orb_schema_generator.cli.main:cli"
+orb-sg = "orb_schema_generator.cli.main:cli"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+orb_schema_generator = ["templates/**/*", "config/defaults.yaml"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311', 'py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--cov=orb_schema_generator",
+    "--cov-branch",
+    "--cov-report=term-missing:skip-covered",
+    "--cov-report=html",
+    "--cov-report=xml",
+]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*", "*/__init__.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if __name__ == .__main__.:",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]
+
+[tool.bandit]
+exclude_dirs = ["tests", "docs"]
+skips = ["B101"]  # assert_used
+
+[tool.ruff]
+line-length = 100
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "N",   # pep8-naming
+    "SIM", # flake8-simplify
+]
+ignore = [
+    "E501",  # line too long (handled by black)
+    "B008",  # do not perform function calls in argument defaults
+    "C901",  # too complex
+]
