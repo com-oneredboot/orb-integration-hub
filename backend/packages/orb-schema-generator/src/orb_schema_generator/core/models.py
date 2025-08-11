@@ -177,6 +177,7 @@ class Operation:
     resolver_type: str = "dynamodb"  # dynamodb, lambda, local
     table_name: Optional[str] = None
     index_name: Optional[str] = None
+    gql: Optional[str] = None  # GraphQL query/mutation string
     
     def __hash__(self) -> int:
         """Make Operation hashable for deduplication."""

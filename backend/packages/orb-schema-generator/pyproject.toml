@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "orb-schema-generator"
 version = "0.1.0"
-description = "A comprehensive schema-driven code generator for TypeScript, Python, GraphQL, and CloudFormation"
+description = "Internal schema-driven code generator for ORB Integration Hub projects"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
@@ -41,7 +41,6 @@ dependencies = [
     "rich>=12.6.0",
     "jsonschema>=4.17.3",
     "toml>=0.10.2",
-    "mcp>=0.1.0",
 ]
 
 [project.optional-dependencies]
@@ -55,6 +54,8 @@ dev = [
     "bandit>=1.7.5",
     "pre-commit>=3.0.0",
     "ruff>=0.1.0",
+    "build>=0.10.0",
+    "twine==6.0.1",
 ]
 docs = [
     "sphinx>=5.3.0",
@@ -62,10 +63,12 @@ docs = [
     "sphinx-click>=4.4.0",
     "myst-parser>=0.18.1",
 ]
+mcp = [
+    "mcp>=0.1.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/orb-integration-hub/orb-schema-generator"
-Documentation = "https://orb-schema-generator.readthedocs.io"
 Repository = "https://github.com/orb-integration-hub/orb-schema-generator"
 Issues = "https://github.com/orb-integration-hub/orb-schema-generator/issues"
 

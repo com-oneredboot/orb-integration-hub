@@ -1,0 +1,196 @@
+{#-- Helper macro to merge and deduplicate auth directives --#}
+{% macro join_unique_directives(directives_list) -%}
+  {%- set api_key_found = [] -%}
+  {%- set cognito_groups = [] -%}
+  
+  {#-- Parse all directives --#}
+  {%- for directive in directives_list -%}
+    {%- if directive == '@aws_api_key' -%}
+      {%- do api_key_found.append(true) -%}
+    {%- elif directive.startswith('@aws_auth(cognito_groups:') -%}
+      {#-- Extract groups from directive like @aws_auth(cognito_groups: ["OWNER", "USER"]) --#}
+      {%- set groups_part = directive.split('[')[1].split(']')[0] -%}
+      {%- set groups = groups_part.split(',') -%}
+      {%- for group in groups -%}
+        {%- set clean_group = group.strip().strip('"').strip("'") -%}
+        {%- if clean_group not in cognito_groups -%}
+          {%- do cognito_groups.append(clean_group) -%}
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endif -%}
+  {%- endfor -%}
+  
+  {#-- Output consolidated directives --#}
+  {%- if api_key_found -%}
+    {{- ' @aws_api_key' -}}
+  {%- endif -%}
+  {%- if cognito_groups -%}
+    {%- set sorted_groups = cognito_groups | sort -%}
+    {{- ' @aws_auth(cognito_groups: [' -}}
+    {%- for group in sorted_groups -%}
+      {{- '"' ~ group ~ '"' -}}
+      {%- if not loop.last -%}, {%- endif -%}
+    {%- endfor -%}
+    {{- '])' -}}
+  {%- endif -%}
+{%- endmacro %}
+
+{#-- Table-based types with auth directives --#}
+{% for schema in table_schemas.values() %}
+{#-- Collect all auth directives for Query/Mutation operations returning this type --#}
+{% set entity_field_directives = [] %}
+{% for op in schema.operations %}
+  {% for d in op.response_auth_directives %}
+    {% if d not in entity_field_directives %}{% do entity_field_directives.append(d) %}{% endif %}
+  {% endfor %}
+{% endfor %}
+{#-- Add API key directive if this type supports it --#}
+{% if schema.auth_config and schema.auth_config.get('apiKeyAuthentication') %}
+  {% set api_key_ops = schema.auth_config.get('apiKeyAuthentication', []) %}
+  {% if schema.name in api_key_ops %}
+    {% do entity_field_directives.append('@aws_api_key') %}
+  {% endif %}
+{% endif %}
+type {{ schema.name }} {
+{% for attr in schema.attributes %}
+  {% set field_directives = entity_field_directives | list %}
+  {{ attr.name }}: {{ attr.type|graphql_type }}{% if attr.required %}!{% endif %}{{ join_unique_directives(field_directives) }}
+{% endfor %}
+}
+{% endfor %}
+
+{#-- Input types for table schemas --#}
+{% for schema_name, schema in table_schemas.items() %}
+{% if schema.type == 'dynamodb' or schema.type == 'lambda-dynamodb' %}
+input {{ schema.name }}CreateInput {
+{% for attr in schema.attributes -%}
+  {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{{ attr.type|graphql_type }}{% endif %}{{ "\n" }}
+{%- endfor %}}
+
+input {{ schema.name }}UpdateInput {
+{% for attr in schema.attributes -%}
+  {{ attr.name }}: {% if attr.enum_type %}{{ attr.enum_type }}{% else %}{{ attr.type|graphql_type }}{% endif %}{{ "\n" }}
+{%- endfor %}}
+
+input {{ schema.name }}DeleteInput {
+  {{ schema.partition_key }}: {{ schema.fields[schema.partition_key]|graphql_type }}
+{% if schema.sort_key and schema.sort_key != 'None' %}
+  {{ schema.sort_key }}: {{ schema.fields[schema.sort_key]|graphql_type }}
+{% endif %}}
+
+input {{ schema.name }}DisableInput {
+  {{ schema.partition_key }}: {{ schema.fields[schema.partition_key]|graphql_type }}
+{% if schema.sort_key and schema.sort_key != 'None' %}
+  {{ schema.sort_key }}: {{ schema.fields[schema.sort_key]|graphql_type }}
+{% endif %}}
+
+{% set seen_indexes = [] %}
+{%- for index in schema.indexes %}
+{%- set input_name = schema.name ~ 'QueryBy' ~ index.partition|to_pascal_case ~ 'Input' %}
+{% if input_name not in seen_indexes %}
+input {{ input_name }} {
+  {{ index.partition }}: {{ schema.fields[index.partition]|graphql_type }}
+}
+
+{% set _ = seen_indexes.append(input_name) %}
+{% endif %}
+{%- if index.sort and index.sort != 'None' %}
+{%- set input_name_and = schema.name ~ 'QueryBy' ~ index.partition|to_pascal_case ~ 'And' ~ index.sort|to_pascal_case ~ 'Input' %}
+{% if input_name_and not in seen_indexes %}
+input {{ input_name_and }} {
+  {{ index.partition }}: {{ schema.fields[index.partition]|graphql_type }}
+  {{ index.sort }}: {{ schema.fields[index.sort]|graphql_type }}
+}
+
+{% set _ = seen_indexes.append(input_name_and) %}
+{% endif %}
+{% endif %}
+{% endfor %}
+
+{#-- Custom query input types --#}
+{% if schema.custom_queries %}
+{% for custom_query in schema.custom_queries %}
+input {{ custom_query.name }}Input {
+{% for input_name, input_def in custom_query.input.items() %}
+  {{ input_name }}: {{ input_def.type }}
+{% endfor %}
+}
+
+{% endfor %}
+{% endif %}
+{% endif %}
+{% endfor %}
+
+{#-- Custom query return types --#}
+{% for schema in table_schemas.values() %}
+{% if schema.custom_queries %}
+{% for custom_query in schema.custom_queries %}
+{% if custom_query.type == 'aggregation' and custom_query.returns == '[OrganizationWithDetails]' %}
+type OrganizationWithDetails {
+  organization: {{ schema.name }}!
+{% for enrichment in custom_query.enrichments %}
+{% if enrichment.type == 'lookup' %}
+  {{ enrichment.field }}: String!
+{% elif enrichment.type == 'count' %}
+  {{ enrichment.field }}: Int!
+{% endif %}
+{% endfor %}
+}
+
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+{% for schema in table_schemas.values() %}
+{% set response_directives = [] %}
+{% for op in schema.operations %}
+  {% for d in op.response_auth_directives %}
+    {% if d not in response_directives %}{% do response_directives.append(d) %}{% endif %}
+  {% endfor %}
+{% endfor %}
+{#-- Add API key directive if this response type supports it --#}
+{% if schema.auth_config %}
+  {% set api_key_ops = schema.auth_config.get('apiKeyAuthentication', []) %}
+  {% if (schema.name + 'Response') in api_key_ops %}
+    {% if '@aws_api_key' not in response_directives %}{% do response_directives.append('@aws_api_key') %}{% endif %}
+  {% endif %}
+{% endif %}
+type {{ schema.name }}Response {
+  StatusCode: Int!{{ join_unique_directives(response_directives) }}
+  Message: String{{ join_unique_directives(response_directives) }}
+  Data: {{ schema.name }}{{ join_unique_directives(response_directives) }}
+}
+{% endfor %}
+{% for schema in table_schemas.values() %}
+{% set list_response_directives = [] %}
+{% for op in schema.operations if op.type == 'Query' %}
+  {% for d in op.response_auth_directives %}
+    {% if d not in list_response_directives %}{% do list_response_directives.append(d) %}{% endif %}
+  {% endfor %}
+{% endfor %}
+{#-- Add API key directive if this list response type supports it --#}
+{% if schema.auth_config %}
+  {% set api_key_ops = schema.auth_config.get('apiKeyAuthentication', []) %}
+  {% if (schema.name + 'ListResponse') in api_key_ops %}
+    {% if '@aws_api_key' not in list_response_directives %}{% do list_response_directives.append('@aws_api_key') %}{% endif %}
+  {% endif %}
+{% endif %}
+type {{ schema.name }}ListResponse {
+  StatusCode: Int!{{ join_unique_directives(list_response_directives) }}
+  Message: String{{ join_unique_directives(list_response_directives) }}
+  Data: [{{ schema.name }}]{{ join_unique_directives(list_response_directives) }}
+}
+{% endfor %}
+{% for schema in table_schemas.values() %}
+{% for operation in schema.operations %}
+{% if operation.type != 'Query' %}
+{% set response_type_name = operation.field + 'Response' %}
+type {{ response_type_name }} {
+  StatusCode: Int!{{ join_unique_directives(operation.response_auth_directives) }}
+  Message: String{{ join_unique_directives(operation.response_auth_directives) }}
+  Data: {{ schema.name }}{{ join_unique_directives(operation.response_auth_directives) }}
+}
+{% endif %}
+{% endfor %}
+{% endfor %} 

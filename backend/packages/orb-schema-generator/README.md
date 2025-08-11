@@ -1,6 +1,6 @@
 # orb-schema-generator
 
-A comprehensive schema-driven code generator for TypeScript, Python, GraphQL, and CloudFormation.
+An internal schema-driven code generator for TypeScript, Python, GraphQL, and CloudFormation. This package is distributed via AWS CodeArtifact for ORB Integration Hub projects.
 
 ## Features
 
@@ -14,8 +14,33 @@ A comprehensive schema-driven code generator for TypeScript, Python, GraphQL, an
 
 ## Installation
 
+### Configure AWS CodeArtifact
+
+First, configure pip to use the CodeArtifact repository:
+
 ```bash
+# Get auth token (valid for 12 hours)
+export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token \
+    --domain orb-integration-hub \
+    --domain-owner $(aws sts get-caller-identity --query Account --output text) \
+    --query authorizationToken --output text)
+
+# Configure pip
+aws codeartifact login --tool pip \
+    --domain orb-integration-hub \
+    --repository python-packages
+
+# Install the package
 pip install orb-schema-generator
+```
+
+### For Development
+
+```bash
+# Clone and install in development mode
+git clone <internal-repo-url>
+cd orb-schema-generator
+pip install -e ".[dev]"
 ```
 
 ## Quick Start

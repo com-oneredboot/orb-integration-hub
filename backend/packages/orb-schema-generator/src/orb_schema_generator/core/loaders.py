@@ -170,6 +170,7 @@ class SchemaLoader:
             'dynamodb': SchemaType.DYNAMODB,
             'graphql': SchemaType.GRAPHQL,
             'lambda': SchemaType.LAMBDA,
+            'lambda-dynamodb': SchemaType.DYNAMODB,  # lambda-dynamodb is DynamoDB with Lambda operations
             'standard': SchemaType.STANDARD,
             'static': SchemaType.STANDARD,  # static is alias for standard
             'registry': SchemaType.REGISTRY
@@ -244,15 +245,25 @@ class SchemaLoader:
             'description': data.get('description'),
             'validation': data.get('validation'),
             'enum_type': data.get('enum'),
-            'items': data.get('items'),
             'unique': data.get('unique', False),
             'indexed': data.get('indexed', False),
             'default': data.get('default')
         }
         
+        # Handle items field - convert string shorthand to dict format
+        if 'items' in data:
+            items = data['items']
+            if isinstance(items, str):
+                # Convert 'items: string' to 'items: {type: string}'
+                field_data['items'] = {'type': items}
+            else:
+                field_data['items'] = items
+        
         # Handle enum values
         if 'values' in data:
             field_data['enum_values'] = data['values']
+        elif 'enum_values' in data:
+            field_data['enum_values'] = data['enum_values']
             
         return SchemaField(**field_data)
         

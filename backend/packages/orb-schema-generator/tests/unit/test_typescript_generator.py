@@ -27,20 +27,23 @@ class TestTypeScriptGenerator:
     @pytest.fixture
     def sample_schema(self):
         """Create a sample schema for testing."""
-        schema = Schema(name="User", schema_type=SchemaType.DYNAMODB)
-        schema.attributes = [
-            SchemaField(name="id", type="string", required=True),
-            SchemaField(name="email", type="string", required=True),
-            SchemaField(name="name", type="string", required=True),
-            SchemaField(name="age", type="number", required=False),
-            SchemaField(name="isActive", type="boolean", required=True),
-            SchemaField(name="tags", type="array", required=False),
-            SchemaField(name="metadata", type="object", required=False),
-            SchemaField(name="createdAt", type="timestamp", required=True),
-        ]
-        schema.partition_key = "id"
-        schema.sort_key = "createdAt"
-        return schema
+        return Schema(
+            name="User", 
+            schema_type=SchemaType.DYNAMODB,
+            table_name="Users",
+            partition_key="id",
+            sort_key="createdAt",
+            fields=[
+                SchemaField(name="id", type="string", required=True),
+                SchemaField(name="email", type="string", required=True),
+                SchemaField(name="name", type="string", required=True),
+                SchemaField(name="age", type="number", required=False),
+                SchemaField(name="isActive", type="boolean", required=True),
+                SchemaField(name="tags", type="array", required=False),
+                SchemaField(name="metadata", type="object", required=False),
+                SchemaField(name="createdAt", type="timestamp", required=True),
+            ]
+        )
         
     @pytest.fixture
     def sample_collection(self, sample_schema):
@@ -49,12 +52,17 @@ class TestTypeScriptGenerator:
         collection.add_schema(sample_schema)
         
         # Add another schema
-        org_schema = Schema(name="Organization", schema_type=SchemaType.DYNAMODB)
-        org_schema.attributes = [
-            SchemaField(name="orgId", type="string", required=True),
-            SchemaField(name="name", type="string", required=True),
-            SchemaField(name="owner", type="User", required=True),  # Reference type
-        ]
+        org_schema = Schema(
+            name="Organization", 
+            schema_type=SchemaType.DYNAMODB,
+            table_name="Organizations",
+            partition_key="orgId",
+            fields=[
+                SchemaField(name="orgId", type="string", required=True),
+                SchemaField(name="name", type="string", required=True),
+                SchemaField(name="owner", type="User", required=True),  # Reference type
+            ]
+        )
         collection.add_schema(org_schema)
         
         # Add operations

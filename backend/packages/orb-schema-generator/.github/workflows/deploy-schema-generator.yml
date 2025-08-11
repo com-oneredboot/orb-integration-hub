@@ -1,0 +1,220 @@
+name: Deploy Schema Generator
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to publish to'
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+        default: dev
+      skip_tests:
+        description: 'Skip tests (not recommended)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  test:
+    name: Test Package
+    if: inputs.skip_tests != true
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Install dependencies
+        run: |
+          pip install pipenv
+          pipenv install --dev
+          pipenv install -e .
+      
+      - name: Lint with black and isort
+        run: |
+          pipenv run black --check .
+          pipenv run isort --check-only . --diff
+      
+      - name: Type check with mypy
+        run: |
+          pipenv run mypy src/orb_schema_generator --ignore-missing-imports
+      
+      - name: Security check with bandit
+        run: |
+          pipenv run bandit -r src/orb_schema_generator -f json -o bandit-report.json || true
+      
+      - name: Run tests
+        run: |
+          pipenv run pytest tests/ -v --cov=orb_schema_generator --cov-report=xml --cov-report=html
+      
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+
+  build:
+    name: Build Package
+    needs: [test]
+    if: needs.test.result == 'success' || needs.test.result == 'skipped'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+      
+      - name: Install build tools
+        run: |
+          pip install pipenv
+          pipenv install --dev
+          pipenv install build twine==6.0.1
+      
+      - name: Build package
+        run: |
+          # Clean any existing build artifacts
+          rm -rf dist/ build/ *.egg-info/
+          # Ensure we have latest setuptools
+          pipenv run pip install --upgrade setuptools wheel
+          pipenv run python -m build
+      
+      - name: Check package
+        run: |
+          pipenv run twine check dist/*
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: orb-schema-generator-dist
+          path: dist/
+
+  publish:
+    name: Publish to CodeArtifact
+    needs: [build]
+    if: needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      
+      - name: Get CodeArtifact configuration
+        id: codeartifact
+        run: |
+          # Get domain and repository from SSM parameters
+          DOMAIN=$(aws ssm get-parameter --name "/orb/integration-hub/${{ inputs.environment }}/codeartifact/domain" --query 'Parameter.Value' --output text 2>/dev/null || echo "orb-integration-hub")
+          REPOSITORY=$(aws ssm get-parameter --name "/orb/integration-hub/${{ inputs.environment }}/codeartifact/repository" --query 'Parameter.Value' --output text 2>/dev/null || echo "${{ inputs.environment }}-python-packages")
+          
+          echo "domain=$DOMAIN" >> $GITHUB_OUTPUT
+          echo "repository=$REPOSITORY" >> $GITHUB_OUTPUT
+          
+          # Get repository endpoint
+          REPOSITORY_ENDPOINT=$(aws codeartifact get-repository-endpoint \
+            --domain $DOMAIN \
+            --repository $REPOSITORY \
+            --format pypi \
+            --query repositoryEndpoint \
+            --output text)
+          
+          # Get authorization token
+          AUTH_TOKEN=$(aws codeartifact get-authorization-token \
+            --domain $DOMAIN \
+            --query authorizationToken \
+            --output text)
+          
+          echo "::add-mask::$AUTH_TOKEN"
+          echo "repository_endpoint=$REPOSITORY_ENDPOINT" >> $GITHUB_OUTPUT
+          echo "auth_token=$AUTH_TOKEN" >> $GITHUB_OUTPUT
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: orb-schema-generator-dist
+          path: ./dist
+      
+      - name: Install twine
+        run: |
+          pip install pipenv
+          pipenv install twine==6.0.1
+      
+      - name: Debug wheel metadata
+        run: |
+          echo "=== Listing dist contents ==="
+          ls -la dist/
+          echo "=== Checking wheel contents ==="
+          unzip -l dist/*.whl | head -20
+          echo "=== Extracting METADATA file ==="
+          unzip -p dist/*.whl '*/METADATA' | head -50
+          echo "=== Checking for license-file in METADATA ==="
+          unzip -p dist/*.whl '*/METADATA' | grep -i "license" || true
+      
+      - name: Publish to CodeArtifact
+        env:
+          TWINE_USERNAME: aws
+          TWINE_PASSWORD: ${{ steps.codeartifact.outputs.auth_token }}
+          TWINE_REPOSITORY_URL: ${{ steps.codeartifact.outputs.repository_endpoint }}
+        run: |
+          echo "Publishing to CodeArtifact repository: ${{ steps.codeartifact.outputs.repository }}"
+          pipenv run twine upload dist/* --verbose
+
+  summary:
+    name: Deployment Summary
+    needs: [test, build, publish]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Summary
+        run: |
+          echo "## ORB Schema Generator Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo ""  >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Skip Tests:** ${{ inputs.skip_tests }}" >> $GITHUB_STEP_SUMMARY
+          echo ""  >> $GITHUB_STEP_SUMMARY
+          echo "### Results:" >> $GITHUB_STEP_SUMMARY
+          echo "- Test Result: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Build Result: ${{ needs.build.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Publish Result: ${{ needs.publish.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Add next steps based on results
+          if [[ "${{ needs.publish.result }}" == "success" ]]; then
+            echo "### ✅ Package Published Successfully" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Next Steps:**" >> $GITHUB_STEP_SUMMARY
+            echo "1. Update orb-models to use orb-schema-generator instead of generate.py" >> $GITHUB_STEP_SUMMARY
+            echo "2. Install in projects: \`pip install orb-schema-generator\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Installation:**" >> $GITHUB_STEP_SUMMARY
+            echo '```bash' >> $GITHUB_STEP_SUMMARY
+            echo '# Configure CodeArtifact' >> $GITHUB_STEP_SUMMARY
+            echo 'aws codeartifact login --tool pip \' >> $GITHUB_STEP_SUMMARY
+            echo '  --domain orb-integration-hub \' >> $GITHUB_STEP_SUMMARY
+            echo '  --repository ${{ inputs.environment }}-python-packages' >> $GITHUB_STEP_SUMMARY
+            echo '' >> $GITHUB_STEP_SUMMARY
+            echo '# Install package' >> $GITHUB_STEP_SUMMARY
+            echo 'pip install orb-schema-generator' >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi

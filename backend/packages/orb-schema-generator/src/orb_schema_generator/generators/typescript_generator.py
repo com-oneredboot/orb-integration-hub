@@ -67,7 +67,7 @@ class TypeScriptGenerator:
         # Track generated files
         self._generated_files: List[Path] = []
         
-    def generate(self, collection: SchemaCollection) -> Dict[str, Any]:
+    def generate(self, collection: SchemaCollection, core_enums: Optional[Dict[str, List[str]]] = None) -> Dict[str, Any]:
         """Generate TypeScript code from schema collection.
         
         Args:
@@ -111,6 +111,9 @@ class TypeScriptGenerator:
                     'error': str(e)
                 })
                 
+        # Generate enums
+        self._generate_enums(collection, results, core_enums)
+        
         logger.info(
             f"TypeScript generation complete: "
             f"{len(results['generated_files'])} files, "
@@ -220,3 +223,53 @@ class TypeScriptGenerator:
             return attr_type
             
         return type_mapping.get(attr_type.lower(), attr_type)
+        
+    def _generate_enums(self, collection: SchemaCollection, results: Dict[str, Any],
+                       core_enums: Optional[Dict[str, List[str]]] = None) -> None:
+        """Generate TypeScript enum files.
+        
+        Args:
+            collection: Schema collection containing enum definitions
+            results: Results dictionary to update
+            core_enums: Core enum definitions from enums.yml
+        """
+        logger.debug("Generating TypeScript enums")
+        
+        # Start with core enums if provided
+        enums = {}
+        if core_enums:
+            enums.update(core_enums)
+            
+        # Extract unique enums from all schemas
+        for schema in collection.schemas:
+            for field in schema.fields:
+                if field.enum_type and field.enum_values:
+                    enums[field.enum_type] = field.enum_values
+                    
+        # Generate enum files
+        template = self.env.get_template('typescript_enum.jinja')
+        import datetime
+        timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        
+        for enum_name, enum_values in enums.items():
+            try:
+                content = template.render(
+                    enum_name=enum_name,
+                    enum_values=enum_values,
+                    timestamp=timestamp
+                )
+                
+                enum_file = self.config.output_dir / f"{enum_name}Enum.ts"
+                with open(enum_file, 'w') as f:
+                    f.write(content)
+                    
+                self._generated_files.append(enum_file)
+                results['generated_files'].append(str(enum_file))
+                logger.info(f"Generated TypeScript enum for {enum_name}")
+                
+            except Exception as e:
+                logger.error(f"Failed to generate enum {enum_name}: {e}")
+                results['errors'].append({
+                    'enum': enum_name,
+                    'error': str(e)
+                })

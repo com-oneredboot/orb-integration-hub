@@ -17,6 +17,17 @@ from orb_schema_generator.core.converters import CaseConverter
 from orb_schema_generator.core.exceptions import GenerationError
 
 
+class DictWrapper:
+    """Wrapper to make a dict accessible via attribute access for templates."""
+    def __init__(self, data):
+        self._data = data
+        
+    def __getattr__(self, name):
+        if name in self._data:
+            return self._data[name]
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -25,6 +36,8 @@ class PythonGeneratorConfig:
     def __init__(
         self,
         output_dir: Path,
+        models_dir: Optional[Path] = None,
+        enums_dir: Optional[Path] = None,
         template_dir: Optional[Path] = None,
         template_names: Optional[Dict[str, str]] = None
     ):
@@ -32,10 +45,14 @@ class PythonGeneratorConfig:
         
         Args:
             output_dir: Output directory for generated files
+            models_dir: Directory for model files (defaults to output_dir/models)
+            enums_dir: Directory for enum files (defaults to output_dir/enums)
             template_dir: Directory containing templates
             template_names: Mapping of schema types to template names
         """
         self.output_dir = output_dir
+        self.models_dir = models_dir or output_dir / "models"
+        self.enums_dir = enums_dir or output_dir / "enums"
         self.template_dir = template_dir
         
         # Default template mappings
@@ -101,6 +118,10 @@ class PythonGenerator:
         self.env.filters['to_pascal_case'] = safe_pascal_case
         self.env.filters['to_snake_case'] = safe_snake_case
         self.env.filters['to_kebab_case'] = safe_kebab_case
+        
+        # Add globals
+        from datetime import datetime
+        self.env.globals['now'] = lambda: datetime.now().isoformat()
         self.env.filters['to_python_type'] = self._to_python_type
         
         # Set undefined to print warnings
@@ -110,7 +131,7 @@ class PythonGenerator:
         # Track generated files
         self._generated_files: List[Path] = []
         
-    def generate(self, collection: SchemaCollection) -> Dict[str, Any]:
+    def generate(self, collection: SchemaCollection, core_enums: Optional[Dict[str, List[str]]] = None) -> Dict[str, Any]:
         """Generate Python code from schema collection.
         
         Args:
@@ -126,12 +147,10 @@ class PythonGenerator:
             'errors': []
         }
         
-        # Ensure output directory exists
+        # Ensure output directories exist
         self.config.output_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Create models subdirectory
-        models_dir = self.config.output_dir / "models"
-        models_dir.mkdir(exist_ok=True)
+        self.config.models_dir.mkdir(parents=True, exist_ok=True)
+        self.config.enums_dir.mkdir(parents=True, exist_ok=True)
         
         # Generate models for each schema
         for schema in collection.schemas:
@@ -145,10 +164,10 @@ class PythonGenerator:
                 })
                 
         # Generate models __init__.py
-        self._generate_models_init(collection.schemas, models_dir, results)
+        self._generate_models_init(collection.schemas, self.config.models_dir, results)
         
         # Generate enums
-        self._generate_enums(collection, results)
+        self._generate_enums(collection, results, core_enums)
         
         logger.info(
             f"Python generation complete: "
@@ -186,18 +205,39 @@ class PythonGenerator:
             import datetime
             timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
             
-            # Debug the schema object
-            logger.debug(f"Schema attributes: {schema.attributes}")
-            logger.debug(f"Schema partition_key: {schema.partition_key}")
-            logger.debug(f"Schema sort_key: {schema.sort_key}")
+            # Convert schema to template-expected format
+            schema_dict = self._schema_to_dict(schema)
             
-            content = template.render(
-                schema=schema,
-                timestamp=timestamp
-            )
+            # Debug the schema object
+            logger.debug(f"Schema attributes: {schema_dict.get('attributes', [])}")
+            logger.debug(f"Schema partition_key: {schema_dict.get('partition_key')}")
+            logger.debug(f"Schema sort_key: {schema_dict.get('sort_key')}")
+            
+            # Special debugging for registry types
+            if schema.schema_type == 'registry':
+                logger.debug(f"Registry items type: {type(schema_dict.get('items'))}")
+                logger.debug(f"Registry items: {schema_dict.get('items')}")
+                logger.debug(f"Schema dict keys: {schema_dict.keys()}")
+                logger.debug(f"Type of schema_dict: {type(schema_dict)}")
+            
+            # For registry types, pass the original schema object
+            # because the template expects schema.items to be accessible
+            if schema.schema_type == 'registry':
+                # But we need to ensure items is set correctly
+                if hasattr(schema, 'registry_items') and schema.registry_items:
+                    schema.items = schema.registry_items
+                content = template.render(
+                    schema=schema,
+                    timestamp=timestamp
+                )
+            else:
+                content = template.render(
+                    schema=schema_dict,
+                    timestamp=timestamp
+                )
             
             # Write generated content
-            model_file = self.config.output_dir / "models" / f"{schema.name}Model.py"
+            model_file = self.config.models_dir / f"{schema.name}Model.py"
             with open(model_file, 'w') as f:
                 f.write(content)
                 
@@ -208,25 +248,71 @@ class PythonGenerator:
         except Exception as e:
             raise GenerationError(f"Failed to generate Python model for {schema.name}: {e}")
             
-    def _generate_enums(self, collection: SchemaCollection, results: Dict[str, Any]) -> None:
+    def _schema_to_dict(self, schema: Schema) -> Dict[str, Any]:
+        """Convert Schema object to dictionary format expected by templates.
+        
+        Args:
+            schema: Schema object to convert
+            
+        Returns:
+            Dictionary with template-expected field names
+        """
+        # Start with basic fields
+        schema_dict = {
+            'name': schema.name,
+            'type': schema.schema_type,
+            'attributes': schema.fields,  # Templates expect 'attributes' not 'fields'
+            'partition_key': schema.partition_key,
+            'sort_key': schema.sort_key,
+            'secondary_indexes': schema.indexes,
+            'auth_config': schema.auth_config,
+            'custom_queries': schema.custom_queries,
+            'operations': schema.operations,
+        }
+        
+        # Add registry-specific fields
+        if schema.schema_type == 'registry' and schema.registry_items:
+            # Make sure we're passing the dict, not the dict.items method
+            if hasattr(schema.registry_items, '__call__'):
+                # If it's a method (like dict.items), we have an issue
+                logger.error(f"Registry items is a method, not a dict: {type(schema.registry_items)}")
+                schema_dict['items'] = {}
+            else:
+                schema_dict['items'] = schema.registry_items
+        
+        # Handle potential string type issues
+        if isinstance(schema_dict['type'], str):
+            schema_dict['type'] = schema_dict['type']
+        else:
+            # If it's a SchemaType enum, convert to string
+            schema_dict['type'] = str(schema_dict['type'].value if hasattr(schema_dict['type'], 'value') else schema_dict['type'])
+            
+        return schema_dict
+            
+    def _generate_enums(self, collection: SchemaCollection, results: Dict[str, Any], 
+                       core_enums: Optional[Dict[str, List[str]]] = None) -> None:
         """Generate Python enum files.
         
         Args:
             collection: Schema collection containing enum definitions
             results: Results dictionary to update
+            core_enums: Core enum definitions from enums.yml
         """
         logger.debug("Generating Python enums")
         
-        # Create enums subdirectory
-        enums_dir = self.config.output_dir / "enums"
-        enums_dir.mkdir(exist_ok=True)
+        # Use configured enums directory
+        enums_dir = self.config.enums_dir
         
-        # Extract unique enums from all schemas
+        # Start with core enums if provided
         enums = {}
+        if core_enums:
+            enums.update(core_enums)
+            
+        # Extract unique enums from all schemas
         for schema in collection.schemas:
-            for attr in schema.attributes:
-                if attr.enum_type and attr.enum_values:
-                    enums[attr.enum_type] = attr.enum_values
+            for field in schema.fields:  # Use fields instead of attributes
+                if field.enum_type and field.enum_values:
+                    enums[field.enum_type] = field.enum_values
                     
         # Generate enum files
         template = self.env.get_template('python_enum.jinja')

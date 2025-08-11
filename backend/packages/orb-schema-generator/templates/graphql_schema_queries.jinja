@@ -1,0 +1,11 @@
+{% for schema in table_schemas.values() %}
+{% for operation in schema.operations if operation.type == 'Query' %}
+{% if operation.custom_type %}
+  {{ operation.field }}(input: {{ operation.field }}Input!): {{ operation.returns }}{% if operation.response_auth_directives and operation.response_auth_directives|length > 0 %} {{ operation.response_auth_directives|join(' ') }}{% endif %}
+
+{% else %}
+  {{ operation.field }}(input: {{ operation.field }}Input!): {{ schema.name }}{{ 'Response' if 'And' in operation.field else 'ListResponse' }}{% if operation.response_auth_directives and operation.response_auth_directives|length > 0 %} {{ operation.response_auth_directives|join(' ') }}{% endif %}
+
+{% endif %}
+{% endfor %}
+{% endfor %}

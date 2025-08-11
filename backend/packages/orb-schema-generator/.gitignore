@@ -71,3 +71,6 @@ docs/_templates/
 generated/
 output/
 .orb-schema-gen.yaml
+
+# CodeArtifact
+.env.codeartifact

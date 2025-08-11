@@ -52,6 +52,11 @@ build: clean
 	python -m build
 
 publish: build
+	@echo "Publishing to CodeArtifact..."
+	@./scripts/publish-to-codeartifact.sh
+
+publish-pypi: build
+	@echo "Publishing to PyPI (if needed in future)..."
 	python -m twine upload dist/*
 
 # Development workflow
