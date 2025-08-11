@@ -1,0 +1,129 @@
+# file: schemas/entities/Invitations.yml
+# author: AI Assistant
+# date: 2025-08-09
+# description: Organization invitation system for managing pending invitations with expiration and audit trails
+# Allows organization owners to invite users to join their organizations with specific roles
+
+type: lambda-dynamodb
+version: '1.0'
+name: Invitations
+model:
+  authConfig:
+    cognitoAuthentication:
+      groups:
+        OWNER:
+          - '*'
+        EMPLOYEE:
+          - '*'
+        CUSTOMER:
+          - '*'
+        USER:
+          - 'GetInvitation'
+          - 'ListInvitations'
+          - 'UpdateInvitation'  # Only for accepting/declining their own invitations
+  keys:
+    primary:
+      partition: invitationId
+      description: Primary key for invitations (UUID generated)
+    secondary:
+      - name: OrganizationInvitationsIndex
+        type: GSI
+        partition: organizationId
+        sort: createdAt
+        projection_type: ALL
+        description: Index for querying all invitations for an organization
+      - name: InviteeEmailIndex
+        type: GSI
+        partition: inviteeEmail
+        sort: createdAt
+        projection_type: ALL
+        description: Index for querying invitations by email address
+      - name: InviteeUserIdIndex
+        type: GSI
+        partition: inviteeUserId
+        sort: createdAt
+        projection_type: ALL
+        description: Index for querying invitations by user ID (once invitation is accepted)
+  ttl:
+    attribute: expiresAt
+    description: Automatic expiration of pending invitations
+  attributes:
+    invitationId:
+      type: string
+      required: true
+      description: Unique identifier for the invitation (UUID)
+    organizationId:
+      type: string
+      required: true
+      description: ID of the organization extending the invitation
+    inviterUserId:
+      type: string
+      required: true
+      description: ID of the user who created the invitation (must be organization owner)
+    inviteeEmail:
+      type: string
+      required: true
+      description: Email address of the invited user
+    inviteeUserId:
+      type: string
+      required: false
+      description: User ID of the invitee (populated once invitation is accepted)
+    role:
+      type: string
+      required: true
+      enum_type: OrganizationUserRole
+      enum_values:
+        - ADMINISTRATOR
+        - VIEWER
+      description: Intended role for the invited user within the organization
+    status:
+      type: string
+      required: true
+      enum_type: InvitationStatus
+      enum_values:
+        - PENDING
+        - ACCEPTED
+        - DECLINED
+        - EXPIRED
+        - REVOKED
+      description: Current status of the invitation
+    message:
+      type: string
+      required: false
+      maxLength: 1000
+      description: Optional personalized message from the inviter
+    expiresAt:
+      type: timestamp
+      required: true
+      description: When the invitation expires (TTL attribute)
+    createdAt:
+      type: timestamp
+      required: true
+      description: When the invitation was created
+    updatedAt:
+      type: timestamp
+      required: true
+      description: When the invitation was last updated
+
+# Custom queries for invitation lookups
+customQueries:
+  - name: GetInvitationsByEmail
+    type: query
+    description: Get all invitations for a specific email address
+    input:
+      email:
+        type: String!
+        description: Email address to look up invitations for
+    returns: '[Invitations]'
+    index: InviteeEmailIndex
+    
+  - name: GetInvitationsByOrganizationId
+    type: query
+    description: Get all invitations for a specific organization
+    input:
+      organizationId:
+        type: String!
+        description: Organization ID to get invitations for
+    returns: '[Invitations]'
+    index: OrganizationInvitationsIndex
+

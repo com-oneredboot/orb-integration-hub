@@ -1,11 +1,23 @@
 """
 AuthError standard model.
-Generated at 2025-07-25T21:36:32.767488+00:00
+Generated at 2025-08-10T00:38:12.011622+00:00
 """
 
 from typing import Optional
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # Main Model (Standard)
@@ -20,13 +32,29 @@ class AuthError(BaseModel):
 
     details: str = Field(None, description="Optional extra data or context")
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     class Config:
         from_attributes = True
-        json_encoders = {datetime: lambda v: v.isoformat()}
-
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
 
 # Response Type
 class AuthErrorResponse(BaseModel):
     statusCode: int
     message: Optional[str]
-    data: Optional[AuthError]
+    data: Optional[AuthError] 

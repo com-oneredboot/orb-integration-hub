@@ -67,6 +67,13 @@ class OrganizationPermissions:
     USERS_UPDATE_ROLES = Permission(PermissionCategory.USERS, "update_roles", "Change user roles")
     USERS_VIEW_ACTIVITY = Permission(PermissionCategory.USERS, "view_activity", "View user activity logs")
     
+    # Invitation-specific permissions
+    INVITATIONS_READ = Permission(PermissionCategory.USERS, "invitations_read", "View invitations")
+    INVITATIONS_CREATE = Permission(PermissionCategory.USERS, "invitations_create", "Create invitations")
+    INVITATIONS_UPDATE = Permission(PermissionCategory.USERS, "invitations_update", "Update invitations (accept/decline)")
+    INVITATIONS_DELETE = Permission(PermissionCategory.USERS, "invitations_delete", "Delete/revoke invitations")
+    INVITATIONS_RESEND = Permission(PermissionCategory.USERS, "invitations_resend", "Resend invitations")
+    
     # Settings permissions
     SETTINGS_READ = Permission(PermissionCategory.SETTINGS, "read", "View organization settings")
     SETTINGS_UPDATE = Permission(PermissionCategory.SETTINGS, "update", "Update organization settings")
@@ -125,6 +132,13 @@ class RolePermissionMatrix:
         OrganizationPermissions.USERS_UPDATE_ROLES.key,
         OrganizationPermissions.USERS_VIEW_ACTIVITY.key,
         
+        # Invitations
+        OrganizationPermissions.INVITATIONS_READ.key,
+        OrganizationPermissions.INVITATIONS_CREATE.key,
+        OrganizationPermissions.INVITATIONS_UPDATE.key,
+        OrganizationPermissions.INVITATIONS_DELETE.key,
+        OrganizationPermissions.INVITATIONS_RESEND.key,
+        
         # Settings
         OrganizationPermissions.SETTINGS_READ.key,
         OrganizationPermissions.SETTINGS_UPDATE.key,
@@ -161,6 +175,13 @@ class RolePermissionMatrix:
         OrganizationPermissions.USERS_VIEW_ACTIVITY.key,
         # Note: USERS_REMOVE and USERS_UPDATE_ROLES have special logic
         
+        # Invitations
+        OrganizationPermissions.INVITATIONS_READ.key,
+        OrganizationPermissions.INVITATIONS_CREATE.key,
+        OrganizationPermissions.INVITATIONS_UPDATE.key,
+        OrganizationPermissions.INVITATIONS_DELETE.key,
+        OrganizationPermissions.INVITATIONS_RESEND.key,
+        
         # Settings (limited)
         OrganizationPermissions.SETTINGS_READ.key,
         OrganizationPermissions.SETTINGS_INTEGRATIONS.key,
@@ -183,6 +204,9 @@ class RolePermissionMatrix:
         
         # Users (read-only)
         OrganizationPermissions.USERS_READ.key,
+        
+        # Invitations (read-only)
+        OrganizationPermissions.INVITATIONS_READ.key,
         
         # Settings (read-only)
         OrganizationPermissions.SETTINGS_READ.key,

@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 orb-schema-generator = {file = ".", editable = true}
+pytest = "*"
 
 [dev-packages]
 pytest = "*"

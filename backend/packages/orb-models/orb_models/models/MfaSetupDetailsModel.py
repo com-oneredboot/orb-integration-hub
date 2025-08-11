@@ -1,11 +1,20 @@
 """
 MfaSetupDetails standard model.
-Generated at 2025-07-25T21:36:32.694935+00:00
+Generated at 2025-08-10T00:38:11.936758+00:00
 """
 
 from typing import Optional
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
+
+
+
+
+
+
+
+
+
 
 
 # Main Model (Standard)
@@ -16,17 +25,28 @@ class MfaSetupDetails(BaseModel):
 
     secret_key: str = Field(..., description="The secret key for TOTP setup")
 
-    setup_uri: str = Field(
-        None, description="The setup URI for the authenticator app (optional, as string)"
-    )
+    setup_uri: str = Field(None, description="The setup URI for the authenticator app (optional, as string)")
+
+
+
+
+
+
+
+
+
+
+
+
 
     class Config:
         from_attributes = True
-        json_encoders = {datetime: lambda v: v.isoformat()}
-
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
 
 # Response Type
 class MfaSetupDetailsResponse(BaseModel):
     statusCode: int
     message: Optional[str]
-    data: Optional[MfaSetupDetails]
+    data: Optional[MfaSetupDetails] 

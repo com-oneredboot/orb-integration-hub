@@ -194,11 +194,11 @@ export class ApplicationRoles implements IApplicationRoles {
 
   roleName = '';
 
-  roleType = RoleType.UNKNOWN;
+  roleType = RoleType.ADMIN;
 
   permissions = [];
 
-  status = RoleStatus.UNKNOWN;
+  status = RoleStatus.ACTIVE;
 
   createdAt = 0;
 
@@ -221,7 +221,7 @@ export class ApplicationRoles implements IApplicationRoles {
 
 
         if (key === 'roleType' && typeof value === 'string') {
-          this.roleType = RoleType[value as keyof typeof RoleType] ?? RoleType.UNKNOWN;
+          this.roleType = RoleType[value as keyof typeof RoleType] ?? RoleType.ADMIN;
         } else 
 
 
@@ -229,7 +229,7 @@ export class ApplicationRoles implements IApplicationRoles {
 
 
         if (key === 'status' && typeof value === 'string') {
-          this.status = RoleStatus[value as keyof typeof RoleStatus] ?? RoleStatus.UNKNOWN;
+          this.status = RoleStatus[value as keyof typeof RoleStatus] ?? RoleStatus.ACTIVE;
         } else 
 
 

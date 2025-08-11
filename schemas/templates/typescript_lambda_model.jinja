@@ -32,7 +32,7 @@ export class {{ schema.name }} implements I{{ schema.name }} {
 {% for attr in schema.attributes %}
 {% if attr.enum_type %}
         if (key === '{{ attr.name }}' && typeof value === 'string') {
-          this.{{ attr.name }} = {{ attr.enum_type }}Enum[value as keyof typeof {{ attr.enum_type }}Enum] ?? {{ attr.enum_type }}Enum.UNKNOWN;
+          this.{{ attr.name }} = {{ attr.enum_type }}Enum[value as keyof typeof {{ attr.enum_type }}Enum] ?? {{ attr.enum_type }}Enum.{{ attr.enum_values[0] if attr.enum_values else 'UNKNOWN' }};
         } else 
 {% elif attr.model_reference %}
         if (key === '{{ attr.name }}' && value) {

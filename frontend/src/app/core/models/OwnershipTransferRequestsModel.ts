@@ -246,7 +246,7 @@ export class OwnershipTransferRequests implements IOwnershipTransferRequests {
 
   organizationId = '';
 
-  status = OwnershipTransferStatus.UNKNOWN;
+  status = OwnershipTransferStatus.PAYMENT_VALIDATION_REQUIRED;
 
   requiredBillingPlan = '';
 
@@ -285,7 +285,7 @@ export class OwnershipTransferRequests implements IOwnershipTransferRequests {
 
 
         if (key === 'status' && typeof value === 'string') {
-          this.status = OwnershipTransferStatus[value as keyof typeof OwnershipTransferStatus] ?? OwnershipTransferStatus.UNKNOWN;
+          this.status = OwnershipTransferStatus[value as keyof typeof OwnershipTransferStatus] ?? OwnershipTransferStatus.PAYMENT_VALIDATION_REQUIRED;
         } else 
 
 

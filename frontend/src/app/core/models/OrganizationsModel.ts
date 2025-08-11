@@ -182,7 +182,7 @@ export class Organizations implements IOrganizations {
 
   ownerId = '';
 
-  status = OrganizationStatus.UNKNOWN;
+  status = OrganizationStatus.ACTIVE;
 
   createdAt = 0;
 
@@ -209,7 +209,7 @@ export class Organizations implements IOrganizations {
 
 
         if (key === 'status' && typeof value === 'string') {
-          this.status = OrganizationStatus[value as keyof typeof OrganizationStatus] ?? OrganizationStatus.UNKNOWN;
+          this.status = OrganizationStatus[value as keyof typeof OrganizationStatus] ?? OrganizationStatus.ACTIVE;
         } else 
 
 

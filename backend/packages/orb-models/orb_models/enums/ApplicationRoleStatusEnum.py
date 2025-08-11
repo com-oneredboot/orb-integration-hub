@@ -1,10 +1,9 @@
 """
 Generated Python enum for ApplicationRoleStatus
-Generated at
+Generated at 
 """
 
 from enum import Enum
-
 
 class ApplicationRoleStatus(Enum):
 
@@ -19,3 +18,4 @@ class ApplicationRoleStatus(Enum):
     REJECTED = "REJECTED"
 
     DELETED = "DELETED"
+ 

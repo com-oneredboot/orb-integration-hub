@@ -4,7 +4,7 @@
 # description: Organization users membership table with role-based access control
 # Maps users to organizations with specific roles (OWNER, ADMINISTRATOR, VIEWER)
 
-type: dynamodb
+type: lambda-dynamodb
 version: '1.0'
 name: OrganizationUsers
 model:
@@ -19,22 +19,22 @@ model:
           - '*'
   keys:
     primary:
-      partition: userId
-      sort: organizationId
-      description: Composite primary key for organization membership (user + organization)
+      partition: organizationId
+      sort: userId
+      description: Composite primary key for organization membership (organization + user)
     secondary:
-      - name: OrganizationMembersIndex
+      - name: UserOrganizationsIndex
+        type: GSI
+        partition: userId
+        sort: organizationId
+        projection_type: ALL
+        description: Index for querying all organizations a user belongs to
+      - name: OrganizationRoleIndex
         type: GSI
         partition: organizationId
         sort: role
         projection_type: ALL
-        description: Index for querying all members of an organization by role
-      - name: UserOrganizationsIndex
-        type: GSI
-        partition: userId
-        sort: role
-        projection_type: ALL
-        description: Index for querying all organizations a user belongs to by role
+        description: Index for querying members of an organization by role
   attributes:
     userId:
       type: string
@@ -76,3 +76,38 @@ model:
       type: timestamp
       required: true
       description: When the membership was last updated
+
+# Custom queries for organization member lookups
+customQueries:
+  - name: GetOrganizationMembers
+    type: query
+    description: Get all members of a specific organization
+    input:
+      organizationId:
+        type: String!
+        description: Organization ID to get members for
+    returns: '[OrganizationUsers]'
+    # No index needed - uses primary key
+    
+  - name: GetUserOrganizations
+    type: query
+    description: Get all organizations a user belongs to
+    input:
+      userId:
+        type: String!
+        description: User ID to get organizations for
+    returns: '[OrganizationUsers]'
+    index: UserOrganizationsIndex
+    
+  - name: GetOrganizationMembersByRole
+    type: query
+    description: Get members of an organization filtered by role
+    input:
+      organizationId:
+        type: String!
+        description: Organization ID to get members for
+      role:
+        type: String!
+        description: Role to filter by
+    returns: '[OrganizationUsers]'
+    index: OrganizationRoleIndex

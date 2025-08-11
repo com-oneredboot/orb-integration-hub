@@ -17,6 +17,7 @@ import { Organizations } from '../../../../../core/models/OrganizationsModel';
 import { OrganizationStatus } from '../../../../../core/models/OrganizationStatusEnum';
 import { OrganizationsActions } from '../../store/organizations.actions';
 import * as fromOrganizations from '../../store/organizations.selectors';
+import { OrganizationMembersComponent } from '../organization-members/organization-members.component';
 
 @Component({
   selector: 'app-organization-detail',
@@ -24,7 +25,8 @@ import * as fromOrganizations from '../../store/organizations.selectors';
   imports: [
     CommonModule,
     FormsModule,
-    FontAwesomeModule
+    FontAwesomeModule,
+    OrganizationMembersComponent
   ],
   templateUrl: './organization-detail.component.html',
   styleUrls: ['./organization-detail.component.scss']

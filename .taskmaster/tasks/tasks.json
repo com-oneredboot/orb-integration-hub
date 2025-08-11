@@ -1912,8 +1912,8 @@
             "id": 1,
             "title": "Design and Implement GraphQL Schema for Invitations",
             "description": "Create the complete GraphQL schema infrastructure for the invitation system, including entity definitions, queries, mutations, and subscription support.",
-            "details": "Create invitations.yml configuration file with proper entity definition including invitationId as primary key (PascalCase), organizationId, inviterUserId, inviteeEmail, inviteeUserId (optional), role, status, message (max 1000 chars), expiresAt, createdAt, and updatedAt fields. Define InvitationStatus enum with values: PENDING, ACCEPTED, DECLINED, EXPIRED, REVOKED. Configure GSIs for efficient querying: GSI1 for organizationId lookups, GSI2 for inviteeEmail lookups, GSI3 for inviteeUserId lookups. Update generate.py script to support invitation entity generation with lambda-secured pattern. Modify .jinja templates to generate proper mutations (CreateInvitation, UpdateInvitation) and queries (GetInvitation, ListInvitations, custom queries by email/organization). Add subscription support to templates for real-time updates (onInvitationStatusChange) with userId-based filtering.",
-            "status": "pending",
+            "details": "Create invitations.yml configuration file with proper entity definition including invitationId as primary key (PascalCase), organizationId, inviterUserId, inviteeEmail, inviteeUserId (optional), role, status, message (max 1000 chars), expiresAt, createdAt, and updatedAt fields. Define InvitationStatus enum with values: PENDING, ACCEPTED, DECLINED, EXPIRED, REVOKED. Configure GSIs for efficient querying: GSI1 for organizationId lookups, GSI2 for inviteeEmail lookups, GSI3 for inviteeUserId lookups. Update generate.py script to support invitation entity generation with lambda-secured pattern. Modify .jinja templates to generate proper mutations (CreateInvitation, UpdateInvitation) and queries (GetInvitation, ListInvitations, custom queries by email/organization). Add subscription support to templates for real-time updates (onInvitationStatusChange) with userId-based filtering.\n<info added on 2025-08-09T21:34:03.404Z>\nDISCOVERED IMPLEMENTATION DETAILS: Project has existing invitation infrastructure via OrganizationUsers entity with invitedBy field and INVITED status. Need dedicated Invitations entity for proper separation.\n\nIMPLEMENTATION STEPS:\n1) Create /schemas/entities/Invitations.yml with fields: invitationId (PK), organizationId, inviterUserId, inviteeEmail, inviteeUserId (optional), role, status (enum: PENDING, ACCEPTED, DECLINED, EXPIRED, REVOKED), message (max 1000 chars), expiresAt, createdAt, updatedAt. Configure GSIs: GSI1 for organizationId, GSI2 for inviteeEmail, GSI3 for inviteeUserId. Set TTL on expiresAt field.\n\n2) Create InvitationAuditTrail.yml with composite key structure (invitationId as PK, timestamp as SK) for tracking invitation state changes.\n\n3) Update .jinja templates in /schemas/templates/ to support subscription generation for lambda-secured entities. Add onInvitationStatusChange subscription template with userId-based filtering for real-time invitation updates.\n\n4) Execute schemas/generate.py to create complete infrastructure: GraphQL schema definitions, DynamoDB CloudFormation templates, Lambda resolver boilerplate code, and TypeScript/Python data models.\n\n5) Verify all generated outputs are correct and properly integrated with existing infrastructure.\n</info added on 2025-08-09T21:34:03.404Z>\n<info added on 2025-08-09T21:58:20.826Z>\nCOMPLETED: Successfully implemented GraphQL schema infrastructure for Invitations entity. Created Invitations.yml with lambda-dynamodb type configuration including all required fields (invitationId as PK, organizationId, inviterUserId, inviteeEmail, inviteeUserId, role, status, message, expiresAt, createdAt, updatedAt). Configured proper GSIs for efficient querying by organizationId, inviteeEmail, and inviteeUserId. Added TTL configuration on expiresAt field for automatic cleanup. Created InvitationStatus enum in enums.yml with values: PENDING, ACCEPTED, DECLINED, EXPIRED, REVOKED. Removed subscription configuration in favor of notification system approach. Successfully executed generate.py script which generated complete infrastructure: GraphQL schema with Invitations type and all CRUD operations, DynamoDB CloudFormation template with InvitationsTable, Python and TypeScript data models, and GraphQL operations for frontend integration. All files generated without errors and ready for next implementation phase.\n</info added on 2025-08-09T21:58:20.826Z>",
+            "status": "done",
             "dependencies": [
               null
             ],
@@ -1923,36 +1923,44 @@
             "id": 2,
             "title": "Create DynamoDB Tables and Infrastructure",
             "description": "Design and implement DynamoDB tables for invitations and audit trails with proper indexes, TTL configuration, and CloudFormation templates.",
-            "details": "Create InvitationTable CloudFormation template with invitationId as primary key, GSIs for organizationId (GSI1), inviteeEmail (GSI2), and inviteeUserId (GSI3). Configure TTL on expiresAt field for automatic cleanup. Create InvitationAuditTrail table with composite key (invitationId as PK, timestamp as SK) for immutable audit logging. Ensure tables follow existing naming conventions and CloudFormation patterns. Configure proper read/write capacity settings optimized for low volume (<10 invitations per organization). Add table resources to infrastructure stack and ensure proper IAM permissions for Lambda access.",
-            "status": "pending",
-            "dependencies": [1],
+            "details": "Create InvitationTable CloudFormation template with invitationId as primary key, GSIs for organizationId (GSI1), inviteeEmail (GSI2), and inviteeUserId (GSI3). Configure TTL on expiresAt field for automatic cleanup. Create InvitationAuditTrail table with composite key (invitationId as PK, timestamp as SK) for immutable audit logging. Ensure tables follow existing naming conventions and CloudFormation patterns. Configure proper read/write capacity settings optimized for low volume (<10 invitations per organization). Add table resources to infrastructure stack and ensure proper IAM permissions for Lambda access.\n<info added on 2025-08-09T22:03:23.953Z>\nCreated invitations Lambda function infrastructure. The DynamoDB table CloudFormation template was already generated by generate.py in subtask 40.1. Created /backend/src/lambdas/invitations/ directory with: index.py implementing full Lambda resolver with create_invitation, update_invitation (accept/decline/revoke/resend), get_invitation, and list_invitations methods. Implemented proper security using organization security layer, permission checks (CUSTOMER can create/revoke, USER can accept/decline), rate limiting using OwnershipTransferRequests table, user existence validation, duplicate invitation prevention. Added missing audit event types to organizations_audit_logger.py. The Lambda expects table names from environment variables and integrates with organizations security layer. AppSync configuration was already generated to expect InvitationsLambdaDataSource. Next steps: Deploy Lambda to AWS and configure environment variables.\n</info added on 2025-08-09T22:03:23.953Z>",
+            "status": "done",
+            "dependencies": [
+              1
+            ],
             "parentTaskId": 40
           },
           {
             "id": 3,
             "title": "Implement Core Invitation Lambda Resolver",
             "description": "Build the main Lambda resolver for invitation operations following the 3-layer security architecture pattern from organizations.",
-            "details": "Create invitations Lambda function following organizations resolver patterns. Implement 3-layer security architecture with proper decorator patterns. Build InvitationsPermissions enum or extend OrganizationPermissions for shared permissions. Implement base resolver class with common functionality: user validation, organization validation, permission checks. Add integration with organizations security layer for context validation. Configure Lambda environment variables and IAM execution role following single-role pattern. Implement proper error handling and logging patterns consistent with existing resolvers.",
-            "status": "pending",
-            "dependencies": [2],
+            "details": "Create invitations Lambda function following organizations resolver patterns. Implement 3-layer security architecture with proper decorator patterns. Build InvitationsPermissions enum or extend OrganizationPermissions for shared permissions. Implement base resolver class with common functionality: user validation, organization validation, permission checks. Add integration with organizations security layer for context validation. Configure Lambda environment variables and IAM execution role following single-role pattern. Implement proper error handling and logging patterns consistent with existing resolvers.\n<info added on 2025-08-09T22:09:03.933Z>\nCompleted CloudFormation configuration for Invitations Lambda resolver. Added InvitationsLambda resource definition in lambdas.yml with proper environment variables for all required DynamoDB tables and organizations security layer integration. Implemented InvitationsLambdaArnParameter in Parameter Store for AppSync integration. Updated IAM DynamoDB access policy to include invitations table and its indexes. Lambda is now fully configured in CloudFormation infrastructure and ready for deployment to support invitation CRUD operations.\n</info added on 2025-08-09T22:09:03.933Z>",
+            "status": "done",
+            "dependencies": [
+              2
+            ],
             "parentTaskId": 40
           },
           {
             "id": 4,
             "title": "Build Invitation CRUD Operations",
             "description": "Implement all CRUD operations for invitations including create, accept, decline, revoke, and resend functionality.",
-            "details": "Implement CreateInvitation mutation with: user existence validation via users service API, duplicate invitation prevention (update existing if role differs), organization validation (active status, owner verification, customer status), message validation (1000 char limit), expiration setting (7-day default, 1-14 day range). Build UpdateInvitation pattern for accept/decline/revoke/resend operations with proper status transitions and validation. Implement GetInvitation and ListInvitations queries with proper filtering and pagination. Add custom queries for getInvitationsByEmail and getInvitationsByOrganizationId. Ensure all operations respect permission model: OWNERS can CREATE/DELETE, users can READ/UPDATE their own invitations.",
-            "status": "pending",
-            "dependencies": [3],
+            "details": "Implement CreateInvitation mutation with: user existence validation via users service API, duplicate invitation prevention (update existing if role differs), organization validation (active status, owner verification, customer status), message validation (1000 char limit), expiration setting (7-day default, 1-14 day range). Build UpdateInvitation pattern for accept/decline/revoke/resend operations with proper status transitions and validation. Implement GetInvitation and ListInvitations queries with proper filtering and pagination. Add custom queries for getInvitationsByEmail and getInvitationsByOrganizationId. Ensure all operations respect permission model: OWNERS can CREATE/DELETE, users can READ/UPDATE their own invitations.\n<info added on 2025-08-09T22:10:39.322Z>\nCOMPLETED: All CRUD operations successfully implemented in Lambda function from subtask 40.2. Implementation includes: CreateInvitation with comprehensive validation (user existence via users service API, duplicate prevention with role updates, organization validation for active/owner/customer status, message length limits, expiration configuration), UpdateInvitation supporting all operations (accept, decline, revoke, resend) with proper status transitions, GetInvitation for single retrieval with access control, ListInvitations with organizationId and email filtering, and custom queries GetInvitationsByEmail and GetInvitationsByOrganizationId routing to list_invitations method. Permission model fully enforced: CUSTOMER owners can create/revoke invitations, USERS can read/update their own invitations.\n</info added on 2025-08-09T22:10:39.322Z>",
+            "status": "done",
+            "dependencies": [
+              3
+            ],
             "parentTaskId": 40
           },
           {
             "id": 5,
             "title": "Implement Invitation Validation and Business Logic",
             "description": "Build comprehensive validation system for all invitation operations with proper error handling and business rule enforcement.",
-            "details": "Implement user validation system that calls users service API (not direct DynamoDB). Build duplicate invitation prevention logic - update existing invitation if role differs rather than creating duplicate. Implement organization validation: check active status, verify userId matches organizationId for owner, validate CUSTOMER status. Add message length validation with 1000 character limit. Build expiration logic with 7-day default and 1-14 day configurable range. Implement role validation against allowed organization roles (administrator, viewer). Create validation utility functions reusable across all invitation operations. Add proper error messages and error codes for each validation scenario.",
-            "status": "pending",
-            "dependencies": [4],
+            "details": "Implement user validation system that calls users service API (not direct DynamoDB). Build duplicate invitation prevention logic - update existing invitation if role differs rather than creating duplicate. Implement organization validation: check active status, verify userId matches organizationId for owner, validate CUSTOMER status. Add message length validation with 1000 character limit. Build expiration logic with 7-day default and 1-14 day configurable range. Implement role validation against allowed organization roles (administrator, viewer). Create validation utility functions reusable across all invitation operations. Add proper error messages and error codes for each validation scenario.\n<info added on 2025-08-09T22:20:49.501Z>\nCompleted invitation validation and business logic implementation. Following the pattern from Users and Organizations Lambdas, kept all business logic in the Lambda function itself, not in separate layers. Added invitation permissions to the organizations_security layer's rbac_manager.py: INVITATIONS_READ, INVITATIONS_CREATE, INVITATIONS_UPDATE, INVITATIONS_DELETE, INVITATIONS_RESEND. Updated role permission matrices: OWNER has all invitation permissions, ADMINISTRATOR has all invitation permissions, VIEWER has read-only access. The Lambda already includes all required validations: user existence checks, duplicate prevention, organization validation, message length limits, expiration logic, rate limiting, and role validation.\n</info added on 2025-08-09T22:20:49.501Z>",
+            "status": "done",
+            "dependencies": [
+              4
+            ],
             "parentTaskId": 40
           },
           {
@@ -1960,8 +1968,10 @@
             "title": "Build Internal Notification System Infrastructure",
             "description": "Create the foundational notification system to support invitation workflows and future notification needs.",
             "details": "Design NotificationTable with notificationId (PK), userId (GSI), type, title, message, status (SENT, DELIVERED, READ), metadata, createdAt, readAt, TTL. Implement notification Lambda functions for creation, delivery, and status updates. Build notification templates for invitation events: created (to invitee), accepted (to inviter), declined (to inviter), expired (to both), revoked (to invitee). Create notification delivery system with in-app delivery and generic email notifications. Implement status tracking with delivery confirmation. Add TTL-based cleanup for read notifications. Build notification preferences system for future enhancement. Integrate with existing audit logging system.",
-            "status": "pending",
-            "dependencies": [3],
+            "status": "done",
+            "dependencies": [
+              3
+            ],
             "parentTaskId": 40
           },
           {
@@ -1969,17 +1979,22 @@
             "title": "Implement Real-time Subscriptions",
             "description": "Add AppSync subscription support for real-time invitation updates with proper filtering and authorization.",
             "details": "Update .jinja templates to support subscription generation for lambda-secured entities. Implement onInvitationStatusChange subscription with userId-based filtering. Configure subscription authorization allowing all authenticated users read access. Build subscription resolvers for create, update, and delete events. Implement proper filtering to ensure users only receive relevant updates (invitations they sent or received). Optimize for low traffic volume with connection pooling. Add subscription event publishing to all mutation operations. Test real-time delivery with multiple concurrent connections.",
-            "status": "pending",
-            "dependencies": [4],
+            "status": "cancelled",
+            "dependencies": [
+              4
+            ],
             "parentTaskId": 40
           },
           {
             "id": 8,
             "title": "Create Background Expiration Handler",
             "description": "Build Lambda function to handle invitation expiration with CloudWatch Events scheduling.",
-            "details": "Create expiration handler Lambda triggered by CloudWatch Events (hourly or daily). Implement logic to query for invitations past expiresAt timestamp with PENDING status. Update expired invitations to EXPIRED status using UpdateInvitation pattern. Generate audit events for each expiration (INVITATION_EXPIRED). Trigger notifications to both inviter and invitee for expired invitations. Implement batch processing for efficiency with proper error handling. Add CloudWatch metrics for monitoring expiration processing. Configure Lambda timeout and memory settings appropriately.",
-            "status": "pending",
-            "dependencies": [4, 6],
+            "details": "Create expiration handler Lambda triggered by CloudWatch Events (hourly or daily). Implement logic to query for invitations past expiresAt timestamp with PENDING status. Update expired invitations to EXPIRED status using UpdateInvitation pattern. Generate audit events for each expiration (INVITATION_EXPIRED). Trigger notifications to both inviter and invitee for expired invitations. Implement batch processing for efficiency with proper error handling. Add CloudWatch metrics for monitoring expiration processing. Configure Lambda timeout and memory settings appropriately.\n<info added on 2025-08-09T22:35:58.197Z>\nDynamoDB TTL is already configured on the expiresAt attribute in Invitations.yml, which will automatically delete expired invitations. No background Lambda is needed for expiration handling. The TTL feature provides automatic cleanup without requiring additional infrastructure or processing overhead.\n</info added on 2025-08-09T22:35:58.197Z>",
+            "status": "cancelled",
+            "dependencies": [
+              4,
+              6
+            ],
             "parentTaskId": 40
           },
           {
@@ -1987,17 +2002,26 @@
             "title": "Implement Security and IAM Policies",
             "description": "Configure comprehensive security policies and rate limiting for invitation system.",
             "details": "Follow organizations IAM policy structure for consistency. Create or reuse Lambda execution role with proper DynamoDB, users service, and notification permissions. Implement rate limiting - evaluate reusing ownershipTransferRequests table vs creating invitationRateLimit table. Configure rate limits: max invitations per organization per hour, max invitations per user per day. Add security decorators for all resolver methods with proper permission checks. Implement audit logging for all invitation operations with compliance flags. Ensure all data access goes through AppSync (no direct Lambda invocation). Add input sanitization and XSS prevention for invitation messages.",
-            "status": "pending",
-            "dependencies": [3, 4],
+            "status": "done",
+            "dependencies": [
+              3,
+              4
+            ],
             "parentTaskId": 40
           },
           {
             "id": 10,
             "title": "Create Comprehensive Test Suite",
             "description": "Build complete test coverage for invitation system including unit, integration, and end-to-end tests.",
-            "details": "Unit tests for all resolver functions with mocked dependencies. Integration tests with real DynamoDB and AppSync. Test all permission scenarios: OWNER create/delete, user accept/decline, unauthorized access. Test validation logic: user existence, duplicates, organization status, message length, expiration ranges. Test notification delivery for all event types with proper recipient targeting. Test subscription filtering and real-time delivery. Test expiration handler with various scenarios. Performance tests for concurrent operations. Security tests for authorization and rate limiting. End-to-end workflow tests from creation through acceptance/expiration.",
+            "details": "Unit tests for all resolver functions with mocked dependencies. Integration tests with real DynamoDB and AppSync. Test all permission scenarios: OWNER create/delete, user accept/decline, unauthorized access. Test validation logic: user existence, duplicates, organization status, message length, expiration ranges. Test notification delivery for all event types with proper recipient targeting. Test subscription filtering and real-time delivery. Test expiration handler with various scenarios. Performance tests for concurrent operations. Security tests for authorization and rate limiting. End-to-end workflow tests from creation through acceptance/expiration.\n<info added on 2025-08-09T22:38:52.948Z>\nUpdated test requirements based on actual implementation: Remove subscription-related tests (subscription filtering and real-time delivery) as subscriptions were cancelled. Remove expiration handler tests as DynamoDB TTL is handling expiration automatically. Remove backend notification delivery tests as notifications are now created by the frontend, not backend services.\n</info added on 2025-08-09T22:38:52.948Z>",
             "status": "pending",
-            "dependencies": [5, 6, 7, 8, 9],
+            "dependencies": [
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
             "parentTaskId": 40
           }
         ]
@@ -3080,11 +3104,318 @@
             "testStrategy": "E2E performance tests measuring query count reduction, load testing for concurrent login scenarios, audit log integrity tests, production monitoring setup for ongoing performance validation, regression testing to ensure no functionality loss"
           }
         ]
+      },
+      {
+        "id": 58,
+        "title": "Redesign Members Tab with Consolidated Member Management Interface",
+        "description": "Create a comprehensive Members tab in the organization detail view that consolidates all member-related operations including current members list, invitation management, member removal, and new member invitations into a single, well-organized interface.",
+        "details": "Implement comprehensive Members tab redesign across multiple functional areas: **1) Tab Structure & Layout:** Create unified Members tab replacing separate member and invitation sections, implement tabbed sub-navigation within Members tab for \"Current Members\", \"Pending Invitations\", and \"Invite New Members\" sections, establish consistent layout patterns using SharedDataTableComponent for member lists and invitation tables, and integrate with existing design system for professional styling. **2) Current Members Management:** Implement member list display using SharedDataTableComponent with columns for name, email, role, join date, and last activity, add inline role editing with dropdown selection and permission validation, implement member removal functionality with confirmation dialogs and proper authorization checks, include member search and filtering capabilities by role, status, and join date, and add bulk operations for managing multiple members simultaneously. **3) Invitation Management Interface:** Create pending invitations table showing invited email, role, invitation date, expiration status, and actions, implement invitation resend functionality with rate limiting and expiration handling, add invitation cancellation with proper cleanup of pending records, include invitation status tracking (sent, opened, expired, accepted, declined), and provide bulk invitation management for multiple pending invites. **4) New Member Invitation Flow:** Design streamlined invitation form with email validation, role selection, and optional personal message, implement batch invitation capability for multiple emails with CSV import support, add invitation preview and confirmation before sending, integrate with email service for professional invitation templates, and include invitation tracking and follow-up reminders. **5) Data Integration & State Management:** Integrate with GraphQL queries for member data, invitation status, and organization permissions, implement real-time updates for member status changes and invitation responses, add proper error handling for invitation failures and member management operations, ensure data consistency between member lists and invitation tables, and implement optimistic updates for better user experience. **6) Responsive Design & Accessibility:** Ensure mobile-responsive design for all member management interfaces, implement accessible navigation between tab sections, add keyboard navigation support for all interactive elements, include proper ARIA labels and screen reader support, and maintain consistent styling with organization detail view layout.",
+        "testStrategy": "Execute comprehensive Members tab validation through multiple testing approaches: **1) Interface Integration Testing:** Verify Members tab properly integrates with organization detail view navigation, test tab switching between Current Members, Pending Invitations, and Invite New Members sections, validate SharedDataTableComponent integration with member and invitation data, and confirm consistent styling with existing organization pages. **2) Member Management Functionality Testing:** Test member list display with various data scenarios including empty states, large member lists, and different role combinations, validate inline role editing with permission checks and unauthorized access prevention, test member removal workflow including confirmation dialogs, authorization validation, and proper data cleanup, verify search and filtering functionality across all member attributes, and test bulk operations for multiple member management tasks. **3) Invitation Management Testing:** Test pending invitations display with various invitation states and expiration scenarios, validate invitation resend functionality including rate limiting and duplicate prevention, test invitation cancellation with proper cleanup and notification handling, verify invitation status tracking accuracy and real-time updates, and test bulk invitation management operations. **4) New Member Invitation Testing:** Test invitation form validation including email format checking, role selection validation, and message length limits, validate batch invitation functionality with CSV import and multiple email processing, test invitation preview and confirmation workflow, verify email service integration and template rendering, and test invitation tracking and follow-up reminder functionality. **5) Data Consistency & Real-time Updates Testing:** Verify GraphQL integration for member data retrieval and mutation operations, test real-time updates when member status changes or invitations are accepted, validate error handling for network failures and service unavailability, test data consistency between member lists and invitation tables during concurrent operations, and verify optimistic updates provide smooth user experience. **6) Responsive Design & Accessibility Testing:** Test mobile responsiveness across different screen sizes and orientations, validate keyboard navigation through all tab sections and interactive elements, test screen reader compatibility and ARIA label accuracy, verify color contrast and visual accessibility standards compliance, and test touch interactions on mobile devices for all member management operations.",
+        "status": "pending",
+        "dependencies": [
+          35,
+          30,
+          47
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Members Tab Structure and Navigation Framework",
+            "description": "Implement the foundational tab structure for the Members tab within the organization detail view, establishing the main navigation framework and sub-tab organization.",
+            "dependencies": [],
+            "details": "Create the main Members tab component that replaces existing separate member and invitation sections. Implement tabbed sub-navigation with three sections: 'Current Members', 'Pending Invitations', and 'Invite New Members'. Set up routing configuration for tab switching, establish consistent layout patterns using the existing design system, and create the base component structure that will house all member management functionality. Integrate with organization detail view navigation and ensure proper styling consistency.",
+            "status": "done",
+            "testStrategy": "Test tab navigation functionality, verify proper integration with organization detail view, validate responsive layout across different screen sizes, and ensure accessibility compliance for tab navigation."
+          },
+          {
+            "id": 2,
+            "title": "Implement Current Members List with SharedDataTableComponent",
+            "description": "Build the Current Members section using SharedDataTableComponent to display existing organization members with comprehensive member information and basic interactions.",
+            "dependencies": [
+              "58.1"
+            ],
+            "details": "Implement member list display using SharedDataTableComponent with columns for name, email, role, join date, and last activity. Set up data fetching from GraphQL API for member information, implement search and filtering capabilities by role, status, and join date. Add sorting functionality for all columns and pagination support for large member lists. Include member status indicators and last activity tracking. Ensure proper loading states and error handling for data fetching operations.",
+            "status": "done",
+            "testStrategy": "Test data table rendering with various member datasets, validate search and filtering functionality, verify sorting and pagination operations, and test loading states and error scenarios."
+          },
+          {
+            "id": 3,
+            "title": "Add Member Role Management and Removal Functionality",
+            "description": "Implement inline role editing capabilities and member removal functionality within the Current Members section with proper authorization and confirmation flows.",
+            "dependencies": [
+              "58.2"
+            ],
+            "details": "Add inline role editing with dropdown selection integrated into the data table, implement permission validation to ensure only authorized users can modify roles. Create member removal functionality with confirmation dialogs and proper authorization checks. Implement bulk operations for managing multiple members simultaneously, including bulk role changes and bulk removal. Add optimistic updates for better user experience and proper error handling with rollback capabilities. Ensure all operations respect RBAC permissions and include audit logging.\n<info added on 2025-08-09T23:09:02.287Z>\nCompleted inline role editing and member removal functionality without modals. Added inline role editing with dropdown selection when clicking edit button. Implemented inline confirmation for member removal that shows Yes/No buttons in place. Fixed CSS issues by replacing undefined CSS variables with SCSS variables. Used existing ORB color scheme (--orb-red) for primary actions. All functionality is contained within the table with no popups or modals.\n</info added on 2025-08-09T23:09:02.287Z>",
+            "status": "done",
+            "testStrategy": "Test role editing permissions and validation, verify member removal confirmation flows, validate bulk operations functionality, and test authorization enforcement for all member management actions."
+          },
+          {
+            "id": 4,
+            "title": "Build Pending Invitations Management Interface",
+            "description": "Create the Pending Invitations section with comprehensive invitation tracking, management capabilities, and status monitoring using SharedDataTableComponent.",
+            "dependencies": [
+              "58.1"
+            ],
+            "details": "Implement pending invitations table using SharedDataTableComponent showing invited email, role, invitation date, expiration status, and available actions. Add invitation resend functionality with rate limiting and expiration handling, implement invitation cancellation with proper cleanup of pending records. Include invitation status tracking (sent, opened, expired, accepted, declined) with real-time updates. Provide bulk invitation management for multiple pending invites including bulk resend and bulk cancellation operations.",
+            "status": "pending",
+            "testStrategy": "Test invitation status tracking accuracy, verify resend and cancellation functionality, validate bulk operations for pending invitations, and test real-time status updates."
+          },
+          {
+            "id": 5,
+            "title": "Design New Member Invitation Flow and Form Interface",
+            "description": "Create a streamlined invitation form interface for inviting new members with email validation, role selection, and batch invitation capabilities.",
+            "dependencies": [
+              "58.1"
+            ],
+            "details": "Design and implement invitation form with email validation, role selection dropdown, and optional personal message field. Implement batch invitation capability for multiple emails with CSV import support and email validation for bulk entries. Add invitation preview and confirmation before sending, create proper form validation with real-time feedback. Include invitation template selection and customization options. Implement form state management with proper error handling and success feedback.",
+            "status": "pending",
+            "testStrategy": "Test form validation for single and batch invitations, verify CSV import functionality, validate email format checking, and test invitation preview and confirmation flows."
+          },
+          {
+            "id": 6,
+            "title": "Integrate Email Service and Invitation Delivery System",
+            "description": "Implement the backend integration for sending invitations through email service with professional templates and delivery tracking.",
+            "dependencies": [
+              "58.5"
+            ],
+            "details": "Integrate with email service for sending professional invitation templates, implement invitation tracking and delivery confirmation. Add follow-up reminder functionality with configurable timing, create email template management for different invitation types. Implement rate limiting for invitation sending to prevent abuse, add delivery status tracking and bounce handling. Include invitation link generation with proper security tokens and expiration handling.",
+            "status": "pending",
+            "testStrategy": "Test email delivery functionality, verify invitation link generation and security, validate rate limiting mechanisms, and test delivery tracking and bounce handling."
+          },
+          {
+            "id": 7,
+            "title": "Implement Data Integration and Real-time State Management",
+            "description": "Set up comprehensive data integration with GraphQL queries and real-time updates for all member management operations across all three sections.",
+            "dependencies": [
+              "58.2",
+              "58.4",
+              "58.6"
+            ],
+            "details": "Integrate with GraphQL queries for member data, invitation status, and organization permissions across all three tab sections. Implement real-time updates using GraphQL subscriptions for member status changes and invitation responses. Add proper error handling for invitation failures and member management operations, ensure data consistency between member lists and invitation tables. Implement optimistic updates for better user experience and add proper loading states and error recovery mechanisms.",
+            "status": "pending",
+            "testStrategy": "Test GraphQL integration and data consistency, verify real-time updates functionality, validate error handling and recovery mechanisms, and test optimistic updates behavior."
+          },
+          {
+            "id": 8,
+            "title": "Ensure Responsive Design and Accessibility Compliance",
+            "description": "Implement responsive design patterns and accessibility features across all member management interfaces to ensure optimal user experience on all devices and for all users.",
+            "dependencies": [
+              "58.3",
+              "58.4",
+              "58.5"
+            ],
+            "details": "Ensure mobile-responsive design for all member management interfaces with proper breakpoint handling and touch-friendly interactions. Implement accessible navigation between tab sections with proper ARIA labels and keyboard navigation support. Add screen reader support for all interactive elements and data tables. Ensure consistent styling with organization detail view layout and maintain design system compliance. Implement proper focus management and keyboard shortcuts for power users.",
+            "status": "pending",
+            "testStrategy": "Test responsive behavior across different screen sizes and devices, validate accessibility compliance using automated tools and manual testing, verify keyboard navigation functionality, and test screen reader compatibility."
+          }
+        ]
+      },
+      {
+        "id": 59,
+        "title": "Refactor generate.py into Standalone Schema Generator Package",
+        "description": "Refactor the monolithic schemas/generate.py script into a well-architected, standalone Python package called 'orb-schema-generator' that can be distributed via PyPI and exposed as an MCP server. This package will be designed for reusability across projects and will address the immediate issues of duplicate TypeScript types and DRY violations in the template logic, while providing a comprehensive schema-driven code generation solution.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "details": "Create a full-featured Python package 'orb-schema-generator' with proper packaging structure, modular architecture, and comprehensive functionality. The package will eliminate code duplication by centralizing schema processing logic, provide template-based code generation for multiple target languages, and offer both programmatic API and CLI interfaces. Key focus areas include resolving duplicate TypeScript type definitions, implementing DRY principles in template logic, and creating a reusable tool that can be adopted across different projects and teams.",
+        "testStrategy": "Comprehensive test suite including unit tests for all core modules, integration tests for end-to-end generation workflows, performance tests with large schema sets, security tests for input validation, and compatibility tests across different Python versions and target platforms. Include automated testing for PyPI package installation and MCP server functionality.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design Package Architecture for orb-schema-generator",
+            "description": "Design the complete package architecture for 'orb-schema-generator' with proper module separation, dependency management, and extensibility patterns to support multiple code generation targets and eliminate DRY violations.",
+            "status": "done",
+            "dependencies": [],
+            "details": "Create comprehensive package architecture design including: 1) Core domain models for Schema, Field, Type, and Operation with proper data structures, 2) Modular generator system supporting TypeScript, Python, and GraphQL targets, 3) Template engine with reusable components to eliminate duplication, 4) Plugin architecture for extensibility, 5) Configuration management system, 6) Public API design for both programmatic and CLI usage. Focus on addressing duplicate TypeScript types and template logic DRY violations through centralized processing.\n<info added on 2025-08-11T13:19:18.529Z>\nSet up the complete package directory structure and initialization files for 'orb-schema-generator' including: 1) Create root package directory with proper Python package hierarchy (orb_schema_generator/), 2) Initialize core module directories: core/ for domain models, generators/ for target-specific generators, templates/ for reusable template components, plugins/ for extensibility, config/ for configuration management, cli/ for command-line interface, and api/ for programmatic access, 3) Create essential package configuration files including pyproject.toml with build system configuration and dependencies, setup.py for legacy compatibility, __init__.py files for proper module imports, requirements.txt for development dependencies, and README.md with package overview, 4) Establish proper package metadata, version management, and entry points for CLI access, 5) Set up testing infrastructure with tests/ directory structure mirroring the package layout, 6) Configure development tools including pre-commit hooks, linting configuration, and CI/CD pipeline setup files. This foundational structure will provide the framework for extracting and organizing components from generate.py in subsequent subtasks.\n</info added on 2025-08-11T13:19:18.529Z>",
+            "testStrategy": "Architecture review and validation, dependency analysis, and design pattern verification"
+          },
+          {
+            "id": 2,
+            "title": "Extract Core Domain Models from generate.py",
+            "description": "Extract and define core domain models including Schema, Field, Type, and Operation classes from the monolithic generate.py script into separate modules with proper data structures and validation.",
+            "status": "done",
+            "dependencies": [
+              1
+            ],
+            "details": "Create domain/models.py with dataclasses for Schema, Field, Type, and Operation. Include validation methods, type checking, and proper serialization/deserialization. Extract all schema parsing logic and create clean interfaces for schema representation. Implement hash-based duplicate detection to address TypeScript type duplication issues.\n<info added on 2025-08-11T14:06:02.301Z>\nSuccessfully completed the extraction of core domain models from generate.py. The orb_schema_generator.core package now contains a complete set of domain models with comprehensive validation, loading, and conversion capabilities. All models are fully tested with 83% code coverage and implement Pydantic v2 validation. The hash-based duplicate detection system is implemented and ready for integration with the TypeScript deduplication resolver. The package structure provides clean interfaces for schema representation and processing, setting the foundation for the remaining refactoring work.\n</info added on 2025-08-11T14:06:02.301Z>",
+            "testStrategy": "Unit tests for model validation, serialization/deserialization, duplicate detection algorithms, and edge cases with malformed schema data"
+          },
+          {
+            "id": 3,
+            "title": "Create Duplicate Resolver System",
+            "description": "Implement a comprehensive DuplicateResolver component that identifies and resolves duplicate schema definitions, types, and operations to eliminate DRY violations and specifically address duplicate TypeScript type issues.",
+            "status": "done",
+            "dependencies": [
+              2
+            ],
+            "details": "Build core/duplicate_resolver.py with advanced algorithms to detect duplicate schemas, merge compatible definitions, and resolve conflicts. Include configurable resolution strategies, detailed conflict reporting, and specialized handling for TypeScript type duplications. Implement hash-based duplicate detection for performance and semantic analysis for intelligent merging.\n<info added on 2025-08-11T14:21:12.838Z>\nSuccessfully implemented the comprehensive duplicate resolver system:\n\n1. Created DuplicateDetector class:\n   - Detects duplicate operations, types, and field definitions\n   - Hash-based duplicate detection for performance\n   - Identifies identical vs. conflicting duplicates\n   - Specific detection for TypeScript type generation issues\n\n2. Created DuplicateResolver class:\n   - Multiple resolution strategies (merge, alias, error, ignore, prefer first/last)\n   - Configurable per-type strategies\n   - Intelligent merging of compatible operations\n   - Detailed conflict reporting and statistics\n\n3. Created TypeScriptDuplicateResolver class:\n   - Specialized for TypeScript duplicate type issues\n   - Type registration tracking to prevent duplicates\n   - Operation filtering to ensure unique type generation\n   - Template data deduplication before rendering\n\n4. All components have comprehensive unit tests (12 passing tests)\n   - 83% code coverage for duplicate_resolver.py\n   - Tests for all resolution strategies\n   - TypeScript-specific duplicate handling tests\n\n5. Created example demonstrating usage patterns\n   - Shows duplicate detection across schemas\n   - Demonstrates different resolution strategies\n   - TypeScript type deduplication examples\n\nThe duplicate resolver directly addresses the original issue of duplicate TypeScript types being generated in templates by providing tools to detect and prevent such duplicates before code generation.\n</info added on 2025-08-11T14:21:12.838Z>",
+            "testStrategy": "Unit tests for duplicate detection algorithms, conflict resolution strategies, TypeScript-specific duplicate handling, and performance tests with large schema sets"
+          },
+          {
+            "id": 4,
+            "title": "Implement Template Engine with DRY Principles",
+            "description": "Create a sophisticated template engine that eliminates DRY violations in template logic through reusable components, template inheritance, and shared template fragments.",
+            "status": "done",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Develop templates/engine.py with Jinja2-based template system featuring: 1) Template inheritance and composition patterns, 2) Reusable template fragments and macros, 3) Shared template libraries for common patterns, 4) Template validation and optimization, 5) Dynamic template loading and caching. Focus on eliminating duplicate template logic across different generators while maintaining flexibility.\n<info added on 2025-08-11T15:06:08.906Z>\nImplementation completed with comprehensive template engine architecture. Built TemplateEngine and DRYTemplateEngine classes featuring automatic deduplication capabilities and context tracking to prevent duplicate rendering. Created reusable template fragments including typescript_type, graphql_operation, response_types, input_types, and query_input_types for consistent code generation across different target languages. Implemented TemplateRegistry for centralized template collection management and TemplateLoader for seamless migration of existing templates. Added template validation and optimization features with comprehensive unit test coverage achieving 73% code coverage for the template engine module. The system successfully eliminates duplicate template logic while maintaining flexibility for different generator implementations.\n</info added on 2025-08-11T15:06:08.906Z>",
+            "testStrategy": "Template rendering tests, inheritance validation, fragment reusability tests, and template optimization verification"
+          },
+          {
+            "id": 5,
+            "title": "Extract TypeScript Generator with Duplicate Resolution",
+            "description": "Refactor TypeScript code generation logic into a dedicated generator module with advanced duplicate type resolution and template-based generation using the new DRY-compliant template engine.",
+            "status": "pending",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "Create generators/typescript.py with TypeScriptGenerator class leveraging the new template engine. Implement intelligent duplicate type resolution, configurable naming conventions, import optimization, and support for both Angular and React output formats. Include specialized handling for interface merging and type alias resolution to eliminate duplicate TypeScript definitions.",
+            "testStrategy": "Unit tests for template rendering, duplicate type resolution validation, integration tests with sample schemas, and TypeScript compilation verification"
+          },
+          {
+            "id": 6,
+            "title": "Extract Python Generator Module",
+            "description": "Separate Python code generation functionality into a dedicated module with support for Pydantic models, dataclasses, and API client generation using the centralized template system.",
+            "status": "pending",
+            "dependencies": [
+              4
+            ],
+            "details": "Develop generators/python.py with PythonGenerator class using the new template engine. Implement templates for Pydantic models, dataclasses, and FastAPI/Django compatible code. Include type hint generation, validation decorators, and serialization methods. Support multiple Python code styles and frameworks while leveraging shared template components.",
+            "testStrategy": "Unit tests for Python code generation, syntax validation of generated code, template reusability verification, and compatibility tests with different Python versions"
+          },
+          {
+            "id": 7,
+            "title": "Extract GraphQL Generator Module",
+            "description": "Create a dedicated GraphQL schema generator that produces valid GraphQL SDL from internal schema representations using the centralized template system with proper type definitions and resolvers.",
+            "status": "pending",
+            "dependencies": [
+              4
+            ],
+            "details": "Build generators/graphql.py with GraphQLGenerator class using the template engine. Generate GraphQL SDL with proper type definitions, queries, mutations, and subscriptions. Include directive support, custom scalar handling, federation compatibility, and schema validation. Leverage shared template components for common GraphQL patterns.",
+            "testStrategy": "Unit tests for GraphQL SDL generation, schema validation using GraphQL tools, template component reusability tests, and compatibility tests with Apollo and other GraphQL servers"
+          },
+          {
+            "id": 8,
+            "title": "Create orb-schema-generator Package Structure",
+            "description": "Establish the complete package structure for 'orb-schema-generator' with proper Python packaging configuration, including setup.py, pyproject.toml, and all necessary metadata for PyPI distribution.",
+            "status": "pending",
+            "dependencies": [
+              5,
+              6,
+              7
+            ],
+            "details": "Create orb_schema_generator/ package with proper __init__.py files, setup.py with dependencies and entry points, pyproject.toml for modern Python packaging, README.md with comprehensive usage examples, and LICENSE file. Include version management, build configuration for wheel distribution, and package metadata optimized for discoverability on PyPI.",
+            "testStrategy": "Package installation tests, import tests, PyPI test deployment validation, and package metadata verification"
+          },
+          {
+            "id": 9,
+            "title": "Implement Public API Interface",
+            "description": "Design and implement a clean public API that exposes the core orb-schema-generator functionality through simple, intuitive methods while hiding internal complexity and providing easy access to duplicate resolution features.",
+            "status": "pending",
+            "dependencies": [
+              8
+            ],
+            "details": "Create api/interface.py with OrbSchemaGenerator main class providing generate(), validate(), resolve_duplicates(), and configure() methods. Implement context managers for resource management, async support for large schema processing, and plugin registration system. Include comprehensive error handling, logging, and specialized methods for TypeScript duplicate resolution.",
+            "testStrategy": "API integration tests, duplicate resolution functionality tests, documentation examples validation, and backward compatibility tests"
+          },
+          {
+            "id": 10,
+            "title": "Build Command Line Interface",
+            "description": "Create a comprehensive CLI tool for orb-schema-generator using Click that provides access to all generator functionality with special commands for duplicate resolution and DRY violation detection.",
+            "status": "pending",
+            "dependencies": [
+              9
+            ],
+            "details": "Develop cli/main.py with Click-based CLI supporting generate, validate, resolve-duplicates, and configure commands. Include file input/output handling, progress bars for large operations, configuration file support, and detailed help text. Implement shell completion, error reporting, and specialized commands for TypeScript duplicate analysis and resolution.",
+            "testStrategy": "CLI integration tests, duplicate resolution command validation, help text verification, and cross-platform compatibility tests"
+          },
+          {
+            "id": 11,
+            "title": "Implement Configuration Management System",
+            "description": "Create a flexible configuration system for orb-schema-generator that supports YAML, JSON, and TOML configuration files with environment variable overrides and validation.",
+            "status": "pending",
+            "dependencies": [
+              9
+            ],
+            "details": "Build config/manager.py with ConfigManager class supporting multiple configuration formats. Include schema validation for configuration files, environment variable interpolation, configuration merging, and specialized settings for duplicate resolution strategies and template customization. Implement default configurations and user-specific overrides.",
+            "testStrategy": "Configuration loading tests, validation tests with invalid configs, environment variable override tests, and duplicate resolution configuration validation"
+          },
+          {
+            "id": 12,
+            "title": "Create MCP Server Implementation",
+            "description": "Implement Model Context Protocol (MCP) server that exposes the orb-schema-generator functionality as tools and resources for AI assistants and other MCP clients, including duplicate resolution capabilities.",
+            "status": "pending",
+            "dependencies": [
+              9,
+              10
+            ],
+            "details": "Develop mcp/server.py implementing MCP protocol with tools for schema generation, validation, duplicate resolution, and introspection. Include resource endpoints for schema templates and examples. Implement proper MCP message handling, error responses, capability negotiation, and specialized tools for TypeScript duplicate analysis.",
+            "testStrategy": "MCP protocol compliance tests, tool invocation tests, duplicate resolution tool validation, and integration tests with MCP clients"
+          },
+          {
+            "id": 13,
+            "title": "Add Comprehensive Logging and Monitoring",
+            "description": "Implement structured logging throughout the orb-schema-generator package with configurable log levels, performance metrics, and detailed tracking of duplicate resolution operations.",
+            "status": "pending",
+            "dependencies": [
+              9
+            ],
+            "details": "Create utils/logging.py with structured logging using Python's logging module. Include performance metrics collection, duplicate resolution operation tracking, optional telemetry with user consent, and integration with popular monitoring tools. Implement log rotation, filtering capabilities, and specialized logging for template processing and duplicate detection.",
+            "testStrategy": "Logging output validation, performance metrics accuracy tests, duplicate resolution logging verification, and telemetry privacy compliance tests"
+          },
+          {
+            "id": 14,
+            "title": "Create Migration Scripts and Documentation",
+            "description": "Develop migration scripts to help users transition from the old generate.py to the new orb-schema-generator package, including compatibility layers and comprehensive migration guides.",
+            "status": "pending",
+            "dependencies": [
+              9,
+              10
+            ],
+            "details": "Build migration/scripts.py with automated migration tools for existing generate.py configurations. Create compatibility wrappers for legacy API calls, comprehensive migration documentation, troubleshooting guides, and validation tools to verify successful migration. Include specific guidance for resolving existing duplicate TypeScript types during migration.",
+            "testStrategy": "Migration script tests with various legacy configurations, compatibility layer tests, documentation accuracy validation, and duplicate resolution migration verification"
+          },
+          {
+            "id": 15,
+            "title": "Implement Comprehensive Test Suite",
+            "description": "Create a complete test suite covering unit tests, integration tests, and end-to-end tests for all orb-schema-generator functionality with high code coverage and specialized testing for duplicate resolution features.",
+            "status": "pending",
+            "dependencies": [
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              9,
+              12
+            ],
+            "details": "Develop comprehensive test suite using pytest with fixtures for common test scenarios. Include unit tests for all modules, integration tests for generator workflows, duplicate resolution algorithm tests, performance tests for large schemas, and security tests for input validation. Achieve >90% code coverage with specialized test cases for TypeScript duplicate handling.",
+            "testStrategy": "Test coverage analysis, duplicate resolution algorithm validation, performance benchmarking, and continuous integration pipeline verification"
+          },
+          {
+            "id": 16,
+            "title": "Package Deployment and PyPI Publication",
+            "description": "Set up automated deployment pipeline for orb-schema-generator PyPI publication with version management, release automation, and distribution verification.",
+            "status": "pending",
+            "dependencies": [
+              8,
+              14,
+              15
+            ],
+            "details": "Configure GitHub Actions or similar CI/CD for automated testing, building, and PyPI deployment of orb-schema-generator. Include semantic versioning, changelog generation, release notes automation, and deployment verification tests. Set up PyPI trusted publishing with proper package metadata and keywords for discoverability.",
+            "testStrategy": "Deployment pipeline tests, PyPI package installation verification, version management validation, and package discoverability testing"
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-06-20T19:07:50.957Z",
-      "updated": "2025-08-08T21:57:33.310Z",
+      "updated": "2025-08-11T15:05:52.076Z",
       "description": "Tasks for master context"
     }
   }

@@ -1,10 +1,9 @@
 """
 Generated Python enum for OrganizationStatus
-Generated at
+Generated at 
 """
 
 from enum import Enum
-
 
 class OrganizationStatus(Enum):
 
@@ -19,3 +18,4 @@ class OrganizationStatus(Enum):
     DELETED = "DELETED"
 
     UNKNOWN = "UNKNOWN"
+ 

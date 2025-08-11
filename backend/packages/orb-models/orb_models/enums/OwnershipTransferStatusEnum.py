@@ -1,10 +1,9 @@
 """
 Generated Python enum for OwnershipTransferStatus
-Generated at
+Generated at 
 """
 
 from enum import Enum
-
 
 class OwnershipTransferStatus(Enum):
 
@@ -19,3 +18,4 @@ class OwnershipTransferStatus(Enum):
     EXPIRED = "EXPIRED"
 
     CANCELLED = "CANCELLED"
+ 

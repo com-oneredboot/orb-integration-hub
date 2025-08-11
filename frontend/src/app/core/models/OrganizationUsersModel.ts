@@ -64,28 +64,28 @@ export type OrganizationUsersUpdateInput = {
 };
 
 // QueryInput
-export type OrganizationUsersQueryByUserIdInput = {
-  userId: string;
+export type OrganizationUsersQueryByOrganizationIdInput = {
+  organizationId: string;
 };
 
 
-export type OrganizationUsersQueryByOrganizationIdInput = {
-  organizationId: string;
+export type OrganizationUsersQueryByUserIdInput = {
+  userId: string;
 };
 
 export type OrganizationUsersQueryByBothInput = {
+  organizationId: string;
   userId: string;
-  organizationId: string;
 };
 
 
-
-export type OrganizationUsersQueryByOrganizationIdInput = {
-  organizationId: string;
-};
 
 export type OrganizationUsersQueryByUserIdInput = {
   userId: string;
+};
+
+export type OrganizationUsersQueryByOrganizationIdInput = {
+  organizationId: string;
 };
 
 
@@ -127,17 +127,17 @@ export type OrganizationUsersDeleteMutationResponse = {
   OrganizationUsersDelete: OrganizationUsersResponse;
 };
 
-export type OrganizationUsersQueryByUserIdResponse = {
-  OrganizationUsersQueryByUserId: OrganizationUsersResponse;
-};
-
-
 export type OrganizationUsersQueryByOrganizationIdResponse = {
-  OrganizationUsersQueryByOrganizationId: OrganizationUsersListResponse;
+  OrganizationUsersQueryByOrganizationId: OrganizationUsersResponse;
 };
+
 
 export type OrganizationUsersQueryByUserIdResponse = {
   OrganizationUsersQueryByUserId: OrganizationUsersListResponse;
+};
+
+export type OrganizationUsersQueryByOrganizationIdResponse = {
+  OrganizationUsersQueryByOrganizationId: OrganizationUsersListResponse;
 };
 
 
@@ -165,9 +165,9 @@ export class OrganizationUsers implements IOrganizationUsers {
 
   organizationId = '';
 
-  role = OrganizationUserRole.UNKNOWN;
+  role = OrganizationUserRole.ADMINISTRATOR;
 
-  status = OrganizationUserStatus.UNKNOWN;
+  status = OrganizationUserStatus.ACTIVE;
 
   invitedBy = '';
 
@@ -186,13 +186,13 @@ export class OrganizationUsers implements IOrganizationUsers {
 
 
         if (key === 'role' && typeof value === 'string') {
-          this.role = OrganizationUserRole[value as keyof typeof OrganizationUserRole] ?? OrganizationUserRole.UNKNOWN;
+          this.role = OrganizationUserRole[value as keyof typeof OrganizationUserRole] ?? OrganizationUserRole.ADMINISTRATOR;
         } else 
 
 
 
         if (key === 'status' && typeof value === 'string') {
-          this.status = OrganizationUserStatus[value as keyof typeof OrganizationUserStatus] ?? OrganizationUserStatus.UNKNOWN;
+          this.status = OrganizationUserStatus[value as keyof typeof OrganizationUserStatus] ?? OrganizationUserStatus.ACTIVE;
         } else 
 
 

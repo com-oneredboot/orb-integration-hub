@@ -13,6 +13,7 @@ from .NotificationStatusEnum import NotificationStatus
 from .UserGroupEnum import UserGroup
 from .UserStatusEnum import UserStatus
 from .SchemaTypeEnum import SchemaType
+from .InvitationStatusEnum import InvitationStatus
 from .ApplicationUserStatusEnum import ApplicationUserStatus
 from .PrivacyRequestStatusEnum import PrivacyRequestStatus
 from .NotificationTypeEnum import NotificationType
@@ -26,6 +27,7 @@ __all__ = [
     "ApplicationRoleStatus",
     "ApplicationStatus",
     "ApplicationUserStatus",
+    "InvitationStatus",
     "LegalBasis",
     "NotificationStatus",
     "NotificationType",

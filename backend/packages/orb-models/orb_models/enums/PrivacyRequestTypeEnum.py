@@ -1,10 +1,9 @@
 """
 Generated Python enum for PrivacyRequestType
-Generated at
+Generated at 
 """
 
 from enum import Enum
-
 
 class PrivacyRequestType(Enum):
 
@@ -19,3 +18,4 @@ class PrivacyRequestType(Enum):
     PROCESSING_RESTRICTION = "PROCESSING_RESTRICTION"
 
     MARKETING_OPT_OUT = "MARKETING_OPT_OUT"
+ 

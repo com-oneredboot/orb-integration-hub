@@ -1,0 +1,296 @@
+<!-- Organization Members Component -->
+<div class="organization-members">
+  
+  <!-- Header with title and action button -->
+  <div class="organization-members__header">
+    <div class="organization-members__title-section">
+      <h3 class="organization-members__title">Organization Members</h3>
+      <div class="organization-members__stats">
+        <span class="organization-members__stat">
+          <fa-icon icon="users" class="organization-members__stat-icon"></fa-icon>
+          {{ filteredData.length }} total
+        </span>
+        <span class="organization-members__stat organization-members__stat--active">
+          {{ activeCount }} active
+        </span>
+        <span class="organization-members__stat organization-members__stat--pending">
+          {{ pendingCount }} pending
+        </span>
+      </div>
+    </div>
+    <button class="organization-members__invite-btn"
+            *ngIf="!showInviteForm"
+            (click)="onShowInviteForm()">
+      <fa-icon icon="user-plus" class="organization-members__invite-icon"></fa-icon>
+      Invite Member
+    </button>
+  </div>
+  
+  <!-- Filters -->
+  <div class="organization-members__filters">
+    <div class="organization-members__search">
+      <div class="organization-members__search-input">
+        <fa-icon icon="search" class="organization-members__search-icon"></fa-icon>
+        <input type="text"
+               class="organization-members__search-field"
+               placeholder="Search by name, email, or role..."
+               [(ngModel)]="searchTerm"
+               (input)="onSearch()">
+      </div>
+    </div>
+    
+    <div class="organization-members__filter-group">
+      <label class="organization-members__filter-label">Status:</label>
+      <select class="organization-members__filter-select"
+              [(ngModel)]="statusFilter"
+              (change)="onFilterChange()">
+        <option value="all">All Members</option>
+        <option value="active">Active Only</option>
+        <option value="pending">Pending Only</option>
+      </select>
+    </div>
+  </div>
+  
+  <!-- Members Table -->
+  <div class="organization-members__table-wrapper">
+    <table class="organization-members__table">
+      <thead>
+        <!-- Inline invite form row -->
+        <tr *ngIf="showInviteForm" class="organization-members__invite-row">
+          <td colspan="6" class="organization-members__invite-cell">
+              <div class="organization-members__invite-form">
+                <div class="organization-members__invite-field">
+                  <input type="email"
+                         class="organization-members__invite-input"
+                         placeholder="Enter email address"
+                         [(ngModel)]="inviteForm.email"
+                         required>
+                </div>
+                <div class="organization-members__invite-field">
+                  <select class="organization-members__invite-select"
+                          [(ngModel)]="inviteForm.role">
+                    <option *ngFor="let role of availableRoles" [value]="role">
+                      {{ role }}
+                    </option>
+                  </select>
+                </div>
+                <div class="organization-members__invite-actions">
+                  <button class="organization-members__invite-action organization-members__invite-action--send"
+                          [disabled]="!inviteForm.email"
+                          (click)="onSendInvitation()">
+                    <fa-icon icon="paper-plane"></fa-icon>
+                    Send Invite
+                  </button>
+                  <button class="organization-members__invite-action organization-members__invite-action--cancel"
+                          (click)="onCancelInvite()">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          
+          <!-- Table headers -->
+          <tr>
+          <th class="organization-members__table-header"
+              (click)="onSort('displayName')">
+            Name
+            <fa-icon *ngIf="sortField === 'displayName'"
+                     [icon]="sortDirection === 'asc' ? 'sort-up' : 'sort-down'"
+                     class="organization-members__sort-icon"></fa-icon>
+          </th>
+          <th class="organization-members__table-header"
+              (click)="onSort('displayEmail')">
+            Email
+            <fa-icon *ngIf="sortField === 'displayEmail'"
+                     [icon]="sortDirection === 'asc' ? 'sort-up' : 'sort-down'"
+                     class="organization-members__sort-icon"></fa-icon>
+          </th>
+          <th class="organization-members__table-header"
+              (click)="onSort('role')">
+            Role
+            <fa-icon *ngIf="sortField === 'role'"
+                     [icon]="sortDirection === 'asc' ? 'sort-up' : 'sort-down'"
+                     class="organization-members__sort-icon"></fa-icon>
+          </th>
+          <th class="organization-members__table-header"
+              (click)="onSort('status')">
+            Status
+            <fa-icon *ngIf="sortField === 'status'"
+                     [icon]="sortDirection === 'asc' ? 'sort-up' : 'sort-down'"
+                     class="organization-members__sort-icon"></fa-icon>
+          </th>
+          <th class="organization-members__table-header"
+              (click)="onSort('joinedDate')">
+            Joined/Invited
+            <fa-icon *ngIf="sortField === 'joinedDate'"
+                     [icon]="sortDirection === 'asc' ? 'sort-up' : 'sort-down'"
+                     class="organization-members__sort-icon"></fa-icon>
+          </th>
+          <th class="organization-members__table-header organization-members__table-header--actions">
+            Actions
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let member of filteredData" 
+            class="organization-members__table-row"
+            [class.organization-members__table-row--pending]="member.status === 'pending'">
+          
+          <!-- Name -->
+          <td class="organization-members__table-cell">
+            <div class="organization-members__member-info">
+              <fa-icon [icon]="member.type === 'member' ? 'user' : 'envelope'" 
+                       class="organization-members__member-icon"></fa-icon>
+              {{ member.displayName }}
+            </div>
+          </td>
+          
+          <!-- Email -->
+          <td class="organization-members__table-cell">
+            {{ member.displayEmail }}
+          </td>
+          
+          <!-- Role -->
+          <td class="organization-members__table-cell">
+            <!-- Show dropdown when editing (active members only) -->
+            <div class="organization-members__role-edit" 
+                 *ngIf="editingMemberId === member.userId && member.type === 'member'">
+              <select class="organization-members__role-select"
+                      [(ngModel)]="editingMemberRole">
+                <option *ngFor="let role of availableRoles" [value]="role">
+                  {{ role }}
+                </option>
+              </select>
+              <div class="organization-members__role-edit-actions">
+                <button class="organization-members__role-btn organization-members__role-btn--save"
+                        title="Save changes"
+                        (click)="onSaveRoleEdit(member)">
+                  <fa-icon icon="check-circle"></fa-icon>
+                </button>
+                <button class="organization-members__role-btn organization-members__role-btn--cancel"
+                        title="Cancel"
+                        (click)="onCancelRoleEdit()">
+                  <fa-icon icon="times"></fa-icon>
+                </button>
+              </div>
+            </div>
+            
+            <!-- Show badge when not editing -->
+            <span class="organization-members__role-badge"
+                  *ngIf="editingMemberId !== member.userId || member.type !== 'member'"
+                  [class.organization-members__role-badge--admin]="member.role === 'ADMINISTRATOR'"
+                  [class.organization-members__role-badge--viewer]="member.role === 'VIEWER'">
+              {{ member.role }}
+            </span>
+          </td>
+          
+          <!-- Status -->
+          <td class="organization-members__table-cell">
+            <span class="organization-members__status-badge"
+                  [class.organization-members__status-badge--active]="member.status === 'active'"
+                  [class.organization-members__status-badge--pending]="member.status === 'pending'">
+              <fa-icon [icon]="member.status === 'active' ? 'check-circle' : 'clock'" 
+                       class="organization-members__status-icon"></fa-icon>
+              {{ member.status === 'active' ? 'Active' : 'Pending' }}
+            </span>
+          </td>
+          
+          <!-- Date -->
+          <td class="organization-members__table-cell">
+            {{ formatDate(member.joinedDate) }}
+            <span class="organization-members__date-expires" 
+                  *ngIf="member.type === 'invitation' && member.expiresAt">
+              <br>Expires: {{ formatDate(member.expiresAt) }}
+            </span>
+          </td>
+          
+          <!-- Actions -->
+          <td class="organization-members__table-cell">
+            <!-- Actions for active members -->
+            <div class="organization-members__actions" 
+                 *ngIf="member.type === 'member' && removingMemberId !== member.userId">
+              <button class="organization-members__action-btn organization-members__action-btn--edit"
+                      title="Edit role"
+                      [disabled]="editingMemberId !== null"
+                      (click)="onEditMemberRole(member)">
+                <fa-icon icon="edit"></fa-icon>
+              </button>
+              <button class="organization-members__action-btn organization-members__action-btn--remove"
+                      title="Remove member"
+                      (click)="onRemoveMember(member)">
+                <fa-icon icon="trash"></fa-icon>
+              </button>
+            </div>
+            
+            <!-- Confirmation for member removal -->
+            <div class="organization-members__remove-confirm" 
+                 *ngIf="member.type === 'member' && removingMemberId === member.userId">
+              <span class="organization-members__remove-text">Remove?</span>
+              <button class="organization-members__remove-btn organization-members__remove-btn--confirm"
+                      title="Confirm removal"
+                      (click)="onConfirmRemoveMember(member)">
+                <fa-icon icon="check-circle"></fa-icon>
+                Yes
+              </button>
+              <button class="organization-members__remove-btn organization-members__remove-btn--cancel"
+                      title="Cancel"
+                      (click)="onCancelRemoveMember()">
+                <fa-icon icon="times"></fa-icon>
+                No
+              </button>
+            </div>
+            
+            <!-- Actions for pending invitations -->
+            <div class="organization-members__actions" 
+                 *ngIf="member.type === 'invitation'">
+              <button class="organization-members__action-btn organization-members__action-btn--resend"
+                      title="Resend invitation"
+                      [disabled]="member.status === 'expired'"
+                      (click)="onResendInvitation(member)">
+                <fa-icon icon="redo"></fa-icon>
+              </button>
+              <button class="organization-members__action-btn organization-members__action-btn--cancel"
+                      title="Cancel invitation"
+                      (click)="onCancelInvitation(member)">
+                <fa-icon icon="times"></fa-icon>
+              </button>
+            </div>
+          </td>
+        </tr>
+        
+        <!-- Loading state -->
+        <tr *ngIf="isLoading" class="organization-members__table-row organization-members__table-row--loading">
+          <td colspan="6" class="organization-members__table-cell organization-members__table-cell--loading">
+            <div class="organization-members__loading">
+              <fa-icon icon="spinner" class="organization-members__loading-icon fa-spin"></fa-icon>
+              Loading members...
+            </div>
+          </td>
+        </tr>
+        
+        <!-- Empty state -->
+        <tr *ngIf="!isLoading && filteredData.length === 0" 
+            class="organization-members__table-row organization-members__table-row--empty">
+          <td colspan="6" class="organization-members__table-cell organization-members__table-cell--empty">
+            <div class="organization-members__empty">
+              <fa-icon icon="users" class="organization-members__empty-icon"></fa-icon>
+              <p class="organization-members__empty-text">
+                {{ allMembers.length === 0 ? 'No members yet' : 'No members match your filters' }}
+              </p>
+              <p class="organization-members__empty-subtext">
+                {{ allMembers.length === 0 ? 'Invite members to collaborate on this organization' : 'Try adjusting your search or filters' }}
+              </p>
+              <button class="organization-members__empty-action"
+                      *ngIf="allMembers.length === 0 && !showInviteForm"
+                      (click)="onShowInviteForm()">
+                <fa-icon icon="user-plus"></fa-icon>
+                Invite Members
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

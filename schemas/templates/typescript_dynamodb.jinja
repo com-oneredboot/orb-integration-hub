@@ -107,7 +107,7 @@ export interface I{{ schema.name }} {
 
 export class {{ schema.name }} implements I{{ schema.name }} {
 {% for attr in schema.attributes %}
-  {{ attr.name }} = {% if attr.enum_type %}{{ attr.enum_type }}.UNKNOWN{% elif attr.type|to_typescript_type == 'string' %}''{% elif attr.type|to_typescript_type == 'number' %}0{% elif attr.type|to_typescript_type == 'boolean' %}false{% elif attr.type|to_typescript_type == 'string[]' %}[]{% elif attr.type|to_typescript_type == 'any[]' %}[]{% elif attr.type|to_typescript_type == 'Record<string, any>' %}{}{% elif attr.type|to_typescript_type == 'Set<string>' %}new Set(){% elif attr.type|to_typescript_type == 'Buffer' %}Buffer.from(''){% elif not attr.required %}undefined{% else %}undefined{% endif %};
+  {{ attr.name }} = {% if attr.enum_type %}{{ attr.enum_type }}.{{ attr.enum_values[0] if attr.enum_values else 'UNKNOWN' }}{% elif attr.type|to_typescript_type == 'string' %}''{% elif attr.type|to_typescript_type == 'number' %}0{% elif attr.type|to_typescript_type == 'boolean' %}false{% elif attr.type|to_typescript_type == 'string[]' %}[]{% elif attr.type|to_typescript_type == 'any[]' %}[]{% elif attr.type|to_typescript_type == 'Record<string, any>' %}{}{% elif attr.type|to_typescript_type == 'Set<string>' %}new Set(){% elif attr.type|to_typescript_type == 'Buffer' %}Buffer.from(''){% elif not attr.required %}undefined{% else %}undefined{% endif %};
 {% endfor %}
 
   constructor(data: Partial<I{{ schema.name }}> = {}) {
@@ -116,7 +116,7 @@ export class {{ schema.name }} implements I{{ schema.name }} {
 {% for attr in schema.attributes %}
 {% if attr.enum_type %}
         if (key === '{{ attr.name }}' && typeof value === 'string') {
-          this.{{ attr.name }} = {{ attr.enum_type }}[value as keyof typeof {{ attr.enum_type }}] ?? {{ attr.enum_type }}.UNKNOWN;
+          this.{{ attr.name }} = {{ attr.enum_type }}[value as keyof typeof {{ attr.enum_type }}] ?? {{ attr.enum_type }}.{{ attr.enum_values[0] if attr.enum_values else 'UNKNOWN' }};
         } else 
 {% endif %}
 {% endfor %}

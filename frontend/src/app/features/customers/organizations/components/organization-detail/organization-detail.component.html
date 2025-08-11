@@ -188,18 +188,7 @@
     <!-- Members Tab -->
     <div class="organization-detail__tab-panel"
          [class.organization-detail__tab-panel--active]="activeTab === 'members'">
-      <div class="organization-detail__placeholder">
-        <fa-icon icon="users" class="organization-detail__placeholder-icon"></fa-icon>
-        <p class="organization-detail__placeholder-text">
-          Member management features will be available here.
-        </p>
-        <ul class="organization-detail__placeholder-list">
-          <li>View organization members</li>
-          <li>Manage member roles and permissions</li>
-          <li>Invite new members</li>
-          <li>Remove members from organization</li>
-        </ul>
-      </div>
+      <app-organization-members [organization]="organization"></app-organization-members>
     </div>
 
     <!-- Danger Zone Tab -->

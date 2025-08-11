@@ -1,10 +1,9 @@
 """
 Generated Python enum for UserGroup
-Generated at
+Generated at 
 """
 
 from enum import Enum
-
 
 class UserGroup(Enum):
 
@@ -15,3 +14,4 @@ class UserGroup(Enum):
     EMPLOYEE = "EMPLOYEE"
 
     OWNER = "OWNER"
+ 

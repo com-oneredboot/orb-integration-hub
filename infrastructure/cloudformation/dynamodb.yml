@@ -570,6 +570,95 @@ Resources:
 
       
   
+  InvitationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${CustomerId}-${ProjectId}-${Environment}-invitations
+      BillingMode: PAY_PER_REQUEST
+      
+      KeySchema:
+        
+        - AttributeName: invitationId
+          KeyType: HASH
+        
+      AttributeDefinitions:
+        
+        - AttributeName: invitationId
+          AttributeType: S
+        
+        - AttributeName: createdAt
+          AttributeType: N
+        
+        - AttributeName: organizationId
+          AttributeType: S
+        
+        - AttributeName: inviteeEmail
+          AttributeType: S
+        
+        - AttributeName: inviteeUserId
+          AttributeType: S
+        
+      
+      GlobalSecondaryIndexes:
+        
+        - IndexName: OrganizationInvitationsIndex
+          KeySchema:
+            
+            - AttributeName: organizationId
+              KeyType: HASH
+            
+            - AttributeName: createdAt
+              KeyType: RANGE
+            
+          Projection:
+            ProjectionType: ALL
+            
+        
+        - IndexName: InviteeEmailIndex
+          KeySchema:
+            
+            - AttributeName: inviteeEmail
+              KeyType: HASH
+            
+            - AttributeName: createdAt
+              KeyType: RANGE
+            
+          Projection:
+            ProjectionType: ALL
+            
+        
+        - IndexName: InviteeUserIdIndex
+          KeySchema:
+            
+            - AttributeName: inviteeUserId
+              KeyType: HASH
+            
+            - AttributeName: createdAt
+              KeyType: RANGE
+            
+          Projection:
+            ProjectionType: ALL
+            
+        
+      
+      
+
+  InvitationsTableArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-invitations-table-arn
+      Type: String
+      Value: !GetAtt InvitationsTable.Arn
+
+  InvitationsTableName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-invitations-table-name
+      Type: String
+      Value: !Ref InvitationsTable
+
+      
+  
   ApplicationRolesTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -959,6 +1048,20 @@ Outputs:
     Value: !Ref OrganizationUsersTable
     Export:
       Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-organization-users-table-name
+
+  
+  
+  InvitationsTableArn:
+    Description: The ARN of the Invitations table
+    Value: !GetAtt InvitationsTable.Arn
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-invitations-table-arn
+
+  InvitationsTableName:
+    Description: The name of the Invitations table
+    Value: !Ref InvitationsTable
+    Export:
+      Name: !Sub ${CustomerId}-${ProjectId}-${Environment}-invitations-table-name
 
   
   

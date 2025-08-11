@@ -276,17 +276,17 @@ export class PrivacyRequests implements IPrivacyRequests {
 
   requestId = '';
 
-  requestType = PrivacyRequestType.UNKNOWN;
+  requestType = PrivacyRequestType.DATA_ACCESS;
 
   dataSubjectEmail = '';
 
-  legalBasis = LegalBasis.UNKNOWN;
+  legalBasis = LegalBasis.GDPR_ARTICLE_15_RIGHT_OF_ACCESS;
 
   organizationId = '';
 
   requesterId = '';
 
-  status = PrivacyRequestStatus.UNKNOWN;
+  status = PrivacyRequestStatus.RECEIVED;
 
   receivedAt = 0;
 
@@ -323,7 +323,7 @@ export class PrivacyRequests implements IPrivacyRequests {
 
 
         if (key === 'requestType' && typeof value === 'string') {
-          this.requestType = PrivacyRequestType[value as keyof typeof PrivacyRequestType] ?? PrivacyRequestType.UNKNOWN;
+          this.requestType = PrivacyRequestType[value as keyof typeof PrivacyRequestType] ?? PrivacyRequestType.DATA_ACCESS;
         } else 
 
 
@@ -331,7 +331,7 @@ export class PrivacyRequests implements IPrivacyRequests {
 
 
         if (key === 'legalBasis' && typeof value === 'string') {
-          this.legalBasis = LegalBasis[value as keyof typeof LegalBasis] ?? LegalBasis.UNKNOWN;
+          this.legalBasis = LegalBasis[value as keyof typeof LegalBasis] ?? LegalBasis.GDPR_ARTICLE_15_RIGHT_OF_ACCESS;
         } else 
 
 
@@ -341,7 +341,7 @@ export class PrivacyRequests implements IPrivacyRequests {
 
 
         if (key === 'status' && typeof value === 'string') {
-          this.status = PrivacyRequestStatus[value as keyof typeof PrivacyRequestStatus] ?? PrivacyRequestStatus.UNKNOWN;
+          this.status = PrivacyRequestStatus[value as keyof typeof PrivacyRequestStatus] ?? PrivacyRequestStatus.RECEIVED;
         } else 
 
 

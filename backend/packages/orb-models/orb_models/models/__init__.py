@@ -11,6 +11,7 @@ from .SmsVerificationModel import SmsVerification
 from .OrganizationsModel import Organizations
 from .RolesModel import Roles
 from .UsersModel import Users
+from .InvitationsModel import Invitations
 from .MfaSetupDetailsModel import MfaSetupDetails
 from .ApplicationUsersModel import ApplicationUsers
 from .ApplicationsModel import Applications
@@ -28,6 +29,7 @@ __all__ = [
     "Auth",
     "AuthError",
     "ErrorRegistry",
+    "Invitations",
     "MfaSetupDetails",
     "Notifications",
     "OrganizationUsers",

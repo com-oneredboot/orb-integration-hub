@@ -214,9 +214,79 @@ query PrivacyRequestsQueryByRequestType($input: PrivacyRequestsQueryByRequestTyp
 
 
 
+export const PrivacyRequestsQueryByRequestTypeAndReceivedAt = /* GraphQL */ `
+query PrivacyRequestsQueryByRequestTypeAndReceivedAt($input: PrivacyRequestsQueryByRequestTypeAndReceivedAtInput!) {
+  PrivacyRequestsQueryByRequestTypeAndReceivedAt(input: $input) {
+    StatusCode
+    Message
+    Data {
+      requestId
+      requestType
+      dataSubjectEmail
+      legalBasis
+      organizationId
+      requesterId
+      status
+      receivedAt
+      deadline
+      completedAt
+      estimatedCompletion
+      automatedProcessing
+      accessReport
+      deletionResult
+      portableData
+      rejectionReason
+      errorDetails
+      complianceNotes
+      createdAt
+      updatedAt
+    }
+  }
+}
+`;
+
+
+
+
+
 export const PrivacyRequestsQueryByDataSubjectEmail = /* GraphQL */ `
 query PrivacyRequestsQueryByDataSubjectEmail($input: PrivacyRequestsQueryByDataSubjectEmailInput!) {
   PrivacyRequestsQueryByDataSubjectEmail(input: $input) {
+    StatusCode
+    Message
+    Data {
+      requestId
+      requestType
+      dataSubjectEmail
+      legalBasis
+      organizationId
+      requesterId
+      status
+      receivedAt
+      deadline
+      completedAt
+      estimatedCompletion
+      automatedProcessing
+      accessReport
+      deletionResult
+      portableData
+      rejectionReason
+      errorDetails
+      complianceNotes
+      createdAt
+      updatedAt
+    }
+  }
+}
+`;
+
+
+
+
+
+export const PrivacyRequestsQueryByDataSubjectEmailAndReceivedAt = /* GraphQL */ `
+query PrivacyRequestsQueryByDataSubjectEmailAndReceivedAt($input: PrivacyRequestsQueryByDataSubjectEmailAndReceivedAtInput!) {
+  PrivacyRequestsQueryByDataSubjectEmailAndReceivedAt(input: $input) {
     StatusCode
     Message
     Data {
@@ -284,9 +354,79 @@ query PrivacyRequestsQueryByOrganizationId($input: PrivacyRequestsQueryByOrganiz
 
 
 
+export const PrivacyRequestsQueryByOrganizationIdAndReceivedAt = /* GraphQL */ `
+query PrivacyRequestsQueryByOrganizationIdAndReceivedAt($input: PrivacyRequestsQueryByOrganizationIdAndReceivedAtInput!) {
+  PrivacyRequestsQueryByOrganizationIdAndReceivedAt(input: $input) {
+    StatusCode
+    Message
+    Data {
+      requestId
+      requestType
+      dataSubjectEmail
+      legalBasis
+      organizationId
+      requesterId
+      status
+      receivedAt
+      deadline
+      completedAt
+      estimatedCompletion
+      automatedProcessing
+      accessReport
+      deletionResult
+      portableData
+      rejectionReason
+      errorDetails
+      complianceNotes
+      createdAt
+      updatedAt
+    }
+  }
+}
+`;
+
+
+
+
+
 export const PrivacyRequestsQueryByStatus = /* GraphQL */ `
 query PrivacyRequestsQueryByStatus($input: PrivacyRequestsQueryByStatusInput!) {
   PrivacyRequestsQueryByStatus(input: $input) {
+    StatusCode
+    Message
+    Data {
+      requestId
+      requestType
+      dataSubjectEmail
+      legalBasis
+      organizationId
+      requesterId
+      status
+      receivedAt
+      deadline
+      completedAt
+      estimatedCompletion
+      automatedProcessing
+      accessReport
+      deletionResult
+      portableData
+      rejectionReason
+      errorDetails
+      complianceNotes
+      createdAt
+      updatedAt
+    }
+  }
+}
+`;
+
+
+
+
+
+export const PrivacyRequestsQueryByStatusAndDeadline = /* GraphQL */ `
+query PrivacyRequestsQueryByStatusAndDeadline($input: PrivacyRequestsQueryByStatusAndDeadlineInput!) {
+  PrivacyRequestsQueryByStatusAndDeadline(input: $input) {
     StatusCode
     Message
     Data {

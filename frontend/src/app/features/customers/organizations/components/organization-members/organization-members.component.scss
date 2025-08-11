@@ -1,0 +1,569 @@
+// Organization Members Component Styles
+@use '../../../../../../styles/variables' as v;
+@use '../../../../../../styles/mixins' as m;
+
+.organization-members {
+  padding: v.$spacing-md;
+  
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: v.$spacing-lg;
+  }
+  
+  &__title-section {
+    flex: 1;
+  }
+
+  &__title {
+    font-size: v.$font-size-lg;
+    font-weight: 600;
+    color: v.$gray-900;
+    margin: 0 0 v.$spacing-xs;
+  }
+
+  &__stats {
+    display: flex;
+    gap: v.$spacing-md;
+    color: v.$gray-600;
+    font-size: v.$font-size-sm;
+  }
+
+  &__stat {
+    display: inline-flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+    
+    &-icon {
+      color: v.$gray-400;
+    }
+    
+    &--active {
+      color: #059669;
+    }
+    
+    &--pending {
+      color: #d97706;
+    }
+  }
+  
+  &__invite-btn {
+    padding: v.$spacing-sm v.$spacing-lg;
+    background-color: var(--orb-red);
+    color: white;
+    border: none;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+
+    &:hover {
+      background-color: #c41530;
+      transform: translateY(-1px);
+    }
+  }
+  
+  &__invite-icon {
+    font-size: 1rem;
+  }
+  
+  // Filters section
+  &__filters {
+    display: flex;
+    gap: v.$spacing-lg;
+    margin-bottom: v.$spacing-lg;
+    align-items: flex-end;
+  }
+
+  &__search {
+    flex: 1;
+    max-width: 400px;
+  }
+
+  &__search-input {
+    position: relative;
+  }
+
+  &__search-icon {
+    position: absolute;
+    left: v.$spacing-sm;
+    top: 50%;
+    transform: translateY(-50%);
+    color: v.$gray-400;
+    pointer-events: none;
+  }
+
+  &__search-field {
+    width: 100%;
+    padding: v.$spacing-sm v.$spacing-sm v.$spacing-sm calc(#{v.$spacing-sm} + 24px);
+    background-color: white;
+    border: 1px solid v.$gray-300;
+    border-radius: 0.25rem;
+    font-size: v.$font-size-base;
+    color: v.$gray-900;
+    transition: border-color 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: var(--orb-red);
+      box-shadow: 0 0 0 3px rgba(227, 24, 55, 0.1);
+    }
+
+    &::placeholder {
+      color: v.$gray-400;
+    }
+  }
+  
+  &__filter-group {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+  }
+  
+  &__filter-label {
+    font-size: v.$font-size-sm;
+    font-weight: 500;
+    color: v.$gray-700;
+  }
+  
+  &__filter-select {
+    padding: v.$spacing-sm;
+    background-color: white;
+    border: 1px solid v.$gray-300;
+    border-radius: 0.25rem;
+    font-size: v.$font-size-base;
+    color: v.$gray-900;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+    
+    &:focus {
+      outline: none;
+      border-color: var(--orb-red);
+      box-shadow: 0 0 0 3px rgba(227, 24, 55, 0.1);
+    }
+  }
+
+  // Table wrapper
+  &__table-wrapper {
+    background-color: white;
+    border-radius: 0.375rem;
+    overflow: hidden;
+    box-shadow: v.$shadow-sm;
+  }
+
+  // Custom table styles
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: v.$font-size-sm;
+  }
+
+  &__table-header {
+    padding: v.$spacing-sm v.$spacing-md;
+    text-align: left;
+    font-weight: 600;
+    color: v.$gray-600;
+    background-color: v.$gray-50;
+    border-bottom: 1px solid v.$gray-200;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: v.$gray-100;
+      color: v.$gray-900;
+    }
+
+    &--actions {
+      text-align: center;
+      cursor: default;
+
+      &:hover {
+        background-color: v.$gray-50;
+        color: v.$gray-600;
+      }
+    }
+  }
+
+  &__sort-icon {
+    margin-left: v.$spacing-xs;
+    color: var(--orb-red);
+  }
+
+  &__table-row {
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: v.$gray-50;
+    }
+
+    &:not(:last-child) {
+      border-bottom: 1px solid v.$gray-100;
+    }
+    
+    &--pending {
+      background-color: #fffbeb;
+      
+      &:hover {
+        background-color: #fef3c7;
+      }
+    }
+  }
+
+  &__table-cell {
+    padding: v.$spacing-md;
+    color: v.$gray-900;
+  }
+  
+  // Member info with icon
+  &__member-info {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+  }
+  
+  &__member-icon {
+    color: v.$gray-400;
+  }
+
+  // Role badges
+  &__role-badge {
+    padding: v.$spacing-xs v.$spacing-sm;
+    border-radius: 0.25rem;
+    font-size: v.$font-size-xs;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+
+    &--admin {
+      background-color: #fef3c7;
+      color: #d97706;
+    }
+
+    &--viewer {
+      background-color: #dbeafe;
+      color: #2563eb;
+    }
+  }
+
+  // Status badges
+  &__status-badge {
+    padding: v.$spacing-xs v.$spacing-sm;
+    border-radius: 0.25rem;
+    font-size: v.$font-size-xs;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+
+    &--active {
+      background-color: #d1fae5;
+      color: #059669;
+    }
+
+    &--pending {
+      background-color: #fef3c7;
+      color: #d97706;
+    }
+  }
+  
+  &__status-icon {
+    font-size: v.$font-size-xs;
+  }
+  
+  &__date-expires {
+    font-size: v.$font-size-xs;
+    color: v.$gray-500;
+  }
+
+  // Action buttons
+  &__actions {
+    display: flex;
+    gap: v.$spacing-xs;
+    justify-content: center;
+  }
+
+  &__action-btn {
+    padding: v.$spacing-xs;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 0.25rem;
+    color: v.$gray-600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: v.$font-size-sm;
+
+    &:hover:not(:disabled) {
+      color: v.$gray-900;
+      background-color: v.$gray-100;
+      border-color: v.$gray-300;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &--edit:hover {
+      color: var(--orb-red);
+    }
+
+    &--remove:hover {
+      color: #dc2626;
+    }
+
+    &--resend:hover {
+      color: #059669;
+    }
+
+    &--cancel:hover {
+      color: #dc2626;
+    }
+  }
+  
+  // Inline invite form
+  &__invite-row {
+    background-color: #f0fdf4;
+    border-bottom: 2px solid #86efac;
+  }
+  
+  &__invite-cell {
+    padding: v.$spacing-lg;
+  }
+  
+  &__invite-form {
+    display: flex;
+    gap: v.$spacing-md;
+    align-items: center;
+  }
+  
+  &__invite-field {
+    flex: 1;
+  }
+  
+  &__invite-input,
+  &__invite-select {
+    width: 100%;
+    padding: v.$spacing-sm;
+    background-color: white;
+    border: 1px solid v.$gray-300;
+    border-radius: 0.25rem;
+    font-size: v.$font-size-base;
+    color: v.$gray-900;
+    transition: border-color 0.2s ease;
+    
+    &:focus {
+      outline: none;
+      border-color: var(--orb-red);
+      box-shadow: 0 0 0 3px rgba(227, 24, 55, 0.1);
+    }
+  }
+  
+  &__invite-actions {
+    display: flex;
+    gap: v.$spacing-sm;
+  }
+  
+  &__invite-action {
+    padding: v.$spacing-sm v.$spacing-md;
+    border: none;
+    border-radius: 0.25rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+    white-space: nowrap;
+    
+    &--send {
+      background-color: var(--orb-red);
+      color: white;
+      
+      &:hover:not(:disabled) {
+        background-color: #c41530;
+      }
+      
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+    
+    &--cancel {
+      background-color: transparent;
+      color: v.$gray-600;
+      border: 1px solid v.$gray-300;
+      
+      &:hover {
+        background-color: v.$gray-100;
+        color: v.$gray-900;
+      }
+    }
+  }
+
+  // Loading state
+  &__loading {
+    text-align: center;
+    padding: v.$spacing-xl * 2;
+    color: v.$gray-600;
+
+    &-icon {
+      font-size: 2rem;
+      margin-bottom: v.$spacing-md;
+      color: var(--orb-red);
+    }
+  }
+
+  // Empty state
+  &__empty {
+    text-align: center;
+    padding: v.$spacing-xl * 2;
+
+    &-icon {
+      font-size: 3rem;
+      color: v.$gray-400;
+      margin-bottom: v.$spacing-md;
+    }
+
+    &-text {
+      font-size: v.$font-size-lg;
+      font-weight: 500;
+      color: v.$gray-900;
+      margin: 0 0 v.$spacing-xs;
+    }
+
+    &-subtext {
+      color: v.$gray-600;
+      margin: 0 0 v.$spacing-lg;
+    }
+
+    &-action {
+      padding: v.$spacing-sm v.$spacing-lg;
+      background-color: var(--orb-red);
+      color: white;
+      border: none;
+      border-radius: 0.375rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: v.$spacing-xs;
+
+      &:hover {
+        background-color: #c41530;
+        transform: translateY(-1px);
+      }
+    }
+  }
+  
+  // Inline role editing
+  &__role-edit {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+  }
+  
+  &__role-select {
+    padding: v.$spacing-xs v.$spacing-sm;
+    background-color: white;
+    border: 1px solid var(--orb-red);
+    border-radius: 0.25rem;
+    font-size: v.$font-size-sm;
+    color: v.$gray-900;
+    cursor: pointer;
+    min-width: 140px;
+    
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(227, 24, 55, 0.1);
+    }
+  }
+  
+  &__role-edit-actions {
+    display: flex;
+    gap: v.$spacing-xs;
+  }
+  
+  &__role-btn {
+    padding: v.$spacing-xs;
+    background: none;
+    border: none;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: v.$font-size-sm;
+    
+    &--save {
+      color: #059669;
+      
+      &:hover {
+        background-color: #d1fae5;
+      }
+    }
+    
+    &--cancel {
+      color: v.$gray-600;
+      
+      &:hover {
+        background-color: v.$gray-100;
+        color: #dc2626;
+      }
+    }
+  }
+  
+  // Inline removal confirmation
+  &__remove-confirm {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-sm;
+    background-color: #fee2e2;
+    padding: v.$spacing-xs v.$spacing-sm;
+    border-radius: 0.25rem;
+  }
+  
+  &__remove-text {
+    font-size: v.$font-size-sm;
+    color: #dc2626;
+    font-weight: 500;
+  }
+  
+  &__remove-btn {
+    padding: v.$spacing-xs v.$spacing-sm;
+    border: none;
+    border-radius: 0.25rem;
+    font-size: v.$font-size-sm;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+    
+    &--confirm {
+      background-color: #dc2626;
+      color: white;
+      
+      &:hover {
+        background-color: #b91c1c;
+      }
+    }
+    
+    &--cancel {
+      background-color: transparent;
+      color: v.$gray-600;
+      border: 1px solid v.$gray-300;
+      
+      &:hover {
+        background-color: v.$gray-100;
+        color: v.$gray-900;
+      }
+    }
+  }
+}

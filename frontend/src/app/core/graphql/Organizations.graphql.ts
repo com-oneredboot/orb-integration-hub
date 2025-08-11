@@ -154,9 +154,59 @@ query OrganizationsQueryByOwnerId($input: OrganizationsQueryByOwnerIdInput!) {
 
 
 
+export const OrganizationsQueryByOwnerIdAndCreatedAt = /* GraphQL */ `
+query OrganizationsQueryByOwnerIdAndCreatedAt($input: OrganizationsQueryByOwnerIdAndCreatedAtInput!) {
+  OrganizationsQueryByOwnerIdAndCreatedAt(input: $input) {
+    StatusCode
+    Message
+    Data {
+      organizationId
+      name
+      description
+      ownerId
+      status
+      createdAt
+      updatedAt
+      kmsKeyId
+      kmsKeyArn
+      kmsAlias
+    }
+  }
+}
+`;
+
+
+
+
+
 export const OrganizationsQueryByStatus = /* GraphQL */ `
 query OrganizationsQueryByStatus($input: OrganizationsQueryByStatusInput!) {
   OrganizationsQueryByStatus(input: $input) {
+    StatusCode
+    Message
+    Data {
+      organizationId
+      name
+      description
+      ownerId
+      status
+      createdAt
+      updatedAt
+      kmsKeyId
+      kmsKeyArn
+      kmsAlias
+    }
+  }
+}
+`;
+
+
+
+
+
+export const OrganizationsQueryByStatusAndCreatedAt = /* GraphQL */ `
+query OrganizationsQueryByStatusAndCreatedAt($input: OrganizationsQueryByStatusAndCreatedAtInput!) {
+  OrganizationsQueryByStatusAndCreatedAt(input: $input) {
     StatusCode
     Message
     Data {

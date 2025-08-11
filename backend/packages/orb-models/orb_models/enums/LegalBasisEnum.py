@@ -1,10 +1,9 @@
 """
 Generated Python enum for LegalBasis
-Generated at
+Generated at 
 """
 
 from enum import Enum
-
 
 class LegalBasis(Enum):
 
@@ -19,3 +18,4 @@ class LegalBasis(Enum):
     CCPA_RIGHT_TO_DELETE = "CCPA_RIGHT_TO_DELETE"
 
     CCPA_RIGHT_TO_OPT_OUT = "CCPA_RIGHT_TO_OPT_OUT"
+ 

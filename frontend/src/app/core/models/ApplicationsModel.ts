@@ -174,7 +174,7 @@ export class Applications implements IApplications {
 
   ownerId = '';
 
-  status = ApplicationStatus.UNKNOWN;
+  status = ApplicationStatus.ACTIVE;
 
   createdAt = 0;
 
@@ -201,7 +201,7 @@ export class Applications implements IApplications {
 
 
         if (key === 'status' && typeof value === 'string') {
-          this.status = ApplicationStatus[value as keyof typeof ApplicationStatus] ?? ApplicationStatus.UNKNOWN;
+          this.status = ApplicationStatus[value as keyof typeof ApplicationStatus] ?? ApplicationStatus.ACTIVE;
         } else 
 
 

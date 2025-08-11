@@ -1,6 +1,6 @@
 """
 Auth standard model.
-Generated at 2025-07-25T21:36:32.627607+00:00
+Generated at 2025-08-10T00:38:11.842592+00:00
 """
 
 from typing import Optional
@@ -8,10 +8,32 @@ from pydantic import BaseModel, Field, validator
 from datetime import datetime
 
 
+
+
+
+
+
+
+
+
+
+
 from .UsersModel import UsersModel
 
 
+
+
+
+
+
+
+
+
+
+
+
 from .MfaSetupDetailsModel import MfaSetupDetailsModel
+
 
 
 # Main Model (Standard)
@@ -32,56 +54,82 @@ class Auth(BaseModel):
 
     mfa_type: str = Field(None, description="Type of MFA (e.g., 'sms', 'totp')")
 
-    mfa_setup_details: MfaSetupDetails = Field(
-        None, description="Details for MFA setup (MfaSetupDetails)"
-    )
+    mfa_setup_details: MfaSetupDetails = Field(None, description="Details for MFA setup (MfaSetupDetails)")
 
-    @validator("isSignedIn", pre=True, always=True)
+
+
+
+
+
+
+
+    @validator('isSignedIn', pre=True, always=True)
     def parse_isSignedIn_bool(cls, value):
         if value is None:
             return None
         if isinstance(value, bool):
             return value
         if isinstance(value, str):
-            if value.lower() == "true":
+            if value.lower() == 'true':
                 return True
-            if value.lower() == "false":
+            if value.lower() == 'false':
                 return False
         return bool(value)
 
-    @validator("needsMFA", pre=True, always=True)
+
+
+
+
+
+
+
+
+
+    @validator('needsMFA', pre=True, always=True)
     def parse_needsMFA_bool(cls, value):
         if value is None:
             return None
         if isinstance(value, bool):
             return value
         if isinstance(value, str):
-            if value.lower() == "true":
+            if value.lower() == 'true':
                 return True
-            if value.lower() == "false":
+            if value.lower() == 'false':
                 return False
         return bool(value)
 
-    @validator("needsMFASetup", pre=True, always=True)
+
+
+
+    @validator('needsMFASetup', pre=True, always=True)
     def parse_needsMFASetup_bool(cls, value):
         if value is None:
             return None
         if isinstance(value, bool):
             return value
         if isinstance(value, str):
-            if value.lower() == "true":
+            if value.lower() == 'true':
                 return True
-            if value.lower() == "false":
+            if value.lower() == 'false':
                 return False
         return bool(value)
 
+
+
+
+
+
+
+
+
     class Config:
         from_attributes = True
-        json_encoders = {datetime: lambda v: v.isoformat()}
-
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
 
 # Response Type
 class AuthResponse(BaseModel):
     statusCode: int
     message: Optional[str]
-    data: Optional[Auth]
+    data: Optional[Auth] 

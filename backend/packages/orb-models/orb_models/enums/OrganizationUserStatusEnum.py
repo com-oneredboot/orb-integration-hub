@@ -1,10 +1,9 @@
 """
 Generated Python enum for OrganizationUserStatus
-Generated at
+Generated at 
 """
 
 from enum import Enum
-
 
 class OrganizationUserStatus(Enum):
 
@@ -19,3 +18,4 @@ class OrganizationUserStatus(Enum):
     REJECTED = "REJECTED"
 
     REMOVED = "REMOVED"
+ 

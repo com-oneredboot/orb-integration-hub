@@ -33,6 +33,10 @@ import { NotificationStatus } from './NotificationStatusEnum';
 
 
 
+
+
+
+
 // CreateInput
 export type NotificationsCreateInput = {
 
@@ -52,11 +56,15 @@ export type NotificationsCreateInput = {
 
   metadata: Record<string, any> | undefined;
 
+  readAt: number | undefined;
+
   expiresAt: number | undefined;
 
   createdAt: number;
 
   updatedAt: number;
+
+  ttl: number | undefined;
 
 };
 
@@ -79,11 +87,15 @@ export type NotificationsUpdateInput = {
 
   metadata: Record<string, any> | undefined;
 
+  readAt: number | undefined;
+
   expiresAt: number | undefined;
 
   createdAt: number;
 
   updatedAt: number;
+
+  ttl: number | undefined;
 
 };
 
@@ -174,11 +186,15 @@ export interface INotifications {
 
   metadata: Record<string, any> | undefined;
 
+  readAt: number | undefined;
+
   expiresAt: number | undefined;
 
   createdAt: number;
 
   updatedAt: number;
+
+  ttl: number | undefined;
 
 }
 
@@ -190,9 +206,9 @@ export class Notifications implements INotifications {
 
   senderUserId = '';
 
-  type = NotificationType.UNKNOWN;
+  type = NotificationType.APPLICATION_TRANSFER_REQUEST;
 
-  status = NotificationStatus.UNKNOWN;
+  status = NotificationStatus.PENDING;
 
   title = '';
 
@@ -200,11 +216,15 @@ export class Notifications implements INotifications {
 
   metadata = {};
 
+  readAt = 0;
+
   expiresAt = 0;
 
   createdAt = 0;
 
   updatedAt = 0;
+
+  ttl = 0;
 
 
   constructor(data: Partial<INotifications> = {}) {
@@ -219,14 +239,18 @@ export class Notifications implements INotifications {
 
 
         if (key === 'type' && typeof value === 'string') {
-          this.type = NotificationType[value as keyof typeof NotificationType] ?? NotificationType.UNKNOWN;
+          this.type = NotificationType[value as keyof typeof NotificationType] ?? NotificationType.APPLICATION_TRANSFER_REQUEST;
         } else 
 
 
 
         if (key === 'status' && typeof value === 'string') {
-          this.status = NotificationStatus[value as keyof typeof NotificationStatus] ?? NotificationStatus.UNKNOWN;
+          this.status = NotificationStatus[value as keyof typeof NotificationStatus] ?? NotificationStatus.PENDING;
         } else 
+
+
+
+
 
 
 

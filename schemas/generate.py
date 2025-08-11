@@ -1174,12 +1174,16 @@ mutation {type_name}Disable($id: ID!) {{
 }}'''
             })
             
+            # Track existing operation names to avoid duplicates
+            existing_operations = set()
+            
             # Query by primary key
+            op_name = f'{type_name}QueryBy{pk_pascal}'
             operations.append({
-                'name': f'{type_name}QueryBy{pk_pascal}',
+                'name': op_name,
                 'gql': f'''
-query {type_name}QueryBy{pk_pascal}($input: {type_name}QueryBy{pk_pascal}Input!) {{
-  {type_name}QueryBy{pk_pascal}(input: $input) {{
+query {op_name}($input: {op_name}Input!) {{
+  {op_name}(input: $input) {{
     StatusCode
     Message
     Data {{
@@ -1188,14 +1192,16 @@ query {type_name}QueryBy{pk_pascal}($input: {type_name}QueryBy{pk_pascal}Input!)
   }}
 }}'''
             })
+            existing_operations.add(op_name)
             
             # Query by sort key (if present)
             if sk_pascal:
+                op_name = f'{type_name}QueryBy{sk_pascal}'
                 operations.append({
-                    'name': f'{type_name}QueryBy{sk_pascal}',
+                    'name': op_name,
                     'gql': f'''
-query {type_name}QueryBy{sk_pascal}($input: {type_name}QueryBy{sk_pascal}Input!) {{
-  {type_name}QueryBy{sk_pascal}(input: $input) {{
+query {op_name}($input: {op_name}Input!) {{
+  {op_name}(input: $input) {{
     StatusCode
     Message
     Data {{
@@ -1204,13 +1210,15 @@ query {type_name}QueryBy{sk_pascal}($input: {type_name}QueryBy{sk_pascal}Input!)
   }}
 }}'''
                 })
+                existing_operations.add(op_name)
                 
                 # QueryBy{Partition}And{Sort}
+                op_name = f'{type_name}QueryBy{pk_pascal}And{sk_pascal}'
                 operations.append({
-                    'name': f'{type_name}QueryBy{pk_pascal}And{sk_pascal}',
+                    'name': op_name,
                     'gql': f'''
-query {type_name}QueryBy{pk_pascal}And{sk_pascal}($input: {type_name}QueryBy{pk_pascal}And{sk_pascal}Input!) {{
-  {type_name}QueryBy{pk_pascal}And{sk_pascal}(input: $input) {{
+query {op_name}($input: {op_name}Input!) {{
+  {op_name}(input: $input) {{
     StatusCode
     Message
     Data {{
@@ -1219,15 +1227,20 @@ query {type_name}QueryBy{pk_pascal}And{sk_pascal}($input: {type_name}QueryBy{pk_
   }}
 }}'''
                 })
+                existing_operations.add(op_name)
             
             # Query by secondary indexes
             for index in processed_schema.secondary_indexes:
                 idx_pascal = to_pascal_case(index['partition'])
-                operations.append({
-                    'name': f'{type_name}QueryBy{idx_pascal}',
-                    'gql': f'''
-query {type_name}QueryBy{idx_pascal}($input: {type_name}QueryBy{idx_pascal}Input!) {{
-  {type_name}QueryBy{idx_pascal}(input: $input) {{
+                
+                # Query by partition key only (check for duplicates)
+                op_name = f'{type_name}QueryBy{idx_pascal}'
+                if op_name not in existing_operations:
+                    operations.append({
+                        'name': op_name,
+                        'gql': f'''
+query {op_name}($input: {op_name}Input!) {{
+  {op_name}(input: $input) {{
     StatusCode
     Message
     Data {{
@@ -1235,7 +1248,32 @@ query {type_name}QueryBy{idx_pascal}($input: {type_name}QueryBy{idx_pascal}Input
     }}
   }}
 }}'''
-                })
+                    })
+                    existing_operations.add(op_name)
+                else:
+                    logger.debug(f"Skipping duplicate operation {op_name} for GSI {index.get('name', 'unknown')}")
+                
+                # If there's a sort key, also add query by partition AND sort key
+                if index.get('sort') and index['sort'] != 'None':
+                    sk_pascal = to_pascal_case(index['sort'])
+                    op_name = f'{type_name}QueryBy{idx_pascal}And{sk_pascal}'
+                    if op_name not in existing_operations:
+                        operations.append({
+                            'name': op_name,
+                            'gql': f'''
+query {op_name}($input: {op_name}Input!) {{
+  {op_name}(input: $input) {{
+    StatusCode
+    Message
+    Data {{
+      {field_list}
+    }}
+  }}
+}}'''
+                        })
+                        existing_operations.add(op_name)
+                    else:
+                        logger.debug(f"Skipping duplicate operation {op_name} for GSI {index.get('name', 'unknown')}")
             
             # Add custom queries to operations
             if hasattr(lambda_type, 'custom_queries') and lambda_type.custom_queries:

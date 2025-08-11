@@ -1,10 +1,9 @@
 """
 Generated Python enum for PrivacyRequestStatus
-Generated at
+Generated at 
 """
 
 from enum import Enum
-
 
 class PrivacyRequestStatus(Enum):
 
@@ -19,3 +18,4 @@ class PrivacyRequestStatus(Enum):
     FAILED = "FAILED"
 
     PARTIALLY_COMPLETED = "PARTIALLY_COMPLETED"
+ 

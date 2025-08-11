@@ -148,7 +148,7 @@ export class ApplicationUsers implements IApplicationUsers {
 
   applicationId = '';
 
-  status = ApplicationUserStatus.UNKNOWN;
+  status = ApplicationUserStatus.ACTIVE;
 
   createdAt = 0;
 
@@ -167,7 +167,7 @@ export class ApplicationUsers implements IApplicationUsers {
 
 
         if (key === 'status' && typeof value === 'string') {
-          this.status = ApplicationUserStatus[value as keyof typeof ApplicationUserStatus] ?? ApplicationUserStatus.UNKNOWN;
+          this.status = ApplicationUserStatus[value as keyof typeof ApplicationUserStatus] ?? ApplicationUserStatus.ACTIVE;
         } else 
 
 

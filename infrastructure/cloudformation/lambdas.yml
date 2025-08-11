@@ -114,6 +114,8 @@ Resources:
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-applications-table-arn}}'
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-ownership-transfer-requests-table-arn}}'
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-privacy-requests-table-arn}}'
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-invitations-table-arn}}'
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-notifications-table-arn}}'
                   # Include indexes for all tables
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-table-arn}}/index/*'
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-organizations-table-arn}}/index/*'
@@ -121,6 +123,8 @@ Resources:
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-applications-table-arn}}/index/*'
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-ownership-transfer-requests-table-arn}}/index/*'
                   - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-privacy-requests-table-arn}}/index/*'
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-invitations-table-arn}}/index/*'
+                  - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-notifications-table-arn}}/index/*'
         - PolicyName: DynamoDBStreamAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -372,6 +376,43 @@ Resources:
           APPLICATIONS_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-applications-table-name}}'
           USER_POOL_ID: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-cognito-user-pool-id}}'
 
+  # Invitations Lambda
+  InvitationsLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${CustomerId}-${ProjectId}-${Environment}-invitations"
+      Description: "Lambda function to handle organization invitations with security"
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      CodeUri: ../../backend/src/lambdas/invitations/
+      Layers:
+        - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-organizations-security-layer-arn}}'
+      Environment:
+        Variables:
+          INVITATIONS_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-invitations-table-name}}'
+          ORGANIZATIONS_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-organizations-table-name}}'
+          ORGANIZATION_USERS_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-organization-users-table-name}}'
+          USERS_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-table-name}}'
+          RATE_LIMIT_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-ownership-transfer-requests-table-name}}'
+          NOTIFICATIONS_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-notifications-table-name}}'
+          USER_POOL_ID: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-cognito-user-pool-id}}'
+
+  # Notifications Lambda
+  NotificationsLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${CustomerId}-${ProjectId}-${Environment}-notifications"
+      Description: "Lambda function to handle notifications CRUD operations and email delivery"
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      CodeUri: ../../backend/src/lambdas/notifications/
+      Environment:
+        Variables:
+          NOTIFICATIONS_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-notifications-table-name}}'
+          USERS_TABLE_NAME: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-users-table-name}}'
+          NOTIFICATION_EMAIL_FROM: !Ref NotificationEmail
+          USER_POOL_ID: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-cognito-user-pool-id}}'
+
   # Users Lambda
   UsersLambda:
     Type: AWS::Serverless::Function
@@ -457,6 +498,22 @@ Resources:
       Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-organizations-lambda-arn"
       Type: String
       Value: !GetAtt OrganizationsLambda.Arn
+
+  # Parameter Store for the Invitations Lambda ARN
+  InvitationsLambdaArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-invitations-lambda-arn"
+      Type: String
+      Value: !GetAtt InvitationsLambda.Arn
+
+  # Parameter Store for the Notifications Lambda ARN
+  NotificationsLambdaArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${CustomerId}-${ProjectId}-${Environment}-notifications-lambda-arn"
+      Type: String
+      Value: !GetAtt NotificationsLambda.Arn
 
   # Parameter Store for the Ownership Transfer Requests Lambda ARN
   OwnershipTransferRequestsLambdaArnParameter:

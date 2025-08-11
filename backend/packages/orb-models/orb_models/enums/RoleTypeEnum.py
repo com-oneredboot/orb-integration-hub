@@ -1,10 +1,9 @@
 """
 Generated Python enum for RoleType
-Generated at
+Generated at 
 """
 
 from enum import Enum
-
 
 class RoleType(Enum):
 
@@ -17,3 +16,4 @@ class RoleType(Enum):
     GUEST = "GUEST"
 
     CUSTOM = "CUSTOM"
+ 

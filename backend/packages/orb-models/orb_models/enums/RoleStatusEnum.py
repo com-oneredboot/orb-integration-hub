@@ -1,10 +1,9 @@
 """
 Generated Python enum for RoleStatus
-Generated at
+Generated at 
 """
 
 from enum import Enum
-
 
 class RoleStatus(Enum):
 
@@ -15,3 +14,4 @@ class RoleStatus(Enum):
     INACTIVE = "INACTIVE"
 
     DELETED = "DELETED"
+ 

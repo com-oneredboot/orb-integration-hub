@@ -253,6 +253,16 @@ Resources:
         LambdaFunctionArn: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-privacy-requests-lambda-arn}}'
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
   
+  InvitationsLambdaDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      Name: InvitationsLambdaDataSource
+      Type: AWS_LAMBDA
+      LambdaConfig:
+        LambdaFunctionArn: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-invitations-lambda-arn}}'
+      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+  
   UsersLambdaDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -4202,6 +4212,487 @@ Resources:
       ResponseMappingTemplate: |
         
         $util.toJson($ctx.result)
+        
+  
+
+  
+    
+  
+  
+  
+  InvitationsCreateResolver:
+  
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - InvitationsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: InvitationsCreate
+      DataSourceName: InvitationsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "info": {
+              "fieldName": "InvitationsCreate",
+              "parentTypeName": "Mutation",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
+          }
+        }
+      ResponseMappingTemplate: |
+        
+        $util.toJson($ctx.result)
+        
+  
+  
+  InvitationsUpdateResolver:
+  
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - InvitationsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: InvitationsUpdate
+      DataSourceName: InvitationsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "info": {
+              "fieldName": "InvitationsUpdate",
+              "parentTypeName": "Mutation",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
+          }
+        }
+      ResponseMappingTemplate: |
+        
+        $util.toJson($ctx.result)
+        
+  
+  
+  InvitationsDeleteResolver:
+  
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - InvitationsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: InvitationsDelete
+      DataSourceName: InvitationsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "info": {
+              "fieldName": "InvitationsDelete",
+              "parentTypeName": "Mutation",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
+          }
+        }
+      ResponseMappingTemplate: |
+        
+        $util.toJson($ctx.result)
+        
+  
+  
+  InvitationsDisableResolver:
+  
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - InvitationsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Mutation
+      FieldName: InvitationsDisable
+      DataSourceName: InvitationsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "info": {
+              "fieldName": "InvitationsDisable",
+              "parentTypeName": "Mutation",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
+          }
+        }
+      ResponseMappingTemplate: |
+        
+        $util.toJson($ctx.result)
+        
+  
+  
+  InvitationsQueryByInvitationIdResolver:
+  
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - InvitationsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: InvitationsQueryByInvitationId
+      DataSourceName: InvitationsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "info": {
+              "fieldName": "InvitationsQueryByInvitationId",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
+          }
+        }
+      ResponseMappingTemplate: |
+        
+        $util.toJson($ctx.result)
+        
+  
+  
+  InvitationsQueryByOrganizationIdResolver:
+  
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - InvitationsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: InvitationsQueryByOrganizationId
+      DataSourceName: InvitationsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "info": {
+              "fieldName": "InvitationsQueryByOrganizationId",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
+          }
+        }
+      ResponseMappingTemplate: |
+        
+        $util.toJson($ctx.result)
+        
+  
+  
+  InvitationsQueryByOrganizationIdAndCreatedAtResolver:
+  
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - InvitationsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: InvitationsQueryByOrganizationIdAndCreatedAt
+      DataSourceName: InvitationsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "info": {
+              "fieldName": "InvitationsQueryByOrganizationIdAndCreatedAt",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
+          }
+        }
+      ResponseMappingTemplate: |
+        
+        $util.toJson($ctx.result)
+        
+  
+  
+  InvitationsQueryByInviteeEmailResolver:
+  
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - InvitationsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: InvitationsQueryByInviteeEmail
+      DataSourceName: InvitationsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "info": {
+              "fieldName": "InvitationsQueryByInviteeEmail",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
+          }
+        }
+      ResponseMappingTemplate: |
+        
+        $util.toJson($ctx.result)
+        
+  
+  
+  InvitationsQueryByInviteeEmailAndCreatedAtResolver:
+  
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - InvitationsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: InvitationsQueryByInviteeEmailAndCreatedAt
+      DataSourceName: InvitationsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "info": {
+              "fieldName": "InvitationsQueryByInviteeEmailAndCreatedAt",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
+          }
+        }
+      ResponseMappingTemplate: |
+        
+        $util.toJson($ctx.result)
+        
+  
+  
+  InvitationsQueryByInviteeUserIdResolver:
+  
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - InvitationsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: InvitationsQueryByInviteeUserId
+      DataSourceName: InvitationsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "info": {
+              "fieldName": "InvitationsQueryByInviteeUserId",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
+          }
+        }
+      ResponseMappingTemplate: |
+        
+        $util.toJson($ctx.result)
+        
+  
+  
+  InvitationsQueryByInviteeUserIdAndCreatedAtResolver:
+  
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - InvitationsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: InvitationsQueryByInviteeUserIdAndCreatedAt
+      DataSourceName: InvitationsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "info": {
+              "fieldName": "InvitationsQueryByInviteeUserIdAndCreatedAt",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
+          }
+        }
+      ResponseMappingTemplate: |
+        
+        $util.toJson($ctx.result)
+        
+  
+  
+  GetInvitationsByEmailResolver:
+  
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - InvitationsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: GetInvitationsByEmail
+      DataSourceName: InvitationsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "info": {
+              "fieldName": "GetInvitationsByEmail",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
+          }
+        }
+      ResponseMappingTemplate: |
+        
+        #if($ctx.result.StatusCode == 200)
+          $util.toJson($ctx.result.Data)
+        #else
+          $util.error($ctx.result.Message)
+        #end
+        
+  
+  
+  GetInvitationsByOrganizationIdResolver:
+  
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - InvitationsLambdaDataSource
+      - IntegrationHubSchema
+    Properties:
+      ApiId: !GetAtt IntegrationHubApi.ApiId
+      TypeName: Query
+      FieldName: GetInvitationsByOrganizationId
+      DataSourceName: InvitationsLambdaDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "info": {
+              "fieldName": "GetInvitationsByOrganizationId",
+              "parentTypeName": "Query",
+              "selectionSetList": $util.toJson($ctx.info.selectionSetList),
+              "selectionSetGraphQL": $util.toJson($ctx.info.selectionSetGraphQL)
+            },
+            "arguments": $util.toJson($ctx.args),
+            "identity": $util.toJson($ctx.identity),
+            "source": $util.toJson($ctx.source),
+            "request": $util.toJson($ctx.request),
+            "prev": $util.toJson($ctx.prev),
+            "stash": $util.toJson($ctx.stash)
+          }
+        }
+      ResponseMappingTemplate: |
+        
+        #if($ctx.result.StatusCode == 200)
+          $util.toJson($ctx.result.Data)
+        #else
+          $util.error($ctx.result.Message)
+        #end
         
   
 

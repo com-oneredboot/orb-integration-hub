@@ -62,7 +62,15 @@ import {
   // Security & Privacy
   faBolt,
   faHeartbeat,
-  faCreditCard
+  faCreditCard,
+  
+  // Member Management
+  faUserPlus,
+  faTrash,
+  faTimes,
+  faRedo,
+  faPaperPlane,
+  faEnvelope
 } from '@fortawesome/free-solid-svg-icons';
 
 /**
@@ -127,7 +135,15 @@ export function configureFontAwesome(library: FaIconLibrary): void {
     // Security & Privacy
     faBolt,
     faHeartbeat,
-    faCreditCard
+    faCreditCard,
+    
+    // Member Management
+    faUserPlus,
+    faTrash,
+    faTimes,
+    faRedo,
+    faPaperPlane,
+    faEnvelope
   );
 }
 
@@ -191,7 +207,15 @@ export const registeredIcons = [
   // Security & Privacy
   'bolt',
   'heartbeat',
-  'credit-card'
+  'credit-card',
+  
+  // Member Management
+  'user-plus',
+  'trash',
+  'times',
+  'redo',
+  'paper-plane',
+  'envelope'
 ] as const;
 
 export type RegisteredIconName = typeof registeredIcons[number];

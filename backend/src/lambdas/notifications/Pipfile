@@ -1,0 +1,14 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+orb-common = ">=0.1.0"
+orb-models = ">=0.1.0"
+boto3 = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.12"

@@ -190,9 +190,71 @@ query OwnershipTransferRequestsQueryByCurrentOwnerId($input: OwnershipTransferRe
 
 
 
+export const OwnershipTransferRequestsQueryByCurrentOwnerIdAndCreatedAt = /* GraphQL */ `
+query OwnershipTransferRequestsQueryByCurrentOwnerIdAndCreatedAt($input: OwnershipTransferRequestsQueryByCurrentOwnerIdAndCreatedAtInput!) {
+  OwnershipTransferRequestsQueryByCurrentOwnerIdAndCreatedAt(input: $input) {
+    StatusCode
+    Message
+    Data {
+      transferId
+      currentOwnerId
+      newOwnerId
+      organizationId
+      status
+      requiredBillingPlan
+      monthlyCost
+      paymentValidationToken
+      createdAt
+      expiresAt
+      updatedAt
+      completedAt
+      failureReason
+      billingTransitionDetails
+      fraudAssessment
+      notificationsSent
+    }
+  }
+}
+`;
+
+
+
+
+
 export const OwnershipTransferRequestsQueryByNewOwnerId = /* GraphQL */ `
 query OwnershipTransferRequestsQueryByNewOwnerId($input: OwnershipTransferRequestsQueryByNewOwnerIdInput!) {
   OwnershipTransferRequestsQueryByNewOwnerId(input: $input) {
+    StatusCode
+    Message
+    Data {
+      transferId
+      currentOwnerId
+      newOwnerId
+      organizationId
+      status
+      requiredBillingPlan
+      monthlyCost
+      paymentValidationToken
+      createdAt
+      expiresAt
+      updatedAt
+      completedAt
+      failureReason
+      billingTransitionDetails
+      fraudAssessment
+      notificationsSent
+    }
+  }
+}
+`;
+
+
+
+
+
+export const OwnershipTransferRequestsQueryByNewOwnerIdAndCreatedAt = /* GraphQL */ `
+query OwnershipTransferRequestsQueryByNewOwnerIdAndCreatedAt($input: OwnershipTransferRequestsQueryByNewOwnerIdAndCreatedAtInput!) {
+  OwnershipTransferRequestsQueryByNewOwnerIdAndCreatedAt(input: $input) {
     StatusCode
     Message
     Data {
@@ -249,6 +311,66 @@ query OwnershipTransferRequestsQueryByStatus($input: OwnershipTransferRequestsQu
 `;
 
 
+
+
+
+export const OwnershipTransferRequestsQueryByStatusAndCreatedAt = /* GraphQL */ `
+query OwnershipTransferRequestsQueryByStatusAndCreatedAt($input: OwnershipTransferRequestsQueryByStatusAndCreatedAtInput!) {
+  OwnershipTransferRequestsQueryByStatusAndCreatedAt(input: $input) {
+    StatusCode
+    Message
+    Data {
+      transferId
+      currentOwnerId
+      newOwnerId
+      organizationId
+      status
+      requiredBillingPlan
+      monthlyCost
+      paymentValidationToken
+      createdAt
+      expiresAt
+      updatedAt
+      completedAt
+      failureReason
+      billingTransitionDetails
+      fraudAssessment
+      notificationsSent
+    }
+  }
+}
+`;
+
+
+
+
+
+export const OwnershipTransferRequestsQueryByStatusAndExpiresAt = /* GraphQL */ `
+query OwnershipTransferRequestsQueryByStatusAndExpiresAt($input: OwnershipTransferRequestsQueryByStatusAndExpiresAtInput!) {
+  OwnershipTransferRequestsQueryByStatusAndExpiresAt(input: $input) {
+    StatusCode
+    Message
+    Data {
+      transferId
+      currentOwnerId
+      newOwnerId
+      organizationId
+      status
+      requiredBillingPlan
+      monthlyCost
+      paymentValidationToken
+      createdAt
+      expiresAt
+      updatedAt
+      completedAt
+      failureReason
+      billingTransitionDetails
+      fraudAssessment
+      notificationsSent
+    }
+  }
+}
+`;
 
 
 

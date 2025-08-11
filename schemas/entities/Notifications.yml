@@ -4,7 +4,7 @@
 # description: Notifications table for organization and application events
 # Supports application transfers, organization invitations, and other business events
 
-type: dynamodb
+type: lambda-dynamodb
 version: '1.0'
 name: Notifications
 model:
@@ -17,6 +17,9 @@ model:
           - '*'
         CUSTOMER:
           - '*'
+  ttl:
+    attribute: ttl
+    description: Automatic cleanup of read notifications after 30 days
   keys:
     primary:
       partition: notificationId
@@ -79,7 +82,11 @@ model:
     metadata:
       type: object
       required: false
-      description: Additional context data (applicationId, organizationId, etc.)
+      description: Additional context data (applicationId, organizationId, invitationId, etc.)
+    readAt:
+      type: timestamp
+      required: false
+      description: When the notification was read by the recipient
     expiresAt:
       type: timestamp
       required: false
@@ -92,3 +99,7 @@ model:
       type: timestamp
       required: true
       description: When the notification was last updated
+    ttl:
+      type: number
+      required: false
+      description: TTL timestamp for automatic deletion (set when notification is read)

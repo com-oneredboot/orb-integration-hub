@@ -1,10 +1,9 @@
 """
 Generated Python enum for NotificationStatus
-Generated at
+Generated at 
 """
 
 from enum import Enum
-
 
 class NotificationStatus(Enum):
 
@@ -15,3 +14,4 @@ class NotificationStatus(Enum):
     DISMISSED = "DISMISSED"
 
     EXPIRED = "EXPIRED"
+ 
