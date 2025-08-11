@@ -10,7 +10,6 @@ __author__ = "ORB Integration Hub Team"
 __email__ = "team@orb-integration-hub.com"
 
 # Public API
-from orb_schema_generator.api.generator import OrbSchemaGenerator
 from orb_schema_generator.core.exceptions import (
     SchemaError,
     ValidationError,
@@ -19,7 +18,6 @@ from orb_schema_generator.core.exceptions import (
 )
 
 __all__ = [
-    "OrbSchemaGenerator",
     "SchemaError",
     "ValidationError", 
     "GenerationError",
