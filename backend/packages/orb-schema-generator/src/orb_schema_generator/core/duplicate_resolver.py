@@ -408,6 +408,8 @@ class TypeScriptDuplicateResolver:
         """Initialize the TypeScript duplicate resolver."""
         self.seen_types: Set[str] = set()
         self.type_registry: Dict[str, Any] = {}
+        self._duplicate_operations: List[Dict[str, Any]] = []
+        self._duplicate_types: List[Dict[str, Any]] = []
         
     def register_type(self, type_name: str, definition: Any) -> bool:
         """Register a type and check if it's a duplicate.
@@ -421,6 +423,12 @@ class TypeScriptDuplicateResolver:
         """
         if type_name in self.seen_types:
             logger.warning(f"Duplicate TypeScript type detected: {type_name}")
+            self._duplicate_types.append({
+                'type': 'type',
+                'name': type_name,
+                'count': 2,  # At least 2 occurrences
+                'resolution': 'skipped'
+            })
             return False
             
         self.seen_types.add(type_name)
@@ -448,6 +456,22 @@ class TypeScriptDuplicateResolver:
                 unique_operations.append(op)
             else:
                 logger.debug(f"Filtering duplicate operation: {key}")
+                # Track duplicate operation
+                existing_count = sum(1 for d in self._duplicate_operations 
+                                   if d['name'] == op.name)
+                if existing_count == 0:
+                    self._duplicate_operations.append({
+                        'type': 'operation',
+                        'name': op.name,
+                        'count': 2,  # Original + this duplicate
+                        'resolution': 'kept_first'
+                    })
+                else:
+                    # Update count for existing duplicate entry
+                    for d in self._duplicate_operations:
+                        if d['name'] == op.name:
+                            d['count'] += 1
+                            break
                 
         return unique_operations
         
@@ -471,3 +495,11 @@ class TypeScriptDuplicateResolver:
         self.seen_types.clear()
         
         return cleaned_data
+    
+    def get_resolution_summary(self) -> List[Dict[str, Any]]:
+        """Get a summary of all duplicate resolutions performed.
+        
+        Returns:
+            List of resolution records
+        """
+        return self._duplicate_operations + self._duplicate_types

@@ -301,6 +301,7 @@ class Schema:
 class SchemaCollection:
     """Collection of schemas with lookup and validation capabilities."""
     schemas: List[Schema] = field(default_factory=list)
+    operations: List[Operation] = field(default_factory=list)
     _name_index: Dict[str, Schema] = field(default_factory=dict, init=False)
     _type_index: Dict[SchemaType, List[Schema]] = field(default_factory=dict, init=False)
     
@@ -321,9 +322,13 @@ class SchemaCollection:
         """Get all schemas of a specific type."""
         return self._type_index.get(schema_type, [])
         
+    def add_operation(self, operation: Operation) -> None:
+        """Add an operation to the collection."""
+        self.operations.append(operation)
+        
     def get_all_operations(self) -> List[Operation]:
-        """Get all operations from all schemas."""
-        operations = []
+        """Get all operations from all schemas and collection."""
+        operations = self.operations.copy()
         for schema in self.schemas:
             operations.extend(schema.operations)
         return operations
