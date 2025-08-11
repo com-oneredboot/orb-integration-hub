@@ -132,7 +132,7 @@ class TypeScriptGenerator:
         
         # Prepare model imports
         model_imports = []
-        for attr in schema.attributes:
+        for attr in schema.attributes:  # Using compatibility property
             if attr.type in all_model_names and attr.type != schema.name:
                 model_imports.append(attr.type)
         

@@ -295,6 +295,22 @@ class Schema:
                 errors.append("Registry schema requires registry_items")
                 
         return errors
+    
+    # Compatibility properties for templates
+    @property
+    def type(self) -> str:
+        """Get string representation of schema type for template compatibility."""
+        return self.schema_type.value
+    
+    @property
+    def attributes(self) -> List[SchemaField]:
+        """Alias for fields to maintain template compatibility."""
+        return self.fields
+    
+    @property
+    def secondary_indexes(self) -> List[SchemaIndex]:
+        """Get only secondary indexes (GSI/LSI) excluding primary index."""
+        return [idx for idx in self.indexes if idx.type in (IndexType.GSI, IndexType.LSI)]
 
 
 @dataclass  
