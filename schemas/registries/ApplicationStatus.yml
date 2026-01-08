@@ -1,0 +1,24 @@
+type: registry
+version: '1.0'
+name: ApplicationStatus
+targets:
+  - api
+  - web
+description: "Application status"
+
+items:
+  UNKNOWN:
+    value: "UNKNOWN"
+    description: "Unknown status"
+  ACTIVE:
+    value: "ACTIVE"
+    description: "Active application"
+  INACTIVE:
+    value: "INACTIVE"
+    description: "Inactive application"
+  PENDING:
+    value: "PENDING"
+    description: "Pending activation"
+  DELETED:
+    value: "DELETED"
+    description: "Deleted application"

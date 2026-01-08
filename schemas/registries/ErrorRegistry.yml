@@ -5,6 +5,8 @@
 
 type: registry
 name: ErrorRegistry
+targets:
+  - api
 model:
   attributes:
     code:

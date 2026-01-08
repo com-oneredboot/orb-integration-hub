@@ -1,0 +1,48 @@
+type: registry
+version: '1.0'
+name: SchemaType
+targets:
+  - api
+  - web
+description: "Types of schemas supported by the schema generator"
+
+items:
+  STANDARD:
+    value: "STANDARD"
+    description: "Standard schema type"
+  DYNAMODB:
+    value: "DYNAMODB"
+    description: "DynamoDB table schema"
+  POSTGRES:
+    value: "POSTGRES"
+    description: "PostgreSQL database schema"
+  MYSQL:
+    value: "MYSQL"
+    description: "MySQL database schema"
+  MSSQL:
+    value: "MSSQL"
+    description: "Microsoft SQL Server schema"
+  SQLITE:
+    value: "SQLITE"
+    description: "SQLite database schema"
+  LAMBDA:
+    value: "LAMBDA"
+    description: "AWS Lambda function schema"
+  LAMBDA_SECURED:
+    value: "LAMBDA_SECURED"
+    description: "Secured AWS Lambda function schema"
+  GRAPHQL:
+    value: "GRAPHQL"
+    description: "GraphQL schema"
+  REGISTRY:
+    value: "REGISTRY"
+    description: "Registry/enum schema"
+  GRAPH:
+    value: "GRAPH"
+    description: "Graph database schema"
+  REST:
+    value: "REST"
+    description: "REST API schema"
+  ELASTICSEARCH:
+    value: "ELASTICSEARCH"
+    description: "Elasticsearch schema"

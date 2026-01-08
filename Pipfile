@@ -1,0 +1,25 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[[source]]
+url = "https://aws:${CODEARTIFACT_AUTH_TOKEN}@orb-infrastructure-shared-codeartifact-domain-432045270100.d.codeartifact.us-east-1.amazonaws.com/pypi/orb-infrastructure-shared-codeartifact-repo/simple/"
+verify_ssl = true
+name = "codeartifact"
+
+[packages]
+orb-schema-generator = "==0.13.2"
+
+[dev-packages]
+pytest = ">=7.4.0"
+hypothesis = ">=6.82.0"
+pytest-cov = ">=4.1.0"
+black = ">=23.7.0"
+ruff = ">=0.0.280"
+pre-commit = ">=3.0.0"
+mypy = "*"
+types-pyyaml = "*"
+
+[requires]
+python_version = "3.12"

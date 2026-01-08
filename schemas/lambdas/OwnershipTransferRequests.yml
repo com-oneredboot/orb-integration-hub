@@ -1,6 +1,8 @@
 type: lambda-secured
 version: '1.0'
 name: OwnershipTransferRequests
+targets:
+  - api
 description: Tracks pending organization ownership transfers requiring payment validation
 
 model:

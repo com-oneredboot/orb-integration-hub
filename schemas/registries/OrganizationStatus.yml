@@ -1,0 +1,27 @@
+type: registry
+version: '1.0'
+name: OrganizationStatus
+targets:
+  - api
+  - web
+description: "Organization status"
+
+items:
+  ACTIVE:
+    value: "ACTIVE"
+    description: "Active organization"
+  INACTIVE:
+    value: "INACTIVE"
+    description: "Inactive organization"
+  PENDING:
+    value: "PENDING"
+    description: "Pending activation"
+  SUSPENDED:
+    value: "SUSPENDED"
+    description: "Suspended organization"
+  DELETED:
+    value: "DELETED"
+    description: "Deleted organization"
+  UNKNOWN:
+    value: "UNKNOWN"
+    description: "Unknown status"

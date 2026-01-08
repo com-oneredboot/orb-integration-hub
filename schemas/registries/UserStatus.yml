@@ -1,0 +1,27 @@
+type: registry
+version: '1.0'
+name: UserStatus
+targets:
+  - api
+  - web
+description: "User account status"
+
+items:
+  UNKNOWN:
+    value: "UNKNOWN"
+    description: "Unknown status"
+  ACTIVE:
+    value: "ACTIVE"
+    description: "Active user"
+  INACTIVE:
+    value: "INACTIVE"
+    description: "Inactive user"
+  PENDING:
+    value: "PENDING"
+    description: "Pending activation"
+  REJECTED:
+    value: "REJECTED"
+    description: "Rejected user"
+  DELETED:
+    value: "DELETED"
+    description: "Deleted user"

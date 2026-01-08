@@ -1,0 +1,27 @@
+type: registry
+version: '1.0'
+name: LegalBasis
+targets:
+  - api
+  - web
+description: "Legal basis for privacy requests under various regulations"
+
+items:
+  GDPR_ARTICLE_15_RIGHT_OF_ACCESS:
+    value: "GDPR_ARTICLE_15_RIGHT_OF_ACCESS"
+    description: "GDPR Article 15 - Right of access by the data subject"
+  GDPR_ARTICLE_17_RIGHT_TO_ERASURE:
+    value: "GDPR_ARTICLE_17_RIGHT_TO_ERASURE"
+    description: "GDPR Article 17 - Right to erasure (right to be forgotten)"
+  GDPR_ARTICLE_20_DATA_PORTABILITY:
+    value: "GDPR_ARTICLE_20_DATA_PORTABILITY"
+    description: "GDPR Article 20 - Right to data portability"
+  CCPA_RIGHT_TO_KNOW:
+    value: "CCPA_RIGHT_TO_KNOW"
+    description: "CCPA - Right to know what personal information is collected"
+  CCPA_RIGHT_TO_DELETE:
+    value: "CCPA_RIGHT_TO_DELETE"
+    description: "CCPA - Right to delete personal information"
+  CCPA_RIGHT_TO_OPT_OUT:
+    value: "CCPA_RIGHT_TO_OPT_OUT"
+    description: "CCPA - Right to opt out of sale of personal information"

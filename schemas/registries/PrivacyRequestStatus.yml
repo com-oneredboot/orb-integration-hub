@@ -1,0 +1,27 @@
+type: registry
+version: '1.0'
+name: PrivacyRequestStatus
+targets:
+  - api
+  - web
+description: "Status of a privacy request"
+
+items:
+  RECEIVED:
+    value: "RECEIVED"
+    description: "Request has been received"
+  PROCESSING:
+    value: "PROCESSING"
+    description: "Request is being processed"
+  COMPLETED:
+    value: "COMPLETED"
+    description: "Request has been completed"
+  REJECTED:
+    value: "REJECTED"
+    description: "Request was rejected"
+  FAILED:
+    value: "FAILED"
+    description: "Request processing failed"
+  PARTIALLY_COMPLETED:
+    value: "PARTIALLY_COMPLETED"
+    description: "Request was partially completed"

@@ -131,3 +131,4 @@ schema_generator.log
 # Angular environment files (generated)
 apps/web/src/environments/environment.ts
 apps/web/src/environments/environment.prod.ts
+generated/

@@ -8,6 +8,8 @@
 type: dynamodb
 version: '1.0'
 name: Applications
+targets:
+  - api
 model:
   authConfig:
     cognitoAuthentication:

@@ -1,0 +1,21 @@
+type: registry
+version: '1.0'
+name: RoleStatus
+targets:
+  - api
+  - web
+description: "Role status"
+
+items:
+  UNKNOWN:
+    value: "UNKNOWN"
+    description: "Unknown status"
+  ACTIVE:
+    value: "ACTIVE"
+    description: "Active role"
+  INACTIVE:
+    value: "INACTIVE"
+    description: "Inactive role"
+  DELETED:
+    value: "DELETED"
+    description: "Deleted role"

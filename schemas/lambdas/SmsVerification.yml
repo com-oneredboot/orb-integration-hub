@@ -5,6 +5,8 @@
 
 type: lambda
 name: SmsVerification
+targets:
+  - api
 model:
   authConfig:
     cognitoAuthentication:

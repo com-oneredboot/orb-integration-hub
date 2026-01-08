@@ -6,6 +6,8 @@
 type: dynamodb
 version: '1.0'
 name: SmsRateLimit
+targets:
+  - api
 model:
   ttl:
     enabled: true

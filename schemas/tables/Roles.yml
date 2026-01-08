@@ -8,6 +8,8 @@
 type: dynamodb
 version: '1.0'
 name: Roles
+targets:
+  - api
 model:
   authConfig:
     cognitoAuthentication:

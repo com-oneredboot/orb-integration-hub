@@ -9,6 +9,8 @@
 type: dynamodb
 version: '1.0'
 name: Users
+targets:
+  - api
 model:
   stream:
     enabled: true

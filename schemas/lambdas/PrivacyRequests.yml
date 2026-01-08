@@ -6,6 +6,8 @@
 type: lambda-secured
 version: '1.0'
 name: PrivacyRequests
+targets:
+  - api
 description: "GDPR/CCPA privacy rights requests with automated processing and compliance tracking"
 
 model:

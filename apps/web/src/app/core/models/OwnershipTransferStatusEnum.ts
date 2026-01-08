@@ -1,5 +1,0 @@
-// Generated TypeScript enum for OwnershipTransferStatus
-// Generated at 
-
-export enum OwnershipTransferStatus {
-  PAYMENT_VALIDATION_REQUIRED = 'PAYMENT_VALIDATION_REQUIRED',  PAYMENT_IN_PROGRESS = 'PAYMENT_IN_PROGRESS',  PAYMENT_VALIDATED = 'PAYMENT_VALIDATED',  COMPLETED = 'COMPLETED',  EXPIRED = 'EXPIRED',  CANCELLED = 'CANCELLED'} 

@@ -1,0 +1,21 @@
+type: registry
+version: '1.0'
+name: NotificationStatus
+targets:
+  - api
+  - web
+description: "Status of a notification"
+
+items:
+  PENDING:
+    value: "PENDING"
+    description: "Notification is pending delivery or action"
+  READ:
+    value: "READ"
+    description: "Notification has been read"
+  DISMISSED:
+    value: "DISMISSED"
+    description: "Notification was dismissed by user"
+  EXPIRED:
+    value: "EXPIRED"
+    description: "Notification has expired"

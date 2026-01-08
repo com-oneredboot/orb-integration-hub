@@ -5,6 +5,9 @@
 
 type: standard
 name: Auth
+targets:
+  - api
+  - web
 model:
   attributes:
     statusCode:

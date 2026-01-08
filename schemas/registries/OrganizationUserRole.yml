@@ -1,0 +1,15 @@
+type: registry
+version: '1.0'
+name: OrganizationUserRole
+targets:
+  - api
+  - web
+description: "Roles a user can have within an organization"
+
+items:
+  ADMINISTRATOR:
+    value: "ADMINISTRATOR"
+    description: "Organization administrator with full access"
+  VIEWER:
+    value: "VIEWER"
+    description: "Read-only access to organization resources"

@@ -1,0 +1,27 @@
+type: registry
+version: '1.0'
+name: OwnershipTransferStatus
+targets:
+  - api
+  - web
+description: "Status of an ownership transfer request"
+
+items:
+  PAYMENT_VALIDATION_REQUIRED:
+    value: "PAYMENT_VALIDATION_REQUIRED"
+    description: "Payment validation is required before transfer"
+  PAYMENT_IN_PROGRESS:
+    value: "PAYMENT_IN_PROGRESS"
+    description: "Payment is being processed"
+  PAYMENT_VALIDATED:
+    value: "PAYMENT_VALIDATED"
+    description: "Payment has been validated"
+  COMPLETED:
+    value: "COMPLETED"
+    description: "Transfer has been completed"
+  EXPIRED:
+    value: "EXPIRED"
+    description: "Transfer request has expired"
+  CANCELLED:
+    value: "CANCELLED"
+    description: "Transfer was cancelled"

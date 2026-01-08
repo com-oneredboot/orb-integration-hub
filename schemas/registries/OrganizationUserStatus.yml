@@ -1,0 +1,27 @@
+type: registry
+version: '1.0'
+name: OrganizationUserStatus
+targets:
+  - api
+  - web
+description: "Status of a user's membership in an organization"
+
+items:
+  ACTIVE:
+    value: "ACTIVE"
+    description: "User is an active member"
+  INACTIVE:
+    value: "INACTIVE"
+    description: "User membership is inactive"
+  INVITED:
+    value: "INVITED"
+    description: "User has been invited but not yet responded"
+  PENDING:
+    value: "PENDING"
+    description: "User membership is pending approval"
+  REJECTED:
+    value: "REJECTED"
+    description: "User membership was rejected"
+  REMOVED:
+    value: "REMOVED"
+    description: "User was removed from the organization"

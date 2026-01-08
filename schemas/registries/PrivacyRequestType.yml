@@ -1,0 +1,27 @@
+type: registry
+version: '1.0'
+name: PrivacyRequestType
+targets:
+  - api
+  - web
+description: "Types of privacy requests users can submit"
+
+items:
+  DATA_ACCESS:
+    value: "DATA_ACCESS"
+    description: "Request to access personal data"
+  DATA_DELETION:
+    value: "DATA_DELETION"
+    description: "Request to delete personal data"
+  DATA_PORTABILITY:
+    value: "DATA_PORTABILITY"
+    description: "Request to export personal data"
+  DATA_RECTIFICATION:
+    value: "DATA_RECTIFICATION"
+    description: "Request to correct personal data"
+  PROCESSING_RESTRICTION:
+    value: "PROCESSING_RESTRICTION"
+    description: "Request to restrict data processing"
+  MARKETING_OPT_OUT:
+    value: "MARKETING_OPT_OUT"
+    description: "Request to opt out of marketing"

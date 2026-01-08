@@ -1,0 +1,27 @@
+type: registry
+version: '1.0'
+name: ApplicationUserStatus
+targets:
+  - api
+  - web
+description: "Application user membership status"
+
+items:
+  UNKNOWN:
+    value: "UNKNOWN"
+    description: "Unknown status"
+  ACTIVE:
+    value: "ACTIVE"
+    description: "Active membership"
+  INACTIVE:
+    value: "INACTIVE"
+    description: "Inactive membership"
+  PENDING:
+    value: "PENDING"
+    description: "Pending approval"
+  REJECTED:
+    value: "REJECTED"
+    description: "Rejected membership"
+  DELETED:
+    value: "DELETED"
+    description: "Deleted membership"

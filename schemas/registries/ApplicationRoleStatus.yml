@@ -1,0 +1,27 @@
+type: registry
+version: '1.0'
+name: ApplicationRoleStatus
+targets:
+  - api
+  - web
+description: "Application role assignment status"
+
+items:
+  UNKNOWN:
+    value: "UNKNOWN"
+    description: "Unknown status"
+  ACTIVE:
+    value: "ACTIVE"
+    description: "Active role assignment"
+  INACTIVE:
+    value: "INACTIVE"
+    description: "Inactive role assignment"
+  PENDING:
+    value: "PENDING"
+    description: "Pending approval"
+  REJECTED:
+    value: "REJECTED"
+    description: "Rejected role assignment"
+  DELETED:
+    value: "DELETED"
+    description: "Deleted role assignment"

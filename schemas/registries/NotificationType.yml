@@ -1,0 +1,24 @@
+type: registry
+version: '1.0'
+name: NotificationType
+targets:
+  - api
+  - web
+description: "Types of notifications that can be sent to users"
+
+items:
+  APPLICATION_TRANSFER_REQUEST:
+    value: "APPLICATION_TRANSFER_REQUEST"
+    description: "Request to transfer application ownership"
+  APPLICATION_TRANSFER_COMPLETED:
+    value: "APPLICATION_TRANSFER_COMPLETED"
+    description: "Application ownership transfer completed"
+  ORGANIZATION_INVITATION_RECEIVED:
+    value: "ORGANIZATION_INVITATION_RECEIVED"
+    description: "User received an organization invitation"
+  ORGANIZATION_INVITATION_ACCEPTED:
+    value: "ORGANIZATION_INVITATION_ACCEPTED"
+    description: "Organization invitation was accepted"
+  ORGANIZATION_INVITATION_REJECTED:
+    value: "ORGANIZATION_INVITATION_REJECTED"
+    description: "Organization invitation was rejected"
