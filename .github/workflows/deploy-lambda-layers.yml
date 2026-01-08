@@ -31,6 +31,7 @@ on:
 jobs:
   deploy-lambda-layers:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     environment: ${{ inputs.environment }}
 
     steps:
@@ -63,7 +64,7 @@ jobs:
         chmod +x build_organizations_security_layer.sh
         bash build_organizations_security_layer.sh
 
-      working-directory: backend/src/layers/organizations_security
+      working-directory: apps/api/layers/organizations_security
 
     # Build Stripe Layer
     - name: Build Stripe Layer
@@ -75,15 +76,15 @@ jobs:
         chmod +x build_stripe_layer.sh
         bash build_stripe_layer.sh
 
-      working-directory: backend/src/layers/stripe
+      working-directory: apps/api/layers/stripe
 
     # Check for changes before deploying
     - name: Check Layer Changes
       id: check-changes
       run: |
         # Generate content hashes for both layers
-        ORG_HASH=$(find backend/src/layers/organizations_security -type f -name "*.py" -exec sha256sum {} + | sha256sum | cut -d' ' -f1)
-        STRIPE_HASH=$(find backend/src/layers/stripe -type f \( -name "*.py" -o -name "Pipfile*" \) -exec sha256sum {} + | sha256sum | cut -d' ' -f1)
+        ORG_HASH=$(find apps/api/layers/organizations_security -type f -name "*.py" -exec sha256sum {} + | sha256sum | cut -d' ' -f1)
+        STRIPE_HASH=$(find apps/api/layers/stripe -type f \( -name "*.py" -o -name "Pipfile*" \) -exec sha256sum {} + | sha256sum | cut -d' ' -f1)
         
         echo "organization_hash=${ORG_HASH}" >> $GITHUB_OUTPUT
         echo "stripe_hash=${STRIPE_HASH}" >> $GITHUB_OUTPUT

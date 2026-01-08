@@ -287,7 +287,7 @@ Resources:
       FunctionName: !Sub '${CustomerId}-${ProjectId}-${Environment}-sms-verification'
       Handler: index.lambda_handler
       Role: !GetAtt LambdaExecutionRole.Arn
-      CodeUri: ../../backend/src/lambdas/sms_verification/
+      CodeUri: ../../apps/api/lambdas/sms_verification/
       Environment:
         Variables:
           SMS_ORIGINATION_NUMBER: !Ref SMSOriginationNumber
@@ -302,7 +302,7 @@ Resources:
       Description: "Lambda function to manage Cognito User Pool groups"
       Handler: index.lambda_handler
       Role: !GetAtt LambdaExecutionRole.Arn
-      CodeUri: ../../backend/src/lambdas/cognito_group_manager/
+      CodeUri: ../../apps/api/lambdas/cognito_group_manager/
 
   # User Status Calculator Lambda (DynamoDB Stream Trigger)
   UserStatusCalculatorLambda:
@@ -312,7 +312,7 @@ Resources:
       Description: "Lambda function triggered by DynamoDB streams to automatically calculate user status"
       Handler: index.lambda_handler
       Role: !GetAtt LambdaExecutionRole.Arn
-      CodeUri: ../../backend/src/lambdas/user_status_calculator/
+      CodeUri: ../../apps/api/lambdas/user_status_calculator/
       Environment:
         Variables:
           USER_POOL_ID: !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-cognito-user-pool-id}}'
@@ -334,7 +334,7 @@ Resources:
       Description: "Lambda function to handle organizations CRUD operations"
       Handler: index.lambda_handler
       Role: !GetAtt LambdaExecutionRole.Arn
-      CodeUri: ../../backend/src/lambdas/organizations/
+      CodeUri: ../../apps/api/lambdas/organizations/
       Layers:
         - !Sub '{{resolve:ssm:${CustomerId}-${ProjectId}-${Environment}-organizations-security-layer-arn}}'
       Environment:

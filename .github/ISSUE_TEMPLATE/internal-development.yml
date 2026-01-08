@@ -1,0 +1,242 @@
+name: Internal Development Task
+description: Create an internal development task for orb-integration-hub team
+title: "[DEV] "
+labels: ["type/task", "team/internal", "status/needs-planning"]
+assignees: ["orb-integration-hub-team"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Internal Development Task Template**
+        
+        This template is for orb-integration-hub team members to create internal development tasks, 
+        infrastructure improvements, and technical initiatives.
+        
+        **Note**: For external requests, please use the Bug Report or Enhancement Request templates.
+
+  - type: dropdown
+    id: task-type
+    attributes:
+      label: Task Type
+      description: What type of development task is this?
+      options:
+        - New Infrastructure Component
+        - Infrastructure Improvement
+        - Technical Debt Resolution
+        - Security Enhancement
+        - Performance Optimization
+        - Documentation Update
+        - Testing Infrastructure
+        - Maintenance Task
+        - Other (specify below)
+    validations:
+      required: true
+
+  - type: input
+    id: assignee
+    attributes:
+      label: Primary Assignee
+      description: Who is the primary person responsible for this task?
+      placeholder: "@username or team-member-name"
+    validations:
+      required: true
+
+  - type: textarea
+    id: task-summary
+    attributes:
+      label: Task Summary
+      description: Brief summary of the development task
+      placeholder: "Provide a concise summary of what needs to be developed or improved..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical-description
+    attributes:
+      label: Technical Description
+      description: Detailed technical description of the work to be done
+      placeholder: |
+        - What components need to be created/modified?
+        - What technologies or services are involved?
+        - What are the technical constraints or requirements?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: requires-spec-driven
+    attributes:
+      label: Requires Spec-Driven Development?
+      description: Does this task require following the full spec-driven development process?
+      options:
+        - "Yes - Complex feature requiring requirements, design, and tasks"
+        - "No - Simple task that can be implemented directly"
+        - "Partial - Needs design document but not full spec"
+    validations:
+      required: true
+
+  - type: textarea
+    id: architecture-requirements
+    attributes:
+      label: Architecture Requirements
+      description: Architecture documentation and design considerations
+      placeholder: |
+        - How does this fit into the existing architecture?
+        - What design patterns should be followed?
+        - Are there any architectural decisions that need review?
+        - What are the integration points with existing systems?
+    validations:
+      required: true
+
+  - type: textarea
+    id: design-review-needs
+    attributes:
+      label: Design Review Requirements
+      description: What design reviews are needed before implementation?
+      placeholder: |
+        - Architecture review needed: Yes/No
+        - Security review needed: Yes/No
+        - Performance review needed: Yes/No
+        - Team review needed: Yes/No
+        - External stakeholder review needed: Yes/No
+    validations:
+      required: true
+
+  - type: textarea
+    id: security-considerations
+    attributes:
+      label: Security Considerations
+      description: Security implications and requirements for this task
+      placeholder: |
+        - What security implications does this have?
+        - Are there any new permissions or access patterns?
+        - Does this affect existing security boundaries?
+        - Are there compliance requirements to consider?
+    validations:
+      required: true
+
+  - type: textarea
+    id: compliance-requirements
+    attributes:
+      label: Compliance Requirements
+      description: Any compliance or regulatory requirements that must be met
+      placeholder: |
+        - SOC 2 compliance considerations
+        - Data privacy requirements
+        - Audit trail requirements
+        - Documentation requirements for compliance
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority Level
+      description: What is the priority of this development task?
+      options:
+        - Critical (Blocking other work)
+        - High (Important for current sprint)
+        - Medium (Should be done soon)
+        - Low (Can be scheduled later)
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: What other tasks, systems, or approvals does this depend on?
+      placeholder: |
+        - Depends on completion of task #123
+        - Requires approval from security team
+        - Needs coordination with AWS account setup
+        - Blocked by existing technical debt in component X
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Specific criteria that must be met for this task to be considered complete
+      placeholder: |
+        - [ ] Component X is implemented and tested
+        - [ ] Documentation is updated
+        - [ ] Security review is completed
+        - [ ] Performance benchmarks are met
+        - [ ] All existing functionality continues to work
+    validations:
+      required: true
+
+  - type: textarea
+    id: testing-requirements
+    attributes:
+      label: Testing Requirements
+      description: What testing is required for this task?
+      placeholder: |
+        - Unit tests for new components
+        - Integration tests for system interactions
+        - Property-based tests for correctness properties
+        - Performance tests for optimization tasks
+        - Security tests for security-related changes
+
+  - type: textarea
+    id: documentation-requirements
+    attributes:
+      label: Documentation Requirements
+      description: What documentation needs to be created or updated?
+      placeholder: |
+        - API documentation
+        - Architecture documentation
+        - User guides
+        - Troubleshooting guides
+        - Code comments and inline documentation
+
+  - type: dropdown
+    id: estimated-effort
+    attributes:
+      label: Estimated Effort
+      description: Rough estimate of the effort required
+      options:
+        - Small (1-2 days)
+        - Medium (3-5 days)
+        - Large (1-2 weeks)
+        - Extra Large (2+ weeks)
+        - Unknown (needs investigation)
+
+  - type: textarea
+    id: success-metrics
+    attributes:
+      label: Success Metrics
+      description: How will we measure the success of this task?
+      placeholder: |
+        - Performance improvements (specific metrics)
+        - Reduced manual work (time saved)
+        - Improved reliability (uptime, error rates)
+        - Enhanced security posture (specific improvements)
+        - Better developer experience (specific improvements)
+
+  - type: textarea
+    id: rollback-plan
+    attributes:
+      label: Rollback Plan
+      description: What is the plan if this change needs to be rolled back?
+      placeholder: |
+        - How can this change be safely reverted?
+        - What are the rollback procedures?
+        - Are there any irreversible changes?
+        - What monitoring is needed to detect issues?
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-implementation Checklist
+      description: Please confirm these items before starting implementation
+      options:
+        - label: I have considered the architecture implications
+          required: true
+        - label: I have identified all security considerations
+          required: true
+        - label: I have defined clear acceptance criteria
+          required: true
+        - label: I have considered testing requirements
+          required: true
+        - label: I understand the compliance requirements
+          required: true

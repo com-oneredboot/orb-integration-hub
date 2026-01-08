@@ -1,0 +1,272 @@
+# Performance Testing CI/CD Pipeline Configuration
+# This file can be integrated into GitHub Actions, GitLab CI, or other CI/CD systems
+
+name: Performance Testing Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run performance tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  performance-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    strategy:
+      matrix:
+        test-type: [load, lighthouse, memory]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: apps/web/package-lock.json
+        
+    - name: Install dependencies
+      working-directory: ./apps/web
+      run: |
+        npm ci --legacy-peer-deps
+        
+    - name: Build application
+      working-directory: ./apps/web
+      run: |
+        npm run build:secure:dev
+        
+    - name: Start application server
+      working-directory: ./apps/web
+      run: |
+        npm run start:secure &
+        sleep 30  # Wait for server to start
+        
+    - name: Wait for application
+      run: |
+        timeout 300 bash -c 'until curl -f http://localhost:4200/user/auth; do sleep 5; done'
+        
+    - name: Run Load Tests
+      if: matrix.test-type == 'load'
+      working-directory: ./apps/web
+      run: |
+        npm run perf:load
+        
+    - name: Run Lighthouse Tests
+      if: matrix.test-type == 'lighthouse'
+      working-directory: ./apps/web
+      run: |
+        npm run perf:lighthouse
+        npm run perf:lighthouse:mobile
+        
+    - name: Run Memory Tests
+      if: matrix.test-type == 'memory'
+      working-directory: ./apps/web
+      run: |
+        npm run perf:memory
+        
+    - name: Compare against baseline
+      working-directory: ./apps/web
+      run: |
+        node performance-tests/scripts/baseline-metrics.js compare
+        
+    - name: Upload performance reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: performance-reports-${{ matrix.test-type }}
+        path: |
+          apps/web/performance-tests/reports/
+          apps/web/coverage/
+        retention-days: 30
+        
+    - name: Comment PR with performance results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const path = './apps/web/performance-tests/reports/baseline-comparison-summary.txt';
+          
+          if (fs.existsSync(path)) {
+            const summary = fs.readFileSync(path, 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Performance Test Results - ${{ matrix.test-type }}\n\n\`\`\`\n${summary}\n\`\`\``
+            });
+          }
+
+  stress-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    needs: performance-tests
+    if: github.ref == 'refs/heads/main' || github.event_name == 'schedule'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: apps/web/package-lock.json
+        
+    - name: Install dependencies
+      working-directory: ./apps/web
+      run: |
+        npm ci --legacy-peer-deps
+        
+    - name: Build application
+      working-directory: ./apps/web
+      run: |
+        npm run build:secure:dev
+        
+    - name: Start application server
+      working-directory: ./apps/web
+      run: |
+        npm run start:secure &
+        sleep 30
+        
+    - name: Run stress tests
+      working-directory: ./apps/web
+      run: |
+        npm run perf:stress
+        
+    - name: Run mobile performance tests
+      working-directory: ./apps/web
+      run: |
+        npm run perf:mobile
+        
+    - name: Run network throttling tests
+      working-directory: ./apps/web
+      run: |
+        npm run perf:network
+        
+    - name: Generate comprehensive report
+      working-directory: ./apps/web
+      run: |
+        npm run perf:all
+        
+    - name: Upload comprehensive reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: comprehensive-performance-reports
+        path: |
+          apps/web/performance-tests/reports/
+        retention-days: 30
+        
+    - name: Notify on performance degradation
+      if: failure()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: 'Performance Degradation Detected',
+            body: 'Automated performance tests detected significant performance degradation. Please review the test results and optimize accordingly.',
+            labels: ['performance', 'bug', 'high-priority']
+          });
+
+  performance-monitoring:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: [performance-tests, stress-tests]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Download performance reports
+      uses: actions/download-artifact@v3
+      with:
+        path: performance-artifacts
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      working-directory: ./apps/web
+      run: |
+        npm ci --legacy-peer-deps
+        
+    - name: Update performance baseline
+      working-directory: ./apps/web
+      run: |
+        # Copy downloaded reports to reports directory
+        cp -r ../performance-artifacts/*/performance-tests/reports/* performance-tests/reports/ || true
+        
+        # Update baseline if this is a main branch commit
+        node performance-tests/scripts/baseline-metrics.js establish
+        
+    - name: Commit updated baseline
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add apps/web/performance-tests/baseline-metrics.json || true
+        git diff --staged --quiet || git commit -m "Update performance baseline metrics [skip ci]"
+        git push || true
+
+  performance-budget-check:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: apps/web/package-lock.json
+        
+    - name: Install dependencies
+      working-directory: ./apps/web
+      run: |
+        npm ci --legacy-peer-deps
+        
+    - name: Build application
+      working-directory: ./apps/web
+      run: |
+        npm run build
+        
+    - name: Check bundle size
+      working-directory: ./apps/web
+      run: |
+        # Check if main bundle exceeds budget
+        BUNDLE_SIZE=$(du -k dist/main*.js | cut -f1)
+        BUDGET_KB=2048  # 2MB budget
+        
+        if [ $BUNDLE_SIZE -gt $BUDGET_KB ]; then
+          echo "❌ Bundle size ($BUNDLE_SIZE KB) exceeds budget ($BUDGET_KB KB)"
+          exit 1
+        else
+          echo "✅ Bundle size ($BUNDLE_SIZE KB) within budget ($BUDGET_KB KB)"
+        fi
+        
+    - name: Analyze bundle
+      working-directory: ./apps/web
+      run: |
+        npm run bundle:analyze -- --no-open --mode static --report performance-tests/reports/bundle-analysis.html
+        
+    - name: Upload bundle analysis
+      uses: actions/upload-artifact@v3
+      with:
+        name: bundle-analysis
+        path: apps/web/performance-tests/reports/bundle-analysis.html

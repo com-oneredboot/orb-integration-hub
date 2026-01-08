@@ -1,0 +1,208 @@
+name: Enhancement Request
+description: Request a new feature or enhancement to orb-integration-hub
+title: "[ENHANCEMENT] "
+labels: ["type/feature", "status/needs-review"]
+assignees: ["orb-integration-hub-team"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting an enhancement! Please provide detailed information to help us understand and prioritize your request.
+        
+        **Before submitting**: Please check existing issues and discussions to avoid duplicates.
+
+  - type: dropdown
+    id: requesting-team
+    attributes:
+      label: Requesting Team
+      description: Which team is requesting this enhancement?
+      options:
+        - Development Team
+        - DevOps Team
+        - Product Team
+        - External Team
+        - Other (specify in description)
+    validations:
+      required: true
+
+  - type: input
+    id: team-contact
+    attributes:
+      label: Team Contact
+      description: Primary contact person or team email for follow-up
+      placeholder: "e.g., john.doe@company.com or @team-handle"
+    validations:
+      required: true
+
+  - type: textarea
+    id: feature-summary
+    attributes:
+      label: Feature Summary
+      description: Brief summary of the requested feature or enhancement
+      placeholder: "Provide a concise summary of what you want to be added or improved..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: business-justification
+    attributes:
+      label: Business Justification
+      description: Why is this enhancement needed? What business problem does it solve?
+      placeholder: |
+        - What business problem does this solve?
+        - How does this align with business objectives?
+        - What are the consequences of not implementing this?
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-outcomes
+    attributes:
+      label: Expected Outcomes
+      description: What specific outcomes or benefits do you expect from this enhancement?
+      placeholder: |
+        - Improved efficiency by X%
+        - Reduced manual work
+        - Better security posture
+        - Cost savings
+        - Enhanced developer experience
+    validations:
+      required: true
+
+  - type: dropdown
+    id: user-impact
+    attributes:
+      label: User Impact Level
+      description: How many users or teams will be affected by this enhancement?
+      options:
+        - High (All teams/users)
+        - Medium (Multiple teams)
+        - Low (Single team)
+        - Minimal (Few users)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority-level
+    attributes:
+      label: Priority Level
+      description: How urgent is this enhancement?
+      options:
+        - Critical (Blocking current work)
+        - High (Important for upcoming work)
+        - Medium (Would be helpful)
+        - Low (Nice to have)
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical-requirements
+    attributes:
+      label: Technical Requirements
+      description: Specific technical requirements or constraints
+      placeholder: |
+        - Must integrate with existing CodeArtifact setup
+        - Should support multiple AWS regions
+        - Needs to be compatible with current IAM roles
+        - Must follow existing naming conventions
+    validations:
+      required: true
+
+  - type: textarea
+    id: timeline-requirements
+    attributes:
+      label: Timeline Requirements
+      description: When do you need this enhancement? Are there any deadlines?
+      placeholder: |
+        - Needed by: [date]
+        - Deadline reason: [project milestone, compliance requirement, etc.]
+        - Flexibility: [can be delayed if needed, hard deadline, etc.]
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: What other systems, teams, or projects does this depend on?
+      placeholder: |
+        - Depends on Team X completing their migration
+        - Requires approval from Security team
+        - Needs coordination with AWS account setup
+        - Blocked by existing technical debt in component Y
+
+  - type: textarea
+    id: stakeholders
+    attributes:
+      label: Stakeholders
+      description: Who are the key stakeholders for this enhancement?
+      placeholder: |
+        - Primary stakeholder: [name/team]
+        - Secondary stakeholders: [names/teams]
+        - Decision makers: [names/teams]
+        - Users who will be affected: [teams/groups]
+    validations:
+      required: true
+
+  - type: textarea
+    id: communication-plan
+    attributes:
+      label: Communication Plan
+      description: How should we communicate progress and coordinate with stakeholders?
+      placeholder: |
+        - Preferred communication method: [Slack, email, meetings]
+        - Update frequency: [weekly, bi-weekly, milestone-based]
+        - Key meetings or reviews needed: [architecture review, security review]
+        - Notification preferences: [who should be notified of what]
+
+  - type: dropdown
+    id: spec-driven-development
+    attributes:
+      label: Requires Spec-Driven Development?
+      description: Does this enhancement require following the spec-driven development process?
+      options:
+        - "Yes - Complex feature requiring full spec"
+        - "No - Simple enhancement"
+        - "Unsure - Need guidance"
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: What specific criteria must be met for this enhancement to be considered complete?
+      placeholder: |
+        - [ ] Feature X is implemented and tested
+        - [ ] Documentation is updated
+        - [ ] All existing functionality continues to work
+        - [ ] Performance meets specified requirements
+        - [ ] Security review is completed
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other context, mockups, references, or relevant information
+      placeholder: |
+        - Links to related discussions or documents
+        - Screenshots or mockups
+        - References to similar implementations
+        - Any other relevant context
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please confirm you have completed these steps
+      options:
+        - label: I have searched existing issues and discussions to avoid duplicates
+          required: true
+        - label: I have provided clear business justification
+          required: true
+        - label: I have identified all key stakeholders
+          required: true
+        - label: I have specified timeline requirements and dependencies
+          required: true
+        - label: I understand this may require spec-driven development process
+          required: true

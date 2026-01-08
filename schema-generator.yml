@@ -1,0 +1,59 @@
+# file: schema-generator.yml
+# author: AI Assistant
+# date: 2025-01-04
+# description: orb-schema-generator configuration for orb-integration-hub
+
+version: '1.0'
+
+project:
+  name: integration-hub
+  customerId: orb
+  projectId: integration-hub
+  environment: dev
+
+paths:
+  schemas: ./schemas
+  subdirectories:
+    core: core
+    tables: tables
+    models: models
+    registries: registries
+    graphql: graphql
+    lambdas: lambdas
+
+output:
+  python:
+    enabled: true
+    base_dir: ./apps/api
+    enums_subdir: enums
+    models_subdir: models
+  typescript:
+    enabled: true
+    base_dir: ./apps/web/src/app
+    enums_subdir: core/enums
+    models_subdir: core/models
+  graphql:
+    base_dir: ./apps/api/graphql
+  infrastructure:
+    format: cloudformation
+    cloudformation:
+      output: ./infrastructure/cloudformation/generated
+    appsync:
+      generateResolvers: true
+      resolverOutputDir: ./infrastructure/cloudformation/appsync/resolvers
+      auth:
+        # SSM parameter name for User Pool ID - resolved at deploy time
+        userPoolId: "/orb/integration-hub/dev/cognito/user-pool-id"
+        publicEndpoints: false
+      logging:
+        enabled: true
+        level: ALL
+
+generation:
+  validate_schemas: true
+  validate_graphql: true
+  cleanup_old_files: false
+
+logging:
+  level: INFO
+  file: ./schema_generator.log

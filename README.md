@@ -8,197 +8,206 @@ Orb Integration Hub is a serverless application that provides a unified API for 
 
 ## Quick Links
 
-- [Product Requirements (PRD)](.taskmaster/docs/prd.md) - Canonical requirements and feature planning document
 - [Architecture Documentation](docs/architecture.md) - System design and component interactions
 - [Development Guide](docs/development.md) - Setup and development workflow
-- [Feature Registry](.taskmaster/docs/features/REGISTRY.md) - List of active and completed features
 - [Frontend Design Plan](docs/frontend-design.md) - Frontend architecture, UI/UX, and features
-- [Frontend Implementation Plan](.taskmaster/docs/frontend-implementation-plan.md) - Frontend development phases and tasks (feature-based)
-- [Frontend Todo List](.taskmaster/docs/frontend-todo.md) - Frontend development checklist (feature-based)
 - [API Documentation](docs/api.md) - GraphQL API reference and examples
 - [Schema Documentation](docs/schema.md) - Data models and schema definitions
 
 ## Getting Started
 
 1. Review the [Development Guide](docs/development.md) for setup instructions
-2. Check the [Product Requirements (PRD)](.taskmaster/docs/prd.md) for the latest requirements and features
-3. Check the [Architecture Documentation](docs/architecture.md) to understand the system
-4. Explore the [API Documentation](docs/api.md) to start integrating
+2. Check the [Architecture Documentation](docs/architecture.md) to understand the system
+3. Explore the [API Documentation](docs/api.md) to start integrating
+
+### Prerequisites
+
+- Python 3.12+
+- Node.js 20.x+
+- AWS CLI configured with `--profile sso-orb-dev`
+- pipenv for Python dependency management
+- npm for TypeScript dependency management
+
+### Quick Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/com-oneredboot/orb-integration-hub.git
+cd orb-integration-hub
+
+# Set up reference repositories (optional, for standards reference)
+mkdir -p repositories
+git clone https://github.com/com-oneredboot/orb-templates.git repositories/orb-templates
+git clone https://github.com/com-oneredboot/orb-infrastructure.git repositories/orb-infrastructure
+
+# Install backend dependencies
+cd apps/api && pipenv install --dev
+
+# Install frontend dependencies
+cd ../web && npm install
+```
 
 ## Project Structure
 
+This project follows the Nx-style monorepo structure aligned with orb-templates standards:
+
 ```
 orb-integration-hub/
-├── backend/           # Python backend services
-├── frontend/         # TypeScript frontend application
-├── docs/            # Technical documentation (API, architecture, dev guides)
-├── .taskmaster/      # Task management, planning, and feature docs
-│   ├── docs/        # Planning documents (PRD, implementation plans)
-│   └── tasks/       # Task definitions and tracking
-│   └── ...
-└── schemas/         # Schema definitions and generators
-    ├── entities/    # YAML schema definitions
-    ├── templates/   # Jinja templates for code generation
-    └── generate.py  # Schema generation script
+├── apps/                    # Application code
+│   ├── api/                 # Python backend (Lambda functions, layers)
+│   │   ├── lambdas/         # Lambda function handlers
+│   │   ├── layers/          # Lambda layers
+│   │   ├── models/          # Generated Python models
+│   │   ├── enums/           # Generated Python enums
+│   │   ├── Pipfile          # Python dependencies
+│   │   └── Pipfile.lock
+│   └── web/                 # Angular frontend application
+│       ├── src/             # Source code
+│       ├── package.json     # Node.js dependencies
+│       └── angular.json     # Angular configuration
+├── packages/                # Shared packages (future use)
+├── schemas/                 # Schema definitions
+│   ├── models/              # Model schema definitions
+│   ├── tables/              # DynamoDB table schemas
+│   ├── core/                # Core types and enums
+│   ├── lambdas/             # Lambda resolver schemas
+│   └── registries/          # Registry definitions
+├── infrastructure/          # CloudFormation templates
+│   └── cloudformation/      # SAM/CloudFormation YAML files
+├── docs/                    # Technical documentation
+├── tests/                   # Test files
+│   └── property/            # Property-based tests
+├── repositories/            # Reference repositories (READ-ONLY)
+│   ├── orb-templates/       # Standards and documentation
+│   ├── orb-infrastructure/  # Shared infrastructure
+│   └── orb-geo-fence/       # Example project
+├── .kiro/                   # Kiro AI assistant configuration
+│   ├── steering/            # Steering files for AI guidance
+│   └── specs/               # Feature specifications
+├── .github/                 # GitHub configuration
+│   ├── workflows/           # CI/CD workflows
+│   ├── ISSUE_TEMPLATE/      # Issue templates
+│   └── ISSUES/              # Cross-team issue tracking
+└── schema-generator.yml     # orb-schema-generator configuration
 ```
-
-## Task & Project Management (AI-Driven)
-
-This project uses [task-master-ai](https://github.com/CoreyDalePeters/task-master-ai) for requirements-driven planning and task management.
-
-- The canonical source of requirements is [.taskmaster/docs/prd.md](.taskmaster/docs/prd.md).
-- To update or generate tasks:
-  1. Edit `.taskmaster/docs/prd.md` as requirements evolve.
-  2. Run `task-master-ai parse-prd` to generate or update the project's tasks.
-  3. Use `task-master-ai` to expand, update, and track tasks throughout the project lifecycle.
-- See [docs/development.md](docs/development.md) for detailed workflow instructions.
-
-All features, tasks, and documentation should trace back to the PRD to ensure alignment and traceability.
-
-### Using task-master-ai
-
-- **Parse PRD and generate tasks:**
-  ```bash
-  npx task-master-ai parse-prd --input=.taskmaster/docs/prd.md
-  ```
-- **Expand tasks into subtasks:**
-  ```bash
-  npx task-master-ai expand --all
-  ```
-- **List and track tasks:**
-  ```bash
-  npx task-master-ai list
-  ```
-
-See [task-master-ai documentation](https://github.com/CoreyDalePeters/task-master-ai) for more details.
 
 ## Development Workflow
 
-### Schema Generation
+### Schema-Driven Development
 
-The project uses a schema-driven development approach. Key files and directories:
+The project uses `orb-schema-generator` for code generation from YAML schemas:
 
-- `schemas/entities/*.yml` - Define data models and relationships
-- `schemas/templates/*.jinja` - Templates for generating code
-- `schemas/generate.py` - Main generation script
-
-To regenerate code after schema changes:
 ```bash
-python schemas/generate.py
+# Validate schemas
+orb-schema-generator validate
+
+# Generate code (Python models, TypeScript interfaces, GraphQL schema)
+orb-schema-generator generate
 ```
 
-This will:
-1. Generate Python models
-2. Generate TypeScript models
-3. Update GraphQL schema
-4. Generate DynamoDB CloudFormation templates
+Configuration is in `schema-generator.yml`. Generated files go to:
+- Python models: `apps/api/models/`
+- Python enums: `apps/api/enums/`
+- TypeScript models: `apps/web/src/app/core/models/`
+- GraphQL schema: `apps/api/graphql/`
 
-### Important Context
+### Running Tests
 
-- **Schema changes require regeneration of code.** Do not edit generated files directly. See [Schema Documentation](docs/schema.md) for the correct workflow.
-- GraphQL schema is timestamped in `infrastructure/cloudformation/`
-- DynamoDB templates are in `infrastructure/cloudformation/dynamodb.yml`
-- Generated models are placed in respective frontend/backend directories
+```bash
+# Backend tests
+cd apps/api && pipenv run pytest
 
-## Key Commands
+# Frontend tests
+cd apps/web && npm test
 
-- **Regenerate code:** `python schemas/generate.py` (Run from root)
-- **Backend Tests:** `cd backend && pytest` (Requires pytest)
-- **Frontend Tests:** `cd frontend && npm run test`
+# Property-based tests
+bash tests/property/test_import_path_migration.sh
+bash tests/property/test_schema_generator_output.sh
+```
+
+### Code Quality with Pre-commit
+
+This project uses pre-commit hooks for automated code quality checks. The hooks run ruff, black, mypy, and file hygiene checks.
+
+```bash
+# Install pre-commit hooks (first time setup)
+cd apps/api && pipenv install --dev
+pipenv run pre-commit install
+
+# Or create custom wrapper to check ALL files (recommended)
+cat > .git/hooks/pre-commit << 'EOF'
+#!/bin/bash
+cd apps/api && pipenv run pre-commit run --config=../../.pre-commit-config.yaml --all-files
+EOF
+chmod +x .git/hooks/pre-commit
+
+# Run hooks manually
+pipenv run pre-commit run --all-files
+
+# Update hooks to latest versions
+pipenv run pre-commit autoupdate
+```
+
+### Linting and Formatting
+
+```bash
+# Backend
+cd apps/api
+pipenv run black .
+pipenv run ruff check . --fix
+pipenv run mypy src/
+
+# Frontend
+cd apps/web
+npm run lint
+npm run format
+```
 
 ## Deployment
 
-Deployment is handled via GitHub Actions. See the workflow files in `.github/workflows/` for details, specifically:
-- Backend: `.github/workflows/deploy-backend.yml`
-- Frontend: `.github/workflows/deploy-frontend.yml`
+Deployment is handled via GitHub Actions. See `.github/workflows/` for:
+- `comprehensive-testing.yml` - Full test suite
+- `deploy-lambda-layers.yml` - Lambda layer deployment
 
-## ORB Master Plan Integration
+### Manual Deployment
 
-This project is part of the ORB ecosystem, which is managed through the [orb-master-plan](https://github.com/com-oneredboot/orb-master-plan) repository. The orb-master-plan serves as the central documentation and planning hub for all ORB ecosystem projects.
+```bash
+# Deploy Lambda functions
+cd infrastructure/cloudformation
+sam build --template lambdas.yml
+sam deploy --profile sso-orb-dev --stack-name orb-integration-hub-dev-lambdas
 
-### Documentation Structure
-
-To ensure compatibility with the orb-master-plan, this project follows a standardized documentation structure:
-
-```
-docs/
-├── prd.md                 # Product Requirements Document (PRD)
-├── core/                  # Core project documentation
-│   ├── DESIGN_PLAN.md     # Overall design plan
-│   ├── IMPLEMENTATION_PLAN.md # Implementation timeline
-│   └── TODO.md            # Current tasks and action items
-├── .taskmaster/docs/
-│   ├── prd.md             # Product Requirements Document
-│   ├── core/              # Core planning documents
-│   ├── features/          # Feature-specific documentation
-│   │   └── [feature-name]/ # Documentation for each feature
-│   │       ├── feature-plan.md # Feature design and implementation plan
-│   │       └── summary.md      # Feature completion summary
-│   └── market-research/   # Business analysis and research
-├── architecture.md        # System architecture documentation
-├── development.md         # Development setup and workflow
-└── api.md                 # API documentation
+# Deploy Lambda layers
+sam build --template lambda-layers.yml
+sam deploy --profile sso-orb-dev --stack-name orb-integration-hub-dev-lambda-layers
 ```
 
-### Keeping Documentation Up-to-Date
+## AWS Configuration
 
-When working on this project:
+- Profile: `sso-orb-dev`
+- Region: `us-east-1`
+- CodeArtifact domain: `orb-infrastructure-shared-codeartifact-domain`
+- CodeArtifact repository: `orb-shared`
 
-1. **Update Feature Documentation**: When implementing new features, create or update the corresponding feature documentation in `.taskmaster/docs/features/[feature-name]/`.
-2. **Update Core Documentation**: Keep the core documentation files (`.taskmaster/docs/core/DESIGN_PLAN.md`, `IMPLEMENTATION_PLAN.md`) up-to-date with the latest project status.
-3. **Follow Standards**: Adhere to the development standards defined in the orb-master-plan.
-4. **Report Progress**: Update the orb-master-plan's task tracking when completing significant milestones.
+## Cross-Team Collaboration
 
-The orb-master-plan will periodically scan project repositories to update its documentation and ensure all projects are aligned with the overall ecosystem vision.
+This project follows orb-templates standards for cross-team collaboration:
 
-## License
+- **Issue Templates**: Use `.github/ISSUE_TEMPLATE/` for bug reports, enhancements, etc.
+- **Cross-Team Issues**: Track upstream blockers in `.github/ISSUES/`
+- **GitHub Issue Ownership**: Never close issues created by another team
 
-[Add your license information here]
+## Kiro AI Assistant
 
-## Recent Changes
+This project includes Kiro steering files for AI-assisted development:
 
-### Timestamp Handling
-- Updated timestamp handling across the application to use ISO string format
-- Ensures consistency between TypeScript, Python, and DynamoDB
-- Fixed type mismatches in user creation and update flows
-
-### Error Handling
-- Implemented proper error registry pattern
-- Improved error messages and error handling flow
-- Added better error tracking and logging
-
-### User Profile Management
-- Fixed user profile update functionality
-- Improved state management with NgRx
-- Added proper validation and error handling
-- Ensures all required fields are present in updates
-
-### Type Safety
-- Fixed TypeScript type definitions
-- Improved type checking across the application
-- Added proper interfaces for all models
-
-## Development Guidelines
-
-### Timestamps
-- Always use `new Date().toISOString()` for timestamps
-- Never use `Date.now()` for database operations
-- Ensure timestamps are stored as strings in ISO format
-
-### Error Handling
-- Use the `ErrorRegistry` class for error handling
-- Include proper error codes and messages
-- Log errors with appropriate context
-
-### User Updates
-- Always include all required fields in update operations
-- Validate input before sending to the server
-- Handle errors appropriately and provide user feedback
-
-### Type Safety
-- Use proper TypeScript interfaces
-- Avoid using `any` type
-- Ensure all required fields are present in type definitions
+- `project-standards.md` - Always loaded, core project configuration
+- `testing-standards.md` - Loaded when working with test files
+- `infrastructure.md` - Loaded when working with CloudFormation
+- `api-development.md` - Loaded when working with backend code
+- `reference-projects.md` - Manual trigger with `#reference-projects`
+- `git-workflow.md` - Manual trigger with `#git-workflow`
+- `troubleshooting-guide.md` - Manual trigger with `#troubleshooting-guide`
 
 ## Response Type Contract for GraphQL Resolvers
 
@@ -209,49 +218,20 @@ All GraphQL response types follow a strict contract:
 - `Data`: Entity or list, as appropriate
 
 ### DynamoDB-backed Resolvers
-- On success: `StatusCode` is always 200, `Message` is `null`, `Data` is the result
-- On error: `StatusCode` is 500, `Message` is the error message, `Data` is `null`
-- This is enforced in the VTL mapping template:
-
 ```vtl
 #if($ctx.error)
-  {
-    "StatusCode": 500,
-    "Message": "$ctx.error.message",
-    "Data": null
-  }
+  { "StatusCode": 500, "Message": "$ctx.error.message", "Data": null }
 #else
-  {
-    "StatusCode": 200,
-    "Message": null,
-    "Data": $util.toJson($ctx.result)
-  }
+  { "StatusCode": 200, "Message": null, "Data": $util.toJson($ctx.result) }
 #end
 ```
 
 ### Lambda-backed Resolvers
-- The Lambda function must return the full response object, e.g.:
-
+Lambda returns the full response object:
 ```json
-{
-  "StatusCode": 404,
-  "Message": "User not found",
-  "Data": null
-}
+{ "StatusCode": 404, "Message": "User not found", "Data": null }
 ```
 
-- The VTL simply passes through the Lambda's response:
+## License
 
-```vtl
-#if($ctx.error)
-  {
-    "StatusCode": 500,
-    "Message": "$ctx.error.message",
-    "Data": null
-  }
-#else
-  $util.toJson($ctx.result)
-#end
-```
-
-> **Note:** This contract is enforced in the GraphQL schema and all generated VTL templates. All resolvers must adhere to this structure for consistent error handling and client experience.
+[Add your license information here]

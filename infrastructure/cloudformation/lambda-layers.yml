@@ -31,7 +31,7 @@ Resources:
     Properties:
       LayerName: !Sub '${CustomerId}-${ProjectId}-${Environment}-organizations-security-layer'
       Description: 'Organization security middleware with audit logging and RBAC utilities'
-      ContentUri: ../../backend/src/layers/organizations_security/
+      ContentUri: ../../apps/api/layers/organizations_security/
       CompatibleRuntimes:
         - python3.12
       LicenseInfo: MIT
@@ -42,7 +42,7 @@ Resources:
     Properties:
       LayerName: !Sub '${CustomerId}-${ProjectId}-${Environment}-stripe-layer'
       Description: 'Stripe Payment processing layer'
-      ContentUri: ../../backend/src/layers/stripe/
+      ContentUri: ../../apps/api/layers/stripe/
       CompatibleRuntimes:
         - !Ref Runtime
     Type: AWS::Serverless::LayerVersion

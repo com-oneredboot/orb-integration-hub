@@ -22,6 +22,7 @@ jobs:
   detect-changes:
     name: Detect Package Changes
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       common-changed: ${{ steps.changes.outputs.common }}
       models-changed: ${{ steps.changes.outputs.models }}

@@ -1,0 +1,24 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+boto3 = "*"
+pynamodb = "*"
+requests = "*"
+stripe = "*"
+orb-common = "*"  # From CodeArtifact - provides EnvironmentDesignator and shared utilities
+
+[dev-packages]
+black = "*"
+flake8 = "*"
+isort = "*"
+pytest = "*"
+pre-commit = "*"
+ruff = "*"
+mypy = "*"
+types-requests = "*"
+
+[requires]
+python_version = "3.12"
