@@ -3,7 +3,6 @@ version: '1.0'
 name: PrivacyRequestType
 targets:
   - api
-  - web
 description: "Types of privacy requests users can submit"
 
 items:

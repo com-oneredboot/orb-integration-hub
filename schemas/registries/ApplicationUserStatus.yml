@@ -3,7 +3,6 @@ version: '1.0'
 name: ApplicationUserStatus
 targets:
   - api
-  - web
 description: "Application user membership status"
 
 items:

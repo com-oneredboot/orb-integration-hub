@@ -7,7 +7,6 @@ type: standard
 name: AuthError
 targets:
   - api
-  - web
 model:
   attributes:
     code:

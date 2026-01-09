@@ -3,7 +3,6 @@ version: '1.0'
 name: LegalBasis
 targets:
   - api
-  - web
 description: "Legal basis for privacy requests under various regulations"
 
 items:

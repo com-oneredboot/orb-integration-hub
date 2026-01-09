@@ -1,9 +1,0 @@
-# Static types
-{%- for type_name, type_def in static_types.items() %}
-type {{ type_name }} {
-{%- for attr in type_def.attributes %}
-  {{ attr.name }}: {{ attr.type }}{% if attr.required %}!{% endif %}
-{%- endfor %}
-}
-
-{%- endfor %} 

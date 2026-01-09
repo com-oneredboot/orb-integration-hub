@@ -1,0 +1,95 @@
+# file: schemas/tables/OwnershipTransferRequests.yml
+# author: orb-integration-hub
+# date: 2026-01-09
+# description: OwnershipTransferRequests table schema for managing organization ownership transfers
+
+type: dynamodb
+version: '1.0'
+name: OwnershipTransferRequests
+targets:
+  - api
+model:
+  authConfig:
+    cognitoAuthentication:
+      groups:
+        OWNER:
+          - '*'
+        EMPLOYEE:
+          - '*'
+        CUSTOMER:
+          - '*'
+  keys:
+    primary:
+      partition: transferId
+      description: Primary key for ownership transfer requests
+    secondary:
+      - name: CurrentOwnerIndex
+        type: GSI
+        partition: currentOwnerId
+        sort: createdAt
+        projection_type: ALL
+        description: Index for querying transfers by current owner
+      - name: NewOwnerIndex
+        type: GSI
+        partition: newOwnerId
+        sort: createdAt
+        projection_type: ALL
+        description: Index for querying transfers by new owner
+      - name: StatusIndex
+        type: GSI
+        partition: status
+        sort: createdAt
+        projection_type: ALL
+        description: Index for querying transfers by status
+      - name: ExpirationIndex
+        type: GSI
+        partition: status
+        sort: expiresAt
+        projection_type: ALL
+        description: Index for querying transfers by expiration
+  attributes:
+    transferId:
+      type: string
+      required: true
+      description: Unique identifier for the transfer request
+    organizationId:
+      type: string
+      required: true
+      description: ID of the organization being transferred
+    currentOwnerId:
+      type: string
+      required: true
+      description: ID of the current owner initiating the transfer
+    newOwnerId:
+      type: string
+      required: true
+      description: ID of the user receiving ownership
+    status:
+      type: string
+      required: true
+      enum_type: OwnershipTransferStatus
+      description: Current status of the transfer request
+    reason:
+      type: string
+      required: false
+      description: Reason for the ownership transfer
+    expiresAt:
+      type: string
+      required: true
+      description: When the transfer request expires (ISO 8601 format)
+    completedAt:
+      type: string
+      required: false
+      description: When the transfer was completed
+    cancelledAt:
+      type: string
+      required: false
+      description: When the transfer was cancelled
+    createdAt:
+      type: string
+      required: true
+      description: When the transfer request was created (ISO 8601 format)
+    updatedAt:
+      type: string
+      required: true
+      description: When the transfer request was last updated

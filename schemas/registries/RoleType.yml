@@ -3,7 +3,6 @@ version: '1.0'
 name: RoleType
 targets:
   - api
-  - web
 description: "Types of roles"
 
 items:

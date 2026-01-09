@@ -12,13 +12,28 @@ For complete coding standards and conventions, see:
 - Always use `--profile sso-orb-dev` for all AWS CLI commands
 - Region: `us-east-1`
 - CodeArtifact domain: `orb-infrastructure-shared-codeartifact-domain`
-- CodeArtifact repository: `orb-shared`
+- CodeArtifact PyPI repository: `orb-infrastructure-shared-pypi-repo`
 
 Example AWS CLI usage:
 ```bash
 aws --profile sso-orb-dev s3 ls
-aws --profile sso-orb-dev codeartifact login --tool pip --domain orb-infrastructure-shared-codeartifact-domain --repository orb-shared
 ```
+
+### CodeArtifact Login for pipenv
+
+Before running `pipenv install` for packages from CodeArtifact, you MUST:
+
+1. Get the auth token and export it:
+```bash
+export CODEARTIFACT_AUTH_TOKEN=$(aws --profile sso-orb-dev codeartifact get-authorization-token --domain orb-infrastructure-shared-codeartifact-domain --query authorizationToken --output text)
+```
+
+2. Then run pipenv commands:
+```bash
+pipenv install
+```
+
+**CRITICAL**: The Pipfile uses `${CODEARTIFACT_AUTH_TOKEN}` environment variable. Without exporting it first, pipenv will fail to authenticate with CodeArtifact.
 
 ## Package Management
 
@@ -114,10 +129,12 @@ Use AWS CLI with the SSO profile for AWS operations:
 ```bash
 # Always use the sso-orb-dev profile
 aws --profile sso-orb-dev s3 ls
-aws --profile sso-orb-dev codeartifact list-packages --domain orb-infrastructure-shared --repository orb-shared
 
-# Login to CodeArtifact for pip
-aws --profile sso-orb-dev codeartifact login --tool pip --domain orb-infrastructure-shared-codeartifact-domain --repository orb-shared
+# List packages in CodeArtifact
+aws --profile sso-orb-dev codeartifact list-packages --domain orb-infrastructure-shared-codeartifact-domain --repository orb-infrastructure-shared-pypi-repo --format pypi
+
+# List package versions
+aws --profile sso-orb-dev codeartifact list-package-versions --domain orb-infrastructure-shared-codeartifact-domain --repository orb-infrastructure-shared-pypi-repo --package <package-name> --format pypi
 ```
 
 ## Project-Specific Settings

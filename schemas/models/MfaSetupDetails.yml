@@ -7,7 +7,6 @@ type: standard
 name: MfaSetupDetails
 targets:
   - api
-  - web
 model:
   attributes:
     qrCode:

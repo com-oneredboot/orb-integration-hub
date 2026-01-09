@@ -1,8 +1,0 @@
-// Generated TypeScript enum for {{ enum_name }}
-// Generated at {{ timestamp }}
-
-export enum {{ enum_name }} {
-{% for value in enum_values %}
-  {{ value }} = '{{ value }}'{% if not loop.last %},{% endif %}
-{% endfor %}
-} 

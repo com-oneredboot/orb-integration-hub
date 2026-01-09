@@ -3,7 +3,6 @@ version: '1.0'
 name: UserGroup
 targets:
   - api
-  - web
 description: "User group types for Cognito authentication"
 
 items:

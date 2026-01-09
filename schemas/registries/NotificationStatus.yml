@@ -3,7 +3,6 @@ version: '1.0'
 name: NotificationStatus
 targets:
   - api
-  - web
 description: "Status of a notification"
 
 items:

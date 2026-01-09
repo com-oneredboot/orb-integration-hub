@@ -3,7 +3,6 @@ version: '1.0'
 name: ApplicationRoleStatus
 targets:
   - api
-  - web
 description: "Application role assignment status"
 
 items:

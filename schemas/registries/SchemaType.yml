@@ -3,7 +3,6 @@ version: '1.0'
 name: SchemaType
 targets:
   - api
-  - web
 description: "Types of schemas supported by the schema generator"
 
 items:

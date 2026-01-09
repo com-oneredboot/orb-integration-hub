@@ -1,0 +1,111 @@
+# file: schemas/tables/PrivacyRequests.yml
+# author: orb-integration-hub
+# date: 2026-01-09
+# description: PrivacyRequests table schema for GDPR/CCPA privacy request management
+
+type: dynamodb
+version: '1.0'
+name: PrivacyRequests
+targets:
+  - api
+model:
+  authConfig:
+    cognitoAuthentication:
+      groups:
+        OWNER:
+          - '*'
+        EMPLOYEE:
+          - '*'
+  keys:
+    primary:
+      partition: requestId
+      description: Primary key for privacy requests
+    secondary:
+      - name: RequestTypeIndex
+        type: GSI
+        partition: requestType
+        sort: receivedAt
+        projection_type: ALL
+        description: Index for querying requests by type
+      - name: DataSubjectIndex
+        type: GSI
+        partition: dataSubjectEmail
+        sort: receivedAt
+        projection_type: ALL
+        description: Index for querying requests by data subject
+      - name: OrganizationIndex
+        type: GSI
+        partition: organizationId
+        sort: receivedAt
+        projection_type: ALL
+        description: Index for querying requests by organization
+      - name: StatusIndex
+        type: GSI
+        partition: status
+        sort: deadline
+        projection_type: ALL
+        description: Index for querying requests by status and deadline
+  attributes:
+    requestId:
+      type: string
+      required: true
+      description: Unique identifier for the privacy request
+    organizationId:
+      type: string
+      required: true
+      description: ID of the organization handling the request
+    requestType:
+      type: string
+      required: true
+      enum_type: PrivacyRequestType
+      description: Type of privacy request (DATA_ACCESS, DATA_DELETION, etc.)
+    status:
+      type: string
+      required: true
+      enum_type: PrivacyRequestStatus
+      description: Current status of the request
+    dataSubjectEmail:
+      type: string
+      required: true
+      description: Email of the data subject making the request
+    dataSubjectName:
+      type: string
+      required: false
+      description: Name of the data subject
+    legalBasis:
+      type: string
+      required: true
+      enum_type: LegalBasis
+      description: Legal basis for the request (GDPR Article, CCPA Right, etc.)
+    description:
+      type: string
+      required: false
+      description: Additional details about the request
+    receivedAt:
+      type: timestamp
+      required: true
+      description: When the request was received
+    deadline:
+      type: timestamp
+      required: true
+      description: Deadline for completing the request
+    completedAt:
+      type: timestamp
+      required: false
+      description: When the request was completed
+    assignedTo:
+      type: string
+      required: false
+      description: ID of the employee assigned to handle the request
+    notes:
+      type: string
+      required: false
+      description: Internal notes about the request
+    createdAt:
+      type: timestamp
+      required: true
+      description: When the record was created
+    updatedAt:
+      type: timestamp
+      required: true
+      description: When the record was last updated

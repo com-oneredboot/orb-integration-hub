@@ -1,8 +1,7 @@
-# file: schemas/entities/OrganizationUsers.yml
-# author: AI Assistant
-# date: 2025-06-22
-# description: Organization users membership table with role-based access control
-# Maps users to organizations with specific roles (OWNER, ADMINISTRATOR, VIEWER)
+# file: schemas/tables/OrganizationUsers.yml
+# author: orb-integration-hub
+# date: 2026-01-09
+# description: OrganizationUsers table schema for managing user membership in organizations
 
 type: dynamodb
 version: '1.0'
@@ -23,58 +22,56 @@ model:
     primary:
       partition: userId
       sort: organizationId
-      description: Composite primary key for organization membership (user + organization)
+      description: Composite key for user-organization membership
     secondary:
       - name: OrganizationMembersIndex
         type: GSI
         partition: organizationId
         sort: role
         projection_type: ALL
-        description: Index for querying all members of an organization by role
+        description: Index for querying members of an organization by role
       - name: UserOrganizationsIndex
         type: GSI
         partition: userId
         sort: role
         projection_type: ALL
-        description: Index for querying all organizations a user belongs to by role
+        description: Index for querying organizations a user belongs to by role
   attributes:
     userId:
       type: string
       required: true
-      description: ID of the user (foreign key to Users, partition key)
+      description: ID of the user (foreign key to Users table)
     organizationId:
       type: string
       required: true
-      description: ID of the organization (foreign key to Organizations, sort key)
+      description: ID of the organization (foreign key to Organizations table)
     role:
       type: string
       required: true
       enum_type: OrganizationUserRole
-      enum_values:
-        - ADMINISTRATOR
-        - VIEWER
-      description: Role of the user within the organization (OWNER is determined by Organizations.ownerId field)
+      description: Role of the user within the organization
     status:
       type: string
       required: true
       enum_type: OrganizationUserStatus
-      enum_values:
-        - ACTIVE
-        - INACTIVE
-        - INVITED
-        - PENDING
-        - REJECTED
-        - REMOVED
-      description: Current status of the user's membership in the organization
+      description: Status of the user's membership
     invitedBy:
       type: string
       required: false
-      description: ID of the user who sent the invitation (for audit trail)
+      description: ID of the user who invited this member
+    invitedAt:
+      type: timestamp
+      required: false
+      description: When the invitation was sent
+    joinedAt:
+      type: timestamp
+      required: false
+      description: When the user accepted and joined
     createdAt:
       type: timestamp
       required: true
-      description: When the membership was created
+      description: When the membership record was created
     updatedAt:
       type: timestamp
       required: true
-      description: When the membership was last updated
+      description: When the membership record was last updated

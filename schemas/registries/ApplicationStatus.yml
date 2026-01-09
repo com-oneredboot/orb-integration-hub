@@ -3,7 +3,6 @@ version: '1.0'
 name: ApplicationStatus
 targets:
   - api
-  - web
 description: "Application status"
 
 items:

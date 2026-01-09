@@ -3,7 +3,6 @@ version: '1.0'
 name: RoleStatus
 targets:
   - api
-  - web
 description: "Role status"
 
 items:

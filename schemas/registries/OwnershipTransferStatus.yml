@@ -3,7 +3,6 @@ version: '1.0'
 name: OwnershipTransferStatus
 targets:
   - api
-  - web
 description: "Status of an ownership transfer request"
 
 items:

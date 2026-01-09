@@ -1,6 +1,6 @@
 # file: schema-generator.yml
 # author: orb-integration-hub
-# date: 2026-01-08
+# date: 2026-01-09
 # description: orb-schema-generator 0.13.2 configuration
 
 project:
@@ -27,19 +27,11 @@ output:
         base_dir: ./apps/api
         enums_subdir: enums
         models_subdir: models
-      web:
-        base_dir: ./apps/api
-        enums_subdir: enums
-        models_subdir: models
 
   typescript:
     enabled: true
     targets:
       api:
-        base_dir: ./apps/web/src/app
-        enums_subdir: core/enums
-        models_subdir: core/models
-      web:
         base_dir: ./apps/web/src/app
         enums_subdir: core/enums
         models_subdir: core/models
@@ -51,8 +43,6 @@ output:
     enabled: true
     targets:
       api:
-        base_dir: ./apps/api/graphql
-      web:
         base_dir: ./apps/api/graphql
 
   infrastructure:

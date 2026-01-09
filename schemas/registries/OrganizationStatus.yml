@@ -3,7 +3,6 @@ version: '1.0'
 name: OrganizationStatus
 targets:
   - api
-  - web
 description: "Organization status"
 
 items:
