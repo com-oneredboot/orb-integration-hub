@@ -1,0 +1,23 @@
+# CODEOWNERS for orb-integration-hub
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything
+* @com-oneredboot/integration-hub-team
+
+# Infrastructure changes require additional review
+/infrastructure/ @com-oneredboot/integration-hub-team @com-oneredboot/infra-team
+
+# Schema changes require schema team review
+/schemas/ @com-oneredboot/integration-hub-team @com-oneredboot/schema-team
+
+# API changes
+/apps/api/ @com-oneredboot/integration-hub-team
+
+# Frontend changes
+/apps/web/ @com-oneredboot/integration-hub-team
+
+# GitHub workflows and configuration
+/.github/ @com-oneredboot/integration-hub-team
+
+# Documentation
+/docs/ @com-oneredboot/integration-hub-team

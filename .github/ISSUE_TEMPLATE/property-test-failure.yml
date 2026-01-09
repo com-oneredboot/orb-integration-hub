@@ -1,0 +1,197 @@
+name: Property Test Failure
+description: Report a failing property-based test with counterexample details
+title: "[PROPERTY TEST] "
+labels: ["bug", "property-test", "needs-investigation"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Property Test Failure Report**
+
+        This template is specifically for reporting property-based test failures. Property tests validate universal properties that should hold across all valid inputs.
+
+        **Important**: Include the complete test output and counterexample for proper debugging.
+
+  - type: input
+    id: contact
+    attributes:
+      label: Contact Information
+      description: Your email or GitHub handle for follow-up
+      placeholder: "e.g., john.doe@company.com or @github-handle"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: property-category
+    attributes:
+      label: Property Category
+      description: Which type of property test failed?
+      options:
+        - GSI-to-Query Operation Mapping
+        - Authentication Directive Coverage
+        - Schema-to-Table Consistency
+        - Query Definition Consistency
+        - Serialization Round-trip
+        - Data Model Validation
+        - Other (specify below)
+    validations:
+      required: true
+
+  - type: input
+    id: property-name
+    attributes:
+      label: Property Name
+      description: Exact name of the failing property test
+      placeholder: "e.g., test_property_1_gsi_to_query_mapping"
+    validations:
+      required: true
+
+  - type: input
+    id: property-number
+    attributes:
+      label: Property Number
+      description: Property number from the design document
+      placeholder: "e.g., Property 1: GSI-to-Query Operation Mapping"
+    validations:
+      required: true
+
+  - type: textarea
+    id: test-output
+    attributes:
+      label: Complete Test Output
+      description: Full output from the test framework including the counterexample
+      placeholder: |
+        Paste the complete test output here, including:
+        - The failing assertion
+        - The counterexample that caused the failure
+        - Any shrinking information
+        - Stack trace
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: counterexample
+    attributes:
+      label: Counterexample Details
+      description: The specific input values that caused the property to fail
+      placeholder: |
+        Example:
+        - Input Schema: { name: "Users", gsi: [...] }
+        - Expected Result: Query operation generated
+        - Actual Result: No query operation found
+    validations:
+      required: true
+
+  - type: textarea
+    id: property-description
+    attributes:
+      label: Property Description
+      description: What property/invariant should hold but doesn't?
+      placeholder: |
+        Describe the property that failed:
+        - What should always be true?
+        - What invariant was violated?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: failure-frequency
+    attributes:
+      label: Failure Frequency
+      description: How often does this property test fail?
+      options:
+        - Always fails with this input
+        - Intermittent (fails sometimes)
+        - Rare (fails occasionally)
+        - First time seeing this failure
+    validations:
+      required: true
+
+  - type: textarea
+    id: analysis
+    attributes:
+      label: Initial Analysis
+      description: Your analysis of why this might be failing
+      placeholder: |
+        - Is this a bug in the implementation?
+        - Is the property test incorrect?
+        - Is the counterexample at an edge case?
+        - Are there missing validations?
+
+  - type: textarea
+    id: environment-details
+    attributes:
+      label: Environment Details
+      description: Test environment information
+      placeholder: |
+        - Python Version: 3.12
+        - Hypothesis Version: 6.x.x (if applicable)
+        - orb-schema-generator Version: 0.13.3
+        - Operating System: Linux/macOS/Windows
+        - Test Command: pytest tests/property/test_xxx.py -v
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Reproduction Steps
+      description: How to reproduce this property test failure
+      placeholder: |
+        1. Run: pytest tests/property/test_xxx.py::test_property_1
+        2. Or use the specific counterexample in a minimal test
+        3. Expected: Property should pass
+        4. Actual: Property fails with counterexample
+    validations:
+      required: true
+
+  - type: dropdown
+    id: impact-assessment
+    attributes:
+      label: Impact Assessment
+      description: How critical is this property test failure?
+      options:
+        - Critical (Core correctness property)
+        - High (Important accuracy property)
+        - Medium (Edge case property)
+        - Low (Minor property)
+    validations:
+      required: true
+
+  - type: textarea
+    id: related-requirements
+    attributes:
+      label: Related Requirements
+      description: Which requirements from the spec does this property validate?
+      placeholder: |
+        - Requirements: 1.6, 4.1 (from requirements.md)
+        - Design Property: Property 1 validates GSI-to-Query mapping
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other relevant information
+      placeholder: |
+        - Links to related property test failures
+        - Similar issues in other projects
+        - Potential fixes or workarounds
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please confirm you have completed these steps
+      options:
+        - label: I have included the complete test output
+          required: true
+        - label: I have provided the exact counterexample that caused the failure
+          required: true
+        - label: I have specified which property and requirements are affected
+          required: true
+        - label: I have included reproduction steps
+          required: true
+        - label: I have assessed the impact and criticality of this failure
+          required: true
