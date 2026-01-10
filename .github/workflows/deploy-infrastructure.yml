@@ -28,7 +28,6 @@ on:
         default: '+12898190331'
 
 env:
-  AWS_REGION: us-east-1
   PYTHON_VERSION: '3.12'
 
 jobs:
@@ -45,7 +44,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_DEPLOYMENT_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -75,21 +74,15 @@ jobs:
           cd infrastructure
           pipenv install --dev
 
-      - name: Get AWS Account ID
-        id: aws-account
-        run: |
-          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          echo "account_id=$ACCOUNT_ID" >> $GITHUB_OUTPUT
-
       - name: CDK Bootstrap (if needed)
         run: |
           cd infrastructure
-          pipenv run cdk bootstrap aws://${{ steps.aws-account.outputs.account_id }}/${{ env.AWS_REGION }} \
+          pipenv run cdk bootstrap aws://${{ vars.AWS_ACCOUNT_ID }}/${{ vars.AWS_REGION }} \
             --context customer_id=${{ inputs.customer_id }} \
             --context project_id=${{ inputs.project_id }} \
             --context environment=${{ inputs.environment }} \
-            --context region=${{ env.AWS_REGION }} \
-            --context account=${{ steps.aws-account.outputs.account_id }} \
+            --context region=${{ vars.AWS_REGION }} \
+            --context account=${{ vars.AWS_ACCOUNT_ID }} \
             --context sms_origination_number=${{ inputs.sms_origination_number }} \
             --context alert_email=${{ vars.ALERT_EMAIL }} \
             || echo "Bootstrap may already exist, continuing..."
@@ -102,8 +95,8 @@ jobs:
             --context customer_id=${{ inputs.customer_id }} \
             --context project_id=${{ inputs.project_id }} \
             --context environment=${{ inputs.environment }} \
-            --context region=${{ env.AWS_REGION }} \
-            --context account=${{ steps.aws-account.outputs.account_id }} \
+            --context region=${{ vars.AWS_REGION }} \
+            --context account=${{ vars.AWS_ACCOUNT_ID }} \
             --context sms_origination_number=${{ inputs.sms_origination_number }} \
             --context alert_email=${{ vars.ALERT_EMAIL }}
 
