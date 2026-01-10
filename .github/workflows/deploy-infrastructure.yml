@@ -7,6 +7,15 @@ on:
         description: 'Environment to deploy'
         required: true
         type: environment
+      action:
+        description: 'CDK action to perform'
+        required: true
+        type: choice
+        options:
+          - deploy
+          - diff
+          - synth
+        default: deploy
       skip_tests:
         description: 'Skip tests'
         required: false
@@ -63,7 +72,45 @@ jobs:
           pip install pipenv
           pipenv install --dev
 
+      - name: Skip tests warning
+        if: ${{ github.event.inputs.skip_tests == 'true' }}
+        run: |
+          echo "⚠️  CDK SYNTH VALIDATION SKIPPED - Emergency deployment mode"
+          echo "   This should only be used in emergencies!"
+
+      - name: Run CDK Tests
+        if: ${{ github.event.inputs.skip_tests != 'true' }}
+        working-directory: infrastructure
+        run: |
+          echo "🧪 Running CDK infrastructure tests..."
+          pipenv run pytest cdk/tests/ -v
+
+      - name: CDK Synth
+        if: ${{ github.event.inputs.action == 'synth' || github.event.inputs.action == 'deploy' }}
+        working-directory: infrastructure
+        run: |
+          echo "🔧 Synthesizing CDK stacks for ${{ github.event.inputs.environment }}..."
+          pipenv run cdk synth --all \
+            --context customer_id=${{ env.CUSTOMER_ID }} \
+            --context project_id=${{ env.PROJECT_ID }} \
+            --context environment=${{ github.event.inputs.environment }} \
+            --context sms_origination_number=${{ env.SMS_ORIGINATION_NUMBER }} \
+            --context alert_email=${{ vars.ALERT_EMAIL }}
+
+      - name: CDK Diff
+        if: ${{ github.event.inputs.action == 'diff' || github.event.inputs.action == 'deploy' }}
+        working-directory: infrastructure
+        run: |
+          echo "📋 Showing infrastructure changes..."
+          pipenv run cdk diff --all \
+            --context customer_id=${{ env.CUSTOMER_ID }} \
+            --context project_id=${{ env.PROJECT_ID }} \
+            --context environment=${{ github.event.inputs.environment }} \
+            --context sms_origination_number=${{ env.SMS_ORIGINATION_NUMBER }} \
+            --context alert_email=${{ vars.ALERT_EMAIL }} || true
+
       - name: CDK Deploy
+        if: ${{ github.event.inputs.action == 'deploy' }}
         working-directory: infrastructure
         run: |
           echo "🚀 Deploying infrastructure to ${{ github.event.inputs.environment }}..."
@@ -94,6 +141,7 @@ jobs:
             --context alert_email=${{ vars.ALERT_EMAIL }}
 
       - name: Output Stack Information
+        if: ${{ github.event.inputs.action == 'deploy' }}
         run: |
           echo "## Deployed Stacks" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
