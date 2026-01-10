@@ -91,6 +91,8 @@ class MonitoringStack(Stack):
 
     def _create_audit_encryption_key(self) -> kms.Key:
         """Create KMS key for audit log encryption."""
+        from aws_cdk import aws_iam as iam
+
         key = kms.Key(
             self,
             "AuditEncryptionKey",
@@ -98,6 +100,28 @@ class MonitoringStack(Stack):
             description=f"KMS key for audit log encryption in {self.config.environment}",
             enable_key_rotation=True,
             removal_policy=RemovalPolicy.RETAIN,
+        )
+
+        # Grant CloudWatch Logs permission to use the key
+        key.add_to_resource_policy(
+            iam.PolicyStatement(
+                actions=[
+                    "kms:Encrypt*",
+                    "kms:Decrypt*",
+                    "kms:ReEncrypt*",
+                    "kms:GenerateDataKey*",
+                    "kms:Describe*",
+                ],
+                principals=[
+                    iam.ServicePrincipal(f"logs.{self.region}.amazonaws.com")
+                ],
+                resources=["*"],
+                conditions={
+                    "ArnLike": {
+                        "kms:EncryptionContext:aws:logs:arn": f"arn:aws:logs:{self.region}:{self.account}:log-group:/audit/{self.config.environment}"
+                    }
+                },
+            )
         )
 
         return key
