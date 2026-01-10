@@ -21,13 +21,6 @@ on:
         required: false
         type: string
         default: 'integration-hub'
-      region:
-        description: 'AWS Region'
-        required: false
-        type: choice
-        options:
-          - 'us-east-1'
-        default: 'us-east-1'
       sms_origination_number:
         description: 'SMS Origination Number'
         required: false
@@ -69,7 +62,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ inputs.region }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Get AWS Account ID
         id: aws-account
@@ -80,11 +73,11 @@ jobs:
       - name: CDK Bootstrap (if needed)
         run: |
           cd infrastructure
-          pipenv run cdk bootstrap aws://${{ steps.aws-account.outputs.account_id }}/${{ inputs.region }} \
+          pipenv run cdk bootstrap aws://${{ steps.aws-account.outputs.account_id }}/${{ vars.AWS_REGION }} \
             --context customer_id=${{ inputs.customer_id }} \
             --context project_id=${{ inputs.project_id }} \
             --context environment=${{ inputs.environment }} \
-            --context region=${{ inputs.region }} \
+            --context region=${{ vars.AWS_REGION }} \
             --context account=${{ steps.aws-account.outputs.account_id }} \
             --context sms_origination_number=${{ inputs.sms_origination_number }} \
             --context alert_email=${{ vars.ALERT_EMAIL || 'corey@thepetersfamily.ca' }} \
@@ -98,7 +91,7 @@ jobs:
             --context customer_id=${{ inputs.customer_id }} \
             --context project_id=${{ inputs.project_id }} \
             --context environment=${{ inputs.environment }} \
-            --context region=${{ inputs.region }} \
+            --context region=${{ vars.AWS_REGION }} \
             --context account=${{ steps.aws-account.outputs.account_id }} \
             --context sms_origination_number=${{ inputs.sms_origination_number }} \
             --context alert_email=${{ vars.ALERT_EMAIL || 'corey@thepetersfamily.ca' }}
