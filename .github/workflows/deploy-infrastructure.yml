@@ -33,11 +33,6 @@ on:
         required: false
         type: string
         default: '+12898190331'
-      alert_email:
-        description: 'Email for CloudWatch alarm notifications (optional)'
-        required: false
-        type: string
-        default: ''
 
 jobs:
   deploy-infrastructure:
@@ -92,7 +87,7 @@ jobs:
             --context region=${{ inputs.region }} \
             --context account=${{ steps.aws-account.outputs.account_id }} \
             --context sms_origination_number=${{ inputs.sms_origination_number }} \
-            --context alert_email=${{ inputs.alert_email }} \
+            --context alert_email=${{ vars.ALERT_EMAIL || 'corey@thepetersfamily.ca' }} \
             || echo "Bootstrap may already exist, continuing..."
 
       - name: CDK Deploy
@@ -106,7 +101,7 @@ jobs:
             --context region=${{ inputs.region }} \
             --context account=${{ steps.aws-account.outputs.account_id }} \
             --context sms_origination_number=${{ inputs.sms_origination_number }} \
-            --context alert_email=${{ inputs.alert_email }}
+            --context alert_email=${{ vars.ALERT_EMAIL || 'corey@thepetersfamily.ca' }}
 
       - name: Output Stack Information
         run: |
