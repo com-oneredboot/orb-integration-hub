@@ -1,129 +1,66 @@
-# Bug: GraphQL operations built but not written to schema.graphql
+# GraphQL enum values generated with invalid hyphens
 
-## Environment
-- orb-schema-generator version: 0.13.2
-- Project: orb-integration-hub
-- OS: Linux
+## Context
 
-## Description
+From: orb-integration-hub  
+Related: Infrastructure modernization - CDK migration
 
-The generator reports building operations for each table schema but the generated `schema.graphql` file has empty Query and Mutation types.
+## Issue
 
-## Steps to Reproduce
+When generating GraphQL schema from registry YAML files, the generator creates enum values with hyphens (e.g., `ORB-AUTH-001`), which are invalid in GraphQL.
 
-1. Configure `schema-generator.yml` with GraphQL output enabled:
+## Error
+
+```
+Schema Creation Status is FAILED with details: Failed to parse schema document - ensure it's a valid SDL-formatted document.
+```
+
+GraphQL schema linter output:
+```
+1168:7 Syntax Error: Invalid number, expected digit but got: "A".
+```
+
+## Source
+
+`schemas/registries/ErrorRegistry.yml`:
 ```yaml
-output:
-  graphql:
-    enabled: true
-    targets:
-      api:
-        base_dir: ./apps/api/graphql
+items:
+  ORB-AUTH-001:
+    message: Invalid email format
+    ...
 ```
 
-2. Create table schemas with `type: dynamodb` and `targets: [api]`
+## Generated Output (Invalid)
 
-3. Run `orb-schema-generator generate`
-
-## Expected Behavior
-
-The generated `schema.graphql` should contain Query and Mutation operations for each table.
-
-## Actual Behavior
-
-Generator output shows operations being built:
-```
-Built 9 operations for Notifications
-Built 9 operations for ApplicationUsers
-Built 5 operations for SmsRateLimit
-Built 9 operations for OrganizationUsers
-Built 11 operations for ApplicationRoles
-Built 7 operations for Roles
-Built 7 operations for Applications
-Built 8 operations for Users
-```
-
-But the generated schema has empty types:
 ```graphql
-type Query {
+enum ErrorRegistry {
+  ORB-AUTH-001  # Invalid - hyphens not allowed
+  ORB-AUTH-002
+  ...
 }
+```
 
-type Mutation {
+## Expected Output
+
+```graphql
+enum ErrorRegistry {
+  ORB_AUTH_001  # Valid - underscores
+  ORB_AUTH_002
+  ...
 }
 ```
 
-## Comparison with Working Project
+## Workaround
 
-orb-geo-fence uses the same generator version and successfully generates operations. Key differences observed:
-- orb-geo-fence has `version: '1.0'` at top level (but generator says this is deprecated)
-- Both projects have similar table schema structures
-
-## Configuration Files
-
-### schema-generator.yml (orb-integration-hub)
-```yaml
-version: '1.0'
-
-project:
-  name: orb-integration-hub
-  customerId: orb
-  projectId: integration-hub
-  environment: dev
-
-paths:
-  schemas: ./schemas
-  subdirectories:
-    core: core
-    tables: tables
-    models: models
-    registries: registries
-    graphql: graphql
-    lambdas: lambdas
-
-output:
-  graphql:
-    enabled: true
-    targets:
-      api:
-        base_dir: ./apps/api/graphql
-      web:
-        base_dir: ./apps/api/graphql
+Manual sed replacement:
+```bash
+sed -i 's/ORB-AUTH-/ORB_AUTH_/g; s/ORB-API-/ORB_API_/g; ...' schema.graphql
 ```
 
-### Example Table Schema (Users.yml)
-```yaml
-type: dynamodb
-version: '1.0'
-name: Users
-targets:
-  - api
-model:
-  authConfig:
-    cognitoAuthentication:
-      groups:
-        OWNER:
-          - '*'
-        USER:
-          - '*'
-  keys:
-    primary:
-      partition: userId
-    secondary:
-      - name: EmailIndex
-        type: GSI
-        partition: email
-        projection_type: ALL
-  attributes:
-    userId:
-      type: string
-      required: true
-    # ... more attributes
-```
+## Suggested Fix
 
-## Impact
+In the GraphQL schema generator, convert registry item keys to valid GraphQL identifiers by replacing hyphens with underscores.
 
-This blocks all GraphQL API development for orb-integration-hub. We cannot proceed with frontend integration or API testing until this is resolved.
+## Priority
 
-## Workaround Attempted
-
-None - per team policy, we do not implement workarounds for generator bugs.
+High - Blocks deployment until manually fixed

@@ -7,6 +7,7 @@
 | #1 | orb-geo-fence | Remove default fallback for environment in deploy-infrastructure.yml | Open | Low |
 | #2 | orb-geo-fence | Add CDK pytest tests to deploy-infrastructure workflow | Open | Low |
 | #34 | orb-templates | Add guidance on running CDK tests in deploy workflows | Open | Low |
+| #58 | orb-schema-generator | GraphQL enum values generated with invalid hyphens | Open | High |
 
 ## Resolved Issues
 
