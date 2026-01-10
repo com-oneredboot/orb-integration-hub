@@ -1,0 +1,138 @@
+name: deploy-website
+
+permissions:
+  contents: read
+  id-token: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: environment
+      customer_id:
+        description: 'Customer ID'
+        required: false
+        type: string
+        default: 'orb'
+      project_id:
+        description: 'Project ID'
+        required: false
+        type: string
+        default: 'integration-hub'
+      region:
+        description: 'AWS Region'
+        required: false
+        type: choice
+        options:
+          - 'us-east-1'
+        default: 'us-east-1'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: apps/web
+
+      - name: Build Angular project
+        run: npm run build -- --configuration=${{ inputs.environment }}
+        working-directory: apps/web
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.region }}
+
+      - name: Get deployment parameters from SSM
+        id: ssm-params
+        run: |
+          PREFIX="${{ inputs.customer_id }}-${{ inputs.project_id }}-${{ inputs.environment }}"
+          
+          # Get S3 bucket name
+          BUCKET_NAME=$(aws ssm get-parameter \
+            --name "${PREFIX}-website-bucket-name" \
+            --query 'Parameter.Value' \
+            --output text)
+          echo "bucket_name=$BUCKET_NAME" >> $GITHUB_OUTPUT
+          
+          # Get CloudFront distribution ID
+          DISTRIBUTION_ID=$(aws ssm get-parameter \
+            --name "${PREFIX}-cloudfront-distribution-id" \
+            --query 'Parameter.Value' \
+            --output text)
+          echo "distribution_id=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
+          
+          echo "## Deployment Parameters" >> $GITHUB_STEP_SUMMARY
+          echo "- S3 Bucket: $BUCKET_NAME" >> $GITHUB_STEP_SUMMARY
+          echo "- CloudFront Distribution: $DISTRIBUTION_ID" >> $GITHUB_STEP_SUMMARY
+
+      - name: Deploy to S3
+        run: |
+          aws s3 sync dist/apps/web/browser \
+            s3://${{ steps.ssm-params.outputs.bucket_name }} \
+            --delete \
+            --cache-control "max-age=31536000,public" \
+            --exclude "index.html" \
+            --exclude "*.json"
+          
+          # Upload index.html and JSON files with no-cache
+          aws s3 sync dist/apps/web/browser \
+            s3://${{ steps.ssm-params.outputs.bucket_name }} \
+            --cache-control "no-cache,no-store,must-revalidate" \
+            --exclude "*" \
+            --include "index.html" \
+            --include "*.json"
+        working-directory: apps/web
+
+      - name: Invalidate CloudFront cache
+        run: |
+          INVALIDATION_ID=$(aws cloudfront create-invalidation \
+            --distribution-id ${{ steps.ssm-params.outputs.distribution_id }} \
+            --paths "/*" \
+            --query 'Invalidation.Id' \
+            --output text)
+          
+          echo "## CloudFront Invalidation" >> $GITHUB_STEP_SUMMARY
+          echo "- Invalidation ID: $INVALIDATION_ID" >> $GITHUB_STEP_SUMMARY
+          
+          # Wait for invalidation to complete
+          echo "Waiting for invalidation to complete..."
+          aws cloudfront wait invalidation-completed \
+            --distribution-id ${{ steps.ssm-params.outputs.distribution_id }} \
+            --id $INVALIDATION_ID
+          
+          echo "- Status: Completed" >> $GITHUB_STEP_SUMMARY
+
+      - name: Output deployment summary
+        run: |
+          PREFIX="${{ inputs.customer_id }}-${{ inputs.project_id }}-${{ inputs.environment }}"
+          
+          # Get website URL
+          WEBSITE_URL=$(aws ssm get-parameter \
+            --name "${PREFIX}-website-url" \
+            --query 'Parameter.Value' \
+            --output text)
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "- Website URL: $WEBSITE_URL" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The website has been deployed and the CloudFront cache has been invalidated." >> $GITHUB_STEP_SUMMARY

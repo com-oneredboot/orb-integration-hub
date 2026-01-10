@@ -1,0 +1,164 @@
+name: deploy-infrastructure
+
+permissions:
+  contents: read
+  id-token: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: environment
+      action:
+        description: 'Action to perform'
+        required: true
+        type: choice
+        options:
+          - 'diff'
+          - 'deploy'
+        default: 'diff'
+      customer_id:
+        description: 'Customer ID'
+        required: false
+        type: string
+        default: 'orb'
+      project_id:
+        description: 'Project ID'
+        required: false
+        type: string
+        default: 'integration-hub'
+      region:
+        description: 'AWS Region'
+        required: false
+        type: choice
+        options:
+          - 'us-east-1'
+        default: 'us-east-1'
+      sms_origination_number:
+        description: 'SMS Origination Number'
+        required: false
+        type: string
+        default: '+12898190331'
+      alert_email:
+        description: 'Alert Email (optional)'
+        required: false
+        type: string
+        default: ''
+      stacks:
+        description: 'Stacks to deploy (comma-separated, or "all")'
+        required: false
+        type: string
+        default: 'all'
+
+jobs:
+  deploy-infrastructure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install AWS CDK CLI
+        run: npm install -g aws-cdk
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pipenv
+          cd infrastructure
+          pipenv install --dev
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.region }}
+
+      - name: Get AWS Account ID
+        id: aws-account
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "account_id=$ACCOUNT_ID" >> $GITHUB_OUTPUT
+
+      - name: CDK Bootstrap (if needed)
+        if: inputs.action == 'deploy'
+        run: |
+          cd infrastructure
+          pipenv run cdk bootstrap aws://${{ steps.aws-account.outputs.account_id }}/${{ inputs.region }} \
+            --context customer_id=${{ inputs.customer_id }} \
+            --context project_id=${{ inputs.project_id }} \
+            --context environment=${{ inputs.environment }} \
+            --context region=${{ inputs.region }} \
+            --context account=${{ steps.aws-account.outputs.account_id }} \
+            --context sms_origination_number=${{ inputs.sms_origination_number }} \
+            --context alert_email=${{ inputs.alert_email }} \
+            || echo "Bootstrap may already exist, continuing..."
+
+      - name: CDK Diff
+        if: inputs.action == 'diff'
+        run: |
+          cd infrastructure
+          STACKS="${{ inputs.stacks }}"
+          if [ "$STACKS" = "all" ]; then
+            STACK_ARG="--all"
+          else
+            STACK_ARG=$(echo "$STACKS" | tr ',' ' ')
+          fi
+          pipenv run cdk diff $STACK_ARG \
+            --context customer_id=${{ inputs.customer_id }} \
+            --context project_id=${{ inputs.project_id }} \
+            --context environment=${{ inputs.environment }} \
+            --context region=${{ inputs.region }} \
+            --context account=${{ steps.aws-account.outputs.account_id }} \
+            --context sms_origination_number=${{ inputs.sms_origination_number }} \
+            --context alert_email=${{ inputs.alert_email }}
+
+      - name: CDK Deploy
+        if: inputs.action == 'deploy'
+        run: |
+          cd infrastructure
+          STACKS="${{ inputs.stacks }}"
+          if [ "$STACKS" = "all" ]; then
+            STACK_ARG="--all"
+          else
+            STACK_ARG=$(echo "$STACKS" | tr ',' ' ')
+          fi
+          pipenv run cdk deploy $STACK_ARG \
+            --require-approval never \
+            --context customer_id=${{ inputs.customer_id }} \
+            --context project_id=${{ inputs.project_id }} \
+            --context environment=${{ inputs.environment }} \
+            --context region=${{ inputs.region }} \
+            --context account=${{ steps.aws-account.outputs.account_id }} \
+            --context sms_origination_number=${{ inputs.sms_origination_number }} \
+            --context alert_email=${{ inputs.alert_email }}
+
+      - name: Output Stack Information
+        if: inputs.action == 'deploy'
+        run: |
+          echo "## Deployed Stacks" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Stack | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          PREFIX="${{ inputs.customer_id }}-${{ inputs.project_id }}-${{ inputs.environment }}"
+          for stack in bootstrap cognito dynamodb lambda-layers frontend lambda appsync monitoring; do
+            STACK_NAME="${PREFIX}-${stack}"
+            STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo "NOT_FOUND")
+            echo "| $STACK_NAME | $STATUS |" >> $GITHUB_STEP_SUMMARY
+          done

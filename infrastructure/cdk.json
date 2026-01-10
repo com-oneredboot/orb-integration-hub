@@ -1,15 +1,20 @@
 {
-  "app": "python app.py",
+  "app": "python cdk/app.py",
   "watch": {
     "include": [
-      "**"
+      "cdk/**"
     ],
     "exclude": [
       "cdk.out",
-      "**/__pycache__"
+      "**/__pycache__",
+      "**/.pytest_cache"
     ]
   },
   "context": {
-    "environment": "dev"
+    "customer_id": "orb",
+    "project_id": "integration-hub",
+    "environment": "dev",
+    "region": "us-east-1",
+    "sms_origination_number": "+12898190331"
   }
 }

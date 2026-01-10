@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [[source]]
-url = "https://aws:${CODEARTIFACT_AUTH_TOKEN}@orb-infrastructure-shared-codeartifact-domain-432045270100.d.codeartifact.us-east-1.amazonaws.com/pypi/orb-infrastructure-shared-codeartifact-repo/simple/"
+url = "https://aws:${CODEARTIFACT_AUTH_TOKEN}@orb-infrastructure-shared-codeartifact-domain-432045270100.d.codeartifact.us-east-1.amazonaws.com/pypi/orb-infrastructure-shared-pypi-repo/simple/"
 verify_ssl = true
 name = "codeartifact"
 
@@ -14,7 +14,7 @@ pynamodb = "*"
 requests = "*"
 stripe = "*"
 orb-common = {version = "*", index = "codeartifact"}  # From CodeArtifact - provides EnvironmentDesignator and shared utilities
-orb-schema-generator = {version = "==0.13.3", index = "codeartifact"}  # Schema generation tool
+orb-schema-generator = {version = "==0.13.4", index = "codeartifact"}  # Schema generation tool
 
 [dev-packages]
 black = "*"

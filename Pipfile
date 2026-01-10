@@ -9,7 +9,7 @@ verify_ssl = true
 name = "codeartifact"
 
 [packages]
-orb-schema-generator = {version = "==0.13.3", index = "codeartifact"}
+orb-schema-generator = {version = "==0.13.4", index = "codeartifact"}
 
 [dev-packages]
 pytest = ">=7.4.0"
