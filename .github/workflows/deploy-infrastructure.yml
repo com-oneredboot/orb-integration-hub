@@ -80,7 +80,7 @@ jobs:
             --context region=${{ vars.AWS_REGION }} \
             --context account=${{ steps.aws-account.outputs.account_id }} \
             --context sms_origination_number=${{ inputs.sms_origination_number }} \
-            --context alert_email=${{ vars.ALERT_EMAIL || 'corey@thepetersfamily.ca' }} \
+            --context alert_email=${{ vars.ALERT_EMAIL }} \
             || echo "Bootstrap may already exist, continuing..."
 
       - name: CDK Deploy
@@ -94,7 +94,7 @@ jobs:
             --context region=${{ vars.AWS_REGION }} \
             --context account=${{ steps.aws-account.outputs.account_id }} \
             --context sms_origination_number=${{ inputs.sms_origination_number }} \
-            --context alert_email=${{ vars.ALERT_EMAIL || 'corey@thepetersfamily.ca' }}
+            --context alert_email=${{ vars.ALERT_EMAIL }}
 
       - name: Output Stack Information
         run: |
