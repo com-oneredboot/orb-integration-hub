@@ -1,8 +1,8 @@
 name: deploy-infrastructure
 
 permissions:
-  contents: read
   id-token: write
+  contents: read
 
 on:
   workflow_dispatch:
@@ -27,6 +27,10 @@ on:
         type: string
         default: '+12898190331'
 
+env:
+  AWS_REGION: us-east-1
+  PYTHON_VERSION: '3.12'
+
 jobs:
   deploy-infrastructure:
     runs-on: ubuntu-latest
@@ -37,10 +41,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.12
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOYMENT_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
@@ -50,19 +60,20 @@ jobs:
       - name: Install AWS CDK CLI
         run: npm install -g aws-cdk
 
+      - name: Login to CodeArtifact for pipenv
+        run: |
+          export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token \
+            --domain orb-infrastructure-shared-codeartifact-domain \
+            --domain-owner 432045270100 \
+            --query authorizationToken \
+            --output text)
+          echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
+
       - name: Install Python dependencies
         run: |
-          python -m pip install --upgrade pip
           pip install pipenv
           cd infrastructure
           pipenv install --dev
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Get AWS Account ID
         id: aws-account
@@ -73,11 +84,11 @@ jobs:
       - name: CDK Bootstrap (if needed)
         run: |
           cd infrastructure
-          pipenv run cdk bootstrap aws://${{ steps.aws-account.outputs.account_id }}/${{ vars.AWS_REGION }} \
+          pipenv run cdk bootstrap aws://${{ steps.aws-account.outputs.account_id }}/${{ env.AWS_REGION }} \
             --context customer_id=${{ inputs.customer_id }} \
             --context project_id=${{ inputs.project_id }} \
             --context environment=${{ inputs.environment }} \
-            --context region=${{ vars.AWS_REGION }} \
+            --context region=${{ env.AWS_REGION }} \
             --context account=${{ steps.aws-account.outputs.account_id }} \
             --context sms_origination_number=${{ inputs.sms_origination_number }} \
             --context alert_email=${{ vars.ALERT_EMAIL }} \
@@ -91,7 +102,7 @@ jobs:
             --context customer_id=${{ inputs.customer_id }} \
             --context project_id=${{ inputs.project_id }} \
             --context environment=${{ inputs.environment }} \
-            --context region=${{ vars.AWS_REGION }} \
+            --context region=${{ env.AWS_REGION }} \
             --context account=${{ steps.aws-account.outputs.account_id }} \
             --context sms_origination_number=${{ inputs.sms_origination_number }} \
             --context alert_email=${{ vars.ALERT_EMAIL }}
