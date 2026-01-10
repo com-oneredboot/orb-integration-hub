@@ -14,7 +14,6 @@ on:
         type: boolean
 
 env:
-  AWS_REGION: us-east-1
   PYTHON_VERSION: '3.13'
   CUSTOMER_ID: orb
   PROJECT_ID: integration-hub
@@ -39,7 +38,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_DEPLOYMENT_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
