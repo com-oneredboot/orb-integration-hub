@@ -1,14 +1,10 @@
 name: deploy-infrastructure
 
-permissions:
-  id-token: write
-  contents: read
-
 on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Environment to deploy to'
+        description: 'Environment to deploy'
         required: true
         type: environment
 
@@ -19,17 +15,22 @@ env:
   PROJECT_ID: integration-hub
   SMS_ORIGINATION_NUMBER: '+12898190331'
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
-  deploy-infrastructure:
+  deploy:
+    name: Deploy Infrastructure
     runs-on: ubuntu-latest
     timeout-minutes: 60
     environment: ${{ github.event.inputs.environment }}
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_DEPLOYMENT_ROLE_ARN }}
@@ -40,12 +41,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Set up Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install AWS CDK CLI
+      - name: Install CDK CLI
         run: npm install -g aws-cdk
 
       - name: Login to CodeArtifact for pipenv
@@ -58,34 +54,38 @@ jobs:
           echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
 
       - name: Install Python dependencies
+        working-directory: infrastructure
         run: |
           pip install pipenv
-          cd infrastructure
           pipenv install --dev
 
-      - name: CDK Bootstrap (if needed)
-        run: |
-          cd infrastructure
-          pipenv run cdk bootstrap aws://${{ vars.AWS_ACCOUNT_ID }}/${{ env.AWS_REGION }} \
-            --context customer_id=${{ env.CUSTOMER_ID }} \
-            --context project_id=${{ env.PROJECT_ID }} \
-            --context environment=${{ inputs.environment }} \
-            --context region=${{ env.AWS_REGION }} \
-            --context account=${{ vars.AWS_ACCOUNT_ID }} \
-            --context sms_origination_number=${{ env.SMS_ORIGINATION_NUMBER }} \
-            --context alert_email=${{ vars.ALERT_EMAIL }} \
-            || echo "Bootstrap may already exist, continuing..."
-
       - name: CDK Deploy
+        working-directory: infrastructure
         run: |
-          cd infrastructure
+          echo "🚀 Deploying infrastructure to ${{ github.event.inputs.environment }}..."
+
+          STACK_STATUS=$(aws cloudformation describe-stacks --stack-name CDKToolkit --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo "DOES_NOT_EXIST")
+
+          if [[ "$STACK_STATUS" == *"ROLLBACK"* ]] || [[ "$STACK_STATUS" == *"FAILED"* ]]; then
+            echo "❌ CDKToolkit stack is in $STACK_STATUS state - manual intervention required"
+            exit 1
+          fi
+
+          if [[ "$STACK_STATUS" == "DOES_NOT_EXIST" ]]; then
+            echo "Bootstrapping CDK..."
+            pipenv run cdk bootstrap \
+              --context customer_id=${{ env.CUSTOMER_ID }} \
+              --context project_id=${{ env.PROJECT_ID }} \
+              --context environment=${{ github.event.inputs.environment }} \
+              --context sms_origination_number=${{ env.SMS_ORIGINATION_NUMBER }} \
+              --context alert_email=${{ vars.ALERT_EMAIL }}
+          fi
+
           pipenv run cdk deploy --all \
             --require-approval never \
             --context customer_id=${{ env.CUSTOMER_ID }} \
             --context project_id=${{ env.PROJECT_ID }} \
-            --context environment=${{ inputs.environment }} \
-            --context region=${{ env.AWS_REGION }} \
-            --context account=${{ vars.AWS_ACCOUNT_ID }} \
+            --context environment=${{ github.event.inputs.environment }} \
             --context sms_origination_number=${{ env.SMS_ORIGINATION_NUMBER }} \
             --context alert_email=${{ vars.ALERT_EMAIL }}
 
@@ -96,7 +96,7 @@ jobs:
           echo "| Stack | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
           
-          PREFIX="${{ env.CUSTOMER_ID }}-${{ env.PROJECT_ID }}-${{ inputs.environment }}"
+          PREFIX="${{ env.CUSTOMER_ID }}-${{ env.PROJECT_ID }}-${{ github.event.inputs.environment }}"
           for stack in bootstrap cognito dynamodb lambda-layers frontend lambda appsync monitoring; do
             STACK_NAME="${PREFIX}-${stack}"
             STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo "NOT_FOUND")
