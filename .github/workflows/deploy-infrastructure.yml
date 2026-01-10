@@ -28,6 +28,7 @@ on:
         default: '+12898190331'
 
 env:
+  AWS_REGION: us-east-1
   PYTHON_VERSION: '3.12'
 
 jobs:
@@ -44,7 +45,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_DEPLOYMENT_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -77,11 +78,11 @@ jobs:
       - name: CDK Bootstrap (if needed)
         run: |
           cd infrastructure
-          pipenv run cdk bootstrap aws://${{ vars.AWS_ACCOUNT_ID }}/${{ vars.AWS_REGION }} \
+          pipenv run cdk bootstrap aws://${{ vars.AWS_ACCOUNT_ID }}/${{ env.AWS_REGION }} \
             --context customer_id=${{ inputs.customer_id }} \
             --context project_id=${{ inputs.project_id }} \
             --context environment=${{ inputs.environment }} \
-            --context region=${{ vars.AWS_REGION }} \
+            --context region=${{ env.AWS_REGION }} \
             --context account=${{ vars.AWS_ACCOUNT_ID }} \
             --context sms_origination_number=${{ inputs.sms_origination_number }} \
             --context alert_email=${{ vars.ALERT_EMAIL }} \
@@ -95,7 +96,7 @@ jobs:
             --context customer_id=${{ inputs.customer_id }} \
             --context project_id=${{ inputs.project_id }} \
             --context environment=${{ inputs.environment }} \
-            --context region=${{ vars.AWS_REGION }} \
+            --context region=${{ env.AWS_REGION }} \
             --context account=${{ vars.AWS_ACCOUNT_ID }} \
             --context sms_origination_number=${{ inputs.sms_origination_number }} \
             --context alert_email=${{ vars.ALERT_EMAIL }}
