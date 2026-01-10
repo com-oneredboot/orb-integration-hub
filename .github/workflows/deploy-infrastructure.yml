@@ -11,14 +11,6 @@ on:
         description: 'Environment to deploy to'
         required: true
         type: environment
-      action:
-        description: 'Action to perform'
-        required: true
-        type: choice
-        options:
-          - 'diff'
-          - 'deploy'
-        default: 'diff'
       customer_id:
         description: 'Customer ID'
         required: false
@@ -42,15 +34,10 @@ on:
         type: string
         default: '+12898190331'
       alert_email:
-        description: 'Alert Email (optional)'
+        description: 'Email for CloudWatch alarm notifications (optional)'
         required: false
         type: string
         default: ''
-      stacks:
-        description: 'Stacks to deploy (comma-separated, or "all")'
-        required: false
-        type: string
-        default: 'all'
 
 jobs:
   deploy-infrastructure:
@@ -96,7 +83,6 @@ jobs:
           echo "account_id=$ACCOUNT_ID" >> $GITHUB_OUTPUT
 
       - name: CDK Bootstrap (if needed)
-        if: inputs.action == 'deploy'
         run: |
           cd infrastructure
           pipenv run cdk bootstrap aws://${{ steps.aws-account.outputs.account_id }}/${{ inputs.region }} \
@@ -109,36 +95,10 @@ jobs:
             --context alert_email=${{ inputs.alert_email }} \
             || echo "Bootstrap may already exist, continuing..."
 
-      - name: CDK Diff
-        if: inputs.action == 'diff'
-        run: |
-          cd infrastructure
-          STACKS="${{ inputs.stacks }}"
-          if [ "$STACKS" = "all" ]; then
-            STACK_ARG="--all"
-          else
-            STACK_ARG=$(echo "$STACKS" | tr ',' ' ')
-          fi
-          pipenv run cdk diff $STACK_ARG \
-            --context customer_id=${{ inputs.customer_id }} \
-            --context project_id=${{ inputs.project_id }} \
-            --context environment=${{ inputs.environment }} \
-            --context region=${{ inputs.region }} \
-            --context account=${{ steps.aws-account.outputs.account_id }} \
-            --context sms_origination_number=${{ inputs.sms_origination_number }} \
-            --context alert_email=${{ inputs.alert_email }}
-
       - name: CDK Deploy
-        if: inputs.action == 'deploy'
         run: |
           cd infrastructure
-          STACKS="${{ inputs.stacks }}"
-          if [ "$STACKS" = "all" ]; then
-            STACK_ARG="--all"
-          else
-            STACK_ARG=$(echo "$STACKS" | tr ',' ' ')
-          fi
-          pipenv run cdk deploy $STACK_ARG \
+          pipenv run cdk deploy --all \
             --require-approval never \
             --context customer_id=${{ inputs.customer_id }} \
             --context project_id=${{ inputs.project_id }} \
@@ -149,7 +109,6 @@ jobs:
             --context alert_email=${{ inputs.alert_email }}
 
       - name: Output Stack Information
-        if: inputs.action == 'deploy'
         run: |
           echo "## Deployed Stacks" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
