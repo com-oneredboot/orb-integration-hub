@@ -11,25 +11,13 @@ on:
         description: 'Environment to deploy to'
         required: true
         type: environment
-      customer_id:
-        description: 'Customer ID'
-        required: false
-        type: string
-        default: 'orb'
-      project_id:
-        description: 'Project ID'
-        required: false
-        type: string
-        default: 'integration-hub'
-      sms_origination_number:
-        description: 'SMS Origination Number'
-        required: false
-        type: string
-        default: '+12898190331'
 
 env:
   AWS_REGION: us-east-1
   PYTHON_VERSION: '3.12'
+  CUSTOMER_ID: orb
+  PROJECT_ID: integration-hub
+  SMS_ORIGINATION_NUMBER: '+12898190331'
 
 jobs:
   deploy-infrastructure:
@@ -79,12 +67,12 @@ jobs:
         run: |
           cd infrastructure
           pipenv run cdk bootstrap aws://${{ vars.AWS_ACCOUNT_ID }}/${{ env.AWS_REGION }} \
-            --context customer_id=${{ inputs.customer_id }} \
-            --context project_id=${{ inputs.project_id }} \
+            --context customer_id=${{ env.CUSTOMER_ID }} \
+            --context project_id=${{ env.PROJECT_ID }} \
             --context environment=${{ inputs.environment }} \
             --context region=${{ env.AWS_REGION }} \
             --context account=${{ vars.AWS_ACCOUNT_ID }} \
-            --context sms_origination_number=${{ inputs.sms_origination_number }} \
+            --context sms_origination_number=${{ env.SMS_ORIGINATION_NUMBER }} \
             --context alert_email=${{ vars.ALERT_EMAIL }} \
             || echo "Bootstrap may already exist, continuing..."
 
@@ -93,12 +81,12 @@ jobs:
           cd infrastructure
           pipenv run cdk deploy --all \
             --require-approval never \
-            --context customer_id=${{ inputs.customer_id }} \
-            --context project_id=${{ inputs.project_id }} \
+            --context customer_id=${{ env.CUSTOMER_ID }} \
+            --context project_id=${{ env.PROJECT_ID }} \
             --context environment=${{ inputs.environment }} \
             --context region=${{ env.AWS_REGION }} \
             --context account=${{ vars.AWS_ACCOUNT_ID }} \
-            --context sms_origination_number=${{ inputs.sms_origination_number }} \
+            --context sms_origination_number=${{ env.SMS_ORIGINATION_NUMBER }} \
             --context alert_email=${{ vars.ALERT_EMAIL }}
 
       - name: Output Stack Information
@@ -108,7 +96,7 @@ jobs:
           echo "| Stack | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
           
-          PREFIX="${{ inputs.customer_id }}-${{ inputs.project_id }}-${{ inputs.environment }}"
+          PREFIX="${{ env.CUSTOMER_ID }}-${{ env.PROJECT_ID }}-${{ inputs.environment }}"
           for stack in bootstrap cognito dynamodb lambda-layers frontend lambda appsync monitoring; do
             STACK_NAME="${PREFIX}-${stack}"
             STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo "NOT_FOUND")
