@@ -59,6 +59,7 @@ orb-integration-hub/
 │   │   ├── layers/          # Lambda layers
 │   │   ├── models/          # Generated Python models
 │   │   ├── enums/           # Generated Python enums
+│   │   ├── graphql/         # GraphQL schema and resolvers
 │   │   ├── Pipfile          # Python dependencies
 │   │   └── Pipfile.lock
 │   └── web/                 # Angular frontend application
@@ -72,11 +73,14 @@ orb-integration-hub/
 │   ├── core/                # Core types and enums
 │   ├── lambdas/             # Lambda resolver schemas
 │   └── registries/          # Registry definitions
-├── infrastructure/          # CloudFormation templates
-│   └── cloudformation/      # SAM/CloudFormation YAML files
+├── infrastructure/          # AWS CDK infrastructure
+│   └── cdk/                 # CDK Python application
+│       ├── app.py           # CDK app entry point
+│       ├── config.py        # Configuration management
+│       ├── stacks/          # Stack definitions
+│       ├── shared_constructs/ # Reusable constructs
+│       └── generated/       # Auto-generated CDK constructs
 ├── docs/                    # Technical documentation
-├── tests/                   # Test files
-│   └── property/            # Property-based tests
 ├── repositories/            # Reference repositories (READ-ONLY)
 │   ├── orb-templates/       # Standards and documentation
 │   ├── orb-infrastructure/  # Shared infrastructure
@@ -165,21 +169,42 @@ npm run format
 
 ## Deployment
 
-Deployment is handled via GitHub Actions. See `.github/workflows/` for:
-- `comprehensive-testing.yml` - Full test suite
-- `deploy-lambda-layers.yml` - Lambda layer deployment
+Deployment is handled via GitHub Actions workflows:
 
-### Manual Deployment
+- `deploy-infrastructure.yml` - CDK infrastructure deployment (synth/diff/deploy)
+- `deploy-website.yml` - Angular frontend deployment to S3/CloudFront
+- `comprehensive-testing.yml` - Full test suite
+
+### CDK Commands
 
 ```bash
-# Deploy Lambda functions
-cd infrastructure/cloudformation
-sam build --template lambdas.yml
-sam deploy --profile sso-orb-dev --stack-name orb-integration-hub-dev-lambdas
+cd infrastructure
 
-# Deploy Lambda layers
-sam build --template lambda-layers.yml
-sam deploy --profile sso-orb-dev --stack-name orb-integration-hub-dev-lambda-layers
+# Synthesize CloudFormation templates
+cdk synth --all \
+  -c customer_id=orb \
+  -c project_id=integration-hub \
+  -c environment=dev
+
+# Preview changes
+cdk diff --all \
+  -c customer_id=orb \
+  -c project_id=integration-hub \
+  -c environment=dev
+
+# Deploy all stacks
+cdk deploy --all --require-approval never \
+  -c customer_id=orb \
+  -c project_id=integration-hub \
+  -c environment=dev
+```
+
+### Running CDK Tests
+
+```bash
+cd infrastructure
+pipenv install --dev
+pipenv run pytest cdk/tests/ -v
 ```
 
 ## AWS Configuration

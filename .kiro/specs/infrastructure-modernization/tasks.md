@@ -217,33 +217,33 @@ This implementation plan migrates orb-integration-hub from SAM/CloudFormation to
   - Test deploy-website workflow in dev environment
   - Verify both workflows complete successfully
 
-- [ ] 17. Clean up old files
-  - [ ] 17.1 Delete old workflow files
+- [x] 17. Clean up old files
+  - [x] 17.1 Delete old workflow files
     - Delete .github/workflows/deploy-backend.yml
     - Delete .github/workflows/deploy-frontend.yml
     - Delete .github/workflows/deploy-frontend-resources.yml
     - Delete .github/workflows/deploy-packages.yml
     - _Requirements: 1.4, 12.5_
 
-  - [ ] 17.2 Delete SAM templates directory
+  - [x] 17.2 Delete SAM templates directory
     - Delete infrastructure/cloudformation/ directory
     - Keep infrastructure/cdk/ as the only IaC directory
     - _Requirements: 11.2_
 
-  - [ ] 17.3 Move generated CDK constructs
+  - [x] 17.3 Move generated CDK constructs
     - Move infrastructure/cdk/appsync/ to infrastructure/cdk/generated/appsync/
     - Move infrastructure/cdk/tables/ to infrastructure/cdk/generated/tables/
     - Update imports in stack files
     - _Requirements: 11.5_
 
-- [-] 18. Update documentation
-  - [ ] 18.1 Update docs/architecture.md
+- [x] 18. Update documentation
+  - [x] 18.1 Update docs/architecture.md
     - Document CDK-based infrastructure approach
     - Update architecture diagrams if present
     - Reference new workflow names
     - _Requirements: 13.1_
 
-  - [ ] 18.2 Update README.md
+  - [x] 18.2 Update README.md
     - Add CDK deployment commands section
     - Update prerequisites (Node.js for CDK CLI)
     - Reference new workflows
@@ -255,15 +255,15 @@ This implementation plan migrates orb-integration-hub from SAM/CloudFormation to
     - Document deployment commands
     - _Requirements: 13.3_
 
-  - [ ] 18.4 Update CHANGELOG.md
+  - [x] 18.4 Update CHANGELOG.md
     - Add new version section
     - Document: Added CDK infrastructure, new workflows
     - Document: Changed infrastructure directory structure
     - Document: Removed SAM templates, old workflows
     - _Requirements: 13.4, 14.1_
 
-- [ ] 19. Version management
-  - [ ] 19.1 Bump version
+- [x] 19. Version management
+  - [x] 19.1 Bump version
     - Update version in appropriate files
     - Use semantic versioning (minor bump for new feature)
     - _Requirements: 14.2_

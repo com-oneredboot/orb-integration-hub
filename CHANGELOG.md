@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-01-10
+
+### Added
+- AWS CDK infrastructure replacing SAM/CloudFormation
+- CDK stacks: Bootstrap, Cognito, DynamoDB, Lambda Layers, Lambda, AppSync, Monitoring, Frontend
+- `deploy-infrastructure.yml` workflow with synth/diff/deploy actions
+- `deploy-website.yml` workflow for Angular frontend deployment
+- CDK pytest tests for all stacks
+- KMS encryption for CloudWatch Logs in monitoring stack
+
+### Changed
+- Migrated infrastructure from SAM templates to AWS CDK
+- Moved generated CDK constructs to `infrastructure/cdk/generated/`
+- Updated `schema-generator.yml` output paths for CDK
+- Updated architecture documentation for CDK-based infrastructure
+
+### Removed
+- SAM/CloudFormation templates (`infrastructure/cloudformation/`)
+- Old deployment workflows (deploy-backend.yml, deploy-frontend.yml, deploy-frontend-resources.yml, deploy-packages.yml)
+
+### Fixed
+- GraphQL enum values with hyphens (orb-schema-generator #58)
+
+## [1.0.1] - 2026-01-09
+
 ### Added
 - Pre-commit hooks for automated code quality (ruff, black, mypy)
 - Spec standards steering file for consistent spec quality
