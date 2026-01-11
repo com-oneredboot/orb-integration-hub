@@ -20,7 +20,7 @@ import { selectIsAuthenticated } from '../../features/user/store/user.selectors'
     imports: [RouterModule, CommonModule]
 })
 export class PlatformLayoutComponent {
-  title = 'OneRedBoot Integration Hub';
+  title = 'Orb Integration Hub';
   currentYear: number = new Date().getFullYear();
   isAuthenticated$ = this.store.select(selectIsAuthenticated);
 

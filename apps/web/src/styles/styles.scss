@@ -1,15 +1,7 @@
 @use 'variables' as v;
 @use 'mixins' as m;
 @use 'components';
-
-// Global styles
-:root {
-  --orb-red: #E31837;
-  --orb-black: #000000;
-  --orb-gray: #666666;
-  --orb-light-gray: #e5e5e5;
-  --orb-white: #FFFFFF;
-}
+@use 'tokens';  // Design tokens - CSS custom properties
 
 html, body {
   margin: 0;

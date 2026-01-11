@@ -2,32 +2,36 @@
 @use '../../../styles/mixins' as m;
 @use "sass:color";
 
+// Platform landing page styles using design tokens
+// Colors use CSS custom properties from _tokens.scss
+// Spacing uses SCSS variables for backward compatibility
+
 .home-container {
   width: 100%;
   margin: 0;
   padding: 0;
-  font-family: v.$font-family-base;
+  font-family: var(--font-family-primary);
   overflow-x: hidden;
-  background-color: v.$orb-paper;
-  color: v.$text-primary;
+  background-color: var(--color-background-secondary);
+  color: var(--color-text-primary);
 }
 
 .hero-section {
-  background: v.$orb-white;
-  padding: v.$spacing-xl * 2 0;
+  background: var(--color-background);
+  padding: var(--spacing-2xl) 0;
   position: relative;
   overflow: hidden;
 
   .hero-content {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0 v.$spacing-lg;
+    padding: 0 var(--spacing-lg);
   }
 
   .hero-flex-container {
     display: flex;
     align-items: center;
-    gap: v.$spacing-xl * 3;
+    gap: var(--spacing-24);
     justify-content: center;
 
     @media (max-width: 1024px) {
@@ -52,7 +56,7 @@
     max-width: 600px;
     display: flex;
     flex-direction: column;
-    gap: v.$spacing-xl;
+    gap: var(--spacing-xl);
     align-items: flex-start;
 
     @media (max-width: 1024px) {
@@ -63,8 +67,8 @@
     .logo-container {
       display: flex;
       align-items: center;
-      gap: v.$spacing-md;
-      margin-bottom: v.$spacing-md;
+      gap: var(--spacing-md);
+      margin-bottom: var(--spacing-md);
 
       img {
         width: 48px;
@@ -73,10 +77,10 @@
       }
 
       h1 {
-        font-family: v.$font-family-heading;
-        font-size: v.$font-size-xl;
-        font-weight: v.$font-weight-bold;
-        color: v.$orb-dark-blue;
+        font-family: var(--font-family-heading);
+        font-size: var(--font-size-4xl);
+        font-weight: var(--font-weight-bold);
+        color: var(--color-neutral-800);
         margin: 0;
       }
 
@@ -86,10 +90,10 @@
     }
 
     .hero-subtitle {
-      font-size: v.$font-size-lg;
-      color: v.$orb-dark-blue;
+      font-size: var(--font-size-lg);
+      color: var(--color-neutral-800);
       margin: 0;
-      line-height: 1.6;
+      line-height: var(--line-height-relaxed);
       text-align: left;
 
       @media (max-width: 1024px) {
@@ -100,7 +104,7 @@
 
   .cta-buttons {
     display: flex;
-    gap: v.$spacing-lg;
+    gap: var(--spacing-lg);
     justify-content: center;
 
     @media (max-width: 768px) {
@@ -117,35 +121,35 @@
 
 .section-header {
   text-align: center;
-  margin-bottom: v.$spacing-xl * 2;
+  margin-bottom: var(--spacing-2xl);
 
   h2 {
-    font-family: v.$font-family-heading;
-    font-size: v.$font-size-xl;
-    font-weight: v.$font-weight-bold;
-    margin-bottom: v.$spacing-md;
-    color: v.$orb-dark-blue;
+    font-family: var(--font-family-heading);
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--spacing-md);
+    color: var(--color-neutral-800);
   }
 
   .section-subtitle {
-    font-size: v.$font-size-lg;
-    color: v.$text-secondary;
+    font-size: var(--font-size-lg);
+    color: var(--color-text-secondary);
     max-width: 600px;
     margin: 0 auto;
   }
 }
 
 .features-section {
-  padding: v.$spacing-xl * 3 0;
-  background-color: v.$orb-dark-blue;
+  padding: var(--spacing-24) 0;
+  background-color: var(--color-neutral-800);
   position: relative;
 
   .section-header {
     h2 {
-      color: v.$orb-white;
+      color: var(--color-text-inverse);
     }
     .section-subtitle {
-      color: v.$orb-light-gray;
+      color: var(--color-neutral-300);
     }
   }
 }
@@ -153,29 +157,29 @@
 .features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: v.$spacing-xl;
+  gap: var(--spacing-xl);
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 v.$spacing-lg;
+  padding: 0 var(--spacing-lg);
 }
 
 .feature-card {
-  padding: v.$spacing-xl;
-  background: v.$orb-white;
-  border-radius: v.$border-radius-lg;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  padding: var(--spacing-xl);
+  background: var(--color-background);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
   text-align: center;
 
   &:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-lg);
   }
 
   .feature-icon {
-    font-size: v.$font-size-xl * 1.5;
+    font-size: var(--font-size-4xl);
     color: v.$orb-red;
-    margin-bottom: v.$spacing-lg;
+    margin-bottom: var(--spacing-lg);
 
     fa-icon {
       filter: drop-shadow(0 2px 4px rgba(227, 24, 55, 0.2));
@@ -183,31 +187,31 @@
   }
 
   h3 {
-    font-family: v.$font-family-heading;
-    font-size: v.$font-size-lg;
-    font-weight: v.$font-weight-semibold;
-    margin-bottom: v.$spacing-md;
-    color: v.$orb-dark-blue;
+    font-family: var(--font-family-heading);
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: var(--spacing-md);
+    color: var(--color-neutral-800);
   }
 
   p {
-    color: v.$text-secondary;
-    line-height: 1.6;
+    color: var(--color-text-secondary);
+    line-height: var(--line-height-relaxed);
   }
 }
 
 .integration-section {
-  padding: v.$spacing-xl * 3 0;
-  background-color: v.$orb-white;
+  padding: var(--spacing-24) 0;
+  background-color: var(--color-background);
 }
 
 .integration-content {
   display: flex;
   align-items: center;
-  gap: v.$spacing-xl * 2;
+  gap: var(--spacing-2xl);
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 v.$spacing-lg;
+  padding: 0 var(--spacing-lg);
 
   @media (max-width: 1024px) {
     flex-direction: column;
@@ -226,14 +230,14 @@
   li {
     display: flex;
     align-items: center;
-    gap: v.$spacing-md;
-    margin-bottom: v.$spacing-lg;
-    font-size: v.$font-size-lg;
-    color: v.$text-primary;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    font-size: var(--font-size-lg);
+    color: var(--color-text-primary);
 
     fa-icon {
       color: v.$orb-red;
-      font-size: v.$font-size-xl;
+      font-size: var(--font-size-xl);
     }
   }
 }
@@ -243,44 +247,44 @@
 }
 
 .code-preview {
-  background: v.$gray-900;
-  border-radius: v.$border-radius-lg;
+  background: var(--color-neutral-900);
+  border-radius: var(--radius-lg);
   overflow: hidden;
 
   .code-header {
     display: flex;
     align-items: center;
-    gap: v.$spacing-sm;
-    padding: v.$spacing-md v.$spacing-lg;
-    background: v.$gray-800;
-    color: v.$white;
-    font-family: v.$font-family-monospace;
-    font-size: v.$font-size-sm;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--color-neutral-800);
+    color: var(--color-text-inverse);
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-sm);
   }
 
   pre {
     margin: 0;
-    padding: v.$spacing-lg;
+    padding: var(--spacing-lg);
     overflow-x: auto;
 
     code {
-      font-family: v.$font-family-monospace;
-      color: v.$white;
-      line-height: 1.5;
+      font-family: var(--font-family-mono);
+      color: var(--color-text-inverse);
+      line-height: var(--line-height-normal);
     }
   }
 }
 
 .pricing-section {
-  padding: v.$spacing-xl * 3 0;
-  background-color: v.$orb-dark-blue;
+  padding: var(--spacing-24) 0;
+  background-color: var(--color-neutral-800);
 
   .section-header {
     h2 {
-      color: v.$orb-white;
+      color: var(--color-text-inverse);
     }
     .section-subtitle {
-      color: v.$orb-light-gray;
+      color: var(--color-neutral-300);
     }
   }
 }
@@ -288,24 +292,24 @@
 .pricing-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: v.$spacing-xl;
+  gap: var(--spacing-xl);
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 v.$spacing-lg;
+  padding: 0 var(--spacing-lg);
 }
 
 .pricing-card {
-  background: v.$orb-white;
-  border-radius: v.$border-radius-lg;
-  padding: v.$spacing-xl;
+  background: var(--color-background);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
   text-align: center;
   position: relative;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+  box-shadow: var(--shadow-md);
 
   &:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-lg);
   }
 
   &.featured {
@@ -320,57 +324,57 @@
   left: 50%;
   transform: translateX(-50%);
   background: v.$orb-red;
-  color: v.$white;
-  padding: v.$spacing-xs v.$spacing-md;
-  border-radius: v.$border-radius;
-  font-size: v.$font-size-sm;
-  font-weight: v.$font-weight-medium;
+  color: var(--color-text-inverse);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   display: flex;
   align-items: center;
-  gap: v.$spacing-xs;
+  gap: var(--spacing-xs);
 }
 
 .pricing-header {
-  margin-bottom: v.$spacing-xl;
+  margin-bottom: var(--spacing-xl);
 
   h3 {
-    font-family: v.$font-family-heading;
-    font-size: v.$font-size-xl;
-    color: v.$text-primary;
-    margin-bottom: v.$spacing-md;
+    font-family: var(--font-family-heading);
+    font-size: var(--font-size-2xl);
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-md);
   }
 }
 
 .price {
   .amount {
-    font-size: v.$font-size-xl * 1.5;
-    font-weight: v.$font-weight-bold;
-    color: v.$text-primary;
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
   }
 
   .detail {
-    color: v.$text-secondary;
+    color: var(--color-text-secondary);
   }
 }
 
 .price-description {
-  color: v.$text-secondary;
-  font-size: v.$font-size-sm;
-  margin-top: v.$spacing-xs;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-xs);
 }
 
 .pricing-features {
   list-style: none;
   padding: 0;
-  margin: v.$spacing-xl 0;
+  margin: var(--spacing-xl) 0;
   text-align: left;
 
   li {
     display: flex;
     align-items: center;
-    gap: v.$spacing-sm;
-    margin-bottom: v.$spacing-md;
-    color: v.$text-primary;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    color: var(--color-text-primary);
 
     fa-icon {
       color: v.$orb-red;
@@ -382,17 +386,17 @@
 %button-base {
   display: inline-flex;
   align-items: center;
-  gap: v.$spacing-sm;
-  padding: v.$spacing-md v.$spacing-lg;
-  border-radius: v.$border-radius-md;
-  font-weight: v.$font-weight-semibold;
-  font-size: v.$font-size-base;
-  transition: all 0.2s ease;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-base);
+  transition: all var(--transition-fast);
   border: none;
   cursor: pointer;
   
   fa-icon {
-    font-size: v.$font-size-lg;
+    font-size: var(--font-size-lg);
   }
 
   &:hover {
@@ -407,7 +411,7 @@
 .primary-button {
   @extend %button-base;
   background-color: v.$orb-red;
-  color: v.$orb-white;
+  color: var(--color-text-inverse);
   box-shadow: 0 2px 4px rgba(227, 24, 55, 0.2);
 
   &:hover {
@@ -419,7 +423,7 @@
 .secondary-button {
   @extend %button-base;
   background-color: v.$orb-red;
-  color: v.$orb-white;
+  color: var(--color-text-inverse);
   box-shadow: 0 2px 4px rgba(227, 24, 55, 0.2);
 
   &:hover {
@@ -431,10 +435,10 @@
 .pricing-cta {
   @extend %button-base;
   background-color: v.$orb-red;
-  color: v.$orb-white;
+  color: var(--color-text-inverse);
   width: 100%;
   justify-content: center;
-  margin-top: v.$spacing-lg;
+  margin-top: var(--spacing-lg);
   box-shadow: 0 2px 4px rgba(227, 24, 55, 0.2);
 
   &:hover {
@@ -444,7 +448,7 @@
 
   &.featured {
     background-color: v.$orb-red;
-    color: v.$orb-white;
+    color: var(--color-text-inverse);
     
     &:hover {
       background-color: color.adjust(v.$orb-red, $lightness: -5%);
@@ -453,32 +457,32 @@
 }
 
 .cta-section {
-  padding: v.$spacing-xl * 3 0;
-  background-color: v.$orb-white;
+  padding: var(--spacing-24) 0;
+  background-color: var(--color-background);
   text-align: center;
 
   .cta-content {
     max-width: 800px;
     margin: 0 auto;
-    padding: 0 v.$spacing-lg;
+    padding: 0 var(--spacing-lg);
 
     h2 {
-      font-family: v.$font-family-heading;
-      font-size: v.$font-size-xl * 1.5;
-      font-weight: v.$font-weight-bold;
-      color: v.$text-primary;
-      margin-bottom: v.$spacing-md;
+      font-family: var(--font-family-heading);
+      font-size: var(--font-size-4xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-primary);
+      margin-bottom: var(--spacing-md);
     }
 
     p {
-      font-size: v.$font-size-lg;
-      color: v.$text-secondary;
-      margin-bottom: v.$spacing-xl;
+      font-size: var(--font-size-lg);
+      color: var(--color-text-secondary);
+      margin-bottom: var(--spacing-xl);
     }
 
     .cta-buttons {
       display: flex;
-      gap: v.$spacing-xl;
+      gap: var(--spacing-xl);
       justify-content: center;
 
       @media (max-width: 768px) {
@@ -492,4 +496,4 @@
       }
     }
   }
-} 
+}

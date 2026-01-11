@@ -4,6 +4,75 @@
 
 orb-integration-hub uses AWS CDK (Cloud Development Kit) for infrastructure as code. All infrastructure is defined in Python and deployed via GitHub Actions.
 
+## Stack Dependency Diagram
+
+```mermaid
+graph TD
+    subgraph "Core Infrastructure"
+        Bootstrap[Bootstrap Stack<br/>S3, SQS, IAM]
+        Cognito[Cognito Stack<br/>User Pool, Identity Pool]
+        DynamoDB[DynamoDB Stack<br/>11 Tables with PITR]
+    end
+
+    subgraph "Compute Layer"
+        Layers[Lambda Layers Stack<br/>Shared Dependencies]
+        Lambda[Lambda Stack<br/>4 Functions]
+    end
+
+    subgraph "API Layer"
+        AppSync[AppSync Stack<br/>GraphQL API]
+    end
+
+    subgraph "Observability"
+        Monitoring[Monitoring Stack<br/>CloudWatch, GuardDuty]
+    end
+
+    subgraph "Frontend"
+        Frontend[Frontend Stack<br/>S3, CloudFront]
+    end
+
+    Bootstrap --> Cognito
+    Cognito --> DynamoDB
+    DynamoDB --> Layers
+    Layers --> Lambda
+    Lambda --> AppSync
+    AppSync --> Monitoring
+    AppSync --> Frontend
+    Cognito --> AppSync
+    DynamoDB --> AppSync
+```
+
+## Data Flow Diagram
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant CloudFront
+    participant AppSync
+    participant Cognito
+    participant Lambda
+    participant DynamoDB
+
+    User->>CloudFront: HTTPS Request
+    CloudFront->>User: Angular SPA
+    User->>Cognito: Authenticate
+    Cognito->>User: JWT Token
+    User->>AppSync: GraphQL Query/Mutation
+    AppSync->>Cognito: Validate Token
+    
+    alt Direct DynamoDB Access
+        AppSync->>DynamoDB: VTL Resolver
+        DynamoDB->>AppSync: Data
+    else Lambda Resolver
+        AppSync->>Lambda: Invoke
+        Lambda->>DynamoDB: Query/Update
+        DynamoDB->>Lambda: Data
+        Lambda->>AppSync: Response
+    end
+    
+    AppSync->>User: GraphQL Response
+```
+
 ### CDK Stack Structure
 
 The infrastructure is organized into modular stacks with explicit dependencies:

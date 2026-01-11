@@ -9,9 +9,10 @@ description: HTML template file
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Integration Hub</title>
+  <title>Orb Integration Hub</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="description" content="Orb Integration Hub - A comprehensive solution for payment processing, event management, and user authentication">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="theme-color" content="#3B82F6">
@@ -29,6 +30,37 @@ description: HTML template file
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16x16.png">
+
+  <!-- JSON-LD Structured Data for LLM discoverability -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Orb Integration Hub",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "description": "A comprehensive solution for payment processing, event management, and user authentication. Integrate multiple payment providers, manage events, and secure your applications with enterprise-grade authentication.",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "description": "Free tier available with pay-per-transaction pricing"
+    },
+    "featureList": [
+      "Multiple payment provider integration (Stripe, PayPal, Apple Pay, Google Pay)",
+      "Event management and ticketing",
+      "AWS Cognito authentication",
+      "GraphQL API",
+      "Real-time analytics dashboard",
+      "Developer-friendly APIs"
+    ],
+    "url": "https://orb-integration-hub.com",
+    "provider": {
+      "@type": "Organization",
+      "name": "Orb Integration Hub"
+    }
+  }
+  </script>
 </head>
 <body>
   <app-root></app-root>

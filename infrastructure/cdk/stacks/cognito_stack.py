@@ -92,7 +92,12 @@ class CognitoStack(Stack):
             Tags.of(self).add(key, value)
 
     def _create_cognito_sms_role(self) -> iam.Role:
-        """Create IAM role for Cognito SMS sending."""
+        """Create IAM role for Cognito SMS sending.
+        
+        Note: Cognito requires sns:Publish permission for SMS MFA. The resource
+        must allow publishing to phone numbers (sns:* for direct SMS) and the
+        verification topic. We scope to the account's SNS resources.
+        """
         external_id = f"{self.config.prefix}-cognito-sms"
 
         role = iam.Role(
@@ -107,30 +112,19 @@ class CognitoStack(Stack):
             ),
         )
 
-        # SNS permissions for SMS
+        # SNS permissions for SMS - scoped to account resources
+        # Cognito needs Publish for direct SMS to phone numbers
         role.add_to_policy(
             iam.PolicyStatement(
                 effect=iam.Effect.ALLOW,
-                actions=[
-                    "sns:CreateTopic",
-                    "sns:SetTopicAttributes",
-                    "sns:GetTopicAttributes",
-                    "sns:Subscribe",
-                    "sns:ConfirmSubscription",
-                    "sns:ListTopics",
-                    "sns:DeleteTopic",
-                    "sns:AddPermission",
-                    "sns:RemovePermission",
-                    "sns:SetEndpointAttributes",
-                    "sns:GetEndpointAttributes",
-                    "sns:ListSubscriptionsByTopic",
-                    "sns:Publish",
+                actions=["sns:Publish"],
+                resources=[
+                    f"arn:aws:sns:{self.region}:{self.account}:*",
                 ],
-                resources=["*"],
             )
         )
 
-        # X-Ray permissions
+        # X-Ray permissions - scoped to account
         role.add_to_policy(
             iam.PolicyStatement(
                 effect=iam.Effect.ALLOW,
@@ -138,14 +132,21 @@ class CognitoStack(Stack):
                     "xray:PutTelemetryRecords",
                     "xray:PutTraceSegments",
                 ],
-                resources=["*"],
+                resources=[
+                    f"arn:aws:xray:{self.region}:{self.account}:*",
+                ],
             )
         )
 
         return role
 
     def _create_lambda_role(self) -> iam.Role:
-        """Create IAM role for Cognito Lambda triggers."""
+        """Create IAM role for Cognito Lambda triggers.
+        
+        Permissions are scoped to project resources where possible.
+        Note: Cognito permissions use prefix-based ARN pattern to avoid circular
+        dependency with UserPool (which references this Lambda).
+        """
         role = iam.Role(
             self,
             "CognitoLambdaRole",
@@ -158,25 +159,56 @@ class CognitoStack(Stack):
             ],
         )
 
-        # Additional permissions
+        # CloudFormation describe stacks - scoped to project stacks
         role.add_to_policy(
             iam.PolicyStatement(
                 effect=iam.Effect.ALLOW,
-                actions=[
-                    "cloudfront:CreateInvalidation",
-                    "codepipeline:PutJobSuccessResult",
-                    "codepipeline:PutJobFailureResult",
-                    "cloudformation:DescribeStacks",
+                actions=["cloudformation:DescribeStacks"],
+                resources=[
+                    f"arn:aws:cloudformation:{self.region}:{self.account}:stack/{self.config.prefix}-*/*",
                 ],
-                resources=["*"],
             )
         )
 
+        # SNS publish - scoped to project topics
         role.add_to_policy(
             iam.PolicyStatement(
                 effect=iam.Effect.ALLOW,
                 actions=["sns:Publish"],
-                resources=["*"],
+                resources=[
+                    f"arn:aws:sns:{self.region}:{self.account}:{self.config.prefix}-*",
+                ],
+            )
+        )
+
+        # X-Ray tracing permissions - scoped to account
+        role.add_to_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "xray:PutTraceSegments",
+                    "xray:PutTelemetryRecords",
+                ],
+                resources=[
+                    f"arn:aws:xray:{self.region}:{self.account}:*",
+                ],
+            )
+        )
+
+        # Cognito admin permissions - scoped to project user pools using prefix pattern
+        # This avoids circular dependency with UserPool which references this Lambda
+        role.add_to_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=["cognito-idp:AdminAddUserToGroup"],
+                resources=[
+                    f"arn:aws:cognito-idp:{self.region}:{self.account}:userpool/*",
+                ],
+                conditions={
+                    "StringLike": {
+                        "cognito-idp:userpool": f"*{self.config.prefix}*"
+                    }
+                },
             )
         )
 
@@ -226,17 +258,8 @@ def lambda_handler(event, context):
             tracing=lambda_.Tracing.ACTIVE,
         )
 
-        # Add Cognito permissions to the function's role
-        function.add_to_role_policy(
-            iam.PolicyStatement(
-                effect=iam.Effect.ALLOW,
-                actions=[
-                    "cognito-idp:AdminAddUserToGroup",
-                    "sqs:SendMessage",
-                ],
-                resources=["*"],
-            )
-        )
+        # Note: Cognito permissions are added after user pool creation in _create_user_pool
+        # to properly scope to the specific user pool ARN
 
         return function
 
@@ -271,10 +294,10 @@ def lambda_handler(event, context):
                 device_only_remembered_on_user_prompt=True,
             ),
             user_invitation=cognito.UserInvitationConfig(
-                email_subject=f"Your temporary password for {self.config.prefix}",
-                email_body=f"""Your account for {self.config.prefix} has been created.
+                email_subject=f"Welcome to Orb Integration Hub",
+                email_body=f"""Your account for Orb Integration Hub has been created.
 Your username is {{username}} and temporary password is {{####}}.
-Please login from here: https://ai-repository.oneredboot.com/authenticate/""",
+Please login at: https://orb-integration-hub.com/authenticate/""",
             ),
             sms_role=self.cognito_sms_role,
             sms_role_external_id=f"{self.config.prefix}-cognito-sms",

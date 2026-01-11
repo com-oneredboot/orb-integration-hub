@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-01-11
+
+### Added
+- Point-in-Time Recovery (PITR) enabled on all DynamoDB tables
+- Design tokens system (`apps/web/src/styles/_tokens.scss`) with CSS custom properties
+- Design handoff documentation (`docs/design/design-handoff.md`) for Figma integration
+- JSON-LD structured data on landing page for LLM discoverability
+- Semantic HTML with ARIA labels and proper heading hierarchy
+- Property tests for IAM policy scoping, PITR enablement, branding consistency, heading hierarchy, and design tokens
+
+### Changed
+- Scoped IAM policies to project-specific resources (removed wildcards)
+- Updated `docs/development.md` with CDK commands (replaced SAM references)
+- Updated `docs/api.md` with Organizations, Notifications, PrivacyRequests, OwnershipTransferRequests operations
+- Updated `docs/architecture.md` with Mermaid diagrams for stack dependencies and data flow
+- Updated `docs/frontend-design.md` paths for new directory structure
+- Replaced "OneRedBoot" branding with "Orb Integration Hub" across all user-facing content
+- Landing page uses design tokens for consistent styling
+- Navigation updated with anchor links (#features, #pricing) and "Get Started" CTA
+
+### Fixed
+- Circular dependency in Cognito stack Lambda trigger permissions
+- Outdated documentation paths and deployment commands
+
 ## [1.1.0] - 2026-01-10
 
 ### Added

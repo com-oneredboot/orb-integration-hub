@@ -244,3 +244,40 @@ Closes a resolved cross-team issue (only for issues we created):
 2. Run `orb-schema-generator generate` to generate code
 3. Report any errors or warnings
 4. List generated files
+
+### "setup local frontend"
+Sets up the Angular frontend for local development with AWS backend:
+1. Navigate to frontend: `cd apps/web`
+2. Install dependencies: `npm install`
+3. Run setup script for dev environment: `npm run setup-dev`
+4. Start the development server: `npm start`
+5. Report the local URL (typically http://localhost:4200)
+
+**Note**: The frontend connects to the deployed AWS backend (AppSync, Cognito) via environment configuration. No local backend needed.
+
+### "setup local testing"
+Sets up both frontend and infrastructure for local testing:
+1. **Frontend setup**:
+   - `cd apps/web && npm install`
+   - `npm run setup-dev` (retrieves secrets from AWS)
+2. **Infrastructure tests**:
+   - Export CodeArtifact token: `export CODEARTIFACT_AUTH_TOKEN=$(aws --profile sso-orb-dev codeartifact get-authorization-token --domain orb-infrastructure-shared-codeartifact-domain --query authorizationToken --output text)`
+   - `cd infrastructure && pipenv install --dev`
+   - Run CDK tests: `PIPENV_IGNORE_VIRTUALENVS=1 pipenv run pytest cdk/tests/ -v`
+3. **Frontend tests**:
+   - `cd apps/web && npm test`
+4. Report setup status and any issues
+
+### "run frontend local"
+Starts the Angular frontend in development mode:
+1. Ensure dependencies installed: `cd apps/web && npm install`
+2. Setup dev environment if needed: `npm run setup-dev`
+3. Start dev server: `npm start`
+4. Report: "Frontend running at http://localhost:4200 - connects to AWS dev backend"
+
+### "run cdk tests"
+Runs the CDK infrastructure tests:
+1. Navigate to infrastructure: `cd infrastructure`
+2. Ensure dependencies: `PIPENV_IGNORE_VIRTUALENVS=1 pipenv install --dev`
+3. Run tests: `PIPENV_IGNORE_VIRTUALENVS=1 pipenv run pytest cdk/tests/ -v`
+4. Report test results summary

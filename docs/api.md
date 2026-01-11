@@ -88,6 +88,80 @@ The API supports two authentication methods:
    UsersDelete(id: ID!): UsersResponse
    ```
 
+### Organizations
+
+1. Query Operations:
+   ```graphql
+   OrganizationsQuery(input: OrganizationsQueryInput!): OrganizationsResponse
+   OrganizationsList(input: OrganizationsListInput): OrganizationsListResponse
+   ```
+
+2. Mutation Operations:
+   ```graphql
+   OrganizationsCreate(input: OrganizationsCreateInput!): OrganizationsResponse
+   OrganizationsUpdate(input: OrganizationsUpdateInput!): OrganizationsResponse
+   OrganizationsDelete(id: ID!): OrganizationsResponse
+   ```
+
+### Organization Users
+
+1. Query Operations:
+   ```graphql
+   OrganizationUsersQuery(input: OrganizationUsersQueryInput!): OrganizationUsersResponse
+   ```
+
+2. Mutation Operations:
+   ```graphql
+   OrganizationUsersCreate(input: OrganizationUsersCreateInput!): OrganizationUsersResponse
+   OrganizationUsersUpdate(input: OrganizationUsersUpdateInput!): OrganizationUsersResponse
+   OrganizationUsersDelete(input: OrganizationUsersDeleteInput!): OrganizationUsersResponse
+   ```
+
+### Notifications
+
+1. Query Operations:
+   ```graphql
+   NotificationsQuery(input: NotificationsQueryInput!): NotificationsResponse
+   NotificationsList(input: NotificationsListInput): NotificationsListResponse
+   ```
+
+2. Mutation Operations:
+   ```graphql
+   NotificationsCreate(input: NotificationsCreateInput!): NotificationsResponse
+   NotificationsUpdate(input: NotificationsUpdateInput!): NotificationsResponse
+   NotificationsDelete(id: ID!): NotificationsResponse
+   ```
+
+### Privacy Requests
+
+1. Query Operations:
+   ```graphql
+   PrivacyRequestsQuery(input: PrivacyRequestsQueryInput!): PrivacyRequestsResponse
+   PrivacyRequestsList(input: PrivacyRequestsListInput): PrivacyRequestsListResponse
+   ```
+
+2. Mutation Operations:
+   ```graphql
+   PrivacyRequestsCreate(input: PrivacyRequestsCreateInput!): PrivacyRequestsResponse
+   PrivacyRequestsUpdate(input: PrivacyRequestsUpdateInput!): PrivacyRequestsResponse
+   PrivacyRequestsDelete(id: ID!): PrivacyRequestsResponse
+   ```
+
+### Ownership Transfer Requests
+
+1. Query Operations:
+   ```graphql
+   OwnershipTransferRequestsQuery(input: OwnershipTransferRequestsQueryInput!): OwnershipTransferRequestsResponse
+   OwnershipTransferRequestsList(input: OwnershipTransferRequestsListInput): OwnershipTransferRequestsListResponse
+   ```
+
+2. Mutation Operations:
+   ```graphql
+   OwnershipTransferRequestsCreate(input: OwnershipTransferRequestsCreateInput!): OwnershipTransferRequestsResponse
+   OwnershipTransferRequestsUpdate(input: OwnershipTransferRequestsUpdateInput!): OwnershipTransferRequestsResponse
+   OwnershipTransferRequestsDelete(id: ID!): OwnershipTransferRequestsResponse
+   ```
+
 ## Response Types
 
 All operations return a standard response type:

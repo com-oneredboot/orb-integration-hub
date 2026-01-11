@@ -76,15 +76,36 @@ class AppSyncStack(Stack):
             Tags.of(self).add(key, value)
 
     def _create_service_role(self) -> iam.Role:
-        """Create IAM role for AppSync to access DynamoDB and Lambda."""
+        """Create IAM role for AppSync to access DynamoDB and Lambda.
+        
+        Uses scoped permissions instead of AmazonDynamoDBFullAccess for security.
+        """
         role = iam.Role(
             self,
             "AppSyncServiceRole",
             role_name=self.config.resource_name("appsync-service-role"),
             assumed_by=iam.ServicePrincipal("appsync.amazonaws.com"),
-            managed_policies=[
-                iam.ManagedPolicy.from_aws_managed_policy_name("AmazonDynamoDBFullAccess"),
-            ],
+        )
+
+        # Scoped DynamoDB access - only required actions on project tables
+        role.add_to_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem",
+                    "dynamodb:UpdateItem",
+                    "dynamodb:DeleteItem",
+                    "dynamodb:Query",
+                    "dynamodb:Scan",
+                    "dynamodb:BatchGetItem",
+                    "dynamodb:BatchWriteItem",
+                ],
+                resources=[
+                    f"arn:aws:dynamodb:{self.region}:{self.account}:table/{self.config.prefix}-*",
+                    f"arn:aws:dynamodb:{self.region}:{self.account}:table/{self.config.prefix}-*/index/*",
+                ],
+            )
         )
 
         # SSM Parameter access

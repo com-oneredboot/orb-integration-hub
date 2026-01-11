@@ -18,7 +18,7 @@ import * as fromAuth from '.../../store/user.selectors';
   template: `
     <div class="auth-container">
       <div class="auth-container__header">
-        <img src="../../../../../../assets/onredboot-logo.jpg" alt="OneRedBoot Logo" class="auth-container__header-logo">
+        <img src="../../../../../../assets/orb-logo.png" alt="Orb Integration Hub Logo" class="auth-container__header-logo">
         <h1 class="auth-container__header-title">{{ stepTitle$ | async }}</h1>
       </div>
 
