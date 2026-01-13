@@ -49,8 +49,9 @@ export class ApplicationDetailComponent implements OnChanges {
     this.activeTab = tab;
   }
 
-  formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  formatDate(dateValue: string | Date): string {
+    const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+    return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',

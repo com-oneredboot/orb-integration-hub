@@ -5,8 +5,8 @@
 
 import { AuthResponse } from '../models/AuthModel';
 import { Users, IUsers } from '../models/UsersModel';
-import { UserStatus } from '../models/UserStatusEnum';
-import { UserGroup } from '../models/UserGroupEnum';
+import { UserStatus } from '../enums/UserStatusEnum';
+import { UserGroup } from '../enums/UserGroupEnum';
 
 /**
  * Factory for creating consistent test data for authentication scenarios
@@ -50,7 +50,7 @@ export class AuthTestDataFactory {
       firstName: 'Test',
       lastName: 'User',
       groups: ['USER'],
-      status: UserStatus.ACTIVE,
+      status: UserStatus.Active,
       mfaEnabled: false,
       mfaSetupComplete: false,
       createdAt: '2024-01-01T00:00:00Z',
@@ -185,7 +185,7 @@ export class AuthTestDataFactory {
       // Active user with all verifications complete
       activeUser: {
         user: this.createMockUser({
-          status: UserStatus.ACTIVE,
+          status: UserStatus.Active,
           emailVerified: true,
           phoneVerified: true,
           groups: ['USER']
@@ -197,7 +197,7 @@ export class AuthTestDataFactory {
       // New user requiring email verification
       unverifiedEmailUser: {
         user: this.createMockUser({
-          status: UserStatus.PENDING,
+          status: UserStatus.Pending,
           emailVerified: false,
           phoneVerified: false
         }),
@@ -208,7 +208,7 @@ export class AuthTestDataFactory {
       // Admin user with elevated privileges
       adminUser: {
         user: this.createMockUser({
-          status: UserStatus.ACTIVE,
+          status: UserStatus.Active,
           groups: ['USER'],
           email: 'admin@example.com'
         }),
@@ -226,7 +226,7 @@ export class AuthTestDataFactory {
       // Suspended user
       suspendedUser: {
         user: this.createMockUser({
-          status: UserStatus.INACTIVE,
+          status: UserStatus.Inactive,
           email: 'suspended@example.com'
         }),
         tokens: null,
@@ -243,7 +243,7 @@ export class AuthTestDataFactory {
       // User requiring MFA setup
       mfaSetupUser: {
         user: this.createMockUser({
-          status: UserStatus.ACTIVE,
+          status: UserStatus.Active,
           emailVerified: true,
           phoneVerified: true
         }),

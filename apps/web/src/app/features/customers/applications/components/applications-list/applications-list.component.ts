@@ -14,7 +14,7 @@ import { takeUntil } from 'rxjs/operators';
 import { StatusBadgeComponent } from '../../../../../shared/components/ui/status-badge.component';
 
 import { Applications } from '../../../../../core/models/ApplicationsModel';
-import { ApplicationStatus } from '../../../../../core/models/ApplicationStatusEnum';
+import { ApplicationStatus } from '../../../../../core/enums/ApplicationStatusEnum';
 import { Users } from '../../../../../core/models/UsersModel';
 import { UserService } from '../../../../../core/services/user.service';
 
@@ -88,12 +88,12 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
           organizationId: 'org_1',
           name: 'Customer Portal',
           ownerId: 'user_123',
-          status: ApplicationStatus.ACTIVE,
+          status: ApplicationStatus.Active,
           apiKey: 'ak_live_cp_84f3d2a1...',
           apiKeyNext: '',
           environments: [],
-          createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+          createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+          updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000)
         },
         organizationName: 'Acme Corporation',
         environmentCount: 3,
@@ -106,12 +106,12 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
           organizationId: 'org_1',
           name: 'Admin Dashboard',
           ownerId: 'user_123',
-          status: ApplicationStatus.ACTIVE,
+          status: ApplicationStatus.Active,
           apiKey: 'ak_live_ad_2b8f5c47...',
           apiKeyNext: '',
           environments: [],
-          createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+          createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+          updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000)
         },
         organizationName: 'Acme Corporation',
         environmentCount: 2,
@@ -124,12 +124,12 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
           organizationId: 'org_2',
           name: 'Mobile App Backend',
           ownerId: 'user_456',
-          status: ApplicationStatus.ACTIVE,
+          status: ApplicationStatus.Active,
           apiKey: 'ak_live_mb_7c9e1f33...',
           apiKeyNext: '',
           environments: [],
-          createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString()
+          createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
+          updatedAt: new Date(Date.now() - 3 * 60 * 60 * 1000)
         },
         organizationName: 'Beta Industries',
         environmentCount: 4,
@@ -142,12 +142,12 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
           organizationId: 'org_1',
           name: 'E-Commerce API',
           ownerId: 'user_789',
-          status: ApplicationStatus.ACTIVE,
+          status: ApplicationStatus.Active,
           apiKey: 'ak_live_ec_4d6b8e91...',
           apiKeyNext: '',
           environments: [],
-          createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString()
+          createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
+          updatedAt: new Date(Date.now() - 6 * 60 * 60 * 1000)
         },
         organizationName: 'Acme Corporation',
         environmentCount: 5,
@@ -160,12 +160,12 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
           organizationId: 'org_3',
           name: 'Analytics Service',
           ownerId: 'user_321',
-          status: ApplicationStatus.ACTIVE,
+          status: ApplicationStatus.Active,
           apiKey: 'ak_live_as_9f2c5b67...',
           apiKeyNext: '',
           environments: [],
-          createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
+          createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+          updatedAt: new Date(Date.now() - 4 * 60 * 60 * 1000)
         },
         organizationName: 'Gamma Solutions',
         environmentCount: 3,
@@ -178,12 +178,12 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
           organizationId: 'org_2',
           name: 'Payment Gateway',
           ownerId: 'user_654',
-          status: ApplicationStatus.ACTIVE,
+          status: ApplicationStatus.Active,
           apiKey: 'ak_live_pg_1a3e7f42...',
           apiKeyNext: '',
           environments: [],
-          createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
+          createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
+          updatedAt: new Date(Date.now() - 12 * 60 * 60 * 1000)
         },
         organizationName: 'Beta Industries',
         environmentCount: 6,
@@ -196,12 +196,12 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
           organizationId: 'org_3',
           name: 'Notification Service',
           ownerId: 'user_987',
-          status: ApplicationStatus.ACTIVE,
+          status: ApplicationStatus.Active,
           apiKey: 'ak_live_ns_5e8d2c76...',
           apiKeyNext: '',
           environments: [],
-          createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString()
+          createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+          updatedAt: new Date(Date.now() - 30 * 60 * 1000)
         },
         organizationName: 'Gamma Solutions',
         environmentCount: 2,
@@ -214,12 +214,12 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
           organizationId: 'org_1',
           name: 'Inventory Management',
           ownerId: 'user_147',
-          status: ApplicationStatus.ACTIVE,
+          status: ApplicationStatus.Active,
           apiKey: 'ak_live_im_8b4f6a92...',
           apiKeyNext: '',
           environments: [],
-          createdAt: new Date(Date.now() - 75 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString()
+          createdAt: new Date(Date.now() - 75 * 24 * 60 * 60 * 1000),
+          updatedAt: new Date(Date.now() - 18 * 60 * 60 * 1000)
         },
         organizationName: 'Acme Corporation',
         environmentCount: 4,

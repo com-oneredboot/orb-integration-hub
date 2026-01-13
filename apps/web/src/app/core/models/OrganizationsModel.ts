@@ -127,7 +127,7 @@ export class Organizations implements IOrganizations {
     this.name = data.name ?? '';
     this.description = data.description;
     this.ownerId = data.ownerId ?? '';
-    this.status = data.status ?? OrganizationStatus.UNKNOWN;
+    this.status = data.status ?? OrganizationStatus.Unknown;
     this.createdAt = data.createdAt ?? new Date();
     this.updatedAt = data.updatedAt ?? new Date();
     this.kmsKeyId = data.kmsKeyId;

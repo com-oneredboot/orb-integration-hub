@@ -4,8 +4,8 @@
  * Generated TypeScript models for Auth
  */
 
-import { MfaSetupDetailsModel, IMfaSetupDetailsModel } from './MfaSetupDetailsModel';
-import { UsersModel, IUsersModel } from './UsersModel';
+import { MfaSetupDetails, IMfaSetupDetails } from './MfaSetupDetailsModel';
+import { Users, IUsers } from './UsersModel';
 
 // Response Types
 export type AuthResponse = {

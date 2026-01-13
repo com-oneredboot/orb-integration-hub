@@ -119,7 +119,7 @@ export class Applications implements IApplications {
     this.name = data.name ?? '';
     this.organizationId = data.organizationId ?? '';
     this.ownerId = data.ownerId ?? '';
-    this.status = data.status ?? ApplicationStatus.ACTIVE;
+    this.status = data.status ?? ApplicationStatus.Active;
     this.createdAt = data.createdAt ?? new Date();
     this.updatedAt = data.updatedAt ?? new Date();
     this.apiKey = data.apiKey ?? '';

@@ -14,7 +14,7 @@ import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { Organizations } from '../../../../../core/models/OrganizationsModel';
-import { OrganizationStatus } from '../../../../../core/models/OrganizationStatusEnum';
+import { OrganizationStatus } from '../../../../../core/enums/OrganizationStatusEnum';
 import { OrganizationsActions } from '../../store/organizations.actions';
 import * as fromOrganizations from '../../store/organizations.selectors';
 
@@ -146,8 +146,9 @@ export class OrganizationDetailComponent implements OnChanges, OnDestroy {
 
   // Status handling now uses global StatusBadgeComponent
 
-  formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  formatDate(dateValue: string | Date): string {
+    const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+    return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -175,7 +176,7 @@ export class OrganizationDetailComponent implements OnChanges, OnDestroy {
         input: {
           name: this.editForm.name.trim(),
           description: this.editForm.description?.trim() || '',
-          status: OrganizationStatus.ACTIVE
+          status: OrganizationStatus.Active
         }
       }));
     } else {

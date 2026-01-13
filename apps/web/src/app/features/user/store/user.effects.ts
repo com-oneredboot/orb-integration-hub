@@ -160,7 +160,7 @@ export class UserEffects {
           lastName: currentUser.lastName,
           status: currentUser.status,
           createdAt: currentUser.createdAt,
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date(),
           phoneNumber: currentUser.phoneNumber,
           phoneVerified: currentUser.phoneVerified,
           emailVerified: true,
@@ -268,7 +268,7 @@ export class UserEffects {
           lastName: currentUser.lastName,
           status: currentUser.status,
           createdAt: currentUser.createdAt,
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date(),
           phoneNumber: currentUser.phoneNumber,
           phoneVerified: currentUser.phoneVerified,
           emailVerified: true,
@@ -393,7 +393,7 @@ export class UserEffects {
           lastName: currentUser.lastName,
           status: currentUser.status,
           createdAt: currentUser.createdAt,
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date(),
           phoneNumber: currentUser.phoneNumber,
           phoneVerified: currentUser.phoneVerified,
           emailVerified: currentUser.emailVerified,
@@ -483,7 +483,7 @@ export class UserEffects {
           lastName: currentUser.lastName,
           status: currentUser.status,
           createdAt: currentUser.createdAt,
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date(),
           phoneNumber: currentUser.phoneNumber,
           phoneVerified: currentUser.phoneVerified,
           emailVerified: currentUser.emailVerified,
@@ -562,7 +562,7 @@ export class UserEffects {
       switchMap(({ email, password }) =>
         from(this.userService.userSignIn(email, password)).pipe(
           map(response => {
-            if (response.StatusCode === 200 && response.Data?.isSignedIn) {
+            if (response.StatusCode === 200 && response.Data?.isSignedIn && response.Data.user) {
               return UserActions.signInSuccess({ 
                 user: response.Data.user, 
                 message: response.Message || 'Sign in successful' 
@@ -710,7 +710,7 @@ export class UserEffects {
           lastName: currentUser.lastName,
           status: currentUser.status,
           createdAt: currentUser.createdAt,
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date(),
           phoneNumber: phoneNumber,
           phoneVerified: true,
           groups: currentUser.groups,

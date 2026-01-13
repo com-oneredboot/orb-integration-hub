@@ -16,8 +16,8 @@ import { StatusBadgeComponent } from '../../../../../shared/components/ui/status
 
 import { Organizations } from '../../../../../core/models/OrganizationsModel';
 import { IUsers } from '../../../../../core/models/UsersModel';
-import { OrganizationStatus } from '../../../../../core/models/OrganizationStatusEnum';
-import { OrganizationUserRole } from '../../../../../core/models/OrganizationUserRoleEnum';
+import { OrganizationStatus } from '../../../../../core/enums/OrganizationStatusEnum';
+import { OrganizationUserRole } from '../../../../../core/enums/OrganizationUserRoleEnum';
 import { UserService } from '../../../../../core/services/user.service';
 import * as fromUser from '../../../../user/store/user.selectors';
 import { OrganizationsActions } from '../../store/organizations.actions';
@@ -147,9 +147,9 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
       name: 'New Organization',
       description: '',
       ownerId: '', // Will be filled by backend
-      status: OrganizationStatus.PENDING,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      status: OrganizationStatus.Pending,
+      createdAt: new Date(),
+      updatedAt: new Date(),
       kmsKeyId: '',
       kmsKeyArn: '',
       kmsAlias: ''
@@ -202,11 +202,11 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
 
   getStatusClass(status: OrganizationStatus): string {
     switch (status) {
-      case OrganizationStatus.ACTIVE:
+      case OrganizationStatus.Active:
         return 'active';
-      case OrganizationStatus.INACTIVE:
+      case OrganizationStatus.Inactive:
         return 'inactive';
-      case OrganizationStatus.PENDING:
+      case OrganizationStatus.Pending:
         return 'pending';
       default:
         return 'inactive';

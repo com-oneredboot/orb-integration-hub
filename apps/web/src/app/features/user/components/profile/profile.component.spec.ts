@@ -31,7 +31,7 @@ describe('ProfileComponent', () => {
     }
   };
 
-  const mockUser: IUsers = { userId: '123', cognitoId: 'abc123', cognitoSub: 'cognito-sub-123', email: 'test@example.com', emailVerified: true, phoneNumber: '+12345678901', phoneVerified: true, firstName: 'Test', lastName: 'User', groups: [UserGroup.USER], status: UserStatus.ACTIVE, mfaEnabled: false, mfaSetupComplete: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+  const mockUser: IUsers = { userId: '123', cognitoId: 'abc123', cognitoSub: 'cognito-sub-123', email: 'test@example.com', emailVerified: true, phoneNumber: '+12345678901', phoneVerified: true, firstName: 'Test', lastName: 'User', groups: [UserGroup.User], status: UserStatus.Active, mfaEnabled: false, mfaSetupComplete: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
 
   const mockUpdateInput: UsersUpdateInput = {
     userId: '123',
@@ -43,8 +43,8 @@ describe('ProfileComponent', () => {
     phoneVerified: true,
     firstName: 'Test',
     lastName: 'User',
-    groups: [UserGroup.USER],
-    status: UserStatus.ACTIVE,
+    groups: [UserGroup.User],
+    status: UserStatus.Active,
     mfaEnabled: false,
     mfaSetupComplete: false,
     createdAt: new Date().toISOString(),
@@ -57,7 +57,7 @@ describe('ProfileComponent', () => {
     Data: new Users(mockUser)
   };
 
-  const mockIncompleteUser: IUsers = { userId: '123', cognitoId: 'abc123', cognitoSub: 'cognito-sub-123', email: 'test@example.com', emailVerified: false, phoneNumber: '', phoneVerified: false, firstName: '', lastName: '', groups: [], status: UserStatus.INACTIVE, mfaEnabled: false, mfaSetupComplete: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+  const mockIncompleteUser: IUsers = { userId: '123', cognitoId: 'abc123', cognitoSub: 'cognito-sub-123', email: 'test@example.com', emailVerified: false, phoneNumber: '', phoneVerified: false, firstName: '', lastName: '', groups: [], status: UserStatus.Inactive, mfaEnabled: false, mfaSetupComplete: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
 
   beforeEach(async () => {
     mockUserService = jasmine.createSpyObj('UserService', ['isUserValid', 'userUpdate', 'userQueryByUserId']);

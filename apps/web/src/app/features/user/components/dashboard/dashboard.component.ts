@@ -62,14 +62,14 @@ export class DashboardComponent implements OnInit {
 
   /**
    * Format date string for display
-   * @param dateString The ISO date string
+   * @param dateValue The date value (string or Date)
    * @returns Formatted date
    */
-  formatDate(dateString: string): string {
-    if (!dateString) return 'Not available';
+  formatDate(dateValue: string | Date): string {
+    if (!dateValue) return 'Not available';
     
     try {
-      const date = new Date(dateString);
+      const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
       return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',

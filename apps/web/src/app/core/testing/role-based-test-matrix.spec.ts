@@ -13,7 +13,7 @@ import { of, throwError } from 'rxjs';
 
 import { OrganizationUserRole } from '../models/OrganizationUserRoleEnum';
 import { OrganizationUserStatus } from '../models/OrganizationUserStatusEnum';
-import { OrganizationStatus } from '../models/OrganizationStatusEnum';
+import { OrganizationStatus } from '../enums/OrganizationStatusEnum';
 import { CognitoService } from '../services/cognito.service';
 import { UserService } from '../services/user.service';
 import { SecurityTestUtils } from './security-test-utils';
@@ -186,8 +186,8 @@ export class RoleBasedTestMatrix {
         scenarioId: 'owner-001',
         description: 'Organization owner can manage organization',
         isOrganizationOwner: true,
-        userStatus: OrganizationUserStatus.ACTIVE,
-        organizationStatus: OrganizationStatus.ACTIVE,
+        userStatus: OrganizationUserStatus.Active,
+        organizationStatus: OrganizationStatus.Active,
         action: 'manage-organization',
         expectedResult: true
       },
@@ -195,8 +195,8 @@ export class RoleBasedTestMatrix {
         scenarioId: 'owner-002',
         description: 'Organization owner can delete organization',
         isOrganizationOwner: true,
-        userStatus: OrganizationUserStatus.ACTIVE,
-        organizationStatus: OrganizationStatus.ACTIVE,
+        userStatus: OrganizationUserStatus.Active,
+        organizationStatus: OrganizationStatus.Active,
         action: 'delete-organization',
         expectedResult: true
       },
@@ -204,8 +204,8 @@ export class RoleBasedTestMatrix {
         scenarioId: 'owner-003',
         description: 'Organization owner can transfer ownership',
         isOrganizationOwner: true,
-        userStatus: OrganizationUserStatus.ACTIVE,
-        organizationStatus: OrganizationStatus.ACTIVE,
+        userStatus: OrganizationUserStatus.Active,
+        organizationStatus: OrganizationStatus.Active,
         action: 'transfer-ownership',
         expectedResult: true
       },
@@ -213,8 +213,8 @@ export class RoleBasedTestMatrix {
         scenarioId: 'owner-004',
         description: 'Organization owner can view billing',
         isOrganizationOwner: true,
-        userStatus: OrganizationUserStatus.ACTIVE,
-        organizationStatus: OrganizationStatus.ACTIVE,
+        userStatus: OrganizationUserStatus.Active,
+        organizationStatus: OrganizationStatus.Active,
         action: 'view-billing',
         expectedResult: true
       },
@@ -222,8 +222,8 @@ export class RoleBasedTestMatrix {
         scenarioId: 'owner-005',
         description: 'Organization owner can change any user role',
         isOrganizationOwner: true,
-        userStatus: OrganizationUserStatus.ACTIVE,
-        organizationStatus: OrganizationStatus.ACTIVE,
+        userStatus: OrganizationUserStatus.Active,
+        organizationStatus: OrganizationStatus.Active,
         action: 'change-user-role',
         expectedResult: true
       }
@@ -237,8 +237,8 @@ export class RoleBasedTestMatrix {
         scenarioId: 'admin-001',
         description: 'Administrator can manage applications',
         userRole: OrganizationUserRole.ADMINISTRATOR,
-        userStatus: OrganizationUserStatus.ACTIVE,
-        organizationStatus: OrganizationStatus.ACTIVE,
+        userStatus: OrganizationUserStatus.Active,
+        organizationStatus: OrganizationStatus.Active,
         action: 'manage-application',
         expectedResult: true
       },
@@ -246,8 +246,8 @@ export class RoleBasedTestMatrix {
         scenarioId: 'admin-002',
         description: 'Administrator cannot delete organization',
         userRole: OrganizationUserRole.ADMINISTRATOR,
-        userStatus: OrganizationUserStatus.ACTIVE,
-        organizationStatus: OrganizationStatus.ACTIVE,
+        userStatus: OrganizationUserStatus.Active,
+        organizationStatus: OrganizationStatus.Active,
         action: 'delete-organization',
         expectedResult: false
       },
@@ -255,8 +255,8 @@ export class RoleBasedTestMatrix {
         scenarioId: 'admin-003',
         description: 'Administrator cannot view billing',
         userRole: OrganizationUserRole.ADMINISTRATOR,
-        userStatus: OrganizationUserStatus.ACTIVE,
-        organizationStatus: OrganizationStatus.ACTIVE,
+        userStatus: OrganizationUserStatus.Active,
+        organizationStatus: OrganizationStatus.Active,
         action: 'view-billing',
         expectedResult: false
       },
@@ -264,8 +264,8 @@ export class RoleBasedTestMatrix {
         scenarioId: 'admin-004',
         description: 'Administrator can invite users',
         userRole: OrganizationUserRole.ADMINISTRATOR,
-        userStatus: OrganizationUserStatus.ACTIVE,
-        organizationStatus: OrganizationStatus.ACTIVE,
+        userStatus: OrganizationUserStatus.Active,
+        organizationStatus: OrganizationStatus.Active,
         action: 'invite-user',
         expectedResult: true
       },
@@ -275,8 +275,8 @@ export class RoleBasedTestMatrix {
         scenarioId: 'viewer-001',
         description: 'Viewer can view applications',
         userRole: OrganizationUserRole.VIEWER,
-        userStatus: OrganizationUserStatus.ACTIVE,
-        organizationStatus: OrganizationStatus.ACTIVE,
+        userStatus: OrganizationUserStatus.Active,
+        organizationStatus: OrganizationStatus.Active,
         action: 'view-application',
         expectedResult: true
       },
@@ -284,8 +284,8 @@ export class RoleBasedTestMatrix {
         scenarioId: 'viewer-002',
         description: 'Viewer cannot manage applications',
         userRole: OrganizationUserRole.VIEWER,
-        userStatus: OrganizationUserStatus.ACTIVE,
-        organizationStatus: OrganizationStatus.ACTIVE,
+        userStatus: OrganizationUserStatus.Active,
+        organizationStatus: OrganizationStatus.Active,
         action: 'manage-application',
         expectedResult: false
       },
@@ -293,8 +293,8 @@ export class RoleBasedTestMatrix {
         scenarioId: 'viewer-003',
         description: 'Viewer cannot invite users',
         userRole: OrganizationUserRole.VIEWER,
-        userStatus: OrganizationUserStatus.ACTIVE,
-        organizationStatus: OrganizationStatus.ACTIVE,
+        userStatus: OrganizationUserStatus.Active,
+        organizationStatus: OrganizationStatus.Active,
         action: 'invite-user',
         expectedResult: false
       },
@@ -302,8 +302,8 @@ export class RoleBasedTestMatrix {
         scenarioId: 'viewer-004',
         description: 'Viewer can read data',
         userRole: OrganizationUserRole.VIEWER,
-        userStatus: OrganizationUserStatus.ACTIVE,
-        organizationStatus: OrganizationStatus.ACTIVE,
+        userStatus: OrganizationUserStatus.Active,
+        organizationStatus: OrganizationStatus.Active,
         action: 'read-data',
         expectedResult: true
       }
@@ -316,8 +316,8 @@ export class RoleBasedTestMatrix {
         scenarioId: 'interaction-001',
         description: 'Administrator can modify Viewer role',
         userRole: OrganizationUserRole.ADMINISTRATOR,
-        userStatus: OrganizationUserStatus.ACTIVE,
-        organizationStatus: OrganizationStatus.ACTIVE,
+        userStatus: OrganizationUserStatus.Active,
+        organizationStatus: OrganizationStatus.Active,
         action: 'change-user-role',
         expectedResult: true,
         context: { targetRole: OrganizationUserRole.VIEWER }
@@ -326,8 +326,8 @@ export class RoleBasedTestMatrix {
         scenarioId: 'interaction-002',
         description: 'Viewer cannot modify any roles',
         userRole: OrganizationUserRole.VIEWER,
-        userStatus: OrganizationUserStatus.ACTIVE,
-        organizationStatus: OrganizationStatus.ACTIVE,
+        userStatus: OrganizationUserStatus.Active,
+        organizationStatus: OrganizationStatus.Active,
         action: 'change-user-role',
         expectedResult: false,
         context: { targetRole: OrganizationUserRole.ADMINISTRATOR }
@@ -336,8 +336,8 @@ export class RoleBasedTestMatrix {
         scenarioId: 'interaction-003',
         description: 'Administrator cannot modify another Administrator role',
         userRole: OrganizationUserRole.ADMINISTRATOR,
-        userStatus: OrganizationUserStatus.ACTIVE,
-        organizationStatus: OrganizationStatus.ACTIVE,
+        userStatus: OrganizationUserStatus.Active,
+        organizationStatus: OrganizationStatus.Active,
         action: 'change-user-role',
         expectedResult: false,
         context: { targetRole: OrganizationUserRole.ADMINISTRATOR }
@@ -351,8 +351,8 @@ export class RoleBasedTestMatrix {
         scenarioId: 'edge-001',
         description: 'Inactive user cannot perform any actions',
         userRole: OrganizationUserRole.ADMINISTRATOR,
-        userStatus: OrganizationUserStatus.INACTIVE,
-        organizationStatus: OrganizationStatus.ACTIVE,
+        userStatus: OrganizationUserStatus.Inactive,
+        organizationStatus: OrganizationStatus.Active,
         action: 'view-application',
         expectedResult: false
       },
@@ -360,8 +360,8 @@ export class RoleBasedTestMatrix {
         scenarioId: 'edge-002',
         description: 'User in inactive organization cannot perform actions',
         userRole: OrganizationUserRole.ADMINISTRATOR,
-        userStatus: OrganizationUserStatus.ACTIVE,
-        organizationStatus: OrganizationStatus.INACTIVE,
+        userStatus: OrganizationUserStatus.Active,
+        organizationStatus: OrganizationStatus.Inactive,
         action: 'view-application',
         expectedResult: false
       },
@@ -369,8 +369,8 @@ export class RoleBasedTestMatrix {
         scenarioId: 'edge-003',
         description: 'User with no role cannot perform any actions',
         userRole: null as any,
-        userStatus: OrganizationUserStatus.ACTIVE,
-        organizationStatus: OrganizationStatus.ACTIVE,
+        userStatus: OrganizationUserStatus.Active,
+        organizationStatus: OrganizationStatus.Active,
         action: 'view-application',
         expectedResult: false
       }
@@ -528,7 +528,7 @@ describe('RoleBasedTestMatrix', () => {
       const factory = new OrganizationTestDataFactory();
       const testOrg = factory.createTestOrganization({
         size: 'small',
-        status: OrganizationStatus.ACTIVE
+        status: OrganizationStatus.Active
       });
       
       // Organization owner should have full permissions

@@ -12,10 +12,10 @@ import { Organizations } from '../models/OrganizationsModel';
 import { OrganizationUsers } from '../models/OrganizationUsersModel';
 import { Applications } from '../models/ApplicationsModel';
 import { Users } from '../models/UsersModel';
-import { OrganizationStatus } from '../models/OrganizationStatusEnum';
-import { OrganizationUserRole } from '../models/OrganizationUserRoleEnum';
-import { OrganizationUserStatus } from '../models/OrganizationUserStatusEnum';
-import { UserStatus } from '../models/UserStatusEnum';
+import { OrganizationStatus } from '../enums/OrganizationStatusEnum';
+import { OrganizationUserRole } from '../enums/OrganizationUserRoleEnum';
+import { OrganizationUserStatus } from '../enums/OrganizationUserStatusEnum';
+import { UserStatus } from '../enums/UserStatusEnum';
 
 export interface TestOrganizationData {
   organization: Organizations;
@@ -96,7 +96,7 @@ export class OrganizationTestDataFactory {
     const {
       name,
       size = 'small',
-      status = OrganizationStatus.ACTIVE,
+      status = OrganizationStatus.Active,
       ownerId,
       includeInactiveUsers = false
     } = options;
@@ -136,7 +136,7 @@ export class OrganizationTestDataFactory {
       
       // Determine user status
       const userStatus = includeInactiveUsers && i % 5 === 0 ? 
-        OrganizationUserStatus.INACTIVE : OrganizationUserStatus.ACTIVE;
+        OrganizationUserStatus.Inactive : OrganizationUserStatus.Active;
       
       // Determine role (only ADMINISTRATOR and VIEWER are valid)
       const role = i === 0 ? OrganizationUserRole.ADMINISTRATOR : OrganizationUserRole.VIEWER;
@@ -200,7 +200,7 @@ export class OrganizationTestDataFactory {
         userId,
         organizationId: orgId,
         role,
-        status: OrganizationUserStatus.ACTIVE
+        status: OrganizationUserStatus.Active
       }));
     });
     
@@ -383,7 +383,7 @@ export class OrganizationTestDataFactory {
         userId: user.userId,
         organizationId: orgId,
         role,
-        status: OrganizationUserStatus.ACTIVE
+        status: OrganizationUserStatus.Active
       });
       
       const roleConfig = rolePermissions[role];
@@ -473,11 +473,11 @@ export class OrganizationTestDataFactory {
       firstName: options.firstName || 'Test',
       lastName: options.lastName || `User_${userId.slice(-4)}`,
       groups: options.groups || ['USER'],
-      status: options.status || UserStatus.ACTIVE,
+      status: options.status || UserStatus.Active,
       mfaEnabled: false,
       mfaSetupComplete: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
     
     this.createdResources.users.push(userId);
@@ -501,8 +501,8 @@ export class OrganizationTestDataFactory {
       name: options.name || `TestApp_${appId}`,
       description: options.description || `Test application ${options.name || appId}`,
       status: options.status || 'ACTIVE',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
     
     this.createdResources.applications.push(appId);
@@ -539,7 +539,7 @@ export class OrganizationTestDataFactory {
         data: {
           updateOrganization: {
             ...testOrg.organization,
-            updatedAt: new Date().toISOString()
+            updatedAt: new Date()
           }
         }
       },
@@ -626,8 +626,8 @@ export class OrganizationTestDataFactory {
       description: options.description || `Test organization ${options.name}`,
       ownerId: options.ownerId,
       status: options.status,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
       kmsKeyId: `kms_key_${options.organizationId}`,
       kmsKeyArn: `arn:aws:kms:us-east-1:123456789012:key/kms_key_${options.organizationId}`,
       kmsAlias: `alias/org-${options.organizationId}`
@@ -650,8 +650,8 @@ export class OrganizationTestDataFactory {
       role: options.role,
       status: options.status,
       invitedBy: options.invitedBy || 'system',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
     
     const membershipKey = `${options.userId}#${options.organizationId}`;
@@ -688,7 +688,7 @@ export class OrganizationTestDataFactory {
     
     const environment = {
       sessionId: this.testSessionId,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
       scenarios: {} as Record<string, any>
     };
     

@@ -32,8 +32,8 @@ import {RateLimitingService} from "../../../../core/services/rate-limiting.servi
 import {AppErrorHandlerService} from "../../../../core/services/error-handler.service";
 import {SecureIdGenerationService} from "../../../../core/services/secure-id-generation.service";
 import {CustomValidators} from "../../../../core/validators/custom-validators";
-import { UserStatus } from "../../../../core/models/UserStatusEnum";
-import { UserGroup } from "../../../../core/models/UserGroupEnum";
+import { UserStatus } from "../../../../core/enums/UserStatusEnum";
+import { UserGroup } from "../../../../core/enums/UserGroupEnum";
 
 
 @Component({
@@ -2909,14 +2909,14 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         firstName: this.authForm.value.firstName,
         lastName: this.authForm.value.lastName,
         phoneNumber: this.authForm.value.phoneNumber,
-        groups: [UserGroup.USER],
-        status: UserStatus.PENDING,
-        createdAt: new Date().toISOString(),
+        groups: [UserGroup.User],
+        status: UserStatus.Pending,
+        createdAt: new Date(),
         phoneVerified: false,
         emailVerified: false,
         mfaEnabled: false,
         mfaSetupComplete: false,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date()
       };
 
       console.debug('[AuthFlowComponent] Dispatching createUser with secure IDs:', {

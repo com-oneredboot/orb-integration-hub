@@ -5,7 +5,7 @@
 
 // Application Imports
 import { IUsers } from '../../../core/models/UsersModel';
-import { UserGroup } from "../../../core/models/UserGroupEnum";
+import { UserGroup } from "../../../core/enums/UserGroupEnum";
 import { environment } from "../../../../environments/environment";
 
 export enum AuthSteps {

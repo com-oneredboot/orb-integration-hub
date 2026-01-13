@@ -122,14 +122,16 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
   
   /**
-   * Format a date string or timestamp
+   * Format a date string, timestamp, or Date object
    */
-  formatDate(dateValue: string | number): string {
+  formatDate(dateValue: string | number | Date): string {
     if (!dateValue) return 'N/A';
     
     try {
       let date: Date;
-      if (typeof dateValue === 'number') {
+      if (dateValue instanceof Date) {
+        date = dateValue;
+      } else if (typeof dateValue === 'number') {
         // If it's a timestamp (number), convert to Date
         date = new Date(dateValue);
       } else {

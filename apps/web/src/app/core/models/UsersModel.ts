@@ -157,7 +157,7 @@ export class Users implements IUsers {
     this.email = data.email ?? '';
     this.firstName = data.firstName ?? '';
     this.lastName = data.lastName ?? '';
-    this.status = data.status ?? UserStatus.UNKNOWN;
+    this.status = data.status ?? UserStatus.Unknown;
     this.createdAt = data.createdAt ?? new Date();
     this.updatedAt = data.updatedAt ?? new Date();
     this.phoneNumber = data.phoneNumber;

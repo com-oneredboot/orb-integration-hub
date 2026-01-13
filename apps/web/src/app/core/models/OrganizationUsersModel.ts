@@ -132,7 +132,7 @@ export class OrganizationUsers implements IOrganizationUsers {
     this.userId = data.userId ?? '';
     this.organizationId = data.organizationId ?? '';
     this.role = data.role ?? OrganizationUserRole.UNKNOWN;
-    this.status = data.status ?? OrganizationUserStatus.UNKNOWN;
+    this.status = data.status ?? OrganizationUserStatus.Unknown;
     this.invitedBy = data.invitedBy;
     this.invitedAt = data.invitedAt;
     this.joinedAt = data.joinedAt;

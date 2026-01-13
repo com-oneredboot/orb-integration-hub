@@ -20,8 +20,8 @@ import {
   UsersCreateResponse, UsersUpdateResponse, IUsers,
   UsersListResponse, UsersResponse, Users
 } from "../models/UsersModel";
-import { UserGroup } from "../models/UserGroupEnum";
-import { UserStatus } from "../models/UserStatusEnum";
+import { UserGroup } from "../enums/UserGroupEnum";
+import { UserStatus } from "../enums/UserStatusEnum";
 import { CognitoService } from "./cognito.service";
 import { SecureIdGenerationService } from "./secure-id-generation.service";
 import { Auth, AuthResponse } from "../models/AuthModel";
@@ -70,7 +70,7 @@ export class UserService extends ApiService {
       const cognitoResponse = await this.cognitoService.createCognitoUser(input, password);
       console.debug('createCognitoUser Response: ', cognitoResponse);
 
-      const timestamp = new Date().toISOString();
+      const timestamp = new Date();
       
       // Validate that secure IDs were provided by the calling component
       if (!input.userId || !input.cognitoId) {
@@ -91,8 +91,8 @@ export class UserService extends ApiService {
         firstName: input.firstName || '',
         lastName: input.lastName || '',
         phoneNumber: input.phoneNumber || '',
-        groups: input.groups || [UserGroup.USER] as string[],
-        status: input.status || UserStatus.PENDING,
+        groups: input.groups || [UserGroup.User] as string[],
+        status: input.status || UserStatus.Pending,
         createdAt: input.createdAt || timestamp,
         phoneVerified: input.phoneVerified || false,
         emailVerified: input.emailVerified || false,
@@ -804,7 +804,7 @@ export class UserService extends ApiService {
         groups: input.groups,
         status: input.status,
         createdAt: input.createdAt,
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date(),
         mfaEnabled: input.mfaEnabled,
         mfaSetupComplete: input.mfaSetupComplete
       };

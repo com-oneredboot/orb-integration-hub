@@ -110,7 +110,7 @@ export class ApplicationUsers implements IApplicationUsers {
     this.applicationUserId = data.applicationUserId ?? '';
     this.userId = data.userId ?? '';
     this.applicationId = data.applicationId ?? '';
-    this.status = data.status ?? ApplicationUserStatus.ACTIVE;
+    this.status = data.status ?? ApplicationUserStatus.Active;
     this.createdAt = data.createdAt ?? new Date();
     this.updatedAt = data.updatedAt ?? new Date();
   }

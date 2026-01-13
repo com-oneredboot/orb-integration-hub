@@ -22,7 +22,7 @@ import {
   OrganizationsListResponse,
   IOrganizations
 } from '../models/OrganizationsModel';
-import { OrganizationStatus } from '../models/OrganizationStatusEnum';
+import { OrganizationStatus } from '../enums/OrganizationStatusEnum';
 
 interface AuthCheckResult {
   isAuthenticated: boolean;
@@ -101,7 +101,7 @@ export class OrganizationService extends ApiService {
 
         console.debug('[OrganizationService] User is authenticated, proceeding with organization creation');
 
-        const timestamp = new Date().toISOString();
+        const timestamp = new Date();
 
         // Build the create input with required fields
         const createInput: OrganizationsCreateInput = {
@@ -109,7 +109,7 @@ export class OrganizationService extends ApiService {
           name: input.name || '',
           description: input.description || '',
           ownerId: input.ownerId || '', // Will be set by backend from authenticated user
-          status: input.status || OrganizationStatus.PENDING,
+          status: input.status || OrganizationStatus.Pending,
           createdAt: timestamp,
           updatedAt: timestamp,
           kmsKeyId: input.kmsKeyId || '',
@@ -181,9 +181,9 @@ export class OrganizationService extends ApiService {
       name: input.name || '',
       description: input.description || '',
       ownerId: input.ownerId || '',
-      status: input.status || OrganizationStatus.ACTIVE,
-      createdAt: input.createdAt || '',
-      updatedAt: new Date().toISOString(), // Always update timestamp
+      status: input.status || OrganizationStatus.Active,
+      createdAt: input.createdAt || new Date(),
+      updatedAt: new Date(), // Always update timestamp
       kmsKeyId: input.kmsKeyId || '',
       kmsKeyArn: input.kmsKeyArn || '',
       kmsAlias: input.kmsAlias || ''
