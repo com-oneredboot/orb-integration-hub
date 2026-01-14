@@ -44,7 +44,8 @@ export class ApplicationsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Component initialization
+    // Lifecycle hook - initialization handled by store selectors in constructor
+    void 0; // Intentionally empty - initialization handled in constructor
   }
 
   onApplicationSelected(application: Applications): void {

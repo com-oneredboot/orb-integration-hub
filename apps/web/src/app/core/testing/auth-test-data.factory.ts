@@ -6,7 +6,6 @@
 import { AuthResponse } from '../models/AuthModel';
 import { Users, IUsers } from '../models/UsersModel';
 import { UserStatus } from '../enums/UserStatusEnum';
-import { UserGroup } from '../enums/UserGroupEnum';
 
 /**
  * Factory for creating consistent test data for authentication scenarios

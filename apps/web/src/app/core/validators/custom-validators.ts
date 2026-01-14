@@ -7,7 +7,7 @@ import { AbstractControl, ValidationErrors, ValidatorFn, AsyncValidatorFn } from
 import { SecurityContext } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Observable, of, timer } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { switchMap } from 'rxjs/operators';
 
 /**
  * Custom validators class with comprehensive validation methods
@@ -369,10 +369,6 @@ export class CustomValidators {
       return timer(500).pipe(
         switchMap(() => {
           // In production, this would make an actual HTTP request to validate domain
-          // For now, simulate validation of common domains
-          const validDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com'];
-          const isKnownValid = validDomains.includes(domain);
-          
           // Simulate some domains as invalid
           const invalidDomains = ['invalid-domain.com', 'fake-email.xyz'];
           const isKnownInvalid = invalidDomains.includes(domain);

@@ -19,14 +19,12 @@ import {
   resetPassword,
   confirmResetPassword,
   setUpTOTP,
-  verifyTOTPSetup,
 } from 'aws-amplify/auth';
 import {BehaviorSubject, Observable} from 'rxjs';
 
 // Application-specific imports
-import { Users, UsersCreateInput, IUsers } from '../models/UsersModel';
-import { AuthResponse } from '../models/AuthModel';
-import { IAuth, Auth } from "../models/AuthModel";
+import { UsersCreateInput, IUsers } from '../models/UsersModel';
+import { AuthResponse, Auth } from '../models/AuthModel';
 import { AuthError } from "../models/AuthErrorModel";
 import { environment } from '../../../environments/environment';
 import { MfaSetupDetails } from '../models/MfaSetupDetailsModel';
@@ -137,7 +135,7 @@ export class CognitoService {
       console.debug('[CognitoService] Processing sign in next step');
 
       switch(nextStep.signInStep) {
-        case 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP':
+        case 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP': {
           const totpSetupDetails = nextStep.totpSetupDetails;
           // Use the custom issuer format with email if available
           const issuer = email ? `${appName}:${email}` : appName;
@@ -158,6 +156,7 @@ export class CognitoService {
                 })
               })
           };
+        }
 
         case 'CONFIRM_SIGN_IN_WITH_TOTP_CODE':
           this.mfaSetupRequiredSubject.next(true);
@@ -357,7 +356,7 @@ export class CognitoService {
       }
 
       // Get current authenticated user
-      const { username, signInDetails } = await getCurrentUser();
+      const { username } = await getCurrentUser();
 
       // Get user attributes using getCurrentUser() and getUserAttributes()
       const userAttributes = await fetchUserAttributes();
@@ -536,12 +535,11 @@ export class CognitoService {
         authSession = null;
       }
       
-      // Method 4: Check current user for MFA info
-      let currentUser;
+      // Method 4: Check current user for MFA info (validates session is active)
       try {
-        currentUser = await getCurrentUser();
-      } catch (userError) {
-        currentUser = null;
+        await getCurrentUser();
+      } catch {
+        // User not authenticated, MFA check not possible
       }
       
       // Analyze all the data we collected
@@ -603,11 +601,11 @@ export class CognitoService {
       }
       
       // Get user profile
-      const profile = await this.getCognitoProfile();
+      await this.getCognitoProfile();
       console.debug('👤 User Profile: Basic profile information retrieved');
       
       // Get groups
-      const groups = await this.getCurrentUserGroups();
+      await this.getCurrentUserGroups();
       console.debug('👥 Current Cognito Groups: Group information retrieved');
       
       // Check SMS verification access
@@ -615,7 +613,7 @@ export class CognitoService {
       console.debug('📱 Has SMS Verification Access:', hasAccess);
       
       // Check MFA status
-      const mfaStatus = await this.checkMFAPreferences();
+      await this.checkMFAPreferences();
       console.debug('🔐 MFA Status: MFA configuration retrieved');
       
       if (!hasAccess) {

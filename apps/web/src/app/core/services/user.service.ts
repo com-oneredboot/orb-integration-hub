@@ -12,11 +12,11 @@ import { BehaviorSubject, Observable } from 'rxjs';
 // Application Imports
 import {ApiService} from "./api.service";
 import {
-  UsersCreateMutation, UsersUpdateMutation, UsersDeleteMutation, UsersQueryByUserId, UsersQueryByEmail, UsersQueryByCognitoSub
+  UsersCreateMutation, UsersUpdateMutation, UsersQueryByUserId, UsersQueryByEmail, UsersQueryByCognitoSub
 } from "../graphql/Users.graphql";
 import { SmsVerificationMutation } from "../graphql/SmsVerification.graphql";
 import {
-  UsersCreateInput, UsersUpdateInput, UsersQueryByUserIdInput, UsersQueryByCognitoSubInput,
+  UsersCreateInput, UsersUpdateInput,
   UsersCreateResponse, UsersUpdateResponse, IUsers,
   UsersListResponse, UsersResponse, Users
 } from "../models/UsersModel";
@@ -25,7 +25,6 @@ import { UserStatus } from "../enums/UserStatusEnum";
 import { CognitoService } from "./cognito.service";
 import { SecureIdGenerationService } from "./secure-id-generation.service";
 import { Auth, AuthResponse } from "../models/AuthModel";
-import { SmsVerificationResponse } from "../models/SmsVerificationModel";
 import { UserActions } from '../../features/user/store/user.actions';
 
 @Injectable({
@@ -790,7 +789,6 @@ export class UserService extends ApiService {
         } as UsersResponse;
       }
 
-      let hasUpdates = false;
       const updateInput: UsersUpdateInput = {
         userId: input.userId,
         cognitoId: input.cognitoId,
@@ -808,26 +806,21 @@ export class UserService extends ApiService {
         mfaEnabled: input.mfaEnabled,
         mfaSetupComplete: input.mfaSetupComplete
       };
-      hasUpdates = true;
 
       if (input.firstName) {
         updateInput.firstName = input.firstName;
-        hasUpdates = true;
       }
 
       if (input.lastName) {
         updateInput.lastName = input.lastName;
-        hasUpdates = true;
       }
 
       if (input.email) {
         updateInput.email = input.email;
-        hasUpdates = true;
       }
 
       if (input.phoneNumber) {
         updateInput.phoneNumber = input.phoneNumber;
-        hasUpdates = true;
       }
 
       let response: GraphQLResult<UsersUpdateResponse>;
@@ -1011,7 +1004,6 @@ export class UserService extends ApiService {
       const hasAccess = await this.cognitoService.validateGraphQLAccess(['USER', 'OWNER']);
       
       if (!hasAccess) {
-        const userGroups = await this.cognitoService.getCurrentUserGroups();
         console.error('User does not have required Cognito groups for SMS verification');
         return false;
       }

@@ -7,7 +7,7 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 
 // Application Imports
-import { IUsers, UsersQueryByEmailInput, UsersCreateInput } from '../../../core/models/UsersModel';
+import { IUsers, UsersCreateInput } from '../../../core/models/UsersModel';
 import { MfaSetupDetails } from '../../../core/models/MfaSetupDetailsModel';
 
 /**

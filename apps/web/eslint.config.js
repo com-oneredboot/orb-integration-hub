@@ -34,40 +34,24 @@ module.exports = tseslint.config(
       "@angular-eslint/prefer-inject": "off",
       // Allow type aliases - generated models use type instead of interface
       "@typescript-eslint/consistent-type-definitions": "off",
-      // Allow explicit any in specific cases - will be addressed incrementally
+      // Allow explicit any - will be addressed incrementally
       "@typescript-eslint/no-explicit-any": "warn",
-      // Allow unused vars with underscore prefix and in catch clauses
+      // Unused vars with underscore prefix allowed, catch clause errors allowed
       "@typescript-eslint/no-unused-vars": [
-        "warn",
+        "error",
         {
           argsIgnorePattern: "^_",
           varsIgnorePattern: "^_",
-          caughtErrorsIgnorePattern: "^_|error|err",
+          caughtErrorsIgnorePattern: ".*",
         },
       ],
-      // Allow empty functions for interface implementations
-      "@typescript-eslint/no-empty-function": "warn",
-      // Allow case declarations with proper scoping
-      "no-case-declarations": "warn",
-      // Allow empty lifecycle methods (will be addressed incrementally)
-      "@angular-eslint/no-empty-lifecycle-method": "warn",
-      // Allow async promise executors (legacy code pattern)
-      "no-async-promise-executor": "warn",
-      // Allow require imports in specific cases (e.g., dynamic imports)
-      "@typescript-eslint/no-require-imports": "warn",
-      // Allow non-standalone components (legacy code pattern)
+      // Allow empty functions for interface implementations (ControlValueAccessor, etc.)
+      "@typescript-eslint/no-empty-function": "off",
+      // Allow non-standalone components - migration path, not a bug
       "@angular-eslint/prefer-standalone": "warn",
     },
   },
-  {
-    // Relaxed rules for generated model files (orb-schema-generator issue #59)
-    files: ["**/core/models/*Model.ts", "**/core/models/*Enum.ts", "**/core/enums/*.ts"],
-    rules: {
-      "@typescript-eslint/consistent-type-definitions": "off",
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unused-vars": "off",
-    },
-  },
+
   {
     files: ["**/*.html"],
     extends: [
@@ -75,11 +59,10 @@ module.exports = tseslint.config(
       ...angular.configs.templateAccessibility,
     ],
     rules: {
-      // Accessibility rules as warnings for incremental improvement
+      // Accessibility rules as warnings - incremental improvement
       "@angular-eslint/template/click-events-have-key-events": "warn",
       "@angular-eslint/template/interactive-supports-focus": "warn",
       "@angular-eslint/template/label-has-associated-control": "warn",
-      "@angular-eslint/template/no-negated-async": "warn",
     },
   }
 );

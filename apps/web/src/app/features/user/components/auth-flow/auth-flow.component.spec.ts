@@ -4,23 +4,25 @@
 // description: Unit tests for the auth-flow component
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { of } from 'rxjs';
 import { AuthFlowComponent } from './auth-flow.component';
 import { UserService } from '../../../../core/services/user.service';
-import { IUsers, Users, UsersCreateInput, UsersResponse } from '../../../../core/models/UsersModel';
+import { IUsers, Users } from '../../../../core/models/UsersModel';
 import { UserStatus } from '../../../../core/enums/UserStatusEnum';
 import { UserGroup } from '../../../../core/enums/UserGroupEnum';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
+import { selectCurrentStep, selectCurrentUser, selectError } from '../../store/user.selectors';
+import { AuthSteps } from '../../store/user.state';
 
 describe('AuthFlowComponent', () => {
   let component: AuthFlowComponent;
   let fixture: ComponentFixture<AuthFlowComponent>;
   let userService: jasmine.SpyObj<UserService>;
   let store: jasmine.SpyObj<Store>;
-  let router: jasmine.SpyObj<Router>;
+  let _router: jasmine.SpyObj<Router>;
 
   const mockUser: IUsers = {
     userId: '123',
@@ -40,7 +42,7 @@ describe('AuthFlowComponent', () => {
     updatedAt: new Date()
   };
 
-  const mockCreateInput: UsersCreateInput = {
+  const _mockCreateInput = {
     userId: '123',
     cognitoId: 'abc123',
     cognitoSub: 'cognito-sub-123',
@@ -58,7 +60,7 @@ describe('AuthFlowComponent', () => {
     mfaSetupComplete: false
   };
 
-  const mockResponse: UsersResponse = {
+  const _mockResponse = {
     StatusCode: 200,
     Message: 'Success',
     Data: new Users(mockUser)
@@ -66,15 +68,15 @@ describe('AuthFlowComponent', () => {
 
   beforeEach(async () => {
     const userServiceSpy = jasmine.createSpyObj('UserService', ['userCreate', 'isUserValid']);
-    userServiceSpy.userCreate.and.returnValue(Promise.resolve(mockResponse));
+    userServiceSpy.userCreate.and.returnValue(Promise.resolve(_mockResponse));
     userServiceSpy.isUserValid.and.returnValue(true);
 
     const storeSpy = jasmine.createSpyObj('Store', ['select', 'dispatch']);
-    storeSpy.select.and.callFake((selector: any) => {
-      if (selector === require('../../store/user.selectors').selectCurrentStep) {
-        return of(require('../../store/user.state').AuthSteps.PASSWORD_SETUP);
+    storeSpy.select.and.callFake((selector: unknown) => {
+      if (selector === selectCurrentStep) {
+        return of(AuthSteps.PASSWORD_SETUP);
       }
-      if (selector === require('../../store/user.selectors').selectCurrentUser) {
+      if (selector === selectCurrentUser) {
         return of(mockUser);
       }
       return of(null);
@@ -103,7 +105,7 @@ describe('AuthFlowComponent', () => {
 
     userService = TestBed.inject(UserService) as jasmine.SpyObj<UserService>;
     store = TestBed.inject(Store) as jasmine.SpyObj<Store>;
-    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+    _router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
   });
 
   beforeEach(() => {
@@ -118,11 +120,11 @@ describe('AuthFlowComponent', () => {
 
   // Skip this test - the component's onSubmit logic has changed and this test needs to be updated
   xit('should create user', async () => {
-    store.select.and.callFake((selector: any) => {
-      if (selector === require('../../store/user.selectors').selectCurrentStep) {
-        return of(require('../../store/user.state').AuthSteps.PASSWORD_SETUP);
+    store.select.and.callFake((selector: unknown) => {
+      if (selector === selectCurrentStep) {
+        return of(AuthSteps.PASSWORD_SETUP);
       }
-      if (selector === require('../../store/user.selectors').selectCurrentUser) {
+      if (selector === selectCurrentUser) {
         return of(mockUser);
       }
       return of(null);
@@ -163,12 +165,12 @@ describe('AuthFlowComponent', () => {
 
   it('should display error banner when error is set in store', () => {
     // Simulate error in store
-    store.select.and.callFake((selector: any) => {
-      if (selector === require('../../store/user.selectors').selectError) {
+    store.select.and.callFake((selector: unknown) => {
+      if (selector === selectError) {
         return of('Unable to connect to the server. Please check your connection and try again.');
       }
-      if (selector === require('../../store/user.selectors').selectCurrentStep) {
-        return of(require('../../store/user.state').AuthSteps.EMAIL);
+      if (selector === selectCurrentStep) {
+        return of(AuthSteps.EMAIL);
       }
       return of(null);
     });
@@ -183,12 +185,12 @@ describe('AuthFlowComponent', () => {
   // Skip this test - the component's error handling logic has changed
   xit('should not advance to password step and should show error if userExists returns false', () => {
     // Simulate error in store for user not found or not authorized
-    store.select.and.callFake((selector: any) => {
-      if (selector === require('../../store/user.selectors').selectError) {
+    store.select.and.callFake((selector: unknown) => {
+      if (selector === selectError) {
         return of('User not found or not authorized.');
       }
-      if (selector === require('../../store/user.selectors').selectCurrentStep) {
-        return of(require('../../store/user.state').AuthSteps.EMAIL);
+      if (selector === selectCurrentStep) {
+        return of(AuthSteps.EMAIL);
       }
       return of(null);
     });
@@ -207,11 +209,11 @@ describe('AuthFlowComponent', () => {
   });
 
   it('should advance to password setup step if user is not found', () => {
-    store.select.and.callFake((selector: any) => {
-      if (selector === require('../../store/user.selectors').selectCurrentStep) {
-        return of(require('../../store/user.state').AuthSteps.PASSWORD_SETUP);
+    store.select.and.callFake((selector: unknown) => {
+      if (selector === selectCurrentStep) {
+        return of(AuthSteps.PASSWORD_SETUP);
       }
-      if (selector === require('../../store/user.selectors').selectError) {
+      if (selector === selectError) {
         return of(null);
       }
       return of(null);
@@ -226,11 +228,11 @@ describe('AuthFlowComponent', () => {
   });
 
   it('should show error and not advance if checkEmailFailure is dispatched', () => {
-    store.select.and.callFake((selector: any) => {
-      if (selector === require('../../store/user.selectors').selectCurrentStep) {
-        return of(require('../../store/user.state').AuthSteps.EMAIL);
+    store.select.and.callFake((selector: unknown) => {
+      if (selector === selectCurrentStep) {
+        return of(AuthSteps.EMAIL);
       }
-      if (selector === require('../../store/user.selectors').selectError) {
+      if (selector === selectError) {
         return of('Some error occurred');
       }
       return of(null);
@@ -256,11 +258,11 @@ describe('AuthFlowComponent', () => {
       Data: null
     }));
 
-    store.select.and.callFake((selector: any) => {
-      if (selector === require('../../store/user.selectors').selectCurrentStep) {
-        return of(require('../../store/user.state').AuthSteps.PASSWORD_SETUP);
+    store.select.and.callFake((selector: unknown) => {
+      if (selector === selectCurrentStep) {
+        return of(AuthSteps.PASSWORD_SETUP);
       }
-      if (selector === require('../../store/user.selectors').selectCurrentUser) {
+      if (selector === selectCurrentUser) {
         return of(null);
       }
       return of(null);

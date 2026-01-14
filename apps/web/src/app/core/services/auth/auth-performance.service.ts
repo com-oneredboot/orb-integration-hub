@@ -5,7 +5,7 @@
 
 import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Subject, timer, Observable, from } from 'rxjs';
-import { debounceTime, throttleTime, shareReplay, switchMap, startWith } from 'rxjs';
+import { debounceTime, throttleTime, shareReplay, switchMap } from 'rxjs';
 
 export interface PerformanceMetrics {
   componentLoadTime: number;
@@ -70,18 +70,20 @@ export class AuthPerformanceService implements OnDestroy {
     const currentMetrics = this.performanceMetrics.value;
 
     switch (entry.entryType) {
-      case 'navigation':
+      case 'navigation': {
         const navEntry = entry as PerformanceNavigationTiming;
         currentMetrics.totalPageLoadTime = navEntry.loadEventEnd - navEntry.fetchStart;
         break;
+      }
 
-      case 'resource':
+      case 'resource': {
         const resourceEntry = entry as PerformanceResourceTiming;
         if (resourceEntry.name.includes('image') || resourceEntry.name.includes('.png') || 
             resourceEntry.name.includes('.jpg') || resourceEntry.name.includes('.svg')) {
           currentMetrics.imageLoadTime = resourceEntry.responseEnd - resourceEntry.requestStart;
         }
         break;
+      }
 
       case 'measure':
         if (entry.name === 'component-load') {

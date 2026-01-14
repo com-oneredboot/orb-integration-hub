@@ -234,7 +234,7 @@ export class SecureIdGenerationService {
     // Generate individual IDs as fallback
     const fallbackObservables = requests.map(request => 
       this.generateSecureId(request).pipe(
-        catchError(individualError => this.emergencyClientSideGeneration(request))
+        catchError(() => this.emergencyClientSideGeneration(request))
       )
     );
 

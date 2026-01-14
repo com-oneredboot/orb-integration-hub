@@ -13,13 +13,12 @@ import { Store } from '@ngrx/store';
 
 // Application Imports
 import { UserService } from "../../../core/services/user.service";
-import { UsersQueryByEmail } from "../../../core/graphql/Users.graphql";
 import { UserActions } from "./user.actions";
 import * as fromUser from "./user.selectors";
 import { AuthSteps } from "./user.state";
 import { CognitoService } from "../../../core/services/cognito.service";
 import { getError } from "../../../core/models/ErrorRegistryModel";
-import { UsersQueryByEmailInput, UsersResponse, UsersListResponse, Users } from "../../../core/models/UsersModel";
+import { UsersQueryByEmailInput, UsersListResponse, Users } from "../../../core/models/UsersModel";
 
 @Injectable()
 export class UserEffects {
@@ -74,7 +73,7 @@ export class UserEffects {
           })
         );
       }),
-      catchError(error => {
+      catchError(_error => {
         console.error('Effect [CheckEmail]: Error caught', error);
         const errorObj = getError('ORB-SYS-001');
         return of(UserActions.checkEmailFailure({
@@ -106,7 +105,7 @@ export class UserEffects {
               error: errorObj ? errorObj.message : 'GraphQL mutation error'
             });
           }),
-          catchError(error => {
+          catchError(_error => {
             const errorObj = getError('ORB-API-002');
             return of(UserActions.createUserFailure({
               error: errorObj ? errorObj.message : 'GraphQL mutation error'
@@ -126,7 +125,7 @@ export class UserEffects {
           map(isVerified => {
             return UserActions.checkEmailVerificationStatusSuccess({ isVerified, email });
           }),
-          catchError(error => {
+          catchError(_error => {
             console.error('[Effect][checkEmailVerificationStatus$] Error:', error);
             return of(UserActions.checkEmailVerificationStatusFailure({
               error: error instanceof Error ? error.message : 'Failed to check email verification status'
@@ -143,8 +142,7 @@ export class UserEffects {
       ofType(UserActions.checkEmailVerificationStatusSuccess),
       filter((action): action is ReturnType<typeof UserActions.checkEmailVerificationStatusSuccess> => action.isVerified), // Only proceed if email is verified in Cognito
       withLatestFrom(this.store.select(fromUser.selectCurrentUser)),
-      switchMap(([action, currentUser]) => {
-        const { email } = action;
+      switchMap(([_action, currentUser]) => {
         if (!currentUser || currentUser.emailVerified) {
           // Skip if no user or already verified in our DB
           return EMPTY;
@@ -177,7 +175,7 @@ export class UserEffects {
             }
             return UserActions.updateUserAfterEmailVerificationSuccess({ user: updatedUser });
           }),
-          catchError(error => {
+          catchError(_error => {
             console.error('[Effect][autoUpdateEmailVerification$] Failed to auto-update email verification:', error);
             return of(UserActions.updateUserAfterEmailVerificationFailure({ 
               error: error instanceof Error ? error.message : 'Failed to update user record'
@@ -225,7 +223,7 @@ export class UserEffects {
                   error: errorObj ? errorObj.message : 'Email verification failed'
                 });
               }),
-              catchError(error => {
+              catchError(_error => {
                 const errorObj = getError('ORB-AUTH-003');
                 return of(UserActions.verifyEmailFailure({
                   error: errorObj ? errorObj.message : 'Email verification failed'
@@ -233,7 +231,7 @@ export class UserEffects {
               })
             );
           }),
-          catchError(error => {
+          catchError(_error => {
             const errorObj = getError('ORB-AUTH-003');
             return of(UserActions.verifyEmailFailure({
               error: errorObj ? errorObj.message : 'Email verification failed'
@@ -287,7 +285,7 @@ export class UserEffects {
 
             return UserActions.updateUserAfterEmailVerificationSuccess({ user: updatedUser });
           }),
-          catchError(error => {
+          catchError(_error => {
             console.error('Failed to update user after email verification:', error);
             return of(UserActions.updateUserAfterEmailVerificationFailure({ 
               error: error instanceof Error ? error.message : 'Failed to update user record'
@@ -321,7 +319,7 @@ export class UserEffects {
             });
 
           }),
-          catchError(error => {
+          catchError(_error => {
             const errorObj = getError('ORB-AUTH-002');
             return of(UserActions.verifyCognitoPasswordFailure({
               error: errorObj ? errorObj.message : 'Invalid credentials'
@@ -359,7 +357,7 @@ export class UserEffects {
           map(({ mfaEnabled, mfaSetupComplete }) => {
             return UserActions.checkMFAStatusSuccess({ mfaEnabled, mfaSetupComplete });
           }),
-          catchError(error => {
+          catchError(_error => {
             console.error('[Effect][checkMFAStatus$] Error:', error);
             return of(UserActions.checkMFAStatusFailure({
               error: error instanceof Error ? error.message : 'Failed to check MFA status'
@@ -376,8 +374,7 @@ export class UserEffects {
       ofType(UserActions.checkMFAStatusSuccess),
       filter((action): action is ReturnType<typeof UserActions.checkMFAStatusSuccess> => action.mfaEnabled && action.mfaSetupComplete), // Only proceed if MFA is enabled and setup
       withLatestFrom(this.store.select(fromUser.selectCurrentUser)),
-      switchMap(([action, currentUser]) => {
-        const { mfaEnabled, mfaSetupComplete } = action;
+      switchMap(([_action, currentUser]) => {
         if (!currentUser || (currentUser.mfaEnabled && currentUser.mfaSetupComplete)) {
           // Skip if no user or already enabled in our DB
           return EMPTY;
@@ -410,7 +407,7 @@ export class UserEffects {
             }
             return UserActions.updateUserAfterMFASetupSuccess({ user: updatedUser });
           }),
-          catchError(error => {
+          catchError(_error => {
             console.error('[Effect][autoUpdateMFAStatus$] Failed to auto-update MFA status:', error);
             return of(UserActions.updateUserAfterMFASetupFailure({ 
               error: error instanceof Error ? error.message : 'Failed to update user record'
@@ -425,7 +422,7 @@ export class UserEffects {
     this.actions$.pipe(
       ofType(UserActions.needsMFASetup),
       withLatestFrom(this.store.select(fromUser.selectMFADetails)),
-      switchMap(([action, existingMfaDetails]) => {
+      switchMap(([_action, existingMfaDetails]) => {
         
         // If we already have MFA setup details, use them (user should see QR code)
         if (existingMfaDetails?.secretKey && existingMfaDetails?.qrCode) {
@@ -449,7 +446,7 @@ export class UserEffects {
               error: errorObj ? errorObj.message : 'MFA setup failed'
             });
           }),
-          catchError(error => {
+          catchError(_error => {
             console.error('[Effect][setupMFA$] MFA setup error:', error);
             const errorObj = getError('ORB-AUTH-003');
             return of(UserActions.needsMFASetupFailure({
@@ -466,7 +463,7 @@ export class UserEffects {
     this.actions$.pipe(
       ofType(UserActions.needsMFASetupSuccess),
       withLatestFrom(this.store.select(fromUser.selectCurrentUser)),
-      switchMap(([action, currentUser]) => {
+      switchMap(([_action, currentUser]) => {
         if (!currentUser) {
           return of(UserActions.updateUserAfterMFASetupFailure({ 
             error: 'Missing user data'
@@ -502,7 +499,7 @@ export class UserEffects {
 
             return UserActions.updateUserAfterMFASetupSuccess({ user: updatedUser });
           }),
-          catchError(error => {
+          catchError(_error => {
             console.error('Failed to update user after MFA setup:', error);
             return of(UserActions.updateUserAfterMFASetupFailure({ 
               error: error instanceof Error ? error.message : 'Failed to update user record'
@@ -527,7 +524,7 @@ export class UserEffects {
               error: errorObj ? errorObj.message : 'Email verification failed'
             });
           }),
-          catchError(error => {
+          catchError(_error => {
             const errorObj = getError('ORB-AUTH-003');
             return of(UserActions.needsMFAFailure({
               error: errorObj ? errorObj.message : 'Email verification failed'
@@ -573,7 +570,7 @@ export class UserEffects {
               error: response.Message || (errorObj ? errorObj.message : 'Sign in failed')
             });
           }),
-          catchError(error => {
+          catchError(_error => {
             const errorObj = getError('ORB-AUTH-002');
             return of(UserActions.signInFailure({
               error: errorObj ? errorObj.message : 'Sign in failed'
@@ -594,7 +591,7 @@ export class UserEffects {
           map(() => {
             return UserActions.signoutSuccess();
           }),
-          catchError(error => {
+          catchError(_error => {
             console.error('Error during signout:', error);
             // Even on error, we return success to ensure state is reset
             return of(UserActions.signoutSuccess());
@@ -622,7 +619,7 @@ export class UserEffects {
       switchMap(() => {
         return of(UserActions.checkPhoneRequiredSuccess({ required: true }))
           .pipe(
-            catchError(error => of(UserActions.checkPhoneRequiredFailure({ 
+            catchError(_error => of(UserActions.checkPhoneRequiredFailure({ 
               error: error instanceof Error ? error.message : 'Failed to check phone requirement'
             })))
           );
@@ -647,7 +644,7 @@ export class UserEffects {
               error: response.message || 'Failed to send verification code'
             });
           }),
-          catchError(error => of(UserActions.setupPhoneFailure({ 
+          catchError(_error => of(UserActions.setupPhoneFailure({ 
             error: error instanceof Error ? error.message : 'Failed to set up phone verification'
           })))
         );
@@ -676,7 +673,7 @@ export class UserEffects {
               error: 'Invalid verification code'
             });
           }),
-          catchError(error => of(UserActions.verifyPhoneFailure({ 
+          catchError(_error => of(UserActions.verifyPhoneFailure({ 
             error: error instanceof Error ? error.message : 'Failed to verify phone code'
           })))
         );
@@ -692,7 +689,7 @@ export class UserEffects {
         this.store.select(fromUser.selectPhoneValidationId),
         this.store.select(fromUser.selectCurrentUser)
       ),
-      switchMap(([action, phoneNumber, currentUser]) => {
+      switchMap(([_action, phoneNumber, currentUser]) => {
         if (!phoneNumber || !currentUser) {
           return of(UserActions.updateUserAfterPhoneVerificationFailure({ 
             error: 'Missing phone number or user data'
@@ -729,7 +726,7 @@ export class UserEffects {
 
             return UserActions.updateUserAfterPhoneVerificationSuccess({ user: updatedUser });
           }),
-          catchError(error => {
+          catchError(_error => {
             console.error('Failed to update user after phone verification:', error);
             return of(UserActions.updateUserAfterPhoneVerificationFailure({ 
               error: error instanceof Error ? error.message : 'Failed to update user record'
@@ -784,7 +781,7 @@ export class UserEffects {
                 
                 return UserActions.refreshSessionSuccess({ user: fallbackUser });
               }),
-              catchError(backendError => {
+              catchError(_backendError => {
                 // Backend call failed completely (network error, etc.)
                 // Continue with Cognito profile data
                 
@@ -802,7 +799,7 @@ export class UserEffects {
               })
             );
           }),
-          catchError(error => {
+          catchError(_error => {
             console.error('Effect [RefreshSession]: Critical error (Cognito profile failed)', error);
             const errorObj = getError('ORB-AUTH-001');
             return of(UserActions.refreshSessionFailure({
@@ -902,7 +899,7 @@ export class UserEffects {
     this.actions$.pipe(
       ofType(UserActions.updateUserAfterEmailVerificationSuccess),
       withLatestFrom(this.store.select(fromUser.selectCurrentUser)),
-      map(([action, user]) => {
+      map(([_action, user]) => {
         
         if (!user) {
           return UserActions.setCurrentStep({ step: AuthSteps.EMAIL });
@@ -940,7 +937,7 @@ export class UserEffects {
   authFlowComplete$ = createEffect(() =>
     this.actions$.pipe(
       ofType(UserActions.authFlowComplete),
-      map(({ user }) => {
+      map(({ user: _user }) => {
         return UserActions.redirectToDashboard();
       })
     )
@@ -981,7 +978,7 @@ export class UserEffects {
     this.actions$.pipe(
       ofType(UserActions.checkMFASetup),
       withLatestFrom(this.store.select(fromUser.selectCurrentUser)),
-      switchMap(([action, user]) => {
+      switchMap(([_action, user]) => {
         if (!user) {
           return of(UserActions.checkMFASetupFailure({ error: 'No user found' }));
         }
@@ -1021,7 +1018,7 @@ export class UserEffects {
               switchMap(() => EMPTY)
             );
           }),
-          catchError(error => {
+          catchError(_error => {
             console.error('[Auth Effect] MFA check failed:', error);
             return of(UserActions.checkMFASetupFailure({ 
               error: error instanceof Error ? error.message : 'Failed to check MFA setup'

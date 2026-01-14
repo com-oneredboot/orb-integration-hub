@@ -4,7 +4,7 @@
 // description: Shared service for common form validation patterns and error handling
 
 import { Injectable } from '@angular/core';
-import { AbstractControl, FormControl, FormGroup } from '@angular/forms';
+import { AbstractControl, FormGroup } from '@angular/forms';
 
 export interface ValidationResult {
   isValid: boolean;

@@ -385,7 +385,7 @@ export class AppErrorHandlerService implements ErrorHandler {
     return actions[type] || actions.system;
   }
 
-  private generateAuthRecoveryActions(operation: string, error: any): string[] {
+  private generateAuthRecoveryActions(operation: string, _error: any): string[] {
     const baseActions = ['Try again', 'Check credentials'];
     
     if (operation.includes('password')) {

@@ -166,117 +166,111 @@ export class SecurityTestUtils {
   /**
    * Create timing attack simulation utility
    */
-  static createTimingAttackTest(
+  static async createTimingAttackTest(
     validCredentials: any,
     invalidCredentials: any,
     authFunction: (creds: any) => Promise<any>
   ): Promise<{ isVulnerable: boolean; timingDifference: number }> {
-    return new Promise(async (resolve) => {
-      const iterations = 10;
-      const validTimes: number[] = [];
-      const invalidTimes: number[] = [];
+    const iterations = 10;
+    const validTimes: number[] = [];
+    const invalidTimes: number[] = [];
 
-      // Test valid credentials timing
-      for (let i = 0; i < iterations; i++) {
-        const start = performance.now();
-        try {
-          await authFunction(validCredentials);
-        } catch (error) {
-          // Ignore errors, just measure timing
-        }
-        const end = performance.now();
-        validTimes.push(end - start);
+    // Test valid credentials timing
+    for (let i = 0; i < iterations; i++) {
+      const start = performance.now();
+      try {
+        await authFunction(validCredentials);
+      } catch (_error) {
+        // Ignore errors, just measure timing
       }
+      const end = performance.now();
+      validTimes.push(end - start);
+    }
 
-      // Test invalid credentials timing
-      for (let i = 0; i < iterations; i++) {
-        const start = performance.now();
-        try {
-          await authFunction(invalidCredentials);
-        } catch (error) {
-          // Ignore errors, just measure timing
-        }
-        const end = performance.now();
-        invalidTimes.push(end - start);
+    // Test invalid credentials timing
+    for (let i = 0; i < iterations; i++) {
+      const start = performance.now();
+      try {
+        await authFunction(invalidCredentials);
+      } catch (_error) {
+        // Ignore errors, just measure timing
       }
+      const end = performance.now();
+      invalidTimes.push(end - start);
+    }
 
-      const avgValidTime = validTimes.reduce((a, b) => a + b, 0) / validTimes.length;
-      const avgInvalidTime = invalidTimes.reduce((a, b) => a + b, 0) / invalidTimes.length;
-      const timingDifference = Math.abs(avgValidTime - avgInvalidTime);
+    const avgValidTime = validTimes.reduce((a, b) => a + b, 0) / validTimes.length;
+    const avgInvalidTime = invalidTimes.reduce((a, b) => a + b, 0) / invalidTimes.length;
+    const timingDifference = Math.abs(avgValidTime - avgInvalidTime);
 
-      // Consider vulnerable if timing difference > 50ms
-      const isVulnerable = timingDifference > 50;
+    // Consider vulnerable if timing difference > 50ms
+    const isVulnerable = timingDifference > 50;
 
-      resolve({ isVulnerable, timingDifference });
-    });
+    return { isVulnerable, timingDifference };
   }
 
   /**
    * Create rate limiting test utility
    */
-  static createRateLimitTest(
+  static async createRateLimitTest(
     authFunction: () => Promise<any>,
     maxAttempts: number,
     timeWindow: number
   ): Promise<{ rateLimitTriggered: boolean; attemptsMade: number }> {
-    return new Promise(async (resolve) => {
-      let attemptsMade = 0;
-      let rateLimitTriggered = false;
+    let attemptsMade = 0;
+    let rateLimitTriggered = false;
 
-      const startTime = Date.now();
+    const startTime = Date.now();
 
-      while (Date.now() - startTime < timeWindow && attemptsMade < maxAttempts + 5) {
-        try {
-          await authFunction();
-          attemptsMade++;
-        } catch (error: any) {
-          attemptsMade++;
-          // Check if this is a rate limiting error
-          if (error.message?.includes('rate') || 
-              error.message?.includes('limit') || 
-              error.message?.includes('too many') ||
-              error.statusCode === 429) {
-            rateLimitTriggered = true;
-            break;
-          }
+    while (Date.now() - startTime < timeWindow && attemptsMade < maxAttempts + 5) {
+      try {
+        await authFunction();
+        attemptsMade++;
+      } catch (error: any) {
+        attemptsMade++;
+        // Check if this is a rate limiting error
+        if (error.message?.includes('rate') || 
+            error.message?.includes('limit') || 
+            error.message?.includes('too many') ||
+            error.statusCode === 429) {
+          rateLimitTriggered = true;
+          break;
         }
-        
-        // Small delay between attempts
-        await new Promise(resolve => setTimeout(resolve, 10));
       }
+      
+      // Small delay between attempts
+      await new Promise(resolve => setTimeout(resolve, 10));
+    }
 
-      resolve({ rateLimitTriggered, attemptsMade });
-    });
+    return { rateLimitTriggered, attemptsMade };
   }
 
   /**
    * Create concurrent session test utility
    */
-  static createConcurrentSessionTest(
+  static async createConcurrentSessionTest(
     loginFunction: (credentials: any) => Promise<any>,
     credentials: any,
     sessionCount: number
   ): Promise<{ successfulSessions: number; errors: any[] }> {
-    return new Promise(async (resolve) => {
-      const promises = [];
-      const errors: any[] = [];
-      let successfulSessions = 0;
+    const promises = [];
+    const errors: any[] = [];
+    let successfulSessions = 0;
 
-      for (let i = 0; i < sessionCount; i++) {
-        promises.push(
-          loginFunction(credentials)
-            .then(() => {
-              successfulSessions++;
-            })
-            .catch(error => {
-              errors.push(error);
-            })
-        );
-      }
+    for (let i = 0; i < sessionCount; i++) {
+      promises.push(
+        loginFunction(credentials)
+          .then(() => {
+            successfulSessions++;
+          })
+          .catch(error => {
+            errors.push(error);
+          })
+      );
+    }
 
-      await Promise.allSettled(promises);
-      resolve({ successfulSessions, errors });
-    });
+    await Promise.allSettled(promises);
+    return { successfulSessions, errors };
   }
 
   /**

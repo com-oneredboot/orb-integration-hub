@@ -5,7 +5,6 @@
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
-import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { FaIconLibrary, FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { fas } from '@fortawesome/free-solid-svg-icons';
@@ -18,9 +17,9 @@ import { UserGroup } from '../../../../core/enums/UserGroupEnum';
 describe('DashboardComponent', () => {
   let component: DashboardComponent;
   let fixture: ComponentFixture<DashboardComponent>;
-  let mockStore: MockStore;
   let mockUserService: jasmine.SpyObj<UserService>;
-  let mockRouter: jasmine.SpyObj<Router>;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let mockStore: MockStore;
 
   const mockUser: IUsers = {
     userId: '123',
@@ -52,8 +51,6 @@ describe('DashboardComponent', () => {
   beforeEach(async () => {
     mockUserService = jasmine.createSpyObj('UserService', ['isUserValid']);
     mockUserService.isUserValid.and.returnValue(true);
-    
-    mockRouter = jasmine.createSpyObj('Router', ['navigate']);
 
     await TestBed.configureTestingModule({
       imports: [ DashboardComponent, FontAwesomeModule, RouterTestingModule ],

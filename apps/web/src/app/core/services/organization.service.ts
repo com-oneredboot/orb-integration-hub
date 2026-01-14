@@ -19,8 +19,7 @@ import {
   OrganizationsResponse,
   OrganizationsCreateResponse,
   OrganizationsUpdateResponse,
-  OrganizationsListResponse,
-  IOrganizations
+  OrganizationsListResponse
 } from '../models/OrganizationsModel';
 import { OrganizationStatus } from '../enums/OrganizationStatusEnum';
 

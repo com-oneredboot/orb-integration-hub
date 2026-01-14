@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Observable, Subject, takeUntil } from 'rxjs';
-import { IUsers, UsersUpdateInput, UsersResponse, UsersQueryByUserIdInput } from '../../../../core/models/UsersModel';
+import { IUsers, UsersUpdateInput } from '../../../../core/models/UsersModel';
 import * as fromUser from '../../store/user.selectors';
 import { UserActions } from '../../store/user.actions';
 import { UserService } from '../../../../core/services/user.service';

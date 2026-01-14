@@ -5,7 +5,7 @@
 
 import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, Subject, timer } from 'rxjs';
-import { map, filter, debounceTime, bufferTime, takeUntil } from 'rxjs/operators';
+import { map, filter, bufferTime, takeUntil } from 'rxjs/operators';
 
 export interface AnalyticsEvent {
   name: string;

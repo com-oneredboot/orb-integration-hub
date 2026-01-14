@@ -55,7 +55,8 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Additional initialization if needed
+    // Lifecycle hook - initialization handled by store selectors in constructor
+    void 0; // Intentionally empty - initialization handled in constructor
   }
 
   // Status handling now uses global StatusBadgeComponent

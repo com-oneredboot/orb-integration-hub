@@ -15,7 +15,7 @@
         <button class="organization-detail__action organization-detail__action--primary"
                 [disabled]="isSaving$ | async"
                 (click)="onSaveOrganization()">
-          <fa-icon *ngIf="!(isSaving$ | async)" icon="save" class="organization-detail__action-icon"></fa-icon>
+          <fa-icon *ngIf="(isSaving$ | async) === false" icon="save" class="organization-detail__action-icon"></fa-icon>
           <fa-icon *ngIf="isSaving$ | async" icon="spinner" class="organization-detail__action-icon fa-spin"></fa-icon>
           {{ (isSaving$ | async) ? 'Saving...' : 'Save' }}
         </button>

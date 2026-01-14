@@ -18,7 +18,7 @@ description: HTML template file
           <a routerLink="profile" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">Profile</a>
           <a (click)="signOut()" class="nav-link" style="cursor: pointer;">Sign Out</a>
         </ng-container>
-        <ng-container *ngIf="!(isAuthenticated$ | async)">
+        <ng-container *ngIf="(isAuthenticated$ | async) === false">
           <a routerLink="/authenticate" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link cta-link">Get Started</a>
         </ng-container>
       </nav>

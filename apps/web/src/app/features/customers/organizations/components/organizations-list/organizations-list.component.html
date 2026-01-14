@@ -152,7 +152,7 @@
                 </tr>
                 
                 <!-- Empty State -->
-                <tr *ngIf="!(isLoading$ | async) && (filteredOrganizationRows$ | async)?.length === 0" 
+                <tr *ngIf="(isLoading$ | async) === false && (filteredOrganizationRows$ | async)?.length === 0" 
                     class="orb-table__row orb-table__row--empty">
                   <td colspan="6" class="orb-table__cell orb-table__cell--empty">
                     <div class="orb-table__empty">

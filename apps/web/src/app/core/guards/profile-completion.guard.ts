@@ -11,7 +11,6 @@ import { map, take, catchError, switchMap } from 'rxjs/operators';
 
 import { UserState } from '../../features/user/store/user.state';
 import { selectCurrentUser, selectIsAuthenticated } from '../../features/user/store/user.selectors';
-import { UserActions } from '../../features/user/store/user.actions';
 import { UserService } from '../services/user.service';
 
 @Injectable({

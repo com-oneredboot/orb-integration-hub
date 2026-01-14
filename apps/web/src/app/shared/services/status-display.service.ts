@@ -328,7 +328,7 @@ export class StatusDisplayService {
   /**
    * Check if status indicates an active/healthy state
    */
-  isHealthyStatus(status: string, type: 'user' | 'organization' | 'application' | 'verification'): boolean {
+  isHealthyStatus(status: string, _type: 'user' | 'organization' | 'application' | 'verification'): boolean {
     const healthyStatuses = ['ACTIVE', 'VERIFIED', 'RUNNING'];
     return healthyStatuses.includes(status?.toUpperCase());
   }
@@ -336,7 +336,7 @@ export class StatusDisplayService {
   /**
    * Check if status indicates a warning state
    */
-  isWarningStatus(status: string, type: 'user' | 'organization' | 'application' | 'verification'): boolean {
+  isWarningStatus(status: string, _type: 'user' | 'organization' | 'application' | 'verification'): boolean {
     const warningStatuses = ['PENDING', 'DEPLOYING', 'MAINTENANCE'];
     return warningStatuses.includes(status?.toUpperCase());
   }
@@ -344,7 +344,7 @@ export class StatusDisplayService {
   /**
    * Check if status indicates an error/critical state
    */
-  isErrorStatus(status: string, type: 'user' | 'organization' | 'application' | 'verification'): boolean {
+  isErrorStatus(status: string, _type: 'user' | 'organization' | 'application' | 'verification'): boolean {
     const errorStatuses = ['SUSPENDED', 'ERROR', 'CANCELLED', 'UNVERIFIED'];
     return errorStatuses.includes(status?.toUpperCase());
   }

@@ -181,7 +181,7 @@ export class AuthInputFieldComponent implements ControlValueAccessor, OnInit, On
   private valueSubject = new Subject<string>();
   
   // ControlValueAccessor
-  onChange = (value: string) => {};
+  onChange = (_value: string) => {};
   onTouched = () => {};
   
   // IDs for accessibility

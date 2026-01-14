@@ -4,27 +4,26 @@
 // description: Unit tests for the profile component
 
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
+import { FormBuilder } from '@angular/forms';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { of } from 'rxjs';
-import { Store } from '@ngrx/store';
 import { Router } from '@angular/router';
 import { FaIconLibrary, FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { fas } from '@fortawesome/free-solid-svg-icons';
 
 import { ProfileComponent } from './profile.component';
 import { UserService } from '../../../../core/services/user.service';
-import { IUsers, Users, UsersUpdateInput, UsersResponse } from '../../../../core/models/UsersModel';
+import { IUsers, Users } from '../../../../core/models/UsersModel';
 import { UserStatus } from '../../../../core/enums/UserStatusEnum';
 import { UserGroup } from '../../../../core/enums/UserGroupEnum';
 
 describe('ProfileComponent', () => {
   let component: ProfileComponent;
   let fixture: ComponentFixture<ProfileComponent>;
-  let mockStore: MockStore;
   let mockUserService: jasmine.SpyObj<UserService>;
-  let store: MockStore;
-  let router: jasmine.SpyObj<Router>;
+  let mockStore: MockStore;
+  const _store: MockStore = null as unknown as MockStore;
+  const _mockRouter = jasmine.createSpyObj('Router', ['navigate']);
 
   const initialState = {
     user: {
@@ -36,30 +35,6 @@ describe('ProfileComponent', () => {
   };
 
   const mockUser: IUsers = { userId: '123', cognitoId: 'abc123', cognitoSub: 'cognito-sub-123', email: 'test@example.com', emailVerified: true, phoneNumber: '+12345678901', phoneVerified: true, firstName: 'Test', lastName: 'User', groups: [UserGroup.User], status: UserStatus.Active, mfaEnabled: false, mfaSetupComplete: false, createdAt: new Date(), updatedAt: new Date() };
-
-  const mockUpdateInput: UsersUpdateInput = {
-    userId: '123',
-    cognitoId: 'abc123',
-    cognitoSub: 'cognito-sub-123',
-    email: 'test@example.com',
-    emailVerified: true,
-    phoneNumber: '+12345678901',
-    phoneVerified: true,
-    firstName: 'Test',
-    lastName: 'User',
-    groups: [UserGroup.User],
-    status: UserStatus.Active,
-    mfaEnabled: false,
-    mfaSetupComplete: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-
-  const mockResponse: UsersResponse = {
-    StatusCode: 200,
-    Message: 'Success',
-    Data: new Users(mockUser)
-  };
 
   const mockIncompleteUser: IUsers = { userId: '123', cognitoId: 'abc123', cognitoSub: 'cognito-sub-123', email: 'test@example.com', emailVerified: false, phoneNumber: '', phoneVerified: false, firstName: '', lastName: '', groups: [], status: UserStatus.Inactive, mfaEnabled: false, mfaSetupComplete: false, createdAt: new Date(), updatedAt: new Date() };
 
@@ -83,7 +58,7 @@ describe('ProfileComponent', () => {
       };
     });
 
-    mockUserService.userQueryByUserId.and.callFake((input) => Promise.resolve({ StatusCode: 200, Message: 'OK', Data: new Users(mockUser) }));
+    mockUserService.userQueryByUserId.and.callFake((_input) => Promise.resolve({ StatusCode: 200, Message: 'OK', Data: new Users(mockUser) }));
 
     const storeSpy = jasmine.createSpyObj('Store', ['select']);
     storeSpy.select.and.returnValue(of(mockUser));
@@ -107,8 +82,6 @@ describe('ProfileComponent', () => {
     mockStore = TestBed.inject(MockStore);
     fixture = TestBed.createComponent(ProfileComponent);
     component = fixture.componentInstance;
-    store = mockStore;
-    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
     fixture.detectChanges();
   });
 

@@ -11,8 +11,6 @@ import {Router} from "@angular/router";
 
 // Application imports
 import { AppState } from "../store/app.state";
-import { CognitoService } from "../core/services/cognito.service";
-import { IAuth } from "../core/models/Auth.model";
 import { IUsers } from "../core/models/Users.model";
 import { UserService } from "../core/services/user.service";
 import { selectUser } from "../store/app.selector";

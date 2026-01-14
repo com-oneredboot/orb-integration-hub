@@ -22,7 +22,6 @@ import { RouterModule } from '@angular/router';
 import {UserActions} from '../../store/user.actions';
 import {UserState, AuthSteps} from '../../store/user.state';
 import * as fromUser from '../../store/user.selectors';
-import { UsersCreateInput } from "../../../../core/models/UsersModel";
 import {QRCodeToDataURLOptions} from "qrcode";
 import {UserService} from "../../../../core/services/user.service";
 import {CognitoService} from "../../../../core/services/cognito.service";
@@ -273,7 +272,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   private async initializeRateLimitingSafely(): Promise<void> {
     try {
       // Test rate limiting service availability
-      const testResult = await this.rateLimitingService.isAttemptAllowed('test@example.com', 'email_check');
+      await this.rateLimitingService.isAttemptAllowed('test@example.com', 'email_check');
       this.rateLimitActive = true;
       
       console.debug('[AuthFlowComponent] Rate limiting initialized successfully');
@@ -297,7 +296,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   private async initializeHistoryManagementSafely(): Promise<void> {
     try {
       // Set up browser history state
-      const currentUrl = this.router.url;
       const currentStep = await this.currentStep$.pipe(take(1)).toPromise();
       
       // Initialize step history
@@ -468,7 +466,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   /**
    * Handle browser navigation events
    */
-  private handleBrowserNavigation(event: PopStateEvent): void {
+  private handleBrowserNavigation(_event: PopStateEvent): void {
     try {
       // Handle browser back/forward buttons
       if (this.stepHistory.length > 1) {
@@ -829,21 +827,23 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             }));
             break;
 
-          case AuthSteps.PHONE_SETUP:
+          case AuthSteps.PHONE_SETUP: {
             const setupPhoneNumber = this.authForm.get('phoneNumber')?.value;
             if (!setupPhoneNumber) {
               return;
             }
             this.store.dispatch(UserActions.setupPhone({ phoneNumber: setupPhoneNumber }));
             break;
+          }
 
-          case AuthSteps.PHONE_VERIFY:
+          case AuthSteps.PHONE_VERIFY: {
             const phoneCode = this.authForm.get('phoneCode')?.value;
             if (!phoneCode) {
               return;
             }
             this.store.dispatch(UserActions.verifyPhone({ code: phoneCode }));
             break;
+          }
 
           case AuthSteps.MFA_SETUP:
             // First check Cognito MFA status to see if user record needs updating
@@ -2485,8 +2485,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
    * Get skeleton items for current step
    */
   public getSkeletonItems(): {type: string, class: string}[] {
-    const currentStep$ = this.currentStep$;
-    
     // Return skeleton configuration based on current step
     return [
       { type: 'input', class: 'auth-flow__skeleton auth-flow__skeleton--input' },

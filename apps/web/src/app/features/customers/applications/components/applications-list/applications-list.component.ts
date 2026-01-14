@@ -10,7 +10,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
 import { StatusBadgeComponent } from '../../../../../shared/components/ui/status-badge.component';
 
 import { Applications } from '../../../../../core/models/ApplicationsModel';

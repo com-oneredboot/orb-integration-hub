@@ -5,7 +5,7 @@
 
 import { Component, Input, OnInit, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { StatusDisplayService, StatusConfig, StatusDisplayOptions } from '../../services/status-display.service';
+import { StatusDisplayService, StatusConfig } from '../../services/status-display.service';
 
 @Component({
   selector: 'app-status-badge',

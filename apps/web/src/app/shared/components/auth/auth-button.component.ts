@@ -6,7 +6,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject } from 'rxjs';
 
 export type AuthButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success';
 export type AuthButtonSize = 'small' | 'medium' | 'large';

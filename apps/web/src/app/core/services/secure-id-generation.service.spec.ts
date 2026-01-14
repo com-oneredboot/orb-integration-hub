@@ -6,7 +6,6 @@
 import { TestBed } from '@angular/core/testing';
 import { SecureIdGenerationService, SecureIdRequest, SecureIdResponse } from './secure-id-generation.service';
 import { AppErrorHandlerService } from './error-handler.service';
-import { of, throwError } from 'rxjs';
 
 describe('SecureIdGenerationService', () => {
   let service: SecureIdGenerationService;

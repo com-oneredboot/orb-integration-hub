@@ -7,7 +7,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Observable, Subject, takeUntil } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 
 // App Imports
 import { AuthState, AuthSteps } from '.../../store/user.state';
@@ -82,10 +82,12 @@ export class AuthContainerComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    // Note: All redirects are handled by auth.effects.ts, not components
+    // Lifecycle hook - redirects handled by auth.effects.ts
+    void 0; // Intentionally empty - redirects handled by effects
   }
 
   ngOnDestroy(): void {
+    // Cleanup subscriptions via destroy$ subject
     this.destroy$.next();
     this.destroy$.complete();
   }

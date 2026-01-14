@@ -17,7 +17,6 @@ import { StatusBadgeComponent } from '../../../../../shared/components/ui/status
 import { Organizations } from '../../../../../core/models/OrganizationsModel';
 import { IUsers } from '../../../../../core/models/UsersModel';
 import { OrganizationStatus } from '../../../../../core/enums/OrganizationStatusEnum';
-import { OrganizationUserRole } from '../../../../../core/enums/OrganizationUserRoleEnum';
 import { UserService } from '../../../../../core/services/user.service';
 import * as fromUser from '../../../../user/store/user.selectors';
 import { OrganizationsActions } from '../../store/organizations.actions';

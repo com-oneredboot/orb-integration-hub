@@ -7,8 +7,6 @@
 import { createReducer, on } from '@ngrx/store';
 import { OrganizationsActions } from './organizations.actions';
 import { OrganizationsState, initialOrganizationsState, OrganizationTableRow } from './organizations.state';
-import { Organizations } from '../../../../core/models/OrganizationsModel';
-import { OrganizationStatus } from '../../../../core/enums/OrganizationStatusEnum';
 
 export const organizationsReducer = createReducer(
   initialOrganizationsState,

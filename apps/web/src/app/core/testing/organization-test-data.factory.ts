@@ -411,7 +411,7 @@ export class OrganizationTestDataFactory {
     maxUsersPerOrg?: number;
   } = {}): TestOrganizationData[] {
     
-    const { organizationCount = 100, maxUsersPerOrg = 1000 } = options;
+    const { organizationCount = 100 } = options;
     const organizations: TestOrganizationData[] = [];
     
     for (let i = 0; i < organizationCount; i++) {

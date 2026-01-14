@@ -5,7 +5,7 @@
 
 import {createReducer, on} from '@ngrx/store';
 import {UserActions} from './user.actions';
-import {AuthSteps, initialState, UserState} from './user.state';
+import {AuthSteps, initialState} from './user.state';
 
 export { UserState } from './user.state';
 
@@ -89,7 +89,7 @@ export const userReducer = createReducer(
     isLoading: true,
     error: null
   })),
-  on(UserActions.verifyCognitoPasswordSuccess, (state, { message, needsMFA, needsMFASetup, mfaSetupDetails }) => {
+  on(UserActions.verifyCognitoPasswordSuccess, (state, { message: _message, needsMFA, needsMFASetup, mfaSetupDetails }) => {
     // decide on next step.  NeedsMFASetup trumps all
     let nextStep = (needsMFA)? AuthSteps.MFA_VERIFY: AuthSteps.SIGNIN;
     nextStep = (needsMFASetup) ? AuthSteps.MFA_SETUP : nextStep;
@@ -114,8 +114,7 @@ export const userReducer = createReducer(
     error: null
   })),
   on(UserActions.signInSuccess, (state, { user }) => {
-    // Check if phone verification is needed
-    const phoneVerificationNeeded = !user.phoneNumber;
+    // Phone verification status is tracked in user object
     
     return {
       ...state,
