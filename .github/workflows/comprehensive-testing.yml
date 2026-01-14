@@ -1,6 +1,7 @@
 name: Comprehensive Testing Suite
 
 permissions:
+  id-token: write
   contents: read
   security-events: write
 
@@ -105,6 +106,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: setup
+    environment: ci
     if: |
       needs.setup.outputs.test-type == 'all' ||
       needs.setup.outputs.test-type == 'unit' ||
@@ -136,12 +138,23 @@ jobs:
           cd apps/web
           npm ci --prefer-offline --no-audit
 
+      - name: Configure AWS credentials (Backend)
+        if: matrix.component == 'backend'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_CI_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
       - name: Install dependencies (Backend)
         if: matrix.component == 'backend'
         run: |
           cd apps/api
           python -m pip install --upgrade pip
           pip install pipenv
+          aws codeartifact login --tool pip \
+            --domain orb-infrastructure-shared-codeartifact-domain \
+            --domain-owner 432045270100 \
+            --repository orb-infrastructure-shared-pypi-repo
           pipenv install --dev
 
       - name: Run linting (Frontend)
@@ -428,6 +441,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: [setup, unit-tests]
+    environment: ci
     if: needs.setup.outputs.run-security == 'true'
     steps:
       - name: Checkout code
@@ -450,10 +464,20 @@ jobs:
           cd apps/web
           npm ci --prefer-offline --no-audit
 
+      - name: Configure AWS credentials (Backend)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_CI_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
       - name: Install dependencies (Backend)
         run: |
           cd apps/api
           pip install pipenv
+          aws codeartifact login --tool pip \
+            --domain orb-infrastructure-shared-codeartifact-domain \
+            --domain-owner 432045270100 \
+            --repository orb-infrastructure-shared-pypi-repo
           pipenv install --dev
 
       - name: Run frontend security tests
@@ -468,6 +492,10 @@ jobs:
         run: |
           cd apps/api
           # Run Python security tests
+          aws codeartifact login --tool pip \
+            --domain orb-infrastructure-shared-codeartifact-domain \
+            --domain-owner 432045270100 \
+            --repository orb-infrastructure-shared-pypi-repo
           pipenv install safety bandit
           pipenv run safety check
           pipenv run bandit -r src/ -f json -o security-report.json
