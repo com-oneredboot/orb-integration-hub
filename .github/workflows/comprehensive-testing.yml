@@ -151,10 +151,11 @@ jobs:
           cd apps/api
           python -m pip install --upgrade pip
           pip install pipenv
-          aws codeartifact login --tool pip \
+          export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token \
             --domain orb-infrastructure-shared-codeartifact-domain \
             --domain-owner 432045270100 \
-            --repository orb-infrastructure-shared-pypi-repo
+            --query authorizationToken \
+            --output text)
           pipenv install --dev
 
       - name: Run linting (Frontend)
@@ -474,10 +475,11 @@ jobs:
         run: |
           cd apps/api
           pip install pipenv
-          aws codeartifact login --tool pip \
+          export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token \
             --domain orb-infrastructure-shared-codeartifact-domain \
             --domain-owner 432045270100 \
-            --repository orb-infrastructure-shared-pypi-repo
+            --query authorizationToken \
+            --output text)
           pipenv install --dev
 
       - name: Run frontend security tests
@@ -492,10 +494,11 @@ jobs:
         run: |
           cd apps/api
           # Run Python security tests
-          aws codeartifact login --tool pip \
+          export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token \
             --domain orb-infrastructure-shared-codeartifact-domain \
             --domain-owner 432045270100 \
-            --repository orb-infrastructure-shared-pypi-repo
+            --query authorizationToken \
+            --output text)
           pipenv install safety bandit
           pipenv run safety check
           pipenv run bandit -r src/ -f json -o security-report.json
