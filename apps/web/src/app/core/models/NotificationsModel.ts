@@ -8,7 +8,7 @@ import { NotificationStatus } from '../../core/enums/NotificationStatusEnum';
 import { NotificationType } from '../../core/enums/NotificationTypeEnum';
 
 // Input Types
-export type NotificationsCreateInput = {
+export interface NotificationsCreateInput {
   notificationId: string;
   recipientUserId: string;
   senderUserId?: string;
@@ -20,9 +20,9 @@ export type NotificationsCreateInput = {
   expiresAt?: Date;
   createdAt: Date;
   updatedAt: Date;
-};
+}
 
-export type NotificationsUpdateInput = {
+export interface NotificationsUpdateInput {
   notificationId?: string;
   recipientUserId?: string;
   senderUserId?: string;
@@ -34,71 +34,71 @@ export type NotificationsUpdateInput = {
   expiresAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
-};
+}
 
-export type NotificationsQueryByNotificationIdInput = {
+export interface NotificationsQueryByNotificationIdInput {
   notificationId: string;
-};
+}
 
-export type NotificationsQueryByRecipientUserIdInput = {
+export interface NotificationsQueryByRecipientUserIdInput {
   recipientUserId: string;
-};
+}
 
-export type NotificationsQueryByTypeInput = {
+export interface NotificationsQueryByTypeInput {
   type: string;
-};
+}
 
 
 // Response Types
-export type NotificationsResponse = {
+export interface NotificationsResponse {
   StatusCode: number;
   Message: string;
   Data: Notifications | null;
-};
+}
 
-export type NotificationsCreateResponse = {
+export interface NotificationsCreateResponse {
   StatusCode: number;
   Message: string;
   Data: Notifications | null;
-};
+}
 
-export type NotificationsUpdateResponse = {
+export interface NotificationsUpdateResponse {
   StatusCode: number;
   Message: string;
   Data: Notifications | null;
-};
+}
 
-export type NotificationsListResponse = {
+export interface NotificationsListResponse {
   StatusCode: number;
   Message: string;
   Data: Notifications[] | null;
-};
+}
 
 
 // GraphQL Response Wrappers
-export type NotificationsCreateMutationResponse = {
+export interface NotificationsCreateMutationResponse {
   NotificationsCreate: NotificationsCreateResponse;
-};
+}
 
-export type NotificationsUpdateMutationResponse = {
+export interface NotificationsUpdateMutationResponse {
   NotificationsUpdate: NotificationsUpdateResponse;
-};
+}
 
-export type NotificationsDeleteMutationResponse = {
+export interface NotificationsDeleteMutationResponse {
   NotificationsDelete: NotificationsResponse;
-};
+}
 
-export type NotificationsQueryByNotificationIdResponse = {
+export interface NotificationsQueryByNotificationIdResponse {
   NotificationsQueryByNotificationId: NotificationsResponse;
-};
+}
 
-export type NotificationsQueryByRecipientUserIdResponse = {
+export interface NotificationsQueryByRecipientUserIdResponse {
   NotificationsQueryByRecipientUserId: NotificationsListResponse;
-};
+}
 
-export type NotificationsQueryByTypeResponse = {
+export interface NotificationsQueryByTypeResponse {
   NotificationsQueryByType: NotificationsListResponse;
-};
+}
 
 export interface INotifications {
   notificationId: string;

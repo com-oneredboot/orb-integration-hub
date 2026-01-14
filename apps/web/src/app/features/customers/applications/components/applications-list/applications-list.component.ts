@@ -45,12 +45,12 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
   currentUser$: Observable<Users | null>;
   applicationRows: ApplicationListRow[] = [];
   filteredApplicationRows: ApplicationListRow[] = [];
-  isLoading: boolean = false;
+  isLoading = false;
   
   // Filters
-  searchTerm: string = '';
-  organizationFilter: string = '';
-  roleFilter: string = '';
+  searchTerm = '';
+  organizationFilter = '';
+  roleFilter = '';
   
   private destroy$ = new Subject<void>();
 

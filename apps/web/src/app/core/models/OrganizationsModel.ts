@@ -7,7 +7,7 @@
 import { OrganizationStatus } from '../../core/enums/OrganizationStatusEnum';
 
 // Input Types
-export type OrganizationsCreateInput = {
+export interface OrganizationsCreateInput {
   organizationId: string;
   name: string;
   description?: string;
@@ -18,9 +18,9 @@ export type OrganizationsCreateInput = {
   kmsKeyId?: string;
   kmsKeyArn?: string;
   kmsAlias?: string;
-};
+}
 
-export type OrganizationsUpdateInput = {
+export interface OrganizationsUpdateInput {
   organizationId?: string;
   name?: string;
   description?: string;
@@ -31,71 +31,71 @@ export type OrganizationsUpdateInput = {
   kmsKeyId?: string;
   kmsKeyArn?: string;
   kmsAlias?: string;
-};
+}
 
-export type OrganizationsQueryByOrganizationIdInput = {
+export interface OrganizationsQueryByOrganizationIdInput {
   organizationId: string;
-};
+}
 
-export type OrganizationsQueryByOwnerIdInput = {
+export interface OrganizationsQueryByOwnerIdInput {
   ownerId: string;
-};
+}
 
-export type OrganizationsQueryByStatusInput = {
+export interface OrganizationsQueryByStatusInput {
   status: string;
-};
+}
 
 
 // Response Types
-export type OrganizationsResponse = {
+export interface OrganizationsResponse {
   StatusCode: number;
   Message: string;
   Data: Organizations | null;
-};
+}
 
-export type OrganizationsCreateResponse = {
+export interface OrganizationsCreateResponse {
   StatusCode: number;
   Message: string;
   Data: Organizations | null;
-};
+}
 
-export type OrganizationsUpdateResponse = {
+export interface OrganizationsUpdateResponse {
   StatusCode: number;
   Message: string;
   Data: Organizations | null;
-};
+}
 
-export type OrganizationsListResponse = {
+export interface OrganizationsListResponse {
   StatusCode: number;
   Message: string;
   Data: Organizations[] | null;
-};
+}
 
 
 // GraphQL Response Wrappers
-export type OrganizationsCreateMutationResponse = {
+export interface OrganizationsCreateMutationResponse {
   OrganizationsCreate: OrganizationsCreateResponse;
-};
+}
 
-export type OrganizationsUpdateMutationResponse = {
+export interface OrganizationsUpdateMutationResponse {
   OrganizationsUpdate: OrganizationsUpdateResponse;
-};
+}
 
-export type OrganizationsDeleteMutationResponse = {
+export interface OrganizationsDeleteMutationResponse {
   OrganizationsDelete: OrganizationsResponse;
-};
+}
 
-export type OrganizationsQueryByOrganizationIdResponse = {
+export interface OrganizationsQueryByOrganizationIdResponse {
   OrganizationsQueryByOrganizationId: OrganizationsResponse;
-};
+}
 
-export type OrganizationsQueryByOwnerIdResponse = {
+export interface OrganizationsQueryByOwnerIdResponse {
   OrganizationsQueryByOwnerId: OrganizationsListResponse;
-};
+}
 
-export type OrganizationsQueryByStatusResponse = {
+export interface OrganizationsQueryByStatusResponse {
   OrganizationsQueryByStatus: OrganizationsListResponse;
-};
+}
 
 export interface IOrganizations {
   organizationId: string;

@@ -7,87 +7,87 @@
 import { ApplicationUserStatus } from '../../core/enums/ApplicationUserStatusEnum';
 
 // Input Types
-export type ApplicationUsersCreateInput = {
+export interface ApplicationUsersCreateInput {
   applicationUserId: string;
   userId: string;
   applicationId: string;
   status: ApplicationUserStatus;
   createdAt: Date;
   updatedAt: Date;
-};
+}
 
-export type ApplicationUsersUpdateInput = {
+export interface ApplicationUsersUpdateInput {
   applicationUserId?: string;
   userId?: string;
   applicationId?: string;
   status?: ApplicationUserStatus;
   createdAt?: Date;
   updatedAt?: Date;
-};
+}
 
-export type ApplicationUsersQueryByApplicationUserIdInput = {
+export interface ApplicationUsersQueryByApplicationUserIdInput {
   applicationUserId: string;
-};
+}
 
-export type ApplicationUsersQueryByUserIdInput = {
+export interface ApplicationUsersQueryByUserIdInput {
   userId: string;
-};
+}
 
-export type ApplicationUsersQueryByApplicationIdInput = {
+export interface ApplicationUsersQueryByApplicationIdInput {
   applicationId: string;
-};
+}
 
 
 // Response Types
-export type ApplicationUsersResponse = {
+export interface ApplicationUsersResponse {
   StatusCode: number;
   Message: string;
   Data: ApplicationUsers | null;
-};
+}
 
-export type ApplicationUsersCreateResponse = {
+export interface ApplicationUsersCreateResponse {
   StatusCode: number;
   Message: string;
   Data: ApplicationUsers | null;
-};
+}
 
-export type ApplicationUsersUpdateResponse = {
+export interface ApplicationUsersUpdateResponse {
   StatusCode: number;
   Message: string;
   Data: ApplicationUsers | null;
-};
+}
 
-export type ApplicationUsersListResponse = {
+export interface ApplicationUsersListResponse {
   StatusCode: number;
   Message: string;
   Data: ApplicationUsers[] | null;
-};
+}
 
 
 // GraphQL Response Wrappers
-export type ApplicationUsersCreateMutationResponse = {
+export interface ApplicationUsersCreateMutationResponse {
   ApplicationUsersCreate: ApplicationUsersCreateResponse;
-};
+}
 
-export type ApplicationUsersUpdateMutationResponse = {
+export interface ApplicationUsersUpdateMutationResponse {
   ApplicationUsersUpdate: ApplicationUsersUpdateResponse;
-};
+}
 
-export type ApplicationUsersDeleteMutationResponse = {
+export interface ApplicationUsersDeleteMutationResponse {
   ApplicationUsersDelete: ApplicationUsersResponse;
-};
+}
 
-export type ApplicationUsersQueryByApplicationUserIdResponse = {
+export interface ApplicationUsersQueryByApplicationUserIdResponse {
   ApplicationUsersQueryByApplicationUserId: ApplicationUsersResponse;
-};
+}
 
-export type ApplicationUsersQueryByUserIdResponse = {
+export interface ApplicationUsersQueryByUserIdResponse {
   ApplicationUsersQueryByUserId: ApplicationUsersListResponse;
-};
+}
 
-export type ApplicationUsersQueryByApplicationIdResponse = {
+export interface ApplicationUsersQueryByApplicationIdResponse {
   ApplicationUsersQueryByApplicationId: ApplicationUsersListResponse;
-};
+}
 
 export interface IApplicationUsers {
   applicationUserId: string;

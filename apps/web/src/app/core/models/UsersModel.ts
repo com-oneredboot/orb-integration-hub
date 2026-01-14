@@ -7,7 +7,7 @@
 import { UserStatus } from '../../core/enums/UserStatusEnum';
 
 // Input Types
-export type UsersCreateInput = {
+export interface UsersCreateInput {
   userId: string;
   cognitoId: string;
   cognitoSub: string;
@@ -23,9 +23,9 @@ export type UsersCreateInput = {
   phoneVerified?: boolean;
   mfaEnabled?: boolean;
   mfaSetupComplete?: boolean;
-};
+}
 
-export type UsersUpdateInput = {
+export interface UsersUpdateInput {
   userId?: string;
   cognitoId?: string;
   cognitoSub?: string;
@@ -41,79 +41,79 @@ export type UsersUpdateInput = {
   phoneVerified?: boolean;
   mfaEnabled?: boolean;
   mfaSetupComplete?: boolean;
-};
+}
 
-export type UsersQueryByUserIdInput = {
+export interface UsersQueryByUserIdInput {
   userId: string;
-};
+}
 
-export type UsersQueryByEmailInput = {
+export interface UsersQueryByEmailInput {
   email: string;
-};
+}
 
-export type UsersQueryByCognitoIdInput = {
+export interface UsersQueryByCognitoIdInput {
   cognitoId: string;
-};
+}
 
-export type UsersQueryByCognitoSubInput = {
+export interface UsersQueryByCognitoSubInput {
   cognitoSub: string;
-};
+}
 
 
 // Response Types
-export type UsersResponse = {
+export interface UsersResponse {
   StatusCode: number;
   Message: string;
   Data: Users | null;
-};
+}
 
-export type UsersCreateResponse = {
+export interface UsersCreateResponse {
   StatusCode: number;
   Message: string;
   Data: Users | null;
-};
+}
 
-export type UsersUpdateResponse = {
+export interface UsersUpdateResponse {
   StatusCode: number;
   Message: string;
   Data: Users | null;
-};
+}
 
-export type UsersListResponse = {
+export interface UsersListResponse {
   StatusCode: number;
   Message: string;
   Data: Users[] | null;
-};
+}
 
 
 // GraphQL Response Wrappers
-export type UsersCreateMutationResponse = {
+export interface UsersCreateMutationResponse {
   UsersCreate: UsersCreateResponse;
-};
+}
 
-export type UsersUpdateMutationResponse = {
+export interface UsersUpdateMutationResponse {
   UsersUpdate: UsersUpdateResponse;
-};
+}
 
-export type UsersDeleteMutationResponse = {
+export interface UsersDeleteMutationResponse {
   UsersDelete: UsersResponse;
-};
+}
 
-export type UsersQueryByUserIdResponse = {
+export interface UsersQueryByUserIdResponse {
   UsersQueryByUserId: UsersResponse;
-};
+}
 
-export type UsersQueryByEmailResponse = {
+export interface UsersQueryByEmailResponse {
   UsersQueryByEmail: UsersListResponse;
-};
+}
 
-export type UsersQueryByCognitoIdResponse = {
+export interface UsersQueryByCognitoIdResponse {
   UsersQueryByCognitoId: UsersListResponse;
-};
+}
 
-export type UsersQueryByCognitoSubResponse = {
+export interface UsersQueryByCognitoSubResponse {
   UsersQueryByCognitoSub: UsersListResponse;
-};
+}
 
 export interface IUsers {
   userId: string;

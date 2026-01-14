@@ -229,7 +229,7 @@ export class InputValidationService {
   /**
    * Validate names (first name, last name)
    */
-  validateName(name: string, fieldName: string = 'Name'): ValidationResult {
+  validateName(name: string, fieldName = 'Name'): ValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
     
@@ -289,7 +289,7 @@ export class InputValidationService {
       hasUppercase: /[A-Z]/.test(password),
       hasLowercase: /[a-z]/.test(password),
       hasNumber: /\d/.test(password),
-      hasSpecial: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+      hasSpecial: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
       noCommonPatterns: !this.hasCommonPasswordPatterns(password)
     };
 
@@ -370,7 +370,7 @@ export class InputValidationService {
   /**
    * Validate input length
    */
-  validateLength(input: string, minLength: number, maxLength: number, fieldName: string = 'Field'): ValidationResult {
+  validateLength(input: string, minLength: number, maxLength: number, fieldName = 'Field'): ValidationResult {
     const errors: string[] = [];
     const length = input.length;
 

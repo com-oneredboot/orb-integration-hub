@@ -3,7 +3,7 @@
 // date: 2025-06-21
 // description: Analytics and conversion tracking service with A/B testing framework for authentication flow
 
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, Subject, timer } from 'rxjs';
 import { map, filter, debounceTime, bufferTime, takeUntil } from 'rxjs/operators';
 
@@ -64,7 +64,7 @@ export interface UserSegment {
 @Injectable({
   providedIn: 'root'
 })
-export class AuthAnalyticsService {
+export class AuthAnalyticsService implements OnDestroy {
   private sessionId = this.generateSessionId();
   private events: AnalyticsEvent[] = [];
   private eventQueue = new Subject<AnalyticsEvent>();
@@ -461,7 +461,7 @@ export class AuthAnalyticsService {
     activeUsers: number;
     eventsPerMinute: number;
     conversionRate: number;
-    topErrors: Array<{ error: string; count: number }>;
+    topErrors: { error: string; count: number }[];
   }> {
     return timer(0, 60000).pipe( // Update every minute
       map(() => {
@@ -567,7 +567,7 @@ export class AuthAnalyticsService {
     return (lastStep.completed / firstStep.entered) * 100;
   }
 
-  private getTopErrors(): Array<{ error: string; count: number }> {
+  private getTopErrors(): { error: string; count: number }[] {
     const errorCounts = new Map<string, number>();
     
     this.events

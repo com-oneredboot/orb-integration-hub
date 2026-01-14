@@ -32,9 +32,9 @@ import * as fromUser from '../../user/store/user.selectors';
 })
 export class OrganizationsComponent implements OnInit {
   selectedOrganization: Organizations | null = null;
-  selectedOrganizationMemberCount: number = 0;
-  selectedOrganizationApplicationCount: number = 0;
-  isInCreateMode: boolean = false;
+  selectedOrganizationMemberCount = 0;
+  selectedOrganizationApplicationCount = 0;
+  isInCreateMode = false;
   debugMode$: Observable<boolean>;
 
   constructor(private store: Store) {

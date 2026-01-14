@@ -8,79 +8,79 @@ import { RoleStatus } from '../../core/enums/RoleStatusEnum';
 import { RoleType } from '../../core/enums/RoleTypeEnum';
 
 // Input Types
-export type RolesCreateInput = {
+export interface RolesCreateInput {
   roleId: string;
   userId?: string;
   roleType: RoleType;
   status: RoleStatus;
   createdAt: Date;
   updatedAt: Date;
-};
+}
 
-export type RolesUpdateInput = {
+export interface RolesUpdateInput {
   roleId?: string;
   userId?: string;
   roleType?: RoleType;
   status?: RoleStatus;
   createdAt?: Date;
   updatedAt?: Date;
-};
+}
 
-export type RolesQueryByRoleIdInput = {
+export interface RolesQueryByRoleIdInput {
   roleId: string;
-};
+}
 
-export type RolesQueryByUserIdInput = {
+export interface RolesQueryByUserIdInput {
   userId: string;
-};
+}
 
 
 // Response Types
-export type RolesResponse = {
+export interface RolesResponse {
   StatusCode: number;
   Message: string;
   Data: Roles | null;
-};
+}
 
-export type RolesCreateResponse = {
+export interface RolesCreateResponse {
   StatusCode: number;
   Message: string;
   Data: Roles | null;
-};
+}
 
-export type RolesUpdateResponse = {
+export interface RolesUpdateResponse {
   StatusCode: number;
   Message: string;
   Data: Roles | null;
-};
+}
 
-export type RolesListResponse = {
+export interface RolesListResponse {
   StatusCode: number;
   Message: string;
   Data: Roles[] | null;
-};
+}
 
 
 // GraphQL Response Wrappers
-export type RolesCreateMutationResponse = {
+export interface RolesCreateMutationResponse {
   RolesCreate: RolesCreateResponse;
-};
+}
 
-export type RolesUpdateMutationResponse = {
+export interface RolesUpdateMutationResponse {
   RolesUpdate: RolesUpdateResponse;
-};
+}
 
-export type RolesDeleteMutationResponse = {
+export interface RolesDeleteMutationResponse {
   RolesDelete: RolesResponse;
-};
+}
 
-export type RolesQueryByRoleIdResponse = {
+export interface RolesQueryByRoleIdResponse {
   RolesQueryByRoleId: RolesResponse;
-};
+}
 
-export type RolesQueryByUserIdResponse = {
+export interface RolesQueryByUserIdResponse {
   RolesQueryByUserId: RolesListResponse;
-};
+}
 
 export interface IRoles {
   roleId: string;

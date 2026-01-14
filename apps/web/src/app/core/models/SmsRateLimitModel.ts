@@ -6,67 +6,67 @@
 
 
 // Input Types
-export type SmsRateLimitCreateInput = {
+export interface SmsRateLimitCreateInput {
   phoneNumber: string;
   requestCount: number;
   firstRequestTime: Date;
   ttl: number;
-};
+}
 
-export type SmsRateLimitUpdateInput = {
+export interface SmsRateLimitUpdateInput {
   phoneNumber?: string;
   requestCount?: number;
   firstRequestTime?: Date;
   ttl?: number;
-};
+}
 
-export type SmsRateLimitQueryByPhoneNumberInput = {
+export interface SmsRateLimitQueryByPhoneNumberInput {
   phoneNumber: string;
-};
+}
 
 
 // Response Types
-export type SmsRateLimitResponse = {
+export interface SmsRateLimitResponse {
   StatusCode: number;
   Message: string;
   Data: SmsRateLimit | null;
-};
+}
 
-export type SmsRateLimitCreateResponse = {
+export interface SmsRateLimitCreateResponse {
   StatusCode: number;
   Message: string;
   Data: SmsRateLimit | null;
-};
+}
 
-export type SmsRateLimitUpdateResponse = {
+export interface SmsRateLimitUpdateResponse {
   StatusCode: number;
   Message: string;
   Data: SmsRateLimit | null;
-};
+}
 
-export type SmsRateLimitListResponse = {
+export interface SmsRateLimitListResponse {
   StatusCode: number;
   Message: string;
   Data: SmsRateLimit[] | null;
-};
+}
 
 
 // GraphQL Response Wrappers
-export type SmsRateLimitCreateMutationResponse = {
+export interface SmsRateLimitCreateMutationResponse {
   SmsRateLimitCreate: SmsRateLimitCreateResponse;
-};
+}
 
-export type SmsRateLimitUpdateMutationResponse = {
+export interface SmsRateLimitUpdateMutationResponse {
   SmsRateLimitUpdate: SmsRateLimitUpdateResponse;
-};
+}
 
-export type SmsRateLimitDeleteMutationResponse = {
+export interface SmsRateLimitDeleteMutationResponse {
   SmsRateLimitDelete: SmsRateLimitResponse;
-};
+}
 
-export type SmsRateLimitQueryByPhoneNumberResponse = {
+export interface SmsRateLimitQueryByPhoneNumberResponse {
   SmsRateLimitQueryByPhoneNumber: SmsRateLimitResponse;
-};
+}
 
 export interface ISmsRateLimit {
   phoneNumber: string;

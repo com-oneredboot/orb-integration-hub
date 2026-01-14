@@ -40,7 +40,7 @@ export class FormValidationService {
   /**
    * Get appropriate error message for a form control
    */
-  getErrorMessage(control: AbstractControl | null, fieldName: string = 'Field'): string {
+  getErrorMessage(control: AbstractControl | null, fieldName = 'Field'): string {
     if (!control || !control.errors) return '';
 
     const errors = control.errors;
@@ -110,7 +110,7 @@ export class FormValidationService {
       uppercase: /[A-Z]/.test(password),
       lowercase: /[a-z]/.test(password),
       number: /\d/.test(password),
-      special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+      special: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)
     };
 
     const metRequirements = Object.values(requirements).filter(Boolean).length;
@@ -136,13 +136,13 @@ export class FormValidationService {
   /**
    * Get password requirement messages
    */
-  getPasswordRequirements(): Array<{ key: string; label: string; pattern: RegExp }> {
+  getPasswordRequirements(): { key: string; label: string; pattern: RegExp }[] {
     return [
       { key: 'length', label: 'At least 8 characters', pattern: /.{8,}/ },
       { key: 'uppercase', label: 'One uppercase letter', pattern: /[A-Z]/ },
       { key: 'lowercase', label: 'One lowercase letter', pattern: /[a-z]/ },
       { key: 'number', label: 'One number', pattern: /\d/ },
-      { key: 'special', label: 'One special character', pattern: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/ }
+      { key: 'special', label: 'One special character', pattern: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/ }
     ];
   }
 

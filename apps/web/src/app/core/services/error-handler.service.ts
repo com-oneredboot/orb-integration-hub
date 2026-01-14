@@ -110,7 +110,7 @@ export class AppErrorHandlerService implements ErrorHandler {
   captureAuthError(
     operation: string,
     error: any,
-    component: string = 'AuthFlow',
+    component = 'AuthFlow',
     userId?: string,
     recoveryActions?: string[]
   ): string {
@@ -134,7 +134,7 @@ export class AppErrorHandlerService implements ErrorHandler {
     operation: string,
     error: any,
     component: string,
-    autoRetry: boolean = true
+    autoRetry = true
   ): string {
     const recoveryActions = autoRetry 
       ? ['Retrying automatically...', 'Check internet connection', 'Refresh page']

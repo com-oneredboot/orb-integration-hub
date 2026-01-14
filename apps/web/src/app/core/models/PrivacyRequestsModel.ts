@@ -9,7 +9,7 @@ import { PrivacyRequestStatus } from '../../core/enums/PrivacyRequestStatusEnum'
 import { PrivacyRequestType } from '../../core/enums/PrivacyRequestTypeEnum';
 
 // Input Types
-export type PrivacyRequestsCreateInput = {
+export interface PrivacyRequestsCreateInput {
   requestId: string;
   organizationId: string;
   requestType: PrivacyRequestType;
@@ -25,9 +25,9 @@ export type PrivacyRequestsCreateInput = {
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
-};
+}
 
-export type PrivacyRequestsUpdateInput = {
+export interface PrivacyRequestsUpdateInput {
   requestId?: string;
   organizationId?: string;
   requestType?: PrivacyRequestType;
@@ -43,87 +43,87 @@ export type PrivacyRequestsUpdateInput = {
   notes?: string;
   createdAt?: Date;
   updatedAt?: Date;
-};
+}
 
-export type PrivacyRequestsQueryByRequestIdInput = {
+export interface PrivacyRequestsQueryByRequestIdInput {
   requestId: string;
-};
+}
 
-export type PrivacyRequestsQueryByRequestTypeInput = {
+export interface PrivacyRequestsQueryByRequestTypeInput {
   requestType: string;
-};
+}
 
-export type PrivacyRequestsQueryByDataSubjectEmailInput = {
+export interface PrivacyRequestsQueryByDataSubjectEmailInput {
   dataSubjectEmail: string;
-};
+}
 
-export type PrivacyRequestsQueryByOrganizationIdInput = {
+export interface PrivacyRequestsQueryByOrganizationIdInput {
   organizationId: string;
-};
+}
 
-export type PrivacyRequestsQueryByStatusInput = {
+export interface PrivacyRequestsQueryByStatusInput {
   status: string;
-};
+}
 
 
 // Response Types
-export type PrivacyRequestsResponse = {
+export interface PrivacyRequestsResponse {
   StatusCode: number;
   Message: string;
   Data: PrivacyRequests | null;
-};
+}
 
-export type PrivacyRequestsCreateResponse = {
+export interface PrivacyRequestsCreateResponse {
   StatusCode: number;
   Message: string;
   Data: PrivacyRequests | null;
-};
+}
 
-export type PrivacyRequestsUpdateResponse = {
+export interface PrivacyRequestsUpdateResponse {
   StatusCode: number;
   Message: string;
   Data: PrivacyRequests | null;
-};
+}
 
-export type PrivacyRequestsListResponse = {
+export interface PrivacyRequestsListResponse {
   StatusCode: number;
   Message: string;
   Data: PrivacyRequests[] | null;
-};
+}
 
 
 // GraphQL Response Wrappers
-export type PrivacyRequestsCreateMutationResponse = {
+export interface PrivacyRequestsCreateMutationResponse {
   PrivacyRequestsCreate: PrivacyRequestsCreateResponse;
-};
+}
 
-export type PrivacyRequestsUpdateMutationResponse = {
+export interface PrivacyRequestsUpdateMutationResponse {
   PrivacyRequestsUpdate: PrivacyRequestsUpdateResponse;
-};
+}
 
-export type PrivacyRequestsDeleteMutationResponse = {
+export interface PrivacyRequestsDeleteMutationResponse {
   PrivacyRequestsDelete: PrivacyRequestsResponse;
-};
+}
 
-export type PrivacyRequestsQueryByRequestIdResponse = {
+export interface PrivacyRequestsQueryByRequestIdResponse {
   PrivacyRequestsQueryByRequestId: PrivacyRequestsResponse;
-};
+}
 
-export type PrivacyRequestsQueryByRequestTypeResponse = {
+export interface PrivacyRequestsQueryByRequestTypeResponse {
   PrivacyRequestsQueryByRequestType: PrivacyRequestsListResponse;
-};
+}
 
-export type PrivacyRequestsQueryByDataSubjectEmailResponse = {
+export interface PrivacyRequestsQueryByDataSubjectEmailResponse {
   PrivacyRequestsQueryByDataSubjectEmail: PrivacyRequestsListResponse;
-};
+}
 
-export type PrivacyRequestsQueryByOrganizationIdResponse = {
+export interface PrivacyRequestsQueryByOrganizationIdResponse {
   PrivacyRequestsQueryByOrganizationId: PrivacyRequestsListResponse;
-};
+}
 
-export type PrivacyRequestsQueryByStatusResponse = {
+export interface PrivacyRequestsQueryByStatusResponse {
   PrivacyRequestsQueryByStatus: PrivacyRequestsListResponse;
-};
+}
 
 export interface IPrivacyRequests {
   requestId: string;

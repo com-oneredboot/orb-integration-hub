@@ -6,29 +6,29 @@
 
 
 // Response Types
-export type SmsVerificationResponse = {
+export interface SmsVerificationResponse {
   StatusCode: number;
   Message: string;
   Data: SmsVerification | null;
-};
+}
 
-export type SmsVerificationCreateResponse = {
+export interface SmsVerificationCreateResponse {
   StatusCode: number;
   Message: string;
   Data: SmsVerification | null;
-};
+}
 
-export type SmsVerificationUpdateResponse = {
+export interface SmsVerificationUpdateResponse {
   StatusCode: number;
   Message: string;
   Data: SmsVerification | null;
-};
+}
 
-export type SmsVerificationListResponse = {
+export interface SmsVerificationListResponse {
   StatusCode: number;
   Message: string;
   Data: SmsVerification[] | null;
-};
+}
 
 export interface ISmsVerification {
   phoneNumber: string;

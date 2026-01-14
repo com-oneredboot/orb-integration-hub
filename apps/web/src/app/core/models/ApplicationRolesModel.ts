@@ -8,7 +8,7 @@ import { RoleStatus } from '../../core/enums/RoleStatusEnum';
 import { RoleType } from '../../core/enums/RoleTypeEnum';
 
 // Input Types
-export type ApplicationRolesCreateInput = {
+export interface ApplicationRolesCreateInput {
   applicationRoleId: string;
   userId: string;
   applicationId: string;
@@ -19,9 +19,9 @@ export type ApplicationRolesCreateInput = {
   status: RoleStatus;
   createdAt: Date;
   updatedAt: Date;
-};
+}
 
-export type ApplicationRolesUpdateInput = {
+export interface ApplicationRolesUpdateInput {
   applicationRoleId?: string;
   userId?: string;
   applicationId?: string;
@@ -32,79 +32,79 @@ export type ApplicationRolesUpdateInput = {
   status?: RoleStatus;
   createdAt?: Date;
   updatedAt?: Date;
-};
+}
 
-export type ApplicationRolesQueryByApplicationRoleIdInput = {
+export interface ApplicationRolesQueryByApplicationRoleIdInput {
   applicationRoleId: string;
-};
+}
 
-export type ApplicationRolesQueryByUserIdInput = {
+export interface ApplicationRolesQueryByUserIdInput {
   userId: string;
-};
+}
 
-export type ApplicationRolesQueryByApplicationIdInput = {
+export interface ApplicationRolesQueryByApplicationIdInput {
   applicationId: string;
-};
+}
 
-export type ApplicationRolesQueryByRoleIdInput = {
+export interface ApplicationRolesQueryByRoleIdInput {
   roleId: string;
-};
+}
 
 
 // Response Types
-export type ApplicationRolesResponse = {
+export interface ApplicationRolesResponse {
   StatusCode: number;
   Message: string;
   Data: ApplicationRoles | null;
-};
+}
 
-export type ApplicationRolesCreateResponse = {
+export interface ApplicationRolesCreateResponse {
   StatusCode: number;
   Message: string;
   Data: ApplicationRoles | null;
-};
+}
 
-export type ApplicationRolesUpdateResponse = {
+export interface ApplicationRolesUpdateResponse {
   StatusCode: number;
   Message: string;
   Data: ApplicationRoles | null;
-};
+}
 
-export type ApplicationRolesListResponse = {
+export interface ApplicationRolesListResponse {
   StatusCode: number;
   Message: string;
   Data: ApplicationRoles[] | null;
-};
+}
 
 
 // GraphQL Response Wrappers
-export type ApplicationRolesCreateMutationResponse = {
+export interface ApplicationRolesCreateMutationResponse {
   ApplicationRolesCreate: ApplicationRolesCreateResponse;
-};
+}
 
-export type ApplicationRolesUpdateMutationResponse = {
+export interface ApplicationRolesUpdateMutationResponse {
   ApplicationRolesUpdate: ApplicationRolesUpdateResponse;
-};
+}
 
-export type ApplicationRolesDeleteMutationResponse = {
+export interface ApplicationRolesDeleteMutationResponse {
   ApplicationRolesDelete: ApplicationRolesResponse;
-};
+}
 
-export type ApplicationRolesQueryByApplicationRoleIdResponse = {
+export interface ApplicationRolesQueryByApplicationRoleIdResponse {
   ApplicationRolesQueryByApplicationRoleId: ApplicationRolesResponse;
-};
+}
 
-export type ApplicationRolesQueryByUserIdResponse = {
+export interface ApplicationRolesQueryByUserIdResponse {
   ApplicationRolesQueryByUserId: ApplicationRolesListResponse;
-};
+}
 
-export type ApplicationRolesQueryByApplicationIdResponse = {
+export interface ApplicationRolesQueryByApplicationIdResponse {
   ApplicationRolesQueryByApplicationId: ApplicationRolesListResponse;
-};
+}
 
-export type ApplicationRolesQueryByRoleIdResponse = {
+export interface ApplicationRolesQueryByRoleIdResponse {
   ApplicationRolesQueryByRoleId: ApplicationRolesListResponse;
-};
+}
 
 export interface IApplicationRoles {
   applicationRoleId: string;

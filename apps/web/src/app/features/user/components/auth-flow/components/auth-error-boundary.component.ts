@@ -92,12 +92,12 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./auth-error-boundary.component.scss']
 })
 export class AuthErrorBoundaryComponent {
-  @Input() errorTitle: string = 'Something went wrong';
-  @Input() errorMessage: string = 'An unexpected error occurred. Please try again or contact support if the problem persists.';
+  @Input() errorTitle = 'Something went wrong';
+  @Input() errorMessage = 'An unexpected error occurred. Please try again or contact support if the problem persists.';
   @Input() technicalDetails?: string;
-  @Input() showDetails: boolean = false;
-  @Input() allowRetry: boolean = true;
-  @Input() allowGoBack: boolean = true;
+  @Input() showDetails = false;
+  @Input() allowRetry = true;
+  @Input() allowGoBack = true;
   
   @Output() retry = new EventEmitter<void>();
   @Output() goBack = new EventEmitter<void>();

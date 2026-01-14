@@ -3,7 +3,7 @@
 // date: 2025-06-21
 // description: Performance optimization service for authentication flow with lazy loading and caching
 
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Subject, timer, Observable, from } from 'rxjs';
 import { debounceTime, throttleTime, shareReplay, switchMap, startWith } from 'rxjs';
 
@@ -25,7 +25,7 @@ export interface CacheConfig {
 @Injectable({
   providedIn: 'root'
 })
-export class AuthPerformanceService {
+export class AuthPerformanceService implements OnDestroy {
   private performanceMetrics = new BehaviorSubject<Partial<PerformanceMetrics>>({});
   private componentCache = new Map<string, any>();
   private imageCache = new Map<string, string>();
@@ -157,7 +157,7 @@ export class AuthPerformanceService {
    */
   createDebouncedValidation<T>(
     validationFn: (value: T) => Observable<any>,
-    debounceMs: number = 300
+    debounceMs = 300
   ): (value: T) => Observable<any> {
     const subject = new Subject<T>();
     
@@ -178,7 +178,7 @@ export class AuthPerformanceService {
    */
   createThrottledValidation<T>(
     validationFn: (value: T) => Observable<any>,
-    throttleMs: number = 100
+    throttleMs = 100
   ): (value: T) => Observable<any> {
     const subject = new Subject<T>();
     
@@ -317,7 +317,7 @@ export class AuthPerformanceService {
       const visibleItemCount = Math.ceil(containerHeight / itemHeight);
       const buffer = Math.ceil(visibleItemCount / 2);
 
-      let scrollTop = 0;
+      const scrollTop = 0;
 
       const calculateVisibleItems = () => {
         const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - buffer);

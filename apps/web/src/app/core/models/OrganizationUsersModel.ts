@@ -8,7 +8,7 @@ import { OrganizationUserRole } from '../../core/enums/OrganizationUserRoleEnum'
 import { OrganizationUserStatus } from '../../core/enums/OrganizationUserStatusEnum';
 
 // Input Types
-export type OrganizationUsersCreateInput = {
+export interface OrganizationUsersCreateInput {
   userId: string;
   organizationId: string;
   role: OrganizationUserRole;
@@ -18,9 +18,9 @@ export type OrganizationUsersCreateInput = {
   joinedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
-};
+}
 
-export type OrganizationUsersUpdateInput = {
+export interface OrganizationUsersUpdateInput {
   userId?: string;
   organizationId?: string;
   role?: OrganizationUserRole;
@@ -30,80 +30,80 @@ export type OrganizationUsersUpdateInput = {
   joinedAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
-};
+}
 
-export type OrganizationUsersQueryByUserIdInput = {
+export interface OrganizationUsersQueryByUserIdInput {
   userId: string;
-};
+}
 
-export type OrganizationUsersQueryByOrganizationIdInput = {
+export interface OrganizationUsersQueryByOrganizationIdInput {
   organizationId: string;
-};
+}
 
-export type OrganizationUsersQueryByBothInput = {
+export interface OrganizationUsersQueryByBothInput {
   userId: string;
   organizationId: string;
-};
+}
 
-export type OrganizationUsersQueryByOrganizationIdInput = {
+export interface OrganizationUsersQueryByOrganizationIdInput {
   organizationId: string;
-};
+}
 
-export type OrganizationUsersQueryByUserIdInput = {
+export interface OrganizationUsersQueryByUserIdInput {
   userId: string;
-};
+}
 
 
 // Response Types
-export type OrganizationUsersResponse = {
+export interface OrganizationUsersResponse {
   StatusCode: number;
   Message: string;
   Data: OrganizationUsers | null;
-};
+}
 
-export type OrganizationUsersCreateResponse = {
+export interface OrganizationUsersCreateResponse {
   StatusCode: number;
   Message: string;
   Data: OrganizationUsers | null;
-};
+}
 
-export type OrganizationUsersUpdateResponse = {
+export interface OrganizationUsersUpdateResponse {
   StatusCode: number;
   Message: string;
   Data: OrganizationUsers | null;
-};
+}
 
-export type OrganizationUsersListResponse = {
+export interface OrganizationUsersListResponse {
   StatusCode: number;
   Message: string;
   Data: OrganizationUsers[] | null;
-};
+}
 
 
 // GraphQL Response Wrappers
-export type OrganizationUsersCreateMutationResponse = {
+export interface OrganizationUsersCreateMutationResponse {
   OrganizationUsersCreate: OrganizationUsersCreateResponse;
-};
+}
 
-export type OrganizationUsersUpdateMutationResponse = {
+export interface OrganizationUsersUpdateMutationResponse {
   OrganizationUsersUpdate: OrganizationUsersUpdateResponse;
-};
+}
 
-export type OrganizationUsersDeleteMutationResponse = {
+export interface OrganizationUsersDeleteMutationResponse {
   OrganizationUsersDelete: OrganizationUsersResponse;
-};
+}
 
-export type OrganizationUsersQueryByUserIdResponse = {
+export interface OrganizationUsersQueryByUserIdResponse {
   OrganizationUsersQueryByUserId: OrganizationUsersResponse;
-};
+}
 
-export type OrganizationUsersQueryByOrganizationIdResponse = {
+export interface OrganizationUsersQueryByOrganizationIdResponse {
   OrganizationUsersQueryByOrganizationId: OrganizationUsersListResponse;
-};
+}
 
-export type OrganizationUsersQueryByUserIdResponse = {
+export interface OrganizationUsersQueryByUserIdResponse {
   OrganizationUsersQueryByUserId: OrganizationUsersListResponse;
-};
+}
 
 export interface IOrganizationUsers {
   userId: string;

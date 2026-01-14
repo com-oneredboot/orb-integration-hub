@@ -70,7 +70,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   // Real-time validation state
   public showValidationErrors = false;
   private validationDebounceTimer: any;
-  public fieldFocusStates: { [key: string]: boolean } = {};
+  public fieldFocusStates: Record<string, boolean> = {};
 
   // Touch interaction state
   public isTouchDevice = false;
@@ -80,7 +80,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
 
   // Loading and skeleton states
   public isStepTransitioning = false;
-  public validationLoadingStates: { [key: string]: boolean } = {};
+  public validationLoadingStates: Record<string, boolean> = {};
   public qrCodeLoading = false;
   public buttonProgress = 0;
   public showSkeletonScreens = false;
@@ -862,7 +862,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         }
       });
     } catch (error) {
-      let email = this.authForm.get('email')?.value || 'unknown';
+      const email = this.authForm.get('email')?.value || 'unknown';
       const errorId = this.errorHandler.captureAuthError(
         'onSubmit',
         error,
@@ -2037,7 +2037,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     if (!error) return '';
     
     // Map technical errors to user-friendly messages
-    const errorMap: { [key: string]: string } = {
+    const errorMap: Record<string, string> = {
       'UserNotFoundException': 'No account found with this email address. Please check your email or create a new account.',
       'NotAuthorizedException': 'Invalid email or password. Please check your credentials and try again.',
       'CodeMismatchException': 'The verification code is incorrect. Please check the code and try again.',
@@ -2246,7 +2246,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   public getResponsiveButtonText(baseText: string): string {
     if (this.isTouchDevice && baseText.length > 10) {
       // Shorten button text on mobile for better UX
-      const shortTexts: { [key: string]: string } = {
+      const shortTexts: Record<string, string> = {
         'Submit': 'Submit',
         'Continue': 'Next',
         'Verify Code': 'Verify',
@@ -2281,7 +2281,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   /**
    * Show step transition loading overlay
    */
-  private showStepTransition(message: string = 'Loading...'): void {
+  private showStepTransition(message = 'Loading...'): void {
     this.isStepTransitioning = true;
     this.loadingMessage = message;
   }
@@ -2484,7 +2484,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   /**
    * Get skeleton items for current step
    */
-  public getSkeletonItems(): Array<{type: string, class: string}> {
+  public getSkeletonItems(): {type: string, class: string}[] {
     const currentStep$ = this.currentStep$;
     
     // Return skeleton configuration based on current step
@@ -2519,7 +2519,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   /**
    * Announce success message for screen readers
    */
-  public announceSuccess(message: string, duration: number = 3000): void {
+  public announceSuccess(message: string, duration = 3000): void {
     this.successMessage = message;
     this.showSuccessMessage = true;
     

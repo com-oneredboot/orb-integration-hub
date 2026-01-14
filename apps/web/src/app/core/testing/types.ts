@@ -73,7 +73,7 @@ export interface PerformanceTestConfig {
  */
 export interface CrossBrowserTestConfig {
   browsers: ('chrome' | 'firefox' | 'safari' | 'edge')[];
-  viewports: Array<{ width: number; height: number; name: string }>;
+  viewports: { width: number; height: number; name: string }[];
   features: string[];
 }
 

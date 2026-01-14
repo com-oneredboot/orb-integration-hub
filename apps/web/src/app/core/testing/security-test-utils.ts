@@ -173,8 +173,8 @@ export class SecurityTestUtils {
   ): Promise<{ isVulnerable: boolean; timingDifference: number }> {
     return new Promise(async (resolve) => {
       const iterations = 10;
-      let validTimes: number[] = [];
-      let invalidTimes: number[] = [];
+      const validTimes: number[] = [];
+      const invalidTimes: number[] = [];
 
       // Test valid credentials timing
       for (let i = 0; i < iterations; i++) {
@@ -282,14 +282,14 @@ export class SecurityTestUtils {
   /**
    * Mock network delay for testing
    */
-  static mockNetworkDelay<T>(response: T, delayMs: number = 100): Observable<T> {
+  static mockNetworkDelay<T>(response: T, delayMs = 100): Observable<T> {
     return of(response).pipe(delay(delayMs));
   }
 
   /**
    * Mock network error for testing
    */
-  static mockNetworkError(errorMessage: string = 'Network Error'): Observable<never> {
+  static mockNetworkError(errorMessage = 'Network Error'): Observable<never> {
     return throwError(() => new Error(errorMessage));
   }
 
@@ -305,7 +305,7 @@ export class SecurityTestUtils {
       hasUppercase: /[A-Z]/.test(password),
       hasLowercase: /[a-z]/.test(password),
       hasNumber: /\d/.test(password),
-      hasSpecial: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+      hasSpecial: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
       noCommonPatterns: !/(password|123456|qwerty|abc123)/i.test(password)
     };
 

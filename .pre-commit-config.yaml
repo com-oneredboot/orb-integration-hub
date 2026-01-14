@@ -10,6 +10,23 @@ repos:
   # Run all tools in local pipenv environment to avoid CodeArtifact issues
   - repo: local
     hooks:
+      # ============================================
+      # Frontend (Angular/TypeScript) Hooks
+      # ============================================
+
+      # Frontend linting with ESLint
+      - id: frontend-lint
+        name: Lint frontend with ESLint
+        description: "Lint Angular/TypeScript code"
+        entry: bash -c 'cd apps/web && npm run lint'
+        language: system
+        files: ^apps/web/.*\.(ts|html)$
+        pass_filenames: false
+
+      # ============================================
+      # Backend (Python) Hooks
+      # ============================================
+
       # Code formatting with black
       - id: black
         name: Format code with black
@@ -36,6 +53,20 @@ repos:
         language: system
         files: ^apps/api/.*\.py$
         pass_filenames: true
+
+      # Security checks with bandit (exclude tests)
+      - id: bandit
+        name: Security check with bandit
+        description: "Find common security issues"
+        entry: pipenv run bandit -f json --skip B101
+        language: system
+        files: ^apps/api/.*\.py$
+        exclude: ^apps/api/tests/.*\.py$
+        pass_filenames: true
+
+      # ============================================
+      # General Hooks
+      # ============================================
 
       # Check YAML syntax
       - id: check-yaml
@@ -64,21 +95,15 @@ repos:
         files: \.toml$
         pass_filenames: true
 
-      # Security checks with bandit (exclude tests)
-      - id: bandit
-        name: Security check with bandit
-        description: "Find common security issues"
-        entry: pipenv run bandit -f json --skip B101
-        language: system
-        files: ^apps/api/.*\.py$
-        exclude: ^apps/api/tests/.*\.py$
-        pass_filenames: true
+      # ============================================
+      # Test Hooks
+      # ============================================
 
-      # Run tests before commit
+      # Run backend tests before commit
       - id: pytest-check
-        name: Run tests
-        description: "Run all tests before commit"
+        name: Run backend tests
+        description: "Run Python tests before commit"
         entry: pipenv run pytest apps/api/tests/ --tb=short -q
         language: system
+        files: ^apps/api/.*\.py$
         pass_filenames: false
-        always_run: true

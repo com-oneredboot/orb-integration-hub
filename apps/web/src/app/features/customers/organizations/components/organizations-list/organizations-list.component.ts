@@ -54,9 +54,9 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
   roleFilter$: Observable<string>;
   
   // Local filter values for form binding
-  searchTerm: string = '';
-  statusFilter: string = '';
-  roleFilter: string = '';
+  searchTerm = '';
+  statusFilter = '';
+  roleFilter = '';
   
   private destroy$ = new Subject<void>();
 

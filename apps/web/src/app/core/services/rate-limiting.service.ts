@@ -181,7 +181,7 @@ export class RateLimitingService {
     }
 
     // Handle failed attempt
-    let state = this.getRateLimitState(rateLimitKey);
+    const state = this.getRateLimitState(rateLimitKey);
     state.totalFailedAttempts++;
     
     // Calculate progressive delay based on failed attempts

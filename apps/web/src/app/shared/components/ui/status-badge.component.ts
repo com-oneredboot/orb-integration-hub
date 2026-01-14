@@ -3,7 +3,7 @@
 // date: 2025-06-23
 // description: Reusable status badge component for consistent status display across the application
 
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { StatusDisplayService, StatusConfig, StatusDisplayOptions } from '../../services/status-display.service';
 
@@ -32,14 +32,14 @@ import { StatusDisplayService, StatusConfig, StatusDisplayOptions } from '../../
   `,
   styleUrls: ['./status-badge.component.scss']
 })
-export class StatusBadgeComponent implements OnInit {
+export class StatusBadgeComponent implements OnInit, OnChanges {
   // Core Properties
   @Input() status!: string;
   @Input() type: 'user' | 'organization' | 'application' | 'verification' = 'user';
   
   // Display Options
-  @Input() showIcon: boolean = true;
-  @Input() showLabel: boolean = true;
+  @Input() showIcon = true;
+  @Input() showLabel = true;
   @Input() size: 'small' | 'medium' | 'large' = 'medium';
   @Input() variant: 'badge' | 'chip' | 'text' | 'indicator' = 'badge';
   

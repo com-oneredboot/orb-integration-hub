@@ -107,20 +107,20 @@ export interface ErrorBoundaryConfig {
 })
 export class ErrorBoundaryComponent {
   // Basic Properties
-  @Input() errorTitle: string = 'Something went wrong';
-  @Input() errorMessage: string = 'An unexpected error occurred. Please try again or contact support if the problem persists.';
+  @Input() errorTitle = 'Something went wrong';
+  @Input() errorMessage = 'An unexpected error occurred. Please try again or contact support if the problem persists.';
   @Input() technicalDetails?: string;
-  @Input() showDetails: boolean = false;
+  @Input() showDetails = false;
   
   // Action Controls
-  @Input() allowRetry: boolean = true;
-  @Input() allowGoBack: boolean = true;
-  @Input() allowStartOver: boolean = true;
+  @Input() allowRetry = true;
+  @Input() allowGoBack = true;
+  @Input() allowStartOver = true;
   
   // Custom Labels
-  @Input() retryLabel: string = 'Try Again';
-  @Input() backLabel: string = 'Go Back';
-  @Input() startOverLabel: string = 'Start Over';
+  @Input() retryLabel = 'Try Again';
+  @Input() backLabel = 'Go Back';
+  @Input() startOverLabel = 'Start Over';
   
   // Configuration object input (alternative to individual inputs)
   @Input() set config(config: ErrorBoundaryConfig) {

@@ -6,6 +6,7 @@
 |-------|------|-------|--------|--------|
 | #1 | orb-geo-fence | Remove default fallback for environment in deploy-infrastructure.yml | Open | Low |
 | #2 | orb-geo-fence | Add CDK pytest tests to deploy-infrastructure workflow | Open | Low |
+| #59 | orb-schema-generator | Generated TypeScript models have ESLint violations | Open | Medium |
 
 
 ## Resolved Issues

@@ -315,7 +315,7 @@ export class StatusDisplayService {
     items: T[], 
     statusGetter: (item: T) => string,
     type: 'user' | 'organization' | 'application' | 'verification',
-    descending: boolean = true
+    descending = true
   ): T[] {
     return items.sort((a, b) => {
       const priorityA = this.getStatusPriority(statusGetter(a), type);

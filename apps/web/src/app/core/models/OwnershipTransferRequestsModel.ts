@@ -7,7 +7,7 @@
 import { OwnershipTransferStatus } from '../../core/enums/OwnershipTransferStatusEnum';
 
 // Input Types
-export type OwnershipTransferRequestsCreateInput = {
+export interface OwnershipTransferRequestsCreateInput {
   transferId: string;
   organizationId: string;
   currentOwnerId: string;
@@ -19,9 +19,9 @@ export type OwnershipTransferRequestsCreateInput = {
   cancelledAt?: string;
   createdAt: string;
   updatedAt: string;
-};
+}
 
-export type OwnershipTransferRequestsUpdateInput = {
+export interface OwnershipTransferRequestsUpdateInput {
   transferId?: string;
   organizationId?: string;
   currentOwnerId?: string;
@@ -33,87 +33,87 @@ export type OwnershipTransferRequestsUpdateInput = {
   cancelledAt?: string;
   createdAt?: string;
   updatedAt?: string;
-};
+}
 
-export type OwnershipTransferRequestsQueryByTransferIdInput = {
+export interface OwnershipTransferRequestsQueryByTransferIdInput {
   transferId: string;
-};
+}
 
-export type OwnershipTransferRequestsQueryByCurrentOwnerIdInput = {
+export interface OwnershipTransferRequestsQueryByCurrentOwnerIdInput {
   currentOwnerId: string;
-};
+}
 
-export type OwnershipTransferRequestsQueryByNewOwnerIdInput = {
+export interface OwnershipTransferRequestsQueryByNewOwnerIdInput {
   newOwnerId: string;
-};
+}
 
-export type OwnershipTransferRequestsQueryByStatusInput = {
+export interface OwnershipTransferRequestsQueryByStatusInput {
   status: string;
-};
+}
 
-export type OwnershipTransferRequestsQueryByStatusInput = {
+export interface OwnershipTransferRequestsQueryByStatusInput {
   status: string;
-};
+}
 
 
 // Response Types
-export type OwnershipTransferRequestsResponse = {
+export interface OwnershipTransferRequestsResponse {
   StatusCode: number;
   Message: string;
   Data: OwnershipTransferRequests | null;
-};
+}
 
-export type OwnershipTransferRequestsCreateResponse = {
+export interface OwnershipTransferRequestsCreateResponse {
   StatusCode: number;
   Message: string;
   Data: OwnershipTransferRequests | null;
-};
+}
 
-export type OwnershipTransferRequestsUpdateResponse = {
+export interface OwnershipTransferRequestsUpdateResponse {
   StatusCode: number;
   Message: string;
   Data: OwnershipTransferRequests | null;
-};
+}
 
-export type OwnershipTransferRequestsListResponse = {
+export interface OwnershipTransferRequestsListResponse {
   StatusCode: number;
   Message: string;
   Data: OwnershipTransferRequests[] | null;
-};
+}
 
 
 // GraphQL Response Wrappers
-export type OwnershipTransferRequestsCreateMutationResponse = {
+export interface OwnershipTransferRequestsCreateMutationResponse {
   OwnershipTransferRequestsCreate: OwnershipTransferRequestsCreateResponse;
-};
+}
 
-export type OwnershipTransferRequestsUpdateMutationResponse = {
+export interface OwnershipTransferRequestsUpdateMutationResponse {
   OwnershipTransferRequestsUpdate: OwnershipTransferRequestsUpdateResponse;
-};
+}
 
-export type OwnershipTransferRequestsDeleteMutationResponse = {
+export interface OwnershipTransferRequestsDeleteMutationResponse {
   OwnershipTransferRequestsDelete: OwnershipTransferRequestsResponse;
-};
+}
 
-export type OwnershipTransferRequestsQueryByTransferIdResponse = {
+export interface OwnershipTransferRequestsQueryByTransferIdResponse {
   OwnershipTransferRequestsQueryByTransferId: OwnershipTransferRequestsResponse;
-};
+}
 
-export type OwnershipTransferRequestsQueryByCurrentOwnerIdResponse = {
+export interface OwnershipTransferRequestsQueryByCurrentOwnerIdResponse {
   OwnershipTransferRequestsQueryByCurrentOwnerId: OwnershipTransferRequestsListResponse;
-};
+}
 
-export type OwnershipTransferRequestsQueryByNewOwnerIdResponse = {
+export interface OwnershipTransferRequestsQueryByNewOwnerIdResponse {
   OwnershipTransferRequestsQueryByNewOwnerId: OwnershipTransferRequestsListResponse;
-};
+}
 
-export type OwnershipTransferRequestsQueryByStatusResponse = {
+export interface OwnershipTransferRequestsQueryByStatusResponse {
   OwnershipTransferRequestsQueryByStatus: OwnershipTransferRequestsListResponse;
-};
+}
 
-export type OwnershipTransferRequestsQueryByStatusResponse = {
+export interface OwnershipTransferRequestsQueryByStatusResponse {
   OwnershipTransferRequestsQueryByStatus: OwnershipTransferRequestsListResponse;
-};
+}
 
 export interface IOwnershipTransferRequests {
   transferId: string;

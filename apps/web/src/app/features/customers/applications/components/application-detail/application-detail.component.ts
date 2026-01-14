@@ -23,13 +23,13 @@ import { Applications } from '../../../../../core/models/ApplicationsModel';
 })
 export class ApplicationDetailComponent implements OnChanges {
   @Input() application: Applications | null = null;
-  @Input() organizationName: string = '';
-  @Input() environmentCount: number = 0;
-  @Input() apiCallsToday: number = 0;
-  @Input() lastActivity: string = '';
+  @Input() organizationName = '';
+  @Input() environmentCount = 0;
+  @Input() apiCallsToday = 0;
+  @Input() lastActivity = '';
 
   // Tab management
-  activeTab: string = 'overview';
+  activeTab = 'overview';
 
   mockEnvironments = [
     { name: 'Production', status: 'ACTIVE' },

@@ -32,11 +32,11 @@ import * as fromUser from '../../user/store/user.selectors';
 })
 export class ApplicationsComponent implements OnInit {
   selectedApplication: Applications | null = null;
-  selectedApplicationOrganizationName: string = '';
-  selectedApplicationEnvironmentCount: number = 0;
-  selectedApplicationApiCallsToday: number = 0;
-  selectedApplicationLastActivity: string = '';
-  totalApplications: number = 8; // Will be updated when applications are loaded
+  selectedApplicationOrganizationName = '';
+  selectedApplicationEnvironmentCount = 0;
+  selectedApplicationApiCallsToday = 0;
+  selectedApplicationLastActivity = '';
+  totalApplications = 8; // Will be updated when applications are loaded
   debugMode$: Observable<boolean>;
 
   constructor(private store: Store) {

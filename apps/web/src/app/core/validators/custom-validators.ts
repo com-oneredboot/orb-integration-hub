@@ -195,7 +195,7 @@ export class CustomValidators {
         errors.push('one number');
       }
 
-      if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
         errors.push('one special character');
       }
 
@@ -229,7 +229,7 @@ export class CustomValidators {
   /**
    * Name validator (first name, last name)
    */
-  static validateName(fieldName: string = 'Name'): ValidatorFn {
+  static validateName(fieldName = 'Name'): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       if (!control.value) {
         return null;
@@ -297,7 +297,7 @@ export class CustomValidators {
   /**
    * Custom length validator
    */
-  static customLength(min: number, max: number, fieldName: string = 'Field'): ValidatorFn {
+  static customLength(min: number, max: number, fieldName = 'Field'): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       if (!control.value) {
         return null;
@@ -395,7 +395,7 @@ export class CustomValidators {
   /**
    * Debounced async validator for real-time validation
    */
-  static debouncedValidator(validatorFn: AsyncValidatorFn, debounceTime: number = 300): AsyncValidatorFn {
+  static debouncedValidator(validatorFn: AsyncValidatorFn, debounceTime = 300): AsyncValidatorFn {
     return (control: AbstractControl): Observable<ValidationErrors | null> => {
       return timer(debounceTime).pipe(
         switchMap(() => validatorFn(control))

@@ -8,29 +8,29 @@ import { MfaSetupDetails, IMfaSetupDetails } from './MfaSetupDetailsModel';
 import { Users, IUsers } from './UsersModel';
 
 // Response Types
-export type AuthResponse = {
+export interface AuthResponse {
   StatusCode: number;
   Message: string;
   Data: Auth | null;
-};
+}
 
-export type AuthCreateResponse = {
+export interface AuthCreateResponse {
   StatusCode: number;
   Message: string;
   Data: Auth | null;
-};
+}
 
-export type AuthUpdateResponse = {
+export interface AuthUpdateResponse {
   StatusCode: number;
   Message: string;
   Data: Auth | null;
-};
+}
 
-export type AuthListResponse = {
+export interface AuthListResponse {
   StatusCode: number;
   Message: string;
   Data: Auth[] | null;
-};
+}
 
 export interface IAuth {
   statusCode: number;

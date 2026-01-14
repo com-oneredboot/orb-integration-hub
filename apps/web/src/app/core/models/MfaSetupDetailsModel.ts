@@ -6,29 +6,29 @@
 
 
 // Response Types
-export type MfaSetupDetailsResponse = {
+export interface MfaSetupDetailsResponse {
   StatusCode: number;
   Message: string;
   Data: MfaSetupDetails | null;
-};
+}
 
-export type MfaSetupDetailsCreateResponse = {
+export interface MfaSetupDetailsCreateResponse {
   StatusCode: number;
   Message: string;
   Data: MfaSetupDetails | null;
-};
+}
 
-export type MfaSetupDetailsUpdateResponse = {
+export interface MfaSetupDetailsUpdateResponse {
   StatusCode: number;
   Message: string;
   Data: MfaSetupDetails | null;
-};
+}
 
-export type MfaSetupDetailsListResponse = {
+export interface MfaSetupDetailsListResponse {
   StatusCode: number;
   Message: string;
   Data: MfaSetupDetails[] | null;
-};
+}
 
 export interface IMfaSetupDetails {
   qrCode: string;

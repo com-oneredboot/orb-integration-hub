@@ -31,9 +31,9 @@ import * as fromOrganizations from '../../store/organizations.selectors';
 })
 export class OrganizationDetailComponent implements OnChanges, OnDestroy {
   @Input() organization: Organizations | null = null;
-  @Input() memberCount: number = 0;
-  @Input() applicationCount: number = 0;
-  @Input() isInCreateMode: boolean = false;
+  @Input() memberCount = 0;
+  @Input() applicationCount = 0;
+  @Input() isInCreateMode = false;
 
   // Output events
   @Output() organizationSaved = new EventEmitter<Organizations>();
@@ -44,10 +44,10 @@ export class OrganizationDetailComponent implements OnChanges, OnDestroy {
   private destroy$ = new Subject<void>();
 
   // Tab management
-  activeTab: string = 'overview';
+  activeTab = 'overview';
   
   // Edit mode (handles both create and edit scenarios)
-  isEditing: boolean = false;
+  isEditing = false;
   
   // Form data
   editForm = {

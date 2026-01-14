@@ -638,7 +638,7 @@ export class UserService extends ApiService {
    * @param rememberDevice
    * @returns AuthResponse
    */
-  public async mfaVerify(code: string, rememberDevice: boolean = false): Promise<AuthResponse> {
+  public async mfaVerify(code: string, rememberDevice = false): Promise<AuthResponse> {
     console.debug('mfaVerify:', code, rememberDevice);
     try {
       const response = await this.cognitoService.mfaVerify(code, rememberDevice);

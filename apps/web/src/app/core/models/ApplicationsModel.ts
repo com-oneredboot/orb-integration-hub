@@ -7,7 +7,7 @@
 import { ApplicationStatus } from '../../core/enums/ApplicationStatusEnum';
 
 // Input Types
-export type ApplicationsCreateInput = {
+export interface ApplicationsCreateInput {
   applicationId: string;
   name: string;
   organizationId: string;
@@ -18,9 +18,9 @@ export type ApplicationsCreateInput = {
   apiKey: string;
   apiKeyNext?: string;
   environments: string[];
-};
+}
 
-export type ApplicationsUpdateInput = {
+export interface ApplicationsUpdateInput {
   applicationId?: string;
   name?: string;
   organizationId?: string;
@@ -31,63 +31,63 @@ export type ApplicationsUpdateInput = {
   apiKey?: string;
   apiKeyNext?: string;
   environments?: string[];
-};
+}
 
-export type ApplicationsQueryByApplicationIdInput = {
+export interface ApplicationsQueryByApplicationIdInput {
   applicationId: string;
-};
+}
 
-export type ApplicationsQueryByOrganizationIdInput = {
+export interface ApplicationsQueryByOrganizationIdInput {
   organizationId: string;
-};
+}
 
 
 // Response Types
-export type ApplicationsResponse = {
+export interface ApplicationsResponse {
   StatusCode: number;
   Message: string;
   Data: Applications | null;
-};
+}
 
-export type ApplicationsCreateResponse = {
+export interface ApplicationsCreateResponse {
   StatusCode: number;
   Message: string;
   Data: Applications | null;
-};
+}
 
-export type ApplicationsUpdateResponse = {
+export interface ApplicationsUpdateResponse {
   StatusCode: number;
   Message: string;
   Data: Applications | null;
-};
+}
 
-export type ApplicationsListResponse = {
+export interface ApplicationsListResponse {
   StatusCode: number;
   Message: string;
   Data: Applications[] | null;
-};
+}
 
 
 // GraphQL Response Wrappers
-export type ApplicationsCreateMutationResponse = {
+export interface ApplicationsCreateMutationResponse {
   ApplicationsCreate: ApplicationsCreateResponse;
-};
+}
 
-export type ApplicationsUpdateMutationResponse = {
+export interface ApplicationsUpdateMutationResponse {
   ApplicationsUpdate: ApplicationsUpdateResponse;
-};
+}
 
-export type ApplicationsDeleteMutationResponse = {
+export interface ApplicationsDeleteMutationResponse {
   ApplicationsDelete: ApplicationsResponse;
-};
+}
 
-export type ApplicationsQueryByApplicationIdResponse = {
+export interface ApplicationsQueryByApplicationIdResponse {
   ApplicationsQueryByApplicationId: ApplicationsResponse;
-};
+}
 
-export type ApplicationsQueryByOrganizationIdResponse = {
+export interface ApplicationsQueryByOrganizationIdResponse {
   ApplicationsQueryByOrganizationId: ApplicationsListResponse;
-};
+}
 
 export interface IApplications {
   applicationId: string;

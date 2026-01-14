@@ -6,29 +6,29 @@
 
 
 // Response Types
-export type AuthErrorResponse = {
+export interface AuthErrorResponse {
   StatusCode: number;
   Message: string;
   Data: AuthError | null;
-};
+}
 
-export type AuthErrorCreateResponse = {
+export interface AuthErrorCreateResponse {
   StatusCode: number;
   Message: string;
   Data: AuthError | null;
-};
+}
 
-export type AuthErrorUpdateResponse = {
+export interface AuthErrorUpdateResponse {
   StatusCode: number;
   Message: string;
   Data: AuthError | null;
-};
+}
 
-export type AuthErrorListResponse = {
+export interface AuthErrorListResponse {
   StatusCode: number;
   Message: string;
   Data: AuthError[] | null;
-};
+}
 
 export interface IAuthError {
   code: string;
