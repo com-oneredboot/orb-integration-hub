@@ -1,9 +1,10 @@
 """
 Generated Python enum for LegalBasis
-Generated at 
+Generated at
 """
 
 from enum import Enum
+
 
 class LegalBasis(Enum):
     GDPR_ARTICLE_15_RIGHT_OF_ACCESS = "GDPR_ARTICLE_15_RIGHT_OF_ACCESS"
@@ -12,4 +13,3 @@ class LegalBasis(Enum):
     CCPA_RIGHT_TO_KNOW = "CCPA_RIGHT_TO_KNOW"
     CCPA_RIGHT_TO_DELETE = "CCPA_RIGHT_TO_DELETE"
     CCPA_RIGHT_TO_OPT_OUT = "CCPA_RIGHT_TO_OPT_OUT"
- 

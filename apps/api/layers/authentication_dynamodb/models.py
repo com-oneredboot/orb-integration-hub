@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List
 from pydantic import BaseModel
 
 
@@ -11,4 +11,4 @@ class RoleData(BaseModel):
 
 class UserRoles(BaseModel):
     applicationRoles: List[str]
-    permissions: List[str] 
+    permissions: List[str]

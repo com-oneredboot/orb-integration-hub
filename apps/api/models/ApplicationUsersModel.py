@@ -10,27 +10,52 @@ from datetime import datetime
 
 from ..enums.application_user_status_enum import ApplicationUserStatus
 
+
 # CRUD Input Types
 class ApplicationUsersCreateInput(BaseModel):
     """ApplicationUsers create input."""
 
-    application_user_id: str = Field(..., description="Unique identifier for the application user membership (primary key)")
+    application_user_id: str = Field(
+        ...,
+        description="Unique identifier for the application user membership (primary key)",
+    )
     user_id: str = Field(..., description="ID of the user (foreign key to Users)")
-    application_id: str = Field(..., description="ID of the application (foreign key to Applications)")
-    status: ApplicationUserStatus = Field(..., description="Current status of the user in the application")
-    created_at: datetime = Field(..., description="When the user was added to the application")
-    updated_at: datetime = Field(..., description="When the membership was last updated")
+    application_id: str = Field(
+        ..., description="ID of the application (foreign key to Applications)"
+    )
+    status: ApplicationUserStatus = Field(
+        ..., description="Current status of the user in the application"
+    )
+    created_at: datetime = Field(
+        ..., description="When the user was added to the application"
+    )
+    updated_at: datetime = Field(
+        ..., description="When the membership was last updated"
+    )
 
 
 class ApplicationUsersUpdateInput(BaseModel):
     """ApplicationUsers update input."""
 
-    application_user_id: Optional[str] = Field(..., description="Unique identifier for the application user membership (primary key)")
-    user_id: Optional[str] = Field(..., description="ID of the user (foreign key to Users)")
-    application_id: Optional[str] = Field(..., description="ID of the application (foreign key to Applications)")
-    status: Optional[ApplicationUserStatus] = Field(..., description="Current status of the user in the application")
-    created_at: Optional[datetime] = Field(..., description="When the user was added to the application")
-    updated_at: Optional[datetime] = Field(..., description="When the membership was last updated")
+    application_user_id: Optional[str] = Field(
+        ...,
+        description="Unique identifier for the application user membership (primary key)",
+    )
+    user_id: Optional[str] = Field(
+        ..., description="ID of the user (foreign key to Users)"
+    )
+    application_id: Optional[str] = Field(
+        ..., description="ID of the application (foreign key to Applications)"
+    )
+    status: Optional[ApplicationUserStatus] = Field(
+        ..., description="Current status of the user in the application"
+    )
+    created_at: Optional[datetime] = Field(
+        ..., description="When the user was added to the application"
+    )
+    updated_at: Optional[datetime] = Field(
+        ..., description="When the membership was last updated"
+    )
 
 
 class ApplicationUsersDeleteInput(BaseModel):
@@ -71,12 +96,23 @@ class ApplicationUsers(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    application_user_id: str = Field(..., description="Unique identifier for the application user membership (primary key)")
+    application_user_id: str = Field(
+        ...,
+        description="Unique identifier for the application user membership (primary key)",
+    )
     user_id: str = Field(..., description="ID of the user (foreign key to Users)")
-    application_id: str = Field(..., description="ID of the application (foreign key to Applications)")
-    status: ApplicationUserStatus = Field(..., description="Current status of the user in the application")
-    created_at: datetime = Field(..., description="When the user was added to the application")
-    updated_at: datetime = Field(..., description="When the membership was last updated")
+    application_id: str = Field(
+        ..., description="ID of the application (foreign key to Applications)"
+    )
+    status: ApplicationUserStatus = Field(
+        ..., description="Current status of the user in the application"
+    )
+    created_at: datetime = Field(
+        ..., description="When the user was added to the application"
+    )
+    updated_at: datetime = Field(
+        ..., description="When the membership was last updated"
+    )
 
     @field_validator("created_at", mode="before")
     @classmethod
@@ -117,6 +153,7 @@ class ApplicationUsers(BaseModel):
             except (ValueError, TypeError):
                 pass
         return value
+
 
 # Response Types
 class ApplicationUsersResponse(BaseModel):

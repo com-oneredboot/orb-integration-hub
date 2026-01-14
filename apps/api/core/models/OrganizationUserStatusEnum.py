@@ -1,9 +1,10 @@
 """
 Generated Python enum for OrganizationUserStatus
-Generated at 
+Generated at
 """
 
 from enum import Enum
+
 
 class OrganizationUserStatus(Enum):
     ACTIVE = "ACTIVE"
@@ -12,4 +13,3 @@ class OrganizationUserStatus(Enum):
     PENDING = "PENDING"
     REJECTED = "REJECTED"
     REMOVED = "REMOVED"
- 

@@ -1,9 +1,10 @@
 """
 Generated Python enum for ApplicationStatus
-Generated at 
+Generated at
 """
 
 from enum import Enum
+
 
 class ApplicationStatus(Enum):
     UNKNOWN = "UNKNOWN"
@@ -11,4 +12,3 @@ class ApplicationStatus(Enum):
     INACTIVE = "INACTIVE"
     PENDING = "PENDING"
     DELETED = "DELETED"
- 

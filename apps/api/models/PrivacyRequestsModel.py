@@ -12,22 +12,43 @@ from ..enums.legal_basis_enum import LegalBasis
 from ..enums.privacy_request_status_enum import PrivacyRequestStatus
 from ..enums.privacy_request_type_enum import PrivacyRequestType
 
+
 # CRUD Input Types
 class PrivacyRequestsCreateInput(BaseModel):
     """PrivacyRequests create input."""
 
-    request_id: str = Field(..., description="Unique identifier for the privacy request")
-    organization_id: str = Field(..., description="ID of the organization handling the request")
-    request_type: PrivacyRequestType = Field(..., description="Type of privacy request (DATA_ACCESS, DATA_DELETION, etc.)")
-    status: PrivacyRequestStatus = Field(..., description="Current status of the request")
-    data_subject_email: str = Field(..., description="Email of the data subject making the request")
-    data_subject_name: Optional[str] = Field(None, description="Name of the data subject")
-    legal_basis: LegalBasis = Field(..., description="Legal basis for the request (GDPR Article, CCPA Right, etc.)")
-    description: Optional[str] = Field(None, description="Additional details about the request")
+    request_id: str = Field(
+        ..., description="Unique identifier for the privacy request"
+    )
+    organization_id: str = Field(
+        ..., description="ID of the organization handling the request"
+    )
+    request_type: PrivacyRequestType = Field(
+        ..., description="Type of privacy request (DATA_ACCESS, DATA_DELETION, etc.)"
+    )
+    status: PrivacyRequestStatus = Field(
+        ..., description="Current status of the request"
+    )
+    data_subject_email: str = Field(
+        ..., description="Email of the data subject making the request"
+    )
+    data_subject_name: Optional[str] = Field(
+        None, description="Name of the data subject"
+    )
+    legal_basis: LegalBasis = Field(
+        ..., description="Legal basis for the request (GDPR Article, CCPA Right, etc.)"
+    )
+    description: Optional[str] = Field(
+        None, description="Additional details about the request"
+    )
     received_at: datetime = Field(..., description="When the request was received")
     deadline: datetime = Field(..., description="Deadline for completing the request")
-    completed_at: Optional[datetime] = Field(None, description="When the request was completed")
-    assigned_to: Optional[str] = Field(None, description="ID of the employee assigned to handle the request")
+    completed_at: Optional[datetime] = Field(
+        None, description="When the request was completed"
+    )
+    assigned_to: Optional[str] = Field(
+        None, description="ID of the employee assigned to handle the request"
+    )
     notes: Optional[str] = Field(None, description="Internal notes about the request")
     created_at: datetime = Field(..., description="When the record was created")
     updated_at: datetime = Field(..., description="When the record was last updated")
@@ -36,21 +57,49 @@ class PrivacyRequestsCreateInput(BaseModel):
 class PrivacyRequestsUpdateInput(BaseModel):
     """PrivacyRequests update input."""
 
-    request_id: Optional[str] = Field(..., description="Unique identifier for the privacy request")
-    organization_id: Optional[str] = Field(..., description="ID of the organization handling the request")
-    request_type: Optional[PrivacyRequestType] = Field(..., description="Type of privacy request (DATA_ACCESS, DATA_DELETION, etc.)")
-    status: Optional[PrivacyRequestStatus] = Field(..., description="Current status of the request")
-    data_subject_email: Optional[str] = Field(..., description="Email of the data subject making the request")
-    data_subject_name: Optional[str] = Field(None, description="Name of the data subject")
-    legal_basis: Optional[LegalBasis] = Field(..., description="Legal basis for the request (GDPR Article, CCPA Right, etc.)")
-    description: Optional[str] = Field(None, description="Additional details about the request")
-    received_at: Optional[datetime] = Field(..., description="When the request was received")
-    deadline: Optional[datetime] = Field(..., description="Deadline for completing the request")
-    completed_at: Optional[datetime] = Field(None, description="When the request was completed")
-    assigned_to: Optional[str] = Field(None, description="ID of the employee assigned to handle the request")
+    request_id: Optional[str] = Field(
+        ..., description="Unique identifier for the privacy request"
+    )
+    organization_id: Optional[str] = Field(
+        ..., description="ID of the organization handling the request"
+    )
+    request_type: Optional[PrivacyRequestType] = Field(
+        ..., description="Type of privacy request (DATA_ACCESS, DATA_DELETION, etc.)"
+    )
+    status: Optional[PrivacyRequestStatus] = Field(
+        ..., description="Current status of the request"
+    )
+    data_subject_email: Optional[str] = Field(
+        ..., description="Email of the data subject making the request"
+    )
+    data_subject_name: Optional[str] = Field(
+        None, description="Name of the data subject"
+    )
+    legal_basis: Optional[LegalBasis] = Field(
+        ..., description="Legal basis for the request (GDPR Article, CCPA Right, etc.)"
+    )
+    description: Optional[str] = Field(
+        None, description="Additional details about the request"
+    )
+    received_at: Optional[datetime] = Field(
+        ..., description="When the request was received"
+    )
+    deadline: Optional[datetime] = Field(
+        ..., description="Deadline for completing the request"
+    )
+    completed_at: Optional[datetime] = Field(
+        None, description="When the request was completed"
+    )
+    assigned_to: Optional[str] = Field(
+        None, description="ID of the employee assigned to handle the request"
+    )
     notes: Optional[str] = Field(None, description="Internal notes about the request")
-    created_at: Optional[datetime] = Field(..., description="When the record was created")
-    updated_at: Optional[datetime] = Field(..., description="When the record was last updated")
+    created_at: Optional[datetime] = Field(
+        ..., description="When the record was created"
+    )
+    updated_at: Optional[datetime] = Field(
+        ..., description="When the record was last updated"
+    )
 
 
 class PrivacyRequestsDeleteInput(BaseModel):
@@ -103,18 +152,38 @@ class PrivacyRequests(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    request_id: str = Field(..., description="Unique identifier for the privacy request")
-    organization_id: str = Field(..., description="ID of the organization handling the request")
-    request_type: PrivacyRequestType = Field(..., description="Type of privacy request (DATA_ACCESS, DATA_DELETION, etc.)")
-    status: PrivacyRequestStatus = Field(..., description="Current status of the request")
-    data_subject_email: str = Field(..., description="Email of the data subject making the request")
-    data_subject_name: Optional[str] = Field(None, description="Name of the data subject")
-    legal_basis: LegalBasis = Field(..., description="Legal basis for the request (GDPR Article, CCPA Right, etc.)")
-    description: Optional[str] = Field(None, description="Additional details about the request")
+    request_id: str = Field(
+        ..., description="Unique identifier for the privacy request"
+    )
+    organization_id: str = Field(
+        ..., description="ID of the organization handling the request"
+    )
+    request_type: PrivacyRequestType = Field(
+        ..., description="Type of privacy request (DATA_ACCESS, DATA_DELETION, etc.)"
+    )
+    status: PrivacyRequestStatus = Field(
+        ..., description="Current status of the request"
+    )
+    data_subject_email: str = Field(
+        ..., description="Email of the data subject making the request"
+    )
+    data_subject_name: Optional[str] = Field(
+        None, description="Name of the data subject"
+    )
+    legal_basis: LegalBasis = Field(
+        ..., description="Legal basis for the request (GDPR Article, CCPA Right, etc.)"
+    )
+    description: Optional[str] = Field(
+        None, description="Additional details about the request"
+    )
     received_at: datetime = Field(..., description="When the request was received")
     deadline: datetime = Field(..., description="Deadline for completing the request")
-    completed_at: Optional[datetime] = Field(None, description="When the request was completed")
-    assigned_to: Optional[str] = Field(None, description="ID of the employee assigned to handle the request")
+    completed_at: Optional[datetime] = Field(
+        None, description="When the request was completed"
+    )
+    assigned_to: Optional[str] = Field(
+        None, description="ID of the employee assigned to handle the request"
+    )
     notes: Optional[str] = Field(None, description="Internal notes about the request")
     created_at: datetime = Field(..., description="When the record was created")
     updated_at: datetime = Field(..., description="When the record was last updated")
@@ -218,6 +287,7 @@ class PrivacyRequests(BaseModel):
             except (ValueError, TypeError):
                 pass
         return value
+
 
 # Response Types
 class PrivacyRequestsResponse(BaseModel):

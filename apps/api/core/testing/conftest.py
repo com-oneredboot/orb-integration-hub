@@ -10,67 +10,55 @@ Date: 2025-06-23
 
 import pytest
 import os
-import json
 import tempfile
-from typing import Dict, Any, Generator
+from typing import Dict, Any
 from unittest.mock import Mock, patch
 
 from .test_environment_manager import TestEnvironmentManager, TestEnvironmentConfig
 from .organization_test_data_factory import OrganizationTestDataFactory
-from ..models.OrganizationStatusEnum import OrganizationStatus
 from ..models.OrganizationUserRoleEnum import OrganizationUserRole
-from ..models.OrganizationUserStatusEnum import OrganizationUserStatus
 
 
 # =============================================================================
 # Test Configuration
 # =============================================================================
 
+
 def pytest_configure(config):
     """Configure pytest for organizations testing."""
-    
+
     # Add custom markers
     config.addinivalue_line(
         "markers", "organization: mark test as organization-related"
     )
-    config.addinivalue_line(
-        "markers", "integration: mark test as integration test"
-    )
-    config.addinivalue_line(
-        "markers", "performance: mark test as performance test"
-    )
-    config.addinivalue_line(
-        "markers", "security: mark test as security test"
-    )
-    config.addinivalue_line(
-        "markers", "edge_case: mark test as edge case test"
-    )
-    config.addinivalue_line(
-        "markers", "slow: mark test as slow running"
-    )
+    config.addinivalue_line("markers", "integration: mark test as integration test")
+    config.addinivalue_line("markers", "performance: mark test as performance test")
+    config.addinivalue_line("markers", "security: mark test as security test")
+    config.addinivalue_line("markers", "edge_case: mark test as edge case test")
+    config.addinivalue_line("markers", "slow: mark test as slow running")
 
 
 def pytest_collection_modifyitems(config, items):
     """Modify test collection to add markers based on test names and paths."""
-    
+
     for item in items:
         # Add organization marker for organization-related tests
         if "organization" in item.nodeid.lower():
             item.add_marker(pytest.mark.organization)
-        
+
         # Add integration marker for integration tests
         if "integration" in item.nodeid.lower():
             item.add_marker(pytest.mark.integration)
-        
+
         # Add performance marker for performance tests
         if "performance" in item.nodeid.lower():
             item.add_marker(pytest.mark.performance)
             item.add_marker(pytest.mark.slow)
-        
+
         # Add security marker for security tests
         if "security" in item.nodeid.lower():
             item.add_marker(pytest.mark.security)
-        
+
         # Add edge_case marker for edge case tests
         if "edge" in item.nodeid.lower():
             item.add_marker(pytest.mark.edge_case)
@@ -79,6 +67,7 @@ def pytest_collection_modifyitems(config, items):
 # =============================================================================
 # Core Fixtures
 # =============================================================================
+
 
 @pytest.fixture(scope="session")
 def test_config():
@@ -90,7 +79,7 @@ def test_config():
         "cleanup_after_test": True,
         "performance_test_size": "small",  # small, medium, large
         "test_timeout": 300,  # 5 minutes
-        "enable_detailed_logging": True
+        "enable_detailed_logging": True,
     }
 
 
@@ -112,19 +101,20 @@ def isolated_organization_factory():
 # Environment Management Fixtures
 # =============================================================================
 
+
 @pytest.fixture(scope="session")
 def shared_test_environment(test_config):
     """Shared test environment for session-level tests."""
-    
+
     config = TestEnvironmentConfig(
         environment_name="pytest_shared",
         auto_cleanup=True,
         isolation_level="session",
-        enable_mocking=test_config["mock_dynamodb"]
+        enable_mocking=test_config["mock_dynamodb"],
     )
-    
+
     manager = TestEnvironmentManager(config)
-    
+
     with manager.test_environment("comprehensive") as env:
         yield env
 
@@ -132,16 +122,16 @@ def shared_test_environment(test_config):
 @pytest.fixture(scope="function")
 def clean_test_environment(test_config):
     """Clean test environment for each test function."""
-    
+
     config = TestEnvironmentConfig(
         environment_name=f"pytest_clean_{pytest.current_test_id()}",
         auto_cleanup=True,
         isolation_level="function",
-        enable_mocking=test_config["mock_dynamodb"]
+        enable_mocking=test_config["mock_dynamodb"],
     )
-    
+
     manager = TestEnvironmentManager(config)
-    
+
     with manager.test_environment("basic") as env:
         yield env
 
@@ -149,18 +139,18 @@ def clean_test_environment(test_config):
 @pytest.fixture(scope="class")
 def class_test_environment(test_config, request):
     """Test environment scoped to test class."""
-    
+
     class_name = request.cls.__name__ if request.cls else "unknown"
-    
+
     config = TestEnvironmentConfig(
         environment_name=f"pytest_class_{class_name}",
         auto_cleanup=True,
         isolation_level="class",
-        enable_mocking=test_config["mock_dynamodb"]
+        enable_mocking=test_config["mock_dynamodb"],
     )
-    
+
     manager = TestEnvironmentManager(config)
-    
+
     # Determine scenario based on class name
     scenario = "basic"
     if "performance" in class_name.lower():
@@ -169,7 +159,7 @@ def class_test_environment(test_config, request):
         scenario = "security"
     elif "integration" in class_name.lower():
         scenario = "comprehensive"
-    
+
     with manager.test_environment(scenario) as env:
         yield env
 
@@ -178,12 +168,12 @@ def class_test_environment(test_config, request):
 # Organization-Specific Fixtures
 # =============================================================================
 
+
 @pytest.fixture
 def test_organization(isolated_organization_factory):
     """Basic test organization fixture."""
     return isolated_organization_factory.create_test_organization(
-        name="TestOrg_Basic",
-        size="small"
+        name="TestOrg_Basic", size="small"
     )
 
 
@@ -191,8 +181,7 @@ def test_organization(isolated_organization_factory):
 def large_test_organization(isolated_organization_factory):
     """Large test organization fixture."""
     return isolated_organization_factory.create_test_organization(
-        name="TestOrg_Large",
-        size="large"
+        name="TestOrg_Large", size="large"
     )
 
 
@@ -201,24 +190,22 @@ def multi_org_user(isolated_organization_factory):
     """Multi-organization user fixture."""
     # Create two organizations
     org1 = isolated_organization_factory.create_test_organization(
-        name="TestOrg_Multi1",
-        size="small"
+        name="TestOrg_Multi1", size="small"
     )
     org2 = isolated_organization_factory.create_test_organization(
-        name="TestOrg_Multi2",
-        size="small"
+        name="TestOrg_Multi2", size="small"
     )
-    
+
     # Create user belonging to both organizations
     return isolated_organization_factory.create_multi_organization_user(
         organization_ids=[
             org1["organization"]["organization_id"],
-            org2["organization"]["organization_id"]
+            org2["organization"]["organization_id"],
         ],
         roles={
             org1["organization"]["organization_id"]: OrganizationUserRole.ADMIN,
-            org2["organization"]["organization_id"]: OrganizationUserRole.MEMBER
-        }
+            org2["organization"]["organization_id"]: OrganizationUserRole.MEMBER,
+        },
     )
 
 
@@ -244,15 +231,18 @@ def edge_case_organizations(isolated_organization_factory):
 # Mock Fixtures
 # =============================================================================
 
+
 @pytest.fixture
 def mock_dynamodb_repository():
     """Mock DynamoDB repository fixture."""
-    
-    with patch('backend.src.core.models.dynamodb.repository.DynamoDBRepository') as mock_repo:
+
+    with patch(
+        "backend.src.core.models.dynamodb.repository.DynamoDBRepository"
+    ) as mock_repo:
         # Configure mock methods
         mock_instance = Mock()
         mock_repo.return_value = mock_instance
-        
+
         # Setup common mock responses
         mock_instance.create_item.return_value = {"success": True}
         mock_instance.get_item.return_value = None
@@ -260,43 +250,43 @@ def mock_dynamodb_repository():
         mock_instance.delete_item.return_value = {"success": True}
         mock_instance.query_items.return_value = []
         mock_instance.scan_items.return_value = []
-        
+
         yield mock_instance
 
 
 @pytest.fixture
 def mock_aws_services():
     """Mock AWS services fixture."""
-    
+
     mocks = {}
-    
+
     # Mock KMS
-    with patch('boto3.client') as mock_boto_client:
+    with patch("boto3.client") as mock_boto_client:
         mock_kms = Mock()
         mock_kms.create_key.return_value = {
-            'KeyMetadata': {
-                'KeyId': 'test-key-id',
-                'Arn': 'arn:aws:kms:us-east-1:123456789012:key/test-key-id'
+            "KeyMetadata": {
+                "KeyId": "test-key-id",
+                "Arn": "arn:aws:kms:us-east-1:123456789012:key/test-key-id",
             }
         }
         mock_kms.create_alias.return_value = {}
-        
+
         mock_dynamodb = Mock()
         mock_dynamodb.create_table.return_value = {}
-        
+
         def client_side_effect(service, **kwargs):
-            if service == 'kms':
+            if service == "kms":
                 return mock_kms
-            elif service == 'dynamodb':
+            elif service == "dynamodb":
                 return mock_dynamodb
             else:
                 return Mock()
-        
+
         mock_boto_client.side_effect = client_side_effect
-        
-        mocks['kms'] = mock_kms
-        mocks['dynamodb'] = mock_dynamodb
-        
+
+        mocks["kms"] = mock_kms
+        mocks["dynamodb"] = mock_dynamodb
+
         yield mocks
 
 
@@ -304,27 +294,28 @@ def mock_aws_services():
 # Performance Testing Fixtures
 # =============================================================================
 
+
 @pytest.fixture(scope="session")
 def performance_test_environment(test_config):
     """Performance testing environment fixture."""
-    
+
     if test_config["performance_test_size"] == "small":
-        org_count = 10
+        pass
     elif test_config["performance_test_size"] == "medium":
-        org_count = 50
+        pass
     else:
-        org_count = 100
-    
+        pass
+
     config = TestEnvironmentConfig(
         environment_name="pytest_performance",
         auto_cleanup=True,
         isolation_level="session",
         enable_mocking=test_config["mock_dynamodb"],
-        performance_testing=True
+        performance_testing=True,
     )
-    
+
     manager = TestEnvironmentManager(config)
-    
+
     with manager.test_environment("performance") as env:
         yield env
 
@@ -332,15 +323,11 @@ def performance_test_environment(test_config):
 @pytest.fixture
 def performance_test_data(isolated_organization_factory, test_config):
     """Performance test data fixture."""
-    
-    size_mapping = {
-        "small": 10,
-        "medium": 50,
-        "large": 100
-    }
-    
+
+    size_mapping = {"small": 10, "medium": 50, "large": 100}
+
     org_count = size_mapping.get(test_config["performance_test_size"], 10)
-    
+
     return isolated_organization_factory.create_performance_test_data(
         organization_count=org_count
     )
@@ -350,13 +337,14 @@ def performance_test_data(isolated_organization_factory, test_config):
 # Helper Fixtures
 # =============================================================================
 
+
 @pytest.fixture
 def temp_test_file():
     """Temporary test file fixture."""
-    
-    with tempfile.NamedTemporaryFile(mode='w+', suffix='.json', delete=False) as f:
+
+    with tempfile.NamedTemporaryFile(mode="w+", suffix=".json", delete=False) as f:
         yield f.name
-    
+
     # Cleanup
     try:
         os.unlink(f.name)
@@ -367,39 +355,43 @@ def temp_test_file():
 @pytest.fixture
 def test_data_validator():
     """Test data validation utilities fixture."""
-    
+
     class TestDataValidator:
         @staticmethod
         def validate_organization_structure(org_data: Dict[str, Any]) -> bool:
             """Validate organization data structure."""
-            required_fields = ["organization", "owner", "users", "applications", "metadata"]
+            required_fields = [
+                "organization",
+                "owner",
+                "users",
+                "applications",
+                "metadata",
+            ]
             return all(field in org_data for field in required_fields)
-        
+
         @staticmethod
-        def validate_user_permissions(user_role: OrganizationUserRole, expected_permissions: list) -> bool:
+        def validate_user_permissions(
+            user_role: OrganizationUserRole, expected_permissions: list
+        ) -> bool:
             """Validate user permissions based on role."""
             # This would contain actual permission validation logic
             return True
-        
+
         @staticmethod
         def validate_organization_integrity(org_data: Dict[str, Any]) -> Dict[str, Any]:
             """Validate organization data integrity."""
-            results = {
-                "valid": True,
-                "errors": [],
-                "warnings": []
-            }
-            
+            results = {"valid": True, "errors": [], "warnings": []}
+
             # Check organization structure
             if not org_data.get("organization", {}).get("organization_id"):
                 results["errors"].append("Missing organization ID")
                 results["valid"] = False
-            
+
             # Check owner exists
             if not org_data.get("owner", {}).get("user_id"):
                 results["errors"].append("Missing owner")
                 results["valid"] = False
-            
+
             # Check user count consistency
             expected_users = org_data.get("metadata", {}).get("total_users", 0)
             actual_users = len(org_data.get("users", [])) + 1  # +1 for owner
@@ -407,9 +399,9 @@ def test_data_validator():
                 results["warnings"].append(
                     f"User count mismatch: expected {expected_users}, got {actual_users}"
                 )
-            
+
             return results
-    
+
     return TestDataValidator()
 
 
@@ -417,17 +409,20 @@ def test_data_validator():
 # Custom Pytest Utilities
 # =============================================================================
 
+
 def pytest_current_test_id():
     """Get current test ID for isolation."""
     import threading
+
     current_thread = threading.current_thread()
-    return getattr(current_thread, 'test_id', 'unknown')
+    return getattr(current_thread, "test_id", "unknown")
 
 
 @pytest.fixture(autouse=True)
 def set_test_id(request):
     """Automatically set test ID for current test."""
     import threading
+
     current_thread = threading.current_thread()
     current_thread.test_id = request.node.nodeid.replace("::", "_").replace("/", "_")
 
@@ -436,13 +431,14 @@ def set_test_id(request):
 # Cleanup Fixtures
 # =============================================================================
 
+
 @pytest.fixture(autouse=True)
 def test_cleanup():
     """Automatic cleanup fixture."""
-    
+
     # Setup
     yield
-    
+
     # Cleanup
     # This would typically clean up any remaining test resources
     pass
@@ -452,29 +448,30 @@ def test_cleanup():
 # Logging and Debugging Fixtures
 # =============================================================================
 
+
 @pytest.fixture(autouse=True)
 def test_logging(test_config, request):
     """Test logging configuration."""
-    
+
     if test_config.get("enable_detailed_logging", False):
         import logging
-        
+
         # Configure logging for test
         logger = logging.getLogger("organization_tests")
         logger.setLevel(logging.DEBUG)
-        
+
         if not logger.handlers:
             handler = logging.StreamHandler()
             formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
             )
             handler.setFormatter(formatter)
             logger.addHandler(handler)
-        
+
         logger.info(f"Starting test: {request.node.nodeid}")
-        
+
         yield logger
-        
+
         logger.info(f"Completed test: {request.node.nodeid}")
     else:
         yield None

@@ -1,9 +1,10 @@
 """
 Generated Python enum for OrganizationStatus
-Generated at 
+Generated at
 """
 
 from enum import Enum
+
 
 class OrganizationStatus(Enum):
     ACTIVE = "ACTIVE"
@@ -12,4 +13,3 @@ class OrganizationStatus(Enum):
     SUSPENDED = "SUSPENDED"
     DELETED = "DELETED"
     UNKNOWN = "UNKNOWN"
- 

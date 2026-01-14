@@ -16,6 +16,7 @@ stripe = "*"
 orb-schema-generator = {version = "==0.13.5", index = "codeartifact"}  # Schema generation tool
 
 [dev-packages]
+bandit = "*"
 black = "*"
 flake8 = "*"
 isort = "*"

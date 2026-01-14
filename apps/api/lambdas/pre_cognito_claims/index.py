@@ -18,8 +18,8 @@ from layers.authentication_dynamodb.core import auth_service
 
 
 # Environment variables
-ENV_LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
-ENV_REGION = os.getenv('AWS_REGION', 'us-east-1')
+ENV_LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+ENV_REGION = os.getenv("AWS_REGION", "us-east-1")
 
 
 # Setting up logging
@@ -40,25 +40,20 @@ async def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     try:
         # Get the user's Cognito group
         groups = (
-            event['request']
-            .get('groupConfiguration', {})
-            .get('groupsToOverride', [])
+            event["request"].get("groupConfiguration", {}).get("groupsToOverride", [])
         )
-        cognito_group = groups[0] if groups else 'CUSTOMER'
+        cognito_group = groups[0] if groups else "CUSTOMER"
 
         # Get the application ID from the client metadata or default context
         application_id = (
-            event['request']
-            .get('clientMetadata', {})
-            .get('applicationId', 'default')
+            event["request"].get("clientMetadata", {}).get("applicationId", "default")
         )
 
         # Get user ID from the event
-        user_id = event['request']['userAttributes']['sub']
+        user_id = event["request"]["userAttributes"]["sub"]
 
         logger.info(
-            f"Processing token generation for user {user_id} "
-            f"in group {cognito_group}"
+            f"Processing token generation for user {user_id} in group {cognito_group}"
         )
 
         # Fetch roles and permissions
@@ -68,20 +63,19 @@ async def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
         # Process log messages from the service
         for log_msg in log_messages:
-            getattr(logger, log_msg['level'].lower())(log_msg['message'])
+            getattr(logger, log_msg["level"].lower())(log_msg["message"])
 
         # Add custom claims to the token
-        event['response'] = {
-            'claimsOverrideDetails': {
-                'claimsToAddOrOverride': {
-                    'applicationRoles': json.dumps(role_data.applicationRoles),
-                    'cognitoGroup': cognito_group,
-                    'permissions': json.dumps(role_data.permissions),
-                    'tenantId': (
-                        event['request']['userAttributes']
-                        .get('custom:tenantId', '')
+        event["response"] = {
+            "claimsOverrideDetails": {
+                "claimsToAddOrOverride": {
+                    "applicationRoles": json.dumps(role_data.applicationRoles),
+                    "cognitoGroup": cognito_group,
+                    "permissions": json.dumps(role_data.permissions),
+                    "tenantId": (
+                        event["request"]["userAttributes"].get("custom:tenantId", "")
                     ),
-                    'applicationId': application_id
+                    "applicationId": application_id,
                 }
             }
         }
@@ -89,13 +83,9 @@ async def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         return event
 
     except AuthDynamoDBError as e:
-        logger.error(
-            f"Authentication database error in pre-token generation: {str(e)}"
-        )
+        logger.error(f"Authentication database error in pre-token generation: {str(e)}")
         return event  # Return original event without custom claims
 
     except Exception as e:
-        logger.error(
-            f"Unexpected error in pre-token generation: {str(e)}"
-        )
+        logger.error(f"Unexpected error in pre-token generation: {str(e)}")
         return event  # Return original event without custom claims

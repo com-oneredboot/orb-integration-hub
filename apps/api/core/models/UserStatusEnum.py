@@ -1,9 +1,10 @@
 """
 Generated Python enum for UserStatus
-Generated at 
+Generated at
 """
 
 from enum import Enum
+
 
 class UserStatus(Enum):
     UNKNOWN = "UNKNOWN"
@@ -12,4 +13,3 @@ class UserStatus(Enum):
     PENDING = "PENDING"
     REJECTED = "REJECTED"
     DELETED = "DELETED"
- 

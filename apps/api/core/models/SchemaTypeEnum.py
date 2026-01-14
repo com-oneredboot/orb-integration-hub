@@ -1,9 +1,10 @@
 """
 Generated Python enum for SchemaType
-Generated at 
+Generated at
 """
 
 from enum import Enum
+
 
 class SchemaType(Enum):
     STANDARD = "STANDARD"
@@ -19,4 +20,3 @@ class SchemaType(Enum):
     GRAPH = "GRAPH"
     REST = "REST"
     ELASTICSEARCH = "ELASTICSEARCH"
- 

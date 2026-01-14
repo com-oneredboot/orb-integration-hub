@@ -174,8 +174,8 @@ jobs:
         if: matrix.component == 'backend'
         run: |
           cd apps/api
+          pipenv run black --check --line-length=100 .
           pipenv run ruff check .
-          pipenv run ruff format --check .
 
       - name: Run unit tests (Frontend)
         if: matrix.component == 'frontend'
