@@ -174,9 +174,8 @@ jobs:
         if: matrix.component == 'backend'
         run: |
           cd apps/api
-          pipenv run flake8 src/ --max-line-length=100
-          pipenv run black --check src/
-          pipenv run isort --check-only src/
+          pipenv run ruff check .
+          pipenv run ruff format --check .
 
       - name: Run unit tests (Frontend)
         if: matrix.component == 'frontend'
@@ -188,7 +187,7 @@ jobs:
         if: matrix.component == 'backend'
         run: |
           cd apps/api
-          pipenv run python -m pytest src/ -v --cov=src --cov-report=xml --cov-report=html
+          pipenv run python -m pytest tests/ -v --cov=. --cov-report=xml --cov-report=html
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
@@ -507,7 +506,7 @@ jobs:
           # Run Python security tests (CODEARTIFACT_AUTH_TOKEN already in GITHUB_ENV)
           pipenv install safety bandit
           pipenv run safety check
-          pipenv run bandit -r src/ -f json -o security-report.json
+          pipenv run bandit -r . -f json -o security-report.json --exclude .venv
 
       - name: Run SAST with CodeQL
         uses: github/codeql-action/init@v2
