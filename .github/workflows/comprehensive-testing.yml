@@ -145,17 +145,23 @@ jobs:
           role-to-assume: ${{ vars.AWS_CI_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
+      - name: Get CodeArtifact token (Backend)
+        if: matrix.component == 'backend'
+        id: codeartifact
+        run: |
+          TOKEN=$(aws codeartifact get-authorization-token \
+            --domain orb-infrastructure-shared-codeartifact-domain \
+            --domain-owner 432045270100 \
+            --query authorizationToken \
+            --output text)
+          echo "CODEARTIFACT_AUTH_TOKEN=$TOKEN" >> $GITHUB_ENV
+
       - name: Install dependencies (Backend)
         if: matrix.component == 'backend'
         run: |
           cd apps/api
           python -m pip install --upgrade pip
           pip install pipenv
-          export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token \
-            --domain orb-infrastructure-shared-codeartifact-domain \
-            --domain-owner 432045270100 \
-            --query authorizationToken \
-            --output text)
           pipenv install --dev
 
       - name: Run linting (Frontend)
@@ -471,15 +477,20 @@ jobs:
           role-to-assume: ${{ vars.AWS_CI_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Install dependencies (Backend)
+      - name: Get CodeArtifact token (Backend)
+        id: codeartifact-security
         run: |
-          cd apps/api
-          pip install pipenv
-          export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token \
+          TOKEN=$(aws codeartifact get-authorization-token \
             --domain orb-infrastructure-shared-codeartifact-domain \
             --domain-owner 432045270100 \
             --query authorizationToken \
             --output text)
+          echo "CODEARTIFACT_AUTH_TOKEN=$TOKEN" >> $GITHUB_ENV
+
+      - name: Install dependencies (Backend)
+        run: |
+          cd apps/api
+          pip install pipenv
           pipenv install --dev
 
       - name: Run frontend security tests
@@ -493,12 +504,7 @@ jobs:
       - name: Run backend security tests
         run: |
           cd apps/api
-          # Run Python security tests
-          export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token \
-            --domain orb-infrastructure-shared-codeartifact-domain \
-            --domain-owner 432045270100 \
-            --query authorizationToken \
-            --output text)
+          # Run Python security tests (CODEARTIFACT_AUTH_TOKEN already in GITHUB_ENV)
           pipenv install safety bandit
           pipenv run safety check
           pipenv run bandit -r src/ -f json -o security-report.json
