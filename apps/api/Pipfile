@@ -13,7 +13,6 @@ boto3 = "*"
 pynamodb = "*"
 requests = "*"
 stripe = "*"
-orb-common = {version = "*", index = "codeartifact"}  # From CodeArtifact - provides EnvironmentDesignator and shared utilities
 orb-schema-generator = {version = "==0.13.5", index = "codeartifact"}  # Schema generation tool
 
 [dev-packages]
