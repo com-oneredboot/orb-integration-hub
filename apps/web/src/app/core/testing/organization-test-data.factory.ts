@@ -16,6 +16,7 @@ import { OrganizationStatus } from '../enums/OrganizationStatusEnum';
 import { OrganizationUserRole } from '../enums/OrganizationUserRoleEnum';
 import { OrganizationUserStatus } from '../enums/OrganizationUserStatusEnum';
 import { UserStatus } from '../enums/UserStatusEnum';
+import { ApplicationStatus } from '../enums/ApplicationStatusEnum';
 
 export interface TestOrganizationData {
   organization: Organizations;
@@ -139,7 +140,7 @@ export class OrganizationTestDataFactory {
         OrganizationUserStatus.Inactive : OrganizationUserStatus.Active;
       
       // Determine role (only ADMINISTRATOR and VIEWER are valid)
-      const role = i === 0 ? OrganizationUserRole.ADMINISTRATOR : OrganizationUserRole.VIEWER;
+      const role = i === 0 ? OrganizationUserRole.Administrator : OrganizationUserRole.Viewer;
       
       organizationUsers.push(this.createOrganizationUserRecord({
         userId: user.userId,
@@ -195,7 +196,7 @@ export class OrganizationTestDataFactory {
     // Create organization memberships
     const memberships: OrganizationUsers[] = [];
     organizationIds.forEach(orgId => {
-      const role = roles[orgId] || OrganizationUserRole.VIEWER;
+      const role = roles[orgId] || OrganizationUserRole.Viewer;
       memberships.push(this.createOrganizationUserRecord({
         userId,
         organizationId: orgId,
@@ -271,25 +272,25 @@ export class OrganizationTestDataFactory {
     const edgeCases: Record<string, TestOrganizationData> = {};
     
     // Organization with maximum field lengths
-    edgeCases.maxLength = this.createTestOrganization({
+    edgeCases['maxLength'] = this.createTestOrganization({
       name: 'A'.repeat(255), // Maximum name length
       size: 'small'
     });
     
     // Organization with minimum valid data
-    edgeCases.minimal = this.createTestOrganization({
+    edgeCases['minimal'] = this.createTestOrganization({
       name: 'A', // Minimum name length
       size: 'small'
     });
     
     // Organization with special characters
-    edgeCases.specialChars = this.createTestOrganization({
+    edgeCases['specialChars'] = this.createTestOrganization({
       name: 'Test-Org_123!@#$%^&*()',
       size: 'small'
     });
     
     // Organization with Unicode characters
-    edgeCases.unicode = this.createTestOrganization({
+    edgeCases['unicode'] = this.createTestOrganization({
       name: '测试组织_テスト_🏢',
       size: 'small'
     });
@@ -313,31 +314,31 @@ export class OrganizationTestDataFactory {
     const securityTests: Record<string, TestOrganizationData> = {};
     
     // XSS injection attempts
-    securityTests.xssInjection = this.createTestOrganization({
+    securityTests['xssInjection'] = this.createTestOrganization({
       name: '<script>alert("xss")</script>',
       size: 'small'
     });
     
     // SQL injection attempts
-    securityTests.sqlInjection = this.createTestOrganization({
+    securityTests['sqlInjection'] = this.createTestOrganization({
       name: '\'; DROP TABLE organizations; --',
       size: 'small'
     });
     
     // Path traversal attempts
-    securityTests.pathTraversal = this.createTestOrganization({
+    securityTests['pathTraversal'] = this.createTestOrganization({
       name: '../../etc/passwd',
       size: 'small'
     });
     
     // LDAP injection attempts
-    securityTests.ldapInjection = this.createTestOrganization({
+    securityTests['ldapInjection'] = this.createTestOrganization({
       name: '*)(uid=*))(|(uid=*',
       size: 'small'
     });
     
     // Command injection attempts
-    securityTests.commandInjection = this.createTestOrganization({
+    securityTests['commandInjection'] = this.createTestOrganization({
       name: 'test; rm -rf /',
       size: 'small'
     });
@@ -363,11 +364,11 @@ export class OrganizationTestDataFactory {
       permissions: string[];
       restrictions: string[];
     }> = {
-      [OrganizationUserRole.ADMINISTRATOR]: {
+      [OrganizationUserRole.Administrator]: {
         permissions: ['MANAGE_APPS', 'VIEW_APPS', 'INVITE_USERS'],
         restrictions: ['DELETE_ORG', 'VIEW_BILLING', 'MANAGE_ORG']
       },
-      [OrganizationUserRole.VIEWER]: {
+      [OrganizationUserRole.Viewer]: {
         permissions: ['VIEW_APPS'],
         restrictions: ['MANAGE_APPS', 'INVITE_USERS', 'DELETE_ORG', 'VIEW_BILLING', 'MANAGE_ORG']
       }
@@ -490,8 +491,8 @@ export class OrganizationTestDataFactory {
   createTestApplication(options: {
     organizationId: string;
     name?: string;
-    description?: string;
-    status?: string;
+    ownerId?: string;
+    status?: ApplicationStatus;
   }): Applications {
     
     const appId = `app_${this.generateId()}`;
@@ -499,10 +500,12 @@ export class OrganizationTestDataFactory {
       applicationId: appId,
       organizationId: options.organizationId,
       name: options.name || `TestApp_${appId}`,
-      description: options.description || `Test application ${options.name || appId}`,
-      status: options.status || 'ACTIVE',
+      ownerId: options.ownerId || `owner_${this.generateId()}`,
+      status: options.status || ApplicationStatus.Active,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      apiKey: `apikey_${this.generateId()}`,
+      environments: ['dev', 'staging', 'prod']
     };
     
     this.createdResources.applications.push(appId);
@@ -686,14 +689,18 @@ export class OrganizationTestDataFactory {
     scenarios: Record<string, any>;
   } {
     
-    const environment = {
+    const environment: {
+      sessionId: string;
+      createdAt: string;
+      scenarios: Record<string, any>;
+    } = {
       sessionId: this.testSessionId,
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
       scenarios: {} as Record<string, any>
     };
     
     // Basic organization scenarios
-    environment.scenarios.basic = {
+    environment.scenarios['basic'] = {
       smallOrg: this.createTestOrganization({ size: 'small' }),
       mediumOrg: this.createTestOrganization({ size: 'medium' }),
       largeOrg: this.createTestOrganization({ size: 'large' })
@@ -701,28 +708,28 @@ export class OrganizationTestDataFactory {
     
     // Multi-organization user scenarios
     const orgIds = [
-      environment.scenarios.basic.smallOrg.organization.organizationId,
-      environment.scenarios.basic.mediumOrg.organization.organizationId
+      environment.scenarios['basic'].smallOrg.organization.organizationId,
+      environment.scenarios['basic'].mediumOrg.organization.organizationId
     ];
-    environment.scenarios.multiOrgUser = this.createMultiOrganizationUser({
+    environment.scenarios['multiOrgUser'] = this.createMultiOrganizationUser({
       organizationIds: orgIds,
       roles: {
-        [orgIds[0]]: OrganizationUserRole.ADMINISTRATOR,
-        [orgIds[1]]: OrganizationUserRole.VIEWER
+        [orgIds[0]]: OrganizationUserRole.Administrator,
+        [orgIds[1]]: OrganizationUserRole.Viewer
       }
     });
     
     // Edge case scenarios
-    environment.scenarios.edgeCases = this.createEdgeCaseOrganizations();
+    environment.scenarios['edgeCases'] = this.createEdgeCaseOrganizations();
     
     // Security test scenarios
-    environment.scenarios.securityTests = this.createSecurityTestOrganizations();
+    environment.scenarios['securityTests'] = this.createSecurityTestOrganizations();
     
     // Role-based scenarios
-    environment.scenarios.roleBased = this.createRoleBasedTestScenarios();
+    environment.scenarios['roleBased'] = this.createRoleBasedTestScenarios();
     
     // Mock API responses
-    environment.scenarios.mockResponses = {
+    environment.scenarios['mockResponses'] = {
       success: this.createMockGraphQLResponses(),
       errors: this.createMockErrorResponses()
     };

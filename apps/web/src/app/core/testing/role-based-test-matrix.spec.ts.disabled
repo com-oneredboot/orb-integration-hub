@@ -11,8 +11,8 @@
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 
-import { OrganizationUserRole } from '../models/OrganizationUserRoleEnum';
-import { OrganizationUserStatus } from '../models/OrganizationUserStatusEnum';
+import { OrganizationUserRole } from '../enums/OrganizationUserRoleEnum';
+import { OrganizationUserStatus } from '../enums/OrganizationUserStatusEnum';
 import { OrganizationStatus } from '../enums/OrganizationStatusEnum';
 import { CognitoService } from '../services/cognito.service';
 import { UserService } from '../services/user.service';
@@ -47,7 +47,12 @@ export interface RolePermissionMatrix {
 export class RoleBasedTestMatrix {
   
   // Organization Owner permissions (user_id matches organization.ownerId)
-  private organizationOwnerPermissions = {
+  private organizationOwnerPermissions: {
+    permissions: string[];
+    restrictions: string[];
+    canModifyRoles: string[];
+    cannotModifyRoles: string[];
+  } = {
     permissions: [
       'view-organization', 'manage-organization', 'delete-organization', 
       'transfer-ownership', 'view-billing', 'manage-billing',
@@ -62,7 +67,7 @@ export class RoleBasedTestMatrix {
 
   // Application role permissions matrix
   private applicationRoleMatrix: RolePermissionMatrix = {
-    [OrganizationUserRole.ADMINISTRATOR]: {
+    [OrganizationUserRole.Administrator]: {
       permissions: [
         'view-organization', 'view-users',
         'create-application', 'view-application', 'manage-application', 'delete-application',
@@ -76,7 +81,7 @@ export class RoleBasedTestMatrix {
       cannotModifyRoles: ['ADMINISTRATOR']
     },
     
-    [OrganizationUserRole.VIEWER]: {
+    [OrganizationUserRole.Viewer]: {
       permissions: [
         'view-organization', 'view-application', 'read-data'
       ],
@@ -236,7 +241,7 @@ export class RoleBasedTestMatrix {
       {
         scenarioId: 'admin-001',
         description: 'Administrator can manage applications',
-        userRole: OrganizationUserRole.ADMINISTRATOR,
+        userRole: OrganizationUserRole.Administrator,
         userStatus: OrganizationUserStatus.Active,
         organizationStatus: OrganizationStatus.Active,
         action: 'manage-application',
@@ -245,7 +250,7 @@ export class RoleBasedTestMatrix {
       {
         scenarioId: 'admin-002',
         description: 'Administrator cannot delete organization',
-        userRole: OrganizationUserRole.ADMINISTRATOR,
+        userRole: OrganizationUserRole.Administrator,
         userStatus: OrganizationUserStatus.Active,
         organizationStatus: OrganizationStatus.Active,
         action: 'delete-organization',
@@ -254,7 +259,7 @@ export class RoleBasedTestMatrix {
       {
         scenarioId: 'admin-003',
         description: 'Administrator cannot view billing',
-        userRole: OrganizationUserRole.ADMINISTRATOR,
+        userRole: OrganizationUserRole.Administrator,
         userStatus: OrganizationUserStatus.Active,
         organizationStatus: OrganizationStatus.Active,
         action: 'view-billing',
@@ -263,7 +268,7 @@ export class RoleBasedTestMatrix {
       {
         scenarioId: 'admin-004',
         description: 'Administrator can invite users',
-        userRole: OrganizationUserRole.ADMINISTRATOR,
+        userRole: OrganizationUserRole.Administrator,
         userStatus: OrganizationUserStatus.Active,
         organizationStatus: OrganizationStatus.Active,
         action: 'invite-user',
@@ -274,7 +279,7 @@ export class RoleBasedTestMatrix {
       {
         scenarioId: 'viewer-001',
         description: 'Viewer can view applications',
-        userRole: OrganizationUserRole.VIEWER,
+        userRole: OrganizationUserRole.Viewer,
         userStatus: OrganizationUserStatus.Active,
         organizationStatus: OrganizationStatus.Active,
         action: 'view-application',
@@ -283,7 +288,7 @@ export class RoleBasedTestMatrix {
       {
         scenarioId: 'viewer-002',
         description: 'Viewer cannot manage applications',
-        userRole: OrganizationUserRole.VIEWER,
+        userRole: OrganizationUserRole.Viewer,
         userStatus: OrganizationUserStatus.Active,
         organizationStatus: OrganizationStatus.Active,
         action: 'manage-application',
@@ -292,7 +297,7 @@ export class RoleBasedTestMatrix {
       {
         scenarioId: 'viewer-003',
         description: 'Viewer cannot invite users',
-        userRole: OrganizationUserRole.VIEWER,
+        userRole: OrganizationUserRole.Viewer,
         userStatus: OrganizationUserStatus.Active,
         organizationStatus: OrganizationStatus.Active,
         action: 'invite-user',
@@ -301,7 +306,7 @@ export class RoleBasedTestMatrix {
       {
         scenarioId: 'viewer-004',
         description: 'Viewer can read data',
-        userRole: OrganizationUserRole.VIEWER,
+        userRole: OrganizationUserRole.Viewer,
         userStatus: OrganizationUserStatus.Active,
         organizationStatus: OrganizationStatus.Active,
         action: 'read-data',
@@ -315,32 +320,32 @@ export class RoleBasedTestMatrix {
       {
         scenarioId: 'interaction-001',
         description: 'Administrator can modify Viewer role',
-        userRole: OrganizationUserRole.ADMINISTRATOR,
+        userRole: OrganizationUserRole.Administrator,
         userStatus: OrganizationUserStatus.Active,
         organizationStatus: OrganizationStatus.Active,
         action: 'change-user-role',
         expectedResult: true,
-        context: { targetRole: OrganizationUserRole.VIEWER }
+        context: { targetRole: OrganizationUserRole.Viewer }
       },
       {
         scenarioId: 'interaction-002',
         description: 'Viewer cannot modify any roles',
-        userRole: OrganizationUserRole.VIEWER,
+        userRole: OrganizationUserRole.Viewer,
         userStatus: OrganizationUserStatus.Active,
         organizationStatus: OrganizationStatus.Active,
         action: 'change-user-role',
         expectedResult: false,
-        context: { targetRole: OrganizationUserRole.ADMINISTRATOR }
+        context: { targetRole: OrganizationUserRole.Administrator }
       },
       {
         scenarioId: 'interaction-003',
         description: 'Administrator cannot modify another Administrator role',
-        userRole: OrganizationUserRole.ADMINISTRATOR,
+        userRole: OrganizationUserRole.Administrator,
         userStatus: OrganizationUserStatus.Active,
         organizationStatus: OrganizationStatus.Active,
         action: 'change-user-role',
         expectedResult: false,
-        context: { targetRole: OrganizationUserRole.ADMINISTRATOR }
+        context: { targetRole: OrganizationUserRole.Administrator }
       }
     ];
   }
@@ -350,7 +355,7 @@ export class RoleBasedTestMatrix {
       {
         scenarioId: 'edge-001',
         description: 'Inactive user cannot perform any actions',
-        userRole: OrganizationUserRole.ADMINISTRATOR,
+        userRole: OrganizationUserRole.Administrator,
         userStatus: OrganizationUserStatus.Inactive,
         organizationStatus: OrganizationStatus.Active,
         action: 'view-application',
@@ -359,7 +364,7 @@ export class RoleBasedTestMatrix {
       {
         scenarioId: 'edge-002',
         description: 'User in inactive organization cannot perform actions',
-        userRole: OrganizationUserRole.ADMINISTRATOR,
+        userRole: OrganizationUserRole.Administrator,
         userStatus: OrganizationUserStatus.Active,
         organizationStatus: OrganizationStatus.Inactive,
         action: 'view-application',
@@ -413,8 +418,8 @@ describe('RoleBasedTestMatrix', () => {
     });
 
     it('should allow organization owner to modify any user role', () => {
-      expect(testMatrix.canModifyUserRole(null, OrganizationUserRole.ADMINISTRATOR, true)).toBe(true);
-      expect(testMatrix.canModifyUserRole(null, OrganizationUserRole.VIEWER, true)).toBe(true);
+      expect(testMatrix.canModifyUserRole(null, OrganizationUserRole.Administrator, true)).toBe(true);
+      expect(testMatrix.canModifyUserRole(null, OrganizationUserRole.Viewer, true)).toBe(true);
     });
 
     it('should not restrict organization owner from any actions', () => {
@@ -430,42 +435,42 @@ describe('RoleBasedTestMatrix', () => {
 
   describe('Administrator Role Permissions', () => {
     it('should allow Administrator to manage applications', () => {
-      expect(testMatrix.hasPermission(OrganizationUserRole.ADMINISTRATOR, 'manage-application')).toBe(true);
-      expect(testMatrix.hasPermission(OrganizationUserRole.ADMINISTRATOR, 'create-application')).toBe(true);
-      expect(testMatrix.hasPermission(OrganizationUserRole.ADMINISTRATOR, 'view-application')).toBe(true);
+      expect(testMatrix.hasPermission(OrganizationUserRole.Administrator, 'manage-application')).toBe(true);
+      expect(testMatrix.hasPermission(OrganizationUserRole.Administrator, 'create-application')).toBe(true);
+      expect(testMatrix.hasPermission(OrganizationUserRole.Administrator, 'view-application')).toBe(true);
     });
 
     it('should restrict Administrator from organization-level actions', () => {
-      expect(testMatrix.hasPermission(OrganizationUserRole.ADMINISTRATOR, 'delete-organization')).toBe(false);
-      expect(testMatrix.hasPermission(OrganizationUserRole.ADMINISTRATOR, 'view-billing')).toBe(false);
-      expect(testMatrix.hasPermission(OrganizationUserRole.ADMINISTRATOR, 'transfer-ownership')).toBe(false);
+      expect(testMatrix.hasPermission(OrganizationUserRole.Administrator, 'delete-organization')).toBe(false);
+      expect(testMatrix.hasPermission(OrganizationUserRole.Administrator, 'view-billing')).toBe(false);
+      expect(testMatrix.hasPermission(OrganizationUserRole.Administrator, 'transfer-ownership')).toBe(false);
     });
 
     it('should allow Administrator to modify Viewer roles', () => {
-      expect(testMatrix.canModifyUserRole(OrganizationUserRole.ADMINISTRATOR, OrganizationUserRole.VIEWER)).toBe(true);
+      expect(testMatrix.canModifyUserRole(OrganizationUserRole.Administrator, OrganizationUserRole.Viewer)).toBe(true);
     });
 
     it('should not allow Administrator to modify other Administrator roles', () => {
-      expect(testMatrix.canModifyUserRole(OrganizationUserRole.ADMINISTRATOR, OrganizationUserRole.ADMINISTRATOR)).toBe(false);
+      expect(testMatrix.canModifyUserRole(OrganizationUserRole.Administrator, OrganizationUserRole.Administrator)).toBe(false);
     });
   });
 
   describe('Viewer Role Permissions', () => {
     it('should allow Viewer to view applications and read data', () => {
-      expect(testMatrix.hasPermission(OrganizationUserRole.VIEWER, 'view-application')).toBe(true);
-      expect(testMatrix.hasPermission(OrganizationUserRole.VIEWER, 'read-data')).toBe(true);
-      expect(testMatrix.hasPermission(OrganizationUserRole.VIEWER, 'view-organization')).toBe(true);
+      expect(testMatrix.hasPermission(OrganizationUserRole.Viewer, 'view-application')).toBe(true);
+      expect(testMatrix.hasPermission(OrganizationUserRole.Viewer, 'read-data')).toBe(true);
+      expect(testMatrix.hasPermission(OrganizationUserRole.Viewer, 'view-organization')).toBe(true);
     });
 
     it('should restrict Viewer from management actions', () => {
-      expect(testMatrix.hasPermission(OrganizationUserRole.VIEWER, 'manage-application')).toBe(false);
-      expect(testMatrix.hasPermission(OrganizationUserRole.VIEWER, 'invite-user')).toBe(false);
-      expect(testMatrix.hasPermission(OrganizationUserRole.VIEWER, 'write-data')).toBe(false);
+      expect(testMatrix.hasPermission(OrganizationUserRole.Viewer, 'manage-application')).toBe(false);
+      expect(testMatrix.hasPermission(OrganizationUserRole.Viewer, 'invite-user')).toBe(false);
+      expect(testMatrix.hasPermission(OrganizationUserRole.Viewer, 'write-data')).toBe(false);
     });
 
     it('should not allow Viewer to modify any user roles', () => {
-      expect(testMatrix.canModifyUserRole(OrganizationUserRole.VIEWER, OrganizationUserRole.ADMINISTRATOR)).toBe(false);
-      expect(testMatrix.canModifyUserRole(OrganizationUserRole.VIEWER, OrganizationUserRole.VIEWER)).toBe(false);
+      expect(testMatrix.canModifyUserRole(OrganizationUserRole.Viewer, OrganizationUserRole.Administrator)).toBe(false);
+      expect(testMatrix.canModifyUserRole(OrganizationUserRole.Viewer, OrganizationUserRole.Viewer)).toBe(false);
     });
   });
 
@@ -505,7 +510,7 @@ describe('RoleBasedTestMatrix', () => {
 
   describe('Edge Cases', () => {
     it('should handle invalid permission checks gracefully', () => {
-      expect(testMatrix.hasPermission(OrganizationUserRole.ADMINISTRATOR, 'invalid-permission')).toBe(false);
+      expect(testMatrix.hasPermission(OrganizationUserRole.Administrator, 'invalid-permission')).toBe(false);
       expect(testMatrix.hasPermission(null, 'valid-permission')).toBe(false);
     });
 
@@ -513,7 +518,7 @@ describe('RoleBasedTestMatrix', () => {
       const startTime = performance.now();
       
       for (let i = 0; i < 1000; i++) {
-        testMatrix.hasPermission(OrganizationUserRole.ADMINISTRATOR, 'view-application');
+        testMatrix.hasPermission(OrganizationUserRole.Administrator, 'view-application');
       }
       
       const endTime = performance.now();
@@ -537,10 +542,10 @@ describe('RoleBasedTestMatrix', () => {
       expect(testMatrix.hasPermission(null, 'manage-organization', isOwner)).toBe(true);
       
       // Other users should have role-based permissions
-      const adminUser = testOrg.organizationUsers.find(ou => ou.role === OrganizationUserRole.ADMINISTRATOR);
+      const adminUser = testOrg.organizationUsers.find(ou => ou.role === OrganizationUserRole.Administrator);
       if (adminUser) {
-        expect(testMatrix.hasPermission(OrganizationUserRole.ADMINISTRATOR, 'manage-application')).toBe(true);
-        expect(testMatrix.hasPermission(OrganizationUserRole.ADMINISTRATOR, 'delete-organization')).toBe(false);
+        expect(testMatrix.hasPermission(OrganizationUserRole.Administrator, 'manage-application')).toBe(true);
+        expect(testMatrix.hasPermission(OrganizationUserRole.Administrator, 'delete-organization')).toBe(false);
       }
     });
   });

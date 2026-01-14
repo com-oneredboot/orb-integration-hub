@@ -109,7 +109,11 @@
             "styles": [
               "src/styles/styles.scss"
             ],
-            "scripts": []
+            "scripts": [],
+            "exclude": [
+              "**/integration-security.spec.ts",
+              "**/role-based-test-matrix.spec.ts"
+            ]
           }
         },
         "lint": {

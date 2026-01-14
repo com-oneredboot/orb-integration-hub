@@ -132,11 +132,12 @@ describe('CsrfService', () => {
 
     it('should handle cookie read/write errors gracefully', async () => {
       // Mock document.cookie to throw error
-      const originalCookie = Object.getOwnPropertyDescriptor(Document.prototype, 'cookie')!;
+      const originalCookie = Object.getOwnPropertyDescriptor(Document.prototype, 'cookie');
       
       Object.defineProperty(document, 'cookie', {
         get: () => { throw new Error('Cookie access denied'); },
-        set: () => { throw new Error('Cookie write denied'); }
+        set: () => { throw new Error('Cookie write denied'); },
+        configurable: true
       });
       
       // Should not throw error, should handle gracefully
@@ -144,7 +145,9 @@ describe('CsrfService', () => {
       expect(token).toBeTruthy();
       
       // Restore original cookie behavior
-      Object.defineProperty(document, 'cookie', originalCookie);
+      if (originalCookie) {
+        Object.defineProperty(Document.prototype, 'cookie', originalCookie);
+      }
     });
   });
 

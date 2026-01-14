@@ -5,15 +5,22 @@
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
+import { Router } from '@angular/router';
+import { RouterTestingModule } from '@angular/router/testing';
+import { FaIconLibrary, FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { fas } from '@fortawesome/free-solid-svg-icons';
 import { DashboardComponent } from './dashboard.component';
+import { UserService } from '../../../../core/services/user.service';
 import { IUsers } from '../../../../core/models/UsersModel';
-import { UserStatus } from '../../../../core/models/UserStatusEnum';
-import { UserGroup } from '../../../../core/models/UserGroupEnum';
+import { UserStatus } from '../../../../core/enums/UserStatusEnum';
+import { UserGroup } from '../../../../core/enums/UserGroupEnum';
 
 describe('DashboardComponent', () => {
   let component: DashboardComponent;
   let fixture: ComponentFixture<DashboardComponent>;
   let mockStore: MockStore;
+  let mockUserService: jasmine.SpyObj<UserService>;
+  let mockRouter: jasmine.SpyObj<Router>;
 
   const mockUser: IUsers = {
     userId: '123',
@@ -29,26 +36,37 @@ describe('DashboardComponent', () => {
     status: UserStatus.Active,
     mfaEnabled: false,
     mfaSetupComplete: false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    createdAt: new Date(),
+    updatedAt: new Date()
   };
 
   const initialState = {
-    auth: {
+    user: {
       currentUser: mockUser,
       error: null,
-      isLoading: false
+      isLoading: false,
+      debugMode: false
     }
   };
 
   beforeEach(async () => {
+    mockUserService = jasmine.createSpyObj('UserService', ['isUserValid']);
+    mockUserService.isUserValid.and.returnValue(true);
+    
+    mockRouter = jasmine.createSpyObj('Router', ['navigate']);
+
     await TestBed.configureTestingModule({
-      imports: [ DashboardComponent ],
+      imports: [ DashboardComponent, FontAwesomeModule, RouterTestingModule ],
       providers: [
-        provideMockStore({ initialState })
+        provideMockStore({ initialState }),
+        { provide: UserService, useValue: mockUserService }
       ]
     })
     .compileComponents();
+
+    // Add FontAwesome icons to library
+    const library = TestBed.inject(FaIconLibrary);
+    library.addIconPacks(fas);
 
     mockStore = TestBed.inject(MockStore);
   });

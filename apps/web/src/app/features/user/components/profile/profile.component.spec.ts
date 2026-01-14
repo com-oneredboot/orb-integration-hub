@@ -9,12 +9,14 @@ import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { of } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { Router } from '@angular/router';
+import { FaIconLibrary, FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { fas } from '@fortawesome/free-solid-svg-icons';
 
 import { ProfileComponent } from './profile.component';
 import { UserService } from '../../../../core/services/user.service';
 import { IUsers, Users, UsersUpdateInput, UsersResponse } from '../../../../core/models/UsersModel';
-import { UserStatus } from '../../../../core/models/UserStatusEnum';
-import { UserGroup } from '../../../../core/models/UserGroupEnum';
+import { UserStatus } from '../../../../core/enums/UserStatusEnum';
+import { UserGroup } from '../../../../core/enums/UserGroupEnum';
 
 describe('ProfileComponent', () => {
   let component: ProfileComponent;
@@ -25,13 +27,15 @@ describe('ProfileComponent', () => {
   let router: jasmine.SpyObj<Router>;
 
   const initialState = {
-    auth: {
+    user: {
       currentUser: null,
-      debugMode: false
+      debugMode: false,
+      isLoading: false,
+      error: null
     }
   };
 
-  const mockUser: IUsers = { userId: '123', cognitoId: 'abc123', cognitoSub: 'cognito-sub-123', email: 'test@example.com', emailVerified: true, phoneNumber: '+12345678901', phoneVerified: true, firstName: 'Test', lastName: 'User', groups: [UserGroup.User], status: UserStatus.Active, mfaEnabled: false, mfaSetupComplete: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+  const mockUser: IUsers = { userId: '123', cognitoId: 'abc123', cognitoSub: 'cognito-sub-123', email: 'test@example.com', emailVerified: true, phoneNumber: '+12345678901', phoneVerified: true, firstName: 'Test', lastName: 'User', groups: [UserGroup.User], status: UserStatus.Active, mfaEnabled: false, mfaSetupComplete: false, createdAt: new Date(), updatedAt: new Date() };
 
   const mockUpdateInput: UsersUpdateInput = {
     userId: '123',
@@ -47,8 +51,8 @@ describe('ProfileComponent', () => {
     status: UserStatus.Active,
     mfaEnabled: false,
     mfaSetupComplete: false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   const mockResponse: UsersResponse = {
@@ -57,7 +61,7 @@ describe('ProfileComponent', () => {
     Data: new Users(mockUser)
   };
 
-  const mockIncompleteUser: IUsers = { userId: '123', cognitoId: 'abc123', cognitoSub: 'cognito-sub-123', email: 'test@example.com', emailVerified: false, phoneNumber: '', phoneVerified: false, firstName: '', lastName: '', groups: [], status: UserStatus.Inactive, mfaEnabled: false, mfaSetupComplete: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+  const mockIncompleteUser: IUsers = { userId: '123', cognitoId: 'abc123', cognitoSub: 'cognito-sub-123', email: 'test@example.com', emailVerified: false, phoneNumber: '', phoneVerified: false, firstName: '', lastName: '', groups: [], status: UserStatus.Inactive, mfaEnabled: false, mfaSetupComplete: false, createdAt: new Date(), updatedAt: new Date() };
 
   beforeEach(async () => {
     mockUserService = jasmine.createSpyObj('UserService', ['isUserValid', 'userUpdate', 'userQueryByUserId']);
@@ -87,7 +91,7 @@ describe('ProfileComponent', () => {
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
 
     await TestBed.configureTestingModule({
-      imports: [ ProfileComponent ],
+      imports: [ ProfileComponent, FontAwesomeModule ],
       providers: [
         provideMockStore({ initialState }),
         { provide: UserService, useValue: mockUserService },
@@ -96,24 +100,25 @@ describe('ProfileComponent', () => {
       ]
     }).compileComponents();
 
+    // Add FontAwesome icons to library
+    const library = TestBed.inject(FaIconLibrary);
+    library.addIconPacks(fas);
+
     mockStore = TestBed.inject(MockStore);
     fixture = TestBed.createComponent(ProfileComponent);
     component = fixture.componentInstance;
     store = mockStore;
     router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
-  });
-
-  beforeEach(() => {
-    fixture = TestBed.createComponent(ProfileComponent);
-    component = fixture.componentInstance;
     fixture.detectChanges();
   });
 
   it('should create', () => {
     mockStore.setState({
-      auth: {
+      user: {
         currentUser: mockUser,
-        debugMode: false
+        debugMode: false,
+        isLoading: false,
+        error: null
       }
     });
     fixture.detectChanges();
@@ -123,9 +128,11 @@ describe('ProfileComponent', () => {
   describe('Form initialization', () => {
     it('should initialize form with user data when user exists', () => {
       mockStore.setState({
-        auth: {
+        user: {
           currentUser: mockUser,
-          debugMode: false
+          debugMode: false,
+          isLoading: false,
+          error: null
         }
       });
       fixture.detectChanges();
@@ -136,9 +143,11 @@ describe('ProfileComponent', () => {
     });
     it('should initialize form with empty values when no user exists', () => {
       mockStore.setState({
-        auth: {
+        user: {
           currentUser: null,
-          debugMode: false
+          debugMode: false,
+          isLoading: false,
+          error: null
         }
       });
       fixture.detectChanges();
@@ -150,9 +159,11 @@ describe('ProfileComponent', () => {
   describe('Form validation', () => {
     beforeEach(() => {
       mockStore.setState({
-        auth: {
+        user: {
           currentUser: mockUser,
-          debugMode: false
+          debugMode: false,
+          isLoading: false,
+          error: null
         }
       });
       fixture.detectChanges();
@@ -190,15 +201,17 @@ describe('ProfileComponent', () => {
   describe('Form actions', () => {
     beforeEach(() => {
       mockStore.setState({
-        auth: {
+        user: {
           currentUser: mockUser,
-          debugMode: false
+          debugMode: false,
+          isLoading: false,
+          error: null
         }
       });
       fixture.detectChanges();
     });
 
-    it('should reset form to original values', () => {
+    it('should reset form to original values', async () => {
       // Change form values
       component.profileForm.patchValue({
         firstName: 'Changed',
@@ -211,6 +224,10 @@ describe('ProfileComponent', () => {
       
       // Reset form
       component.resetForm();
+      
+      // Wait for async subscription to complete
+      await fixture.whenStable();
+      fixture.detectChanges();
       
       // Verify form values are reset
       expect(component.profileForm.get('firstName')?.value).toBe('Test');
@@ -265,9 +282,11 @@ describe('ProfileComponent', () => {
     it('should correctly determine if a user is valid', () => {
       // Set up the store with valid user
       mockStore.setState({
-        auth: {
+        user: {
           currentUser: mockUser,
-          debugMode: false
+          debugMode: false,
+          isLoading: false,
+          error: null
         }
       });
       fixture.detectChanges();
@@ -283,18 +302,16 @@ describe('ProfileComponent', () => {
     it('should format dates correctly', () => {
       // Note: Date formatting can vary by timezone, so we need to be more flexible
       
-      // Don't test the exact format as it depends on the browser/environment timezone
-      // Just test that our method returns the original string if it can't parse the date
-      // and returns 'N/A' for empty strings
-      const formattedDate = component.formatDate('2023-01-01T00:00:00Z');
+      // Test with a Date object
+      const formattedDate = component.formatDate(new Date('2023-01-01T00:00:00Z'));
       expect(typeof formattedDate).toBe('string');
       
-      // Test empty string handling
-      expect(component.formatDate('')).toBe('N/A');
+      // Test null/undefined handling
+      expect(component.formatDate(null as any)).toBe('N/A');
+      expect(component.formatDate(undefined as any)).toBe('N/A');
       
       // Test invalid date handling
-      // Invalid date handling varies by browser and environment
-      const invalidResult = component.formatDate('invalid-date');
+      const invalidResult = component.formatDate(new Date('invalid-date'));
       // Just make sure we get something back and no errors thrown
       expect(typeof invalidResult).toBe('string');
     });

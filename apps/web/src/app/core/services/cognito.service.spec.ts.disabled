@@ -9,6 +9,7 @@ import { SecurityTestUtils } from '../testing/security-test-utils';
 import { AuthTestDataFactory } from '../testing/auth-test-data.factory';
 import { UserService } from './user.service';
 import { of, throwError, BehaviorSubject } from 'rxjs';
+import { UserStatus } from '../enums/UserStatusEnum';
 
 // Mock AWS Amplify Auth functions
 const mockAmplifyAuth = {
@@ -509,12 +510,12 @@ describe('CognitoService - Security Tests', () => {
               emailVerified: false,
               phoneVerified: false,
               groups: [],
-              status: 'ACTIVE',
+              status: UserStatus.Active,
               cognitoSub: 'cognito-sub',
               mfaEnabled: false,
               mfaSetupComplete: false,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
+              createdAt: new Date(),
+              updatedAt: new Date()
             }, 'ValidP@ssw0rd!');
           } catch (error) {
             // Should throw validation error for invalid phones
