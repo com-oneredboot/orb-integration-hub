@@ -35,6 +35,7 @@ output:
         base_dir: ./apps/web/src/app
         enums_subdir: core/enums
         models_subdir: core/models
+        graphql_queries_subdir: core/graphql
 
   dart:
     enabled: false

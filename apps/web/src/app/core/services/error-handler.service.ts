@@ -79,7 +79,7 @@ export class AppErrorHandlerService implements ErrorHandler {
       component: errorContext.component || 'Unknown',
       operation: errorContext.operation || 'Unknown',
       error: errorContext.error,
-      stack: errorContext.error?.stack,
+      stack: (errorContext.error as Error | undefined)?.stack,
       userAgent: navigator.userAgent,
       url: window.location.href,
       userId: errorContext.userId,

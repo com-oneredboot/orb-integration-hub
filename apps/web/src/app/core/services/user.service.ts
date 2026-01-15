@@ -12,7 +12,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 // Application Imports
 import {ApiService} from "./api.service";
 import {
-  UsersCreateMutation, UsersUpdateMutation, UsersQueryByUserId, UsersQueryByEmail, UsersQueryByCognitoSub
+  UsersCreate, UsersUpdate, UsersQueryByUserId, UsersQueryByEmail, UsersQueryByCognitoSub
 } from "../graphql/Users.graphql";
 import { SmsVerificationMutation } from "../graphql/SmsVerification.graphql";
 import {
@@ -100,7 +100,7 @@ export class UserService extends ApiService {
         mfaSetupComplete: input.mfaSetupComplete || false
       };
 
-      const response = await this.mutate(UsersCreateMutation, {"input": userCreateInput}, "apiKey") as GraphQLResult<UsersCreateResponse>;
+      const response = await this.mutate(UsersCreate, {"input": userCreateInput}, "apiKey") as GraphQLResult<UsersCreateResponse>;
       console.debug('createUser Response: ', response);
 
       return {
@@ -240,8 +240,8 @@ export class UserService extends ApiService {
         error: error,
         errorMessage: message,
         errorType: typeof error,
-        errorName: error?.name,
-        errorCode: error?.code,
+        errorName: (error as Error | undefined)?.name,
+        errorCode: (error as { code?: string } | undefined)?.code,
         rawError: JSON.stringify(error, null, 2)
       });
       
@@ -828,7 +828,7 @@ export class UserService extends ApiService {
       // Skip userPool auth if user is not properly authenticated or tokens are expired
       if (!cognitoProfile || !isAuthenticated || !hasValidTokens) {
         response = await this.mutate(
-          UsersUpdateMutation,
+          UsersUpdate,
           { input: updateInput },
           "apiKey"
         ) as GraphQLResult<UsersUpdateResponse>;
@@ -836,7 +836,7 @@ export class UserService extends ApiService {
         try {
           // Try userPool authentication first
           response = await this.mutate(
-            UsersUpdateMutation,
+            UsersUpdate,
             { input: updateInput },
             "userPool"
           ) as GraphQLResult<UsersUpdateResponse>;
@@ -845,7 +845,7 @@ export class UserService extends ApiService {
           
           // Fallback to API key authentication
           response = await this.mutate(
-            UsersUpdateMutation,
+            UsersUpdate,
             { input: updateInput },
             "apiKey"
           ) as GraphQLResult<UsersUpdateResponse>;

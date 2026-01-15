@@ -31,7 +31,7 @@ export abstract class ApiService {
       const client = authMode === 'apiKey' ? this.apiKeyClient : this.userPoolClient;
       return client.graphql({
         query: query,
-        variables: variables
+        variables: variables as never
       }) as Promise<GraphQLResult<T>>;
     } catch (error) {
       // If userPool auth fails and this isn't already an apiKey request, try with apiKey
@@ -83,7 +83,7 @@ export abstract class ApiService {
         }
       }
       
-      return client.graphql(graphqlRequest) as Promise<GraphQLResult<T>>;
+      return client.graphql(graphqlRequest as never) as Promise<GraphQLResult<T>>;
     } catch (error) {
       // For mutations, be more selective about fallback - only for read-only operations
       if (authMode === 'userPool' && this.isAuthError(error) && this.isReadOnlyMutation(mutation)) {
