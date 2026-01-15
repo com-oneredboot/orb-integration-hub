@@ -21,7 +21,7 @@ description: HTML template file for user pages
            routerLink="customers/applications" 
            routerLinkActive="active" 
            class="nav-link">Applications</a>
-        <a (click)="signOut()" class="nav-link" style="cursor: pointer;">Sign Out</a>
+        <a (click)="signOut()" (keydown.enter)="signOut()" (keydown.space)="signOut()" class="nav-link" style="cursor: pointer;" tabindex="0" role="button">Sign Out</a>
       </ng-container>
       <ng-container *ngIf="(isAuthenticated$ | async) === false">
         <a routerLink="/authenticate" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">Sign In</a>

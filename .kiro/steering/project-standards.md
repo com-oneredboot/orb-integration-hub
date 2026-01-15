@@ -165,6 +165,30 @@ cd apps/web && npm run build
 orb-schema-generator generate
 ```
 
+## Code Quality Standards
+
+### Zero Tolerance for Linting Issues
+
+**CRITICAL**: This project has a zero-tolerance policy for linting errors AND warnings.
+
+- All ESLint errors MUST be fixed immediately - never ignore or suppress them
+- All ESLint warnings MUST be fixed immediately - warnings are treated as errors
+- The ESLint configuration treats all warnings as errors (`--max-warnings 0`)
+- CI will fail if any linting issues exist
+- Never use `// eslint-disable` comments to suppress errors - fix the underlying issue instead
+
+When you encounter linting issues:
+1. Fix the issue properly using the correct pattern
+2. If unsure how to fix, research the rule and apply the recommended solution
+3. Never leave warnings "for later" - fix them now
+
+Common fix patterns:
+- Unused imports → Remove them
+- Unused variables → Remove or prefix with `_` if intentionally unused
+- `any` types → Replace with specific types from models or create interfaces
+- Accessibility errors → Add proper ARIA attributes, labels, and keyboard handlers
+- `standalone: false` → Convert to standalone components with proper imports
+
 ## Command Phrases
 
 When the user says these phrases, execute the corresponding actions:

@@ -23,7 +23,11 @@
               style="color: white; text-decoration: underline; cursor: pointer;"
               [style.opacity]="(isSaving$ | async) ? '0.5' : '1'"
               [style.pointer-events]="(isSaving$ | async) ? 'none' : 'auto'"
-              (click)="onCancelEdit()">
+              (click)="onCancelEdit()"
+              (keydown.enter)="onCancelEdit()"
+              (keydown.space)="onCancelEdit()"
+              tabindex="0"
+              role="button">
           Cancel
         </span>
       </ng-container>
@@ -88,10 +92,11 @@
       <div class="organization-detail__info-grid">
         <!-- Organization Name (editable) -->
         <div class="organization-detail__info-item">
-          <label class="organization-detail__info-label">
+          <label class="organization-detail__info-label" for="org-name-input">
             Organization Name *
           </label>
           <input type="text" 
+                 id="org-name-input"
                  class="organization-detail__info-input"
                  [class.organization-detail__info-input--error]="validationErrors.name"
                  [(ngModel)]="editForm.name"
@@ -104,8 +109,9 @@
         
         <!-- Description (editable) -->
         <div class="organization-detail__info-item">
-          <label class="organization-detail__info-label">Description</label>
-          <textarea class="organization-detail__info-input organization-detail__info-input--textarea"
+          <label class="organization-detail__info-label" for="org-description-input">Description</label>
+          <textarea id="org-description-input"
+                    class="organization-detail__info-input organization-detail__info-input--textarea"
                     [(ngModel)]="editForm.description"
                     [disabled]="!isEditing"
                     maxlength="500"
@@ -119,24 +125,24 @@
         
         <!-- Organization ID (read-only) -->
         <div class="organization-detail__info-item" *ngIf="!isInCreateMode">
-          <label class="organization-detail__info-label">Organization ID</label>
-          <input type="text" class="organization-detail__info-input organization-detail__info-input--code"
+          <label class="organization-detail__info-label" for="org-id-input">Organization ID</label>
+          <input type="text" id="org-id-input" class="organization-detail__info-input organization-detail__info-input--code"
                  [value]="organization.organizationId"
                  disabled>
         </div>
         
         <!-- Created (read-only) -->
         <div class="organization-detail__info-item" *ngIf="!isInCreateMode">
-          <label class="organization-detail__info-label">Created</label>
-          <input type="text" class="organization-detail__info-input"
+          <label class="organization-detail__info-label" for="org-created-input">Created</label>
+          <input type="text" id="org-created-input" class="organization-detail__info-input"
                  [value]="formatDate(organization.createdAt)"
                  disabled>
         </div>
         
         <!-- Last Updated (read-only) -->
         <div class="organization-detail__info-item" *ngIf="!isInCreateMode">
-          <label class="organization-detail__info-label">Last Updated</label>
-          <input type="text" class="organization-detail__info-input"
+          <label class="organization-detail__info-label" for="org-updated-input">Last Updated</label>
+          <input type="text" id="org-updated-input" class="organization-detail__info-input"
                  [value]="formatDate(organization.updatedAt)"
                  disabled>
         </div>
@@ -148,14 +154,14 @@
          [class.organization-detail__tab-panel--active]="activeTab === 'security'">
       <div class="organization-detail__info-grid">
         <div class="organization-detail__info-item">
-          <label class="organization-detail__info-label">Encryption Key ID</label>
-          <input type="text" class="organization-detail__info-input organization-detail__info-input--code"
+          <label class="organization-detail__info-label" for="org-kms-key-input">Encryption Key ID</label>
+          <input type="text" id="org-kms-key-input" class="organization-detail__info-input organization-detail__info-input--code"
                  [value]="organization.kmsKeyId"
                  disabled>
         </div>
         <div class="organization-detail__info-item">
-          <label class="organization-detail__info-label">Key Alias</label>
-          <input type="text" class="organization-detail__info-input organization-detail__info-input--code"
+          <label class="organization-detail__info-label" for="org-kms-alias-input">Key Alias</label>
+          <input type="text" id="org-kms-alias-input" class="organization-detail__info-input organization-detail__info-input--code"
                  [value]="organization.kmsAlias"
                  disabled>
         </div>

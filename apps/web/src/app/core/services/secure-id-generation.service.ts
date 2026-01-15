@@ -11,7 +11,7 @@ import { AppErrorHandlerService } from './error-handler.service';
 export interface SecureIdRequest {
   type: 'user' | 'session' | 'cognito' | 'transaction' | 'correlation';
   context?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SecureIdResponse {
@@ -19,7 +19,7 @@ export interface SecureIdResponse {
   type: string;
   timestamp: number;
   expiresAt?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface IdGenerationStats {
@@ -197,7 +197,7 @@ export class SecureIdGenerationService {
   /**
    * Handle ID generation errors with fallback strategies
    */
-  private handleIdGenerationError(request: SecureIdRequest, error: any): Observable<SecureIdResponse> {
+  private handleIdGenerationError(request: SecureIdRequest, error: unknown): Observable<SecureIdResponse> {
     const errorId = this.errorHandler.captureSecurityError(
       'generateSecureId',
       error,
@@ -221,7 +221,7 @@ export class SecureIdGenerationService {
   /**
    * Handle batch ID generation errors
    */
-  private handleBatchIdGenerationError(requests: SecureIdRequest[], error: any): Observable<SecureIdResponse[]> {
+  private handleBatchIdGenerationError(requests: SecureIdRequest[], error: unknown): Observable<SecureIdResponse[]> {
     const errorId = this.errorHandler.captureSecurityError(
       'generateSecureIdBatch',
       error,
@@ -324,9 +324,10 @@ export class SecureIdGenerationService {
   /**
    * Update service statistics
    */
-  private updateStats(success: boolean, responseTime: number, error?: any): void {
+  private updateStats(success: boolean, responseTime: number, error?: unknown): void {
     const currentStats = this.stats$.value;
     const newTotal = currentStats.totalGenerated + 1;
+    const errorObj = error as { message?: string } | undefined;
     
     const newStats: IdGenerationStats = {
       totalGenerated: newTotal,
@@ -334,7 +335,7 @@ export class SecureIdGenerationService {
         ? ((currentStats.successRate * (newTotal - 1)) + 100) / newTotal
         : ((currentStats.successRate * (newTotal - 1)) + 0) / newTotal,
       avgResponseTime: ((currentStats.avgResponseTime * (newTotal - 1)) + responseTime) / newTotal,
-      lastError: error?.message
+      lastError: errorObj?.message
     };
 
     this.stats$.next(newStats);

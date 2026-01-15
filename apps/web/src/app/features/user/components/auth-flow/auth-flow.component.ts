@@ -33,6 +33,7 @@ import {SecureIdGenerationService} from "../../../../core/services/secure-id-gen
 import {CustomValidators} from "../../../../core/validators/custom-validators";
 import { UserStatus } from "../../../../core/enums/UserStatusEnum";
 import { UserGroup } from "../../../../core/enums/UserGroupEnum";
+import { IUsers } from "../../../../core/models/UsersModel";
 
 
 @Component({
@@ -52,7 +53,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
 
   // Store Selectors
   currentStep$: Observable<AuthSteps> = this.store.select(fromUser.selectCurrentStep);
-  currentUser$: Observable<any> = this.store.select(fromUser.selectCurrentUser);
+  currentUser$: Observable<IUsers | null> = this.store.select(fromUser.selectCurrentUser);
   isLoading$ = this.store.select(fromUser.selectIsLoading);
   error$ = this.store.select(fromUser.selectError);
   userExists$ = this.store.select(fromUser.selectUserExists);
@@ -68,7 +69,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   
   // Real-time validation state
   public showValidationErrors = false;
-  private validationDebounceTimer: any;
+  private validationDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   public fieldFocusStates: Record<string, boolean> = {};
 
   // Touch interaction state
@@ -421,7 +422,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   /**
    * Handle initialization errors with user-friendly recovery options
    */
-  private handleInitializationError(error: any, operation: string): void {
+  private handleInitializationError(error: unknown, operation: string): void {
     const errorId = this.errorHandler.captureError({
       type: 'system',
       severity: 'high',
@@ -1216,7 +1217,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     }
   }
 
-  private getPasswordErrorMessage(errors: any): string {
+  private getPasswordErrorMessage(errors: { pattern?: boolean } | null): string {
     if (errors?.pattern) {
       const missing = [];
       if (!this.passwordValidations.hasUppercase) missing.push('uppercase letter');
@@ -1710,7 +1711,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
    * @param user The user to check
    * @returns True if the user has all required attributes, false otherwise
    */
-  public isUserValid(user: any): boolean {
+  public isUserValid(user: IUsers | null): boolean {
     return this.userService.isUserValid(user);
   }
   

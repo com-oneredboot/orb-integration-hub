@@ -209,7 +209,7 @@ export class AuthInputFieldComponent implements ControlValueAccessor, OnInit, On
   }
   
   // ControlValueAccessor Implementation
-  writeValue(value: any): void {
+  writeValue(value: string): void {
     this.value = value || '';
   }
   

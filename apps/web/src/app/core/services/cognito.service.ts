@@ -32,6 +32,14 @@ import { MfaSetupDetails } from '../models/MfaSetupDetailsModel';
 // Settings
 const appName = environment.appName;
 
+// Interfaces
+interface CognitoProfile {
+  username: string;
+  sub: string | undefined;
+  groups: string[];
+  [key: string]: unknown;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -345,7 +353,7 @@ export class CognitoService {
     }
   }
 
-  public async getCognitoProfile(): Promise<any | null> {
+  public async getCognitoProfile(): Promise<CognitoProfile | null> {
     try {
       // Fetch the current session
       const session = await fetchAuthSession();
@@ -548,7 +556,7 @@ export class CognitoService {
       
       // Check MFA preferences if available
       if (mfaPreferences) {
-        const prefs = mfaPreferences as any;
+        const prefs = mfaPreferences as { TOTP?: string; preferred?: string; enabled?: string[] };
         if (prefs.TOTP === 'ENABLED' || prefs.TOTP === 'PREFERRED' ||
             prefs.preferred === 'TOTP' ||
             (Array.isArray(prefs.enabled) && prefs.enabled.includes('TOTP'))) {
@@ -568,7 +576,7 @@ export class CognitoService {
       
       // Check auth session tokens for MFA info
       if (authSession?.tokens?.accessToken && !mfaEnabled) {
-        const payload = authSession.tokens.accessToken.payload as any;
+        const payload = authSession.tokens.accessToken.payload as { amr?: string[] };
         // Check if the token indicates MFA was used
         if (payload.amr && Array.isArray(payload.amr) && payload.amr.includes('mfa')) {
           mfaEnabled = true;

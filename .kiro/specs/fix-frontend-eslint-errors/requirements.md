@@ -6,9 +6,13 @@ This spec follows the [orb-templates Spec Standards](../../../repositories/orb-t
 
 ## Introduction
 
-The Angular frontend (`apps/web`) has 74 ESLint errors in hand-written TypeScript and HTML files that must be fixed to pass CI linting. These errors fall into several categories: unused imports/variables, empty lifecycle methods, negated async pipes, case declarations in switch statements, and async promise executors.
+The Angular frontend (`apps/web`) has ESLint errors in hand-written TypeScript and HTML files that must be fixed to pass CI linting with zero errors and zero warnings. The errors fall into several categories:
 
-Note: 2 additional errors exist in generated model files (`AuthModel.ts`) which are tracked in GitHub issue #59 with orb-schema-generator and will be resolved when v0.13.6 is published to CodeArtifact.
+**Phase 1 (Completed):** 74 errors - unused imports/variables, empty lifecycle methods, negated async pipes, case declarations, async promise executors
+
+**Phase 2 (Current):** 192 additional issues - explicit `any` types (155), accessibility violations (34), non-standalone components (3)
+
+Note: Issue #59 with orb-schema-generator has been resolved - models regenerated with v0.13.6.
 
 ## Glossary
 
@@ -84,5 +88,37 @@ Note: 2 additional errors exist in generated model files (`AuthModel.ts`) which 
 
 #### Acceptance Criteria
 
-1. WHEN the CI_Pipeline runs the lint step, THE CI_Pipeline SHALL complete with zero ESLint errors in hand-written files
-2. THE Linting_System SHALL allow warnings (which are acceptable) but SHALL fail on errors
+1. WHEN the CI_Pipeline runs the lint step, THE CI_Pipeline SHALL complete with zero ESLint errors
+2. WHEN the CI_Pipeline runs the lint step, THE CI_Pipeline SHALL complete with zero ESLint warnings
+3. THE Linting_System SHALL treat all linting issues as errors (no warnings allowed)
+
+### Requirement 8: Fix Explicit Any Type Errors
+
+**User Story:** As a developer, I want all types to be explicitly defined, so that the codebase has strong type safety.
+
+#### Acceptance Criteria
+
+1. WHEN the Linting_System analyzes TypeScript files, THE Linting_System SHALL report zero `@typescript-eslint/no-explicit-any` errors
+2. WHEN a variable or parameter needs a type, THE Developer SHALL use a specific type from generated models or create a new interface
+3. WHEN the exact type is unknown, THE Developer SHALL use `unknown` instead of `any` and add type guards
+
+### Requirement 9: Fix Accessibility Errors
+
+**User Story:** As a developer, I want the application to be accessible, so that all users can interact with it effectively.
+
+#### Acceptance Criteria
+
+1. WHEN the Linting_System analyzes Angular templates, THE Linting_System SHALL report zero `@angular-eslint/template/label-has-associated-control` errors
+2. WHEN the Linting_System analyzes Angular templates, THE Linting_System SHALL report zero `@angular-eslint/template/click-events-have-key-events` errors
+3. WHEN the Linting_System analyzes Angular templates, THE Linting_System SHALL report zero `@angular-eslint/template/interactive-supports-focus` errors
+4. WHEN a form control exists, THE Developer SHALL associate it with a label using `for` attribute or by wrapping
+5. WHEN a click handler exists on a non-button element, THE Developer SHALL add a corresponding keyboard handler
+
+### Requirement 10: Fix Standalone Component Errors
+
+**User Story:** As a developer, I want components to use Angular's standalone architecture, so that the codebase follows modern Angular patterns.
+
+#### Acceptance Criteria
+
+1. WHEN the Linting_System analyzes Angular components, THE Linting_System SHALL report zero `@angular-eslint/prefer-standalone` errors
+2. WHEN a component is not standalone, THE Developer SHALL convert it to standalone by adding `standalone: true` and importing dependencies directly

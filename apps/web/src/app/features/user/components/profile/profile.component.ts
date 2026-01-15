@@ -256,7 +256,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
    * @param user The user to check
    * @returns True if the user has all required attributes, false otherwise
    */
-  public isUserValid(user: any): boolean {
+  public isUserValid(user: IUsers | null): boolean {
     return this.userService.isUserValid(user);
   }
   
@@ -287,7 +287,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
    * Check if account setup is complete
    * Account is complete when status is ACTIVE
    */
-  isAccountComplete(user: any): boolean {
+  isAccountComplete(user: IUsers | null): boolean {
     return user?.status === 'ACTIVE';
   }
 

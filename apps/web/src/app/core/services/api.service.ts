@@ -20,7 +20,7 @@ export abstract class ApiService {
   private userPoolClient = generateClient({authMode: 'userPool'});
   private csrfService = inject(CsrfService);
 
-  protected async query<T>(query: string, variables?: any, authMode: 'userPool' | 'apiKey' = 'userPool'): Promise<GraphQLResult<T>> {
+  protected async query<T>(query: string, variables?: Record<string, unknown>, authMode: 'userPool' | 'apiKey' = 'userPool'): Promise<GraphQLResult<T>> {
     console.debug('[ApiService] GraphQL query initiated:', {
       operation: query.substring(0, 50) + '...',
       authMode,
@@ -43,7 +43,7 @@ export abstract class ApiService {
     }
   }
 
-  protected async mutate<T>(mutation: string, variables?: any, authMode: 'userPool' | 'apiKey' = 'userPool'): Promise<GraphQLResult<T>> {
+  protected async mutate<T>(mutation: string, variables?: Record<string, unknown>, authMode: 'userPool' | 'apiKey' = 'userPool'): Promise<GraphQLResult<T>> {
     console.debug('[ApiService] GraphQL mutation initiated:', {
       operation: mutation.substring(0, 50) + '...',
       authMode,
@@ -66,7 +66,7 @@ export abstract class ApiService {
       const client = authMode === 'apiKey' ? this.apiKeyClient : this.userPoolClient;
       
       // Add CSRF protection for state-changing mutations
-      const graphqlRequest: any = {
+      const graphqlRequest: { query: string; variables?: Record<string, unknown>; authToken?: string } = {
         query: mutation,
         variables: variables
       };
@@ -97,11 +97,12 @@ export abstract class ApiService {
   /**
    * Check if an error is authentication-related
    */
-  private isAuthError(error: any): boolean {
+  private isAuthError(error: unknown): boolean {
     if (!error) return false;
     
     const errorString = String(error).toLowerCase();
-    const errorMessage = error?.message?.toLowerCase() || '';
+    const errorObj = error as { message?: string; name?: string; code?: string };
+    const errorMessage = errorObj?.message?.toLowerCase() || '';
     
     return (
       errorString.includes('unauthorized') ||
@@ -111,8 +112,8 @@ export abstract class ApiService {
       errorMessage.includes('unauthorized') ||
       errorMessage.includes('invalid authorization') ||
       errorMessage.includes('access denied') ||
-      error?.name === 'UnauthorizedException' ||
-      error?.code === 'UnauthorizedException'
+      errorObj?.name === 'UnauthorizedException' ||
+      errorObj?.code === 'UnauthorizedException'
     );
   }
 

@@ -22,14 +22,20 @@ export interface CacheConfig {
   enableCompression: boolean;
 }
 
+export interface PerformanceMemory {
+  jsHeapSizeLimit: number;
+  totalJSHeapSize: number;
+  usedJSHeapSize: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class AuthPerformanceService implements OnDestroy {
   private performanceMetrics = new BehaviorSubject<Partial<PerformanceMetrics>>({});
-  private componentCache = new Map<string, any>();
+  private componentCache = new Map<string, { component: unknown; timestamp: number }>();
   private imageCache = new Map<string, string>();
-  private validationCache = new Map<string, any>();
+  private validationCache = new Map<string, { result: unknown; timestamp: number }>();
   
   private readonly cacheConfig: CacheConfig = {
     maxAge: 5 * 60 * 1000, // 5 minutes
@@ -157,15 +163,15 @@ export class AuthPerformanceService implements OnDestroy {
   /**
    * Debounced validation to improve performance
    */
-  createDebouncedValidation<T>(
-    validationFn: (value: T) => Observable<any>,
+  createDebouncedValidation<T, R>(
+    validationFn: (value: T) => Observable<R>,
     debounceMs = 300
-  ): (value: T) => Observable<any> {
+  ): (value: T) => Observable<R> {
     const subject = new Subject<T>();
     
     const debouncedStream = subject.pipe(
       debounceTime(debounceMs),
-      switchMap(value => this.getCachedValidation(value) || validationFn(value)),
+      switchMap(value => this.getCachedValidation<R>(value) || validationFn(value)),
       shareReplay(1)
     );
 
@@ -178,15 +184,15 @@ export class AuthPerformanceService implements OnDestroy {
   /**
    * Throttled validation for real-time feedback
    */
-  createThrottledValidation<T>(
-    validationFn: (value: T) => Observable<any>,
+  createThrottledValidation<T, R>(
+    validationFn: (value: T) => Observable<R>,
     throttleMs = 100
-  ): (value: T) => Observable<any> {
+  ): (value: T) => Observable<R> {
     const subject = new Subject<T>();
     
     const throttledStream = subject.pipe(
       throttleTime(throttleMs),
-      switchMap(value => this.getCachedValidation(value) || validationFn(value)),
+      switchMap(value => this.getCachedValidation<R>(value) || validationFn(value)),
       shareReplay(1)
     );
 
@@ -199,12 +205,12 @@ export class AuthPerformanceService implements OnDestroy {
   /**
    * Cache validation results to avoid repeated calculations
    */
-  private getCachedValidation<T>(value: T): Observable<any> | null {
+  private getCachedValidation<R>(value: unknown): Observable<R> | null {
     const key = JSON.stringify(value);
     const cached = this.validationCache.get(key);
     
     if (cached && this.isCacheValid(cached.timestamp)) {
-      return from([cached.result]);
+      return from([cached.result as R]);
     }
     
     return null;
@@ -213,7 +219,7 @@ export class AuthPerformanceService implements OnDestroy {
   /**
    * Store validation result in cache
    */
-  cacheValidationResult<T>(value: T, result: any): void {
+  cacheValidationResult<T>(value: T, result: unknown): void {
     const key = JSON.stringify(value);
     
     if (this.validationCache.size >= this.cacheConfig.maxSize) {
@@ -287,11 +293,11 @@ export class AuthPerformanceService implements OnDestroy {
   /**
    * Optimize bundle loading with intelligent prefetching
    */
-  prefetchNextStep(nextStepComponent: string): Promise<any> {
+  prefetchNextStep(nextStepComponent: string): Promise<unknown> {
     // Only prefetch if the user is likely to proceed
     return new Promise(resolve => {
       if ('requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(() => {
+        (window as Window & { requestIdleCallback: (callback: () => void) => void }).requestIdleCallback(() => {
           this.lazyLoadComponent(nextStepComponent, () => 
             import(`../components/auth-flow/${nextStepComponent}`)
           ).then(resolve);
@@ -310,11 +316,11 @@ export class AuthPerformanceService implements OnDestroy {
   /**
    * Virtual scrolling helper for large lists
    */
-  createVirtualScrolling(
-    items: any[],
+  createVirtualScrolling<T>(
+    items: T[],
     itemHeight: number,
     containerHeight: number
-  ): Observable<{ visibleItems: any[], startIndex: number, endIndex: number }> {
+  ): Observable<{ visibleItems: T[], startIndex: number, endIndex: number }> {
     return new Observable(observer => {
       const visibleItemCount = Math.ceil(containerHeight / itemHeight);
       const buffer = Math.ceil(visibleItemCount / 2);
@@ -344,9 +350,9 @@ export class AuthPerformanceService implements OnDestroy {
   /**
    * Memory usage monitoring
    */
-  getMemoryUsage(): any {
+  getMemoryUsage(): PerformanceMemory | null {
     if ('memory' in performance) {
-      return (performance as any).memory;
+      return (performance as Performance & { memory: PerformanceMemory }).memory;
     }
     return null;
   }
@@ -356,7 +362,7 @@ export class AuthPerformanceService implements OnDestroy {
    */
   getNetworkSpeed(): string {
     if ('connection' in navigator) {
-      const connection = (navigator as any).connection;
+      const connection = (navigator as Navigator & { connection: { effectiveType?: string } }).connection;
       return connection.effectiveType || 'unknown';
     }
     return 'unknown';
@@ -413,7 +419,7 @@ export class AuthPerformanceService implements OnDestroy {
     return Date.now() - timestamp < this.cacheConfig.maxAge;
   }
 
-  private cleanupCache(cache: Map<string, any>): void {
+  private cleanupCache(cache: Map<string, { timestamp: number; [key: string]: unknown }>): void {
     // Remove oldest entries (simple LRU implementation)
     const entries = Array.from(cache.entries());
     entries.sort((a, b) => a[1].timestamp - b[1].timestamp);

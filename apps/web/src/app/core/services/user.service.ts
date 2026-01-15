@@ -33,7 +33,7 @@ import { UserActions } from '../../features/user/store/user.actions';
 export class UserService extends ApiService {
 
   // Private Attributes
-  private currentUser = new BehaviorSubject<any>(null);
+  private currentUser = new BehaviorSubject<IUsers | null>(null);
 
   /**
    * Constructor
@@ -109,9 +109,10 @@ export class UserService extends ApiService {
         Data: response.data?.Data ?? null
       } as UsersResponse;
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating User:', error);
-      const message = error?.message || error?.toString() || '';
+      const errorObj = error as { message?: string };
+      const message = errorObj?.message || String(error) || '';
       if (message.includes('Not Authorized') || message.includes('Unauthorized')) {
         return {
           StatusCode: 401,
@@ -147,14 +148,14 @@ export class UserService extends ApiService {
         throw new Error('Must provide userId or email');
       }
       // Try userPool auth first (user might have access), fallback to apiKey
-      let response;
+      let response: GraphQLResult<{ UsersQueryByUserId?: UsersListResponse; UsersQueryByEmail?: UsersListResponse }>;
       try {
         // First try with userPool authentication (for authenticated users)
         response = await this.query(
           query,
           { input: queryInput },
           'userPool'
-        ) as any;
+        ) as GraphQLResult<{ UsersQueryByUserId?: UsersListResponse; UsersQueryByEmail?: UsersListResponse }>;
       } catch (userPoolError) {
         console.warn('userExists: userPool auth failed, trying apiKey. Full error:', userPoolError);
         // Fallback to apiKey authentication
@@ -162,7 +163,7 @@ export class UserService extends ApiService {
           query,
           { input: queryInput },
           'apiKey'
-        ) as any;
+        ) as GraphQLResult<{ UsersQueryByUserId?: UsersListResponse; UsersQueryByEmail?: UsersListResponse }>;
       }
 
       // Dynamically get the result based on which query was used
@@ -194,32 +195,31 @@ export class UserService extends ApiService {
         Data: users
       } as UsersListResponse;
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Better error message handling
       let message = '';
+      const errorObj = error as { message?: string; errors?: { message?: string; recoverySuggestion?: string }[]; name?: string; code?: string };
       
-      if (error?.message && typeof error.message === 'string') {
-        message = error.message;
-      } else if (error?.toString && typeof error.toString === 'function') {
-        message = error.toString();
+      if (errorObj?.message && typeof errorObj.message === 'string') {
+        message = errorObj.message;
       } else if (typeof error === 'string') {
         message = error;
       } else {
         // Handle complex error objects by extracting useful information
-        if (error?.errors && Array.isArray(error.errors)) {
-          const errorMessages = error.errors.map((e: any) => e.message || e.toString()).join(', ');
+        if (errorObj?.errors && Array.isArray(errorObj.errors)) {
+          const errorMessages = errorObj.errors.map((e) => e.message || String(e)).join(', ');
           message = `GraphQL Error: ${errorMessages}`;
           
           // Add recovery suggestions if available
-          const suggestions = error.errors
-            .filter((e: any) => e.recoverySuggestion)
-            .map((e: any) => e.recoverySuggestion)
+          const suggestions = errorObj.errors
+            .filter((e) => e.recoverySuggestion)
+            .map((e) => e.recoverySuggestion)
             .join(', ');
           if (suggestions) {
             message += ` | Suggestions: ${suggestions}`;
           }
         } else {
-          message = `GraphQL Error: ${error?.name || 'Unknown'} - ${error?.code || 'No code'}`;
+          message = `GraphQL Error: ${errorObj?.name || 'Unknown'} - ${errorObj?.code || 'No code'}`;
         }
       }
       
@@ -358,17 +358,17 @@ export class UserService extends ApiService {
   public async userQueryByCognitoSub(cognitoSub: string): Promise<UsersListResponse> {
     console.debug('userQueryByCognitoSub: ', cognitoSub);
     try {
-      const query = await this.query(
+      const queryResult = await this.query(
         UsersQueryByCognitoSub,
         {
           input: {
             cognitoSub: cognitoSub
           }
         },
-        'apiKey') as any;
+        'apiKey') as GraphQLResult<{ UsersQueryByCognitoSub: UsersListResponse }>;
 
-        const response = query.data?.UsersQueryByCognitoSub;
-        const users = response.Data;
+        const response = queryResult.data?.UsersQueryByCognitoSub;
+        const users = response?.Data || [];
 
         if (users.length > 1) {
           return {
@@ -385,7 +385,7 @@ export class UserService extends ApiService {
           };
         }          
       
-      return response;
+      return response || { StatusCode: 500, Message: 'No response', Data: [] };
 
     } catch (error) {
 
@@ -402,17 +402,17 @@ export class UserService extends ApiService {
   public async userQueryByEmail(email: string): Promise<UsersListResponse> {
     console.debug('userQueryByEmail: ', email);
     try {
-      const query = await this.query(
+      const queryResult = await this.query(
         UsersQueryByEmail,
         {
           input: {
             email: email
           }
         },
-        'apiKey') as any;
+        'apiKey') as GraphQLResult<{ UsersQueryByEmail: UsersListResponse }>;
 
-        const response = query.data?.UsersQueryByEmail;
-        const users = response.Data;
+        const response = queryResult.data?.UsersQueryByEmail;
+        const users = response?.Data || [];
 
         if (users.length > 1) {
           return {
@@ -429,7 +429,7 @@ export class UserService extends ApiService {
           };
         }          
       
-      return response;
+      return response || { StatusCode: 500, Message: 'No response', Data: [] };
 
     } catch (error) {
 
@@ -656,7 +656,7 @@ export class UserService extends ApiService {
   /**
    * Get the current user as an observable
    */
-  public getCurrentUser$(): Observable<any> {
+  public getCurrentUser$(): Observable<IUsers | null> {
     return this.currentUser.asObservable();
   }
 
@@ -675,7 +675,7 @@ export class UserService extends ApiService {
    * @param user User object to check
    * @returns boolean indicating if user has CUSTOMER group
    */
-  public isUserCustomer(user: any): boolean {
+  public isUserCustomer(user: IUsers | null): boolean {
     const groups = user?.groups || [];
     return groups.includes('CUSTOMER');
   }
@@ -685,7 +685,7 @@ export class UserService extends ApiService {
    * @param user The user to check
    * @returns The status the user should have ('PENDING' or 'ACTIVE')
    */
-  public calculateUserStatus(user: any): 'PENDING' | 'ACTIVE' {
+  public calculateUserStatus(user: IUsers | null): 'PENDING' | 'ACTIVE' {
     if (!user) return 'PENDING';
 
     // Check all required fields are present
@@ -716,7 +716,7 @@ export class UserService extends ApiService {
    * @param user The user to check
    * @returns True if the user is complete and active, false otherwise
    */
-  public isUserValid(user: any): boolean {
+  public isUserValid(user: IUsers | null): boolean {
     if (!user) return false;
 
     // User is valid if they have all required attributes and are ACTIVE
@@ -730,7 +730,7 @@ export class UserService extends ApiService {
    * @param user The user to check
    * @returns True if user can access dashboard, false otherwise
    */
-  public canAccessDashboard(user: any): boolean {
+  public canAccessDashboard(user: IUsers | null): boolean {
     if (!user) return false;
 
     // All requirements must be met for dashboard access
@@ -869,7 +869,7 @@ export class UserService extends ApiService {
 
       let errorMessage = 'Error updating user';
       if (error && typeof error === 'object' && 'errors' in error) {
-        const gqlError = error as any;
+        const gqlError = error as { errors?: { message?: string }[] };
         if (gqlError.errors?.[0]?.message) {
           errorMessage = gqlError.errors[0].message;
         }
@@ -923,7 +923,7 @@ export class UserService extends ApiService {
           }
         },
         "userPool"
-      ) as any;
+      ) as GraphQLResult<{ SmsVerification?: { StatusCode?: number; Message?: string } }>;
 
       if (response.data?.SmsVerification?.StatusCode === 200) {
         return { 
@@ -1018,7 +1018,7 @@ export class UserService extends ApiService {
           }
         },
         "userPool"
-      ) as any;
+      ) as GraphQLResult<{ SmsVerification?: { StatusCode?: number; Data?: { valid?: boolean } } }>;
 
       try {
         // Check if the lambda verified the code successfully

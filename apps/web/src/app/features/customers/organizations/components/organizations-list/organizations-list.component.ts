@@ -166,7 +166,7 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
     this.store.dispatch(OrganizationsActions.cancelCreateMode());
     
     // Clear selection
-    this.organizationSelected.emit(null as any);
+    this.organizationSelected.emit(null as unknown as Organizations);
   }
 
   onOrganizationSaved(savedOrganization: Organizations): void {

@@ -8,6 +8,93 @@ import { Users, IUsers } from '../models/UsersModel';
 import { UserStatus } from '../enums/UserStatusEnum';
 
 /**
+ * Token payload interface
+ */
+interface TokenPayload {
+  sub?: string;
+  'cognito:groups'?: string[];
+  token_use?: string;
+  scope?: string;
+  auth_time?: number;
+  iat?: number;
+  exp?: number;
+  email?: string;
+  email_verified?: boolean;
+  given_name?: string;
+  family_name?: string;
+}
+
+/**
+ * Mock token interface
+ */
+interface MockToken {
+  jwtToken: string;
+  payload: TokenPayload | null;
+}
+
+/**
+ * Mock tokens interface
+ */
+interface MockTokens {
+  accessToken: MockToken;
+  idToken: MockToken;
+  refreshToken: {
+    token: string | null;
+  };
+}
+
+/**
+ * MFA setup details interface
+ */
+interface MFASetupDetails {
+  totpEnabled: boolean;
+  totpSetupComplete: boolean;
+  secretCode: string;
+  qrCodeUrl: string;
+  backupCodes: string[];
+}
+
+/**
+ * User scenario interface
+ */
+interface UserScenario {
+  user: Users;
+  tokens: MockTokens | null;
+  mfaEnabled: boolean;
+  mfaSetupRequired?: boolean;
+}
+
+/**
+ * Cognito error interface
+ */
+interface CognitoError {
+  name: string;
+  message?: string;
+  challengeName?: string;
+}
+
+/**
+ * Auth flow test case interface
+ */
+interface AuthFlowTestCase {
+  input: {
+    username: string;
+    password: string;
+  };
+  expectedResponse?: AuthResponse;
+  expectedError?: CognitoError;
+}
+
+/**
+ * Network response interface
+ */
+interface NetworkResponse {
+  status: number;
+  data?: AuthResponse;
+  error?: string;
+}
+
+/**
  * Factory for creating consistent test data for authentication scenarios
  */
 export class AuthTestDataFactory {
@@ -15,7 +102,7 @@ export class AuthTestDataFactory {
   /**
    * Create mock AuthResponse for successful operations
    */
-  static createSuccessAuthResponse(data?: any): AuthResponse {
+  static createSuccessAuthResponse(data?: unknown): AuthResponse {
     return {
       StatusCode: 200,
       Message: 'Success',
@@ -62,8 +149,8 @@ export class AuthTestDataFactory {
   /**
    * Create mock Cognito user attributes
    */
-  static createMockCognitoAttributes(overrides?: Record<string, any>): Record<string, any> {
-    const defaultAttributes = {
+  static createMockCognitoAttributes(overrides?: Record<string, string | string[]>): Record<string, string | string[]> {
+    const defaultAttributes: Record<string, string | string[]> = {
       sub: 'cognito-user-sub-123',
       email: 'testuser@example.com',
       email_verified: 'true',
@@ -81,8 +168,8 @@ export class AuthTestDataFactory {
   /**
    * Create mock Cognito session tokens
    */
-  static createMockTokens(overrides?: any): any {
-    const defaultTokens = {
+  static createMockTokens(overrides?: Partial<MockTokens>): MockTokens {
+    const defaultTokens: MockTokens = {
       accessToken: {
         jwtToken: 'mock-access-token-jwt',
         payload: {
@@ -120,7 +207,7 @@ export class AuthTestDataFactory {
   /**
    * Create expired tokens for testing
    */
-  static createExpiredTokens(): any {
+  static createExpiredTokens(): MockTokens {
     const expiredTime = Math.floor(Date.now() / 1000) - 3600; // 1 hour ago
     return this.createMockTokens({
       accessToken: {
@@ -145,7 +232,7 @@ export class AuthTestDataFactory {
   /**
    * Create malformed tokens for security testing
    */
-  static createMalformedTokens(): any {
+  static createMalformedTokens(): MockTokens {
     return {
       accessToken: {
         jwtToken: 'malformed.token.here',
@@ -164,8 +251,8 @@ export class AuthTestDataFactory {
   /**
    * Create mock MFA setup details
    */
-  static createMockMFASetup(overrides?: any): any {
-    const defaultMFASetup = {
+  static createMockMFASetup(overrides?: Partial<MFASetupDetails>): MFASetupDetails {
+    const defaultMFASetup: MFASetupDetails = {
       totpEnabled: true,
       totpSetupComplete: true,
       secretCode: 'JBSWY3DPEHPK3PXP',
@@ -179,7 +266,7 @@ export class AuthTestDataFactory {
   /**
    * Create test scenarios for different user states
    */
-  static createUserScenarios(): Record<string, any> {
+  static createUserScenarios(): Record<string, UserScenario> {
     return {
       // Active user with all verifications complete
       activeUser: {
@@ -267,7 +354,7 @@ export class AuthTestDataFactory {
   /**
    * Create mock Cognito errors for testing
    */
-  static createCognitoErrors(): Record<string, any> {
+  static createCognitoErrors(): Record<string, CognitoError> {
     return {
       userNotFound: {
         name: 'UserNotFoundException',
@@ -315,7 +402,7 @@ export class AuthTestDataFactory {
   /**
    * Create test cases for authentication flows
    */
-  static createAuthFlowTestCases(): Record<string, any> {
+  static createAuthFlowTestCases(): Record<string, AuthFlowTestCase> {
     return {
       validSignIn: {
         input: {
@@ -373,7 +460,7 @@ export class AuthTestDataFactory {
   /**
    * Create mock network responses for different scenarios
    */
-  static createNetworkResponses(): Record<string, any> {
+  static createNetworkResponses(): Record<string, NetworkResponse> {
     return {
       success: {
         status: 200,
@@ -405,7 +492,7 @@ export class AuthTestDataFactory {
   /**
    * Create comprehensive password test cases
    */
-  static createPasswordTestCases(): Record<string, any> {
+  static createPasswordTestCases(): Record<string, string[]> {
     return {
       valid: [
         'SecureP@ssw0rd!',
@@ -437,8 +524,8 @@ export class AuthTestDataFactory {
   /**
    * Generate large dataset for performance testing
    */
-  static createPerformanceTestData(count: number): any[] {
-    const testData = [];
+  static createPerformanceTestData(count: number): { user: Users; credentials: { username: string; password: string } }[] {
+    const testData: { user: Users; credentials: { username: string; password: string } }[] = [];
     for (let i = 0; i < count; i++) {
       testData.push({
         user: this.createMockUser({

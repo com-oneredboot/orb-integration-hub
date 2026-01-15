@@ -131,6 +131,10 @@ description: HTML template file
           <div class="orb-health-item orb-health-item--clickable" 
                [ngClass]="hasValidName(user) ? 'orb-health-item--healthy' : 'orb-health-item--warning'"
                (click)="goToProfile()"
+               (keydown.enter)="goToProfile()"
+               (keydown.space)="goToProfile()"
+               tabindex="0"
+               role="button"
                [title]="hasValidName(user) ? 'Name complete' : 'Click to update your name in profile'">
             <fa-icon [icon]="hasValidName(user) ? 'check-circle' : 'exclamation-triangle'" 
                      class="orb-health-item__icon"></fa-icon>
@@ -149,6 +153,10 @@ description: HTML template file
           <div class="orb-health-item orb-health-item--clickable" 
                [ngClass]="user.emailVerified ? 'orb-health-item--healthy' : 'orb-health-item--warning'"
                (click)="!user.emailVerified && goToEmailVerification()"
+               (keydown.enter)="!user.emailVerified && goToEmailVerification()"
+               (keydown.space)="!user.emailVerified && goToEmailVerification()"
+               tabindex="0"
+               role="button"
                [title]="user.emailVerified ? 'Email verified' : 'Click to verify your email'">
             <fa-icon [icon]="user.emailVerified ? 'check-circle' : 'exclamation-triangle'" 
                      class="orb-health-item__icon"></fa-icon>
@@ -167,6 +175,10 @@ description: HTML template file
           <div class="orb-health-item orb-health-item--clickable" 
                [ngClass]="user.phoneVerified ? 'orb-health-item--healthy' : 'orb-health-item--warning'"
                (click)="!user.phoneVerified && goToPhoneVerification()"
+               (keydown.enter)="!user.phoneVerified && goToPhoneVerification()"
+               (keydown.space)="!user.phoneVerified && goToPhoneVerification()"
+               tabindex="0"
+               role="button"
                [title]="user.phoneVerified ? 'Phone verified' : 'Click to verify your phone'">
             <fa-icon [icon]="user.phoneVerified ? 'check-circle' : 'exclamation-triangle'" 
                      class="orb-health-item__icon"></fa-icon>
@@ -185,6 +197,10 @@ description: HTML template file
           <div class="orb-health-item orb-health-item--clickable" 
                [ngClass]="(user.mfaEnabled && user.mfaSetupComplete) ? 'orb-health-item--healthy' : 'orb-health-item--warning'"
                (click)="checkMFASetup()"
+               (keydown.enter)="checkMFASetup()"
+               (keydown.space)="checkMFASetup()"
+               tabindex="0"
+               role="button"
                [class.orb-health-item--loading]="isLoading$ | async"
                [style.pointer-events]="(isLoading$ | async) ? 'none' : 'auto'"
                [title]="(user.mfaEnabled && user.mfaSetupComplete) ? 'MFA enabled - click to recheck' : 'Click to check MFA setup'">

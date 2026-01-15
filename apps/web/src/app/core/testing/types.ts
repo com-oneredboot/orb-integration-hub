@@ -21,9 +21,9 @@ export interface TestCredentials {
 export interface TestScenario {
   name: string;
   description: string;
-  input: any;
-  expectedOutput?: any;
-  expectedError?: any;
+  input: unknown;
+  expectedOutput?: unknown;
+  expectedError?: unknown;
   timeout?: number;
   retries?: number;
 }
@@ -34,7 +34,7 @@ export interface TestScenario {
 export interface SecurityTestCase {
   name: string;
   type: 'xss' | 'injection' | 'timing' | 'rate_limit' | 'auth_bypass' | 'token_manipulation';
-  payload: any;
+  payload: unknown;
   expectedBehavior: 'reject' | 'sanitize' | 'rate_limit' | 'throw_error';
   description: string;
 }
@@ -80,7 +80,7 @@ export interface CrossBrowserTestConfig {
 /**
  * Mock response configuration
  */
-export interface MockResponse<T = any> {
+export interface MockResponse<T = unknown> {
   data?: T;
   status: number;
   headers?: Record<string, string>;
@@ -94,7 +94,7 @@ export interface MockResponse<T = any> {
 export interface TestDataFactoryOptions {
   seed?: number;
   locale?: string;
-  overrides?: Record<string, any>;
+  overrides?: Record<string, unknown>;
   count?: number;
 }
 

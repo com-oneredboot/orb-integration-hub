@@ -17,7 +17,7 @@ export interface AppError {
   userMessage: string;
   component: string;
   operation: string;
-  error: any;
+  error: unknown;
   stack?: string;
   userAgent?: string;
   url?: string;
@@ -50,11 +50,12 @@ export class AppErrorHandlerService implements ErrorHandler {
   /**
    * Angular ErrorHandler interface implementation
    */
-  handleError(error: any): void {
+  handleError(error: unknown): void {
+    const errorObj = error as { message?: string };
     this.captureError({
       type: 'system',
       severity: 'high',
-      message: error?.message || 'Unhandled application error',
+      message: errorObj?.message || 'Unhandled application error',
       component: 'Global',
       operation: 'Unknown',
       error: error,
@@ -109,15 +110,16 @@ export class AppErrorHandlerService implements ErrorHandler {
    */
   captureAuthError(
     operation: string,
-    error: any,
+    error: unknown,
     component = 'AuthFlow',
     userId?: string,
     recoveryActions?: string[]
   ): string {
+    const errorObj = error as { message?: string };
     return this.captureError({
       type: 'authentication',
       severity: this.determineAuthErrorSeverity(error),
-      message: error?.message || 'Authentication error occurred',
+      message: errorObj?.message || 'Authentication error occurred',
       component,
       operation,
       error,
@@ -132,7 +134,7 @@ export class AppErrorHandlerService implements ErrorHandler {
    */
   captureNetworkError(
     operation: string,
-    error: any,
+    error: unknown,
     component: string,
     autoRetry = true
   ): string {
@@ -158,15 +160,16 @@ export class AppErrorHandlerService implements ErrorHandler {
    */
   captureValidationError(
     operation: string,
-    error: any,
+    error: unknown,
     component: string,
     fieldName?: string
   ): string {
+    const errorObj = error as { message?: string };
     return this.captureError({
       type: 'validation',
       severity: 'low',
       message: `Validation error in ${fieldName || operation}`,
-      userMessage: error?.message || 'Please check your input and try again.',
+      userMessage: errorObj?.message || 'Please check your input and try again.',
       component,
       operation,
       error,
@@ -180,7 +183,7 @@ export class AppErrorHandlerService implements ErrorHandler {
    */
   captureSecurityError(
     operation: string,
-    error: any,
+    error: unknown,
     component: string,
     userId?: string
   ): string {
@@ -385,7 +388,7 @@ export class AppErrorHandlerService implements ErrorHandler {
     return actions[type] || actions.system;
   }
 
-  private generateAuthRecoveryActions(operation: string, _error: any): string[] {
+  private generateAuthRecoveryActions(operation: string, _error: unknown): string[] {
     const baseActions = ['Try again', 'Check credentials'];
     
     if (operation.includes('password')) {
@@ -400,8 +403,9 @@ export class AppErrorHandlerService implements ErrorHandler {
     return baseActions;
   }
 
-  private determineAuthErrorSeverity(error: any): 'low' | 'medium' | 'high' | 'critical' {
-    const message = error?.message?.toLowerCase() || '';
+  private determineAuthErrorSeverity(error: unknown): 'low' | 'medium' | 'high' | 'critical' {
+    const errorObj = error as { message?: string };
+    const message = errorObj?.message?.toLowerCase() || '';
     
     if (message.includes('network') || message.includes('timeout')) {
       return 'medium';

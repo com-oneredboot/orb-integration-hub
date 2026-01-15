@@ -50,7 +50,7 @@ export class DashboardComponent implements OnInit {
    * @param user The user to check
    * @returns True if the user has all required attributes, false otherwise
    */
-  public isUserValid(user: any): boolean {
+  public isUserValid(user: IUsers | null): boolean {
     return this.userService.isUserValid(user);
   }
 
@@ -86,7 +86,7 @@ export class DashboardComponent implements OnInit {
    * @param user The user object
    * @returns true if both first and last name are present
    */
-  hasValidName(user: any): boolean {
+  hasValidName(user: IUsers | null): boolean {
     return !!(user?.firstName?.trim() && user?.lastName?.trim());
   }
 
@@ -102,7 +102,7 @@ export class DashboardComponent implements OnInit {
    * @param user The user object
    * @returns true if user has CUSTOMER group membership
    */
-  isCustomerUser(user: any): boolean {
+  isCustomerUser(user: IUsers | null): boolean {
     return user?.groups?.includes('CUSTOMER') || false;
   }
 
@@ -150,7 +150,7 @@ export class DashboardComponent implements OnInit {
    * @param user The user object
    * @returns true if there are any incomplete requirements
    */
-  hasHealthWarnings(user: any): boolean {
+  hasHealthWarnings(user: IUsers | null): boolean {
     if (!user) return true;
     
     // Check all health requirements

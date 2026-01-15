@@ -248,7 +248,7 @@ export class UserEffects {
       ofType(UserActions.verifyEmailSuccess),
       withLatestFrom(this.store.select(fromUser.selectCurrentUser)),
       switchMap(([action, currentUser]) => {
-        const email = (action as any).email;
+        const email = action.email;
         
         if (!email || !currentUser) {
           return of(UserActions.updateUserAfterEmailVerificationFailure({ 

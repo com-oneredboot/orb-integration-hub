@@ -95,7 +95,7 @@ export class ApplicationDetailComponent implements OnChanges {
     // TODO: Implement next key activation
   }
 
-  onViewEnvironment(environment: any): void {
+  onViewEnvironment(environment: { name: string; status: string }): void {
     console.log('View environment:', environment.name);
     // TODO: Navigate to environment details
   }

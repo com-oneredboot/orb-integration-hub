@@ -519,7 +519,7 @@ export class OrganizationTestDataFactory {
   /**
    * Create mock GraphQL responses for organization queries
    */
-  createMockGraphQLResponses(): Record<string, any> {
+  createMockGraphQLResponses(): Record<string, { data: Record<string, unknown> }> {
     const testOrg = this.createTestOrganization();
     
     return {
@@ -568,7 +568,7 @@ export class OrganizationTestDataFactory {
   /**
    * Create mock error responses
    */
-  createMockErrorResponses(): Record<string, any> {
+  createMockErrorResponses(): Record<string, { errors: { message: string; extensions: Record<string, unknown> }[] }> {
     return {
       organizationNotFound: {
         errors: [{
@@ -686,17 +686,17 @@ export class OrganizationTestDataFactory {
   seedComprehensiveTestEnvironment(): {
     sessionId: string;
     createdAt: string;
-    scenarios: Record<string, any>;
+    scenarios: Record<string, unknown>;
   } {
     
     const environment: {
       sessionId: string;
       createdAt: string;
-      scenarios: Record<string, any>;
+      scenarios: Record<string, unknown>;
     } = {
       sessionId: this.testSessionId,
       createdAt: new Date().toISOString(),
-      scenarios: {} as Record<string, any>
+      scenarios: {} as Record<string, unknown>
     };
     
     // Basic organization scenarios

@@ -238,7 +238,7 @@ describe('AppErrorHandlerService', () => {
     });
 
     it('should limit stored errors to prevent memory issues', () => {
-      const maxErrors = (service as any).MAX_ERRORS_STORED;
+      const maxErrors = (service as unknown as { MAX_ERRORS_STORED: number }).MAX_ERRORS_STORED;
       
       // Generate more errors than the limit
       for (let i = 0; i < maxErrors + 10; i++) {
@@ -357,7 +357,7 @@ describe('AppErrorHandlerService', () => {
         recoverable: true
       };
       
-      (service as any).storeError(oldError);
+      (service as unknown as { storeError: (error: AppError) => void }).storeError(oldError);
 
       const stats = service.getErrorStatistics();
       expect(stats.recentErrors).toBe(1); // Only recent errors
@@ -427,7 +427,7 @@ describe('AppErrorHandlerService', () => {
 
       testCases.forEach(testCase => {
         const errorId = service.captureError({
-          type: testCase.type as any,
+          type: testCase.type as 'authentication' | 'network' | 'validation' | 'system' | 'security',
           message: 'Technical error message'
         });
 
@@ -459,7 +459,7 @@ describe('AppErrorHandlerService', () => {
 
   describe('Memory Management', () => {
     it('should not cause memory leaks with observables', () => {
-      const subscriptions: any[] = [];
+      const subscriptions: { unsubscribe: () => void }[] = [];
       
       // Create multiple subscriptions
       for (let i = 0; i < 10; i++) {
@@ -495,7 +495,7 @@ describe('AppErrorHandlerService', () => {
     });
 
     it('should handle circular reference in error objects', () => {
-      const circularError: any = { message: 'Circular error' };
+      const circularError: { message: string; self?: unknown } = { message: 'Circular error' };
       circularError.self = circularError;
 
       expect(() => {

@@ -5,6 +5,7 @@
 
 // 3rd Party Imports
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
@@ -12,6 +13,8 @@ import { Observable, Subject } from 'rxjs';
 // App Imports
 import { AuthState, AuthSteps } from '.../../store/user.state';
 import * as fromAuth from '.../../store/user.selectors';
+import { LoginComponent } from '../components/login/login.component';
+import { PasswordComponent } from '../components/password/password.component';
 
 @Component({
   selector: 'app-auth-container',
@@ -52,7 +55,8 @@ import * as fromAuth from '.../../store/user.selectors';
     </div>
   `,
   styleUrls: ['./auth-container.component.scss'],
-  standalone: false
+  standalone: true,
+  imports: [CommonModule, LoginComponent, PasswordComponent]
 })
 export class AuthContainerComponent implements OnInit, OnDestroy {
   // Store Selectors

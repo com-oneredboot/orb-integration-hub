@@ -13,7 +13,7 @@ export interface AnalyticsEvent {
   action: string;
   label?: string;
   value?: number;
-  properties?: Record<string, any>;
+  properties?: Record<string, unknown>;
   timestamp: number;
   sessionId: string;
   userId?: string;
@@ -32,7 +32,7 @@ export interface ABTestVariant {
   id: string;
   name: string;
   traffic: number; // Percentage of traffic (0-100)
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   active: boolean;
 }
 
@@ -216,7 +216,7 @@ export class AuthAnalyticsService implements OnDestroy {
   trackFieldInteraction(
     fieldName: string, 
     action: 'focus' | 'blur' | 'change' | 'error' | 'validation_success',
-    value?: any
+    value?: unknown
   ): void {
     this.trackEvent({
       name: `field_${action}`,
@@ -293,7 +293,7 @@ export class AuthAnalyticsService implements OnDestroy {
   /**
    * Track user engagement metrics
    */
-  trackEngagement(metric: string, value: number, context?: Record<string, any>): void {
+  trackEngagement(metric: string, value: number, context?: Record<string, unknown>): void {
     this.trackEvent({
       name: 'engagement_metric',
       category: 'user_interaction',
@@ -382,7 +382,7 @@ export class AuthAnalyticsService implements OnDestroy {
   /**
    * Get variant configuration
    */
-  getVariantConfig(testId: string): Record<string, any> {
+  getVariantConfig(testId: string): Record<string, unknown> {
     const variant = this.getVariant(testId);
     const test = this.activeTests.value.find(t => t.testId === testId);
     

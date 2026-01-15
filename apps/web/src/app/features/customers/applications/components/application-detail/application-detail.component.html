@@ -66,33 +66,33 @@
          [class.application-detail__tab-panel--active]="activeTab === 'overview'">
       <div class="application-detail__info-grid">
         <div class="application-detail__info-item">
-          <label class="application-detail__info-label">Application Name</label>
-          <input type="text" class="application-detail__info-input"
+          <label class="application-detail__info-label" for="app-name">Application Name</label>
+          <input type="text" id="app-name" class="application-detail__info-input"
                  [value]="application.name || ''"
                  placeholder="No name provided"
                  disabled>
         </div>
         <div class="application-detail__info-item">
-          <label class="application-detail__info-label">Organization</label>
-          <input type="text" class="application-detail__info-input"
+          <label class="application-detail__info-label" for="app-org">Organization</label>
+          <input type="text" id="app-org" class="application-detail__info-input"
                  [value]="organizationName || 'Unknown Organization'"
                  disabled>
         </div>
         <div class="application-detail__info-item">
-          <label class="application-detail__info-label">Application ID</label>
-          <input type="text" class="application-detail__info-input application-detail__info-input--code"
+          <label class="application-detail__info-label" for="app-id">Application ID</label>
+          <input type="text" id="app-id" class="application-detail__info-input application-detail__info-input--code"
                  [value]="application.applicationId"
                  disabled>
         </div>
         <div class="application-detail__info-item">
-          <label class="application-detail__info-label">Created</label>
-          <input type="text" class="application-detail__info-input"
+          <label class="application-detail__info-label" for="app-created">Created</label>
+          <input type="text" id="app-created" class="application-detail__info-input"
                  [value]="formatDate(application.createdAt)"
                  disabled>
         </div>
         <div class="application-detail__info-item">
-          <label class="application-detail__info-label">Last Updated</label>
-          <input type="text" class="application-detail__info-input"
+          <label class="application-detail__info-label" for="app-updated">Last Updated</label>
+          <input type="text" id="app-updated" class="application-detail__info-input"
                  [value]="formatDate(application.updatedAt)"
                  disabled>
         </div>
@@ -105,9 +105,9 @@
       <div class="application-detail__api-section">
         <div class="application-detail__info-grid">
           <div class="application-detail__info-item">
-            <label class="application-detail__info-label">Current API Key</label>
+            <label class="application-detail__info-label" for="app-api-key">Current API Key</label>
             <div class="application-detail__api-key">
-              <input type="text" class="application-detail__info-input application-detail__info-input--code"
+              <input type="text" id="app-api-key" class="application-detail__info-input application-detail__info-input--code"
                      [value]="maskApiKey(application.apiKey)"
                      disabled>
               <button class="application-detail__api-key-action"
@@ -123,9 +123,9 @@
             </div>
           </div>
           <div class="application-detail__info-item" *ngIf="application.apiKeyNext">
-            <label class="application-detail__info-label">Next API Key (Staged)</label>
+            <label class="application-detail__info-label" for="app-api-key-next">Next API Key (Staged)</label>
             <div class="application-detail__api-key">
-              <input type="text" class="application-detail__info-input application-detail__info-input--code"
+              <input type="text" id="app-api-key-next" class="application-detail__info-input application-detail__info-input--code"
                      [value]="maskApiKey(application.apiKeyNext)"
                      disabled>
               <button class="application-detail__api-key-action"

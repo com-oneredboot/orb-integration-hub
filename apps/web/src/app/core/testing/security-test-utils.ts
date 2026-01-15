@@ -7,6 +7,18 @@ import { Observable, of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
 
 /**
+ * Test credentials interface for security testing
+ */
+export interface TestCredentials {
+  username: string;
+  password: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+}
+
+/**
  * Security test utilities for authentication testing
  */
 export class SecurityTestUtils {
@@ -134,9 +146,7 @@ export class SecurityTestUtils {
       '(123) 456-7890',
       '<script>alert("xss")</script>',
       'DROP TABLE users',
-      '',
-      null as any,
-      undefined as any
+      ''
     ];
   }
 
@@ -156,8 +166,6 @@ export class SecurityTestUtils {
       '000000', // All zeros (potentially weak)
       '123456', // Sequential
       '111111', // All same
-      null as any,
-      undefined as any,
       ' 123456 ', // With spaces
       '12 34 56' // With internal spaces
     ];
@@ -166,10 +174,10 @@ export class SecurityTestUtils {
   /**
    * Create timing attack simulation utility
    */
-  static async createTimingAttackTest(
-    validCredentials: any,
-    invalidCredentials: any,
-    authFunction: (creds: any) => Promise<any>
+  static async createTimingAttackTest<T>(
+    validCredentials: T,
+    invalidCredentials: T,
+    authFunction: (creds: T) => Promise<unknown>
   ): Promise<{ isVulnerable: boolean; timingDifference: number }> {
     const iterations = 10;
     const validTimes: number[] = [];
@@ -213,7 +221,7 @@ export class SecurityTestUtils {
    * Create rate limiting test utility
    */
   static async createRateLimitTest(
-    authFunction: () => Promise<any>,
+    authFunction: () => Promise<unknown>,
     maxAttempts: number,
     timeWindow: number
   ): Promise<{ rateLimitTriggered: boolean; attemptsMade: number }> {
@@ -226,13 +234,14 @@ export class SecurityTestUtils {
       try {
         await authFunction();
         attemptsMade++;
-      } catch (error: any) {
+      } catch (error: unknown) {
         attemptsMade++;
         // Check if this is a rate limiting error
-        if (error.message?.includes('rate') || 
-            error.message?.includes('limit') || 
-            error.message?.includes('too many') ||
-            error.statusCode === 429) {
+        const errorObj = error as { message?: string; statusCode?: number };
+        if (errorObj.message?.includes('rate') || 
+            errorObj.message?.includes('limit') || 
+            errorObj.message?.includes('too many') ||
+            errorObj.statusCode === 429) {
           rateLimitTriggered = true;
           break;
         }
@@ -248,13 +257,13 @@ export class SecurityTestUtils {
   /**
    * Create concurrent session test utility
    */
-  static async createConcurrentSessionTest(
-    loginFunction: (credentials: any) => Promise<any>,
-    credentials: any,
+  static async createConcurrentSessionTest<T>(
+    loginFunction: (credentials: T) => Promise<unknown>,
+    credentials: T,
     sessionCount: number
-  ): Promise<{ successfulSessions: number; errors: any[] }> {
+  ): Promise<{ successfulSessions: number; errors: unknown[] }> {
     const promises = [];
-    const errors: any[] = [];
+    const errors: unknown[] = [];
     let successfulSessions = 0;
 
     for (let i = 0; i < sessionCount; i++) {
@@ -322,10 +331,10 @@ export class SecurityTestUtils {
    * Generate test user credentials with various security scenarios
    */
   static createTestCredentials(): {
-    valid: any;
-    invalid: any;
-    malicious: any;
-    weak: any;
+    valid: TestCredentials;
+    invalid: TestCredentials;
+    malicious: TestCredentials;
+    weak: TestCredentials;
   } {
     return {
       valid: {

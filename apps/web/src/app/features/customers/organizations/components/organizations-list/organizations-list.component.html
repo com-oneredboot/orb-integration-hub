@@ -25,11 +25,12 @@
   <!-- Filters -->
   <div class="orb-filters">
     <div class="orb-filters__group">
-      <label class="orb-filters__label">Search</label>
+      <label class="orb-filters__label" for="org-search">Search</label>
       <div class="orb-filters__input-group">
         <fa-icon icon="search" class="orb-filters__icon"></fa-icon>
         <input 
           type="text" 
+          id="org-search"
           class="orb-filters__input"
           placeholder="Search organizations..."
           [(ngModel)]="searchTerm"
@@ -38,8 +39,9 @@
     </div>
     
     <div class="orb-filters__group">
-      <label class="orb-filters__label">Status</label>
+      <label class="orb-filters__label" for="org-status-filter">Status</label>
       <select 
+        id="org-status-filter"
         class="orb-filters__select"
         [(ngModel)]="statusFilter"
         (change)="onFilterChange()">
@@ -52,8 +54,9 @@
     </div>
 
     <div class="orb-filters__group">
-      <label class="orb-filters__label">My Role</label>
+      <label class="orb-filters__label" for="org-role-filter">My Role</label>
       <select 
+        id="org-role-filter"
         class="orb-filters__select"
         [(ngModel)]="roleFilter"
         (change)="onFilterChange()">

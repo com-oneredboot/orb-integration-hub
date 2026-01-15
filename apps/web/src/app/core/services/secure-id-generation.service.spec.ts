@@ -143,7 +143,7 @@ describe('SecureIdGenerationService', () => {
   describe('Emergency Client Side Generation', () => {
     it('should generate unique IDs for emergency fallback', () => {
       // Access private method for testing
-      const generateMethod = (service as any).generateInsecureClientId.bind(service);
+      const generateMethod = (service as unknown as { generateInsecureClientId: () => string }).generateInsecureClientId.bind(service);
       
       const id1 = generateMethod();
       const id2 = generateMethod();

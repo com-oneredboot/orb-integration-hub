@@ -22,7 +22,6 @@ describe('ProfileComponent', () => {
   let fixture: ComponentFixture<ProfileComponent>;
   let mockUserService: jasmine.SpyObj<UserService>;
   let mockStore: MockStore;
-  const _store: MockStore = null as unknown as MockStore;
   const _mockRouter = jasmine.createSpyObj('Router', ['navigate']);
 
   const initialState = {
@@ -166,8 +165,8 @@ describe('ProfileComponent', () => {
 
     it('should correctly format field names in error messages', () => {
       // Access the private method using type casting
-      expect((component as any).formatFieldName('firstName')).toBe('First Name');
-      expect((component as any).formatFieldName('lastName')).toBe('Last Name');
+      expect((component as unknown as { formatFieldName: (name: string) => string }).formatFieldName('firstName')).toBe('First Name');
+      expect((component as unknown as { formatFieldName: (name: string) => string }).formatFieldName('lastName')).toBe('Last Name');
     });
   });
 
@@ -227,7 +226,7 @@ describe('ProfileComponent', () => {
 
     it('should process form submission correctly with valid data', fakeAsync(() => {
       // Spy on getCurrentUser
-      spyOn(component as any, 'getCurrentUser').and.returnValue(Promise.resolve(mockUser));
+      spyOn(component as unknown as { getCurrentUser: () => Promise<IUsers | null> }, 'getCurrentUser').and.returnValue(Promise.resolve(mockUser));
       
       // Set valid form values
       component.profileForm.patchValue({
@@ -280,8 +279,8 @@ describe('ProfileComponent', () => {
       expect(typeof formattedDate).toBe('string');
       
       // Test null/undefined handling
-      expect(component.formatDate(null as any)).toBe('N/A');
-      expect(component.formatDate(undefined as any)).toBe('N/A');
+      expect(component.formatDate(null as unknown as Date)).toBe('N/A');
+      expect(component.formatDate(undefined as unknown as Date)).toBe('N/A');
       
       // Test invalid date handling
       const invalidResult = component.formatDate(new Date('invalid-date'));

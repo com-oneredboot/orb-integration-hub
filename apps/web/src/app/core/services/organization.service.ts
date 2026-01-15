@@ -130,7 +130,7 @@ export class OrganizationService extends ApiService {
         );
       })
     ).pipe(
-      map((response: GraphQLResult<any>) => {
+      map((response: GraphQLResult<{ Organizations?: { StatusCode?: number; Message?: string; Data?: Record<string, unknown> } }>) => {
         console.debug('[OrganizationService] Create organization response:', response);
         
         if (!response.data) {

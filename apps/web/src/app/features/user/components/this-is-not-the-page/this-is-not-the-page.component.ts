@@ -66,7 +66,12 @@ export class ThisIsNotThePageComponent {
   }
 
   getConnectionType(): string {
-    const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
+    const nav = navigator as Navigator & { 
+      connection?: { effectiveType?: string; type?: string };
+      mozConnection?: { effectiveType?: string; type?: string };
+      webkitConnection?: { effectiveType?: string; type?: string };
+    };
+    const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
     return connection ? connection.effectiveType || connection.type || 'Unknown' : 'Not available';
   }
 }

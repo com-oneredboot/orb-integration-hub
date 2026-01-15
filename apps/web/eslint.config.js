@@ -34,8 +34,8 @@ module.exports = tseslint.config(
       "@angular-eslint/prefer-inject": "off",
       // Allow type aliases - generated models use type instead of interface
       "@typescript-eslint/consistent-type-definitions": "off",
-      // Allow explicit any - will be addressed incrementally
-      "@typescript-eslint/no-explicit-any": "warn",
+      // Explicit any must be replaced with proper types
+      "@typescript-eslint/no-explicit-any": "error",
       // Unused vars with underscore prefix allowed, catch clause errors allowed
       "@typescript-eslint/no-unused-vars": [
         "error",
@@ -47,8 +47,8 @@ module.exports = tseslint.config(
       ],
       // Allow empty functions for interface implementations (ControlValueAccessor, etc.)
       "@typescript-eslint/no-empty-function": "off",
-      // Allow non-standalone components - migration path, not a bug
-      "@angular-eslint/prefer-standalone": "warn",
+      // Prefer standalone components
+      "@angular-eslint/prefer-standalone": "error",
     },
   },
 
@@ -59,10 +59,10 @@ module.exports = tseslint.config(
       ...angular.configs.templateAccessibility,
     ],
     rules: {
-      // Accessibility rules as warnings - incremental improvement
-      "@angular-eslint/template/click-events-have-key-events": "warn",
-      "@angular-eslint/template/interactive-supports-focus": "warn",
-      "@angular-eslint/template/label-has-associated-control": "warn",
+      // Accessibility rules - must be fixed
+      "@angular-eslint/template/click-events-have-key-events": "error",
+      "@angular-eslint/template/interactive-supports-focus": "error",
+      "@angular-eslint/template/label-has-associated-control": "error",
     },
   }
 );
