@@ -76,6 +76,7 @@ Fix 74 ESLint errors in the Angular frontend hand-written files. Tasks are organ
 ## Notes
 
 - Tasks are ordered to fix related files together for efficiency
-- The 2 errors in `AuthModel.ts` (generated file) are tracked in GitHub issue #59 and will be resolved when orb-schema-generator v0.13.6 is published
+- ✅ Issue #59 resolved: Regenerated models with orb-schema-generator v0.13.6 (commit fbf1cbf)
+- Final lint result: 0 errors, 192 warnings (warnings are acceptable)
 - Warnings (e.g., `@typescript-eslint/no-explicit-any`) are acceptable and should not be treated as failures
 - No behavioral changes should be made - only code cleanup to satisfy ESLint rules
