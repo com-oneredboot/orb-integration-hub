@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Complete GraphQL API with 99 operations across 11 entities
+- VTL resolvers for all DynamoDB operations (114 resolver files)
+- Table schemas for Organizations, OrganizationUsers, OwnershipTransferRequests, PrivacyRequests
+- GSI-based query operations for all access patterns
+- Authentication directives on all operations with Cognito group authorization
+
+### Changed
+- Updated `docs/api.md` with complete operation reference
+- Regenerated schema with orb-schema-generator v0.13.6
+
+### Fixed
+- All frontend ESLint errors and warnings (0 errors, 0 warnings)
+- Type safety issues with `no-explicit-any` violations
+- Accessibility issues in form labels and interactive elements
+- Standalone component configuration
+
+### Pending
+- TypeScript GraphQL query definition generation ([orb-schema-generator#61](https://github.com/com-oneredboot/orb-schema-generator/issues/61))
+
 ## [1.2.0] - 2026-01-11
 
 ### Added

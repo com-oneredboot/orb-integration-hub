@@ -189,6 +189,42 @@ Common fix patterns:
 - Accessibility errors → Add proper ARIA attributes, labels, and keyboard handlers
 - `standalone: false` → Convert to standalone components with proper imports
 
+## Schema Generation
+
+### orb-schema-generator
+
+This project uses `orb-schema-generator` for code generation from YAML schemas. Reference documentation is in `repositories/orb-schema-generator/`.
+
+**Run schema generation:**
+```bash
+pipenv run orb-schema generate
+```
+
+**What it generates:**
+- GraphQL schema (`apps/api/graphql/schema.graphql`)
+- Python models (`apps/api/models/`)
+- TypeScript models (`apps/web/src/app/core/models/`)
+- TypeScript enums (`apps/web/src/app/core/enums/`)
+- VTL resolvers (`apps/api/graphql/resolvers/`)
+- CDK constructs (`infrastructure/cdk/generated/`)
+
+**What it does NOT generate:**
+- TypeScript GraphQL query definition files (`apps/web/src/app/core/graphql/*.graphql.ts`) - these are hand-written and must match the generated schema
+
+**Configuration:** `schema-generator.yml`
+
+**Schema locations:**
+- `schemas/tables/` - DynamoDB table schemas
+- `schemas/models/` - Standard data models
+- `schemas/registries/` - Enum/registry types
+- `schemas/lambdas/` - Lambda-only types
+- `schemas/core/` - Shared enums
+
+**Key documentation:**
+- `repositories/orb-schema-generator/README.md` - Main documentation
+- `repositories/orb-schema-generator/docs/generation/graphql.md` - GraphQL generation details
+- `repositories/orb-schema-generator/docs/generation/schema-attributes.md` - Schema attribute reference
+
 ## Command Phrases
 
 When the user says these phrases, execute the corresponding actions:

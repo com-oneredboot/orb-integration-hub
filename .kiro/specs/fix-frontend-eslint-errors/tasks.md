@@ -149,7 +149,7 @@ Fix all ESLint errors in the Angular frontend hand-written files. Tasks are orga
   - Run `npm test` to ensure no regressions
   - _Requirements: 7.1_
 
-- [-] 30. Final commit
+- [x] 30. Final commit
   - Commit all changes with message: `fix: resolve all ESLint errors and warnings in frontend`
   - _Requirements: 7.1_
 
