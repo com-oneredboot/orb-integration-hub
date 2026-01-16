@@ -444,12 +444,12 @@ class MonitoringStack(Stack):
         )
 
     def _create_ssm_parameters(self) -> None:
-        """Create SSM parameters for cross-stack references."""
+        """Create SSM parameters for cross-stack references with path-based naming."""
         # Audit Log Group Name
         ssm.StringParameter(
             self,
             "AuditLogGroupNameParameter",
-            parameter_name=self.config.ssm_parameter_name("audit-log-group-name"),
+            parameter_name=self.config.ssm_parameter_name("monitoring/audit-log-group/name"),
             string_value=self.audit_log_group.log_group_name,
             description="CloudWatch log group for audit events",
         )
@@ -458,7 +458,7 @@ class MonitoringStack(Stack):
         ssm.StringParameter(
             self,
             "AuditEncryptionKeyArnParameter",
-            parameter_name=self.config.ssm_parameter_name("audit-kms-key-arn"),
+            parameter_name=self.config.ssm_parameter_name("monitoring/audit-kms-key/arn"),
             string_value=self.audit_encryption_key.key_arn,
             description="KMS Key ARN for audit log encryption",
         )
@@ -467,7 +467,7 @@ class MonitoringStack(Stack):
         ssm.StringParameter(
             self,
             "SecurityAlertTopicArnParameter",
-            parameter_name=self.config.ssm_parameter_name("security-alert-topic-arn"),
+            parameter_name=self.config.ssm_parameter_name("monitoring/security-alert-topic/arn"),
             string_value=self.security_alert_topic.topic_arn,
             description="SNS topic for security alerts",
         )

@@ -66,15 +66,46 @@ The lambda stack reads layer ARNs from SSM parameters (set by lambda-layers stac
 
 ## Parameter Naming
 
+SSM parameters use path-based naming aligned with orb-schema-generator conventions:
+
 ```yaml
-# SSM Parameter pattern
-{customer_id}-{project_id}-{environment}-<resource>-<attribute>
+# Pattern: /{customer_id}/{project_id}/{environment}/{resource-type}/{resource-name}/{attribute}
 
 # Examples:
-# orb-integration-hub-dev-users-table-arn
-# orb-integration-hub-dev-cognito-user-pool-id
-# orb-integration-hub-dev-organizations-security-layer-arn
+# /orb/integration-hub/dev/cognito/user-pool-id
+# /orb/integration-hub/dev/dynamodb/users/arn
+# /orb/integration-hub/dev/lambda-layers/organizations-security/arn
+# /orb/integration-hub/dev/lambda/sms-verification/arn
+# /orb/integration-hub/dev/appsync/api-url
 ```
+
+### Using the Config Helper
+
+The `Config` class provides a helper method for generating parameter names:
+
+```python
+# In config.py
+config.ssm_parameter_name("cognito/user-pool-id")
+# Returns: /orb/integration-hub/dev/cognito/user-pool-id
+
+config.ssm_parameter_name("dynamodb/users/arn")
+# Returns: /orb/integration-hub/dev/dynamodb/users/arn
+```
+
+### Parameter Path Structure by Resource Type
+
+| Resource Type | Path Pattern | Example |
+|---------------|--------------|---------|
+| Cognito | `/cognito/{attribute}` | `/orb/integration-hub/dev/cognito/user-pool-id` |
+| DynamoDB | `/dynamodb/{table-name}/{attribute}` | `/orb/integration-hub/dev/dynamodb/users/arn` |
+| Lambda | `/lambda/{function-name}/{attribute}` | `/orb/integration-hub/dev/lambda/sms-verification/arn` |
+| Lambda Layers | `/lambda-layers/{layer-name}/{attribute}` | `/orb/integration-hub/dev/lambda-layers/common/arn` |
+| AppSync | `/appsync/{attribute}` | `/orb/integration-hub/dev/appsync/api-url` |
+| SQS | `/sqs/{queue-name}/{attribute}` | `/orb/integration-hub/dev/sqs/alerts-queue/arn` |
+| Frontend | `/frontend/{attribute}` | `/orb/integration-hub/dev/frontend/distribution-id` |
+| Monitoring | `/monitoring/{resource}/{attribute}` | `/orb/integration-hub/dev/monitoring/audit-log-group/name` |
+
+See `infrastructure/cdk/README.md` for complete parameter reference.
 
 ## Lambda Function Paths
 

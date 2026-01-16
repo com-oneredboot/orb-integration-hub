@@ -58,10 +58,11 @@ def template(test_config: Config) -> Template:
     
     # Create mock SSM parameter for layer ARN (normally created by lambda-layers stack)
     # This simulates the SSM parameter that would exist after lambda-layers deployment
+    # Uses path-based naming: /customer/project/env/lambda-layers/layer-name/arn
     ssm.StringParameter(
         cognito_stack,  # Add to cognito stack to avoid circular dependency
         "MockOrganizationsSecurityLayerArn",
-        parameter_name=test_config.ssm_parameter_name("organizations-security-layer-arn"),
+        parameter_name=test_config.ssm_parameter_name("lambda-layers/organizations-security/arn"),
         string_value="arn:aws:lambda:us-east-1:123456789012:layer:test-project-dev-organizations-security-layer:1",
     )
 
@@ -217,44 +218,44 @@ class TestLambdaStackOrganizationsLambda:
 
 
 class TestLambdaStackSSMParameters:
-    """Tests for SSM parameter exports."""
+    """Tests for SSM parameter exports using path-based naming."""
 
     def test_exports_sms_verification_lambda_arn(self, template: Template) -> None:
-        """Verify SMS Verification Lambda ARN is exported to SSM."""
+        """Verify SMS Verification Lambda ARN is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-sms-verification-lambda-arn",
+                "Name": "/test/project/dev/lambda/sms-verification/arn",
                 "Type": "String",
             },
         )
 
     def test_exports_cognito_group_manager_lambda_arn(self, template: Template) -> None:
-        """Verify Cognito Group Manager Lambda ARN is exported to SSM."""
+        """Verify Cognito Group Manager Lambda ARN is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-cognito-group-manager-lambda-arn",
+                "Name": "/test/project/dev/lambda/cognito-group-manager/arn",
                 "Type": "String",
             },
         )
 
     def test_exports_user_status_calculator_lambda_arn(self, template: Template) -> None:
-        """Verify User Status Calculator Lambda ARN is exported to SSM."""
+        """Verify User Status Calculator Lambda ARN is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-user-status-calculator-lambda-arn",
+                "Name": "/test/project/dev/lambda/user-status-calculator/arn",
                 "Type": "String",
             },
         )
 
     def test_exports_organizations_lambda_arn(self, template: Template) -> None:
-        """Verify Organizations Lambda ARN is exported to SSM."""
+        """Verify Organizations Lambda ARN is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-organizations-lambda-arn",
+                "Name": "/test/project/dev/lambda/organizations/arn",
                 "Type": "String",
             },
         )

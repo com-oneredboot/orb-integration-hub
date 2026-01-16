@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Refactored CDK infrastructure to use path-based SSM parameter naming aligned with orb-schema-generator conventions
+- SSM parameters now follow pattern `/{customer_id}/{project_id}/{environment}/{resource-type}/{resource-name}/{attribute}`
+- Updated all stacks: Cognito, DynamoDB, Lambda, Lambda Layers, Bootstrap, AppSync, Frontend, Monitoring
+- DynamoDB stack now imports generated table constructs from orb-schema-generator
+- Updated `Config.ssm_parameter_name()` helper to generate path-based names
+- Updated infrastructure documentation with complete SSM parameter reference
+
+### Pending
+- SSM parameter generation in orb-schema-generator ([orb-schema-generator#64](https://github.com/com-oneredboot/orb-schema-generator/issues/64))
+- PITR configuration in orb-schema-generator ([orb-schema-generator#65](https://github.com/com-oneredboot/orb-schema-generator/issues/65))
+- Schema type generation matrix documentation ([orb-schema-generator#66](https://github.com/com-oneredboot/orb-schema-generator/issues/66))
+
 ### Security
 - Updated Angular packages to v19.2.18 (core, material, cdk, forms, router, etc.)
 - Updated Angular build tools to v19.2.19 (@angular-devkit/build-angular, @angular/build, @angular/cli)

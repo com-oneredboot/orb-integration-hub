@@ -49,10 +49,11 @@ def template(test_config: Config) -> Template:
     )
     
     # Create mock SSM parameter for layer ARN (normally created by lambda-layers stack)
+    # Uses path-based naming: /customer/project/env/lambda-layers/layer-name/arn
     ssm.StringParameter(
         cognito_stack,
         "MockOrganizationsSecurityLayerArn",
-        parameter_name=test_config.ssm_parameter_name("organizations-security-layer-arn"),
+        parameter_name=test_config.ssm_parameter_name("lambda-layers/organizations-security/arn"),
         string_value="arn:aws:lambda:us-east-1:123456789012:layer:test-project-dev-organizations-security-layer:1",
     )
     
@@ -181,34 +182,34 @@ class TestAppSyncStackDataSources:
 
 
 class TestAppSyncStackSSMParameters:
-    """Tests for SSM parameter exports."""
+    """Tests for SSM parameter exports using path-based naming."""
 
     def test_exports_api_id(self, template: Template) -> None:
-        """Verify API ID is exported to SSM."""
+        """Verify API ID is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-appsync-api-id",
+                "Name": "/test/project/dev/appsync/api-id",
                 "Type": "String",
             },
         )
 
     def test_exports_graphql_url(self, template: Template) -> None:
-        """Verify GraphQL URL is exported to SSM."""
+        """Verify GraphQL URL is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-graphql-api-url",
+                "Name": "/test/project/dev/appsync/graphql-url",
                 "Type": "String",
             },
         )
 
     def test_exports_api_key_secret_name(self, template: Template) -> None:
-        """Verify API key secret name is exported to SSM."""
+        """Verify API key secret name is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-graphql-api-key-secret-name",
+                "Name": "/test/project/dev/appsync/api-key-secret-name",
                 "Type": "String",
             },
         )

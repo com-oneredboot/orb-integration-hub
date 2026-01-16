@@ -123,12 +123,12 @@ class FrontendStack(Stack):
         return distribution
 
     def _create_ssm_parameters(self) -> None:
-        """Create SSM parameters for cross-stack references."""
+        """Create SSM parameters for cross-stack references with path-based naming."""
         # Website Bucket Name
         ssm.StringParameter(
             self,
             "WebsiteBucketNameParameter",
-            parameter_name=self.config.ssm_parameter_name("website-bucket-name"),
+            parameter_name=self.config.ssm_parameter_name("frontend/website-bucket/name"),
             string_value=self.website_bucket.bucket_name,
             description="S3 bucket name for website hosting",
         )
@@ -137,7 +137,7 @@ class FrontendStack(Stack):
         ssm.StringParameter(
             self,
             "WebsiteBucketArnParameter",
-            parameter_name=self.config.ssm_parameter_name("website-bucket-arn"),
+            parameter_name=self.config.ssm_parameter_name("frontend/website-bucket/arn"),
             string_value=self.website_bucket.bucket_arn,
             description="S3 bucket ARN for website hosting",
         )
@@ -146,7 +146,7 @@ class FrontendStack(Stack):
         ssm.StringParameter(
             self,
             "DistributionIdParameter",
-            parameter_name=self.config.ssm_parameter_name("cloudfront-distribution-id"),
+            parameter_name=self.config.ssm_parameter_name("frontend/distribution-id"),
             string_value=self.distribution.distribution_id,
             description="CloudFront distribution ID for website",
         )
@@ -155,7 +155,7 @@ class FrontendStack(Stack):
         ssm.StringParameter(
             self,
             "DistributionDomainNameParameter",
-            parameter_name=self.config.ssm_parameter_name("cloudfront-domain-name"),
+            parameter_name=self.config.ssm_parameter_name("frontend/domain-name"),
             string_value=self.distribution.distribution_domain_name,
             description="CloudFront distribution domain name",
         )
@@ -164,7 +164,7 @@ class FrontendStack(Stack):
         ssm.StringParameter(
             self,
             "WebsiteUrlParameter",
-            parameter_name=self.config.ssm_parameter_name("website-url"),
+            parameter_name=self.config.ssm_parameter_name("frontend/website-url"),
             string_value=f"https://{self.distribution.distribution_domain_name}",
             description="Website URL",
         )

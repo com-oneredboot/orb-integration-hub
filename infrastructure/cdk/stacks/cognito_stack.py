@@ -453,7 +453,7 @@ Please login at: https://orb-integration-hub.com/authenticate/""",
         ssm.StringParameter(
             self,
             "SMSVerificationCodeTopicArnParameter",
-            parameter_name=self.config.ssm_parameter_name("phone-number-verification-topic-arn"),
+            parameter_name=self.config.ssm_parameter_name("cognito/phone-number-verification-topic/arn"),
             string_value=topic.topic_arn,
             description="SMS Verification Code Topic ARN",
         )
@@ -466,7 +466,7 @@ Please login at: https://orb-integration-hub.com/authenticate/""",
         ssm.StringParameter(
             self,
             "UserPoolIdParameter",
-            parameter_name=self.config.ssm_parameter_name("cognito-user-pool-id"),
+            parameter_name=self.config.ssm_parameter_name("cognito/user-pool-id"),
             string_value=self.user_pool.user_pool_id,
             description="Cognito User Pool ID",
         )
@@ -475,7 +475,7 @@ Please login at: https://orb-integration-hub.com/authenticate/""",
         ssm.StringParameter(
             self,
             "UserPoolClientIdParameter",
-            parameter_name=self.config.ssm_parameter_name("cognito-client-id"),
+            parameter_name=self.config.ssm_parameter_name("cognito/client-id"),
             string_value=self.user_pool_client.user_pool_client_id,
             description="Cognito User Pool Client ID for frontend authentication",
         )
@@ -484,7 +484,7 @@ Please login at: https://orb-integration-hub.com/authenticate/""",
         ssm.StringParameter(
             self,
             "CognitoQrIssuerParameter",
-            parameter_name=self.config.ssm_parameter_name("cognito-qr-issuer"),
+            parameter_name=self.config.ssm_parameter_name("cognito/qr-issuer"),
             string_value=self.config.prefix,
             description="QR code issuer name for TOTP MFA setup",
         )
@@ -493,7 +493,7 @@ Please login at: https://orb-integration-hub.com/authenticate/""",
         ssm.StringParameter(
             self,
             "IdentityPoolIdParameter",
-            parameter_name=self.config.ssm_parameter_name("cognito-identity-pool-id"),
+            parameter_name=self.config.ssm_parameter_name("cognito/identity-pool-id"),
             string_value=self.identity_pool.ref,
             description="Cognito Identity Pool ID",
         )
@@ -502,7 +502,7 @@ Please login at: https://orb-integration-hub.com/authenticate/""",
         ssm.StringParameter(
             self,
             "UserPoolArnParameter",
-            parameter_name=self.config.ssm_parameter_name("cognito-user-pool-arn"),
+            parameter_name=self.config.ssm_parameter_name("cognito/user-pool-arn"),
             string_value=self.user_pool.user_pool_arn,
             description="Cognito User Pool ARN",
         )

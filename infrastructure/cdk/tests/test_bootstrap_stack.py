@@ -95,34 +95,34 @@ class TestBootstrapStackQueues:
 
 
 class TestBootstrapStackSSMParameters:
-    """Tests for SSM parameter exports."""
+    """Tests for SSM parameter exports using path-based naming."""
 
     def test_exports_dead_letter_queue_arn(self, template: Template) -> None:
-        """Verify dead letter queue ARN is exported to SSM."""
+        """Verify dead letter queue ARN is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-dead-letter-queue-arn",
+                "Name": "/test/project/dev/sqs/dead-letter-queue/arn",
                 "Type": "String",
             },
         )
 
     def test_exports_alerts_queue_arn(self, template: Template) -> None:
-        """Verify alerts queue ARN is exported to SSM."""
+        """Verify alerts queue ARN is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-alerts-queue-arn",
+                "Name": "/test/project/dev/sqs/alerts-queue/arn",
                 "Type": "String",
             },
         )
 
     def test_exports_cloudwatch_logging_policy_arn(self, template: Template) -> None:
-        """Verify CloudWatch logging policy ARN is exported to SSM."""
+        """Verify CloudWatch logging policy ARN is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-cloudwatch-logging-policy-arn",
+                "Name": "/test/project/dev/iam/cloudwatch-logging-policy/arn",
                 "Type": "String",
             },
         )

@@ -65,18 +65,18 @@ class DynamoDBStack(Stack):
         return self.config.resource_name(name)
 
     def _export_table_params(self, table: dynamodb.Table, name: str, has_stream: bool = False) -> None:
-        """Export table name and ARN to SSM parameters."""
+        """Export table name and ARN to SSM parameters with path-based naming."""
         ssm.StringParameter(
             self,
             f"{name}TableArnParameter",
-            parameter_name=self.config.ssm_parameter_name(f"{name}-table-arn"),
+            parameter_name=self.config.ssm_parameter_name(f"dynamodb/{name}/arn"),
             string_value=table.table_arn,
         )
 
         ssm.StringParameter(
             self,
             f"{name}TableNameParameter",
-            parameter_name=self.config.ssm_parameter_name(f"{name}-table-name"),
+            parameter_name=self.config.ssm_parameter_name(f"dynamodb/{name}/name"),
             string_value=table.table_name,
         )
 
@@ -84,7 +84,7 @@ class DynamoDBStack(Stack):
             ssm.StringParameter(
                 self,
                 f"{name}TableStreamArnParameter",
-                parameter_name=self.config.ssm_parameter_name(f"{name}-table-stream-arn"),
+                parameter_name=self.config.ssm_parameter_name(f"dynamodb/{name}/stream-arn"),
                 string_value=table.table_stream_arn,
             )
 

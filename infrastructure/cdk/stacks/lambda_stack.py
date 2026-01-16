@@ -343,9 +343,10 @@ class LambdaStack(Stack):
         cross-stack exports which cause update failures when layer versions change.
         """
         # Read layer ARN from SSM parameter (set by lambda-layers stack)
+        # Uses path-based naming: /customer/project/env/lambda-layers/layer-name/arn
         organizations_security_layer_arn = ssm.StringParameter.value_for_string_parameter(
             self,
-            self.config.ssm_parameter_name("organizations-security-layer-arn"),
+            self.config.ssm_parameter_name("lambda-layers/organizations-security/arn"),
         )
         
         # Create layer reference from ARN
@@ -382,11 +383,11 @@ class LambdaStack(Stack):
         return function
 
     def _export_lambda_arn(self, function: lambda_.Function, name: str) -> None:
-        """Export Lambda ARN to SSM parameter."""
+        """Export Lambda ARN to SSM parameter with path-based naming."""
         ssm.StringParameter(
             self,
             f"{name.replace('-', '')}LambdaArnParameter",
-            parameter_name=self.config.ssm_parameter_name(f"{name}-lambda-arn"),
+            parameter_name=self.config.ssm_parameter_name(f"lambda/{name}/arn"),
             string_value=function.function_arn,
             description=f"ARN of the {name} Lambda function",
         )

@@ -178,54 +178,54 @@ class TestFrontendStackOAI:
 
 
 class TestFrontendStackSSMParameters:
-    """Tests for SSM parameter exports."""
+    """Tests for SSM parameter exports using path-based naming."""
 
     def test_exports_website_bucket_name(self, template: Template) -> None:
-        """Verify website bucket name is exported to SSM."""
+        """Verify website bucket name is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-website-bucket-name",
+                "Name": "/test/project/dev/frontend/website-bucket/name",
                 "Type": "String",
             },
         )
 
     def test_exports_website_bucket_arn(self, template: Template) -> None:
-        """Verify website bucket ARN is exported to SSM."""
+        """Verify website bucket ARN is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-website-bucket-arn",
+                "Name": "/test/project/dev/frontend/website-bucket/arn",
                 "Type": "String",
             },
         )
 
     def test_exports_distribution_id(self, template: Template) -> None:
-        """Verify CloudFront distribution ID is exported to SSM."""
+        """Verify CloudFront distribution ID is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-cloudfront-distribution-id",
+                "Name": "/test/project/dev/frontend/distribution-id",
                 "Type": "String",
             },
         )
 
     def test_exports_distribution_domain_name(self, template: Template) -> None:
-        """Verify CloudFront domain name is exported to SSM."""
+        """Verify CloudFront domain name is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-cloudfront-domain-name",
+                "Name": "/test/project/dev/frontend/domain-name",
                 "Type": "String",
             },
         )
 
     def test_exports_website_url(self, template: Template) -> None:
-        """Verify website URL is exported to SSM."""
+        """Verify website URL is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-website-url",
+                "Name": "/test/project/dev/frontend/website-url",
                 "Type": "String",
             },
         )

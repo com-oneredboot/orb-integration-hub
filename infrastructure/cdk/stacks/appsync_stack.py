@@ -239,12 +239,12 @@ class AppSyncStack(Stack):
         return data_sources
 
     def _create_ssm_parameters(self) -> None:
-        """Create SSM parameters for cross-stack references."""
+        """Create SSM parameters for cross-stack references with path-based naming."""
         # API ID
         ssm.StringParameter(
             self,
             "ApiIdParameter",
-            parameter_name=self.config.ssm_parameter_name("appsync-api-id"),
+            parameter_name=self.config.ssm_parameter_name("appsync/api-id"),
             string_value=self.api.api_id,
             description="AppSync GraphQL API ID",
         )
@@ -253,7 +253,7 @@ class AppSyncStack(Stack):
         ssm.StringParameter(
             self,
             "GraphqlUrlParameter",
-            parameter_name=self.config.ssm_parameter_name("graphql-api-url"),
+            parameter_name=self.config.ssm_parameter_name("appsync/graphql-url"),
             string_value=self.api.graphql_url,
             description="GraphQL API URL for frontend API calls",
         )
@@ -262,7 +262,7 @@ class AppSyncStack(Stack):
         ssm.StringParameter(
             self,
             "ApiKeySecretNameParameter",
-            parameter_name=self.config.ssm_parameter_name("graphql-api-key-secret-name"),
+            parameter_name=self.config.ssm_parameter_name("appsync/api-key-secret-name"),
             string_value=self.config.resource_name("graphql-api-key"),
             description="Name of the secret containing the GraphQL API key",
         )

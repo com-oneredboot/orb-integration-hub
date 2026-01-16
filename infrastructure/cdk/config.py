@@ -45,9 +45,21 @@ class Config:
         """Generate a fully qualified resource name."""
         return f"{self.prefix}-{name}"
 
-    def ssm_parameter_name(self, name: str) -> str:
-        """Generate an SSM parameter name."""
-        return f"{self.prefix}-{name}"
+    def ssm_parameter_name(self, resource_path: str) -> str:
+        """Generate path-based SSM parameter name.
+
+        Follows orb-schema-generator convention for SSM parameter naming.
+
+        Pattern: /{customer_id}/{project_id}/{environment}/{resource_path}
+        Example: /orb/integration-hub/dev/cognito/user-pool-id
+
+        Args:
+            resource_path: Resource-specific path (e.g., "cognito/user-pool-id")
+
+        Returns:
+            Full SSM parameter path
+        """
+        return f"/{self.customer_id}/{self.project_id}/{self.environment}/{resource_path}"
 
     @property
     def standard_tags(self) -> dict:

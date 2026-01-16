@@ -4,6 +4,9 @@
 
 | Issue | Team | Title | Status | Impact |
 |-------|------|-------|--------|--------|
+| #64 | orb-schema-generator | Enhancement: Generate SSM parameters for DynamoDB table ARNs and names | Open | Low |
+| #65 | orb-schema-generator | Enhancement: Support PITR configuration in DynamoDB table schemas | Open | Low |
+| #66 | orb-schema-generator | Documentation: Add schema type generation matrix and construct extension examples | Open | Low |
 | #36 | orb-templates | Add 'No CloudFormation Outputs' Rule to Infrastructure Standards | Open | Medium |
 | #1 | orb-geo-fence | Remove default fallback for environment in deploy-infrastructure.yml | Open | Low |
 | #2 | orb-geo-fence | Add CDK pytest tests to deploy-infrastructure workflow | Open | Low |

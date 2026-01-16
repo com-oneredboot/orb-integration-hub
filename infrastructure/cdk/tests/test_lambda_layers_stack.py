@@ -86,24 +86,24 @@ class TestLambdaLayersStackStripeLayer:
 
 
 class TestLambdaLayersStackSSMParameters:
-    """Tests for SSM parameter exports."""
+    """Tests for SSM parameter exports using path-based naming."""
 
     def test_exports_organizations_security_layer_arn(self, template: Template) -> None:
-        """Verify Organizations Security layer ARN is exported to SSM."""
+        """Verify Organizations Security layer ARN is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-organizations-security-layer-arn",
+                "Name": "/test/project/dev/lambda-layers/organizations-security/arn",
                 "Type": "String",
             },
         )
 
     def test_exports_stripe_layer_arn(self, template: Template) -> None:
-        """Verify Stripe layer ARN is exported to SSM."""
+        """Verify Stripe layer ARN is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-stripe-layer-arn",
+                "Name": "/test/project/dev/lambda-layers/stripe/arn",
                 "Type": "String",
             },
         )

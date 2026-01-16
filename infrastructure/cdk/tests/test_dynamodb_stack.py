@@ -252,44 +252,44 @@ class TestDynamoDBStackSmsRateLimitTable:
 
 
 class TestDynamoDBStackSSMParameters:
-    """Tests for SSM parameter exports."""
+    """Tests for SSM parameter exports using path-based naming."""
 
     def test_exports_users_table_arn(self, template: Template) -> None:
-        """Verify Users table ARN is exported to SSM."""
+        """Verify Users table ARN is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-users-table-arn",
+                "Name": "/test/project/dev/dynamodb/users/arn",
                 "Type": "String",
             },
         )
 
     def test_exports_users_table_name(self, template: Template) -> None:
-        """Verify Users table name is exported to SSM."""
+        """Verify Users table name is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-users-table-name",
+                "Name": "/test/project/dev/dynamodb/users/name",
                 "Type": "String",
             },
         )
 
     def test_exports_users_table_stream_arn(self, template: Template) -> None:
-        """Verify Users table stream ARN is exported to SSM."""
+        """Verify Users table stream ARN is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-users-table-stream-arn",
+                "Name": "/test/project/dev/dynamodb/users/stream-arn",
                 "Type": "String",
             },
         )
 
     def test_exports_organizations_table_arn(self, template: Template) -> None:
-        """Verify Organizations table ARN is exported to SSM."""
+        """Verify Organizations table ARN is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-organizations-table-arn",
+                "Name": "/test/project/dev/dynamodb/organizations/arn",
                 "Type": "String",
             },
         )

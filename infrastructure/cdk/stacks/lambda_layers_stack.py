@@ -61,11 +61,11 @@ class LambdaLayersStack(Stack):
             license="MIT",
         )
 
-        # Export layer ARN to SSM
+        # Export layer ARN to SSM with path-based naming
         ssm.StringParameter(
             self,
             "OrganizationsSecurityLayerArnParameter",
-            parameter_name=self.config.ssm_parameter_name("organizations-security-layer-arn"),
+            parameter_name=self.config.ssm_parameter_name("lambda-layers/organizations-security/arn"),
             string_value=layer.layer_version_arn,
             description="ARN of the Organization Security Lambda Layer",
         )
@@ -86,11 +86,11 @@ class LambdaLayersStack(Stack):
             ],
         )
 
-        # Export layer ARN to SSM
+        # Export layer ARN to SSM with path-based naming
         ssm.StringParameter(
             self,
             "StripeLayerArnParameter",
-            parameter_name=self.config.ssm_parameter_name("stripe-layer-arn"),
+            parameter_name=self.config.ssm_parameter_name("lambda-layers/stripe/arn"),
             string_value=layer.layer_version_arn,
             description="ARN of the Stripe Payment Lambda Layer",
         )

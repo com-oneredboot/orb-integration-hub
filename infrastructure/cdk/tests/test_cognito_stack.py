@@ -187,54 +187,64 @@ class TestCognitoStackIdentityPool:
 
 
 class TestCognitoStackSSMParameters:
-    """Tests for SSM parameter exports."""
+    """Tests for SSM parameter exports using path-based naming."""
 
     def test_exports_user_pool_id(self, template: Template) -> None:
-        """Verify User Pool ID is exported to SSM."""
+        """Verify User Pool ID is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-cognito-user-pool-id",
+                "Name": "/test/project/dev/cognito/user-pool-id",
                 "Type": "String",
             },
         )
 
     def test_exports_user_pool_client_id(self, template: Template) -> None:
-        """Verify User Pool Client ID is exported to SSM."""
+        """Verify User Pool Client ID is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-cognito-client-id",
+                "Name": "/test/project/dev/cognito/client-id",
                 "Type": "String",
             },
         )
 
     def test_exports_qr_issuer(self, template: Template) -> None:
-        """Verify QR issuer is exported to SSM."""
+        """Verify QR issuer is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-cognito-qr-issuer",
+                "Name": "/test/project/dev/cognito/qr-issuer",
                 "Type": "String",
             },
         )
 
     def test_exports_identity_pool_id(self, template: Template) -> None:
-        """Verify Identity Pool ID is exported to SSM."""
+        """Verify Identity Pool ID is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-cognito-identity-pool-id",
+                "Name": "/test/project/dev/cognito/identity-pool-id",
+                "Type": "String",
+            },
+        )
+
+    def test_exports_user_pool_arn(self, template: Template) -> None:
+        """Verify User Pool ARN is exported to SSM with path-based naming."""
+        template.has_resource_properties(
+            "AWS::SSM::Parameter",
+            {
+                "Name": "/test/project/dev/cognito/user-pool-arn",
                 "Type": "String",
             },
         )
 
     def test_exports_sms_verification_topic_arn(self, template: Template) -> None:
-        """Verify SMS verification topic ARN is exported to SSM."""
+        """Verify SMS verification topic ARN is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-phone-number-verification-topic-arn",
+                "Name": "/test/project/dev/cognito/phone-number-verification-topic/arn",
                 "Type": "String",
             },
         )

@@ -51,10 +51,11 @@ def template(test_config: Config) -> Template:
     )
     
     # Create mock SSM parameter for layer ARN (normally created by lambda-layers stack)
+    # Uses path-based naming: /customer/project/env/lambda-layers/layer-name/arn
     ssm.StringParameter(
         cognito_stack,
         "MockOrganizationsSecurityLayerArn",
-        parameter_name=test_config.ssm_parameter_name("organizations-security-layer-arn"),
+        parameter_name=test_config.ssm_parameter_name("lambda-layers/organizations-security/arn"),
         string_value="arn:aws:lambda:us-east-1:123456789012:layer:test-project-dev-organizations-security-layer:1",
     )
     
@@ -290,34 +291,34 @@ class TestMonitoringStackMetricFilters:
 
 
 class TestMonitoringStackSSMParameters:
-    """Tests for SSM parameter exports."""
+    """Tests for SSM parameter exports using path-based naming."""
 
     def test_exports_audit_log_group_name(self, template: Template) -> None:
-        """Verify audit log group name is exported to SSM."""
+        """Verify audit log group name is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-audit-log-group-name",
+                "Name": "/test/project/dev/monitoring/audit-log-group/name",
                 "Type": "String",
             },
         )
 
     def test_exports_audit_kms_key_arn(self, template: Template) -> None:
-        """Verify audit KMS key ARN is exported to SSM."""
+        """Verify audit KMS key ARN is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-audit-kms-key-arn",
+                "Name": "/test/project/dev/monitoring/audit-kms-key/arn",
                 "Type": "String",
             },
         )
 
     def test_exports_security_alert_topic_arn(self, template: Template) -> None:
-        """Verify security alert topic ARN is exported to SSM."""
+        """Verify security alert topic ARN is exported to SSM with path-based naming."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "test-project-dev-security-alert-topic-arn",
+                "Name": "/test/project/dev/monitoring/security-alert-topic/arn",
                 "Type": "String",
             },
         )

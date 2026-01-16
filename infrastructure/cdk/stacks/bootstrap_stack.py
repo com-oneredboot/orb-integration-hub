@@ -95,11 +95,11 @@ class BootstrapStack(Stack):
             retention_period=Duration.days(14),
         )
 
-        # Export ARN to SSM
+        # Export ARN to SSM with path-based naming
         ssm.StringParameter(
             self,
             "DeadLetterQueueArnParameter",
-            parameter_name=self.config.ssm_parameter_name("dead-letter-queue-arn"),
+            parameter_name=self.config.ssm_parameter_name("sqs/dead-letter-queue/arn"),
             string_value=queue.queue_arn,
         )
 
@@ -114,11 +114,11 @@ class BootstrapStack(Stack):
             retention_period=Duration.days(14),
         )
 
-        # Export ARN to SSM
+        # Export ARN to SSM with path-based naming
         ssm.StringParameter(
             self,
             "AlertsQueueArnParameter",
-            parameter_name=self.config.ssm_parameter_name("alerts-queue-arn"),
+            parameter_name=self.config.ssm_parameter_name("sqs/alerts-queue/arn"),
             string_value=queue.queue_arn,
         )
 
@@ -164,11 +164,11 @@ class BootstrapStack(Stack):
             ],
         )
 
-        # Export policy ARN to SSM
+        # Export policy ARN to SSM with path-based naming
         ssm.StringParameter(
             self,
             "CloudWatchLoggingPolicyArnParameter",
-            parameter_name=self.config.ssm_parameter_name("cloudwatch-logging-policy-arn"),
+            parameter_name=self.config.ssm_parameter_name("iam/cloudwatch-logging-policy/arn"),
             string_value=cloudwatch_logging_policy.managed_policy_arn,
         )
 
@@ -189,11 +189,11 @@ class BootstrapStack(Stack):
             ],
         )
 
-        # Export policy ARN to SSM
+        # Export policy ARN to SSM with path-based naming
         ssm.StringParameter(
             self,
             "CloudWatchDashboardPolicyArnParameter",
-            parameter_name=self.config.ssm_parameter_name("cloudwatch-dashboard-policy-arn"),
+            parameter_name=self.config.ssm_parameter_name("iam/cloudwatch-dashboard-policy/arn"),
             string_value=cloudwatch_dashboard_policy.managed_policy_arn,
         )
 
@@ -217,11 +217,11 @@ class BootstrapStack(Stack):
             ],
         )
 
-        # Export policy ARN to SSM
+        # Export policy ARN to SSM with path-based naming
         ssm.StringParameter(
             self,
             "AlertsQueuePolicyArnParameter",
-            parameter_name=self.config.ssm_parameter_name("alerts-queue-policy-arn"),
+            parameter_name=self.config.ssm_parameter_name("iam/alerts-queue-policy/arn"),
             string_value=alerts_queue_policy.managed_policy_arn,
         )
 
@@ -245,11 +245,11 @@ class BootstrapStack(Stack):
             ],
         )
 
-        # Export policy ARN to SSM
+        # Export policy ARN to SSM with path-based naming
         ssm.StringParameter(
             self,
             "DeadLetterQueuePolicyArnParameter",
-            parameter_name=self.config.ssm_parameter_name("dead-letter-queue-policy-arn"),
+            parameter_name=self.config.ssm_parameter_name("iam/dead-letter-queue-policy/arn"),
             string_value=dead_letter_queue_policy.managed_policy_arn,
         )
 
@@ -267,11 +267,11 @@ class BootstrapStack(Stack):
             ],
         )
 
-        # Export policy ARN to SSM
+        # Export policy ARN to SSM with path-based naming
         ssm.StringParameter(
             self,
             "LambdaEventPolicyArnParameter",
-            parameter_name=self.config.ssm_parameter_name("lambda-event-policy-arn"),
+            parameter_name=self.config.ssm_parameter_name("iam/lambda-event-policy/arn"),
             string_value=lambda_event_policy.managed_policy_arn,
         )
 
@@ -299,7 +299,7 @@ class BootstrapStack(Stack):
         ssm.StringParameter(
             self,
             "GitHubActionsAccessKeyIdParameter",
-            parameter_name=self.config.ssm_parameter_name("github-actions-access-key-id"),
+            parameter_name=self.config.ssm_parameter_name("iam/github-actions/access-key-id"),
             string_value=access_key.access_key_id,
         )
 
@@ -569,11 +569,11 @@ class BootstrapStack(Stack):
             ),
         )
 
-        # Export secret name to SSM
+        # Export secret name to SSM with path-based naming
         ssm.StringParameter(
             self,
             "SmsVerificationSecretNameParameter",
-            parameter_name=self.config.ssm_parameter_name("sms-verification-secret-name"),
+            parameter_name=self.config.ssm_parameter_name("secrets/sms-verification/name"),
             string_value=secret.secret_name,
             description="Name of the SMS verification secret for lambda access",
         )

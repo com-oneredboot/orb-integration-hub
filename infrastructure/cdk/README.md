@@ -183,17 +183,108 @@ Example: `orb-integration-hub-dev-appsync`
 
 ## SSM Parameters
 
-Each stack exports key values to SSM Parameter Store for cross-stack references:
+Each stack exports key values to SSM Parameter Store for cross-stack references using path-based naming.
 
-| Parameter | Description |
-|-----------|-------------|
-| `{prefix}-user-pool-id` | Cognito User Pool ID |
-| `{prefix}-user-pool-client-id` | Cognito User Pool Client ID |
-| `{prefix}-identity-pool-id` | Cognito Identity Pool ID |
-| `{prefix}-users-table-arn` | Users DynamoDB table ARN |
-| `{prefix}-graphql-api-url` | AppSync GraphQL API URL |
-| `{prefix}-website-bucket-name` | S3 bucket for website |
-| `{prefix}-cloudfront-distribution-id` | CloudFront distribution ID |
+### Naming Convention
+
+SSM parameters follow the path-based naming pattern aligned with orb-schema-generator conventions:
+
+```
+/{customer_id}/{project_id}/{environment}/{resource-type}/{resource-name}/{attribute}
+```
+
+Example: `/orb/integration-hub/dev/cognito/user-pool-id`
+
+### Parameter Reference by Stack
+
+#### Cognito Stack (`/orb/integration-hub/{env}/cognito/`)
+
+| Parameter Path | Description |
+|----------------|-------------|
+| `/orb/integration-hub/{env}/cognito/user-pool-id` | Cognito User Pool ID |
+| `/orb/integration-hub/{env}/cognito/client-id` | Cognito User Pool Client ID |
+| `/orb/integration-hub/{env}/cognito/identity-pool-id` | Cognito Identity Pool ID |
+| `/orb/integration-hub/{env}/cognito/user-pool-arn` | Cognito User Pool ARN |
+| `/orb/integration-hub/{env}/cognito/qr-issuer` | MFA QR code issuer name |
+| `/orb/integration-hub/{env}/cognito/phone-number-verification-topic-arn` | SNS topic for phone verification |
+
+#### DynamoDB Stack (`/orb/integration-hub/{env}/dynamodb/`)
+
+| Parameter Path | Description |
+|----------------|-------------|
+| `/orb/integration-hub/{env}/dynamodb/{table-name}/arn` | Table ARN |
+| `/orb/integration-hub/{env}/dynamodb/{table-name}/name` | Table name |
+
+Tables: `users`, `organizations`, `organization-users`, `applications`, `application-users`, `application-roles`, `roles`, `notifications`, `privacy-requests`, `ownership-transfer-requests`, `sms-rate-limit`
+
+#### Lambda Layers Stack (`/orb/integration-hub/{env}/lambda-layers/`)
+
+| Parameter Path | Description |
+|----------------|-------------|
+| `/orb/integration-hub/{env}/lambda-layers/{layer-name}/arn` | Lambda layer ARN |
+
+Layers: `common`, `authentication-dynamodb`, `organizations-security`, `stripe`
+
+#### Lambda Stack (`/orb/integration-hub/{env}/lambda/`)
+
+| Parameter Path | Description |
+|----------------|-------------|
+| `/orb/integration-hub/{env}/lambda/{function-name}/arn` | Lambda function ARN |
+
+Functions: `sms-verification`, `pre-cognito-claims`, `cognito-group-manager`, `user-status-calculator`, `contact-us`, `stripe`, `stripe-publishable-key`, `paypal`, `organizations`, `ownership-transfer-service`, `privacy-rights-resolver`, `kms-cleanup-orphaned`
+
+#### Bootstrap Stack (`/orb/integration-hub/{env}/`)
+
+| Parameter Path | Description |
+|----------------|-------------|
+| `/orb/integration-hub/{env}/sqs/alerts-queue/arn` | Alerts SQS queue ARN |
+| `/orb/integration-hub/{env}/sqs/alerts-queue/url` | Alerts SQS queue URL |
+| `/orb/integration-hub/{env}/iam/ci-user/arn` | CI user ARN |
+| `/orb/integration-hub/{env}/iam/ci-user/access-key-id` | CI user access key ID |
+| `/orb/integration-hub/{env}/secrets/ci-user-secret-key/arn` | CI user secret key ARN |
+
+#### AppSync Stack (`/orb/integration-hub/{env}/appsync/`)
+
+| Parameter Path | Description |
+|----------------|-------------|
+| `/orb/integration-hub/{env}/appsync/api-id` | AppSync API ID |
+| `/orb/integration-hub/{env}/appsync/api-url` | AppSync GraphQL endpoint URL |
+| `/orb/integration-hub/{env}/appsync/api-key` | AppSync API key |
+
+#### Frontend Stack (`/orb/integration-hub/{env}/frontend/`)
+
+| Parameter Path | Description |
+|----------------|-------------|
+| `/orb/integration-hub/{env}/frontend/bucket-name` | S3 bucket name |
+| `/orb/integration-hub/{env}/frontend/bucket-arn` | S3 bucket ARN |
+| `/orb/integration-hub/{env}/frontend/distribution-id` | CloudFront distribution ID |
+| `/orb/integration-hub/{env}/frontend/distribution-domain` | CloudFront domain name |
+
+#### Monitoring Stack (`/orb/integration-hub/{env}/monitoring/`)
+
+| Parameter Path | Description |
+|----------------|-------------|
+| `/orb/integration-hub/{env}/monitoring/audit-log-group/name` | CloudWatch audit log group name |
+| `/orb/integration-hub/{env}/monitoring/audit-log-group/arn` | CloudWatch audit log group ARN |
+| `/orb/integration-hub/{env}/monitoring/dashboard/name` | CloudWatch dashboard name |
+
+### Using SSM Parameters in Code
+
+```python
+from aws_cdk import aws_ssm as ssm
+
+# Write a parameter
+ssm.StringParameter(
+    self, "UserPoolIdParam",
+    parameter_name=config.ssm_parameter_name("cognito/user-pool-id"),
+    string_value=user_pool.user_pool_id,
+)
+
+# Read a parameter
+user_pool_id = ssm.StringParameter.value_for_string_parameter(
+    self, config.ssm_parameter_name("cognito/user-pool-id")
+)
+```
 
 ## GitHub Actions Workflows
 

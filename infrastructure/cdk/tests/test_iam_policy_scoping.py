@@ -48,10 +48,11 @@ def appsync_template(test_config: Config) -> Template:
     dynamodb = DynamoDBStack(app, "DynamoDB", config=test_config)
     
     # Create mock SSM parameter for layer ARN (normally created by lambda-layers stack)
+    # Uses path-based naming: /customer/project/env/lambda-layers/layer-name/arn
     ssm.StringParameter(
         cognito,
         "MockOrganizationsSecurityLayerArn",
-        parameter_name=test_config.ssm_parameter_name("organizations-security-layer-arn"),
+        parameter_name=test_config.ssm_parameter_name("lambda-layers/organizations-security/arn"),
         string_value="arn:aws:lambda:us-east-1:123456789012:layer:orb-integration-hub-dev-organizations-security-layer:1",
     )
     
