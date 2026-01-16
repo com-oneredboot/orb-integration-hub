@@ -77,6 +77,13 @@
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "allowedHosts": [
+              "localhost",
+              "tameka-overhonest-carefully.ngrok-free.dev",
+              "tameka-overhonest-selfishly.ngrok-free.dev"
+            ]
+          },
           "configurations": {
             "production": {
               "buildTarget": "orb-integration-hub:build:production"
