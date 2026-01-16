@@ -4,6 +4,7 @@
 
 | Issue | Team | Title | Status | Impact |
 |-------|------|-------|--------|--------|
+| #15 | orb-infrastructure | Cognito SMS Role Missing Permission for Direct SMS Publishing | Open | High |
 | #1 | orb-geo-fence | Remove default fallback for environment in deploy-infrastructure.yml | Open | Low |
 | #2 | orb-geo-fence | Add CDK pytest tests to deploy-infrastructure workflow | Open | Low |
 
