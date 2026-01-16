@@ -19,7 +19,7 @@ const CONFIG = {
   projectId: process.env.PROJECT_ID || 'integration-hub',
   environment: process.argv[2] || process.env.ENVIRONMENT || 'dev',
   region: process.env.AWS_REGION || 'us-east-1',
-  awsProfile: process.env.AWS_PROFILE || 'sso-tpf',
+  awsProfile: process.env.AWS_PROFILE || 'sso-orb-dev',
   envFile: path.join(__dirname, '../src/environments/environment.ts'),
   localFile: path.join(__dirname, '../src/environments/environment.local.ts')
 };
@@ -136,6 +136,7 @@ async function setupDevEnvironment() {
 export const environment = {
   appName: 'Integration Hub',
   production: ${isProduction},
+  debugMode: ${!isProduction},
   loggingLevel: '${isProduction ? 'info' : 'debug'}',
   cognito: {
     userPoolId: '${credentials.COGNITO_USER_POOL_ID}',

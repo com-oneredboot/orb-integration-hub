@@ -799,7 +799,7 @@ export class UserEffects {
               })
             );
           }),
-          catchError(_error => {
+          catchError(error => {
             console.error('Effect [RefreshSession]: Critical error (Cognito profile failed)', error);
             const errorObj = getError('ORB-AUTH-001');
             return of(UserActions.refreshSessionFailure({
@@ -1018,7 +1018,7 @@ export class UserEffects {
               switchMap(() => EMPTY)
             );
           }),
-          catchError(_error => {
+          catchError(error => {
             console.error('[Auth Effect] MFA check failed:', error);
             return of(UserActions.checkMFASetupFailure({ 
               error: error instanceof Error ? error.message : 'Failed to check MFA setup'

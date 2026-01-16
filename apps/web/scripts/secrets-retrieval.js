@@ -30,7 +30,7 @@ const CONFIG = {
   projectId: process.env.PROJECT_ID || 'integration-hub',
   environment: process.argv[2] || process.env.ENVIRONMENT || 'dev',
   region: process.env.AWS_REGION || 'us-east-1',
-  awsProfile: process.env.AWS_PROFILE || 'sso-tpf',
+  awsProfile: process.env.AWS_PROFILE || 'sso-orb-dev',
   bootstrapYmlPath: path.join(__dirname, '../../infrastructure/cloudformation/bootstrap.yml'),
   tempSecretsFile: path.join(__dirname, '../.secrets-temp.json')
 };
