@@ -5,8 +5,11 @@ Creates:
 - SmsVerificationLambda
 - CognitoGroupManagerLambda
 - UserStatusCalculatorLambda with DynamoDB stream trigger
-- OrganizationsLambda with layer reference
+- OrganizationsLambda with layer reference (from SSM parameter)
 - SSM parameters for Lambda ARNs
+
+Note: Lambda layers are referenced via SSM parameters to avoid CloudFormation
+cross-stack exports which cause update failures when layer versions change.
 """
 
 import sys
@@ -30,7 +33,6 @@ from constructs import Construct
 from config import Config
 from stacks.cognito_stack import CognitoStack
 from stacks.dynamodb_stack import DynamoDBStack
-from stacks.lambda_layers_stack import LambdaLayersStack
 
 
 class LambdaStack(Stack):
@@ -43,14 +45,12 @@ class LambdaStack(Stack):
         config: Config,
         cognito_stack: CognitoStack,
         dynamodb_stack: DynamoDBStack,
-        layers_stack: LambdaLayersStack,
         **kwargs,
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
         self.config = config
         self.cognito_stack = cognito_stack
         self.dynamodb_stack = dynamodb_stack
-        self.layers_stack = layers_stack
         self._apply_tags()
 
         # Dictionary to store all Lambda functions for cross-stack references
@@ -337,7 +337,24 @@ class LambdaStack(Stack):
         return function
 
     def _create_organizations_lambda(self) -> lambda_.Function:
-        """Create Organizations Lambda function with layer reference."""
+        """Create Organizations Lambda function with layer reference.
+        
+        The layer ARN is read from SSM parameter to avoid CloudFormation
+        cross-stack exports which cause update failures when layer versions change.
+        """
+        # Read layer ARN from SSM parameter (set by lambda-layers stack)
+        organizations_security_layer_arn = ssm.StringParameter.value_for_string_parameter(
+            self,
+            self.config.ssm_parameter_name("organizations-security-layer-arn"),
+        )
+        
+        # Create layer reference from ARN
+        organizations_security_layer = lambda_.LayerVersion.from_layer_version_arn(
+            self,
+            "OrganizationsSecurityLayerRef",
+            organizations_security_layer_arn,
+        )
+        
         function = lambda_.Function(
             self,
             "OrganizationsLambda",
@@ -349,7 +366,7 @@ class LambdaStack(Stack):
             timeout=Duration.seconds(30),
             memory_size=256,
             role=self.lambda_execution_role,
-            layers=[self.layers_stack.organizations_security_layer],
+            layers=[organizations_security_layer],
             environment={
                 "ALERTS_QUEUE": f"arn:aws:sqs:{self.region}:{self.account}:{self.config.prefix}-alerts-queue",
                 "LOGGING_LEVEL": "INFO",

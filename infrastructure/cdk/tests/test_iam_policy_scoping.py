@@ -13,6 +13,7 @@ import json
 import pytest
 from aws_cdk import App
 from aws_cdk.assertions import Template
+from aws_cdk import aws_ssm as ssm
 
 import sys
 from pathlib import Path
@@ -22,7 +23,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import Config
 from stacks.cognito_stack import CognitoStack
 from stacks.dynamodb_stack import DynamoDBStack
-from stacks.lambda_layers_stack import LambdaLayersStack
 from stacks.lambda_stack import LambdaStack
 from stacks.appsync_stack import AppSyncStack
 
@@ -46,13 +46,20 @@ def appsync_template(test_config: Config) -> Template:
     app = App()
     cognito = CognitoStack(app, "Cognito", config=test_config)
     dynamodb = DynamoDBStack(app, "DynamoDB", config=test_config)
-    layers = LambdaLayersStack(app, "Layers", config=test_config)
+    
+    # Create mock SSM parameter for layer ARN (normally created by lambda-layers stack)
+    ssm.StringParameter(
+        cognito,
+        "MockOrganizationsSecurityLayerArn",
+        parameter_name=test_config.ssm_parameter_name("organizations-security-layer-arn"),
+        string_value="arn:aws:lambda:us-east-1:123456789012:layer:orb-integration-hub-dev-organizations-security-layer:1",
+    )
+    
     lambdas = LambdaStack(
         app, "Lambda",
         config=test_config,
         cognito_stack=cognito,
         dynamodb_stack=dynamodb,
-        layers_stack=layers,
     )
     appsync = AppSyncStack(
         app, "AppSync",

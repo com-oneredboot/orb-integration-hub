@@ -1,133 +1,112 @@
 name: deploy-lambda-layers
 
-permissions:
-  contents: read
-  security-events: write
-
 on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Environment to deploy to'
+        description: 'Environment to deploy'
         required: true
         type: environment
         default: dev
-      region:
-        description: 'AWS Region'
+      action:
+        description: 'CDK action to perform'
         required: true
         type: choice
         options:
-          - 'us-east-1'
-      customer_id:
-        description: 'Customer ID'
-        required: true
-        type: string
-        default: 'orb'
-      project_id:
-        description: 'Project ID'
-        required: true
-        type: string
-        default: 'integration-hub'
+          - deploy
+          - diff
+          - synth
+        default: deploy
+
+env:
+  PYTHON_VERSION: '3.13'
+  CUSTOMER_ID: orb
+  PROJECT_ID: integration-hub
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
-  deploy-lambda-layers:
+  deploy:
+    name: Deploy Lambda Layers
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    environment: ${{ inputs.environment }}
+    environment: ${{ github.event.inputs.environment }}
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    # Checkout code
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOYMENT_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
 
-    # Setup Python environment
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.12'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
-    # Fetch AWS Credentials
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+      - name: Install CDK CLI
+        run: npm install -g aws-cdk
 
-    # Build Organizations Security Layer
-    - name: Build Organizations Security Layer
-      run: |
-        pip install --upgrade pip
-        pip install pipenv --user
-        
-        echo "Building Organizations Security Layer"
-        chmod +x build_organizations_security_layer.sh
-        bash build_organizations_security_layer.sh
+      - name: Login to CodeArtifact for pipenv
+        run: |
+          export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token \
+            --domain orb-infrastructure-shared-codeartifact-domain \
+            --domain-owner 432045270100 \
+            --query authorizationToken \
+            --output text)
+          echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
 
-      working-directory: apps/api/layers/organizations_security
+      - name: Install Python dependencies
+        working-directory: infrastructure
+        run: |
+          pip install pipenv
+          pipenv install --dev
 
-    # Build Stripe Layer
-    - name: Build Stripe Layer
-      run: |
-        pip install --upgrade pip
-        pip install pipenv --user
-        
-        echo "Building Stripe Layer"
-        chmod +x build_stripe_layer.sh
-        bash build_stripe_layer.sh
+      - name: CDK Synth
+        if: ${{ github.event.inputs.action == 'synth' || github.event.inputs.action == 'deploy' }}
+        working-directory: infrastructure
+        run: |
+          echo "🔧 Synthesizing Lambda Layers stack for ${{ github.event.inputs.environment }}..."
+          pipenv run cdk --app "python cdk/app_lambda_layers.py" synth \
+            --context customer_id=${{ env.CUSTOMER_ID }} \
+            --context project_id=${{ env.PROJECT_ID }} \
+            --context environment=${{ github.event.inputs.environment }}
 
-      working-directory: apps/api/layers/stripe
+      - name: CDK Diff
+        if: ${{ github.event.inputs.action == 'diff' || github.event.inputs.action == 'deploy' }}
+        working-directory: infrastructure
+        run: |
+          echo "📋 Showing Lambda Layers changes..."
+          pipenv run cdk --app "python cdk/app_lambda_layers.py" diff \
+            --context customer_id=${{ env.CUSTOMER_ID }} \
+            --context project_id=${{ env.PROJECT_ID }} \
+            --context environment=${{ github.event.inputs.environment }} || true
 
-    # Check for changes before deploying
-    - name: Check Layer Changes
-      id: check-changes
-      run: |
-        # Generate content hashes for both layers
-        ORG_HASH=$(find apps/api/layers/organizations_security -type f -name "*.py" -exec sha256sum {} + | sha256sum | cut -d' ' -f1)
-        STRIPE_HASH=$(find apps/api/layers/stripe -type f \( -name "*.py" -o -name "Pipfile*" \) -exec sha256sum {} + | sha256sum | cut -d' ' -f1)
-        
-        echo "organization_hash=${ORG_HASH}" >> $GITHUB_OUTPUT
-        echo "stripe_hash=${STRIPE_HASH}" >> $GITHUB_OUTPUT
-        
-        # Check if hashes changed from last deployment
-        aws s3 cp s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts/lambda-layer-hashes.json ./previous-hashes.json 2>/dev/null || echo '{"organization_hash":"","stripe_hash":""}' > ./previous-hashes.json
-        
-        PREV_ORG_HASH=$(jq -r '.organization_hash' previous-hashes.json)
-        PREV_STRIPE_HASH=$(jq -r '.stripe_hash' previous-hashes.json)
-        
-        if [[ "$ORG_HASH" != "$PREV_ORG_HASH" || "$STRIPE_HASH" != "$PREV_STRIPE_HASH" ]]; then
-          echo "changes_detected=true" >> $GITHUB_OUTPUT
-          echo "Layer changes detected, will deploy new versions"
-        else
-          echo "changes_detected=false" >> $GITHUB_OUTPUT
-          echo "No layer changes detected, skipping deployment"
-        fi
+      - name: CDK Deploy
+        if: ${{ github.event.inputs.action == 'deploy' }}
+        working-directory: infrastructure
+        run: |
+          echo "🚀 Deploying Lambda Layers to ${{ github.event.inputs.environment }}..."
+          pipenv run cdk --app "python cdk/app_lambda_layers.py" deploy --all \
+            --require-approval never \
+            --context customer_id=${{ env.CUSTOMER_ID }} \
+            --context project_id=${{ env.PROJECT_ID }} \
+            --context environment=${{ github.event.inputs.environment }}
 
-    # Deploy Consolidated Layers (only if changes detected)
-    - name: Deploy Consolidated Layers
-      if: steps.check-changes.outputs.changes_detected == 'true'
-      run: |
-        sam build \
-        --template lambda-layers.yml
-        
-        sam package \
-        --template-file lambda-layers.yml \
-        --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
-        --output-template-file lambda-layers-packaged.yml
-        
-        sam deploy \
-        --template-file lambda-layers-packaged.yml \
-        --s3-bucket ${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts \
-        --stack-name ${{ inputs.customer_id }}-${{ inputs.project_id }}-${{ inputs.environment }}-lambda-layers \
-        --capabilities CAPABILITY_NAMED_IAM \
-        --no-fail-on-empty-changeset
-        
-        aws s3 cp lambda-layers-packaged.yml \
-        s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-templates/lambda-layers-packaged.yml
-        
-        # Store new hashes
-        echo "{\"organization_hash\":\"${{ steps.check-changes.outputs.organization_hash }}\",\"stripe_hash\":\"${{ steps.check-changes.outputs.stripe_hash }}\"}" > lambda-layer-hashes.json
-        aws s3 cp lambda-layer-hashes.json s3://${{ inputs.customer_id }}-${{ inputs.project_id }}-build-artifacts/lambda-layer-hashes.json
-
-      working-directory: infrastructure/cloudformation
+      - name: Output Stack Information
+        if: ${{ github.event.inputs.action == 'deploy' }}
+        run: |
+          echo "## Deployed Lambda Layers Stack" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          PREFIX="${{ env.CUSTOMER_ID }}-${{ env.PROJECT_ID }}-${{ github.event.inputs.environment }}"
+          STACK_NAME="${PREFIX}-lambda-layers"
+          STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo "NOT_FOUND")
+          echo "| Stack | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| $STACK_NAME | $STATUS |" >> $GITHUB_STEP_SUMMARY

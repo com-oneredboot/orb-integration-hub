@@ -1,4 +1,8 @@
-"""Unit tests for LambdaStack."""
+"""Unit tests for LambdaStack.
+
+Note: Lambda layers are deployed separately and referenced via SSM parameters.
+The test creates a mock SSM parameter for the layer ARN.
+"""
 
 import sys
 from pathlib import Path
@@ -9,11 +13,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import pytest
 from aws_cdk import App
 from aws_cdk.assertions import Match, Template
+from aws_cdk import aws_ssm as ssm
 
 from config import Config
 from stacks.cognito_stack import CognitoStack
 from stacks.dynamodb_stack import DynamoDBStack
-from stacks.lambda_layers_stack import LambdaLayersStack
 from stacks.lambda_stack import LambdaStack
 
 
@@ -32,7 +36,12 @@ def test_config() -> Config:
 
 @pytest.fixture
 def template(test_config: Config) -> Template:
-    """Create CDK template from LambdaStack with dependencies."""
+    """Create CDK template from LambdaStack with dependencies.
+    
+    Note: Lambda layers are deployed separately. The lambda stack reads
+    layer ARNs from SSM parameters. For testing, we create a mock SSM
+    parameter in the same app.
+    """
     app = App()
 
     # Create dependency stacks
@@ -46,20 +55,23 @@ def template(test_config: Config) -> Template:
         "TestDynamoDBStack",
         config=test_config,
     )
-    layers_stack = LambdaLayersStack(
-        app,
-        "TestLambdaLayersStack",
-        config=test_config,
+    
+    # Create mock SSM parameter for layer ARN (normally created by lambda-layers stack)
+    # This simulates the SSM parameter that would exist after lambda-layers deployment
+    ssm.StringParameter(
+        cognito_stack,  # Add to cognito stack to avoid circular dependency
+        "MockOrganizationsSecurityLayerArn",
+        parameter_name=test_config.ssm_parameter_name("organizations-security-layer-arn"),
+        string_value="arn:aws:lambda:us-east-1:123456789012:layer:test-project-dev-organizations-security-layer:1",
     )
 
-    # Create Lambda stack
+    # Create Lambda stack (no layers_stack dependency - reads from SSM)
     stack = LambdaStack(
         app,
         "TestLambdaStack",
         config=test_config,
         cognito_stack=cognito_stack,
         dynamodb_stack=dynamodb_stack,
-        layers_stack=layers_stack,
     )
     return Template.from_stack(stack)
 

@@ -4,6 +4,10 @@
 This is the main entry point for the CDK application. It instantiates all stacks
 with the correct dependencies and configuration.
 
+IMPORTANT: Lambda layers are deployed separately via deploy-lambda-layers workflow.
+This avoids CloudFormation cross-stack export issues when layer versions change.
+The lambda stack reads layer ARNs from SSM parameters instead of direct references.
+
 Usage:
     cdk synth --all
     cdk deploy --all
@@ -27,7 +31,6 @@ from stacks import (
     CognitoStack,
     DynamoDBStack,
     FrontendStack,
-    LambdaLayersStack,
     LambdaStack,
     MonitoringStack,
 )
@@ -78,14 +81,8 @@ def main() -> None:
         description="DynamoDB tables for application data",
     )
 
-    # Lambda Layers Stack - Shared Lambda layers
-    lambda_layers_stack = LambdaLayersStack(
-        app,
-        f"{stack_prefix}-lambda-layers",
-        config=config,
-        env=env,
-        description="Lambda layers: organizations_security, stripe",
-    )
+    # NOTE: Lambda Layers Stack is deployed separately via deploy-lambda-layers workflow
+    # to avoid CloudFormation cross-stack export issues. Layer ARNs are read from SSM.
 
     # Frontend Stack - S3 and CloudFront for website
     frontend_stack = FrontendStack(
@@ -98,14 +95,14 @@ def main() -> None:
 
     # ===== Application Stacks (with dependencies) =====
 
-    # Lambda Stack - Lambda functions (depends on Cognito, DynamoDB, Layers)
+    # Lambda Stack - Lambda functions (depends on Cognito, DynamoDB)
+    # Layer ARNs are read from SSM parameters (set by lambda-layers stack)
     lambda_stack = LambdaStack(
         app,
         f"{stack_prefix}-lambda",
         config=config,
         cognito_stack=cognito_stack,
         dynamodb_stack=dynamodb_stack,
-        layers_stack=lambda_layers_stack,
         env=env,
         description="Lambda functions for business logic",
     )
@@ -135,7 +132,6 @@ def main() -> None:
     # Add stack dependencies explicitly
     lambda_stack.add_dependency(cognito_stack)
     lambda_stack.add_dependency(dynamodb_stack)
-    lambda_stack.add_dependency(lambda_layers_stack)
 
     appsync_stack.add_dependency(cognito_stack)
     appsync_stack.add_dependency(dynamodb_stack)
