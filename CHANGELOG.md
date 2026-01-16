@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- Updated Angular packages to v19.2.18 (core, material, cdk, forms, router, etc.)
+- Updated Angular build tools to v19.2.19 (@angular-devkit/build-angular, @angular/build, @angular/cli)
+- Resolved all 30 Dependabot vulnerabilities (2 critical, 16 high, 6 moderate, 6 low)
+- npm audit now reports 0 vulnerabilities
+- Python dependencies verified clean via `pipenv check`
+
 ### Added
 - Complete GraphQL API with 99 operations across 11 entities
 - VTL resolvers for all DynamoDB operations (114 resolver files)
