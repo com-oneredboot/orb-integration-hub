@@ -4,6 +4,7 @@
 
 | Issue | Team | Title | Status | Impact |
 |-------|------|-------|--------|--------|
+| #36 | orb-templates | Add 'No CloudFormation Outputs' Rule to Infrastructure Standards | Open | Medium |
 | #1 | orb-geo-fence | Remove default fallback for environment in deploy-infrastructure.yml | Open | Low |
 | #2 | orb-geo-fence | Add CDK pytest tests to deploy-infrastructure workflow | Open | Low |
 
