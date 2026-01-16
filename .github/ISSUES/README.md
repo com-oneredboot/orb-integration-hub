@@ -6,14 +6,14 @@
 |-------|------|-------|--------|--------|
 | #1 | orb-geo-fence | Remove default fallback for environment in deploy-infrastructure.yml | Open | Low |
 | #2 | orb-geo-fence | Add CDK pytest tests to deploy-infrastructure workflow | Open | Low |
-| #62 | orb-schema-generator | TypeScript model references wrong enum case (UNKNOWN vs Unknown) | Open | High |
-| #63 | orb-schema-generator | Enhancement: Generate GraphQL operations for Lambda types | Open | Medium |
 
 
 ## Resolved Issues
 
 | Issue | Team | Title | Resolution Date |
 |-------|------|-------|-----------------|
+| #63 | orb-schema-generator | Enhancement: Generate GraphQL operations for Lambda types | 2026-01-15 |
+| #62 | orb-schema-generator | TypeScript model references wrong enum case (UNKNOWN vs Unknown) | 2026-01-15 |
 | #61 | orb-schema-generator | Enhancement: Generate TypeScript GraphQL Query Definition Files | 2026-01-15 |
 | #59 | orb-schema-generator | Generated TypeScript models have ESLint violations | 2026-01-14 |
 | #13 | orb-infrastructure | CI Environment OIDC Role for CodeArtifact Access | 2026-01-14 |

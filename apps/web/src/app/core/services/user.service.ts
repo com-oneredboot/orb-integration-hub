@@ -14,7 +14,7 @@ import {ApiService} from "./api.service";
 import {
   UsersCreate, UsersUpdate, UsersQueryByUserId, UsersQueryByEmail, UsersQueryByCognitoSub
 } from "../graphql/Users.graphql";
-import { SmsVerificationMutation } from "../graphql/SmsVerification.graphql";
+import { SmsVerification } from "../graphql/SmsVerification.graphql";
 import {
   UsersCreateInput, UsersUpdateInput,
   UsersCreateResponse, UsersUpdateResponse, IUsers,
@@ -264,7 +264,7 @@ export class UserService extends ApiService {
       console.debug('[UserService][checkCognitoEmailVerification] Cognito profile:', cognitoProfile);
       
       // Check if the current user's email matches and is verified
-      if (cognitoProfile?.email === email && cognitoProfile?.email_verified === 'true') {
+      if (cognitoProfile?.['email'] === email && cognitoProfile?.['email_verified'] === 'true') {
         console.debug('[UserService][checkCognitoEmailVerification] Email is verified in Cognito');
         return true;
       }
@@ -916,7 +916,7 @@ export class UserService extends ApiService {
       
       // Use userPool authentication for authenticated users
       const response = await this.mutate(
-        SmsVerificationMutation,
+        SmsVerification,
         {
           input: {
             phoneNumber: phoneNumber
@@ -1010,7 +1010,7 @@ export class UserService extends ApiService {
       
       // Use userPool authentication for authenticated users
       const response = await this.mutate(
-        SmsVerificationMutation,
+        SmsVerification,
         {
           input: {
             phoneNumber: phoneNumber,

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "c9cb35d29153ae86b71f427cc50f33c523350600c1e2400a94901b7952912dcb"
+            "sha256": "886091171a9eb4695f4679ac99562641f4d5c8e6a9e91ff11252999d03053da1"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -387,12 +387,12 @@
         },
         "orb-schema-generator": {
             "hashes": [
-                "sha256:35b4883ea09bacf941078a3b2a7ee187b91308364fb43cf6a6eabe8303686d3f",
-                "sha256:f9b631ebac200b1f218c5be6217398294b61edd8ac891e7a9fa69e67e10a782b"
+                "sha256:198615121f6d178897e64bb90ca58e765bc47cbda58420ced014b57e165dd259",
+                "sha256:44fb75b507100a201d208f565cbc1759f13d0102e71be4ef9bcb2a0953d58cf8"
             ],
             "index": "codeartifact",
             "markers": "python_version >= '3.12'",
-            "version": "==0.14.0"
+            "version": "==0.15.0"
         },
         "packaging": {
             "hashes": [
