@@ -310,10 +310,19 @@ Sets up the Angular frontend for local development with AWS backend:
 1. Navigate to frontend: `cd apps/web`
 2. Install dependencies: `npm install`
 3. Run setup script for dev environment: `npm run setup-dev`
-4. Start the development server: `npm start`
-5. Report the local URL (typically http://localhost:4200)
+4. Report: "Frontend configured with dev environment credentials"
 
 **Note**: The frontend connects to the deployed AWS backend (AppSync, Cognito) via environment configuration. No local backend needed.
+
+### "start local testing"
+Sets up and starts the frontend for local testing against the dev backend:
+1. **Setup frontend**:
+   - `cd apps/web && npm install`
+   - `npm run setup-dev` (retrieves credentials from AWS SSM/Secrets Manager)
+2. **Start dev server**: `npm start`
+3. Report: "Frontend running at http://localhost:4200 - connects to AWS dev backend"
+
+**Prerequisites**: AWS SSO session must be active (`aws sso login --profile sso-orb-dev`)
 
 ### "setup local testing"
 Sets up both frontend and infrastructure for local testing:

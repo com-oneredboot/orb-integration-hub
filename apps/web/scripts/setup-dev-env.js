@@ -40,22 +40,26 @@ const clientConfig = getAWSClientConfig();
 const secretsManager = new SecretsManagerClient(clientConfig);
 const ssmClient = new SSMClient(clientConfig);
 
+// Helper to generate path-based SSM parameter names
+const ssmParameterName = (resourcePath) => 
+  `/${CONFIG.customerId}/${CONFIG.projectId}/${CONFIG.environment}/${resourcePath}`;
+
 const FRONTEND_SECRETS_MAP = {
   'COGNITO_USER_POOL_ID': {
     type: 'parameter',
-    name: `${CONFIG.customerId}-${CONFIG.projectId}-${CONFIG.environment}-cognito-user-pool-id`
+    name: ssmParameterName('cognito/user-pool-id')
   },
   'COGNITO_CLIENT_ID': {
     type: 'parameter',
-    name: `${CONFIG.customerId}-${CONFIG.projectId}-${CONFIG.environment}-cognito-client-id`
+    name: ssmParameterName('cognito/client-id')
   },
   'COGNITO_QR_ISSUER': {
     type: 'parameter',
-    name: `${CONFIG.customerId}-${CONFIG.projectId}-${CONFIG.environment}-cognito-qr-issuer`
+    name: ssmParameterName('cognito/qr-issuer')
   },
   'GRAPHQL_API_URL': {
     type: 'parameter',
-    name: `${CONFIG.customerId}-${CONFIG.projectId}-${CONFIG.environment}-graphql-api-url`
+    name: ssmParameterName('appsync/graphql-url')
   },
   'AWS_REGION': {
     type: 'static',
