@@ -141,10 +141,23 @@ class TestCognitoIAMPolicyScoping:
     """Test that Cognito IAM policies are properly scoped."""
 
     def test_sns_policy_is_scoped(self, cognito_template: Template):
-        """Verify SNS policy resources are scoped."""
+        """Verify SNS policy resources are scoped where possible.
+        
+        Note: The Cognito SMS role requires sns:Publish with Resource: "*" because
+        direct SMS publishing to phone numbers doesn't use ARNs. AWS documentation
+        confirms this is the required pattern for SMS MFA.
+        See: https://docs.aws.amazon.com/sns/latest/dg/sms_publish-to-phone.html
+        
+        This test allows wildcard resources for the Cognito SMS role policy
+        (CognitoSMSRoleDefaultPolicy) while ensuring other SNS policies are scoped.
+        """
         policies = cognito_template.find_resources("AWS::IAM::Policy")
         
         for policy_id, policy in policies.items():
+            # Skip the Cognito SMS role policy - wildcard is required for direct SMS
+            if "CognitoSMSRole" in policy_id:
+                continue
+                
             statements = policy.get("Properties", {}).get("PolicyDocument", {}).get("Statement", [])
             
             for statement in statements:

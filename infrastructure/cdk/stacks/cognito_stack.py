@@ -94,9 +94,13 @@ class CognitoStack(Stack):
     def _create_cognito_sms_role(self) -> iam.Role:
         """Create IAM role for Cognito SMS sending.
         
-        Note: Cognito requires sns:Publish permission for SMS MFA. The resource
-        must allow publishing to phone numbers (sns:* for direct SMS) and the
-        verification topic. We scope to the account's SNS resources.
+        Note: Cognito requires sns:Publish permission for SMS MFA. Direct SMS
+        publishing to phone numbers requires Resource: "*" because phone numbers
+        don't have ARNs. See: https://docs.aws.amazon.com/sns/latest/dg/sms_publish-to-phone.html
+        
+        Security is maintained because:
+        1. The role is only assumable by Cognito (via trust policy with external ID)
+        2. Cognito only uses it for SMS MFA verification codes
         """
         external_id = f"{self.config.prefix}-cognito-sms"
 
@@ -112,15 +116,13 @@ class CognitoStack(Stack):
             ),
         )
 
-        # SNS permissions for SMS - scoped to account resources
-        # Cognito needs Publish for direct SMS to phone numbers
+        # SNS permissions for SMS - Resource: "*" required for direct SMS to phone numbers
+        # Phone numbers don't have ARNs, so wildcard is the AWS-documented pattern
         role.add_to_policy(
             iam.PolicyStatement(
                 effect=iam.Effect.ALLOW,
                 actions=["sns:Publish"],
-                resources=[
-                    f"arn:aws:sns:{self.region}:{self.account}:*",
-                ],
+                resources=["*"],
             )
         )
 
