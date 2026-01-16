@@ -74,7 +74,7 @@ export class UserEffects {
         );
       }),
       catchError(_error => {
-        console.error('Effect [CheckEmail]: Error caught', error);
+        console.error('Effect [CheckEmail]: Error caught', _error);
         const errorObj = getError('ORB-SYS-001');
         return of(UserActions.checkEmailFailure({
           error: errorObj ? errorObj.message : 'Unexpected error'
@@ -126,9 +126,9 @@ export class UserEffects {
             return UserActions.checkEmailVerificationStatusSuccess({ isVerified, email });
           }),
           catchError(_error => {
-            console.error('[Effect][checkEmailVerificationStatus$] Error:', error);
+            console.error('[Effect][checkEmailVerificationStatus$] Error:', _error);
             return of(UserActions.checkEmailVerificationStatusFailure({
-              error: error instanceof Error ? error.message : 'Failed to check email verification status'
+              error: _error instanceof Error ? _error.message : 'Failed to check email verification status'
             }));
           })
         );
@@ -176,9 +176,9 @@ export class UserEffects {
             return UserActions.updateUserAfterEmailVerificationSuccess({ user: updatedUser });
           }),
           catchError(_error => {
-            console.error('[Effect][autoUpdateEmailVerification$] Failed to auto-update email verification:', error);
+            console.error('[Effect][autoUpdateEmailVerification$] Failed to auto-update email verification:', _error);
             return of(UserActions.updateUserAfterEmailVerificationFailure({ 
-              error: error instanceof Error ? error.message : 'Failed to update user record'
+              error: _error instanceof Error ? _error.message : 'Failed to update user record'
             }));
           })
         );
@@ -286,9 +286,9 @@ export class UserEffects {
             return UserActions.updateUserAfterEmailVerificationSuccess({ user: updatedUser });
           }),
           catchError(_error => {
-            console.error('Failed to update user after email verification:', error);
+            console.error('Failed to update user after email verification:', _error);
             return of(UserActions.updateUserAfterEmailVerificationFailure({ 
-              error: error instanceof Error ? error.message : 'Failed to update user record'
+              error: _error instanceof Error ? _error.message : 'Failed to update user record'
             }));
           })
         );
@@ -358,9 +358,9 @@ export class UserEffects {
             return UserActions.checkMFAStatusSuccess({ mfaEnabled, mfaSetupComplete });
           }),
           catchError(_error => {
-            console.error('[Effect][checkMFAStatus$] Error:', error);
+            console.error('[Effect][checkMFAStatus$] Error:', _error);
             return of(UserActions.checkMFAStatusFailure({
-              error: error instanceof Error ? error.message : 'Failed to check MFA status'
+              error: _error instanceof Error ? _error.message : 'Failed to check MFA status'
             }));
           })
         );
@@ -408,9 +408,9 @@ export class UserEffects {
             return UserActions.updateUserAfterMFASetupSuccess({ user: updatedUser });
           }),
           catchError(_error => {
-            console.error('[Effect][autoUpdateMFAStatus$] Failed to auto-update MFA status:', error);
+            console.error('[Effect][autoUpdateMFAStatus$] Failed to auto-update MFA status:', _error);
             return of(UserActions.updateUserAfterMFASetupFailure({ 
-              error: error instanceof Error ? error.message : 'Failed to update user record'
+              error: _error instanceof Error ? _error.message : 'Failed to update user record'
             }));
           })
         );
@@ -447,7 +447,7 @@ export class UserEffects {
             });
           }),
           catchError(_error => {
-            console.error('[Effect][setupMFA$] MFA setup error:', error);
+            console.error('[Effect][setupMFA$] MFA setup error:', _error);
             const errorObj = getError('ORB-AUTH-003');
             return of(UserActions.needsMFASetupFailure({
               error: errorObj ? errorObj.message : 'MFA setup failed'
@@ -500,9 +500,9 @@ export class UserEffects {
             return UserActions.updateUserAfterMFASetupSuccess({ user: updatedUser });
           }),
           catchError(_error => {
-            console.error('Failed to update user after MFA setup:', error);
+            console.error('Failed to update user after MFA setup:', _error);
             return of(UserActions.updateUserAfterMFASetupFailure({ 
-              error: error instanceof Error ? error.message : 'Failed to update user record'
+              error: _error instanceof Error ? _error.message : 'Failed to update user record'
             }));
           })
         );
@@ -592,7 +592,7 @@ export class UserEffects {
             return UserActions.signoutSuccess();
           }),
           catchError(_error => {
-            console.error('Error during signout:', error);
+            console.error('Error during signout:', _error);
             // Even on error, we return success to ensure state is reset
             return of(UserActions.signoutSuccess());
           })
@@ -620,7 +620,7 @@ export class UserEffects {
         return of(UserActions.checkPhoneRequiredSuccess({ required: true }))
           .pipe(
             catchError(_error => of(UserActions.checkPhoneRequiredFailure({ 
-              error: error instanceof Error ? error.message : 'Failed to check phone requirement'
+              error: _error instanceof Error ? _error.message : 'Failed to check phone requirement'
             })))
           );
       })
@@ -645,7 +645,7 @@ export class UserEffects {
             });
           }),
           catchError(_error => of(UserActions.setupPhoneFailure({ 
-            error: error instanceof Error ? error.message : 'Failed to set up phone verification'
+            error: _error instanceof Error ? _error.message : 'Failed to set up phone verification'
           })))
         );
       })
@@ -674,7 +674,7 @@ export class UserEffects {
             });
           }),
           catchError(_error => of(UserActions.verifyPhoneFailure({ 
-            error: error instanceof Error ? error.message : 'Failed to verify phone code'
+            error: _error instanceof Error ? _error.message : 'Failed to verify phone code'
           })))
         );
       })
@@ -727,9 +727,9 @@ export class UserEffects {
             return UserActions.updateUserAfterPhoneVerificationSuccess({ user: updatedUser });
           }),
           catchError(_error => {
-            console.error('Failed to update user after phone verification:', error);
+            console.error('Failed to update user after phone verification:', _error);
             return of(UserActions.updateUserAfterPhoneVerificationFailure({ 
-              error: error instanceof Error ? error.message : 'Failed to update user record'
+              error: _error instanceof Error ? _error.message : 'Failed to update user record'
             }));
           })
         );
@@ -745,12 +745,12 @@ export class UserEffects {
         from(this.cognitoService.getCognitoProfile()).pipe(
           switchMap(cognitoProfile => {
             
-            if (!cognitoProfile?.email) {
+            if (!cognitoProfile?.['email']) {
               throw new Error('No email found in Cognito profile');
             }
             
             // Get user data from our backend using the email from Cognito
-            return from(this.userService.userExists({ email: cognitoProfile.email })).pipe(
+            return from(this.userService.userExists({ email: cognitoProfile['email'] as string })).pipe(
               map(response => {
                 
                 // Handle backend user lookup - be resilient to failures
@@ -770,13 +770,13 @@ export class UserEffects {
                 
                 // Create a minimal user object from Cognito profile
                 const fallbackUser = new Users({
-                  userId: cognitoProfile.sub || '', // Cognito user ID as fallback
-                  cognitoSub: cognitoProfile.sub || '',
-                  email: cognitoProfile.email,
-                  firstName: cognitoProfile.given_name || '',
-                  lastName: cognitoProfile.family_name || '',
-                  emailVerified: cognitoProfile.email_verified === 'true',
-                  groups: cognitoProfile['cognito:groups'] || []
+                  userId: (cognitoProfile.sub as string) || '', // Cognito user ID as fallback
+                  cognitoSub: (cognitoProfile.sub as string) || '',
+                  email: cognitoProfile['email'] as string,
+                  firstName: (cognitoProfile['given_name'] as string) || '',
+                  lastName: (cognitoProfile['family_name'] as string) || '',
+                  emailVerified: cognitoProfile['email_verified'] === 'true',
+                  groups: (cognitoProfile['cognito:groups'] as string[]) || []
                 });
                 
                 return UserActions.refreshSessionSuccess({ user: fallbackUser });
@@ -786,21 +786,21 @@ export class UserEffects {
                 // Continue with Cognito profile data
                 
                 const fallbackUser = new Users({
-                  userId: cognitoProfile.sub || '',
-                  cognitoSub: cognitoProfile.sub || '',
-                  email: cognitoProfile.email,
-                  firstName: cognitoProfile.given_name || '',
-                  lastName: cognitoProfile.family_name || '',
-                  emailVerified: cognitoProfile.email_verified === 'true',
-                  groups: cognitoProfile['cognito:groups'] || []
+                  userId: (cognitoProfile.sub as string) || '',
+                  cognitoSub: (cognitoProfile.sub as string) || '',
+                  email: cognitoProfile['email'] as string,
+                  firstName: (cognitoProfile['given_name'] as string) || '',
+                  lastName: (cognitoProfile['family_name'] as string) || '',
+                  emailVerified: cognitoProfile['email_verified'] === 'true',
+                  groups: (cognitoProfile['cognito:groups'] as string[]) || []
                 });
                 
                 return of(UserActions.refreshSessionSuccess({ user: fallbackUser }));
               })
             );
           }),
-          catchError(error => {
-            console.error('Effect [RefreshSession]: Critical error (Cognito profile failed)', error);
+          catchError(_error => {
+            console.error('Effect [RefreshSession]: Critical error (Cognito profile failed)', _error);
             const errorObj = getError('ORB-AUTH-001');
             return of(UserActions.refreshSessionFailure({
               error: errorObj ? errorObj.message : 'Session refresh failed'
@@ -1018,10 +1018,10 @@ export class UserEffects {
               switchMap(() => EMPTY)
             );
           }),
-          catchError(error => {
-            console.error('[Auth Effect] MFA check failed:', error);
+          catchError(_error => {
+            console.error('[Auth Effect] MFA check failed:', _error);
             return of(UserActions.checkMFASetupFailure({ 
-              error: error instanceof Error ? error.message : 'Failed to check MFA setup'
+              error: _error instanceof Error ? _error.message : 'Failed to check MFA setup'
             }));
           })
         );

@@ -8,11 +8,12 @@ import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { of } from 'rxjs';
-import { map, catchError, switchMap, withLatestFrom } from 'rxjs/operators';
+import { map, catchError, switchMap, withLatestFrom, filter } from 'rxjs/operators';
 
 import { OrganizationsActions } from './organizations.actions';
 import { OrganizationService } from '../../../../core/services/organization.service';
 import { selectIsCreatingNew } from './organizations.selectors';
+import { selectCurrentUser } from '../../../user/store/user.selectors';
 
 @Injectable()
 export class OrganizationsEffects {
@@ -27,8 +28,10 @@ export class OrganizationsEffects {
   loadOrganizations$ = createEffect(() =>
     this.actions$.pipe(
       ofType(OrganizationsActions.loadOrganizations, OrganizationsActions.refreshOrganizations),
-      switchMap(() =>
-        this.organizationService.getUserOrganizations().pipe(
+      withLatestFrom(this.store.select(selectCurrentUser)),
+      filter(([, currentUser]) => !!currentUser?.userId),
+      switchMap(([, currentUser]) =>
+        this.organizationService.getUserOrganizations(currentUser!.userId).pipe(
           map(response => {
             if (response.StatusCode === 200 && response.Data) {
               return OrganizationsActions.loadOrganizationsSuccess({ 
