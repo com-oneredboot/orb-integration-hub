@@ -15,6 +15,7 @@ import {
   UsersCreate, UsersUpdate, UsersQueryByUserId, UsersQueryByEmail, UsersQueryByCognitoSub
 } from "../graphql/Users.graphql";
 import { SmsVerification } from "../graphql/SmsVerification.graphql";
+import { CheckEmailExists } from "../graphql/CheckEmailExists.graphql";
 import {
   UsersCreateInput, UsersUpdateInput,
   UsersCreateResponse, UsersUpdateResponse, IUsers,
@@ -1037,6 +1038,30 @@ export class UserService extends ApiService {
     } catch (error) {
       console.error('Error verifying SMS code:', error);
       return false;
+    }
+  }
+
+  /**
+   * Check if an email exists in the system using the public CheckEmailExists query.
+   * This uses API key authentication and doesn't require user authentication.
+   * 
+   * @param email Email address to check
+   * @returns Promise with exists boolean
+   */
+  public async checkEmailExists(email: string): Promise<{ exists: boolean }> {
+    try {
+      const response = await this.query(
+        CheckEmailExists,
+        { input: { email } },
+        'apiKey'
+      ) as GraphQLResult<{ CheckEmailExists?: { email: string; exists: boolean } }>;
+
+      return {
+        exists: response.data?.CheckEmailExists?.exists ?? false
+      };
+    } catch (error) {
+      console.error('[UserService][checkEmailExists] Error checking email:', error);
+      throw new Error('Failed to check email existence');
     }
   }
 }

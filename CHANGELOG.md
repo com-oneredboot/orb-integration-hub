@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- CheckEmailExists Lambda-backed GraphQL query for public email existence checks
+  - Uses API key authentication for unauthenticated access during auth flow
+  - Returns minimal disclosure (boolean only) for security
+  - Email format validation before database query
+  - Spec: `.kiro/specs/check-email-exists/`
+- New error codes: ORB-AUTH-006 (duplicate users), ORB-AUTH-007 (invalid email format), ORB-API-005 (email check service unavailable)
+- Property-based tests for auth flow state transitions using fast-check
+
 ### Changed
 - Refactored CDK infrastructure to use path-based SSM parameter naming aligned with orb-schema-generator conventions
 - SSM parameters now follow pattern `/{customer_id}/{project_id}/{environment}/{resource-type}/{resource-name}/{attribute}`
@@ -16,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated infrastructure documentation with complete SSM parameter reference
 
 ### Pending
+- CDK infrastructure for CheckEmailExists Lambda ([orb-schema-generator#67](https://github.com/com-oneredboot/orb-schema-generator/issues/67), [orb-schema-generator#68](https://github.com/com-oneredboot/orb-schema-generator/issues/68))
 - SSM parameter generation in orb-schema-generator ([orb-schema-generator#64](https://github.com/com-oneredboot/orb-schema-generator/issues/64))
 - PITR configuration in orb-schema-generator ([orb-schema-generator#65](https://github.com/com-oneredboot/orb-schema-generator/issues/65))
 - Schema type generation matrix documentation ([orb-schema-generator#66](https://github.com/com-oneredboot/orb-schema-generator/issues/66))

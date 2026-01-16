@@ -56,6 +56,16 @@ items:
     description: Failed to check if user exists by email
     solution: Please try again later
 
+  ORB-AUTH-006:
+    message: Duplicate users found
+    description: Multiple user accounts found for this email address
+    solution: Please contact support to resolve this issue
+
+  ORB-AUTH-007:
+    message: Invalid email format
+    description: The email address does not match the expected format for CheckEmailExists
+    solution: Please enter a valid email address (e.g., user@example.com)
+
   ORB-API-001:
     message: GraphQL query error
     description: An error occurred while executing a GraphQL query
@@ -75,6 +85,11 @@ items:
     message: Network error
     description: A network error occurred while communicating with the API
     solution: Please check your internet connection and try again
+
+  ORB-API-005:
+    message: Email check service unavailable
+    description: The CheckEmailExists service is temporarily unavailable
+    solution: Please try again in a few moments
 
   ORB-DATA-001:
     message: Invalid data format

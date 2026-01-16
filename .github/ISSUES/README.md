@@ -4,6 +4,8 @@
 
 | Issue | Team | Title | Status | Impact |
 |-------|------|-------|--------|--------|
+| #68 | orb-schema-generator | Enhancement: Generate Lambda Data Sources and Resolvers for LambdaType Schemas | Open | High |
+| #67 | orb-schema-generator | Bug: apiKeyAuthentication directive not rendered in GraphQL schema | Open | High |
 | #64 | orb-schema-generator | Enhancement: Generate SSM parameters for DynamoDB table ARNs and names | Open | Low |
 | #65 | orb-schema-generator | Enhancement: Support PITR configuration in DynamoDB table schemas | Open | Low |
 | #66 | orb-schema-generator | Documentation: Add schema type generation matrix and construct extension examples | Open | Low |

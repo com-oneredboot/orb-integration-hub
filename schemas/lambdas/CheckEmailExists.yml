@@ -1,0 +1,23 @@
+# file: schemas/lambdas/CheckEmailExists.yml
+# author: Corey Dale Peters
+# date: 2026-01-16
+# description: GraphQL query schema for checking email existence (public endpoint)
+
+type: lambda
+name: CheckEmailExists
+targets:
+  - api
+model:
+  operation: query
+  authConfig:
+    apiKeyAuthentication:
+      - CheckEmailExists
+  attributes:
+    email:
+      type: string
+      required: true
+      description: Email address to check for existence
+    exists:
+      type: boolean
+      required: true
+      description: Whether the email exists in the system

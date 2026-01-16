@@ -1,0 +1,148 @@
+# Implementation Plan: CheckEmailExists
+
+## Overview
+
+This implementation plan creates a secure, Lambda-backed GraphQL query for checking email existence during authentication. The implementation spans schema definition, Lambda handler, frontend integration, and comprehensive testing.
+
+## Tasks
+
+- [x] 1. Create schema and generate code
+  - [x] 1.1 Create CheckEmailExists schema file
+    - Create `schemas/lambdas/CheckEmailExists.yml` with Lambda type definition
+    - Configure `apiKeyAuthentication` for public access
+    - Set `operation: query` for GraphQL query generation
+    - _Requirements: 4.1, 4.2, 4.3_
+
+  - [x] 1.2 Run schema generator and verify output
+    - Run `pipenv run orb-schema generate`
+    - Verify GraphQL schema includes `CheckEmailExists` query with `@aws_api_key`
+    - Verify TypeScript types are generated
+    - _Requirements: 4.4_
+
+- [-] 2. Implement Lambda handler
+  - [x] 2.1 Create Lambda handler file
+    - Create `apps/api/lambdas/check_email_exists/index.py`
+    - Implement email format validation using regex
+    - Implement DynamoDB query using EmailIndex GSI
+    - Add logging for security audit
+    - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2_
+
+  - [x] 2.2 Write unit tests for Lambda handler
+    - Created `apps/api/lambdas/check_email_exists/test_check_email_exists.py`
+    - Test valid email returns correct existence status
+    - Test invalid email format returns error
+    - Test database error handling
+    - Test timing attack prevention
+    - Test response doesn't leak user data
+    - _Requirements: 5.1, 5.2, 5.3_
+
+  - [x] 2.3 Write property test for email validation
+    - Created `apps/api/lambdas/check_email_exists/test_check_email_exists_property.py`
+    - **Property 2: Invalid email format rejection**
+    - Generate random invalid email strings (missing @, no TLD, non-string types)
+    - Verify all return validation error
+    - **Validates: Requirements 1.2, 2.1**
+
+- [x] 3. Checkpoint - Lambda implementation complete
+  - Ensure all Lambda tests pass, ask the user if questions arise.
+
+- [x] 4. VTL resolvers not needed for Lambda-backed operations
+  - Lambda data sources in AppSync use direct invocation (no VTL)
+  - Request/response mapping handled by Lambda handler directly
+  - CDK will wire the Lambda to AppSync via data source and resolver
+  - _Requirements: 1.1_
+
+- [x] 5. Update frontend service
+  - [x] 5.1 Create TypeScript GraphQL query definition
+    - Create `apps/web/src/app/core/graphql/CheckEmailExists.graphql.ts`
+    - Define CheckEmailExists query with input type
+    - _Requirements: 3.1_
+
+  - [x] 5.2 Add checkEmailExists method to UserService
+    - Add `checkEmailExists(email: string)` method
+    - Use API key authentication
+    - Return `{ exists: boolean }` response
+    - _Requirements: 3.1_
+
+  - [x] 5.3 Write unit tests for UserService.checkEmailExists
+    - Test correct GraphQL query is called
+    - Test API key auth is used
+    - Test response parsing
+    - _Requirements: 5.4_
+
+- [x] 6. Update frontend effects
+  - [x] 6.1 Update checkEmail$ effect to use new query
+    - Replace `userExists` call with `checkEmailExists`
+    - Map response to existing actions
+    - Handle error cases
+    - _Requirements: 3.1, 3.2, 3.3, 3.4_
+
+  - [x] 6.2 Write unit tests for updated checkEmail$ effect
+    - Test success path dispatches checkEmailSuccess
+    - Test not-found path dispatches checkEmailUserNotFound
+    - Test error path dispatches checkEmailFailure
+    - _Requirements: 5.4_
+
+  - [x] 6.3 Write property test for auth flow state transitions
+    - **Property 3: Auth flow state transition correctness**
+    - Generate random CheckEmailExists responses
+    - Verify correct state transitions
+    - **Validates: Requirements 3.2, 3.3**
+
+- [x] 7. Checkpoint - Frontend implementation complete
+  - Ensure all frontend tests pass, ask the user if questions arise.
+
+- [x] 8. Add error codes to ErrorRegistry
+  - [x] 8.1 Add ORB-AUTH-007 error code
+    - Add to `schemas/registries/ErrorRegistry.yml`
+    - Code: ORB-AUTH-007, Message: "Invalid email format"
+    - _Requirements: 1.2_
+
+  - [x] 8.2 Add ORB-API-005 error code
+    - Add to `schemas/registries/ErrorRegistry.yml`
+    - Code: ORB-API-005, Message: "Email check service unavailable"
+    - _Requirements: 3.4_
+
+- [ ] 9. Update CDK infrastructure
+  - **BLOCKED**: Waiting on orb-schema-generator issues #67 and #68
+  - [ ] 9.1 Add Lambda function to CDK stack
+    - Create Lambda construct for CheckEmailExists
+    - Configure DynamoDB read permissions for Users table
+    - Wire to AppSync data source
+    - _Requirements: 1.1_
+
+  - [ ] 9.2 Add AppSync resolver configuration
+    - Configure resolver to invoke Lambda
+    - Set up API key authentication
+    - _Requirements: 1.4_
+
+- [-] 10. Documentation and versioning
+  - [x] 10.1 Update API documentation
+    - Add CheckEmailExists query to `docs/api.md`
+    - Document input/output format
+    - Document error responses
+    - _Requirements: 6.1_
+
+  - [x] 10.2 Update CHANGELOG
+    - Add entry for CheckEmailExists feature
+    - Reference this spec
+    - _Requirements: 6.2_
+
+  - [-] 10.3 Commit with proper message format
+    - Use conventional commits: `feat: add CheckEmailExists query for public email checks`
+    - Reference related issues
+    - _Requirements: 6.3_
+
+- [ ] 11. Final checkpoint - All tests pass
+  - Run all tests: Lambda, frontend, integration
+  - Verify no linting errors
+  - Ensure all documentation is updated
+  - _Requirements: 6.4_
+
+## Notes
+
+- All tasks are required for comprehensive coverage
+- Each task references specific requirements for traceability
+- Checkpoints ensure incremental validation
+- Property tests validate universal correctness properties
+- Unit tests validate specific examples and edge cases

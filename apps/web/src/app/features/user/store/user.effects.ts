@@ -18,7 +18,7 @@ import * as fromUser from "./user.selectors";
 import { AuthSteps } from "./user.state";
 import { CognitoService } from "../../../core/services/cognito.service";
 import { getError } from "../../../core/models/ErrorRegistryModel";
-import { UsersQueryByEmailInput, UsersListResponse, Users } from "../../../core/models/UsersModel";
+import { UsersListResponse, Users } from "../../../core/models/UsersModel";
 
 @Injectable()
 export class UserEffects {
@@ -27,30 +27,16 @@ export class UserEffects {
     this.actions$.pipe(
       ofType(UserActions.checkEmail),
       switchMap(({ email }) => {
-        const userInput: UsersQueryByEmailInput = { email: email };
-        
-        return from(this.userService.userExists(userInput)).pipe(
-          map((result: UsersListResponse) => {
-            const users = result.Data || [];
-            if (result.StatusCode === 500 && users.length > 1) {
-              // Duplicate user error
-              console.error('Duplicate users found for email:', email, users);
-              const errorObj = getError('ORB-AUTH-006'); // Use a suitable error code
-              return UserActions.checkEmailFailure({
-                error: errorObj ? errorObj.message : 'Duplicate users found for this email.'
-              });
-            }
-            if (result.StatusCode === 200 && users.length === 1) {
+        // Use the new CheckEmailExists Lambda-backed query with API key auth
+        return from(this.userService.checkEmailExists(email)).pipe(
+          map((result: { exists: boolean }) => {
+            if (result.exists) {
               // User exists
               return UserActions.checkEmailSuccess({ userExists: true });
-            }
-            if (result.StatusCode === 200 && users.length === 0) {
+            } else {
               // User not found
               return UserActions.checkEmailUserNotFound();
             }
-            // Any other statusCode is an error
-            const errorObj = getError('ORB-AUTH-005');
-            return UserActions.checkEmailFailure({ error: errorObj ? errorObj.message : 'User email check failed' });
           }),
           catchError((error: Error) => {
             // Map network errors to ORB-API-004, others to ORB-SYS-001

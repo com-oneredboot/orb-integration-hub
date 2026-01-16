@@ -19,6 +19,59 @@ All API operations require Cognito User Pool authentication with group-based aut
 
 Operations specify required groups via the `@aws_auth` directive.
 
+### Public Operations (API Key Authentication)
+
+Some operations are accessible without user authentication using API key:
+
+| Operation | Description |
+|-----------|-------------|
+| `CheckEmailExists` | Check if an email exists in the system |
+
+## Public Queries
+
+### CheckEmailExists
+
+Check if an email address exists in the system. This is a Lambda-backed query that uses API key authentication, allowing unauthenticated users to check email existence during the authentication flow.
+
+**Authentication**: API Key (`@aws_api_key`)
+
+**Input**:
+```graphql
+input CheckEmailExistsInput {
+  email: String!
+}
+```
+
+**Output**:
+```graphql
+type CheckEmailExists {
+  email: String!
+  exists: Boolean!
+}
+```
+
+**Example**:
+```graphql
+query {
+  CheckEmailExists(input: { email: "user@example.com" }) {
+    email
+    exists
+  }
+}
+```
+
+**Error Responses**:
+
+| Error Code | Message | Description |
+|------------|---------|-------------|
+| ORB-AUTH-007 | Invalid email format | Email doesn't match expected format |
+| ORB-API-005 | Email check service unavailable | Backend service error |
+
+**Security Notes**:
+- Returns only boolean existence status (no user data exposed)
+- Email format validated before database query
+- All requests logged for security audit
+
 ## Generated Operations
 
 The schema contains 99 operations across 11 entities. Operations follow a consistent naming pattern:
