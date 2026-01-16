@@ -350,3 +350,23 @@ Runs the CDK infrastructure tests:
 2. Ensure dependencies: `PIPENV_IGNORE_VIRTUALENVS=1 pipenv install --dev`
 3. Run tests: `PIPENV_IGNORE_VIRTUALENVS=1 pipenv run pytest cdk/tests/ -v`
 4. Report test results summary
+
+### "start local testing with ngrok"
+Starts the frontend with ngrok tunnel for external access (mobile testing, sharing):
+1. **Setup frontend** (if not already done):
+   - `cd apps/web && npm install`
+   - `npm run setup-dev` (retrieves credentials from AWS SSM/Secrets Manager)
+2. **Start dev server**: `npm start` (in background)
+3. **Start ngrok tunnel**: `npm run ngrok`
+4. Report: "Frontend running at http://localhost:4200 and https://tameka-overhonest-carefully.ngrok-free.dev"
+
+**ngrok Configuration**:
+- Primary domain: `tameka-overhonest-carefully.ngrok-free.dev`
+- Secondary domain: `tameka-overhonest-selfishly.ngrok-free.dev`
+- These are reserved domains on a paid ngrok plan
+
+**Prerequisites**:
+- AWS SSO session must be active (`aws sso login --profile sso-orb-dev`)
+- ngrok must be installed and authenticated (`ngrok config add-authtoken YOUR_TOKEN`)
+
+**Note**: If testing Cognito auth flows through ngrok, you may need to add the ngrok URL to Cognito's allowed callback URLs in AWS Console.

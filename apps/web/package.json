@@ -52,7 +52,9 @@
     "setup-dev": "node scripts/setup-dev-env.js dev",
     "setup-staging": "node scripts/setup-dev-env.js staging",
     "setup-prod": "node scripts/setup-dev-env.js prod",
-    "cleanup-env": "node scripts/setup-dev-env.js cleanup"
+    "cleanup-env": "node scripts/setup-dev-env.js cleanup",
+    "ngrok": "node scripts/start-ngrok.js",
+    "start:ngrok": "concurrently \"npm start\" \"npm run ngrok\""
   },
   "private": true,
   "dependencies": {
