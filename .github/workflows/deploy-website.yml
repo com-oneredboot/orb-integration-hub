@@ -11,6 +11,7 @@ on:
         description: 'Environment to deploy to'
         required: true
         type: environment
+        default: dev
       customer_id:
         description: 'Customer ID'
         required: false
