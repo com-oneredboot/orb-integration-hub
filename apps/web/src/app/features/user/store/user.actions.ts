@@ -9,6 +9,8 @@ import { createActionGroup, emptyProps, props } from '@ngrx/store';
 // Application Imports
 import { IUsers, UsersCreateInput } from '../../../core/models/UsersModel';
 import { MfaSetupDetails } from '../../../core/models/MfaSetupDetailsModel';
+import { SmartCheckResult } from '../../../core/models/RecoveryModel';
+import { AuthSteps } from './user.state';
 
 /**
  * User Actions (includes Auth functionality)
@@ -17,13 +19,29 @@ export const UserActions = createActionGroup({
   source: 'User',
   events: {
     // Navigation and Flow Control
-    'Set Current Step': props<{ step: number }>(),
+    'Set Current Step': props<{ step: AuthSteps }>(),
     
     // Flow Control Actions (New - Explicit flow management)
     'Auth Flow Complete': props<{ user: IUsers }>(),
     'Redirect To Dashboard': emptyProps(),
     'Redirect To Profile': emptyProps(),
     'Begin MFA Setup Flow': emptyProps(),
+
+    // Smart Recovery Actions
+    'Smart Check': props<{ email: string }>(),
+    'Smart Check Success': props<{ result: SmartCheckResult }>(),
+    'Smart Check Failure': props<{ error: string }>(),
+    
+    'Recover Orphaned User': props<{ email: string; cognitoSub: string }>(),
+    'Recover Orphaned User Success': props<{ user: IUsers }>(),
+    'Recover Orphaned User Failure': props<{ error: string }>(),
+    
+    'Resume From Storage': emptyProps(),
+    'Resume From Storage Success': props<{ email: string; step: AuthSteps }>(),
+    'Resume From Storage Not Found': emptyProps(),
+    
+    'Set Recovery Message': props<{ message: string }>(),
+    'Clear Recovery Message': emptyProps(),
 
     // State 0 - Email
     'Check Email': props<{ email: string }>(),

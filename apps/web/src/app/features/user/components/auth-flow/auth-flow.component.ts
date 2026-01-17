@@ -8,9 +8,9 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {ActivatedRoute, Router} from '@angular/router';
 import {Store} from '@ngrx/store';
-import {map, Observable, Subject, take, takeUntil, tap, filter, firstValueFrom} from 'rxjs';
+import {map, Observable, Subject, take, takeUntil, tap, filter} from 'rxjs';
 import {Location} from '@angular/common';
-import { CommonModule } from '@angular/common';
+import { CommonModule, SlicePipe } from '@angular/common';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -29,7 +29,8 @@ import {InputValidationService} from "../../../../core/services/input-validation
 import {CsrfService} from "../../../../core/services/csrf.service";
 import {RateLimitingService} from "../../../../core/services/rate-limiting.service";
 import {AppErrorHandlerService} from "../../../../core/services/error-handler.service";
-import {SecureIdGenerationService} from "../../../../core/services/secure-id-generation.service";
+import {DebugLogService, DebugLogEntry} from "../../../../core/services/debug-log.service";
+
 import {CustomValidators} from "../../../../core/validators/custom-validators";
 import { UserStatus } from "../../../../core/enums/UserStatusEnum";
 import { UserGroup } from "../../../../core/enums/UserGroupEnum";
@@ -45,7 +46,8 @@ import { IUsers } from "../../../../core/models/UsersModel";
     CommonModule,
     ReactiveFormsModule,
     FontAwesomeModule,
-    RouterModule
+    RouterModule,
+    SlicePipe
     // Add any shared components, directives, or pipes used in the template here
   ]
 })
@@ -62,6 +64,11 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   phoneVerified$ = this.store.select(fromUser.selectPhoneVerified);
   emailVerified$ = this.store.select(fromUser.selectEmailVerified);
   debugMode$ = this.store.select(fromUser.selectDebugMode);
+  recoveryMessage$ = this.store.select(fromUser.selectRecoveryMessage);
+
+  // Debug log state
+  debugLogs$: Observable<DebugLogEntry[]>;
+  debugCopyStatus: 'idle' | 'copying' | 'copied' = 'idle';
 
   // UI State
   buttonText$!: Observable<string>;
@@ -153,9 +160,12 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     private csrfService: CsrfService,
     private rateLimitingService: RateLimitingService,
     private errorHandler: AppErrorHandlerService,
-    private secureIdService: SecureIdGenerationService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private debugLogService: DebugLogService
   ) {
+
+    // Initialize debug logs observable
+    this.debugLogs$ = this.debugLogService.logs$;
 
     // Initialize the form with enhanced validation
     this.authForm = this.fb.group({
@@ -801,8 +811,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             if (!password) {
               return;
             }
-            // Generate secure IDs from backend service
-            this.createUserWithSecureIds(password);
+            this.createUserWithCognito(password);
             break;
 
           case AuthSteps.EMAIL_VERIFY:
@@ -2365,8 +2374,10 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
    */
   private getStepTransitionMessage(step: AuthSteps): string {
     const messages: Record<AuthSteps, string> = {
+      [AuthSteps.EMAIL_ENTRY]: 'Preparing email entry...',
       [AuthSteps.EMAIL]: 'Preparing email verification...',
       [AuthSteps.PASSWORD]: 'Loading password form...',
+      [AuthSteps.PASSWORD_VERIFY]: 'Verifying password...',
       [AuthSteps.PASSWORD_SETUP]: 'Setting up password...',
       [AuthSteps.EMAIL_VERIFY]: 'Setting up verification...',
       [AuthSteps.SIGNIN]: 'Preparing sign in...',
@@ -2616,8 +2627,10 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
    */
   private getUrlForStep(step: AuthSteps): string {
     const stepUrls: Record<AuthSteps, string> = {
+      [AuthSteps.EMAIL_ENTRY]: '/authenticate',
       [AuthSteps.EMAIL]: '/authenticate',
       [AuthSteps.PASSWORD]: '/authenticate/password',
+      [AuthSteps.PASSWORD_VERIFY]: '/authenticate/password',
       [AuthSteps.PASSWORD_SETUP]: '/authenticate/setup',
       [AuthSteps.EMAIL_VERIFY]: '/authenticate/verify-email',
       [AuthSteps.SIGNIN]: '/authenticate/signin',
@@ -2642,8 +2655,10 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     try {
       setTimeout(() => {
         const focusMap: Record<AuthSteps, string> = {
+          [AuthSteps.EMAIL_ENTRY]: 'email',
           [AuthSteps.EMAIL]: 'email',
           [AuthSteps.PASSWORD]: 'password',
+          [AuthSteps.PASSWORD_VERIFY]: 'password',
           [AuthSteps.PASSWORD_SETUP]: 'password',
           [AuthSteps.EMAIL_VERIFY]: 'emailCode',
           [AuthSteps.SIGNIN]: 'password',
@@ -2684,8 +2699,10 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   private announceStepChange(step: AuthSteps): void {
     try {
       const announcements: Record<AuthSteps, string> = {
+        [AuthSteps.EMAIL_ENTRY]: 'Email entry step loaded',
         [AuthSteps.EMAIL]: 'Email step loaded',
         [AuthSteps.PASSWORD]: 'Password step loaded',
+        [AuthSteps.PASSWORD_VERIFY]: 'Password verification step loaded',
         [AuthSteps.PASSWORD_SETUP]: 'Password setup step loaded',
         [AuthSteps.EMAIL_VERIFY]: 'Email verification step loaded',
         [AuthSteps.SIGNIN]: 'Sign in step loaded',
@@ -2851,96 +2868,68 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Create user with secure backend-generated IDs
+   * Create user - Cognito uses email as username
    */
-  private async createUserWithSecureIds(password: string): Promise<void> {
+  private createUserWithCognito(password: string): void {
+    const now = new Date();
+    
+    const userInput = {
+      userId: '', // Will be set from Cognito sub
+      cognitoId: '', // Will be set from Cognito sub
+      cognitoSub: '', // Will be set from Cognito response
+      email: this.authForm.value.email,
+      firstName: this.authForm.value.firstName || '',
+      lastName: this.authForm.value.lastName || '',
+      phoneNumber: this.authForm.value.phoneNumber,
+      groups: [UserGroup.User],
+      status: UserStatus.Pending,
+      createdAt: now,
+      phoneVerified: false,
+      emailVerified: false,
+      mfaEnabled: false,
+      mfaSetupComplete: false,
+      updatedAt: now
+    };
+
+    this.store.dispatch(UserActions.createUser({input: userInput, password: password}));
+  }
+
+  /**
+   * Copy debug summary to clipboard for LLM troubleshooting
+   */
+  async copyDebugSummary(): Promise<void> {
+    this.debugCopyStatus = 'copying';
+    
     try {
-      console.debug('[AuthFlowComponent] Creating user with secure backend IDs');
+      // Get current state values
+      const currentStep = await this.currentStep$.pipe(take(1)).toPromise();
+      const currentUser = await this.currentUser$.pipe(take(1)).toPromise();
+      const userExists = await this.userExists$.pipe(take(1)).toPromise();
+      const emailVerified = await this.emailVerified$.pipe(take(1)).toPromise();
+      const phoneVerified = await this.phoneVerified$.pipe(take(1)).toPromise();
+      const needsMFA = await this.needsMFA$.pipe(take(1)).toPromise();
       
-      // Request secure IDs from backend service
-      const secureIdRequests = [
-        {
-          type: 'user' as const,
-          context: 'user_registration',
-          metadata: {
-            email: this.authForm.value.email,
-            timestamp: Date.now()
-          }
-        },
-        {
-          type: 'cognito' as const,
-          context: 'cognito_authentication',
-          metadata: {
-            email: this.authForm.value.email,
-            timestamp: Date.now()
-          }
-        }
-      ];
-
-      // Generate secure IDs in batch for better performance
-      const secureIds = await firstValueFrom(this.secureIdService.generateSecureIdBatch(secureIdRequests));
-      
-      if (!secureIds || secureIds.length !== 2) {
-        throw new Error('Failed to generate required secure IDs');
-      }
-
-      const [userIdResponse, cognitoIdResponse] = secureIds;
-      
-      // Validate ID security
-      if (!this.secureIdService.validateIdFormat(userIdResponse.id) || 
-          !this.secureIdService.validateIdFormat(cognitoIdResponse.id)) {
-        console.warn('🚨 SECURITY WARNING: Generated IDs may not be secure!');
-        
-        this.errorHandler.captureSecurityError(
-          'createUserWithSecureIds',
-          new Error('Generated IDs failed security validation'),
-          'AuthFlowComponent',
-          this.authForm.value.email
-        );
-      }
-
-      // Create user input with secure backend-generated IDs
-      const userInput = {
-        userId: userIdResponse.id,
-        cognitoId: cognitoIdResponse.id,
-        cognitoSub: '', // Will be populated by user service with actual Cognito sub
-        email: this.authForm.value.email,
-        firstName: this.authForm.value.firstName,
-        lastName: this.authForm.value.lastName,
-        phoneNumber: this.authForm.value.phoneNumber,
-        groups: [UserGroup.User],
-        status: UserStatus.Pending,
-        createdAt: new Date(),
-        phoneVerified: false,
-        emailVerified: false,
-        mfaEnabled: false,
-        mfaSetupComplete: false,
-        updatedAt: new Date()
+      const userState = {
+        exists: userExists || false,
+        emailVerified: emailVerified || currentUser?.emailVerified || false,
+        phoneVerified: phoneVerified || currentUser?.phoneVerified || false,
+        mfaEnabled: needsMFA || currentUser?.mfaEnabled || false
       };
-
-      console.debug('[AuthFlowComponent] Dispatching createUser with secure IDs:', {
-        userId: userInput.userId,
-        cognitoId: userInput.cognitoId,
-        email: userInput.email
-      });
-
-      // Dispatch user creation action
-      this.store.dispatch(UserActions.createUser({input: userInput, password: password}));
       
+      const stepName = AuthSteps[currentStep || AuthSteps.EMAIL];
+      const success = await this.debugLogService.copySummaryToClipboard(stepName, userState);
+      
+      if (success) {
+        this.debugCopyStatus = 'copied';
+        setTimeout(() => {
+          this.debugCopyStatus = 'idle';
+        }, 2000);
+      } else {
+        this.debugCopyStatus = 'idle';
+      }
     } catch (error) {
-      const errorId = this.errorHandler.captureSecurityError(
-        'createUserWithSecureIds',
-        error,
-        'AuthFlowComponent',
-        this.authForm.value.email
-      );
-      
-      console.error('[AuthFlowComponent] Secure user creation failed:', errorId);
-      
-      // Show user-friendly error
-      this.store.dispatch(UserActions.createUserFailure({ 
-        error: 'User registration failed due to security requirements. Please try again.' 
-      }));
+      console.error('Failed to copy debug summary:', error);
+      this.debugCopyStatus = 'idle';
     }
   }
 

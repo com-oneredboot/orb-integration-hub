@@ -83,7 +83,7 @@ export class CognitoService {
       console.debug('[CognitoService] Creating Cognito user');
 
       return await signUp({
-        username: input.cognitoId,
+        username: input.email,
         password,
         options: {
           userAttributes: {
@@ -96,13 +96,14 @@ export class CognitoService {
 
   /**
    * Verify email for a user
-   * @param cognitoId
-   * @param code
+   * @param email The user's email (used as username during signup)
+   * @param code Verification code
    */
-  public async emailVerify(cognitoId: string, code: string): Promise<AuthResponse> {
+  public async emailVerify(email: string, code: string): Promise<AuthResponse> {
     console.debug('[CognitoService] Email verification initiated');
     try {
-      await confirmSignUp({ username: cognitoId, confirmationCode: code });
+      // Cognito's confirmSignUp requires the username used during signup, which is the email
+      await confirmSignUp({ username: email, confirmationCode: code });
       console.debug('[CognitoService][emailVerify] confirmSignUp success');
       return {
         StatusCode: 200,
@@ -110,7 +111,7 @@ export class CognitoService {
         Data: new Auth({ isSignedIn: false })
       };
     } catch (error) {
-      console.error('[CognitoService][emailVerify] Email verification failed');
+      console.error('[CognitoService][emailVerify] Email verification failed:', error);
       return {
         StatusCode: 500,
         Message: error instanceof Error ? error.message : 'Confirmation failed',

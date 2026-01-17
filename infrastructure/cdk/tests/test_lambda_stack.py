@@ -243,6 +243,7 @@ class TestLambdaStackCheckEmailExistsLambda:
                 "Environment": {
                     "Variables": Match.object_like({
                         "LOGGING_LEVEL": "INFO",
+                        "USER_POOL_ID": Match.any_value(),
                     }),
                 },
             },

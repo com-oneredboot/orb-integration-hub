@@ -18,6 +18,7 @@
 
 | Issue | Team | Title | Resolution Date |
 |-------|------|-------|-----------------|
+| #71 | orb-schema-generator | TypeScript Generator Missing Timestamp Conversion for AWSTimestamp | 2026-01-17 |
 | #67 | orb-schema-generator | Bug: apiKeyAuthentication directive not rendered in GraphQL schema | 2026-01-17 |
 | #68 | orb-schema-generator | Enhancement: Generate Lambda Data Sources and Resolvers for LambdaType Schemas | 2026-01-17 |
 | #15 | orb-infrastructure | Cognito SMS Role Missing Permission for Direct SMS Publishing | 2026-01-16 |

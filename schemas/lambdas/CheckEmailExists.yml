@@ -21,3 +21,11 @@ model:
       type: boolean
       required: false
       description: Whether the email exists in the system (response only)
+    cognitoStatus:
+      type: string
+      required: false
+      description: Cognito user status (UNCONFIRMED, CONFIRMED, FORCE_CHANGE_PASSWORD, etc.)
+    cognitoSub:
+      type: string
+      required: false
+      description: Cognito user ID (sub) if user exists in Cognito

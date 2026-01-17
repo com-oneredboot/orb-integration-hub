@@ -18,6 +18,72 @@ export const userReducer = createReducer(
     currentStep: step
   })),
 
+  // Smart Recovery Actions
+  on(UserActions.smartCheck, (state, { email }) => ({
+    ...state,
+    currentEmail: email,
+    isLoading: true,
+    error: null,
+    recoveryMessage: null
+  })),
+  on(UserActions.smartCheckSuccess, (state, { result }) => ({
+    ...state,
+    isLoading: false,
+    error: null,
+    currentStep: result.nextStep,
+    recoveryAction: result.recoveryAction,
+    recoveryMessage: result.userMessage,
+    userExists: result.dynamoExists
+  })),
+  on(UserActions.smartCheckFailure, (state, { error }) => ({
+    ...state,
+    isLoading: false,
+    error,
+    recoveryMessage: null
+  })),
+  
+  on(UserActions.recoverOrphanedUser, (state) => ({
+    ...state,
+    isLoading: true,
+    error: null
+  })),
+  on(UserActions.recoverOrphanedUserSuccess, (state, { user }) => ({
+    ...state,
+    isLoading: false,
+    error: null,
+    currentUser: user,
+    recoveryMessage: null
+  })),
+  on(UserActions.recoverOrphanedUserFailure, (state, { error }) => ({
+    ...state,
+    isLoading: false,
+    error
+  })),
+  
+  on(UserActions.resumeFromStorage, (state) => ({
+    ...state,
+    isLoading: true
+  })),
+  on(UserActions.resumeFromStorageSuccess, (state, { email, step }) => ({
+    ...state,
+    isLoading: false,
+    currentEmail: email,
+    currentStep: step
+  })),
+  on(UserActions.resumeFromStorageNotFound, (state) => ({
+    ...state,
+    isLoading: false
+  })),
+  
+  on(UserActions.setRecoveryMessage, (state, { message }) => ({
+    ...state,
+    recoveryMessage: message
+  })),
+  on(UserActions.clearRecoveryMessage, (state) => ({
+    ...state,
+    recoveryMessage: null
+  })),
+
   // Check Email
   on(UserActions.checkEmail, (state, { email }) => {
     return {

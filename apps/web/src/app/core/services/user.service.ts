@@ -5,7 +5,7 @@
 
 // 3rd Party Imports
 import { GraphQLResult} from "@aws-amplify/api-graphql";
-import { Injectable } from "@angular/core";
+import { Injectable, inject } from "@angular/core";
 import { Store } from '@ngrx/store';
 import { BehaviorSubject, Observable } from 'rxjs';
 
@@ -24,16 +24,17 @@ import {
 import { UserGroup } from "../enums/UserGroupEnum";
 import { UserStatus } from "../enums/UserStatusEnum";
 import { CognitoService } from "./cognito.service";
-import { SecureIdGenerationService } from "./secure-id-generation.service";
 import { Auth, AuthResponse } from "../models/AuthModel";
 import { UserActions } from '../../features/user/store/user.actions';
+import { toGraphQLInput } from '../../graphql-utils';
+import { DebugLogService } from './debug-log.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserService extends ApiService {
 
-  // Private Attributes
+  private userDebugLog = inject(DebugLogService);  // Private Attributes
   private currentUser = new BehaviorSubject<IUsers | null>(null);
 
   /**
@@ -43,8 +44,7 @@ export class UserService extends ApiService {
    */
   constructor(
     private cognitoService: CognitoService,
-    private store: Store,
-    private secureIdService: SecureIdGenerationService
+    private store: Store
   ) {
     super();
 
@@ -64,29 +64,24 @@ export class UserService extends ApiService {
    */
   public async userCreate(input: UsersCreateInput, password: string): Promise<UsersResponse> {
     console.debug('createUser input:', input);
+    this.userDebugLog.logApi('userCreate', 'pending', { email: input.email });
 
     try {
       // create the Cognito User
+      this.userDebugLog.logAuth('createCognitoUser', 'success', { email: input.email });
       const cognitoResponse = await this.cognitoService.createCognitoUser(input, password);
       console.debug('createCognitoUser Response: ', cognitoResponse);
+      this.userDebugLog.logAuth('createCognitoUser', 'success', { userId: cognitoResponse.userId });
 
       const timestamp = new Date();
       
-      // Validate that secure IDs were provided by the calling component
-      if (!input.userId || !input.cognitoId) {
-        throw new Error('Secure user and cognito IDs must be provided by the calling component');
-      }
-      
-      // Validate ID format for security
-      if (!this.secureIdService.validateIdFormat(input.userId) || 
-          !this.secureIdService.validateIdFormat(input.cognitoId)) {
-        console.warn('🚨 SECURITY WARNING: Provided IDs may not be secure!');
-      }
+      // Generate IDs using Cognito's sub as the primary identifier
+      const cognitoSub = cognitoResponse.userId || '';
       
       const userCreateInput: UsersCreateInput = {
-        userId: input.userId, // Use secure backend-generated ID
-        cognitoId: input.cognitoId, // Use secure backend-generated cognito ID
-        cognitoSub: cognitoResponse.userId || '', // Store actual Cognito sub from signup response
+        userId: cognitoSub, // Use Cognito sub as user ID
+        cognitoId: cognitoSub, // Use Cognito sub as cognito ID
+        cognitoSub: cognitoSub,
         email: input.email,
         firstName: input.firstName || '',
         lastName: input.lastName || '',
@@ -101,11 +96,21 @@ export class UserService extends ApiService {
         mfaSetupComplete: input.mfaSetupComplete || false
       };
 
-      const response = await this.mutate(UsersCreate, {"input": userCreateInput}, "apiKey") as GraphQLResult<UsersCreateResponse>;
+      // Convert Date fields to Unix timestamps for GraphQL AWSTimestamp compatibility
+      const graphqlInput = toGraphQLInput(userCreateInput as unknown as Record<string, unknown>);
+
+      const response = await this.mutate(UsersCreate, {"input": graphqlInput}, "apiKey") as GraphQLResult<UsersCreateResponse>;
       console.debug('createUser Response: ', response);
 
+      const statusCode = response.data?.StatusCode ?? 200;
+      if (statusCode !== 200) {
+        this.userDebugLog.logError('userCreate', response.data?.Message || 'Non-200 status', { statusCode });
+      } else {
+        this.userDebugLog.logApi('userCreate', 'success', { userId: cognitoSub });
+      }
+
       return {
-        StatusCode: response.data?.StatusCode ?? 200,
+        StatusCode: statusCode,
         Message: response.data?.Message ?? '',
         Data: response.data?.Data ?? null
       } as UsersResponse;
@@ -114,6 +119,8 @@ export class UserService extends ApiService {
       console.error('Error creating User:', error);
       const errorObj = error as { message?: string };
       const message = errorObj?.message || String(error) || '';
+      this.userDebugLog.logError('userCreate', message, { error: String(error) });
+      
       if (message.includes('Not Authorized') || message.includes('Unauthorized')) {
         return {
           StatusCode: 401,
@@ -148,24 +155,13 @@ export class UserService extends ApiService {
       } else {
         throw new Error('Must provide userId or email');
       }
-      // Try userPool auth first (user might have access), fallback to apiKey
-      let response: GraphQLResult<{ UsersQueryByUserId?: UsersListResponse; UsersQueryByEmail?: UsersListResponse }>;
-      try {
-        // First try with userPool authentication (for authenticated users)
-        response = await this.query(
-          query,
-          { input: queryInput },
-          'userPool'
-        ) as GraphQLResult<{ UsersQueryByUserId?: UsersListResponse; UsersQueryByEmail?: UsersListResponse }>;
-      } catch (userPoolError) {
-        console.warn('userExists: userPool auth failed, trying apiKey. Full error:', userPoolError);
-        // Fallback to apiKey authentication
-        response = await this.query(
-          query,
-          { input: queryInput },
-          'apiKey'
-        ) as GraphQLResult<{ UsersQueryByUserId?: UsersListResponse; UsersQueryByEmail?: UsersListResponse }>;
-      }
+
+      // Use apiKey for unauthenticated user lookups (registration flow)
+      const response = await this.query(
+        query,
+        { input: queryInput },
+        'apiKey'
+      ) as GraphQLResult<{ UsersQueryByUserId?: UsersListResponse; UsersQueryByEmail?: UsersListResponse }>;
 
       // Dynamically get the result based on which query was used
       let result;
@@ -280,14 +276,13 @@ export class UserService extends ApiService {
 
   /**
    * Verify the email
-   * @param input UserQueryInput with backend-compatible fields
    * @param code Verification code
-   * @param email Optional email to filter results client-side
+   * @param email User's email address
    */
   public async emailVerify(code: string, email: string): Promise<AuthResponse> {
     console.debug('[UserService][emailVerify] called with', { code, email });
     try {
-      // get the user
+      // Verify the user exists in our database first
       const userResponse = await this.userQueryByEmail(email);
       console.debug('[UserService][emailVerify] userQueryByEmail response:', userResponse);
 
@@ -302,9 +297,8 @@ export class UserService extends ApiService {
 
       }
 
-      // QueryByEmail ensures we have either 1
-      const user = userResponse.Data[0];
-      const emailVerifyResponse = await this.cognitoService.emailVerify(user.cognitoId, code);
+      // Call Cognito's confirmSignUp with email (the username used during signup)
+      const emailVerifyResponse = await this.cognitoService.emailVerify(email, code);
       console.debug('[UserService][emailVerify] cognitoService.emailVerify response:', emailVerifyResponse);
 
       return emailVerifyResponse;
@@ -824,34 +818,15 @@ export class UserService extends ApiService {
         updateInput.phoneNumber = input.phoneNumber;
       }
 
-      let response: GraphQLResult<UsersUpdateResponse>;
+      // Use apiKey for user updates during registration flow (user not yet authenticated)
+      // Use userPool for authenticated users
+      const authMode = (cognitoProfile && isAuthenticated && hasValidTokens) ? 'userPool' : 'apiKey';
       
-      // Skip userPool auth if user is not properly authenticated or tokens are expired
-      if (!cognitoProfile || !isAuthenticated || !hasValidTokens) {
-        response = await this.mutate(
-          UsersUpdate,
-          { input: updateInput },
-          "apiKey"
-        ) as GraphQLResult<UsersUpdateResponse>;
-      } else {
-        try {
-          // Try userPool authentication first
-          response = await this.mutate(
-            UsersUpdate,
-            { input: updateInput },
-            "userPool"
-          ) as GraphQLResult<UsersUpdateResponse>;
-        } catch (authError) {
-          console.warn('userPool authentication failed, trying API key:', authError);
-          
-          // Fallback to API key authentication
-          response = await this.mutate(
-            UsersUpdate,
-            { input: updateInput },
-            "apiKey"
-          ) as GraphQLResult<UsersUpdateResponse>;
-        }
-      }
+      const response = await this.mutate(
+        UsersUpdate,
+        { input: updateInput },
+        authMode
+      ) as GraphQLResult<UsersUpdateResponse>;
 
       if (!response.data) {
         return {
@@ -1044,20 +1019,32 @@ export class UserService extends ApiService {
   /**
    * Check if an email exists in the system using the public CheckEmailExists query.
    * This uses API key authentication and doesn't require user authentication.
+   * Returns Cognito user status for smart recovery flow.
    * 
    * @param email Email address to check
-   * @returns Promise with exists boolean
+   * @returns Promise with exists boolean, cognitoStatus, and cognitoSub
    */
-  public async checkEmailExists(email: string): Promise<{ exists: boolean }> {
+  public async checkEmailExists(email: string): Promise<{ 
+    exists: boolean; 
+    cognitoStatus?: string | null;
+    cognitoSub?: string | null;
+  }> {
     try {
       const response = await this.query(
         CheckEmailExists,
         { input: { email } },
         'apiKey'
-      ) as GraphQLResult<{ CheckEmailExists?: { email: string; exists: boolean } }>;
+      ) as GraphQLResult<{ CheckEmailExists?: { 
+        email: string; 
+        exists: boolean;
+        cognitoStatus?: string | null;
+        cognitoSub?: string | null;
+      } }>;
 
       return {
-        exists: response.data?.CheckEmailExists?.exists ?? false
+        exists: response.data?.CheckEmailExists?.exists ?? false,
+        cognitoStatus: response.data?.CheckEmailExists?.cognitoStatus ?? null,
+        cognitoSub: response.data?.CheckEmailExists?.cognitoSub ?? null
       };
     } catch (error) {
       console.error('[UserService][checkEmailExists] Error checking email:', error);

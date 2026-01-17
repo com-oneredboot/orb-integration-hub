@@ -132,6 +132,17 @@ export const selectCurrentEmail = createSelector(
   (state) => state.currentEmail || ''
 );
 
+// Recovery-related selectors
+export const selectRecoveryMessage = createSelector(
+  selectUserState,
+  (state) => state.recoveryMessage
+);
+
+export const selectRecoveryAction = createSelector(
+  selectUserState,
+  (state) => state.recoveryAction
+);
+
 // Derived selector for step title
 export const selectStepTitle = createSelector(
   selectCurrentStep,

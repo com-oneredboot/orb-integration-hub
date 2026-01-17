@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Smart Recovery Auth Flow for resilient user registration
+  - RecoveryService for automatic state detection across Cognito and DynamoDB
+  - AuthProgressStorageService for progress persistence with 24-hour expiry
+  - State decision matrix for all Cognito/DynamoDB state combinations
+  - User-friendly messages with no technical jargon
+  - Property-based tests for correctness properties
+  - Spec: `.kiro/specs/smart-recovery-auth-flow/`
+- CheckEmailExists Lambda now returns Cognito user status (`cognitoStatus`, `cognitoSub`)
+- New NgRx actions: `smartCheck`, `smartCheckSuccess`, `smartCheckFailure`, `resumeFromStorage`
+- Recovery message display in auth-flow component
 - CheckEmailExists Lambda-backed GraphQL query for public email existence checks
   - Uses API key authentication for unauthenticated access during auth flow
   - Returns minimal disclosure (boolean only) for security
@@ -17,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Property-based tests for auth flow state transitions using fast-check
 
 ### Changed
+- Auth flow automatically recovers from partial registration states
+- `createUser$` effect now catches `UsernameExistsException` and triggers smart recovery
 - Refactored CDK infrastructure to use path-based SSM parameter naming aligned with orb-schema-generator conventions
 - SSM parameters now follow pattern `/{customer_id}/{project_id}/{environment}/{resource-type}/{resource-name}/{attribute}`
 - Updated all stacks: Cognito, DynamoDB, Lambda, Lambda Layers, Bootstrap, AppSync, Frontend, Monitoring

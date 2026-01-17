@@ -15,6 +15,7 @@ from botocore.exceptions import ClientError
 
 # AWS clients - created lazily to support mocking in tests
 _dynamodb = None
+_cognito = None
 
 
 def get_dynamodb_resource():
@@ -23,6 +24,14 @@ def get_dynamodb_resource():
     if _dynamodb is None:
         _dynamodb = boto3.resource("dynamodb")
     return _dynamodb
+
+
+def get_cognito_client():
+    """Get Cognito client, creating it lazily."""
+    global _cognito
+    if _cognito is None:
+        _cognito = boto3.client("cognito-idp")
+    return _cognito
 
 
 # Environment variables
@@ -36,6 +45,11 @@ logger.setLevel(LOGGING_LEVEL)
 def get_users_table_name() -> str | None:
     """Get the Users table name from environment variable at runtime."""
     return os.getenv("USERS_TABLE_NAME")
+
+
+def get_user_pool_id() -> str | None:
+    """Get the Cognito User Pool ID from environment variable at runtime."""
+    return os.getenv("USER_POOL_ID")
 
 
 # Email validation regex - RFC 5322 simplified
@@ -96,19 +110,73 @@ def check_email_in_database(email: str) -> bool:
         raise
 
 
+def check_cognito_user_status(email: str) -> tuple[str | None, str | None]:
+    """
+    Check Cognito user status by email.
+
+    Args:
+        email: Email address to check
+
+    Returns:
+        Tuple of (cognito_status, cognito_sub) or (None, None) if user doesn't exist
+
+    Note:
+        Uses adminGetUser which requires the username. Since we use email as username,
+        we can query directly by email.
+    """
+    user_pool_id = get_user_pool_id()
+    if not user_pool_id:
+        logger.warning("USER_POOL_ID environment variable not set, skipping Cognito check")
+        return None, None
+
+    cognito = get_cognito_client()
+
+    try:
+        # Use adminGetUser with email as username (since we use email as username during signup)
+        response = cognito.admin_get_user(
+            UserPoolId=user_pool_id,
+            Username=email
+        )
+
+        cognito_status = response.get("UserStatus")
+        cognito_sub = None
+
+        # Extract sub from user attributes
+        for attr in response.get("UserAttributes", []):
+            if attr.get("Name") == "sub":
+                cognito_sub = attr.get("Value")
+                break
+
+        logger.info(f"Cognito user found with status: {cognito_status}")
+        return cognito_status, cognito_sub
+
+    except cognito.exceptions.UserNotFoundException:
+        logger.debug("User not found in Cognito")
+        return None, None
+
+    except ClientError as e:
+        error_code = e.response.get("Error", {}).get("Code", "Unknown")
+        if error_code == "UserNotFoundException":
+            logger.debug("User not found in Cognito")
+            return None, None
+        logger.error(f"Cognito adminGetUser failed: {error_code}")
+        # Return None on error to allow flow to continue with DynamoDB check
+        return None, None
+
+
 def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     """
-    Check if an email exists in the system.
+    Check if an email exists in the system and return Cognito user status.
 
     This endpoint is designed for the authentication flow to determine
-    whether a user should be directed to sign-in or sign-up.
+    whether a user should be directed to sign-in, sign-up, or recovery.
 
     Args:
         event: AppSync event containing input with email
         context: Lambda context (unused)
 
     Returns:
-        Response with email and exists boolean
+        Response with email, exists boolean, cognitoStatus, and cognitoSub
     """
     start_time = time.time()
 
@@ -129,15 +197,23 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
             _ensure_min_response_time(start_time)
             raise ValueError("Invalid email format")
 
+        # Check Cognito user status first
+        cognito_status, cognito_sub = check_cognito_user_status(email)
+
         # Check if email exists in database
         exists = check_email_in_database(email)
 
-        logger.info(f"Email check completed - exists: {exists}")
+        logger.info(f"Email check completed - exists: {exists}, cognitoStatus: {cognito_status}")
 
         # Ensure consistent response time to prevent timing attacks
         _ensure_min_response_time(start_time)
 
-        return {"email": email, "exists": exists}
+        return {
+            "email": email,
+            "exists": exists,
+            "cognitoStatus": cognito_status,
+            "cognitoSub": cognito_sub
+        }
 
     except ValueError:
         # Re-raise validation errors

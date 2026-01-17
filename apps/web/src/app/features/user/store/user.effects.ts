@@ -7,7 +7,7 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { catchError, filter, map, switchMap, tap, withLatestFrom, delay, finalize } from 'rxjs/operators';
+import { catchError, delay, filter, finalize, map, switchMap, tap, withLatestFrom } from 'rxjs/operators';
 import { from, of, EMPTY } from "rxjs";
 import { Store } from '@ngrx/store';
 
@@ -18,10 +18,79 @@ import * as fromUser from "./user.selectors";
 import { AuthSteps } from "./user.state";
 import { CognitoService } from "../../../core/services/cognito.service";
 import { getError } from "../../../core/models/ErrorRegistryModel";
-import { UsersListResponse, Users } from "../../../core/models/UsersModel";
+import { Users } from "../../../core/models/UsersModel";
+import { RecoveryService } from "../../../core/services/recovery.service";
+import { AuthProgressStorageService } from "../../../core/services/auth-progress-storage.service";
+import { RecoveryAction } from "../../../core/models/RecoveryModel";
 
 @Injectable()
 export class UserEffects {
+
+  // Smart Check Effect - replaces checkEmail$ for smart recovery flow
+  smartCheck$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(UserActions.smartCheck),
+      switchMap(({ email }) => {
+        return from(this.recoveryService.smartCheck(email)).pipe(
+          switchMap(result => {
+            // Save progress to local storage
+            this.authProgressStorage.save({
+              email,
+              step: result.nextStep,
+              timestamp: Date.now()
+            });
+
+            // If we need to resend verification code, do it
+            if (result.recoveryAction === RecoveryAction.RESEND_VERIFICATION) {
+              return from(this.recoveryService.resendVerificationCode(email)).pipe(
+                map(() => UserActions.smartCheckSuccess({ result })),
+                catchError(() => {
+                  // Even if resend fails, continue with the flow
+                  return of(UserActions.smartCheckSuccess({ result }));
+                })
+              );
+            }
+
+            return of(UserActions.smartCheckSuccess({ result }));
+          }),
+          catchError((error: Error) => {
+            const errorObj = getError('ORB-SYS-001');
+            return of(UserActions.smartCheckFailure({
+              error: errorObj ? errorObj.message : error.message || 'Unexpected error'
+            }));
+          })
+        );
+      })
+    )
+  );
+
+  // Resume from storage on page load
+  resumeFromStorage$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(UserActions.resumeFromStorage),
+      map(() => {
+        const progress = this.authProgressStorage.get();
+        if (progress && this.authProgressStorage.isValid(progress)) {
+          return UserActions.resumeFromStorageSuccess({
+            email: progress.email,
+            step: progress.step
+          });
+        }
+        return UserActions.resumeFromStorageNotFound();
+      })
+    )
+  );
+
+  // Validate resumed progress against backend
+  validateResumedProgress$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(UserActions.resumeFromStorageSuccess),
+      switchMap(({ email }) => {
+        // Trigger smart check to validate the stored state
+        return of(UserActions.smartCheck({ email }));
+      })
+    )
+  );
 
   checkEmail$ = createEffect(() =>
     this.actions$.pipe(
@@ -91,7 +160,15 @@ export class UserEffects {
               error: errorObj ? errorObj.message : 'GraphQL mutation error'
             });
           }),
-          catchError(_error => {
+          catchError(error => {
+            // Check for UsernameExistsException - trigger smart recovery
+            const errorMessage = error?.message || String(error);
+            if (errorMessage.includes('UsernameExistsException') || 
+                errorMessage.includes('User already exists')) {
+              // Trigger smart check to recover
+              return of(UserActions.smartCheck({ email: input.email }));
+            }
+            
             const errorObj = getError('ORB-API-002');
             return of(UserActions.createUserFailure({
               error: errorObj ? errorObj.message : 'GraphQL mutation error'
@@ -1021,6 +1098,8 @@ export class UserEffects {
     private userService: UserService,
     private cognitoService: CognitoService,
     private store: Store,
-    private router: Router
+    private router: Router,
+    private recoveryService: RecoveryService,
+    private authProgressStorage: AuthProgressStorageService
   ) {}
 }

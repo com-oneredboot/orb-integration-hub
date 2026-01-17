@@ -9,7 +9,7 @@ verify_ssl = true
 name = "codeartifact"
 
 [packages]
-orb-schema-generator = "==0.16.1"
+orb-schema-generator = {version = "==0.17.0", index = "codeartifact"}
 packaging = "*"
 
 [dev-packages]

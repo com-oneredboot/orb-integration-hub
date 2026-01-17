@@ -10,6 +10,8 @@ export const CheckEmailExists = /* GraphQL */ `
     CheckEmailExists(input: $input) {
       email
       exists
+      cognitoStatus
+      cognitoSub
     }
   }
 `;

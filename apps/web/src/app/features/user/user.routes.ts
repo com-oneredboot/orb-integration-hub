@@ -22,7 +22,20 @@ export const USER_ROUTES: Routes = [
       {
         path: 'authenticate',
         component: AuthFlowComponent,
-        data: { requiresAuth: false }
+        data: { requiresAuth: false },
+        children: [
+          { path: '', component: AuthFlowComponent },
+          { path: 'setup', component: AuthFlowComponent },
+          { path: 'password', component: AuthFlowComponent },
+          { path: 'verify-email', component: AuthFlowComponent },
+          { path: 'signin', component: AuthFlowComponent },
+          { path: 'name', component: AuthFlowComponent },
+          { path: 'phone', component: AuthFlowComponent },
+          { path: 'verify-phone', component: AuthFlowComponent },
+          { path: 'mfa-setup', component: AuthFlowComponent },
+          { path: 'mfa-verify', component: AuthFlowComponent },
+          { path: '**', component: AuthFlowComponent }
+        ]
       },
       {
         path: 'profile',

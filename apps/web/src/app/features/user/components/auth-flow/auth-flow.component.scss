@@ -380,8 +380,12 @@
   &__help-text {
     font-size: v.$font-size-sm;
     color: v.$text-secondary;
-    margin-top: v.$spacing-xs;
-    line-height: 1.4;
+    margin-top: v.$spacing-sm;
+    line-height: 1.5;
+    padding: v.$spacing-sm v.$spacing-md;
+    background-color: v.$gray-50;
+    border-radius: v.$border-radius;
+    border-left: 3px solid v.$primary-color;
   }
 
   &__input-group {
@@ -399,10 +403,16 @@
       font-family: v.$font-family-base;
       font-size: v.$input-font-size;
       color: v.$input-color;
-      border: 1px solid v.$input-border-color;
+      border: 2px solid v.$gray-400; // Increased border width and darker color for visibility
       border-radius: v.$border-radius;
       background-color: v.$input-bg;
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      
+      // Placeholder styling for better visibility
+      &::placeholder {
+        color: v.$gray-500;
+        opacity: 1;
+      }
 
       &:focus {
         outline: none;
@@ -634,6 +644,35 @@
     }
   }
 
+  // Recovery message styling - friendly, non-alarming
+  &__recovery-message {
+    width: 100%;
+    padding: v.$spacing-md v.$spacing-lg;
+    background-color: rgba(v.$primary-color, 0.05);
+    border: 1px solid rgba(v.$primary-color, 0.2);
+    border-left: 4px solid v.$primary-color;
+    border-radius: v.$border-radius;
+    margin-bottom: v.$spacing-md;
+    box-shadow: 0 2px 8px rgba(v.$primary-color, 0.1);
+
+    p {
+      color: v.$text-primary;
+      font-size: v.$font-size-base;
+      line-height: 1.5;
+      margin: 0;
+      text-align: left;
+      
+      &::before {
+        content: '\f05a'; // FontAwesome info-circle
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        font-size: v.$font-size-sm;
+        color: v.$primary-color;
+        margin-right: v.$spacing-xs;
+      }
+    }
+  }
+
   &__button {
     width: 100%;
     padding: v.$spacing-sm v.$spacing-lg;
@@ -691,18 +730,40 @@
 
   &__mfa-options {
     width: 100%;
-    padding: v.$spacing-md;
-    background-color: v.$bg-secondary;
-    border-radius: v.$border-radius;
+    padding: v.$spacing-lg;
+    background-color: v.$gray-50;
+    border-radius: v.$border-radius-lg;
     text-align: center;
-    border: 1px solid v.$border-color;
+    border: 1px solid v.$gray-200;
+    box-shadow: v.$shadow-sm;
   }
 
   &__mfa-title {
-    font-size: v.$font-size-lg;
+    font-size: v.$font-size-xl;
     font-weight: v.$font-weight-semibold;
     color: v.$text-primary;
-    margin: 0 0 v.$spacing-md 0;
+    margin: 0 0 v.$spacing-lg 0;
+  }
+
+  // Instructions section for MFA setup
+  &__instructions {
+    margin-bottom: v.$spacing-lg;
+    padding: v.$spacing-md;
+    background-color: v.$orb-white;
+    border-radius: v.$border-radius;
+    border: 1px solid v.$gray-200;
+    text-align: left;
+
+    p {
+      margin: 0 0 v.$spacing-sm 0;
+      color: v.$text-primary;
+      font-size: v.$font-size-base;
+      line-height: 1.6;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
   }
 
   &__secret-title {
@@ -713,16 +774,18 @@
   }
 
   &__verification-info {
-    margin-bottom: v.$spacing-md;
-    padding: v.$spacing-sm;
-    background-color: v.$bg-secondary;
-    border-radius: v.$border-radius;
+    margin-bottom: v.$spacing-lg;
+    padding: v.$spacing-md v.$spacing-lg;
+    background-color: v.$gray-50;
+    border-radius: v.$border-radius-lg;
     border-left: 4px solid v.$primary-color;
+    box-shadow: v.$shadow-sm;
 
     p {
-      margin: 0 0 v.$spacing-xs 0;
+      margin: 0 0 v.$spacing-sm 0;
       color: v.$text-primary;
       font-size: v.$font-size-base;
+      line-height: 1.6;
 
       &:last-child {
         margin-bottom: 0;
@@ -963,6 +1026,101 @@
 
   &__debug {
     @include m.debug-container;
+  }
+
+  &__debug-summary {
+    background: linear-gradient(135deg, v.$gray-50, v.$gray-100);
+    border: 2px dashed v.$primary-color;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  &__debug-hint {
+    font-size: 0.85rem;
+    color: v.$gray-600;
+    margin-bottom: 0.5rem;
+  }
+
+  &__debug-copy-btn {
+    background: v.$primary-color;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s;
+
+    &:hover:not(:disabled) {
+      background: v.$logo-dark-red;
+    }
+
+    &:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+  }
+
+  &__debug-logs {
+    max-height: 200px;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 0.75rem;
+    background: v.$gray-900;
+    color: v.$gray-100;
+    border-radius: 4px;
+    padding: 0.5rem;
+  }
+
+  &__debug-log-entry {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid v.$gray-700;
+
+    &--error {
+      background: rgba(239, 65, 54, 0.1);
+    }
+  }
+
+  &__debug-log-time {
+    color: v.$gray-500;
+  }
+
+  &__debug-log-type {
+    color: v.$role-owner;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.65rem;
+  }
+
+  &__debug-log-op {
+    color: v.$warning-color;
+  }
+
+  &__debug-log-status {
+    &--success {
+      color: v.$success-color;
+    }
+    &--failure {
+      color: v.$danger-color;
+    }
+  }
+
+  &__debug-log-error {
+    color: v.$danger-color;
+    width: 100%;
+    padding-left: 1rem;
+    font-style: italic;
+  }
+
+  &__debug-empty {
+    color: v.$gray-500;
+    font-style: italic;
+    text-align: center;
+    padding: 1rem;
   }
 }
 

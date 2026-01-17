@@ -69,7 +69,7 @@ Fix all ESLint errors in the Angular frontend hand-written files. Tasks are orga
 
 - [x] 14. Fix explicit any in core services
   - Replace `any` with proper types in service files
-  - Files: `api.service.ts`, `cognito.service.ts`, `error-handler.service.ts`, `organization.service.ts`, `user.service.ts`, `secure-id-generation.service.ts`
+  - Files: `api.service.ts`, `cognito.service.ts`, `error-handler.service.ts`, `organization.service.ts`, `user.service.ts`
   - _Requirements: 8.1_
 
 - [x] 15. Fix explicit any in core auth services
@@ -84,7 +84,7 @@ Fix all ESLint errors in the Angular frontend hand-written files. Tasks are orga
 
 - [x] 17. Fix explicit any in core service specs
   - Replace `any` with proper types in test files
-  - Files: `error-handler.service.spec.ts`, `secure-id-generation.service.spec.ts`
+  - Files: `error-handler.service.spec.ts`
   - _Requirements: 8.1_
 
 - [x] 18. Fix explicit any in user feature services

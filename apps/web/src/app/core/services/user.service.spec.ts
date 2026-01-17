@@ -7,7 +7,6 @@ import { TestBed } from '@angular/core/testing';
 import { provideMockStore } from '@ngrx/store/testing';
 import { UserService } from './user.service';
 import { CognitoService } from './cognito.service';
-import { SecureIdGenerationService } from './secure-id-generation.service';
 
 describe('UserService', () => {
   let service: UserService;
@@ -22,16 +21,11 @@ describe('UserService', () => {
       currentUser: { subscribe: jasmine.createSpy('subscribe') }
     });
 
-    const secureIdSpy = jasmine.createSpyObj('SecureIdGenerationService', [
-      'validateIdFormat'
-    ]);
-
     TestBed.configureTestingModule({
       providers: [
         UserService,
         provideMockStore({}),
-        { provide: CognitoService, useValue: cognitoSpy },
-        { provide: SecureIdGenerationService, useValue: secureIdSpy }
+        { provide: CognitoService, useValue: cognitoSpy }
       ]
     });
 

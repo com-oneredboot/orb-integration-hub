@@ -11,7 +11,6 @@ export { UserService } from './user.service';
 // Security Services  
 export { CsrfService } from './csrf.service';
 export { RateLimitingService } from './rate-limiting.service';
-export { SecureIdGenerationService } from './secure-id-generation.service';
 
 // Utility Services
 export { ErrorHandlerService } from './error-handler.service';

@@ -13,7 +13,7 @@ boto3 = "*"
 pynamodb = "*"
 requests = "*"
 stripe = "*"
-orb-schema-generator = {version = "==0.13.5", index = "codeartifact"}  # Schema generation tool
+orb-schema-generator = "*"  # Schema generation tool
 
 [dev-packages]
 bandit = "*"

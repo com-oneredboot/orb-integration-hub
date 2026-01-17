@@ -407,6 +407,7 @@ class LambdaStack(Stack):
                 "LOGGING_LEVEL": "INFO",
                 "VERSION": "1",
                 "USERS_TABLE_NAME": self.dynamodb_stack.tables["users"].table_name,
+                "USER_POOL_ID": self.cognito_stack.user_pool.user_pool_id,
             },
             dead_letter_queue_enabled=True,
         )

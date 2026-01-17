@@ -370,3 +370,35 @@ Starts the frontend with ngrok tunnel for external access (mobile testing, shari
 - ngrok must be installed and authenticated (`ngrok config add-authtoken YOUR_TOKEN`)
 
 **Note**: If testing Cognito auth flows through ngrok, you may need to add the ngrok URL to Cognito's allowed callback URLs in AWS Console.
+
+### "delete test user [email]"
+Deletes a test user from both Cognito and DynamoDB (dev environment only):
+1. **Find user in Cognito**:
+   ```bash
+   aws --profile sso-orb-dev --region us-east-1 cognito-idp list-users \
+       --user-pool-id us-east-1_8ch8unBaX \
+       --filter "email = \"[email]\""
+   ```
+2. **Delete from Cognito** (using the Username/UUID from step 1):
+   ```bash
+   aws --profile sso-orb-dev --region us-east-1 cognito-idp admin-delete-user \
+       --user-pool-id us-east-1_8ch8unBaX \
+       --username "[username-uuid]"
+   ```
+3. **Find user in DynamoDB**:
+   ```bash
+   aws --profile sso-orb-dev --region us-east-1 dynamodb query \
+       --table-name orb-integration-hub-dev-users \
+       --index-name EmailIndex \
+       --key-condition-expression "email = :email" \
+       --expression-attribute-values '{":email":{"S":"[email]"}}'
+   ```
+4. **Delete from DynamoDB** (using the userId from step 3):
+   ```bash
+   aws --profile sso-orb-dev --region us-east-1 dynamodb delete-item \
+       --table-name orb-integration-hub-dev-users \
+       --key '{"userId":{"S":"[userId]"}}'
+   ```
+5. Report: "User [email] deleted from Cognito and DynamoDB"
+
+**Warning**: This permanently deletes user data. Only use for test accounts in dev environment.
