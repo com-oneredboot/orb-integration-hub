@@ -4,6 +4,7 @@
 # description: PrivacyRequests table schema for GDPR/CCPA privacy request management
 
 type: dynamodb
+pitr_enabled: false
 version: '1.0'
 name: PrivacyRequests
 targets:

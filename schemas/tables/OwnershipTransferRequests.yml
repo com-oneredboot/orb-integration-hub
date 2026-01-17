@@ -4,6 +4,7 @@
 # description: OwnershipTransferRequests table schema for managing organization ownership transfers
 
 type: dynamodb
+pitr_enabled: false
 version: '1.0'
 name: OwnershipTransferRequests
 targets:

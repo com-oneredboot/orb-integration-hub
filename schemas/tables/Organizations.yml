@@ -4,6 +4,7 @@
 # description: Organizations table schema for multi-tenant organization management
 
 type: dynamodb
+pitr_enabled: false
 version: '1.0'
 name: Organizations
 targets:

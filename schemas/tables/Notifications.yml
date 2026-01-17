@@ -5,6 +5,7 @@
 # Supports application transfers, organization invitations, and other business events
 
 type: dynamodb
+pitr_enabled: false
 version: '1.0'
 name: Notifications
 targets:

@@ -4,6 +4,7 @@
 # description: yaml file containing the SmsRateLimit table schema for tracking SMS request rates
 
 type: dynamodb
+pitr_enabled: false
 version: '1.0'
 name: SmsRateLimit
 targets:

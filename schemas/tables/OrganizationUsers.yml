@@ -4,6 +4,7 @@
 # description: OrganizationUsers table schema for managing user membership in organizations
 
 type: dynamodb
+pitr_enabled: false
 version: '1.0'
 name: OrganizationUsers
 targets:
