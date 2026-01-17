@@ -13,16 +13,28 @@ from typing import Any
 import boto3
 from botocore.exceptions import ClientError
 
-# AWS clients
-dynamodb = boto3.resource("dynamodb")
+# AWS clients - created lazily to support mocking in tests
+_dynamodb = None
+
+
+def get_dynamodb_resource():
+    """Get DynamoDB resource, creating it lazily."""
+    global _dynamodb
+    if _dynamodb is None:
+        _dynamodb = boto3.resource("dynamodb")
+    return _dynamodb
 
 # Environment variables
 LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
-USERS_TABLE_NAME = os.getenv("USERS_TABLE_NAME")
 
 # Setting up logging
 logger = logging.getLogger()
 logger.setLevel(LOGGING_LEVEL)
+
+
+def get_users_table_name() -> str | None:
+    """Get the Users table name from environment variable at runtime."""
+    return os.getenv("USERS_TABLE_NAME")
 
 # Email validation regex - RFC 5322 simplified
 EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
@@ -59,11 +71,12 @@ def check_email_in_database(email: str) -> bool:
     Raises:
         ClientError: If DynamoDB query fails
     """
-    if not USERS_TABLE_NAME:
+    users_table_name = get_users_table_name()
+    if not users_table_name:
         logger.error("USERS_TABLE_NAME environment variable not set")
         raise ValueError("Users table not configured")
 
-    table = dynamodb.Table(USERS_TABLE_NAME)
+    table = get_dynamodb_resource().Table(users_table_name)
 
     try:
         response = table.query(

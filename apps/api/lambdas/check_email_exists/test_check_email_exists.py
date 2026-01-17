@@ -20,6 +20,7 @@ from index import (
     check_email_in_database,
     MIN_RESPONSE_TIME,
 )
+import index  # Import module to reset _dynamodb
 
 
 class TestCheckEmailExistsValidation(unittest.TestCase):
@@ -99,6 +100,8 @@ class TestCheckEmailExistsHandler(unittest.TestCase):
         self.test_context = MagicMock()
         os.environ["USERS_TABLE_NAME"] = "test-users-table"
         os.environ["LOGGING_LEVEL"] = "DEBUG"
+        # Reset the global dynamodb resource so moto can mock it
+        index._dynamodb = None
 
     def tearDown(self):
         """Clean up after each test"""
@@ -216,6 +219,8 @@ class TestCheckEmailExistsSecurity(unittest.TestCase):
         self.test_context = MagicMock()
         os.environ["USERS_TABLE_NAME"] = "test-users-table"
         os.environ["LOGGING_LEVEL"] = "DEBUG"
+        # Reset the global dynamodb resource so moto can mock it
+        index._dynamodb = None
 
     def tearDown(self):
         """Clean up after each test"""
@@ -342,6 +347,8 @@ class TestCheckEmailExistsDatabase(unittest.TestCase):
     def setUp(self):
         """Set up test environment before each test"""
         os.environ["USERS_TABLE_NAME"] = "test-users-table"
+        # Reset the global dynamodb resource so moto can mock it
+        index._dynamodb = None
 
     def tearDown(self):
         """Clean up after each test"""
