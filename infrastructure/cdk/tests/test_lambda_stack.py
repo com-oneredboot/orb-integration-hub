@@ -80,9 +80,9 @@ def template(test_config: Config) -> Template:
 class TestLambdaStackFunctionCount:
     """Tests for Lambda function count."""
 
-    def test_creates_four_lambda_functions(self, template: Template) -> None:
-        """Verify exactly 4 Lambda functions are created."""
-        template.resource_count_is("AWS::Lambda::Function", 4)
+    def test_creates_five_lambda_functions(self, template: Template) -> None:
+        """Verify exactly 5 Lambda functions are created."""
+        template.resource_count_is("AWS::Lambda::Function", 5)
 
 
 class TestLambdaStackIAMRole:
@@ -217,6 +217,38 @@ class TestLambdaStackOrganizationsLambda:
         )
 
 
+class TestLambdaStackCheckEmailExistsLambda:
+    """Tests for CheckEmailExists Lambda."""
+
+    def test_creates_check_email_exists_lambda(self, template: Template) -> None:
+        """Verify CheckEmailExists Lambda is created."""
+        template.has_resource_properties(
+            "AWS::Lambda::Function",
+            {
+                "FunctionName": "test-project-dev-check-email-exists",
+                "Description": "Lambda function to check if an email exists (public endpoint)",
+                "Runtime": "python3.12",
+                "Handler": "index.lambda_handler",
+                "MemorySize": 128,
+                "Timeout": 10,
+            },
+        )
+
+    def test_check_email_exists_has_environment_variables(self, template: Template) -> None:
+        """Verify CheckEmailExists Lambda has required environment variables."""
+        template.has_resource_properties(
+            "AWS::Lambda::Function",
+            {
+                "FunctionName": "test-project-dev-check-email-exists",
+                "Environment": {
+                    "Variables": Match.object_like({
+                        "LOGGING_LEVEL": "INFO",
+                    }),
+                },
+            },
+        )
+
+
 class TestLambdaStackSSMParameters:
     """Tests for SSM parameter exports using path-based naming."""
 
@@ -256,6 +288,16 @@ class TestLambdaStackSSMParameters:
             "AWS::SSM::Parameter",
             {
                 "Name": "/test/project/dev/lambda/organizations/arn",
+                "Type": "String",
+            },
+        )
+
+    def test_exports_check_email_exists_lambda_arn(self, template: Template) -> None:
+        """Verify CheckEmailExists Lambda ARN is exported to SSM with path-based naming."""
+        template.has_resource_properties(
+            "AWS::SSM::Parameter",
+            {
+                "Name": "/test/project/dev/lambda/checkemailexists/arn",
                 "Type": "String",
             },
         )

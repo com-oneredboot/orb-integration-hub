@@ -64,6 +64,7 @@ class LambdaStack(Stack):
         self.cognito_group_manager_lambda = self._create_cognito_group_manager_lambda()
         self.user_status_calculator_lambda = self._create_user_status_calculator_lambda()
         self.organizations_lambda = self._create_organizations_lambda()
+        self.check_email_exists_lambda = self._create_check_email_exists_lambda()
 
     def _apply_tags(self) -> None:
         """Apply standard tags to all resources in this stack."""
@@ -99,6 +100,7 @@ class LambdaStack(Stack):
                 ],
                 resources=[
                     self.dynamodb_stack.tables["users"].table_arn,
+                    f"{self.dynamodb_stack.tables['users'].table_arn}/index/*",
                     self.dynamodb_stack.tables["sms-rate-limit"].table_arn,
                     self.dynamodb_stack.tables["organizations"].table_arn,
                 ],
@@ -381,6 +383,48 @@ class LambdaStack(Stack):
         self.functions["organizations"] = function
         self._export_lambda_arn(function, "organizations")
         return function
+
+    def _create_check_email_exists_lambda(self) -> lambda_.Function:
+        """Create CheckEmailExists Lambda function for public email existence checks.
+        
+        This Lambda is used by the CheckEmailExists GraphQL query to check if an
+        email exists in the system. It uses API key authentication for public access
+        during the signup/signin flow.
+        """
+        function = lambda_.Function(
+            self,
+            "CheckEmailExistsLambda",
+            function_name=self.config.resource_name("check-email-exists"),
+            description="Lambda function to check if an email exists (public endpoint)",
+            runtime=lambda_.Runtime.PYTHON_3_12,
+            handler="index.lambda_handler",
+            code=lambda_.Code.from_asset("../apps/api/lambdas/check_email_exists"),
+            timeout=Duration.seconds(10),
+            memory_size=128,
+            role=self.lambda_execution_role,
+            environment={
+                "ALERTS_QUEUE": f"arn:aws:sqs:{self.region}:{self.account}:{self.config.prefix}-alerts-queue",
+                "LOGGING_LEVEL": "INFO",
+                "VERSION": "1",
+                "USERS_TABLE_NAME": self.dynamodb_stack.tables["users"].table_name,
+            },
+            dead_letter_queue_enabled=True,
+        )
+
+        self.functions["check-email-exists"] = function
+        # Export with lowercase name to match orb-schema-generator convention
+        self._export_lambda_arn_custom(function, "checkemailexists")
+        return function
+
+    def _export_lambda_arn_custom(self, function: lambda_.Function, name: str) -> None:
+        """Export Lambda ARN to SSM parameter with custom name (no hyphens)."""
+        ssm.StringParameter(
+            self,
+            f"{name}LambdaArnParameter",
+            parameter_name=self.config.ssm_parameter_name(f"lambda/{name}/arn"),
+            string_value=function.function_arn,
+            description=f"ARN of the {name} Lambda function",
+        )
 
     def _export_lambda_arn(self, function: lambda_.Function, name: str) -> None:
         """Export Lambda ARN to SSM parameter with path-based naming."""
