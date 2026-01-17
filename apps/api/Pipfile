@@ -25,6 +25,8 @@ pre-commit = "*"
 ruff = "*"
 mypy = "*"
 types-requests = "*"
+moto = {extras = ["dynamodb"], version = "*"}
+hypothesis = ">=6.82.0"
 
 [requires]
 python_version = "3.12"
