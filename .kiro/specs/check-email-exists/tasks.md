@@ -19,7 +19,7 @@ This implementation plan creates a secure, Lambda-backed GraphQL query for check
     - Verify TypeScript types are generated
     - _Requirements: 4.4_
 
-- [-] 2. Implement Lambda handler
+- [x] 2. Implement Lambda handler
   - [x] 2.1 Create Lambda handler file
     - Create `apps/api/lambdas/check_email_exists/index.py`
     - Implement email format validation using regex
@@ -103,8 +103,9 @@ This implementation plan creates a secure, Lambda-backed GraphQL query for check
     - Code: ORB-API-005, Message: "Email check service unavailable"
     - _Requirements: 3.4_
 
-- [ ] 9. Update CDK infrastructure
-  - **BLOCKED**: Waiting on orb-schema-generator issues #67 and #68
+- [x] 9. Update CDK infrastructure
+  - **NOTE**: Issue #68 resolved - Lambda data sources now auto-generated
+  - **NOTE**: Issue #67 partially fixed - @aws_api_key manually added for Lambda types
   - [ ] 9.1 Add Lambda function to CDK stack
     - Create Lambda construct for CheckEmailExists
     - Configure DynamoDB read permissions for Users table
@@ -116,7 +117,7 @@ This implementation plan creates a secure, Lambda-backed GraphQL query for check
     - Set up API key authentication
     - _Requirements: 1.4_
 
-- [-] 10. Documentation and versioning
+- [x] 10. Documentation and versioning
   - [x] 10.1 Update API documentation
     - Add CheckEmailExists query to `docs/api.md`
     - Document input/output format
@@ -128,7 +129,7 @@ This implementation plan creates a secure, Lambda-backed GraphQL query for check
     - Reference this spec
     - _Requirements: 6.2_
 
-  - [-] 10.3 Commit with proper message format
+  - [x] 10.3 Commit with proper message format
     - Use conventional commits: `feat: add CheckEmailExists query for public email checks`
     - Reference related issues
     - _Requirements: 6.3_

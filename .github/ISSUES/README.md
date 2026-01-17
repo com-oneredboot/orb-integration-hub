@@ -4,8 +4,7 @@
 
 | Issue | Team | Title | Status | Impact |
 |-------|------|-------|--------|--------|
-| #68 | orb-schema-generator | Enhancement: Generate Lambda Data Sources and Resolvers for LambdaType Schemas | Open | High |
-| #67 | orb-schema-generator | Bug: apiKeyAuthentication directive not rendered in GraphQL schema | Open | High |
+| #67 | orb-schema-generator | Bug: apiKeyAuthentication directive not rendered in GraphQL schema (Lambda types) | Open | High |
 | #64 | orb-schema-generator | Enhancement: Generate SSM parameters for DynamoDB table ARNs and names | Open | Low |
 | #65 | orb-schema-generator | Enhancement: Support PITR configuration in DynamoDB table schemas | Open | Low |
 | #66 | orb-schema-generator | Documentation: Add schema type generation matrix and construct extension examples | Open | Low |
@@ -18,6 +17,7 @@
 
 | Issue | Team | Title | Resolution Date |
 |-------|------|-------|-----------------|
+| #68 | orb-schema-generator | Enhancement: Generate Lambda Data Sources and Resolvers for LambdaType Schemas | 2026-01-17 |
 | #15 | orb-infrastructure | Cognito SMS Role Missing Permission for Direct SMS Publishing | 2026-01-16 |
 | #63 | orb-schema-generator | Enhancement: Generate GraphQL operations for Lambda types | 2026-01-15 |
 | #62 | orb-schema-generator | TypeScript model references wrong enum case (UNKNOWN vs Unknown) | 2026-01-15 |
