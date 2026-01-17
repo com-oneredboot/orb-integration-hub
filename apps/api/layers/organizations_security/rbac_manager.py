@@ -63,9 +63,7 @@ class OrganizationPermissions:
     )
 
     # Application permissions
-    APPLICATIONS_READ = Permission(
-        PermissionCategory.APPLICATIONS, "read", "View applications"
-    )
+    APPLICATIONS_READ = Permission(PermissionCategory.APPLICATIONS, "read", "View applications")
     APPLICATIONS_CREATE = Permission(
         PermissionCategory.APPLICATIONS, "create", "Create new applications"
     )
@@ -85,20 +83,14 @@ class OrganizationPermissions:
     # User management permissions
     USERS_READ = Permission(PermissionCategory.USERS, "read", "View organization users")
     USERS_INVITE = Permission(PermissionCategory.USERS, "invite", "Invite new users")
-    USERS_REMOVE = Permission(
-        PermissionCategory.USERS, "remove", "Remove users from organization"
-    )
-    USERS_UPDATE_ROLES = Permission(
-        PermissionCategory.USERS, "update_roles", "Change user roles"
-    )
+    USERS_REMOVE = Permission(PermissionCategory.USERS, "remove", "Remove users from organization")
+    USERS_UPDATE_ROLES = Permission(PermissionCategory.USERS, "update_roles", "Change user roles")
     USERS_VIEW_ACTIVITY = Permission(
         PermissionCategory.USERS, "view_activity", "View user activity logs"
     )
 
     # Settings permissions
-    SETTINGS_READ = Permission(
-        PermissionCategory.SETTINGS, "read", "View organization settings"
-    )
+    SETTINGS_READ = Permission(PermissionCategory.SETTINGS, "read", "View organization settings")
     SETTINGS_UPDATE = Permission(
         PermissionCategory.SETTINGS, "update", "Update organization settings"
     )
@@ -110,23 +102,13 @@ class OrganizationPermissions:
     )
 
     # Billing permissions
-    BILLING_READ = Permission(
-        PermissionCategory.BILLING, "read", "View billing information"
-    )
-    BILLING_UPDATE = Permission(
-        PermissionCategory.BILLING, "update", "Update billing settings"
-    )
-    BILLING_CANCEL = Permission(
-        PermissionCategory.BILLING, "cancel", "Cancel subscription"
-    )
+    BILLING_READ = Permission(PermissionCategory.BILLING, "read", "View billing information")
+    BILLING_UPDATE = Permission(PermissionCategory.BILLING, "update", "Update billing settings")
+    BILLING_CANCEL = Permission(PermissionCategory.BILLING, "cancel", "Cancel subscription")
 
     # Security permissions
-    SECURITY_READ = Permission(
-        PermissionCategory.SECURITY, "read", "View security logs"
-    )
-    SECURITY_AUDIT = Permission(
-        PermissionCategory.SECURITY, "audit", "Access audit logs"
-    )
+    SECURITY_READ = Permission(PermissionCategory.SECURITY, "read", "View security logs")
+    SECURITY_AUDIT = Permission(PermissionCategory.SECURITY, "audit", "Access audit logs")
     SECURITY_MANAGE_KEYS = Permission(
         PermissionCategory.SECURITY, "manage_keys", "Manage encryption keys"
     )
@@ -142,9 +124,7 @@ class OrganizationPermissions:
         return permissions
 
     @classmethod
-    def get_permissions_by_category(
-        cls, category: PermissionCategory
-    ) -> List[Permission]:
+    def get_permissions_by_category(cls, category: PermissionCategory) -> List[Permission]:
         """Get all permissions for a specific category."""
         return [p for p in cls.get_all_permissions() if p.category == category]
 
@@ -281,9 +261,7 @@ class OrganizationRBACManager:
         """
         try:
             # Get user's role in the organization
-            user_role, role_context = self._get_user_organization_role(
-                user_id, organization_id
-            )
+            user_role, role_context = self._get_user_organization_role(user_id, organization_id)
 
             if not user_role:
                 return False, {
@@ -322,9 +300,7 @@ class OrganizationRBACManager:
             return has_permission, context
 
         except Exception as e:
-            logger.error(
-                f"Error checking permission {permission_key} for user {user_id}: {str(e)}"
-            )
+            logger.error(f"Error checking permission {permission_key} for user {user_id}: {str(e)}")
             return False, {
                 "reason": "error",
                 "error": str(e),
@@ -349,9 +325,7 @@ class OrganizationRBACManager:
             Dict with user permissions and role info
         """
         try:
-            user_role, role_context = self._get_user_organization_role(
-                user_id, organization_id
-            )
+            user_role, role_context = self._get_user_organization_role(user_id, organization_id)
 
             if not user_role:
                 return {
@@ -363,9 +337,7 @@ class OrganizationRBACManager:
 
             # Platform-level access override
             if cognito_groups and self._has_platform_override(cognito_groups):
-                all_permissions = [
-                    p.key for p in OrganizationPermissions.get_all_permissions()
-                ]
+                all_permissions = [p.key for p in OrganizationPermissions.get_all_permissions()]
                 return {
                     "role": "PLATFORM_ADMIN",
                     "permissions": all_permissions,
@@ -375,9 +347,7 @@ class OrganizationRBACManager:
                 }
 
             # Get role-based permissions
-            base_permissions = list(
-                RolePermissionMatrix.get_role_permissions(user_role)
-            )
+            base_permissions = list(RolePermissionMatrix.get_role_permissions(user_role))
 
             # Add special permissions based on role and context
             effective_permissions = self._calculate_effective_permissions(

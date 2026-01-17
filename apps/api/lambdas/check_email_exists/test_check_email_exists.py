@@ -69,7 +69,7 @@ class TestCheckEmailExistsValidation(unittest.TestCase):
         malicious_inputs = [
             # XSS attempts
             '<script>alert("xss")</script>@example.com',
-            'user@example.com<script>alert(1)</script>',
+            "user@example.com<script>alert(1)</script>",
             # SQL injection attempts
             "'; DROP TABLE users; --@example.com",
             "user@example.com' OR '1'='1",

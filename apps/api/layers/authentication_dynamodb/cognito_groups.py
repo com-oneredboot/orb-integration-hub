@@ -47,22 +47,14 @@ class CognitoGroupManager:
         except ClientError as e:
             error_code = e.response.get("Error", {}).get("Code", "Unknown")
             if error_code == "UserNotFoundException":
-                logger.error(
-                    f"User {username} not found in user pool {self.user_pool_id}"
-                )
+                logger.error(f"User {username} not found in user pool {self.user_pool_id}")
             elif error_code == "ResourceNotFoundException":
-                logger.error(
-                    f"Group {group_name} not found in user pool {self.user_pool_id}"
-                )
+                logger.error(f"Group {group_name} not found in user pool {self.user_pool_id}")
             else:
-                logger.error(
-                    f"Error adding user {username} to group {group_name}: {str(e)}"
-                )
+                logger.error(f"Error adding user {username} to group {group_name}: {str(e)}")
             return False
         except Exception as e:
-            logger.error(
-                f"Unexpected error adding user {username} to group {group_name}: {str(e)}"
-            )
+            logger.error(f"Unexpected error adding user {username} to group {group_name}: {str(e)}")
             return False
 
     def remove_user_from_group(self, username: str, group_name: str) -> bool:
@@ -85,17 +77,11 @@ class CognitoGroupManager:
         except ClientError as e:
             error_code = e.response.get("Error", {}).get("Code", "Unknown")
             if error_code == "UserNotFoundException":
-                logger.error(
-                    f"User {username} not found in user pool {self.user_pool_id}"
-                )
+                logger.error(f"User {username} not found in user pool {self.user_pool_id}")
             elif error_code == "ResourceNotFoundException":
-                logger.error(
-                    f"Group {group_name} not found in user pool {self.user_pool_id}"
-                )
+                logger.error(f"Group {group_name} not found in user pool {self.user_pool_id}")
             else:
-                logger.error(
-                    f"Error removing user {username} from group {group_name}: {str(e)}"
-                )
+                logger.error(f"Error removing user {username} from group {group_name}: {str(e)}")
             return False
         except Exception as e:
             logger.error(
@@ -123,16 +109,12 @@ class CognitoGroupManager:
         except ClientError as e:
             error_code = e.response.get("Error", {}).get("Code", "Unknown")
             if error_code == "UserNotFoundException":
-                logger.error(
-                    f"User {username} not found in user pool {self.user_pool_id}"
-                )
+                logger.error(f"User {username} not found in user pool {self.user_pool_id}")
             else:
                 logger.error(f"Error getting groups for user {username}: {str(e)}")
             return []
         except Exception as e:
-            logger.error(
-                f"Unexpected error getting groups for user {username}: {str(e)}"
-            )
+            logger.error(f"Unexpected error getting groups for user {username}: {str(e)}")
             return []
 
     def user_has_group(self, username: str, group_name: str) -> bool:
@@ -179,14 +161,10 @@ class CognitoGroupManager:
             current_groups = self.get_user_groups(username)
 
             # Groups to add
-            groups_to_add = [
-                group for group in target_groups if group not in current_groups
-            ]
+            groups_to_add = [group for group in target_groups if group not in current_groups]
 
             # Groups to remove
-            groups_to_remove = [
-                group for group in current_groups if group not in target_groups
-            ]
+            groups_to_remove = [group for group in current_groups if group not in target_groups]
 
             success = True
 
@@ -205,16 +183,12 @@ class CognitoGroupManager:
                     f"Successfully synced groups for user {username}. Target: {target_groups}"
                 )
             else:
-                logger.warning(
-                    f"Some operations failed while syncing groups for user {username}"
-                )
+                logger.warning(f"Some operations failed while syncing groups for user {username}")
 
             return success
 
         except Exception as e:
-            logger.error(
-                f"Unexpected error syncing groups for user {username}: {str(e)}"
-            )
+            logger.error(f"Unexpected error syncing groups for user {username}: {str(e)}")
             return False
 
     def list_all_groups(self) -> List[Dict[str, Any]]:
@@ -230,9 +204,7 @@ class CognitoGroupManager:
             logger.debug(f"Found {len(groups)} groups in user pool {self.user_pool_id}")
             return groups
         except ClientError as e:
-            logger.error(
-                f"Error listing groups in user pool {self.user_pool_id}: {str(e)}"
-            )
+            logger.error(f"Error listing groups in user pool {self.user_pool_id}: {str(e)}")
             return []
         except Exception as e:
             logger.error(f"Unexpected error listing groups: {str(e)}")
@@ -265,9 +237,7 @@ def get_cognito_group_manager(
 
 
 # Convenience functions for common operations
-def add_user_to_default_group(
-    username: str, user_pool_id: Optional[str] = None
-) -> bool:
+def add_user_to_default_group(username: str, user_pool_id: Optional[str] = None) -> bool:
     """
     Add a user to the default USER group.
 

@@ -194,7 +194,9 @@ class AWSAuditLogger:
 
         try:
             # Generate unique event ID
-            event_id = f"evt_{int(time.time())}_{hashlib.md5(str(time.time()).encode()).hexdigest()[:8]}"
+            event_id = (
+                f"evt_{int(time.time())}_{hashlib.md5(str(time.time()).encode()).hexdigest()[:8]}"
+            )
 
             # Build comprehensive audit entry
             audit_entry = self._build_audit_entry(
@@ -210,9 +212,7 @@ class AWSAuditLogger:
             log_group = self._determine_log_group(event_type, compliance_flags)
 
             # Create log stream for organization (for efficient querying)
-            log_stream = self._get_log_stream_name(
-                target_context.get("organization_id")
-            )
+            log_stream = self._get_log_stream_name(target_context.get("organization_id"))
 
             # Send to CloudWatch - AWS manages retention, archival, lifecycle
             self._send_to_cloudwatch(log_group, log_stream, audit_entry)
@@ -297,9 +297,7 @@ class AWSAuditLogger:
             # Compliance and legal
             "compliance": {
                 "flags": [flag.value for flag in (compliance_flags or [])],
-                "data_classification": action_details.get(
-                    "data_classification", "INTERNAL"
-                ),
+                "data_classification": action_details.get("data_classification", "INTERNAL"),
                 "legal_hold": action_details.get("legal_hold", False),
                 "retention_category": self._determine_retention_category(
                     event_type, compliance_flags
@@ -332,9 +330,7 @@ class AWSAuditLogger:
             return self.log_groups["financial"]
 
         # Authentication events go to access log group
-        elif event_type.value.startswith(
-            ("LOGIN_", "LOGOUT", "SESSION_", "MFA_", "PASSWORD_")
-        ):
+        elif event_type.value.startswith(("LOGIN_", "LOGOUT", "SESSION_", "MFA_", "PASSWORD_")):
             return self.log_groups["access"]
 
         # API-related events
@@ -370,9 +366,7 @@ class AWSAuditLogger:
 
         return "STANDARD_7_YEARS"
 
-    def _send_to_cloudwatch(
-        self, log_group: str, log_stream: str, audit_entry: Dict[str, Any]
-    ):
+    def _send_to_cloudwatch(self, log_group: str, log_stream: str, audit_entry: Dict[str, Any]):
         """Send audit entry to CloudWatch with automatic retry."""
 
         try:
@@ -400,9 +394,7 @@ class AWSAuditLogger:
         """Ensure log stream exists in CloudWatch."""
 
         try:
-            self.cloudwatch_logs.create_log_stream(
-                logGroupName=log_group, logStreamName=log_stream
-            )
+            self.cloudwatch_logs.create_log_stream(logGroupName=log_group, logStreamName=log_stream)
         except self.cloudwatch_logs.exceptions.ResourceAlreadyExistsException:
             # Log stream already exists, which is fine
             pass
@@ -463,14 +455,10 @@ class StateChangeTracker:
             "field_changes": field_changes,
             "change_summary": {
                 "created_fields": [
-                    f
-                    for f in changed_fields
-                    if self._get_nested_value(old_state, f) is None
+                    f for f in changed_fields if self._get_nested_value(old_state, f) is None
                 ],
                 "deleted_fields": [
-                    f
-                    for f in changed_fields
-                    if self._get_nested_value(new_state, f) is None
+                    f for f in changed_fields if self._get_nested_value(new_state, f) is None
                 ],
                 "modified_fields": [
                     f

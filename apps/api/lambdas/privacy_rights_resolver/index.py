@@ -69,9 +69,7 @@ class PrivacyRightsResolver:
                 request_type_enum = PrivacyRequestType(request_type)
                 legal_basis_enum = LegalBasis(legal_basis)
             except ValueError as e:
-                return self._error_response(
-                    f"Invalid request type or legal basis: {str(e)}"
-                )
+                return self._error_response(f"Invalid request type or legal basis: {str(e)}")
 
             # Generate unique request ID
             request_id = str(uuid.uuid4())
@@ -176,9 +174,7 @@ class PrivacyRightsResolver:
                 return self._error_response("Request ID is required")
 
             # Get request from DynamoDB
-            response = self.privacy_requests_table.get_item(
-                Key={"requestId": request_id}
-            )
+            response = self.privacy_requests_table.get_item(Key={"requestId": request_id})
 
             if "Item" not in response:
                 return self._error_response("Privacy request not found")
@@ -242,9 +238,7 @@ class PrivacyRightsResolver:
         """Process data access request (GDPR Article 15)."""
         try:
             # Get request details
-            response = self.privacy_requests_table.get_item(
-                Key={"requestId": request_id}
-            )
+            response = self.privacy_requests_table.get_item(Key={"requestId": request_id})
             if "Item" not in response:
                 return
 
@@ -267,9 +261,7 @@ class PrivacyRightsResolver:
             )
 
             # Generate data access report
-            access_report = self._generate_data_access_report(
-                discovery_result, request_data
-            )
+            access_report = self._generate_data_access_report(discovery_result, request_data)
 
             # Update request with completion
             self.privacy_requests_table.update_item(
@@ -285,9 +277,7 @@ class PrivacyRightsResolver:
             )
 
             # Send completion email with report
-            self._send_data_access_completion(
-                request_data["dataSubjectEmail"], access_report
-            )
+            self._send_data_access_completion(request_data["dataSubjectEmail"], access_report)
 
             # Log completion audit event
             self._log_privacy_request_completion(request_id, "DATA_ACCESS")
@@ -300,9 +290,7 @@ class PrivacyRightsResolver:
         """Process data deletion request (GDPR Article 17)."""
         try:
             # Get request details
-            response = self.privacy_requests_table.get_item(
-                Key={"requestId": request_id}
-            )
+            response = self.privacy_requests_table.get_item(Key={"requestId": request_id})
             if "Item" not in response:
                 return
 
@@ -338,26 +326,20 @@ class PrivacyRightsResolver:
             )
 
             # Send deletion confirmation
-            self._send_data_deletion_completion(
-                request_data["dataSubjectEmail"], deletion_result
-            )
+            self._send_data_deletion_completion(request_data["dataSubjectEmail"], deletion_result)
 
             # Log completion audit event
             self._log_privacy_request_completion(request_id, "DATA_DELETION")
 
         except Exception as e:
-            logger.error(
-                f"Error processing data deletion request {request_id}: {str(e)}"
-            )
+            logger.error(f"Error processing data deletion request {request_id}: {str(e)}")
             self._update_request_status(request_id, PrivacyRequestStatus.FAILED, str(e))
 
     def _process_data_portability_request(self, request_id: str):
         """Process data portability request (GDPR Article 20)."""
         try:
             # Get request details
-            response = self.privacy_requests_table.get_item(
-                Key={"requestId": request_id}
-            )
+            response = self.privacy_requests_table.get_item(Key={"requestId": request_id})
             if "Item" not in response:
                 return
 
@@ -380,9 +362,7 @@ class PrivacyRightsResolver:
             )
 
             # Generate portable data export
-            portable_data = self._generate_portable_data_export(
-                discovery_result, request_data
-            )
+            portable_data = self._generate_portable_data_export(discovery_result, request_data)
 
             # Update request with completion
             self.privacy_requests_table.update_item(
@@ -398,22 +378,16 @@ class PrivacyRightsResolver:
             )
 
             # Send completion email with download link
-            self._send_data_portability_completion(
-                request_data["dataSubjectEmail"], portable_data
-            )
+            self._send_data_portability_completion(request_data["dataSubjectEmail"], portable_data)
 
             # Log completion audit event
             self._log_privacy_request_completion(request_id, "DATA_PORTABILITY")
 
         except Exception as e:
-            logger.error(
-                f"Error processing data portability request {request_id}: {str(e)}"
-            )
+            logger.error(f"Error processing data portability request {request_id}: {str(e)}")
             self._update_request_status(request_id, PrivacyRequestStatus.FAILED, str(e))
 
-    def _generate_data_access_report(
-        self, discovery_result, request_data: Dict
-    ) -> Dict[str, Any]:
+    def _generate_data_access_report(self, discovery_result, request_data: Dict) -> Dict[str, Any]:
         """Generate comprehensive data access report."""
 
         # Group records by data category
@@ -427,9 +401,7 @@ class PrivacyRightsResolver:
                     "system": record.system_name,
                     "table": record.table_name,
                     "data_fields": record.data_fields,
-                    "created_at": (
-                        record.created_at.isoformat() if record.created_at else None
-                    ),
+                    "created_at": (record.created_at.isoformat() if record.created_at else None),
                     "last_updated": (
                         record.last_updated.isoformat() if record.last_updated else None
                     ),
@@ -445,9 +417,7 @@ class PrivacyRightsResolver:
             "legal_basis": request_data["legalBasis"],
             "total_records_found": discovery_result.total_records,
             "systems_scanned": discovery_result.systems_scanned,
-            "data_categories_found": [
-                cat.value for cat in discovery_result.data_categories
-            ],
+            "data_categories_found": [cat.value for cat in discovery_result.data_categories],
             "records_by_category": records_by_category,
             "privacy_rights_available": {
                 "right_to_rectification": "Contact support to update incorrect information",
@@ -487,9 +457,7 @@ class PrivacyRightsResolver:
                             record.created_at.isoformat() if record.created_at else None
                         ),
                         "last_updated": (
-                            record.last_updated.isoformat()
-                            if record.last_updated
-                            else None
+                            record.last_updated.isoformat() if record.last_updated else None
                         ),
                         "data_category": record.data_category.value,
                     },
@@ -518,9 +486,7 @@ class PrivacyRightsResolver:
             # Default: 30 days
             return datetime.utcnow() + timedelta(days=30)
 
-    def _send_request_confirmation(
-        self, email: str, request_id: str, deadline: datetime
-    ):
+    def _send_request_confirmation(self, email: str, request_id: str, deadline: datetime):
         """Send confirmation email for privacy request."""
         try:
             subject = "Privacy Request Confirmation"

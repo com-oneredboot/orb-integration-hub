@@ -141,9 +141,7 @@ class SecurityTestSuite:
         scenario_id += len(access_control_scenarios)
 
         # Permission escalation scenarios
-        escalation_scenarios = self._generate_permission_escalation_scenarios(
-            scenario_id
-        )
+        escalation_scenarios = self._generate_permission_escalation_scenarios(scenario_id)
         scenarios.extend(escalation_scenarios)
         scenario_id += len(escalation_scenarios)
 
@@ -189,9 +187,7 @@ class SecurityTestSuite:
         self.test_scenarios = scenarios
         return scenarios
 
-    def _generate_access_control_scenarios(
-        self, start_id: int
-    ) -> List[SecurityTestScenario]:
+    def _generate_access_control_scenarios(self, start_id: int) -> List[SecurityTestScenario]:
         """Generate access control security scenarios."""
 
         scenarios = []
@@ -392,9 +388,7 @@ class SecurityTestSuite:
 
         return scenarios
 
-    def _generate_data_isolation_scenarios(
-        self, start_id: int
-    ) -> List[SecurityTestScenario]:
+    def _generate_data_isolation_scenarios(self, start_id: int) -> List[SecurityTestScenario]:
         """Generate data isolation security scenarios."""
 
         scenarios = []
@@ -474,9 +468,7 @@ class SecurityTestSuite:
 
         return scenarios
 
-    def _generate_authentication_scenarios(
-        self, start_id: int
-    ) -> List[SecurityTestScenario]:
+    def _generate_authentication_scenarios(self, start_id: int) -> List[SecurityTestScenario]:
         """Generate authentication security scenarios."""
 
         scenarios = []
@@ -554,9 +546,7 @@ class SecurityTestSuite:
 
         return scenarios
 
-    def _generate_authorization_scenarios(
-        self, start_id: int
-    ) -> List[SecurityTestScenario]:
+    def _generate_authorization_scenarios(self, start_id: int) -> List[SecurityTestScenario]:
         """Generate authorization security scenarios."""
 
         scenarios = []
@@ -599,9 +589,7 @@ class SecurityTestSuite:
 
         return scenarios
 
-    def _generate_input_validation_scenarios(
-        self, start_id: int
-    ) -> List[SecurityTestScenario]:
+    def _generate_input_validation_scenarios(self, start_id: int) -> List[SecurityTestScenario]:
         """Generate input validation security scenarios."""
 
         scenarios = []
@@ -644,9 +632,7 @@ class SecurityTestSuite:
 
         return scenarios
 
-    def _generate_injection_attack_scenarios(
-        self, start_id: int
-    ) -> List[SecurityTestScenario]:
+    def _generate_injection_attack_scenarios(self, start_id: int) -> List[SecurityTestScenario]:
         """Generate injection attack security scenarios."""
 
         scenarios = []
@@ -689,9 +675,7 @@ class SecurityTestSuite:
 
         return scenarios
 
-    def _generate_session_management_scenarios(
-        self, start_id: int
-    ) -> List[SecurityTestScenario]:
+    def _generate_session_management_scenarios(self, start_id: int) -> List[SecurityTestScenario]:
         """Generate session management security scenarios."""
 
         scenarios = []
@@ -734,9 +718,7 @@ class SecurityTestSuite:
 
         return scenarios
 
-    def _generate_cryptography_scenarios(
-        self, start_id: int
-    ) -> List[SecurityTestScenario]:
+    def _generate_cryptography_scenarios(self, start_id: int) -> List[SecurityTestScenario]:
         """Generate cryptography security scenarios."""
 
         scenarios = []
@@ -779,9 +761,7 @@ class SecurityTestSuite:
 
         return scenarios
 
-    def _generate_audit_security_scenarios(
-        self, start_id: int
-    ) -> List[SecurityTestScenario]:
+    def _generate_audit_security_scenarios(self, start_id: int) -> List[SecurityTestScenario]:
         """Generate audit security scenarios."""
 
         scenarios = []
@@ -862,9 +842,7 @@ class SecurityTestSuite:
 
             # Determine test success based on expected behavior
             if scenario.expected_block:
-                result.success = (
-                    result.attack_blocked and not result.vulnerability_detected
-                )
+                result.success = result.attack_blocked and not result.vulnerability_detected
             else:
                 result.success = len(result.errors) == 0
 
@@ -927,9 +905,7 @@ class SecurityTestSuite:
         """Execute permission escalation security tests."""
 
         if "Horizontal Privilege Escalation" in scenario.title:
-            escalation_test = await self._test_horizontal_escalation(
-                scenario.test_payload
-            )
+            escalation_test = await self._test_horizontal_escalation(scenario.test_payload)
 
             if escalation_test["escalation_successful"]:
                 result.vulnerability_detected = True
@@ -938,9 +914,7 @@ class SecurityTestSuite:
                 result.attack_blocked = True
 
         elif "Vertical Privilege Escalation" in scenario.title:
-            escalation_test = await self._test_vertical_escalation(
-                scenario.test_payload
-            )
+            escalation_test = await self._test_vertical_escalation(scenario.test_payload)
 
             if escalation_test["escalation_successful"]:
                 result.vulnerability_detected = True
@@ -1137,21 +1111,15 @@ class SecurityTestSuite:
         """Mock RBAC enforcement test."""
         return {"bypass_detected": False}
 
-    async def _test_horizontal_escalation(
-        self, payload: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _test_horizontal_escalation(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Mock horizontal escalation test."""
         return {"escalation_successful": False}
 
-    async def _test_vertical_escalation(
-        self, payload: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _test_vertical_escalation(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Mock vertical escalation test."""
         return {"escalation_successful": False}
 
-    async def _test_data_isolation(
-        self, endpoint: str, payload: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _test_data_isolation(self, endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Mock data isolation test."""
         return {"isolation_breached": False, "leaked_data": []}
 
@@ -1191,9 +1159,7 @@ class SecurityTestSuite:
         """Mock cryptographic implementation test."""
         return {"weak_crypto_detected": False}
 
-    async def _test_audit_security(
-        self, endpoint: str, payload: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _test_audit_security(self, endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Mock audit security test."""
         return {"audit_compromised": False}
 
@@ -1214,9 +1180,7 @@ class SecurityTestSuite:
 
         total_scenarios = len(self.test_scenarios)
         executed_scenarios = len(self.test_results)
-        vulnerabilities_found = len(
-            [r for r in self.test_results if r.vulnerability_detected]
-        )
+        vulnerabilities_found = len([r for r in self.test_results if r.vulnerability_detected])
         attacks_blocked = len([r for r in self.test_results if r.attack_blocked])
 
         # Group by category and severity
@@ -1254,9 +1218,7 @@ class SecurityTestSuite:
             by_attack_vector[attack_vector]["total"] += 1
 
         for result in self.test_results:
-            scenario = next(
-                s for s in self.test_scenarios if s.scenario_id == result.scenario_id
-            )
+            scenario = next(s for s in self.test_scenarios if s.scenario_id == result.scenario_id)
             category = scenario.category.value
             severity = scenario.severity.value
             attack_vector = scenario.attack_vector.value
@@ -1277,9 +1239,7 @@ class SecurityTestSuite:
                 "vulnerabilities_found": vulnerabilities_found,
                 "attacks_blocked": attacks_blocked,
                 "security_score": (
-                    (attacks_blocked / executed_scenarios * 100)
-                    if executed_scenarios > 0
-                    else 0
+                    (attacks_blocked / executed_scenarios * 100) if executed_scenarios > 0 else 0
                 ),
                 "vulnerability_rate": (
                     (vulnerabilities_found / executed_scenarios * 100)
@@ -1335,23 +1295,15 @@ class SecurityTestSuite:
                 f"Address {len(critical_vulnerabilities)} critical security vulnerabilities immediately"
             )
 
-        permission_escalations = [
-            r for r in self.test_results if r.permission_escalation_detected
-        ]
+        permission_escalations = [r for r in self.test_results if r.permission_escalation_detected]
         if permission_escalations:
-            recommendations.append(
-                "Implement stronger privilege escalation prevention controls"
-            )
+            recommendations.append("Implement stronger privilege escalation prevention controls")
 
         data_leakages = [r for r in self.test_results if r.data_leakage_detected]
         if data_leakages:
-            recommendations.append(
-                "Strengthen data isolation and access control mechanisms"
-            )
+            recommendations.append("Strengthen data isolation and access control mechanisms")
 
-        access_control_violations = [
-            r for r in self.test_results if r.access_control_violations
-        ]
+        access_control_violations = [r for r in self.test_results if r.access_control_violations]
         if access_control_violations:
             recommendations.append("Review and improve access control implementation")
 

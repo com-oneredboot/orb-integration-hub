@@ -17,9 +17,7 @@ logger = logging.getLogger(__name__)
 cognito_client = boto3.client("cognito-idp")
 
 
-def add_user_to_group(
-    user_pool_id: str, username: str, group_name: str
-) -> Dict[str, Any]:
+def add_user_to_group(user_pool_id: str, username: str, group_name: str) -> Dict[str, Any]:
     """Add a user to a specific group"""
     if not username or not group_name:
         raise ValueError("Missing required parameters: username and groupName")
@@ -50,9 +48,7 @@ def add_user_to_group(
         raise Exception(f"Failed to add user to group: {str(e)}")
 
 
-def remove_user_from_group(
-    user_pool_id: str, username: str, group_name: str
-) -> Dict[str, Any]:
+def remove_user_from_group(user_pool_id: str, username: str, group_name: str) -> Dict[str, Any]:
     """Remove a user from a specific group"""
     if not username or not group_name:
         raise ValueError("Missing required parameters: username and groupName")
@@ -97,9 +93,7 @@ def list_user_groups(user_pool_id: str, username: str) -> Dict[str, Any]:
 
         return {
             "statusCode": 200,
-            "body": json.dumps(
-                {"username": username, "groups": groups, "groupCount": len(groups)}
-            ),
+            "body": json.dumps({"username": username, "groups": groups, "groupCount": len(groups)}),
         }
 
     except cognito_client.exceptions.UserNotFoundException:
@@ -114,9 +108,7 @@ def list_users_in_group(user_pool_id: str, group_name: str) -> Dict[str, Any]:
         raise ValueError("Missing required parameter: groupName")
 
     try:
-        response = cognito_client.list_users_in_group(
-            UserPoolId=user_pool_id, GroupName=group_name
-        )
+        response = cognito_client.list_users_in_group(UserPoolId=user_pool_id, GroupName=group_name)
 
         users = [user["Username"] for user in response.get("Users", [])]
 
@@ -124,9 +116,7 @@ def list_users_in_group(user_pool_id: str, group_name: str) -> Dict[str, Any]:
 
         return {
             "statusCode": 200,
-            "body": json.dumps(
-                {"groupName": group_name, "users": users, "userCount": len(users)}
-            ),
+            "body": json.dumps({"groupName": group_name, "users": users, "userCount": len(users)}),
         }
 
     except cognito_client.exceptions.ResourceNotFoundException:
@@ -184,7 +174,5 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         logger.error(f"Error processing request: {str(e)}")
         return {
             "statusCode": 500,
-            "body": json.dumps(
-                {"error": str(e), "operation": event.get("operation", "unknown")}
-            ),
+            "body": json.dumps({"error": str(e), "operation": event.get("operation", "unknown")}),
         }

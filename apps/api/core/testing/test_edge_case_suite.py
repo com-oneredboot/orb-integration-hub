@@ -80,9 +80,7 @@ class TestEdgeCaseTestingSuite:
 
         # Check scenario types
         scenario_titles = [s.title for s in scenarios]
-        assert any(
-            "Owner Deletion Without Succession" in title for title in scenario_titles
-        )
+        assert any("Owner Deletion Without Succession" in title for title in scenario_titles)
         assert any("Automatic Admin Promotion" in title for title in scenario_titles)
         assert any("Multiple Owners Conflict" in title for title in scenario_titles)
 
@@ -99,9 +97,7 @@ class TestEdgeCaseTestingSuite:
         assert len(scenarios) >= 2  # At least 2 deletion scenarios
 
         # Check for critical scenarios
-        critical_scenarios = [
-            s for s in scenarios if s.severity == EdgeCaseSeverity.CRITICAL
-        ]
+        critical_scenarios = [s for s in scenarios if s.severity == EdgeCaseSeverity.CRITICAL]
         assert len(critical_scenarios) >= 1
 
         # Verify cascade deletion scenario exists
@@ -136,9 +132,7 @@ class TestEdgeCaseTestingSuite:
         assert len(scenarios) >= 2  # At least 2 integrity scenarios
 
         # Check for cross-table reference scenario
-        reference_scenarios = [
-            s for s in scenarios if "Cross-Table Reference" in s.title
-        ]
+        reference_scenarios = [s for s in scenarios if "Cross-Table Reference" in s.title]
         assert len(reference_scenarios) >= 1
 
         # Check for circular reference scenario
@@ -153,9 +147,7 @@ class TestEdgeCaseTestingSuite:
         assert len(scenarios) >= 2  # At least 2 concurrent scenarios
 
         # Check for concurrent invitation scenario
-        invitation_scenarios = [
-            s for s in scenarios if "Concurrent User Invitations" in s.title
-        ]
+        invitation_scenarios = [s for s in scenarios if "Concurrent User Invitations" in s.title]
         assert len(invitation_scenarios) >= 1
 
         # Check for concurrent role change scenario
@@ -201,9 +193,7 @@ class TestEdgeCaseTestingSuite:
         ) as mock_deletion:
             mock_deletion.return_value = {"allowed": False, "succession_required": True}
 
-            result = await edge_case_suite.execute_edge_case_scenario(
-                sample_edge_case_scenario
-            )
+            result = await edge_case_suite.execute_edge_case_scenario(sample_edge_case_scenario)
 
             assert isinstance(result, EdgeCaseTestResult)
             assert result.scenario_id == sample_edge_case_scenario.scenario_id
@@ -288,9 +278,7 @@ class TestEdgeCaseTestingSuite:
                 "invitation_id": "test_inv_123",
             }
 
-            result = await edge_case_suite.execute_edge_case_scenario(
-                concurrent_scenario
-            )
+            result = await edge_case_suite.execute_edge_case_scenario(concurrent_scenario)
 
             assert isinstance(result, EdgeCaseTestResult)
             assert result.scenario_id == concurrent_scenario.scenario_id
@@ -387,9 +375,7 @@ class TestEdgeCaseTestingSuite:
             patch.object(
                 edge_case_suite, "_cleanup_test_organizations", new_callable=AsyncMock
             ) as mock_cleanup_orgs,
-            patch.object(
-                edge_case_suite, "_cleanup_orphaned_data", new_callable=AsyncMock
-            ),
+            patch.object(edge_case_suite, "_cleanup_orphaned_data", new_callable=AsyncMock),
         ):
             result = EdgeCaseTestResult(
                 scenario_id=sample_edge_case_scenario.scenario_id,
@@ -397,20 +383,14 @@ class TestEdgeCaseTestingSuite:
                 execution_time_seconds=1.0,
             )
 
-            await edge_case_suite._execute_cleanup_steps(
-                sample_edge_case_scenario, result
-            )
+            await edge_case_suite._execute_cleanup_steps(sample_edge_case_scenario, result)
 
             # Verify cleanup was called
-            mock_cleanup_orgs.assert_called_once_with(
-                sample_edge_case_scenario.scenario_id
-            )
+            mock_cleanup_orgs.assert_called_once_with(sample_edge_case_scenario.scenario_id)
             assert result.cleanup_success is True
 
     @pytest.mark.asyncio
-    async def test_cleanup_failure_handling(
-        self, edge_case_suite, sample_edge_case_scenario
-    ):
+    async def test_cleanup_failure_handling(self, edge_case_suite, sample_edge_case_scenario):
         """Test handling of cleanup failures."""
 
         # Mock cleanup to fail
@@ -425,9 +405,7 @@ class TestEdgeCaseTestingSuite:
                 execution_time_seconds=1.0,
             )
 
-            await edge_case_suite._execute_cleanup_steps(
-                sample_edge_case_scenario, result
-            )
+            await edge_case_suite._execute_cleanup_steps(sample_edge_case_scenario, result)
 
             assert result.cleanup_success is False
             assert any("Cleanup failed" in error for error in result.errors)
@@ -523,9 +501,7 @@ class TestEdgeCaseIntegration:
         edge_case_suite = EdgeCaseTestSuite(isolated_organization_factory)
 
         # Generate a subset of scenarios for testing
-        scenarios = edge_case_suite.generate_all_edge_case_scenarios()[
-            :3
-        ]  # Test first 3 scenarios
+        scenarios = edge_case_suite.generate_all_edge_case_scenarios()[:3]  # Test first 3 scenarios
 
         # Mock external dependencies
         with (

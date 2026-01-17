@@ -20,9 +20,7 @@ class SmsRateLimitCreateInput(BaseModel):
         ...,
         description="Timestamp of the first request in the current rate limit window",
     )
-    ttl: str = Field(
-        ..., description="Time-to-live timestamp for automatic record cleanup"
-    )
+    ttl: str = Field(..., description="Time-to-live timestamp for automatic record cleanup")
 
 
 class SmsRateLimitUpdateInput(BaseModel):
@@ -70,9 +68,7 @@ class SmsRateLimit(BaseModel):
         ...,
         description="Timestamp of the first request in the current rate limit window",
     )
-    ttl: float = Field(
-        ..., description="Time-to-live timestamp for automatic record cleanup"
-    )
+    ttl: float = Field(..., description="Time-to-live timestamp for automatic record cleanup")
 
     @validator("firstRequestTime", pre=True)
     def parse_firstRequestTime(cls, value):

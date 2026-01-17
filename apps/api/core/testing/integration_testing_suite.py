@@ -173,9 +173,7 @@ class InvitationFlowIntegrationTests:
 
         return scenarios
 
-    def _generate_permission_based_scenarios(
-        self, start_id: int
-    ) -> List[InvitationTestScenario]:
+    def _generate_permission_based_scenarios(self, start_id: int) -> List[InvitationTestScenario]:
         """Generate permission-based invitation scenarios."""
 
         scenarios = []
@@ -239,9 +237,7 @@ class InvitationFlowIntegrationTests:
 
         return scenarios
 
-    def _generate_failure_scenarios(
-        self, start_id: int
-    ) -> List[InvitationTestScenario]:
+    def _generate_failure_scenarios(self, start_id: int) -> List[InvitationTestScenario]:
         """Generate failure scenario tests."""
 
         scenarios = []
@@ -314,9 +310,7 @@ class InvitationFlowIntegrationTests:
 
         return scenarios
 
-    def _generate_edge_case_scenarios(
-        self, start_id: int
-    ) -> List[InvitationTestScenario]:
+    def _generate_edge_case_scenarios(self, start_id: int) -> List[InvitationTestScenario]:
         """Generate edge case invitation scenarios."""
 
         scenarios = []
@@ -387,9 +381,7 @@ class InvitationFlowIntegrationTests:
     ) -> Dict[str, Any]:
         """Execute a single invitation test scenario."""
 
-        print(
-            f"Executing invitation scenario: {scenario.scenario_id} - {scenario.description}"
-        )
+        print(f"Executing invitation scenario: {scenario.scenario_id} - {scenario.description}")
 
         # Setup test organization
         test_org = self.factory.create_test_organization(
@@ -399,10 +391,7 @@ class InvitationFlowIntegrationTests:
         # Setup inviter user
         inviter = None
         for user in test_org["users"]:
-            if (
-                user.get("organization_membership", {}).get("role")
-                == scenario.inviter_role
-            ):
+            if user.get("organization_membership", {}).get("role") == scenario.inviter_role:
                 inviter = user
                 break
 
@@ -435,13 +424,9 @@ class InvitationFlowIntegrationTests:
         try:
             # Execute test scenario based on failure point
             if scenario.failure_point:
-                result.update(
-                    await self._execute_failure_scenario(scenario, test_org, inviter)
-                )
+                result.update(await self._execute_failure_scenario(scenario, test_org, inviter))
             else:
-                result.update(
-                    await self._execute_success_scenario(scenario, test_org, inviter)
-                )
+                result.update(await self._execute_success_scenario(scenario, test_org, inviter))
 
             # Execute validation steps
             for validation_step in scenario.validation_steps:
@@ -458,9 +443,7 @@ class InvitationFlowIntegrationTests:
 
         finally:
             end_time = datetime.utcnow()
-            result["execution_time_ms"] = int(
-                (end_time - start_time).total_seconds() * 1000
-            )
+            result["execution_time_ms"] = int((end_time - start_time).total_seconds() * 1000)
 
         return result
 
@@ -476,8 +459,7 @@ class InvitationFlowIntegrationTests:
         invitation_data = {
             "invitation_id": f"invite_{uuid.uuid4().hex}",
             "organization_id": test_org["organization"]["organization_id"],
-            "inviter_id": inviter.get("user_data", {}).get("user_id")
-            or inviter.get("user_id"),
+            "inviter_id": inviter.get("user_data", {}).get("user_id") or inviter.get("user_id"),
             "invitee_email": scenario.invitee_email,
             "target_role": scenario.target_role.value,
             "status": InvitationStatus.PENDING.value,
@@ -616,9 +598,7 @@ class InvitationFlowIntegrationTests:
                 return "invitation_data" not in test_data
 
             elif step == "verify_email_service_failure":
-                return hasattr(
-                    self.mock_email_service.send_invitation_email, "side_effect"
-                )
+                return hasattr(self.mock_email_service.send_invitation_email, "side_effect")
 
             elif step == "validate_email_format":
                 import re
@@ -707,9 +687,7 @@ class PaymentFlowIntegrationTests:
 
         return scenarios
 
-    def _generate_payment_failure_scenarios(
-        self, start_id: int
-    ) -> List[PaymentFlowTestScenario]:
+    def _generate_payment_failure_scenarios(self, start_id: int) -> List[PaymentFlowTestScenario]:
         """Generate payment failure scenarios."""
 
         scenarios = []
@@ -771,9 +749,7 @@ class PaymentFlowIntegrationTests:
 
         return scenarios
 
-    def _generate_customer_type_scenarios(
-        self, start_id: int
-    ) -> List[PaymentFlowTestScenario]:
+    def _generate_customer_type_scenarios(self, start_id: int) -> List[PaymentFlowTestScenario]:
         """Generate scenarios for different customer types."""
 
         scenarios = []
@@ -806,9 +782,7 @@ class PaymentFlowIntegrationTests:
                 customer_type=case["customer_type"],
                 expected_org_creation=case["expected_result"],
                 expected_payment_status=(
-                    PaymentStatus.COMPLETED
-                    if case["expected_result"]
-                    else PaymentStatus.FAILED
+                    PaymentStatus.COMPLETED if case["expected_result"] else PaymentStatus.FAILED
                 ),
                 validation_steps=[
                     "validate_customer_status",
@@ -823,9 +797,7 @@ class PaymentFlowIntegrationTests:
 
         return scenarios
 
-    def _generate_payment_edge_cases(
-        self, start_id: int
-    ) -> List[PaymentFlowTestScenario]:
+    def _generate_payment_edge_cases(self, start_id: int) -> List[PaymentFlowTestScenario]:
         """Generate edge case payment scenarios."""
 
         scenarios = []
@@ -863,9 +835,7 @@ class PaymentFlowIntegrationTests:
                 customer_type="new",
                 expected_org_creation=case["expected_result"],
                 expected_payment_status=(
-                    PaymentStatus.FAILED
-                    if not case["expected_result"]
-                    else PaymentStatus.COMPLETED
+                    PaymentStatus.FAILED if not case["expected_result"] else PaymentStatus.COMPLETED
                 ),
                 validation_steps=[
                     "validate_payment_amount",
@@ -883,9 +853,7 @@ class PaymentFlowIntegrationTests:
     ) -> Dict[str, Any]:
         """Execute a single payment test scenario."""
 
-        print(
-            f"Executing payment scenario: {scenario.scenario_id} - {scenario.description}"
-        )
+        print(f"Executing payment scenario: {scenario.scenario_id} - {scenario.description}")
 
         result = {
             "scenario_id": scenario.scenario_id,
@@ -909,17 +877,9 @@ class PaymentFlowIntegrationTests:
 
             # Execute payment scenario
             if scenario.failure_point:
-                result.update(
-                    await self._execute_payment_failure_scenario(
-                        scenario, customer_data
-                    )
-                )
+                result.update(await self._execute_payment_failure_scenario(scenario, customer_data))
             else:
-                result.update(
-                    await self._execute_payment_success_scenario(
-                        scenario, customer_data
-                    )
-                )
+                result.update(await self._execute_payment_success_scenario(scenario, customer_data))
 
             # Execute validation steps
             for validation_step in scenario.validation_steps:
@@ -936,9 +896,7 @@ class PaymentFlowIntegrationTests:
 
         finally:
             end_time = datetime.utcnow()
-            result["execution_time_ms"] = int(
-                (end_time - start_time).total_seconds() * 1000
-            )
+            result["execution_time_ms"] = int((end_time - start_time).total_seconds() * 1000)
 
         return result
 
@@ -962,9 +920,7 @@ class PaymentFlowIntegrationTests:
 
         elif customer_type == "deleted":
             base_customer["status"] = "deleted"
-            base_customer["deleted_at"] = (
-                datetime.utcnow() - timedelta(days=30)
-            ).isoformat()
+            base_customer["deleted_at"] = (datetime.utcnow() - timedelta(days=30)).isoformat()
 
         else:  # new customer
             base_customer["status"] = "new"
@@ -1034,16 +990,14 @@ class PaymentFlowIntegrationTests:
             failure_results["insufficient_funds"] = True
 
         elif scenario.failure_point == "gateway_timeout":
-            self.mock_payment_service.process_payment.side_effect = (
-                asyncio.TimeoutError("Gateway timeout")
+            self.mock_payment_service.process_payment.side_effect = asyncio.TimeoutError(
+                "Gateway timeout"
             )
             failure_results["gateway_timeout"] = True
 
         elif scenario.failure_point == "kms_failure":
             self.mock_payment_service.process_payment.return_value = {"success": True}
-            self.mock_kms_service.create_key.side_effect = Exception(
-                "KMS service unavailable"
-            )
+            self.mock_kms_service.create_key.side_effect = Exception("KMS service unavailable")
             failure_results["kms_failure"] = True
 
         elif scenario.failure_point == "database_failure":
@@ -1069,9 +1023,7 @@ class PaymentFlowIntegrationTests:
                 return "organization_data" in test_data
 
             elif step == "setup_kms_encryption":
-                return (
-                    test_data.get("organization_data", {}).get("kms_key_id") is not None
-                )
+                return test_data.get("organization_data", {}).get("kms_key_id") is not None
 
             elif step == "assign_owner_role":
                 return (
@@ -1124,15 +1076,11 @@ class IntegrationTestSuite:
         start_time = datetime.utcnow()
 
         # Generate and execute invitation tests
-        invitation_scenarios = (
-            self.invitation_tests.generate_invitation_test_scenarios()
-        )
+        invitation_scenarios = self.invitation_tests.generate_invitation_test_scenarios()
         invitation_results = []
 
         for scenario in invitation_scenarios:
-            result = await self.invitation_tests.execute_invitation_test_scenario(
-                scenario
-            )
+            result = await self.invitation_tests.execute_invitation_test_scenario(scenario)
             invitation_results.append(result)
 
         # Generate and execute payment tests
@@ -1150,9 +1098,7 @@ class IntegrationTestSuite:
             "test_suite_info": {
                 "execution_start": start_time.isoformat(),
                 "execution_end": end_time.isoformat(),
-                "total_duration_ms": int(
-                    (end_time - start_time).total_seconds() * 1000
-                ),
+                "total_duration_ms": int((end_time - start_time).total_seconds() * 1000),
                 "test_environment": "integration",
             },
             "invitation_tests": {
@@ -1290,9 +1236,7 @@ class TestPaymentFlowIntegration:
         assert result["test_data"]["payment_amount"] == 99.99
         assert result.get("organization_created")
 
-    async def test_payment_failure_prevents_organization_creation(
-        self, isolated_test_environment
-    ):
+    async def test_payment_failure_prevents_organization_creation(self, isolated_test_environment):
         """Test that payment failure prevents organization creation."""
 
         factory = OrganizationTestDataFactory()

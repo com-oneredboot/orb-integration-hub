@@ -12,9 +12,7 @@ from datetime import datetime
 class MfaSetupDetails(BaseModel):
     """MfaSetupDetails model."""
 
-    qr_code: str = Field(
-        ..., description="The QR code value or label for the authenticator app"
-    )
+    qr_code: str = Field(..., description="The QR code value or label for the authenticator app")
     secret_key: str = Field(..., description="The secret key for TOTP setup")
     setup_uri: str = Field(
         None,

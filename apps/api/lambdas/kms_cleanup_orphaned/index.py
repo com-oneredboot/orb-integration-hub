@@ -41,9 +41,7 @@ def lambda_handler(event, context):
 
             try:
                 # Check if organization exists and is not deleted
-                response = organizations_table.get_item(
-                    Key={"organizationId": organization_id}
-                )
+                response = organizations_table.get_item(Key={"organizationId": organization_id})
 
                 org_exists = "Item" in response
                 org_deleted = False
@@ -75,9 +73,7 @@ def lambda_handler(event, context):
 
             except Exception as e:
                 errors.append({"organizationId": organization_id, "error": str(e)})
-                logger.error(
-                    f"Error processing organization {organization_id}: {str(e)}"
-                )
+                logger.error(f"Error processing organization {organization_id}: {str(e)}")
 
         # Log summary
         logger.info(

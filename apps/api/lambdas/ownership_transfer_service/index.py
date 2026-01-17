@@ -171,9 +171,7 @@ class PaymentStatusService:
             logger.error(f"Error checking PayPal status for user {user_id}: {str(e)}")
             return PaymentStatus.NO_PAYMENT_METHOD
 
-    def validate_payment_method_capacity(
-        self, user_id: str, required_amount: Decimal
-    ) -> bool:
+    def validate_payment_method_capacity(self, user_id: str, required_amount: Decimal) -> bool:
         """Validate if user's payment method can handle required billing amount."""
         try:
             # Check payment method limits and validity
@@ -181,9 +179,7 @@ class PaymentStatusService:
             return payment_status != PaymentStatus.NO_PAYMENT_METHOD
 
         except Exception as e:
-            logger.error(
-                f"Error validating payment capacity for user {user_id}: {str(e)}"
-            )
+            logger.error(f"Error validating payment capacity for user {user_id}: {str(e)}")
             return False
 
 
@@ -199,9 +195,7 @@ class BillingRequirementsService:
         """Determine billing requirements for organization."""
         try:
             # Get organization data
-            org_response = self.organizations_table.get_item(
-                Key={"organizationId": org_id}
-            )
+            org_response = self.organizations_table.get_item(Key={"organizationId": org_id})
 
             if not org_response.get("Item"):
                 raise ValueError(f"Organization {org_id} not found")
@@ -223,9 +217,7 @@ class BillingRequirementsService:
             )
 
         except Exception as e:
-            logger.error(
-                f"Error getting billing requirements for org {org_id}: {str(e)}"
-            )
+            logger.error(f"Error getting billing requirements for org {org_id}: {str(e)}")
             # Default to Pro plan if cannot determine
             return BillingRequirements(
                 plan_level="PRO",
@@ -239,18 +231,14 @@ class BillingRequirementsService:
         try:
             # Count applications
             app_response = self.applications_table.scan(
-                FilterExpression=boto3.dynamodb.conditions.Attr("organizationId").eq(
-                    org_id
-                )
+                FilterExpression=boto3.dynamodb.conditions.Attr("organizationId").eq(org_id)
             )
             app_count = len(app_response.get("Items", []))
 
             # Count team members (from OrganizationUsers)
             org_users_table = self.dynamodb.Table("OrganizationUsers")
             users_response = org_users_table.scan(
-                FilterExpression=boto3.dynamodb.conditions.Attr("organizationId").eq(
-                    org_id
-                )
+                FilterExpression=boto3.dynamodb.conditions.Attr("organizationId").eq(org_id)
             )
             member_count = len(users_response.get("Items", []))
 
@@ -348,12 +336,8 @@ class TransferFraudDetection:
             since_date = datetime.utcnow() - timedelta(days=days)
 
             response = self.transfer_requests_table.scan(
-                FilterExpression=boto3.dynamodb.conditions.Attr("organizationId").eq(
-                    org_id
-                )
-                & boto3.dynamodb.conditions.Attr("createdAt").gte(
-                    since_date.isoformat()
-                )
+                FilterExpression=boto3.dynamodb.conditions.Attr("organizationId").eq(org_id)
+                & boto3.dynamodb.conditions.Attr("createdAt").gte(since_date.isoformat())
             )
 
             return response.get("Items", [])
@@ -397,9 +381,7 @@ class OwnershipTransferResolver:
         self.rbac_manager = OrganizationRBACManager()
 
     @requires_organization_owner()
-    def initiate_ownership_transfer(
-        self, event: Dict[str, Any], org_context
-    ) -> Dict[str, Any]:
+    def initiate_ownership_transfer(self, event: Dict[str, Any], org_context) -> Dict[str, Any]:
         """Initiate organization ownership transfer with payment validation."""
         try:
             # Extract arguments
@@ -424,9 +406,7 @@ class OwnershipTransferResolver:
             # Check for existing pending transfers
             existing_transfer = self._get_pending_transfer(organization_id)
             if existing_transfer:
-                return self._error_response(
-                    "Organization already has pending ownership transfer"
-                )
+                return self._error_response("Organization already has pending ownership transfer")
 
             # Validate transfer legitimacy
             fraud_assessment = self.fraud_detection.validate_transfer_legitimacy(
@@ -437,16 +417,12 @@ class OwnershipTransferResolver:
                 return self._error_response("Transfer blocked due to security concerns")
 
             # Get organization billing requirements
-            billing_requirements = (
-                self.billing_service.get_organization_billing_requirements(
-                    organization_id
-                )
+            billing_requirements = self.billing_service.get_organization_billing_requirements(
+                organization_id
             )
 
             # Check new owner payment capability
-            payment_status = self.payment_service.get_customer_payment_status(
-                new_owner_id
-            )
+            payment_status = self.payment_service.get_customer_payment_status(new_owner_id)
 
             if payment_status == PaymentStatus.PAYING_CUSTOMER:
                 # Fast track for existing paying customers
@@ -501,9 +477,7 @@ class OwnershipTransferResolver:
             return self._error_response(f"Internal error: {str(e)}")
 
     @organization_context_required()
-    def cancel_ownership_transfer(
-        self, event: Dict[str, Any], org_context
-    ) -> Dict[str, Any]:
+    def cancel_ownership_transfer(self, event: Dict[str, Any], org_context) -> Dict[str, Any]:
         """Cancel pending ownership transfer."""
         try:
             organization_id = org_context.organization_id
@@ -601,9 +575,7 @@ class OwnershipTransferResolver:
                 return self._error_response("Transfer ID is required")
 
             # Get transfer request
-            response = self.transfer_requests_table.get_item(
-                Key={"transferId": transfer_id}
-            )
+            response = self.transfer_requests_table.get_item(Key={"transferId": transfer_id})
 
             if not response.get("Item"):
                 return self._error_response("Transfer request not found")
@@ -615,12 +587,9 @@ class OwnershipTransferResolver:
             cognito_groups = event.get("identity", {}).get("groups", [])
 
             is_participant = (
-                user_id == transfer_data["currentOwnerId"]
-                or user_id == transfer_data["newOwnerId"]
+                user_id == transfer_data["currentOwnerId"] or user_id == transfer_data["newOwnerId"]
             )
-            is_platform_admin = any(
-                group in cognito_groups for group in ["OWNER", "EMPLOYEE"]
-            )
+            is_platform_admin = any(group in cognito_groups for group in ["OWNER", "EMPLOYEE"])
 
             if not (is_participant or is_platform_admin):
                 return self._error_response("Access denied")
@@ -642,9 +611,7 @@ class OwnershipTransferResolver:
             user_id = event.get("identity", {}).get("sub")
             cognito_groups = event.get("identity", {}).get("groups", [])
 
-            is_platform_admin = any(
-                group in cognito_groups for group in ["OWNER", "EMPLOYEE"]
-            )
+            is_platform_admin = any(group in cognito_groups for group in ["OWNER", "EMPLOYEE"])
 
             if is_platform_admin:
                 # Platform admin sees all transfers
@@ -653,22 +620,20 @@ class OwnershipTransferResolver:
                 # Regular user sees only their transfers
                 current_owner_response = self.transfer_requests_table.query(
                     IndexName="CurrentOwnerIndex",
-                    KeyConditionExpression=boto3.dynamodb.conditions.Key(
-                        "currentOwnerId"
-                    ).eq(user_id),
+                    KeyConditionExpression=boto3.dynamodb.conditions.Key("currentOwnerId").eq(
+                        user_id
+                    ),
                 )
 
                 new_owner_response = self.transfer_requests_table.query(
                     IndexName="NewOwnerIndex",
-                    KeyConditionExpression=boto3.dynamodb.conditions.Key(
-                        "newOwnerId"
-                    ).eq(user_id),
+                    KeyConditionExpression=boto3.dynamodb.conditions.Key("newOwnerId").eq(user_id),
                 )
 
                 # Combine results
-                all_transfers = current_owner_response.get(
+                all_transfers = current_owner_response.get("Items", []) + new_owner_response.get(
                     "Items", []
-                ) + new_owner_response.get("Items", [])
+                )
 
                 # Remove duplicates
                 seen_ids = set()
@@ -784,9 +749,7 @@ class OwnershipTransferResolver:
             self.transfer_requests_table.put_item(Item=transfer_record)
 
             # Send notifications
-            self._send_payment_validation_notifications(
-                transfer_record, billing_requirements
-            )
+            self._send_payment_validation_notifications(transfer_record, billing_requirements)
 
             return {
                 "statusCode": 200,
@@ -861,9 +824,7 @@ class OwnershipTransferResolver:
             logger.warning(f"Transfer token validation failed: {str(e)}")
             return None
 
-    def _validate_payment_setup(
-        self, user_id: str, required_plan: str, payment_data: Dict
-    ) -> bool:
+    def _validate_payment_setup(self, user_id: str, required_plan: str, payment_data: Dict) -> bool:
         """Validate payment setup for user."""
         try:
             # Validate payment method with billing providers
@@ -871,8 +832,7 @@ class OwnershipTransferResolver:
 
             # For demo purposes, assume valid if payment_data provided
             return bool(
-                payment_data.get("paymentMethodId")
-                or payment_data.get("billingAgreementId")
+                payment_data.get("paymentMethodId") or payment_data.get("billingAgreementId")
             )
 
         except Exception as e:
@@ -891,9 +851,7 @@ class OwnershipTransferResolver:
                     ":updated": datetime.utcnow().isoformat(),
                 },
                 ConditionExpression="ownerId = :current_owner",
-                ExpressionAttributeNames={
-                    ":current_owner": transfer_request["currentOwnerId"]
-                },
+                ExpressionAttributeNames={":current_owner": transfer_request["currentOwnerId"]},
             )
 
             # Update transfer request status
@@ -991,9 +949,7 @@ class OwnershipTransferResolver:
         """Get pending ownership transfer for organization."""
         try:
             response = self.transfer_requests_table.scan(
-                FilterExpression=boto3.dynamodb.conditions.Attr("organizationId").eq(
-                    org_id
-                )
+                FilterExpression=boto3.dynamodb.conditions.Attr("organizationId").eq(org_id)
                 & boto3.dynamodb.conditions.Attr("status").eq(
                     TransferStatus.PAYMENT_VALIDATION_REQUIRED.value
                 )
@@ -1145,9 +1101,7 @@ class OwnershipTransferResolver:
         except Exception as e:
             logger.error(f"Error sending cancellation notifications: {str(e)}")
 
-    def _error_response(
-        self, message: str, context: Optional[Dict] = None
-    ) -> Dict[str, Any]:
+    def _error_response(self, message: str, context: Optional[Dict] = None) -> Dict[str, Any]:
         """Generate standardized error response."""
         error_data = {"error": message}
         if context:
@@ -1160,9 +1114,7 @@ class OwnershipTransferResolver:
 def lambda_handler(event, context):
     """Main Lambda handler for ownership transfer operations."""
     try:
-        logger.info(
-            f"Ownership transfer service invoked with event: {json.dumps(event)}"
-        )
+        logger.info(f"Ownership transfer service invoked with event: {json.dumps(event)}")
 
         resolver = OwnershipTransferResolver()
 

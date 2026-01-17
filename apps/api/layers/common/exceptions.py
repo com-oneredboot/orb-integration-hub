@@ -73,9 +73,7 @@ class DatabaseError(OrbError):
 class ExternalServiceError(OrbError):
     """Raised when external service calls fail."""
 
-    def __init__(
-        self, message: str, service: str, details: Optional[Dict[str, Any]] = None
-    ):
+    def __init__(self, message: str, service: str, details: Optional[Dict[str, Any]] = None):
         super().__init__(
             message=message,
             error_code="ORB-API-004",

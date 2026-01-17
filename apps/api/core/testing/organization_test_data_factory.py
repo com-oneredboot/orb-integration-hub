@@ -58,17 +58,12 @@ class OrganizationTestDataFactory:
         """Create a complete test organization with users and applications."""
 
         # Generate unique test organization name
-        org_name = (
-            name
-            or f"{self.TEST_PREFIX}Org_{self.test_session_id}_{uuid.uuid4().hex[:8]}"
-        )
+        org_name = name or f"{self.TEST_PREFIX}Org_{self.test_session_id}_{uuid.uuid4().hex[:8]}"
         org_id = f"org_{uuid.uuid4().hex}"
 
         # Create owner user if not provided
         if not owner_id:
-            owner = self.create_test_user(
-                email=f"owner_{org_id}@test.com", role_in_org="OWNER"
-            )
+            owner = self.create_test_user(email=f"owner_{org_id}@test.com", role_in_org="OWNER")
             owner_id = owner["user_id"]
 
         # Create organization
@@ -81,9 +76,7 @@ class OrganizationTestDataFactory:
         )
 
         # Create additional users based on size
-        size_config = self.ORGANIZATION_SIZES.get(
-            size, self.ORGANIZATION_SIZES["small"]
-        )
+        size_config = self.ORGANIZATION_SIZES.get(size, self.ORGANIZATION_SIZES["small"])
         additional_users = []
 
         for i in range(size_config["user_count"] - 1):  # -1 for owner
@@ -97,9 +90,7 @@ class OrganizationTestDataFactory:
         # Create applications
         applications = []
         for i in range(size_config["app_count"]):
-            app = self.create_test_application(
-                organization_id=org_id, name=f"TestApp_{i}_{org_id}"
-            )
+            app = self.create_test_application(organization_id=org_id, name=f"TestApp_{i}_{org_id}")
             applications.append(app)
 
         # Track created resources
@@ -130,9 +121,7 @@ class OrganizationTestDataFactory:
         email = base_email or f"multiorg_{user_id}@test.com"
 
         # Create base user
-        user = self.create_test_user(
-            user_id=user_id, email=email, skip_org_membership=True
-        )
+        user = self.create_test_user(user_id=user_id, email=email, skip_org_membership=True)
 
         # Create organization memberships
         memberships = []
@@ -183,9 +172,7 @@ class OrganizationTestDataFactory:
             "metadata": {
                 "levels": levels,
                 "children_per_level": children_per_level,
-                "total_organizations": sum(
-                    children_per_level**i for i in range(1, levels + 1)
-                ),
+                "total_organizations": sum(children_per_level**i for i in range(1, levels + 1)),
             },
         }
 
@@ -228,10 +215,8 @@ class OrganizationTestDataFactory:
 
         # Organization in different statuses
         for status in OrganizationStatus:
-            edge_cases[f"status_{status.value.lower()}"] = (
-                self.create_test_organization(
-                    name=f"Status_{status.value}_Org", status=status, size="small"
-                )
+            edge_cases[f"status_{status.value.lower()}"] = self.create_test_organization(
+                name=f"Status_{status.value}_Org", status=status, size="small"
             )
 
         return edge_cases
@@ -304,9 +289,7 @@ class OrganizationTestDataFactory:
 
             # Add progress logging for large datasets
             if (i + 1) % 10 == 0:
-                print(
-                    f"Created {i + 1}/{organization_count} performance test organizations"
-                )
+                print(f"Created {i + 1}/{organization_count} performance test organizations")
 
         return organizations
 
@@ -411,27 +394,19 @@ class OrganizationTestDataFactory:
 
         # Multi-organization user scenarios
         org_ids = [
-            environment["scenarios"]["basic"]["small_org"]["organization"][
-                "organization_id"
-            ],
-            environment["scenarios"]["basic"]["medium_org"]["organization"][
-                "organization_id"
-            ],
+            environment["scenarios"]["basic"]["small_org"]["organization"]["organization_id"],
+            environment["scenarios"]["basic"]["medium_org"]["organization"]["organization_id"],
         ]
-        environment["scenarios"]["multi_org_user"] = (
-            self.create_multi_organization_user(
-                organization_ids=org_ids,
-                roles={org_ids[0]: "ADMIN", org_ids[1]: "MEMBER"},
-            )
+        environment["scenarios"]["multi_org_user"] = self.create_multi_organization_user(
+            organization_ids=org_ids,
+            roles={org_ids[0]: "ADMIN", org_ids[1]: "MEMBER"},
         )
 
         # Edge case scenarios
         environment["scenarios"]["edge_cases"] = self.create_edge_case_organizations()
 
         # Security test scenarios
-        environment["scenarios"][
-            "security_tests"
-        ] = self.create_security_test_organizations()
+        environment["scenarios"]["security_tests"] = self.create_security_test_organizations()
 
         # Organization hierarchy
         environment["scenarios"]["hierarchy"] = self.create_organization_hierarchy(
@@ -593,9 +568,7 @@ class OrganizationTestDataFactory:
                 for i, user in enumerate(test_data["users"]):
                     user_data = user.get("user_data", {})
                     if not user_data.get("user_id"):
-                        validation_results["errors"].append(
-                            f"User {i}: Missing user_id"
-                        )
+                        validation_results["errors"].append(f"User {i}: Missing user_id")
                     if not user_data.get("email"):
                         validation_results["errors"].append(f"User {i}: Missing email")
 
@@ -624,9 +597,7 @@ class OrganizationTestDataFactory:
 
 def create_isolated_test_environment(test_name: str) -> OrganizationTestDataFactory:
     """Create an isolated test environment for a specific test."""
-    return OrganizationTestDataFactory(
-        test_session_id=f"{test_name}_{uuid.uuid4().hex[:8]}"
-    )
+    return OrganizationTestDataFactory(test_session_id=f"{test_name}_{uuid.uuid4().hex[:8]}")
 
 
 def create_standard_test_organizations() -> Dict[str, Any]:

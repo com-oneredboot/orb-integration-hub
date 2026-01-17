@@ -234,9 +234,7 @@ class DataDiscoveryEngine:
             logger.error(f"Error resolving user ID from email {email}: {str(e)}")
             return None
 
-    def _deduplicate_records(
-        self, records: List[PersonalDataRecord]
-    ) -> List[PersonalDataRecord]:
+    def _deduplicate_records(self, records: List[PersonalDataRecord]) -> List[PersonalDataRecord]:
         """Remove duplicate records based on system, table, and record ID."""
 
         seen = set()
@@ -296,9 +294,7 @@ class DynamoDBDataMapper:
                 "senderUserId",
             ]:
                 response = self.table.scan(
-                    FilterExpression=boto3.dynamodb.conditions.Attr(
-                        self.email_field
-                    ).eq(user_id)
+                    FilterExpression=boto3.dynamodb.conditions.Attr(self.email_field).eq(user_id)
                 )
 
                 return self._convert_to_personal_data_records(response.get("Items", []))
@@ -309,9 +305,7 @@ class DynamoDBDataMapper:
             logger.error(f"Error finding by user ID in {self.table_name}: {str(e)}")
             return []
 
-    def find_by_organization(
-        self, user_id: str, organization_id: str
-    ) -> List[PersonalDataRecord]:
+    def find_by_organization(self, user_id: str, organization_id: str) -> List[PersonalDataRecord]:
         """Find records by user ID within organization context."""
         try:
             # Only relevant for tables with organizationId field
@@ -328,14 +322,10 @@ class DynamoDBDataMapper:
             return self._convert_to_personal_data_records(response.get("Items", []))
 
         except Exception as e:
-            logger.error(
-                f"Error finding by organization in {self.table_name}: {str(e)}"
-            )
+            logger.error(f"Error finding by organization in {self.table_name}: {str(e)}")
             return []
 
-    def _convert_to_personal_data_records(
-        self, items: List[Dict]
-    ) -> List[PersonalDataRecord]:
+    def _convert_to_personal_data_records(self, items: List[Dict]) -> List[PersonalDataRecord]:
         """Convert DynamoDB items to PersonalDataRecord objects."""
 
         records = []
@@ -343,9 +333,7 @@ class DynamoDBDataMapper:
         for item in items:
             # Extract only personal data fields
             personal_data = {
-                field: item.get(field)
-                for field in self.personal_data_fields
-                if field in item
+                field: item.get(field) for field in self.personal_data_fields if field in item
             }
 
             # Determine record ID (primary key)
@@ -432,7 +420,9 @@ class PrivacyDeletionEngine:
     ) -> Dict[str, Any]:
         """Execute comprehensive data deletion with verification."""
 
-        deletion_id = f"del_{int(time.time())}_{hashlib.md5(data_subject_email.encode()).hexdigest()[:8]}"
+        deletion_id = (
+            f"del_{int(time.time())}_{hashlib.md5(data_subject_email.encode()).hexdigest()[:8]}"
+        )
 
         logger.info(f"Starting data deletion {deletion_id} for {data_subject_email}")
 
@@ -497,9 +487,7 @@ class PrivacyDeletionEngine:
             },
         }
 
-    def _delete_personal_data_record(
-        self, record: PersonalDataRecord
-    ) -> Dict[str, Any]:
+    def _delete_personal_data_record(self, record: PersonalDataRecord) -> Dict[str, Any]:
         """Delete a specific personal data record."""
 
         try:
@@ -563,8 +551,7 @@ class PrivacyDeletionEngine:
         # Update record with anonymized data
         table.update_item(
             Key=key,
-            UpdateExpression="SET "
-            + ", ".join([f"#{k} = :{k}" for k in anonymized_data.keys()]),
+            UpdateExpression="SET " + ", ".join([f"#{k} = :{k}" for k in anonymized_data.keys()]),
             ExpressionAttributeNames={f"#{k}": k for k in anonymized_data.keys()},
             ExpressionAttributeValues={f":{k}": v for k, v in anonymized_data.items()},
         )
@@ -599,9 +586,7 @@ class PrivacyDeletionEngine:
             UpdateExpression="SET "
             + ", ".join([f"#{k} = :{k}" for k in pseudonymized_data.keys()]),
             ExpressionAttributeNames={f"#{k}": k for k in pseudonymized_data.keys()},
-            ExpressionAttributeValues={
-                f":{k}": v for k, v in pseudonymized_data.items()
-            },
+            ExpressionAttributeValues={f":{k}": v for k, v in pseudonymized_data.items()},
         )
 
         return {
@@ -610,9 +595,7 @@ class PrivacyDeletionEngine:
             "deletion_method": "PSEUDONYMIZATION",
             "status": "SUCCESS",
             "pseudonymized_at": datetime.utcnow().isoformat(),
-            "verification_hash": self._calculate_deletion_hash(
-                record, "PSEUDONYMIZATION"
-            ),
+            "verification_hash": self._calculate_deletion_hash(record, "PSEUDONYMIZATION"),
         }
 
     def _build_delete_key(self, record: PersonalDataRecord) -> Dict[str, str]:
@@ -646,10 +629,7 @@ class PrivacyDeletionEngine:
     def _has_retention_requirement(self, record: PersonalDataRecord) -> bool:
         """Check if record has legal retention requirements."""
         # Financial and compliance data often has retention requirements
-        return (
-            "7 years" in record.retention_policy
-            or "tax" in record.retention_policy.lower()
-        )
+        return "7 years" in record.retention_policy or "tax" in record.retention_policy.lower()
 
     def _delete_from_backup_systems(self, data_subject_email: str) -> Dict[str, Any]:
         """Delete personal data from backup and archive systems."""
@@ -663,9 +643,7 @@ class PrivacyDeletionEngine:
                 "aurora_snapshots",
             ],
             "deletion_strategy": "SCHEDULED_DELETION",
-            "estimated_completion": (
-                datetime.utcnow() + timedelta(days=30)
-            ).isoformat(),
+            "estimated_completion": (datetime.utcnow() + timedelta(days=30)).isoformat(),
             "status": "SCHEDULED",
         }
 
@@ -682,9 +660,7 @@ class PrivacyDeletionEngine:
             ).hexdigest(),
         }
 
-        return hashlib.sha256(
-            json.dumps(deletion_data, sort_keys=True).encode()
-        ).hexdigest()
+        return hashlib.sha256(json.dumps(deletion_data, sort_keys=True).encode()).hexdigest()
 
     def _generate_deletion_proof(
         self,
@@ -700,16 +676,12 @@ class PrivacyDeletionEngine:
             "data_subject_email": data_subject_email,
             "deletion_timestamp": datetime.utcnow().isoformat(),
             "total_records_discovered": discovery_result.total_records,
-            "total_records_deleted": len(
-                [r for r in deletion_results if r["status"] == "SUCCESS"]
-            ),
+            "total_records_deleted": len([r for r in deletion_results if r["status"] == "SUCCESS"]),
             "deletion_methods_used": list(
                 set(r.get("deletion_method", "UNKNOWN") for r in deletion_results)
             ),
             "verification_hashes": [
-                r.get("verification_hash")
-                for r in deletion_results
-                if r.get("verification_hash")
+                r.get("verification_hash") for r in deletion_results if r.get("verification_hash")
             ],
             "compliance_frameworks": ["GDPR_ARTICLE_17", "CCPA_RIGHT_TO_DELETE"],
             "legal_validity": "COURT_ADMISSIBLE_EVIDENCE",
@@ -736,15 +708,11 @@ def execute_privacy_data_deletion(
     data_subject_email: str, organization_id: str = None
 ) -> Dict[str, Any]:
     """Convenience function for executing privacy data deletion."""
-    return privacy_deletion_engine.execute_data_deletion(
-        data_subject_email, organization_id
-    )
+    return privacy_deletion_engine.execute_data_deletion(data_subject_email, organization_id)
 
 
 def discover_personal_data(
     data_subject_email: str, organization_id: str = None
 ) -> DataDiscoveryResult:
     """Convenience function for discovering personal data."""
-    return privacy_discovery_engine.discover_personal_data(
-        data_subject_email, organization_id
-    )
+    return privacy_discovery_engine.discover_personal_data(data_subject_email, organization_id)

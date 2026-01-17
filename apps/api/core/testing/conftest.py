@@ -28,9 +28,7 @@ def pytest_configure(config):
     """Configure pytest for organizations testing."""
 
     # Add custom markers
-    config.addinivalue_line(
-        "markers", "organization: mark test as organization-related"
-    )
+    config.addinivalue_line("markers", "organization: mark test as organization-related")
     config.addinivalue_line("markers", "integration: mark test as integration test")
     config.addinivalue_line("markers", "performance: mark test as performance test")
     config.addinivalue_line("markers", "security: mark test as security test")
@@ -236,9 +234,7 @@ def edge_case_organizations(isolated_organization_factory):
 def mock_dynamodb_repository():
     """Mock DynamoDB repository fixture."""
 
-    with patch(
-        "backend.src.core.models.dynamodb.repository.DynamoDBRepository"
-    ) as mock_repo:
+    with patch("backend.src.core.models.dynamodb.repository.DynamoDBRepository") as mock_repo:
         # Configure mock methods
         mock_instance = Mock()
         mock_repo.return_value = mock_instance
@@ -328,9 +324,7 @@ def performance_test_data(isolated_organization_factory, test_config):
 
     org_count = size_mapping.get(test_config["performance_test_size"], 10)
 
-    return isolated_organization_factory.create_performance_test_data(
-        organization_count=org_count
-    )
+    return isolated_organization_factory.create_performance_test_data(organization_count=org_count)
 
 
 # =============================================================================
@@ -462,9 +456,7 @@ def test_logging(test_config, request):
 
         if not logger.handlers:
             handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
+            formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
             handler.setFormatter(formatter)
             logger.addHandler(handler)
 

@@ -110,9 +110,7 @@ def lambda_handler(event, context):
         logger.info("Stripe API key retrieved successfully")
 
         # process payment
-        logger.info(
-            f"Processing payment for customer {customer_id}, amount: {amount} {currency}"
-        )
+        logger.info(f"Processing payment for customer {customer_id}, amount: {amount} {currency}")
 
         # Create the Payment Intent, since confirm=True it will process immediately
         intent = stripe.PaymentIntent.create(

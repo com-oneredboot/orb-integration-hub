@@ -147,9 +147,7 @@ def lambda_handler(event, context):
     phone_number = input_data["phoneNumber"]
     provided_code = input_data.get("code")  # Optional for verification
 
-    logger.info(
-        f"Processing SMS verification request - Code provided: {provided_code is not None}"
-    )
+    logger.info(f"Processing SMS verification request - Code provided: {provided_code is not None}")
 
     try:
         # Get the secret key
@@ -164,9 +162,7 @@ def lambda_handler(event, context):
             response = {
                 "StatusCode": 200,
                 "Message": (
-                    "Code verified successfully"
-                    if is_valid
-                    else "Invalid or expired code"
+                    "Code verified successfully" if is_valid else "Invalid or expired code"
                 ),
                 "Data": {"phoneNumber": phone_number, "valid": is_valid},
             }

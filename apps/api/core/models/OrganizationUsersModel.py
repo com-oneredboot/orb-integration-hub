@@ -12,9 +12,7 @@ from .OrganizationUserStatusEnum import OrganizationUserStatus
 
 # CRUD Input Types
 class OrganizationUsersCreateInput(BaseModel):
-    user_id: str = Field(
-        ..., description="ID of the user (foreign key to Users, partition key)"
-    )
+    user_id: str = Field(..., description="ID of the user (foreign key to Users, partition key)")
     organization_id: str = Field(
         ...,
         description="ID of the organization (foreign key to Organizations, sort key)",
@@ -30,9 +28,7 @@ class OrganizationUsersCreateInput(BaseModel):
         ..., description="ID of the user who sent the invitation (for audit trail)"
     )
     created_at: datetime = Field(..., description="When the membership was created")
-    updated_at: datetime = Field(
-        ..., description="When the membership was last updated"
-    )
+    updated_at: datetime = Field(..., description="When the membership was last updated")
 
 
 class OrganizationUsersUpdateInput(BaseModel):
@@ -53,12 +49,8 @@ class OrganizationUsersUpdateInput(BaseModel):
     invited_by: Optional[str] = Field(
         None, description="ID of the user who sent the invitation (for audit trail)"
     )
-    created_at: Optional[datetime] = Field(
-        None, description="When the membership was created"
-    )
-    updated_at: Optional[datetime] = Field(
-        None, description="When the membership was last updated"
-    )
+    created_at: Optional[datetime] = Field(None, description="When the membership was created")
+    updated_at: Optional[datetime] = Field(None, description="When the membership was last updated")
 
 
 class OrganizationUsersDeleteInput(BaseModel):
@@ -91,9 +83,7 @@ class OrganizationUsersQueryByBothInput(BaseModel):
 class OrganizationUsers(BaseModel):
     """OrganizationUsers model."""
 
-    user_id: str = Field(
-        ..., description="ID of the user (foreign key to Users, partition key)"
-    )
+    user_id: str = Field(..., description="ID of the user (foreign key to Users, partition key)")
     organization_id: str = Field(
         ...,
         description="ID of the organization (foreign key to Organizations, sort key)",
@@ -109,9 +99,7 @@ class OrganizationUsers(BaseModel):
         None, description="ID of the user who sent the invitation (for audit trail)"
     )
     created_at: datetime = Field(..., description="When the membership was created")
-    updated_at: datetime = Field(
-        ..., description="When the membership was last updated"
-    )
+    updated_at: datetime = Field(..., description="When the membership was last updated")
 
     @validator("createdAt", pre=True)
     def parse_createdAt(cls, value):
@@ -148,9 +136,7 @@ class OrganizationUsers(BaseModel):
                 else OrganizationUserRole.UNKNOWN
             ),
             status=(
-                OrganizationUserStatus[
-                    dto.get("status", "OrganizationUserStatus.UNKNOWN")
-                ]
+                OrganizationUserStatus[dto.get("status", "OrganizationUserStatus.UNKNOWN")]
                 if dto.get("status")
                 else OrganizationUserStatus.UNKNOWN
             ),
@@ -164,9 +150,7 @@ class OrganizationUsers(BaseModel):
             "user_id": self.user_id,
             "organization_id": self.organization_id,
             "role": self.role.value if self.role else "OrganizationUserRole.UNKNOWN",
-            "status": (
-                self.status.value if self.status else "OrganizationUserStatus.UNKNOWN"
-            ),
+            "status": (self.status.value if self.status else "OrganizationUserStatus.UNKNOWN"),
             "invited_by": self.invited_by,
             "created_at": self.created_at,
             "updated_at": self.updated_at,

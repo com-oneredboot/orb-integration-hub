@@ -23,17 +23,11 @@ class ApplicationsCreateInput(BaseModel):
         ...,
         description="ID of the user who owns the application (foreign key to Users)",
     )
-    status: ApplicationStatus = Field(
-        ..., description="Current status of the application"
-    )
+    status: ApplicationStatus = Field(..., description="Current status of the application")
     created_at: datetime = Field(..., description="When the application was created")
-    updated_at: datetime = Field(
-        ..., description="When the application was last updated"
-    )
+    updated_at: datetime = Field(..., description="When the application was last updated")
     api_key: str = Field(..., description="Current active API key for the application")
-    api_key_next: str = Field(
-        ..., description="Next API key for rotation (dual key system)"
-    )
+    api_key_next: str = Field(..., description="Next API key for rotation (dual key system)")
     environments: List[str] = Field(
         ...,
         description="List of available environments for this application (max 5 for starter plan)",
@@ -56,15 +50,11 @@ class ApplicationsUpdateInput(BaseModel):
     status: Optional[ApplicationStatus] = Field(
         None, description="Current status of the application"
     )
-    created_at: Optional[datetime] = Field(
-        None, description="When the application was created"
-    )
+    created_at: Optional[datetime] = Field(None, description="When the application was created")
     updated_at: Optional[datetime] = Field(
         None, description="When the application was last updated"
     )
-    api_key: Optional[str] = Field(
-        None, description="Current active API key for the application"
-    )
+    api_key: Optional[str] = Field(None, description="Current active API key for the application")
     api_key_next: Optional[str] = Field(
         None, description="Next API key for rotation (dual key system)"
     )
@@ -111,13 +101,9 @@ class Applications(BaseModel):
     )
     status: str = Field(..., description="Current status of the application")
     created_at: datetime = Field(..., description="When the application was created")
-    updated_at: datetime = Field(
-        ..., description="When the application was last updated"
-    )
+    updated_at: datetime = Field(..., description="When the application was last updated")
     api_key: str = Field(..., description="Current active API key for the application")
-    api_key_next: str = Field(
-        None, description="Next API key for rotation (dual key system)"
-    )
+    api_key_next: str = Field(None, description="Next API key for rotation (dual key system)")
     environments: List[str] = Field(
         ...,
         description="List of available environments for this application (max 5 for starter plan)",

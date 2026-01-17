@@ -65,13 +65,9 @@ class TestPerformanceTestingSuite:
             assert metrics is not None
             assert metrics.total_operations == 50  # 10 users * 5 operations
             assert metrics.successful_operations <= metrics.total_operations
+            assert metrics.error_rate_percentage <= load_test_config.max_error_rate_percentage
             assert (
-                metrics.error_rate_percentage
-                <= load_test_config.max_error_rate_percentage
-            )
-            assert (
-                metrics.average_response_time_ms
-                <= load_test_config.target_response_time_ms * 2
+                metrics.average_response_time_ms <= load_test_config.target_response_time_ms * 2
             )  # Allow some tolerance
 
     @pytest.mark.asyncio
@@ -119,9 +115,7 @@ class TestPerformanceTestingSuite:
             # Verify all organization sizes are tested
             expected_sizes = ["small", "medium", "large", "enterprise"]
             for size in expected_sizes:
-                assert any(
-                    size in result_key for result_key in scalability_results.keys()
-                )
+                assert any(size in result_key for result_key in scalability_results.keys())
 
             # Verify metrics are collected for each size
             for size_result in scalability_results.values():
@@ -129,9 +123,7 @@ class TestPerformanceTestingSuite:
                 assert size_result.total_operations > 0
 
     @pytest.mark.asyncio
-    async def test_bulk_operations_testing(
-        self, performance_runner, isolated_organization_factory
-    ):
+    async def test_bulk_operations_testing(self, performance_runner, isolated_organization_factory):
         """Test bulk operations performance."""
 
         # Create test organization for bulk operations
@@ -157,13 +149,9 @@ class TestPerformanceTestingSuite:
                 "bulk_data_export",
             ]
             for operation in expected_operations:
-                assert any(
-                    operation in result_key for result_key in bulk_results.keys()
-                )
+                assert any(operation in result_key for result_key in bulk_results.keys())
 
-    def test_database_query_optimization(
-        self, performance_runner, isolated_organization_factory
-    ):
+    def test_database_query_optimization(self, performance_runner, isolated_organization_factory):
         """Test database query optimization validation."""
 
         # Create large organization for query testing
@@ -171,9 +159,7 @@ class TestPerformanceTestingSuite:
             name="QueryTestOrg", size="large"
         )
 
-        with patch.object(
-            performance_runner, "_analyze_query_performance"
-        ) as mock_analyze:
+        with patch.object(performance_runner, "_analyze_query_performance") as mock_analyze:
             mock_analyze.return_value = {
                 "query_time_ms": 150,
                 "rows_examined": 500,
@@ -191,9 +177,7 @@ class TestPerformanceTestingSuite:
             assert "optimization_analysis" in query_results
 
     @pytest.mark.asyncio
-    async def test_concurrent_operations(
-        self, performance_runner, isolated_organization_factory
-    ):
+    async def test_concurrent_operations(self, performance_runner, isolated_organization_factory):
         """Test concurrent operations handling."""
 
         test_org = isolated_organization_factory.create_test_organization(
@@ -259,9 +243,7 @@ class TestPerformanceTestingSuite:
         assert abs(metrics.p95_response_time_ms - 290.0) < 5  # 95th percentile
 
     @pytest.mark.asyncio
-    async def test_performance_test_with_failures(
-        self, performance_runner, load_test_config
-    ):
+    async def test_performance_test_with_failures(self, performance_runner, load_test_config):
         """Test performance testing with simulated failures."""
 
         # Mock operations with some failures
@@ -316,9 +298,7 @@ class TestPerformanceTestingSuite:
         assert report["summary"]["overall_success_rate"] == 95.0
 
     @pytest.mark.asyncio
-    async def test_performance_test_timeout_handling(
-        self, performance_runner, load_test_config
-    ):
+    async def test_performance_test_timeout_handling(self, performance_runner, load_test_config):
         """Test timeout handling in performance tests."""
 
         # Mock slow operations that exceed timeout
@@ -329,9 +309,7 @@ class TestPerformanceTestingSuite:
         # Set short timeout for testing
         load_test_config.test_duration_seconds = 1
 
-        with patch.object(
-            performance_runner, "_execute_operation", side_effect=slow_operation
-        ):
+        with patch.object(performance_runner, "_execute_operation", side_effect=slow_operation):
             start_time = time.time()
             metrics = await performance_runner.run_load_test(load_test_config)
             end_time = time.time()
@@ -444,9 +422,7 @@ class TestPerformanceTestIntegration:
             assert metrics.error_rate_percentage == 0.0
             assert metrics.operations_per_second > 0
 
-    def test_performance_test_data_export(
-        self, isolated_organization_factory, temp_test_file
-    ):
+    def test_performance_test_data_export(self, isolated_organization_factory, temp_test_file):
         """Test exporting performance test results."""
 
         performance_runner = PerformanceTestRunner(isolated_organization_factory)
@@ -485,6 +461,5 @@ class TestPerformanceTestIntegration:
         assert "metadata" in exported_data
         assert len(exported_data["performance_test_results"]) == 1
         assert (
-            exported_data["performance_test_results"][0]["operation_type"]
-            == "create_organization"
+            exported_data["performance_test_results"][0]["operation_type"] == "create_organization"
         )

@@ -39,27 +39,19 @@ async def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
     try:
         # Get the user's Cognito group
-        groups = (
-            event["request"].get("groupConfiguration", {}).get("groupsToOverride", [])
-        )
+        groups = event["request"].get("groupConfiguration", {}).get("groupsToOverride", [])
         cognito_group = groups[0] if groups else "CUSTOMER"
 
         # Get the application ID from the client metadata or default context
-        application_id = (
-            event["request"].get("clientMetadata", {}).get("applicationId", "default")
-        )
+        application_id = event["request"].get("clientMetadata", {}).get("applicationId", "default")
 
         # Get user ID from the event
         user_id = event["request"]["userAttributes"]["sub"]
 
-        logger.info(
-            f"Processing token generation for user {user_id} in group {cognito_group}"
-        )
+        logger.info(f"Processing token generation for user {user_id} in group {cognito_group}")
 
         # Fetch roles and permissions
-        role_data, log_messages = await auth_service.get_user_roles(
-            user_id, application_id
-        )
+        role_data, log_messages = await auth_service.get_user_roles(user_id, application_id)
 
         # Process log messages from the service
         for log_msg in log_messages:
@@ -72,9 +64,7 @@ async def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     "applicationRoles": json.dumps(role_data.applicationRoles),
                     "cognitoGroup": cognito_group,
                     "permissions": json.dumps(role_data.permissions),
-                    "tenantId": (
-                        event["request"]["userAttributes"].get("custom:tenantId", "")
-                    ),
+                    "tenantId": (event["request"]["userAttributes"].get("custom:tenantId", "")),
                     "applicationId": application_id,
                 }
             }

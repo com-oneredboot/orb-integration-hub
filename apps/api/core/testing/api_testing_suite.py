@@ -169,9 +169,7 @@ class APITestSuite:
         scenario_id = 1
 
         # Query optimization scenarios
-        optimization_scenarios = self._generate_query_optimization_scenarios(
-            scenario_id
-        )
+        optimization_scenarios = self._generate_query_optimization_scenarios(scenario_id)
         scenarios.extend(optimization_scenarios)
         scenario_id += len(optimization_scenarios)
 
@@ -212,9 +210,7 @@ class APITestSuite:
         self.test_scenarios = scenarios
         return scenarios
 
-    def _generate_query_optimization_scenarios(
-        self, start_id: int
-    ) -> List[APITestScenario]:
+    def _generate_query_optimization_scenarios(self, start_id: int) -> List[APITestScenario]:
         """Generate query optimization test scenarios."""
 
         scenarios = []
@@ -377,9 +373,7 @@ class APITestSuite:
 
         return scenarios
 
-    def _generate_batch_operations_scenarios(
-        self, start_id: int
-    ) -> List[APITestScenario]:
+    def _generate_batch_operations_scenarios(self, start_id: int) -> List[APITestScenario]:
         """Generate batch operations test scenarios."""
 
         scenarios = []
@@ -760,9 +754,7 @@ class APITestSuite:
 
         return scenarios
 
-    def _generate_complexity_analysis_scenarios(
-        self, start_id: int
-    ) -> List[APITestScenario]:
+    def _generate_complexity_analysis_scenarios(self, start_id: int) -> List[APITestScenario]:
         """Generate query complexity analysis scenarios."""
 
         scenarios = []
@@ -1079,9 +1071,7 @@ class APITestSuite:
 
         return scenarios
 
-    async def execute_api_test_scenario(
-        self, scenario: APITestScenario
-    ) -> APITestResult:
+    async def execute_api_test_scenario(self, scenario: APITestScenario) -> APITestResult:
         """Execute a single API test scenario."""
 
         start_time = time.time()
@@ -1101,38 +1091,26 @@ class APITestSuite:
                 result.batch_results[batch.batch_id] = batch_result
 
             # Collect performance metrics
-            result.performance_metrics = await self._collect_performance_metrics(
-                scenario
-            )
+            result.performance_metrics = await self._collect_performance_metrics(scenario)
 
             # Analyze optimization effectiveness
-            result.optimization_metrics = (
-                await self._analyze_optimization_effectiveness(scenario)
-            )
+            result.optimization_metrics = await self._analyze_optimization_effectiveness(scenario)
 
             # Run security validations
             if scenario.security_validations:
-                result.security_findings = await self._run_security_validations(
-                    scenario
-                )
+                result.security_findings = await self._run_security_validations(scenario)
 
             # Detect N+1 problems
             if scenario.category == APITestCategory.N_PLUS_ONE:
-                result.n_plus_one_detected = await self._detect_n_plus_one_problems(
-                    scenario
-                )
+                result.n_plus_one_detected = await self._detect_n_plus_one_problems(scenario)
 
             # Analyze query complexity
             if scenario.category == APITestCategory.COMPLEXITY_ANALYSIS:
-                result.query_complexity_analysis = await self._analyze_query_complexity(
-                    scenario
-                )
+                result.query_complexity_analysis = await self._analyze_query_complexity(scenario)
 
             # Test caching
             if OptimizationTechnique.CACHING in scenario.optimization_techniques:
-                result.cache_hit_ratio = await self._test_caching_effectiveness(
-                    scenario
-                )
+                result.cache_hit_ratio = await self._test_caching_effectiveness(scenario)
 
             # Test rate limiting
             if scenario.category == APITestCategory.RATE_LIMITING:
@@ -1142,9 +1120,7 @@ class APITestSuite:
             performance_passed = self._validate_performance_thresholds(scenario, result)
             security_passed = len(result.security_findings) == 0
 
-            result.success = (
-                performance_passed and security_passed and len(result.errors) == 0
-            )
+            result.success = performance_passed and security_passed and len(result.errors) == 0
 
         except Exception as e:
             result.errors.append(f"API test execution failed: {str(e)}")
@@ -1158,9 +1134,7 @@ class APITestSuite:
 
         try:
             # Mock GraphQL execution - in real implementation would use actual GraphQL client
-            await asyncio.sleep(
-                query.expected_response_time_ms / 1000
-            )  # Simulate query time
+            await asyncio.sleep(query.expected_response_time_ms / 1000)  # Simulate query time
 
             return {
                 "data": {"mock": "response"},
@@ -1212,9 +1186,7 @@ class APITestSuite:
                 "error_count": len(batch.queries),
             }
 
-    async def _execute_mixed_batch(
-        self, queries: List[GraphQLQuery]
-    ) -> List[Dict[str, Any]]:
+    async def _execute_mixed_batch(self, queries: List[GraphQLQuery]) -> List[Dict[str, Any]]:
         """Execute queries with mixed parallel/sequential strategy."""
 
         results = []
@@ -1225,9 +1197,7 @@ class APITestSuite:
 
         # Execute light queries in parallel
         if light_queries:
-            light_tasks = [
-                self._execute_graphql_query(query) for query in light_queries
-            ]
+            light_tasks = [self._execute_graphql_query(query) for query in light_queries]
             light_results = await asyncio.gather(*light_tasks)
             results.extend(light_results)
 
@@ -1238,9 +1208,7 @@ class APITestSuite:
 
         return results
 
-    async def _collect_performance_metrics(
-        self, scenario: APITestScenario
-    ) -> Dict[str, float]:
+    async def _collect_performance_metrics(self, scenario: APITestScenario) -> Dict[str, float]:
         """Collect performance metrics for the scenario."""
 
         # Mock performance metrics collection
@@ -1314,9 +1282,7 @@ class APITestSuite:
 
         return db_queries_count > expected_queries * 2
 
-    async def _analyze_query_complexity(
-        self, scenario: APITestScenario
-    ) -> Dict[str, Any]:
+    async def _analyze_query_complexity(self, scenario: APITestScenario) -> Dict[str, Any]:
         """Analyze query complexity metrics."""
 
         return {
@@ -1353,9 +1319,7 @@ class APITestSuite:
             if threshold_key in result.performance_metrics:
                 actual_value = result.performance_metrics[threshold_key]
                 if actual_value > threshold_value:
-                    result.warnings.append(
-                        f"Performance threshold exceeded: {threshold_key}"
-                    )
+                    result.warnings.append(f"Performance threshold exceeded: {threshold_key}")
                     return False
 
         return True
@@ -1376,9 +1340,7 @@ class APITestSuite:
             by_category[category]["total"] += 1
 
         for result in self.test_results:
-            scenario = next(
-                s for s in self.test_scenarios if s.scenario_id == result.scenario_id
-            )
+            scenario = next(s for s in self.test_scenarios if s.scenario_id == result.scenario_id)
             category = scenario.category.value
             by_category[category]["executed"] += 1
             if result.success:
@@ -1386,8 +1348,7 @@ class APITestSuite:
 
         # Calculate average metrics
         avg_response_time = sum(
-            r.performance_metrics.get("avg_response_time_ms", 0)
-            for r in self.test_results
+            r.performance_metrics.get("avg_response_time_ms", 0) for r in self.test_results
         ) / max(len(self.test_results), 1)
 
         return {
@@ -1396,9 +1357,7 @@ class APITestSuite:
                 "executed_scenarios": executed_scenarios,
                 "successful_tests": successful_tests,
                 "success_rate": (
-                    (successful_tests / executed_scenarios * 100)
-                    if executed_scenarios > 0
-                    else 0
+                    (successful_tests / executed_scenarios * 100) if executed_scenarios > 0 else 0
                 ),
                 "avg_response_time_ms": avg_response_time,
             },
@@ -1437,17 +1396,11 @@ class APITestSuite:
 
         return {
             "total_findings": len(all_findings),
-            "critical_findings": len(
-                [f for f in all_findings if "injection" in f.lower()]
-            ),
+            "critical_findings": len([f for f in all_findings if "injection" in f.lower()]),
             "findings_by_type": {
                 "injection": len([f for f in all_findings if "injection" in f.lower()]),
-                "introspection": len(
-                    [f for f in all_findings if "introspection" in f.lower()]
-                ),
-                "complexity": len(
-                    [f for f in all_findings if "complexity" in f.lower()]
-                ),
+                "introspection": len([f for f in all_findings if "introspection" in f.lower()]),
+                "complexity": len([f for f in all_findings if "complexity" in f.lower()]),
             },
         }
 
@@ -1458,17 +1411,14 @@ class APITestSuite:
             return {}
 
         response_times = [
-            r.performance_metrics.get("avg_response_time_ms", 0)
-            for r in self.test_results
+            r.performance_metrics.get("avg_response_time_ms", 0) for r in self.test_results
         ]
 
         return {
             "avg_response_time_ms": sum(response_times) / len(response_times),
             "min_response_time_ms": min(response_times),
             "max_response_time_ms": max(response_times),
-            "n_plus_one_detections": len(
-                [r for r in self.test_results if r.n_plus_one_detected]
-            ),
+            "n_plus_one_detections": len([r for r in self.test_results if r.n_plus_one_detected]),
             "avg_cache_hit_ratio": sum(r.cache_hit_ratio for r in self.test_results)
             / len(self.test_results),
         }

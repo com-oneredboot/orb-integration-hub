@@ -123,16 +123,12 @@ class EdgeCaseTestSuite:
         scenario_id += len(orphaning_scenarios)
 
         # Referential integrity scenarios
-        integrity_scenarios = self._generate_referential_integrity_scenarios(
-            scenario_id
-        )
+        integrity_scenarios = self._generate_referential_integrity_scenarios(scenario_id)
         scenarios.extend(integrity_scenarios)
         scenario_id += len(integrity_scenarios)
 
         # Concurrent operations scenarios
-        concurrent_scenarios = self._generate_concurrent_operations_scenarios(
-            scenario_id
-        )
+        concurrent_scenarios = self._generate_concurrent_operations_scenarios(scenario_id)
         scenarios.extend(concurrent_scenarios)
         scenario_id += len(concurrent_scenarios)
 
@@ -153,9 +149,7 @@ class EdgeCaseTestSuite:
         self.test_scenarios = scenarios
         return scenarios
 
-    def _generate_owner_succession_scenarios(
-        self, start_id: int
-    ) -> List[EdgeCaseScenario]:
+    def _generate_owner_succession_scenarios(self, start_id: int) -> List[EdgeCaseScenario]:
         """Generate owner succession edge case scenarios."""
 
         scenarios = []
@@ -269,9 +263,7 @@ class EdgeCaseTestSuite:
 
         return scenarios
 
-    def _generate_organization_deletion_scenarios(
-        self, start_id: int
-    ) -> List[EdgeCaseScenario]:
+    def _generate_organization_deletion_scenarios(self, start_id: int) -> List[EdgeCaseScenario]:
         """Generate organization deletion cascade scenarios."""
 
         scenarios = []
@@ -362,9 +354,7 @@ class EdgeCaseTestSuite:
 
         return scenarios
 
-    def _generate_data_orphaning_scenarios(
-        self, start_id: int
-    ) -> List[EdgeCaseScenario]:
+    def _generate_data_orphaning_scenarios(self, start_id: int) -> List[EdgeCaseScenario]:
         """Generate data orphaning prevention scenarios."""
 
         scenarios = []
@@ -446,9 +436,7 @@ class EdgeCaseTestSuite:
 
         return scenarios
 
-    def _generate_referential_integrity_scenarios(
-        self, start_id: int
-    ) -> List[EdgeCaseScenario]:
+    def _generate_referential_integrity_scenarios(self, start_id: int) -> List[EdgeCaseScenario]:
         """Generate referential integrity validation scenarios."""
 
         scenarios = []
@@ -525,9 +513,7 @@ class EdgeCaseTestSuite:
 
         return scenarios
 
-    def _generate_concurrent_operations_scenarios(
-        self, start_id: int
-    ) -> List[EdgeCaseScenario]:
+    def _generate_concurrent_operations_scenarios(self, start_id: int) -> List[EdgeCaseScenario]:
         """Generate concurrent operations edge case scenarios."""
 
         scenarios = []
@@ -601,9 +587,7 @@ class EdgeCaseTestSuite:
 
         return scenarios
 
-    def _generate_state_transition_scenarios(
-        self, start_id: int
-    ) -> List[EdgeCaseScenario]:
+    def _generate_state_transition_scenarios(self, start_id: int) -> List[EdgeCaseScenario]:
         """Generate state transition edge case scenarios."""
 
         scenarios = []
@@ -644,9 +628,7 @@ class EdgeCaseTestSuite:
 
         return scenarios
 
-    def _generate_boundary_condition_scenarios(
-        self, start_id: int
-    ) -> List[EdgeCaseScenario]:
+    def _generate_boundary_condition_scenarios(self, start_id: int) -> List[EdgeCaseScenario]:
         """Generate boundary condition scenarios."""
 
         scenarios = []
@@ -687,9 +669,7 @@ class EdgeCaseTestSuite:
 
         return scenarios
 
-    def _generate_error_recovery_scenarios(
-        self, start_id: int
-    ) -> List[EdgeCaseScenario]:
+    def _generate_error_recovery_scenarios(self, start_id: int) -> List[EdgeCaseScenario]:
         """Generate error recovery scenarios."""
 
         scenarios = []
@@ -731,9 +711,7 @@ class EdgeCaseTestSuite:
 
         return scenarios
 
-    async def execute_edge_case_scenario(
-        self, scenario: EdgeCaseScenario
-    ) -> EdgeCaseTestResult:
+    async def execute_edge_case_scenario(self, scenario: EdgeCaseScenario) -> EdgeCaseTestResult:
         """Execute a single edge case scenario."""
 
         start_time = datetime.now()
@@ -801,13 +779,8 @@ class EdgeCaseTestSuite:
                     org_data["organization"]["organization_id"],
                 )
 
-                if (
-                    deletion_result["allowed"]
-                    and not deletion_result["succession_required"]
-                ):
-                    result.errors.append(
-                        "Owner deletion allowed without succession plan"
-                    )
+                if deletion_result["allowed"] and not deletion_result["succession_required"]:
+                    result.errors.append("Owner deletion allowed without succession plan")
                 else:
                     result.data_integrity_checks["owner_deletion_prevented"] = True
 
@@ -848,17 +821,13 @@ class EdgeCaseTestSuite:
             )
 
             # Perform deletion and verify cascade
-            await self._perform_cascade_deletion(
-                org_data["organization"]["organization_id"]
-            )
+            await self._perform_cascade_deletion(org_data["organization"]["organization_id"])
 
             # Check for orphaned data
             orphaned_apps = await self._check_for_orphaned_applications(applications)
             if orphaned_apps:
                 result.orphaned_data_detected.extend(orphaned_apps)
-                result.errors.append(
-                    f"Found {len(orphaned_apps)} orphaned applications"
-                )
+                result.errors.append(f"Found {len(orphaned_apps)} orphaned applications")
             else:
                 result.data_integrity_checks["cascade_deletion_complete"] = True
 
@@ -922,15 +891,11 @@ class EdgeCaseTestSuite:
                 concurrent_tasks.append(task)
 
             # Execute all tasks concurrently
-            invitation_results = await asyncio.gather(
-                *concurrent_tasks, return_exceptions=True
-            )
+            invitation_results = await asyncio.gather(*concurrent_tasks, return_exceptions=True)
 
             # Count successful invitations
             successful_invitations = sum(
-                1
-                for r in invitation_results
-                if isinstance(r, dict) and r.get("success")
+                1 for r in invitation_results if isinstance(r, dict) and r.get("success")
             )
 
             if successful_invitations != 1:
@@ -999,24 +964,18 @@ class EdgeCaseTestSuite:
         """Validate data integrity after test execution."""
 
         # Run comprehensive data integrity checks
-        integrity_report = (
-            await self.data_integrity_validator.validate_system_integrity()
-        )
+        integrity_report = await self.data_integrity_validator.validate_system_integrity()
 
         # Add results to test result
         result.data_integrity_checks.update(integrity_report["checks"])
 
         if integrity_report["violations"]:
-            result.referential_integrity_violations.extend(
-                integrity_report["violations"]
-            )
+            result.referential_integrity_violations.extend(integrity_report["violations"])
 
         if integrity_report["orphaned_data"]:
             result.orphaned_data_detected.extend(integrity_report["orphaned_data"])
 
-    async def _execute_cleanup_steps(
-        self, scenario: EdgeCaseScenario, result: EdgeCaseTestResult
-    ):
+    async def _execute_cleanup_steps(self, scenario: EdgeCaseScenario, result: EdgeCaseTestResult):
         """Execute cleanup steps for the scenario."""
 
         try:
@@ -1040,9 +999,7 @@ class EdgeCaseTestSuite:
             result.errors.append(f"Cleanup failed: {str(e)}")
 
     # Mock helper methods (would be implemented with actual system calls)
-    async def _attempt_owner_deletion(
-        self, owner_id: str, org_id: str
-    ) -> Dict[str, Any]:
+    async def _attempt_owner_deletion(self, owner_id: str, org_id: str) -> Dict[str, Any]:
         """Mock owner deletion attempt."""
         return {"allowed": False, "succession_required": True}
 
@@ -1050,9 +1007,7 @@ class EdgeCaseTestSuite:
         """Mock auto admin promotion test."""
         return {"promotion_occurred": True, "new_owner_id": "admin_123"}
 
-    async def _create_test_applications_with_data(
-        self, org_id: str, count: int
-    ) -> List[str]:
+    async def _create_test_applications_with_data(self, org_id: str, count: int) -> List[str]:
         """Mock application creation with data."""
         return [f"app_{i}_{org_id}" for i in range(count)]
 
@@ -1060,9 +1015,7 @@ class EdgeCaseTestSuite:
         """Mock cascade deletion."""
         return {"success": True, "deleted_items": ["org", "apps", "users"]}
 
-    async def _check_for_orphaned_applications(
-        self, applications: List[str]
-    ) -> List[str]:
+    async def _check_for_orphaned_applications(self, applications: List[str]) -> List[str]:
         """Mock orphaned application check."""
         return []  # No orphaned applications found
 
@@ -1070,9 +1023,7 @@ class EdgeCaseTestSuite:
         """Mock test data with ownership."""
         return {"owners": [], "data": []}
 
-    async def _attempt_orphaning_operations(
-        self, test_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _attempt_orphaning_operations(self, test_data: Dict[str, Any]) -> Dict[str, Any]:
         """Mock orphaning operation attempts."""
         return {"attempts": 0, "prevented": 0}
 
@@ -1084,22 +1035,16 @@ class EdgeCaseTestSuite:
         """Mock test data with references."""
         return {"references": []}
 
-    async def _test_referential_constraints(
-        self, test_refs: Dict[str, Any]
-    ) -> List[str]:
+    async def _test_referential_constraints(self, test_refs: Dict[str, Any]) -> List[str]:
         """Mock referential constraint testing."""
         return []
 
-    async def _send_invitation_async(
-        self, org_id: str, email: str, inviter: str
-    ) -> Dict[str, Any]:
+    async def _send_invitation_async(self, org_id: str, email: str, inviter: str) -> Dict[str, Any]:
         """Mock async invitation sending."""
         await asyncio.sleep(0.1)  # Simulate async operation
         return {"success": True, "invitation_id": f"inv_{inviter}_{org_id}"}
 
-    async def _attempt_invalid_state_transitions(
-        self, org_id: str
-    ) -> List[Dict[str, Any]]:
+    async def _attempt_invalid_state_transitions(self, org_id: str) -> List[Dict[str, Any]]:
         """Mock invalid state transition attempts."""
         return [{"transition": "active_to_deleted", "allowed": False}]
 
@@ -1143,9 +1088,7 @@ class EdgeCaseTestSuite:
             by_severity[severity]["total"] += 1
 
         for result in self.test_results:
-            scenario = next(
-                s for s in self.test_scenarios if s.scenario_id == result.scenario_id
-            )
+            scenario = next(s for s in self.test_scenarios if s.scenario_id == result.scenario_id)
             category = scenario.category.value
             severity = scenario.severity.value
 
@@ -1162,14 +1105,10 @@ class EdgeCaseTestSuite:
                 "executed_scenarios": executed_scenarios,
                 "successful_tests": successful_tests,
                 "success_rate": (
-                    (successful_tests / executed_scenarios * 100)
-                    if executed_scenarios > 0
-                    else 0
+                    (successful_tests / executed_scenarios * 100) if executed_scenarios > 0 else 0
                 ),
                 "execution_rate": (
-                    (executed_scenarios / total_scenarios * 100)
-                    if total_scenarios > 0
-                    else 0
+                    (executed_scenarios / total_scenarios * 100) if total_scenarios > 0 else 0
                 ),
             },
             "by_category": by_category,
@@ -1183,9 +1122,7 @@ class EdgeCaseTestSuite:
                     "warnings": result.warnings,
                     "data_integrity_passed": all(result.data_integrity_checks.values()),
                     "orphaned_data_count": len(result.orphaned_data_detected),
-                    "integrity_violations_count": len(
-                        result.referential_integrity_violations
-                    ),
+                    "integrity_violations_count": len(result.referential_integrity_violations),
                 }
                 for result in self.test_results
             ],
@@ -1216,17 +1153,11 @@ class EdgeCaseTestSuite:
 
         orphaned_data_tests = [r for r in self.test_results if r.orphaned_data_detected]
         if orphaned_data_tests:
-            recommendations.append(
-                "Implement stronger data orphaning prevention mechanisms"
-            )
+            recommendations.append("Implement stronger data orphaning prevention mechanisms")
 
-        integrity_violations = [
-            r for r in self.test_results if r.referential_integrity_violations
-        ]
+        integrity_violations = [r for r in self.test_results if r.referential_integrity_violations]
         if integrity_violations:
-            recommendations.append(
-                "Review and strengthen referential integrity constraints"
-            )
+            recommendations.append("Review and strengthen referential integrity constraints")
 
         manual_verification_needed = [
             r

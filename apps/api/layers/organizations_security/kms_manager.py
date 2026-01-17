@@ -54,9 +54,7 @@ class OrganizationKMSManager:
                     {
                         "Sid": "Enable IAM User Permissions",
                         "Effect": "Allow",
-                        "Principal": {
-                            "AWS": f"arn:aws:iam::{self._get_account_id()}:root"
-                        },
+                        "Principal": {"AWS": f"arn:aws:iam::{self._get_account_id()}:root"},
                         "Action": "kms:*",
                         "Resource": "*",
                     },
@@ -126,14 +124,10 @@ class OrganizationKMSManager:
             return {"keyId": key_id, "keyArn": key_arn, "aliasName": alias_name}
 
         except ClientError as e:
-            logger.error(
-                f"Failed to create KMS key for organization {organization_id}: {e}"
-            )
+            logger.error(f"Failed to create KMS key for organization {organization_id}: {e}")
             raise
 
-    def get_organization_kms_key(
-        self, organization_id: str
-    ) -> Optional[Dict[str, str]]:
+    def get_organization_kms_key(self, organization_id: str) -> Optional[Dict[str, str]]:
         """
         Retrieve the KMS key information for an organization.
 
@@ -154,17 +148,13 @@ class OrganizationKMSManager:
                 "keyArn": key_metadata["Arn"],
                 "aliasName": alias_name,
                 "enabled": key_metadata["Enabled"],
-                "keyRotationEnabled": self._is_key_rotation_enabled(
-                    key_metadata["KeyId"]
-                ),
+                "keyRotationEnabled": self._is_key_rotation_enabled(key_metadata["KeyId"]),
             }
 
         except ClientError as e:
             if e.response["Error"]["Code"] == "NotFoundException":
                 return None
-            logger.error(
-                f"Failed to get KMS key for organization {organization_id}: {e}"
-            )
+            logger.error(f"Failed to get KMS key for organization {organization_id}: {e}")
             raise
 
     def encrypt_organization_data(
@@ -189,9 +179,7 @@ class OrganizationKMSManager:
 
             # Set default encryption context
             context = encryption_context or {}
-            context.update(
-                {"OrganizationId": organization_id, "Purpose": "OrganizationData"}
-            )
+            context.update({"OrganizationId": organization_id, "Purpose": "OrganizationData"})
 
             response = self.kms_client.encrypt(
                 KeyId=alias_name,
@@ -203,9 +191,7 @@ class OrganizationKMSManager:
             return base64.b64encode(response["CiphertextBlob"]).decode("utf-8")
 
         except ClientError as e:
-            logger.error(
-                f"Failed to encrypt data for organization {organization_id}: {e}"
-            )
+            logger.error(f"Failed to encrypt data for organization {organization_id}: {e}")
             raise
 
     def decrypt_organization_data(
@@ -228,9 +214,7 @@ class OrganizationKMSManager:
         try:
             # Set expected encryption context
             context = encryption_context or {}
-            context.update(
-                {"OrganizationId": organization_id, "Purpose": "OrganizationData"}
-            )
+            context.update({"OrganizationId": organization_id, "Purpose": "OrganizationData"})
 
             # Decode base64 data
             ciphertext_blob = base64.b64decode(encrypted_data.encode("utf-8"))
@@ -242,9 +226,7 @@ class OrganizationKMSManager:
             return response["Plaintext"].decode("utf-8")
 
         except ClientError as e:
-            logger.error(
-                f"Failed to decrypt data for organization {organization_id}: {e}"
-            )
+            logger.error(f"Failed to decrypt data for organization {organization_id}: {e}")
             raise
 
     def rotate_organization_key(self, organization_id: str) -> bool:
@@ -261,15 +243,11 @@ class OrganizationKMSManager:
             # Check if key rotation is enabled
             key_info = self.get_organization_kms_key(organization_id)
             if not key_info or not key_info.get("keyRotationEnabled"):
-                logger.warning(
-                    f"Key rotation not enabled for organization {organization_id}"
-                )
+                logger.warning(f"Key rotation not enabled for organization {organization_id}")
                 return False
 
             # KMS handles automatic rotation, but we can log this event
-            logger.info(
-                f"Key rotation check performed for organization {organization_id}"
-            )
+            logger.info(f"Key rotation check performed for organization {organization_id}")
 
             # In a real implementation, you might want to:
             # 1. Create a new key version
@@ -279,14 +257,10 @@ class OrganizationKMSManager:
             return True
 
         except ClientError as e:
-            logger.error(
-                f"Failed to rotate key for organization {organization_id}: {e}"
-            )
+            logger.error(f"Failed to rotate key for organization {organization_id}: {e}")
             return False
 
-    def delete_organization_key(
-        self, organization_id: str, pending_window_days: int = 30
-    ) -> bool:
+    def delete_organization_key(self, organization_id: str, pending_window_days: int = 30) -> bool:
         """
         Schedule deletion of an organization's KMS key.
 
@@ -323,9 +297,7 @@ class OrganizationKMSManager:
             return True
 
         except ClientError as e:
-            logger.error(
-                f"Failed to schedule key deletion for organization {organization_id}: {e}"
-            )
+            logger.error(f"Failed to schedule key deletion for organization {organization_id}: {e}")
             return False
 
     def list_organization_keys(self) -> List[Dict[str, Any]]:
@@ -347,9 +319,7 @@ class OrganizationKMSManager:
 
                         # Get key details
                         try:
-                            key_response = self.kms_client.describe_key(
-                                KeyId=alias["TargetKeyId"]
-                            )
+                            key_response = self.kms_client.describe_key(KeyId=alias["TargetKeyId"])
                             key_metadata = key_response["KeyMetadata"]
 
                             org_keys.append(
@@ -393,9 +363,7 @@ class OrganizationKMSManager:
         except ClientError:
             return False
 
-    def get_key_usage_metrics(
-        self, organization_id: str, days: int = 30
-    ) -> Dict[str, Any]:
+    def get_key_usage_metrics(self, organization_id: str, days: int = 30) -> Dict[str, Any]:
         """
         Get usage metrics for an organization's KMS key.
         Note: This would require CloudWatch integration for full implementation.

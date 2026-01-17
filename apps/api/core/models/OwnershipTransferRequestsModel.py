@@ -16,22 +16,16 @@ class OwnershipTransferRequestsCreateInput(BaseModel):
     new_owner_id: str = Field(..., description="Prospective new owner user ID")
     organization_id: str = Field(..., description="Organization being transferred")
     status: OwnershipTransferStatus = Field(..., description="Current transfer status")
-    required_billing_plan: str = Field(
-        ..., description="Billing plan required for organization"
-    )
+    required_billing_plan: str = Field(..., description="Billing plan required for organization")
     monthly_cost: str = Field(..., description="Monthly cost in cents")
     payment_validation_token: str = Field(
         ..., description="Encrypted single-use token for payment validation"
     )
     created_at: str = Field(..., description="Transfer request creation timestamp")
-    expires_at: str = Field(
-        ..., description="Transfer request expiration timestamp (7 days)"
-    )
+    expires_at: str = Field(..., description="Transfer request expiration timestamp (7 days)")
     updated_at: str = Field(..., description="Last update timestamp")
     completed_at: str = Field(..., description="Transfer completion timestamp")
-    failure_reason: str = Field(
-        ..., description="Reason for transfer failure or cancellation"
-    )
+    failure_reason: str = Field(..., description="Reason for transfer failure or cancellation")
     billing_transition_details: str = Field(
         ..., description="Details of billing transition during transfer"
     )
@@ -42,21 +36,11 @@ class OwnershipTransferRequestsCreateInput(BaseModel):
 
 
 class OwnershipTransferRequestsUpdateInput(BaseModel):
-    transfer_id: Optional[str] = Field(
-        None, description="Unique transfer request identifier"
-    )
-    current_owner_id: Optional[str] = Field(
-        None, description="Current organization owner user ID"
-    )
-    new_owner_id: Optional[str] = Field(
-        None, description="Prospective new owner user ID"
-    )
-    organization_id: Optional[str] = Field(
-        None, description="Organization being transferred"
-    )
-    status: Optional[OwnershipTransferStatus] = Field(
-        None, description="Current transfer status"
-    )
+    transfer_id: Optional[str] = Field(None, description="Unique transfer request identifier")
+    current_owner_id: Optional[str] = Field(None, description="Current organization owner user ID")
+    new_owner_id: Optional[str] = Field(None, description="Prospective new owner user ID")
+    organization_id: Optional[str] = Field(None, description="Organization being transferred")
+    status: Optional[OwnershipTransferStatus] = Field(None, description="Current transfer status")
     required_billing_plan: Optional[str] = Field(
         None, description="Billing plan required for organization"
     )
@@ -64,25 +48,19 @@ class OwnershipTransferRequestsUpdateInput(BaseModel):
     payment_validation_token: Optional[str] = Field(
         None, description="Encrypted single-use token for payment validation"
     )
-    created_at: Optional[str] = Field(
-        None, description="Transfer request creation timestamp"
-    )
+    created_at: Optional[str] = Field(None, description="Transfer request creation timestamp")
     expires_at: Optional[str] = Field(
         None, description="Transfer request expiration timestamp (7 days)"
     )
     updated_at: Optional[str] = Field(None, description="Last update timestamp")
-    completed_at: Optional[str] = Field(
-        None, description="Transfer completion timestamp"
-    )
+    completed_at: Optional[str] = Field(None, description="Transfer completion timestamp")
     failure_reason: Optional[str] = Field(
         None, description="Reason for transfer failure or cancellation"
     )
     billing_transition_details: Optional[str] = Field(
         None, description="Details of billing transition during transfer"
     )
-    fraud_assessment: Optional[str] = Field(
-        None, description="Fraud detection assessment results"
-    )
+    fraud_assessment: Optional[str] = Field(None, description="Fraud detection assessment results")
     notifications_sent: Optional[List[str]] = Field(
         None, description="Track notifications sent for this transfer"
     )
@@ -124,28 +102,20 @@ class OwnershipTransferRequests(BaseModel):
     new_owner_id: str = Field(..., description="Prospective new owner user ID")
     organization_id: str = Field(..., description="Organization being transferred")
     status: str = Field(..., description="Current transfer status")
-    required_billing_plan: str = Field(
-        ..., description="Billing plan required for organization"
-    )
+    required_billing_plan: str = Field(..., description="Billing plan required for organization")
     monthly_cost: float = Field(..., description="Monthly cost in cents")
     payment_validation_token: str = Field(
         ..., description="Encrypted single-use token for payment validation"
     )
     created_at: str = Field(..., description="Transfer request creation timestamp")
-    expires_at: str = Field(
-        ..., description="Transfer request expiration timestamp (7 days)"
-    )
+    expires_at: str = Field(..., description="Transfer request expiration timestamp (7 days)")
     updated_at: str = Field(..., description="Last update timestamp")
     completed_at: str = Field(None, description="Transfer completion timestamp")
-    failure_reason: str = Field(
-        None, description="Reason for transfer failure or cancellation"
-    )
+    failure_reason: str = Field(None, description="Reason for transfer failure or cancellation")
     billing_transition_details: str = Field(
         None, description="Details of billing transition during transfer"
     )
-    fraud_assessment: str = Field(
-        None, description="Fraud detection assessment results"
-    )
+    fraud_assessment: str = Field(None, description="Fraud detection assessment results")
     notifications_sent: List[str] = Field(
         None, description="Track notifications sent for this transfer"
     )
@@ -158,9 +128,7 @@ class OwnershipTransferRequests(BaseModel):
             new_owner_id=dto.get("new_owner_id"),
             organization_id=dto.get("organization_id"),
             status=(
-                OwnershipTransferStatus[
-                    dto.get("status", "OwnershipTransferStatus.UNKNOWN")
-                ]
+                OwnershipTransferStatus[dto.get("status", "OwnershipTransferStatus.UNKNOWN")]
                 if dto.get("status")
                 else OwnershipTransferStatus.UNKNOWN
             ),
@@ -183,9 +151,7 @@ class OwnershipTransferRequests(BaseModel):
             "current_owner_id": self.current_owner_id,
             "new_owner_id": self.new_owner_id,
             "organization_id": self.organization_id,
-            "status": (
-                self.status.value if self.status else "OwnershipTransferStatus.UNKNOWN"
-            ),
+            "status": (self.status.value if self.status else "OwnershipTransferStatus.UNKNOWN"),
             "required_billing_plan": self.required_billing_plan,
             "monthly_cost": self.monthly_cost,
             "payment_validation_token": self.payment_validation_token,

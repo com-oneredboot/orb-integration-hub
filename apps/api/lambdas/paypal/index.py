@@ -83,9 +83,7 @@ def lambda_handler(event, context):
             logger.error(message)
             raise ValueError(message)
 
-        logger.info(
-            f"Received payment request for ID {paypal_account} with amount {amount}."
-        )
+        logger.info(f"Received payment request for ID {paypal_account} with amount {amount}.")
 
         if not paypal_account:
             return {

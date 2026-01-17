@@ -22,12 +22,8 @@ class ApplicationUsersCreateInput(BaseModel):
     status: ApplicationUserStatus = Field(
         ..., description="Current status of the user in the application"
     )
-    created_at: datetime = Field(
-        ..., description="When the user was added to the application"
-    )
-    updated_at: datetime = Field(
-        ..., description="When the membership was last updated"
-    )
+    created_at: datetime = Field(..., description="When the user was added to the application")
+    updated_at: datetime = Field(..., description="When the membership was last updated")
 
 
 class ApplicationUsersUpdateInput(BaseModel):
@@ -35,9 +31,7 @@ class ApplicationUsersUpdateInput(BaseModel):
         None,
         description="Unique identifier for the application user membership (primary key)",
     )
-    user_id: Optional[str] = Field(
-        None, description="ID of the user (foreign key to Users)"
-    )
+    user_id: Optional[str] = Field(None, description="ID of the user (foreign key to Users)")
     application_id: Optional[str] = Field(
         None, description="ID of the application (foreign key to Applications)"
     )
@@ -47,9 +41,7 @@ class ApplicationUsersUpdateInput(BaseModel):
     created_at: Optional[datetime] = Field(
         None, description="When the user was added to the application"
     )
-    updated_at: Optional[datetime] = Field(
-        None, description="When the membership was last updated"
-    )
+    updated_at: Optional[datetime] = Field(None, description="When the membership was last updated")
 
 
 class ApplicationUsersDeleteInput(BaseModel):
@@ -87,15 +79,9 @@ class ApplicationUsers(BaseModel):
     application_id: str = Field(
         ..., description="ID of the application (foreign key to Applications)"
     )
-    status: str = Field(
-        ..., description="Current status of the user in the application"
-    )
-    created_at: datetime = Field(
-        ..., description="When the user was added to the application"
-    )
-    updated_at: datetime = Field(
-        ..., description="When the membership was last updated"
-    )
+    status: str = Field(..., description="Current status of the user in the application")
+    created_at: datetime = Field(..., description="When the user was added to the application")
+    updated_at: datetime = Field(..., description="When the membership was last updated")
 
     @validator("createdAt", pre=True)
     def parse_createdAt(cls, value):
@@ -128,9 +114,7 @@ class ApplicationUsers(BaseModel):
             user_id=dto.get("user_id"),
             application_id=dto.get("application_id"),
             status=(
-                ApplicationUserStatus[
-                    dto.get("status", "ApplicationUserStatus.UNKNOWN")
-                ]
+                ApplicationUserStatus[dto.get("status", "ApplicationUserStatus.UNKNOWN")]
                 if dto.get("status")
                 else ApplicationUserStatus.UNKNOWN
             ),
@@ -143,9 +127,7 @@ class ApplicationUsers(BaseModel):
             "application_user_id": self.application_user_id,
             "user_id": self.user_id,
             "application_id": self.application_id,
-            "status": (
-                self.status.value if self.status else "ApplicationUserStatus.UNKNOWN"
-            ),
+            "status": (self.status.value if self.status else "ApplicationUserStatus.UNKNOWN"),
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }

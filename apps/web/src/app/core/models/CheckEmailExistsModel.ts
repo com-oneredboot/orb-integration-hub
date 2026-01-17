@@ -32,15 +32,15 @@ export type CheckEmailExistsListResponse = {
 
 export interface ICheckEmailExists {
   email: string;
-  exists: boolean;
+  exists?: boolean;
 }
 
 export class CheckEmailExists implements ICheckEmailExists {
   email: string;
-  exists: boolean;
+  exists?: boolean;
 
   constructor(data: Partial<ICheckEmailExists> = {}) {
     this.email = data.email ?? '';
-    this.exists = data.exists ?? false;
+    this.exists = data.exists;
   }
 }

@@ -60,12 +60,8 @@ class TestEnvironmentManager:
             self.mock_dynamodb = mock_dynamodb()
             self.mock_dynamodb.start()
 
-            self.dynamodb_client = boto3.client(
-                "dynamodb", region_name=self.config.aws_region
-            )
-            self.dynamodb_resource = boto3.resource(
-                "dynamodb", region_name=self.config.aws_region
-            )
+            self.dynamodb_client = boto3.client("dynamodb", region_name=self.config.aws_region)
+            self.dynamodb_resource = boto3.resource("dynamodb", region_name=self.config.aws_region)
         else:
             # Use real DynamoDB (for integration testing)
             session_config = {"region_name": self.config.aws_region}
@@ -212,9 +208,7 @@ class TestEnvironmentManager:
                 "GlobalSecondaryIndexes": [
                     {
                         "IndexName": "OrganizationIndex",
-                        "KeySchema": [
-                            {"AttributeName": "organization_id", "KeyType": "HASH"}
-                        ],
+                        "KeySchema": [{"AttributeName": "organization_id", "KeyType": "HASH"}],
                         "Projection": {"ProjectionType": "ALL"},
                         "BillingMode": "PAY_PER_REQUEST",
                     }
@@ -238,9 +232,7 @@ class TestEnvironmentManager:
                     },
                     {
                         "IndexName": "CognitoSubIndex",
-                        "KeySchema": [
-                            {"AttributeName": "cognito_sub", "KeyType": "HASH"}
-                        ],
+                        "KeySchema": [{"AttributeName": "cognito_sub", "KeyType": "HASH"}],
                         "Projection": {"ProjectionType": "ALL"},
                         "BillingMode": "PAY_PER_REQUEST",
                     },
@@ -257,9 +249,7 @@ class TestEnvironmentManager:
                 "GlobalSecondaryIndexes": [
                     {
                         "IndexName": "OrganizationIndex",
-                        "KeySchema": [
-                            {"AttributeName": "organization_id", "KeyType": "HASH"}
-                        ],
+                        "KeySchema": [{"AttributeName": "organization_id", "KeyType": "HASH"}],
                         "Projection": {"ProjectionType": "ALL"},
                         "BillingMode": "PAY_PER_REQUEST",
                     }
@@ -396,9 +386,7 @@ class TestEnvironmentManager:
             if scenario_name == "basic":
                 # Handle basic scenarios
                 for org_type, org_data in scenario_data.items():
-                    self._seed_organization_data_to_dynamodb(
-                        org_data, f"basic_{org_type}"
-                    )
+                    self._seed_organization_data_to_dynamodb(org_data, f"basic_{org_type}")
 
             elif scenario_name in ["edge_cases", "security_tests"]:
                 # Handle edge cases and security tests
@@ -413,13 +401,9 @@ class TestEnvironmentManager:
 
             elif scenario_name == "role_based":
                 # Handle role-based scenarios
-                self._seed_role_based_scenarios_to_dynamodb(
-                    scenario_data, scenario_name
-                )
+                self._seed_role_based_scenarios_to_dynamodb(scenario_data, scenario_name)
 
-    def _seed_organization_data_to_dynamodb(
-        self, org_data: Dict[str, Any], scenario_name: str
-    ):
+    def _seed_organization_data_to_dynamodb(self, org_data: Dict[str, Any], scenario_name: str):
         """Seed organization data to DynamoDB tables."""
 
         table_prefix = f"{self.config.table_prefix}_{self.config.environment_name}"
@@ -445,9 +429,7 @@ class TestEnvironmentManager:
                         users_table.put_item(Item=user_item)
 
             # Seed organization users relationships
-            org_users_table = self.dynamodb_resource.Table(
-                f"{table_prefix}_organization_users"
-            )
+            org_users_table = self.dynamodb_resource.Table(f"{table_prefix}_organization_users")
 
             # Create membership for owner
             if "organization" in org_data and "owner" in org_data:
@@ -468,9 +450,7 @@ class TestEnvironmentManager:
                     if "user_data" in user:
                         membership = {
                             "user_id": user["user_data"]["user_id"],
-                            "organization_id": org_data["organization"][
-                                "organization_id"
-                            ],
+                            "organization_id": org_data["organization"]["organization_id"],
                             "role": "ADMIN" if i == 0 else "MEMBER",
                             "status": "ACTIVE",
                             "invited_by": org_data["owner"].get("user_id", "system"),
@@ -481,9 +461,7 @@ class TestEnvironmentManager:
 
             # Seed applications
             if "applications" in org_data:
-                apps_table = self.dynamodb_resource.Table(
-                    f"{table_prefix}_applications"
-                )
+                apps_table = self.dynamodb_resource.Table(f"{table_prefix}_applications")
                 for app in org_data["applications"]:
                     app_item = self._convert_to_dynamodb_item(app)
                     apps_table.put_item(Item=app_item)
@@ -493,9 +471,7 @@ class TestEnvironmentManager:
         except Exception as e:
             print(f"Failed to seed organization data for {scenario_name}: {e}")
 
-    def _seed_performance_data_to_dynamodb(
-        self, performance_data: List[Dict[str, Any]]
-    ):
+    def _seed_performance_data_to_dynamodb(self, performance_data: List[Dict[str, Any]]):
         """Seed performance test data using batch operations."""
 
         # Use batch writing for performance
@@ -604,9 +580,7 @@ class TestEnvironmentManager:
                 validation_results["statistics"][table_name] = item_count
 
                 if item_count == 0:
-                    validation_results["warnings"].append(
-                        f"Table {table_name} is empty"
-                    )
+                    validation_results["warnings"].append(f"Table {table_name} is empty")
 
             # Check test duration
             if self.test_start_time:

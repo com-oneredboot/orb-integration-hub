@@ -27,16 +27,10 @@ class ApplicationRolesCreateInput(BaseModel):
     role_id: str = Field(..., description="ID of the role (foreign key to Roles)")
     role_name: str = Field(..., description="Name of the role")
     role_type: RoleType = Field(..., description="Type of the role")
-    permissions: List[str] = Field(
-        ..., description="List of permissions granted to this role"
-    )
+    permissions: List[str] = Field(..., description="List of permissions granted to this role")
     status: RoleStatus = Field(..., description="Current status of the role assignment")
-    created_at: datetime = Field(
-        ..., description="When the role assignment was created"
-    )
-    updated_at: datetime = Field(
-        ..., description="When the role assignment was last updated"
-    )
+    created_at: datetime = Field(..., description="When the role assignment was created")
+    updated_at: datetime = Field(..., description="When the role assignment was last updated")
 
 
 class ApplicationRolesUpdateInput(BaseModel):
@@ -52,20 +46,14 @@ class ApplicationRolesUpdateInput(BaseModel):
         None,
         description="ID of the application this role assignment belongs to (foreign key to Applications)",
     )
-    role_id: Optional[str] = Field(
-        None, description="ID of the role (foreign key to Roles)"
-    )
+    role_id: Optional[str] = Field(None, description="ID of the role (foreign key to Roles)")
     role_name: Optional[str] = Field(None, description="Name of the role")
     role_type: Optional[RoleType] = Field(None, description="Type of the role")
     permissions: Optional[List[str]] = Field(
         None, description="List of permissions granted to this role"
     )
-    status: Optional[RoleStatus] = Field(
-        None, description="Current status of the role assignment"
-    )
-    created_at: Optional[datetime] = Field(
-        None, description="When the role assignment was created"
-    )
+    status: Optional[RoleStatus] = Field(None, description="Current status of the role assignment")
+    created_at: Optional[datetime] = Field(None, description="When the role assignment was created")
     updated_at: Optional[datetime] = Field(
         None, description="When the role assignment was last updated"
     )
@@ -117,16 +105,10 @@ class ApplicationRoles(BaseModel):
     role_id: str = Field(..., description="ID of the role (foreign key to Roles)")
     role_name: str = Field(..., description="Name of the role")
     role_type: str = Field(..., description="Type of the role")
-    permissions: List[str] = Field(
-        ..., description="List of permissions granted to this role"
-    )
+    permissions: List[str] = Field(..., description="List of permissions granted to this role")
     status: str = Field(..., description="Current status of the role assignment")
-    created_at: datetime = Field(
-        ..., description="When the role assignment was created"
-    )
-    updated_at: datetime = Field(
-        ..., description="When the role assignment was last updated"
-    )
+    created_at: datetime = Field(..., description="When the role assignment was created")
+    updated_at: datetime = Field(..., description="When the role assignment was last updated")
 
     @validator("createdAt", pre=True)
     def parse_createdAt(cls, value):

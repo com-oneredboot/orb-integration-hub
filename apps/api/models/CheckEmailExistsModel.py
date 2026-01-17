@@ -14,7 +14,7 @@ class CheckEmailExists(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     email: str = Field(..., description="Email address to check for existence")
-    exists: bool = Field(..., description="Whether the email exists in the system")
+    exists: Optional[bool] = Field(None, description="Whether the email exists in the system (response only)")
 
     @field_validator("exists", mode="before")
     @classmethod

@@ -138,7 +138,9 @@ class TestEmailValidationProperties:
         result = validate_email(email)
         assert result is False, f"Should reject single char TLD: {email}"
 
-    @given(st.none() | st.integers() | st.lists(st.integers()) | st.dictionaries(st.text(), st.text()))
+    @given(
+        st.none() | st.integers() | st.lists(st.integers()) | st.dictionaries(st.text(), st.text())
+    )
     @settings(max_examples=50)
     def test_non_string_types_rejected(self, value):
         """

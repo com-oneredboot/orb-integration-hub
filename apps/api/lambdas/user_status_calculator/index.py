@@ -38,9 +38,7 @@ def check_cognito_mfa_status(email: str) -> Dict[str, bool]:
             return {"mfaEnabled": False, "mfaSetupComplete": False}
 
         # Call adminGetUser to get user's MFA status
-        response = cognito_client.admin_get_user(
-            UserPoolId=USER_POOL_ID, Username=email
-        )
+        response = cognito_client.admin_get_user(UserPoolId=USER_POOL_ID, Username=email)
 
         # Check MFA options (legacy MFA configuration, mainly SMS)
         mfa_options = response.get("MFAOptions", [])
@@ -79,9 +77,7 @@ def check_cognito_mfa_status(email: str) -> Dict[str, bool]:
 
         # Check user pool MFA configuration
         try:
-            user_pool_response = cognito_client.describe_user_pool(
-                UserPoolId=USER_POOL_ID
-            )
+            user_pool_response = cognito_client.describe_user_pool(UserPoolId=USER_POOL_ID)
             user_pool = user_pool_response.get("UserPool", {})
             mfa_configuration = user_pool.get("MfaConfiguration", "OFF")
             logger.debug(f"  User Pool MFA Configuration: {mfa_configuration}")
@@ -98,12 +94,10 @@ def check_cognito_mfa_status(email: str) -> Dict[str, bool]:
             mfa_prefs_response = cognito_client.admin_get_user_mfa_preference(
                 UserPoolId=USER_POOL_ID, Username=email
             )
-            sms_mfa_enabled = mfa_prefs_response.get("SMSMfaSettings", {}).get(
+            sms_mfa_enabled = mfa_prefs_response.get("SMSMfaSettings", {}).get("Enabled", False)
+            software_token_enabled = mfa_prefs_response.get("SoftwareTokenMfaSettings", {}).get(
                 "Enabled", False
             )
-            software_token_enabled = mfa_prefs_response.get(
-                "SoftwareTokenMfaSettings", {}
-            ).get("Enabled", False)
             logger.debug(
                 f"  User MFA Preferences: SMS={sms_mfa_enabled}, SoftwareToken={software_token_enabled}"
             )
@@ -166,8 +160,7 @@ def calculate_user_status(user_data: Dict[str, Any]) -> str:
     # Check all required fields are present and non-empty
     required_fields = ["email", "firstName", "lastName", "phoneNumber"]
     has_required_fields = all(
-        user_data.get(field) and str(user_data.get(field)).strip()
-        for field in required_fields
+        user_data.get(field) and str(user_data.get(field)).strip() for field in required_fields
     )
 
     # Check all verification requirements are met
@@ -199,9 +192,7 @@ def calculate_user_status(user_data: Dict[str, Any]) -> str:
         )
 
         if mfa_status_changed:
-            user_data["_mfa_status_updated"] = (
-                True  # Flag to indicate we updated MFA status
-            )
+            user_data["_mfa_status_updated"] = True  # Flag to indicate we updated MFA status
             logger.info(
                 f"MFA status changed for user {user_data.get('userId')}: "
                 f"enabled {current_mfa_enabled} -> {cognito_mfa_status['mfaEnabled']}, "
@@ -220,9 +211,7 @@ def calculate_user_status(user_data: Dict[str, Any]) -> str:
     has_mfa_requirements = mfa_enabled and mfa_setup_complete
 
     # User is ACTIVE only when ALL requirements are met
-    is_complete = (
-        has_required_fields and has_required_verifications and has_mfa_requirements
-    )
+    is_complete = has_required_fields and has_required_verifications and has_mfa_requirements
 
     logger.debug(
         f"Status calculation for user {user_data.get('userId', 'unknown')}: "
@@ -317,14 +306,10 @@ def has_status_relevant_changes(record: Dict[str, Any]) -> bool:
         logger.debug(f"Checking fields: {status_relevant_fields}")
         for field in status_relevant_fields:
             old_value = (
-                convert_dynamodb_value(old_image.get(field, {}))
-                if old_image.get(field)
-                else None
+                convert_dynamodb_value(old_image.get(field, {})) if old_image.get(field) else None
             )
             new_value = (
-                convert_dynamodb_value(new_image.get(field, {}))
-                if new_image.get(field)
-                else None
+                convert_dynamodb_value(new_image.get(field, {})) if new_image.get(field) else None
             )
 
             logger.debug(
@@ -345,9 +330,7 @@ def has_status_relevant_changes(record: Dict[str, Any]) -> bool:
 
         has_changes = len(changed_fields) > 0
         if not has_changes:
-            logger.debug(
-                "No status-relevant fields changed, skipping status calculation"
-            )
+            logger.debug("No status-relevant fields changed, skipping status calculation")
 
         return has_changes
 
@@ -437,9 +420,7 @@ def lambda_handler(event, _):
                             "mfaEnabled = :mfaEnabled, mfaSetupComplete = :mfaSetupComplete"
                         )
                         expression_values[":mfaEnabled"] = user_data["mfaEnabled"]
-                        expression_values[":mfaSetupComplete"] = user_data[
-                            "mfaSetupComplete"
-                        ]
+                        expression_values[":mfaSetupComplete"] = user_data["mfaSetupComplete"]
                         logger.info(
                             f"Updating user {user_id} MFA status from Cognito: enabled={user_data['mfaEnabled']}, complete={user_data['mfaSetupComplete']}"
                         )
@@ -466,9 +447,7 @@ def lambda_handler(event, _):
 
                     logger.info(f"Successfully updated user {user_id}")
                 else:
-                    logger.debug(
-                        f"User {user_id} status and MFA fields are already correct"
-                    )
+                    logger.debug(f"User {user_id} status and MFA fields are already correct")
 
             except Exception as e:
                 logger.error(f"Error processing record: {e}")

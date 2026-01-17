@@ -11,15 +11,9 @@ from .UserStatusEnum import UserStatus
 
 # CRUD Input Types
 class UsersCreateInput(BaseModel):
-    user_id: str = Field(
-        ..., description="Unique identifier for the user (primary key)"
-    )
-    cognito_id: str = Field(
-        ..., description="Cognito username (used for authentication)"
-    )
-    cognito_sub: str = Field(
-        ..., description="Cognito user sub (unique identifier from tokens)"
-    )
+    user_id: str = Field(..., description="Unique identifier for the user (primary key)")
+    cognito_id: str = Field(..., description="Cognito username (used for authentication)")
+    cognito_sub: str = Field(..., description="Cognito user sub (unique identifier from tokens)")
     email: str = Field(..., description="User's email address")
     first_name: str = Field(..., description="User's first name")
     last_name: str = Field(..., description="User's last name")
@@ -31,12 +25,8 @@ class UsersCreateInput(BaseModel):
         ...,
         description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)",
     )
-    email_verified: bool = Field(
-        ..., description="Whether the user's email is verified"
-    )
-    phone_verified: bool = Field(
-        ..., description="Whether the user's phone number is verified"
-    )
+    email_verified: bool = Field(..., description="Whether the user's email is verified")
+    phone_verified: bool = Field(..., description="Whether the user's phone number is verified")
     mfa_enabled: bool = Field(
         ..., description="Whether multi-factor authentication is enabled for the user"
     )
@@ -46,9 +36,7 @@ class UsersCreateInput(BaseModel):
 
 
 class UsersUpdateInput(BaseModel):
-    user_id: Optional[str] = Field(
-        None, description="Unique identifier for the user (primary key)"
-    )
+    user_id: Optional[str] = Field(None, description="Unique identifier for the user (primary key)")
     cognito_id: Optional[str] = Field(
         None, description="Cognito username (used for authentication)"
     )
@@ -59,20 +47,14 @@ class UsersUpdateInput(BaseModel):
     first_name: Optional[str] = Field(None, description="User's first name")
     last_name: Optional[str] = Field(None, description="User's last name")
     status: Optional[UserStatus] = Field(None, description="Current status of the user")
-    created_at: Optional[datetime] = Field(
-        None, description="When the user was created"
-    )
-    updated_at: Optional[datetime] = Field(
-        None, description="When the user was last updated"
-    )
+    created_at: Optional[datetime] = Field(None, description="When the user was created")
+    updated_at: Optional[datetime] = Field(None, description="When the user was last updated")
     phone_number: Optional[str] = Field(None, description="User's phone number")
     groups: Optional[List[str]] = Field(
         None,
         description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)",
     )
-    email_verified: Optional[bool] = Field(
-        None, description="Whether the user's email is verified"
-    )
+    email_verified: Optional[bool] = Field(None, description="Whether the user's email is verified")
     phone_verified: Optional[bool] = Field(
         None, description="Whether the user's phone number is verified"
     )
@@ -115,15 +97,9 @@ class UsersQueryByCognitoSubInput(BaseModel):
 class Users(BaseModel):
     """Users model."""
 
-    user_id: str = Field(
-        ..., description="Unique identifier for the user (primary key)"
-    )
-    cognito_id: str = Field(
-        ..., description="Cognito username (used for authentication)"
-    )
-    cognito_sub: str = Field(
-        ..., description="Cognito user sub (unique identifier from tokens)"
-    )
+    user_id: str = Field(..., description="Unique identifier for the user (primary key)")
+    cognito_id: str = Field(..., description="Cognito username (used for authentication)")
+    cognito_sub: str = Field(..., description="Cognito user sub (unique identifier from tokens)")
     email: str = Field(..., description="User's email address")
     first_name: str = Field(..., description="User's first name")
     last_name: str = Field(..., description="User's last name")
@@ -135,12 +111,8 @@ class Users(BaseModel):
         None,
         description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)",
     )
-    email_verified: bool = Field(
-        None, description="Whether the user's email is verified"
-    )
-    phone_verified: bool = Field(
-        None, description="Whether the user's phone number is verified"
-    )
+    email_verified: bool = Field(None, description="Whether the user's email is verified")
+    phone_verified: bool = Field(None, description="Whether the user's phone number is verified")
     mfa_enabled: bool = Field(
         None, description="Whether multi-factor authentication is enabled for the user"
     )

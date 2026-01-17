@@ -4,6 +4,8 @@
 
 | Issue | Team | Title | Status | Impact |
 |-------|------|-------|--------|--------|
+| #70 | orb-schema-generator | Bug: Lambda schema generates all attributes in both Input and Output types | Open | Critical |
+| #69 | orb-schema-generator | Bug: Generated Python files fail black and ruff linting | Open | High |
 | #64 | orb-schema-generator | Enhancement: Generate SSM parameters for DynamoDB table ARNs and names | Open | Low |
 | #65 | orb-schema-generator | Enhancement: Support PITR configuration in DynamoDB table schemas | Open | Low |
 | #66 | orb-schema-generator | Documentation: Add schema type generation matrix and construct extension examples | Open | Low |

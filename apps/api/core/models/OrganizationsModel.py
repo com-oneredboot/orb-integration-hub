@@ -15,25 +15,17 @@ class OrganizationsCreateInput(BaseModel):
         ..., description="Unique identifier for the organization (primary key)"
     )
     name: str = Field(..., description="Name of the organization (required field)")
-    description: str = Field(
-        ..., description="Optional description of the organization"
-    )
+    description: str = Field(..., description="Optional description of the organization")
     owner_id: str = Field(
         ...,
         description="ID of the CUSTOMER user who owns the organization (foreign key to Users)",
     )
-    status: OrganizationStatus = Field(
-        ..., description="Current status of the organization"
-    )
+    status: OrganizationStatus = Field(..., description="Current status of the organization")
     created_at: datetime = Field(
         ..., description="When the organization was created (on payment completion)"
     )
-    updated_at: datetime = Field(
-        ..., description="When the organization was last updated"
-    )
-    kms_key_id: str = Field(
-        ..., description="Organization-specific KMS key ID for encryption"
-    )
+    updated_at: datetime = Field(..., description="When the organization was last updated")
+    kms_key_id: str = Field(..., description="Organization-specific KMS key ID for encryption")
     kms_key_arn: str = Field(..., description="Organization-specific KMS key ARN")
     kms_alias: str = Field(..., description="Organization-specific KMS key alias name")
 
@@ -42,12 +34,8 @@ class OrganizationsUpdateInput(BaseModel):
     organization_id: Optional[str] = Field(
         None, description="Unique identifier for the organization (primary key)"
     )
-    name: Optional[str] = Field(
-        None, description="Name of the organization (required field)"
-    )
-    description: Optional[str] = Field(
-        None, description="Optional description of the organization"
-    )
+    name: Optional[str] = Field(None, description="Name of the organization (required field)")
+    description: Optional[str] = Field(None, description="Optional description of the organization")
     owner_id: Optional[str] = Field(
         None,
         description="ID of the CUSTOMER user who owns the organization (foreign key to Users)",
@@ -64,12 +52,8 @@ class OrganizationsUpdateInput(BaseModel):
     kms_key_id: Optional[str] = Field(
         None, description="Organization-specific KMS key ID for encryption"
     )
-    kms_key_arn: Optional[str] = Field(
-        None, description="Organization-specific KMS key ARN"
-    )
-    kms_alias: Optional[str] = Field(
-        None, description="Organization-specific KMS key alias name"
-    )
+    kms_key_arn: Optional[str] = Field(None, description="Organization-specific KMS key ARN")
+    kms_alias: Optional[str] = Field(None, description="Organization-specific KMS key alias name")
 
 
 class OrganizationsDeleteInput(BaseModel):
@@ -103,9 +87,7 @@ class Organizations(BaseModel):
         ..., description="Unique identifier for the organization (primary key)"
     )
     name: str = Field(..., description="Name of the organization (required field)")
-    description: str = Field(
-        None, description="Optional description of the organization"
-    )
+    description: str = Field(None, description="Optional description of the organization")
     owner_id: str = Field(
         ...,
         description="ID of the CUSTOMER user who owns the organization (foreign key to Users)",
@@ -114,12 +96,8 @@ class Organizations(BaseModel):
     created_at: datetime = Field(
         ..., description="When the organization was created (on payment completion)"
     )
-    updated_at: datetime = Field(
-        ..., description="When the organization was last updated"
-    )
-    kms_key_id: str = Field(
-        None, description="Organization-specific KMS key ID for encryption"
-    )
+    updated_at: datetime = Field(..., description="When the organization was last updated")
+    kms_key_id: str = Field(None, description="Organization-specific KMS key ID for encryption")
     kms_key_arn: str = Field(None, description="Organization-specific KMS key ARN")
     kms_alias: str = Field(None, description="Organization-specific KMS key alias name")
 
@@ -172,9 +150,7 @@ class Organizations(BaseModel):
             "name": self.name,
             "description": self.description,
             "owner_id": self.owner_id,
-            "status": (
-                self.status.value if self.status else "OrganizationStatus.UNKNOWN"
-            ),
+            "status": (self.status.value if self.status else "OrganizationStatus.UNKNOWN"),
             "created_at": self.created_at,
             "updated_at": self.updated_at,
             "kms_key_id": self.kms_key_id,

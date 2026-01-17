@@ -24,6 +24,7 @@ def get_dynamodb_resource():
         _dynamodb = boto3.resource("dynamodb")
     return _dynamodb
 
+
 # Environment variables
 LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
 
@@ -35,6 +36,7 @@ logger.setLevel(LOGGING_LEVEL)
 def get_users_table_name() -> str | None:
     """Get the Users table name from environment variable at runtime."""
     return os.getenv("USERS_TABLE_NAME")
+
 
 # Email validation regex - RFC 5322 simplified
 EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
@@ -118,7 +120,7 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         input_data = event.get("arguments", {}).get("input", {})
         email = input_data.get("email", "")
 
-        logger.debug(f"Processing email check request")
+        logger.debug("Processing email check request")
 
         # Validate email format
         if not validate_email(email):
@@ -137,7 +139,7 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
 
         return {"email": email, "exists": exists}
 
-    except ValueError as e:
+    except ValueError:
         # Re-raise validation errors
         _ensure_min_response_time(start_time)
         raise

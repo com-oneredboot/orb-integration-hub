@@ -403,9 +403,7 @@ class TestSMSVerificationSecurity(unittest.TestCase):
         dynamodb.create_table(
             TableName="test-rate-limit-table",
             KeySchema=[{"AttributeName": "phoneNumber", "KeyType": "HASH"}],
-            AttributeDefinitions=[
-                {"AttributeName": "phoneNumber", "AttributeType": "S"}
-            ],
+            AttributeDefinitions=[{"AttributeName": "phoneNumber", "AttributeType": "S"}],
             BillingMode="PAY_PER_REQUEST",
         )
 
@@ -416,9 +414,7 @@ class TestSMSVerificationSecurity(unittest.TestCase):
         table = dynamodb.create_table(
             TableName="test-rate-limit-table",
             KeySchema=[{"AttributeName": "phoneNumber", "KeyType": "HASH"}],
-            AttributeDefinitions=[
-                {"AttributeName": "phoneNumber", "AttributeType": "S"}
-            ],
+            AttributeDefinitions=[{"AttributeName": "phoneNumber", "AttributeType": "S"}],
             BillingMode="PAY_PER_REQUEST",
         )
 

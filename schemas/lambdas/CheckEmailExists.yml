@@ -19,5 +19,5 @@ model:
       description: Email address to check for existence
     exists:
       type: boolean
-      required: true
-      description: Whether the email exists in the system
+      required: false
+      description: Whether the email exists in the system (response only)

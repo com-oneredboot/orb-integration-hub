@@ -91,9 +91,7 @@ class OrganizationContextExtractor:
                 return None
 
             # If we get here, organization ID is required but missing
-            raise ContextExtractionError(
-                "Organization ID is required but not found in request"
-            )
+            raise ContextExtractionError("Organization ID is required but not found in request")
 
         except Exception as e:
             logger.error(f"Error extracting organization ID: {str(e)}")
@@ -133,9 +131,7 @@ class OrganizationContextExtractor:
             membership_data = self._get_user_membership(user_id, organization_id)
             if not membership_data:
                 # Check if user is platform admin
-                is_platform_admin = any(
-                    group in cognito_groups for group in ["OWNER", "EMPLOYEE"]
-                )
+                is_platform_admin = any(group in cognito_groups for group in ["OWNER", "EMPLOYEE"])
                 if not is_platform_admin:
                     raise SecurityViolationError(
                         f"User {user_id} is not a member of organization {organization_id}"
@@ -192,9 +188,7 @@ class OrganizationContextExtractor:
             raise  # Re-raise security violations as-is
         except Exception as e:
             logger.error(f"Error building organization context: {str(e)}")
-            raise ContextExtractionError(
-                f"Failed to build organization context: {str(e)}"
-            )
+            raise ContextExtractionError(f"Failed to build organization context: {str(e)}")
 
     def _get_organization_data(self, organization_id: str) -> Optional[Dict[str, Any]]:
         """Get organization data from database."""
@@ -205,9 +199,7 @@ class OrganizationContextExtractor:
             dynamodb = boto3.resource("dynamodb")
             organizations_table = dynamodb.Table("Organizations")
 
-            response = organizations_table.get_item(
-                Key={"organizationId": organization_id}
-            )
+            response = organizations_table.get_item(Key={"organizationId": organization_id})
 
             org_data = response.get("Item")
             if org_data and org_data.get("status") == "ACTIVE":
@@ -221,9 +213,7 @@ class OrganizationContextExtractor:
             lookup_time = (time.time() - start_time) * 1000
             logger.debug(f"Organization data lookup took {lookup_time:.2f}ms")
 
-    def _get_user_membership(
-        self, user_id: str, organization_id: str
-    ) -> Optional[Dict[str, Any]]:
+    def _get_user_membership(self, user_id: str, organization_id: str) -> Optional[Dict[str, Any]]:
         """Get user membership data from database."""
         start_time = time.time()
         try:
@@ -279,9 +269,7 @@ class OrganizationContextMiddleware:
                 return None
 
             if not organization_id:
-                raise SecurityViolationError(
-                    "Organization ID is required for this operation"
-                )
+                raise SecurityViolationError("Organization ID is required for this operation")
 
             # Build cache key for this request
             cache_key = f"{user_id}:{organization_id}:{int(time.time() // 300)}"  # 5-minute cache
@@ -441,9 +429,7 @@ def requires_any_permission(permissions: List[str]):
 
                 # Check if user has any of the required permissions
                 user_permissions = org_context.user_permissions
-                has_any_permission = any(
-                    perm in user_permissions for perm in permissions
-                )
+                has_any_permission = any(perm in user_permissions for perm in permissions)
 
                 if not has_any_permission:
                     raise SecurityViolationError(
@@ -460,9 +446,7 @@ def requires_any_permission(permissions: List[str]):
                         "violation_type": "insufficient_permissions",
                         "required_permissions": permissions,
                         "user_permissions": (
-                            org_context.user_permissions
-                            if "org_context" in locals()
-                            else []
+                            org_context.user_permissions if "org_context" in locals() else []
                         ),
                     },
                 )
@@ -493,15 +477,12 @@ def requires_organization_owner():
                 # Check if user is organization owner
                 is_owner = (
                     org_context.user_role == "OWNER"
-                    or org_context.organization_data.get("ownerId")
-                    == org_context.user_id
+                    or org_context.organization_data.get("ownerId") == org_context.user_id
                     or org_context.is_platform_admin
                 )
 
                 if not is_owner:
-                    raise SecurityViolationError(
-                        "Access denied - organization owner required"
-                    )
+                    raise SecurityViolationError("Access denied - organization owner required")
 
                 # Call original function with organization context
                 return func(self, event, org_context, *args, **kwargs)
@@ -512,9 +493,7 @@ def requires_organization_owner():
                     {
                         "violation_type": "owner_required",
                         "user_role": (
-                            org_context.user_role
-                            if "org_context" in locals()
-                            else "unknown"
+                            org_context.user_role if "org_context" in locals() else "unknown"
                         ),
                     },
                 )
@@ -534,9 +513,7 @@ def allows_platform_override(func: Callable) -> Callable:
     def wrapper(self, event: Dict[str, Any], *args, **kwargs):
         # Check if user is platform admin
         cognito_groups = event.get("identity", {}).get("groups", [])
-        is_platform_admin = any(
-            group in cognito_groups for group in ["OWNER", "EMPLOYEE"]
-        )
+        is_platform_admin = any(group in cognito_groups for group in ["OWNER", "EMPLOYEE"])
 
         if is_platform_admin:
             # Platform admin can bypass organization requirements

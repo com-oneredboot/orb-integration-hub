@@ -104,9 +104,7 @@ class PermissionRule:
     conditions: Dict[str, Any] = field(default_factory=dict)
     inheritance: bool = True
 
-    def allows(
-        self, permission: PermissionType, context: Dict[str, Any] = None
-    ) -> bool:
+    def allows(self, permission: PermissionType, context: Dict[str, Any] = None) -> bool:
         """Check if this rule allows the given permission."""
 
         if permission in self.restrictions:
@@ -337,10 +335,7 @@ class RoleBasedTestingMatrix:
         # Add inherited permissions if enabled
         if include_inherited and rule.inheritance:
             for role, level in self.role_hierarchy.items():
-                if (
-                    level < self.role_hierarchy[user_role]
-                    and role in self.permission_rules
-                ):
+                if level < self.role_hierarchy[user_role] and role in self.permission_rules:
                     inherited_rule = self.permission_rules[role]
                     if inherited_rule.inheritance:
                         permissions.update(inherited_rule.permissions)
@@ -387,9 +382,7 @@ class RoleBasedTestingMatrix:
         scenario_counter += len(cross_role_scenarios)
 
         # Generate privilege escalation scenarios
-        escalation_scenarios = self._generate_privilege_escalation_scenarios(
-            scenario_counter
-        )
+        escalation_scenarios = self._generate_privilege_escalation_scenarios(scenario_counter)
         scenarios.extend(escalation_scenarios)
         scenario_counter += len(escalation_scenarios)
 
@@ -459,9 +452,7 @@ class RoleBasedTestingMatrix:
             for target_role in OrganizationUserRole:
                 for action in role_modification_actions:
                     # Determine if actor can perform action on target
-                    expected_result = self._can_role_modify_role(
-                        actor_role, target_role, action
-                    )
+                    expected_result = self._can_role_modify_role(actor_role, target_role, action)
 
                     scenario = TestScenario(
                         scenario_id=f"CROSS_{scenario_id:04d}",
@@ -490,9 +481,7 @@ class RoleBasedTestingMatrix:
 
         return scenarios
 
-    def _generate_privilege_escalation_scenarios(
-        self, start_id: int
-    ) -> List[TestScenario]:
+    def _generate_privilege_escalation_scenarios(self, start_id: int) -> List[TestScenario]:
         """Generate scenarios testing privilege escalation attempts."""
 
         scenarios = []
@@ -693,9 +682,7 @@ class RoleBasedTestingMatrix:
         # Members and guests cannot modify others
         return False
 
-    def _determine_scenario_priority(
-        self, role: OrganizationUserRole, action: ActionType
-    ) -> str:
+    def _determine_scenario_priority(self, role: OrganizationUserRole, action: ActionType) -> str:
         """Determine priority level for a test scenario."""
 
         # Critical actions that could cause data loss or security issues
@@ -753,9 +740,7 @@ class RoleBasedTestingMatrix:
 
             # By role
             role = scenario.user_role.value
-            analysis["scenarios_by_role"][role] = (
-                analysis["scenarios_by_role"].get(role, 0) + 1
-            )
+            analysis["scenarios_by_role"][role] = analysis["scenarios_by_role"].get(role, 0) + 1
 
             # By action
             action = scenario.action.value
@@ -848,17 +833,13 @@ class RoleBasedTestingMatrix:
                     {
                         "type": "overly_permissive_role",
                         "role": role.value,
-                        "dangerous_permissions": [
-                            p.value for p in role_dangerous_perms
-                        ],
+                        "dangerous_permissions": [p.value for p in role_dangerous_perms],
                         "risk_level": "high",
                     }
                 )
 
         # Check for privilege escalation possibilities
-        escalation_scenarios = [
-            s for s in self.test_scenarios if "privilege_escalation" in s.tags
-        ]
+        escalation_scenarios = [s for s in self.test_scenarios if "privilege_escalation" in s.tags]
         failing_escalations = [s for s in escalation_scenarios if s.expected_result]
 
         if failing_escalations:
@@ -892,9 +873,7 @@ class RoleBasedTestingMatrix:
         """Generate recommended test execution plan."""
 
         # Group scenarios by priority
-        critical_scenarios = [
-            s for s in self.test_scenarios if s.priority == "critical"
-        ]
+        critical_scenarios = [s for s in self.test_scenarios if s.priority == "critical"]
         high_scenarios = [s for s in self.test_scenarios if s.priority == "high"]
         medium_scenarios = [s for s in self.test_scenarios if s.priority == "medium"]
         low_scenarios = [s for s in self.test_scenarios if s.priority == "low"]

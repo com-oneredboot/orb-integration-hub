@@ -178,7 +178,7 @@ type AuthError {
 
 type CheckEmailExists {
   email: String!
-  exists: Boolean!
+  exists: Boolean
 }
 
 type SmsVerification {
@@ -248,7 +248,7 @@ type UsersResponse {
 
 input CheckEmailExistsInput {
   email: String!
-  exists: Boolean!
+  exists: Boolean
 }
 
 input SmsVerificationInput {

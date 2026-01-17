@@ -24,9 +24,7 @@ class NotificationsCreateInput(BaseModel):
         description="ID of the user who triggered this notification (foreign key to Users)",
     )
     type: NotificationType = Field(..., description="Type of notification")
-    status: NotificationStatus = Field(
-        ..., description="Current status of the notification"
-    )
+    status: NotificationStatus = Field(..., description="Current status of the notification")
     title: str = Field(..., description="Title/subject of the notification")
     message: str = Field(..., description="Content/body of the notification")
     metadata: str = Field(
@@ -36,9 +34,7 @@ class NotificationsCreateInput(BaseModel):
         ..., description="When the notification expires (for time-sensitive actions)"
     )
     created_at: datetime = Field(..., description="When the notification was created")
-    updated_at: datetime = Field(
-        ..., description="When the notification was last updated"
-    )
+    updated_at: datetime = Field(..., description="When the notification was last updated")
 
 
 class NotificationsUpdateInput(BaseModel):
@@ -66,9 +62,7 @@ class NotificationsUpdateInput(BaseModel):
     expires_at: Optional[datetime] = Field(
         None, description="When the notification expires (for time-sensitive actions)"
     )
-    created_at: Optional[datetime] = Field(
-        None, description="When the notification was created"
-    )
+    created_at: Optional[datetime] = Field(None, description="When the notification was created")
     updated_at: Optional[datetime] = Field(
         None, description="When the notification was last updated"
     )
@@ -124,9 +118,7 @@ class Notifications(BaseModel):
         None, description="When the notification expires (for time-sensitive actions)"
     )
     created_at: datetime = Field(..., description="When the notification was created")
-    updated_at: datetime = Field(
-        ..., description="When the notification was last updated"
-    )
+    updated_at: datetime = Field(..., description="When the notification was last updated")
 
     @validator("expiresAt", pre=True)
     def parse_expiresAt(cls, value):
@@ -194,9 +186,7 @@ class Notifications(BaseModel):
             "recipient_user_id": self.recipient_user_id,
             "sender_user_id": self.sender_user_id,
             "type": self.type.value if self.type else "NotificationType.UNKNOWN",
-            "status": (
-                self.status.value if self.status else "NotificationStatus.UNKNOWN"
-            ),
+            "status": (self.status.value if self.status else "NotificationStatus.UNKNOWN"),
             "title": self.title,
             "message": self.message,
             "metadata": self.metadata,

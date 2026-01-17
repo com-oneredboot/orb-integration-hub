@@ -67,12 +67,8 @@ class OrganizationsResolver:
                 return self._error_response("Organization name is required")
 
             # Validate platform access
-            if not any(
-                group in cognito_groups for group in ["OWNER", "EMPLOYEE", "CUSTOMER"]
-            ):
-                return self._error_response(
-                    "Insufficient permissions to create organization"
-                )
+            if not any(group in cognito_groups for group in ["OWNER", "EMPLOYEE", "CUSTOMER"]):
+                return self._error_response("Insufficient permissions to create organization")
 
             # Check starter plan limits for CUSTOMER users
             if (
@@ -103,9 +99,7 @@ class OrganizationsResolver:
                 logger.error(
                     f"Failed to create KMS key for organization {organization_id}: {str(e)}"
                 )
-                return self._error_response(
-                    f"Failed to create encryption key: {str(e)}"
-                )
+                return self._error_response(f"Failed to create encryption key: {str(e)}")
 
             # Encrypt sensitive organization data using organization-specific KMS key
             encrypted_description = ""
@@ -194,12 +188,8 @@ class OrganizationsResolver:
             if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
                 # Clean up KMS key if organization creation fails
                 try:
-                    self.kms_manager.delete_organization_key(
-                        organization_id, pending_window_days=7
-                    )
-                    logger.info(
-                        f"Cleaned up KMS key for failed organization {organization_id}"
-                    )
+                    self.kms_manager.delete_organization_key(organization_id, pending_window_days=7)
+                    logger.info(f"Cleaned up KMS key for failed organization {organization_id}")
                 except Exception as cleanup_error:
                     logger.error(f"Failed to cleanup KMS key: {cleanup_error}")
                 return self._error_response("Organization ID already exists")
@@ -207,12 +197,8 @@ class OrganizationsResolver:
                 logger.error(f"DynamoDB error creating organization: {str(e)}")
                 # Clean up KMS key on database error
                 try:
-                    self.kms_manager.delete_organization_key(
-                        organization_id, pending_window_days=7
-                    )
-                    logger.info(
-                        f"Cleaned up KMS key for failed organization {organization_id}"
-                    )
+                    self.kms_manager.delete_organization_key(organization_id, pending_window_days=7)
+                    logger.info(f"Cleaned up KMS key for failed organization {organization_id}")
                 except Exception as cleanup_error:
                     logger.error(f"Failed to cleanup KMS key: {cleanup_error}")
                 return self._error_response(f"Database error: {str(e)}")
@@ -238,9 +224,7 @@ class OrganizationsResolver:
                     organization["description"] = decrypted_description
                 except Exception as e:
                     # If decryption fails, assume it's plain text (backward compatibility)
-                    logger.debug(
-                        f"Description decryption failed (likely plain text): {str(e)}"
-                    )
+                    logger.debug(f"Description decryption failed (likely plain text): {str(e)}")
 
             return {"statusCode": 200, "body": organization}
 
@@ -304,15 +288,13 @@ class OrganizationsResolver:
                 encrypted_description = args["description"]
                 if args["description"]:
                     try:
-                        encrypted_description = (
-                            self.kms_manager.encrypt_organization_data(
-                                organization_id=organization_id,
-                                plaintext_data=args["description"],
-                                encryption_context={
-                                    "field": "description",
-                                    "action": "update",
-                                },
-                            )
+                        encrypted_description = self.kms_manager.encrypt_organization_data(
+                            organization_id=organization_id,
+                            plaintext_data=args["description"],
+                            encryption_context={
+                                "field": "description",
+                                "action": "update",
+                            },
                         )
                     except Exception as e:
                         logger.warning(f"Failed to encrypt description: {str(e)}")
@@ -428,9 +410,7 @@ class OrganizationsResolver:
                     organization_id, pending_window_days=30
                 )
                 if kms_deletion_success:
-                    logger.info(
-                        f"Scheduled KMS key deletion for organization {organization_id}"
-                    )
+                    logger.info(f"Scheduled KMS key deletion for organization {organization_id}")
                 else:
                     logger.warning(
                         f"Failed to schedule KMS key deletion for organization {organization_id}"
@@ -515,9 +495,7 @@ class OrganizationsResolver:
             return self._error_response(f"Internal error: {str(e)}")
 
     @organization_context_required()
-    def get_user_permissions(
-        self, event: Dict[str, Any], org_context
-    ) -> Dict[str, Any]:
+    def get_user_permissions(self, event: Dict[str, Any], org_context) -> Dict[str, Any]:
         """Get user's permissions for an organization."""
         try:
             # Return permissions from organization context
@@ -584,9 +562,7 @@ class OrganizationsResolver:
                 "statusCode": 200,
                 "body": {
                     "roles": roles_data,
-                    "permissions": [
-                        p.key for p in OrganizationPermissions.get_all_permissions()
-                    ],
+                    "permissions": [p.key for p in OrganizationPermissions.get_all_permissions()],
                 },
             }
 
@@ -615,9 +591,7 @@ class OrganizationsResolver:
             logger.error(f"Error getting user organizations: {str(e)}")
             return []
 
-    def _error_response(
-        self, message: str, context: Optional[Dict] = None
-    ) -> Dict[str, Any]:
+    def _error_response(self, message: str, context: Optional[Dict] = None) -> Dict[str, Any]:
         """Generate standardized error response."""
         error_data = {"error": message}
         if context:

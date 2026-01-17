@@ -12,9 +12,7 @@ from .RoleStatusEnum import RoleStatus
 
 # CRUD Input Types
 class RolesCreateInput(BaseModel):
-    role_id: str = Field(
-        ..., description="Unique identifier for the role (primary key)"
-    )
+    role_id: str = Field(..., description="Unique identifier for the role (primary key)")
     user_id: str = Field(
         ...,
         description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.",
@@ -26,21 +24,15 @@ class RolesCreateInput(BaseModel):
 
 
 class RolesUpdateInput(BaseModel):
-    role_id: Optional[str] = Field(
-        None, description="Unique identifier for the role (primary key)"
-    )
+    role_id: Optional[str] = Field(None, description="Unique identifier for the role (primary key)")
     user_id: Optional[str] = Field(
         None,
         description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.",
     )
     role_type: Optional[RoleType] = Field(None, description="Type of the role")
     status: Optional[RoleStatus] = Field(None, description="Current status of the role")
-    created_at: Optional[datetime] = Field(
-        None, description="When the role was created"
-    )
-    updated_at: Optional[datetime] = Field(
-        None, description="When the role was last updated"
-    )
+    created_at: Optional[datetime] = Field(None, description="When the role was created")
+    updated_at: Optional[datetime] = Field(None, description="When the role was last updated")
 
 
 class RolesDeleteInput(BaseModel):
@@ -66,9 +58,7 @@ class RolesQueryByUserIdInput(BaseModel):
 class Roles(BaseModel):
     """Roles model."""
 
-    role_id: str = Field(
-        ..., description="Unique identifier for the role (primary key)"
-    )
+    role_id: str = Field(..., description="Unique identifier for the role (primary key)")
     user_id: str = Field(
         None,
         description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.",

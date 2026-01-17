@@ -30,22 +30,14 @@ class PrivacyRequestsCreateInput(BaseModel):
     organization_id: str = Field(
         ..., description="Organization ID if request is scoped to specific organization"
     )
-    requester_id: str = Field(
-        ..., description="User ID of the person who submitted the request"
-    )
-    status: PrivacyRequestStatus = Field(
-        ..., description="Current status of the privacy request"
-    )
-    received_at: datetime = Field(
-        ..., description="When the privacy request was received"
-    )
+    requester_id: str = Field(..., description="User ID of the person who submitted the request")
+    status: PrivacyRequestStatus = Field(..., description="Current status of the privacy request")
+    received_at: datetime = Field(..., description="When the privacy request was received")
     deadline: datetime = Field(
         ...,
         description="Legal deadline for completing the request (30 days GDPR, 45 days CCPA)",
     )
-    completed_at: datetime = Field(
-        ..., description="When the privacy request was completed"
-    )
+    completed_at: datetime = Field(..., description="When the privacy request was completed")
     estimated_completion: datetime = Field(
         ..., description="Estimated completion time for the request"
     )
@@ -61,21 +53,13 @@ class PrivacyRequestsCreateInput(BaseModel):
     portable_data: str = Field(
         ..., description="Portable data export for GDPR Article 20 requests (JSON)"
     )
-    rejection_reason: str = Field(
-        ..., description="Reason for request rejection if applicable"
-    )
-    error_details: str = Field(
-        ..., description="Error details if request processing failed"
-    )
+    rejection_reason: str = Field(..., description="Reason for request rejection if applicable")
+    error_details: str = Field(..., description="Error details if request processing failed")
     compliance_notes: str = Field(
         ..., description="Additional compliance notes or special handling instructions"
     )
-    created_at: datetime = Field(
-        ..., description="When the privacy request record was created"
-    )
-    updated_at: datetime = Field(
-        ..., description="When the privacy request was last updated"
-    )
+    created_at: datetime = Field(..., description="When the privacy request record was created")
+    updated_at: datetime = Field(..., description="When the privacy request was last updated")
 
 
 class PrivacyRequestsUpdateInput(BaseModel):
@@ -198,20 +182,14 @@ class PrivacyRequests(BaseModel):
         None,
         description="Organization ID if request is scoped to specific organization",
     )
-    requester_id: str = Field(
-        ..., description="User ID of the person who submitted the request"
-    )
+    requester_id: str = Field(..., description="User ID of the person who submitted the request")
     status: str = Field(..., description="Current status of the privacy request")
-    received_at: datetime = Field(
-        ..., description="When the privacy request was received"
-    )
+    received_at: datetime = Field(..., description="When the privacy request was received")
     deadline: datetime = Field(
         ...,
         description="Legal deadline for completing the request (30 days GDPR, 45 days CCPA)",
     )
-    completed_at: datetime = Field(
-        None, description="When the privacy request was completed"
-    )
+    completed_at: datetime = Field(None, description="When the privacy request was completed")
     estimated_completion: datetime = Field(
         None, description="Estimated completion time for the request"
     )
@@ -227,21 +205,13 @@ class PrivacyRequests(BaseModel):
     portable_data: str = Field(
         None, description="Portable data export for GDPR Article 20 requests (JSON)"
     )
-    rejection_reason: str = Field(
-        None, description="Reason for request rejection if applicable"
-    )
-    error_details: str = Field(
-        None, description="Error details if request processing failed"
-    )
+    rejection_reason: str = Field(None, description="Reason for request rejection if applicable")
+    error_details: str = Field(None, description="Error details if request processing failed")
     compliance_notes: str = Field(
         None, description="Additional compliance notes or special handling instructions"
     )
-    created_at: datetime = Field(
-        ..., description="When the privacy request record was created"
-    )
-    updated_at: datetime = Field(
-        ..., description="When the privacy request was last updated"
-    )
+    created_at: datetime = Field(..., description="When the privacy request record was created")
+    updated_at: datetime = Field(..., description="When the privacy request was last updated")
 
     @validator("receivedAt", pre=True)
     def parse_receivedAt(cls, value):
@@ -333,9 +303,7 @@ class PrivacyRequests(BaseModel):
         return cls(
             request_id=dto.get("request_id"),
             request_type=(
-                PrivacyRequestType[
-                    dto.get("request_type", "PrivacyRequestType.UNKNOWN")
-                ]
+                PrivacyRequestType[dto.get("request_type", "PrivacyRequestType.UNKNOWN")]
                 if dto.get("request_type")
                 else PrivacyRequestType.UNKNOWN
             ),
@@ -371,19 +339,13 @@ class PrivacyRequests(BaseModel):
         return {
             "request_id": self.request_id,
             "request_type": (
-                self.request_type.value
-                if self.request_type
-                else "PrivacyRequestType.UNKNOWN"
+                self.request_type.value if self.request_type else "PrivacyRequestType.UNKNOWN"
             ),
             "data_subject_email": self.data_subject_email,
-            "legal_basis": (
-                self.legal_basis.value if self.legal_basis else "LegalBasis.UNKNOWN"
-            ),
+            "legal_basis": (self.legal_basis.value if self.legal_basis else "LegalBasis.UNKNOWN"),
             "organization_id": self.organization_id,
             "requester_id": self.requester_id,
-            "status": (
-                self.status.value if self.status else "PrivacyRequestStatus.UNKNOWN"
-            ),
+            "status": (self.status.value if self.status else "PrivacyRequestStatus.UNKNOWN"),
             "received_at": self.received_at,
             "deadline": self.deadline,
             "completed_at": self.completed_at,

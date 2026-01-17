@@ -58,9 +58,7 @@ class OrganizationSecurityManager:
                 }
 
             # Layer 2: Organization-level authorization
-            org_context = self._get_organization_context(
-                user_id, organization_id, cognito_groups
-            )
+            org_context = self._get_organization_context(user_id, organization_id, cognito_groups)
 
             # Layer 3: Action-specific authorization
             if not self._validate_action_permission(org_context, required_action):
@@ -76,9 +74,7 @@ class OrganizationSecurityManager:
             logger.error(f"Error validating organization access: {str(e)}")
             return False, {"error": f"Authorization validation failed: {str(e)}"}
 
-    def _validate_platform_access(
-        self, cognito_groups: List[str], required_action: str
-    ) -> bool:
+    def _validate_platform_access(self, cognito_groups: List[str], required_action: str) -> bool:
         """Validate platform-level access based on Cognito groups."""
         # OWNER and EMPLOYEE have full platform access
         if any(group in cognito_groups for group in ["OWNER", "EMPLOYEE"]):
@@ -103,9 +99,7 @@ class OrganizationSecurityManager:
             "user_id": user_id,
             "organization_id": organization_id,
             "cognito_groups": cognito_groups,
-            "is_platform_admin": any(
-                group in cognito_groups for group in ["OWNER", "EMPLOYEE"]
-            ),
+            "is_platform_admin": any(group in cognito_groups for group in ["OWNER", "EMPLOYEE"]),
             "organization_role": None,
             "is_organization_owner": False,
         }
@@ -157,9 +151,7 @@ class OrganizationSecurityManager:
             return True
 
         # For create operations, CUSTOMER can create their first organization
-        if required_action == "create" and "CUSTOMER" in org_context.get(
-            "cognito_groups", []
-        ):
+        if required_action == "create" and "CUSTOMER" in org_context.get("cognito_groups", []):
             return True
 
         # Organization must exist for other operations
@@ -201,7 +193,4 @@ class OrganizationSecurityManager:
 
         # For CUSTOMER users, they can only access organizations they own
         # (In starter plan, this is limited to 1 organization)
-        return {
-            "condition_expression": Attr("ownerId").eq(user_id)
-            & Attr("status").eq("ACTIVE")
-        }
+        return {"condition_expression": Attr("ownerId").eq(user_id) & Attr("status").eq("ACTIVE")}
