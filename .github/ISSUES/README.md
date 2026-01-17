@@ -4,7 +4,6 @@
 
 | Issue | Team | Title | Status | Impact |
 |-------|------|-------|--------|--------|
-| #67 | orb-schema-generator | Bug: apiKeyAuthentication directive not rendered in GraphQL schema (Lambda types) | Open | High |
 | #64 | orb-schema-generator | Enhancement: Generate SSM parameters for DynamoDB table ARNs and names | Open | Low |
 | #65 | orb-schema-generator | Enhancement: Support PITR configuration in DynamoDB table schemas | Open | Low |
 | #66 | orb-schema-generator | Documentation: Add schema type generation matrix and construct extension examples | Open | Low |
@@ -17,6 +16,7 @@
 
 | Issue | Team | Title | Resolution Date |
 |-------|------|-------|-----------------|
+| #67 | orb-schema-generator | Bug: apiKeyAuthentication directive not rendered in GraphQL schema | 2026-01-17 |
 | #68 | orb-schema-generator | Enhancement: Generate Lambda Data Sources and Resolvers for LambdaType Schemas | 2026-01-17 |
 | #15 | orb-infrastructure | Cognito SMS Role Missing Permission for Direct SMS Publishing | 2026-01-16 |
 | #63 | orb-schema-generator | Enhancement: Generate GraphQL operations for Lambda types | 2026-01-15 |
