@@ -136,9 +136,7 @@ class PerformanceTestRunner:
             if config.enable_monitoring:
                 self._stop_monitoring()
 
-    async def run_stress_test(
-        self, base_config: LoadTestConfig
-    ) -> Dict[str, PerformanceMetrics]:
+    async def run_stress_test(self, base_config: LoadTestConfig) -> Dict[str, PerformanceMetrics]:
         """Run stress test by gradually increasing load until failure."""
 
         print("Starting stress test - finding breaking point...")
@@ -169,8 +167,7 @@ class PerformanceTestRunner:
                 # Check if we've hit the breaking point
                 if (
                     metrics.error_rate_percentage > 10.0
-                    or metrics.average_response_time_ms
-                    > base_config.target_response_time_ms * 5
+                    or metrics.average_response_time_ms > base_config.target_response_time_ms * 5
                 ):
                     print(f"  Breaking point reached at {current_users} users")
                     break
@@ -323,10 +320,8 @@ class PerformanceTestRunner:
                 query_results[query_name] = {
                     "response_time_ms": response_time_ms,
                     "target_response_time_ms": test_config["target_response_time_ms"],
-                    "performance_ratio": response_time_ms
-                    / test_config["target_response_time_ms"],
-                    "passed": response_time_ms
-                    <= test_config["target_response_time_ms"],
+                    "performance_ratio": response_time_ms / test_config["target_response_time_ms"],
+                    "passed": response_time_ms <= test_config["target_response_time_ms"],
                     "complexity": test_config["complexity"],
                     "description": test_config["description"],
                 }
@@ -336,9 +331,7 @@ class PerformanceTestRunner:
 
         return query_results
 
-    async def _setup_performance_test_environment(
-        self, config: LoadTestConfig
-    ) -> Dict[str, Any]:
+    async def _setup_performance_test_environment(self, config: LoadTestConfig) -> Dict[str, Any]:
         """Setup test environment for performance testing."""
 
         # Create test organizations based on size
@@ -363,14 +356,10 @@ class PerformanceTestRunner:
         return {
             "organizations": organizations,
             "operation_type": config.operation_type,
-            "test_users": self._generate_test_users_for_operations(
-                config.concurrent_users
-            ),
+            "test_users": self._generate_test_users_for_operations(config.concurrent_users),
         }
 
-    def _generate_test_users_for_operations(
-        self, user_count: int
-    ) -> List[Dict[str, Any]]:
+    def _generate_test_users_for_operations(self, user_count: int) -> List[Dict[str, Any]]:
         """Generate test users for performance operations."""
 
         test_users = []
@@ -402,9 +391,7 @@ class PerformanceTestRunner:
 
         # Execute with ramp-up
         if config.ramp_up_duration_seconds > 0:
-            delay_between_users = (
-                config.ramp_up_duration_seconds / config.concurrent_users
-            )
+            delay_between_users = config.ramp_up_duration_seconds / config.concurrent_users
             delayed_tasks = []
 
             for i, task in enumerate(tasks):
@@ -451,9 +438,7 @@ class PerformanceTestRunner:
                 )
 
             elif operation_type == OperationType.INVITE_USER:
-                result = await self._simulate_invite_user(
-                    test_data, user_index, operation_index
-                )
+                result = await self._simulate_invite_user(test_data, user_index, operation_index)
 
             elif operation_type == OperationType.BULK_USER_INVITE:
                 result = await self._simulate_bulk_user_invite(
@@ -466,9 +451,7 @@ class PerformanceTestRunner:
                 )
 
             elif operation_type == OperationType.QUERY_USERS:
-                result = await self._simulate_query_users(
-                    test_data, user_index, operation_index
-                )
+                result = await self._simulate_query_users(test_data, user_index, operation_index)
 
             elif operation_type == OperationType.PERMISSION_CHECK:
                 result = await self._simulate_permission_check(
@@ -476,9 +459,7 @@ class PerformanceTestRunner:
                 )
 
             elif operation_type == OperationType.DATA_EXPORT:
-                result = await self._simulate_data_export(
-                    test_data, user_index, operation_index
-                )
+                result = await self._simulate_data_export(test_data, user_index, operation_index)
 
             else:
                 result = await self._simulate_generic_operation(
@@ -701,9 +682,7 @@ class PerformanceTestRunner:
         successful_results = [r for r in results if r.get("success", False)]
         failed_results = [r for r in results if not r.get("success", False)]
 
-        response_times = [
-            r["response_time_ms"] for r in results if "response_time_ms" in r
-        ]
+        response_times = [r["response_time_ms"] for r in results if "response_time_ms" in r]
 
         if not response_times:
             response_times = [0]
@@ -718,20 +697,14 @@ class PerformanceTestRunner:
         p99_index = int(0.99 * len(sorted_times))
 
         p95_response_time = (
-            sorted_times[p95_index]
-            if p95_index < len(sorted_times)
-            else sorted_times[-1]
+            sorted_times[p95_index] if p95_index < len(sorted_times) else sorted_times[-1]
         )
         p99_response_time = (
-            sorted_times[p99_index]
-            if p99_index < len(sorted_times)
-            else sorted_times[-1]
+            sorted_times[p99_index] if p99_index < len(sorted_times) else sorted_times[-1]
         )
 
         # Calculate rates
-        operations_per_second = (
-            len(results) / total_duration if total_duration > 0 else 0
-        )
+        operations_per_second = len(results) / total_duration if total_duration > 0 else 0
         error_rate = (len(failed_results) / len(results)) * 100 if results else 0
 
         # Get system metrics
@@ -792,14 +765,10 @@ class PerformanceTestRunner:
             )
 
         if metrics.cpu_usage_percentage > 80:
-            validation["warnings"].append(
-                f"High CPU usage ({metrics.cpu_usage_percentage:.1f}%)"
-            )
+            validation["warnings"].append(f"High CPU usage ({metrics.cpu_usage_percentage:.1f}%)")
 
         if metrics.memory_usage_mb > 1000:  # 1GB
-            validation["warnings"].append(
-                f"High memory usage ({metrics.memory_usage_mb:.1f}MB)"
-            )
+            validation["warnings"].append(f"High memory usage ({metrics.memory_usage_mb:.1f}MB)")
 
         return validation
 
@@ -872,25 +841,17 @@ class PerformanceTestRunner:
         p99_index = int(0.99 * len(sorted_times))
 
         p95_response_time = (
-            sorted_times[p95_index]
-            if p95_index < len(sorted_times)
-            else sorted_times[-1]
+            sorted_times[p95_index] if p95_index < len(sorted_times) else sorted_times[-1]
         )
         p99_response_time = (
-            sorted_times[p99_index]
-            if p99_index < len(sorted_times)
-            else sorted_times[-1]
+            sorted_times[p99_index] if p99_index < len(sorted_times) else sorted_times[-1]
         )
 
         # Calculate rates
         operations_per_second = (
-            total_operations / total_duration_seconds
-            if total_duration_seconds > 0
-            else 0
+            total_operations / total_duration_seconds if total_duration_seconds > 0 else 0
         )
-        error_rate = (
-            (failed_operations / total_operations) * 100 if total_operations > 0 else 0
-        )
+        error_rate = (failed_operations / total_operations) * 100 if total_operations > 0 else 0
 
         return PerformanceMetrics(
             operation_type=operation_type,
@@ -912,9 +873,7 @@ class PerformanceTestRunner:
             errors=[],
         )
 
-    def generate_performance_report(
-        self, metrics_list: List[PerformanceMetrics]
-    ) -> Dict[str, Any]:
+    def generate_performance_report(self, metrics_list: List[PerformanceMetrics]) -> Dict[str, Any]:
         """Generate a performance report from metrics."""
         if not metrics_list:
             return {
@@ -926,9 +885,7 @@ class PerformanceTestRunner:
         total_operations = sum(m.total_operations for m in metrics_list)
         successful_operations = sum(m.successful_operations for m in metrics_list)
         overall_success_rate = (
-            (successful_operations / total_operations * 100)
-            if total_operations > 0
-            else 0
+            (successful_operations / total_operations * 100) if total_operations > 0 else 0
         )
 
         return {
@@ -1044,9 +1001,7 @@ class PerformanceTestSuite:
         bulk_operations_results = await self.runner.run_bulk_operations_test()
 
         # Database optimization tests
-        db_optimization_results = (
-            await self.runner.run_database_query_optimization_test()
-        )
+        db_optimization_results = await self.runner.run_database_query_optimization_test()
 
         end_time = datetime.now(UTC)
 
@@ -1107,15 +1062,13 @@ class PerformanceTestSuite:
         for config in load_configs:
             try:
                 metrics = await self.runner.run_load_test(config)
-                load_results[
-                    f"{config.operation_type.value}_{config.concurrent_users}users"
-                ] = metrics
+                load_results[f"{config.operation_type.value}_{config.concurrent_users}users"] = (
+                    metrics
+                )
 
             except Exception as e:
                 print(f"Load test failed for {config.operation_type.value}: {e}")
-                load_results[
-                    f"{config.operation_type.value}_{config.concurrent_users}users"
-                ] = None
+                load_results[f"{config.operation_type.value}_{config.concurrent_users}users"] = None
 
         return load_results
 
@@ -1187,16 +1140,10 @@ class PerformanceTestSuite:
 
         # Analyze stress test results
         stress_tests = self.suite_results.get("stress_tests", {})
-        if (
-            stress_tests
-            and not isinstance(stress_tests, dict)
-            or "error" not in stress_tests
-        ):
+        if stress_tests and not isinstance(stress_tests, dict) or "error" not in stress_tests:
             # Find the highest user count that passed
             user_counts = [
-                int(k.split("_")[0])
-                for k in stress_tests.keys()
-                if k.endswith("_users")
+                int(k.split("_")[0]) for k in stress_tests.keys() if k.endswith("_users")
             ]
             if user_counts:
                 summary["stress_test_breaking_point"] = max(user_counts)
@@ -1250,9 +1197,7 @@ class TestOrganizationPerformance:
         assert metrics.operations_per_second > 10
 
     @pytest.mark.asyncio
-    async def test_large_organization_query_performance(
-        self, performance_test_environment
-    ):
+    async def test_large_organization_query_performance(self, performance_test_environment):
         """Test query performance for large organizations."""
 
         factory = OrganizationTestDataFactory()
@@ -1287,9 +1232,7 @@ class TestOrganizationPerformance:
         bulk_invite_metrics = bulk_results.get("bulk_user_invite")
         if bulk_invite_metrics:
             assert bulk_invite_metrics.error_rate_percentage < 5.0
-            assert (
-                bulk_invite_metrics.p95_response_time_ms < 10000
-            )  # 10 seconds for bulk
+            assert bulk_invite_metrics.p95_response_time_ms < 10000  # 10 seconds for bulk
 
         # Verify bulk removal performance
         bulk_remove_metrics = bulk_results.get("bulk_user_removal")

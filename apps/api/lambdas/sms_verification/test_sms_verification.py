@@ -96,9 +96,7 @@ class TestSMSVerificationSecurity(unittest.TestCase):
         with (
             patch.object(sms_index, "get_secret", return_value="test-secret-value"),
             patch.object(sms_index, "sns_client") as mock_sns,
-            patch.object(
-                sms_index, "check_rate_limit", side_effect=rate_limit_side_effect
-            ),
+            patch.object(sms_index, "check_rate_limit", side_effect=rate_limit_side_effect),
         ):
             mock_sns.publish.return_value = {"MessageId": "test-message-id"}
 
@@ -307,9 +305,7 @@ class TestSMSVerificationSecurity(unittest.TestCase):
             with self.subTest(origination=malicious_num):
                 with patch.dict(os.environ, {"SMS_ORIGINATION_NUMBER": malicious_num}):
                     with (
-                        patch.object(
-                            sms_index, "get_secret", return_value="test-secret"
-                        ),
+                        patch.object(sms_index, "get_secret", return_value="test-secret"),
                         patch.object(sms_index, "check_rate_limit") as mock_rate_limit,
                         patch.object(sms_index, "sns_client") as mock_sns,
                     ):
@@ -447,9 +443,7 @@ class TestSMSVerificationSecurity(unittest.TestCase):
         dynamodb.create_table(
             TableName="test-rate-limit-table",
             KeySchema=[{"AttributeName": "phoneNumber", "KeyType": "HASH"}],
-            AttributeDefinitions=[
-                {"AttributeName": "phoneNumber", "AttributeType": "S"}
-            ],
+            AttributeDefinitions=[{"AttributeName": "phoneNumber", "AttributeType": "S"}],
             BillingMode="PAY_PER_REQUEST",
         )
 
@@ -460,9 +454,7 @@ class TestSMSVerificationSecurity(unittest.TestCase):
         table = dynamodb.create_table(
             TableName="test-rate-limit-table",
             KeySchema=[{"AttributeName": "phoneNumber", "KeyType": "HASH"}],
-            AttributeDefinitions=[
-                {"AttributeName": "phoneNumber", "AttributeType": "S"}
-            ],
+            AttributeDefinitions=[{"AttributeName": "phoneNumber", "AttributeType": "S"}],
             BillingMode="PAY_PER_REQUEST",
         )
 

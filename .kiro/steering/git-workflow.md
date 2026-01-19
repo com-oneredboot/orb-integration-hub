@@ -125,6 +125,38 @@ git rebase -i HEAD~3  # Squash last 3 commits
 # Change 'pick' to 'squash' for commits to combine
 ```
 
+## Pre-Commit Hooks
+
+**CRITICAL: NEVER use `--no-verify` flag**
+
+The `--no-verify` flag bypasses pre-commit hooks and is strictly forbidden. Pre-commit hooks exist to catch issues before they reach CI.
+
+### Forbidden Commands
+```bash
+# NEVER DO THIS
+git commit --no-verify
+git commit -n
+git push --no-verify
+```
+
+### If Pre-Commit Fails
+1. Read the error message carefully
+2. Fix the issues in your code (formatting, linting, type errors)
+3. Stage the fixed files with `git add`
+4. Run commit again WITHOUT `--no-verify`
+
+### Common Pre-Commit Fixes
+```bash
+# Format Python files (note: uses --line-length=100)
+pipenv run black --line-length=100 <file>
+
+# Fix linting issues
+pipenv run ruff check <file> --fix
+
+# Check types
+pipenv run mypy <file>
+```
+
 ## Protected Branches
 
 - `main` - Production-ready code

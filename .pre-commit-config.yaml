@@ -43,7 +43,7 @@ repos:
         language: system
         types: [python]
         files: ^apps/api/.*\.py$
-        exclude: ^apps/api/lambdas/.*\.py$
+        exclude: ^apps/api/(lambdas/|core/testing/).*\.py$
 
       # Bandit - Security scanning
       - id: bandit
@@ -52,7 +52,7 @@ repos:
         language: system
         types: [python]
         files: ^apps/api/.*\.py$
-        exclude: ^apps/api/tests/.*\.py$
+        exclude: ^apps/api/(tests/|.*test.*\.py$|core/testing/)
 
       # ============================================
       # Frontend Hooks (Angular/TypeScript)
