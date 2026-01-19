@@ -10,7 +10,7 @@ Date: 2025-06-23
 
 import boto3
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 from contextlib import contextmanager
@@ -80,7 +80,7 @@ class EnvironmentManager:
     def test_environment(self, scenario: str = "comprehensive"):
         """Context manager for test environment lifecycle."""
 
-        self.test_start_time = datetime.utcnow()
+        self.test_start_time = datetime.now(UTC)
 
         try:
             # Setup environment
@@ -439,8 +439,8 @@ class EnvironmentManager:
                     "role": "OWNER",
                     "status": "ACTIVE",
                     "invited_by": "system",
-                    "created_at": datetime.utcnow().isoformat(),
-                    "updated_at": datetime.utcnow().isoformat(),
+                    "created_at": datetime.now(UTC).isoformat(),
+                    "updated_at": datetime.now(UTC).isoformat(),
                 }
                 org_users_table.put_item(Item=owner_membership)
 
@@ -454,8 +454,8 @@ class EnvironmentManager:
                             "role": "ADMIN" if i == 0 else "MEMBER",
                             "status": "ACTIVE",
                             "invited_by": org_data["owner"].get("user_id", "system"),
-                            "created_at": datetime.utcnow().isoformat(),
-                            "updated_at": datetime.utcnow().isoformat(),
+                            "created_at": datetime.now(UTC).isoformat(),
+                            "updated_at": datetime.now(UTC).isoformat(),
                         }
                         org_users_table.put_item(Item=membership)
 
@@ -584,7 +584,7 @@ class EnvironmentManager:
 
             # Check test duration
             if self.test_start_time:
-                duration = datetime.utcnow() - self.test_start_time
+                duration = datetime.now(UTC) - self.test_start_time
                 max_duration = timedelta(minutes=self.config.max_test_duration_minutes)
 
                 if duration > max_duration:

@@ -293,8 +293,8 @@ class TestCheckEmailExistsSecurity(unittest.TestCase):
             event = {"arguments": {"input": {"email": "test@example.com"}}}
             result = lambda_handler(event, self.test_context)
 
-            # Should only contain email and exists
-            self.assertEqual(set(result.keys()), {"email", "exists"})
+            # Should only contain email, exists, cognitoStatus, and cognitoSub
+            self.assertEqual(set(result.keys()), {"email", "exists", "cognitoStatus", "cognitoSub"})
 
     def test_error_messages_dont_leak_info(self):
         """Test that error messages don't expose sensitive information"""

@@ -10,7 +10,7 @@ Date: 2025-06-23
 
 import uuid
 import json
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Dict, List, Optional, Any
 
 from ..models.OrganizationStatusEnum import OrganizationStatus
@@ -64,7 +64,7 @@ class OrganizationTestDataFactory:
         # Create owner user if not provided
         if not owner_id:
             owner = self.create_test_user(email=f"owner_{org_id}@test.com", role_in_org="OWNER")
-            owner_id = owner["user_id"]
+            owner_id = owner["user_data"]["user_id"]
 
         # Create organization
         organization = self._create_organization_record(
@@ -302,7 +302,7 @@ class OrganizationTestDataFactory:
         user_id: Optional[str] = None,
         email: Optional[str] = None,
         organization_id: Optional[str] = None,
-        role_in_org: str = "MEMBER",
+        role_in_org: str = "VIEWER",
         skip_org_membership: bool = False,
         **overrides,
     ) -> Dict[str, Any]:
@@ -326,8 +326,8 @@ class OrganizationTestDataFactory:
             "status": UserStatus.ACTIVE,
             "mfa_enabled": False,
             "mfa_setup_complete": False,
-            "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow(),
+            "created_at": datetime.now(UTC),
+            "updated_at": datetime.now(UTC),
             **overrides,
         }
 
@@ -338,10 +338,20 @@ class OrganizationTestDataFactory:
 
         # Create organization membership if requested
         if organization_id and not skip_org_membership:
+            # Map role names to valid enum values
+            role_mapping = {
+                "OWNER": "ADMINISTRATOR",
+                "ADMIN": "ADMINISTRATOR",
+                "MEMBER": "VIEWER",
+                "GUEST": "VIEWER",
+                "ADMINISTRATOR": "ADMINISTRATOR",
+                "VIEWER": "VIEWER",
+            }
+            mapped_role = role_mapping.get(role_in_org, "VIEWER")
             org_membership = self._create_organization_user_record(
                 user_id=user_id,
                 organization_id=organization_id,
-                role=OrganizationUserRole[role_in_org],
+                role=OrganizationUserRole[mapped_role],
                 status=OrganizationUserStatus.ACTIVE,
             )
             result["organization_membership"] = org_membership
@@ -362,8 +372,8 @@ class OrganizationTestDataFactory:
             "name": app_name,
             "description": f"Test application {app_name}",
             "status": "ACTIVE",
-            "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow(),
+            "created_at": datetime.now(UTC),
+            "updated_at": datetime.now(UTC),
             **overrides,
         }
 
@@ -381,7 +391,7 @@ class OrganizationTestDataFactory:
 
         environment = {
             "session_id": self.test_session_id,
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
             "scenarios": {},
         }
 
@@ -475,8 +485,8 @@ class OrganizationTestDataFactory:
             "description": f"Test organization {name}",
             "owner_id": owner_id,
             "status": status,
-            "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow(),
+            "created_at": datetime.now(UTC),
+            "updated_at": datetime.now(UTC),
             "kms_key_id": f"kms_key_{organization_id}",
             "kms_key_arn": f"arn:aws:kms:us-east-1:123456789012:key/kms_key_{organization_id}",
             "kms_alias": f"alias/org-{organization_id}",
@@ -501,8 +511,8 @@ class OrganizationTestDataFactory:
             "role": role,
             "status": status,
             "invited_by": invited_by or "system",
-            "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow(),
+            "created_at": datetime.now(UTC),
+            "updated_at": datetime.now(UTC),
         }
 
         # Track created membership
