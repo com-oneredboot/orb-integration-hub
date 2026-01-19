@@ -403,7 +403,7 @@ def test_data_validator():
 # =============================================================================
 
 
-def pytest_current_test_id():
+def get_current_test_id():
     """Get current test ID for isolation."""
     import threading
 
