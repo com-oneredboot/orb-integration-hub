@@ -165,6 +165,38 @@ cd apps/web && npm run build
 orb-schema-generator generate
 ```
 
+## Change Plan Requirement
+
+**CRITICAL**: Before making any code changes, you MUST provide a plan and get user approval.
+
+### Plan Format
+
+Every change plan must include:
+
+1. **Problem**: Brief description of what needs to be fixed/added
+2. **Proposed Solution**: Concise explanation of the approach
+3. **Files to Modify**: List of all files that will be created, modified, or deleted
+
+### Example Plan
+
+```
+## Plan: Fix Import Path Issue
+
+**Problem**: CI fails with `ModuleNotFoundError: No module named 'generated'`
+
+**Proposed Solution**: Add sys.path manipulation to include the cdk directory
+
+**Files to Modify**:
+1. `infrastructure/cdk/stacks/appsync_stack.py` - Add path fix at top of file
+```
+
+### Rules
+
+- Always present the plan BEFORE making changes
+- Wait for explicit user approval (e.g., "yes", "proceed", "go ahead")
+- If the user asks a question, answer it - don't assume they want changes
+- Keep plans concise - no lengthy explanations needed
+
 ## Code Quality Standards
 
 ### Zero Tolerance for Linting Issues
