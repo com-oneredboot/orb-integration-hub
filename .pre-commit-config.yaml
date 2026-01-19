@@ -93,7 +93,7 @@ repos:
 
       - id: pytest-backend
         name: Run backend tests
-        entry: bash -c 'cd apps/api && pipenv run pytest tests/ --tb=short -q'
+        entry: bash -c 'cd apps/api && pipenv run pytest lambdas/ core/testing/ --tb=short -q'
         language: system
         files: ^apps/api/.*\.py$
         pass_filenames: false

@@ -187,7 +187,7 @@ jobs:
         if: matrix.component == 'backend'
         run: |
           cd apps/api
-          pipenv run python -m pytest tests/ -v --cov=. --cov-report=xml --cov-report=html
+          pipenv run python -m pytest lambdas/ core/testing/ -v --cov=. --cov-report=xml --cov-report=html
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
