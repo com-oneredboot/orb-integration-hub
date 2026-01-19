@@ -13,6 +13,8 @@ boto3 = "*"
 pynamodb = "*"
 requests = "*"
 stripe = "*"
+safety = "*"
+bandit = "*"
 
 [dev-packages]
 bandit = "*"
