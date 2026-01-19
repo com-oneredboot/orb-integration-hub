@@ -56,6 +56,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   // Store Selectors
   currentStep$: Observable<AuthSteps> = this.store.select(fromUser.selectCurrentStep);
   currentUser$: Observable<IUsers | null> = this.store.select(fromUser.selectCurrentUser);
+  currentEmail$: Observable<string> = this.store.select(fromUser.selectCurrentEmail);
   isLoading$ = this.store.select(fromUser.selectIsLoading);
   error$ = this.store.select(fromUser.selectError);
   userExists$ = this.store.select(fromUser.selectUserExists);
@@ -780,7 +781,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     const csrfValid = await this.validateCsrfProtection();
     if (!csrfValid) {
       console.error('[AuthFlowComponent] Form submission blocked - CSRF validation failed');
-      this.store.dispatch(UserActions.checkEmailFailure({ 
+      this.store.dispatch(UserActions.smartCheckFailure({ 
         error: this.csrfError || 'Security validation failed. Please refresh the page.' 
       }));
       return;
@@ -790,14 +791,20 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       .pipe(
         take(1),
         takeUntil(this.destroy$))
-      .subscribe(step => {
-        const email = this.authForm.get('email')?.value;
+      .subscribe(async step => {
+        const formEmail = this.authForm.get('email')?.value;
         const password = this.authForm.get('password')?.value;
         const emailCode = this.authForm.get('emailCode')?.value;
         const mfaCode = this.authForm.get('mfaCode')?.value;
+        
+        // Get email from store as fallback (important for EMAIL_VERIFY step)
+        const storeEmail = await this.currentEmail$.pipe(take(1)).toPromise();
+        const email = formEmail || storeEmail;
+        
         switch (step) {
           case AuthSteps.EMAIL:
-            this.store.dispatch(UserActions.checkEmail({ email }));
+            // Use smartCheck for intelligent routing based on Cognito + DynamoDB state
+            this.store.dispatch(UserActions.smartCheck({ email }));
             break;
 
           case AuthSteps.PASSWORD:
@@ -818,6 +825,14 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             if (!emailCode) {
               return;
             }
+            if (!email) {
+              console.error('[AuthFlowComponent] No email available for verification');
+              this.store.dispatch(UserActions.verifyEmailFailure({ 
+                error: 'Email address not found. Please start over.' 
+              }));
+              return;
+            }
+            console.debug('[AuthFlowComponent] Dispatching verifyEmail', { email, codeLength: emailCode?.length });
             this.store.dispatch(UserActions.verifyEmail({
               code: emailCode,
               email: email
@@ -884,7 +899,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       console.error('[AuthFlowComponent] Form submission error:', errorId);
       
       // Show user-friendly error
-      this.store.dispatch(UserActions.checkEmailFailure({ 
+      this.store.dispatch(UserActions.smartCheckFailure({ 
         error: 'An error occurred while processing your request. Please try again.' 
       }));
     }
@@ -1485,7 +1500,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       this.startRateLimitCountdown(delayMs);
       
       // Show error to user
-      this.store.dispatch(UserActions.checkEmailFailure({ 
+      this.store.dispatch(UserActions.smartCheckFailure({ 
         error: this.rateLimitMessage 
       }));
       

@@ -68,7 +68,7 @@ export class UserService extends ApiService {
 
     try {
       // create the Cognito User
-      this.userDebugLog.logAuth('createCognitoUser', 'success', { email: input.email });
+      this.userDebugLog.logApi('createCognitoUser', 'pending', { email: input.email });
       const cognitoResponse = await this.cognitoService.createCognitoUser(input, password);
       console.debug('createCognitoUser Response: ', cognitoResponse);
       this.userDebugLog.logAuth('createCognitoUser', 'success', { userId: cognitoResponse.userId });
@@ -117,9 +117,33 @@ export class UserService extends ApiService {
 
     } catch (error: unknown) {
       console.error('Error creating User:', error);
-      const errorObj = error as { message?: string };
+      const errorObj = error as { message?: string; name?: string; code?: string };
       const message = errorObj?.message || String(error) || '';
-      this.userDebugLog.logError('userCreate', message, { error: String(error) });
+      const errorName = errorObj?.name || '';
+      const errorCode = errorObj?.code || '';
+      
+      console.debug('[UserService][userCreate] Error details:', {
+        message,
+        name: errorName,
+        code: errorCode,
+        fullError: JSON.stringify(error)
+      });
+      
+      this.userDebugLog.logError('userCreate', message, { error: String(error), name: errorName });
+      
+      // Re-throw UsernameExistsException so the effect can handle smart recovery
+      // Check message, name, and code for various error formats
+      const isUsernameExists = 
+        message.toLowerCase().includes('usernameexistsexception') || 
+        message.toLowerCase().includes('user already exists') ||
+        message.toLowerCase().includes('already exists') ||
+        errorName === 'UsernameExistsException' ||
+        errorCode === 'UsernameExistsException';
+        
+      if (isUsernameExists) {
+        console.debug('[UserService][userCreate] Detected UsernameExistsException, re-throwing for smart recovery');
+        throw error; // Let the effect handle this for smart recovery
+      }
       
       if (message.includes('Not Authorized') || message.includes('Unauthorized')) {
         return {
@@ -131,7 +155,7 @@ export class UserService extends ApiService {
 
       return {
         StatusCode: 500,
-        Message: 'Error creating user',
+        Message: message || 'Error creating user',
         Data: new Users()
       } as UsersResponse;
     }

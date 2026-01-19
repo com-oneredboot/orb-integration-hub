@@ -52,15 +52,6 @@ output:
       base_dir: ./infrastructure/cdk/generated
       language: python
       generate_stack: false
-    appsync:
-      generateResolvers: true
-      resolverOutputDir: ./apps/api/graphql/resolvers
-      auth:
-        userPoolId: "/orb/integration-hub/dev/cognito/user-pool-id"
-        publicEndpoints: false
-      logging:
-        enabled: true
-        level: ALL
 
 generation:
   validate_schemas: true

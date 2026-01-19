@@ -84,39 +84,10 @@ export const userReducer = createReducer(
     recoveryMessage: null
   })),
 
-  // Check Email
-  on(UserActions.checkEmail, (state, { email }) => {
-    return {
-      ...state,
-      currentEmail: email,
-      isLoading: true,
-      error: null
-    };
-  }),
-  on(UserActions.checkEmailSuccess, (state, { userExists }) => {
-    return {
-      ...state,
-      userExists,
-      isLoading: false,
-      currentStep: userExists ? AuthSteps.PASSWORD : AuthSteps.PASSWORD_SETUP,
-      error: null
-    };
-  }),
-  on(UserActions.checkEmailFailure, (state, { error }) => ({
-    ...state,
-    error,
-    isLoading: false
-  })),
-  on(UserActions.checkEmailUserNotFound, (state) => ({
-    ...state,
-    currentStep: AuthSteps.PASSWORD_SETUP,
-    isLoading: false,
-    error: null
-  })),
-
   // Create User
-  on(UserActions.createUser, (state) => ({
+  on(UserActions.createUser, (state, { input }) => ({
     ...state,
+    currentEmail: input.email, // Preserve email for verification step
     isLoading: true,
     error: null
   })),

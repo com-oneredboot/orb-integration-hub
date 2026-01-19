@@ -50,10 +50,23 @@ export class RecoveryService {
       const cognitoStart = Date.now();
       const checkResult = await this.userService.checkEmailExists(email);
       const cognitoCheckMs = Date.now() - cognitoStart;
+      
+      // Debug: Log raw checkResult
+      console.debug('[RecoveryService][smartCheck] checkEmailExists result:', {
+        exists: checkResult.exists,
+        cognitoStatus: checkResult.cognitoStatus,
+        cognitoSub: checkResult.cognitoSub
+      });
 
       const dynamoStart = Date.now();
       const dynamoResult = await this.userService.userExists({ email });
       const dynamoCheckMs = Date.now() - dynamoStart;
+      
+      // Debug: Log raw dynamoResult
+      console.debug('[RecoveryService][smartCheck] userExists result:', {
+        statusCode: dynamoResult.StatusCode,
+        dataLength: dynamoResult.Data?.length ?? 0
+      });
 
       const cognitoStatus = this.parseCognitoStatus(checkResult.cognitoStatus);
       const cognitoSub = checkResult.cognitoSub ?? null;
@@ -61,11 +74,24 @@ export class RecoveryService {
                           dynamoResult.Data !== null && 
                           dynamoResult.Data.length > 0;
 
+      // Debug: Log parsed values
+      console.debug('[RecoveryService][smartCheck] Parsed state:', {
+        cognitoStatus,
+        cognitoSub,
+        dynamoExists
+      });
+
       // Determine recovery action based on state matrix
       const { action, message } = this.determineRecoveryAction(
         cognitoStatus,
         dynamoExists
       );
+      
+      // Debug: Log determined action
+      console.debug('[RecoveryService][smartCheck] Determined action:', {
+        action,
+        message
+      });
 
       const result: SmartCheckResult = {
         cognitoStatus,

@@ -267,7 +267,7 @@ Update documentation, bump version, and update changelog.
   - User messages are now jargon-free
   ```
 - [x] 8.3 Run all checks: `npm run lint && npm test`
-- [ ] 8.4 Commit with message: `feat: add smart recovery auth flow`
+- [x] 8.4 Commit with message: `feat: add smart recovery auth flow`
 - [ ] 8.5 Push changes
 
 ### Acceptance Criteria

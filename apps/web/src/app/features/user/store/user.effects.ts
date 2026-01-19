@@ -92,52 +92,6 @@ export class UserEffects {
     )
   );
 
-  checkEmail$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(UserActions.checkEmail),
-      switchMap(({ email }) => {
-        // Use the new CheckEmailExists Lambda-backed query with API key auth
-        return from(this.userService.checkEmailExists(email)).pipe(
-          map((result: { exists: boolean }) => {
-            if (result.exists) {
-              // User exists
-              return UserActions.checkEmailSuccess({ userExists: true });
-            } else {
-              // User not found
-              return UserActions.checkEmailUserNotFound();
-            }
-          }),
-          catchError((error: Error) => {
-            // Map network errors to ORB-API-004, others to ORB-SYS-001
-            let errorCode = 'ORB-SYS-001';
-            const message = error.message || '';
-            if (
-              message.includes('Unable to connect to the server') ||
-              message.includes('ERR_NAME_NOT_RESOLVED') ||
-              message.includes('NetworkError') ||
-              message.includes('Failed to fetch') ||
-              message.includes('network timeout') ||
-              message.includes('Could not connect')
-            ) {
-              errorCode = 'ORB-API-004';
-            }
-            const errorObj = getError(errorCode);
-            return of(UserActions.checkEmailFailure({
-              error: errorObj ? errorObj.message : 'Unexpected error'
-            }));
-          })
-        );
-      }),
-      catchError(_error => {
-        console.error('Effect [CheckEmail]: Error caught', _error);
-        const errorObj = getError('ORB-SYS-001');
-        return of(UserActions.checkEmailFailure({
-          error: errorObj ? errorObj.message : 'Unexpected error'
-        }));
-      })
-    )
-  );
-
   createUser$ = createEffect(() =>
     this.actions$.pipe(
       ofType(UserActions.createUser),
@@ -148,6 +102,16 @@ export class UserEffects {
             if (response.StatusCode === 200) {
               return UserActions.createUserSuccess();
             }
+            
+            // Check for "User already exists" in response message - trigger smart recovery
+            const responseMessage = response.Message || '';
+            if (responseMessage.includes('UsernameExistsException') || 
+                responseMessage.includes('User already exists') ||
+                responseMessage.includes('already exists')) {
+              console.debug('[Effect][createUser$] User already exists, triggering smart check for:', input.email);
+              return UserActions.smartCheck({ email: input.email });
+            }
+            
             if (response.StatusCode === 401) {
               // Unauthorized: surface the error, do not dispatch createUserSuccess
               const errorObj = getError('ORB-API-002');
@@ -162,10 +126,32 @@ export class UserEffects {
           }),
           catchError(error => {
             // Check for UsernameExistsException - trigger smart recovery
-            const errorMessage = error?.message || String(error);
-            if (errorMessage.includes('UsernameExistsException') || 
-                errorMessage.includes('User already exists')) {
-              // Trigger smart check to recover
+            // Handle various error formats from Amplify/Cognito
+            const errorMessage = error?.message || '';
+            const errorString = String(error);
+            const errorName = error?.name || '';
+            const errorCode = error?.code || '';
+            
+            console.debug('[Effect][createUser$] catchError - error details:', {
+              message: errorMessage,
+              string: errorString,
+              name: errorName,
+              code: errorCode,
+              fullError: JSON.stringify(error)
+            });
+            
+            // Check all possible error indicators
+            const isUsernameExists = 
+              errorMessage.toLowerCase().includes('usernameexistsexception') || 
+              errorMessage.toLowerCase().includes('user already exists') ||
+              errorMessage.toLowerCase().includes('already exists') ||
+              errorString.toLowerCase().includes('usernameexistsexception') ||
+              errorString.toLowerCase().includes('already exists') ||
+              errorName === 'UsernameExistsException' ||
+              errorCode === 'UsernameExistsException';
+            
+            if (isUsernameExists) {
+              console.debug('[Effect][createUser$] Caught UsernameExistsException, triggering smart check for:', input.email);
               return of(UserActions.smartCheck({ email: input.email }));
             }
             
@@ -253,22 +239,32 @@ export class UserEffects {
     this.actions$.pipe(
       ofType(UserActions.verifyEmail),
       switchMap(({ code, email }) => {
+        console.debug('[Effect][verifyEmail$] Starting email verification', { code: code ? '***' : 'empty', email });
 
         return from(this.userService.userExists({ email })).pipe(
           switchMap(user => {
             const users = Array.isArray(user.Data) ? user.Data : [];
-            if (user.StatusCode === 500 && users.length > 1) {
+            console.debug('[Effect][verifyEmail$] userExists response', { 
+              statusCode: user.StatusCode, 
+              message: user.Message,
+              usersCount: users.length 
+            });
 
+            if (user.StatusCode === 500 && users.length > 1) {
               // Duplicate user error
-              console.error('Duplicate users found for email:', email, users);
+              console.error('[Effect][verifyEmail$] Duplicate users found for email:', email, users);
               const errorObj = getError('ORB-AUTH-006');
               return of(UserActions.verifyEmailFailure({
                 error: errorObj ? errorObj.message : 'Duplicate users found for this email.'
               }));
-
             }
 
             if (!user || user.StatusCode !== 200 || users.length === 0) {
+              console.error('[Effect][verifyEmail$] User not found or error', { 
+                hasUser: !!user, 
+                statusCode: user?.StatusCode, 
+                usersLength: users.length 
+              });
               const errorObj = getError('ORB-AUTH-003');
               return of(UserActions.verifyEmailFailure({
                 error: errorObj ? errorObj.message : 'Email verification failed'
@@ -276,8 +272,13 @@ export class UserEffects {
             }
 
             // Now verify the email with the userId
+            console.debug('[Effect][verifyEmail$] User found, calling emailVerify', { userId: users[0]?.userId });
             return from(this.userService.emailVerify(code, email)).pipe(
               map(response => {
+                console.debug('[Effect][verifyEmail$] emailVerify response', { 
+                  statusCode: response.StatusCode, 
+                  message: response.Message 
+                });
                 if (response.StatusCode === 200) {
                   return UserActions.verifyEmailSuccess({ email });
                 }
@@ -287,6 +288,7 @@ export class UserEffects {
                 });
               }),
               catchError(_error => {
+                console.error('[Effect][verifyEmail$] emailVerify error', _error);
                 const errorObj = getError('ORB-AUTH-003');
                 return of(UserActions.verifyEmailFailure({
                   error: errorObj ? errorObj.message : 'Email verification failed'
@@ -295,6 +297,7 @@ export class UserEffects {
             );
           }),
           catchError(_error => {
+            console.error('[Effect][verifyEmail$] userExists error', _error);
             const errorObj = getError('ORB-AUTH-003');
             return of(UserActions.verifyEmailFailure({
               error: errorObj ? errorObj.message : 'Email verification failed'
@@ -313,10 +316,66 @@ export class UserEffects {
       switchMap(([action, currentUser]) => {
         const email = action.email;
         
-        if (!email || !currentUser) {
+        if (!email) {
           return of(UserActions.updateUserAfterEmailVerificationFailure({ 
-            error: 'Missing email or user data'
+            error: 'Missing email'
           }));
+        }
+
+        // If currentUser is null, query by email first
+        if (!currentUser) {
+          return from(this.userService.userExists({ email })).pipe(
+            switchMap(response => {
+              const users = Array.isArray(response.Data) ? response.Data : [];
+              if (response.StatusCode !== 200 || users.length === 0) {
+                return of(UserActions.updateUserAfterEmailVerificationFailure({ 
+                  error: 'User not found'
+                }));
+              }
+              
+              const user = users[0];
+              // Update the user record with verified email
+              const updateInput = {
+                userId: user.userId,
+                cognitoId: user.cognitoId,
+                cognitoSub: user.cognitoSub,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                status: user.status,
+                createdAt: user.createdAt,
+                updatedAt: new Date(),
+                phoneNumber: user.phoneNumber,
+                phoneVerified: user.phoneVerified,
+                emailVerified: true,
+                groups: user.groups,
+                mfaEnabled: user.mfaEnabled,
+                mfaSetupComplete: user.mfaSetupComplete
+              };
+
+              return from(this.userService.userUpdate(updateInput)).pipe(
+                map(updateResponse => {
+                  const updatedUser = updateResponse.Data;
+                  if (!updatedUser) {
+                    throw new Error('User update succeeded but no user data returned');
+                  }
+                  return UserActions.updateUserAfterEmailVerificationSuccess({ user: updatedUser });
+                }),
+                catchError(_error => {
+                  console.error('Failed to update user after email verification:', _error);
+                  return of(UserActions.updateUserAfterEmailVerificationFailure({ 
+                    error: _error instanceof Error ? _error.message : 'Failed to update user record'
+                  }));
+                })
+              );
+            }),
+            catchError(_error => {
+              console.error('Failed to query user for email verification update:', _error);
+              return of(UserActions.updateUserAfterEmailVerificationFailure({ 
+                error: _error instanceof Error ? _error.message : 'Failed to find user'
+              }));
+            })
+          );
         }
         
         // Update the user record with verified email

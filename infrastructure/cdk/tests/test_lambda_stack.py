@@ -258,7 +258,8 @@ class TestLambdaStackSSMParameters:
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
-                "Name": "/test/project/dev/lambda/sms-verification/arn",
+                # Note: Uses lowercase no-hyphens to match orb-schema-generator convention
+                "Name": "/test/project/dev/lambda/smsverification/arn",
                 "Type": "String",
             },
         )

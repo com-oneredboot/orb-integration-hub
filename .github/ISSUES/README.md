@@ -4,6 +4,7 @@
 
 | Issue | Team | Title | Status | Impact |
 |-------|------|-------|--------|--------|
+| #73 | orb-schema-generator | Enhancement: AppSyncApi Construct Missing Production Features (X-Ray, Secrets Manager, Scoped IAM) | Open | Medium |
 | #70 | orb-schema-generator | Bug: Lambda schema generates all attributes in both Input and Output types | Open | Critical |
 | #69 | orb-schema-generator | Bug: Generated Python files fail black and ruff linting | Open | High |
 | #64 | orb-schema-generator | Enhancement: Generate SSM parameters for DynamoDB table ARNs and names | Open | Low |
@@ -18,6 +19,7 @@
 
 | Issue | Team | Title | Resolution Date |
 |-------|------|-------|-----------------|
+| #72 | orb-schema-generator | Bug: Generated AppSyncApi Construct Has Hardcoded Values - Not Usable as Subcomponent | 2026-01-17 |
 | #71 | orb-schema-generator | TypeScript Generator Missing Timestamp Conversion for AWSTimestamp | 2026-01-17 |
 | #67 | orb-schema-generator | Bug: apiKeyAuthentication directive not rendered in GraphQL schema | 2026-01-17 |
 | #68 | orb-schema-generator | Enhancement: Generate Lambda Data Sources and Resolvers for LambdaType Schemas | 2026-01-17 |

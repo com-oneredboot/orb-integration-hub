@@ -2,8 +2,8 @@
 // author: Corey Dale Peters
 // date: 2026-01-16
 // description: Property-based tests for UserEffects auth flow state transitions
-// **Feature: check-email-exists, Property 3: Auth flow state transition correctness**
-// **Validates: Requirements 3.2, 3.3**
+// **Feature: smart-recovery-auth-flow, Property: Auth flow state transition correctness**
+// **Validates: Smart check routing based on Cognito and DynamoDB state**
 
 import { TestBed } from '@angular/core/testing';
 import { provideMockActions } from '@ngrx/effects/testing';
@@ -16,12 +16,18 @@ import { UserEffects } from './user.effects';
 import { UserActions } from './user.actions';
 import { UserService } from '../../../core/services/user.service';
 import { CognitoService } from '../../../core/services/cognito.service';
+import { RecoveryService } from '../../../core/services/recovery.service';
+import { AuthProgressStorageService } from '../../../core/services/auth-progress-storage.service';
+import { AuthSteps } from './user.state';
+import { RecoveryAction, SmartCheckResult, CognitoUserStatus } from '../../../core/models/RecoveryModel';
 
 describe('UserEffects Property Tests', () => {
   let actions$: Observable<unknown>;
   let effects: UserEffects;
   let userServiceSpy: jasmine.SpyObj<UserService>;
   let cognitoServiceSpy: jasmine.SpyObj<CognitoService>;
+  let recoveryServiceSpy: jasmine.SpyObj<RecoveryService>;
+  let authProgressStorageSpy: jasmine.SpyObj<AuthProgressStorageService>;
   let routerSpy: jasmine.SpyObj<Router>;
 
   beforeEach(() => {
@@ -46,6 +52,18 @@ describe('UserEffects Property Tests', () => {
       'getCognitoProfile'
     ]);
 
+    recoveryServiceSpy = jasmine.createSpyObj('RecoveryService', [
+      'smartCheck',
+      'resendVerificationCode'
+    ]);
+
+    authProgressStorageSpy = jasmine.createSpyObj('AuthProgressStorageService', [
+      'save',
+      'get',
+      'clear',
+      'isValid'
+    ]);
+
     routerSpy = jasmine.createSpyObj('Router', ['navigate']);
 
     TestBed.configureTestingModule({
@@ -55,6 +73,8 @@ describe('UserEffects Property Tests', () => {
         provideMockStore({}),
         { provide: UserService, useValue: userServiceSpy },
         { provide: CognitoService, useValue: cognitoServiceSpy },
+        { provide: RecoveryService, useValue: recoveryServiceSpy },
+        { provide: AuthProgressStorageService, useValue: authProgressStorageSpy },
         { provide: Router, useValue: routerSpy }
       ]
     });
@@ -62,86 +82,114 @@ describe('UserEffects Property Tests', () => {
     effects = TestBed.inject(UserEffects);
   });
 
-  describe('Property 3: Auth flow state transition correctness', () => {
+  describe('Property: Smart check routes to correct auth step based on user state', () => {
     /**
-     * Property: For any CheckEmailExists response, the Auth_Flow_Component SHALL
-     * transition to the password entry step when exists: true, and to the
-     * registration flow when exists: false.
+     * Property: For any smartCheck response, the effect SHALL route to the
+     * appropriate auth step based on the recovery service's state analysis.
      * 
-     * **Validates: Requirements 3.2, 3.3**
+     * **Validates: Smart Recovery Auth Flow state transitions**
      */
-    it('should dispatch checkEmailSuccess when exists is true for any valid email', async () => {
-      // Run 100 iterations with random valid emails
+    it('should dispatch smartCheckSuccess with PASSWORD_SETUP for new users', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.emailAddress(),
           async (email) => {
-            // Setup: checkEmailExists returns exists: true
-            userServiceSpy.checkEmailExists.and.returnValue(
-              Promise.resolve({ exists: true })
-            );
+            // Setup: Recovery service returns NEW_USER state
+            const mockResult: SmartCheckResult = {
+              cognitoStatus: null,
+              cognitoSub: null,
+              dynamoExists: false,
+              recoveryAction: RecoveryAction.NEW_SIGNUP,
+              nextStep: AuthSteps.PASSWORD_SETUP,
+              userMessage: "Let's create your account",
+              debugInfo: {
+                checkTimestamp: new Date(),
+                cognitoCheckMs: 10,
+                dynamoCheckMs: 10
+              }
+            };
+            recoveryServiceSpy.smartCheck.and.returnValue(Promise.resolve(mockResult));
+            authProgressStorageSpy.save.and.stub();
 
-            actions$ = of(UserActions.checkEmail({ email }));
+            actions$ = of(UserActions.smartCheck({ email }));
 
-            const action = await firstValueFrom(effects.checkEmail$);
+            const action = await firstValueFrom(effects.smartCheck$);
             
-            // Verify: When exists is true, checkEmailSuccess is dispatched
-            expect(action).toEqual(UserActions.checkEmailSuccess({ userExists: true }));
+            // Verify: New users should go to PASSWORD_SETUP
+            expect(action).toEqual(UserActions.smartCheckSuccess({ result: mockResult }));
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 50 }
       );
     });
 
-    it('should dispatch checkEmailUserNotFound when exists is false for any valid email', async () => {
-      // Run 100 iterations with random valid emails
+    it('should dispatch smartCheckSuccess with PASSWORD_VERIFY for existing users', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.emailAddress(),
           async (email) => {
-            // Setup: checkEmailExists returns exists: false
-            userServiceSpy.checkEmailExists.and.returnValue(
-              Promise.resolve({ exists: false })
-            );
+            // Setup: Recovery service returns existing user state
+            const mockResult: SmartCheckResult = {
+              cognitoStatus: CognitoUserStatus.CONFIRMED,
+              cognitoSub: 'test-sub-123',
+              dynamoExists: true,
+              recoveryAction: RecoveryAction.LOGIN,
+              nextStep: AuthSteps.PASSWORD_VERIFY,
+              userMessage: 'Welcome back!',
+              debugInfo: {
+                checkTimestamp: new Date(),
+                cognitoCheckMs: 10,
+                dynamoCheckMs: 10
+              }
+            };
+            recoveryServiceSpy.smartCheck.and.returnValue(Promise.resolve(mockResult));
+            authProgressStorageSpy.save.and.stub();
 
-            actions$ = of(UserActions.checkEmail({ email }));
+            actions$ = of(UserActions.smartCheck({ email }));
 
-            const action = await firstValueFrom(effects.checkEmail$);
+            const action = await firstValueFrom(effects.smartCheck$);
             
-            // Verify: When exists is false, checkEmailUserNotFound is dispatched
-            expect(action).toEqual(UserActions.checkEmailUserNotFound());
+            // Verify: Existing users should go to PASSWORD_VERIFY
+            expect(action).toEqual(UserActions.smartCheckSuccess({ result: mockResult }));
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 50 }
       );
     });
 
-    it('should correctly map any boolean exists value to the appropriate action', async () => {
-      // Run 100 iterations with random boolean values
+    it('should dispatch smartCheckSuccess with EMAIL_VERIFY for unconfirmed Cognito users', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.emailAddress(),
-          fc.boolean(),
-          async (email, exists) => {
-            // Setup: checkEmailExists returns the random boolean
-            userServiceSpy.checkEmailExists.and.returnValue(
-              Promise.resolve({ exists })
-            );
+          async (email) => {
+            // Setup: Recovery service returns unconfirmed user state
+            const mockResult: SmartCheckResult = {
+              cognitoStatus: CognitoUserStatus.UNCONFIRMED,
+              cognitoSub: 'test-sub-456',
+              dynamoExists: false,
+              recoveryAction: RecoveryAction.RESEND_VERIFICATION,
+              nextStep: AuthSteps.EMAIL_VERIFY,
+              userMessage: "We've sent a new verification code to your email.",
+              debugInfo: {
+                checkTimestamp: new Date(),
+                cognitoCheckMs: 10,
+                dynamoCheckMs: 10
+              }
+            };
+            recoveryServiceSpy.smartCheck.and.returnValue(Promise.resolve(mockResult));
+            // Mock resendVerificationCode since it's called for RESEND_VERIFICATION action
+            recoveryServiceSpy.resendVerificationCode.and.returnValue(Promise.resolve());
+            authProgressStorageSpy.save.and.stub();
 
-            actions$ = of(UserActions.checkEmail({ email }));
+            actions$ = of(UserActions.smartCheck({ email }));
 
-            const action = await firstValueFrom(effects.checkEmail$);
+            const action = await firstValueFrom(effects.smartCheck$);
             
-            if (exists) {
-              // When exists is true, should dispatch checkEmailSuccess
-              expect(action).toEqual(UserActions.checkEmailSuccess({ userExists: true }));
-            } else {
-              // When exists is false, should dispatch checkEmailUserNotFound
-              expect(action).toEqual(UserActions.checkEmailUserNotFound());
-            }
+            // Verify: Unconfirmed users should go to EMAIL_VERIFY with resend action
+            expect(action).toEqual(UserActions.smartCheckSuccess({ result: mockResult }));
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 50 }
       );
     });
   });

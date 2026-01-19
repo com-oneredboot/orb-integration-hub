@@ -273,7 +273,8 @@ class LambdaStack(Stack):
         )
 
         self.functions["sms-verification"] = function
-        self._export_lambda_arn(function, "sms-verification")
+        # Export with lowercase name to match orb-schema-generator convention
+        self._export_lambda_arn_custom(function, "smsverification")
         return function
 
     def _create_cognito_group_manager_lambda(self) -> lambda_.Function:

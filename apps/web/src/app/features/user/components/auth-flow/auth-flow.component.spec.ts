@@ -227,7 +227,7 @@ describe('AuthFlowComponent', () => {
     expect(activePasswordInput).toBeTruthy();
   });
 
-  it('should show error and not advance if checkEmailFailure is dispatched', () => {
+  it('should show error and not advance if smartCheckFailure is dispatched', () => {
     store.select.and.callFake((selector: unknown) => {
       if (selector === selectCurrentStep) {
         return of(AuthSteps.EMAIL);
