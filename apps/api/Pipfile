@@ -13,7 +13,6 @@ boto3 = "*"
 pynamodb = "*"
 requests = "*"
 stripe = "*"
-orb-schema-generator = "*"  # Schema generation tool
 
 [dev-packages]
 bandit = "*"
@@ -21,6 +20,7 @@ black = "*"
 flake8 = "*"
 isort = "*"
 pytest = "*"
+pytest-cov = "*"
 pre-commit = "*"
 ruff = "*"
 mypy = "*"
