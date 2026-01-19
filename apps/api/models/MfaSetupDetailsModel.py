@@ -7,6 +7,7 @@ Generated Python models for MfaSetupDetails
 from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Optional
 
+
 # Main Model
 class MfaSetupDetails(BaseModel):
     """MfaSetupDetails model."""
@@ -15,7 +16,10 @@ class MfaSetupDetails(BaseModel):
 
     qr_code: str = Field(..., description="The QR code value or label for the authenticator app")
     secret_key: str = Field(..., description="The secret key for TOTP setup")
-    setup_uri: Optional[str] = Field(None, description="The setup URI for the authenticator app (optional, as string)")
+    setup_uri: Optional[str] = Field(
+        None, description="The setup URI for the authenticator app (optional, as string)"
+    )
+
 
 # Response Types
 class MfaSetupDetailsResponse(BaseModel):

@@ -133,10 +133,7 @@ def check_cognito_user_status(email: str) -> tuple[str | None, str | None]:
 
     try:
         # Use adminGetUser with email as username (since we use email as username during signup)
-        response = cognito.admin_get_user(
-            UserPoolId=user_pool_id,
-            Username=email
-        )
+        response = cognito.admin_get_user(UserPoolId=user_pool_id, Username=email)
 
         cognito_status = response.get("UserStatus")
         cognito_sub = None
@@ -212,7 +209,7 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
             "email": email,
             "exists": exists,
             "cognitoStatus": cognito_status,
-            "cognitoSub": cognito_sub
+            "cognitoSub": cognito_sub,
         }
 
     except ValueError:

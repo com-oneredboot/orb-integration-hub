@@ -1,109 +1,98 @@
 # Pre-commit hooks configuration for orb-integration-hub
 # See https://pre-commit.com for more information
-# Note: Using local hooks to run in main pipenv environment instead of isolated environments
-# This avoids CodeArtifact authentication issues for standard development tools
+#
+# NOTE: Uses local hooks to run in main pipenv environment instead of isolated environments.
+# This avoids CodeArtifact authentication issues for standard development tools.
+#
+# SETUP: After cloning, create the git hook wrapper:
+#   cat > .git/hooks/pre-commit << 'EOF'
+#   #!/bin/bash
+#   pipenv run pre-commit run --config=.pre-commit-config.yaml
+#   EOF
+#   chmod +x .git/hooks/pre-commit
 #
 # CRITICAL: NEVER use `git commit --no-verify` to bypass pre-commit hooks.
-# Pre-commit hooks are MANDATORY quality gates that prevent broken code from being committed.
 
 repos:
-  # Run all tools in local pipenv environment to avoid CodeArtifact issues
   - repo: local
     hooks:
       # ============================================
-      # Frontend (Angular/TypeScript) Hooks
+      # Python Hooks
       # ============================================
 
-      # Frontend linting with ESLint
+      # Black - Code formatting
+      - id: black
+        name: Format Python with black
+        entry: pipenv run black --line-length=100
+        language: system
+        types: [python]
+        files: ^apps/api/.*\.py$
+
+      # Ruff - Fast linting
+      - id: ruff
+        name: Lint Python with ruff
+        entry: pipenv run ruff check --fix --exit-non-zero-on-fix
+        language: system
+        types: [python]
+        files: ^apps/api/.*\.py$
+
+      # MyPy - Static type checking
+      - id: mypy
+        name: Type check with mypy
+        entry: pipenv run mypy --ignore-missing-imports
+        language: system
+        types: [python]
+        files: ^apps/api/.*\.py$
+
+      # Bandit - Security scanning
+      - id: bandit
+        name: Security check with bandit
+        entry: pipenv run bandit -f json --skip B101
+        language: system
+        types: [python]
+        files: ^apps/api/.*\.py$
+        exclude: ^apps/api/tests/.*\.py$
+
+      # ============================================
+      # Frontend Hooks (Angular/TypeScript)
+      # ============================================
+
       - id: frontend-lint
         name: Lint frontend with ESLint
-        description: "Lint Angular/TypeScript code"
         entry: bash -c 'cd apps/web && npm run lint'
         language: system
         files: ^apps/web/.*\.(ts|html)$
         pass_filenames: false
 
       # ============================================
-      # Backend (Python) Hooks
+      # General File Hygiene
       # ============================================
 
-      # Code formatting with black
-      - id: black
-        name: Format code with black
-        description: "Auto-format Python code"
-        entry: pipenv run black --line-length=100
-        language: system
-        files: ^apps/api/.*\.py$
-        pass_filenames: true
-
-      # Linting with ruff
-      - id: ruff
-        name: Lint with ruff
-        description: "Fast Python linter"
-        entry: pipenv run ruff check --fix --exit-non-zero-on-fix
-        language: system
-        files: ^apps/api/.*\.py$
-        pass_filenames: true
-
-      # Type checking with mypy
-      - id: mypy
-        name: Type check with mypy
-        description: "Static type checking"
-        entry: pipenv run mypy --ignore-missing-imports
-        language: system
-        files: ^apps/api/.*\.py$
-        pass_filenames: true
-
-      # Security checks with bandit (exclude tests)
-      - id: bandit
-        name: Security check with bandit
-        description: "Find common security issues"
-        entry: pipenv run bandit -f json --skip B101
-        language: system
-        files: ^apps/api/.*\.py$
-        exclude: ^apps/api/tests/.*\.py$
-        pass_filenames: true
-
-      # ============================================
-      # General Hooks
-      # ============================================
-
-      # Check YAML syntax
       - id: check-yaml
         name: Check YAML syntax
-        description: "Validate YAML files"
         entry: python -c "import yaml, sys; yaml.safe_load(open(sys.argv[1], encoding='utf-8'))"
         language: system
-        files: \.ya?ml$
-        pass_filenames: true
+        types: [yaml]
 
-      # Check JSON syntax
       - id: check-json
         name: Check JSON syntax
-        description: "Validate JSON files"
         entry: python -c "import json, sys; json.load(open(sys.argv[1], encoding='utf-8'))"
         language: system
-        files: \.json$
-        pass_filenames: true
+        types: [json]
 
-      # Check TOML syntax
       - id: check-toml
         name: Check TOML syntax
-        description: "Validate TOML files"
         entry: python -c "import tomllib, sys; tomllib.load(open(sys.argv[1], 'rb'))"
         language: system
-        files: \.toml$
-        pass_filenames: true
+        types: [toml]
 
       # ============================================
       # Test Hooks
       # ============================================
 
-      # Run backend tests before commit
-      - id: pytest-check
+      - id: pytest-backend
         name: Run backend tests
-        description: "Run Python tests before commit"
-        entry: pipenv run pytest apps/api/tests/ --tb=short -q
+        entry: bash -c 'cd apps/api && pipenv run pytest tests/ --tb=short -q'
         language: system
         files: ^apps/api/.*\.py$
         pass_filenames: false

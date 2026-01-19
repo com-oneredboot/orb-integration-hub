@@ -60,6 +60,13 @@ cd apps/api && pipenv install --dev
 
 # Frontend
 cd apps/web && npm install
+
+# Pre-commit hooks (REQUIRED)
+cat > .git/hooks/pre-commit << 'EOF'
+#!/bin/bash
+pipenv run pre-commit run --config=.pre-commit-config.yaml
+EOF
+chmod +x .git/hooks/pre-commit
 ```
 
 ## Repositories Directory

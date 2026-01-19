@@ -11,13 +11,21 @@ from datetime import datetime
 from ..enums.role_status_enum import RoleStatus
 from ..enums.role_type_enum import RoleType
 
+
 # CRUD Input Types
 class ApplicationRolesCreateInput(BaseModel):
     """ApplicationRoles create input."""
 
-    application_role_id: str = Field(..., description="Unique identifier for the application role assignment (primary key)")
-    user_id: str = Field(..., description="ID of the user this role assignment belongs to (foreign key to Users)")
-    application_id: str = Field(..., description="ID of the application this role assignment belongs to (foreign key to Applications)")
+    application_role_id: str = Field(
+        ..., description="Unique identifier for the application role assignment (primary key)"
+    )
+    user_id: str = Field(
+        ..., description="ID of the user this role assignment belongs to (foreign key to Users)"
+    )
+    application_id: str = Field(
+        ...,
+        description="ID of the application this role assignment belongs to (foreign key to Applications)",
+    )
     role_id: str = Field(..., description="ID of the role (foreign key to Roles)")
     role_name: str = Field(..., description="Name of the role")
     role_type: RoleType = Field(..., description="Type of the role")
@@ -30,16 +38,27 @@ class ApplicationRolesCreateInput(BaseModel):
 class ApplicationRolesUpdateInput(BaseModel):
     """ApplicationRoles update input."""
 
-    application_role_id: Optional[str] = Field(..., description="Unique identifier for the application role assignment (primary key)")
-    user_id: Optional[str] = Field(..., description="ID of the user this role assignment belongs to (foreign key to Users)")
-    application_id: Optional[str] = Field(..., description="ID of the application this role assignment belongs to (foreign key to Applications)")
+    application_role_id: Optional[str] = Field(
+        ..., description="Unique identifier for the application role assignment (primary key)"
+    )
+    user_id: Optional[str] = Field(
+        ..., description="ID of the user this role assignment belongs to (foreign key to Users)"
+    )
+    application_id: Optional[str] = Field(
+        ...,
+        description="ID of the application this role assignment belongs to (foreign key to Applications)",
+    )
     role_id: Optional[str] = Field(..., description="ID of the role (foreign key to Roles)")
     role_name: Optional[str] = Field(..., description="Name of the role")
     role_type: Optional[RoleType] = Field(..., description="Type of the role")
-    permissions: Optional[List[str]] = Field(..., description="List of permissions granted to this role")
+    permissions: Optional[List[str]] = Field(
+        ..., description="List of permissions granted to this role"
+    )
     status: Optional[RoleStatus] = Field(..., description="Current status of the role assignment")
     created_at: Optional[datetime] = Field(..., description="When the role assignment was created")
-    updated_at: Optional[datetime] = Field(..., description="When the role assignment was last updated")
+    updated_at: Optional[datetime] = Field(
+        ..., description="When the role assignment was last updated"
+    )
 
 
 class ApplicationRolesDeleteInput(BaseModel):
@@ -86,9 +105,16 @@ class ApplicationRoles(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    application_role_id: str = Field(..., description="Unique identifier for the application role assignment (primary key)")
-    user_id: str = Field(..., description="ID of the user this role assignment belongs to (foreign key to Users)")
-    application_id: str = Field(..., description="ID of the application this role assignment belongs to (foreign key to Applications)")
+    application_role_id: str = Field(
+        ..., description="Unique identifier for the application role assignment (primary key)"
+    )
+    user_id: str = Field(
+        ..., description="ID of the user this role assignment belongs to (foreign key to Users)"
+    )
+    application_id: str = Field(
+        ...,
+        description="ID of the application this role assignment belongs to (foreign key to Applications)",
+    )
     role_id: str = Field(..., description="ID of the role (foreign key to Roles)")
     role_name: str = Field(..., description="Name of the role")
     role_type: RoleType = Field(..., description="Type of the role")
@@ -136,6 +162,7 @@ class ApplicationRoles(BaseModel):
             except (ValueError, TypeError):
                 pass
         return value
+
 
 # Response Types
 class ApplicationRolesResponse(BaseModel):

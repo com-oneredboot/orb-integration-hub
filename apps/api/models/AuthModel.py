@@ -10,6 +10,7 @@ from typing import List, Optional
 from .MfaSetupDetailsModel import MfaSetupDetails
 from .UsersModel import Users
 
+
 # Main Model
 class Auth(BaseModel):
     """Auth model."""
@@ -23,7 +24,9 @@ class Auth(BaseModel):
     needs_mfa: Optional[bool] = Field(None, description="Whether MFA is required")
     needs_mfa_setup: Optional[bool] = Field(None, description="Whether MFA setup is required")
     mfa_type: Optional[str] = Field(None, description="Type of MFA (e.g., 'sms', 'totp')")
-    mfa_setup_details: Optional[MfaSetupDetails] = Field(None, description="Details for MFA setup (MfaSetupDetails)")
+    mfa_setup_details: Optional[MfaSetupDetails] = Field(
+        None, description="Details for MFA setup (MfaSetupDetails)"
+    )
 
     @field_validator("is_signed_in", mode="before")
     @classmethod
@@ -69,6 +72,7 @@ class Auth(BaseModel):
             if value.lower() == "false":
                 return False
         return bool(value)
+
 
 # Response Types
 class AuthResponse(BaseModel):

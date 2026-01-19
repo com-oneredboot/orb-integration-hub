@@ -7,6 +7,7 @@ Generated Python models for AuthError
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Any, Dict, List, Optional
 
+
 # Main Model
 class AuthError(BaseModel):
     """AuthError model."""
@@ -17,6 +18,7 @@ class AuthError(BaseModel):
     message: str = Field(..., description="User-facing error message")
     description: Optional[str] = Field(None, description="Optional technical description")
     details: Optional[Dict[str, Any]] = Field(None, description="Optional extra data or context")
+
 
 # Response Types
 class AuthErrorResponse(BaseModel):

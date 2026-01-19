@@ -7,6 +7,7 @@ Generated Python models for CheckEmailExists
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing import List, Optional
 
+
 # Main Model
 class CheckEmailExists(BaseModel):
     """CheckEmailExists model."""
@@ -14,9 +15,16 @@ class CheckEmailExists(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     email: str = Field(..., description="Email address to check for existence")
-    exists: Optional[bool] = Field(None, description="Whether the email exists in the system (response only)")
-    cognito_status: Optional[str] = Field(None, description="Cognito user status (UNCONFIRMED, CONFIRMED, FORCE_CHANGE_PASSWORD, etc.)")
-    cognito_sub: Optional[str] = Field(None, description="Cognito user ID (sub) if user exists in Cognito")
+    exists: Optional[bool] = Field(
+        None, description="Whether the email exists in the system (response only)"
+    )
+    cognito_status: Optional[str] = Field(
+        None,
+        description="Cognito user status (UNCONFIRMED, CONFIRMED, FORCE_CHANGE_PASSWORD, etc.)",
+    )
+    cognito_sub: Optional[str] = Field(
+        None, description="Cognito user ID (sub) if user exists in Cognito"
+    )
 
     @field_validator("exists", mode="before")
     @classmethod
@@ -32,6 +40,7 @@ class CheckEmailExists(BaseModel):
             if value.lower() == "false":
                 return False
         return bool(value)
+
 
 # Response Types
 class CheckEmailExistsResponse(BaseModel):

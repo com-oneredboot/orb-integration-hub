@@ -7,6 +7,7 @@ Generated Python models for SmsVerification
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing import List, Optional
 
+
 # Main Model
 class SmsVerification(BaseModel):
     """SmsVerification model."""
@@ -15,7 +16,9 @@ class SmsVerification(BaseModel):
 
     phone_number: str = Field(..., description="the phone number to verify")
     code: Optional[float] = Field(None, description="the confirmation Code")
-    valid: Optional[bool] = Field(None, description="whether the provided code is valid (returned during verification)")
+    valid: Optional[bool] = Field(
+        None, description="whether the provided code is valid (returned during verification)"
+    )
 
     @field_validator("valid", mode="before")
     @classmethod
@@ -31,6 +34,7 @@ class SmsVerification(BaseModel):
             if value.lower() == "false":
                 return False
         return bool(value)
+
 
 # Response Types
 class SmsVerificationResponse(BaseModel):

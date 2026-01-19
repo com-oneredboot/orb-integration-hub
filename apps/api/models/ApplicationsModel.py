@@ -10,35 +10,62 @@ from datetime import datetime
 
 from ..enums.application_status_enum import ApplicationStatus
 
+
 # CRUD Input Types
 class ApplicationsCreateInput(BaseModel):
     """Applications create input."""
 
-    application_id: str = Field(..., description="Unique identifier for the application (primary key)")
+    application_id: str = Field(
+        ..., description="Unique identifier for the application (primary key)"
+    )
     name: str = Field(..., description="Name of the application")
-    organization_id: str = Field(..., description="ID of the organization this application belongs to (foreign key to Organizations)")
-    owner_id: str = Field(..., description="ID of the user who owns the application (foreign key to Users)")
+    organization_id: str = Field(
+        ...,
+        description="ID of the organization this application belongs to (foreign key to Organizations)",
+    )
+    owner_id: str = Field(
+        ..., description="ID of the user who owns the application (foreign key to Users)"
+    )
     status: ApplicationStatus = Field(..., description="Current status of the application")
     created_at: datetime = Field(..., description="When the application was created")
     updated_at: datetime = Field(..., description="When the application was last updated")
     api_key: str = Field(..., description="Current active API key for the application")
-    api_key_next: Optional[str] = Field(None, description="Next API key for rotation (dual key system)")
-    environments: List[str] = Field(..., description="List of available environments for this application (max 5 for starter plan)")
+    api_key_next: Optional[str] = Field(
+        None, description="Next API key for rotation (dual key system)"
+    )
+    environments: List[str] = Field(
+        ...,
+        description="List of available environments for this application (max 5 for starter plan)",
+    )
 
 
 class ApplicationsUpdateInput(BaseModel):
     """Applications update input."""
 
-    application_id: Optional[str] = Field(..., description="Unique identifier for the application (primary key)")
+    application_id: Optional[str] = Field(
+        ..., description="Unique identifier for the application (primary key)"
+    )
     name: Optional[str] = Field(..., description="Name of the application")
-    organization_id: Optional[str] = Field(..., description="ID of the organization this application belongs to (foreign key to Organizations)")
-    owner_id: Optional[str] = Field(..., description="ID of the user who owns the application (foreign key to Users)")
-    status: Optional[ApplicationStatus] = Field(..., description="Current status of the application")
+    organization_id: Optional[str] = Field(
+        ...,
+        description="ID of the organization this application belongs to (foreign key to Organizations)",
+    )
+    owner_id: Optional[str] = Field(
+        ..., description="ID of the user who owns the application (foreign key to Users)"
+    )
+    status: Optional[ApplicationStatus] = Field(
+        ..., description="Current status of the application"
+    )
     created_at: Optional[datetime] = Field(..., description="When the application was created")
     updated_at: Optional[datetime] = Field(..., description="When the application was last updated")
     api_key: Optional[str] = Field(..., description="Current active API key for the application")
-    api_key_next: Optional[str] = Field(None, description="Next API key for rotation (dual key system)")
-    environments: Optional[List[str]] = Field(..., description="List of available environments for this application (max 5 for starter plan)")
+    api_key_next: Optional[str] = Field(
+        None, description="Next API key for rotation (dual key system)"
+    )
+    environments: Optional[List[str]] = Field(
+        ...,
+        description="List of available environments for this application (max 5 for starter plan)",
+    )
 
 
 class ApplicationsDeleteInput(BaseModel):
@@ -73,16 +100,28 @@ class Applications(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    application_id: str = Field(..., description="Unique identifier for the application (primary key)")
+    application_id: str = Field(
+        ..., description="Unique identifier for the application (primary key)"
+    )
     name: str = Field(..., description="Name of the application")
-    organization_id: str = Field(..., description="ID of the organization this application belongs to (foreign key to Organizations)")
-    owner_id: str = Field(..., description="ID of the user who owns the application (foreign key to Users)")
+    organization_id: str = Field(
+        ...,
+        description="ID of the organization this application belongs to (foreign key to Organizations)",
+    )
+    owner_id: str = Field(
+        ..., description="ID of the user who owns the application (foreign key to Users)"
+    )
     status: ApplicationStatus = Field(..., description="Current status of the application")
     created_at: datetime = Field(..., description="When the application was created")
     updated_at: datetime = Field(..., description="When the application was last updated")
     api_key: str = Field(..., description="Current active API key for the application")
-    api_key_next: Optional[str] = Field(None, description="Next API key for rotation (dual key system)")
-    environments: List[str] = Field(..., description="List of available environments for this application (max 5 for starter plan)")
+    api_key_next: Optional[str] = Field(
+        None, description="Next API key for rotation (dual key system)"
+    )
+    environments: List[str] = Field(
+        ...,
+        description="List of available environments for this application (max 5 for starter plan)",
+    )
 
     @field_validator("created_at", mode="before")
     @classmethod
@@ -123,6 +162,7 @@ class Applications(BaseModel):
             except (ValueError, TypeError):
                 pass
         return value
+
 
 # Response Types
 class ApplicationsResponse(BaseModel):
