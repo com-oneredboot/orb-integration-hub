@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from contextlib import contextmanager
 
 import pytest
-from moto import mock_dynamodb
+from moto import mock_aws
 
 from .organization_test_data_factory import OrganizationTestDataFactory
 

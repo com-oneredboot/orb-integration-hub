@@ -7,7 +7,7 @@ import unittest
 import json
 import time
 from unittest.mock import patch, MagicMock
-from moto import mock_secretsmanager, mock_sns, mock_dynamodb
+from moto import mock_aws
 import boto3
 
 # Import the lambda function
@@ -49,9 +49,7 @@ class TestSMSVerificationSecurity(unittest.TestCase):
             if key in os.environ:
                 del os.environ[key]
 
-    @mock_secretsmanager
-    @mock_sns
-    @mock_dynamodb
+    @mock_aws
     def test_valid_sms_generation_security(self):
         """Test secure SMS code generation and sending"""
         # Setup mocks
@@ -63,8 +61,7 @@ class TestSMSVerificationSecurity(unittest.TestCase):
         self.assertIn("sent successfully", result["Message"])
         self.assertEqual(result["Data"]["phoneNumber"], "+1234567890")
 
-    @mock_secretsmanager
-    @mock_dynamodb
+    @mock_aws
     def test_rate_limiting_security(self):
         """Test rate limiting protection against SMS abuse"""
         self._setup_rate_limit_mocks()
@@ -191,7 +188,7 @@ class TestSMSVerificationSecurity(unittest.TestCase):
         timing_diff = abs(avg_valid - avg_invalid)
         self.assertLess(timing_diff, 0.01, "Timing attack vulnerability detected")
 
-    @mock_secretsmanager
+    @mock_aws
     def test_secret_management_security(self):
         """Test secure secret management and caching"""
         # Setup Secrets Manager mock
