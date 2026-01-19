@@ -21,12 +21,14 @@ flake8 = "*"
 isort = "*"
 pytest = "*"
 pytest-cov = "*"
+pytest-asyncio = "*"
 pre-commit = "*"
 ruff = "*"
 mypy = "*"
 types-requests = "*"
 moto = {extras = ["dynamodb"], version = "*"}
 hypothesis = ">=6.82.0"
+psutil = "*"
 
 [requires]
 python_version = "3.12"

@@ -22,7 +22,7 @@ from .organization_test_data_factory import OrganizationTestDataFactory
 
 
 @dataclass
-class TestEnvironmentConfig:
+class EnvironmentConfig:
     """Configuration for test environment setup."""
 
     environment_name: str
@@ -36,10 +36,10 @@ class TestEnvironmentConfig:
     max_test_duration_minutes: int = 30
 
 
-class TestEnvironmentManager:
+class EnvironmentManager:
     """Manages test environments with automated setup, seeding, and cleanup."""
 
-    def __init__(self, config: TestEnvironmentConfig):
+    def __init__(self, config: EnvironmentConfig):
         self.config = config
         self.factory = OrganizationTestDataFactory()
         self.dynamodb_client = None
@@ -614,14 +614,14 @@ class TestEnvironmentManager:
 def test_environment_manager():
     """Pytest fixture for test environment manager."""
 
-    config = TestEnvironmentConfig(
+    config = EnvironmentConfig(
         environment_name="pytest_session",
         auto_cleanup=True,
         isolation_level="session",
         enable_mocking=True,
     )
 
-    manager = TestEnvironmentManager(config)
+    manager = EnvironmentManager(config)
 
     with manager.test_environment("comprehensive") as env:
         yield env
@@ -631,14 +631,14 @@ def test_environment_manager():
 def isolated_test_environment():
     """Pytest fixture for isolated function-level test environment."""
 
-    config = TestEnvironmentConfig(
+    config = EnvironmentConfig(
         environment_name=f"pytest_function_{int(time.time())}",
         auto_cleanup=True,
         isolation_level="function",
         enable_mocking=True,
     )
 
-    manager = TestEnvironmentManager(config)
+    manager = EnvironmentManager(config)
 
     with manager.test_environment("basic") as env:
         yield env
@@ -648,7 +648,7 @@ def isolated_test_environment():
 def performance_test_environment():
     """Pytest fixture for performance testing environment."""
 
-    config = TestEnvironmentConfig(
+    config = EnvironmentConfig(
         environment_name="pytest_performance",
         auto_cleanup=True,
         isolation_level="class",
@@ -656,7 +656,7 @@ def performance_test_environment():
         performance_testing=True,
     )
 
-    manager = TestEnvironmentManager(config)
+    manager = EnvironmentManager(config)
 
     with manager.test_environment("performance") as env:
         yield env

@@ -14,7 +14,7 @@ import tempfile
 from typing import Dict, Any
 from unittest.mock import Mock, patch
 
-from .test_environment_manager import TestEnvironmentManager, TestEnvironmentConfig
+from .test_environment_manager import EnvironmentManager, EnvironmentConfig
 from .organization_test_data_factory import OrganizationTestDataFactory
 from ..models.OrganizationUserRoleEnum import OrganizationUserRole
 
@@ -103,14 +103,14 @@ def isolated_organization_factory():
 def shared_test_environment(test_config):
     """Shared test environment for session-level tests."""
 
-    config = TestEnvironmentConfig(
+    config = EnvironmentConfig(
         environment_name="pytest_shared",
         auto_cleanup=True,
         isolation_level="session",
         enable_mocking=test_config["mock_dynamodb"],
     )
 
-    manager = TestEnvironmentManager(config)
+    manager = EnvironmentManager(config)
 
     with manager.test_environment("comprehensive") as env:
         yield env
@@ -120,14 +120,14 @@ def shared_test_environment(test_config):
 def clean_test_environment(test_config):
     """Clean test environment for each test function."""
 
-    config = TestEnvironmentConfig(
+    config = EnvironmentConfig(
         environment_name=f"pytest_clean_{pytest.current_test_id()}",
         auto_cleanup=True,
         isolation_level="function",
         enable_mocking=test_config["mock_dynamodb"],
     )
 
-    manager = TestEnvironmentManager(config)
+    manager = EnvironmentManager(config)
 
     with manager.test_environment("basic") as env:
         yield env
@@ -139,14 +139,14 @@ def class_test_environment(test_config, request):
 
     class_name = request.cls.__name__ if request.cls else "unknown"
 
-    config = TestEnvironmentConfig(
+    config = EnvironmentConfig(
         environment_name=f"pytest_class_{class_name}",
         auto_cleanup=True,
         isolation_level="class",
         enable_mocking=test_config["mock_dynamodb"],
     )
 
-    manager = TestEnvironmentManager(config)
+    manager = EnvironmentManager(config)
 
     # Determine scenario based on class name
     scenario = "basic"
@@ -301,7 +301,7 @@ def performance_test_environment(test_config):
     else:
         pass
 
-    config = TestEnvironmentConfig(
+    config = EnvironmentConfig(
         environment_name="pytest_performance",
         auto_cleanup=True,
         isolation_level="session",
@@ -309,7 +309,7 @@ def performance_test_environment(test_config):
         performance_testing=True,
     )
 
-    manager = TestEnvironmentManager(config)
+    manager = EnvironmentManager(config)
 
     with manager.test_environment("performance") as env:
         yield env
