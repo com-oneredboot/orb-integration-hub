@@ -10,12 +10,10 @@ import logging
 import os
 from typing import Dict, Any
 
-
 # Local Imports
 from layers.authentication_dynamodb import CoreDynamoDBService
 from layers.authentication_dynamodb.exceptions import AuthDynamoDBError
 from layers.authentication_dynamodb.core import auth_service
-
 
 # Environment variables
 ENV_LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")

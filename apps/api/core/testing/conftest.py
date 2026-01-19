@@ -18,7 +18,6 @@ from .test_environment_manager import TestEnvironmentManager, TestEnvironmentCon
 from .organization_test_data_factory import OrganizationTestDataFactory
 from ..models.OrganizationUserRoleEnum import OrganizationUserRole
 
-
 # =============================================================================
 # Test Configuration
 # =============================================================================

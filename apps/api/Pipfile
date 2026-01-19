@@ -16,7 +16,7 @@ stripe = "*"
 
 [dev-packages]
 bandit = "*"
-black = "*"
+black = "==26.1.0"
 flake8 = "*"
 isort = "*"
 pytest = "*"

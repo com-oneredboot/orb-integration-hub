@@ -43,6 +43,7 @@ repos:
         language: system
         types: [python]
         files: ^apps/api/.*\.py$
+        exclude: ^apps/api/lambdas/.*\.py$
 
       # Bandit - Security scanning
       - id: bandit
