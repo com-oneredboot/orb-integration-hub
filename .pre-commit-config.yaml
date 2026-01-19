@@ -29,9 +29,10 @@ repos:
         files: ^apps/api/.*\.py$
 
       # Ruff - Fast linting
+      # NOTE: No --fix flag to match CI behavior and catch unfixable errors like F841
       - id: ruff
         name: Lint Python with ruff
-        entry: pipenv run ruff check --fix --exit-non-zero-on-fix
+        entry: pipenv run ruff check
         language: system
         types: [python]
         files: ^apps/api/.*\.py$
