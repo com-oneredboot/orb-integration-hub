@@ -152,7 +152,7 @@ class TestPerformanceTestingSuite:
         """Test bulk operations performance."""
 
         # Create test organization for bulk operations
-        test_org = isolated_organization_factory.create_test_organization(
+        _test_org = isolated_organization_factory.create_test_organization(
             name="BulkTestOrg", size="large"
         )
 
@@ -184,7 +184,7 @@ class TestPerformanceTestingSuite:
         """Test database query optimization validation."""
 
         # Create large organization for query testing
-        large_org = isolated_organization_factory.create_test_organization(
+        _large_org = isolated_organization_factory.create_test_organization(
             name="QueryTestOrg", size="large"
         )
 
@@ -206,7 +206,7 @@ class TestPerformanceTestingSuite:
     async def test_concurrent_operations(self, performance_runner, isolated_organization_factory):
         """Test concurrent operations handling."""
 
-        test_org = isolated_organization_factory.create_test_organization(
+        _test_org = isolated_organization_factory.create_test_organization(
             name="ConcurrentTestOrg", size="medium"
         )
 
