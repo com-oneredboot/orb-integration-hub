@@ -57,7 +57,7 @@ class TestEnvironmentManager:
 
         if self.config.enable_mocking:
             # Use moto for mocking
-            self.mock_dynamodb = mock_dynamodb()
+            self.mock_dynamodb = mock_aws()
             self.mock_dynamodb.start()
 
             self.dynamodb_client = boto3.client("dynamodb", region_name=self.config.aws_region)
