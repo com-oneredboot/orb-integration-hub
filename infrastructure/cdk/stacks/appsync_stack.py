@@ -15,8 +15,10 @@ The generated construct provides:
 import sys
 from pathlib import Path
 
-# Add parent directory to path for imports when running via CDK CLI
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add cdk directory to path for imports (handles both direct and indirect imports)
+_cdk_dir = Path(__file__).parent.parent
+if str(_cdk_dir) not in sys.path:
+    sys.path.insert(0, str(_cdk_dir))
 
 from aws_cdk import (
     Duration,
