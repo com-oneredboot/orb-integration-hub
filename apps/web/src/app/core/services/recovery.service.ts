@@ -46,10 +46,11 @@ export class RecoveryService {
     this.debugLog.logApi('smartCheck', 'pending', { email: this.maskEmail(email) });
 
     try {
-      // Check both Cognito and DynamoDB
+      // Check both Cognito and DynamoDB via CheckEmailExists Lambda
+      // This single call returns both Cognito status AND DynamoDB existence
       const cognitoStart = Date.now();
       const checkResult = await this.userService.checkEmailExists(email);
-      const cognitoCheckMs = Date.now() - cognitoStart;
+      const checkMs = Date.now() - cognitoStart;
       
       // Debug: Log raw checkResult
       console.debug('[RecoveryService][smartCheck] checkEmailExists result:', {
@@ -58,21 +59,10 @@ export class RecoveryService {
         cognitoSub: checkResult.cognitoSub
       });
 
-      const dynamoStart = Date.now();
-      const dynamoResult = await this.userService.userExists({ email });
-      const dynamoCheckMs = Date.now() - dynamoStart;
-      
-      // Debug: Log raw dynamoResult
-      console.debug('[RecoveryService][smartCheck] userExists result:', {
-        statusCode: dynamoResult.StatusCode,
-        dataLength: dynamoResult.Data?.length ?? 0
-      });
-
       const cognitoStatus = this.parseCognitoStatus(checkResult.cognitoStatus);
       const cognitoSub = checkResult.cognitoSub ?? null;
-      const dynamoExists = dynamoResult.StatusCode === 200 && 
-                          dynamoResult.Data !== null && 
-                          dynamoResult.Data.length > 0;
+      // Use the exists field from CheckEmailExists - it checks DynamoDB
+      const dynamoExists = checkResult.exists === true;
 
       // Debug: Log parsed values
       console.debug('[RecoveryService][smartCheck] Parsed state:', {
@@ -102,8 +92,8 @@ export class RecoveryService {
         userMessage: message,
         debugInfo: {
           checkTimestamp: new Date(),
-          cognitoCheckMs,
-          dynamoCheckMs
+          cognitoCheckMs: checkMs,
+          dynamoCheckMs: 0 // DynamoDB check is included in checkEmailExists
         }
       };
 
