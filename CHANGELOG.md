@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- CDK tests failing in CI due to missing `generated` module
+  - Added `orb-schema-generator` as dev dependency to `infrastructure/Pipfile`
+  - Added schema generation step to `deploy-infrastructure.yml` workflow
+
 ### Removed
 - Comprehensive testing CI workflow (`comprehensive-testing.yml`) - was failing due to incomplete implementation
 - Integration test infrastructure (`apps/web/integration-tests/`) - missing jest dependency

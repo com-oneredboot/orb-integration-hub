@@ -3,6 +3,11 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
+[[source]]
+url = "https://aws:${CODEARTIFACT_AUTH_TOKEN}@orb-infrastructure-shared-codeartifact-domain-432045270100.d.codeartifact.us-east-1.amazonaws.com/pypi/orb-infrastructure-shared-pypi-repo/simple/"
+verify_ssl = true
+name = "codeartifact"
+
 [packages]
 aws-cdk-lib = ">=2.172.0"
 constructs = ">=10.0.0,<11.0.0"
@@ -11,6 +16,7 @@ pyyaml = ">=6.0.0"
 [dev-packages]
 pytest = "*"
 pytest-cov = ">=4.1.0"
+orb-schema-generator = {version = "==0.18.1", index = "codeartifact"}
 
 [requires]
 python_version = "3.12"
