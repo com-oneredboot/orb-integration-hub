@@ -107,14 +107,14 @@ def main() -> None:
         description="Lambda functions for business logic",
     )
 
-    # AppSync Stack - GraphQL API (depends on Cognito, DynamoDB)
-    # Lambda ARNs are read from SSM parameters (no direct stack reference needed)
+    # AppSync Stack - GraphQL API (depends on Cognito, DynamoDB, Lambda)
     appsync_stack = AppSyncStack(
         app,
         f"{stack_prefix}-appsync",
         config=config,
         cognito_stack=cognito_stack,
         dynamodb_stack=dynamodb_stack,
+        lambda_stack=lambda_stack,
         env=env,
         description="AppSync GraphQL API",
     )
@@ -135,8 +135,7 @@ def main() -> None:
 
     appsync_stack.add_dependency(cognito_stack)
     appsync_stack.add_dependency(dynamodb_stack)
-    # NOTE: Lambda dependency removed - AppSync reads Lambda ARNs from SSM parameters
-    # This eliminates CloudFormation cross-stack exports
+    appsync_stack.add_dependency(lambda_stack)
 
     monitoring_stack.add_dependency(appsync_stack)
 

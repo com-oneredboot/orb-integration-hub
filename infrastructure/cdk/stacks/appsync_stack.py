@@ -35,6 +35,7 @@ from constructs import Construct
 from config import Config
 from stacks.cognito_stack import CognitoStack
 from stacks.dynamodb_stack import DynamoDBStack
+from stacks.lambda_stack import LambdaStack
 
 # Import generated AppSync construct
 from generated.appsync.api import AppSyncApi
@@ -50,6 +51,7 @@ class AppSyncStack(Stack):
         config: Config,
         cognito_stack: CognitoStack,
         dynamodb_stack: DynamoDBStack,
+        lambda_stack: LambdaStack,
         **kwargs,
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
