@@ -6,30 +6,63 @@ fileMatchPattern: "**/infrastructure/**,**/cloudformation/**"
 
 This file loads automatically when working with infrastructure/CloudFormation files.
 
-## CRITICAL: No CloudFormation Outputs/Exports
+## Documentation References
+
+For complete CDK coding standards, see:
+- #[[file:repositories/orb-templates/docs/coding-standards/cdk.md]]
+
+## CRITICAL: No CloudFormation Outputs/Exports - EVER
 
 **NEVER use CloudFormation Outputs with Export for cross-stack references.**
+**NEVER pass stack objects between stacks (this creates implicit exports).**
 
 CloudFormation exports create tight coupling between stacks that causes deployment failures:
 - Cannot update an export while another stack imports it
 - Layer version updates fail with "Cannot update export as it is in use"
 - Creates deployment order dependencies that are hard to manage
 
-**ALWAYS use SSM Parameters instead:**
+### What NOT to do:
 
 ```python
-# WRONG - Creates export dependency
+# WRONG - Explicit export
 CfnOutput(self, "LayerArn", value=layer.layer_version_arn, export_name="layer-arn")
 
-# CORRECT - Use SSM Parameter
-ssm.StringParameter(self, "LayerArnParam",
-    parameter_name=f"{prefix}-layer-arn",
-    string_value=layer.layer_version_arn,
+# WRONG - Passing stack objects creates IMPLICIT exports
+class MonitoringStack(Stack):
+    def __init__(self, appsync_stack: AppSyncStack, ...):  # BAD!
+        api_id = appsync_stack.api.api_id  # Creates implicit export!
+
+# WRONG - Using resources from another stack
+lambda_stack.functions["sms-verification"]  # Creates implicit export!
+dynamodb_stack.tables["users"]  # Creates implicit export!
+```
+
+### What TO do:
+
+```python
+# CORRECT - Use SSM Parameters for ALL cross-stack references
+ssm.StringParameter(self, "ApiIdParam",
+    parameter_name=config.ssm_parameter_name("appsync/api-id"),
+    string_value=self.api.api_id,
 )
 
 # In consuming stack - read from SSM
-layer_arn = ssm.StringParameter.value_for_string_parameter(
-    self, f"{prefix}-layer-arn"
+api_id = ssm.StringParameter.value_for_string_parameter(
+    self, config.ssm_parameter_name("appsync/api-id")
+)
+```
+
+### Stack Dependencies
+
+Use `add_dependency()` for deployment ordering, but NEVER pass stack objects:
+
+```python
+# CORRECT - Dependency without passing stack object
+monitoring_stack.add_dependency(appsync_stack)
+
+# Then read values from SSM in monitoring_stack
+api_id = ssm.StringParameter.value_for_string_parameter(
+    self, config.ssm_parameter_name("appsync/api-id")
 )
 ```
 

@@ -7,15 +7,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import pytest
-from aws_cdk import App
+from aws_cdk import App, Stack
 from aws_cdk.assertions import Match, Template
 from aws_cdk import aws_ssm as ssm
 
 from config import Config
-from stacks.appsync_stack import AppSyncStack
-from stacks.cognito_stack import CognitoStack
-from stacks.dynamodb_stack import DynamoDBStack
-from stacks.lambda_stack import LambdaStack
 from stacks.monitoring_stack import MonitoringStack
 
 
@@ -35,53 +31,31 @@ def test_config() -> Config:
 
 @pytest.fixture
 def template(test_config: Config) -> Template:
-    """Create CDK template from MonitoringStack with dependencies."""
+    """Create CDK template from MonitoringStack.
+    
+    MonitoringStack reads AppSync API ID from SSM parameter (no cross-stack reference).
+    We create a mock SSM parameter in a helper stack for testing.
+    """
     app = App()
 
-    # Create dependency stacks
-    cognito_stack = CognitoStack(
-        app,
-        "TestCognitoStack",
-        config=test_config,
-    )
-    dynamodb_stack = DynamoDBStack(
-        app,
-        "TestDynamoDBStack",
-        config=test_config,
-    )
-    
-    # Create mock SSM parameter for layer ARN (normally created by lambda-layers stack)
-    # Uses path-based naming: /customer/project/env/lambda-layers/layer-name/arn
+    # Create a helper stack to hold the mock SSM parameter
+    # This simulates the AppSync stack creating the parameter
+    helper_stack = Stack(app, "HelperStack")
     ssm.StringParameter(
-        cognito_stack,
-        "MockOrganizationsSecurityLayerArn",
-        parameter_name=test_config.ssm_parameter_name("lambda-layers/organizations-security/arn"),
-        string_value="arn:aws:lambda:us-east-1:123456789012:layer:test-project-dev-organizations-security-layer:1",
-    )
-    
-    lambda_stack = LambdaStack(
-        app,
-        "TestLambdaStack",
-        config=test_config,
-        cognito_stack=cognito_stack,
-        dynamodb_stack=dynamodb_stack,
-    )
-    appsync_stack = AppSyncStack(
-        app,
-        "TestAppSyncStack",
-        config=test_config,
-        cognito_stack=cognito_stack,
-        dynamodb_stack=dynamodb_stack,
-        lambda_stack=lambda_stack,
+        helper_stack,
+        "MockAppSyncApiId",
+        parameter_name=test_config.ssm_parameter_name("appsync/api-id"),
+        string_value="test-appsync-api-id-12345",
     )
 
-    # Create Monitoring stack
+    # Create Monitoring stack (reads API ID from SSM)
     stack = MonitoringStack(
         app,
         "TestMonitoringStack",
         config=test_config,
-        appsync_stack=appsync_stack,
     )
+    stack.add_dependency(helper_stack)
+    
     return Template.from_stack(stack)
 
 

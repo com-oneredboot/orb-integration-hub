@@ -119,12 +119,12 @@ def main() -> None:
         description="AppSync GraphQL API",
     )
 
-    # Monitoring Stack - CloudWatch dashboards and alarms (depends on AppSync)
+    # Monitoring Stack - CloudWatch dashboards and alarms
+    # Reads AppSync API ID from SSM parameter (no cross-stack reference)
     monitoring_stack = MonitoringStack(
         app,
         f"{stack_prefix}-monitoring",
         config=config,
-        appsync_stack=appsync_stack,
         env=env,
         description="Monitoring: CloudWatch dashboards, alarms, GuardDuty",
     )
@@ -137,6 +137,7 @@ def main() -> None:
     appsync_stack.add_dependency(dynamodb_stack)
     appsync_stack.add_dependency(lambda_stack)
 
+    # Monitoring depends on AppSync SSM parameter existing
     monitoring_stack.add_dependency(appsync_stack)
 
     # Synthesize the app

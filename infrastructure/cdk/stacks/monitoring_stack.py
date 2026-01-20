@@ -9,6 +9,9 @@ Creates:
 - Audit log group with KMS encryption
 - Security alert SNS topic
 - SSM parameters for cross-stack references
+
+Note: This stack reads AppSync API ID from SSM parameter to avoid CloudFormation
+cross-stack exports which cause update failures.
 """
 
 import sys
@@ -34,7 +37,6 @@ from aws_cdk import (
 from constructs import Construct
 
 from config import Config
-from stacks.appsync_stack import AppSyncStack
 
 
 class MonitoringStack(Stack):
@@ -45,13 +47,16 @@ class MonitoringStack(Stack):
         scope: Construct,
         construct_id: str,
         config: Config,
-        appsync_stack: AppSyncStack,
         **kwargs,
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
         self.config = config
-        self.appsync_stack = appsync_stack
         self._apply_tags()
+        
+        # Read AppSync API ID from SSM parameter (set by AppSync stack)
+        self.appsync_api_id = ssm.StringParameter.value_for_string_parameter(
+            self, config.ssm_parameter_name("appsync/api-id")
+        )
 
         # Create KMS key for audit encryption
         self.audit_encryption_key = self._create_audit_encryption_key()
@@ -166,7 +171,7 @@ class MonitoringStack(Stack):
 
     def _create_appsync_dashboard(self) -> cloudwatch.Dashboard:
         """Create CloudWatch dashboard for AppSync metrics."""
-        api_id = self.appsync_stack.api.api_id
+        api_id = self.appsync_api_id
 
         return cloudwatch.Dashboard(
             self,
@@ -288,7 +293,7 @@ class MonitoringStack(Stack):
 
     def _create_appsync_alarms(self) -> None:
         """Create CloudWatch alarms for AppSync metrics."""
-        api_id = self.appsync_stack.api.api_id
+        api_id = self.appsync_api_id
 
         # 4XX Error Alarm
         cloudwatch.Alarm(
@@ -349,7 +354,7 @@ class MonitoringStack(Stack):
 
     def _create_anomaly_detection(self) -> None:
         """Create anomaly detectors and alarms for AppSync metrics."""
-        api_id = self.appsync_stack.api.api_id
+        api_id = self.appsync_api_id
 
         # Request Count Anomaly Detector
         cloudwatch.CfnAnomalyDetector(
