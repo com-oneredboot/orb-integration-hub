@@ -135,7 +135,10 @@ def main() -> None:
 
     appsync_stack.add_dependency(cognito_stack)
     appsync_stack.add_dependency(dynamodb_stack)
-    appsync_stack.add_dependency(lambda_stack)  # Lambda must deploy first to create SSM params
+    # NOTE: Lambda dependency temporarily removed to fix CloudFormation export issue
+    # AppSync reads Lambda ARNs from SSM parameters, so Lambda must be deployed first
+    # in normal operation. Re-add after export cleanup is complete.
+    # appsync_stack.add_dependency(lambda_stack)
 
     monitoring_stack.add_dependency(appsync_stack)
 
