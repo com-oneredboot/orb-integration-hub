@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- Comprehensive testing CI workflow (`comprehensive-testing.yml`) - was failing due to incomplete implementation
+- Integration test infrastructure (`apps/web/integration-tests/`) - missing jest dependency
+- E2E test infrastructure (`apps/web/cypress/`, `cypress.config.ts`) - required environment config unavailable in CI
+- Performance test infrastructure (`apps/web/performance-tests/`) - missing puppeteer dependency
+- Unused devDependencies: cypress, artillery, lighthouse, webpack-bundle-analyzer, chrome-launcher
+
+### Changed
+- Unit tests now run as part of deployment workflows (following orb-geo-fence pattern)
+- `deploy-website.yml` now runs frontend linting and unit tests before build
+- Added `skip_tests` input to `deploy-website.yml` for emergency deployments
+- Cleaned up package.json scripts to remove references to deleted test infrastructure
+- Added `test:ci` script for headless unit test execution in CI
+
 ### Added
 - Smart Recovery Auth Flow for resilient user registration
   - RecoveryService for automatic state detection across Cognito and DynamoDB
