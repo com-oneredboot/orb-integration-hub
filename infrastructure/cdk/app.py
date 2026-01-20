@@ -135,7 +135,8 @@ def main() -> None:
 
     appsync_stack.add_dependency(cognito_stack)
     appsync_stack.add_dependency(dynamodb_stack)
-    appsync_stack.add_dependency(lambda_stack)
+    # NOTE: Lambda dependency removed - AppSync reads Lambda ARNs from SSM parameters
+    # This eliminates CloudFormation cross-stack exports
 
     monitoring_stack.add_dependency(appsync_stack)
 
