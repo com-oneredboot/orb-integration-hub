@@ -73,12 +73,6 @@ jobs:
           pip install pipenv
           pipenv install --dev
 
-      - name: Generate schemas
-        run: |
-          echo "📦 Generating CDK schemas with orb-schema-generator..."
-          INFRA_VENV=$(cd infrastructure && pipenv --venv)
-          $INFRA_VENV/bin/orb-schema generate --cdk-only
-
       - name: Skip tests warning
         if: ${{ github.event.inputs.skip_tests == 'true' }}
         run: |

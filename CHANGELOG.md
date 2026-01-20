@@ -9,8 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - CDK tests failing in CI due to missing `generated` module
-  - Added `orb-schema-generator` as dev dependency to `infrastructure/Pipfile`
-  - Added schema generation step to `deploy-infrastructure.yml` workflow
+  - Removed schema generation from CI workflow (generated code must be committed)
+  - Updated `.gitignore` to allow committing infrastructure CDK generated code
+  - Filed bug #74 with orb-schema-generator for `from_function_arn` issue
 
 ### Removed
 - Comprehensive testing CI workflow (`comprehensive-testing.yml`) - was failing due to incomplete implementation

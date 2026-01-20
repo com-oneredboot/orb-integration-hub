@@ -4,6 +4,7 @@
 
 | Issue | Team | Title | Status | Impact |
 |-------|------|-------|--------|--------|
+| #74 | orb-schema-generator | Bug: Lambda Data Source Uses from_function_arn Instead of from_function_attributes | Open | Critical |
 | #73 | orb-schema-generator | Enhancement: AppSyncApi Construct Missing Production Features (X-Ray, Secrets Manager, Scoped IAM) | Open | Medium |
 | #70 | orb-schema-generator | Bug: Lambda schema generates all attributes in both Input and Output types | Open | Critical |
 | #69 | orb-schema-generator | Bug: Generated Python files fail black and ruff linting | Open | High |
