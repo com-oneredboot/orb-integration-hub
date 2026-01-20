@@ -333,8 +333,9 @@ jobs:
       - name: Start application server
         run: |
           cd apps/web
-          # Use serve to host the production build instead of ng serve (which requires environment.local.ts)
-          npx serve dist/browser -l 4200 &
+          # Use serve to host the production build with --single for SPA routing
+          # --single serves index.html for all routes (required for Angular routing)
+          npx serve dist/browser -l 4200 --single &
           echo $! > app.pid
           # Wait for app to be ready
           timeout 60 bash -c 'until curl -s http://localhost:4200 > /dev/null; do sleep 2; done'
@@ -396,7 +397,8 @@ jobs:
       - name: Start application server
         run: |
           cd apps/web
-          npx serve dist/browser -l 4200 &
+          # Use --single for SPA routing (serves index.html for all routes)
+          npx serve dist/browser -l 4200 --single &
           echo $! > app.pid
           timeout 60 bash -c 'until curl -s http://localhost:4200 > /dev/null; do sleep 2; done'
 
@@ -405,9 +407,9 @@ jobs:
           cd apps/web
           # Create reports directory if it doesn't exist
           mkdir -p performance-tests/reports
-          # Run Lighthouse with headless Chrome flags for CI environment
-          npm run perf:lighthouse -- --chrome-flags="--headless --no-sandbox --disable-gpu" || true
-          npm run perf:lighthouse:mobile -- --chrome-flags="--headless --no-sandbox --disable-gpu" || true
+          # Run Lighthouse directly with proper chrome flags for CI (headless environment)
+          npx lighthouse http://localhost:4200 --chrome-flags="--headless --no-sandbox --disable-gpu" --output json --output html --output-path performance-tests/reports/lighthouse-report || true
+          npx lighthouse http://localhost:4200 --preset=perf --form-factor=mobile --chrome-flags="--headless --no-sandbox --disable-gpu" --output json --output html --output-path performance-tests/reports/lighthouse-mobile-report || true
 
       - name: Run load testing with Artillery
         run: |
