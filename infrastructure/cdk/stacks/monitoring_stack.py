@@ -98,6 +98,9 @@ class MonitoringStack(Stack):
         """Create KMS key for audit log encryption."""
         from aws_cdk import aws_iam as iam
 
+        # Log group name follows path-based naming convention
+        audit_log_group_name = f"/{self.config.customer_id}/{self.config.project_id}/{self.config.environment}/audit"
+
         key = kms.Key(
             self,
             "AuditEncryptionKey",
@@ -123,7 +126,7 @@ class MonitoringStack(Stack):
                 resources=["*"],
                 conditions={
                     "ArnLike": {
-                        "kms:EncryptionContext:aws:logs:arn": f"arn:aws:logs:{self.region}:{self.account}:log-group:/audit/{self.config.environment}"
+                        "kms:EncryptionContext:aws:logs:arn": f"arn:aws:logs:{self.region}:{self.account}:log-group:{audit_log_group_name}"
                     }
                 },
             )
@@ -133,10 +136,13 @@ class MonitoringStack(Stack):
 
     def _create_audit_log_group(self) -> logs.LogGroup:
         """Create CloudWatch log group for audit events."""
+        # Log group name follows path-based naming convention
+        audit_log_group_name = f"/{self.config.customer_id}/{self.config.project_id}/{self.config.environment}/audit"
+        
         return logs.LogGroup(
             self,
             "AuditLogGroup",
-            log_group_name=f"/audit/{self.config.environment}",
+            log_group_name=audit_log_group_name,
             retention=logs.RetentionDays.THREE_YEARS,
             encryption_key=self.audit_encryption_key,
             removal_policy=RemovalPolicy.RETAIN,

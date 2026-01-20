@@ -90,7 +90,7 @@ class TestMonitoringStackLogGroup:
         template.has_resource_properties(
             "AWS::Logs::LogGroup",
             {
-                "LogGroupName": "/audit/dev",
+                "LogGroupName": "/test/project/dev/audit",
                 "RetentionInDays": 1096,  # 3 years
             },
         )
