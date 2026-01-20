@@ -306,22 +306,8 @@ export class UserService extends ApiService {
   public async emailVerify(code: string, email: string): Promise<AuthResponse> {
     console.debug('[UserService][emailVerify] called with', { code, email });
     try {
-      // Verify the user exists in our database first
-      const userResponse = await this.userQueryByEmail(email);
-      console.debug('[UserService][emailVerify] userQueryByEmail response:', userResponse);
-
-      if (userResponse.StatusCode !== 200 || userResponse.Data == null || userResponse.Data?.length == 0) {
-        console.error('[UserService][emailVerify] user not found or error', userResponse);
-
-        return {
-          StatusCode: userResponse.StatusCode,
-          Message: 'Error getting user',
-          Data: new Auth( { isSignedIn: false})
-        };
-
-      }
-
       // Call Cognito's confirmSignUp with email (the username used during signup)
+      // No need to check DynamoDB first - user may not exist yet or we may not have auth
       const emailVerifyResponse = await this.cognitoService.emailVerify(email, code);
       console.debug('[UserService][emailVerify] cognitoService.emailVerify response:', emailVerifyResponse);
 

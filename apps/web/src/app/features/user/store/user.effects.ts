@@ -241,63 +241,24 @@ export class UserEffects {
       switchMap(({ code, email }) => {
         console.debug('[Effect][verifyEmail$] Starting email verification', { code: code ? '***' : 'empty', email });
 
-        return from(this.userService.userExists({ email })).pipe(
-          switchMap(user => {
-            const users = Array.isArray(user.Data) ? user.Data : [];
-            console.debug('[Effect][verifyEmail$] userExists response', { 
-              statusCode: user.StatusCode, 
-              message: user.Message,
-              usersCount: users.length 
+        // Step 1: Confirm signup with Cognito first (no auth required)
+        return from(this.cognitoService.emailVerify(email, code)).pipe(
+          map(response => {
+            console.debug('[Effect][verifyEmail$] Cognito confirmSignUp response', { 
+              statusCode: response.StatusCode, 
+              message: response.Message 
             });
-
-            if (user.StatusCode === 500 && users.length > 1) {
-              // Duplicate user error
-              console.error('[Effect][verifyEmail$] Duplicate users found for email:', email, users);
-              const errorObj = getError('ORB-AUTH-006');
-              return of(UserActions.verifyEmailFailure({
-                error: errorObj ? errorObj.message : 'Duplicate users found for this email.'
-              }));
+            if (response.StatusCode === 200) {
+              // Email verified with Cognito - user now needs to sign in
+              return UserActions.verifyEmailSuccess({ email });
             }
-
-            if (!user || user.StatusCode !== 200 || users.length === 0) {
-              console.error('[Effect][verifyEmail$] User not found or error', { 
-                hasUser: !!user, 
-                statusCode: user?.StatusCode, 
-                usersLength: users.length 
-              });
-              const errorObj = getError('ORB-AUTH-003');
-              return of(UserActions.verifyEmailFailure({
-                error: errorObj ? errorObj.message : 'Email verification failed'
-              }));
-            }
-
-            // Now verify the email with the userId
-            console.debug('[Effect][verifyEmail$] User found, calling emailVerify', { userId: users[0]?.userId });
-            return from(this.userService.emailVerify(code, email)).pipe(
-              map(response => {
-                console.debug('[Effect][verifyEmail$] emailVerify response', { 
-                  statusCode: response.StatusCode, 
-                  message: response.Message 
-                });
-                if (response.StatusCode === 200) {
-                  return UserActions.verifyEmailSuccess({ email });
-                }
-                const errorObj = getError('ORB-AUTH-003');
-                return UserActions.verifyEmailFailure({
-                  error: errorObj ? errorObj.message : 'Email verification failed'
-                });
-              }),
-              catchError(_error => {
-                console.error('[Effect][verifyEmail$] emailVerify error', _error);
-                const errorObj = getError('ORB-AUTH-003');
-                return of(UserActions.verifyEmailFailure({
-                  error: errorObj ? errorObj.message : 'Email verification failed'
-                }));
-              })
-            );
+            const errorObj = getError('ORB-AUTH-003');
+            return UserActions.verifyEmailFailure({
+              error: response.Message || (errorObj ? errorObj.message : 'Email verification failed')
+            });
           }),
           catchError(_error => {
-            console.error('[Effect][verifyEmail$] userExists error', _error);
+            console.error('[Effect][verifyEmail$] Cognito confirmSignUp error', _error);
             const errorObj = getError('ORB-AUTH-003');
             return of(UserActions.verifyEmailFailure({
               error: errorObj ? errorObj.message : 'Email verification failed'
@@ -308,115 +269,10 @@ export class UserEffects {
     )
   );
 
-  // Update user record after successful email verification
-  updateUserAfterEmailVerification$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(UserActions.verifyEmailSuccess),
-      withLatestFrom(this.store.select(fromUser.selectCurrentUser)),
-      switchMap(([action, currentUser]) => {
-        const email = action.email;
-        
-        if (!email) {
-          return of(UserActions.updateUserAfterEmailVerificationFailure({ 
-            error: 'Missing email'
-          }));
-        }
-
-        // If currentUser is null, query by email first
-        if (!currentUser) {
-          return from(this.userService.userExists({ email })).pipe(
-            switchMap(response => {
-              const users = Array.isArray(response.Data) ? response.Data : [];
-              if (response.StatusCode !== 200 || users.length === 0) {
-                return of(UserActions.updateUserAfterEmailVerificationFailure({ 
-                  error: 'User not found'
-                }));
-              }
-              
-              const user = users[0];
-              // Update the user record with verified email
-              const updateInput = {
-                userId: user.userId,
-                cognitoId: user.cognitoId,
-                cognitoSub: user.cognitoSub,
-                email: user.email,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                status: user.status,
-                createdAt: user.createdAt,
-                updatedAt: new Date(),
-                phoneNumber: user.phoneNumber,
-                phoneVerified: user.phoneVerified,
-                emailVerified: true,
-                groups: user.groups,
-                mfaEnabled: user.mfaEnabled,
-                mfaSetupComplete: user.mfaSetupComplete
-              };
-
-              return from(this.userService.userUpdate(updateInput)).pipe(
-                map(updateResponse => {
-                  const updatedUser = updateResponse.Data;
-                  if (!updatedUser) {
-                    throw new Error('User update succeeded but no user data returned');
-                  }
-                  return UserActions.updateUserAfterEmailVerificationSuccess({ user: updatedUser });
-                }),
-                catchError(_error => {
-                  console.error('Failed to update user after email verification:', _error);
-                  return of(UserActions.updateUserAfterEmailVerificationFailure({ 
-                    error: _error instanceof Error ? _error.message : 'Failed to update user record'
-                  }));
-                })
-              );
-            }),
-            catchError(_error => {
-              console.error('Failed to query user for email verification update:', _error);
-              return of(UserActions.updateUserAfterEmailVerificationFailure({ 
-                error: _error instanceof Error ? _error.message : 'Failed to find user'
-              }));
-            })
-          );
-        }
-        
-        // Update the user record with verified email
-        const updateInput = {
-          userId: currentUser.userId,
-          cognitoId: currentUser.cognitoId,
-          cognitoSub: currentUser.cognitoSub,
-          email: currentUser.email,
-          firstName: currentUser.firstName,
-          lastName: currentUser.lastName,
-          status: currentUser.status,
-          createdAt: currentUser.createdAt,
-          updatedAt: new Date(),
-          phoneNumber: currentUser.phoneNumber,
-          phoneVerified: currentUser.phoneVerified,
-          emailVerified: true,
-          groups: currentUser.groups,
-          mfaEnabled: currentUser.mfaEnabled,
-          mfaSetupComplete: currentUser.mfaSetupComplete
-        };
-
-        return from(this.userService.userUpdate(updateInput)).pipe(
-          map(response => {
-            // Extract the updated user from the response
-            const updatedUser = response.Data;
-            if (!updatedUser) {
-              throw new Error('User update succeeded but no user data returned');
-            }
-
-            return UserActions.updateUserAfterEmailVerificationSuccess({ user: updatedUser });
-          }),
-          catchError(_error => {
-            console.error('Failed to update user after email verification:', _error);
-            return of(UserActions.updateUserAfterEmailVerificationFailure({ 
-              error: _error instanceof Error ? _error.message : 'Failed to update user record'
-            }));
-          })
-        );
-      })
-    )
-  );
+  // NOTE: User record update after email verification is handled during sign-in flow
+  // The user doesn't have Cognito tokens yet after confirmSignUp, so we can't call
+  // authenticated AppSync operations. The emailVerified flag will be synced when
+  // the user signs in and we query/update their DynamoDB record.
 
   verifyCognitoPassword$ = createEffect(() =>
     this.actions$.pipe(
