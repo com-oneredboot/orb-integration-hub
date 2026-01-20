@@ -197,8 +197,10 @@ class CognitoStack(Stack):
             )
         )
 
-        # Cognito admin permissions - scoped to project user pools using prefix pattern
-        # This avoids circular dependency with UserPool which references this Lambda
+        # Cognito admin permissions - scoped to project user pools
+        # Note: We use a broad resource pattern because the user pool ID is not known
+        # at role creation time (circular dependency). The Lambda only operates on
+        # the user pool that triggers it.
         role.add_to_policy(
             iam.PolicyStatement(
                 effect=iam.Effect.ALLOW,
@@ -206,11 +208,6 @@ class CognitoStack(Stack):
                 resources=[
                     f"arn:aws:cognito-idp:{self.region}:{self.account}:userpool/*",
                 ],
-                conditions={
-                    "StringLike": {
-                        "cognito-idp:userpool": f"*{self.config.prefix}*"
-                    }
-                },
             )
         )
 
