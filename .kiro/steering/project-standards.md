@@ -35,6 +35,37 @@ pipenv install
 
 **CRITICAL**: The Pipfile uses `${CODEARTIFACT_AUTH_TOKEN}` environment variable. Without exporting it first, pipenv will fail to authenticate with CodeArtifact.
 
+### Installing from Existing Lock File
+
+When installing dependencies from an existing `Pipfile.lock` (e.g., after cloning or in CI), use `pipenv sync` instead of `pipenv install` or `pipenv lock`:
+
+```bash
+# Install from existing lock file (PREFERRED for CodeArtifact)
+pipenv sync --dev
+
+# DO NOT use pipenv lock with CodeArtifact - it often fails with auth issues
+# pipenv lock  # ❌ Avoid this
+```
+
+**Why `pipenv sync`?**
+- `pipenv sync` installs exactly what's in `Pipfile.lock` without re-resolving dependencies
+- `pipenv lock` re-resolves all dependencies and often fails with CodeArtifact authentication
+- Use `pipenv sync --dev` to include dev dependencies
+
+### Updating CodeArtifact Packages
+
+When you need to update a package from CodeArtifact (like `orb-schema-generator`):
+
+```bash
+# Option 1: Direct pip install (most reliable)
+pipenv run pip install --upgrade orb-schema-generator
+
+# Option 2: If pipenv lock works (may fail with CodeArtifact)
+pipenv update orb-schema-generator
+```
+
+After updating, commit the updated `Pipfile.lock`.
+
 ## Package Management
 
 - Python: Use `pipenv` for dependency management
