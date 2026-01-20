@@ -21,6 +21,7 @@
 
 | Issue | Team | Title | Resolution Date |
 |-------|------|-------|-----------------|
+| #75 | orb-schema-generator | Bug: Lambda Type Auth Directives Not Generated in GraphQL Schema | 2026-01-20 |
 | #74 | orb-schema-generator | Bug: Lambda Data Source Uses from_function_arn Instead of from_function_attributes | 2026-01-20 |
 | #72 | orb-schema-generator | Bug: Generated AppSyncApi Construct Has Hardcoded Values - Not Usable as Subcomponent | 2026-01-17 |
 | #71 | orb-schema-generator | TypeScript Generator Missing Timestamp Conversion for AWSTimestamp | 2026-01-17 |

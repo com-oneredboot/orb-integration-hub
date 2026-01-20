@@ -1038,7 +1038,7 @@ type Query {
   ApplicationsQueryByOrganizationId(input: ApplicationsQueryByOrganizationIdInput!): ApplicationsResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   ApplicationsQueryByOrganizationIdAndCreatedAt(input: ApplicationsQueryByOrganizationIdAndCreatedAtInput!): ApplicationsResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   UsersQueryByUserId(input: UsersQueryByUserIdInput!): UsersResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER", "USER"])
-  UsersQueryByEmail(input: UsersQueryByEmailInput!): UsersResponse @aws_api_key @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER", "USER"])
+  UsersQueryByEmail(input: UsersQueryByEmailInput!): UsersResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER", "USER"])
   UsersQueryByCognitoId(input: UsersQueryByCognitoIdInput!): UsersResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER", "USER"])
   UsersQueryByCognitoSub(input: UsersQueryByCognitoSubInput!): UsersResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER", "USER"])
 }

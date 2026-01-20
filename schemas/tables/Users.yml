@@ -19,7 +19,6 @@ model:
   authConfig:
     apiKeyAuthentication:
     - Users
-    - UsersQueryByEmail
     - UsersCreate
     - UsersUpdate
     - UsersResponse
