@@ -29,6 +29,7 @@ import { Auth, AuthResponse } from "../models/AuthModel";
 import { UserActions } from '../../features/user/store/user.actions';
 import { toGraphQLInput } from '../../graphql-utils';
 import { DebugLogService } from './debug-log.service';
+import { sanitizeEmail, sanitizeCognitoSub } from '../utils/log-sanitizer';
 
 @Injectable({
   providedIn: 'root'
@@ -68,8 +69,8 @@ export class UserService extends ApiService {
    * @param password User's password
    */
   public async userCreate(input: UsersCreateInput, password: string): Promise<UsersResponse> {
-    console.debug('[UserService][userCreate] Creating Cognito user only:', input.email);
-    this.userDebugLog.logApi('userCreate', 'pending', { email: input.email });
+    console.debug('[UserService][userCreate] Creating Cognito user only:', sanitizeEmail(input.email));
+    this.userDebugLog.logApi('userCreate', 'pending', { email: sanitizeEmail(input.email) });
 
     try {
       // Create the Cognito User ONLY - no DynamoDB record yet
@@ -132,8 +133,8 @@ export class UserService extends ApiService {
    * @param input User data to create
    */
   public async createUserRecordOnly(input: UsersCreateInput): Promise<UsersResponse> {
-    console.debug('[UserService][createUserRecordOnly] Creating DynamoDB record:', input.email);
-    this.userDebugLog.logApi('createUserRecordOnly', 'pending', { email: input.email });
+    console.debug('[UserService][createUserRecordOnly] Creating DynamoDB record:', sanitizeEmail(input.email));
+    this.userDebugLog.logApi('createUserRecordOnly', 'pending', { email: sanitizeEmail(input.email) });
 
     try {
       const timestamp = new Date();
@@ -312,7 +313,7 @@ export class UserService extends ApiService {
   public async checkCognitoEmailVerification(email: string): Promise<boolean> {
     try {
       const cognitoProfile = await this.cognitoService.getCognitoProfile();
-      console.debug('[UserService][checkCognitoEmailVerification] Cognito profile:', cognitoProfile);
+      console.debug('[UserService][checkCognitoEmailVerification] Cognito profile retrieved');
       
       // Check if the current user's email matches and is verified
       if (cognitoProfile?.['email'] === email && cognitoProfile?.['email_verified'] === 'true') {
@@ -334,12 +335,12 @@ export class UserService extends ApiService {
    * @param email User's email address
    */
   public async emailVerify(code: string, email: string): Promise<AuthResponse> {
-    console.debug('[UserService][emailVerify] called with', { code, email });
+    console.debug('[UserService][emailVerify] called with', { code: code ? '***' : 'empty', email: sanitizeEmail(email) });
     try {
       // Call Cognito's confirmSignUp with email (the username used during signup)
       // No need to check DynamoDB first - user may not exist yet or we may not have auth
       const emailVerifyResponse = await this.cognitoService.emailVerify(email, code);
-      console.debug('[UserService][emailVerify] cognitoService.emailVerify response:', emailVerifyResponse);
+      console.debug('[UserService][emailVerify] cognitoService.emailVerify response:', emailVerifyResponse.StatusCode);
 
       return emailVerifyResponse;
 
@@ -392,7 +393,7 @@ export class UserService extends ApiService {
   }
 
   public async userQueryByCognitoSub(cognitoSub: string): Promise<UsersListResponse> {
-    console.debug('userQueryByCognitoSub: ', cognitoSub);
+    console.debug('userQueryByCognitoSub:', sanitizeCognitoSub(cognitoSub));
     try {
       // UsersQueryByCognitoSub requires Cognito auth
       const queryResult = await this.query(
@@ -437,7 +438,7 @@ export class UserService extends ApiService {
   }
 
   public async userQueryByEmail(email: string): Promise<UsersListResponse> {
-    console.debug('userQueryByEmail: ', email);
+    console.debug('userQueryByEmail:', sanitizeEmail(email));
     try {
       // UsersQueryByEmail requires Cognito auth (user must be signed in)
       const queryResult = await this.query(
@@ -487,7 +488,7 @@ export class UserService extends ApiService {
    * @param password
    */
   public async userSignIn(email: string, password: string): Promise<AuthResponse> {
-    console.debug('userSignIn:', email);
+    console.debug('userSignIn:', sanitizeEmail(email));
 
     try {
       // Step 1: Sign in with Cognito first using email as username
@@ -1104,8 +1105,8 @@ export class UserService extends ApiService {
     createdAt: number;
     updatedAt: number;
   }> {
-    console.debug('[UserService][createUserFromCognito] Creating user from Cognito:', cognitoSub);
-    this.userDebugLog.logApi('createUserFromCognito', 'pending', { cognitoSub });
+    console.debug('[UserService][createUserFromCognito] Creating user from Cognito:', sanitizeCognitoSub(cognitoSub));
+    this.userDebugLog.logApi('createUserFromCognito', 'pending', { cognitoSub: sanitizeCognitoSub(cognitoSub) });
 
     try {
       const response = await this.mutate(

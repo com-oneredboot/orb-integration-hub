@@ -33,7 +33,9 @@ export const routes: Routes = [
   },
   {
     path: 'authenticate',
-    component: AuthFlowComponent
+    component: AuthFlowComponent,
+    canActivate: [AuthGuard],
+    data: { requiresAuth: false }
   },
   {
     path: 'signout',

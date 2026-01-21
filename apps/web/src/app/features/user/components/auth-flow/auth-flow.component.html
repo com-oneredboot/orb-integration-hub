@@ -238,7 +238,7 @@ description: HTML template file
 
       <!-- Password Step -->
       <div class="auth-flow__form-step"
-           [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.PASSWORD || state.currentStep === authSteps.SIGNIN}">
+           [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.PASSWORD || state.currentStep === authSteps.PASSWORD_VERIFY || state.currentStep === authSteps.SIGNIN}">
         <div class="auth-flow__verification-info" role="status" aria-live="polite">
           <p>Enter the password for your account to continue.</p>
         </div>

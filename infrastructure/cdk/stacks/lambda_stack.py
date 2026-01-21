@@ -178,23 +178,47 @@ class LambdaStack(Stack):
             )
         )
 
-        # SNS Access
+        # SNS Access - scoped to project topics and SMS (phone numbers require "*")
+        # Note: Direct SMS publishing to phone numbers requires Resource: "*" because
+        # phone numbers don't have ARNs. We scope topic publishing to project topics.
         role.add_to_policy(
             iam.PolicyStatement(
-                sid="SNSAccess",
+                sid="SNSTopicAccess",
                 effect=iam.Effect.ALLOW,
                 actions=["sns:Publish"],
-                resources=["*"],
+                resources=[
+                    f"arn:aws:sns:{self.region}:{self.account}:{self.config.prefix}-*",
+                ],
             )
         )
 
-        # SES Access
+        # SNS SMS Access - required for direct SMS to phone numbers (no ARN available)
+        # This is the AWS-documented pattern for SMS publishing
+        role.add_to_policy(
+            iam.PolicyStatement(
+                sid="SNSSMSAccess",
+                effect=iam.Effect.ALLOW,
+                actions=["sns:Publish"],
+                resources=["*"],
+                conditions={
+                    "StringEquals": {
+                        "sns:Protocol": "sms"
+                    }
+                },
+            )
+        )
+
+        # SES Access - scoped to verified identities in this account
+        # Note: SES requires identity ARNs for sending. We scope to all identities
+        # in the account since specific identities may vary by environment.
         role.add_to_policy(
             iam.PolicyStatement(
                 sid="SESAccess",
                 effect=iam.Effect.ALLOW,
-                actions=["ses:SendEmail"],
-                resources=["*"],
+                actions=["ses:SendEmail", "ses:SendRawEmail"],
+                resources=[
+                    f"arn:aws:ses:{self.region}:{self.account}:identity/*",
+                ],
             )
         )
 
@@ -233,7 +257,9 @@ class LambdaStack(Stack):
             )
         )
 
-        # KMS Access
+        # KMS Access - scoped to keys in this account
+        # Note: We scope to all keys in the account since specific key ARNs
+        # may vary by environment and are managed separately.
         role.add_to_policy(
             iam.PolicyStatement(
                 sid="KMSAccess",
@@ -243,7 +269,9 @@ class LambdaStack(Stack):
                     "kms:Decrypt",
                     "kms:GenerateDataKey",
                 ],
-                resources=["*"],
+                resources=[
+                    f"arn:aws:kms:{self.region}:{self.account}:key/*",
+                ],
             )
         )
 

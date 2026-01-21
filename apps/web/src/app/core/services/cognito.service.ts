@@ -234,16 +234,31 @@ export class CognitoService {
 
       return {
         StatusCode: 401,
-        Message: 'MFA verification failed',
-        Data: new Auth({ isSignedIn: false })
+        Message: 'MFA verification failed. Please try again.',
+        Data: new Auth({ isSignedIn: false, message: 'MFA verification failed. Please try again.' })
       };
 
     } catch (error) {
-      console.error('[CognitoService] MFA verification failed');
+      console.error('[CognitoService] MFA verification failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'MFA verification failed';
+      
+      // Check for code mismatch error from Cognito
+      const isCodeMismatch = errorMessage.toLowerCase().includes('code mismatch') ||
+                             errorMessage.toLowerCase().includes('invalid code') ||
+                             errorMessage.toLowerCase().includes('codemismatchexception');
+      
+      if (isCodeMismatch) {
+        return {
+          StatusCode: 401,
+          Message: 'Invalid verification code. Please check your authenticator app and try again.',
+          Data: new Auth({ isSignedIn: false, message: 'Invalid verification code. Please check your authenticator app and try again.' })
+        };
+      }
+      
       return {
         StatusCode: 500,
-        Message: error instanceof Error ? error.message : 'MFA verification failed',
-        Data: new Auth({ isSignedIn: false, message: 'MFA verification failed' })
+        Message: errorMessage,
+        Data: new Auth({ isSignedIn: false, message: errorMessage })
       };
     }
   }

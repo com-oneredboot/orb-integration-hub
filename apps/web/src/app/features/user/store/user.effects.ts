@@ -23,6 +23,7 @@ import { RecoveryService } from "../../../core/services/recovery.service";
 import { AuthProgressStorageService } from "../../../core/services/auth-progress-storage.service";
 import { RecoveryAction } from "../../../core/models/RecoveryModel";
 import { UserStatus } from "../../../core/enums/UserStatusEnum";
+import { sanitizeEmail, sanitizeCognitoSub } from "../../../core/utils/log-sanitizer";
 
 @Injectable()
 export class UserEffects {
@@ -109,7 +110,7 @@ export class UserEffects {
             if (responseMessage.includes('UsernameExistsException') || 
                 responseMessage.includes('User already exists') ||
                 responseMessage.includes('already exists')) {
-              console.debug('[Effect][createUser$] User already exists, triggering smart check for:', input.email);
+              console.debug('[Effect][createUser$] User already exists, triggering smart check for:', sanitizeEmail(input.email));
               return UserActions.smartCheck({ email: input.email });
             }
             
@@ -152,7 +153,7 @@ export class UserEffects {
               errorCode === 'UsernameExistsException';
             
             if (isUsernameExists) {
-              console.debug('[Effect][createUser$] Caught UsernameExistsException, triggering smart check for:', input.email);
+              console.debug('[Effect][createUser$] Caught UsernameExistsException, triggering smart check for:', sanitizeEmail(input.email));
               return of(UserActions.smartCheck({ email: input.email }));
             }
             
@@ -171,7 +172,7 @@ export class UserEffects {
     this.actions$.pipe(
       ofType(UserActions.createUserRecordOnly),
       switchMap(({ user }) => {
-        console.log('[Effect][createUserRecordOnly$] Creating DynamoDB record for:', user.email);
+        console.log('[Effect][createUserRecordOnly$] Creating DynamoDB record for:', sanitizeEmail(user.email));
         
         // Use UsersCreate mutation to create the DynamoDB record
         // The user already exists in Cognito, so we just need the DynamoDB record
@@ -220,7 +221,7 @@ export class UserEffects {
     this.actions$.pipe(
       ofType(UserActions.createUserRecordOnlySuccess),
       map(({ user }) => {
-        console.log('[Effect][handleCreateUserRecordOnlySuccess$] Completing auth flow for:', user.email);
+        console.log('[Effect][handleCreateUserRecordOnlySuccess$] Completing auth flow for:', sanitizeEmail(user.email));
         return UserActions.authFlowComplete({ user });
       })
     )
@@ -232,11 +233,11 @@ export class UserEffects {
     this.actions$.pipe(
       ofType(UserActions.createUserFromCognito),
       switchMap(({ cognitoSub }) => {
-        console.log('[Effect][createUserFromCognito$] Creating user from Cognito with sub:', cognitoSub);
+        console.log('[Effect][createUserFromCognito$] Creating user from Cognito with sub:', sanitizeCognitoSub(cognitoSub));
         
         return from(this.userService.createUserFromCognito(cognitoSub)).pipe(
           map(response => {
-            console.log('[Effect][createUserFromCognito$] User created successfully:', response.email);
+            console.log('[Effect][createUserFromCognito$] User created successfully:', sanitizeEmail(response.email));
             // Convert the response to a Users object
             const user = new Users({
               userId: response.userId,
@@ -272,7 +273,7 @@ export class UserEffects {
     this.actions$.pipe(
       ofType(UserActions.createUserFromCognitoSuccess),
       map(({ user }) => {
-        console.log('[Effect][handleCreateUserFromCognitoSuccess$] Completing auth flow for:', user.email);
+        console.log('[Effect][handleCreateUserFromCognitoSuccess$] Completing auth flow for:', sanitizeEmail(user.email));
         return UserActions.authFlowComplete({ user });
       })
     )
@@ -283,7 +284,7 @@ export class UserEffects {
     this.actions$.pipe(
       ofType(UserActions.signInSuccess),
       map(({ user }) => {
-        console.log('[Effect][handleSignInSuccess$] Completing auth flow for:', user.email);
+        console.log('[Effect][handleSignInSuccess$] Completing auth flow for:', sanitizeEmail(user.email));
         return UserActions.authFlowComplete({ user });
       })
     )
@@ -363,7 +364,7 @@ export class UserEffects {
     this.actions$.pipe(
       ofType(UserActions.verifyEmail),
       switchMap(({ code, email }) => {
-        console.debug('[Effect][verifyEmail$] Starting email verification', { code: code ? '***' : 'empty', email });
+        console.debug('[Effect][verifyEmail$] Starting email verification', { code: code ? '***' : 'empty', email: sanitizeEmail(email) });
 
         // Step 1: Confirm signup with Cognito first (no auth required)
         return from(this.cognitoService.emailVerify(email, code)).pipe(
@@ -621,15 +622,15 @@ export class UserEffects {
             if (response.StatusCode === 200) {
               return UserActions.needsMFASuccess();
             }
-            const errorObj = getError('ORB-AUTH-003');
+            // Use the actual error message from the service
             return UserActions.needsMFAFailure({
-              error: errorObj ? errorObj.message : 'Email verification failed'
+              error: response.Message || 'MFA verification failed. Please try again.'
             });
           }),
           catchError(_error => {
-            const errorObj = getError('ORB-AUTH-003');
+            const errorMessage = _error instanceof Error ? _error.message : 'MFA verification failed. Please try again.';
             return of(UserActions.needsMFAFailure({
-              error: errorObj ? errorObj.message : 'Email verification failed'
+              error: errorMessage
             }));
           })
         )
@@ -648,16 +649,16 @@ export class UserEffects {
       switchMap(([, currentUser, email]) => {
         // If we already have the user, complete the flow
         if (currentUser) {
-          console.log('[AuthEffects] MFA verification successful, completing auth flow for user:', currentUser.email);
+          console.log('[AuthEffects] MFA verification successful, completing auth flow for user:', sanitizeEmail(currentUser.email));
           return of(UserActions.authFlowComplete({ user: currentUser }));
         }
         
         // If no user but we have email, fetch the user from DynamoDB
         if (email) {
-          console.log('[AuthEffects] MFA success, fetching user from DynamoDB for:', email);
+          console.log('[AuthEffects] MFA success, fetching user from DynamoDB for:', sanitizeEmail(email));
           return from(this.userService.userQueryByEmail(email)).pipe(
             switchMap(response => {
-              console.debug('[AuthEffects] userQueryByEmail response:', response);
+              console.debug('[AuthEffects] userQueryByEmail response: StatusCode', response.StatusCode);
               if (response.StatusCode === 200 && response.Data && response.Data.length > 0) {
                 const user = new Users(response.Data[0]);
                 console.log('[AuthEffects] User fetched successfully, completing auth flow');
@@ -666,7 +667,7 @@ export class UserEffects {
               
               // User not found in DynamoDB - need to create the record using secure Lambda
               // This uses CreateUserFromCognito which validates against Cognito and extracts all data from there
-              console.log('[AuthEffects] User not found in DynamoDB (StatusCode:', response.StatusCode, ', Data length:', response.Data?.length, '), creating record via CreateUserFromCognito for:', email);
+              console.log('[AuthEffects] User not found in DynamoDB (StatusCode:', response.StatusCode, ', Data length:', response.Data?.length, '), creating record via CreateUserFromCognito for:', sanitizeEmail(email));
               return from(this.cognitoService.getCognitoProfile()).pipe(
                 switchMap(cognitoProfile => {
                   console.debug('[AuthEffects] getCognitoProfile result:', cognitoProfile);
@@ -681,7 +682,7 @@ export class UserEffects {
                     return of(UserActions.needsMFAFailure({ error: 'Unable to get user identifier' }));
                   }
                   
-                  console.log('[AuthEffects] Creating DynamoDB record via CreateUserFromCognito with cognitoSub:', cognitoSub);
+                  console.log('[AuthEffects] Creating DynamoDB record via CreateUserFromCognito with cognitoSub:', sanitizeCognitoSub(cognitoSub));
                   // Use the secure CreateUserFromCognito Lambda which validates against Cognito
                   // and extracts all user data from Cognito (prevents client-side data injection)
                   return of(UserActions.createUserFromCognito({ cognitoSub }));

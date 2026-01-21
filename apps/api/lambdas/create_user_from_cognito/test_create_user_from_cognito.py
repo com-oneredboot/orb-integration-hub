@@ -318,7 +318,9 @@ class TestCreateUserFromCognitoSecurity(unittest.TestCase):
 
     def test_response_only_contains_expected_fields(self):
         """Test that response doesn't leak additional data"""
-        with patch.object(index, "query_user_by_cognito_sub") as mock_query:
+        with patch.object(index, "ensure_user_in_group"), patch.object(
+            index, "query_user_by_cognito_sub"
+        ) as mock_query:
             mock_query.return_value = {
                 "userId": "550e8400-e29b-41d4-a716-446655440000",
                 "email": "test@example.com",
@@ -382,9 +384,11 @@ class TestCreateUserFromCognitoSecurity(unittest.TestCase):
         """Test that only Cognito data is used, not client input"""
         # This test verifies that even if client sends extra data,
         # only cognitoSub is used and all other data comes from Cognito
-        with patch.object(index, "query_user_by_cognito_sub") as mock_query, patch.object(
-            index, "get_cognito_user"
-        ) as mock_cognito, patch.object(index, "create_user_record") as mock_create:
+        with patch.object(index, "ensure_user_in_group"), patch.object(
+            index, "query_user_by_cognito_sub"
+        ) as mock_query, patch.object(index, "get_cognito_user") as mock_cognito, patch.object(
+            index, "create_user_record"
+        ) as mock_create:
 
             mock_query.return_value = None  # User doesn't exist
             mock_cognito.return_value = {

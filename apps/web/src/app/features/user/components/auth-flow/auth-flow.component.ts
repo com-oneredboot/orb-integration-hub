@@ -35,6 +35,7 @@ import {CustomValidators} from "../../../../core/validators/custom-validators";
 import { UserStatus } from "../../../../core/enums/UserStatusEnum";
 import { UserGroup } from "../../../../core/enums/UserGroupEnum";
 import { IUsers } from "../../../../core/models/UsersModel";
+import { sanitizeEmail } from "../../../../core/utils/log-sanitizer";
 
 
 @Component({
@@ -808,6 +809,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             break;
 
           case AuthSteps.PASSWORD:
+          case AuthSteps.PASSWORD_VERIFY:
             if (!password) {
               return;
             }
@@ -832,7 +834,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
               }));
               return;
             }
-            console.debug('[AuthFlowComponent] Dispatching verifyEmail', { email, codeLength: emailCode?.length });
+            console.debug('[AuthFlowComponent] Dispatching verifyEmail', { email: sanitizeEmail(email), codeLength: emailCode?.length });
             this.store.dispatch(UserActions.verifyEmail({
               code: emailCode,
               email: email

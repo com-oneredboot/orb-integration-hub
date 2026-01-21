@@ -271,6 +271,8 @@ export class CustomValidators {
 
   /**
    * Input sanitization validator to prevent XSS
+   * Decodes URL-encoded values to catch encoded XSS payloads like %3Cscript%3E
+   * Also detects XSS patterns in partially encoded or malformed strings
    */
   static noXSS(sanitizer: DomSanitizer): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
@@ -279,9 +281,43 @@ export class CustomValidators {
       }
 
       const value = control.value;
-      const sanitizedValue = sanitizer.sanitize(SecurityContext.HTML, value);
+      
+      // Helper function to safely decode URL-encoded strings
+      // Uses a permissive approach that decodes valid sequences and leaves invalid ones
+      const safeDecodeURIComponent = (str: string): string => {
+        try {
+          return decodeURIComponent(str);
+        } catch {
+          // If full decode fails, try to decode valid percent-encoded sequences
+          // This handles cases like "%%3Cscript%3E" where %% is invalid
+          return str.replace(/%([0-9A-Fa-f]{2})/g, (_, hex) => {
+            try {
+              return String.fromCharCode(parseInt(hex, 16));
+            } catch {
+              return _;
+            }
+          });
+        }
+      };
+      
+      // Decode URL-encoded values to catch encoded XSS payloads
+      // Handle multiple encoding layers (e.g., double-encoding)
+      let decodedValue = value;
+      let previousValue = '';
+      let iterations = 0;
+      const maxIterations = 5; // Prevent infinite loops
+      
+      while (decodedValue !== previousValue && iterations < maxIterations) {
+        previousValue = decodedValue;
+        decodedValue = safeDecodeURIComponent(decodedValue);
+        iterations++;
+      }
 
-      if (sanitizedValue !== value) {
+      // Check both original and decoded values
+      const sanitizedOriginal = sanitizer.sanitize(SecurityContext.HTML, value);
+      const sanitizedDecoded = sanitizer.sanitize(SecurityContext.HTML, decodedValue);
+
+      if (sanitizedOriginal !== value || sanitizedDecoded !== decodedValue) {
         return {
           xss: {
             value: control.value,

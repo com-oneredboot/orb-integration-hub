@@ -16,6 +16,7 @@ import {
   getNextStepForAction
 } from '../models/RecoveryModel';
 import { AuthSteps } from '../../features/user/store/user.state';
+import { sanitizeEmail, sanitizeCognitoSub } from '../utils/log-sanitizer';
 
 @Injectable({
   providedIn: 'root'
@@ -56,7 +57,7 @@ export class RecoveryService {
       console.debug('[RecoveryService][smartCheck] checkEmailExists result:', {
         exists: checkResult.exists,
         cognitoStatus: checkResult.cognitoStatus,
-        cognitoSub: checkResult.cognitoSub
+        cognitoSub: sanitizeCognitoSub(checkResult.cognitoSub)
       });
 
       const cognitoStatus = this.parseCognitoStatus(checkResult.cognitoStatus);
@@ -67,7 +68,7 @@ export class RecoveryService {
       // Debug: Log parsed values
       console.debug('[RecoveryService][smartCheck] Parsed state:', {
         cognitoStatus,
-        cognitoSub,
+        cognitoSub: sanitizeCognitoSub(cognitoSub),
         dynamoExists
       });
 

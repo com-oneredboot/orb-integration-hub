@@ -19,7 +19,6 @@ model:
   authConfig:
     apiKeyAuthentication:
     - Users
-    - UsersUpdate
     - UsersResponse
     cognitoAuthentication:
       groups:

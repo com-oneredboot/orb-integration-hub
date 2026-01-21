@@ -29,6 +29,7 @@ from aws_cdk import (
     aws_appsync as appsync,
     aws_secretsmanager as secretsmanager,
     aws_ssm as ssm,
+    aws_wafv2 as wafv2,
 )
 from constructs import Construct
 
@@ -80,8 +81,6 @@ class AppSyncStack(Stack):
             self,
             "AppSyncApi",
             tables=tables,
-            enable_api_key=True,  # Enable API_KEY auth mode
-            enable_xray=True,     # Enable X-Ray tracing
         )
 
         # Expose the GraphQL API for other stacks
@@ -93,6 +92,10 @@ class AppSyncStack(Stack):
         # Create SSM parameter for API Key secret name
         self._create_api_key_ssm_parameter()
 
+        # Create WAF WebACL and associate with AppSync API
+        self.web_acl = self._create_waf_web_acl()
+        self._associate_waf_with_appsync()
+
     def _apply_tags(self) -> None:
         """Apply standard tags to all resources in this stack."""
         for key, value in self.config.standard_tags.items():
@@ -100,13 +103,13 @@ class AppSyncStack(Stack):
 
     def _create_api_key(self) -> appsync.CfnApiKey:
         """Create API Key and store in Secrets Manager."""
-        # API key expires in 365 days
+        # API key expires in 90 days (SEC-FINDING-010: reduced from 365 days)
         api_key = appsync.CfnApiKey(
             self,
             "ApiKey",
             api_id=self.api.api_id,
             description="API Key for unauthenticated access",
-            expires=Expiration.after(Duration.days(365)).to_epoch(),
+            expires=Expiration.after(Duration.days(90)).to_epoch(),
         )
 
         # Store API key in Secrets Manager
@@ -128,4 +131,89 @@ class AppSyncStack(Stack):
             parameter_name=self.config.ssm_parameter_name("appsync/api-key-secret-name"),
             string_value=self.config.resource_name("graphql-api-key"),
             description="Name of the secret containing the GraphQL API key",
+        )
+
+    def _create_waf_web_acl(self) -> wafv2.CfnWebACL:
+        """Create WAF WebACL with managed rules and rate limiting.
+        
+        Includes:
+        - AWSManagedRulesCommonRuleSet: Protection against common web exploits
+        - AWSManagedRulesKnownBadInputsRuleSet: Protection against known bad inputs
+        - Rate-based rule: 2000 requests per 5 minutes per IP
+        """
+        web_acl = wafv2.CfnWebACL(
+            self,
+            "AppSyncWebACL",
+            name=self.config.resource_name("appsync-waf"),
+            description="WAF WebACL for AppSync API protection",
+            default_action=wafv2.CfnWebACL.DefaultActionProperty(allow={}),
+            scope="REGIONAL",
+            visibility_config=wafv2.CfnWebACL.VisibilityConfigProperty(
+                cloud_watch_metrics_enabled=True,
+                metric_name=self.config.resource_name("appsync-waf"),
+                sampled_requests_enabled=True,
+            ),
+            rules=[
+                # AWS Managed Common Rule Set - protects against common web exploits
+                wafv2.CfnWebACL.RuleProperty(
+                    name="AWSManagedRulesCommonRuleSet",
+                    priority=1,
+                    override_action=wafv2.CfnWebACL.OverrideActionProperty(none={}),
+                    statement=wafv2.CfnWebACL.StatementProperty(
+                        managed_rule_group_statement=wafv2.CfnWebACL.ManagedRuleGroupStatementProperty(
+                            vendor_name="AWS",
+                            name="AWSManagedRulesCommonRuleSet",
+                        )
+                    ),
+                    visibility_config=wafv2.CfnWebACL.VisibilityConfigProperty(
+                        cloud_watch_metrics_enabled=True,
+                        metric_name=self.config.resource_name("common-rules"),
+                        sampled_requests_enabled=True,
+                    ),
+                ),
+                # AWS Managed Known Bad Inputs Rule Set - protects against known bad inputs
+                wafv2.CfnWebACL.RuleProperty(
+                    name="AWSManagedRulesKnownBadInputsRuleSet",
+                    priority=2,
+                    override_action=wafv2.CfnWebACL.OverrideActionProperty(none={}),
+                    statement=wafv2.CfnWebACL.StatementProperty(
+                        managed_rule_group_statement=wafv2.CfnWebACL.ManagedRuleGroupStatementProperty(
+                            vendor_name="AWS",
+                            name="AWSManagedRulesKnownBadInputsRuleSet",
+                        )
+                    ),
+                    visibility_config=wafv2.CfnWebACL.VisibilityConfigProperty(
+                        cloud_watch_metrics_enabled=True,
+                        metric_name=self.config.resource_name("known-bad-inputs"),
+                        sampled_requests_enabled=True,
+                    ),
+                ),
+                # Rate-based rule - 2000 requests per 5 minutes per IP
+                wafv2.CfnWebACL.RuleProperty(
+                    name="RateLimitRule",
+                    priority=3,
+                    action=wafv2.CfnWebACL.RuleActionProperty(block={}),
+                    statement=wafv2.CfnWebACL.StatementProperty(
+                        rate_based_statement=wafv2.CfnWebACL.RateBasedStatementProperty(
+                            limit=2000,
+                            aggregate_key_type="IP",
+                        )
+                    ),
+                    visibility_config=wafv2.CfnWebACL.VisibilityConfigProperty(
+                        cloud_watch_metrics_enabled=True,
+                        metric_name=self.config.resource_name("rate-limit"),
+                        sampled_requests_enabled=True,
+                    ),
+                ),
+            ],
+        )
+        return web_acl
+
+    def _associate_waf_with_appsync(self) -> wafv2.CfnWebACLAssociation:
+        """Associate WAF WebACL with AppSync API."""
+        return wafv2.CfnWebACLAssociation(
+            self,
+            "AppSyncWAFAssociation",
+            resource_arn=self.api.arn,
+            web_acl_arn=self.web_acl.attr_arn,
         )

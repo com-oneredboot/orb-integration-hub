@@ -127,9 +127,11 @@ class TestProperty1CognitoValidation:
 
         Validates: Requirements 2.1, 2.6
         """
-        with patch.object(index, "query_user_by_cognito_sub") as mock_query, patch.object(
-            index, "get_cognito_user"
-        ) as mock_cognito, patch.object(index, "create_user_record") as mock_create:
+        with patch.object(index, "ensure_user_in_group"), patch.object(
+            index, "query_user_by_cognito_sub"
+        ) as mock_query, patch.object(index, "get_cognito_user") as mock_cognito, patch.object(
+            index, "create_user_record"
+        ) as mock_create:
 
             mock_query.return_value = None  # User doesn't exist in DynamoDB
             mock_cognito.return_value = make_cognito_user(cognito_sub, email, "Test", "User", True)
@@ -152,9 +154,11 @@ class TestProperty1CognitoValidation:
 
         Validates: Requirements 2.1, 2.6
         """
-        with patch.object(index, "query_user_by_cognito_sub") as mock_query, patch.object(
-            index, "get_cognito_user"
-        ) as mock_cognito, patch.object(index, "create_user_record") as mock_create:
+        with patch.object(index, "ensure_user_in_group"), patch.object(
+            index, "query_user_by_cognito_sub"
+        ) as mock_query, patch.object(index, "get_cognito_user") as mock_cognito, patch.object(
+            index, "create_user_record"
+        ) as mock_create:
 
             mock_query.return_value = None  # User doesn't exist in DynamoDB
             mock_cognito.return_value = None  # User doesn't exist in Cognito
@@ -230,9 +234,11 @@ class TestProperty2DataSourceIntegrity:
         assume(client_email != cognito_email)
         assume(client_first != cognito_first)
 
-        with patch.object(index, "query_user_by_cognito_sub") as mock_query, patch.object(
-            index, "get_cognito_user"
-        ) as mock_cognito, patch.object(index, "create_user_record") as mock_create:
+        with patch.object(index, "ensure_user_in_group"), patch.object(
+            index, "query_user_by_cognito_sub"
+        ) as mock_query, patch.object(index, "get_cognito_user") as mock_cognito, patch.object(
+            index, "create_user_record"
+        ) as mock_create:
 
             mock_query.return_value = None
             mock_cognito.return_value = make_cognito_user(
@@ -354,9 +360,11 @@ class TestProperty3Idempotency:
             cognito_sub, email, first_name, last_name, status, groups
         )
 
-        with patch.object(index, "query_user_by_cognito_sub") as mock_query, patch.object(
-            index, "get_cognito_user"
-        ) as mock_cognito, patch.object(index, "create_user_record") as mock_create:
+        with patch.object(index, "ensure_user_in_group"), patch.object(
+            index, "query_user_by_cognito_sub"
+        ) as mock_query, patch.object(index, "get_cognito_user") as mock_cognito, patch.object(
+            index, "create_user_record"
+        ) as mock_create:
 
             mock_query.return_value = existing_record
 
@@ -488,7 +496,9 @@ class TestProperty5TimingConsistency:
 
         Validates: Requirements 5.2
         """
-        with patch.object(index, "query_user_by_cognito_sub") as mock_query:
+        with patch.object(index, "ensure_user_in_group"), patch.object(
+            index, "query_user_by_cognito_sub"
+        ) as mock_query:
             mock_query.return_value = make_user_record(cognito_sub, email, "Test", "User")
 
             event = {"arguments": {"input": {"cognitoSub": cognito_sub}}}

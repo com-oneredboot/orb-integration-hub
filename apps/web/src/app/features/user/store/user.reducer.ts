@@ -6,6 +6,7 @@
 import {createReducer, on} from '@ngrx/store';
 import {UserActions} from './user.actions';
 import {AuthSteps, initialState} from './user.state';
+import { sanitizeEmail } from '../../../core/utils/log-sanitizer';
 
 export { UserState } from './user.state';
 
@@ -355,7 +356,7 @@ export const userReducer = createReducer(
 
   // Auth Flow Complete
   on(UserActions.authFlowComplete, (state, { user }) => {
-    console.log('[AuthReducer] authFlowComplete - Authentication flow completed for user:', user.email);
+    console.log('[AuthReducer] authFlowComplete - Authentication flow completed for user:', sanitizeEmail(user.email));
     return {
       ...state,
       currentStep: AuthSteps.COMPLETE,

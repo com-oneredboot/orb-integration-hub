@@ -288,6 +288,9 @@ def lambda_handler(event, context):
                 sms=True,
                 otp=True,
             ),
+            # SEC-FINDING-009: Enable advanced security for threat protection
+            # Detects compromised credentials, suspicious sign-ins, and adaptive auth
+            advanced_security_mode=cognito.AdvancedSecurityMode.ENFORCED,
             device_tracking=cognito.DeviceTracking(
                 challenge_required_on_new_device=True,
                 device_only_remembered_on_user_prompt=True,
