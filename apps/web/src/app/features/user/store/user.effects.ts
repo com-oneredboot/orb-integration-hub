@@ -593,6 +593,7 @@ export class UserEffects {
           console.log('[AuthEffects] MFA success, fetching user from DynamoDB for:', email);
           return from(this.userService.userQueryByEmail(email)).pipe(
             switchMap(response => {
+              console.debug('[AuthEffects] userQueryByEmail response:', response);
               if (response.StatusCode === 200 && response.Data && response.Data.length > 0) {
                 const user = new Users(response.Data[0]);
                 console.log('[AuthEffects] User fetched successfully, completing auth flow');
@@ -601,15 +602,17 @@ export class UserEffects {
               
               // User not found in DynamoDB - need to create the record
               // This is the CREATE_DYNAMO_RECORD case
-              console.log('[AuthEffects] User not found in DynamoDB, creating record for:', email);
+              console.log('[AuthEffects] User not found in DynamoDB (StatusCode:', response.StatusCode, ', Data length:', response.Data?.length, '), creating record for:', email);
               return from(this.cognitoService.getCognitoProfile()).pipe(
                 switchMap(cognitoProfile => {
+                  console.debug('[AuthEffects] getCognitoProfile result:', cognitoProfile);
                   if (!cognitoProfile) {
                     console.error('[AuthEffects] No Cognito profile available');
                     return of(UserActions.needsMFAFailure({ error: 'Unable to get user profile' }));
                   }
                   
                   const cognitoSub = cognitoProfile.sub as string || '';
+                  console.debug('[AuthEffects] Creating user with cognitoSub:', cognitoSub);
                   const newUser = new Users({
                     userId: cognitoSub,
                     cognitoId: cognitoSub,
@@ -625,7 +628,7 @@ export class UserEffects {
                     status: 'PENDING'
                   });
                   
-                  console.log('[AuthEffects] Creating DynamoDB record for user:', newUser.email);
+                  console.log('[AuthEffects] Creating DynamoDB record for user:', newUser.email, 'with userId:', newUser.userId);
                   // Dispatch action to create user - this will trigger the createUser flow
                   // But we need to create without password since user already exists in Cognito
                   return of(UserActions.createUserRecordOnly({ user: newUser }));
