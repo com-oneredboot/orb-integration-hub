@@ -288,9 +288,13 @@ def lambda_handler(event, context):
                 sms=True,
                 otp=True,
             ),
-            # SEC-FINDING-009: Enable advanced security for threat protection
-            # Detects compromised credentials, suspicious sign-ins, and adaptive auth
-            advanced_security_mode=cognito.AdvancedSecurityMode.ENFORCED,
+            # SEC-FINDING-009: Enable Plus tier for threat protection
+            # Plus tier required for threat protection features
+            # Cost: $0.02/MAU (no free tier) vs Essentials $0.015/MAU (10K free)
+            feature_plan=cognito.FeaturePlan.PLUS,
+            # Enable full threat protection - detects compromised credentials,
+            # suspicious sign-ins, and takes automatic preventative actions
+            standard_threat_protection_mode=cognito.StandardThreatProtectionMode.FULL_FUNCTION,
             device_tracking=cognito.DeviceTracking(
                 challenge_required_on_new_device=True,
                 device_only_remembered_on_user_prompt=True,

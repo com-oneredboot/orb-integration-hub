@@ -100,7 +100,9 @@ class DynamoDBStack(Stack):
             ),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
             stream=dynamodb.StreamViewType.NEW_AND_OLD_IMAGES,
-            point_in_time_recovery=True,
+            point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
+                point_in_time_recovery_enabled=True
+            ),
             removal_policy=RemovalPolicy.RETAIN,
         )
 
@@ -148,7 +150,9 @@ class DynamoDBStack(Stack):
                 type=dynamodb.AttributeType.STRING,
             ),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
-            point_in_time_recovery=True,
+            point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
+                point_in_time_recovery_enabled=True
+            ),
             removal_policy=RemovalPolicy.RETAIN,
         )
 
@@ -198,7 +202,9 @@ class DynamoDBStack(Stack):
                 type=dynamodb.AttributeType.STRING,
             ),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
-            point_in_time_recovery=True,
+            point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
+                point_in_time_recovery_enabled=True
+            ),
             removal_policy=RemovalPolicy.RETAIN,
         )
 
@@ -244,7 +250,9 @@ class DynamoDBStack(Stack):
                 type=dynamodb.AttributeType.STRING,
             ),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
-            point_in_time_recovery=True,
+            point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
+                point_in_time_recovery_enabled=True
+            ),
             removal_policy=RemovalPolicy.RETAIN,
         )
 
@@ -276,7 +284,9 @@ class DynamoDBStack(Stack):
                 type=dynamodb.AttributeType.STRING,
             ),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
-            point_in_time_recovery=True,
+            point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
+                point_in_time_recovery_enabled=True
+            ),
             removal_policy=RemovalPolicy.RETAIN,
         )
 
@@ -322,7 +332,9 @@ class DynamoDBStack(Stack):
                 type=dynamodb.AttributeType.STRING,
             ),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
-            point_in_time_recovery=True,
+            point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
+                point_in_time_recovery_enabled=True
+            ),
             removal_policy=RemovalPolicy.RETAIN,
         )
 
@@ -382,7 +394,9 @@ class DynamoDBStack(Stack):
                 type=dynamodb.AttributeType.STRING,
             ),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
-            point_in_time_recovery=True,
+            point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
+                point_in_time_recovery_enabled=True
+            ),
             removal_policy=RemovalPolicy.RETAIN,
         )
 
@@ -414,7 +428,9 @@ class DynamoDBStack(Stack):
                 type=dynamodb.AttributeType.STRING,
             ),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
-            point_in_time_recovery=True,
+            point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
+                point_in_time_recovery_enabled=True
+            ),
             removal_policy=RemovalPolicy.RETAIN,
         )
 
@@ -460,7 +476,9 @@ class DynamoDBStack(Stack):
                 type=dynamodb.AttributeType.STRING,
             ),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
-            point_in_time_recovery=True,
+            point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
+                point_in_time_recovery_enabled=True
+            ),
             removal_policy=RemovalPolicy.RETAIN,
         )
 
@@ -534,7 +552,9 @@ class DynamoDBStack(Stack):
                 type=dynamodb.AttributeType.STRING,
             ),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
-            point_in_time_recovery=True,
+            point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
+                point_in_time_recovery_enabled=True
+            ),
             removal_policy=RemovalPolicy.RETAIN,
         )
 
@@ -608,7 +628,9 @@ class DynamoDBStack(Stack):
                 type=dynamodb.AttributeType.STRING,
             ),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
-            point_in_time_recovery=True,
+            point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
+                point_in_time_recovery_enabled=True
+            ),
             removal_policy=RemovalPolicy.RETAIN,
         )
 

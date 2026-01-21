@@ -162,17 +162,19 @@ class TestFrontendStackCloudFront:
         )
 
 
-class TestFrontendStackOAI:
-    """Tests for Origin Access Identity."""
+class TestFrontendStackOAC:
+    """Tests for Origin Access Control."""
 
-    def test_creates_origin_access_identity(self, template: Template) -> None:
-        """Verify Origin Access Identity is created."""
+    def test_creates_origin_access_control(self, template: Template) -> None:
+        """Verify Origin Access Control is created."""
         template.has_resource_properties(
-            "AWS::CloudFront::CloudFrontOriginAccessIdentity",
+            "AWS::CloudFront::OriginAccessControl",
             {
-                "CloudFrontOriginAccessIdentityConfig": {
-                    "Comment": "OAI for test-project-dev website",
-                },
+                "OriginAccessControlConfig": Match.object_like({
+                    "OriginAccessControlOriginType": "s3",
+                    "SigningBehavior": "always",
+                    "SigningProtocol": "sigv4",
+                }),
             },
         )
 

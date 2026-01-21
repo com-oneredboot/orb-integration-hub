@@ -73,25 +73,15 @@ class FrontendStack(Stack):
 
     def _create_cloudfront_distribution(self) -> cloudfront.Distribution:
         """Create CloudFront distribution for website."""
-        # Create Origin Access Identity for S3 access
-        origin_access_identity = cloudfront.OriginAccessIdentity(
-            self,
-            "OAI",
-            comment=f"OAI for {self.config.prefix} website",
-        )
-
-        # Grant read access to CloudFront
-        self.website_bucket.grant_read(origin_access_identity)
-
-        # Create CloudFront distribution
+        # Create CloudFront distribution with Origin Access Control (OAC)
+        # OAC is the modern replacement for OAI and is recommended by AWS
         distribution = cloudfront.Distribution(
             self,
             "Distribution",
             comment=f"{self.config.prefix} website distribution",
             default_behavior=cloudfront.BehaviorOptions(
-                origin=origins.S3Origin(
+                origin=origins.S3BucketOrigin.with_origin_access_control(
                     self.website_bucket,
-                    origin_access_identity=origin_access_identity,
                 ),
                 viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                 allowed_methods=cloudfront.AllowedMethods.ALLOW_GET_HEAD,
