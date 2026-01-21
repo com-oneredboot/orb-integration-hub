@@ -59,65 +59,38 @@ export class UserService extends ApiService {
   }
 
   /**
-   * Create a new user
-   * @param input
-   * @param password
+   * Create a new user in Cognito only.
+   * DynamoDB record will be created later via CreateUserFromCognito after email verification and MFA.
+   * 
+   * Flow: EMAIL → PASSWORD_SETUP → EMAIL_VERIFY → SIGNIN → MFA_SETUP → CreateUserFromCognito → Dashboard
+   * 
+   * @param input User input (only email is used for Cognito signup)
+   * @param password User's password
    */
   public async userCreate(input: UsersCreateInput, password: string): Promise<UsersResponse> {
-    console.debug('createUser input:', input);
+    console.debug('[UserService][userCreate] Creating Cognito user only:', input.email);
     this.userDebugLog.logApi('userCreate', 'pending', { email: input.email });
 
     try {
-      // create the Cognito User
+      // Create the Cognito User ONLY - no DynamoDB record yet
+      // DynamoDB record will be created via CreateUserFromCognito after MFA completion
       this.userDebugLog.logApi('createCognitoUser', 'pending', { email: input.email });
       const cognitoResponse = await this.cognitoService.createCognitoUser(input, password);
-      console.debug('createCognitoUser Response: ', cognitoResponse);
-      this.userDebugLog.logAuth('createCognitoUser', 'success', { userId: cognitoResponse.userId });
-
-      const timestamp = new Date();
+      console.debug('[UserService][userCreate] createCognitoUser Response:', cognitoResponse);
       
-      // Generate IDs using Cognito's sub as the primary identifier
       const cognitoSub = cognitoResponse.userId || '';
-      
-      const userCreateInput: UsersCreateInput = {
-        userId: cognitoSub, // Use Cognito sub as user ID
-        cognitoId: cognitoSub, // Use Cognito sub as cognito ID
-        cognitoSub: cognitoSub,
-        email: input.email,
-        firstName: input.firstName || '',
-        lastName: input.lastName || '',
-        phoneNumber: input.phoneNumber || '',
-        groups: input.groups || [UserGroup.User] as string[],
-        status: input.status || UserStatus.Pending,
-        createdAt: input.createdAt || timestamp,
-        phoneVerified: input.phoneVerified || false,
-        emailVerified: input.emailVerified || false,
-        updatedAt: timestamp, // Always update with current timestamp
-        mfaEnabled: input.mfaEnabled || false,
-        mfaSetupComplete: input.mfaSetupComplete || false
-      };
+      this.userDebugLog.logAuth('createCognitoUser', 'success', { userId: cognitoSub });
 
-      // Convert Date fields to Unix timestamps for GraphQL AWSTimestamp compatibility
-      const graphqlInput = toGraphQLInput(userCreateInput as unknown as Record<string, unknown>);
-
-      const response = await this.mutate(UsersCreate, {"input": graphqlInput}, "apiKey") as GraphQLResult<UsersCreateResponse>;
-      console.debug('createUser Response: ', response);
-
-      const statusCode = response.data?.StatusCode ?? 200;
-      if (statusCode !== 200) {
-        this.userDebugLog.logError('userCreate', response.data?.Message || 'Non-200 status', { statusCode });
-      } else {
-        this.userDebugLog.logApi('userCreate', 'success', { userId: cognitoSub });
-      }
-
+      // Return success - user needs to verify email next
+      // No DynamoDB record created yet - that happens after MFA via CreateUserFromCognito
       return {
-        StatusCode: statusCode,
-        Message: response.data?.Message ?? '',
-        Data: response.data?.Data ?? null
+        StatusCode: 200,
+        Message: 'Cognito user created successfully. Please verify your email.',
+        Data: null // No DynamoDB user yet
       } as UsersResponse;
 
     } catch (error: unknown) {
-      console.error('Error creating User:', error);
+      console.error('[UserService][userCreate] Error creating Cognito user:', error);
       const errorObj = error as { message?: string; name?: string; code?: string };
       const message = errorObj?.message || String(error) || '';
       const errorName = errorObj?.name || '';
@@ -133,7 +106,6 @@ export class UserService extends ApiService {
       this.userDebugLog.logError('userCreate', message, { error: String(error), name: errorName });
       
       // Re-throw UsernameExistsException so the effect can handle smart recovery
-      // Check message, name, and code for various error formats
       const isUsernameExists = 
         message.toLowerCase().includes('usernameexistsexception') || 
         message.toLowerCase().includes('user already exists') ||
@@ -145,18 +117,10 @@ export class UserService extends ApiService {
         console.debug('[UserService][userCreate] Detected UsernameExistsException, re-throwing for smart recovery');
         throw error; // Let the effect handle this for smart recovery
       }
-      
-      if (message.includes('Not Authorized') || message.includes('Unauthorized')) {
-        return {
-          StatusCode: 401,
-          Message: 'Not Authorized to access UsersCreate on type Mutation',
-          Data: new Users()
-        } as UsersResponse;
-      }
 
       return {
         StatusCode: 500,
-        Message: message || 'Error creating user',
+        Message: message || 'Error creating Cognito user',
         Data: new Users()
       } as UsersResponse;
     }
