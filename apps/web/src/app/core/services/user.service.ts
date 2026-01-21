@@ -180,11 +180,11 @@ export class UserService extends ApiService {
         throw new Error('Must provide userId or email');
       }
 
-      // Use apiKey for unauthenticated user lookups (registration flow)
+      // UsersQueryByUserId and UsersQueryByEmail require Cognito auth
       const response = await this.query(
         query,
         { input: queryInput },
-        'apiKey'
+        'userPool'
       ) as GraphQLResult<{ UsersQueryByUserId?: UsersListResponse; UsersQueryByEmail?: UsersListResponse }>;
 
       // Dynamically get the result based on which query was used
@@ -332,13 +332,14 @@ export class UserService extends ApiService {
   public async userQueryByUserId(userId: string): Promise<UsersResponse> {
     console.debug('userQueryByUserId:', userId);
     try {
+      // UsersQueryByUserId requires Cognito auth
       const response = await this.query(
         UsersQueryByUserId,
         {
           input: {
             userId: userId
           }
-        },'apiKey') as GraphQLResult<UsersResponse>;
+        }, 'userPool') as GraphQLResult<UsersResponse>;
 
       console.debug('userQueryByUserId Response: ', response);
      
@@ -363,6 +364,7 @@ export class UserService extends ApiService {
   public async userQueryByCognitoSub(cognitoSub: string): Promise<UsersListResponse> {
     console.debug('userQueryByCognitoSub: ', cognitoSub);
     try {
+      // UsersQueryByCognitoSub requires Cognito auth
       const queryResult = await this.query(
         UsersQueryByCognitoSub,
         {
@@ -370,7 +372,7 @@ export class UserService extends ApiService {
             cognitoSub: cognitoSub
           }
         },
-        'apiKey') as GraphQLResult<{ UsersQueryByCognitoSub: UsersListResponse }>;
+        'userPool') as GraphQLResult<{ UsersQueryByCognitoSub: UsersListResponse }>;
 
         const response = queryResult.data?.UsersQueryByCognitoSub;
         const users = response?.Data || [];
