@@ -278,6 +278,17 @@ export class UserEffects {
     )
   );
 
+  // Complete auth flow after successful sign-in
+  handleSignInSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(UserActions.signInSuccess),
+      map(({ user }) => {
+        console.log('[Effect][handleSignInSuccess$] Completing auth flow for:', user.email);
+        return UserActions.authFlowComplete({ user });
+      })
+    )
+  );
+
   // Check email verification status in Cognito
   checkEmailVerificationStatus$ = createEffect(() =>
     this.actions$.pipe(
