@@ -92,6 +92,11 @@ export const UserActions = createActionGroup({
     'Create User': props<{ input: UsersCreateInput, password: string}>(),
     'Create User Success': emptyProps(),
     'Create User Failure': props<{ error: string }>(),
+    
+    // Create DynamoDB record only (user already exists in Cognito)
+    'Create User Record Only': props<{ user: IUsers }>(),
+    'Create User Record Only Success': props<{ user: IUsers }>(),
+    'Create User Record Only Failure': props<{ error: string }>(),
 
     'Register': props<{ email: string; password: string; firstName: string; lastName: string }>(),
     'Register Success': props<{ user: IUsers }>(),

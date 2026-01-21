@@ -165,6 +165,66 @@ export class UserEffects {
     )
   );
 
+  // Create DynamoDB record only (user already exists in Cognito)
+  createUserRecordOnly$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(UserActions.createUserRecordOnly),
+      switchMap(({ user }) => {
+        console.log('[Effect][createUserRecordOnly$] Creating DynamoDB record for:', user.email);
+        
+        // Use UsersCreate mutation to create the DynamoDB record
+        // The user already exists in Cognito, so we just need the DynamoDB record
+        const createInput = {
+          userId: user.userId,
+          cognitoId: user.cognitoId,
+          cognitoSub: user.cognitoSub,
+          email: user.email,
+          firstName: user.firstName || '',
+          lastName: user.lastName || '',
+          phoneNumber: user.phoneNumber || '',
+          phoneVerified: user.phoneVerified || false,
+          emailVerified: user.emailVerified || true,
+          mfaEnabled: user.mfaEnabled || true,
+          mfaSetupComplete: user.mfaSetupComplete || true,
+          groups: user.groups || ['USER'],
+          status: user.status || 'PENDING',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        
+        return from(this.userService.createUserRecordOnly(createInput)).pipe(
+          map(response => {
+            if (response.StatusCode === 200 && response.Data) {
+              console.log('[Effect][createUserRecordOnly$] DynamoDB record created successfully');
+              return UserActions.createUserRecordOnlySuccess({ user: new Users(response.Data) });
+            }
+            console.error('[Effect][createUserRecordOnly$] Failed to create record:', response.Message);
+            return UserActions.createUserRecordOnlyFailure({ 
+              error: response.Message || 'Failed to create user record' 
+            });
+          }),
+          catchError(error => {
+            console.error('[Effect][createUserRecordOnly$] Error:', error);
+            return of(UserActions.createUserRecordOnlyFailure({ 
+              error: error instanceof Error ? error.message : 'Failed to create user record' 
+            }));
+          })
+        );
+      })
+    )
+  );
+
+  // Complete auth flow after creating DynamoDB record
+  handleCreateUserRecordOnlySuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(UserActions.createUserRecordOnlySuccess),
+      map(({ user }) => {
+        console.log('[Effect][handleCreateUserRecordOnlySuccess$] Completing auth flow for:', user.email);
+        return UserActions.authFlowComplete({ user });
+      })
+    )
+  );
+
   // Check email verification status in Cognito
   checkEmailVerificationStatus$ = createEffect(() =>
     this.actions$.pipe(
@@ -532,14 +592,49 @@ export class UserEffects {
         if (email) {
           console.log('[AuthEffects] MFA success, fetching user from DynamoDB for:', email);
           return from(this.userService.userQueryByEmail(email)).pipe(
-            map(response => {
+            switchMap(response => {
               if (response.StatusCode === 200 && response.Data && response.Data.length > 0) {
                 const user = new Users(response.Data[0]);
                 console.log('[AuthEffects] User fetched successfully, completing auth flow');
-                return UserActions.authFlowComplete({ user });
+                return of(UserActions.authFlowComplete({ user }));
               }
-              console.error('[AuthEffects] User not found in DynamoDB after MFA');
-              return UserActions.needsMFAFailure({ error: 'User record not found' });
+              
+              // User not found in DynamoDB - need to create the record
+              // This is the CREATE_DYNAMO_RECORD case
+              console.log('[AuthEffects] User not found in DynamoDB, creating record for:', email);
+              return from(this.cognitoService.getCognitoProfile()).pipe(
+                switchMap(cognitoProfile => {
+                  if (!cognitoProfile) {
+                    console.error('[AuthEffects] No Cognito profile available');
+                    return of(UserActions.needsMFAFailure({ error: 'Unable to get user profile' }));
+                  }
+                  
+                  const cognitoSub = cognitoProfile.sub as string || '';
+                  const newUser = new Users({
+                    userId: cognitoSub,
+                    cognitoId: cognitoSub,
+                    cognitoSub: cognitoSub,
+                    email: email,
+                    firstName: (cognitoProfile['given_name'] as string) || '',
+                    lastName: (cognitoProfile['family_name'] as string) || '',
+                    emailVerified: true, // Must be verified to complete MFA
+                    phoneVerified: false,
+                    mfaEnabled: true, // Just completed MFA
+                    mfaSetupComplete: true,
+                    groups: ['USER'],
+                    status: 'PENDING'
+                  });
+                  
+                  console.log('[AuthEffects] Creating DynamoDB record for user:', newUser.email);
+                  // Dispatch action to create user - this will trigger the createUser flow
+                  // But we need to create without password since user already exists in Cognito
+                  return of(UserActions.createUserRecordOnly({ user: newUser }));
+                }),
+                catchError(error => {
+                  console.error('[AuthEffects] Error getting Cognito profile:', error);
+                  return of(UserActions.needsMFAFailure({ error: 'Failed to create user record' }));
+                })
+              );
             }),
             catchError(error => {
               console.error('[AuthEffects] Error fetching user after MFA:', error);

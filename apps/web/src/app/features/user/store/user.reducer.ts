@@ -101,6 +101,24 @@ export const userReducer = createReducer(
     error,
     isLoading: false
   })),
+  
+  // Create DynamoDB record only (user already exists in Cognito)
+  on(UserActions.createUserRecordOnly, (state) => ({
+    ...state,
+    isLoading: true,
+    error: null
+  })),
+  on(UserActions.createUserRecordOnlySuccess, (state, { user }) => ({
+    ...state,
+    currentUser: user,
+    isLoading: false,
+    error: null
+  })),
+  on(UserActions.createUserRecordOnlyFailure, (state, { error }) => ({
+    ...state,
+    error,
+    isLoading: false
+  })),
 
   // Email Verification
   on(UserActions.verifyEmail, (state) => ({

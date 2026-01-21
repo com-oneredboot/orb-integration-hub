@@ -162,6 +162,71 @@ export class UserService extends ApiService {
   }
 
   /**
+   * Create DynamoDB record only (user already exists in Cognito)
+   * This is used when a user exists in Cognito but not in DynamoDB
+   * @param input User data to create
+   */
+  public async createUserRecordOnly(input: UsersCreateInput): Promise<UsersResponse> {
+    console.debug('[UserService][createUserRecordOnly] Creating DynamoDB record:', input.email);
+    this.userDebugLog.logApi('createUserRecordOnly', 'pending', { email: input.email });
+
+    try {
+      const timestamp = new Date();
+      
+      const userCreateInput: UsersCreateInput = {
+        userId: input.userId,
+        cognitoId: input.cognitoId,
+        cognitoSub: input.cognitoSub,
+        email: input.email,
+        firstName: input.firstName || '',
+        lastName: input.lastName || '',
+        phoneNumber: input.phoneNumber || '',
+        groups: input.groups || [UserGroup.User] as string[],
+        status: input.status || UserStatus.Pending,
+        createdAt: input.createdAt || timestamp,
+        phoneVerified: input.phoneVerified || false,
+        emailVerified: input.emailVerified || false,
+        updatedAt: timestamp,
+        mfaEnabled: input.mfaEnabled || false,
+        mfaSetupComplete: input.mfaSetupComplete || false
+      };
+
+      // Convert Date fields to Unix timestamps for GraphQL AWSTimestamp compatibility
+      const graphqlInput = toGraphQLInput(userCreateInput as unknown as Record<string, unknown>);
+
+      // Use userPool auth since user is already authenticated
+      const response = await this.mutate(UsersCreate, {"input": graphqlInput}, "userPool") as GraphQLResult<UsersCreateResponse>;
+      console.debug('[UserService][createUserRecordOnly] Response:', response);
+
+      const statusCode = response.data?.StatusCode ?? 200;
+      if (statusCode !== 200) {
+        this.userDebugLog.logError('createUserRecordOnly', response.data?.Message || 'Non-200 status', { statusCode });
+      } else {
+        this.userDebugLog.logApi('createUserRecordOnly', 'success', { userId: input.userId });
+      }
+
+      return {
+        StatusCode: statusCode,
+        Message: response.data?.Message ?? '',
+        Data: response.data?.Data ?? null
+      } as UsersResponse;
+
+    } catch (error: unknown) {
+      console.error('[UserService][createUserRecordOnly] Error:', error);
+      const errorObj = error as { message?: string };
+      const message = errorObj?.message || String(error) || '';
+      
+      this.userDebugLog.logError('createUserRecordOnly', message, { error: String(error) });
+
+      return {
+        StatusCode: 500,
+        Message: message || 'Error creating user record',
+        Data: new Users()
+      } as UsersResponse;
+    }
+  }
+
+  /**
    * Check if a user exists
    * @param input UserQueryInput with backend-compatible fields
    * @returns UsersResponse object
