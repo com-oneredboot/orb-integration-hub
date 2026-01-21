@@ -901,20 +901,20 @@ description: HTML template file
 
     <!-- LLM-Friendly Summary Section -->
     <div class="auth-flow__debug-section auth-flow__debug-summary">
-      <h4>📋 Quick Debug Summary</h4>
+      <h4>Quick Debug Summary</h4>
       <p class="auth-flow__debug-hint">Click to copy a compact summary for troubleshooting</p>
       <button 
         type="button" 
         class="auth-flow__debug-copy-btn"
         (click)="copyDebugSummary()"
         [disabled]="debugCopyStatus === 'copying'">
-        {{ debugCopyStatus === 'copied' ? '✓ Copied!' : debugCopyStatus === 'copying' ? 'Copying...' : '📋 Copy Debug Summary' }}
+        {{ debugCopyStatus === 'copied' ? 'Copied!' : debugCopyStatus === 'copying' ? 'Copying...' : 'Copy Debug Summary' }}
       </button>
     </div>
 
     <!-- Recent API Calls -->
     <div class="auth-flow__debug-section">
-      <h4>🔄 Recent API Calls</h4>
+      <h4>Recent API Calls</h4>
       <div class="auth-flow__debug-logs">
         <ng-container *ngFor="let log of debugLogs$ | async | slice:-5">
           <div class="auth-flow__debug-log-entry" [class.auth-flow__debug-log-entry--error]="log.status === 'failure'">
