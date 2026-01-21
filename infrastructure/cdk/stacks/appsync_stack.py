@@ -77,10 +77,12 @@ class AppSyncStack(Stack):
 
         # Create AppSync API using generated construct
         # This creates the API, data sources, and all resolvers
+        # enable_api_key=True adds API_KEY as additional auth mode for unauthenticated access
         self.appsync_api = AppSyncApi(
             self,
             "AppSyncApi",
             tables=tables,
+            enable_api_key=True,
         )
 
         # Expose the GraphQL API for other stacks
