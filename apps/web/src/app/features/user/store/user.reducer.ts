@@ -145,8 +145,9 @@ export const userReducer = createReducer(
   })),
 
   // Sign In
-  on(UserActions.signIn, (state) => ({
+  on(UserActions.signIn, (state, { email }) => ({
     ...state,
+    currentEmail: email, // Preserve email for MFA flow
     isLoading: true,
     error: null
   })),
