@@ -1081,6 +1081,8 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             return 'Sign In or Create Account';
           case AuthSteps.PASSWORD:
             return this.userExists$ ? 'Enter Password' : 'Create Account';
+          case AuthSteps.SIGNIN:
+            return 'Sign In';
           case AuthSteps.PHONE_SETUP:
             return 'Setup Phone';
           case AuthSteps.MFA_SETUP:
@@ -1172,6 +1174,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         ]);
         break;
       case AuthSteps.PASSWORD:
+      case AuthSteps.SIGNIN:
         passwordControl?.setValidators([
           Validators.required,
           CustomValidators.noXSS(this.sanitizer)
@@ -1713,6 +1716,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       case AuthSteps.EMAIL:
         return ['email'];
       case AuthSteps.PASSWORD:
+      case AuthSteps.SIGNIN:
         return ['password'];
       case AuthSteps.PASSWORD_SETUP:
         return ['password', 'firstName', 'lastName'];
