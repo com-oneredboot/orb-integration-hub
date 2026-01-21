@@ -733,12 +733,15 @@ export class UserEffects {
               });
             }
             
-            // Check for needsUserRecord case (user in Cognito but not DynamoDB)
-            if (response.StatusCode === 200 && response.Data?.needsUserRecord) {
-              console.debug('[Effect][signIn$] User needs DynamoDB record creation');
-              // For now, treat as success but the flow will need to create the record
-              return UserActions.signInFailure({
-                error: 'User record needs to be created. Please contact support.'
+            // Check for sign-in success without user record (user in Cognito but not DynamoDB)
+            // The MFA flow will handle creating the record via CreateUserFromCognito
+            if (response.StatusCode === 200 && response.Data?.isSignedIn && !response.Data.user) {
+              console.debug('[Effect][signIn$] User signed in but no DynamoDB record - MFA flow will create it');
+              // Continue with MFA flow which will create the user record
+              return UserActions.verifyCognitoPasswordSuccess({
+                needsMFA: false,
+                needsMFASetup: false,
+                message: 'Sign in successful, creating user record'
               });
             }
             

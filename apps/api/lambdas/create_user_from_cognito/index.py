@@ -251,6 +251,7 @@ def format_response(user_record: dict[str, Any]) -> dict[str, Any]:
         Formatted response dict
     """
     return {
+        "cognitoSub": user_record.get("cognitoSub") or user_record.get("userId"),
         "userId": user_record.get("userId"),
         "email": user_record.get("email"),
         "firstName": user_record.get("firstName"),

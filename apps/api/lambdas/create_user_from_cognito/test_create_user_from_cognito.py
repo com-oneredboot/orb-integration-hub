@@ -342,6 +342,7 @@ class TestCreateUserFromCognitoSecurity(unittest.TestCase):
 
             # Should only contain expected fields
             expected_fields = {
+                "cognitoSub",
                 "userId",
                 "email",
                 "firstName",

@@ -577,12 +577,13 @@ export class UserService extends ApiService {
       console.debug('userResult:', userResult);
       
       if (userResult.StatusCode !== 200 || userResult.Data == null || userResult.Data?.length == 0) {
-        // User exists in Cognito but not in DynamoDB - this is the CREATE_DYNAMO_RECORD case
-        // Return success with isSignedIn but no user object
+        // User exists in Cognito but not in DynamoDB
+        // Return success with isSignedIn but no user - the MFA flow will handle creating the record
+        // via CreateUserFromCognito Lambda
         return {
           StatusCode: 200,
           Message: 'Signed in but user record not found',
-          Data: new Auth({ isSignedIn: true, message: 'User record needs to be created', needsUserRecord: true })
+          Data: new Auth({ isSignedIn: true, message: 'User record will be created' })
         };
       }
 
