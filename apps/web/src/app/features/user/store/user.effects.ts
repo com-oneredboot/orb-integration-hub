@@ -517,15 +517,39 @@ export class UserEffects {
   handleMFASuccess$ = createEffect(() =>
     this.actions$.pipe(
       ofType(UserActions.needsMFASuccess),
-      withLatestFrom(this.store.select(fromUser.selectCurrentUser)),
-      map(([, currentUser]) => {
-        if (!currentUser) {
-          console.error('[AuthEffects] MFA success but no current user available');
-          return UserActions.needsMFAFailure({ error: 'User data not available' });
+      withLatestFrom(
+        this.store.select(fromUser.selectCurrentUser),
+        this.store.select(fromUser.selectCurrentEmail)
+      ),
+      switchMap(([, currentUser, email]) => {
+        // If we already have the user, complete the flow
+        if (currentUser) {
+          console.log('[AuthEffects] MFA verification successful, completing auth flow for user:', currentUser.email);
+          return of(UserActions.authFlowComplete({ user: currentUser }));
         }
         
-        console.log('[AuthEffects] MFA verification successful, completing auth flow for user:', currentUser.email);
-        return UserActions.authFlowComplete({ user: currentUser });
+        // If no user but we have email, fetch the user from DynamoDB
+        if (email) {
+          console.log('[AuthEffects] MFA success, fetching user from DynamoDB for:', email);
+          return from(this.userService.userQueryByEmail(email)).pipe(
+            map(response => {
+              if (response.StatusCode === 200 && response.Data && response.Data.length > 0) {
+                const user = new Users(response.Data[0]);
+                console.log('[AuthEffects] User fetched successfully, completing auth flow');
+                return UserActions.authFlowComplete({ user });
+              }
+              console.error('[AuthEffects] User not found in DynamoDB after MFA');
+              return UserActions.needsMFAFailure({ error: 'User record not found' });
+            }),
+            catchError(error => {
+              console.error('[AuthEffects] Error fetching user after MFA:', error);
+              return of(UserActions.needsMFAFailure({ error: 'Failed to fetch user data' }));
+            })
+          );
+        }
+        
+        console.error('[AuthEffects] MFA success but no current user or email available');
+        return of(UserActions.needsMFAFailure({ error: 'User data not available' }));
       })
     )
   );
