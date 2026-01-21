@@ -407,6 +407,7 @@ export class UserService extends ApiService {
   public async userQueryByEmail(email: string): Promise<UsersListResponse> {
     console.debug('userQueryByEmail: ', email);
     try {
+      // UsersQueryByEmail requires Cognito auth (user must be signed in)
       const queryResult = await this.query(
         UsersQueryByEmail,
         {
@@ -414,7 +415,7 @@ export class UserService extends ApiService {
             email: email
           }
         },
-        'apiKey') as GraphQLResult<{ UsersQueryByEmail: UsersListResponse }>;
+        'userPool') as GraphQLResult<{ UsersQueryByEmail: UsersListResponse }>;
 
         const response = queryResult.data?.UsersQueryByEmail;
         const users = response?.Data || [];
