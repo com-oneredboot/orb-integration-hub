@@ -457,25 +457,13 @@ export class UserService extends ApiService {
     console.debug('userSignIn:', email);
 
     try {
+      // Step 1: Sign in with Cognito first using email as username
+      // (email is used as username during signup)
+      const cognitoSignInResponse = await this.cognitoService.signIn(email, password, email);
+      console.debug('cognitoSignInResponse:', cognitoSignInResponse);
 
-      // Lookup the User
-      const userResult = await this.userQueryByEmail(email);
-      console.debug('userResult:', userResult);
-      if (userResult.StatusCode !== 200 || userResult.Data == null || userResult.Data?.length == 0) {
-        return {
-          StatusCode: userResult?.StatusCode,
-          Message: userResult.Message,
-          Data: new Auth({ isSignedIn: false, message: 'User Does Not Exist' })
-        };
-      }
-
-      // SIgn in
-      const user = new Users(userResult.Data[0]);
-      console.debug('User: ', user)
-      const userSignInResponse = await this.cognitoService.signIn(user.cognitoId, password, user.email);
-
-      if (userSignInResponse.StatusCode === 401 &&
-        userSignInResponse.Message?.toLowerCase().includes('already signed in')) {
+      if (cognitoSignInResponse.StatusCode === 401 &&
+        cognitoSignInResponse.Message?.toLowerCase().includes('already signed in')) {
         console.debug('User is already signed in, initiating cleanup and sign out process');
         
         // Show helpful message to user about cleaning up sessions
@@ -492,17 +480,9 @@ export class UserService extends ApiService {
           await new Promise(resolve => setTimeout(resolve, 2000));
           
           // Try signing in again
-          const retrySignInResponse = await this.cognitoService.signIn(user.cognitoId, password, user.email);
+          const retrySignInResponse = await this.cognitoService.signIn(email, password, email);
           
-          if (retrySignInResponse.StatusCode === 200) {
-            this.store.dispatch(UserActions.signInSuccess({ user: user, message: 'Welcome back! Successfully signed in.' }));
-            this.currentUser.next(user);
-            return {
-              StatusCode: 200,
-              Message: 'Welcome back! Successfully signed in.',
-              Data: new Auth({ isSignedIn: true, message: 'Welcome back! Successfully signed in.', user: user })
-            };
-          } else {
+          if (retrySignInResponse.StatusCode !== 200) {
             return retrySignInResponse;
           }
         } catch (signOutError) {
@@ -513,15 +493,42 @@ export class UserService extends ApiService {
             Data: new Auth({ isSignedIn: false, message: 'Session refresh failed. Please refresh the page and try signing in again.' })
           };
         }
+      } else if (cognitoSignInResponse.StatusCode !== 200) {
+        // Cognito sign-in failed
+        return cognitoSignInResponse;
       }
 
-      // Only dispatch signInSuccess if authentication is successful
-      if (userSignInResponse.StatusCode === 200) {
-        this.store.dispatch(UserActions.signInSuccess({ user: user, message: 'User found' }));
-        this.currentUser.next(user);
+      // Check if MFA is required
+      if (cognitoSignInResponse.Data?.needsMFA || cognitoSignInResponse.Data?.needsMFASetup) {
+        return cognitoSignInResponse;
       }
 
-      return userSignInResponse;
+      // Step 2: Now that we're authenticated, lookup the user in DynamoDB
+      const userResult = await this.userQueryByEmail(email);
+      console.debug('userResult:', userResult);
+      
+      if (userResult.StatusCode !== 200 || userResult.Data == null || userResult.Data?.length == 0) {
+        // User exists in Cognito but not in DynamoDB - this is the CREATE_DYNAMO_RECORD case
+        // Return success with isSignedIn but no user object
+        return {
+          StatusCode: 200,
+          Message: 'Signed in but user record not found',
+          Data: new Auth({ isSignedIn: true, message: 'User record needs to be created', needsUserRecord: true })
+        };
+      }
+
+      const user = new Users(userResult.Data[0]);
+      console.debug('User: ', user);
+
+      // Dispatch success and update current user
+      this.store.dispatch(UserActions.signInSuccess({ user: user, message: 'Welcome back!' }));
+      this.currentUser.next(user);
+
+      return {
+        StatusCode: 200,
+        Message: 'Welcome back! Successfully signed in.',
+        Data: new Auth({ isSignedIn: true, message: 'Welcome back! Successfully signed in.', user: user })
+      };
 
     } catch (error) {
       const error_message = error instanceof Error ? error.message : 'Error signing in';
@@ -543,32 +550,8 @@ export class UserService extends ApiService {
           // Small delay to let the user see the cleanup message
           await new Promise(resolve => setTimeout(resolve, 2000));
           
-          // Get the user data from the earlier query to retry sign in
-          const userResult = await this.userQueryByEmail(email);
-          if (userResult.StatusCode === 200 && userResult.Data && userResult.Data.length > 0) {
-            const user = new Users(userResult.Data[0]);
-            
-            // Try signing in again
-            const retrySignInResponse = await this.cognitoService.signIn(user.cognitoId, password, user.email);
-            
-            if (retrySignInResponse.StatusCode === 200) {
-              this.store.dispatch(UserActions.signInSuccess({ user: user, message: 'Welcome back! Successfully signed in.' }));
-              this.currentUser.next(user);
-              return {
-                StatusCode: 200,
-                Message: 'Welcome back! Successfully signed in.',
-                Data: new Auth({ isSignedIn: true, message: 'Welcome back! Successfully signed in.', user: user })
-              };
-            } else {
-              return retrySignInResponse;
-            }
-          } else {
-            return {
-              StatusCode: 500,
-              Message: 'Unable to retrieve user data for retry. Please try signing in again.',
-              Data: new Auth({ isSignedIn: false, message: 'Unable to retrieve user data for retry. Please try signing in again.' })
-            };
-          }
+          // Try signing in again (recursive call)
+          return await this.userSignIn(email, password);
         } catch (signOutError) {
           console.error('Error during sign out and retry:', signOutError);
           return {
