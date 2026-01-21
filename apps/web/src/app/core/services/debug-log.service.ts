@@ -31,6 +31,12 @@ export interface DebugSummary {
     phoneVerified: boolean;
     mfaEnabled: boolean;
   };
+  // Extended debug info
+  currentEmail?: string;
+  currentUser?: Record<string, unknown> | null;
+  mfaSetupDetails?: Record<string, unknown> | null;
+  formState?: Record<string, unknown>;
+  storeState?: Record<string, unknown>;
 }
 
 @Injectable({
@@ -128,7 +134,17 @@ export class DebugLogService {
   /**
    * Generate LLM-friendly summary
    */
-  generateSummary(currentStep: string, userState: DebugSummary['userState']): string {
+  generateSummary(
+    currentStep: string, 
+    userState: DebugSummary['userState'],
+    extendedInfo?: {
+      currentEmail?: string;
+      currentUser?: Record<string, unknown> | null;
+      mfaSetupDetails?: Record<string, unknown> | null;
+      formState?: Record<string, unknown>;
+      storeState?: Record<string, unknown>;
+    }
+  ): string {
     const recentLogs = this.getRecentLogs(10);
     const failedOps = this.getFailedOperations().slice(-5);
     const lastError = failedOps.length > 0 ? failedOps[failedOps.length - 1] : null;
@@ -143,10 +159,12 @@ export class DebugLogService {
         error: f.error || 'Unknown error',
         timestamp: f.timestamp
       })),
-      userState
+      userState,
+      ...extendedInfo
     };
 
-    return `DEBUG SUMMARY
+    // Build the summary string
+    let output = `DEBUG SUMMARY
 ==============
 Step: ${summary.currentStep}
 Time: ${summary.generatedAt}
@@ -159,18 +177,51 @@ User State:
 - MFA Enabled: ${summary.userState.mfaEnabled}
 
 Recent Actions (newest last):
-${summary.recentActions.map(a => `  - ${a}`).join('\n')}
+${summary.recentActions.map(a => `- ${a}`).join('\n')}
 
 Failed Operations:
-${summary.failedOperations.length === 0 ? '  None' : summary.failedOperations.map(f => `  - [${f.timestamp.split('T')[1].split('.')[0]}] ${f.operation}: ${f.error}`).join('\n')}`;
+${summary.failedOperations.length === 0 ? 'None' : summary.failedOperations.map(f => `- [${f.timestamp.split('T')[1].split('.')[0]}] ${f.operation}: ${f.error}`).join('\n')}`;
+
+    // Add extended info if provided
+    if (extendedInfo?.currentEmail) {
+      output += `\n\nCurrent Email: ${extendedInfo.currentEmail}`;
+    }
+
+    if (extendedInfo?.currentUser) {
+      output += `\n\nCurrent User:\n${JSON.stringify(extendedInfo.currentUser, null, 2)}`;
+    }
+
+    if (extendedInfo?.mfaSetupDetails) {
+      output += `\n\nMFA Setup Details:\n${JSON.stringify(extendedInfo.mfaSetupDetails, null, 2)}`;
+    }
+
+    if (extendedInfo?.formState) {
+      output += `\n\nForm State:\n${JSON.stringify(extendedInfo.formState, null, 2)}`;
+    }
+
+    if (extendedInfo?.storeState) {
+      output += `\n\nStore State:\n${JSON.stringify(extendedInfo.storeState, null, 2)}`;
+    }
+
+    return output;
   }
 
   /**
    * Copy summary to clipboard
    */
-  async copySummaryToClipboard(currentStep: string, userState: DebugSummary['userState']): Promise<boolean> {
+  async copySummaryToClipboard(
+    currentStep: string, 
+    userState: DebugSummary['userState'],
+    extendedInfo?: {
+      currentEmail?: string;
+      currentUser?: Record<string, unknown> | null;
+      mfaSetupDetails?: Record<string, unknown> | null;
+      formState?: Record<string, unknown>;
+      storeState?: Record<string, unknown>;
+    }
+  ): Promise<boolean> {
     try {
-      const summary = this.generateSummary(currentStep, userState);
+      const summary = this.generateSummary(currentStep, userState, extendedInfo);
       await navigator.clipboard.writeText(summary);
       return true;
     } catch {

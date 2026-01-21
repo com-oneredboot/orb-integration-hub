@@ -2931,6 +2931,10 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       const emailVerified = await this.emailVerified$.pipe(take(1)).toPromise();
       const phoneVerified = await this.phoneVerified$.pipe(take(1)).toPromise();
       const needsMFA = await this.needsMFA$.pipe(take(1)).toPromise();
+      const currentEmail = await this.currentEmail$.pipe(take(1)).toPromise();
+      const mfaSetupDetails = await this.mfaSetupDetails$.pipe(take(1)).toPromise();
+      const error = await this.error$.pipe(take(1)).toPromise();
+      const isLoading = await this.isLoading$.pipe(take(1)).toPromise();
       
       const userState = {
         exists: userExists || false,
@@ -2939,8 +2943,42 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         mfaEnabled: needsMFA || currentUser?.mfaEnabled || false
       };
       
+      // Get form state (sanitize password)
+      const formValues = this.authForm.getRawValue();
+      const sanitizedFormState = {
+        ...formValues,
+        password: formValues.password ? '[REDACTED]' : ''
+      };
+      
+      // Build store state snapshot
+      const storeState = {
+        currentStep: AuthSteps[currentStep || AuthSteps.EMAIL],
+        isLoading,
+        error,
+        userExists,
+        currentUser: currentUser ? {
+          userId: currentUser.userId,
+          email: currentUser.email,
+          emailVerified: currentUser.emailVerified,
+          phoneVerified: currentUser.phoneVerified,
+          mfaEnabled: currentUser.mfaEnabled,
+          status: currentUser.status
+        } : null,
+        needsMFA,
+        mfaSetupDetails: mfaSetupDetails ? {
+          qrCode: mfaSetupDetails.qrCode ? '[PRESENT]' : null,
+          secretKey: mfaSetupDetails.secretKey ? '[PRESENT]' : null
+        } : null
+      };
+      
       const stepName = AuthSteps[currentStep || AuthSteps.EMAIL];
-      const success = await this.debugLogService.copySummaryToClipboard(stepName, userState);
+      const success = await this.debugLogService.copySummaryToClipboard(stepName, userState, {
+        currentEmail: currentEmail || undefined,
+        currentUser: currentUser as unknown as Record<string, unknown> | null,
+        mfaSetupDetails: mfaSetupDetails as unknown as Record<string, unknown> | null,
+        formState: sanitizedFormState,
+        storeState
+      });
       
       if (success) {
         this.debugCopyStatus = 'copied';
