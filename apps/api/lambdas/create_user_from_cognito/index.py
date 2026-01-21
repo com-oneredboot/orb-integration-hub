@@ -128,6 +128,65 @@ def get_cognito_user(cognito_sub: str) -> dict[str, Any] | None:
         raise
 
 
+def get_user_groups(cognito_sub: str) -> list[str]:
+    """
+    Get the groups a user belongs to in Cognito.
+
+    Args:
+        cognito_sub: Cognito user ID (sub)
+
+    Returns:
+        List of group names the user belongs to
+    """
+    user_pool_id = get_user_pool_id()
+    if not user_pool_id:
+        return []
+
+    cognito = get_cognito_client()
+
+    try:
+        response = cognito.admin_list_groups_for_user(UserPoolId=user_pool_id, Username=cognito_sub)
+        return [group["GroupName"] for group in response.get("Groups", [])]
+    except ClientError as e:
+        logger.warning(f"Failed to get user groups: {e.response['Error']['Code']}")
+        return []
+
+
+def ensure_user_in_group(cognito_sub: str, group_name: str = "USER") -> bool:
+    """
+    Ensure user is in the specified Cognito group. Adds them if not.
+
+    Args:
+        cognito_sub: Cognito user ID (sub)
+        group_name: Name of the group to ensure membership in
+
+    Returns:
+        True if user is now in the group, False if operation failed
+    """
+    user_pool_id = get_user_pool_id()
+    if not user_pool_id:
+        logger.error("USER_POOL_ID not set, cannot add user to group")
+        return False
+
+    # Check if user is already in the group
+    current_groups = get_user_groups(cognito_sub)
+    if group_name in current_groups:
+        logger.debug(f"User already in {group_name} group")
+        return True
+
+    # Add user to group
+    cognito = get_cognito_client()
+    try:
+        cognito.admin_add_user_to_group(
+            UserPoolId=user_pool_id, Username=cognito_sub, GroupName=group_name
+        )
+        logger.info(f"Added user to {group_name} group")
+        return True
+    except ClientError as e:
+        logger.error(f"Failed to add user to group: {e.response['Error']['Code']}")
+        return False
+
+
 def extract_cognito_attributes(cognito_user: dict[str, Any]) -> dict[str, Any]:
     """
     Extract user attributes from Cognito response.
@@ -306,6 +365,11 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
             _ensure_min_response_time(start_time)
             # ORB-AUTH-011: Invalid request format
             raise ValueError("Invalid request format")
+
+        # Ensure user is in the USER group in Cognito
+        # This handles cases where the PostUserConfirmation trigger didn't fire
+        # or failed (e.g., user created before trigger was deployed)
+        ensure_user_in_group(cognito_sub, "USER")
 
         # Check if user already exists in DynamoDB (idempotency)
         existing_user = query_user_by_cognito_sub(cognito_sub)
