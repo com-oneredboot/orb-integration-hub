@@ -19,6 +19,12 @@ export enum ErrorRegistry {
   OrbAuth006 = "orb-auth-006",
   /** The email address does not match the expected format for CheckEmailExists */
   OrbAuth007 = "orb-auth-007",
+  /** The Cognito authentication service is temporarily unavailable */
+  OrbAuth010 = "orb-auth-010",
+  /** The cognitoSub provided is not a valid UUID format */
+  OrbAuth011 = "orb-auth-011",
+  /** The user does not exist in Cognito */
+  OrbAuth012 = "orb-auth-012",
   /** An error occurred while executing a GraphQL query */
   OrbApi001 = "orb-api-001",
   /** An error occurred while executing a GraphQL mutation */
@@ -29,6 +35,8 @@ export enum ErrorRegistry {
   OrbApi004 = "orb-api-004",
   /** The CheckEmailExists service is temporarily unavailable */
   OrbApi005 = "orb-api-005",
+  /** The DynamoDB database service is temporarily unavailable */
+  OrbApi010 = "orb-api-010",
   /** The data format provided is invalid */
   OrbData001 = "orb-data-001",
   /** The requested data was not found */

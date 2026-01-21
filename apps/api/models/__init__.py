@@ -10,6 +10,7 @@ from .ApplicationsModel import Applications
 from .AuthModel import Auth
 from .AuthErrorModel import AuthError
 from .CheckEmailExistsModel import CheckEmailExists
+from .CreateUserFromCognitoModel import CreateUserFromCognito
 from .MfaSetupDetailsModel import MfaSetupDetails
 from .NotificationsModel import Notifications
 from .OrganizationUsersModel import OrganizationUsers
@@ -28,6 +29,7 @@ __all__ = [
     "Auth",
     "AuthError",
     "CheckEmailExists",
+    "CreateUserFromCognito",
     "MfaSetupDetails",
     "Notifications",
     "OrganizationUsers",

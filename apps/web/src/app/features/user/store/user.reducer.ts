@@ -120,6 +120,24 @@ export const userReducer = createReducer(
     isLoading: false
   })),
 
+  // Create user from Cognito (secure Lambda-backed operation)
+  on(UserActions.createUserFromCognito, (state) => ({
+    ...state,
+    isLoading: true,
+    error: null
+  })),
+  on(UserActions.createUserFromCognitoSuccess, (state, { user }) => ({
+    ...state,
+    currentUser: user,
+    isLoading: false,
+    error: null
+  })),
+  on(UserActions.createUserFromCognitoFailure, (state, { error }) => ({
+    ...state,
+    error,
+    isLoading: false
+  })),
+
   // Email Verification
   on(UserActions.verifyEmail, (state) => ({
     ...state,

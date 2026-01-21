@@ -176,6 +176,22 @@ type AuthError {
   details: String
 }
 
+type CreateUserFromCognito @aws_api_key {
+  cognitoSub: String!
+  userId: String
+  email: String
+  firstName: String
+  lastName: String
+  status: String
+  emailVerified: Boolean
+  phoneVerified: Boolean
+  mfaEnabled: Boolean
+  mfaSetupComplete: Boolean
+  groups: String
+  createdAt: AWSTimestamp
+  updatedAt: AWSTimestamp
+}
+
 type CheckEmailExists @aws_api_key {
   email: String!
   exists: Boolean
@@ -247,6 +263,22 @@ type UsersResponse {
 }
 
 # Input Types
+
+input CreateUserFromCognitoInput {
+  cognitoSub: String!
+  userId: String
+  email: String
+  firstName: String
+  lastName: String
+  status: String
+  emailVerified: Boolean
+  phoneVerified: Boolean
+  mfaEnabled: Boolean
+  mfaSetupComplete: Boolean
+  groups: String
+  createdAt: AWSTimestamp
+  updatedAt: AWSTimestamp
+}
 
 input CheckEmailExistsInput {
   email: String!
@@ -1037,14 +1069,15 @@ type Query {
   ApplicationsQueryByApplicationId(input: ApplicationsQueryByApplicationIdInput!): ApplicationsResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   ApplicationsQueryByOrganizationId(input: ApplicationsQueryByOrganizationIdInput!): ApplicationsResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   ApplicationsQueryByOrganizationIdAndCreatedAt(input: ApplicationsQueryByOrganizationIdAndCreatedAtInput!): ApplicationsResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
-  UsersQueryByUserId(input: UsersQueryByUserIdInput!): UsersResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER", "USER"])
-  UsersQueryByEmail(input: UsersQueryByEmailInput!): UsersResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER", "USER"])
-  UsersQueryByCognitoId(input: UsersQueryByCognitoIdInput!): UsersResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER", "USER"])
-  UsersQueryByCognitoSub(input: UsersQueryByCognitoSubInput!): UsersResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER", "USER"])
+  UsersQueryByUserId(input: UsersQueryByUserIdInput!): UsersResponse @aws_auth(cognito_groups: ["OWNER"])
+  UsersQueryByEmail(input: UsersQueryByEmailInput!): UsersResponse @aws_auth(cognito_groups: ["OWNER"])
+  UsersQueryByCognitoId(input: UsersQueryByCognitoIdInput!): UsersResponse @aws_auth(cognito_groups: ["OWNER"])
+  UsersQueryByCognitoSub(input: UsersQueryByCognitoSubInput!): UsersResponse @aws_auth(cognito_groups: ["OWNER"])
 }
 
 # Mutations
 type Mutation {
+  CreateUserFromCognito(input: CreateUserFromCognitoInput!): CreateUserFromCognito @aws_api_key
   SmsVerification(input: SmsVerificationInput!): SmsVerification @aws_auth(cognito_groups: ["OWNER", "USER"])
   OwnershipTransferRequestsCreate(input: OwnershipTransferRequestsCreateInput!): OwnershipTransferRequestsResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   OwnershipTransferRequestsUpdate(input: OwnershipTransferRequestsUpdateInput!): OwnershipTransferRequestsResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
@@ -1086,10 +1119,10 @@ type Mutation {
   ApplicationsUpdate(input: ApplicationsUpdateInput!): ApplicationsResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   ApplicationsDelete(input: ApplicationsDeleteInput!): ApplicationsResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   ApplicationsDisable(input: ApplicationsDisableInput!): ApplicationsResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
-  UsersCreate(input: UsersCreateInput!): UsersResponse @aws_api_key @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER", "USER"])
-  UsersUpdate(input: UsersUpdateInput!): UsersResponse @aws_api_key @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER", "USER"])
-  UsersDelete(input: UsersDeleteInput!): UsersResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER", "USER"])
-  UsersDisable(input: UsersDisableInput!): UsersResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER", "USER"])
+  UsersCreate(input: UsersCreateInput!): UsersResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])
+  UsersUpdate(input: UsersUpdateInput!): UsersResponse @aws_api_key @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])
+  UsersDelete(input: UsersDeleteInput!): UsersResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])
+  UsersDisable(input: UsersDisableInput!): UsersResponse @aws_auth(cognito_groups: ["OWNER"])
 }
 
 # Enums
@@ -1194,11 +1227,15 @@ enum ErrorRegistry {
   ORB_AUTH_005
   ORB_AUTH_006
   ORB_AUTH_007
+  ORB_AUTH_010
+  ORB_AUTH_011
+  ORB_AUTH_012
   ORB_API_001
   ORB_API_002
   ORB_API_003
   ORB_API_004
   ORB_API_005
+  ORB_API_010
   ORB_DATA_001
   ORB_DATA_002
   ORB_SYS_001

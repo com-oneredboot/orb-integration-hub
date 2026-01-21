@@ -1,7 +1,7 @@
 // file: apps/web/src/app/core/services/user.service.spec.ts
 // author: Corey Dale Peters
 // date: 2026-01-16
-// description: Unit tests for UserService.checkEmailExists method
+// description: Unit tests for UserService.checkEmailExists and createUserFromCognito methods
 
 import { TestBed } from '@angular/core/testing';
 import { provideMockStore } from '@ngrx/store/testing';
@@ -65,6 +65,90 @@ describe('UserService', () => {
 
       await expectAsync(service.checkEmailExists('test@example.com'))
         .toBeRejectedWithError('Failed to check email existence');
+    });
+  });
+
+  // Feature: create-user-from-cognito
+  // Tests for createUserFromCognito method
+  // Validates: Requirements 4.2, 8.3
+  describe('createUserFromCognito', () => {
+    const mockCognitoSub = '12345678-1234-1234-1234-123456789012';
+    const mockUserResponse = {
+      userId: mockCognitoSub,
+      email: 'test@example.com',
+      firstName: 'Test',
+      lastName: 'User',
+      status: 'PENDING',
+      emailVerified: true,
+      phoneVerified: false,
+      mfaEnabled: true,
+      mfaSetupComplete: true,
+      groups: ['USER'],
+      createdAt: 1705420800,
+      updatedAt: 1705420800
+    };
+
+    it('should call createUserFromCognito with apiKey auth mode', async () => {
+      // Spy on the method and verify it uses apiKey auth
+      spyOn<UserService, 'createUserFromCognito'>(service, 'createUserFromCognito').and.returnValue(
+        Promise.resolve(mockUserResponse)
+      );
+
+      const result = await service.createUserFromCognito(mockCognitoSub);
+
+      expect(service.createUserFromCognito).toHaveBeenCalledWith(mockCognitoSub);
+      expect(result.userId).toBe(mockCognitoSub);
+      expect(result.email).toBe('test@example.com');
+    });
+
+    it('should return user data on successful creation', async () => {
+      spyOn<UserService, 'createUserFromCognito'>(service, 'createUserFromCognito').and.returnValue(
+        Promise.resolve(mockUserResponse)
+      );
+
+      const result = await service.createUserFromCognito(mockCognitoSub);
+
+      expect(result).toEqual(mockUserResponse);
+      expect(result.status).toBe('PENDING');
+      expect(result.groups).toContain('USER');
+    });
+
+    it('should return existing user data for idempotent calls', async () => {
+      // When user already exists, Lambda returns existing user
+      spyOn<UserService, 'createUserFromCognito'>(service, 'createUserFromCognito').and.returnValue(
+        Promise.resolve(mockUserResponse)
+      );
+
+      const result = await service.createUserFromCognito(mockCognitoSub);
+
+      expect(result.userId).toBe(mockCognitoSub);
+    });
+
+    it('should throw error when cognitoSub is not found in Cognito', async () => {
+      spyOn<UserService, 'createUserFromCognito'>(service, 'createUserFromCognito').and.returnValue(
+        Promise.reject(new Error('User not found'))
+      );
+
+      await expectAsync(service.createUserFromCognito('invalid-sub'))
+        .toBeRejectedWithError('User not found');
+    });
+
+    it('should throw error when service is unavailable', async () => {
+      spyOn<UserService, 'createUserFromCognito'>(service, 'createUserFromCognito').and.returnValue(
+        Promise.reject(new Error('Authentication service unavailable'))
+      );
+
+      await expectAsync(service.createUserFromCognito(mockCognitoSub))
+        .toBeRejectedWithError('Authentication service unavailable');
+    });
+
+    it('should throw error when no data is returned', async () => {
+      spyOn<UserService, 'createUserFromCognito'>(service, 'createUserFromCognito').and.returnValue(
+        Promise.reject(new Error('Failed to create user record'))
+      );
+
+      await expectAsync(service.createUserFromCognito(mockCognitoSub))
+        .toBeRejectedWithError('Failed to create user record');
     });
   });
 });

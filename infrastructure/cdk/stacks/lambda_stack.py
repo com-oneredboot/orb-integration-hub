@@ -65,6 +65,7 @@ class LambdaStack(Stack):
         self.user_status_calculator_lambda = self._create_user_status_calculator_lambda()
         self.organizations_lambda = self._create_organizations_lambda()
         self.check_email_exists_lambda = self._create_check_email_exists_lambda()
+        self.create_user_from_cognito_lambda = self._create_create_user_from_cognito_lambda()
 
     def _apply_tags(self) -> None:
         """Apply standard tags to all resources in this stack."""
@@ -416,6 +417,42 @@ class LambdaStack(Stack):
         self.functions["check-email-exists"] = function
         # Export with lowercase name to match orb-schema-generator convention
         self._export_lambda_arn_custom(function, "checkemailexists")
+        return function
+
+    def _create_create_user_from_cognito_lambda(self) -> lambda_.Function:
+        """Create CreateUserFromCognito Lambda function for secure user record creation.
+        
+        This Lambda is used by the CreateUserFromCognito GraphQL mutation to create
+        user records in DynamoDB from Cognito data. It validates against Cognito
+        before creating records and extracts all user data from Cognito to prevent
+        client-side data injection.
+        
+        Uses API key authentication for public access during the self-registration flow.
+        """
+        function = lambda_.Function(
+            self,
+            "CreateUserFromCognitoLambda",
+            function_name=self.config.resource_name("create-user-from-cognito"),
+            description="Lambda function to create user records from Cognito data (public endpoint)",
+            runtime=lambda_.Runtime.PYTHON_3_12,
+            handler="index.lambda_handler",
+            code=lambda_.Code.from_asset("../apps/api/lambdas/create_user_from_cognito"),
+            timeout=Duration.seconds(10),
+            memory_size=128,
+            role=self.lambda_execution_role,
+            environment={
+                "ALERTS_QUEUE": f"arn:aws:sqs:{self.region}:{self.account}:{self.config.prefix}-alerts-queue",
+                "LOGGING_LEVEL": "INFO",
+                "VERSION": "1",
+                "USERS_TABLE_NAME": self.dynamodb_stack.tables["users"].table_name,
+                "USER_POOL_ID": self.cognito_stack.user_pool.user_pool_id,
+            },
+            dead_letter_queue_enabled=True,
+        )
+
+        self.functions["create-user-from-cognito"] = function
+        # Export with lowercase name to match orb-schema-generator convention
+        self._export_lambda_arn_custom(function, "createuserfromcognito")
         return function
 
     def _export_lambda_arn_custom(self, function: lambda_.Function, name: str) -> None:

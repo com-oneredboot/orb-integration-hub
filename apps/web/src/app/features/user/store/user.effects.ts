@@ -22,6 +22,7 @@ import { Users } from "../../../core/models/UsersModel";
 import { RecoveryService } from "../../../core/services/recovery.service";
 import { AuthProgressStorageService } from "../../../core/services/auth-progress-storage.service";
 import { RecoveryAction } from "../../../core/models/RecoveryModel";
+import { UserStatus } from "../../../core/enums/UserStatusEnum";
 
 @Injectable()
 export class UserEffects {
@@ -220,6 +221,58 @@ export class UserEffects {
       ofType(UserActions.createUserRecordOnlySuccess),
       map(({ user }) => {
         console.log('[Effect][handleCreateUserRecordOnlySuccess$] Completing auth flow for:', user.email);
+        return UserActions.authFlowComplete({ user });
+      })
+    )
+  );
+
+  // Create user from Cognito (secure Lambda-backed operation)
+  // This validates against Cognito and extracts all user data from there
+  createUserFromCognito$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(UserActions.createUserFromCognito),
+      switchMap(({ cognitoSub }) => {
+        console.log('[Effect][createUserFromCognito$] Creating user from Cognito with sub:', cognitoSub);
+        
+        return from(this.userService.createUserFromCognito(cognitoSub)).pipe(
+          map(response => {
+            console.log('[Effect][createUserFromCognito$] User created successfully:', response.email);
+            // Convert the response to a Users object
+            const user = new Users({
+              userId: response.userId,
+              cognitoId: response.userId,
+              cognitoSub: response.userId,
+              email: response.email,
+              firstName: response.firstName,
+              lastName: response.lastName,
+              status: response.status as UserStatus,
+              emailVerified: response.emailVerified,
+              phoneVerified: response.phoneVerified,
+              mfaEnabled: response.mfaEnabled,
+              mfaSetupComplete: response.mfaSetupComplete,
+              groups: response.groups,
+              createdAt: new Date(response.createdAt * 1000),
+              updatedAt: new Date(response.updatedAt * 1000)
+            });
+            return UserActions.createUserFromCognitoSuccess({ user });
+          }),
+          catchError(error => {
+            console.error('[Effect][createUserFromCognito$] Error:', error);
+            return of(UserActions.createUserFromCognitoFailure({ 
+              error: error instanceof Error ? error.message : 'Failed to create user from Cognito' 
+            }));
+          })
+        );
+      })
+    )
+  );
+
+  // Complete auth flow after creating user from Cognito
+  handleCreateUserFromCognitoSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(UserActions.createUserFromCognitoSuccess),
+      map(({ user }) => {
+        console.log('[Effect][handleCreateUserFromCognitoSuccess$] Completing auth flow for:', user.email);
         return UserActions.authFlowComplete({ user });
       })
     )
@@ -600,9 +653,9 @@ export class UserEffects {
                 return of(UserActions.authFlowComplete({ user }));
               }
               
-              // User not found in DynamoDB - need to create the record
-              // This is the CREATE_DYNAMO_RECORD case
-              console.log('[AuthEffects] User not found in DynamoDB (StatusCode:', response.StatusCode, ', Data length:', response.Data?.length, '), creating record for:', email);
+              // User not found in DynamoDB - need to create the record using secure Lambda
+              // This uses CreateUserFromCognito which validates against Cognito and extracts all data from there
+              console.log('[AuthEffects] User not found in DynamoDB (StatusCode:', response.StatusCode, ', Data length:', response.Data?.length, '), creating record via CreateUserFromCognito for:', email);
               return from(this.cognitoService.getCognitoProfile()).pipe(
                 switchMap(cognitoProfile => {
                   console.debug('[AuthEffects] getCognitoProfile result:', cognitoProfile);
@@ -612,26 +665,15 @@ export class UserEffects {
                   }
                   
                   const cognitoSub = cognitoProfile.sub as string || '';
-                  console.debug('[AuthEffects] Creating user with cognitoSub:', cognitoSub);
-                  const newUser = new Users({
-                    userId: cognitoSub,
-                    cognitoId: cognitoSub,
-                    cognitoSub: cognitoSub,
-                    email: email,
-                    firstName: (cognitoProfile['given_name'] as string) || '',
-                    lastName: (cognitoProfile['family_name'] as string) || '',
-                    emailVerified: true, // Must be verified to complete MFA
-                    phoneVerified: false,
-                    mfaEnabled: true, // Just completed MFA
-                    mfaSetupComplete: true,
-                    groups: ['USER'],
-                    status: 'PENDING'
-                  });
+                  if (!cognitoSub) {
+                    console.error('[AuthEffects] No cognitoSub available in profile');
+                    return of(UserActions.needsMFAFailure({ error: 'Unable to get user identifier' }));
+                  }
                   
-                  console.log('[AuthEffects] Creating DynamoDB record for user:', newUser.email, 'with userId:', newUser.userId);
-                  // Dispatch action to create user - this will trigger the createUser flow
-                  // But we need to create without password since user already exists in Cognito
-                  return of(UserActions.createUserRecordOnly({ user: newUser }));
+                  console.log('[AuthEffects] Creating DynamoDB record via CreateUserFromCognito with cognitoSub:', cognitoSub);
+                  // Use the secure CreateUserFromCognito Lambda which validates against Cognito
+                  // and extracts all user data from Cognito (prevents client-side data injection)
+                  return of(UserActions.createUserFromCognito({ cognitoSub }));
                 }),
                 catchError(error => {
                   console.error('[AuthEffects] Error getting Cognito profile:', error);

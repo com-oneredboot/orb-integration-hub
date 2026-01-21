@@ -9,6 +9,7 @@ export * from './ApplicationRoles.graphql';
 export * from './ApplicationUsers.graphql';
 export * from './Applications.graphql';
 export * from './CheckEmailExists.graphql';
+export * from './CreateUserFromCognito.graphql';
 export * from './Notifications.graphql';
 export * from './OrganizationUsers.graphql';
 export * from './Organizations.graphql';

@@ -16,6 +16,7 @@ import {
 } from "../graphql/Users.graphql";
 import { SmsVerification } from "../graphql/SmsVerification.graphql";
 import { CheckEmailExists } from "../graphql/CheckEmailExists.graphql";
+import { CreateUserFromCognito } from "../graphql/CreateUserFromCognito.graphql";
 import {
   UsersCreateInput, UsersUpdateInput,
   UsersCreateResponse, UsersUpdateResponse, IUsers,
@@ -1110,6 +1111,85 @@ export class UserService extends ApiService {
     } catch (error) {
       console.error('[UserService][checkEmailExists] Error checking email:', error);
       throw new Error('Failed to check email existence');
+    }
+  }
+
+  /**
+   * Create a user record in DynamoDB from Cognito data.
+   * This is a secure, purpose-built operation for self-registration that validates
+   * against Cognito before creating records. Only accepts cognitoSub as input and
+   * extracts all user data from Cognito to prevent client-side data injection.
+   * 
+   * Uses API key authentication (no Cognito auth required).
+   * 
+   * @param cognitoSub The Cognito user sub (UUID)
+   * @returns Promise with created/existing user data
+   */
+  public async createUserFromCognito(cognitoSub: string): Promise<{
+    userId: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    status: string;
+    emailVerified: boolean;
+    phoneVerified: boolean;
+    mfaEnabled: boolean;
+    mfaSetupComplete: boolean;
+    groups: string[];
+    createdAt: number;
+    updatedAt: number;
+  }> {
+    console.debug('[UserService][createUserFromCognito] Creating user from Cognito:', cognitoSub);
+    this.userDebugLog.logApi('createUserFromCognito', 'pending', { cognitoSub });
+
+    try {
+      const response = await this.mutate(
+        CreateUserFromCognito,
+        { input: { cognitoSub } },
+        'apiKey'
+      ) as GraphQLResult<{ CreateUserFromCognito?: {
+        userId: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+        status: string;
+        emailVerified: boolean;
+        phoneVerified: boolean;
+        mfaEnabled: boolean;
+        mfaSetupComplete: boolean;
+        groups: string[];
+        createdAt: number;
+        updatedAt: number;
+      } }>;
+
+      const data = response.data?.CreateUserFromCognito;
+      if (!data) {
+        this.userDebugLog.logError('createUserFromCognito', 'No data returned', { cognitoSub });
+        throw new Error('Failed to create user record');
+      }
+
+      this.userDebugLog.logApi('createUserFromCognito', 'success', { userId: data.userId });
+
+      return {
+        userId: data.userId,
+        email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        status: data.status,
+        emailVerified: data.emailVerified,
+        phoneVerified: data.phoneVerified,
+        mfaEnabled: data.mfaEnabled,
+        mfaSetupComplete: data.mfaSetupComplete,
+        groups: data.groups || [],
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt
+      };
+    } catch (error) {
+      console.error('[UserService][createUserFromCognito] Error:', error);
+      const errorObj = error as { message?: string };
+      const message = errorObj?.message || String(error) || '';
+      this.userDebugLog.logError('createUserFromCognito', message, { error: String(error) });
+      throw new Error(message || 'Failed to create user from Cognito');
     }
   }
 }

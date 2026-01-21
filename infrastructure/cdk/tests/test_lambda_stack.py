@@ -80,9 +80,9 @@ def template(test_config: Config) -> Template:
 class TestLambdaStackFunctionCount:
     """Tests for Lambda function count."""
 
-    def test_creates_five_lambda_functions(self, template: Template) -> None:
-        """Verify exactly 5 Lambda functions are created."""
-        template.resource_count_is("AWS::Lambda::Function", 5)
+    def test_creates_six_lambda_functions(self, template: Template) -> None:
+        """Verify exactly 6 Lambda functions are created."""
+        template.resource_count_is("AWS::Lambda::Function", 6)
 
 
 class TestLambdaStackIAMRole:
@@ -250,6 +250,39 @@ class TestLambdaStackCheckEmailExistsLambda:
         )
 
 
+class TestLambdaStackCreateUserFromCognitoLambda:
+    """Tests for CreateUserFromCognito Lambda."""
+
+    def test_creates_create_user_from_cognito_lambda(self, template: Template) -> None:
+        """Verify CreateUserFromCognito Lambda is created."""
+        template.has_resource_properties(
+            "AWS::Lambda::Function",
+            {
+                "FunctionName": "test-project-dev-create-user-from-cognito",
+                "Description": "Lambda function to create user records from Cognito data (public endpoint)",
+                "Runtime": "python3.12",
+                "Handler": "index.lambda_handler",
+                "MemorySize": 128,
+                "Timeout": 10,
+            },
+        )
+
+    def test_create_user_from_cognito_has_environment_variables(self, template: Template) -> None:
+        """Verify CreateUserFromCognito Lambda has required environment variables."""
+        template.has_resource_properties(
+            "AWS::Lambda::Function",
+            {
+                "FunctionName": "test-project-dev-create-user-from-cognito",
+                "Environment": {
+                    "Variables": Match.object_like({
+                        "LOGGING_LEVEL": "INFO",
+                        "USER_POOL_ID": Match.any_value(),
+                    }),
+                },
+            },
+        )
+
+
 class TestLambdaStackSSMParameters:
     """Tests for SSM parameter exports using path-based naming."""
 
@@ -300,6 +333,16 @@ class TestLambdaStackSSMParameters:
             "AWS::SSM::Parameter",
             {
                 "Name": "/test/project/dev/lambda/checkemailexists/arn",
+                "Type": "String",
+            },
+        )
+
+    def test_exports_create_user_from_cognito_lambda_arn(self, template: Template) -> None:
+        """Verify CreateUserFromCognito Lambda ARN is exported to SSM with path-based naming."""
+        template.has_resource_properties(
+            "AWS::SSM::Parameter",
+            {
+                "Name": "/test/project/dev/lambda/createuserfromcognito/arn",
                 "Type": "String",
             },
         )

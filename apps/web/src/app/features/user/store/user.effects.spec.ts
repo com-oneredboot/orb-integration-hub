@@ -17,7 +17,7 @@ import { RecoveryService } from '../../../core/services/recovery.service';
 import { AuthProgressStorageService } from '../../../core/services/auth-progress-storage.service';
 import { RecoveryAction, CognitoUserStatus, AUTH_MESSAGES } from '../../../core/models/RecoveryModel';
 import { AuthSteps } from './user.state';
-import { UsersCreateInput } from '../../../core/models/UsersModel';
+import { UsersCreateInput, Users } from '../../../core/models/UsersModel';
 import { UserStatus } from '../../../core/enums/UserStatusEnum';
 
 describe('UserEffects', () => {
@@ -43,7 +43,9 @@ describe('UserEffects', () => {
       'checkCognitoMFAStatus',
       'sendSMSVerificationCode',
       'verifySMSCode',
-      'updateUserTimestamp'
+      'updateUserTimestamp',
+      'createUserFromCognito',
+      'userQueryByEmail'
     ]);
 
     cognitoServiceSpy = jasmine.createSpyObj('CognitoService', [
@@ -260,6 +262,99 @@ describe('UserEffects', () => {
 
       effects.createUser$.subscribe(action => {
         expect(action).toEqual(UserActions.smartCheck({ email: input.email }));
+        done();
+      });
+    });
+  });
+
+  // Feature: create-user-from-cognito
+  // Tests for createUserFromCognito$ effect
+  // Validates: Requirements 4.1, 4.3, 8.3
+  describe('createUserFromCognito$', () => {
+    const mockCognitoSub = '12345678-1234-1234-1234-123456789012';
+    const mockUserResponse = {
+      userId: mockCognitoSub,
+      email: 'test@example.com',
+      firstName: 'Test',
+      lastName: 'User',
+      status: 'PENDING',
+      emailVerified: true,
+      phoneVerified: false,
+      mfaEnabled: true,
+      mfaSetupComplete: true,
+      groups: ['USER'],
+      createdAt: 1705420800,
+      updatedAt: 1705420800
+    };
+
+    it('should dispatch createUserFromCognitoSuccess on successful user creation', (done) => {
+      userServiceSpy.createUserFromCognito.and.returnValue(Promise.resolve(mockUserResponse));
+
+      actions$ = of(UserActions.createUserFromCognito({ cognitoSub: mockCognitoSub }));
+
+      effects.createUserFromCognito$.subscribe(action => {
+        expect(action.type).toBe('[User] Create User From Cognito Success');
+        expect(userServiceSpy.createUserFromCognito).toHaveBeenCalledWith(mockCognitoSub);
+        done();
+      });
+    });
+
+    it('should dispatch createUserFromCognitoFailure on error', (done) => {
+      userServiceSpy.createUserFromCognito.and.returnValue(
+        Promise.reject(new Error('User not found'))
+      );
+
+      actions$ = of(UserActions.createUserFromCognito({ cognitoSub: mockCognitoSub }));
+
+      effects.createUserFromCognito$.subscribe(action => {
+        expect(action.type).toBe('[User] Create User From Cognito Failure');
+        done();
+      });
+    });
+
+    it('should convert response to Users object with correct fields', (done) => {
+      userServiceSpy.createUserFromCognito.and.returnValue(Promise.resolve(mockUserResponse));
+
+      actions$ = of(UserActions.createUserFromCognito({ cognitoSub: mockCognitoSub }));
+
+      effects.createUserFromCognito$.subscribe(action => {
+        if (action.type === '[User] Create User From Cognito Success') {
+          const successAction = action as ReturnType<typeof UserActions.createUserFromCognitoSuccess>;
+          expect(successAction.user.userId).toBe(mockCognitoSub);
+          expect(successAction.user.email).toBe('test@example.com');
+          expect(successAction.user.status).toBe('PENDING');
+        }
+        done();
+      });
+    });
+  });
+
+  // Feature: create-user-from-cognito
+  // Tests for handleCreateUserFromCognitoSuccess$ effect
+  // Validates: Requirements 4.3, 8.3
+  describe('handleCreateUserFromCognitoSuccess$', () => {
+    it('should dispatch authFlowComplete after createUserFromCognitoSuccess', (done) => {
+      const mockUser = new Users({
+        userId: '12345678-1234-1234-1234-123456789012',
+        cognitoId: '12345678-1234-1234-1234-123456789012',
+        cognitoSub: '12345678-1234-1234-1234-123456789012',
+        email: 'test@example.com',
+        firstName: 'Test',
+        lastName: 'User',
+        status: UserStatus.Pending,
+        emailVerified: true,
+        phoneVerified: false,
+        mfaEnabled: true,
+        mfaSetupComplete: true,
+        groups: ['USER'],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      actions$ = of(UserActions.createUserFromCognitoSuccess({ user: mockUser }));
+
+      effects.handleCreateUserFromCognitoSuccess$.subscribe(action => {
+        expect(action).toEqual(UserActions.authFlowComplete({ user: mockUser }));
         done();
       });
     });

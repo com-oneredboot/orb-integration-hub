@@ -26,6 +26,7 @@ Some operations are accessible without user authentication using API key:
 | Operation | Description |
 |-----------|-------------|
 | `CheckEmailExists` | Check if an email exists in the system |
+| `CreateUserFromCognito` | Create user record from Cognito data during self-registration |
 
 ## Public Queries
 
@@ -72,6 +73,76 @@ query {
 - Email format validated before database query
 - All requests logged for security audit
 
+## Public Mutations
+
+### CreateUserFromCognito
+
+Create a user record in DynamoDB from Cognito data during self-registration. This is a secure, Lambda-backed mutation that validates against Cognito before creating records. Only accepts `cognitoSub` as input and extracts all user data from Cognito to prevent client-side data injection.
+
+**Authentication**: API Key (`@aws_api_key`)
+
+**Input**:
+```graphql
+input CreateUserFromCognitoInput {
+  cognitoSub: String!
+}
+```
+
+**Output**:
+```graphql
+type CreateUserFromCognito {
+  cognitoSub: String!
+  userId: String
+  email: String
+  firstName: String
+  lastName: String
+  status: String
+  emailVerified: Boolean
+  phoneVerified: Boolean
+  mfaEnabled: Boolean
+  mfaSetupComplete: Boolean
+  groups: [String]
+  createdAt: AWSTimestamp
+  updatedAt: AWSTimestamp
+}
+```
+
+**Example**:
+```graphql
+mutation {
+  CreateUserFromCognito(input: { cognitoSub: "550e8400-e29b-41d4-a716-446655440000" }) {
+    userId
+    email
+    firstName
+    lastName
+    status
+    groups
+  }
+}
+```
+
+**Error Responses**:
+
+| Error Code | Message | Description |
+|------------|---------|-------------|
+| ORB-AUTH-010 | Authentication service unavailable | Cognito service error |
+| ORB-AUTH-011 | Invalid request format | cognitoSub is not a valid UUID |
+| ORB-AUTH-012 | User not found | User doesn't exist in Cognito |
+| ORB-API-010 | Database service unavailable | DynamoDB service error |
+
+**Security Notes**:
+- Only accepts `cognitoSub` as input - all other user data is extracted from Cognito
+- Validates user exists in Cognito before creating DynamoDB record
+- Idempotent - returns existing user if already created
+- Timing attack prevention via consistent response times
+- Error messages don't expose internal details or PII
+
+**Use Case**:
+This mutation is used during the self-registration flow after MFA verification. The frontend calls this mutation with the user's Cognito sub to create the corresponding DynamoDB record. This approach:
+1. Prevents client-side data injection (all data comes from Cognito)
+2. Ensures user exists in Cognito before creating DynamoDB record
+3. Provides idempotency for retry scenarios
+
 ## Generated Operations
 
 The schema contains 99 operations across 11 entities. Operations follow a consistent naming pattern:
@@ -86,11 +157,13 @@ The schema contains 99 operations across 11 entities. Operations follow a consis
 - `UsersQueryByCognitoId(input: UsersQueryByCognitoIdInput!): UsersResponse`
 - `UsersQueryByCognitoSub(input: UsersQueryByCognitoSubInput!): UsersResponse`
 
-**Mutations** (Groups: CUSTOMER, EMPLOYEE, OWNER, USER):
-- `UsersCreate(input: UsersCreateInput!): UsersResponse`
-- `UsersUpdate(input: UsersUpdateInput!): UsersResponse`
-- `UsersDelete(input: UsersDeleteInput!): UsersResponse`
-- `UsersDisable(input: UsersDisableInput!): UsersResponse`
+**Mutations**:
+- `UsersCreate(input: UsersCreateInput!): UsersResponse` (Groups: EMPLOYEE, OWNER) - Admin user creation
+- `UsersUpdate(input: UsersUpdateInput!): UsersResponse` (Groups: EMPLOYEE, OWNER, or API Key)
+- `UsersDelete(input: UsersDeleteInput!): UsersResponse` (Groups: EMPLOYEE, OWNER)
+- `UsersDisable(input: UsersDisableInput!): UsersResponse` (Groups: EMPLOYEE, OWNER)
+
+**Note**: For self-registration, use `CreateUserFromCognito` mutation instead of `UsersCreate`. The `UsersCreate` mutation is restricted to admin operations (EMPLOYEE, OWNER groups).
 
 ### Organizations
 

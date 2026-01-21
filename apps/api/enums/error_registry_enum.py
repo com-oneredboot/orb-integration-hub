@@ -24,6 +24,12 @@ class ErrorRegistry(StrEnum):
     ORB_AUTH_006 = "orb-auth-006"
     # The email address does not match the expected format for CheckEmailExists
     ORB_AUTH_007 = "orb-auth-007"
+    # The Cognito authentication service is temporarily unavailable
+    ORB_AUTH_010 = "orb-auth-010"
+    # The cognitoSub provided is not a valid UUID format
+    ORB_AUTH_011 = "orb-auth-011"
+    # The user does not exist in Cognito
+    ORB_AUTH_012 = "orb-auth-012"
     # An error occurred while executing a GraphQL query
     ORB_API_001 = "orb-api-001"
     # An error occurred while executing a GraphQL mutation
@@ -34,6 +40,8 @@ class ErrorRegistry(StrEnum):
     ORB_API_004 = "orb-api-004"
     # The CheckEmailExists service is temporarily unavailable
     ORB_API_005 = "orb-api-005"
+    # The DynamoDB database service is temporarily unavailable
+    ORB_API_010 = "orb-api-010"
     # The data format provided is invalid
     ORB_DATA_001 = "orb-data-001"
     # The requested data was not found

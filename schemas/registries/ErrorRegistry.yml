@@ -66,6 +66,21 @@ items:
     description: The email address does not match the expected format for CheckEmailExists
     solution: Please enter a valid email address (e.g., user@example.com)
 
+  ORB-AUTH-010:
+    message: Authentication service unavailable
+    description: The Cognito authentication service is temporarily unavailable
+    solution: Please try again in a few moments
+
+  ORB-AUTH-011:
+    message: Invalid request format
+    description: The cognitoSub provided is not a valid UUID format
+    solution: Please ensure the cognitoSub is a valid UUID (e.g., 550e8400-e29b-41d4-a716-446655440000)
+
+  ORB-AUTH-012:
+    message: User not found
+    description: The user does not exist in Cognito
+    solution: Please ensure the user has completed Cognito registration before creating a DynamoDB record
+
   ORB-API-001:
     message: GraphQL query error
     description: An error occurred while executing a GraphQL query
@@ -89,6 +104,11 @@ items:
   ORB-API-005:
     message: Email check service unavailable
     description: The CheckEmailExists service is temporarily unavailable
+    solution: Please try again in a few moments
+
+  ORB-API-010:
+    message: Database service unavailable
+    description: The DynamoDB database service is temporarily unavailable
     solution: Please try again in a few moments
 
   ORB-DATA-001:

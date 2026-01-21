@@ -41,7 +41,6 @@ export interface IAuth {
   needsMFASetup?: boolean;
   mfaType?: string;
   mfaSetupDetails?: MfaSetupDetails;
-  needsUserRecord?: boolean;
 }
 
 export class Auth implements IAuth {
@@ -53,7 +52,6 @@ export class Auth implements IAuth {
   needsMFASetup?: boolean;
   mfaType?: string;
   mfaSetupDetails?: MfaSetupDetails;
-  needsUserRecord?: boolean;
 
   constructor(data: Partial<IAuth> = {}) {
     this.statusCode = data.statusCode ?? 0;
@@ -64,6 +62,5 @@ export class Auth implements IAuth {
     this.needsMFASetup = data.needsMFASetup;
     this.mfaType = data.mfaType;
     this.mfaSetupDetails = data.mfaSetupDetails;
-    this.needsUserRecord = data.needsUserRecord;
   }
 }

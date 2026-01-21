@@ -19,19 +19,22 @@ model:
   authConfig:
     apiKeyAuthentication:
     - Users
-    - UsersCreate
     - UsersUpdate
     - UsersResponse
     cognitoAuthentication:
       groups:
         OWNER:
           - '*'
-        CUSTOMER:
-          - '*'
         EMPLOYEE:
-          - '*'
+          - UsersCreate
+          - UsersUpdate
+          - UsersDelete
+        CUSTOMER:
+          - Users
+          - UsersResponse
         USER:
-          - '*'
+          - Users
+          - UsersResponse
   keys:
     primary:
       partition: userId

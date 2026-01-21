@@ -98,6 +98,11 @@ export const UserActions = createActionGroup({
     'Create User Record Only Success': props<{ user: IUsers }>(),
     'Create User Record Only Failure': props<{ error: string }>(),
 
+    // Create user from Cognito (secure Lambda-backed operation)
+    'Create User From Cognito': props<{ cognitoSub: string }>(),
+    'Create User From Cognito Success': props<{ user: IUsers }>(),
+    'Create User From Cognito Failure': props<{ error: string }>(),
+
     'Register': props<{ email: string; password: string; firstName: string; lastName: string }>(),
     'Register Success': props<{ user: IUsers }>(),
     'Register Failure': props<{ error: string }>(),

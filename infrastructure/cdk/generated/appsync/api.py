@@ -856,6 +856,28 @@ class AppSyncApi(Construct):
 
         # Add Lambda data sources and resolvers
 
+        # CreateUserFromCognito Lambda data source and resolvers
+        create_user_from_cognito_lambda_arn = ssm.StringParameter.value_for_string_parameter(
+            self, "/orb/integration-hub/dev/lambda/createuserfromcognito/arn"
+        )
+        create_user_from_cognito_lambda = lambda_.Function.from_function_attributes(
+            self,
+            "CreateUserFromCognitoLambda",
+            function_arn=create_user_from_cognito_lambda_arn,
+            same_environment=True,
+        )
+        create_user_from_cognito_lambda_data_source = self.api.add_lambda_data_source(
+            "CreateUserFromCognitoLambdaDataSource",
+            create_user_from_cognito_lambda,
+        )
+
+        create_user_from_cognito_lambda_data_source.create_resolver(
+            "CreateUserFromCognitoResolver",
+            type_name="Mutation",
+            field_name="CreateUserFromCognito",
+        )
+
+
         # CheckEmailExists Lambda data source and resolvers
         check_email_exists_lambda_arn = ssm.StringParameter.value_for_string_parameter(
             self, "/orb/integration-hub/dev/lambda/checkemailexists/arn"

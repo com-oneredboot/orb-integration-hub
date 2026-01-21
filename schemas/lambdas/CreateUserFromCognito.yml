@@ -1,0 +1,73 @@
+# file: schemas/lambdas/CreateUserFromCognito.yml
+# author: Corey Dale Peters
+# date: 2026-01-21
+# description: GraphQL mutation schema for creating user records from Cognito data (public endpoint)
+#              This is a secure, purpose-built operation for self-registration that validates
+#              against Cognito before creating DynamoDB records.
+
+type: lambda
+name: CreateUserFromCognito
+targets:
+  - api
+model:
+  operation: mutation
+  authConfig:
+    apiKeyAuthentication:
+      - CreateUserFromCognito
+  attributes:
+    # Input attribute
+    cognitoSub:
+      type: string
+      required: true
+      description: Cognito user ID (sub) to create record for - must be valid UUID
+    
+    # Response attributes (populated by Lambda from Cognito data)
+    userId:
+      type: string
+      required: false
+      description: Created user ID (same as cognitoSub)
+    email:
+      type: string
+      required: false
+      description: Email address from Cognito
+    firstName:
+      type: string
+      required: false
+      description: First name (given_name) from Cognito
+    lastName:
+      type: string
+      required: false
+      description: Last name (family_name) from Cognito
+    status:
+      type: string
+      required: false
+      description: User status (always PENDING for new users)
+    emailVerified:
+      type: boolean
+      required: false
+      description: Email verification status from Cognito
+    phoneVerified:
+      type: boolean
+      required: false
+      description: Phone verification status (always false for new users)
+    mfaEnabled:
+      type: boolean
+      required: false
+      description: MFA enabled status (true if user completed MFA)
+    mfaSetupComplete:
+      type: boolean
+      required: false
+      description: MFA setup complete status (true if user completed MFA)
+    groups:
+      type: string
+      list: true
+      required: false
+      description: User groups (always ['USER'] for new users)
+    createdAt:
+      type: timestamp
+      required: false
+      description: Record creation timestamp
+    updatedAt:
+      type: timestamp
+      required: false
+      description: Record update timestamp
