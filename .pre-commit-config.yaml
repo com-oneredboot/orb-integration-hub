@@ -89,6 +89,17 @@ repos:
         types: [toml]
 
       # ============================================
+      # Infrastructure Hooks
+      # ============================================
+
+      - id: cdk-synth
+        name: CDK synth validation
+        entry: bash -c 'cd infrastructure && pipenv run cdk synth --quiet'
+        language: system
+        files: ^infrastructure/.*\.py$
+        pass_filenames: false
+
+      # ============================================
       # Test Hooks
       # ============================================
 
