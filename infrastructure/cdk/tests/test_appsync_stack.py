@@ -89,22 +89,18 @@ def template(test_config: Config) -> Template:
 class TestAppSyncStackGraphQLApi:
     """Tests for GraphQL API.
     
-    Note: The generated construct from orb-schema-generator uses API_KEY as default
-    auth type and has hardcoded API name "GeneratedApi". These tests verify the
-    actual generated output, not ideal configuration.
-    
-    TODO: File issue with orb-schema-generator to support Cognito auth, X-Ray, and
-    configurable API names.
+    Note: The generated construct from orb-schema-generator v0.18.3+ uses Cognito
+    User Pool as default auth type and configurable API name from schema-generator.yml.
     """
 
     def test_creates_graphql_api(self, template: Template) -> None:
-        """Verify GraphQL API is created with API_KEY auth (generated construct default)."""
-        # Note: Generated construct uses API_KEY as default auth and hardcoded name
+        """Verify GraphQL API is created with Cognito auth."""
+        # Generated construct uses Cognito User Pool auth and configured API name
         template.has_resource_properties(
             "AWS::AppSync::GraphQLApi",
             {
-                "Name": "GeneratedApi",
-                "AuthenticationType": "API_KEY",
+                "Name": "orb-integration-hub-dev-appsync-api",
+                "AuthenticationType": "AMAZON_COGNITO_USER_POOLS",
             },
         )
 
