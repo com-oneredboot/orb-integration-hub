@@ -530,25 +530,61 @@ export class UserEffects {
     )
   );
 
-  // Add signIn effect - this was missing!
+  // Add signIn effect - handles sign-in including MFA flows
   signIn$ = createEffect(() =>
     this.actions$.pipe(
       ofType(UserActions.signIn),
       switchMap(({ email, password }) =>
         from(this.userService.userSignIn(email, password)).pipe(
           map(response => {
+            console.debug('[Effect][signIn$] Response:', response);
+            
+            // Check for MFA setup required first
+            if (response.StatusCode === 200 && response.Data?.needsMFASetup) {
+              console.debug('[Effect][signIn$] MFA setup required, dispatching verifyCognitoPasswordSuccess');
+              return UserActions.verifyCognitoPasswordSuccess({
+                needsMFA: false,
+                needsMFASetup: true,
+                message: 'MFA setup required',
+                mfaSetupDetails: response.Data.mfaSetupDetails
+              });
+            }
+            
+            // Check for MFA verification required
+            if (response.StatusCode === 200 && response.Data?.needsMFA) {
+              console.debug('[Effect][signIn$] MFA verification required, dispatching verifyCognitoPasswordSuccess');
+              return UserActions.verifyCognitoPasswordSuccess({
+                needsMFA: true,
+                needsMFASetup: false,
+                message: 'MFA verification required',
+                mfaSetupDetails: response.Data.mfaSetupDetails
+              });
+            }
+            
+            // Check for successful sign-in with user
             if (response.StatusCode === 200 && response.Data?.isSignedIn && response.Data.user) {
               return UserActions.signInSuccess({ 
                 user: response.Data.user, 
                 message: response.Message || 'Sign in successful' 
               });
             }
+            
+            // Check for needsUserRecord case (user in Cognito but not DynamoDB)
+            if (response.StatusCode === 200 && response.Data?.needsUserRecord) {
+              console.debug('[Effect][signIn$] User needs DynamoDB record creation');
+              // For now, treat as success but the flow will need to create the record
+              return UserActions.signInFailure({
+                error: 'User record needs to be created. Please contact support.'
+              });
+            }
+            
             const errorObj = getError('ORB-AUTH-002');
             return UserActions.signInFailure({
               error: response.Message || (errorObj ? errorObj.message : 'Sign in failed')
             });
           }),
           catchError(_error => {
+            console.error('[Effect][signIn$] Error:', _error);
             const errorObj = getError('ORB-AUTH-002');
             return of(UserActions.signInFailure({
               error: errorObj ? errorObj.message : 'Sign in failed'
