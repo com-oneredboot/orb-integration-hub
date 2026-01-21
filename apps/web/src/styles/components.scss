@@ -765,6 +765,42 @@
   }
 }
 
+// Header CTA Button (for profile completion, etc.)
+.orb-header-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: v.$spacing-sm;
+  padding: v.$spacing-sm v.$spacing-lg;
+  background: v.$primary-color;
+  color: v.$orb-white;
+  border: none;
+  border-radius: v.$border-radius-lg;
+  font-size: v.$font-size-sm;
+  font-weight: v.$font-weight-semibold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+
+  &:hover {
+    background: color.adjust(v.$primary-color, $lightness: -10%);
+    transform: translateX(2px);
+  }
+
+  &:focus {
+    outline: 2px solid v.$primary-color;
+    outline-offset: 2px;
+  }
+
+  &__icon {
+    font-size: v.$font-size-xs;
+    transition: transform 0.2s ease;
+  }
+
+  &:hover &__icon {
+    transform: translateX(3px);
+  }
+}
+
 
 // Responsive Styles
 @media (max-width: 768px) {

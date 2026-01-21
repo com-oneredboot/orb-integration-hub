@@ -51,6 +51,14 @@ description: HTML template file
                 <fa-icon [icon]="getStatusIcon(user.status)" class="orb-header-badge__icon"></fa-icon>
                 {{ getStatusLabel(user.status) }}
               </span>
+              <!-- CTA button when account needs activation -->
+              <button *ngIf="user.status !== 'ACTIVE'" 
+                      class="orb-header-cta"
+                      (click)="goToProfile()"
+                      type="button">
+                <fa-icon icon="arrow-right" class="orb-header-cta__icon"></fa-icon>
+                Complete Profile Setup
+              </button>
             </div>
           </div>
         </div>
