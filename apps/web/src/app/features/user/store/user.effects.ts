@@ -942,58 +942,57 @@ export class UserEffects {
               throw new Error('No email found in Cognito profile');
             }
             
+            const email = cognitoProfile['email'] as string;
+            
             // Get user data from our backend using the email from Cognito
-            return from(this.userService.userExists({ email: cognitoProfile['email'] as string })).pipe(
+            return from(this.userService.userQueryByEmail(email)).pipe(
               map(response => {
+                console.debug('[Effect][refreshSession$] userQueryByEmail response:', {
+                  statusCode: response.StatusCode,
+                  dataLength: response.Data?.length,
+                  message: response.Message
+                });
                 
-                // Handle backend user lookup - be resilient to failures
+                // User found in backend
                 if (response.StatusCode === 200 && response.Data && response.Data.length === 1) {
-                  // Ideal case: user found in backend
                   const user = new Users(response.Data[0]);
+                  console.debug('[Effect][refreshSession$] User loaded from backend:', {
+                    userId: user.userId,
+                    status: user.status,
+                    email: sanitizeEmail(user.email)
+                  });
                   return UserActions.refreshSessionSuccess({ user });
                 }
                 
-                if (response.StatusCode === 500 && response.Data && response.Data.length > 1) {
-                  // Multiple users found - this is a critical error we can't recover from
+                // Multiple users found - critical error
+                if (response.Data && response.Data.length > 1) {
+                  console.error('[Effect][refreshSession$] Multiple users found for email');
                   throw new Error('Multiple users found for email');
                 }
                 
-                // For any other case (user not found, 500 error, network issues, etc.)
-                // Continue with Cognito profile data to maintain user session
+                // User not found in DynamoDB - they need to complete registration
+                // This can happen if user exists in Cognito but DynamoDB record wasn't created
+                console.warn('[Effect][refreshSession$] User not found in DynamoDB for:', sanitizeEmail(email));
+                const cognitoSub = (cognitoProfile.sub as string) || '';
+                if (cognitoSub) {
+                  // Trigger CreateUserFromCognito to create the DynamoDB record
+                  console.log('[Effect][refreshSession$] Triggering CreateUserFromCognito for:', sanitizeCognitoSub(cognitoSub));
+                  return UserActions.createUserFromCognito({ cognitoSub });
+                }
                 
-                // Create a minimal user object from Cognito profile
-                const fallbackUser = new Users({
-                  userId: (cognitoProfile.sub as string) || '', // Cognito user ID as fallback
-                  cognitoSub: (cognitoProfile.sub as string) || '',
-                  email: cognitoProfile['email'] as string,
-                  firstName: (cognitoProfile['given_name'] as string) || '',
-                  lastName: (cognitoProfile['family_name'] as string) || '',
-                  emailVerified: cognitoProfile['email_verified'] === 'true',
-                  groups: (cognitoProfile['cognito:groups'] as string[]) || []
-                });
-                
-                return UserActions.refreshSessionSuccess({ user: fallbackUser });
+                throw new Error('User not found and unable to create record');
               }),
-              catchError(_backendError => {
-                // Backend call failed completely (network error, etc.)
-                // Continue with Cognito profile data
-                
-                const fallbackUser = new Users({
-                  userId: (cognitoProfile.sub as string) || '',
-                  cognitoSub: (cognitoProfile.sub as string) || '',
-                  email: cognitoProfile['email'] as string,
-                  firstName: (cognitoProfile['given_name'] as string) || '',
-                  lastName: (cognitoProfile['family_name'] as string) || '',
-                  emailVerified: cognitoProfile['email_verified'] === 'true',
-                  groups: (cognitoProfile['cognito:groups'] as string[]) || []
-                });
-                
-                return of(UserActions.refreshSessionSuccess({ user: fallbackUser }));
+              catchError(backendError => {
+                console.error('[Effect][refreshSession$] Backend lookup failed:', backendError);
+                const errorObj = getError('ORB-AUTH-001');
+                return of(UserActions.refreshSessionFailure({
+                  error: errorObj ? errorObj.message : 'Failed to load user data'
+                }));
               })
             );
           }),
           catchError(_error => {
-            console.error('Effect [RefreshSession]: Critical error (Cognito profile failed)', _error);
+            console.error('[Effect][refreshSession$] Critical error (Cognito profile failed):', _error);
             const errorObj = getError('ORB-AUTH-001');
             return of(UserActions.refreshSessionFailure({
               error: errorObj ? errorObj.message : 'Session refresh failed'
