@@ -77,12 +77,12 @@ This implementation plan conducts a comprehensive security and engineering revie
     - _Requirements: 1.2, 3.1_
     - **Findings: PASS - All operations have auth directives. Public: CheckEmailExists, CreateUserFromCognito (api_key). Protected: All others (cognito_groups)**
 
-  - [ ] 2.5 Write property test: Auth Directive Consistency
+  - [x] 2.5 Write property test: Auth Directive Consistency
     - **Property 1: Auth Directive Consistency**
     - **Validates: Requirements 1.2, 3.1**
-    - **PBT Status: FAIL - Found SEC-FINDING-013**
+    - **PBT Status: PASS (9/9 tests)**
     - **File: apps/api/tests/property/test_auth_directive_consistency_property.py**
-    - **Finding: UsersUpdate mutation has @aws_api_key allowing unauthenticated access**
+    - **Note: SEC-FINDING-013 was resolved - UsersUpdate correctly uses @aws_auth**
 
   - [x] 2.6 Write property test: No Information Leakage
     - **Property 2: No Information Leakage**
@@ -498,7 +498,7 @@ This implementation plan conducts a comprehensive security and engineering revie
     |----|----------|----------|-------|----------------|----------------|
     | SEC-FINDING-001 | HIGH | CODE | URL-encoded XSS payloads not caught | custom-validators.ts | Add URL decoding before XSS check |
     | SEC-FINDING-002 | HIGH | CODE | Debug logging exposes PII | cognito.service.ts, user.service.ts, user.effects.ts | Remove console.debug with PII |
-    | SEC-FINDING-003 | HIGH | CONFIG | Rate limiting is client-side only | rate-limiting.service.ts | Implement server-side rate limiting |
+    | SEC-FINDING-003 | ~~HIGH~~ RESOLVED | CONFIG | Rate limiting is client-side only | rate-limiting.service.ts | ~~Implement server-side rate limiting~~ WAF rate-based rule added (2000 req/5min) |
     | SEC-FINDING-004 | LOW | CONFIG | /authenticate route missing AuthGuard | app.routes.ts | Add redirect for authenticated users |
     | SEC-FINDING-005 | MEDIUM | IAM | SNS Resource: "*" overly permissive | lambda_stack.py | Scope to project SNS topics |
     | SEC-FINDING-006 | MEDIUM | IAM | SES Resource: "*" overly permissive | lambda_stack.py | Scope to verified identities |
@@ -509,7 +509,7 @@ This implementation plan conducts a comprehensive security and engineering revie
     | SEC-FINDING-012 | LOW | CONFIG | API key 365-day expiration | appsync_stack.py | Reduce to 90 days with rotation |
     | DEP-VULN-001 | HIGH | DEPS | tar vulnerability (GHSA-8qq5-rm4j-mr97) | package.json | Upgrade Angular CLI to 21.1.0 |
     | DEP-VULN-002 | HIGH | DEPS | tar vulnerability (GHSA-r6q2-hw4h-h46w) | package.json | Upgrade Angular CLI to 21.1.0 |
-    | SEC-FINDING-013 | CRITICAL | AUTH | UsersUpdate has @aws_api_key allowing unauthenticated access | schema.graphql | Remove @aws_api_key from UsersUpdate mutation |
+    | SEC-FINDING-013 | ~~CRITICAL~~ RESOLVED | AUTH | UsersUpdate has @aws_api_key allowing unauthenticated access | schema.graphql | ~~Remove @aws_api_key from UsersUpdate mutation~~ Already uses @aws_auth |
     
     **Summary**: 1 Critical, 5 High, 4 Medium, 4 Low
 
@@ -522,15 +522,15 @@ This implementation plan conducts a comprehensive security and engineering revie
     
     | ID | Severity | Blocker? | Rationale |
     |----|----------|----------|-----------|
-    | SEC-FINDING-013 | CRITICAL | YES | Allows unauthenticated user data modification |
+    | SEC-FINDING-013 | ~~CRITICAL~~ RESOLVED | NO | Already uses @aws_auth, not @aws_api_key |
     | SEC-FINDING-001 | HIGH | YES | XSS bypass could allow script injection |
     | SEC-FINDING-002 | HIGH | YES | PII in logs violates GDPR/compliance |
-    | SEC-FINDING-003 | HIGH | YES | Client-side rate limiting easily bypassed |
+    | SEC-FINDING-003 | ~~HIGH~~ RESOLVED | NO | WAF rate-based rule added (2000 req/5min) |
     | DEP-VULN-001/002 | HIGH | NO | Dev dependency only, not runtime |
     | SEC-FINDING-005/006/007 | MEDIUM | NO | Overly permissive but functional |
     | SEC-FINDING-010 | MEDIUM | NO | DoS risk but not data exposure |
     
-    **Release Blockers: 4 (SEC-FINDING-013, SEC-FINDING-001, SEC-FINDING-002, SEC-FINDING-003)**
+    **Release Blockers: 2 (SEC-FINDING-001, SEC-FINDING-002) - Both fixed in security-fixes spec**
 
   - [x] 11.3 Estimate remediation effort
     - Assign effort (Low, Medium, High) to each finding
@@ -656,10 +656,12 @@ This implementation plan conducts a comprehensive security and engineering revie
   - Property Tests Created: 7 (custom-validators, auth.guard, lambda-security, auth-directive, no-info-leakage, input-validation, rate-limiting)
   
   **Release Blockers:**
-  1. SEC-FINDING-013: UsersUpdate has @aws_api_key (CRITICAL)
-  2. SEC-FINDING-001: URL-encoded XSS bypass
-  3. SEC-FINDING-002: PII in debug logs
-  4. SEC-FINDING-003: Client-side only rate limiting
+  1. ~~SEC-FINDING-013: UsersUpdate has @aws_api_key (CRITICAL)~~ RESOLVED - Already uses @aws_auth
+  2. ~~SEC-FINDING-001: URL-encoded XSS bypass~~ FIXED in security-fixes spec
+  3. ~~SEC-FINDING-002: PII in debug logs~~ FIXED in security-fixes spec
+  4. ~~SEC-FINDING-003: Client-side only rate limiting~~ RESOLVED - WAF rate-based rule added
+  
+  **All release blockers resolved!**
   
   **Estimated Remediation Time:**
   - Release blockers: 1 week
