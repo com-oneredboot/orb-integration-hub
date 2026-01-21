@@ -94,7 +94,9 @@ export function getNextStepForAction(action: RecoveryAction): AuthSteps {
     case RecoveryAction.RESEND_VERIFICATION:
       return AuthSteps.EMAIL_VERIFY;
     case RecoveryAction.CREATE_DYNAMO_RECORD:
-      return AuthSteps.PHONE_SETUP;
+      // User exists in Cognito but not DynamoDB - need to sign in first
+      // After sign-in, the flow will create the DynamoDB record
+      return AuthSteps.SIGNIN;
     case RecoveryAction.LOGIN:
       return AuthSteps.PASSWORD_VERIFY;
     case RecoveryAction.PASSWORD_RESET:
