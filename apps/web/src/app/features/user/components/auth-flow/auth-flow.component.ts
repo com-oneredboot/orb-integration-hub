@@ -871,8 +871,12 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           }
 
           case AuthSteps.MFA_SETUP:
-            // First check Cognito MFA status to see if user record needs updating
-            this.store.dispatch(UserActions.checkMFAStatus());
+            // User has scanned QR code and entered TOTP code - verify it
+            if(!mfaCode) {
+              return;
+            }
+            // Use the same MFA verification as MFA_VERIFY - confirmSignIn handles both
+            this.store.dispatch(UserActions.needsMFA({ code: mfaCode, rememberDevice: false }));
             break;
 
           case AuthSteps.MFA_VERIFY:
