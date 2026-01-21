@@ -165,17 +165,20 @@ export class DashboardComponent implements OnInit {
 
   /**
    * Get status class for header badge styling
-   * @param status The user status
+   * @param status The user status (UserStatus enum value)
    * @returns CSS class name for status
    */
   getStatusClass(status: string): string {
-    switch (status?.toLowerCase()) {
-      case 'active':
+    switch (status?.toUpperCase()) {
+      case 'ACTIVE':
         return 'active';
-      case 'pending':
+      case 'PENDING':
         return 'pending';
-      case 'suspended':
+      case 'INACTIVE':
+      case 'REJECTED':
+      case 'DELETED':
         return 'suspended';
+      case 'UNKNOWN':
       default:
         return 'unknown';
     }
@@ -183,17 +186,20 @@ export class DashboardComponent implements OnInit {
 
   /**
    * Get status icon for header badge
-   * @param status The user status
+   * @param status The user status (UserStatus enum value)
    * @returns Font Awesome icon name
    */
   getStatusIcon(status: string): string {
-    switch (status?.toLowerCase()) {
-      case 'active':
+    switch (status?.toUpperCase()) {
+      case 'ACTIVE':
         return 'check-circle';
-      case 'pending':
+      case 'PENDING':
         return 'clock';
-      case 'suspended':
+      case 'INACTIVE':
+      case 'REJECTED':
+      case 'DELETED':
         return 'ban';
+      case 'UNKNOWN':
       default:
         return 'question-circle';
     }
@@ -201,17 +207,22 @@ export class DashboardComponent implements OnInit {
 
   /**
    * Get status label for header badge
-   * @param status The user status
+   * @param status The user status (UserStatus enum value)
    * @returns Human readable status label
    */
   getStatusLabel(status: string): string {
-    switch (status?.toLowerCase()) {
-      case 'active':
+    switch (status?.toUpperCase()) {
+      case 'ACTIVE':
         return 'Account Active';
-      case 'pending':
+      case 'PENDING':
         return 'Account Pending';
-      case 'suspended':
-        return 'Account Suspended';
+      case 'INACTIVE':
+        return 'Account Inactive';
+      case 'REJECTED':
+        return 'Account Rejected';
+      case 'DELETED':
+        return 'Account Deleted';
+      case 'UNKNOWN':
       default:
         return 'Account Status Unknown';
     }
