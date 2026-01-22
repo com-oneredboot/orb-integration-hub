@@ -194,16 +194,20 @@ description: HTML template file
             </div>
           </div>
           
-          <div class="orb-health-item orb-health-item--clickable" 
-               [ngClass]="(user.mfaEnabled && user.mfaSetupComplete) ? 'orb-health-item--healthy' : 'orb-health-item--warning'"
-               (click)="checkMFASetup()"
-               (keydown.enter)="checkMFASetup()"
-               (keydown.space)="checkMFASetup()"
-               tabindex="0"
-               role="button"
-               [class.orb-health-item--loading]="isLoading$ | async"
+          <div class="orb-health-item" 
+               [ngClass]="{
+                 'orb-health-item--healthy': user.mfaEnabled && user.mfaSetupComplete,
+                 'orb-health-item--warning': !(user.mfaEnabled && user.mfaSetupComplete),
+                 'orb-health-item--clickable': !(user.mfaEnabled && user.mfaSetupComplete),
+                 'orb-health-item--loading': isLoading$ | async
+               }"
+               (click)="!(user.mfaEnabled && user.mfaSetupComplete) && checkMFASetup()"
+               (keydown.enter)="!(user.mfaEnabled && user.mfaSetupComplete) && checkMFASetup()"
+               (keydown.space)="!(user.mfaEnabled && user.mfaSetupComplete) && checkMFASetup()"
+               [attr.tabindex]="(user.mfaEnabled && user.mfaSetupComplete) ? null : 0"
+               [attr.role]="(user.mfaEnabled && user.mfaSetupComplete) ? null : 'button'"
                [style.pointer-events]="(isLoading$ | async) ? 'none' : 'auto'"
-               [title]="(user.mfaEnabled && user.mfaSetupComplete) ? 'MFA enabled - click to recheck' : 'Click to check MFA setup'">
+               [title]="(user.mfaEnabled && user.mfaSetupComplete) ? 'MFA enabled' : 'Click to check MFA setup'">
             <fa-icon [icon]="(user.mfaEnabled && user.mfaSetupComplete) ? 'check-circle' : 'exclamation-triangle'" 
                      class="orb-health-item__icon"></fa-icon>
             <div class="orb-health-item__content">
@@ -216,7 +220,7 @@ description: HTML template file
                   Checking MFA status...
                 </ng-container>
               </div>
-              <div class="orb-health-item__action">
+              <div class="orb-health-item__action" *ngIf="!(user.mfaEnabled && user.mfaSetupComplete)">
                 <fa-icon *ngIf="isNotLoading$ | async" icon="arrow-right" class="orb-health-item__action-icon"></fa-icon>
                 <fa-icon *ngIf="isLoading$ | async" icon="clock" class="orb-health-item__action-icon orb-health-item__action-icon--loading"></fa-icon>
                 <ng-container *ngIf="isNotLoading$ | async">Check MFA Setup</ng-container>
