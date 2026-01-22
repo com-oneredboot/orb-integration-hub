@@ -276,16 +276,18 @@ export const userReducer = createReducer(
   })),
   
   // Phone verification actions
+  // Note: Phone setup/verification is now handled on the profile page
+  // These reducers are kept for the profile component's use
   on(UserActions.checkPhoneRequired, (state) => ({
     ...state,
     isLoading: true,
     error: null
   })),
-  on(UserActions.checkPhoneRequiredSuccess, (state, { required }) => ({
+  on(UserActions.checkPhoneRequiredSuccess, (state, { required: _required }) => ({
     ...state,
     isLoading: false,
-    error: null,
-    currentStep: required ? AuthSteps.PHONE_SETUP : AuthSteps.COMPLETE
+    error: null
+    // Step navigation is now handled by the profile page
   })),
   on(UserActions.checkPhoneRequiredFailure, (state, { error }) => ({
     ...state,
@@ -303,8 +305,8 @@ export const userReducer = createReducer(
     isLoading: false,
     error: null,
     phoneValidationId: validationId,
-    phoneValidationExpiration: expiresAt,
-    currentStep: AuthSteps.PHONE_VERIFY
+    phoneValidationExpiration: expiresAt
+    // Step navigation is now handled by the profile page
   })),
   on(UserActions.setupPhoneFailure, (state, { error }) => ({
     ...state,

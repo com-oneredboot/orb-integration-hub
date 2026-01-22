@@ -21,8 +21,6 @@ describe('AuthProgressStorageService', () => {
     AuthSteps.PASSWORD_SETUP,
     AuthSteps.PASSWORD_VERIFY,
     AuthSteps.EMAIL_VERIFY,
-    AuthSteps.PHONE_SETUP,
-    AuthSteps.PHONE_VERIFY,
     AuthSteps.MFA_SETUP,
     AuthSteps.MFA_VERIFY
   );

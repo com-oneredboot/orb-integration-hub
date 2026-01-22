@@ -2,7 +2,7 @@
 file: frontend/src/app/features/user/components/profile/profile.component.html
 author: Corey Dale Peters
 date: 2025-03-07
-description: HTML template file
+description: HTML template file - Profile page with step-based setup flow
 -->
 
 <div class="profile-container">
@@ -16,20 +16,22 @@ description: HTML template file
           <div class="orb-page-header__greeting">
             <div class="orb-page-header__icon-title">
               <img src="../../../../../assets/hardhat.jpg" alt="Engineering" class="orb-page-header__icon">
-              <h1 class="orb-page-header__title">Profile Settings</h1>
+              <h1 class="orb-page-header__title">
+                {{ setupState.isFlowMode ? 'Profile Setup' : 'Profile Settings' }}
+              </h1>
             </div>
-            <p class="orb-page-header__subtitle" *ngIf="isAccountComplete(user); else pendingMessage">
+            <p class="orb-page-header__subtitle" *ngIf="isAccountComplete(user) && !setupState.isFlowMode; else pendingMessage">
               Your profile is complete and ready for engineering work
             </p>
             <ng-template #pendingMessage>
               <p class="orb-page-header__subtitle orb-page-header__subtitle--warning">
-                Complete your profile setup to activate your account
+                {{ setupState.isFlowMode ? 'Complete the steps below to finish your profile' : 'Complete your profile setup to activate your account' }}
               </p>
             </ng-template>
-            <p class="orb-page-header__hint">
+            <p class="orb-page-header__hint" *ngIf="!setupState.isFlowMode">
               Review your personal information below and click the edit button to make changes. Ensure all verification steps are completed for full account access.
             </p>
-            <div class="orb-page-header__status">
+            <div class="orb-page-header__status" *ngIf="!setupState.isFlowMode">
               <span class="orb-header-badge" 
                     [ngClass]="'orb-header-badge--' + getStatusClass(user.status)">
                 <fa-icon [icon]="isAccountComplete(user) ? 'check-circle' : 'exclamation-triangle'" class="orb-header-badge__icon"></fa-icon>
@@ -42,8 +44,8 @@ description: HTML template file
     </div>
   </div>
 
-  <!-- Profile Overview Card - Full Width -->
-  <div class="profile-overview-section" *ngIf="(currentUser$ | async) as user">
+  <!-- Profile Overview Card - Only show when NOT in flow mode -->
+  <div class="profile-overview-section" *ngIf="!setupState.isFlowMode && (currentUser$ | async) as user">
     <div class="orb-card">
       <div class="orb-card__header">
         <h2 class="orb-card__title">
@@ -60,9 +62,8 @@ description: HTML template file
             variant="badge">
           </app-status-badge>
           <button 
-            *ngIf="!isEditMode"
             class="orb-card-btn"
-            (click)="enterEditMode()"
+            (click)="startFullFlow()"
             type="button">
             <fa-icon icon="edit" class="orb-card-btn__icon"></fa-icon>
             Edit Profile
@@ -111,7 +112,7 @@ description: HTML template file
           <div class="profile-overview-item">
             <div class="profile-overview-item__label">Account Type</div>
             <div class="profile-overview-item__value">
-              <span *ngFor="let group of user.groups; let last = last" 
+              <span *ngFor="let group of getGroupsArray(user.groups); let last = last" 
                     class="role-badge">
                 {{ group }}<span *ngIf="!last">, </span>
               </span>
@@ -132,132 +133,288 @@ description: HTML template file
     </div>
   </div>
 
-  <!-- Edit Form Section - Constrained Width -->
-  <div class="profile-content" *ngIf="isEditMode && (currentUser$ | async) as user">
-    <form 
-      [formGroup]="profileForm" 
-      (ngSubmit)="onSubmit()" 
-      class="profile-form"
-      id="profile-edit-form">
-      <!-- Personal Information Section -->
-      <div class="profile-form__section">
-        <h2 class="profile-form__section-title">Personal Information</h2>
+  <!-- Step-Based Profile Setup Flow -->
+  <div class="profile-setup-flow" *ngIf="setupState.isFlowMode && (currentUser$ | async) as user">
+    
+    <!-- Progress Indicator (using shared component) -->
+    <app-progress-steps
+      [steps]="profileSteps"
+      [currentStep]="getCurrentStepNumber()">
+    </app-progress-steps>
+
+    <!-- Step 1: Name -->
+    <div class="profile-setup-flow__step" *ngIf="setupState.currentStep === ProfileSetupStep.NAME">
+      <div class="profile-setup-flow__step-card">
+        <h2 class="profile-setup-flow__step-title">Your Name</h2>
+        <p class="profile-setup-flow__step-description">Enter your legal name as it appears on your ID.</p>
         
-        <div class="profile-form__row">
-          <!-- First Name -->
-          <div class="profile-form__field">
-            <label for="firstName" class="profile-form__field-label">First Name</label>
+        <form [formGroup]="nameForm" class="profile-setup-flow__form">
+          <div class="profile-setup-flow__input-group">
+            <label for="setup-firstName" class="profile-setup-flow__label">
+              First Name <span class="profile-setup-flow__required">*</span>
+            </label>
             <input 
               type="text" 
-              id="firstName" 
+              id="setup-firstName" 
               formControlName="firstName" 
-              class="profile-form__field-input"
-              [ngClass]="{'profile-form__field-input--error': isFieldInvalid('firstName')}"
-            >
-            <div *ngIf="isFieldInvalid('firstName')" class="profile-form__field-error">
-              {{ getErrorMessage('firstName') }}
+              class="profile-setup-flow__input"
+              [ngClass]="{'profile-setup-flow__input--error': nameForm.get('firstName')?.invalid && nameForm.get('firstName')?.touched}"
+              placeholder="Enter your first name"
+              autocomplete="given-name">
+            <div *ngIf="nameForm.get('firstName')?.invalid && nameForm.get('firstName')?.touched" 
+                 class="profile-setup-flow__error">
+              <span *ngIf="nameForm.get('firstName')?.errors?.['required']">First name is required</span>
+              <span *ngIf="nameForm.get('firstName')?.errors?.['minlength']">First name must be at least 2 characters</span>
             </div>
           </div>
           
-          <!-- Last Name -->
-          <div class="profile-form__field">
-            <label for="lastName" class="profile-form__field-label">Last Name</label>
+          <div class="profile-setup-flow__input-group">
+            <label for="setup-lastName" class="profile-setup-flow__label">
+              Last Name <span class="profile-setup-flow__required">*</span>
+            </label>
             <input 
               type="text" 
-              id="lastName" 
+              id="setup-lastName" 
               formControlName="lastName" 
-              class="profile-form__field-input"
-              [ngClass]="{'profile-form__field-input--error': isFieldInvalid('lastName')}"
-            >
-            <div *ngIf="isFieldInvalid('lastName')" class="profile-form__field-error">
-              {{ getErrorMessage('lastName') }}
+              class="profile-setup-flow__input"
+              [ngClass]="{'profile-setup-flow__input--error': nameForm.get('lastName')?.invalid && nameForm.get('lastName')?.touched}"
+              placeholder="Enter your last name"
+              autocomplete="family-name">
+            <div *ngIf="nameForm.get('lastName')?.invalid && nameForm.get('lastName')?.touched" 
+                 class="profile-setup-flow__error">
+              <span *ngIf="nameForm.get('lastName')?.errors?.['required']">Last name is required</span>
+              <span *ngIf="nameForm.get('lastName')?.errors?.['minlength']">Last name must be at least 2 characters</span>
             </div>
           </div>
-        </div>
+        </form>
         
-        <!-- Email -->
-        <div class="profile-form__field">
-          <label for="email" class="profile-form__field-label">Email Address</label>
-          <input 
-            type="email" 
-            id="email" 
-            formControlName="email" 
-            class="profile-form__field-input"
-          >
-          <div class="profile-form__field-hint">Email address cannot be changed</div>
-        </div>
-        
-        <!-- Phone Number -->
-        <div class="profile-form__field">
-          <label for="phoneNumber" class="profile-form__field-label">Phone Number</label>
-          <input 
-            type="tel" 
-            id="phoneNumber" 
-            formControlName="phoneNumber" 
-            class="profile-form__field-input"
-          >
-          <div class="profile-form__field-hint">Phone number verification is handled during authentication</div>
+        <div class="profile-setup-flow__actions">
+          <button 
+            type="button" 
+            class="profile-setup-flow__button profile-setup-flow__button--secondary"
+            (click)="showSummary()">
+            Cancel
+          </button>
+          <button 
+            type="button" 
+            class="profile-setup-flow__button profile-setup-flow__button--primary"
+            [disabled]="nameForm.invalid || isLoading"
+            (click)="submitNameStep()">
+            {{ isLoading ? 'Saving...' : 'Continue' }}
+          </button>
         </div>
       </div>
-      
-      <!-- Form Actions -->
-      <div class="profile-form__actions">
+    </div>
+
+    <!-- Step 2: Phone -->
+    <div class="profile-setup-flow__step" *ngIf="setupState.currentStep === ProfileSetupStep.PHONE">
+      <div class="profile-setup-flow__step-card">
+        <h2 class="profile-setup-flow__step-title">Phone Number</h2>
+        <p class="profile-setup-flow__step-description">Enter your phone number with country code (e.g., +1 for US).</p>
+        
+        <form [formGroup]="phoneForm" class="profile-setup-flow__form">
+          <div class="profile-setup-flow__input-group">
+            <label for="setup-phoneNumber" class="profile-setup-flow__label">
+              Phone Number <span class="profile-setup-flow__required">*</span>
+            </label>
+            <input 
+              type="tel" 
+              id="setup-phoneNumber" 
+              formControlName="phoneNumber" 
+              class="profile-setup-flow__input"
+              [ngClass]="{'profile-setup-flow__input--error': phoneForm.get('phoneNumber')?.invalid && phoneForm.get('phoneNumber')?.touched}"
+              placeholder="+1 (555) 123-4567"
+              autocomplete="tel">
+            <div *ngIf="phoneForm.get('phoneNumber')?.invalid && phoneForm.get('phoneNumber')?.touched" 
+                 class="profile-setup-flow__error">
+              <span *ngIf="phoneForm.get('phoneNumber')?.errors?.['required']">Phone number is required</span>
+              <span *ngIf="phoneForm.get('phoneNumber')?.errors?.['pattern']">Please enter a valid phone number in international format (e.g., +12025550123)</span>
+            </div>
+            <div class="profile-setup-flow__hint">
+              Enter your phone number in E.164 format starting with + and country code
+            </div>
+          </div>
+        </form>
+        
+        <div class="profile-setup-flow__actions">
+          <button 
+            type="button" 
+            class="profile-setup-flow__button profile-setup-flow__button--secondary"
+            (click)="previousStep()">
+            Back
+          </button>
+          <button 
+            type="button" 
+            class="profile-setup-flow__button profile-setup-flow__button--primary"
+            [disabled]="phoneForm.invalid || isLoading"
+            (click)="submitPhoneStep()">
+            {{ isLoading ? 'Saving...' : 'Continue' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Phone Verification -->
+    <div class="profile-setup-flow__step" *ngIf="setupState.currentStep === ProfileSetupStep.PHONE_VERIFY">
+      <div class="profile-setup-flow__step-card">
+        <h2 class="profile-setup-flow__step-title">Verify Phone</h2>
+        <p class="profile-setup-flow__step-description">
+          {{ phoneVerificationState.codeSent 
+             ? 'Enter the 6-digit code sent to your phone.' 
+             : 'Click the button below to receive a verification code via SMS.' }}
+        </p>
+        
+        <!-- Send Code Button (before code is sent) -->
+        <div *ngIf="!phoneVerificationState.codeSent" class="profile-setup-flow__verify-action">
+          <button 
+            type="button" 
+            class="profile-setup-flow__button profile-setup-flow__button--primary"
+            [disabled]="isLoading"
+            (click)="sendVerificationCode()">
+            {{ isLoading ? 'Sending...' : 'Send Verification Code' }}
+          </button>
+        </div>
+        
+        <!-- Verification Code Input (after code is sent) -->
+        <form *ngIf="phoneVerificationState.codeSent" [formGroup]="verifyForm" class="profile-setup-flow__form">
+          <div class="profile-setup-flow__input-group">
+            <label for="setup-verificationCode" class="profile-setup-flow__label">
+              Verification Code <span class="profile-setup-flow__required">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="setup-verificationCode" 
+              formControlName="verificationCode" 
+              class="profile-setup-flow__input profile-setup-flow__input--code"
+              [ngClass]="{'profile-setup-flow__input--error': verifyForm.get('verificationCode')?.invalid && verifyForm.get('verificationCode')?.touched}"
+              placeholder="000000"
+              maxlength="6"
+              inputmode="numeric"
+              autocomplete="one-time-code">
+            <div *ngIf="verifyForm.get('verificationCode')?.invalid && verifyForm.get('verificationCode')?.touched" 
+                 class="profile-setup-flow__error">
+              <span *ngIf="verifyForm.get('verificationCode')?.errors?.['required']">Verification code is required</span>
+              <span *ngIf="verifyForm.get('verificationCode')?.errors?.['pattern']">Please enter a 6-digit code</span>
+            </div>
+            <div *ngIf="phoneVerificationState.error" class="profile-setup-flow__error">
+              {{ phoneVerificationState.error }}
+            </div>
+          </div>
+          
+          <div class="profile-setup-flow__resend">
+            <button 
+              type="button" 
+              class="profile-setup-flow__text-button"
+              [disabled]="!canResendCode() || isLoading"
+              (click)="sendVerificationCode()">
+              Resend Code
+            </button>
+          </div>
+        </form>
+        
+        <div class="profile-setup-flow__actions">
+          <button 
+            type="button" 
+            class="profile-setup-flow__button profile-setup-flow__button--secondary"
+            (click)="previousStep()">
+            Back
+          </button>
+          <button 
+            *ngIf="phoneVerificationState.codeSent"
+            type="button" 
+            class="profile-setup-flow__button profile-setup-flow__button--primary"
+            [disabled]="verifyForm.invalid || isLoading"
+            (click)="submitVerifyStep()">
+            {{ isLoading ? 'Verifying...' : 'Verify' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Debug section (matching auth-flow format) -->
+  <ng-container *ngIf="debugMode$ | async">
+    <div class="profile__debug">
+      <h3>Profile Debug Information</h3>
+
+      <!-- LLM-Friendly Summary Section -->
+      <div class="profile__debug-section profile__debug-summary">
+        <h4>Quick Debug Summary</h4>
+        <p class="profile__debug-hint">Click to copy a compact summary for troubleshooting</p>
         <button 
           type="button" 
-          class="profile-form__button profile-form__button--secondary"
-          (click)="cancelEdit()"
-        >
-          Cancel
-        </button>
-        <button 
-          type="submit" 
-          class="profile-form__button profile-form__button--primary"
-          [disabled]="!profileForm.valid || profileForm.pristine || isLoading"
-        >
-          {{ isLoading ? 'Saving...' : 'Save Changes' }}
+          class="profile__debug-copy-btn"
+          (click)="copyDebugSummary()"
+          [disabled]="debugCopyStatus === 'copying'">
+          {{ debugCopyStatus === 'copied' ? 'Copied!' : debugCopyStatus === 'copying' ? 'Copying...' : 'Copy Debug Summary' }}
         </button>
       </div>
-    </form>
-  </div>
-  
-  <!-- Debug section -->
-  <div class="profile__debug" *ngIf="debugMode$ | async">
-    <h3>Profile Debug Information</h3>
+
+      <!-- Recent API Calls -->
+      <div class="profile__debug-section">
+        <h4>Recent API Calls</h4>
+        <div class="profile__debug-logs">
+          <ng-container *ngFor="let log of debugLogs$ | async | slice:-5">
+            <div class="profile__debug-log-entry" [class.profile__debug-log-entry--error]="log.status === 'failure'">
+              <span class="profile__debug-log-time">{{ log.timestamp | date:'HH:mm:ss' }}</span>
+              <span class="profile__debug-log-type">{{ log.type }}</span>
+              <span class="profile__debug-log-op">{{ log.operation }}</span>
+              <span class="profile__debug-log-status" 
+                    [class.profile__debug-log-status--success]="log.status === 'success'" 
+                    [class.profile__debug-log-status--failure]="log.status === 'failure'">
+                {{ log.status }}
+              </span>
+              <span *ngIf="log.error" class="profile__debug-log-error">{{ log.error }}</span>
+            </div>
+          </ng-container>
+          <p *ngIf="(debugLogs$ | async)?.length === 0" class="profile__debug-empty">No API calls yet</p>
+        </div>
+      </div>
     
-    <div class="profile__debug-section">
-      <h4>Current User Observable Status</h4>
-      <ng-container *ngIf="currentUser$ | async as user; else noUser">
-        <p><strong>User Data Found:</strong></p>
-        <pre>{{ user | json }}</pre>
-        <p><strong>User Is Valid:</strong> {{ isUserValid(user) }}</p>
-        <p><strong>Required Attributes Check:</strong></p>
-        <ul>
-          <li>Email: {{ !!user.email }} ({{ user.email }})</li>
-          <li>First Name: {{ !!user.firstName }} ({{ user.firstName }})</li>
-          <li>Last Name: {{ !!user.lastName}} ({{ user.lastName }})</li>
-          <li>Phone Number: {{ !!user.phoneNumber}} ({{ user.phoneNumber }})</li>
-          <li>Status Is Active: {{ user.status === 'ACTIVE' }} ({{ user.status }})</li>
-        </ul>
-      </ng-container>
-      <ng-template #noUser>
-        <p class="error"><strong>No User Data Found</strong></p>
-        <p>currentUser$ observable is emitting null or undefined</p>
-      </ng-template>
-    </div>
+      <div class="profile__debug-section">
+        <h4>Setup Flow State</h4>
+        <pre>Flow Mode: {{ setupState.isFlowMode ? 'ON' : 'OFF' }}</pre>
+        <pre>Current Step: {{ setupState.currentStep }}</pre>
+        <pre>Start From Beginning: {{ setupState.startFromBeginning }}</pre>
+        <pre>Progress: {{ getProgressPercentage() }}%</pre>
+      </div>
     
-    <div class="profile__debug-section" *ngIf="isEditMode">
-      <h4>Form Debug Status</h4>
-      <p><strong>Form Valid:</strong> {{ profileForm.valid }}</p>
-      <p><strong>Form Pristine:</strong> {{ profileForm.pristine }}</p>
-      <p><strong>Form Touched:</strong> {{ profileForm.touched }}</p>
-      <p><strong>Form Values:</strong></p>
-      <pre>{{ profileForm.value | json }}</pre>
-    </div>
+      <div class="profile__debug-section">
+        <h4>Phone Verification State</h4>
+        <pre>Code Sent: {{ phoneVerificationState.codeSent }}</pre>
+        <pre>Error: {{ phoneVerificationState.error || 'None' }}</pre>
+        <pre>Can Resend: {{ canResendCode() }}</pre>
+      </div>
     
-    <div class="profile__debug-section">
-      <h4>Edit Mode Status</h4>
-      <p><strong>Edit Mode:</strong> {{ isEditMode ? 'ON' : 'OFF' }}</p>
-      <p><strong>Loading:</strong> {{ isLoading ? 'YES' : 'NO' }}</p>
+      <div class="profile__debug-section">
+        <h4>Current User Observable Status</h4>
+        <ng-container *ngIf="currentUser$ | async as user; else noUser">
+          <pre>User Data Found</pre>
+          <pre>{{ user | json }}</pre>
+          <pre>User Is Valid: {{ isUserValid(user) }}</pre>
+          <h5>Required Attributes Check:</h5>
+          <ul>
+            <li>Email: {{ !!user.email }} ({{ user.email }})</li>
+            <li>First Name: {{ !!user.firstName }} ({{ user.firstName }})</li>
+            <li>Last Name: {{ !!user.lastName}} ({{ user.lastName }})</li>
+            <li>Phone Number: {{ !!user.phoneNumber}} ({{ user.phoneNumber }})</li>
+            <li>Phone Verified: {{ user.phoneVerified }}</li>
+            <li>Status Is Active: {{ user.status === 'ACTIVE' }} ({{ user.status }})</li>
+          </ul>
+        </ng-container>
+        <ng-template #noUser>
+          <p class="error"><strong>No User Data Found</strong></p>
+          <p>currentUser$ observable is emitting null or undefined</p>
+        </ng-template>
+      </div>
+    
+      <div class="profile__debug-section" *ngIf="setupState.isFlowMode">
+        <h4>Form Debug Status</h4>
+        <pre>Name Form Valid: {{ nameForm.valid }}</pre>
+        <pre>Phone Form Valid: {{ phoneForm.valid }}</pre>
+        <pre>Verify Form Valid: {{ verifyForm.valid }}</pre>
+        <pre>Loading: {{ isLoading ? 'YES' : 'NO' }}</pre>
+      </div>
     </div>
-  </div>
+  </ng-container>
 </div>

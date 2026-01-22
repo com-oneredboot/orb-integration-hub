@@ -1,0 +1,137 @@
+// file: apps/web/src/app/shared/components/debug/debug-panel.component.scss
+// author: Corey Dale Peters
+// date: 2025-01-22
+// description: Styles for shared debug panel component
+
+@use '../../../../../../styles/variables' as v;
+@use '../../../../../../styles/mixins' as m;
+
+.debug-panel {
+  @include m.debug-container;
+
+  &__title {
+    color: v.$orb-red;
+    font-weight: v.$font-weight-bold;
+    margin: 0 0 v.$spacing-lg 0;
+    font-size: v.$font-size-lg;
+    font-family: v.$font-family-heading;
+    text-align: center;
+    border-bottom: 1px solid v.$orb-light-gray;
+    padding-bottom: v.$spacing-sm;
+  }
+
+  &__section {
+    margin-bottom: v.$spacing-lg;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    h4 {
+      color: v.$orb-dark-blue;
+      font-weight: v.$font-weight-semibold;
+      margin: 0 0 v.$spacing-sm 0;
+      font-size: v.$font-size-base;
+      font-family: v.$font-family-heading;
+    }
+
+    pre {
+      background: rgba(v.$orb-light-gray, 0.3);
+      border: 1px solid v.$orb-light-gray;
+      padding: v.$spacing-sm;
+      border-radius: v.$border-radius-sm;
+      margin: v.$spacing-xs 0;
+      font-family: v.$font-family-monospace;
+      font-size: v.$font-size-sm;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+  }
+
+  &__summary {
+    background: linear-gradient(135deg, v.$gray-50, v.$gray-100);
+    border: 2px dashed v.$primary-color;
+    border-radius: 8px;
+    padding: 1rem;
+  }
+
+  &__hint {
+    font-size: 0.85rem;
+    color: v.$gray-600;
+    margin-bottom: 0.5rem;
+  }
+
+  &__copy-btn {
+    @include m.button-primary;
+    font-size: v.$font-size-sm;
+    padding: v.$spacing-sm v.$spacing-md;
+
+    &:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+  }
+
+  &__logs {
+    max-height: 200px;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 0.75rem;
+    background: v.$gray-900;
+    color: v.$gray-100;
+    border-radius: 4px;
+    padding: 0.5rem;
+  }
+
+  &__log-entry {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid v.$gray-700;
+
+    &--error {
+      background: rgba(239, 65, 54, 0.1);
+    }
+  }
+
+  &__log-time {
+    color: v.$gray-500;
+  }
+
+  &__log-type {
+    color: v.$role-owner;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.65rem;
+  }
+
+  &__log-op {
+    color: v.$warning-color;
+  }
+
+  &__log-status {
+    &--success {
+      color: v.$success-color;
+    }
+
+    &--failure {
+      color: v.$danger-color;
+    }
+  }
+
+  &__log-error {
+    color: v.$danger-color;
+    width: 100%;
+    padding-left: 1rem;
+    font-style: italic;
+  }
+
+  &__empty {
+    color: v.$gray-500;
+    font-style: italic;
+    text-align: center;
+    padding: 1rem;
+  }
+}

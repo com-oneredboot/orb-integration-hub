@@ -780,28 +780,119 @@ export class UserService extends ApiService {
    * @returns Promise with UserResponse
    */
   public async userUpdate(input: UsersUpdateInput): Promise<UsersResponse> {
+    console.debug('[UserService][userUpdate] Starting update for userId:', input.userId);
+    this.userDebugLog.logApi('userUpdate', 'pending', { userId: input.userId });
+    
     try {
-      // Check Cognito auth status
-      const cognitoProfile = await this.cognitoService.getCognitoProfile();
+      // First, ensure we have valid tokens by checking authentication (this will auto-refresh if needed)
       const isAuthenticated = await this.cognitoService.checkIsAuthenticated();
+      const cognitoProfile = await this.cognitoService.getCognitoProfile();
       
-      // Additional token validation - check if tokens are actually valid
-      let hasValidTokens = false;
-      if (isAuthenticated && cognitoProfile) {
+      console.debug('[UserService][userUpdate] Auth check:', { 
+        isAuthenticated, 
+        hasCognitoProfile: !!cognitoProfile 
+      });
+      
+      // Log auth state to debug panel
+      this.userDebugLog.logAuth('userUpdate-authCheck', isAuthenticated ? 'success' : 'failure', {
+        isAuthenticated,
+        hasCognitoProfile: !!cognitoProfile
+      });
+      
+      // If not authenticated after the check (which includes auto-refresh), we can't proceed with userPool auth
+      let hasValidTokens = isAuthenticated && !!cognitoProfile;
+      let tokenDetails: Record<string, unknown> = {};
+      
+      // Double-check token validity if we think we're authenticated
+      if (hasValidTokens) {
         try {
-          // Import fetchAuthSession to check token validity
           const { fetchAuthSession } = await import('@aws-amplify/auth');
           const session = await fetchAuthSession();
           const now = Math.floor(Date.now() / 1000);
-          const accessTokenExp = session.tokens?.accessToken?.payload?.exp;
-          const idTokenExp = session.tokens?.idToken?.payload?.exp;
+          const accessTokenExp = session.tokens?.accessToken?.payload?.exp as number | undefined;
+          const idTokenExp = session.tokens?.idToken?.payload?.exp as number | undefined;
+          
+          // Get user groups from the token
+          const userGroupsRaw = session.tokens?.idToken?.payload?.['cognito:groups'];
+          const userGroups = Array.isArray(userGroupsRaw) ? userGroupsRaw : [];
+          
+          tokenDetails = {
+            now,
+            accessTokenExp,
+            idTokenExp,
+            accessTokenValid: accessTokenExp ? accessTokenExp > now : false,
+            idTokenValid: idTokenExp ? idTokenExp > now : false,
+            accessTokenExpiresIn: accessTokenExp ? `${Math.round((accessTokenExp - now) / 60)}min` : 'N/A',
+            idTokenExpiresIn: idTokenExp ? `${Math.round((idTokenExp - now) / 60)}min` : 'N/A',
+            hasAccessToken: !!session.tokens?.accessToken,
+            hasIdToken: !!session.tokens?.idToken,
+            userGroups: userGroups,
+            hasUserGroup: userGroups.includes('USER'),
+            hasOwnerGroup: userGroups.includes('OWNER'),
+            hasEmployeeGroup: userGroups.includes('EMPLOYEE')
+          };
+          
+          console.debug('[UserService][userUpdate] Token expiry check:', tokenDetails);
           
           hasValidTokens = !!(accessTokenExp && idTokenExp && accessTokenExp > now && idTokenExp > now);
+          
+          // Log token state to debug panel - include groups for visibility
+          this.userDebugLog.logAuth('userUpdate-tokenCheck', hasValidTokens ? 'success' : 'failure', tokenDetails);
+          
+          // Log groups separately for easy visibility in debug panel
+          if (userGroups.length === 0) {
+            this.userDebugLog.logError('userUpdate-groups', 'NO GROUPS IN TOKEN - This is the auth problem!', {
+              userGroups: userGroups,
+              tokenHasGroups: false,
+              requiredGroups: ['USER', 'OWNER', 'EMPLOYEE']
+            });
+          } else {
+            this.userDebugLog.logState('userUpdate-groups', {
+              userGroups: userGroups,
+              hasUserGroup: userGroups.includes('USER'),
+              hasOwnerGroup: userGroups.includes('OWNER'),
+              hasEmployeeGroup: userGroups.includes('EMPLOYEE'),
+              canCallUsersUpdate: userGroups.includes('USER') || userGroups.includes('OWNER') || userGroups.includes('EMPLOYEE')
+            });
+          }
+          
+          // If tokens are expired, try one more force refresh
+          if (!hasValidTokens) {
+            console.debug('[UserService][userUpdate] Tokens expired, attempting force refresh...');
+            this.userDebugLog.logState('userUpdate-tokenRefresh', { status: 'attempting', reason: 'tokens expired' });
+            
+            const refreshedSession = await fetchAuthSession({ forceRefresh: true });
+            const refreshedAccessExp = refreshedSession.tokens?.accessToken?.payload?.exp as number | undefined;
+            const refreshedIdExp = refreshedSession.tokens?.idToken?.payload?.exp as number | undefined;
+            hasValidTokens = !!(refreshedAccessExp && refreshedIdExp && refreshedAccessExp > now && refreshedIdExp > now);
+            
+            console.debug('[UserService][userUpdate] Force refresh result:', hasValidTokens ? 'success' : 'failed');
+            this.userDebugLog.logAuth('userUpdate-tokenRefresh', hasValidTokens ? 'success' : 'failure', {
+              refreshedAccessExp,
+              refreshedIdExp,
+              refreshSuccess: hasValidTokens
+            });
+          }
         } catch (tokenError) {
-          console.warn('Error checking token validity:', tokenError);
+          console.warn('[UserService][userUpdate] Error checking/refreshing token validity:', tokenError);
+          this.userDebugLog.logError('userUpdate-tokenCheck', String(tokenError), { tokenDetails });
           hasValidTokens = false;
         }
       }
+      
+      console.debug('[UserService][userUpdate] Final auth state:', { 
+        isAuthenticated, 
+        hasCognitoProfile: !!cognitoProfile, 
+        hasValidTokens 
+      });
+      
+      // Log final auth decision to debug panel
+      this.userDebugLog.logState('userUpdate-authDecision', {
+        isAuthenticated,
+        hasCognitoProfile: !!cognitoProfile,
+        hasValidTokens,
+        willUseUserPool: isAuthenticated && !!cognitoProfile && hasValidTokens
+      });
 
       if (!input.userId) {
         console.error('Cannot update user: missing required userId');
@@ -848,13 +939,55 @@ export class UserService extends ApiService {
 
       // Use apiKey for user updates during registration flow (user not yet authenticated)
       // Use userPool for authenticated users
+      // IMPORTANT: UsersUpdate requires Cognito auth - apiKey will NOT work!
       const authMode = (cognitoProfile && isAuthenticated && hasValidTokens) ? 'userPool' : 'apiKey';
+      
+      console.debug('[UserService][userUpdate] Auth mode selected:', authMode, {
+        cognitoProfile: !!cognitoProfile,
+        isAuthenticated,
+        hasValidTokens,
+        willUseUserPool: authMode === 'userPool'
+      });
+      
+      // Log auth mode to debug panel
+      this.userDebugLog.logState('userUpdate-authMode', {
+        authMode,
+        willUseUserPool: authMode === 'userPool'
+      });
+      
+      // Warn if falling back to apiKey - this will likely fail for UsersUpdate
+      if (authMode === 'apiKey') {
+        console.warn('[UserService][userUpdate] WARNING: Using apiKey auth for UsersUpdate - this may fail!');
+        console.warn('[UserService][userUpdate] UsersUpdate requires Cognito auth (USER, OWNER, or EMPLOYEE group)');
+        this.userDebugLog.logError('userUpdate', 'Falling back to apiKey auth - UsersUpdate requires Cognito auth!', { 
+          isAuthenticated, 
+          hasValidTokens,
+          hasCognitoProfile: !!cognitoProfile,
+          reason: 'apiKey auth will fail for UsersUpdate mutation'
+        });
+      }
+      
+      // Convert Date fields to Unix timestamps for GraphQL AWSTimestamp compatibility
+      const graphqlInput = toGraphQLInput(updateInput as unknown as Record<string, unknown>);
       
       const response = await this.mutate(
         UsersUpdate,
-        { input: updateInput },
+        { input: graphqlInput },
         authMode
       ) as GraphQLResult<UsersUpdateResponse>;
+      
+      console.debug('[UserService][userUpdate] Mutation response:', {
+        hasData: !!response.data,
+        hasErrors: !!response.errors,
+        errors: response.errors
+      });
+      
+      // Log mutation result
+      if (response.errors?.length) {
+        this.userDebugLog.logApi('UsersUpdate', 'failure', { authMode }, response.errors[0]?.message || 'Unknown error');
+      } else {
+        this.userDebugLog.logApi('UsersUpdate', 'success', { authMode, hasData: !!response.data });
+      }
 
       if (!response.data) {
         return {

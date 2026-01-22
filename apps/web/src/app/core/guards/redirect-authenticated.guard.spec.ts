@@ -4,7 +4,7 @@
 // description: Tests for redirect-if-authenticated behavior on /authenticate route
 
 import { TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import { Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { AuthGuard } from './auth.guard';
 import { CognitoService } from '../services/cognito.service';
 
@@ -44,8 +44,8 @@ describe('AuthGuard - Redirect Authenticated Users', () => {
       const route = {
         data: { requiresAuth: false },
         routeConfig: { path: 'authenticate' }
-      } as any;
-      const state = { url: '/authenticate' } as any;
+      } as unknown as ActivatedRouteSnapshot;
+      const state = { url: '/authenticate' } as unknown as RouterStateSnapshot;
 
       // Act
       const result = await guard.canActivate(route, state);
@@ -64,8 +64,8 @@ describe('AuthGuard - Redirect Authenticated Users', () => {
       const route = {
         data: { requiresAuth: false },
         routeConfig: { path: 'authenticate' }
-      } as any;
-      const state = { url: '/authenticate' } as any;
+      } as unknown as ActivatedRouteSnapshot;
+      const state = { url: '/authenticate' } as unknown as RouterStateSnapshot;
 
       // Act
       const result = await guard.canActivate(route, state);
@@ -85,8 +85,8 @@ describe('AuthGuard - Redirect Authenticated Users', () => {
       const route = {
         data: { requiresAuth: false },
         routeConfig: { path: 'authenticate' }
-      } as any;
-      const state = { url: '/authenticate' } as any;
+      } as unknown as ActivatedRouteSnapshot;
+      const state = { url: '/authenticate' } as unknown as RouterStateSnapshot;
 
       // Act
       const result = await guard.canActivate(route, state);
@@ -111,8 +111,8 @@ describe('AuthGuard - Redirect Authenticated Users', () => {
       const route = {
         data: { requiresAuth: true },
         routeConfig: { path: 'dashboard' }
-      } as any;
-      const state = { url: '/dashboard' } as any;
+      } as unknown as ActivatedRouteSnapshot;
+      const state = { url: '/dashboard' } as unknown as RouterStateSnapshot;
 
       // Act
       const result = await guard.canActivate(route, state);
@@ -131,8 +131,8 @@ describe('AuthGuard - Redirect Authenticated Users', () => {
       const route = {
         data: { requiresAuth: true },
         routeConfig: { path: 'dashboard' }
-      } as any;
-      const state = { url: '/dashboard' } as any;
+      } as unknown as ActivatedRouteSnapshot;
+      const state = { url: '/dashboard' } as unknown as RouterStateSnapshot;
 
       // Act
       const result = await guard.canActivate(route, state);

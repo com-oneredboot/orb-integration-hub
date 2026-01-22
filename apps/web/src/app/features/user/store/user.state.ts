@@ -17,9 +17,7 @@ export enum AuthSteps {
   PASSWORD_SETUP = 'PASSWORD_SETUP',     // For new users
   EMAIL_VERIFY = 'EMAIL_VERIFY',       // Verifies the email code
   SIGNIN = 'SIGNIN',             // For users who have verified their email
-  NAME_SETUP = 'NAME_SETUP',         // for users without firstName, lastName
-  PHONE_SETUP = 'PHONE_SETUP',        // for users without phoneNumber
-  PHONE_VERIFY = 'PHONE_VERIFY',       // verifies the phone number
+  // NAME_SETUP, PHONE_SETUP, PHONE_VERIFY moved to profile page
   MFA_SETUP = 'MFA_SETUP',          // for users without MFA
   MFA_VERIFY = 'MFA_VERIFY',         // verifies the MFA code
   PASSWORD_RESET = 'PASSWORD_RESET',     // initiates password reset

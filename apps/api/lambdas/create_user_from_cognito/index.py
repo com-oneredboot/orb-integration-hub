@@ -302,6 +302,7 @@ def create_user_record(cognito_sub: str, cognito_attrs: dict[str, Any]) -> dict[
 def format_response(user_record: dict[str, Any]) -> dict[str, Any]:
     """
     Format user record for GraphQL response.
+    Ensures timestamps are Unix epoch integers for AWSTimestamp compatibility.
 
     Args:
         user_record: DynamoDB user record
@@ -309,6 +310,24 @@ def format_response(user_record: dict[str, Any]) -> dict[str, Any]:
     Returns:
         Formatted response dict
     """
+
+    def ensure_timestamp(value: Any) -> int | None:
+        """Convert various timestamp formats to Unix epoch seconds."""
+        if value is None:
+            return None
+        if isinstance(value, int):
+            return value
+        if isinstance(value, float):
+            return int(value)
+        if isinstance(value, str):
+            try:
+                # Handle ISO format strings
+                dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+                return int(dt.timestamp())
+            except (ValueError, TypeError):
+                pass
+        return None
+
     return {
         "cognitoSub": user_record.get("cognitoSub") or user_record.get("userId"),
         "userId": user_record.get("userId"),
@@ -321,8 +340,8 @@ def format_response(user_record: dict[str, Any]) -> dict[str, Any]:
         "mfaEnabled": user_record.get("mfaEnabled"),
         "mfaSetupComplete": user_record.get("mfaSetupComplete"),
         "groups": user_record.get("groups"),
-        "createdAt": user_record.get("createdAt"),
-        "updatedAt": user_record.get("updatedAt"),
+        "createdAt": ensure_timestamp(user_record.get("createdAt")),
+        "updatedAt": ensure_timestamp(user_record.get("updatedAt")),
     }
 
 

@@ -157,12 +157,6 @@ export const selectStepTitle = createSelector(
         return 'Create a Password';
       case AuthSteps.EMAIL_VERIFY:
         return 'Verify Email';
-      case AuthSteps.NAME_SETUP:
-        return 'Complete Your Profile';
-      case AuthSteps.PHONE_SETUP:
-        return 'Add Phone Number';
-      case AuthSteps.PHONE_VERIFY:
-        return 'Verify Phone Number';
       case AuthSteps.MFA_SETUP:
         return 'Set Up Two-Factor Authentication';
       case AuthSteps.MFA_VERIFY:

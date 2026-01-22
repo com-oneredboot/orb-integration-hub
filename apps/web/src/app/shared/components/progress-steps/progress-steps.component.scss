@@ -1,0 +1,248 @@
+// file: apps/web/src/app/shared/components/progress-steps/progress-steps.component.scss
+// author: Corey Dale Peters
+// date: 2025-01-22
+// description: Styles for shared progress steps component (matching auth-flow)
+
+@use '../../../../styles/variables' as v;
+@use 'sass:color';
+
+.progress-steps {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto v.$spacing-xl;
+  position: relative;
+
+  // Screen reader only content
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  // Progress bar background track (line between steps)
+  &__bar {
+    position: absolute;
+    top: 20px; // Center with step circles (40px / 2)
+    left: 10%;
+    right: 10%;
+    height: 3px; // Thicker line for visibility
+    background-color: v.$gray-400; // Darker background for better visibility
+    border-radius: 2px;
+    z-index: 1;
+
+    // Progress bar fill
+    &-fill {
+      height: 100%;
+      background: linear-gradient(90deg, v.$primary-color 0%, v.$success-color 100%);
+      border-radius: 2px;
+      transition: width 0.4s ease;
+      position: relative;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        right: -6px;
+        top: -4px;
+        width: 10px;
+        height: 10px;
+        background: v.$primary-color;
+        border-radius: 50%;
+        border: 2px solid v.$orb-white;
+        transition: all 0.4s ease;
+      }
+    }
+  }
+
+  // Steps container
+  &__container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+    z-index: 2;
+  }
+
+  // Individual step wrapper
+  &__step-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 120px;
+
+    // Active step styling
+    &.step-active {
+      .progress-steps__step-label {
+        color: v.$primary-color;
+        font-weight: v.$font-weight-semibold;
+      }
+    }
+    
+    // Completed step styling
+    &.step-completed {
+      .progress-steps__step-label {
+        color: v.$success-color;
+      }
+    }
+  }
+
+  // Step circle/indicator
+  &__step {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: v.$input-border-color;
+    border: 3px solid v.$orb-white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.3s ease;
+    margin-bottom: v.$spacing-sm;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    &-content {
+      font-weight: v.$font-weight-semibold;
+      font-size: v.$font-size-sm;
+      color: v.$orb-white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    // Pending state (future steps)
+    &--pending {
+      background-color: v.$gray-300;
+      color: v.$gray-600;
+      
+      .progress-steps__step-content {
+        color: v.$gray-600;
+      }
+    }
+
+    // Active state (current step)
+    &--active {
+      background-color: v.$primary-color;
+      transform: scale(1.1);
+      box-shadow: 0 4px 8px rgba(v.$primary-color, 0.3);
+      animation: pulse 2s infinite;
+      
+      .progress-steps__step-content {
+        color: v.$orb-white;
+      }
+    }
+
+    // Completed state
+    &--completed {
+      background-color: v.$success-color;
+      
+      .progress-steps__step-content {
+        color: v.$orb-white;
+      }
+    }
+  }
+
+  // Step labels
+  &__step-label {
+    font-size: v.$font-size-xs;
+    font-weight: v.$font-weight-medium;
+    color: v.$text-secondary;
+    line-height: 1.3;
+    margin-top: v.$spacing-xs;
+    min-height: 2.6em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s ease, font-weight 0.3s ease;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 4px 8px rgba(v.$primary-color, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 8px rgba(v.$primary-color, 0.5), 0 0 0 4px rgba(v.$primary-color, 0.2);
+  }
+  100% {
+    box-shadow: 0 4px 8px rgba(v.$primary-color, 0.3);
+  }
+}
+
+// Responsive styles
+@media (max-width: 768px) {
+  .progress-steps {
+    max-width: 100%;
+
+    &__step-wrapper {
+      max-width: 80px;
+    }
+
+    &__step {
+      width: 32px;
+      height: 32px;
+      
+      &-content {
+        font-size: v.$font-size-xs;
+      }
+    }
+
+    &__step-label {
+      font-size: 10px;
+      min-height: 2em;
+    }
+
+    &__bar {
+      top: 16px; // Adjust for smaller circles
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .progress-steps {
+    &__step-wrapper {
+      max-width: 60px;
+    }
+
+    &__step {
+      width: 28px;
+      height: 28px;
+      
+      &-content {
+        font-size: 10px;
+      }
+    }
+
+    &__step-label {
+      font-size: 9px;
+      min-height: 1.8em;
+      display: none; // Hide labels on very small screens
+    }
+
+    &__bar {
+      top: 14px;
+    }
+  }
+}
+
+// Accessibility: Reduced motion preference
+@media (prefers-reduced-motion: reduce) {
+  .progress-steps {
+    &__step,
+    &__bar-fill {
+      transition: none;
+      animation: none;
+    }
+
+    &__step--active {
+      animation: none;
+    }
+  }
+}

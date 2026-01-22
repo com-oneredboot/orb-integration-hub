@@ -9,7 +9,6 @@ import { GraphQLResult } from '@aws-amplify/api-graphql';
 import { Injectable, inject } from '@angular/core';
 
 // Application Imports
-import { CsrfService } from './csrf.service';
 import { DebugLogService } from './debug-log.service';
 
 type AuthMode = 'userPool' | 'apiKey';
@@ -20,9 +19,15 @@ type OperationType = 'query' | 'mutation';
 })
 export abstract class ApiService {
   private apiKeyClient = generateClient({ authMode: 'apiKey' });
-  private userPoolClient = generateClient({ authMode: 'userPool' });
-  private csrfService = inject(CsrfService);
   private debugLog = inject(DebugLogService);
+
+  /**
+   * Get a fresh userPool client to ensure it uses current tokens
+   * This is important after token refresh operations
+   */
+  private getUserPoolClient() {
+    return generateClient({ authMode: 'userPool' });
+  }
 
   /**
    * Execute a GraphQL query
@@ -66,17 +71,38 @@ export abstract class ApiService {
     this.debugLog.logApi(operationName, 'pending', { authMode, type });
 
     try {
-      const client = authMode === 'apiKey' ? this.apiKeyClient : this.userPoolClient;
+      // Always get a fresh userPool client to ensure current tokens are used
+      const client = authMode === 'apiKey' ? this.apiKeyClient : this.getUserPoolClient();
       
-      // Build request - add CSRF for authenticated state-changing mutations
-      const request: { query: string; variables?: Record<string, unknown>; authToken?: string } = {
+      // Log which client type we're using
+      console.debug(`[ApiService] Using ${authMode} client for ${operationName}`);
+      
+      // For userPool auth, verify we have tokens before making the request
+      if (authMode === 'userPool') {
+        try {
+          const { fetchAuthSession } = await import('@aws-amplify/auth');
+          const session = await fetchAuthSession();
+          const hasTokens = !!session.tokens?.accessToken && !!session.tokens?.idToken;
+          console.debug(`[ApiService] Token check for ${operationName}:`, {
+            hasAccessToken: !!session.tokens?.accessToken,
+            hasIdToken: !!session.tokens?.idToken,
+            hasTokens
+          });
+          
+          if (!hasTokens) {
+            console.error(`[ApiService] No valid tokens for userPool auth on ${operationName}`);
+            this.debugLog.logError(operationName, 'No valid tokens for userPool auth', { authMode });
+          }
+        } catch (tokenCheckError) {
+          console.error(`[ApiService] Error checking tokens for ${operationName}:`, tokenCheckError);
+        }
+      }
+      
+      // Build request
+      const request: { query: string; variables?: Record<string, unknown> } = {
         query: operation,
         variables
       };
-
-      if (type === 'mutation' && authMode === 'userPool' && this.isStateMutation(operation)) {
-        await this.addCsrfToken(request, operationName, authMode);
-      }
 
       const result = await client.graphql(request as never) as GraphQLResult<T>;
 
@@ -89,40 +115,10 @@ export abstract class ApiService {
 
       return result;
     } catch (error) {
+      console.error(`[ApiService] GraphQL ${type} failed for ${operationName}:`, error);
       this.debugLog.logApi(operationName, 'failure', { authMode, type }, this.extractErrorMessage(error));
       throw error;
     }
-  }
-
-  /**
-   * Add CSRF token to request for state-changing mutations
-   */
-  private async addCsrfToken(
-    request: { authToken?: string },
-    operationName: string,
-    authMode: AuthMode
-  ): Promise<void> {
-    try {
-      request.authToken = await this.csrfService.getCsrfToken();
-      console.debug('[ApiService] CSRF token added to mutation request');
-    } catch (csrfError) {
-      console.error('[ApiService] Failed to obtain CSRF token:', csrfError);
-      this.debugLog.logError(operationName, 'CSRF protection failed', { authMode });
-      throw new Error('CSRF protection failed - request blocked');
-    }
-  }
-
-  /**
-   * Check if operation is a state-changing mutation requiring CSRF protection
-   */
-  private isStateMutation(operation: string): boolean {
-    const opLower = operation.toLowerCase();
-    const statePatterns = [
-      'create', 'update', 'delete', 'insert', 'modify', 'change',
-      'set', 'add', 'remove', 'smsverification', 'signup', 'signin',
-      'signout', 'confirm', 'reset', 'verify'
-    ];
-    return statePatterns.some(p => opLower.includes(p));
   }
 
   /**

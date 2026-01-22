@@ -16,7 +16,7 @@ import {
   getNextStepForAction
 } from '../models/RecoveryModel';
 import { AuthSteps } from '../../features/user/store/user.state';
-import { sanitizeEmail, sanitizeCognitoSub } from '../utils/log-sanitizer';
+import { sanitizeCognitoSub } from '../utils/log-sanitizer';
 
 @Injectable({
   providedIn: 'root'

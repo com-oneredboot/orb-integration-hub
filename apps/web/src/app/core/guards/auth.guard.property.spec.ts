@@ -53,20 +53,20 @@ describe('AuthGuard Route Coverage Property Tests', () => {
     /**
      * Helper function to recursively extract all routes with their full paths
      */
-    function extractAllRoutes(routeConfig: Routes, parentPath: string = ''): Array<{
+    function extractAllRoutes(routeConfig: Routes, parentPath = ''): {
       path: string;
       requiresAuth: boolean | undefined;
       hasAuthGuard: boolean;
       requiresCustomer: boolean | undefined;
       requiredGroup: string | undefined;
-    }> {
-      const result: Array<{
+    }[] {
+      const result: {
         path: string;
         requiresAuth: boolean | undefined;
         hasAuthGuard: boolean;
         requiresCustomer: boolean | undefined;
         requiredGroup: string | undefined;
-      }> = [];
+      }[] = [];
 
       for (const route of routeConfig) {
         const fullPath = parentPath ? `${parentPath}/${route.path}` : route.path || '';

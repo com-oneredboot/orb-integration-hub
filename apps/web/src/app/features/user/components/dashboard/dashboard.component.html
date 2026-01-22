@@ -130,9 +130,9 @@ description: HTML template file
         <div class="orb-health-check">
           <div class="orb-health-item orb-health-item--clickable" 
                [ngClass]="hasValidName(user) ? 'orb-health-item--healthy' : 'orb-health-item--warning'"
-               (click)="goToProfile()"
-               (keydown.enter)="goToProfile()"
-               (keydown.space)="goToProfile()"
+               (click)="!hasValidName(user) && goToProfileSetup()"
+               (keydown.enter)="!hasValidName(user) && goToProfileSetup()"
+               (keydown.space)="!hasValidName(user) && goToProfileSetup()"
                tabindex="0"
                role="button"
                [title]="hasValidName(user) ? 'Name complete' : 'Click to update your name in profile'">

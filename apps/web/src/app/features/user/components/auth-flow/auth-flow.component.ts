@@ -26,7 +26,6 @@ import {QRCodeToDataURLOptions} from "qrcode";
 import {UserService} from "../../../../core/services/user.service";
 import {CognitoService} from "../../../../core/services/cognito.service";
 import {InputValidationService} from "../../../../core/services/input-validation.service";
-import {CsrfService} from "../../../../core/services/csrf.service";
 import {RateLimitingService} from "../../../../core/services/rate-limiting.service";
 import {AppErrorHandlerService} from "../../../../core/services/error-handler.service";
 import {DebugLogService, DebugLogEntry} from "../../../../core/services/debug-log.service";
@@ -107,10 +106,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   public showSuccessMessage = false;
   public successMessage = '';
 
-  // CSRF protection state
-  public csrfProtectionEnabled = false;
-  public csrfError: string | null = null;
-
   // Rate limiting and brute force protection state
   public rateLimitActive = false;
   public rateLimitMessage: string | null = null;
@@ -159,7 +154,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     private userService: UserService,
     private cognitoService: CognitoService,
     private inputValidationService: InputValidationService,
-    private csrfService: CsrfService,
     private rateLimitingService: RateLimitingService,
     private errorHandler: AppErrorHandlerService,
     private sanitizer: DomSanitizer,
@@ -227,9 +221,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
    */
   private async initializeAuthFlowSafely(): Promise<void> {
     try {
-      // Initialize CSRF protection for secure form submissions
-      await this.initializeCsrfProtectionSafely();
-      
       // Initialize rate limiting and brute force protection
       await this.initializeRateLimitingSafely();
       
@@ -251,31 +242,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       
     } catch (error) {
       this.handleInitializationError(error, 'initializeAuthFlowSafely');
-    }
-  }
-
-  /**
-   * Initialize CSRF protection with error handling
-   */
-  private async initializeCsrfProtectionSafely(): Promise<void> {
-    try {
-      // Test CSRF service availability
-      const csrfToken = await this.csrfService.getCsrfToken();
-      this.csrfProtectionEnabled = !!csrfToken;
-      this.csrfError = null;
-      
-      console.debug('[AuthFlowComponent] CSRF protection initialized successfully');
-    } catch (error) {
-      const errorId = this.errorHandler.captureSecurityError(
-        'initializeCsrfProtection',
-        error,
-        'AuthFlowComponent'
-      );
-      
-      this.csrfProtectionEnabled = false;
-      this.csrfError = 'CSRF protection initialization failed';
-      
-      console.warn('[AuthFlowComponent] CSRF protection initialization failed:', errorId);
     }
   }
 
@@ -393,16 +359,11 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           this.authForm.patchValue({ email: currentUser.email });
           
           // Determine appropriate step based on user state
+          // Note: NAME_SETUP, PHONE_SETUP, PHONE_VERIFY are now handled on profile page
           let nextStep = AuthSteps.COMPLETE;
           
           if (!currentUser.emailVerified) {
             nextStep = AuthSteps.EMAIL_VERIFY;
-          } else if (!currentUser.firstName || !currentUser.lastName) {
-            nextStep = AuthSteps.NAME_SETUP;
-          } else if (!currentUser.phoneNumber) {
-            nextStep = AuthSteps.PHONE_SETUP;
-          } else if (!currentUser.phoneVerified) {
-            nextStep = AuthSteps.PHONE_VERIFY;
           } else if (!currentUser.mfaEnabled) {
             nextStep = AuthSteps.MFA_SETUP;
           }
@@ -778,16 +739,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       });
     }
 
-    // Validate CSRF protection before processing form submission
-    const csrfValid = await this.validateCsrfProtection();
-    if (!csrfValid) {
-      console.error('[AuthFlowComponent] Form submission blocked - CSRF validation failed');
-      this.store.dispatch(UserActions.smartCheckFailure({ 
-        error: this.csrfError || 'Security validation failed. Please refresh the page.' 
-      }));
-      return;
-    }
-
     this.currentStep$
       .pipe(
         take(1),
@@ -853,24 +804,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
               password
             }));
             break;
-
-          case AuthSteps.PHONE_SETUP: {
-            const setupPhoneNumber = this.authForm.get('phoneNumber')?.value;
-            if (!setupPhoneNumber) {
-              return;
-            }
-            this.store.dispatch(UserActions.setupPhone({ phoneNumber: setupPhoneNumber }));
-            break;
-          }
-
-          case AuthSteps.PHONE_VERIFY: {
-            const phoneCode = this.authForm.get('phoneCode')?.value;
-            if (!phoneCode) {
-              return;
-            }
-            this.store.dispatch(UserActions.verifyPhone({ code: phoneCode }));
-            break;
-          }
 
           case AuthSteps.MFA_SETUP:
             // User has scanned QR code and entered TOTP code - verify it
@@ -1068,7 +1001,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         switch (step) {
           case AuthSteps.EMAIL:
             return 'Next';
-          case AuthSteps.PHONE_VERIFY:
           case AuthSteps.EMAIL_VERIFY:
           case AuthSteps.MFA_VERIFY:
             return 'Verify';
@@ -1089,14 +1021,10 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             return this.userExists$ ? 'Enter Password' : 'Create Account';
           case AuthSteps.SIGNIN:
             return 'Sign In';
-          case AuthSteps.PHONE_SETUP:
-            return 'Setup Phone';
           case AuthSteps.MFA_SETUP:
             return 'Set Up Two-Factor Authentication';
           case AuthSteps.EMAIL_VERIFY:
             return 'Submit Email Verification Code';
-          case AuthSteps.PHONE_VERIFY:
-            return 'Submit Phone Verification Code';
           case AuthSteps.MFA_VERIFY:
             return 'Submit MFA Verification Code';
           default:
@@ -1159,15 +1087,23 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       const emailCodeControl = this.authForm.get('emailCode');
       const mfaCodeControl = this.authForm.get('mfaCode');
 
-    // Reset all validators first
+    // Reset all validators first and update each control
     emailControl?.clearValidators();
+    emailControl?.updateValueAndValidity({ emitEvent: false });
     passwordControl?.clearValidators();
+    passwordControl?.updateValueAndValidity({ emitEvent: false });
     firstNameControl?.clearValidators();
+    firstNameControl?.updateValueAndValidity({ emitEvent: false });
     lastNameControl?.clearValidators();
+    lastNameControl?.updateValueAndValidity({ emitEvent: false });
     phoneNumberControl?.clearValidators();
+    phoneNumberControl?.updateValueAndValidity({ emitEvent: false });
     phoneCodeControl?.clearValidators();
+    phoneCodeControl?.updateValueAndValidity({ emitEvent: false });
     emailCodeControl?.clearValidators();
+    emailCodeControl?.updateValueAndValidity({ emitEvent: false });
     mfaCodeControl?.clearValidators();
+    mfaCodeControl?.updateValueAndValidity({ emitEvent: false });
 
     // Set validators based on current step with enhanced validation
     switch (step) {
@@ -1178,6 +1114,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           CustomValidators.noDisposableEmail(),
           CustomValidators.noXSS(this.sanitizer)
         ]);
+        emailControl?.updateValueAndValidity({ emitEvent: false });
         break;
       case AuthSteps.PASSWORD:
       case AuthSteps.SIGNIN:
@@ -1185,6 +1122,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           Validators.required,
           CustomValidators.noXSS(this.sanitizer)
         ]);
+        passwordControl?.updateValueAndValidity({ emitEvent: false });
         break;
       case AuthSteps.PASSWORD_SETUP:
         passwordControl?.setValidators([
@@ -1192,30 +1130,19 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           CustomValidators.password(),
           CustomValidators.noXSS(this.sanitizer)
         ]);
+        passwordControl?.updateValueAndValidity({ emitEvent: false });
         firstNameControl?.setValidators([
           Validators.required,
           CustomValidators.validateName('First name'),
           CustomValidators.noXSS(this.sanitizer)
         ]);
+        firstNameControl?.updateValueAndValidity({ emitEvent: false });
         lastNameControl?.setValidators([
           Validators.required,
           CustomValidators.validateName('Last name'),
           CustomValidators.noXSS(this.sanitizer)
         ]);
-        break;
-      case AuthSteps.PHONE_SETUP:
-        phoneNumberControl?.setValidators([
-          Validators.required,
-          CustomValidators.phoneNumber(),
-          CustomValidators.noXSS(this.sanitizer)
-        ]);
-        break;
-      case AuthSteps.PHONE_VERIFY:
-        phoneCodeControl?.setValidators([
-          Validators.required,
-          CustomValidators.verificationCode(),
-          CustomValidators.noXSS(this.sanitizer)
-        ]);
+        lastNameControl?.updateValueAndValidity({ emitEvent: false });
         break;
       case AuthSteps.EMAIL_VERIFY:
         emailCodeControl?.setValidators([
@@ -1223,6 +1150,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           CustomValidators.verificationCode(),
           CustomValidators.noXSS(this.sanitizer)
         ]);
+        emailCodeControl?.updateValueAndValidity({ emitEvent: false });
         break;
       case AuthSteps.MFA_VERIFY:
         mfaCodeControl?.setValidators([
@@ -1230,6 +1158,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           CustomValidators.verificationCode(),
           CustomValidators.noXSS(this.sanitizer)
         ]);
+        mfaCodeControl?.updateValueAndValidity({ emitEvent: false });
         break;
       case AuthSteps.MFA_SETUP:
         // For MFA setup, no specific field validation needed initially
@@ -1359,69 +1288,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Initialize CSRF protection for secure form submissions
-   */
-  private initializeCsrfProtection(): void {
-    console.debug('[AuthFlowComponent] Initializing CSRF protection');
-    
-    // Initialize CSRF token and handle any initialization errors
-    this.csrfService.getCsrfToken$()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (token) => {
-          if (token) {
-            this.csrfProtectionEnabled = true;
-            this.csrfError = null;
-            console.debug('[AuthFlowComponent] CSRF protection enabled');
-          } else {
-            this.csrfProtectionEnabled = false;
-            this.csrfError = 'CSRF protection initialization failed';
-            console.warn('[AuthFlowComponent] CSRF protection failed to initialize');
-          }
-        },
-        error: (error) => {
-          this.csrfProtectionEnabled = false;
-          this.csrfError = 'CSRF protection error: ' + (error.message || 'Unknown error');
-          console.error('[AuthFlowComponent] CSRF protection error:', error);
-        }
-      });
-
-    // Monitor CSRF token status for proactive error handling
-    this.csrfService.getCsrfToken$()
-      .pipe(
-        takeUntil(this.destroy$),
-        filter(token => !token) // Only when token becomes null
-      )
-      .subscribe(() => {
-        console.warn('[AuthFlowComponent] CSRF token lost - authentication may be required');
-        this.csrfError = 'Security token expired - please refresh';
-      });
-  }
-
-  /**
-   * Validate CSRF protection before form submission
-   */
-  private async validateCsrfProtection(): Promise<boolean> {
-    if (!this.csrfProtectionEnabled) {
-      console.error('[AuthFlowComponent] CSRF protection not enabled');
-      return false;
-    }
-
-    try {
-      const token = await this.csrfService.getCsrfToken();
-      if (!token) {
-        this.csrfError = 'Security validation failed - please refresh';
-        return false;
-      }
-      return true;
-    } catch (error) {
-      console.error('[AuthFlowComponent] CSRF validation failed:', error);
-      this.csrfError = 'Security validation error';
-      return false;
-    }
-  }
-
-  /**
    * Initialize rate limiting and brute force protection
    */
   private initializeRateLimiting(): void {
@@ -1455,9 +1321,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       [AuthSteps.PASSWORD]: 'password_verify',
       [AuthSteps.PASSWORD_SETUP]: null, // No rate limiting for setup
       [AuthSteps.EMAIL_VERIFY]: null, // No rate limiting for email verification
-      [AuthSteps.NAME_SETUP]: null, // No rate limiting for name setup
-      [AuthSteps.PHONE_SETUP]: null, // No rate limiting for phone setup
-      [AuthSteps.PHONE_VERIFY]: 'phone_verify',
       [AuthSteps.MFA_SETUP]: null, // No rate limiting for MFA setup
       [AuthSteps.MFA_VERIFY]: 'mfa_verify',
       [AuthSteps.SIGNIN]: 'password_verify',
@@ -1474,7 +1337,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       return { allowed: true, delayMs: 0 };
     }
 
-    type AttemptType = 'email_check' | 'password_verify' | 'mfa_verify' | 'phone_verify';
+    type AttemptType = 'email_check' | 'password_verify' | 'mfa_verify';
       return await this.rateLimitingService.isAttemptAllowed(
         identifier, 
         attemptType as AttemptType
@@ -1572,9 +1435,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       [AuthSteps.PASSWORD]: 'password_verify',
       [AuthSteps.PASSWORD_SETUP]: null,
       [AuthSteps.EMAIL_VERIFY]: null,
-      [AuthSteps.NAME_SETUP]: null,
-      [AuthSteps.PHONE_SETUP]: null,
-      [AuthSteps.PHONE_VERIFY]: 'phone_verify',
       [AuthSteps.MFA_SETUP]: null,
       [AuthSteps.MFA_VERIFY]: 'mfa_verify',
       [AuthSteps.SIGNIN]: 'password_verify',
@@ -1587,7 +1447,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     const attemptType = attemptTypeMap[step];
     
     if (attemptType) {
-      type AttemptType = 'email_check' | 'password_verify' | 'mfa_verify' | 'phone_verify';
+      type AttemptType = 'email_check' | 'password_verify' | 'mfa_verify';
       this.rateLimitingService.recordAttempt(
         identifier,
         attemptType as AttemptType,
@@ -1728,10 +1588,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         return ['password', 'firstName', 'lastName'];
       case AuthSteps.EMAIL_VERIFY:
         return ['emailCode'];
-      case AuthSteps.PHONE_SETUP:
-        return ['phoneNumber'];
-      case AuthSteps.PHONE_VERIFY:
-        return ['phoneCode'];
       case AuthSteps.MFA_VERIFY:
         return ['mfaCode'];
       default:
@@ -1787,8 +1643,8 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     if (step === AuthSteps.EMAIL || step === AuthSteps.EMAIL_VERIFY) {
       return 1; // "Email Verification"
     }
-    if (step === AuthSteps.PASSWORD || step === AuthSteps.PASSWORD_SETUP || step === AuthSteps.NAME_SETUP || step === AuthSteps.SIGNIN || step === AuthSteps.PHONE_SETUP || step === AuthSteps.PHONE_VERIFY) {
-      return 2; // "Identity & Contact Setup"
+    if (step === AuthSteps.PASSWORD || step === AuthSteps.PASSWORD_SETUP || step === AuthSteps.SIGNIN) {
+      return 2; // "Identity Setup"
     }
     if (step === AuthSteps.MFA_SETUP || step === AuthSteps.MFA_VERIFY) {
       return 3; // "Security Verification"
@@ -1811,8 +1667,8 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     if (authStep === AuthSteps.EMAIL || authStep === AuthSteps.EMAIL_VERIFY) {
       return 'Email Verification';
     }
-    if (authStep === AuthSteps.PASSWORD || authStep === AuthSteps.PASSWORD_SETUP || authStep === AuthSteps.NAME_SETUP || authStep === AuthSteps.SIGNIN || authStep === AuthSteps.PHONE_SETUP || authStep === AuthSteps.PHONE_VERIFY) {
-      return 'Identity & Contact Setup';
+    if (authStep === AuthSteps.PASSWORD || authStep === AuthSteps.PASSWORD_SETUP || authStep === AuthSteps.SIGNIN) {
+      return 'Identity Setup';
     }
     if (authStep === AuthSteps.MFA_SETUP || authStep === AuthSteps.MFA_VERIFY) {
       return 'Security Verification';
@@ -1984,7 +1840,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   public isStepNavigationSafe(step: AuthSteps): boolean {
     const destructiveSteps = [
       AuthSteps.EMAIL_VERIFY,
-      AuthSteps.PHONE_VERIFY,
       AuthSteps.MFA_VERIFY,
       AuthSteps.COMPLETE
     ];
@@ -2398,7 +2253,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
    * Get appropriate loading message for step transition
    */
   private getStepTransitionMessage(step: AuthSteps): string {
-    const messages: Record<AuthSteps, string> = {
+    const messages: Partial<Record<AuthSteps, string>> = {
       [AuthSteps.EMAIL_ENTRY]: 'Preparing email entry...',
       [AuthSteps.EMAIL]: 'Preparing email verification...',
       [AuthSteps.PASSWORD]: 'Loading password form...',
@@ -2406,9 +2261,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       [AuthSteps.PASSWORD_SETUP]: 'Setting up password...',
       [AuthSteps.EMAIL_VERIFY]: 'Setting up verification...',
       [AuthSteps.SIGNIN]: 'Preparing sign in...',
-      [AuthSteps.NAME_SETUP]: 'Loading name form...',
-      [AuthSteps.PHONE_SETUP]: 'Setting up phone verification...',
-      [AuthSteps.PHONE_VERIFY]: 'Loading phone verification...',
       [AuthSteps.MFA_SETUP]: 'Preparing security setup...',
       [AuthSteps.MFA_VERIFY]: 'Loading verification...',
       [AuthSteps.PASSWORD_RESET]: 'Preparing password reset...',
@@ -2651,7 +2503,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
    * Get URL for auth step
    */
   private getUrlForStep(step: AuthSteps): string {
-    const stepUrls: Record<AuthSteps, string> = {
+    const stepUrls: Partial<Record<AuthSteps, string>> = {
       [AuthSteps.EMAIL_ENTRY]: '/authenticate',
       [AuthSteps.EMAIL]: '/authenticate',
       [AuthSteps.PASSWORD]: '/authenticate/password',
@@ -2659,9 +2511,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       [AuthSteps.PASSWORD_SETUP]: '/authenticate/setup',
       [AuthSteps.EMAIL_VERIFY]: '/authenticate/verify-email',
       [AuthSteps.SIGNIN]: '/authenticate/signin',
-      [AuthSteps.NAME_SETUP]: '/authenticate/name',
-      [AuthSteps.PHONE_SETUP]: '/authenticate/phone',
-      [AuthSteps.PHONE_VERIFY]: '/authenticate/verify-phone',
       [AuthSteps.MFA_SETUP]: '/authenticate/mfa-setup',
       [AuthSteps.MFA_VERIFY]: '/authenticate/mfa-verify',
       [AuthSteps.PASSWORD_RESET]: '/authenticate/reset',
@@ -2679,7 +2528,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   private focusCurrentStepInput(step: AuthSteps): void {
     try {
       setTimeout(() => {
-        const focusMap: Record<AuthSteps, string> = {
+        const focusMap: Partial<Record<AuthSteps, string>> = {
           [AuthSteps.EMAIL_ENTRY]: 'email',
           [AuthSteps.EMAIL]: 'email',
           [AuthSteps.PASSWORD]: 'password',
@@ -2687,9 +2536,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           [AuthSteps.PASSWORD_SETUP]: 'password',
           [AuthSteps.EMAIL_VERIFY]: 'emailCode',
           [AuthSteps.SIGNIN]: 'password',
-          [AuthSteps.NAME_SETUP]: 'firstName',
-          [AuthSteps.PHONE_SETUP]: 'phoneNumber',
-          [AuthSteps.PHONE_VERIFY]: 'phoneCode',
           [AuthSteps.MFA_SETUP]: 'submit',
           [AuthSteps.MFA_VERIFY]: 'mfaCode',
           [AuthSteps.PASSWORD_RESET]: 'email',
@@ -2723,7 +2569,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
    */
   private announceStepChange(step: AuthSteps): void {
     try {
-      const announcements: Record<AuthSteps, string> = {
+      const announcements: Partial<Record<AuthSteps, string>> = {
         [AuthSteps.EMAIL_ENTRY]: 'Email entry step loaded',
         [AuthSteps.EMAIL]: 'Email step loaded',
         [AuthSteps.PASSWORD]: 'Password step loaded',
@@ -2731,9 +2577,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         [AuthSteps.PASSWORD_SETUP]: 'Password setup step loaded',
         [AuthSteps.EMAIL_VERIFY]: 'Email verification step loaded',
         [AuthSteps.SIGNIN]: 'Sign in step loaded',
-        [AuthSteps.NAME_SETUP]: 'Name setup step loaded',
-        [AuthSteps.PHONE_SETUP]: 'Phone setup step loaded',
-        [AuthSteps.PHONE_VERIFY]: 'Phone verification step loaded',
         [AuthSteps.MFA_SETUP]: 'MFA setup step loaded',
         [AuthSteps.MFA_VERIFY]: 'MFA verification step loaded',
         [AuthSteps.PASSWORD_RESET]: 'Password reset step loaded',

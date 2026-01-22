@@ -91,10 +91,19 @@ export class DashboardComponent implements OnInit {
   }
 
   /**
-   * Navigate to profile page
+   * Navigate to profile page (summary view)
    */
   goToProfile(): void {
     this.router.navigate(['/profile']);
+  }
+
+  /**
+   * Navigate to profile setup flow (starts from first incomplete step)
+   */
+  goToProfileSetup(): void {
+    this.router.navigate(['/profile'], { 
+      queryParams: { mode: 'setup', startFrom: 'incomplete' } 
+    });
   }
 
   /**
@@ -115,11 +124,12 @@ export class DashboardComponent implements OnInit {
   }
 
   /**
-   * Navigate to phone setup/verification in auth flow
+   * Navigate to phone setup/verification on profile page
    */
   goToPhoneVerification(): void {
-    this.router.navigate(['/authenticate']);
-    // The auth flow will handle checking phone verification status
+    this.router.navigate(['/profile'], { 
+      queryParams: { mode: 'setup', startFrom: 'incomplete' } 
+    });
   }
 
   /**

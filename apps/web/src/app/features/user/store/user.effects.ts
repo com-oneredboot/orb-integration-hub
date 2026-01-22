@@ -1025,10 +1025,8 @@ export class UserEffects {
           return of(UserActions.checkEmailVerificationStatus({ email: user.email }));
         }
 
-        // Check phone verification
-        if (!user.phoneNumber || !user.phoneVerified) {
-          return of(UserActions.setCurrentStep({ step: AuthSteps.PHONE_SETUP }));
-        }
+        // Profile setup (name, phone) is now handled on the profile page
+        // Skip directly to MFA check or completion
 
         // Check MFA status - this is async, so we let the MFA effects handle the step setting
         if (!user.mfaEnabled || !user.mfaSetupComplete) {
@@ -1097,10 +1095,8 @@ export class UserEffects {
           return UserActions.setCurrentStep({ step: AuthSteps.EMAIL });
         }
 
-        // Check phone verification next
-        if (!user.phoneNumber || !user.phoneVerified) {
-          return UserActions.setCurrentStep({ step: AuthSteps.PHONE_SETUP });
-        }
+        // Profile setup (name, phone) is now handled on the profile page
+        // Skip directly to MFA check or completion
 
         // Check MFA status next
         if (!user.mfaEnabled || !user.mfaSetupComplete) {

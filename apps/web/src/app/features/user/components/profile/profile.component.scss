@@ -85,19 +85,38 @@
         font-family: v.$font-family-base;
         font-size: v.$input-font-size;
         color: v.$input-color;
-        border: 1px solid v.$input-border-color;
+        border: 2px solid v.$gray-400; // Match auth flow - increased border width and darker color for visibility
         border-radius: v.$border-radius;
         background-color: v.$input-bg;
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
         
+        // Placeholder styling for better visibility
+        &::placeholder {
+          color: v.$gray-500;
+          opacity: 1;
+        }
+        
         &:focus {
           outline: none;
           border-color: v.$primary-color;
-          box-shadow: 0 0 0 2px rgba(v.$primary-color, 0.2);
+          box-shadow: 0 0 0 3px rgba(v.$primary-color, 0.3);
+        }
+        
+        // High contrast focus for accessibility
+        @media (prefers-contrast: high) {
+          &:focus {
+            box-shadow: 0 0 0 3px v.$primary-color;
+            border-color: v.$primary-color;
+          }
         }
         
         &--error {
           border-color: v.$danger-color;
+          animation: shake 0.5s ease-in-out;
+        }
+        
+        &--valid {
+          border-color: v.$success-color;
         }
         
         &:disabled {
@@ -205,6 +224,92 @@
     
     &-section {
       @include m.debug-section;
+    }
+    
+    &-summary {
+      background: linear-gradient(135deg, v.$gray-50, v.$gray-100);
+      border: 2px dashed v.$primary-color;
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    
+    &-hint {
+      font-size: 0.85rem;
+      color: v.$gray-600;
+      margin-bottom: 0.5rem;
+    }
+    
+    &-copy-btn {
+      @include m.button-primary;
+      font-size: v.$font-size-sm;
+      padding: v.$spacing-sm v.$spacing-md;
+
+      &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+    }
+    
+    &-logs {
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 0.75rem;
+      background: v.$gray-900;
+      color: v.$gray-100;
+      border-radius: 4px;
+      padding: 0.5rem;
+    }
+    
+    &-log-entry {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 0.25rem 0;
+      border-bottom: 1px solid v.$gray-700;
+
+      &--error {
+        background: rgba(239, 65, 54, 0.1);
+      }
+    }
+    
+    &-log-time {
+      color: v.$gray-500;
+    }
+    
+    &-log-type {
+      color: v.$role-owner;
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 0.65rem;
+    }
+    
+    &-log-op {
+      color: v.$warning-color;
+    }
+    
+    &-log-status {
+      &--success {
+        color: v.$success-color;
+      }
+
+      &--failure {
+        color: v.$danger-color;
+      }
+    }
+    
+    &-log-error {
+      color: v.$danger-color;
+      width: 100%;
+      padding-left: 1rem;
+      font-style: italic;
+    }
+    
+    &-empty {
+      color: v.$gray-500;
+      font-style: italic;
+      text-align: center;
+      padding: 1rem;
     }
   }
 }
@@ -393,6 +498,587 @@
       &__content {
         padding: v.$spacing-md;
       }
+    }
+  }
+}
+
+
+// ============================================
+// Profile Setup Flow Styles (Auth Flow Matching)
+// ============================================
+
+.profile-setup-flow {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: v.$spacing-lg;
+  
+  &__progress {
+    margin-bottom: v.$spacing-xl;
+    position: relative;
+    
+    // Progress bar background track (line between steps)
+    &-bar {
+      position: absolute;
+      top: 16px; // Center with step circles (32px / 2)
+      left: 15%;
+      right: 15%;
+      height: 2px;
+      background-color: v.$gray-200;
+      border-radius: 1px;
+      z-index: 1;
+    }
+    
+    &-fill {
+      height: 100%;
+      background: linear-gradient(90deg, v.$primary-color 0%, v.$success-color 100%);
+      border-radius: 1px;
+      transition: width 0.4s ease;
+      position: relative;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        right: -5px;
+        top: -3px;
+        width: 8px;
+        height: 8px;
+        background: v.$primary-color;
+        border-radius: 50%;
+        border: 2px solid v.$orb-white;
+        transition: all 0.4s ease;
+      }
+    }
+    
+    &-steps {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      z-index: 2;
+    }
+    
+    &-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: v.$spacing-xs;
+      flex: 1;
+      max-width: 100px;
+      
+      &-number {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: v.$gray-200;
+        color: v.$text-secondary;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: v.$font-weight-semibold;
+        font-size: v.$font-size-sm;
+        transition: all 0.3s ease;
+        border: 3px solid v.$orb-white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      
+      &-label {
+        font-size: v.$font-size-xs;
+        color: v.$text-secondary;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        text-align: center;
+      }
+      
+      &--active &-number {
+        background-color: v.$primary-color;
+        color: v.$white;
+        transform: scale(1.1);
+        box-shadow: 0 4px 8px rgba(v.$primary-color, 0.3);
+      }
+      
+      &--active &-label {
+        color: v.$primary-color;
+        font-weight: v.$font-weight-medium;
+      }
+      
+      &--completed &-number {
+        background-color: v.$success-color;
+        color: v.$white;
+      }
+      
+      &--completed &-label {
+        color: v.$success-color;
+      }
+    }
+  }
+  
+  &__step {
+    width: 100%;
+    
+    &-card {
+      background-color: v.$bg-secondary;
+      border-radius: v.$border-radius;
+      padding: v.$spacing-xl;
+      box-shadow: v.$shadow-sm;
+    }
+    
+    &-title {
+      font-family: v.$font-family-heading;
+      font-size: v.$font-size-xl;
+      color: v.$text-primary;
+      margin: 0 0 v.$spacing-sm 0;
+      text-align: center;
+    }
+    
+    &-description {
+      font-size: v.$font-size-base;
+      color: v.$text-secondary;
+      margin: 0 0 v.$spacing-lg 0;
+      text-align: center;
+      line-height: 1.5;
+    }
+  }
+  
+  &__form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: v.$spacing-md;
+  }
+  
+  &__input-group {
+    width: 100%;
+    margin-bottom: v.$spacing-md;
+  }
+  
+  &__label {
+    display: block;
+    font-weight: v.$font-weight-medium;
+    color: v.$text-primary;
+    margin-bottom: v.$spacing-xs;
+    font-size: v.$font-size-base;
+  }
+  
+  &__required {
+    color: v.$danger-color;
+    font-weight: v.$font-weight-bold;
+  }
+  
+  &__input {
+    width: 100%;
+    padding: v.$spacing-sm v.$spacing-md;
+    font-family: v.$font-family-base;
+    font-size: v.$input-font-size;
+    color: v.$input-color;
+    border: 2px solid v.$gray-400;
+    border-radius: v.$border-radius;
+    background-color: v.$input-bg;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-sizing: border-box;
+    
+    &::placeholder {
+      color: v.$gray-500;
+      opacity: 1;
+    }
+    
+    &:focus {
+      outline: none;
+      border-color: v.$primary-color;
+      box-shadow: 0 0 0 3px rgba(v.$primary-color, 0.3);
+    }
+    
+    @media (prefers-contrast: high) {
+      &:focus {
+        box-shadow: 0 0 0 3px v.$primary-color;
+        border-color: v.$primary-color;
+      }
+    }
+    
+    &--error {
+      border-color: v.$danger-color;
+      animation: shake 0.5s ease-in-out;
+    }
+    
+    &--code {
+      text-align: center;
+      font-size: v.$font-size-xl;
+      letter-spacing: 0.5em;
+      font-family: monospace;
+    }
+  }
+  
+  &__error {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+    font-size: v.$font-size-sm;
+    color: v.$danger-color;
+    margin-top: v.$spacing-xs;
+    padding: v.$spacing-xs v.$spacing-sm;
+    background-color: rgba(v.$danger-color, 0.05);
+    border-radius: v.$border-radius-sm;
+    border-left: 3px solid v.$danger-color;
+    animation: slideDown 0.3s ease-out;
+  }
+  
+  &__hint {
+    font-size: v.$font-size-xs;
+    color: v.$text-secondary;
+    margin-top: v.$spacing-xs;
+  }
+  
+  &__verify-action {
+    display: flex;
+    justify-content: center;
+    margin: v.$spacing-lg 0;
+  }
+  
+  &__resend {
+    text-align: center;
+    margin-top: v.$spacing-md;
+  }
+  
+  &__text-button {
+    background: none;
+    border: none;
+    color: v.$primary-color;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: v.$font-size-sm;
+    padding: v.$spacing-xs;
+    
+    &:hover:not(:disabled) {
+      color: color.adjust(v.$primary-color, $lightness: -10%);
+    }
+    
+    &:disabled {
+      color: v.$text-secondary;
+      cursor: not-allowed;
+      text-decoration: none;
+    }
+  }
+  
+  &__actions {
+    display: flex;
+    justify-content: space-between;
+    gap: v.$spacing-md;
+    margin-top: v.$spacing-lg;
+    
+    @media (max-width: 480px) {
+      flex-direction: column-reverse;
+    }
+  }
+  
+  &__button {
+    flex: 1;
+    padding: v.$spacing-sm v.$spacing-lg;
+    font-family: v.$font-family-base;
+    font-size: v.$font-size-base;
+    font-weight: v.$font-weight-semibold;
+    border: none;
+    border-radius: v.$border-radius;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    min-height: 48px;
+    
+    &:focus {
+      outline: 3px solid rgba(v.$primary-color, 0.5);
+      outline-offset: 2px;
+    }
+    
+    &--primary {
+      background-color: v.$primary-color;
+      color: v.$white;
+      
+      &:hover:not(:disabled) {
+        background-color: color.adjust(v.$primary-color, $lightness: -10%);
+        transform: translateY(-1px);
+      }
+      
+      &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+    }
+    
+    &--secondary {
+      background-color: transparent;
+      color: v.$text-primary;
+      border: 2px solid v.$border-color;
+      
+      &:hover:not(:disabled) {
+        background-color: v.$gray-100;
+        transform: translateY(-1px);
+      }
+    }
+  }
+}
+
+.profile-setup {
+  &__progress {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto v.$spacing-xl;
+    
+    &-bar {
+      height: 4px;
+      background-color: v.$gray-200;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: v.$spacing-sm;
+      
+      &-fill {
+        height: 100%;
+        background: linear-gradient(90deg, v.$primary-color 0%, v.$success-color 100%);
+        border-radius: 2px;
+        transition: width 0.4s ease;
+      }
+    }
+    
+    &-text {
+      font-size: v.$font-size-sm;
+      color: v.$text-secondary;
+      text-align: center;
+    }
+  }
+  
+  &__step {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    
+    &-title {
+      font-family: v.$font-family-heading;
+      font-size: v.$font-size-xl;
+      color: v.$text-primary;
+      margin-bottom: v.$spacing-md;
+      text-align: center;
+    }
+    
+    &-description {
+      font-size: v.$font-size-base;
+      color: v.$text-secondary;
+      margin-bottom: v.$spacing-lg;
+      text-align: center;
+      line-height: 1.5;
+    }
+  }
+  
+  &__form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: v.$spacing-md;
+  }
+  
+  &__input-group {
+    width: 100%;
+    margin-bottom: v.$spacing-md;
+    
+    &-label {
+      display: block;
+      font-weight: v.$font-weight-medium;
+      color: v.$text-primary;
+      margin-bottom: v.$spacing-xs;
+      font-size: v.$font-size-base;
+    }
+    
+    &-required {
+      color: v.$danger-color;
+      font-weight: v.$font-weight-bold;
+    }
+    
+    &-field {
+      width: 100%;
+      padding: v.$spacing-sm v.$spacing-md;
+      font-family: v.$font-family-base;
+      font-size: v.$input-font-size;
+      color: v.$input-color;
+      border: 2px solid v.$gray-400;
+      border-radius: v.$border-radius;
+      background-color: v.$input-bg;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      box-sizing: border-box;
+      
+      &::placeholder {
+        color: v.$gray-500;
+        opacity: 1;
+      }
+      
+      &:focus {
+        outline: none;
+        border-color: v.$primary-color;
+        box-shadow: 0 0 0 3px rgba(v.$primary-color, 0.3);
+      }
+      
+      @media (prefers-contrast: high) {
+        &:focus {
+          box-shadow: 0 0 0 3px v.$primary-color;
+          border-color: v.$primary-color;
+        }
+      }
+      
+      &--error {
+        border-color: v.$danger-color;
+        animation: shake 0.5s ease-in-out;
+      }
+      
+      &--valid {
+        border-color: v.$success-color;
+      }
+    }
+    
+    &-error {
+      display: flex;
+      align-items: center;
+      gap: v.$spacing-xs;
+      font-size: v.$font-size-sm;
+      color: v.$danger-color;
+      margin-top: v.$spacing-xs;
+      padding: v.$spacing-xs v.$spacing-sm;
+      background-color: rgba(v.$danger-color, 0.05);
+      border-radius: v.$border-radius-sm;
+      border-left: 3px solid v.$danger-color;
+      animation: slideDown 0.3s ease-out;
+    }
+  }
+  
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    gap: v.$spacing-md;
+    margin-top: v.$spacing-lg;
+    
+    &-row {
+      display: flex;
+      justify-content: space-between;
+      gap: v.$spacing-md;
+    }
+  }
+  
+  &__button {
+    width: 100%;
+    padding: v.$spacing-sm v.$spacing-lg;
+    font-family: v.$font-family-base;
+    font-size: v.$font-size-base;
+    font-weight: v.$font-weight-semibold;
+    color: v.$white;
+    background-color: v.$primary-color;
+    border: none;
+    border-radius: v.$border-radius;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    min-height: 48px;
+    
+    &:hover:not(:disabled) {
+      background-color: color.adjust(v.$primary-color, $lightness: -10%);
+      transform: translateY(-1px);
+    }
+    
+    &:focus {
+      outline: 3px solid rgba(v.$primary-color, 0.5);
+      outline-offset: 2px;
+    }
+    
+    &:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+    
+    &--secondary {
+      background-color: transparent;
+      color: v.$text-primary;
+      border: 2px solid v.$border-color;
+      
+      &:hover:not(:disabled) {
+        background-color: v.$gray-100;
+        transform: translateY(-1px);
+      }
+    }
+    
+    &--text {
+      background: none;
+      border: none;
+      color: v.$primary-color;
+      text-decoration: underline;
+      padding: v.$spacing-xs;
+      min-height: auto;
+      width: auto;
+      
+      &:hover {
+        color: color.adjust(v.$primary-color, $lightness: -10%);
+      }
+    }
+  }
+  
+  // Phone verification specific styles
+  &__verification {
+    &-info {
+      padding: v.$spacing-md;
+      background-color: v.$gray-50;
+      border-radius: v.$border-radius;
+      border-left: 4px solid v.$primary-color;
+      margin-bottom: v.$spacing-lg;
+      
+      p {
+        margin: 0;
+        color: v.$text-primary;
+        font-size: v.$font-size-base;
+        line-height: 1.5;
+      }
+    }
+    
+    &-code-input {
+      text-align: center;
+      font-size: v.$font-size-xl;
+      letter-spacing: 0.5em;
+      font-family: monospace;
+    }
+    
+    &-resend {
+      text-align: center;
+      margin-top: v.$spacing-md;
+      
+      &-text {
+        font-size: v.$font-size-sm;
+        color: v.$text-secondary;
+      }
+      
+      &-timer {
+        font-weight: v.$font-weight-medium;
+        color: v.$primary-color;
+      }
+    }
+  }
+}
+
+// Animations
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Accessibility: Reduced motion preference
+@media (prefers-reduced-motion: reduce) {
+  .profile-setup {
+    &__input-group-field,
+    &__input-group-error,
+    &__button,
+    &__progress-bar-fill {
+      transition: none;
+      animation: none;
     }
   }
 }

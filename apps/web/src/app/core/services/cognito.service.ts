@@ -274,24 +274,24 @@ export class CognitoService {
    * Check if user is properly authenticated with valid tokens and accessible user data
    * This method validates:
    * 1. Session exists with tokens
-   * 2. Tokens are not expired 
+   * 2. Tokens are not expired (auto-refreshes if expired)
    * 3. User profile can be retrieved
    * 4. User has basic required groups for app access
    */
   public async checkIsAuthenticated(): Promise<boolean> {
     try {
       // Step 1: Check if session and tokens exist
-      const session = await fetchAuthSession();
+      let session = await fetchAuthSession();
       if (!session.tokens?.accessToken || !session.tokens?.idToken) {
         console.debug('[CognitoService] No valid tokens found');
         this.isAuthenticatedSubject.next(false);
         return false;
       }
 
-      // Step 2: Validate token expiration
+      // Step 2: Validate token expiration - auto-refresh if expired
       const currentTime = Math.floor(Date.now() / 1000);
-      const accessTokenExp = session.tokens.accessToken.payload?.exp;
-      const idTokenExp = session.tokens.idToken.payload?.exp;
+      let accessTokenExp = session.tokens.accessToken.payload?.exp;
+      let idTokenExp = session.tokens.idToken.payload?.exp;
 
       if (!accessTokenExp || !idTokenExp) {
         console.debug('[CognitoService] Tokens missing expiration data');
@@ -299,10 +299,26 @@ export class CognitoService {
         return false;
       }
 
-      if (accessTokenExp <= currentTime || idTokenExp <= currentTime) {
-        console.debug('[CognitoService] Tokens are expired');
-        this.isAuthenticatedSubject.next(false);
-        return false;
+      // If tokens are expired or about to expire (within 5 minutes), force refresh
+      const bufferTime = 5 * 60; // 5 minutes buffer
+      if (accessTokenExp <= currentTime + bufferTime || idTokenExp <= currentTime + bufferTime) {
+        console.debug('[CognitoService] Tokens expired or expiring soon, attempting refresh...');
+        try {
+          session = await fetchAuthSession({ forceRefresh: true });
+          if (!session.tokens?.accessToken || !session.tokens?.idToken) {
+            console.debug('[CognitoService] Token refresh failed - no tokens returned');
+            this.isAuthenticatedSubject.next(false);
+            return false;
+          }
+          // Update expiration times after refresh
+          accessTokenExp = session.tokens.accessToken.payload?.exp;
+          idTokenExp = session.tokens.idToken.payload?.exp;
+          console.debug('[CognitoService] Tokens refreshed successfully');
+        } catch (refreshError) {
+          console.debug('[CognitoService] Token refresh failed:', refreshError);
+          this.isAuthenticatedSubject.next(false);
+          return false;
+        }
       }
 
       // Step 3: Verify we can retrieve current user (validates tokens are functional)

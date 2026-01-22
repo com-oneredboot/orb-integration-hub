@@ -7,7 +7,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { FormBuilder } from '@angular/forms';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { of } from 'rxjs';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { FaIconLibrary, FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { fas } from '@fortawesome/free-solid-svg-icons';
 
@@ -64,12 +64,17 @@ describe('ProfileComponent', () => {
 
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
 
+    const activatedRouteMock = {
+      queryParams: of({})
+    };
+
     await TestBed.configureTestingModule({
       imports: [ ProfileComponent, FontAwesomeModule ],
       providers: [
         provideMockStore({ initialState }),
         { provide: UserService, useValue: mockUserService },
         { provide: Router, useValue: routerSpy },
+        { provide: ActivatedRoute, useValue: activatedRouteMock },
         FormBuilder
       ]
     }).compileComponents();

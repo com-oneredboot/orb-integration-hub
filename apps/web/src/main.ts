@@ -41,7 +41,7 @@ Amplify.configure({
   }
 });
 
-// Initialize security headers for CSRF protection
+// Initialize security headers
 if (typeof document !== 'undefined') {
   // Set Content Security Policy for additional security
   const meta = document.createElement('meta');
@@ -88,7 +88,7 @@ bootstrapApplication(AppComponent, {
       organizations: organizationsReducer
     }),
     provideEffects([UserEffects, OrganizationsEffects]),
-    provideHttpClient(withInterceptorsFromDi()), // Enable HTTP client for CSRF functionality
+    provideHttpClient(withInterceptorsFromDi()),
     importProvidersFrom(BrowserModule, ReactiveFormsModule, FontAwesomeModule, NgOptimizedImage),
     // Provide the configured icon library
     { provide: FaIconLibrary, useValue: iconLibrary }
