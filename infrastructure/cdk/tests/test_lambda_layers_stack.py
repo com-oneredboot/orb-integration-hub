@@ -42,9 +42,33 @@ def template(test_config: Config) -> Template:
 class TestLambdaLayersStackLayerCount:
     """Tests for layer count."""
 
-    def test_creates_two_layers(self, template: Template) -> None:
-        """Verify exactly 2 Lambda layers are created."""
-        template.resource_count_is("AWS::Lambda::LayerVersion", 2)
+    def test_creates_three_layers(self, template: Template) -> None:
+        """Verify exactly 3 Lambda layers are created (common, organizations-security, stripe)."""
+        template.resource_count_is("AWS::Lambda::LayerVersion", 3)
+
+
+class TestLambdaLayersStackCommonLayer:
+    """Tests for Common layer."""
+
+    def test_creates_common_layer(self, template: Template) -> None:
+        """Verify Common layer is created."""
+        template.has_resource_properties(
+            "AWS::Lambda::LayerVersion",
+            {
+                "LayerName": "test-project-dev-common-layer",
+                "Description": "Common shared dependencies including orb-common utilities",
+            },
+        )
+
+    def test_common_layer_has_compatible_runtimes(self, template: Template) -> None:
+        """Verify Common layer has compatible runtimes."""
+        template.has_resource_properties(
+            "AWS::Lambda::LayerVersion",
+            {
+                "LayerName": "test-project-dev-common-layer",
+                "CompatibleRuntimes": Match.array_with(["python3.12", "python3.13"]),
+            },
+        )
 
 
 class TestLambdaLayersStackOrganizationsSecurityLayer:
@@ -87,6 +111,16 @@ class TestLambdaLayersStackStripeLayer:
 
 class TestLambdaLayersStackSSMParameters:
     """Tests for SSM parameter exports using path-based naming."""
+
+    def test_exports_common_layer_arn(self, template: Template) -> None:
+        """Verify Common layer ARN is exported to SSM with path-based naming."""
+        template.has_resource_properties(
+            "AWS::SSM::Parameter",
+            {
+                "Name": "/test/project/dev/lambda-layers/common/arn",
+                "Type": "String",
+            },
+        )
 
     def test_exports_organizations_security_layer_arn(self, template: Template) -> None:
         """Verify Organizations Security layer ARN is exported to SSM with path-based naming."""
