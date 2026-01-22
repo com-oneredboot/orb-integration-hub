@@ -223,7 +223,7 @@ description: HTML template file - Profile page with step-based setup flow
               formControlName="phoneNumber" 
               class="profile-setup-flow__input"
               [ngClass]="{'profile-setup-flow__input--error': phoneForm.get('phoneNumber')?.invalid && phoneForm.get('phoneNumber')?.touched}"
-              placeholder="+1 (555) 123-4567"
+              placeholder="+12025550123"
               autocomplete="tel">
             <div *ngIf="phoneForm.get('phoneNumber')?.invalid && phoneForm.get('phoneNumber')?.touched" 
                  class="profile-setup-flow__error">
