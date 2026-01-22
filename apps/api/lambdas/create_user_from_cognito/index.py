@@ -6,15 +6,16 @@
 #              against Cognito before creating records. Only accepts cognitoSub as input and
 #              extracts all user data from Cognito to prevent client-side data injection.
 
-import re
-import os
 import logging
+import os
+import re
 import time
 from datetime import datetime, timezone
 from typing import Any
 
 import boto3
 from botocore.exceptions import ClientError
+from orb_common.timestamps import ensure_timestamp
 
 # AWS clients - created lazily to support mocking in tests
 _dynamodb = None
@@ -310,24 +311,6 @@ def format_response(user_record: dict[str, Any]) -> dict[str, Any]:
     Returns:
         Formatted response dict
     """
-
-    def ensure_timestamp(value: Any) -> int | None:
-        """Convert various timestamp formats to Unix epoch seconds."""
-        if value is None:
-            return None
-        if isinstance(value, int):
-            return value
-        if isinstance(value, float):
-            return int(value)
-        if isinstance(value, str):
-            try:
-                # Handle ISO format strings
-                dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
-                return int(dt.timestamp())
-            except (ValueError, TypeError):
-                pass
-        return None
-
     return {
         "cognitoSub": user_record.get("cognitoSub") or user_record.get("userId"),
         "userId": user_record.get("userId"),
