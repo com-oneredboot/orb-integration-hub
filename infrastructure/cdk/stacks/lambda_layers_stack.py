@@ -38,6 +38,7 @@ class LambdaLayersStack(Stack):
         self._apply_tags()
 
         # Create layers
+        self.common_layer = self._create_common_layer()
         self.organizations_security_layer = self._create_organizations_security_layer()
         self.stripe_layer = self._create_stripe_layer()
 
@@ -46,12 +47,40 @@ class LambdaLayersStack(Stack):
         for key, value in self.config.standard_tags.items():
             Tags.of(self).add(key, value)
 
+    def _create_common_layer(self) -> lambda_.LayerVersion:
+        """Create Common Lambda layer with shared dependencies (orb-common, etc.)."""
+        layer = lambda_.LayerVersion(
+            self,
+            "CommonLayer",
+            layer_version_name=self.config.resource_name("common-layer"),
+            description="Common shared dependencies including orb-common utilities",
+            code=lambda_.Code.from_asset("../apps/api/layers/common"),
+            compatible_runtimes=[
+                lambda_.Runtime.PYTHON_3_12,
+                lambda_.Runtime.PYTHON_3_13,
+            ],
+            license="MIT",
+        )
+
+        # Export layer ARN to SSM with path-based naming
+        ssm.StringParameter(
+            self,
+            "CommonLayerArnParameter",
+            parameter_name=self.config.ssm_parameter_name("lambda-layers/common/arn"),
+            string_value=layer.layer_version_arn,
+            description="ARN of the Common Lambda Layer",
+        )
+
+        return layer
+
     def _create_organizations_security_layer(self) -> lambda_.LayerVersion:
         """Create Organizations Security Lambda layer."""
         layer = lambda_.LayerVersion(
             self,
             "OrganizationsSecurityLayer",
-            layer_version_name=self.config.resource_name("organizations-security-layer"),
+            layer_version_name=self.config.resource_name(
+                "organizations-security-layer"
+            ),
             description="Organization security middleware with audit logging and RBAC utilities",
             code=lambda_.Code.from_asset("../apps/api/layers/organizations_security"),
             compatible_runtimes=[
@@ -65,7 +94,9 @@ class LambdaLayersStack(Stack):
         ssm.StringParameter(
             self,
             "OrganizationsSecurityLayerArnParameter",
-            parameter_name=self.config.ssm_parameter_name("lambda-layers/organizations-security/arn"),
+            parameter_name=self.config.ssm_parameter_name(
+                "lambda-layers/organizations-security/arn"
+            ),
             string_value=layer.layer_version_arn,
             description="ARN of the Organization Security Lambda Layer",
         )

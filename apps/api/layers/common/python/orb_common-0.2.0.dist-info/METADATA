@@ -1,0 +1,66 @@
+Metadata-Version: 2.4
+Name: orb-common
+Version: 0.2.0
+Summary: Shared types and utilities for the orb ecosystem
+Author: ORB Team
+License: MIT
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Typing :: Typed
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0; extra == "dev"
+Requires-Dist: mypy>=1.0; extra == "dev"
+Requires-Dist: hypothesis>=6.0; extra == "dev"
+Requires-Dist: toml>=0.10.2; extra == "dev"
+
+# orb-common (Python)
+
+Shared types and utilities for the orb ecosystem.
+
+## Installation
+
+```bash
+pip install orb-common
+```
+
+For CodeArtifact installation, see [docs/common-library.md](../../../docs/common-library.md).
+
+## Usage
+
+```python
+from orb_common import EnvironmentDesignator
+
+# Use enum directly
+env = EnvironmentDesignator.DEV
+print(f"Deploying to {env}")  # "Deploying to dev"
+
+# Parse from string (case-insensitive)
+env = EnvironmentDesignator.from_string("DEV")
+
+# Get all valid values
+values = EnvironmentDesignator.values()  # ["dev", "stg", "uat", "qa", "prd"]
+```
+
+## Development
+
+```bash
+# Install dev dependencies
+pipenv install --dev
+
+# Run tests
+pipenv run pytest tests/ -v
+
+# Run type checker
+pipenv run mypy orb_common/
+
+# Run tests with coverage
+pipenv run pytest tests/ --cov=orb_common --cov-report=term-missing
+```

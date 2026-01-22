@@ -22,7 +22,6 @@ from aws_cdk import (
     Duration,
     Stack,
     Tags,
-    aws_dynamodb as dynamodb,
     aws_iam as iam,
     aws_lambda as lambda_,
     aws_lambda_event_sources as lambda_event_sources,
@@ -62,10 +61,14 @@ class LambdaStack(Stack):
         # Create Lambda functions
         self.sms_verification_lambda = self._create_sms_verification_lambda()
         self.cognito_group_manager_lambda = self._create_cognito_group_manager_lambda()
-        self.user_status_calculator_lambda = self._create_user_status_calculator_lambda()
+        self.user_status_calculator_lambda = (
+            self._create_user_status_calculator_lambda()
+        )
         self.organizations_lambda = self._create_organizations_lambda()
         self.check_email_exists_lambda = self._create_check_email_exists_lambda()
-        self.create_user_from_cognito_lambda = self._create_create_user_from_cognito_lambda()
+        self.create_user_from_cognito_lambda = (
+            self._create_create_user_from_cognito_lambda()
+        )
 
     def _apply_tags(self) -> None:
         """Apply standard tags to all resources in this stack."""
@@ -200,11 +203,7 @@ class LambdaStack(Stack):
                 effect=iam.Effect.ALLOW,
                 actions=["sns:Publish"],
                 resources=["*"],
-                conditions={
-                    "StringEquals": {
-                        "sns:Protocol": "sms"
-                    }
-                },
+                conditions={"StringEquals": {"sns:Protocol": "sms"}},
             )
         )
 
@@ -295,8 +294,12 @@ class LambdaStack(Stack):
                 "LOGGING_LEVEL": "INFO",
                 "VERSION": "1",
                 "SMS_ORIGINATION_NUMBER": self.config.sms_origination_number,
-                "SMS_VERIFICATION_SECRET_NAME": self.config.resource_name("sms-verification-secret"),
-                "SMS_RATE_LIMIT_TABLE_NAME": self.dynamodb_stack.tables["sms-rate-limit"].table_name,
+                "SMS_VERIFICATION_SECRET_NAME": self.config.resource_name(
+                    "sms-verification-secret"
+                ),
+                "SMS_RATE_LIMIT_TABLE_NAME": self.dynamodb_stack.tables[
+                    "sms-rate-limit"
+                ].table_name,
             },
             dead_letter_queue_enabled=True,
         )
@@ -370,24 +373,28 @@ class LambdaStack(Stack):
 
     def _create_organizations_lambda(self) -> lambda_.Function:
         """Create Organizations Lambda function with layer reference.
-        
+
         The layer ARN is read from SSM parameter to avoid CloudFormation
         cross-stack exports which cause update failures when layer versions change.
         """
         # Read layer ARN from SSM parameter (set by lambda-layers stack)
         # Uses path-based naming: /customer/project/env/lambda-layers/layer-name/arn
-        organizations_security_layer_arn = ssm.StringParameter.value_for_string_parameter(
-            self,
-            self.config.ssm_parameter_name("lambda-layers/organizations-security/arn"),
+        organizations_security_layer_arn = (
+            ssm.StringParameter.value_for_string_parameter(
+                self,
+                self.config.ssm_parameter_name(
+                    "lambda-layers/organizations-security/arn"
+                ),
+            )
         )
-        
+
         # Create layer reference from ARN
         organizations_security_layer = lambda_.LayerVersion.from_layer_version_arn(
             self,
             "OrganizationsSecurityLayerRef",
             organizations_security_layer_arn,
         )
-        
+
         function = lambda_.Function(
             self,
             "OrganizationsLambda",
@@ -404,7 +411,9 @@ class LambdaStack(Stack):
                 "ALERTS_QUEUE": f"arn:aws:sqs:{self.region}:{self.account}:{self.config.prefix}-alerts-queue",
                 "LOGGING_LEVEL": "INFO",
                 "VERSION": "1",
-                "ORGANIZATIONS_TABLE_NAME": self.dynamodb_stack.tables["organizations"].table_name,
+                "ORGANIZATIONS_TABLE_NAME": self.dynamodb_stack.tables[
+                    "organizations"
+                ].table_name,
                 "USER_POOL_ID": self.cognito_stack.user_pool.user_pool_id,
             },
             dead_letter_queue_enabled=True,
@@ -416,7 +425,7 @@ class LambdaStack(Stack):
 
     def _create_check_email_exists_lambda(self) -> lambda_.Function:
         """Create CheckEmailExists Lambda function for public email existence checks.
-        
+
         This Lambda is used by the CheckEmailExists GraphQL query to check if an
         email exists in the system. It uses API key authentication for public access
         during the signup/signin flow.
@@ -449,14 +458,28 @@ class LambdaStack(Stack):
 
     def _create_create_user_from_cognito_lambda(self) -> lambda_.Function:
         """Create CreateUserFromCognito Lambda function for secure user record creation.
-        
+
         This Lambda is used by the CreateUserFromCognito GraphQL mutation to create
         user records in DynamoDB from Cognito data. It validates against Cognito
         before creating records and extracts all user data from Cognito to prevent
         client-side data injection.
-        
+
         Uses API key authentication for public access during the self-registration flow.
+        Uses the common layer for shared dependencies (orb-common).
         """
+        # Read common layer ARN from SSM parameter
+        common_layer_arn = ssm.StringParameter.value_for_string_parameter(
+            self,
+            self.config.ssm_parameter_name("lambda-layers/common/arn"),
+        )
+
+        # Create layer reference from ARN
+        common_layer = lambda_.LayerVersion.from_layer_version_arn(
+            self,
+            "CommonLayerRefForCreateUser",
+            common_layer_arn,
+        )
+
         function = lambda_.Function(
             self,
             "CreateUserFromCognitoLambda",
@@ -464,10 +487,13 @@ class LambdaStack(Stack):
             description="Lambda function to create user records from Cognito data (public endpoint)",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="index.lambda_handler",
-            code=lambda_.Code.from_asset("../apps/api/lambdas/create_user_from_cognito"),
+            code=lambda_.Code.from_asset(
+                "../apps/api/lambdas/create_user_from_cognito"
+            ),
             timeout=Duration.seconds(10),
             memory_size=128,
             role=self.lambda_execution_role,
+            layers=[common_layer],
             environment={
                 "ALERTS_QUEUE": f"arn:aws:sqs:{self.region}:{self.account}:{self.config.prefix}-alerts-queue",
                 "LOGGING_LEVEL": "INFO",
