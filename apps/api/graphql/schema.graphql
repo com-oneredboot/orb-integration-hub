@@ -187,7 +187,7 @@ type CreateUserFromCognito @aws_api_key {
   phoneVerified: Boolean
   mfaEnabled: Boolean
   mfaSetupComplete: Boolean
-  groups: String
+  groups: [String]
   createdAt: AWSTimestamp
   updatedAt: AWSTimestamp
 }
@@ -275,7 +275,7 @@ input CreateUserFromCognitoInput {
   phoneVerified: Boolean
   mfaEnabled: Boolean
   mfaSetupComplete: Boolean
-  groups: String
+  groups: [String]
   createdAt: AWSTimestamp
   updatedAt: AWSTimestamp
 }
@@ -1120,7 +1120,7 @@ type Mutation {
   ApplicationsDelete(input: ApplicationsDeleteInput!): ApplicationsResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   ApplicationsDisable(input: ApplicationsDisableInput!): ApplicationsResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   UsersCreate(input: UsersCreateInput!): UsersResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])
-  UsersUpdate(input: UsersUpdateInput!): UsersResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])
+  UsersUpdate(input: UsersUpdateInput!): UsersResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER", "USER"])
   UsersDelete(input: UsersDeleteInput!): UsersResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])
   UsersDisable(input: UsersDisableInput!): UsersResponse @aws_auth(cognito_groups: ["OWNER"])
 }

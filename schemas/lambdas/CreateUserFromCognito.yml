@@ -59,8 +59,8 @@ model:
       required: false
       description: MFA setup complete status (true if user completed MFA)
     groups:
-      type: string
-      list: true
+      type: array
+      items: string
       required: false
       description: User groups (always ['USER'] for new users)
     createdAt:
