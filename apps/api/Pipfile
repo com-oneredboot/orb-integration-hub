@@ -15,7 +15,7 @@ requests = "*"
 stripe = "*"
 safety = "*"
 bandit = "*"
-orb-common = {version = "*", index = "codeartifact"}
+orb-common = "*"
 
 [dev-packages]
 bandit = "*"
