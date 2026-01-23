@@ -106,14 +106,14 @@ export type VerificationCodeType = 'email' | 'phone' | 'mfa';
     }
     
     .verification-code__message {
-      color: var(--text-secondary, #6b7280);
+      color: var(--orb-text-secondary, #666666);
       font-size: 0.95rem;
       margin: 0 0 0.5rem 0;
       line-height: 1.5;
     }
     
     .verification-code__destination {
-      color: var(--text-primary, #1f2937);
+      color: var(--orb-text-primary, #000000);
       font-weight: 600;
       font-size: 1rem;
       margin: 0;
@@ -124,7 +124,7 @@ export type VerificationCodeType = 'email' | 'phone' | 'mfa';
     }
     
     .verification-code__icon {
-      color: var(--primary, #3b82f6);
+      color: var(--orb-primary, #E31837);
     }
     
     .verification-code__input-group {
@@ -135,13 +135,13 @@ export type VerificationCodeType = 'email' | 'phone' | 'mfa';
     .verification-code__label {
       display: block;
       font-weight: 500;
-      color: var(--text-primary, #1f2937);
+      color: var(--orb-text-primary, #000000);
       margin-bottom: 0.5rem;
       font-size: 0.875rem;
     }
     
     .verification-code__required {
-      color: var(--error, #ef4444);
+      color: var(--orb-error, #E31837);
       font-weight: 700;
     }
     
@@ -156,45 +156,45 @@ export type VerificationCodeType = 'email' | 'phone' | 'mfa';
       padding: 0.75rem 1rem;
       font-size: 1rem;
       font-family: inherit;
-      color: var(--text-primary, #1f2937);
-      border: 2px solid var(--border-dark, #9ca3af);
+      color: var(--orb-text-primary, #000000);
+      border: 2px solid var(--orb-border, #9ca3af);
       border-radius: 0.5rem;
-      background: var(--bg-input, #ffffff);
+      background: var(--orb-white, #ffffff);
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
       box-sizing: border-box;
     }
     
     .verification-code__input::placeholder {
-      color: var(--text-muted, #6b7280);
+      color: var(--orb-text-muted, #9ca3af);
       opacity: 1;
     }
     
     .verification-code__input:focus {
       outline: none;
-      border-color: var(--primary, #3b82f6);
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+      border-color: var(--orb-primary, #E31837);
+      box-shadow: 0 0 0 3px rgba(227, 24, 55, 0.3);
     }
     
     /* High contrast focus for accessibility */
     @media (prefers-contrast: high) {
       .verification-code__input:focus {
-        box-shadow: 0 0 0 3px var(--primary, #3b82f6);
-        border-color: var(--primary, #3b82f6);
+        box-shadow: 0 0 0 3px var(--orb-primary, #E31837);
+        border-color: var(--orb-primary, #E31837);
       }
     }
     
     .verification-code__input--error {
-      border-color: var(--error, #ef4444);
+      border-color: var(--orb-error, #E31837);
       animation: shake 0.5s ease-in-out;
     }
     
     .verification-code__input--error:focus {
-      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
+      box-shadow: 0 0 0 3px rgba(227, 24, 55, 0.3);
     }
     
     .verification-code__input--valid {
-      border-color: var(--success, #059669);
-      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23059669"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>');
+      border-color: var(--orb-success, #2B8A3E);
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%232B8A3E"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>');
       background-repeat: no-repeat;
       background-position: right 12px center;
       background-size: 16px 16px;
@@ -212,7 +212,7 @@ export type VerificationCodeType = 'email' | 'phone' | 'mfa';
       right: 12px;
       top: 50%;
       transform: translateY(-50%);
-      color: var(--success, #059669);
+      color: var(--orb-success, #2B8A3E);
     }
     
     .verification-code__valid-icon {
@@ -223,7 +223,7 @@ export type VerificationCodeType = 'email' | 'phone' | 'mfa';
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      color: var(--error, #ef4444);
+      color: var(--orb-error, #E31837);
       font-size: 0.875rem;
       margin-top: 0.5rem;
     }
@@ -242,27 +242,27 @@ export type VerificationCodeType = 'email' | 'phone' | 'mfa';
     }
     
     .verification-code__resend-text {
-      color: var(--text-secondary, #6b7280);
+      color: var(--orb-text-secondary, #666666);
     }
     
     .verification-code__resend-button {
       background: none;
       border: none;
-      color: var(--primary, #3b82f6);
+      color: var(--orb-primary, #E31837);
       font-weight: 500;
       cursor: pointer;
       padding: 0;
       font-size: inherit;
       transition: color 0.2s;
-    }
-    
-    .verification-code__resend-button:hover:not(:disabled) {
-      color: var(--primary-dark, #2563eb);
       text-decoration: underline;
     }
     
+    .verification-code__resend-button:hover:not(:disabled) {
+      color: var(--orb-primary-dark, #c91518);
+    }
+    
     .verification-code__resend-button:disabled {
-      color: var(--text-muted, #9ca3af);
+      color: var(--orb-text-muted, #9ca3af);
       cursor: not-allowed;
     }
     

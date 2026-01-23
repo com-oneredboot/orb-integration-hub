@@ -17,13 +17,42 @@
 
 :root {
   /* ==========================================================================
-     Color Tokens
+     Orb Brand Colors (Primary Design System)
      ========================================================================== */
 
-  /* Primary Colors */
-  --color-primary: #3B82F6;
-  --color-primary-light: #60A5FA;
-  --color-primary-dark: #2563EB;
+  /* Orb Primary - Red brand color */
+  --orb-primary: #E31837;
+  --orb-primary-dark: #c91518;
+  --orb-primary-light: #f04d5f;
+
+  /* Orb Neutrals */
+  --orb-black: #000000;
+  --orb-white: #FFFFFF;
+  --orb-gray: #666666;
+  --orb-light-gray: #e5e5e5;
+
+  /* Orb Text Colors */
+  --orb-text-primary: #000000;
+  --orb-text-secondary: #666666;
+  --orb-text-muted: #9ca3af;
+
+  /* Orb Semantic Colors */
+  --orb-success: #2B8A3E;
+  --orb-warning: #f59e0b;
+  --orb-error: #E31837;
+
+  /* Orb Border Colors */
+  --orb-border: #9ca3af;
+  --orb-border-light: #e5e5e5;
+
+  /* ==========================================================================
+     Color Tokens (Legacy - for backward compatibility)
+     ========================================================================== */
+
+  /* Primary Colors - Now mapped to Orb Red */
+  --color-primary: #E31837;
+  --color-primary-light: #f04d5f;
+  --color-primary-dark: #c91518;
   --color-primary-contrast: #FFFFFF;
 
   /* Secondary Colors */
@@ -33,7 +62,7 @@
   --color-secondary-contrast: #FFFFFF;
 
   /* Accent Colors */
-  --color-accent: #10B981;
+  --color-accent: #2B8A3E;
   --color-accent-light: #34D399;
   --color-accent-dark: #059669;
   --color-accent-contrast: #FFFFFF;
