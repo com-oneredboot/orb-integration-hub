@@ -69,6 +69,7 @@ class LambdaStack(Stack):
         self.create_user_from_cognito_lambda = (
             self._create_create_user_from_cognito_lambda()
         )
+        self.get_current_user_lambda = self._create_get_current_user_lambda()
 
     def _apply_tags(self) -> None:
         """Apply standard tags to all resources in this stack."""
@@ -528,3 +529,52 @@ class LambdaStack(Stack):
             string_value=function.function_arn,
             description=f"ARN of the {name} Lambda function",
         )
+
+    def _create_get_current_user_lambda(self) -> lambda_.Function:
+        """Create GetCurrentUser Lambda function for secure self-lookup.
+
+        This Lambda is used by the GetCurrentUser GraphQL query to allow users
+        to retrieve their own record. It extracts cognitoSub from the AppSync
+        identity context - users can only retrieve their own record.
+
+        Uses Cognito authentication (USER or OWNER group required).
+        Uses the common layer for shared dependencies (orb-common).
+        """
+        # Read common layer ARN from SSM parameter
+        common_layer_arn = ssm.StringParameter.value_for_string_parameter(
+            self,
+            self.config.ssm_parameter_name("lambda-layers/common/arn"),
+        )
+
+        # Create layer reference from ARN
+        common_layer = lambda_.LayerVersion.from_layer_version_arn(
+            self,
+            "CommonLayerRefForGetCurrentUser",
+            common_layer_arn,
+        )
+
+        function = lambda_.Function(
+            self,
+            "GetCurrentUserLambda",
+            function_name=self.config.resource_name("get-current-user"),
+            description="Lambda function to get current user's own record (secure self-lookup)",
+            runtime=lambda_.Runtime.PYTHON_3_12,
+            handler="index.lambda_handler",
+            code=lambda_.Code.from_asset("../apps/api/lambdas/get_current_user"),
+            timeout=Duration.seconds(10),
+            memory_size=128,
+            role=self.lambda_execution_role,
+            layers=[common_layer],
+            environment={
+                "ALERTS_QUEUE": f"arn:aws:sqs:{self.region}:{self.account}:{self.config.prefix}-alerts-queue",
+                "LOGGING_LEVEL": "INFO",
+                "VERSION": "1",
+                "USERS_TABLE_NAME": self.dynamodb_stack.tables["users"].table_name,
+            },
+            dead_letter_queue_enabled=True,
+        )
+
+        self.functions["get-current-user"] = function
+        # Export with lowercase name to match orb-schema-generator convention
+        self._export_lambda_arn_custom(function, "getcurrentuser")
+        return function

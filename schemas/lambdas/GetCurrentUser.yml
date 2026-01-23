@@ -1,0 +1,86 @@
+# file: schemas/lambdas/GetCurrentUser.yml
+# author: Corey Dale Peters
+# date: 2026-01-23
+# description: GraphQL query schema for getting the current authenticated user's record.
+#              This is a secure endpoint that extracts cognitoSub from the caller's token
+#              and only returns their own user record - users cannot query other users.
+
+type: lambda
+name: GetCurrentUser
+targets:
+  - api
+model:
+  operation: query
+  authConfig:
+    cognitoAuthentication:
+      groups:
+        USER:
+          - GetCurrentUser
+        OWNER:
+          - GetCurrentUser
+  attributes:
+    # No input required - Lambda extracts cognitoSub from AppSync identity context
+    
+    # Response attributes (full user record)
+    userId:
+      type: string
+      required: false
+      description: User ID (same as cognitoSub)
+    cognitoId:
+      type: string
+      required: false
+      description: Cognito username
+    cognitoSub:
+      type: string
+      required: false
+      description: Cognito user sub (UUID)
+    email:
+      type: string
+      required: false
+      description: User's email address
+    firstName:
+      type: string
+      required: false
+      description: User's first name
+    lastName:
+      type: string
+      required: false
+      description: User's last name
+    status:
+      type: string
+      required: false
+      enum_type: UserStatus
+      description: Current user status
+    phoneNumber:
+      type: string
+      required: false
+      description: User's phone number
+    groups:
+      type: array
+      items: string
+      required: false
+      description: Cognito groups the user belongs to
+    emailVerified:
+      type: boolean
+      required: false
+      description: Whether email is verified
+    phoneVerified:
+      type: boolean
+      required: false
+      description: Whether phone is verified
+    mfaEnabled:
+      type: boolean
+      required: false
+      description: Whether MFA is enabled
+    mfaSetupComplete:
+      type: boolean
+      required: false
+      description: Whether MFA setup is complete
+    createdAt:
+      type: timestamp
+      required: false
+      description: Record creation timestamp
+    updatedAt:
+      type: timestamp
+      required: false
+      description: Record update timestamp

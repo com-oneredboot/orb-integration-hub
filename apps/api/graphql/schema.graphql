@@ -176,6 +176,24 @@ type AuthError {
   details: String
 }
 
+type GetCurrentUser @aws_auth(cognito_groups: ["OWNER", "USER"]) {
+  userId: String
+  cognitoId: String
+  cognitoSub: String
+  email: String
+  firstName: String
+  lastName: String
+  status: UserStatus
+  phoneNumber: String
+  groups: [String]
+  emailVerified: Boolean
+  phoneVerified: Boolean
+  mfaEnabled: Boolean
+  mfaSetupComplete: Boolean
+  createdAt: AWSTimestamp
+  updatedAt: AWSTimestamp
+}
+
 type CreateUserFromCognito @aws_api_key {
   cognitoSub: String!
   userId: String
@@ -263,6 +281,24 @@ type UsersResponse {
 }
 
 # Input Types
+
+input GetCurrentUserInput {
+  userId: String
+  cognitoId: String
+  cognitoSub: String
+  email: String
+  firstName: String
+  lastName: String
+  status: UserStatus
+  phoneNumber: String
+  groups: [String]
+  emailVerified: Boolean
+  phoneVerified: Boolean
+  mfaEnabled: Boolean
+  mfaSetupComplete: Boolean
+  createdAt: AWSTimestamp
+  updatedAt: AWSTimestamp
+}
 
 input CreateUserFromCognitoInput {
   cognitoSub: String!
@@ -1017,6 +1053,7 @@ input UsersQueryByCognitoSubInput {
 
 # Queries
 type Query {
+  GetCurrentUser(input: GetCurrentUserInput!): GetCurrentUser @aws_auth(cognito_groups: ["OWNER", "USER"])
   CheckEmailExists(input: CheckEmailExistsInput!): CheckEmailExists @aws_api_key
   OwnershipTransferRequestsQueryByTransferId(input: OwnershipTransferRequestsQueryByTransferIdInput!): OwnershipTransferRequestsResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   OwnershipTransferRequestsQueryByCurrentOwnerId(input: OwnershipTransferRequestsQueryByCurrentOwnerIdInput!): OwnershipTransferRequestsResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
@@ -1069,10 +1106,10 @@ type Query {
   ApplicationsQueryByApplicationId(input: ApplicationsQueryByApplicationIdInput!): ApplicationsResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   ApplicationsQueryByOrganizationId(input: ApplicationsQueryByOrganizationIdInput!): ApplicationsResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   ApplicationsQueryByOrganizationIdAndCreatedAt(input: ApplicationsQueryByOrganizationIdAndCreatedAtInput!): ApplicationsResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
-  UsersQueryByUserId(input: UsersQueryByUserIdInput!): UsersResponse @aws_auth(cognito_groups: ["OWNER", "USER"])
-  UsersQueryByEmail(input: UsersQueryByEmailInput!): UsersResponse @aws_auth(cognito_groups: ["OWNER", "USER"])
-  UsersQueryByCognitoId(input: UsersQueryByCognitoIdInput!): UsersResponse @aws_auth(cognito_groups: ["OWNER", "USER"])
-  UsersQueryByCognitoSub(input: UsersQueryByCognitoSubInput!): UsersResponse @aws_auth(cognito_groups: ["OWNER", "USER"])
+  UsersQueryByUserId(input: UsersQueryByUserIdInput!): UsersResponse @aws_auth(cognito_groups: ["OWNER"])
+  UsersQueryByEmail(input: UsersQueryByEmailInput!): UsersResponse @aws_auth(cognito_groups: ["OWNER"])
+  UsersQueryByCognitoId(input: UsersQueryByCognitoIdInput!): UsersResponse @aws_auth(cognito_groups: ["OWNER"])
+  UsersQueryByCognitoSub(input: UsersQueryByCognitoSubInput!): UsersResponse @aws_auth(cognito_groups: ["OWNER"])
 }
 
 # Mutations

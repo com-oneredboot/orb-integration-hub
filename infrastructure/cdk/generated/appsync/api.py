@@ -856,6 +856,28 @@ class AppSyncApi(Construct):
 
         # Add Lambda data sources and resolvers
 
+        # GetCurrentUser Lambda data source and resolvers
+        get_current_user_lambda_arn = ssm.StringParameter.value_for_string_parameter(
+            self, "/orb/integration-hub/dev/lambda/getcurrentuser/arn"
+        )
+        get_current_user_lambda = lambda_.Function.from_function_attributes(
+            self,
+            "GetCurrentUserLambda",
+            function_arn=get_current_user_lambda_arn,
+            same_environment=True,
+        )
+        get_current_user_lambda_data_source = self.api.add_lambda_data_source(
+            "GetCurrentUserLambdaDataSource",
+            get_current_user_lambda,
+        )
+
+        get_current_user_lambda_data_source.create_resolver(
+            "GetCurrentUserResolver",
+            type_name="Query",
+            field_name="GetCurrentUser",
+        )
+
+
         # CreateUserFromCognito Lambda data source and resolvers
         create_user_from_cognito_lambda_arn = ssm.StringParameter.value_for_string_parameter(
             self, "/orb/integration-hub/dev/lambda/createuserfromcognito/arn"

@@ -17,6 +17,7 @@ import {
 import { SmsVerification } from "../graphql/SmsVerification.graphql";
 import { CheckEmailExists } from "../graphql/CheckEmailExists.graphql";
 import { CreateUserFromCognito } from "../graphql/CreateUserFromCognito.graphql";
+import { GetCurrentUser } from "../graphql/GetCurrentUser.graphql";
 import {
   UsersCreateInput, UsersUpdateInput,
   UsersCreateResponse, UsersUpdateResponse, IUsers,
@@ -359,6 +360,7 @@ export class UserService extends ApiService {
    * Query a user by ID
    * @param userId User ID to query
    * @returns UsersResponse with user data
+   * @deprecated Use getCurrentUserFromApi() for self-lookup - this requires OWNER group
    */
   public async userQueryByUserId(userId: string): Promise<UsersResponse> {
     console.debug('userQueryByUserId:', userId);
@@ -402,6 +404,60 @@ export class UserService extends ApiService {
       console.error('Error getting user:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error getting user';
       this.userDebugLog.logApi('UsersQueryByUserId', 'failure', { userId }, errorMessage);
+      
+      return {
+        StatusCode: 500,
+        Message: errorMessage,
+        Data: null
+      } as UsersResponse;
+    }
+  }
+
+  /**
+   * Get the current authenticated user's record.
+   * This is a secure endpoint that extracts identity from the caller's Cognito token.
+   * Users can only retrieve their own record - they cannot query other users.
+   * 
+   * @returns UsersResponse with current user data
+   */
+  public async getCurrentUserFromApi(): Promise<UsersResponse> {
+    console.debug('getCurrentUserFromApi: fetching current user');
+    this.userDebugLog.logApi('GetCurrentUser', 'pending', {});
+    
+    try {
+      // GetCurrentUser requires Cognito auth - Lambda extracts identity from token
+      const response = await this.query(
+        GetCurrentUser,
+        { input: {} },  // Empty input - Lambda uses identity context
+        'userPool'
+      ) as GraphQLResult<{ GetCurrentUser: IUsers | null }>;
+
+      console.debug('getCurrentUserFromApi Response:', response);
+      
+      const userData = response.data?.GetCurrentUser;
+      
+      if (!userData) {
+        this.userDebugLog.logApi('GetCurrentUser', 'success', { found: false });
+        return {
+          StatusCode: 404,
+          Message: 'User not found',
+          Data: null
+        } as UsersResponse;
+      }
+      
+      const user = new Users(userData);
+      this.userDebugLog.logApi('GetCurrentUser', 'success', { found: true, userId: user.userId });
+      
+      return {
+        StatusCode: 200,
+        Message: 'User found',
+        Data: user
+      } as UsersResponse;
+
+    } catch (error) {
+      console.error('Error getting current user:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error getting current user';
+      this.userDebugLog.logApi('GetCurrentUser', 'failure', {}, errorMessage);
       
       return {
         StatusCode: 500,
@@ -1016,7 +1072,9 @@ export class UserService extends ApiService {
         } as UsersResponse;
       }
 
-      const updatedUser = await this.userQueryByUserId(input.userId);
+      // Use secure getCurrentUserFromApi to fetch updated user
+      // This ensures users can only retrieve their own record
+      const updatedUser = await this.getCurrentUserFromApi();
 
       return updatedUser;
 

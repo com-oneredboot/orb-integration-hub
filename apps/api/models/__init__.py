@@ -11,6 +11,7 @@ from .AuthModel import Auth
 from .AuthErrorModel import AuthError
 from .CheckEmailExistsModel import CheckEmailExists
 from .CreateUserFromCognitoModel import CreateUserFromCognito
+from .GetCurrentUserModel import GetCurrentUser
 from .MfaSetupDetailsModel import MfaSetupDetails
 from .NotificationsModel import Notifications
 from .OrganizationUsersModel import OrganizationUsers
@@ -30,6 +31,7 @@ __all__ = [
     "AuthError",
     "CheckEmailExists",
     "CreateUserFromCognito",
+    "GetCurrentUser",
     "MfaSetupDetails",
     "Notifications",
     "OrganizationUsers",

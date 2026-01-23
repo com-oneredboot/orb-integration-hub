@@ -80,9 +80,9 @@ def template(test_config: Config) -> Template:
 class TestLambdaStackFunctionCount:
     """Tests for Lambda function count."""
 
-    def test_creates_six_lambda_functions(self, template: Template) -> None:
-        """Verify exactly 6 Lambda functions are created."""
-        template.resource_count_is("AWS::Lambda::Function", 6)
+    def test_creates_seven_lambda_functions(self, template: Template) -> None:
+        """Verify exactly 7 Lambda functions are created."""
+        template.resource_count_is("AWS::Lambda::Function", 7)
 
 
 class TestLambdaStackIAMRole:
@@ -283,6 +283,49 @@ class TestLambdaStackCreateUserFromCognitoLambda:
         )
 
 
+class TestLambdaStackGetCurrentUserLambda:
+    """Tests for GetCurrentUser Lambda."""
+
+    def test_creates_get_current_user_lambda(self, template: Template) -> None:
+        """Verify GetCurrentUser Lambda is created."""
+        template.has_resource_properties(
+            "AWS::Lambda::Function",
+            {
+                "FunctionName": "test-project-dev-get-current-user",
+                "Description": "Lambda function to get current user's own record (secure self-lookup)",
+                "Runtime": "python3.12",
+                "Handler": "index.lambda_handler",
+                "MemorySize": 128,
+                "Timeout": 10,
+            },
+        )
+
+    def test_get_current_user_has_environment_variables(self, template: Template) -> None:
+        """Verify GetCurrentUser Lambda has required environment variables."""
+        template.has_resource_properties(
+            "AWS::Lambda::Function",
+            {
+                "FunctionName": "test-project-dev-get-current-user",
+                "Environment": {
+                    "Variables": Match.object_like({
+                        "LOGGING_LEVEL": "INFO",
+                        "USERS_TABLE_NAME": Match.any_value(),
+                    }),
+                },
+            },
+        )
+
+    def test_get_current_user_has_layer(self, template: Template) -> None:
+        """Verify GetCurrentUser Lambda has common layer reference."""
+        template.has_resource_properties(
+            "AWS::Lambda::Function",
+            {
+                "FunctionName": "test-project-dev-get-current-user",
+                "Layers": Match.any_value(),
+            },
+        )
+
+
 class TestLambdaStackSSMParameters:
     """Tests for SSM parameter exports using path-based naming."""
 
@@ -343,6 +386,16 @@ class TestLambdaStackSSMParameters:
             "AWS::SSM::Parameter",
             {
                 "Name": "/test/project/dev/lambda/createuserfromcognito/arn",
+                "Type": "String",
+            },
+        )
+
+    def test_exports_get_current_user_lambda_arn(self, template: Template) -> None:
+        """Verify GetCurrentUser Lambda ARN is exported to SSM with path-based naming."""
+        template.has_resource_properties(
+            "AWS::SSM::Parameter",
+            {
+                "Name": "/test/project/dev/lambda/getcurrentuser/arn",
                 "Type": "String",
             },
         )
