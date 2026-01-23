@@ -270,7 +270,11 @@ description: HTML template file - Profile page with step-based setup flow
           [resendLoading]="isLoading"
           [externalError]="phoneVerificationState.error"
           [formControl]="verificationCodeControl"
-          (resend)="sendVerificationCode()">
+          [showSubmitButton]="true"
+          submitButtonText="Verify"
+          [submitLoading]="isLoading"
+          (resend)="sendVerificationCode()"
+          (submitCode)="submitVerifyStep()">
         </app-verification-code-input>
         
         <div class="profile-setup-flow__actions">
@@ -279,13 +283,6 @@ description: HTML template file - Profile page with step-based setup flow
             class="profile-setup-flow__button profile-setup-flow__button--secondary"
             (click)="previousStep()">
             Back
-          </button>
-          <button 
-            type="button" 
-            class="profile-setup-flow__button profile-setup-flow__button--primary"
-            [disabled]="verifyForm.invalid || isLoading"
-            (click)="submitVerifyStep()">
-            {{ isLoading ? 'Verifying...' : 'Verify' }}
           </button>
         </div>
       </div>

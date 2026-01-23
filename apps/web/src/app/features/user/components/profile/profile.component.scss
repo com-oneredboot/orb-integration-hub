@@ -1009,6 +1009,24 @@
         color: color.adjust(v.$primary-color, $lightness: -10%);
       }
     }
+    
+    &--loading {
+      color: transparent;
+      position: relative;
+    }
+    
+    &-loader {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(v.$white, 0.3);
+      border-radius: 50%;
+      border-top-color: v.$white;
+      animation: spin 0.8s linear infinite;
+    }
   }
   
   // Phone verification specific styles
