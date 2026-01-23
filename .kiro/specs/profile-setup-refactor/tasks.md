@@ -103,11 +103,11 @@ This implementation plan refactors profile setup functionality from the authenti
     - Remove any navigation to `/authenticate` for profile items
     - _Requirements: 6.1, 6.4_
 
-  - [ ] 6.2 Write property test for dashboard navigation consistency
+  - [x] 6.2 Write property test for dashboard navigation consistency
     - **Property 5: Dashboard Navigation Consistency**
     - **Validates: Requirements 6.1, 6.4**
 
-  - [ ] 6.3 Write unit tests for dashboard navigation
+  - [x] 6.3 Write unit tests for dashboard navigation
     - Test health check click navigates to profile
     - Test query parameters are correct
     - _Requirements: 8.4_
@@ -120,33 +120,33 @@ This implementation plan refactors profile setup functionality from the authenti
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
     - Note: Logic already exists in profile.component.ts - sets UserStatus.Active on save
 
-  - [ ] 7.2 Write property test for user status calculation
+  - [x] 7.2 Write property test for user status calculation
     - **Property 6: User Status Calculation**
     - **Validates: Requirements 7.1, 7.2, 7.3, 7.4**
 
-- [ ] 8. Checkpoint - Integration Complete
+- [x] 8. Checkpoint - Integration Complete
   - Ensure all tests pass
   - Verify end-to-end flow works
   - Ask the user if questions arise
 
-- [ ] 9. Add Profile Component Unit Tests
-  - [ ] 9.1 Write unit tests for edit mode toggling
+- [x] 9. Add Profile Component Unit Tests
+  - [x] 9.1 Write unit tests for edit mode toggling
     - Test `startFullFlow()` sets correct state
     - Test `startFromIncomplete()` skips completed steps
     - Test cancel returns to summary
     - _Requirements: 8.1_
 
-  - [ ] 9.2 Write unit tests for phone verification flow
+  - [x] 9.2 Write unit tests for phone verification flow
     - Test code sending triggers service call
     - Test successful verification updates state
     - Test error handling displays messages
     - _Requirements: 8.2_
 
-  - [ ] 9.3 Write property test for form validation error display
+  - [x] 9.3 Write property test for form validation error display
     - **Property 7: Form Validation Error Display**
     - **Validates: Requirements 1.3**
 
-- [ ] 10. Final Checkpoint
+- [x] 10. Final Checkpoint
   - Ensure all tests pass
   - Run linting and type checking
   - Verify no console errors in browser
