@@ -15,6 +15,8 @@ import { UserService } from '../../../../core/services/user.service';
 import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { RouterModule } from '@angular/router';
+import { DebugPanelComponent, DebugContext } from '../../../../shared/components/debug/debug-panel.component';
+import { DebugLogService, DebugLogEntry } from '../../../../core/services/debug-log.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -24,8 +26,8 @@ import { RouterModule } from '@angular/router';
   imports: [
     CommonModule,
     FontAwesomeModule,
-    RouterModule
-    // Add any shared components, directives, or pipes used in the template here
+    RouterModule,
+    DebugPanelComponent
   ]
 })
 export class DashboardComponent implements OnInit {
@@ -33,16 +35,46 @@ export class DashboardComponent implements OnInit {
   debugMode$: Observable<boolean>;
   isLoading$: Observable<boolean>;
   isNotLoading$: Observable<boolean>;
+  debugLogs$: Observable<DebugLogEntry[]>;
+
+  // Current user snapshot for debug context
+  private currentUserSnapshot: IUsers | null = null;
 
   constructor(
     private store: Store,
     private userService: UserService,
-    private router: Router
+    private router: Router,
+    private debugLogService: DebugLogService
   ) {
     this.currentUser$ = this.store.select(fromUser.selectCurrentUser);
     this.debugMode$ = this.store.select(fromUser.selectDebugMode);
     this.isLoading$ = this.store.select(fromUser.selectIsLoading);
     this.isNotLoading$ = this.isLoading$.pipe(map(loading => !loading));
+    this.debugLogs$ = this.debugLogService.logs$;
+
+    // Keep a snapshot of current user for debug context
+    this.currentUser$.subscribe(user => this.currentUserSnapshot = user);
+  }
+
+  /**
+   * Debug context getter for shared DebugPanelComponent
+   */
+  get debugContext(): DebugContext {
+    const user = this.currentUserSnapshot;
+    return {
+      page: 'Dashboard',
+      email: user?.email,
+      userExists: !!user,
+      emailVerified: user?.emailVerified,
+      phoneVerified: user?.phoneVerified,
+      mfaEnabled: user?.mfaEnabled,
+      status: user?.status,
+      storeState: {
+        hasValidName: user ? this.hasValidName(user) : false,
+        isCustomerUser: user ? this.isCustomerUser(user) : false,
+        hasHealthWarnings: user ? this.hasHealthWarnings(user) : true
+      }
+    };
   }
   
   /**

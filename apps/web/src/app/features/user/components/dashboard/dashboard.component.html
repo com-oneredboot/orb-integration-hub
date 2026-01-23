@@ -271,34 +271,11 @@ description: HTML template file
     </div>
   </ng-template>
   
-  <!-- Debug section -->
-  <div class="dashboard__debug" *ngIf="debugMode$ | async">
-    <h3>Debug Information</h3>
-    
-    <div class="dashboard__debug-section">
-      <h4>Current User Observable Status</h4>
-      <ng-container *ngIf="currentUser$ | async as user; else noUser">
-        <p><strong>User Data Found:</strong></p>
-        <pre>{{ user | json }}</pre>
-        <p><strong>User Is Valid:</strong> {{ isUserValid(user) }}</p>
-        <p><strong>Required Attributes Check:</strong></p>
-        <ul>
-          <li>Email: {{ !!user.email }} ({{ user.email }})</li>
-          <li>First Name: {{ !!user.firstName }} ({{ user.firstName }})</li>
-          <li>Last Name: {{ !!user.lastName}} ({{ user.lastName }})</li>
-          <li>Phone Number: {{ !!user.phoneNumber}} ({{ user.phoneNumber }})</li>
-          <li>Status Is Active: {{ user.status === 'ACTIVE' }} ({{ user.status }})</li>
-        </ul>
-      </ng-container>
-      <ng-template #noUser>
-        <p class="error"><strong>No User Data Found</strong></p>
-        <p>currentUser$ observable is emitting null or undefined</p>
-      </ng-template>
-    </div>
-    
-    <div class="dashboard__debug-section">
-      <h4>Debug Mode Status</h4>
-      <p>Debug Mode: {{ (debugMode$ | async) ? 'ON' : 'OFF' }}</p>
-    </div>
-  </div>
+  <!-- Debug Panel using shared component -->
+  <app-debug-panel
+    [visible]="(debugMode$ | async) || false"
+    [title]="'Dashboard Debug'"
+    [logs$]="debugLogs$"
+    [context]="debugContext">
+  </app-debug-panel>
 </div>

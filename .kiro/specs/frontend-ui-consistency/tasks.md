@@ -97,6 +97,21 @@ This implementation plan addresses UI consistency issues discovered during the c
   - Remove custom debug SCSS styles
   - _Requirements: 1.4, 1.7_
 
+- [x] 5.5 Migrate dashboard to use DebugPanelComponent
+  - Import `DebugPanelComponent` and `DebugLogService` in dashboard.component.ts
+  - Replace custom `.dashboard__debug` section with `<app-debug-panel>`
+  - Create `debugContext` getter with user state
+  - Add `debugLogs$` observable
+  - _Requirements: 1.4, 1.7_
+
+- [x] 5.6 Migrate profile to use DebugPanelComponent
+  - Import `DebugPanelComponent` in profile.component.ts
+  - Replace custom `.profile__debug` section with `<app-debug-panel>`
+  - Create `debugContext` getter with form/flow state
+  - Remove custom `copyDebugSummary()` method (now in shared component)
+  - Remove custom debug SCSS styles (~80 lines)
+  - _Requirements: 1.4, 1.7_
+
 - [x] 6. Create Design System Documentation
   - Document available variables, mixins, and components
   - _Requirements: 7.1, 7.2, 7.3, 7.4_
@@ -175,4 +190,9 @@ This implementation plan addresses UI consistency issues discovered during the c
 | `apps/web/src/app/features/customers/applications/applications.component.html` | Replace custom debug with `<app-debug-panel>` |
 | `apps/web/src/app/features/customers/organizations/organizations.component.ts` | Import and use DebugPanelComponent |
 | `apps/web/src/app/features/customers/organizations/organizations.component.html` | Replace custom debug with `<app-debug-panel>` |
+| `apps/web/src/app/features/user/components/dashboard/dashboard.component.ts` | Import DebugPanelComponent, add debugContext getter |
+| `apps/web/src/app/features/user/components/dashboard/dashboard.component.html` | Replace custom debug with `<app-debug-panel>` |
+| `apps/web/src/app/features/user/components/profile/profile.component.ts` | Import DebugPanelComponent, add debugContext getter, remove copyDebugSummary |
+| `apps/web/src/app/features/user/components/profile/profile.component.html` | Replace custom debug with `<app-debug-panel>` |
+| `apps/web/src/app/features/user/components/profile/profile.component.scss` | Remove custom debug SCSS styles |
 | `docs/design/design-system.md` | Create new documentation file |

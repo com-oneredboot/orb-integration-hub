@@ -7,7 +7,7 @@ import * as fromUser from '../../store/user.selectors';
 import { UserActions } from '../../store/user.actions';
 import { UserService } from '../../../../core/services/user.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CommonModule, SlicePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { RouterModule } from '@angular/router';
@@ -17,6 +17,7 @@ import { UserStatus } from '../../../../core/enums/UserStatusEnum';
 import { DebugLogService, DebugLogEntry } from '../../../../core/services/debug-log.service';
 import { ProgressStepsComponent, ProgressStep } from '../../../../shared/components/progress-steps/progress-steps.component';
 import { VerificationCodeInputComponent } from '../../../../shared/components/verification-code-input/verification-code-input.component';
+import { DebugPanelComponent, DebugContext } from '../../../../shared/components/debug/debug-panel.component';
 
 /**
  * Profile setup flow steps
@@ -59,9 +60,9 @@ export interface PhoneVerificationState {
     FontAwesomeModule,
     RouterModule,
     StatusBadgeComponent,
-    SlicePipe,
     ProgressStepsComponent,
-    VerificationCodeInputComponent
+    VerificationCodeInputComponent,
+    DebugPanelComponent
   ]
 })
 export class ProfileComponent implements OnInit, OnDestroy {
@@ -74,7 +75,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   // Debug log state (matching auth-flow)
   debugLogs$: Observable<DebugLogEntry[]>;
-  debugCopyStatus: 'idle' | 'copying' | 'copied' = 'idle';
+
+  // Current user snapshot for debug context
+  private currentUserSnapshot: IUsers | null = null;
 
   // Profile setup flow state
   setupState: ProfileSetupState = {
@@ -137,6 +140,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.currentUser$ = this.store.select(fromUser.selectCurrentUser);
     this.debugMode$ = this.store.select(fromUser.selectDebugMode);
     this.debugLogs$ = this.debugLogService.logs$;
+
+    // Keep a snapshot of current user for debug context
+    this.currentUser$.subscribe(user => this.currentUserSnapshot = user);
     
     // Initialize the legacy form with empty values and properly disabled controls
     this.profileForm = this.fb.group({
@@ -148,6 +154,45 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     // Initialize step-based forms
     this.initForms();
+  }
+
+  /**
+   * Debug context getter for shared DebugPanelComponent
+   */
+  get debugContext(): DebugContext {
+    const user = this.currentUserSnapshot;
+    return {
+      page: 'Profile',
+      step: this.setupState.currentStep,
+      email: user?.email,
+      userExists: !!user,
+      emailVerified: user?.emailVerified,
+      phoneVerified: user?.phoneVerified,
+      mfaEnabled: user?.mfaEnabled,
+      status: user?.status,
+      formState: {
+        nameFormValid: this.nameForm?.valid,
+        phoneFormValid: this.phoneForm?.valid,
+        verifyFormValid: this.verifyForm?.valid,
+        isLoading: this.isLoading
+      },
+      storeState: {
+        flowMode: this.setupState.isFlowMode,
+        currentStep: this.setupState.currentStep,
+        startFromBeginning: this.setupState.startFromBeginning,
+        progress: this.getProgressPercentage()
+      },
+      additionalSections: [
+        {
+          title: 'Phone Verification State',
+          data: {
+            codeSent: this.phoneVerificationState.codeSent,
+            error: this.phoneVerificationState.error || 'None',
+            canResend: this.canResendCode()
+          }
+        }
+      ]
+    };
   }
   
   ngOnInit(): void {
@@ -890,73 +935,5 @@ export class ProfileComponent implements OnInit, OnDestroy {
       }
     }
     return [];
-  }
-
-  /**
-   * Copy debug summary to clipboard (matching auth-flow functionality)
-   */
-  async copyDebugSummary(): Promise<void> {
-    this.debugCopyStatus = 'copying';
-    
-    try {
-      const user = await this.getCurrentUser();
-      const logs = await new Promise<DebugLogEntry[]>((resolve) => {
-        this.debugLogs$.pipe(takeUntil(this.destroy$)).subscribe(logs => resolve(logs || []));
-      });
-      
-      // Get recent failed operations
-      const failedOps = logs
-        .filter(log => log.status === 'failure')
-        .slice(-5)
-        .map(log => `- [${new Date(log.timestamp).toLocaleTimeString()}] ${log.operation}: ${log.error || 'Unknown error'}`)
-        .join('\n');
-      
-      // Get recent actions
-      const recentActions = logs
-        .slice(-10)
-        .map(log => `- ${log.type}:${log.operation}:${log.status}`)
-        .join('\n');
-      
-      const summary = `DEBUG SUMMARY
-==============
-Page: Profile
-Step: ${this.setupState.currentStep}
-Flow Mode: ${this.setupState.isFlowMode}
-Time: ${new Date().toISOString()}
-Last Error: ${failedOps ? 'See below' : 'None'}
-User State:
-- Exists: ${!!user}
-- Email Verified: ${user?.emailVerified || false}
-- Phone Verified: ${user?.phoneVerified || false}
-- MFA Enabled: ${user?.mfaEnabled || false}
-- Status: ${user?.status || 'Unknown'}
-Recent Actions (newest last):
-${recentActions || '- None'}
-Failed Operations:
-${failedOps || '- None'}
-Current Email: ${user?.email || 'N/A'}
-Form State:
-- Name Form Valid: ${this.nameForm?.valid}
-- Phone Form Valid: ${this.phoneForm?.valid}
-- Verify Form Valid: ${this.verifyForm?.valid}
-- Loading: ${this.isLoading}
-Store State:
-${JSON.stringify({
-  currentStep: this.setupState.currentStep,
-  isFlowMode: this.setupState.isFlowMode,
-  isLoading: this.isLoading,
-  phoneVerificationState: this.phoneVerificationState
-}, null, 2)}`;
-      
-      await navigator.clipboard.writeText(summary);
-      this.debugCopyStatus = 'copied';
-      
-      setTimeout(() => {
-        this.debugCopyStatus = 'idle';
-      }, 2000);
-    } catch (error) {
-      console.error('Failed to copy debug summary:', error);
-      this.debugCopyStatus = 'idle';
-    }
   }
 }

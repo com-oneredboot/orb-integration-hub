@@ -293,89 +293,11 @@ description: HTML template file - Profile page with step-based setup flow
     </div>
   </div>
 
-  <!-- Debug section (matching auth-flow format) -->
-  <ng-container *ngIf="debugMode$ | async">
-    <div class="profile__debug">
-      <h3>Profile Debug Information</h3>
-
-      <!-- LLM-Friendly Summary Section -->
-      <div class="profile__debug-section profile__debug-summary">
-        <h4>Quick Debug Summary</h4>
-        <p class="profile__debug-hint">Click to copy a compact summary for troubleshooting</p>
-        <button 
-          type="button" 
-          class="profile__debug-copy-btn"
-          (click)="copyDebugSummary()"
-          [disabled]="debugCopyStatus === 'copying'">
-          {{ debugCopyStatus === 'copied' ? 'Copied!' : debugCopyStatus === 'copying' ? 'Copying...' : 'Copy Debug Summary' }}
-        </button>
-      </div>
-
-      <!-- Recent API Calls -->
-      <div class="profile__debug-section">
-        <h4>Recent API Calls</h4>
-        <div class="profile__debug-logs">
-          <ng-container *ngFor="let log of debugLogs$ | async | slice:-5">
-            <div class="profile__debug-log-entry" [class.profile__debug-log-entry--error]="log.status === 'failure'">
-              <span class="profile__debug-log-time">{{ log.timestamp | date:'HH:mm:ss' }}</span>
-              <span class="profile__debug-log-type">{{ log.type }}</span>
-              <span class="profile__debug-log-op">{{ log.operation }}</span>
-              <span class="profile__debug-log-status" 
-                    [class.profile__debug-log-status--success]="log.status === 'success'" 
-                    [class.profile__debug-log-status--failure]="log.status === 'failure'">
-                {{ log.status }}
-              </span>
-              <span *ngIf="log.error" class="profile__debug-log-error">{{ log.error }}</span>
-            </div>
-          </ng-container>
-          <p *ngIf="(debugLogs$ | async)?.length === 0" class="profile__debug-empty">No API calls yet</p>
-        </div>
-      </div>
-    
-      <div class="profile__debug-section">
-        <h4>Setup Flow State</h4>
-        <pre>Flow Mode: {{ setupState.isFlowMode ? 'ON' : 'OFF' }}</pre>
-        <pre>Current Step: {{ setupState.currentStep }}</pre>
-        <pre>Start From Beginning: {{ setupState.startFromBeginning }}</pre>
-        <pre>Progress: {{ getProgressPercentage() }}%</pre>
-      </div>
-    
-      <div class="profile__debug-section">
-        <h4>Phone Verification State</h4>
-        <pre>Code Sent: {{ phoneVerificationState.codeSent }}</pre>
-        <pre>Error: {{ phoneVerificationState.error || 'None' }}</pre>
-        <pre>Can Resend: {{ canResendCode() }}</pre>
-      </div>
-    
-      <div class="profile__debug-section">
-        <h4>Current User Observable Status</h4>
-        <ng-container *ngIf="currentUser$ | async as user; else noUser">
-          <pre>User Data Found</pre>
-          <pre>{{ user | json }}</pre>
-          <pre>User Is Valid: {{ isUserValid(user) }}</pre>
-          <h5>Required Attributes Check:</h5>
-          <ul>
-            <li>Email: {{ !!user.email }} ({{ user.email }})</li>
-            <li>First Name: {{ !!user.firstName }} ({{ user.firstName }})</li>
-            <li>Last Name: {{ !!user.lastName}} ({{ user.lastName }})</li>
-            <li>Phone Number: {{ !!user.phoneNumber}} ({{ user.phoneNumber }})</li>
-            <li>Phone Verified: {{ user.phoneVerified }}</li>
-            <li>Status Is Active: {{ user.status === 'ACTIVE' }} ({{ user.status }})</li>
-          </ul>
-        </ng-container>
-        <ng-template #noUser>
-          <p class="error"><strong>No User Data Found</strong></p>
-          <p>currentUser$ observable is emitting null or undefined</p>
-        </ng-template>
-      </div>
-    
-      <div class="profile__debug-section" *ngIf="setupState.isFlowMode">
-        <h4>Form Debug Status</h4>
-        <pre>Name Form Valid: {{ nameForm.valid }}</pre>
-        <pre>Phone Form Valid: {{ phoneForm.valid }}</pre>
-        <pre>Verify Form Valid: {{ verifyForm.valid }}</pre>
-        <pre>Loading: {{ isLoading ? 'YES' : 'NO' }}</pre>
-      </div>
-    </div>
-  </ng-container>
+  <!-- Debug Panel using shared component -->
+  <app-debug-panel
+    [visible]="(debugMode$ | async) || false"
+    [title]="'Profile Debug'"
+    [logs$]="debugLogs$"
+    [context]="debugContext">
+  </app-debug-panel>
 </div>
