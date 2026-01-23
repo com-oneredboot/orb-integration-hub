@@ -258,47 +258,20 @@ description: HTML template file - Profile page with step-based setup flow
     <div class="profile-setup-flow__step" *ngIf="setupState.currentStep === ProfileSetupStep.PHONE_VERIFY">
       <div class="profile-setup-flow__step-card">
         <h2 class="profile-setup-flow__step-title">Verify Phone</h2>
-        <p class="profile-setup-flow__step-description">
-          A 6-digit verification code has been sent to {{ (currentUser$ | async)?.phoneNumber }}. Enter the code below to verify your phone number.
-        </p>
         
-        <!-- Verification Code Input -->
-        <form [formGroup]="verifyForm" class="profile-setup-flow__form">
-          <div class="profile-setup-flow__input-group">
-            <label for="setup-verificationCode" class="profile-setup-flow__label">
-              Verification Code <span class="profile-setup-flow__required">*</span>
-            </label>
-            <input 
-              type="text" 
-              id="setup-verificationCode" 
-              formControlName="verificationCode" 
-              class="profile-setup-flow__input profile-setup-flow__input--code"
-              [ngClass]="{'profile-setup-flow__input--error': verifyForm.get('verificationCode')?.invalid && verifyForm.get('verificationCode')?.touched}"
-              placeholder="000000"
-              maxlength="6"
-              inputmode="numeric"
-              autocomplete="one-time-code">
-            <div *ngIf="verifyForm.get('verificationCode')?.invalid && verifyForm.get('verificationCode')?.touched" 
-                 class="profile-setup-flow__error">
-              <span *ngIf="verifyForm.get('verificationCode')?.errors?.['required']">Verification code is required</span>
-              <span *ngIf="verifyForm.get('verificationCode')?.errors?.['pattern']">Please enter a 6-digit code</span>
-            </div>
-            <div *ngIf="phoneVerificationState.error" class="profile-setup-flow__error">
-              {{ phoneVerificationState.error }}
-            </div>
-          </div>
-          
-          <div class="profile-setup-flow__resend">
-            <span class="profile-setup-flow__resend-text">Didn't receive the code?</span>
-            <button 
-              type="button" 
-              class="profile-setup-flow__text-button"
-              [disabled]="!canResendCode() || isLoading"
-              (click)="sendVerificationCode()">
-              Resend Code
-            </button>
-          </div>
-        </form>
+        <app-verification-code-input
+          type="phone"
+          [destination]="(currentUser$ | async)?.phoneNumber || ''"
+          message="A 6-digit verification code has been sent via SMS."
+          label="Verification Code"
+          inputId="phone-verification-code"
+          [showResend]="true"
+          [canResend]="canResendCode()"
+          [resendLoading]="isLoading"
+          [externalError]="phoneVerificationState.error"
+          [formControl]="verifyForm.controls['verificationCode']"
+          (resend)="sendVerificationCode()">
+        </app-verification-code-input>
         
         <div class="profile-setup-flow__actions">
           <button 

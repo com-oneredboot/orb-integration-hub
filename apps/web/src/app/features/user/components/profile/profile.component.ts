@@ -16,6 +16,7 @@ import { StatusBadgeComponent } from '../../../../shared/components/ui/status-ba
 import { UserStatus } from '../../../../core/enums/UserStatusEnum';
 import { DebugLogService, DebugLogEntry } from '../../../../core/services/debug-log.service';
 import { ProgressStepsComponent, ProgressStep } from '../../../../shared/components/progress-steps/progress-steps.component';
+import { VerificationCodeInputComponent } from '../../../../shared/components/verification-code-input/verification-code-input.component';
 
 /**
  * Profile setup flow steps
@@ -59,7 +60,8 @@ export interface PhoneVerificationState {
     RouterModule,
     StatusBadgeComponent,
     SlicePipe,
-    ProgressStepsComponent
+    ProgressStepsComponent,
+    VerificationCodeInputComponent
   ]
 })
 export class ProfileComponent implements OnInit, OnDestroy {
