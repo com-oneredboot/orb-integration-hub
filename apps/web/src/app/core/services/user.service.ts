@@ -357,11 +357,13 @@ export class UserService extends ApiService {
 
   /**
    * Query a user by ID
-   * @param input UserQueryInput with backend-compatible fields
-   * @param email Optional email to filter results client-side
+   * @param userId User ID to query
+   * @returns UsersResponse with user data
    */
   public async userQueryByUserId(userId: string): Promise<UsersResponse> {
     console.debug('userQueryByUserId:', userId);
+    this.userDebugLog.logApi('UsersQueryByUserId', 'pending', { userId });
+    
     try {
       // UsersQueryByUserId requires Cognito auth
       const response = await this.query(
@@ -370,25 +372,42 @@ export class UserService extends ApiService {
           input: {
             userId: userId
           }
-        }, 'userPool') as GraphQLResult<UsersResponse>;
+        }, 'userPool') as GraphQLResult<{ UsersQueryByUserId: { items: IUsers[] | null; nextToken: string | null } }>;
 
       console.debug('userQueryByUserId Response: ', response);
-     
+      
+      // Extract items from the GraphQL response structure
+      const items = response.data?.UsersQueryByUserId?.items;
+      
+      if (!items || items.length === 0) {
+        this.userDebugLog.logApi('UsersQueryByUserId', 'success', { userId, found: false });
+        return {
+          StatusCode: 404,
+          Message: 'User not found',
+          Data: null
+        } as UsersResponse;
+      }
+      
+      // Return the first user (should only be one for userId query)
+      const user = new Users(items[0]);
+      this.userDebugLog.logApi('UsersQueryByUserId', 'success', { userId, found: true });
+      
       return {
-        StatusCode: response.data?.StatusCode,
-        Message: response.data?.Message,
-        Data: response.data?.Data
+        StatusCode: 200,
+        Message: 'User found',
+        Data: user
       } as UsersResponse;
 
     } catch (error) {
-
       console.error('Error getting user:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error getting user';
+      this.userDebugLog.logApi('UsersQueryByUserId', 'failure', { userId }, errorMessage);
+      
       return {
         StatusCode: 500,
-        Message: 'Error getting user',
-        Data: new Users()
+        Message: errorMessage,
+        Data: null
       } as UsersResponse;
-
     }
   }
 
