@@ -419,7 +419,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       const response = await this.userService.userUpdate(updateInput);
 
       if (response.StatusCode === 200 && response.Data) {
-        this.store.dispatch(UserActions.signInSuccess({
+        this.store.dispatch(UserActions.updateProfileSuccess({
           user: new Users(response.Data),
           message: 'Name updated successfully'
         }));
@@ -476,7 +476,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       const response = await this.userService.userUpdate(updateInput);
 
       if (response.StatusCode === 200 && response.Data) {
-        this.store.dispatch(UserActions.signInSuccess({
+        this.store.dispatch(UserActions.updateProfileSuccess({
           user: new Users(response.Data),
           message: 'Phone number updated successfully'
         }));
@@ -540,7 +540,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         const updateResponse = await this.userService.userUpdate(updateInput);
 
         if (updateResponse.StatusCode === 200 && updateResponse.Data) {
-          this.store.dispatch(UserActions.signInSuccess({
+          this.store.dispatch(UserActions.updateProfileSuccess({
             user: new Users(updateResponse.Data),
             message: 'Phone verified successfully'
           }));
@@ -749,7 +749,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       
       if (response.StatusCode === 200 && response.Data) {
         // Update the store with the updated user data
-        this.store.dispatch(UserActions.signInSuccess({
+        this.store.dispatch(UserActions.updateProfileSuccess({
           user: new Users(response.Data),
           message: 'Profile updated successfully'
         }));

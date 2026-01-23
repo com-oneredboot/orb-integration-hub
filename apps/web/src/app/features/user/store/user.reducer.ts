@@ -405,5 +405,13 @@ export const userReducer = createReducer(
     ...state,
     error,
     isLoading: false
+  })),
+
+  // Profile Update (updates store without triggering auth flow completion)
+  on(UserActions.updateProfileSuccess, (state, { user }) => ({
+    ...state,
+    currentUser: user,
+    isLoading: false,
+    error: null
   }))
 );
