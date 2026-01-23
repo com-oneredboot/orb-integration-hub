@@ -38,7 +38,8 @@ class TestSMSVerificationSecurity(unittest.TestCase):
 
     def setUp(self):
         """Set up test environment before each test"""
-        self.test_event = {"input": {"phoneNumber": "+1234567890"}}
+        # Use AppSync event structure: arguments.input
+        self.test_event = {"arguments": {"input": {"phoneNumber": "+1234567890"}}}
         self.test_context = MagicMock()
 
         # Mock environment variables
@@ -139,7 +140,7 @@ class TestSMSVerificationSecurity(unittest.TestCase):
 
         for malicious_phone in malicious_phone_numbers:
             with self.subTest(phone=malicious_phone):
-                event = {"input": {"phoneNumber": malicious_phone}}
+                event = {"arguments": {"input": {"phoneNumber": malicious_phone}}}
 
                 with (
                     patch.object(sms_index, "get_secret"),
@@ -270,7 +271,7 @@ class TestSMSVerificationSecurity(unittest.TestCase):
 
         for attack_input in attack_vectors:
             with self.subTest(input=attack_input):
-                event = {"input": attack_input}
+                event = {"arguments": {"input": attack_input}}
 
                 with (
                     patch.object(sms_index, "get_secret"),

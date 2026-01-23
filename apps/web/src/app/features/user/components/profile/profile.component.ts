@@ -481,6 +481,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
           message: 'Phone number updated successfully'
         }));
         this.nextStep();
+        
+        // Auto-send verification code when entering PHONE_VERIFY step
+        // This matches the email verification UX where code is sent automatically
+        await this.sendVerificationCode();
       } else {
         console.error('Failed to update phone:', response.Message);
       }

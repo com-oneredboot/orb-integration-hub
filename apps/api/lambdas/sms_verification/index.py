@@ -27,7 +27,10 @@ logger = logging.getLogger()
 logger.setLevel(LOGGING_LEVEL)
 
 # Cache for secret to avoid repeated API calls
-secret_cache = {"secret": None, "expires": 0}
+secret_cache = {
+    "secret": None,
+    "expires": 0,
+}  # nosec B105 - not a hardcoded password, just cache init
 
 
 def get_secret():
@@ -142,10 +145,18 @@ def check_rate_limit(phone_number: str) -> tuple:
 def lambda_handler(event, context):
     logger.debug("SMS verification event received")
 
-    # Get data
-    input_data = event["input"]
-    phone_number = input_data["phoneNumber"]
+    # Get data - use AppSync event structure (arguments.input)
+    input_data = event.get("arguments", {}).get("input", {})
+    phone_number = input_data.get("phoneNumber", "")
     provided_code = input_data.get("code")  # Optional for verification
+
+    if not phone_number:
+        logger.error("No phone number provided in request")
+        return {
+            "StatusCode": 400,
+            "Message": "Phone number is required",
+            "Data": None,
+        }
 
     logger.info(f"Processing SMS verification request - Code provided: {provided_code is not None}")
 
