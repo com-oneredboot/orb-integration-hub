@@ -23,7 +23,7 @@ model:
       required: true
       description: the phone number to verify
     code:
-      type: number
+      type: string
       required: false
       description: the confirmation Code
     valid:

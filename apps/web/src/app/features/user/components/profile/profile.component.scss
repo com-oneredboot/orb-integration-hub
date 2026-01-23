@@ -1029,6 +1029,48 @@
     }
   }
   
+  &__links {
+    display: flex;
+    justify-content: center;
+    gap: v.$spacing-md;
+    margin-top: v.$spacing-md;
+  }
+  
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+    padding: v.$spacing-xs v.$spacing-sm;
+    background: none;
+    border: none;
+    color: v.$text-secondary;
+    font-size: v.$font-size-sm;
+    font-family: v.$font-family-base;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    text-decoration: underline;
+    min-height: auto;
+
+    &:hover {
+      color: v.$primary-color;
+    }
+
+    &:focus {
+      outline: 2px solid v.$primary-color;
+      outline-offset: 2px;
+      border-radius: v.$border-radius-sm;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      
+      &:hover {
+        color: v.$text-secondary;
+      }
+    }
+  }
+  
   // Phone verification specific styles
   &__verification {
     &-info {

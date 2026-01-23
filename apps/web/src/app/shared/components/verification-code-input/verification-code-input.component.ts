@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, forwardRef } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faEnvelope, faMobileAlt, faShieldAlt, faExclamationCircle, faCheckCircle, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faEnvelope, faMobileAlt, faShieldAlt, faExclamationCircle, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 
 /**
  * Verification code type - determines icon and messaging
@@ -93,18 +93,6 @@ export type VerificationCodeType = 'email' | 'phone' | 'mfa';
           {{ resendLoading ? 'Sending...' : 'Resend Code' }}
         </button>
       </div>
-      
-      <!-- Submit button -->
-      <button 
-        *ngIf="showSubmitButton"
-        type="button" 
-        class="verification-code__submit-button"
-        [disabled]="!isValid || submitLoading"
-        [ngClass]="{'verification-code__submit-button--loading': submitLoading}"
-        (click)="onSubmitClick()">
-        <span *ngIf="!submitLoading">{{ submitButtonText }}</span>
-        <span *ngIf="submitLoading" class="verification-code__submit-loader"></span>
-      </button>
     </div>
   `,
   styles: [`
@@ -278,59 +266,6 @@ export type VerificationCodeType = 'email' | 'phone' | 'mfa';
       cursor: not-allowed;
     }
     
-    .verification-code__submit-button {
-      width: 100%;
-      padding: 0.75rem 1.5rem;
-      margin-top: 1rem;
-      font-family: inherit;
-      font-size: 1rem;
-      font-weight: 600;
-      color: #ffffff;
-      background-color: var(--primary, #3b82f6);
-      border: none;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      transition: background-color 0.2s ease, transform 0.2s ease;
-      min-height: 48px;
-      position: relative;
-    }
-    
-    .verification-code__submit-button:hover:not(:disabled) {
-      background-color: var(--primary-dark, #2563eb);
-      transform: translateY(-1px);
-    }
-    
-    .verification-code__submit-button:focus {
-      outline: 3px solid rgba(59, 130, 246, 0.5);
-      outline-offset: 2px;
-    }
-    
-    .verification-code__submit-button:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-    }
-    
-    .verification-code__submit-button--loading {
-      color: transparent;
-    }
-    
-    .verification-code__submit-loader {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 20px;
-      height: 20px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      border-top-color: #ffffff;
-      animation: spin 0.8s linear infinite;
-    }
-    
-    @keyframes spin {
-      to { transform: translate(-50%, -50%) rotate(360deg); }
-    }
-    
     .sr-only {
       position: absolute;
       width: 1px;
@@ -355,12 +290,8 @@ export class VerificationCodeInputComponent implements ControlValueAccessor {
   @Input() canResend = true;
   @Input() resendLoading = false;
   @Input() externalError: string | null = null;
-  @Input() showSubmitButton = false;
-  @Input() submitButtonText = 'Verify';
-  @Input() submitLoading = false;
   
   @Output() resend = new EventEmitter<void>();
-  @Output() submitCode = new EventEmitter<string>();
   
   // FontAwesome icons
   faEnvelope = faEnvelope;
@@ -368,7 +299,6 @@ export class VerificationCodeInputComponent implements ControlValueAccessor {
   faShieldAlt = faShieldAlt;
   faExclamationCircle = faExclamationCircle;
   faCheckCircle = faCheckCircle;
-  faSpinner = faSpinner;
   
   codeControl = new FormControl('', [
     Validators.required,
@@ -433,12 +363,6 @@ export class VerificationCodeInputComponent implements ControlValueAccessor {
   
   onResendClick(): void {
     this.resend.emit();
-  }
-  
-  onSubmitClick(): void {
-    if (this.isValid) {
-      this.submitCode.emit(this.codeControl.value || '');
-    }
   }
   
   // ControlValueAccessor implementation

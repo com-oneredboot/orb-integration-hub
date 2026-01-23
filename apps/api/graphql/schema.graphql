@@ -219,7 +219,7 @@ type CheckEmailExists @aws_api_key {
 
 type SmsVerification @aws_auth(cognito_groups: ["OWNER", "USER"]) {
   phoneNumber: String!
-  code: Float
+  code: String
   valid: Boolean
 }
 
@@ -325,7 +325,7 @@ input CheckEmailExistsInput {
 
 input SmsVerificationInput {
   phoneNumber: String!
-  code: Float
+  code: String
   valid: Boolean
 }
 

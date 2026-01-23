@@ -15,7 +15,7 @@ class SmsVerification(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     phone_number: str = Field(..., description="the phone number to verify")
-    code: Optional[float] = Field(None, description="the confirmation Code")
+    code: Optional[str] = Field(None, description="the confirmation Code")
     valid: Optional[bool] = Field(
         None, description="whether the provided code is valid (returned during verification)"
     )

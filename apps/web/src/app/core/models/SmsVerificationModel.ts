@@ -32,13 +32,13 @@ export type SmsVerificationListResponse = {
 
 export interface ISmsVerification {
   phoneNumber: string;
-  code?: number;
+  code?: string;
   valid?: boolean;
 }
 
 export class SmsVerification implements ISmsVerification {
   phoneNumber: string;
-  code?: number;
+  code?: string;
   valid?: boolean;
 
   constructor(data: Partial<ISmsVerification> = {}) {

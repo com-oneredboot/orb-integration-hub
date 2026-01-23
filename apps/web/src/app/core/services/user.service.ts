@@ -1233,11 +1233,11 @@ export class UserService extends ApiService {
         {
           input: {
             phoneNumber: phoneNumber,
-            code: parseInt(code)
+            code: code  // Send as string to preserve leading zeros
           }
         },
         "userPool"
-      ) as GraphQLResult<{ SmsVerification?: { phoneNumber?: string; code?: number | null; valid?: boolean | null } }>;
+      ) as GraphQLResult<{ SmsVerification?: { phoneNumber?: string; code?: string | null; valid?: boolean | null } }>;
 
       // Check if the lambda verified the code successfully
       // valid=true means code verified, valid=false means invalid code, valid=null means code was sent
