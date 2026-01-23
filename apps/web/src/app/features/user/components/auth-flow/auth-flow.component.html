@@ -573,83 +573,10 @@ description: HTML template file
   </ng-container>
 </div> <!-- Close normal auth flow -->
 
-<!-- Add this after your form in auth-flow.component.html -->
-<ng-container *ngIf="debugMode$ | async">
-  <div class="auth-flow__debug">
-    <h3 class="auth-flow__debug-title">Debug Information</h3>
-
-    <!-- LLM-Friendly Summary Section -->
-    <div class="auth-flow__debug-section auth-flow__debug-summary">
-      <h4>Quick Debug Summary</h4>
-      <p class="auth-flow__debug-hint">Click to copy a compact summary for troubleshooting</p>
-      <button 
-        type="button" 
-        class="auth-flow__debug-copy-btn"
-        (click)="copyDebugSummary()"
-        [disabled]="debugCopyStatus === 'copying'">
-        {{ debugCopyStatus === 'copied' ? 'Copied!' : debugCopyStatus === 'copying' ? 'Copying...' : 'Copy Debug Summary' }}
-      </button>
-    </div>
-
-    <!-- Recent API Calls -->
-    <div class="auth-flow__debug-section">
-      <h4>Recent API Calls</h4>
-      <div class="auth-flow__debug-logs">
-        <ng-container *ngFor="let log of debugLogs$ | async | slice:-5">
-          <div class="auth-flow__debug-log-entry" [class.auth-flow__debug-log-entry--error]="log.status === 'failure'">
-            <span class="auth-flow__debug-log-time">{{ log.timestamp | date:'HH:mm:ss' }}</span>
-            <span class="auth-flow__debug-log-type">{{ log.type }}</span>
-            <span class="auth-flow__debug-log-op">{{ log.operation }}</span>
-            <span class="auth-flow__debug-log-status" [class.auth-flow__debug-log-status--success]="log.status === 'success'" [class.auth-flow__debug-log-status--failure]="log.status === 'failure'">
-              {{ log.status }}
-            </span>
-            <span *ngIf="log.error" class="auth-flow__debug-log-error">{{ log.error }}</span>
-          </div>
-        </ng-container>
-        <p *ngIf="(debugLogs$ | async)?.length === 0" class="auth-flow__debug-empty">No API calls yet</p>
-      </div>
-    </div>
-
-    <div class="auth-flow__debug-section">
-      <h4>Form State</h4>
-      <pre>Form Valid: {{ authForm.valid }}</pre>
-      <pre>Form Pristine: {{ authForm.pristine }}</pre>
-      <pre>Form Touched: {{ authForm.touched }}</pre>
-      <pre>Form Values: {{ authForm.value | json }}</pre>
-      <pre>Form Errors: {{ authForm.errors | json }}</pre>
-      <pre>Button Disabled: {{ !authForm.valid }}</pre>
-    </div>
-
-    <div class="auth-flow__debug-section">
-      <h4>Current Store State</h4>
-      <ng-container *ngIf="{
-        currentStep: currentStep$ | async,
-        isLoading: isLoading$ | async,
-        error: error$ | async,
-        userExists: userExists$ | async,
-        currentUser: currentUser$ | async,
-        needsMFA: needsMFA$ | async,
-        phoneVerified: phoneVerified$ | async,
-        emailVerified: emailVerified$ | async,
-        mfaSetupDetails: mfaSetupDetails$ | async
-      } as state">
-        <pre>Current Step: {{ state.currentStep }}</pre>
-        <pre>Is Loading: {{ state.isLoading }}</pre>
-        <pre>Error: {{ state.error }}</pre>
-        <pre>User Exists: {{ state.userExists }}</pre>
-        <pre>Current User: {{ state.currentUser | json }}</pre>
-        <pre>User Is Valid: {{ state.currentUser ? (isUserValid(state.currentUser) | json) : 'N/A' }}</pre>
-        <pre>Needs MFA: {{ state.needsMFA }}</pre>
-        <pre>MFA Setup Details: {{ state.mfaSetupDetails | json }}</pre>
-        <pre>Phone Verified: {{ state.phoneVerified }}</pre>
-        <pre>Email Verified: {{ state.emailVerified }}</pre>
-      </ng-container>
-    </div>
-
-    <div class="auth-flow__debug-section">
-      <h4>Button State</h4>
-      <pre>Button Disabled: {{ !authForm.valid }}</pre>
-      <pre>Is Loading: {{ isLoading$ | async }}</pre>
-    </div>
-  </div>
-</ng-container>
+<!-- Debug Panel using shared component -->
+<app-debug-panel
+  [visible]="(debugMode$ | async) || false"
+  [title]="'Auth Flow Debug'"
+  [logs$]="debugLogs$"
+  [context]="debugContext">
+</app-debug-panel>

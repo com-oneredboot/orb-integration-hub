@@ -49,33 +49,11 @@ description: HTML template file
     </div>
   </div>
 
-  <!-- Debug Section -->
-  <ng-container *ngIf="debugMode$ | async">
-    <div class="not-found__debug">
-      <h3 class="not-found__debug-title">Debug Information</h3>
-      
-      <div class="not-found__debug-section">
-        <h4>Page Information</h4>
-        <pre>Current URL: {{ currentUrl }}</pre>
-        <pre>Requested At: {{ timestamp | date:'medium' }}</pre>
-        <pre>User Agent: {{ getUserAgent() }}</pre>
-        <pre>Referrer: {{ getReferrer() }}</pre>
-      </div>
-
-      <div class="not-found__debug-section">
-        <h4>Navigation State</h4>
-        <pre>Can Go Back: {{ canGoBack() }}</pre>
-        <pre>History Length: {{ getHistoryLength() }}</pre>
-        <pre>Location Path: {{ location.path() }}</pre>
-      </div>
-
-      <div class="not-found__debug-section">
-        <h4>Browser Information</h4>
-        <pre>Window Width: {{ getWindowWidth() }}px</pre>
-        <pre>Window Height: {{ getWindowHeight() }}px</pre>
-        <pre>Is Mobile: {{ isMobile() }}</pre>
-        <pre>Connection Type: {{ getConnectionType() }}</pre>
-      </div>
-    </div>
-  </ng-container>
+  <!-- Debug Panel using shared component -->
+  <app-debug-panel
+    [visible]="(debugMode$ | async) || false"
+    [title]="'Not Found Debug'"
+    [logs$]="debugLogs$"
+    [context]="debugContext">
+  </app-debug-panel>
 </div>

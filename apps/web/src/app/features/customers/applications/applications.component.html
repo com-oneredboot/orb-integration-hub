@@ -67,33 +67,11 @@ description: HTML template file for applications management
     </div>
   </div>
 
-  <!-- Debug section -->
-  <div class="applications__debug" *ngIf="debugMode$ | async">
-    <h3>Applications Debug Information</h3>
-    
-    <div class="applications__debug-section">
-      <h4>Selected Application</h4>
-      <ng-container *ngIf="selectedApplication; else noAppSelected">
-        <p><strong>Application Data:</strong></p>
-        <pre>{{ selectedApplication | json }}</pre>
-        <p><strong>Organization Name:</strong> {{ selectedApplicationOrganizationName }}</p>
-        <p><strong>Environment Count:</strong> {{ selectedApplicationEnvironmentCount }}</p>
-        <p><strong>API Calls Today:</strong> {{ selectedApplicationApiCallsToday }}</p>
-        <p><strong>Last Activity:</strong> {{ selectedApplicationLastActivity }}</p>
-      </ng-container>
-      <ng-template #noAppSelected>
-        <p class="error"><strong>No Application Selected</strong></p>
-        <p>Select an application from the list to view debug information</p>
-      </ng-template>
-    </div>
-    
-    <div class="applications__debug-section">
-      <h4>Component State</h4>
-      <p><strong>Selected Application ID:</strong> {{ selectedApplication?.applicationId || 'None' }}</p>
-      <p><strong>Selected Application Name:</strong> {{ selectedApplication?.name || 'None' }}</p>
-      <p><strong>Selected Application Status:</strong> {{ selectedApplication?.status || 'None' }}</p>
-      <p><strong>Total Applications:</strong> {{ totalApplications }}</p>
-      <p><strong>Component Initialized:</strong> YES</p>
-    </div>
-  </div>
+  <!-- Debug Panel using shared component -->
+  <app-debug-panel
+    [visible]="(debugMode$ | async) || false"
+    [title]="'Applications Debug'"
+    [logs$]="debugLogs$"
+    [context]="debugContext">
+  </app-debug-panel>
 </div>

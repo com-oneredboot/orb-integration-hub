@@ -70,30 +70,11 @@ description: HTML template file for organizations management
     </div>
   </div>
 
-  <!-- Debug section -->
-  <div class="organizations__debug" *ngIf="debugMode$ | async">
-    <h3>Organizations Debug Information</h3>
-    
-    <div class="organizations__debug-section">
-      <h4>Selected Organization</h4>
-      <ng-container *ngIf="selectedOrganization; else noOrgSelected">
-        <p><strong>Organization Data:</strong></p>
-        <pre>{{ selectedOrganization | json }}</pre>
-        <p><strong>Member Count:</strong> {{ selectedOrganizationMemberCount }}</p>
-        <p><strong>Application Count:</strong> {{ selectedOrganizationApplicationCount }}</p>
-      </ng-container>
-      <ng-template #noOrgSelected>
-        <p class="error"><strong>No Organization Selected</strong></p>
-        <p>Select an organization from the list to view debug information</p>
-      </ng-template>
-    </div>
-    
-    <div class="organizations__debug-section">
-      <h4>Component State</h4>
-      <p><strong>Selected Organization ID:</strong> {{ selectedOrganization?.organizationId || 'None' }}</p>
-      <p><strong>Selected Organization Name:</strong> {{ selectedOrganization?.name || 'None' }}</p>
-      <p><strong>Selected Organization Status:</strong> {{ selectedOrganization?.status || 'None' }}</p>
-      <p><strong>Component Initialized:</strong> YES</p>
-    </div>
-  </div>
+  <!-- Debug Panel using shared component -->
+  <app-debug-panel
+    [visible]="(debugMode$ | async) || false"
+    [title]="'Organizations Debug'"
+    [logs$]="debugLogs$"
+    [context]="debugContext">
+  </app-debug-panel>
 </div>

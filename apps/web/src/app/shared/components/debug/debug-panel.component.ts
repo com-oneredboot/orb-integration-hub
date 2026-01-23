@@ -72,13 +72,13 @@ export interface DebugSection {
       <!-- Form State -->
       <div class="debug-panel__section" *ngIf="context?.formState">
         <h4>Form State</h4>
-        <pre>{{ context.formState | json }}</pre>
+        <pre>{{ context?.formState | json }}</pre>
       </div>
 
       <!-- Store State -->
       <div class="debug-panel__section" *ngIf="context?.storeState">
         <h4>Store State</h4>
-        <pre>{{ context.storeState | json }}</pre>
+        <pre>{{ context?.storeState | json }}</pre>
       </div>
 
       <!-- Additional Sections -->

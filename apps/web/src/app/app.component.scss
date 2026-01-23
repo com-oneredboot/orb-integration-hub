@@ -3,14 +3,8 @@
 // date: 2025-03-07
 // description: SCSS style file
 
-// app.component.scss
-:root {
-  --orb-red: #E31837;
-  --orb-black: #000000;
-  --orb-gray: #666666;
-  --orb-light-gray: #e5e5e5;
-  --orb-white: #FFFFFF;
-}
+// Note: CSS custom properties (--orb-*) are defined globally in _tokens.scss
+// No need to redeclare them here
 
 .app-container {
   min-height: 100vh;

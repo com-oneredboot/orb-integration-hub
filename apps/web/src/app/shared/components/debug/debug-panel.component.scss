@@ -3,8 +3,8 @@
 // date: 2025-01-22
 // description: Styles for shared debug panel component
 
-@use '../../../../../../styles/variables' as v;
-@use '../../../../../../styles/mixins' as m;
+@use '../../../../styles/variables' as v;
+@use '../../../../styles/mixins' as m;
 
 .debug-panel {
   @include m.debug-container;

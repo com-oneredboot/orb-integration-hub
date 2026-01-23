@@ -10,7 +10,7 @@ import {ActivatedRoute, Router} from '@angular/router';
 import {Store} from '@ngrx/store';
 import {map, Observable, Subject, take, takeUntil, tap, filter} from 'rxjs';
 import {Location} from '@angular/common';
-import { CommonModule, SlicePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -36,6 +36,7 @@ import { UserGroup } from "../../../../core/enums/UserGroupEnum";
 import { IUsers } from "../../../../core/models/UsersModel";
 import { sanitizeEmail } from "../../../../core/utils/log-sanitizer";
 import { VerificationCodeInputComponent } from "../../../../shared/components/verification-code-input/verification-code-input.component";
+import { DebugPanelComponent, DebugContext } from "../../../../shared/components/debug/debug-panel.component";
 
 
 @Component({
@@ -48,8 +49,8 @@ import { VerificationCodeInputComponent } from "../../../../shared/components/ve
     ReactiveFormsModule,
     FontAwesomeModule,
     RouterModule,
-    SlicePipe,
-    VerificationCodeInputComponent
+    VerificationCodeInputComponent,
+    DebugPanelComponent
   ]
 })
 export class AuthFlowComponent implements OnInit, OnDestroy {
@@ -70,7 +71,23 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
 
   // Debug log state
   debugLogs$: Observable<DebugLogEntry[]>;
-  debugCopyStatus: 'idle' | 'copying' | 'copied' = 'idle';
+
+  // Debug context getter for shared DebugPanelComponent
+  get debugContext(): DebugContext {
+    return {
+      page: 'AuthFlow',
+      formState: {
+        valid: this.authForm?.valid,
+        pristine: this.authForm?.pristine,
+        touched: this.authForm?.touched,
+        values: this.authForm?.value ? {
+          ...this.authForm.value,
+          password: this.authForm.value.password ? '[REDACTED]' : ''
+        } : {},
+        errors: this.authForm?.errors
+      }
+    };
+  }
 
   // UI State
   buttonText$!: Observable<string>;
@@ -2774,83 +2791,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     };
 
     this.store.dispatch(UserActions.createUser({input: userInput, password: password}));
-  }
-
-  /**
-   * Copy debug summary to clipboard for LLM troubleshooting
-   */
-  async copyDebugSummary(): Promise<void> {
-    this.debugCopyStatus = 'copying';
-    
-    try {
-      // Get current state values
-      const currentStep = await this.currentStep$.pipe(take(1)).toPromise();
-      const currentUser = await this.currentUser$.pipe(take(1)).toPromise();
-      const userExists = await this.userExists$.pipe(take(1)).toPromise();
-      const emailVerified = await this.emailVerified$.pipe(take(1)).toPromise();
-      const phoneVerified = await this.phoneVerified$.pipe(take(1)).toPromise();
-      const needsMFA = await this.needsMFA$.pipe(take(1)).toPromise();
-      const currentEmail = await this.currentEmail$.pipe(take(1)).toPromise();
-      const mfaSetupDetails = await this.mfaSetupDetails$.pipe(take(1)).toPromise();
-      const error = await this.error$.pipe(take(1)).toPromise();
-      const isLoading = await this.isLoading$.pipe(take(1)).toPromise();
-      
-      const userState = {
-        exists: userExists || false,
-        emailVerified: emailVerified || currentUser?.emailVerified || false,
-        phoneVerified: phoneVerified || currentUser?.phoneVerified || false,
-        mfaEnabled: needsMFA || currentUser?.mfaEnabled || false
-      };
-      
-      // Get form state (sanitize password)
-      const formValues = this.authForm.getRawValue();
-      const sanitizedFormState = {
-        ...formValues,
-        password: formValues.password ? '[REDACTED]' : ''
-      };
-      
-      // Build store state snapshot
-      const storeState = {
-        currentStep: AuthSteps[currentStep || AuthSteps.EMAIL],
-        isLoading,
-        error,
-        userExists,
-        currentUser: currentUser ? {
-          userId: currentUser.userId,
-          email: currentUser.email,
-          emailVerified: currentUser.emailVerified,
-          phoneVerified: currentUser.phoneVerified,
-          mfaEnabled: currentUser.mfaEnabled,
-          status: currentUser.status
-        } : null,
-        needsMFA,
-        mfaSetupDetails: mfaSetupDetails ? {
-          qrCode: mfaSetupDetails.qrCode ? '[PRESENT]' : null,
-          secretKey: mfaSetupDetails.secretKey ? '[PRESENT]' : null
-        } : null
-      };
-      
-      const stepName = AuthSteps[currentStep || AuthSteps.EMAIL];
-      const success = await this.debugLogService.copySummaryToClipboard(stepName, userState, {
-        currentEmail: currentEmail || undefined,
-        currentUser: currentUser as unknown as Record<string, unknown> | null,
-        mfaSetupDetails: mfaSetupDetails as unknown as Record<string, unknown> | null,
-        formState: sanitizedFormState,
-        storeState
-      });
-      
-      if (success) {
-        this.debugCopyStatus = 'copied';
-        setTimeout(() => {
-          this.debugCopyStatus = 'idle';
-        }, 2000);
-      } else {
-        this.debugCopyStatus = 'idle';
-      }
-    } catch (error) {
-      console.error('Failed to copy debug summary:', error);
-      this.debugCopyStatus = 'idle';
-    }
   }
 
 

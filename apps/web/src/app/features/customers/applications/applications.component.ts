@@ -10,12 +10,14 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 
 import { Applications } from '../../../core/models/ApplicationsModel';
 import { ApplicationsListComponent } from './components/applications-list/applications-list.component';
 import { ApplicationDetailComponent } from './components/application-detail/application-detail.component';
 import * as fromUser from '../../user/store/user.selectors';
+import { DebugPanelComponent, DebugContext } from '../../../shared/components/debug/debug-panel.component';
+import { DebugLogEntry } from '../../../core/services/debug-log.service';
 
 @Component({
   selector: 'app-applications',
@@ -25,7 +27,8 @@ import * as fromUser from '../../user/store/user.selectors';
     RouterModule,
     FontAwesomeModule,
     ApplicationsListComponent,
-    ApplicationDetailComponent
+    ApplicationDetailComponent,
+    DebugPanelComponent
   ],
   templateUrl: './applications.component.html',
   styleUrls: ['./applications.component.scss']
@@ -38,6 +41,38 @@ export class ApplicationsComponent implements OnInit {
   selectedApplicationLastActivity = '';
   totalApplications = 8; // Will be updated when applications are loaded
   debugMode$: Observable<boolean>;
+  
+  // Empty logs observable for debug panel
+  debugLogs$: Observable<DebugLogEntry[]> = of([]);
+
+  // Debug context getter for shared DebugPanelComponent
+  get debugContext(): DebugContext {
+    return {
+      page: 'Applications',
+      additionalSections: [
+        {
+          title: 'Selected Application',
+          data: this.selectedApplication ? {
+            applicationData: this.selectedApplication,
+            organizationName: this.selectedApplicationOrganizationName,
+            environmentCount: this.selectedApplicationEnvironmentCount,
+            apiCallsToday: this.selectedApplicationApiCallsToday,
+            lastActivity: this.selectedApplicationLastActivity
+          } : { status: 'No Application Selected' }
+        },
+        {
+          title: 'Component State',
+          data: {
+            selectedApplicationId: this.selectedApplication?.applicationId || 'None',
+            selectedApplicationName: this.selectedApplication?.name || 'None',
+            selectedApplicationStatus: this.selectedApplication?.status || 'None',
+            totalApplications: this.totalApplications,
+            componentInitialized: true
+          }
+        }
+      ]
+    };
+  }
 
   constructor(private store: Store) {
     this.debugMode$ = this.store.select(fromUser.selectDebugMode);

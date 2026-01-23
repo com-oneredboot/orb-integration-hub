@@ -7,20 +7,60 @@ import { Component } from '@angular/core';
 import { Location, CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import * as fromUser from '../../store/user.selectors';
+import { DebugPanelComponent, DebugContext } from '../../../../shared/components/debug/debug-panel.component';
+import { DebugLogEntry } from '../../../../core/services/debug-log.service';
 
 @Component({
   selector: 'app-this-is-not-the-page',
   templateUrl: './this-is-not-the-page.component.html',
   styleUrl: './this-is-not-the-page.component.scss',
   standalone: true,
-  imports: [CommonModule, RouterModule]
+  imports: [CommonModule, RouterModule, DebugPanelComponent]
 })
 export class ThisIsNotThePageComponent {
   debugMode$: Observable<boolean>;
   currentUrl: string;
   timestamp: Date;
+  
+  // Empty logs observable for debug panel (no API calls on 404 page)
+  debugLogs$: Observable<DebugLogEntry[]> = of([]);
+
+  // Debug context getter for shared DebugPanelComponent
+  get debugContext(): DebugContext {
+    return {
+      page: 'NotFound',
+      additionalSections: [
+        {
+          title: 'Page Information',
+          data: {
+            currentUrl: this.currentUrl,
+            requestedAt: this.timestamp,
+            userAgent: this.getUserAgent(),
+            referrer: this.getReferrer()
+          }
+        },
+        {
+          title: 'Navigation State',
+          data: {
+            canGoBack: this.canGoBack(),
+            historyLength: this.getHistoryLength(),
+            locationPath: this.location.path()
+          }
+        },
+        {
+          title: 'Browser Information',
+          data: {
+            windowWidth: this.getWindowWidth(),
+            windowHeight: this.getWindowHeight(),
+            isMobile: this.isMobile(),
+            connectionType: this.getConnectionType()
+          }
+        }
+      ]
+    };
+  }
 
   constructor(
     public location: Location,

@@ -10,12 +10,14 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 
 import { Organizations } from '../../../core/models/OrganizationsModel';
 import { OrganizationsListComponent } from './components/organizations-list/organizations-list.component';
 import { OrganizationDetailComponent } from './components/organization-detail/organization-detail.component';
 import * as fromUser from '../../user/store/user.selectors';
+import { DebugPanelComponent, DebugContext } from '../../../shared/components/debug/debug-panel.component';
+import { DebugLogEntry } from '../../../core/services/debug-log.service';
 
 @Component({
   selector: 'app-organizations',
@@ -25,7 +27,8 @@ import * as fromUser from '../../user/store/user.selectors';
     RouterModule,
     FontAwesomeModule,
     OrganizationsListComponent,
-    OrganizationDetailComponent
+    OrganizationDetailComponent,
+    DebugPanelComponent
   ],
   templateUrl: './organizations.component.html',
   styleUrls: ['./organizations.component.scss']
@@ -36,6 +39,36 @@ export class OrganizationsComponent implements OnInit {
   selectedOrganizationApplicationCount = 0;
   isInCreateMode = false;
   debugMode$: Observable<boolean>;
+  
+  // Empty logs observable for debug panel
+  debugLogs$: Observable<DebugLogEntry[]> = of([]);
+
+  // Debug context getter for shared DebugPanelComponent
+  get debugContext(): DebugContext {
+    return {
+      page: 'Organizations',
+      additionalSections: [
+        {
+          title: 'Selected Organization',
+          data: this.selectedOrganization ? {
+            organizationData: this.selectedOrganization,
+            memberCount: this.selectedOrganizationMemberCount,
+            applicationCount: this.selectedOrganizationApplicationCount
+          } : { status: 'No Organization Selected' }
+        },
+        {
+          title: 'Component State',
+          data: {
+            selectedOrganizationId: this.selectedOrganization?.organizationId || 'None',
+            selectedOrganizationName: this.selectedOrganization?.name || 'None',
+            selectedOrganizationStatus: this.selectedOrganization?.status || 'None',
+            isInCreateMode: this.isInCreateMode,
+            componentInitialized: true
+          }
+        }
+      ]
+    };
+  }
 
   constructor(private store: Store) {
     this.debugMode$ = this.store.select(fromUser.selectDebugMode);

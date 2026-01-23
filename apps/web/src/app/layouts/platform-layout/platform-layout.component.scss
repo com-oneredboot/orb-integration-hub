@@ -3,13 +3,10 @@
 // date: 2025-03-07
 // description: SCSS style file
 
-:host {
-  --orb-red: #E31837;
-  --orb-black: #000000;
-  --orb-gray: #666666;
-  --orb-light-gray: #e5e5e5;
-  --orb-white: #FFFFFF;
-}
+@use '../../../styles/variables' as v;
+
+// Note: CSS custom properties (--orb-*) are defined globally in _tokens.scss
+// No need to redeclare them here
 
 .app-container {
   min-height: 100vh;
@@ -19,7 +16,7 @@
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
-  background-color: var(--orb-white);
+  background-color: v.$orb-white;
 }
 
 .header {
@@ -46,7 +43,7 @@
     h1 {
       font-family: 'Archivo Black', sans-serif;
       font-size: 1.25rem;
-      color: var(--orb-black);
+      color: v.$orb-black;
       margin: 0;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -60,17 +57,17 @@
     gap: 2rem;
 
     .nav-link {
-      color: var(--orb-black);
+      color: v.$orb-black;
       text-decoration: none;
       position: relative;
       padding: 0.5rem 0;
 
       &:hover {
-        color: var(--orb-red);
+        color: v.$orb-red;
       }
 
       &.active {
-        color: var(--orb-black);
+        color: v.$orb-black;
 
         &::after {
           content: '';
@@ -79,7 +76,7 @@
           left: 0;
           width: 100%;
           height: 2px;
-          background-color: var(--orb-red);
+          background-color: v.$orb-red;
           animation: underline 0.3s ease-in-out;
         }
       }
@@ -129,10 +126,10 @@
 .platform-bg {
   min-height: 100vh;
   width: 100vw;
-  background-color: #3A3A3A;
+  background-color: v.$orb-dark-gray;
   background-image: 
     radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.07) 1px, transparent 0),
-    radial-gradient(circle at 1px 1px, rgba(227, 24, 55, 0.06) 1px, transparent 0);
+    radial-gradient(circle at 1px 1px, rgba(v.$orb-red, 0.06) 1px, transparent 0);
   background-size: 20px 20px, 15px 15px;
   background-position: 0 0, 10px 10px;
   display: flex;
