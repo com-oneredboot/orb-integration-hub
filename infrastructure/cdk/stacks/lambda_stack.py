@@ -196,15 +196,17 @@ class LambdaStack(Stack):
             )
         )
 
-        # SNS SMS Access - required for direct SMS to phone numbers (no ARN available)
-        # This is the AWS-documented pattern for SMS publishing
+        # SNS SMS Access - required for direct SMS to phone numbers
+        # Phone numbers don't have ARNs, so we must use Resource: "*"
+        # The sns:Protocol condition doesn't apply to direct Publish calls,
+        # it only applies to topic subscriptions. For direct SMS, we need
+        # unrestricted Publish access but only the SMS verification Lambda uses this.
         role.add_to_policy(
             iam.PolicyStatement(
                 sid="SNSSMSAccess",
                 effect=iam.Effect.ALLOW,
                 actions=["sns:Publish"],
                 resources=["*"],
-                conditions={"StringEquals": {"sns:Protocol": "sms"}},
             )
         )
 
