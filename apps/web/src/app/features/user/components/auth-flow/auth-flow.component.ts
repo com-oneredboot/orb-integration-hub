@@ -35,6 +35,7 @@ import { UserStatus } from "../../../../core/enums/UserStatusEnum";
 import { UserGroup } from "../../../../core/enums/UserGroupEnum";
 import { IUsers } from "../../../../core/models/UsersModel";
 import { sanitizeEmail } from "../../../../core/utils/log-sanitizer";
+import { VerificationCodeInputComponent } from "../../../../shared/components/verification-code-input/verification-code-input.component";
 
 
 @Component({
@@ -47,8 +48,8 @@ import { sanitizeEmail } from "../../../../core/utils/log-sanitizer";
     ReactiveFormsModule,
     FontAwesomeModule,
     RouterModule,
-    SlicePipe
-    // Add any shared components, directives, or pipes used in the template here
+    SlicePipe,
+    VerificationCodeInputComponent
   ]
 })
 export class AuthFlowComponent implements OnInit, OnDestroy {
@@ -130,6 +131,19 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   authSteps = AuthSteps;
   passwordVisible = false;
   qrCodeDataUrl: string | null = null;
+
+  // Form control getters for shared verification code component
+  get emailCodeControl() {
+    return this.authForm.get('emailCode') as import('@angular/forms').FormControl;
+  }
+  
+  get mfaCodeControl() {
+    return this.authForm.get('mfaCode') as import('@angular/forms').FormControl;
+  }
+  
+  get phoneCodeControl() {
+    return this.authForm.get('phoneCode') as import('@angular/forms').FormControl;
+  }
 
   // History management
   public stepHistory: AuthSteps[] = [];

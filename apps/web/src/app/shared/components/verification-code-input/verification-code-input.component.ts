@@ -2,10 +2,17 @@ import { Component, Input, Output, EventEmitter, forwardRef } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { faEnvelope, faMobileAlt, faShieldAlt, faExclamationCircle, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
+
+/**
+ * Verification code type - determines icon and messaging
+ */
+export type VerificationCodeType = 'email' | 'phone' | 'mfa';
 
 /**
  * Shared verification code input component
- * Used for email and phone verification flows
+ * Used for email, phone, and MFA verification flows
+ * Styled to match auth-flow component for consistency
  */
 @Component({
   selector: 'app-verification-code-input',
@@ -20,14 +27,16 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
   ],
   template: `
     <div class="verification-code">
+      <!-- Info section with icon and destination -->
       <div class="verification-code__info" role="status" aria-live="polite">
         <p class="verification-code__message">{{ message }}</p>
         <p class="verification-code__destination" *ngIf="destination">
-          <fa-icon [icon]="type === 'email' ? 'envelope' : 'mobile-alt'" class="verification-code__icon"></fa-icon>
+          <fa-icon [icon]="getTypeIcon()" class="verification-code__icon"></fa-icon>
           {{ destination }}
         </p>
       </div>
       
+      <!-- Input group matching auth-flow styling -->
       <div class="verification-code__input-group">
         <label [for]="inputId" class="verification-code__label">
           {{ label }} <span class="verification-code__required" aria-label="required">*</span>
@@ -53,17 +62,27 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
             (input)="onInput($event)"
             (blur)="onBlur()">
           
+          <!-- Valid indicator -->
+          <div *ngIf="isValid && codeControl.touched && !showError" 
+               class="verification-code__valid-indicator"
+               aria-live="polite">
+            <fa-icon [icon]="faCheckCircle" class="verification-code__valid-icon"></fa-icon>
+            <span class="sr-only">Code format is valid</span>
+          </div>
+          
+          <!-- Error message -->
           <div *ngIf="showError" 
                [id]="inputId + '-error'" 
                class="verification-code__error" 
                role="alert" 
                aria-live="polite">
-            <fa-icon icon="exclamation-circle" class="verification-code__error-icon"></fa-icon>
+            <fa-icon [icon]="faExclamationCircle" class="verification-code__error-icon"></fa-icon>
             <span class="sr-only">Error: </span>{{ errorMessage }}
           </div>
         </div>
       </div>
       
+      <!-- Resend section -->
       <div class="verification-code__resend" *ngIf="showResend">
         <span class="verification-code__resend-text">Didn't receive the code?</span>
         <button 
@@ -90,6 +109,7 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
       color: var(--text-secondary, #6b7280);
       font-size: 0.95rem;
       margin: 0 0 0.5rem 0;
+      line-height: 1.5;
     }
     
     .verification-code__destination {
@@ -108,6 +128,7 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
     }
     
     .verification-code__input-group {
+      width: 100%;
       margin-bottom: 1rem;
     }
     
@@ -121,48 +142,81 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
     
     .verification-code__required {
       color: var(--error, #ef4444);
+      font-weight: 700;
     }
     
     .verification-code__input-container {
       position: relative;
+      width: 100%;
     }
     
+    /* Input styling matching auth-flow */
     .verification-code__input {
       width: 100%;
       padding: 0.75rem 1rem;
-      font-size: 1.5rem;
-      font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-      letter-spacing: 0.5rem;
-      text-align: center;
-      border: 2px solid var(--border, #e5e7eb);
+      font-size: 1rem;
+      font-family: inherit;
+      color: var(--text-primary, #1f2937);
+      border: 2px solid var(--border-dark, #9ca3af);
       border-radius: 0.5rem;
       background: var(--bg-input, #ffffff);
-      color: var(--text-primary, #1f2937);
-      transition: border-color 0.2s, box-shadow 0.2s;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
       box-sizing: border-box;
+    }
+    
+    .verification-code__input::placeholder {
+      color: var(--text-muted, #6b7280);
+      opacity: 1;
     }
     
     .verification-code__input:focus {
       outline: none;
       border-color: var(--primary, #3b82f6);
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    }
+    
+    /* High contrast focus for accessibility */
+    @media (prefers-contrast: high) {
+      .verification-code__input:focus {
+        box-shadow: 0 0 0 3px var(--primary, #3b82f6);
+        border-color: var(--primary, #3b82f6);
+      }
     }
     
     .verification-code__input--error {
       border-color: var(--error, #ef4444);
+      animation: shake 0.5s ease-in-out;
     }
     
     .verification-code__input--error:focus {
-      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
     }
     
     .verification-code__input--valid {
-      border-color: var(--success, #10b981);
+      border-color: var(--success, #059669);
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23059669"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>');
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 16px 16px;
+      padding-right: 40px;
     }
     
-    .verification-code__input::placeholder {
-      color: var(--text-muted, #9ca3af);
-      letter-spacing: 0.25rem;
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+      20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+    
+    .verification-code__valid-indicator {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--success, #059669);
+    }
+    
+    .verification-code__valid-icon {
+      font-size: 1rem;
     }
     
     .verification-code__error {
@@ -226,18 +280,25 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
   `]
 })
 export class VerificationCodeInputComponent implements ControlValueAccessor {
-  @Input() type: 'email' | 'phone' = 'email';
+  @Input() type: VerificationCodeType = 'email';
   @Input() destination = '';
   @Input() message = 'Enter the 6-digit verification code.';
   @Input() label = 'Verification Code';
-  @Input() placeholder = '000000';
+  @Input() placeholder = 'Enter 6-digit code';
   @Input() inputId = 'verification-code';
-  @Input() showResend = true;
+  @Input() showResend = false;
   @Input() canResend = true;
   @Input() resendLoading = false;
   @Input() externalError: string | null = null;
   
   @Output() resend = new EventEmitter<void>();
+  
+  // FontAwesome icons
+  faEnvelope = faEnvelope;
+  faMobileAlt = faMobileAlt;
+  faShieldAlt = faShieldAlt;
+  faExclamationCircle = faExclamationCircle;
+  faCheckCircle = faCheckCircle;
   
   codeControl = new FormControl('', [
     Validators.required,
@@ -248,6 +309,22 @@ export class VerificationCodeInputComponent implements ControlValueAccessor {
   
   private onChange: (value: string) => void = () => {};
   private onTouched: () => void = () => {};
+  
+  /**
+   * Get the appropriate icon based on verification type
+   */
+  getTypeIcon() {
+    switch (this.type) {
+      case 'email':
+        return this.faEnvelope;
+      case 'phone':
+        return this.faMobileAlt;
+      case 'mfa':
+        return this.faShieldAlt;
+      default:
+        return this.faEnvelope;
+    }
+  }
   
   get showError(): boolean {
     return (this.codeControl.invalid && this.codeControl.touched) || !!this.externalError;

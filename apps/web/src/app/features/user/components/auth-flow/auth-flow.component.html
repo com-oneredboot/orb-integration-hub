@@ -402,52 +402,18 @@ description: HTML template file
       <!-- Email Confirm Step -->
       <div class="auth-flow__form-step"
            [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.EMAIL_VERIFY}">
-        <div class="auth-flow__verification-info" role="status" aria-live="polite">
-          <p>Enter the 6-digit verification code sent to your email.</p>
-        </div>
-        <div class="auth-flow__input-group">
-          <label for="email-code-input" class="auth-flow__label">
-            Email Verification Code <span class="auth-flow__required" aria-label="required">*</span>
-          </label>
-          <div class="auth-flow__input-group-container">
-            <input type="text"
-                   id="email-code-input"
-                   formControlName="emailCode"
-                   class="auth-flow__input-group-field"
-                   [ngClass]="{
-                     'auth-flow__input-group-field--error': shouldShowFieldError('emailCode'),
-                     'auth-flow__input-group-field--valid': getFieldValidationStatus('emailCode') === 'valid',
-                     'auth-flow__input-group-field--pending': getFieldValidationStatus('emailCode') === 'pending'
-                   }"
-                   placeholder="Enter 6-digit verification code"
-                   aria-describedby="email-code-error email-code-status"
-                   [attr.aria-invalid]="shouldShowFieldError('emailCode')"
-                   aria-required="true"
-                   inputmode="numeric"
-                   pattern="[0-9]{6}"
-                   maxlength="6"
-                   (focus)="onFieldFocus('emailCode')"
-                   (blur)="onFieldBlur('emailCode')">
-            <div id="email-code-status" 
-                 class="auth-flow__validation-status"
-                 [ngClass]="{
-                   'auth-flow__validation-status--pending': getFieldValidationStatus('emailCode') === 'pending'
-                 }"
-                 *ngIf="getFieldValidationStatus('emailCode') === 'pending' && !shouldShowFieldError('emailCode')"
-                 aria-live="polite">
-              <span *ngIf="getFieldValidationStatus('emailCode') === 'valid'" class="sr-only">Code format is valid</span>
-            </div>
-            
-            <div *ngIf="shouldShowFieldError('emailCode')" 
-                 id="email-code-error" 
-                 class="auth-flow__input-error" 
-                 role="alert" 
-                 aria-live="polite">
-              <i class="fa fa-exclamation-circle auth-flow__error-icon" aria-hidden="true"></i>
-              <span class="sr-only">Error: </span>{{ getErrorMessage('emailCode') }}
-            </div>
-          </div>
-        </div>
+        <app-verification-code-input
+          type="email"
+          [destination]="(currentEmail$ | async) || ''"
+          message="Enter the 6-digit verification code sent to your email."
+          label="Email Verification Code"
+          inputId="email-code-input"
+          [showResend]="true"
+          [canResend]="true"
+          [resendLoading]="state.isLoading || false"
+          [externalError]="shouldShowFieldError('emailCode') ? getErrorMessage('emailCode') : null"
+          [formControl]="emailCodeControl">
+        </app-verification-code-input>
       </div>
 
       <!-- MFA Setup Step -->
@@ -505,50 +471,16 @@ description: HTML template file
             </p>
           </div>
           <div class="auth-flow__input-group">
-            <label for="mfa-setup-input" class="auth-flow__label">
-              Authenticator Code <span class="auth-flow__required" aria-label="required">*</span>
-            </label>
-            <div class="auth-flow__input-group-container">
-              <input type="text"
-                     id="mfa-setup-input"
-                     formControlName="mfaCode"
-                     class="auth-flow__input-group-field"
-                     [ngClass]="{
-                       'auth-flow__input-group-field--error': shouldShowFieldError('mfaCode'),
-                       'auth-flow__input-group-field--valid': getFieldValidationStatus('mfaCode') === 'valid',
-                       'auth-flow__input-group-field--pending': getFieldValidationStatus('mfaCode') === 'pending'
-                     }"
-                     placeholder="Enter 6-digit code from app"
-                     aria-describedby="mfa-setup-error mfa-setup-status"
-                     [attr.aria-invalid]="shouldShowFieldError('mfaCode')"
-                     aria-required="true"
-                     inputmode="numeric"
-                     pattern="[0-9]{6}"
-                     maxlength="6"
-                     (focus)="onFieldFocus('mfaCode')"
-                     (blur)="onFieldBlur('mfaCode')">
-              <div id="mfa-setup-status" 
-                   class="auth-flow__validation-status"
-                   [ngClass]="{
-                     'auth-flow__validation-status--pending': getFieldValidationStatus('mfaCode') === 'pending'
-                   }"
-                   *ngIf="getFieldValidationStatus('mfaCode') === 'pending' && !shouldShowFieldError('mfaCode')"
-                   aria-live="polite">
-                <i *ngIf="getFieldValidationStatus('mfaCode') === 'valid'" 
-                   class="fa fa-check auth-flow__validation-icon" 
-                   aria-hidden="true"></i>
-                <span *ngIf="getFieldValidationStatus('mfaCode') === 'valid'" class="sr-only">Code format is valid</span>
-              </div>
-              
-              <div *ngIf="shouldShowFieldError('mfaCode')" 
-                   id="mfa-setup-error" 
-                   class="auth-flow__input-error" 
-                   role="alert" 
-                   aria-live="polite">
-                <i class="fa fa-exclamation-circle auth-flow__error-icon" aria-hidden="true"></i>
-                <span class="sr-only">Error: </span>{{ getErrorMessage('mfaCode') }}
-              </div>
-            </div>
+            <app-verification-code-input
+              type="mfa"
+              message="Enter the 6-digit code from your authenticator app."
+              label="Authenticator Code"
+              inputId="mfa-setup-input"
+              placeholder="Enter 6-digit code from app"
+              [showResend]="false"
+              [externalError]="shouldShowFieldError('mfaCode') ? getErrorMessage('mfaCode') : null"
+              [formControl]="mfaCodeControl">
+            </app-verification-code-input>
           </div>
         </div>
       </div>
@@ -556,55 +488,16 @@ description: HTML template file
       <!-- MFA Verification Step -->
       <div class="auth-flow__form-step"
            [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.MFA_VERIFY}">
-        <div class="auth-flow__verification-info" role="status" aria-live="polite">
-          <p>Please enter the 6-digit code from your authenticator app to complete sign in.</p>
-        </div>
-        <div class="auth-flow__input-group">
-          <label for="mfa-verify-input" class="auth-flow__label">
-            Authenticator Code <span class="auth-flow__required" aria-label="required">*</span>
-          </label>
-          <div class="auth-flow__input-group-container">
-            <input type="text"
-                   id="mfa-verify-input"
-                   formControlName="mfaCode"
-                   class="auth-flow__input-group-field"
-                   [ngClass]="{
-                     'auth-flow__input-group-field--error': shouldShowFieldError('mfaCode'),
-                     'auth-flow__input-group-field--valid': getFieldValidationStatus('mfaCode') === 'valid',
-                     'auth-flow__input-group-field--pending': getFieldValidationStatus('mfaCode') === 'pending'
-                   }"
-                   placeholder="Enter 6-digit code from app"
-                   aria-describedby="mfa-verify-error mfa-verify-status"
-                   [attr.aria-invalid]="shouldShowFieldError('mfaCode')"
-                   aria-required="true"
-                   inputmode="numeric"
-                   pattern="[0-9]{6}"
-                   maxlength="6"
-                   (focus)="onFieldFocus('mfaCode')"
-                   (blur)="onFieldBlur('mfaCode')">
-            <div id="mfa-verify-status" 
-                 class="auth-flow__validation-status"
-                 [ngClass]="{
-                   'auth-flow__validation-status--pending': getFieldValidationStatus('mfaCode') === 'pending'
-                 }"
-                 *ngIf="getFieldValidationStatus('mfaCode') === 'pending' && !shouldShowFieldError('mfaCode')"
-                 aria-live="polite">
-              <i *ngIf="getFieldValidationStatus('mfaCode') === 'valid'" 
-                 class="fa fa-check auth-flow__validation-icon" 
-                 aria-hidden="true"></i>
-              <span *ngIf="getFieldValidationStatus('mfaCode') === 'valid'" class="sr-only">Code format is valid</span>
-            </div>
-            
-            <div *ngIf="shouldShowFieldError('mfaCode')" 
-                 id="mfa-verify-error" 
-                 class="auth-flow__input-error" 
-                 role="alert" 
-                 aria-live="polite">
-              <i class="fa fa-exclamation-circle auth-flow__error-icon" aria-hidden="true"></i>
-              <span class="sr-only">Error: </span>{{ getErrorMessage('mfaCode') }}
-            </div>
-          </div>
-        </div>
+        <app-verification-code-input
+          type="mfa"
+          message="Please enter the 6-digit code from your authenticator app to complete sign in."
+          label="Authenticator Code"
+          inputId="mfa-verify-input"
+          placeholder="Enter 6-digit code from app"
+          [showResend]="false"
+          [externalError]="shouldShowFieldError('mfaCode') ? getErrorMessage('mfaCode') : null"
+          [formControl]="mfaCodeControl">
+        </app-verification-code-input>
       </div>
 
       <!-- Enhanced Submit Button with Progress -->
