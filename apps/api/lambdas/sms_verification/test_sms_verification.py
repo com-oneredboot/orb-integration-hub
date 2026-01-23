@@ -487,6 +487,51 @@ class TestSMSVerificationSecurity(unittest.TestCase):
             }
         )
 
+    @mock_aws
+    def test_rate_limit_window_expiration(self):
+        """Test that rate limit resets after 1 hour window expires"""
+        # Setup DynamoDB table
+        dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
+        table = dynamodb.create_table(
+            TableName="test-rate-limit-table",
+            KeySchema=[{"AttributeName": "phoneNumber", "KeyType": "HASH"}],
+            AttributeDefinitions=[{"AttributeName": "phoneNumber", "AttributeType": "S"}],
+            BillingMode="PAY_PER_REQUEST",
+        )
+
+        # Pre-populate with rate limit data from 2 hours ago (expired window)
+        two_hours_ago = int(time.time()) - 7200
+        table.put_item(
+            Item={
+                "phoneNumber": "+1234567890",
+                "requestCount": 3,  # Already at limit
+                "firstRequestTime": two_hours_ago,  # But window expired
+                "ttl": two_hours_ago
+                + 3600,  # TTL also expired (but DynamoDB may not have deleted it)
+            }
+        )
+
+        with (
+            patch.object(sms_index, "get_secret", return_value="test-secret-value"),
+            patch.object(sms_index, "sns_client") as mock_sns,
+            patch.object(sms_index, "RATE_LIMIT_TABLE_NAME", "test-rate-limit-table"),
+            patch.object(sms_index, "dynamodb", dynamodb),
+        ):
+            mock_sns.publish.return_value = {"MessageId": "test-message-id"}
+
+            # Request should succeed because window expired
+            result = lambda_handler(self.test_event, self.test_context)
+
+            # Should succeed - window expired so counter should reset
+            self.assertEqual(result["phoneNumber"], "+1234567890")
+            self.assertIsNone(result["valid"])  # null means code sent
+
+            # Verify the counter was reset in DynamoDB
+            response = table.get_item(Key={"phoneNumber": "+1234567890"})
+            item = response["Item"]
+            self.assertEqual(item["requestCount"], 1)  # Reset to 1
+            self.assertGreater(item["firstRequestTime"], two_hours_ago)  # New timestamp
+
 
 if __name__ == "__main__":
     # Run the tests

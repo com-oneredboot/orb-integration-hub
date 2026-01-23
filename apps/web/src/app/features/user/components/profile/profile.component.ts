@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Observable, Subject, takeUntil, take } from 'rxjs';
 import { IUsers, UsersUpdateInput } from '../../../../core/models/UsersModel';
@@ -105,6 +105,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
     { number: 2, label: 'Phone' },
     { number: 3, label: 'Verify' }
   ];
+
+  /**
+   * Get the verification code form control with proper typing
+   */
+  get verificationCodeControl(): FormControl<string> {
+    return this.verifyForm.get('verificationCode') as FormControl<string>;
+  }
 
   /**
    * Get current step number for progress component

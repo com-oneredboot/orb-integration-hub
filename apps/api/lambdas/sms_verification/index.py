@@ -100,6 +100,7 @@ def check_rate_limit(phone_number: str) -> tuple:
 
     table = dynamodb.Table(RATE_LIMIT_TABLE_NAME)
     current_time = int(time.time())
+    one_hour_ago = current_time - 3600
 
     try:
         # Get current rate limit record
@@ -120,6 +121,22 @@ def check_rate_limit(phone_number: str) -> tuple:
 
         item = response["Item"]
         request_count = item["requestCount"]
+        first_request_time = item.get("firstRequestTime", 0)
+
+        # Check if the rate limit window has expired (older than 1 hour)
+        # DynamoDB TTL deletion can be delayed up to 48 hours, so we must check manually
+        if first_request_time < one_hour_ago:
+            # Window expired - reset the counter
+            table.put_item(
+                Item={
+                    "phoneNumber": phone_number,
+                    "requestCount": 1,
+                    "firstRequestTime": current_time,
+                    "ttl": current_time + 3600,  # 1 hour TTL
+                }
+            )
+            logger.info("Rate limit: Window expired, resetting counter")
+            return True, "Rate limit window expired, counter reset"
 
         if request_count >= 3:
             # Rate limit exceeded

@@ -45,6 +45,7 @@ import {
   
   // Status & Feedback
   faCheckCircle,
+  faExclamationCircle,
   faExclamationTriangle,
   faInfoCircle,
   faSpinner,
@@ -62,7 +63,11 @@ import {
   // Security & Privacy
   faBolt,
   faHeartbeat,
-  faCreditCard
+  faCreditCard,
+  
+  // Communication
+  faEnvelope,
+  faMobileAlt
 } from '@fortawesome/free-solid-svg-icons';
 
 /**
@@ -110,6 +115,7 @@ export function configureFontAwesome(library: FaIconLibrary): void {
     
     // Status & Feedback
     faCheckCircle,
+    faExclamationCircle,
     faExclamationTriangle,
     faInfoCircle,
     faSpinner,
@@ -127,7 +133,11 @@ export function configureFontAwesome(library: FaIconLibrary): void {
     // Security & Privacy
     faBolt,
     faHeartbeat,
-    faCreditCard
+    faCreditCard,
+    
+    // Communication
+    faEnvelope,
+    faMobileAlt
   );
 }
 
@@ -174,6 +184,7 @@ export const registeredIcons = [
   
   // Status & Feedback
   'check-circle',
+  'exclamation-circle',
   'exclamation-triangle',
   'info-circle',
   'spinner',
@@ -191,7 +202,11 @@ export const registeredIcons = [
   // Security & Privacy
   'bolt',
   'heartbeat',
-  'credit-card'
+  'credit-card',
+  
+  // Communication
+  'envelope',
+  'mobile-alt'
 ] as const;
 
 export type RegisteredIconName = typeof registeredIcons[number];

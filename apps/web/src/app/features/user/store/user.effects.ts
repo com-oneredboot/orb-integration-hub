@@ -827,7 +827,7 @@ export class UserEffects {
       switchMap(({ phoneNumber }) => {
         return from(this.userService.sendSMSVerificationCode(phoneNumber)).pipe(
           map(response => {
-            if (response.statusCode === 200) {
+            if (response.success) {
               return UserActions.setupPhoneSuccess({ 
                 validationId: phoneNumber,
                 expiresAt: Date.now() + 10 * 60 * 1000

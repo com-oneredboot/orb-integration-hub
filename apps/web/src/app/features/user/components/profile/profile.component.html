@@ -269,7 +269,7 @@ description: HTML template file - Profile page with step-based setup flow
           [canResend]="canResendCode()"
           [resendLoading]="isLoading"
           [externalError]="phoneVerificationState.error"
-          [formControl]="verifyForm.controls['verificationCode']"
+          [formControl]="verificationCodeControl"
           (resend)="sendVerificationCode()">
         </app-verification-code-input>
         
