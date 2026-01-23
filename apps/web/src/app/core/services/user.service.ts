@@ -1227,6 +1227,7 @@ export class UserService extends ApiService {
       }
       
       // Use userPool authentication for authenticated users
+      // Lambda returns: { phoneNumber: string, code: null, valid: boolean }
       const response = await this.mutate(
         SmsVerification,
         {
@@ -1236,21 +1237,15 @@ export class UserService extends ApiService {
           }
         },
         "userPool"
-      ) as GraphQLResult<{ SmsVerification?: { StatusCode?: number; Data?: { valid?: boolean } } }>;
+      ) as GraphQLResult<{ SmsVerification?: { phoneNumber?: string; code?: number | null; valid?: boolean | null } }>;
 
-      try {
-        // Check if the lambda verified the code successfully
-        if (response.data?.SmsVerification?.StatusCode === 200) {
-          const verificationData = response.data.SmsVerification.Data;
-          const result = verificationData?.valid === true;
-          return result;
-        }
-
-        return false;
-      } catch (parseError) {
-        console.error('Error parsing SMS verification response:', parseError);
-        return false;
+      // Check if the lambda verified the code successfully
+      // valid=true means code verified, valid=false means invalid code, valid=null means code was sent
+      if (response.data?.SmsVerification?.valid === true) {
+        return true;
       }
+
+      return false;
 
     } catch (error) {
       console.error('Error verifying SMS code:', error);
