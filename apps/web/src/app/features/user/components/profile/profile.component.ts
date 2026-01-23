@@ -480,11 +480,18 @@ export class ProfileComponent implements OnInit, OnDestroy {
           user: new Users(response.Data),
           message: 'Phone number updated successfully'
         }));
-        this.nextStep();
         
-        // Auto-send verification code when entering PHONE_VERIFY step
-        // This matches the email verification UX where code is sent automatically
-        await this.sendVerificationCode();
+        // Move to PHONE_VERIFY step and set codeSent=true immediately
+        // This shows the code input UI right away while SMS is being sent
+        this.nextStep();
+        this.phoneVerificationState.codeSent = true;
+        this.phoneVerificationState.codeExpiration = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+        
+        // Send verification code in background - UI already shows code input
+        this.sendVerificationCode().catch(error => {
+          console.error('Error sending verification code:', error);
+          this.phoneVerificationState.error = 'Failed to send verification code. Click "Resend Code" to try again.';
+        });
       } else {
         console.error('Failed to update phone:', response.Message);
       }
@@ -583,7 +590,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
       // Call the SMS verification service
       const response = await this.userService.sendSMSVerificationCode(user.phoneNumber);
 
-      if (response.statusCode === 200) {
+      if (response.success) {
+        // Code sent successfully - update expiration and cooldown
         this.phoneVerificationState.codeSent = true;
         this.phoneVerificationState.codeExpiration = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
         this.phoneVerificationState.cooldownUntil = new Date(Date.now() + 60 * 1000); // 60 seconds cooldown

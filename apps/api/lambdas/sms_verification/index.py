@@ -143,6 +143,17 @@ def check_rate_limit(phone_number: str) -> tuple:
 
 
 def lambda_handler(event, context):
+    """
+    SMS Verification Lambda Handler.
+
+    Returns fields matching GraphQL schema:
+    - phoneNumber: String! (the phone number)
+    - code: Float (not returned for security - only used for verification input)
+    - valid: Boolean (true if code verified, false if failed, null if sending code)
+
+    When sending code: returns {phoneNumber, valid: null}
+    When verifying code: returns {phoneNumber, valid: true/false}
+    """
     logger.debug("SMS verification event received")
 
     # Get data - use AppSync event structure (arguments.input)
@@ -152,11 +163,8 @@ def lambda_handler(event, context):
 
     if not phone_number:
         logger.error("No phone number provided in request")
-        return {
-            "StatusCode": 400,
-            "Message": "Phone number is required",
-            "Data": None,
-        }
+        # Return error via GraphQL - phoneNumber is required
+        raise ValueError("Phone number is required")
 
     logger.info(f"Processing SMS verification request - Code provided: {provided_code is not None}")
 
@@ -170,15 +178,13 @@ def lambda_handler(event, context):
             logger.info("Verifying code for phone number")
             is_valid = verify_code(phone_number, str(provided_code), secret)
 
-            response = {
-                "StatusCode": 200,
-                "Message": (
-                    "Code verified successfully" if is_valid else "Invalid or expired code"
-                ),
-                "Data": {"phoneNumber": phone_number, "valid": is_valid},
-            }
             logger.info(f"Verification completed - Valid: {is_valid}")
-            return response
+            # Return fields matching GraphQL schema
+            return {
+                "phoneNumber": phone_number,
+                "code": None,  # Never return the code
+                "valid": is_valid,
+            }
 
         # Check rate limiting before generating/sending SMS
         logger.info("Checking rate limit for phone number")
@@ -186,11 +192,8 @@ def lambda_handler(event, context):
 
         if not is_allowed:
             logger.warning(f"Rate limit exceeded: {rate_limit_message}")
-            return {
-                "StatusCode": 429,
-                "Message": rate_limit_message,
-                "Data": {"phoneNumber": phone_number, "rateLimited": True},
-            }
+            # Return with valid=False to indicate failure
+            raise ValueError(rate_limit_message)
 
         # Generate and send new verification code
         logger.info("Generating verification code for phone number")
@@ -224,19 +227,21 @@ def lambda_handler(event, context):
         logger.debug("SMS parameters configured for sending")
 
         response = sns_client.publish(**sns_parameters)
-        logger.info("SMS sent successfully via SNS")
-        logger.info("Verification code sent successfully")
+        message_id = response.get("MessageId", "unknown")
+        logger.info(f"SMS sent successfully via SNS - MessageId: {message_id}")
 
+        # Return fields matching GraphQL schema
+        # valid=None indicates code was sent (not a verification result)
         return {
-            "StatusCode": 200,
-            "Message": "Verification code sent successfully",
-            "Data": {"phoneNumber": phone_number},
+            "phoneNumber": phone_number,
+            "code": None,  # Never return the code for security
+            "valid": None,  # null means code sent, not verified yet
         }
 
-    except Exception:
-        logger.error("Error in SMS verification processing")
-        return {
-            "StatusCode": 500,
-            "Message": "Error processing SMS verification request",
-            "Data": None,
-        }
+    except ValueError as ve:
+        # Re-raise ValueError for GraphQL error handling
+        logger.error(f"Validation error: {ve}")
+        raise
+    except Exception as e:
+        logger.error(f"Error in SMS verification processing: {e}")
+        raise ValueError("Error processing SMS verification request")

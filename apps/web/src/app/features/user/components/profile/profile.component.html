@@ -259,24 +259,11 @@ description: HTML template file - Profile page with step-based setup flow
       <div class="profile-setup-flow__step-card">
         <h2 class="profile-setup-flow__step-title">Verify Phone</h2>
         <p class="profile-setup-flow__step-description">
-          {{ phoneVerificationState.codeSent 
-             ? 'Enter the 6-digit code sent to your phone.' 
-             : 'Click the button below to receive a verification code via SMS.' }}
+          A 6-digit verification code has been sent to {{ (currentUser$ | async)?.phoneNumber }}. Enter the code below to verify your phone number.
         </p>
         
-        <!-- Send Code Button (before code is sent) -->
-        <div *ngIf="!phoneVerificationState.codeSent" class="profile-setup-flow__verify-action">
-          <button 
-            type="button" 
-            class="profile-setup-flow__button profile-setup-flow__button--primary"
-            [disabled]="isLoading"
-            (click)="sendVerificationCode()">
-            {{ isLoading ? 'Sending...' : 'Send Verification Code' }}
-          </button>
-        </div>
-        
-        <!-- Verification Code Input (after code is sent) -->
-        <form *ngIf="phoneVerificationState.codeSent" [formGroup]="verifyForm" class="profile-setup-flow__form">
+        <!-- Verification Code Input -->
+        <form [formGroup]="verifyForm" class="profile-setup-flow__form">
           <div class="profile-setup-flow__input-group">
             <label for="setup-verificationCode" class="profile-setup-flow__label">
               Verification Code <span class="profile-setup-flow__required">*</span>
@@ -302,6 +289,7 @@ description: HTML template file - Profile page with step-based setup flow
           </div>
           
           <div class="profile-setup-flow__resend">
+            <span class="profile-setup-flow__resend-text">Didn't receive the code?</span>
             <button 
               type="button" 
               class="profile-setup-flow__text-button"
@@ -320,7 +308,6 @@ description: HTML template file - Profile page with step-based setup flow
             Back
           </button>
           <button 
-            *ngIf="phoneVerificationState.codeSent"
             type="button" 
             class="profile-setup-flow__button profile-setup-flow__button--primary"
             [disabled]="verifyForm.invalid || isLoading"

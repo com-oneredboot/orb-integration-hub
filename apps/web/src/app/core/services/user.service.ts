@@ -1102,16 +1102,16 @@ export class UserService extends ApiService {
   /**
    * Send SMS verification code to a phone number
    * @param phoneNumber
-   * @returns Promise with statusCode and optional message
+   * @returns Promise with success flag and optional message
    */
-  public async sendSMSVerificationCode(phoneNumber: string): Promise<{ statusCode: number, message?: string }> {
+  public async sendSMSVerificationCode(phoneNumber: string): Promise<{ success: boolean, message?: string }> {
     try {
       // Check if user is authenticated - only authenticated users can verify phone
       const isAuthenticated = await this.cognitoService.checkIsAuthenticated();
       
       if (!isAuthenticated) {
         return { 
-          statusCode: 401, 
+          success: false, 
           message: 'User must be authenticated to verify phone number' 
         };
       }
@@ -1123,12 +1123,13 @@ export class UserService extends ApiService {
         const userGroups = await this.cognitoService.getCurrentUserGroups();
         console.error('User does not have required Cognito groups for SMS verification');
         return { 
-          statusCode: 403, 
+          success: false, 
           message: `User does not have required permissions for SMS verification. User groups: [${userGroups.join(', ')}], Required: [USER, OWNER]` 
         };
       }
       
       // Use userPool authentication for authenticated users
+      // Lambda returns: { phoneNumber: string, code: null, valid: null } on success
       const response = await this.mutate(
         SmsVerification,
         {
@@ -1137,25 +1138,28 @@ export class UserService extends ApiService {
           }
         },
         "userPool"
-      ) as GraphQLResult<{ SmsVerification?: { StatusCode?: number; Message?: string } }>;
+      ) as GraphQLResult<{ SmsVerification?: { phoneNumber?: string; code?: number | null; valid?: boolean | null } }>;
 
-      if (response.data?.SmsVerification?.StatusCode === 200) {
+      // Success if we got a response with phoneNumber (valid=null means code sent)
+      if (response.data?.SmsVerification?.phoneNumber) {
         return { 
-          statusCode: 200, 
-          message: response.data.SmsVerification.Message || 'Verification code sent' 
+          success: true, 
+          message: 'Verification code sent' 
         };
       } else {
         return { 
-          statusCode: response.data?.SmsVerification?.StatusCode || 500,
-          message: response.data?.SmsVerification?.Message || 'Failed to send verification code'
+          success: false,
+          message: 'Failed to send verification code'
         };
       }
 
     } catch (error) {
       console.error('Error sending SMS verification code:', error);
+      // Extract error message if available
+      const errorMessage = error instanceof Error ? error.message : 'Error sending verification code';
       return { 
-        statusCode: 500, 
-        message: 'Error sending verification code' 
+        success: false, 
+        message: errorMessage 
       };
     }
   }
