@@ -110,6 +110,10 @@ describe('RecoveryService', () => {
      * Property: The recovery action should always be consistent with the
      * Cognito and DynamoDB state combination.
      * Tag: [state-consistency]
+     * 
+     * Note: The checkEmailExists Lambda returns `exists: true` when the user
+     * exists in DynamoDB, NOT when they exist in Cognito. So we need to mock
+     * the `exists` field based on dynamoExists, not cognitoStatus.
      */
     it('should return correct action for each state combination', async () => {
       await fc.assert(
@@ -118,8 +122,9 @@ describe('RecoveryService', () => {
           cognitoStatusArbitrary,
           dynamoExistsArbitrary,
           async (email, cognitoStatus, dynamoExists) => {
+            // Mock checkEmailExists - exists field reflects DynamoDB state
             userServiceSpy.checkEmailExists.and.returnValue(Promise.resolve({
-              exists: cognitoStatus !== null,
+              exists: dynamoExists,
               cognitoStatus: cognitoStatus,
               cognitoSub: cognitoStatus ? 'test-sub-123' : null
             }));
@@ -132,17 +137,22 @@ describe('RecoveryService', () => {
             const result = await service.smartCheck(email);
 
             // Verify state consistency based on decision matrix
+            // Note: cognitoStatus null means no Cognito user
             if (!cognitoStatus && !dynamoExists) {
+              // Case 1: Neither system has the user - new signup
               expect(result.recoveryAction).toBe(RecoveryAction.NEW_SIGNUP);
             } else if (!cognitoStatus && dynamoExists) {
+              // Case 2: DynamoDB has user but Cognito doesn't - data integrity issue
               expect(result.recoveryAction).toBe(RecoveryAction.CONTACT_SUPPORT);
             } else if (cognitoStatus && !dynamoExists) {
+              // Case 3: Cognito has user but DynamoDB doesn't - orphaned state
               expect([
                 RecoveryAction.RESEND_VERIFICATION,
                 RecoveryAction.CREATE_DYNAMO_RECORD,
                 RecoveryAction.PASSWORD_RESET
               ]).toContain(result.recoveryAction);
             } else if (cognitoStatus && dynamoExists) {
+              // Case 4: Both systems have the user - login flow
               expect([
                 RecoveryAction.LOGIN,
                 RecoveryAction.PASSWORD_RESET,

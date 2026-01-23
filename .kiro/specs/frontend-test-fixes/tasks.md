@@ -73,8 +73,9 @@ All active tests are now passing (57 SUCCESS, 4 skipped). Several test files wer
     - Result: 57 SUCCESS, 4 skipped, 0 failures
     - _Requirements: 7.1, 7.2_
 
-  - [ ] 5.2 Commit changes
+  - [x] 5.2 Commit changes
     - Commit with message: `fix: resolve frontend test failures after schema regeneration`
+    - Note: Committed in previous session
     - _Requirements: All_
 
 ## Summary of Changes

@@ -66,7 +66,13 @@ $warning-color: #f59e0b;
 $danger-color: $orb-red;
 $text-primary: $orb-black;
 $text-secondary: $orb-gray;
+$text-muted: $gray-400;
 $white: $orb-white;
+
+// Dark Mode Colors
+$bg-secondary-dark: #1f2937;
+$text-primary-dark: #f9fafb;
+$border-color-dark: #374151;
 
 // Role Colors (distinct from status colors)
 $role-owner: #3b82f6;      // Blue - authority without status confusion
