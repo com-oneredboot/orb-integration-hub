@@ -108,27 +108,18 @@ export class OrganizationService extends ApiService {
   }
 
   /**
-   * Get the current user's ID from the auth session
-   */
-  private async getCurrentUserId(): Promise<string> {
-    const { fetchAuthSession } = await import('@aws-amplify/auth');
-    const session = await fetchAuthSession();
-    const userId = session.tokens?.idToken?.payload?.['custom:userId'] as string;
-    if (!userId) {
-      throw new Error('User ID not found in session');
-    }
-    return userId;
-  }
-
-  /**
    * Create a draft organization (create-on-click pattern)
    * Creates a new organization with PENDING status and minimal default values.
    * The user will then be navigated to the detail page to complete the setup.
-   * Note: Using PENDING until DRAFT status is deployed to backend.
+   * @param ownerId The user ID of the organization owner
    * @returns Observable<OrganizationsCreateResponse>
    */
-  public createDraft(): Observable<OrganizationsCreateResponse> {
-    console.debug('[OrganizationService] Creating draft organization');
+  public createDraft(ownerId: string): Observable<OrganizationsCreateResponse> {
+    console.debug('[OrganizationService] Creating draft organization for owner:', ownerId);
+
+    if (!ownerId) {
+      throw new Error('Owner ID is required to create an organization');
+    }
 
     return from(this.checkAuthentication()).pipe(
       switchMap(async (authResult: AuthCheckResult) => {
@@ -140,12 +131,10 @@ export class OrganizationService extends ApiService {
 
         const now = new Date();
         const organizationId = this.generateUUID();
-        const ownerId = await this.getCurrentUserId();
 
         console.debug('[OrganizationService] Generated organizationId:', organizationId);
-        console.debug('[OrganizationService] Owner ID:', ownerId);
 
-        // Build the create input with PENDING status (using PENDING until DRAFT is deployed)
+        // Build the create input with PENDING status
         const createInput: OrganizationsCreateInput = {
           organizationId,
           name: 'New Organization', // Default name - user will update on detail page

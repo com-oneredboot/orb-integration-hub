@@ -57,8 +57,10 @@ export class OrganizationsEffects {
   createDraftOrganization$ = createEffect(() =>
     this.actions$.pipe(
       ofType(OrganizationsActions.createDraftOrganization),
-      switchMap(() =>
-        this.organizationService.createDraft().pipe(
+      withLatestFrom(this.store.select(selectCurrentUser)),
+      filter(([, currentUser]) => !!currentUser?.userId),
+      switchMap(([, currentUser]) =>
+        this.organizationService.createDraft(currentUser!.userId).pipe(
           map(response => {
             if (response.StatusCode === 200 && response.Data) {
               return OrganizationsActions.createDraftOrganizationSuccess({ 

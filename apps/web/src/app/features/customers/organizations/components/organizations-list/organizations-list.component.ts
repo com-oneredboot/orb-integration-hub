@@ -246,6 +246,11 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
       console.debug('[OrganizationsList] Current user:', user);
       console.debug('[OrganizationsList] User groups:', user?.groups);
       
+      if (!user?.userId) {
+        console.warn('[OrganizationsList] No user ID available');
+        return;
+      }
+      
       if (!this.userService.isUserCustomer(user)) {
         console.warn('[OrganizationsList] User is not a customer - cannot create organization');
         return;
@@ -258,9 +263,9 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
       
       // Create-on-click: Create draft and navigate to detail page
       this.isCreatingDraft = true;
-      console.debug('[OrganizationsList] Creating draft organization...');
+      console.debug('[OrganizationsList] Creating draft organization for user:', user.userId);
       
-      this.organizationService.createDraft().pipe(take(1)).subscribe({
+      this.organizationService.createDraft(user.userId).pipe(take(1)).subscribe({
         next: (response) => {
           this.isCreatingDraft = false;
           if (response.StatusCode === 200 && response.Data) {
