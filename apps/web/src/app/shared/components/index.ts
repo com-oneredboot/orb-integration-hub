@@ -12,6 +12,9 @@ export * from './error';
 // UI Components
 export * from './ui';
 
+// Data Grid Component
+export * from './data-grid';
+
 // Note: Add other component categories here as they are created
 // Example:
 // export * from './layout';

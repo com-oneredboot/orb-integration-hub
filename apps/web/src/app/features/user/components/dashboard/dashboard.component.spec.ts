@@ -14,7 +14,7 @@ import { DashboardCtaService } from '../../services/dashboard-cta.service';
 import { IUsers } from '../../../../core/models/UsersModel';
 import { UserStatus } from '../../../../core/enums/UserStatusEnum';
 import { UserGroup } from '../../../../core/enums/UserGroupEnum';
-import { CtaCard, SideNavItem } from './dashboard.types';
+import { CtaCard } from './dashboard.types';
 
 describe('DashboardComponent', () => {
   let component: DashboardComponent;
@@ -137,22 +137,6 @@ describe('DashboardComponent', () => {
       component.onCtaCardAction(card);
       
       expect(consoleSpy).toHaveBeenCalledWith('[Dashboard] CTA card action:', card.id, card.title);
-    });
-  });
-
-  describe('Side Navigation', () => {
-    it('should log side nav item click on onSideNavItemClicked', () => {
-      const consoleSpy = spyOn(console, 'log');
-      const item: SideNavItem = {
-        id: 'profile',
-        icon: 'user',
-        tooltip: 'Edit Profile',
-        route: '/profile'
-      };
-      
-      component.onSideNavItemClicked(item);
-      
-      expect(consoleSpy).toHaveBeenCalledWith('[Dashboard] Side nav item clicked:', item.id, item.tooltip);
     });
   });
 

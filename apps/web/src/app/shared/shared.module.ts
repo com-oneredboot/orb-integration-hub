@@ -13,6 +13,7 @@ import { AuthButtonComponent } from './components/auth/auth-button.component';
 import { AuthInputFieldComponent } from './components/auth/auth-input-field.component';
 import { ErrorBoundaryComponent } from './components/error/error-boundary.component';
 import { StatusBadgeComponent } from './components/ui/status-badge.component';
+import { DataGridComponent } from './components/data-grid/data-grid.component';
 
 // Services
 import { FormValidationService } from './services/form-validation.service';
@@ -35,7 +36,8 @@ const SHARED_COMPONENTS = [
   AuthButtonComponent,
   AuthInputFieldComponent,
   ErrorBoundaryComponent,
-  StatusBadgeComponent
+  StatusBadgeComponent,
+  DataGridComponent
 ];
 
 // All shared services

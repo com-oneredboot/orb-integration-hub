@@ -53,6 +53,33 @@ export class OrganizationsEffects {
     )
   );
 
+  // Create Draft Organization Effect (create-on-click pattern)
+  createDraftOrganization$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(OrganizationsActions.createDraftOrganization),
+      switchMap(() =>
+        this.organizationService.createDraft().pipe(
+          map(response => {
+            if (response.StatusCode === 200 && response.Data) {
+              return OrganizationsActions.createDraftOrganizationSuccess({ 
+                organization: response.Data 
+              });
+            } else {
+              return OrganizationsActions.createDraftOrganizationFailure({ 
+                error: response.Message || 'Failed to create draft organization' 
+              });
+            }
+          }),
+          catchError(error => 
+            of(OrganizationsActions.createDraftOrganizationFailure({ 
+              error: error.message || 'Failed to create draft organization' 
+            }))
+          )
+        )
+      )
+    )
+  );
+
   // Create Organization Effect
   createOrganization$ = createEffect(() =>
     this.actions$.pipe(

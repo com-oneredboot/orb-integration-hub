@@ -191,6 +191,64 @@ export class MyComponent {
 
 ## Component Patterns
 
+### Create-on-Click Pattern (Draft Records)
+
+Use the "create-on-click" pattern for all resource creation flows. This keeps URLs RESTful (noun-only) and provides a consistent UX.
+
+**How it works:**
+1. User clicks "Create [Resource]" button
+2. API immediately creates a new record with `status: 'DRAFT'` and default values
+3. Navigate to `/:resourceId` (the detail/edit page)
+4. User fills in details and saves → status changes to `ACTIVE`
+
+**URL Structure:**
+```
+/organizations          → List view (filters out DRAFT by default)
+/organizations/:id      → Detail/Edit view (handles both DRAFT and ACTIVE)
+```
+
+**Benefits:**
+- Clean REST URLs (no action words like `/new`, `/create`, `/edit`)
+- Same detail component handles create and edit modes
+- Auto-save/draft functionality comes naturally
+- User can abandon and return later
+
+**Implementation:**
+
+```typescript
+// List component - "Create" button handler
+async onCreateOrganization(): Promise<void> {
+  // Call API to create pending record (used as draft state)
+  const newOrg = await this.organizationService.createDraft();
+  // Navigate to detail page with new ID
+  this.router.navigate(['/customers/organizations', newOrg.organizationId]);
+}
+
+// Detail component - detect pending vs active
+ngOnInit(): void {
+  const id = this.route.snapshot.paramMap.get('id');
+  this.organization$ = this.organizationService.getById(id);
+  
+  // Component handles both modes based on status
+  this.isPending$ = this.organization$.pipe(
+    map(org => org?.status === 'PENDING')
+  );
+}
+```
+
+**Required Status Values:**
+- `PENDING` - Newly created, incomplete record (used as draft state)
+- `ACTIVE` - Complete, published record
+- `INACTIVE` - Soft-deleted or disabled
+
+**List View Filtering:**
+- Default: Show only `ACTIVE` records
+- Optional: "Show pending" toggle for users to see their incomplete items
+
+**Cleanup Considerations:**
+- Implement a cleanup job for abandoned pending records (e.g., pending older than 30 days)
+- Or use soft-delete and let users manage their own pending items
+
 ### Multi-Step Flow Components
 
 For components with multiple steps (auth, profile setup, wizards):

@@ -133,6 +133,66 @@ response = table.query(
 )
 ```
 
+## Create-on-Click Pattern (Draft Records)
+
+All resource creation should use the "create-on-click" pattern. When a user clicks "Create", immediately create a draft record and return the new ID.
+
+**GraphQL Mutation Pattern:**
+
+```graphql
+type Mutation {
+  # Creates a draft record with default values, returns the new resource
+  organizationCreateDraft: Organization!
+  
+  # Updates an existing record (draft or active)
+  organizationUpdate(input: OrganizationUpdateInput!): Organization!
+}
+```
+
+**Resolver Implementation:**
+
+```python
+def create_draft(user_id: str) -> dict:
+    """Create a new pending record with default values (used as draft state)."""
+    new_id = str(uuid.uuid4())
+    now = int(datetime.now().timestamp())
+    
+    item = {
+        "organizationId": new_id,
+        "status": "PENDING",  # Using PENDING as draft state
+        "name": "",  # Empty, user will fill in
+        "createdAt": now,
+        "updatedAt": now,
+        "createdBy": user_id,
+    }
+    
+    table.put_item(Item=item)
+    return item
+```
+
+**Required Status Values:**
+- `PENDING` - Newly created, incomplete record (used as draft state)
+- `ACTIVE` - Complete, published record  
+- `INACTIVE` - Soft-deleted or disabled
+
+**Query Filtering:**
+
+```python
+# Default list query - exclude pending (draft) records
+def list_organizations(user_id: str, include_pending: bool = False) -> list:
+    response = table.query(
+        KeyConditionExpression=Key("userId").eq(user_id),
+        FilterExpression=Attr("status").ne("PENDING") if not include_pending else None
+    )
+    return response.get("Items", [])
+```
+
+**Benefits:**
+- Clean REST/GraphQL URLs (no action words)
+- Same update mutation handles both draft completion and edits
+- Auto-save/draft functionality comes naturally
+- User can abandon and return later
+
 ## Logging
 
 ```python

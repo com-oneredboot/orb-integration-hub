@@ -22,153 +22,71 @@
     </div>
   </div>
 
-  <!-- Filters -->
-  <div class="orb-filters">
-    <div class="orb-filters__group">
-      <label class="orb-filters__label" for="org-search">Search</label>
-      <div class="orb-filters__input-group">
-        <fa-icon icon="search" class="orb-filters__icon"></fa-icon>
-        <input 
-          type="text" 
-          id="org-search"
-          class="orb-filters__input"
-          placeholder="Search organizations..."
-          [(ngModel)]="searchTerm"
-          (input)="onSearchChange()">
-      </div>
-    </div>
-    
-    <div class="orb-filters__group">
-      <label class="orb-filters__label" for="org-status-filter">Status</label>
-      <select 
-        id="org-status-filter"
-        class="orb-filters__select"
-        [(ngModel)]="statusFilter"
-        (change)="onFilterChange()">
-        <option value="">All Statuses</option>
-        <option value="ACTIVE">Active</option>
-        <option value="INACTIVE">Inactive</option>
-        <option value="PENDING">Pending</option>
-        <option value="SUSPENDED">Suspended</option>
-      </select>
-    </div>
-
-    <div class="orb-filters__group">
-      <label class="orb-filters__label" for="org-role-filter">My Role</label>
-      <select 
-        id="org-role-filter"
-        class="orb-filters__select"
-        [(ngModel)]="roleFilter"
-        (change)="onFilterChange()">
-        <option value="">All Roles</option>
-        <option value="OWNER">Owner</option>
-        <option value="EMPLOYEE">Employee</option>
-        <option value="CUSTOMER">Customer</option>
-      </select>
-    </div>
-  </div>
-  
-  <!-- Content -->
-  <div class="orb-card__content orb-card__content--table">
-        <div class="orb-table">
-          <div class="orb-table__container">
-            <table class="orb-table__element">
-              <thead>
-                <tr>
-                  <th class="orb-table__header orb-table__header--select"></th>
-                  <th class="orb-table__header">Organization</th>
-                  <th class="orb-table__header">Status</th>
-                  <th class="orb-table__header">Role</th>
-                  <th class="orb-table__header">Members</th>
-                  <th class="orb-table__header">Applications</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let row of filteredOrganizationRows$ | async; trackBy: trackByOrganizationId"
-                    class="orb-table__row"
-                    [class.orb-table__row--selected]="row.organization.organizationId === selectedOrganization?.organizationId">
-                  
-                  <!-- Radio Selection -->
-                  <td class="orb-table__cell orb-table__cell--select">
-                    <input 
-                      type="radio" 
-                      name="selectedOrganization"
-                      class="orb-table__radio"
-                      [value]="row.organization.organizationId"
-                      [checked]="row.organization.organizationId === selectedOrganization?.organizationId"
-                      (change)="onOrganizationSelected(row.organization)">
-                  </td>
-                  
-                  <!-- Organization Info -->
-                  <td class="orb-table__cell">
-                    <div class="orb-info">
-                      <div class="orb-info__name">{{ row.organization.name }}</div>
-                      <div class="orb-info__id">{{ row.organization.organizationId }}</div>
-                    </div>
-                  </td>
-                  
-                  <!-- Status -->
-                  <td class="orb-table__cell">
-                    <app-status-badge 
-                      [status]="row.organization.status" 
-                      type="organization"
-                      [showIcon]="true"
-                      [showLabel]="true"
-                      size="small"
-                      variant="chip">
-                    </app-status-badge>
-                  </td>
-                  
-                  <!-- Role -->
-                  <td class="orb-table__cell">
-                    <span class="orb-role-badge orb-role-badge--{{ getRoleClass(row.userRole) }}">
-                      {{ row.userRole }}
-                    </span>
-                  </td>
-                  
-                  <!-- Member Count -->
-                  <td class="orb-table__cell">
-                    <div class="orb-count">
-                      <fa-icon icon="users" class="orb-count__icon"></fa-icon>
-                      {{ row.memberCount }}
-                    </div>
-                  </td>
-                  
-                  <!-- Application Count -->
-                  <td class="orb-table__cell">
-                    <div class="orb-count">
-                      <fa-icon icon="rocket" class="orb-count__icon"></fa-icon>
-                      {{ row.applicationCount }}
-                    </div>
-                  </td>
-                  
-                </tr>
-                
-                <!-- Loading State -->
-                <tr *ngIf="isLoading$ | async" class="orb-table__row orb-table__row--loading">
-                  <td colspan="6" class="orb-table__cell orb-table__cell--loading">
-                    <div class="orb-table__loading">
-                      <fa-icon icon="spinner" class="orb-table__loading-icon fa-spin"></fa-icon>
-                      Loading organizations...
-                    </div>
-                  </td>
-                </tr>
-                
-                <!-- Empty State -->
-                <tr *ngIf="(isLoading$ | async) === false && (filteredOrganizationRows$ | async)?.length === 0" 
-                    class="orb-table__row orb-table__row--empty">
-                  <td colspan="6" class="orb-table__cell orb-table__cell--empty">
-                    <div class="orb-table__empty">
-                      <fa-icon icon="building" class="orb-table__empty-icon"></fa-icon>
-                      <p class="orb-table__empty-text">
-                        {{ (organizationRows$ | async)?.length === 0 ? 'No organizations found' : 'No organizations match your filters' }}
-                      </p>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+  <!-- Data Grid -->
+  <div class="orb-card__content">
+    <app-data-grid
+      [columns]="columns"
+      [data]="(filteredOrganizationRows$ | async) || []"
+      [pageState]="pageState"
+      [sortState]="sortState"
+      [filterState]="filterState"
+      [loading]="(isLoading$ | async) || false"
+      [showFilters]="true"
+      [showPagination]="true"
+      [showReset]="true"
+      [selectable]="false"
+      trackByField="organization"
+      emptyMessage="No organizations found"
+      (pageChange)="onPageChange($event)"
+      (sortChange)="onSortChange($event)"
+      (filterChange)="onFilterChange($event)"
+      (resetGrid)="onResetGrid()"
+      (rowClick)="onRowClick($event)">
+    </app-data-grid>
   </div>
 </div>
+
+<!-- Custom Cell Templates -->
+
+<!-- Organization Info Cell -->
+<ng-template #orgInfoCell let-row let-value="value">
+  <div class="orb-info">
+    <div class="orb-info__name">{{ row.organization.name }}</div>
+    <div class="orb-info__id">{{ row.organization.organizationId }}</div>
+  </div>
+</ng-template>
+
+<!-- Status Cell -->
+<ng-template #statusCell let-row>
+  <app-status-badge 
+    [status]="row.organization.status" 
+    type="organization"
+    [showIcon]="true"
+    [showLabel]="true"
+    size="small"
+    variant="chip">
+  </app-status-badge>
+</ng-template>
+
+<!-- Role Cell -->
+<ng-template #roleCell let-row>
+  <span class="orb-role-badge orb-role-badge--{{ getRoleClass(row.userRole) }}">
+    {{ row.userRole }}
+  </span>
+</ng-template>
+
+<!-- Member Count Cell -->
+<ng-template #memberCountCell let-row>
+  <div class="orb-count">
+    <fa-icon icon="users" class="orb-count__icon"></fa-icon>
+    {{ row.memberCount }}
+  </div>
+</ng-template>
+
+<!-- Application Count Cell -->
+<ng-template #appCountCell let-row>
+  <div class="orb-count">
+    <fa-icon icon="rocket" class="orb-count__icon"></fa-icon>
+    {{ row.applicationCount }}
+  </div>
+</ng-template>

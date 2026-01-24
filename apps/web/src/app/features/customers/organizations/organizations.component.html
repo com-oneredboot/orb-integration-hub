@@ -22,7 +22,7 @@ description: HTML template file for organizations management
               Manage your organizations and view member details
             </p>
             <p class="orb-page-header__hint">
-              Choose an organization from the list to view its details and manage settings.
+              Click on an organization to view its details, or create a new one.
             </p>
             <div class="orb-page-header__status">
               <span class="orb-header-badge orb-header-badge--active">
@@ -41,31 +41,12 @@ description: HTML template file for organizations management
     <div class="organizations-page">
       <!-- Main Content -->
       <div class="organizations-page__content">
-        <div class="organizations-page__layout">
-          
-          <!-- Organizations List -->
-          <div class="organizations-page__list-panel">
-            <app-organizations-list
-              #organizationsList
-              [selectedOrganization]="selectedOrganization"
-              (organizationSelected)="onOrganizationSelected($event)"
-              (createModeRequested)="onCreateModeRequested($event)">
-            </app-organizations-list>
-          </div>
-
-          <!-- Organization Detail -->
-          <div class="organizations-page__detail-panel">
-            <app-organization-detail
-              [organization]="selectedOrganization"
-              [memberCount]="selectedOrganizationMemberCount"
-              [applicationCount]="selectedOrganizationApplicationCount"
-              [isInCreateMode]="isInCreateMode"
-              (organizationSaved)="organizationsList.onOrganizationSaved($event)"
-              (createCancelled)="organizationsList.onCreateCancelled()">
-            </app-organization-detail>
-          </div>
-
-        </div>
+        <!-- Organizations List (full width - detail is now a separate route) -->
+        <app-organizations-list
+          #organizationsList
+          [selectedOrganization]="selectedOrganization"
+          (organizationSelected)="onOrganizationSelected($event)">
+        </app-organizations-list>
       </div>
     </div>
   </div>

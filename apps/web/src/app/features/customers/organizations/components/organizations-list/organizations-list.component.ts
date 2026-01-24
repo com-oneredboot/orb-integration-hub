@@ -1,22 +1,36 @@
 /**
  * Organizations List Component
  * 
- * Displays a list of organizations with filtering and selection capabilities.
- * Uses radio button selection for master-detail pattern.
+ * Displays a list of organizations using the shared DataGridComponent.
+ * Supports filtering, sorting, and selection.
+ * Uses create-on-click pattern for new organizations.
  */
 
-import { Component, OnInit, OnDestroy, Output, EventEmitter, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, Output, EventEmitter, Input, TemplateRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntil, map, take } from 'rxjs/operators';
 import { StatusBadgeComponent } from '../../../../../shared/components/ui/status-badge.component';
+import {
+  DataGridComponent,
+  ColumnDefinition,
+  PageState,
+  SortState,
+  FilterState,
+  PageChangeEvent,
+  SortChangeEvent,
+  FilterChangeEvent,
+  DEFAULT_PAGE_STATE
+} from '../../../../../shared/components/data-grid';
 
 import { Organizations } from '../../../../../core/models/OrganizationsModel';
 import { IUsers } from '../../../../../core/models/UsersModel';
 import { OrganizationStatus } from '../../../../../core/enums/OrganizationStatusEnum';
+import { OrganizationService } from '../../../../../core/services/organization.service';
 import { UserService } from '../../../../../core/services/user.service';
 import * as fromUser from '../../../../user/store/user.selectors';
 import { OrganizationsActions } from '../../store/organizations.actions';
@@ -30,15 +44,27 @@ import { OrganizationTableRow } from '../../store/organizations.state';
     CommonModule, 
     FormsModule,
     FontAwesomeModule,
-    StatusBadgeComponent
+    StatusBadgeComponent,
+    DataGridComponent
   ],
   templateUrl: './organizations-list.component.html',
   styleUrls: ['./organizations-list.component.scss']
 })
 export class OrganizationsListComponent implements OnInit, OnDestroy {
   @Output() organizationSelected = new EventEmitter<Organizations>();
-  @Output() createModeRequested = new EventEmitter<Organizations>();
   @Input() selectedOrganization: Organizations | null = null;
+
+  // Template references for custom cells
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  @ViewChild('orgInfoCell', { static: true }) orgInfoCell!: TemplateRef<any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  @ViewChild('statusCell', { static: true }) statusCell!: TemplateRef<any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  @ViewChild('roleCell', { static: true }) roleCell!: TemplateRef<any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  @ViewChild('memberCountCell', { static: true }) memberCountCell!: TemplateRef<any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  @ViewChild('appCountCell', { static: true }) appCountCell!: TemplateRef<any>;
 
   // User data
   currentUser$: Observable<IUsers | null>;
@@ -48,19 +74,22 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
   filteredOrganizationRows$: Observable<OrganizationTableRow[]>;
   isLoading$: Observable<boolean>;
   isCreatingNew$: Observable<boolean>;
-  searchTerm$: Observable<string>;
-  statusFilter$: Observable<string>;
-  roleFilter$: Observable<string>;
   
-  // Local filter values for form binding
-  searchTerm = '';
-  statusFilter = '';
-  roleFilter = '';
+  // Grid configuration
+  columns: ColumnDefinition<OrganizationTableRow>[] = [];
+  pageState: PageState = { ...DEFAULT_PAGE_STATE, pageSize: 10 };
+  sortState: SortState | null = null;
+  filterState: FilterState = {};
+  
+  // Create state
+  isCreatingDraft = false;
   
   private destroy$ = new Subject<void>();
 
   constructor(
     private userService: UserService,
+    private organizationService: OrganizationService,
+    private router: Router,
     private store: Store
   ) {
     // User selectors
@@ -71,17 +100,24 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
     this.filteredOrganizationRows$ = this.store.select(fromOrganizations.selectFilteredOrganizationRows);
     this.isLoading$ = this.store.select(fromOrganizations.selectIsLoading);
     this.isCreatingNew$ = this.store.select(fromOrganizations.selectIsCreatingNew);
-    this.searchTerm$ = this.store.select(fromOrganizations.selectSearchTerm);
-    this.statusFilter$ = this.store.select(fromOrganizations.selectStatusFilter);
-    this.roleFilter$ = this.store.select(fromOrganizations.selectRoleFilter);
     
-    // Sync local filter values with store
-    this.searchTerm$.pipe(takeUntil(this.destroy$)).subscribe(term => this.searchTerm = term);
-    this.statusFilter$.pipe(takeUntil(this.destroy$)).subscribe(filter => this.statusFilter = filter);
-    this.roleFilter$.pipe(takeUntil(this.destroy$)).subscribe(filter => this.roleFilter = filter);
+    // Update page state when data changes
+    this.filteredOrganizationRows$.pipe(
+      takeUntil(this.destroy$),
+      map(rows => rows.length)
+    ).subscribe(totalItems => {
+      this.pageState = {
+        ...this.pageState,
+        totalItems,
+        totalPages: Math.ceil(totalItems / this.pageState.pageSize)
+      };
+    });
   }
 
   ngOnInit(): void {
+    // Initialize columns with templates
+    this.initializeColumns();
+    
     // Load organizations from the store
     this.store.dispatch(OrganizationsActions.loadOrganizations());
   }
@@ -91,108 +127,156 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  private initializeColumns(): void {
+    this.columns = [
+      {
+        field: 'organization',
+        header: 'Organization',
+        sortable: true,
+        filterable: true,
+        cellTemplate: this.orgInfoCell,
+        width: '30%'
+      },
+      {
+        field: 'organization',
+        header: 'Status',
+        sortable: true,
+        filterable: true,
+        filterType: 'select',
+        filterOptions: [
+          { value: 'ACTIVE', label: 'Active' },
+          { value: 'INACTIVE', label: 'Inactive' },
+          { value: 'PENDING', label: 'Pending' },
+          { value: 'SUSPENDED', label: 'Suspended' }
+        ],
+        cellTemplate: this.statusCell,
+        width: '15%'
+      },
+      {
+        field: 'userRole',
+        header: 'Role',
+        sortable: true,
+        filterable: true,
+        filterType: 'select',
+        filterOptions: [
+          { value: 'OWNER', label: 'Owner' },
+          { value: 'EMPLOYEE', label: 'Employee' },
+          { value: 'CUSTOMER', label: 'Customer' }
+        ],
+        cellTemplate: this.roleCell,
+        width: '15%'
+      },
+      {
+        field: 'memberCount',
+        header: 'Members',
+        sortable: true,
+        cellTemplate: this.memberCountCell,
+        width: '15%',
+        hideOnMobile: true
+      },
+      {
+        field: 'applicationCount',
+        header: 'Applications',
+        sortable: true,
+        cellTemplate: this.appCountCell,
+        width: '15%',
+        hideOnMobile: true
+      }
+    ];
+  }
 
+  // Grid event handlers
+  onPageChange(event: PageChangeEvent): void {
+    this.pageState = {
+      ...this.pageState,
+      currentPage: event.page,
+      pageSize: event.pageSize,
+      totalPages: Math.ceil(this.pageState.totalItems / event.pageSize)
+    };
+  }
+
+  onSortChange(event: SortChangeEvent): void {
+    if (event.direction) {
+      this.sortState = { field: event.field, direction: event.direction };
+    } else {
+      this.sortState = null;
+    }
+    // TODO: Dispatch sort action to store for server-side sorting
+  }
+
+  onFilterChange(event: FilterChangeEvent): void {
+    this.filterState = event.filters;
+    
+    // Dispatch filter actions to store
+    const searchTerm = (event.filters['organization'] as string) || '';
+    const statusFilter = (event.filters['status'] as string) || '';
+    const roleFilter = (event.filters['userRole'] as string) || '';
+    
+    this.store.dispatch(OrganizationsActions.setSearchTerm({ searchTerm }));
+    this.store.dispatch(OrganizationsActions.setStatusFilter({ statusFilter }));
+    this.store.dispatch(OrganizationsActions.setRoleFilter({ roleFilter }));
+  }
+
+  onResetGrid(): void {
+    this.pageState = { ...DEFAULT_PAGE_STATE, pageSize: 10 };
+    this.sortState = null;
+    this.filterState = {};
+    
+    // Clear store filters
+    this.store.dispatch(OrganizationsActions.setSearchTerm({ searchTerm: '' }));
+    this.store.dispatch(OrganizationsActions.setStatusFilter({ statusFilter: '' }));
+    this.store.dispatch(OrganizationsActions.setRoleFilter({ roleFilter: '' }));
+  }
+
+  onRowClick(row: OrganizationTableRow): void {
+    // Navigate to detail page using create-on-click pattern
+    this.router.navigate(['/customers/organizations', row.organization.organizationId]);
+  }
 
   onOrganizationSelected(organization: Organizations): void {
     this.store.dispatch(OrganizationsActions.selectOrganization({ organization }));
     this.organizationSelected.emit(organization);
   }
 
-  onEnterOrganization(organization: Organizations): void {
-    console.debug('Entering organization:', organization.name);
-    // TODO: Implement organization context switching
-  }
-
-  onManageOrganization(organization: Organizations): void {
-    console.debug('Managing organization:', organization.name);
-    // TODO: Navigate to organization management page
-  }
-
-  onViewOrganization(organization: Organizations): void {
-    this.onOrganizationSelected(organization);
-  }
-
   onCreateOrganization(): void {
-    console.debug('Create organization clicked');
+    console.debug('[OrganizationsList] Create organization clicked');
     
-    // Debug: Check current user and groups
-    this.currentUser$.pipe(takeUntil(this.destroy$)).subscribe(user => {
-      console.debug('Current user:', user);
-      console.debug('User groups:', user?.groups);
-      console.debug('Is customer check:', this.userService.isUserCustomer(user));
+    // Check if user is a customer
+    this.currentUser$.pipe(take(1)).subscribe(user => {
+      console.debug('[OrganizationsList] Current user:', user);
+      console.debug('[OrganizationsList] User groups:', user?.groups);
       
       if (!this.userService.isUserCustomer(user)) {
-        console.warn('User is not a customer - cannot create organization');
+        console.warn('[OrganizationsList] User is not a customer - cannot create organization');
         return;
       }
       
-      // Check if already creating new from store
-      this.isCreatingNew$.pipe(takeUntil(this.destroy$)).subscribe(isCreatingNew => {
-        if (isCreatingNew) {
-          console.debug('Already creating a new organization');
-          return;
+      if (this.isCreatingDraft) {
+        console.debug('[OrganizationsList] Already creating a draft');
+        return;
+      }
+      
+      // Create-on-click: Create draft and navigate to detail page
+      this.isCreatingDraft = true;
+      console.debug('[OrganizationsList] Creating draft organization...');
+      
+      this.organizationService.createDraft().pipe(take(1)).subscribe({
+        next: (response) => {
+          this.isCreatingDraft = false;
+          if (response.StatusCode === 200 && response.Data) {
+            console.debug('[OrganizationsList] Draft created:', response.Data.organizationId);
+            // Navigate to the detail page with the new organization ID
+            this.router.navigate(['/customers/organizations', response.Data.organizationId]);
+          } else {
+            console.error('[OrganizationsList] Failed to create draft:', response.Message);
+          }
+        },
+        error: (error) => {
+          this.isCreatingDraft = false;
+          console.error('[OrganizationsList] Error creating draft:', error);
         }
-        
-        console.debug('User is customer - creating placeholder organization');
-        this.createPlaceholderOrganization();
-      }).unsubscribe();
-    }).unsubscribe();
-  }
-
-  private createPlaceholderOrganization(): void {
-    // Create placeholder organization
-    const placeholderOrg: Organizations = new Organizations({
-      organizationId: 'new-org-placeholder',
-      name: 'New Organization',
-      description: '',
-      ownerId: '', // Will be filled by backend
-      status: OrganizationStatus.Pending,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      kmsKeyId: '',
-      kmsKeyArn: '',
-      kmsAlias: ''
+      });
     });
-
-    // Dispatch action to enter create mode with placeholder
-    this.store.dispatch(OrganizationsActions.enterCreateMode({ placeholderOrganization: placeholderOrg }));
-    
-    // Emit create mode request to parent
-    this.createModeRequested.emit(placeholderOrg);
-  }
-
-  cancelCreateOrganization(): void {
-    // Dispatch action to cancel create mode
-    this.store.dispatch(OrganizationsActions.cancelCreateMode());
-    
-    // Clear selection
-    this.organizationSelected.emit(null as unknown as Organizations);
-  }
-
-  onOrganizationSaved(savedOrganization: Organizations): void {
-    console.debug('Organization saved:', savedOrganization);
-    
-    // The store effects will handle updating the organization data
-    // We just need to ensure the selection is updated
-    this.onOrganizationSelected(savedOrganization);
-  }
-
-  onCreateCancelled(): void {
-    console.debug('Create cancelled');
-    this.cancelCreateOrganization();
-  }
-
-  onSearchChange(): void {
-    this.store.dispatch(OrganizationsActions.setSearchTerm({ searchTerm: this.searchTerm }));
-  }
-
-  onFilterChange(): void {
-    this.store.dispatch(OrganizationsActions.setStatusFilter({ statusFilter: this.statusFilter }));
-    this.store.dispatch(OrganizationsActions.setRoleFilter({ roleFilter: this.roleFilter }));
-  }
-
-  trackByOrganizationId(_index: number, row: OrganizationTableRow): string {
-    return row.organization.organizationId;
   }
 
   getRoleClass(role: string): string {

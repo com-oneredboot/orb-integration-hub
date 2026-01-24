@@ -16,6 +16,11 @@ export const OrganizationsActions = createActionGroup({
     'Load Organizations Success': props<{ organizations: Organizations[] }>(),
     'Load Organizations Failure': props<{ error: string }>(),
 
+    // Create Draft Organization (create-on-click pattern)
+    'Create Draft Organization': emptyProps(),
+    'Create Draft Organization Success': props<{ organization: Organizations }>(),
+    'Create Draft Organization Failure': props<{ error: string }>(),
+
     // Create Organization
     'Create Organization': props<{ input: Partial<OrganizationsCreateInput> }>(),
     'Create Organization Success': props<{ organization: Organizations }>(),

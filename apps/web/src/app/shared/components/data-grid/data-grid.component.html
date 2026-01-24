@@ -1,0 +1,349 @@
+<div class="data-grid" [class.data-grid--loading]="loading">
+  <!-- Toolbar -->
+  <div class="data-grid__toolbar" *ngIf="showFilters || showReset">
+    <!-- Filter Toggle (Mobile) -->
+    <button
+      *ngIf="showFilters && filterableColumns.length > 0"
+      type="button"
+      class="data-grid__filter-toggle"
+      (click)="toggleFilters()"
+      [attr.aria-expanded]="filtersExpanded"
+      aria-controls="grid-filters">
+      <fa-icon [icon]="faFilter" aria-hidden="true"></fa-icon>
+      <span>Filters</span>
+      <span *ngIf="activeFilterCount > 0" class="data-grid__filter-badge">
+        {{ activeFilterCount }}
+      </span>
+    </button>
+
+    <!-- Filter Section -->
+    <div
+      *ngIf="showFilters && filterableColumns.length > 0"
+      id="grid-filters"
+      class="data-grid__filters"
+      [class.data-grid__filters--expanded]="filtersExpanded"
+      role="search"
+      aria-label="Filter data">
+      
+      <div class="data-grid__filter-inputs">
+        <ng-container *ngFor="let column of filterableColumns; trackBy: trackByColumn">
+          <div class="data-grid__filter-field">
+            <label [for]="'filter-' + $any(column.field)" class="data-grid__filter-label">
+              {{ column.header }}
+            </label>
+            
+            <!-- Text Filter -->
+            <input
+              *ngIf="column.filterType !== 'select'"
+              [id]="'filter-' + $any(column.field)"
+              type="text"
+              class="data-grid__filter-input"
+              [placeholder]="'Filter ' + column.header"
+              [value]="getFilterValue(column.field)"
+              (input)="onFilterInputFromEvent(column, $event)"
+              [attr.aria-label]="'Filter by ' + column.header" />
+            
+            <!-- Select Filter -->
+            <select
+              *ngIf="column.filterType === 'select'"
+              [id]="'filter-' + $any(column.field)"
+              class="data-grid__filter-select"
+              [value]="getFilterValue(column.field)"
+              (change)="onSelectFilterFromEvent(column, $event)"
+              [attr.aria-label]="'Filter by ' + column.header">
+              <option value="">All</option>
+              <option *ngFor="let option of column.filterOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- Clear Filters Button -->
+      <button
+        *ngIf="hasActiveFilters"
+        type="button"
+        class="data-grid__clear-filters"
+        (click)="clearFilters()"
+        aria-label="Clear all filters">
+        <fa-icon [icon]="faTimes" aria-hidden="true"></fa-icon>
+        <span>Clear Filters</span>
+      </button>
+    </div>
+
+    <!-- Reset Button -->
+    <button
+      *ngIf="showReset"
+      type="button"
+      class="data-grid__reset"
+      (click)="onReset()"
+      [disabled]="loading"
+      aria-label="Reset grid to default state">
+      <fa-icon [icon]="faRotateLeft" aria-hidden="true"></fa-icon>
+      <span>Reset</span>
+    </button>
+  </div>
+
+  <!-- Active Filter Indicators -->
+  <div
+    *ngIf="hasActiveFilters"
+    class="data-grid__active-filters"
+    role="status"
+    aria-live="polite">
+    <span class="data-grid__active-filters-label">Active filters:</span>
+    <span class="data-grid__active-filters-count">{{ activeFilterCount }}</span>
+  </div>
+
+  <!-- Table Container -->
+  <div class="data-grid__container" [attr.aria-busy]="loading">
+    <table
+      class="data-grid__table"
+      role="grid"
+      [attr.aria-rowcount]="data.length"
+      [attr.aria-colcount]="columns.length">
+      
+      <!-- Table Header -->
+      <thead class="data-grid__thead">
+        <tr class="data-grid__header-row" role="row">
+          <!-- Selection Column -->
+          <th
+            *ngIf="selectable"
+            class="data-grid__header data-grid__header--select"
+            scope="col"
+            role="columnheader">
+            <span class="sr-only">Select</span>
+          </th>
+          
+          <!-- Data Columns -->
+          <th
+            *ngFor="let column of columns; trackBy: trackByColumn"
+            class="data-grid__header"
+            [class.data-grid__header--sortable]="column.sortable"
+            [class.data-grid__header--sorted]="getSortDirection(column) !== null"
+            [class.data-grid__header--hide-mobile]="column.hideOnMobile"
+            [style.width]="column.width"
+            [style.min-width]="column.minWidth"
+            [style.text-align]="column.align || 'left'"
+            scope="col"
+            role="columnheader"
+            [attr.aria-sort]="column.sortable ? (getSortDirection(column) === 'asc' ? 'ascending' : getSortDirection(column) === 'desc' ? 'descending' : 'none') : null"
+            (click)="onHeaderClick(column)"
+            (keydown.enter)="onHeaderClick(column)"
+            (keydown.space)="onHeaderClick(column); $event.preventDefault()"
+            [attr.tabindex]="column.sortable ? 0 : null">
+            
+            <!-- Custom Header Template -->
+            <ng-container *ngIf="column.headerTemplate; else defaultHeader">
+              <ng-container *ngTemplateOutlet="column.headerTemplate; context: { $implicit: column, column: column, sortDirection: getSortDirection(column) }"></ng-container>
+            </ng-container>
+            
+            <!-- Default Header -->
+            <ng-template #defaultHeader>
+              <div class="data-grid__header-content">
+                <span class="data-grid__header-text">{{ column.header }}</span>
+                <span *ngIf="column.sortable" class="data-grid__sort-icon" aria-hidden="true">
+                  <fa-icon
+                    *ngIf="getSortDirection(column) === null"
+                    [icon]="faSort"
+                    class="data-grid__sort-icon--inactive">
+                  </fa-icon>
+                  <fa-icon
+                    *ngIf="getSortDirection(column) === 'asc'"
+                    [icon]="faSortUp"
+                    class="data-grid__sort-icon--active">
+                  </fa-icon>
+                  <fa-icon
+                    *ngIf="getSortDirection(column) === 'desc'"
+                    [icon]="faSortDown"
+                    class="data-grid__sort-icon--active">
+                  </fa-icon>
+                </span>
+              </div>
+            </ng-template>
+          </th>
+        </tr>
+      </thead>
+
+      <!-- Table Body -->
+      <tbody class="data-grid__tbody">
+        <!-- Loading State -->
+        <tr *ngIf="loading" class="data-grid__row data-grid__row--loading" role="row">
+          <td
+            [attr.colspan]="selectable ? columns.length + 1 : columns.length"
+            class="data-grid__cell data-grid__cell--loading"
+            role="gridcell">
+            <ng-container *ngIf="loadingTemplate; else defaultLoading">
+              <ng-container *ngTemplateOutlet="loadingTemplate"></ng-container>
+            </ng-container>
+            <ng-template #defaultLoading>
+              <div class="data-grid__loading">
+                <fa-icon [icon]="faSpinner" [animation]="'spin'" class="data-grid__loading-icon" aria-hidden="true"></fa-icon>
+                <span>Loading...</span>
+              </div>
+            </ng-template>
+          </td>
+        </tr>
+
+        <!-- Empty State -->
+        <tr *ngIf="!loading && data.length === 0" class="data-grid__row data-grid__row--empty" role="row">
+          <td
+            [attr.colspan]="selectable ? columns.length + 1 : columns.length"
+            class="data-grid__cell data-grid__cell--empty"
+            role="gridcell">
+            <ng-container *ngIf="emptyTemplate; else defaultEmpty">
+              <ng-container *ngTemplateOutlet="emptyTemplate"></ng-container>
+            </ng-container>
+            <ng-template #defaultEmpty>
+              <div class="data-grid__empty">
+                <fa-icon [icon]="faInbox" class="data-grid__empty-icon" aria-hidden="true"></fa-icon>
+                <p class="data-grid__empty-text">{{ emptyMessage }}</p>
+              </div>
+            </ng-template>
+          </td>
+        </tr>
+
+        <!-- Data Rows -->
+        <ng-container *ngIf="!loading && data.length > 0">
+          <tr
+            *ngFor="let row of data; let i = index; trackBy: trackByRow"
+            class="data-grid__row"
+            [class.data-grid__row--selected]="isRowSelected(row)"
+            [class.data-grid__row--even]="i % 2 === 1"
+            role="row"
+            [attr.aria-rowindex]="i + 1"
+            [attr.aria-selected]="selectable ? isRowSelected(row) : null"
+            (click)="onRowClick(row)"
+            tabindex="0"
+            (keydown.enter)="onRowClick(row)">
+            
+            <!-- Selection Cell -->
+            <td
+              *ngIf="selectable"
+              class="data-grid__cell data-grid__cell--select"
+              role="gridcell">
+              <input
+                type="checkbox"
+                class="data-grid__checkbox"
+                [checked]="isRowSelected(row)"
+                (change)="toggleRowSelection(row, $event)"
+                (click)="$event.stopPropagation()"
+                [attr.aria-label]="'Select row ' + (i + 1)" />
+            </td>
+            
+            <!-- Data Cells -->
+            <td
+              *ngFor="let column of columns; trackBy: trackByColumn"
+              class="data-grid__cell"
+              [class.data-grid__cell--hide-mobile]="column.hideOnMobile"
+              [style.text-align]="column.align || 'left'"
+              role="gridcell">
+              
+              <!-- Custom Cell Template -->
+              <ng-container *ngIf="column.cellTemplate; else defaultCell">
+                <ng-container *ngTemplateOutlet="column.cellTemplate; context: getCellContext(row, column, i)"></ng-container>
+              </ng-container>
+              
+              <!-- Default Cell -->
+              <ng-template #defaultCell>
+                {{ getCellValue(row, column) }}
+              </ng-template>
+            </td>
+          </tr>
+        </ng-container>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div
+    *ngIf="showPagination && pageState.totalPages > 0"
+    class="data-grid__pagination"
+    role="navigation"
+    aria-label="Table pagination">
+    
+    <!-- Page Size Selector -->
+    <div class="data-grid__page-size">
+      <label for="page-size" class="data-grid__page-size-label">Rows per page:</label>
+      <select
+        id="page-size"
+        class="data-grid__page-size-select"
+        [value]="pageState.pageSize"
+        (change)="onPageSizeChange(+$any($event.target).value)"
+        [disabled]="loading">
+        <option *ngFor="let size of PAGE_SIZE_OPTIONS" [value]="size">{{ size }}</option>
+      </select>
+    </div>
+
+    <!-- Display Range -->
+    <div class="data-grid__display-range" aria-live="polite">
+      {{ displayRange }}
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="data-grid__page-nav">
+      <!-- First Page -->
+      <button
+        type="button"
+        class="data-grid__page-btn"
+        [disabled]="isPrevDisabled"
+        (click)="onPageChange(1)"
+        aria-label="Go to first page">
+        <fa-icon [icon]="faAnglesLeft" aria-hidden="true"></fa-icon>
+      </button>
+
+      <!-- Previous Page -->
+      <button
+        type="button"
+        class="data-grid__page-btn"
+        [disabled]="isPrevDisabled"
+        (click)="onPageChange(pageState.currentPage - 1)"
+        aria-label="Go to previous page">
+        <fa-icon [icon]="faChevronLeft" aria-hidden="true"></fa-icon>
+      </button>
+
+      <!-- Page Numbers -->
+      <ng-container *ngFor="let page of pageNumbers">
+        <span *ngIf="page === -1" class="data-grid__page-ellipsis" aria-hidden="true">...</span>
+        <button
+          *ngIf="page !== -1"
+          type="button"
+          class="data-grid__page-btn data-grid__page-btn--number"
+          [class.data-grid__page-btn--active]="page === pageState.currentPage"
+          [disabled]="loading"
+          (click)="onPageChange(page)"
+          [attr.aria-label]="'Go to page ' + page"
+          [attr.aria-current]="page === pageState.currentPage ? 'page' : null">
+          {{ page }}
+        </button>
+      </ng-container>
+
+      <!-- Next Page -->
+      <button
+        type="button"
+        class="data-grid__page-btn"
+        [disabled]="isNextDisabled"
+        (click)="onPageChange(pageState.currentPage + 1)"
+        aria-label="Go to next page">
+        <fa-icon [icon]="faChevronRight" aria-hidden="true"></fa-icon>
+      </button>
+
+      <!-- Last Page -->
+      <button
+        type="button"
+        class="data-grid__page-btn"
+        [disabled]="isNextDisabled"
+        (click)="onPageChange(pageState.totalPages)"
+        aria-label="Go to last page">
+        <fa-icon [icon]="faAnglesRight" aria-hidden="true"></fa-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Screen Reader Announcements -->
+  <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">
+    <span *ngIf="sortState">
+      Sorted by {{ sortState.field }} {{ sortState.direction === 'asc' ? 'ascending' : 'descending' }}
+    </span>
+  </div>
+</div>

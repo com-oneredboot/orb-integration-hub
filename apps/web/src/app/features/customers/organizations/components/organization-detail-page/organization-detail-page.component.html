@@ -1,0 +1,167 @@
+<!-- Organization Detail Page Template -->
+<div class="org-detail-page">
+  <!-- Header -->
+  <div class="org-detail-page__header">
+    <div class="org-detail-page__breadcrumb">
+      <a routerLink="/customers/organizations" class="org-detail-page__back-link">
+        <fa-icon icon="arrow-left"></fa-icon>
+        Back to Organizations
+      </a>
+    </div>
+    <div class="org-detail-page__title-row">
+      <h1 class="org-detail-page__title">
+        <fa-icon icon="building" class="org-detail-page__icon"></fa-icon>
+        {{ isDraft ? 'Create Organization' : (organization?.name || 'Organization Details') }}
+      </h1>
+      <div class="org-detail-page__status" *ngIf="organization && !isDraft">
+        <app-status-badge 
+          [status]="organization.status" 
+          type="organization"
+          [showIcon]="true"
+          [showLabel]="true"
+          size="medium"
+          variant="chip">
+        </app-status-badge>
+      </div>
+    </div>
+    <p class="org-detail-page__subtitle" *ngIf="isDraft">
+      Fill in the details below to create your new organization
+    </p>
+  </div>
+
+  <!-- Loading State -->
+  <div class="org-detail-page__loading" *ngIf="isLoading">
+    <fa-icon icon="spinner" animation="spin" size="2x"></fa-icon>
+    <p>Loading organization...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="org-detail-page__error" *ngIf="loadError && !isLoading">
+    <fa-icon icon="exclamation-triangle" size="2x"></fa-icon>
+    <p>{{ loadError }}</p>
+    <button class="org-detail-page__btn org-detail-page__btn--secondary" routerLink="/customers/organizations">
+      Back to Organizations
+    </button>
+  </div>
+
+  <!-- Content -->
+  <div class="org-detail-page__content" *ngIf="organization && !isLoading && !loadError">
+    <!-- Form Card -->
+    <div class="org-detail-page__card">
+      <div class="org-detail-page__card-header">
+        <h2 class="org-detail-page__card-title">
+          <fa-icon icon="info-circle"></fa-icon>
+          Organization Information
+        </h2>
+      </div>
+      <div class="org-detail-page__card-body">
+        <!-- Name Field -->
+        <div class="org-detail-page__field">
+          <label class="org-detail-page__label" for="org-name">
+            Organization Name <span class="org-detail-page__required">*</span>
+          </label>
+          <input 
+            type="text" 
+            id="org-name"
+            class="org-detail-page__input"
+            [class.org-detail-page__input--error]="validationErrors.name"
+            [(ngModel)]="editForm.name"
+            placeholder="Enter organization name"
+            maxlength="100"
+            [attr.aria-invalid]="validationErrors.name ? 'true' : 'false'"
+            [attr.aria-describedby]="validationErrors.name ? 'name-error' : null">
+          <div class="org-detail-page__error-text" id="name-error" *ngIf="validationErrors.name">
+            {{ validationErrors.name }}
+          </div>
+          <div class="org-detail-page__hint">
+            {{ editForm.name.length }}/100 characters
+          </div>
+        </div>
+
+        <!-- Description Field -->
+        <div class="org-detail-page__field">
+          <label class="org-detail-page__label" for="org-description">
+            Description
+          </label>
+          <textarea 
+            id="org-description"
+            class="org-detail-page__textarea"
+            [class.org-detail-page__textarea--error]="validationErrors.description"
+            [(ngModel)]="editForm.description"
+            placeholder="Enter a brief description of your organization"
+            maxlength="500"
+            rows="4"
+            [attr.aria-invalid]="validationErrors.description ? 'true' : 'false'"
+            [attr.aria-describedby]="validationErrors.description ? 'desc-error' : null">
+          </textarea>
+          <div class="org-detail-page__error-text" id="desc-error" *ngIf="validationErrors.description">
+            {{ validationErrors.description }}
+          </div>
+          <div class="org-detail-page__hint">
+            {{ editForm.description.length }}/500 characters
+          </div>
+        </div>
+
+        <!-- Metadata (read-only, shown for existing orgs) -->
+        <div class="org-detail-page__metadata" *ngIf="!isDraft">
+          <div class="org-detail-page__meta-item">
+            <span class="org-detail-page__meta-label">Organization ID</span>
+            <span class="org-detail-page__meta-value">{{ organization.organizationId }}</span>
+          </div>
+          <div class="org-detail-page__meta-item">
+            <span class="org-detail-page__meta-label">Created</span>
+            <span class="org-detail-page__meta-value">{{ formatDate(organization.createdAt) }}</span>
+          </div>
+          <div class="org-detail-page__meta-item">
+            <span class="org-detail-page__meta-label">Last Updated</span>
+            <span class="org-detail-page__meta-value">{{ formatDate(organization.updatedAt) }}</span>
+          </div>
+        </div>
+
+        <!-- Save Error -->
+        <div class="org-detail-page__save-error" *ngIf="saveError">
+          <fa-icon icon="exclamation-circle"></fa-icon>
+          {{ saveError }}
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="org-detail-page__card-footer">
+        <div class="org-detail-page__actions-left">
+          <button 
+            class="org-detail-page__btn org-detail-page__btn--danger"
+            *ngIf="!isDraft"
+            (click)="onDelete()"
+            [disabled]="isSaving">
+            <fa-icon icon="trash"></fa-icon>
+            Delete
+          </button>
+        </div>
+        <div class="org-detail-page__actions-right">
+          <button 
+            class="org-detail-page__btn org-detail-page__btn--secondary"
+            (click)="onCancel()"
+            [disabled]="isSaving">
+            Cancel
+          </button>
+          <button 
+            class="org-detail-page__btn org-detail-page__btn--primary"
+            (click)="onSave()"
+            [disabled]="isSaving">
+            <fa-icon icon="spinner" animation="spin" *ngIf="isSaving"></fa-icon>
+            <fa-icon icon="save" *ngIf="!isSaving"></fa-icon>
+            {{ isDraft ? 'Create Organization' : 'Save Changes' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Debug Panel -->
+  <app-debug-panel
+    [visible]="(debugMode$ | async) || false"
+    [title]="'Organization Detail Debug'"
+    [logs$]="debugLogs$"
+    [context]="debugContext">
+  </app-debug-panel>
+</div>

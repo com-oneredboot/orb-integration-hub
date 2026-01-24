@@ -1,8 +1,9 @@
 /**
  * Organizations Component
  * 
- * Main container for organizations management with master-detail layout.
+ * Main container for organizations list view.
  * Available only to CUSTOMER role users.
+ * Uses create-on-click pattern - detail view is a separate route.
  */
 
 import { Component, OnInit } from '@angular/core';
@@ -14,7 +15,6 @@ import { Observable, of } from 'rxjs';
 
 import { Organizations } from '../../../core/models/OrganizationsModel';
 import { OrganizationsListComponent } from './components/organizations-list/organizations-list.component';
-import { OrganizationDetailComponent } from './components/organization-detail/organization-detail.component';
 import * as fromUser from '../../user/store/user.selectors';
 import { DebugPanelComponent, DebugContext } from '../../../shared/components/debug/debug-panel.component';
 import { DebugLogEntry } from '../../../core/services/debug-log.service';
@@ -27,7 +27,6 @@ import { DebugLogEntry } from '../../../core/services/debug-log.service';
     RouterModule,
     FontAwesomeModule,
     OrganizationsListComponent,
-    OrganizationDetailComponent,
     DebugPanelComponent
   ],
   templateUrl: './organizations.component.html',
@@ -35,9 +34,6 @@ import { DebugLogEntry } from '../../../core/services/debug-log.service';
 })
 export class OrganizationsComponent implements OnInit {
   selectedOrganization: Organizations | null = null;
-  selectedOrganizationMemberCount = 0;
-  selectedOrganizationApplicationCount = 0;
-  isInCreateMode = false;
   debugMode$: Observable<boolean>;
   
   // Empty logs observable for debug panel
@@ -49,20 +45,9 @@ export class OrganizationsComponent implements OnInit {
       page: 'Organizations',
       additionalSections: [
         {
-          title: 'Selected Organization',
-          data: this.selectedOrganization ? {
-            organizationData: this.selectedOrganization,
-            memberCount: this.selectedOrganizationMemberCount,
-            applicationCount: this.selectedOrganizationApplicationCount
-          } : { status: 'No Organization Selected' }
-        },
-        {
           title: 'Component State',
           data: {
             selectedOrganizationId: this.selectedOrganization?.organizationId || 'None',
-            selectedOrganizationName: this.selectedOrganization?.name || 'None',
-            selectedOrganizationStatus: this.selectedOrganization?.status || 'None',
-            isInCreateMode: this.isInCreateMode,
             componentInitialized: true
           }
         }
@@ -81,39 +66,5 @@ export class OrganizationsComponent implements OnInit {
 
   onOrganizationSelected(organization: Organizations): void {
     this.selectedOrganization = organization;
-    this.isInCreateMode = false; // Exit create mode on normal selection
-    
-    // TODO: Load actual member and application counts from service
-    // For now, use mock data based on organization
-    this.loadOrganizationStats(organization);
-  }
-
-  onCreateModeRequested(organization: Organizations): void {
-    this.selectedOrganization = organization;
-    this.isInCreateMode = true;
-    this.selectedOrganizationMemberCount = 0;
-    this.selectedOrganizationApplicationCount = 0;
-  }
-
-  private loadOrganizationStats(organization: Organizations): void {
-    // TODO: Replace with actual service calls
-    // Mock data for demonstration
-    switch (organization.organizationId) {
-      case 'org_1':
-        this.selectedOrganizationMemberCount = 15;
-        this.selectedOrganizationApplicationCount = 12;
-        break;
-      case 'org_2':
-        this.selectedOrganizationMemberCount = 8;
-        this.selectedOrganizationApplicationCount = 5;
-        break;
-      case 'org_3':
-        this.selectedOrganizationMemberCount = 25;
-        this.selectedOrganizationApplicationCount = 18;
-        break;
-      default:
-        this.selectedOrganizationMemberCount = 0;
-        this.selectedOrganizationApplicationCount = 0;
-    }
   }
 }
