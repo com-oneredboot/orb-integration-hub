@@ -158,15 +158,31 @@ export class OrganizationService extends ApiService {
         );
       }),
       switchMap(response => from(Promise.resolve(response))),
-      map((response: GraphQLResult<{ OrganizationsCreate: OrganizationsGraphQLResponse }>) => {
+      map((response: GraphQLResult<{ OrganizationsCreate: OrganizationsGraphQLResponse | IOrganizations }>) => {
         console.debug('[OrganizationService] Create draft organization response:', response);
         
         if (!response.data?.OrganizationsCreate) {
           throw new Error('No data in create draft organization response');
         }
 
-        const items = response.data.OrganizationsCreate.items;
-        const createdOrg = items.length > 0 ? new Organizations(items[0]) : null;
+        // Handle both response formats:
+        // 1. Wrapped format: { items: [...], nextToken }
+        // 2. Direct format: { organizationId, name, ... } (raw DynamoDB PutItem result)
+        const result = response.data.OrganizationsCreate;
+        let createdOrg: Organizations | null = null;
+
+        if ('items' in result && Array.isArray(result.items)) {
+          // Wrapped format
+          const items = result.items ?? [];
+          createdOrg = items.length > 0 ? new Organizations(items[0]) : null;
+        } else if ('organizationId' in result) {
+          // Direct format - the result IS the organization
+          createdOrg = new Organizations(result as IOrganizations);
+        }
+
+        if (!createdOrg) {
+          throw new Error('Organization was not created - invalid response format');
+        }
 
         return {
           StatusCode: 200,
