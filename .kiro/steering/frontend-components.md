@@ -7,6 +7,75 @@ fileMatchPattern: "apps/web/**/*.ts"
 
 Guidelines for creating Angular components in orb-integration-hub.
 
+## CTA Card System
+
+The dashboard uses a role-based CTA card system. See the full card matrix in:
+#[[file:.kiro/specs/dashboard-cta-redesign/design.md]]
+
+### CTA Card Component
+
+Use `CtaCardComponent` for dashboard call-to-action cards. Located at `apps/web/src/app/features/user/components/dashboard/cta-card/cta-card.component.ts`.
+
+**Card Layout:**
+- Fixed dimensions: 400px × 220px
+- Vertical layout: icon+title top, description middle, button bottom-right
+- Severity-based colors on left border and button
+
+**Severity Colors (muted):**
+| Severity | Color | Hex | Use Case |
+|----------|-------|-----|----------|
+| low | Green | `#7bc47f` | Informational, resource creation |
+| medium | Yellow | `#f5c872` | Attention needed, expiring items |
+| high | Orange | `#f5a66b` | Urgent action, security issues |
+
+**Usage:**
+
+```typescript
+import { CtaCardComponent } from '../cta-card/cta-card.component';
+import { CtaCard } from '../dashboard.types';
+
+@Component({
+  imports: [CtaCardComponent],
+})
+export class DashboardComponent {
+  cards: CtaCard[] = this.ctaService.getCtaCards(user);
+}
+```
+
+**Template:**
+
+```html
+<app-cta-card
+  [card]="card"
+  (action)="onCardAction($event)">
+</app-cta-card>
+```
+
+### DashboardCtaService
+
+Use `DashboardCtaService` to generate CTA cards based on user state and role.
+
+```typescript
+import { DashboardCtaService } from '../../services/dashboard-cta.service';
+
+// Get all cards for user (sorted by priority)
+const cards = this.ctaService.getCtaCards(user);
+
+// Get specific card types
+const healthCards = this.ctaService.getHealthCards(user);
+const benefitCards = this.ctaService.getUserBenefitCards();
+const customerCards = this.ctaService.getCustomerActionCards(user);
+```
+
+### Card Categories by Account Type
+
+| Account Type | Card Categories |
+|--------------|-----------------|
+| USER | Health cards + Benefit cards (upgrade promotions) |
+| CUSTOMER | Health cards + Action cards (resource management) |
+| EMPLOYEE | Health cards + Employee cards (internal tools) |
+| OWNER | Health cards + Owner cards (platform admin) |
+
 ## Shared Components
 
 ### Progress Steps Component
