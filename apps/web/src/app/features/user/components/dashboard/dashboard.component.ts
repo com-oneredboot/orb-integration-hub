@@ -1,22 +1,24 @@
 // file: apps/web/src/app/features/user/components/dashboard/dashboard.component.ts
 // author: Corey Dale Peters
 // date: 2025-02-24
-// description: Dashboard component for authenticated users
+// description: Dashboard component for authenticated users - CTA Hub redesign
 
 import { Component, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Router } from '@angular/router';
 import { IUsers } from '../../../../core/models/UsersModel';
 import * as fromUser from '../../store/user.selectors';
-import { UserActions } from '../../store/user.actions';
 import { UserService } from '../../../../core/services/user.service';
 import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { RouterModule } from '@angular/router';
 import { DebugPanelComponent, DebugContext } from '../../../../shared/components/debug/debug-panel.component';
 import { DebugLogService, DebugLogEntry } from '../../../../core/services/debug-log.service';
+import { CtaCard, SideNavItem } from './dashboard.types';
+import { DashboardCtaService } from '../../services/dashboard-cta.service';
+import { CtaCardComponent } from './cta-card/cta-card.component';
+import { DashboardSideNavComponent } from './dashboard-side-nav/dashboard-side-nav.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -27,7 +29,9 @@ import { DebugLogService, DebugLogEntry } from '../../../../core/services/debug-
     CommonModule,
     FontAwesomeModule,
     RouterModule,
-    DebugPanelComponent
+    DebugPanelComponent,
+    CtaCardComponent,
+    DashboardSideNavComponent
   ]
 })
 export class DashboardComponent implements OnInit {
@@ -36,6 +40,7 @@ export class DashboardComponent implements OnInit {
   isLoading$: Observable<boolean>;
   isNotLoading$: Observable<boolean>;
   debugLogs$: Observable<DebugLogEntry[]>;
+  ctaCards$: Observable<CtaCard[]>;
 
   // Current user snapshot for debug context
   private currentUserSnapshot: IUsers | null = null;
@@ -43,14 +48,19 @@ export class DashboardComponent implements OnInit {
   constructor(
     private store: Store,
     private userService: UserService,
-    private router: Router,
-    private debugLogService: DebugLogService
+    private debugLogService: DebugLogService,
+    private ctaService: DashboardCtaService
   ) {
     this.currentUser$ = this.store.select(fromUser.selectCurrentUser);
     this.debugMode$ = this.store.select(fromUser.selectDebugMode);
     this.isLoading$ = this.store.select(fromUser.selectIsLoading);
     this.isNotLoading$ = this.isLoading$.pipe(map(loading => !loading));
     this.debugLogs$ = this.debugLogService.logs$;
+    
+    // Derive CTA cards from current user
+    this.ctaCards$ = this.currentUser$.pipe(
+      map(user => this.ctaService.getCtaCards(user))
+    );
 
     // Keep a snapshot of current user for debug context
     this.currentUser$.subscribe(user => this.currentUserSnapshot = user);
@@ -61,6 +71,7 @@ export class DashboardComponent implements OnInit {
    */
   get debugContext(): DebugContext {
     const user = this.currentUserSnapshot;
+    const cards = this.ctaService.getCtaCards(user);
     return {
       page: 'Dashboard',
       email: user?.email,
@@ -72,11 +83,14 @@ export class DashboardComponent implements OnInit {
       storeState: {
         hasValidName: user ? this.hasValidName(user) : false,
         isCustomerUser: user ? this.isCustomerUser(user) : false,
-        hasHealthWarnings: user ? this.hasHealthWarnings(user) : true
+        ctaCardCount: cards.length,
+        healthCardCount: cards.filter(c => c.category === 'health').length,
+        benefitCardCount: cards.filter(c => c.category === 'benefit').length,
+        actionCardCount: cards.filter(c => c.category === 'action').length
       }
     };
   }
-  
+
   /**
    * Public method to check if a user is valid
    * @param user The user to check
@@ -90,8 +104,6 @@ export class DashboardComponent implements OnInit {
     // Lifecycle hook - initialization handled by store selectors in constructor
     void 0; // Intentionally empty - initialization handled in constructor
   }
-
-  // Status handling now uses global StatusBadgeComponent
 
   /**
    * Format date string for display
@@ -123,86 +135,12 @@ export class DashboardComponent implements OnInit {
   }
 
   /**
-   * Navigate to profile page (summary view)
-   */
-  goToProfile(): void {
-    this.router.navigate(['/profile']);
-  }
-
-  /**
-   * Navigate to profile setup flow (starts from first incomplete step)
-   */
-  goToProfileSetup(): void {
-    this.router.navigate(['/profile'], { 
-      queryParams: { mode: 'setup', startFrom: 'incomplete' } 
-    });
-  }
-
-  /**
    * Check if user is a CUSTOMER user (should see organizations features)
    * @param user The user object
    * @returns true if user has CUSTOMER group membership
    */
   isCustomerUser(user: IUsers | null): boolean {
     return user?.groups?.includes('CUSTOMER') || false;
-  }
-
-  /**
-   * Navigate to email verification in auth flow
-   */
-  goToEmailVerification(): void {
-    this.router.navigate(['/authenticate']);
-    // The auth flow will handle checking email verification status
-  }
-
-  /**
-   * Navigate to phone setup/verification on profile page
-   */
-  goToPhoneVerification(): void {
-    this.router.navigate(['/profile'], { 
-      queryParams: { mode: 'setup', startFrom: 'incomplete' } 
-    });
-  }
-
-  /**
-   * Check MFA setup status by triggering user record update
-   * This will cause the Lambda to check Cognito and update MFA fields
-   */
-  checkMFASetup(): void {
-    // Only proceed if not already loading
-    this.isLoading$.subscribe(isLoading => {
-      if (!isLoading) {
-        console.log('[Dashboard] Triggering MFA check...');
-        this.store.dispatch(UserActions.checkMFASetup());
-      }
-    }).unsubscribe();
-  }
-
-  /**
-   * Navigate to security settings (MFA management)
-   */
-  goToSecuritySettings(): void {
-    // Use the new explicit MFA setup flow action to avoid redirect loops
-    this.store.dispatch(UserActions.beginMFASetupFlow());
-    this.router.navigate(['/authenticate']);
-  }
-
-  /**
-   * Check if user has any health warnings
-   * @param user The user object
-   * @returns true if there are any incomplete requirements
-   */
-  hasHealthWarnings(user: IUsers | null): boolean {
-    if (!user) return true;
-    
-    // Check all health requirements
-    const hasValidName = this.hasValidName(user);
-    const emailVerified = !!user.emailVerified;
-    const phoneVerified = !!user.phoneVerified;
-    const mfaComplete = !!(user.mfaEnabled && user.mfaSetupComplete);
-    
-    // Return true if ANY requirement is not met
-    return !hasValidName || !emailVerified || !phoneVerified || !mfaComplete;
   }
 
   /**
@@ -268,5 +206,28 @@ export class DashboardComponent implements OnInit {
       default:
         return 'Account Status Unknown';
     }
+  }
+
+  /**
+   * Handle CTA card action triggered
+   * @param card The CTA card that was clicked
+   */
+  onCtaCardAction(card: CtaCard): void {
+    console.log('[Dashboard] CTA card action:', card.id, card.title);
+  }
+
+  /**
+   * Handle side navigation item clicked
+   * @param item The side nav item that was clicked
+   */
+  onSideNavItemClicked(item: SideNavItem): void {
+    console.log('[Dashboard] Side nav item clicked:', item.id, item.tooltip);
+  }
+
+  /**
+   * Track CTA cards by ID for ngFor
+   */
+  trackByCardId(_index: number, card: CtaCard): string {
+    return card.id;
   }
 }

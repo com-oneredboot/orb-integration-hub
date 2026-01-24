@@ -1,0 +1,51 @@
+<!-- 
+file: apps/web/src/app/features/user/components/dashboard/cta-card/cta-card.component.html
+author: Kiro
+date: 2026-01-23
+description: CTA Card template - vertical layout: icon+title top, description middle, button bottom right
+-->
+
+<article 
+  class="orb-cta-card"
+  [ngClass]="getCategoryClass()"
+  role="article"
+  [attr.aria-labelledby]="'cta-title-' + card.id">
+  
+  <div class="orb-cta-card__content">
+    <!-- Top: Icon + Title -->
+    <div class="orb-cta-card__header">
+      <div class="orb-cta-card__icon-container">
+        <fa-icon 
+          [icon]="card.icon" 
+          class="orb-cta-card__icon"
+          [attr.aria-hidden]="true">
+        </fa-icon>
+      </div>
+      <h3 
+        [id]="'cta-title-' + card.id"
+        class="orb-cta-card__title">
+        {{ card.title }}
+      </h3>
+    </div>
+    
+    <!-- Middle: Description -->
+    <div class="orb-cta-card__text">
+      <p class="orb-cta-card__description">
+        {{ card.description }}
+      </p>
+    </div>
+    
+    <!-- Bottom Right: Button -->
+    <div class="orb-cta-card__action">
+      <button 
+        type="button"
+        class="orb-btn orb-btn--primary"
+        (click)="onActionClick()"
+        (keydown)="onKeydown($event)"
+        [attr.aria-label]="card.actionLabel + ' - ' + card.title">
+        {{ card.actionLabel }}
+        <fa-icon icon="arrow-right" class="orb-btn__icon" [attr.aria-hidden]="true"></fa-icon>
+      </button>
+    </div>
+  </div>
+</article>

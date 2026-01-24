@@ -1,105 +1,131 @@
 // file: frontend/src/app/features/user/components/dashboard/dashboard.component.scss
 // author: Corey Dale Peters
 // date: 2025-03-07
-// description: SCSS style file
+// description: Dashboard CTA Hub styles - Cards on left, Quick Actions on extreme right
 
 @use '../../../../../styles/variables' as v;
 @use '../../../../../styles/mixins' as m;
 @use 'sass:color';
 
-// Status badge mixin to reduce duplication
-@mixin status-badge-color($color) {
-  background: rgba($color, 0.1);
-  color: $color;
-  border: 1px solid rgba($color, 0.2);
-}
-
 .dashboard-container {
   max-width: v.$page-max-width;
   margin: 0 auto;
-  padding: 0; // No padding - header handles all spacing
-  
-  // Dashboard header now uses global .orb-page-header class
+  padding: 0;
 
   .dashboard-content {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: v.$spacing-xl;
     width: 100%;
     max-width: v.$page-max-width;
     margin: 0 auto;
     padding: 0 v.$spacing-lg;
   }
   
-  .dashboard-card {
-    @include m.card;
+  // CTA Hub Layout: Cards on left/center, Quick Actions on extreme right
+  .dashboard-cta-layout {
+    display: flex;
+    gap: v.$spacing-xl;
+    width: 100%;
+    align-items: flex-start;
     
-    &--profile {
-      grid-column: 1 / -1; // Full width
+    &__main {
+      flex: 1;
+      min-width: 0;
     }
     
-    &__header {
-      @include m.card-header;
-    }
-    
-    &__title {
-      @include m.card-title;
-    }
-    
-    &__icon {
-      @include m.card-icon;
-    }
-    
-    &__badge {
-      padding: v.$spacing-xs v.$spacing-sm;
-      border-radius: v.$border-radius;
-      font-size: v.$font-size-sm;
-      font-weight: v.$font-weight-medium;
-      text-transform: uppercase;
-      
-      &--success { @include status-badge-color(v.$success-color); }
-      &--warning { @include status-badge-color(v.$warning-color); }
-      &--error { @include status-badge-color(v.$danger-color); }
-      &--default { @include status-badge-color(v.$gray-500); }
-    }
-    
-    &__content {
-      @include m.card-content;
+    &__side-nav {
+      flex-shrink: 0;
+      position: sticky;
+      top: v.$spacing-lg;
     }
   }
   
-  // Dashboard-specific content grid
-  .dashboard-content {
+  // CTA Cards Container - Grid layout for cards
+  .dashboard-cta-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(320px, 400px));
     gap: v.$spacing-xl;
     width: 100%;
+    
+    &__empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: v.$spacing-xl * 2;
+      background: v.$white;
+      border-radius: v.$border-radius-lg;
+      box-shadow: v.$shadow-md;
+      border: 1px solid v.$border-color;
+    }
+    
+    &__empty-icon {
+      font-size: 4rem;
+      color: v.$success-color;
+      margin-bottom: v.$spacing-lg;
+    }
+    
+    &__empty-title {
+      font-size: v.$font-size-xl;
+      font-weight: v.$font-weight-semibold;
+      color: v.$text-primary;
+      margin: 0 0 v.$spacing-sm 0;
+    }
+    
+    &__empty-text {
+      font-size: v.$font-size-base;
+      color: v.$text-secondary;
+      margin: 0;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
   }
   
   // Debug section
   .dashboard__debug {
-    grid-column: 1 / -1; // Full width
     @include m.debug-container;
   }
 }
 
 // Responsive Design
+@media (max-width: 992px) {
+  .dashboard-container {
+    .dashboard-cta-cards {
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: v.$spacing-lg;
+    }
+  }
+}
+
 @media (max-width: 768px) {
   .dashboard-container {
     padding: v.$spacing-md;
     
     .dashboard-content {
-      grid-template-columns: 1fr;
-      gap: v.$spacing-md;
+      padding: 0 v.$spacing-md;
     }
     
-    .dashboard-header {
-      padding: v.$spacing-xl 0;
-      &__content { padding: 0 v.$spacing-md; }
-      &__flex-container { gap: v.$spacing-lg; }
-      &__logo-section { max-width: 300px; }
-      &__title { font-size: 2rem; }
-      &__subtitle { font-size: v.$font-size-base; }
+    .dashboard-cta-layout {
+      flex-direction: column;
+      gap: v.$spacing-lg;
+      
+      &__side-nav {
+        position: static;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        order: -1; // Move to top on mobile
+      }
+    }
+    
+    .dashboard-cta-cards {
+      grid-template-columns: 1fr;
+      gap: v.$spacing-md;
+      
+      &__empty {
+        padding: v.$spacing-xl;
+      }
+      
+      &__empty-icon {
+        font-size: 3rem;
+      }
     }
   }
 }
@@ -108,39 +134,31 @@
   .dashboard-container {
     padding: v.$spacing-sm;
     
-    .dashboard-header {
-      padding: v.$spacing-lg 0;
-      &__content { padding: 0 v.$spacing-sm; }
-      &__flex-container { gap: v.$spacing-md; }
-      &__logo-section { max-width: 250px; }
-      &__title { font-size: 1.75rem; }
-      &__subtitle { font-size: v.$font-size-sm; }
-      &__status { gap: v.$spacing-xs; }
-      &__status-badge { 
-        padding: v.$spacing-xs v.$spacing-sm;
-        font-size: v.$font-size-xs;
-      }
+    .dashboard-content {
+      padding: 0 v.$spacing-sm;
     }
     
-    .dashboard-card {
-      &__header {
-        padding: v.$spacing-md;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: v.$spacing-sm;
+    .dashboard-cta-cards {
+      gap: v.$spacing-sm;
+      
+      &__empty {
+        padding: v.$spacing-lg;
       }
-      &__content { padding: v.$spacing-md; }
-    }
-    
-    .health-item {
-      flex-direction: column;
-      align-items: flex-start;
-      text-align: left;
+      
+      &__empty-icon {
+        font-size: 2.5rem;
+      }
+      
+      &__empty-title {
+        font-size: v.$font-size-lg;
+      }
+      
+      &__empty-text {
+        font-size: v.$font-size-sm;
+      }
     }
   }
 }
-
-// Dashboard component no longer needs custom loading styles - using global orb-loading-* classes
 
 // Debug Styles
 .dashboard__debug {

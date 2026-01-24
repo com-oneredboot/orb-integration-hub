@@ -1,0 +1,426 @@
+// file: apps/web/src/app/features/user/services/dashboard-cta.service.spec.ts
+// author: Kiro
+// date: 2026-01-23
+// description: Unit tests for DashboardCtaService
+
+import { TestBed } from '@angular/core/testing';
+import { DashboardCtaService } from './dashboard-cta.service';
+import { IUsers } from '../../../core/models/UsersModel';
+import { UserStatus } from '../../../core/enums/UserStatusEnum';
+
+describe('DashboardCtaService', () => {
+  let service: DashboardCtaService;
+
+  // Helper to create a test user with customizable properties
+  const createTestUser = (overrides: Partial<IUsers> = {}): IUsers => ({
+    userId: 'test-user-id',
+    cognitoId: 'test-cognito-id',
+    cognitoSub: 'test-cognito-sub',
+    email: 'test@example.com',
+    firstName: 'Test',
+    lastName: 'User',
+    emailVerified: true,
+    phoneVerified: true,
+    phoneNumber: '+1234567890',
+    mfaEnabled: true,
+    mfaSetupComplete: true,
+    groups: ['USER'],
+    status: UserStatus.Active,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides
+  });
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [DashboardCtaService]
+    });
+    service = TestBed.inject(DashboardCtaService);
+  });
+
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+
+  describe('getCtaCards', () => {
+    it('should return empty array for null user', () => {
+      const cards = service.getCtaCards(null);
+      expect(cards).toEqual([]);
+    });
+
+    it('should return cards sorted by priority', () => {
+      const user = createTestUser({ emailVerified: false });
+      const cards = service.getCtaCards(user);
+      
+      for (let i = 1; i < cards.length; i++) {
+        expect(cards[i].priority).toBeGreaterThanOrEqual(cards[i - 1].priority);
+      }
+    });
+
+    it('should return health cards before benefit cards for USER', () => {
+      const user = createTestUser({ 
+        emailVerified: false,
+        groups: ['USER']
+      });
+      const cards = service.getCtaCards(user);
+      
+      const healthCards = cards.filter(c => c.category === 'health');
+      const benefitCards = cards.filter(c => c.category === 'benefit');
+      
+      expect(healthCards.length).toBeGreaterThan(0);
+      expect(benefitCards.length).toBeGreaterThan(0);
+      
+      // Health cards should come before benefit cards
+      const lastHealthIndex = cards.findIndex(c => c.id === healthCards[healthCards.length - 1].id);
+      const firstBenefitIndex = cards.findIndex(c => c.id === benefitCards[0].id);
+      expect(lastHealthIndex).toBeLessThan(firstBenefitIndex);
+    });
+
+    it('should return health cards before action cards for CUSTOMER', () => {
+      const user = createTestUser({ 
+        emailVerified: false,
+        groups: ['USER', 'CUSTOMER']
+      });
+      const cards = service.getCtaCards(user);
+      
+      const healthCards = cards.filter(c => c.category === 'health');
+      const actionCards = cards.filter(c => c.category === 'action');
+      
+      expect(healthCards.length).toBeGreaterThan(0);
+      expect(actionCards.length).toBeGreaterThan(0);
+      
+      // Health cards should come before action cards
+      const lastHealthIndex = cards.findIndex(c => c.id === healthCards[healthCards.length - 1].id);
+      const firstActionIndex = cards.findIndex(c => c.id === actionCards[0].id);
+      expect(lastHealthIndex).toBeLessThan(firstActionIndex);
+    });
+  });
+
+  describe('getHealthCards', () => {
+    it('should return empty array for null user', () => {
+      const cards = service.getHealthCards(null);
+      expect(cards).toEqual([]);
+    });
+
+    it('should return no health cards for fully complete user', () => {
+      const user = createTestUser();
+      const cards = service.getHealthCards(user);
+      expect(cards.length).toBe(0);
+    });
+
+    it('should return name card when firstName is missing', () => {
+      const user = createTestUser({ firstName: '' });
+      const cards = service.getHealthCards(user);
+      
+      const nameCard = cards.find(c => c.id === 'health-name');
+      expect(nameCard).toBeTruthy();
+      expect(nameCard?.title).toBe('Complete Your Profile');
+    });
+
+    it('should return name card when lastName is missing', () => {
+      const user = createTestUser({ lastName: '' });
+      const cards = service.getHealthCards(user);
+      
+      const nameCard = cards.find(c => c.id === 'health-name');
+      expect(nameCard).toBeTruthy();
+    });
+
+    it('should return name card when name is whitespace only', () => {
+      const user = createTestUser({ firstName: '   ', lastName: '   ' });
+      const cards = service.getHealthCards(user);
+      
+      const nameCard = cards.find(c => c.id === 'health-name');
+      expect(nameCard).toBeTruthy();
+    });
+
+    it('should return email card when email is not verified', () => {
+      const user = createTestUser({ emailVerified: false });
+      const cards = service.getHealthCards(user);
+      
+      const emailCard = cards.find(c => c.id === 'health-email');
+      expect(emailCard).toBeTruthy();
+      expect(emailCard?.title).toBe('Verify Your Email');
+    });
+
+    it('should return phone card when phone is not verified', () => {
+      const user = createTestUser({ phoneVerified: false });
+      const cards = service.getHealthCards(user);
+      
+      const phoneCard = cards.find(c => c.id === 'health-phone');
+      expect(phoneCard).toBeTruthy();
+      expect(phoneCard?.title).toBe('Verify Your Phone');
+    });
+
+    it('should show "Add Phone" label when phone number is missing', () => {
+      const user = createTestUser({ phoneVerified: false, phoneNumber: undefined });
+      const cards = service.getHealthCards(user);
+      
+      const phoneCard = cards.find(c => c.id === 'health-phone');
+      expect(phoneCard?.actionLabel).toBe('Add Phone');
+    });
+
+    it('should show "Verify Phone" label when phone number exists', () => {
+      const user = createTestUser({ phoneVerified: false, phoneNumber: '+1234567890' });
+      const cards = service.getHealthCards(user);
+      
+      const phoneCard = cards.find(c => c.id === 'health-phone');
+      expect(phoneCard?.actionLabel).toBe('Verify Phone');
+    });
+
+    it('should return MFA card when MFA is not enabled', () => {
+      const user = createTestUser({ mfaEnabled: false });
+      const cards = service.getHealthCards(user);
+      
+      const mfaCard = cards.find(c => c.id === 'health-mfa');
+      expect(mfaCard).toBeTruthy();
+      expect(mfaCard?.title).toBe('Secure Your Account');
+    });
+
+    it('should return MFA card when MFA setup is not complete', () => {
+      const user = createTestUser({ mfaEnabled: true, mfaSetupComplete: false });
+      const cards = service.getHealthCards(user);
+      
+      const mfaCard = cards.find(c => c.id === 'health-mfa');
+      expect(mfaCard).toBeTruthy();
+    });
+
+    it('should return all 4 health cards when all items are incomplete', () => {
+      const user = createTestUser({
+        firstName: '',
+        lastName: '',
+        emailVerified: false,
+        phoneVerified: false,
+        mfaEnabled: false,
+        mfaSetupComplete: false
+      });
+      const cards = service.getHealthCards(user);
+      
+      expect(cards.length).toBe(4);
+      expect(cards.map(c => c.id)).toContain('health-name');
+      expect(cards.map(c => c.id)).toContain('health-email');
+      expect(cards.map(c => c.id)).toContain('health-phone');
+      expect(cards.map(c => c.id)).toContain('health-mfa');
+    });
+
+    it('should return health cards sorted by priority', () => {
+      const user = createTestUser({
+        firstName: '',
+        emailVerified: false,
+        phoneVerified: false,
+        mfaEnabled: false
+      });
+      const cards = service.getHealthCards(user);
+      
+      for (let i = 1; i < cards.length; i++) {
+        expect(cards[i].priority).toBeGreaterThanOrEqual(cards[i - 1].priority);
+      }
+    });
+  });
+
+  describe('getUserBenefitCards', () => {
+    it('should return benefit cards for upgrade promotion', () => {
+      const cards = service.getUserBenefitCards();
+      
+      expect(cards.length).toBeGreaterThan(0);
+      expect(cards.every(c => c.category === 'benefit')).toBe(true);
+    });
+
+    it('should include organization management card', () => {
+      const cards = service.getUserBenefitCards();
+      
+      const orgCard = cards.find(c => c.id === 'benefit-orgs');
+      expect(orgCard).toBeTruthy();
+      expect(orgCard?.title).toBe('Manage Organizations');
+    });
+
+    it('should include integrations card', () => {
+      const cards = service.getUserBenefitCards();
+      
+      const intCard = cards.find(c => c.id === 'benefit-integrations');
+      expect(intCard).toBeTruthy();
+      expect(intCard?.title).toBe('Connect Integrations');
+    });
+
+    it('should include team building card', () => {
+      const cards = service.getUserBenefitCards();
+      
+      const teamCard = cards.find(c => c.id === 'benefit-team');
+      expect(teamCard).toBeTruthy();
+      expect(teamCard?.title).toBe('Build Your Team');
+    });
+  });
+
+  describe('getCustomerActionCards', () => {
+    it('should return empty array for null user', () => {
+      const cards = service.getCustomerActionCards(null);
+      expect(cards).toEqual([]);
+    });
+
+    it('should return action cards for CUSTOMER', () => {
+      const user = createTestUser({ groups: ['USER', 'CUSTOMER'] });
+      const cards = service.getCustomerActionCards(user);
+      
+      expect(cards.length).toBeGreaterThan(0);
+      expect(cards.every(c => c.category === 'action')).toBe(true);
+    });
+
+    it('should include create organization card', () => {
+      const user = createTestUser({ groups: ['USER', 'CUSTOMER'] });
+      const cards = service.getCustomerActionCards(user);
+      
+      const createOrgCard = cards.find(c => c.id === 'action-create-org');
+      expect(createOrgCard).toBeTruthy();
+      expect(createOrgCard?.title).toBe('Create Your First Organization');
+    });
+
+    it('should include manage organizations card', () => {
+      const user = createTestUser({ groups: ['USER', 'CUSTOMER'] });
+      const cards = service.getCustomerActionCards(user);
+      
+      const manageOrgCard = cards.find(c => c.id === 'action-manage-orgs');
+      expect(manageOrgCard).toBeTruthy();
+      expect(manageOrgCard?.title).toBe('Manage Organizations');
+    });
+
+    it('should include add application card', () => {
+      const user = createTestUser({ groups: ['USER', 'CUSTOMER'] });
+      const cards = service.getCustomerActionCards(user);
+      
+      const addAppCard = cards.find(c => c.id === 'action-add-app');
+      expect(addAppCard).toBeTruthy();
+      expect(addAppCard?.title).toBe('Add Your First Application');
+    });
+  });
+
+  describe('Role-based card exclusivity', () => {
+    it('should return benefit cards for USER (non-customer)', () => {
+      const user = createTestUser({ groups: ['USER'] });
+      const cards = service.getCtaCards(user);
+      
+      const benefitCards = cards.filter(c => c.category === 'benefit');
+      const actionCards = cards.filter(c => c.category === 'action');
+      
+      expect(benefitCards.length).toBeGreaterThan(0);
+      expect(actionCards.length).toBe(0);
+    });
+
+    it('should return action cards for CUSTOMER', () => {
+      const user = createTestUser({ groups: ['USER', 'CUSTOMER'] });
+      const cards = service.getCtaCards(user);
+      
+      const benefitCards = cards.filter(c => c.category === 'benefit');
+      const actionCards = cards.filter(c => c.category === 'action');
+      
+      expect(benefitCards.length).toBe(0);
+      expect(actionCards.length).toBeGreaterThan(0);
+    });
+
+    it('should not mix benefit and action cards', () => {
+      const userOnly = createTestUser({ groups: ['USER'] });
+      const customer = createTestUser({ groups: ['USER', 'CUSTOMER'] });
+      
+      const userCards = service.getCtaCards(userOnly);
+      const customerCards = service.getCtaCards(customer);
+      
+      // USER should have benefit but not action
+      expect(userCards.some(c => c.category === 'benefit')).toBe(true);
+      expect(userCards.some(c => c.category === 'action')).toBe(false);
+      
+      // CUSTOMER should have action but not benefit
+      expect(customerCards.some(c => c.category === 'action')).toBe(true);
+      expect(customerCards.some(c => c.category === 'benefit')).toBe(false);
+    });
+  });
+
+  describe('countIncompleteHealthItems', () => {
+    it('should return 4 for null user', () => {
+      expect(service.countIncompleteHealthItems(null)).toBe(4);
+    });
+
+    it('should return 0 for fully complete user', () => {
+      const user = createTestUser();
+      expect(service.countIncompleteHealthItems(user)).toBe(0);
+    });
+
+    it('should count each incomplete item', () => {
+      const user = createTestUser({
+        firstName: '',
+        emailVerified: false
+      });
+      expect(service.countIncompleteHealthItems(user)).toBe(2);
+    });
+
+    it('should return 4 for completely incomplete user', () => {
+      const user = createTestUser({
+        firstName: '',
+        lastName: '',
+        emailVerified: false,
+        phoneVerified: false,
+        mfaEnabled: false
+      });
+      expect(service.countIncompleteHealthItems(user)).toBe(4);
+    });
+  });
+
+  describe('filterByCategory', () => {
+    it('should filter cards by category', () => {
+      const user = createTestUser({ 
+        emailVerified: false,
+        groups: ['USER']
+      });
+      const allCards = service.getCtaCards(user);
+      
+      const healthCards = service.filterByCategory(allCards, 'health');
+      const benefitCards = service.filterByCategory(allCards, 'benefit');
+      
+      expect(healthCards.every(c => c.category === 'health')).toBe(true);
+      expect(benefitCards.every(c => c.category === 'benefit')).toBe(true);
+    });
+
+    it('should return empty array when no cards match category', () => {
+      const user = createTestUser({ groups: ['USER'] });
+      const allCards = service.getCtaCards(user);
+      
+      const actionCards = service.filterByCategory(allCards, 'action');
+      expect(actionCards.length).toBe(0);
+    });
+  });
+
+  describe('Card structure validation', () => {
+    it('all cards should have required properties', () => {
+      const user = createTestUser({
+        firstName: '',
+        emailVerified: false,
+        groups: ['USER']
+      });
+      const cards = service.getCtaCards(user);
+      
+      cards.forEach(card => {
+        expect(card.id).toBeTruthy();
+        expect(card.icon).toBeTruthy();
+        expect(card.title).toBeTruthy();
+        expect(card.description).toBeTruthy();
+        expect(card.actionLabel).toBeTruthy();
+        expect(typeof card.priority).toBe('number');
+        expect(['health', 'benefit', 'action']).toContain(card.category);
+        // Each card should have either actionRoute or actionHandler
+        expect(card.actionRoute || card.actionHandler).toBeTruthy();
+      });
+    });
+
+    it('all cards should have unique IDs', () => {
+      const user = createTestUser({
+        firstName: '',
+        emailVerified: false,
+        phoneVerified: false,
+        mfaEnabled: false,
+        groups: ['USER']
+      });
+      const cards = service.getCtaCards(user);
+      
+      const ids = cards.map(c => c.id);
+      const uniqueIds = new Set(ids);
+      expect(uniqueIds.size).toBe(ids.length);
+    });
+  });
+});

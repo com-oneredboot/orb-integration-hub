@@ -1,0 +1,49 @@
+<!-- 
+file: apps/web/src/app/features/user/components/dashboard/dashboard-side-nav/dashboard-side-nav.component.html
+author: Kiro
+date: 2026-01-23
+description: Dashboard side navigation template - uses global orb-side-nav styles
+-->
+
+<nav 
+  class="orb-side-nav"
+  role="navigation"
+  aria-label="Quick actions">
+  
+  <ul class="orb-side-nav__list">
+    <li 
+      *ngFor="let item of navItems; trackBy: trackByItemId"
+      class="orb-side-nav__item">
+      
+      <button
+        type="button"
+        class="orb-side-nav__button"
+        [class.orb-side-nav__button--disabled]="item.disabled"
+        [disabled]="item.disabled"
+        (click)="onItemClick(item)"
+        (keydown)="onKeydown($event, item)"
+        (mouseenter)="onMouseEnter(item)"
+        (mouseleave)="onMouseLeave()"
+        (focus)="onMouseEnter(item)"
+        (blur)="onMouseLeave()"
+        [attr.aria-label]="item.tooltip"
+        [attr.aria-disabled]="item.disabled">
+        
+        <fa-icon 
+          [icon]="item.icon" 
+          class="orb-side-nav__icon"
+          [attr.aria-hidden]="true">
+        </fa-icon>
+      </button>
+      
+      <!-- Tooltip -->
+      <div 
+        class="orb-side-nav__tooltip"
+        [class.orb-side-nav__tooltip--visible]="isTooltipVisible(item)"
+        role="tooltip"
+        [attr.aria-hidden]="!isTooltipVisible(item)">
+        {{ item.tooltip }}
+      </div>
+    </li>
+  </ul>
+</nav>

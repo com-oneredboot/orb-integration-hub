@@ -1,0 +1,14 @@
+// file: apps/web/src/app/features/user/components/dashboard/cta-card/cta-card.component.scss
+// author: Kiro
+// date: 2026-01-23
+// description: CTA Card component styles - uses global .orb-cta-card styles
+
+// Component-specific styles are minimal since we use global .orb-cta-card styles
+// from components.scss. This file only contains any component-specific overrides.
+
+// The global styles in components.scss handle:
+// - Vertical card layout with icon, content, and button stacked
+// - Max-width of 400px
+// - Category-specific border colors (health=warning, benefit=red, action=green)
+// - Responsive adjustments for mobile
+// - Hover effects and shadows

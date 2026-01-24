@@ -1,27 +1,27 @@
 // file: apps/web/src/app/features/user/components/dashboard/dashboard.component.spec.ts
 // author: Corey Dale Peters
 // date: 2025-02-24
-// description: Unit tests for the dashboard component
+// description: Unit tests for the dashboard component - CTA Hub redesign
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { Router } from '@angular/router';
 import { FaIconLibrary, FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { fas } from '@fortawesome/free-solid-svg-icons';
 import { DashboardComponent } from './dashboard.component';
 import { UserService } from '../../../../core/services/user.service';
+import { DashboardCtaService } from '../../services/dashboard-cta.service';
 import { IUsers } from '../../../../core/models/UsersModel';
 import { UserStatus } from '../../../../core/enums/UserStatusEnum';
 import { UserGroup } from '../../../../core/enums/UserGroupEnum';
+import { CtaCard, SideNavItem } from './dashboard.types';
 
 describe('DashboardComponent', () => {
   let component: DashboardComponent;
   let fixture: ComponentFixture<DashboardComponent>;
   let mockUserService: jasmine.SpyObj<UserService>;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let mockCtaService: jasmine.SpyObj<DashboardCtaService>;
   let mockStore: MockStore;
-  let router: Router;
 
   const mockUser: IUsers = {
     userId: '123',
@@ -41,6 +41,29 @@ describe('DashboardComponent', () => {
     updatedAt: new Date()
   };
 
+  const mockCtaCards: CtaCard[] = [
+    {
+      id: 'health-mfa',
+      icon: 'shield-alt',
+      title: 'Secure Your Account',
+      description: 'Enable MFA',
+      actionLabel: 'Setup MFA',
+      actionRoute: '/authenticate',
+      priority: 40,
+      category: 'health'
+    },
+    {
+      id: 'benefit-orgs',
+      icon: 'building',
+      title: 'Manage Organizations',
+      description: 'Create and manage business entities',
+      actionLabel: 'Upgrade Now',
+      actionRoute: '/upgrade',
+      priority: 100,
+      category: 'benefit'
+    }
+  ];
+
   const initialState = {
     user: {
       currentUser: mockUser,
@@ -54,21 +77,23 @@ describe('DashboardComponent', () => {
     mockUserService = jasmine.createSpyObj('UserService', ['isUserValid']);
     mockUserService.isUserValid.and.returnValue(true);
 
+    mockCtaService = jasmine.createSpyObj('DashboardCtaService', ['getCtaCards']);
+    mockCtaService.getCtaCards.and.returnValue(mockCtaCards);
+
     await TestBed.configureTestingModule({
-      imports: [ DashboardComponent, FontAwesomeModule, RouterTestingModule ],
+      imports: [DashboardComponent, FontAwesomeModule, RouterTestingModule],
       providers: [
         provideMockStore({ initialState }),
-        { provide: UserService, useValue: mockUserService }
+        { provide: UserService, useValue: mockUserService },
+        { provide: DashboardCtaService, useValue: mockCtaService }
       ]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     // Add FontAwesome icons to library
     const library = TestBed.inject(FaIconLibrary);
     library.addIconPacks(fas);
 
     mockStore = TestBed.inject(MockStore);
-    router = TestBed.inject(Router);
   });
 
   beforeEach(() => {
@@ -82,71 +107,55 @@ describe('DashboardComponent', () => {
   });
 
   it('should have currentUser$ Observable', (done) => {
-    // Subscribe to the Observable to check its value
-    let receivedUser: IUsers | null = null;
     component.currentUser$.subscribe(user => {
-      receivedUser = user;
-      expect(receivedUser).toEqual(mockUser);
+      expect(user).toEqual(mockUser);
       done();
     });
   });
 
-  /**
-   * Dashboard Navigation Tests
-   * Feature: profile-setup-refactor
-   * Validates: Requirements 6.1, 6.4, 8.4
-   */
-  describe('Dashboard Navigation', () => {
-    it('should navigate to profile page on goToProfile()', () => {
-      const navigateSpy = spyOn(router, 'navigate');
-      
-      component.goToProfile();
-      
-      expect(navigateSpy).toHaveBeenCalledWith(['/profile']);
-    });
-
-    it('should navigate to profile setup with correct query params on goToProfileSetup()', () => {
-      const navigateSpy = spyOn(router, 'navigate');
-      
-      component.goToProfileSetup();
-      
-      expect(navigateSpy).toHaveBeenCalledWith(['/profile'], {
-        queryParams: { mode: 'setup', startFrom: 'incomplete' }
+  describe('CTA Cards', () => {
+    it('should have ctaCards$ Observable', (done) => {
+      component.ctaCards$.subscribe(cards => {
+        expect(cards).toEqual(mockCtaCards);
+        done();
       });
     });
 
-    it('should navigate to profile setup on goToPhoneVerification()', () => {
-      const navigateSpy = spyOn(router, 'navigate');
-      
-      component.goToPhoneVerification();
-      
-      expect(navigateSpy).toHaveBeenCalledWith(['/profile'], {
-        queryParams: { mode: 'setup', startFrom: 'incomplete' }
-      });
+    it('should call DashboardCtaService.getCtaCards with user', () => {
+      expect(mockCtaService.getCtaCards).toHaveBeenCalled();
     });
 
-    it('should navigate to authenticate on goToEmailVerification()', () => {
-      const navigateSpy = spyOn(router, 'navigate');
-      
-      component.goToEmailVerification();
-      
-      expect(navigateSpy).toHaveBeenCalledWith(['/authenticate']);
+    it('should track cards by ID', () => {
+      const card = mockCtaCards[0];
+      expect(component.trackByCardId(0, card)).toBe(card.id);
     });
 
-    it('should navigate to authenticate on goToSecuritySettings()', () => {
-      const navigateSpy = spyOn(router, 'navigate');
+    it('should log CTA card action on onCtaCardAction', () => {
+      const consoleSpy = spyOn(console, 'log');
+      const card = mockCtaCards[0];
       
-      component.goToSecuritySettings();
+      component.onCtaCardAction(card);
       
-      expect(navigateSpy).toHaveBeenCalledWith(['/authenticate']);
+      expect(consoleSpy).toHaveBeenCalledWith('[Dashboard] CTA card action:', card.id, card.title);
     });
   });
 
-  /**
-   * Health Check Tests
-   * Feature: profile-setup-refactor
-   * Validates: Requirements 7.1, 7.2, 7.3, 7.4
-   */
+  describe('Side Navigation', () => {
+    it('should log side nav item click on onSideNavItemClicked', () => {
+      const consoleSpy = spyOn(console, 'log');
+      const item: SideNavItem = {
+        id: 'profile',
+        icon: 'user',
+        tooltip: 'Edit Profile',
+        route: '/profile'
+      };
+      
+      component.onSideNavItemClicked(item);
+      
+      expect(consoleSpy).toHaveBeenCalledWith('[Dashboard] Side nav item clicked:', item.id, item.tooltip);
+    });
+  });
+
   describe('Health Check Methods', () => {
     it('should return true for hasValidName when user has first and last name', () => {
       expect(component.hasValidName(mockUser)).toBe(true);
@@ -166,20 +175,6 @@ describe('DashboardComponent', () => {
       expect(component.hasValidName(null)).toBe(false);
     });
 
-    it('should return true for hasHealthWarnings when user has incomplete profile', () => {
-      const incompleteUser = { ...mockUser, phoneVerified: false };
-      expect(component.hasHealthWarnings(incompleteUser)).toBe(true);
-    });
-
-    it('should return true for hasHealthWarnings when user is null', () => {
-      expect(component.hasHealthWarnings(null)).toBe(true);
-    });
-
-    it('should return false for hasHealthWarnings when user has complete profile with MFA', () => {
-      const completeUser = { ...mockUser, mfaEnabled: true, mfaSetupComplete: true };
-      expect(component.hasHealthWarnings(completeUser)).toBe(false);
-    });
-
     it('should return true for isCustomerUser when user has CUSTOMER group', () => {
       const customerUser = { ...mockUser, groups: [UserGroup.Customer] };
       expect(component.isCustomerUser(customerUser)).toBe(true);
@@ -190,9 +185,6 @@ describe('DashboardComponent', () => {
     });
   });
 
-  /**
-   * Status Display Tests
-   */
   describe('Status Display Methods', () => {
     it('should return correct status class for ACTIVE', () => {
       expect(component.getStatusClass('ACTIVE')).toBe('active');
@@ -220,6 +212,82 @@ describe('DashboardComponent', () => {
 
     it('should return correct status label for PENDING', () => {
       expect(component.getStatusLabel('PENDING')).toBe('Account Pending');
+    });
+  });
+
+  describe('Debug Context', () => {
+    it('should provide debug context with CTA card counts', () => {
+      const context = component.debugContext;
+      
+      expect(context.page).toBe('Dashboard');
+      expect(context.storeState).toBeDefined();
+      if (context.storeState) {
+        expect(context.storeState['ctaCardCount']).toBeDefined();
+        expect(context.storeState['healthCardCount']).toBeDefined();
+        expect(context.storeState['benefitCardCount']).toBeDefined();
+        expect(context.storeState['actionCardCount']).toBeDefined();
+      }
+    });
+  });
+
+  describe('Utility Methods', () => {
+    it('should format date correctly', () => {
+      const date = new Date('2025-01-15T12:00:00Z');
+      const formatted = component.formatDate(date);
+      expect(formatted).toContain('January');
+      expect(formatted).toContain('2025');
+    });
+
+    it('should return "Not available" for empty date', () => {
+      expect(component.formatDate('')).toBe('Not available');
+    });
+
+    it('should delegate isUserValid to UserService', () => {
+      component.isUserValid(mockUser);
+      expect(mockUserService.isUserValid).toHaveBeenCalledWith(mockUser);
+    });
+  });
+
+  describe('Template Rendering', () => {
+    it('should render the page header', () => {
+      const header = fixture.nativeElement.querySelector('.orb-page-header');
+      expect(header).toBeTruthy();
+    });
+
+    it('should render the side navigation', () => {
+      const sideNav = fixture.nativeElement.querySelector('app-dashboard-side-nav');
+      expect(sideNav).toBeTruthy();
+    });
+
+    it('should render CTA cards', () => {
+      const ctaCards = fixture.nativeElement.querySelectorAll('app-cta-card');
+      expect(ctaCards.length).toBe(mockCtaCards.length);
+    });
+
+    it('should display status badge', () => {
+      const badge = fixture.nativeElement.querySelector('.orb-header-badge');
+      expect(badge).toBeTruthy();
+      expect(badge.textContent).toContain('Account Active');
+    });
+  });
+
+  describe('Loading State', () => {
+    it('should show loading overlay when isLoading is true', () => {
+      mockStore.setState({
+        user: {
+          ...initialState.user,
+          isLoading: true
+        }
+      });
+      fixture.detectChanges();
+      
+      const loadingOverlay = fixture.nativeElement.querySelector('.orb-loading-overlay');
+      expect(loadingOverlay).toBeTruthy();
+    });
+
+    it('should hide loading overlay when isLoading is false', () => {
+      const loadingOverlay = fixture.nativeElement.querySelector('.orb-loading-overlay');
+      expect(loadingOverlay).toBeFalsy();
     });
   });
 });

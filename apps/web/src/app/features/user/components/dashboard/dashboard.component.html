@@ -2,7 +2,7 @@
 file: frontend/src/app/features/user/components/dashboard/dashboard.component.html
 author: Corey Dale Peters
 date: 2025-03-07
-description: HTML template file
+description: Dashboard CTA Hub - Single column layout with role-based CTA cards
 -->
 
 <div class="dashboard-container">
@@ -20,6 +20,7 @@ description: HTML template file
     <div class="orb-loading-mask"></div>
   </div>
 
+  <!-- Page Header -->
   <div class="orb-page-header">
     <div class="orb-page-header__content">
       <div class="orb-page-header__flex-container">
@@ -43,7 +44,7 @@ description: HTML template file
               </p>
             </ng-template>
             <p class="orb-page-header__hint">
-              Use the quick actions below to manage your profile, security settings, and integrations. Access your organizations and applications from the navigation menu.
+              Complete the actions below to get started. Use the quick access menu on the left for common tasks.
             </p>
             <div class="orb-page-header__status">
               <span class="orb-header-badge" 
@@ -58,205 +59,43 @@ description: HTML template file
     </div>
   </div>
 
+  <!-- Main Dashboard Content -->
   <div class="dashboard-content" *ngIf="currentUser$ | async as user; else loadingUser">
     
-    <!-- Quick Actions Card -->
-    <div class="orb-card">
-      <div class="orb-card__header">
-        <h2 class="orb-card__title">
-          <fa-icon icon="bolt" class="orb-card__icon"></fa-icon>
-          Quick Actions
-        </h2>
-      </div>
+    <!-- CTA Hub Layout: Cards on left, Quick Actions on right -->
+    <div class="dashboard-cta-layout">
       
-      <div class="orb-card__content orb-card__content--padded">
-        <div class="orb-action-grid">
-          <a routerLink="/profile" class="orb-action-button orb-action-button--secondary">
-            <fa-icon icon="user-edit" class="orb-action-button__icon"></fa-icon>
-            <div class="orb-action-button__content">
-              <div class="orb-action-button__title">Edit Profile</div>
-              <div class="orb-action-button__subtitle">Update your information</div>
-            </div>
-          </a>
+      <!-- Main CTA Column -->
+      <main class="dashboard-cta-layout__main">
+        
+        <!-- CTA Cards -->
+        <div class="dashboard-cta-cards">
+          <app-cta-card
+            *ngFor="let card of ctaCards$ | async; trackBy: trackByCardId"
+            [card]="card"
+            (actionTriggered)="onCtaCardAction($event)">
+          </app-cta-card>
           
-          <button class="orb-action-button orb-action-button--secondary" (click)="goToSecuritySettings()">
-            <fa-icon icon="shield-alt" class="orb-action-button__icon"></fa-icon>
-            <div class="orb-action-button__content">
-              <div class="orb-action-button__title">Security Settings</div>
-              <div class="orb-action-button__subtitle">Manage MFA & passwords</div>
-            </div>
-          </button>
-          
-          <button class="orb-action-button orb-action-button--secondary">
-            <fa-icon icon="credit-card" class="orb-action-button__icon"></fa-icon>
-            <div class="orb-action-button__content">
-              <div class="orb-action-button__title">Payment Methods</div>
-              <div class="orb-action-button__subtitle">Billing & subscriptions</div>
-            </div>
-          </button>
-          
-          <button class="orb-action-button orb-action-button--secondary">
-            <fa-icon icon="cog" class="orb-action-button__icon"></fa-icon>
-            <div class="orb-action-button__content">
-              <div class="orb-action-button__title">Integrations</div>
-              <div class="orb-action-button__subtitle">Connect your tools</div>
-            </div>
-          </button>
-          
-          <!-- Organizations button - Only show for CUSTOMER users -->
-          <a *ngIf="isCustomerUser(user)" 
-             routerLink="/customers/organizations" 
-             class="orb-action-button orb-action-button--secondary">
-            <fa-icon icon="building" class="orb-action-button__icon"></fa-icon>
-            <div class="orb-action-button__content">
-              <div class="orb-action-button__title">Organizations</div>
-              <div class="orb-action-button__subtitle">Manage teams & access</div>
-            </div>
-          </a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Account Health Card - Only show if there are warnings -->
-    <div class="orb-card" *ngIf="hasHealthWarnings(user)">
-      <div class="orb-card__header">
-        <h2 class="orb-card__title">
-          <fa-icon icon="heartbeat" class="orb-card__icon"></fa-icon>
-          Account Health
-        </h2>
-      </div>
-      
-      <div class="orb-card__content orb-card__content--padded">
-        <div class="orb-health-check">
-          <div class="orb-health-item orb-health-item--clickable" 
-               [ngClass]="hasValidName(user) ? 'orb-health-item--healthy' : 'orb-health-item--warning'"
-               (click)="!hasValidName(user) && goToProfileSetup()"
-               (keydown.enter)="!hasValidName(user) && goToProfileSetup()"
-               (keydown.space)="!hasValidName(user) && goToProfileSetup()"
-               tabindex="0"
-               role="button"
-               [title]="hasValidName(user) ? 'Name complete' : 'Click to update your name in profile'">
-            <fa-icon [icon]="hasValidName(user) ? 'check-circle' : 'exclamation-triangle'" 
-                     class="orb-health-item__icon"></fa-icon>
-            <div class="orb-health-item__content">
-              <div class="orb-health-item__title">Full Name</div>
-              <div class="orb-health-item__status">
-                {{ hasValidName(user) ? 'Complete' : 'First & Last Name Required' }}
-              </div>
-              <div class="orb-health-item__action" *ngIf="!hasValidName(user)">
-                <fa-icon icon="arrow-right" class="orb-health-item__action-icon"></fa-icon>
-                Update Profile
-              </div>
-            </div>
-          </div>
-          
-          <div class="orb-health-item orb-health-item--clickable" 
-               [ngClass]="user.emailVerified ? 'orb-health-item--healthy' : 'orb-health-item--warning'"
-               (click)="!user.emailVerified && goToEmailVerification()"
-               (keydown.enter)="!user.emailVerified && goToEmailVerification()"
-               (keydown.space)="!user.emailVerified && goToEmailVerification()"
-               tabindex="0"
-               role="button"
-               [title]="user.emailVerified ? 'Email verified' : 'Click to verify your email'">
-            <fa-icon [icon]="user.emailVerified ? 'check-circle' : 'exclamation-triangle'" 
-                     class="orb-health-item__icon"></fa-icon>
-            <div class="orb-health-item__content">
-              <div class="orb-health-item__title">Email Verification</div>
-              <div class="orb-health-item__status">
-                {{ user.emailVerified ? 'Verified' : 'Email verification required' }}
-              </div>
-              <div class="orb-health-item__action" *ngIf="!user.emailVerified">
-                <fa-icon icon="arrow-right" class="orb-health-item__action-icon"></fa-icon>
-                Verify Email
-              </div>
-            </div>
-          </div>
-          
-          <div class="orb-health-item orb-health-item--clickable" 
-               [ngClass]="user.phoneVerified ? 'orb-health-item--healthy' : 'orb-health-item--warning'"
-               (click)="!user.phoneVerified && goToPhoneVerification()"
-               (keydown.enter)="!user.phoneVerified && goToPhoneVerification()"
-               (keydown.space)="!user.phoneVerified && goToPhoneVerification()"
-               tabindex="0"
-               role="button"
-               [title]="user.phoneVerified ? 'Phone verified' : 'Click to verify your phone'">
-            <fa-icon [icon]="user.phoneVerified ? 'check-circle' : 'exclamation-triangle'" 
-                     class="orb-health-item__icon"></fa-icon>
-            <div class="orb-health-item__content">
-              <div class="orb-health-item__title">Phone Verification</div>
-              <div class="orb-health-item__status">
-                {{ user.phoneVerified ? 'Verified' : (user.phoneNumber ? 'Phone verification required' : 'Phone number required') }}
-              </div>
-              <div class="orb-health-item__action" *ngIf="!user.phoneVerified">
-                <fa-icon icon="arrow-right" class="orb-health-item__action-icon"></fa-icon>
-                {{ user.phoneNumber ? 'Verify Phone' : 'Add Phone' }}
-              </div>
-            </div>
-          </div>
-          
-          <div class="orb-health-item" 
-               [ngClass]="{
-                 'orb-health-item--healthy': user.mfaEnabled && user.mfaSetupComplete,
-                 'orb-health-item--warning': !(user.mfaEnabled && user.mfaSetupComplete),
-                 'orb-health-item--clickable': !(user.mfaEnabled && user.mfaSetupComplete),
-                 'orb-health-item--loading': isLoading$ | async
-               }"
-               (click)="!(user.mfaEnabled && user.mfaSetupComplete) && checkMFASetup()"
-               (keydown.enter)="!(user.mfaEnabled && user.mfaSetupComplete) && checkMFASetup()"
-               (keydown.space)="!(user.mfaEnabled && user.mfaSetupComplete) && checkMFASetup()"
-               [attr.tabindex]="(user.mfaEnabled && user.mfaSetupComplete) ? null : 0"
-               [attr.role]="(user.mfaEnabled && user.mfaSetupComplete) ? null : 'button'"
-               [style.pointer-events]="(isLoading$ | async) ? 'none' : 'auto'"
-               [title]="(user.mfaEnabled && user.mfaSetupComplete) ? 'MFA enabled' : 'Click to check MFA setup'">
-            <fa-icon [icon]="(user.mfaEnabled && user.mfaSetupComplete) ? 'check-circle' : 'exclamation-triangle'" 
-                     class="orb-health-item__icon"></fa-icon>
-            <div class="orb-health-item__content">
-              <div class="orb-health-item__title">Multi-Factor Authentication</div>
-              <div class="orb-health-item__status">
-                <ng-container *ngIf="isNotLoading$ | async">
-                  {{ (user.mfaEnabled && user.mfaSetupComplete) ? 'Enabled' : 'Status unknown - check setup' }}
-                </ng-container>
-                <ng-container *ngIf="isLoading$ | async">
-                  Checking MFA status...
-                </ng-container>
-              </div>
-              <div class="orb-health-item__action" *ngIf="!(user.mfaEnabled && user.mfaSetupComplete)">
-                <fa-icon *ngIf="isNotLoading$ | async" icon="arrow-right" class="orb-health-item__action-icon"></fa-icon>
-                <fa-icon *ngIf="isLoading$ | async" icon="clock" class="orb-health-item__action-icon orb-health-item__action-icon--loading"></fa-icon>
-                <ng-container *ngIf="isNotLoading$ | async">Check MFA Setup</ng-container>
-                <ng-container *ngIf="isLoading$ | async">Checking...</ng-container>
-              </div>
-            </div>
+          <!-- Empty State when no cards -->
+          <div class="dashboard-cta-cards__empty" 
+               *ngIf="(ctaCards$ | async)?.length === 0">
+            <fa-icon icon="check-circle" class="dashboard-cta-cards__empty-icon"></fa-icon>
+            <h3 class="dashboard-cta-cards__empty-title">All caught up!</h3>
+            <p class="dashboard-cta-cards__empty-text">
+              You've completed all setup tasks. Use the navigation menu to explore your workspace.
+            </p>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Recent Activity Card -->
-    <div class="orb-card">
-      <div class="orb-card__header">
-        <h2 class="orb-card__title">
-          <fa-icon icon="history" class="orb-card__icon"></fa-icon>
-          Recent Activity
-        </h2>
-      </div>
+        
+      </main>
       
-      <div class="orb-card__content orb-card__content--padded">
-        <div class="orb-activity-list">
-          <div class="orb-activity-item">
-            <div class="orb-activity-item__time">{{ formatDate(user.updatedAt) }}</div>
-            <div class="orb-activity-item__description">Profile information updated</div>
-          </div>
-          <div class="orb-activity-item">
-            <div class="orb-activity-item__time">{{ formatDate(user.createdAt) }}</div>
-            <div class="orb-activity-item__description">Account created</div>
-          </div>
-          <div class="empty-state">
-            <fa-icon icon="info-circle" class="empty-state__icon"></fa-icon>
-            <p class="empty-state__text">More activity will appear here as you use the platform</p>
-          </div>
-        </div>
-      </div>
+      <!-- Quick Actions (positioned on extreme right) -->
+      <aside class="dashboard-cta-layout__side-nav">
+        <app-dashboard-side-nav
+          (itemClicked)="onSideNavItemClicked($event)">
+        </app-dashboard-side-nav>
+      </aside>
+      
     </div>
 
   </div>
