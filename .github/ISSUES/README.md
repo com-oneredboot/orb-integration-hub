@@ -4,6 +4,7 @@
 
 | Issue | Team | Title | Status | Impact |
 |-------|------|-------|--------|--------|
+| #78 | orb-schema-generator | Bug: Mutation VTL Response Doesn't Match GraphQL Schema (items wrapper mismatch) | Open | High |
 | #76 | orb-schema-generator | Bug: VTL Resolvers Use ISO8601 Instead of Epoch Seconds for AWSTimestamp Fields | Open | High |
 | #17 | orb-infrastructure | feat: Add timestamp utilities to orb-common for AWSTimestamp handling | Open | Medium |
 | #75 | orb-schema-generator | Bug: Lambda Type Auth Directives Not Generated in GraphQL Schema | Open | Critical |
