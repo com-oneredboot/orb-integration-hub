@@ -1522,6 +1522,16 @@ $cta-orange-muted: #f5a66b; // Muted orange (was #f97316)
       opacity: 0.4;
       cursor: not-allowed;
     }
+    
+    &--active {
+      background: rgba(v.$white, 0.2);
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px v.$white;
+      
+      &:hover:not(:disabled) {
+        background: rgba(v.$white, 0.25);
+      }
+    }
   }
   
   &__icon {

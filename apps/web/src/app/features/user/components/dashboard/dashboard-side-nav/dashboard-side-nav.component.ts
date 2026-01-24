@@ -1,17 +1,20 @@
 // file: apps/web/src/app/features/user/components/dashboard/dashboard-side-nav/dashboard-side-nav.component.ts
 // author: Kiro
 // date: 2026-01-23
-// description: Icon-only side navigation component for dashboard quick actions
+// description: Icon-only side navigation component for quick actions (Organizations, Applications, Groups, Users)
 
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { Subject } from 'rxjs';
+import { filter, takeUntil } from 'rxjs/operators';
 import { SideNavItem } from '../dashboard.types';
 
 /**
- * Dashboard side navigation component displays a vertical bar of icon buttons
- * for quick access to common actions. Only visible on the dashboard page.
+ * Side navigation component displays a vertical bar of icon buttons
+ * for quick access to Organizations, Applications, Groups, and Users.
+ * Shows active state when on the corresponding page.
  */
 @Component({
   selector: 'app-dashboard-side-nav',
@@ -20,44 +23,74 @@ import { SideNavItem } from '../dashboard.types';
   templateUrl: './dashboard-side-nav.component.html',
   styleUrls: ['./dashboard-side-nav.component.scss']
 })
-export class DashboardSideNavComponent {
+export class DashboardSideNavComponent implements OnInit, OnDestroy {
   /** Emitted when a navigation item is clicked */
   @Output() itemClicked = new EventEmitter<SideNavItem>();
 
   /** Navigation items to display */
   navItems: SideNavItem[] = [
     {
-      id: 'profile',
+      id: 'organizations',
+      icon: 'building',
+      tooltip: 'Organizations',
+      route: '/customers/organizations'
+    },
+    {
+      id: 'applications',
+      icon: 'cube',
+      tooltip: 'Applications',
+      route: '/customers/applications'
+    },
+    {
+      id: 'groups',
+      icon: 'users',
+      tooltip: 'Groups',
+      route: '/customers/groups'
+    },
+    {
+      id: 'users',
       icon: 'user',
-      tooltip: 'Edit Profile',
-      route: '/profile'
-    },
-    {
-      id: 'security',
-      icon: 'shield-alt',
-      tooltip: 'Security Settings',
-      route: '/authenticate'
-    },
-    {
-      id: 'payment',
-      icon: 'credit-card',
-      tooltip: 'Payment Methods',
-      route: '/payment', // Placeholder
-      disabled: true
-    },
-    {
-      id: 'integrations',
-      icon: 'plug',
-      tooltip: 'Integrations',
-      route: '/integrations', // Placeholder
-      disabled: true
+      tooltip: 'Users',
+      route: '/customers/users'
     }
   ];
 
   /** Currently hovered item for tooltip display */
   hoveredItemId: string | null = null;
 
+  /** Current active route for highlighting */
+  currentRoute = '';
+
+  /** Cleanup subject */
+  private destroy$ = new Subject<void>();
+
   constructor(private router: Router) {}
+
+  ngOnInit(): void {
+    // Set initial route
+    this.currentRoute = this.router.url;
+
+    // Listen for route changes
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd),
+      takeUntil(this.destroy$)
+    ).subscribe((event: NavigationEnd) => {
+      this.currentRoute = event.urlAfterRedirects;
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Check if a nav item is currently active
+   */
+  isActive(item: SideNavItem): boolean {
+    if (!item.route) return false;
+    return this.currentRoute.startsWith(item.route);
+  }
 
   /**
    * Handle navigation item click

@@ -62,7 +62,7 @@ description: Dashboard CTA Hub - Single column layout with role-based CTA cards
   <!-- Main Dashboard Content -->
   <div class="dashboard-content" *ngIf="currentUser$ | async as user; else loadingUser">
     
-    <!-- CTA Hub Layout: Cards on left, Quick Actions on right -->
+    <!-- CTA Hub Layout: Cards -->
     <div class="dashboard-cta-layout">
       
       <!-- Main CTA Column -->
@@ -88,13 +88,6 @@ description: Dashboard CTA Hub - Single column layout with role-based CTA cards
         </div>
         
       </main>
-      
-      <!-- Quick Actions (positioned on extreme right) -->
-      <aside class="dashboard-cta-layout__side-nav">
-        <app-dashboard-side-nav
-          (itemClicked)="onSideNavItemClicked($event)">
-        </app-dashboard-side-nav>
-      </aside>
       
     </div>
 

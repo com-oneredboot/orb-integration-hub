@@ -5,20 +5,20 @@
 
 import { Component, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { IUsers } from '../../../../core/models/UsersModel';
 import * as fromUser from '../../store/user.selectors';
+import * as fromOrganizations from '../../../customers/organizations/store/organizations.selectors';
 import { UserService } from '../../../../core/services/user.service';
 import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { RouterModule } from '@angular/router';
 import { DebugPanelComponent, DebugContext } from '../../../../shared/components/debug/debug-panel.component';
 import { DebugLogService, DebugLogEntry } from '../../../../core/services/debug-log.service';
-import { CtaCard, SideNavItem } from './dashboard.types';
+import { CtaCard } from './dashboard.types';
 import { DashboardCtaService } from '../../services/dashboard-cta.service';
 import { CtaCardComponent } from './cta-card/cta-card.component';
-import { DashboardSideNavComponent } from './dashboard-side-nav/dashboard-side-nav.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -30,8 +30,7 @@ import { DashboardSideNavComponent } from './dashboard-side-nav/dashboard-side-n
     FontAwesomeModule,
     RouterModule,
     DebugPanelComponent,
-    CtaCardComponent,
-    DashboardSideNavComponent
+    CtaCardComponent
   ]
 })
 export class DashboardComponent implements OnInit {
@@ -41,9 +40,11 @@ export class DashboardComponent implements OnInit {
   isNotLoading$: Observable<boolean>;
   debugLogs$: Observable<DebugLogEntry[]>;
   ctaCards$: Observable<CtaCard[]>;
+  organizationCount$: Observable<number>;
 
-  // Current user snapshot for debug context
+  // Snapshots for debug context
   private currentUserSnapshot: IUsers | null = null;
+  private orgCountSnapshot = 0;
 
   constructor(
     private store: Store,
@@ -56,14 +57,23 @@ export class DashboardComponent implements OnInit {
     this.isLoading$ = this.store.select(fromUser.selectIsLoading);
     this.isNotLoading$ = this.isLoading$.pipe(map(loading => !loading));
     this.debugLogs$ = this.debugLogService.logs$;
+    this.organizationCount$ = this.store.select(fromOrganizations.selectOrganizationCount);
     
-    // Derive CTA cards from current user
-    this.ctaCards$ = this.currentUser$.pipe(
-      map(user => this.ctaService.getCtaCards(user))
+    // Derive CTA cards from current user and organization count
+    this.ctaCards$ = combineLatest([
+      this.currentUser$,
+      this.organizationCount$
+    ]).pipe(
+      map(([user, orgCount]) => {
+        // TODO: Add application count when applications store is implemented
+        const appCount = 0;
+        return this.ctaService.getCtaCards(user, orgCount, appCount);
+      })
     );
 
-    // Keep a snapshot of current user for debug context
+    // Keep snapshots for debug context
     this.currentUser$.subscribe(user => this.currentUserSnapshot = user);
+    this.organizationCount$.subscribe(count => this.orgCountSnapshot = count);
   }
 
   /**
@@ -71,7 +81,9 @@ export class DashboardComponent implements OnInit {
    */
   get debugContext(): DebugContext {
     const user = this.currentUserSnapshot;
-    const cards = this.ctaService.getCtaCards(user);
+    const orgCount = this.orgCountSnapshot;
+    const appCount = 0; // TODO: Add when applications store is implemented
+    const cards = this.ctaService.getCtaCards(user, orgCount, appCount);
     return {
       page: 'Dashboard',
       email: user?.email,
@@ -83,6 +95,8 @@ export class DashboardComponent implements OnInit {
       storeState: {
         hasValidName: user ? this.hasValidName(user) : false,
         isCustomerUser: user ? this.isCustomerUser(user) : false,
+        organizationCount: orgCount,
+        applicationCount: appCount,
         ctaCardCount: cards.length,
         healthCardCount: cards.filter(c => c.category === 'health').length,
         benefitCardCount: cards.filter(c => c.category === 'benefit').length,
@@ -214,14 +228,6 @@ export class DashboardComponent implements OnInit {
    */
   onCtaCardAction(card: CtaCard): void {
     console.log('[Dashboard] CTA card action:', card.id, card.title);
-  }
-
-  /**
-   * Handle side navigation item clicked
-   * @param item The side nav item that was clicked
-   */
-  onSideNavItemClicked(item: SideNavItem): void {
-    console.log('[Dashboard] Side nav item clicked:', item.id, item.tooltip);
   }
 
   /**

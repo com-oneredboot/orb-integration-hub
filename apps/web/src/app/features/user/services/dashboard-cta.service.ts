@@ -20,9 +20,11 @@ export class DashboardCtaService {
    * Get all applicable CTA cards for a user, sorted by priority.
    * Health cards appear first, followed by role-specific cards.
    * @param user The current user
+   * @param orgCount Number of organizations (for CUSTOMER cards)
+   * @param appCount Number of applications (for CUSTOMER cards)
    * @returns Array of CTA cards sorted by priority
    */
-  getCtaCards(user: IUsers | null): CtaCard[] {
+  getCtaCards(user: IUsers | null, orgCount = 0, appCount = 0): CtaCard[] {
     if (!user) {
       return [];
     }
@@ -34,7 +36,7 @@ export class DashboardCtaService {
 
     // Add role-specific cards (mutually exclusive)
     if (this.isCustomerUser(user)) {
-      cards.push(...this.getCustomerActionCards(user));
+      cards.push(...this.getCustomerActionCards(user, orgCount, appCount));
     } else {
       cards.push(...this.getUserBenefitCards());
     }
@@ -159,54 +161,70 @@ export class DashboardCtaService {
 
   /**
    * Get action CTA cards for CUSTOMER role.
-   * Cards are conditional based on user's current state.
+   * Cards are conditional based on user's current resource state.
    * @param user The current user
+   * @param orgCount Number of organizations the user has (default 0)
+   * @param appCount Number of applications the user has (default 0)
    * @returns Array of action CTA cards
    */
-  getCustomerActionCards(user: IUsers | null): CtaCard[] {
+  getCustomerActionCards(user: IUsers | null, orgCount = 0, appCount = 0): CtaCard[] {
     if (!user) {
       return [];
     }
 
     const cards: CtaCard[] = [];
 
-    // For now, we'll show the "Create Organization" card
-    // In the future, this would check if user has organizations
-    // TODO: Integrate with organizations store/service
-    cards.push({
-      id: 'action-create-org',
-      icon: 'plus-circle',
-      title: 'Create Your First Organization',
-      description: 'Set up your business entity to get started. Organizations allow you to manage teams, applications, and integrations all in one place with centralized billing and access control.',
-      actionLabel: 'Create Organization',
-      actionRoute: '/customers/organizations/create',
-      priority: 100,
-      category: 'action'
-    });
+    // No orgs → Show "Create Your First Organization"
+    if (orgCount === 0) {
+      cards.push({
+        id: 'action-create-org',
+        icon: 'plus-circle',
+        title: 'Create Your First Organization',
+        description: 'Set up your business entity to get started. Organizations allow you to manage teams, applications, and integrations all in one place with centralized billing and access control.',
+        actionLabel: 'Create Organization',
+        actionRoute: '/customers/organizations/create',
+        priority: 100,
+        category: 'action'
+      });
+    } else {
+      // Has orgs → Show "Manage Organizations"
+      cards.push({
+        id: 'action-manage-orgs',
+        icon: 'building',
+        title: 'Manage Organizations',
+        description: 'View and manage your existing organizations, update settings, invite or remove team members, and configure access permissions for your business entities.',
+        actionLabel: 'View Organizations',
+        actionRoute: '/customers/organizations',
+        priority: 100,
+        category: 'action'
+      });
 
-    // Always show manage organizations card for customers
-    cards.push({
-      id: 'action-manage-orgs',
-      icon: 'building',
-      title: 'Manage Organizations',
-      description: 'View and manage your existing organizations, update settings, invite or remove team members, and configure access permissions for your business entities.',
-      actionLabel: 'View Organizations',
-      actionRoute: '/customers/organizations',
-      priority: 110,
-      category: 'action'
-    });
-
-    // Add application card
-    cards.push({
-      id: 'action-add-app',
-      icon: 'cube',
-      title: 'Add Your First Application',
-      description: 'Create an application to start integrating services. Applications provide API keys and configuration for connecting your software with our platform\'s powerful features.',
-      actionLabel: 'Create Application',
-      actionRoute: '/customers/applications/create',
-      priority: 120,
-      category: 'action'
-    });
+      // Has orgs but no apps → Show "Add Your First Application"
+      if (appCount === 0) {
+        cards.push({
+          id: 'action-add-app',
+          icon: 'cube',
+          title: 'Add Your First Application',
+          description: 'Create an application to start integrating services. Applications provide API keys and configuration for connecting your software with our platform\'s powerful features.',
+          actionLabel: 'Create Application',
+          actionRoute: '/customers/applications/create',
+          priority: 110,
+          category: 'action'
+        });
+      } else {
+        // Has orgs and apps → Show "Manage Applications"
+        cards.push({
+          id: 'action-manage-apps',
+          icon: 'cubes',
+          title: 'Manage Applications',
+          description: 'View and configure your applications, rotate API keys, update settings, and monitor usage across your integrated services.',
+          actionLabel: 'View Applications',
+          actionRoute: '/customers/applications',
+          priority: 110,
+          category: 'action'
+        });
+      }
+    }
 
     return cards;
   }

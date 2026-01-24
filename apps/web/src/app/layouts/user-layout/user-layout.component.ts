@@ -11,13 +11,15 @@ import { CognitoService } from '../../core/services/cognito.service';
 import { UserActions } from '../../features/user/store/user.actions';
 import { selectIsAuthenticated, selectCurrentUser } from '../../features/user/store/user.selectors';
 import { map } from 'rxjs/operators';
+import { DashboardSideNavComponent } from '../../features/user/components/dashboard/dashboard-side-nav/dashboard-side-nav.component';
+import { SideNavItem } from '../../features/user/components/dashboard/dashboard.types';
 
 @Component({
   selector: 'app-user-layout',
   templateUrl: './user-layout.component.html',
   styleUrls: ['./user-layout.component.scss'],
   standalone: true,
-  imports: [RouterModule, CommonModule]
+  imports: [RouterModule, CommonModule, DashboardSideNavComponent]
 })
 export class UserLayoutComponent implements OnInit {
   isAuthenticated$ = this.store.select(selectIsAuthenticated);
@@ -39,5 +41,12 @@ export class UserLayoutComponent implements OnInit {
   signOut(): void {
     // Use NgRx action - navigation will be handled by the effect
     this.store.dispatch(UserActions.signout());
+  }
+
+  /**
+   * Handle side navigation item clicked
+   */
+  onSideNavItemClicked(item: SideNavItem): void {
+    console.log('[UserLayout] Side nav item clicked:', item.id, item.tooltip);
   }
 } 

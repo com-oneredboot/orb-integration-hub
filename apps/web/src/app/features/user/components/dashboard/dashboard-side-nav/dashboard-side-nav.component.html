@@ -2,7 +2,7 @@
 file: apps/web/src/app/features/user/components/dashboard/dashboard-side-nav/dashboard-side-nav.component.html
 author: Kiro
 date: 2026-01-23
-description: Dashboard side navigation template - uses global orb-side-nav styles
+description: Side navigation template - Organizations, Applications, Groups, Users with active state
 -->
 
 <nav 
@@ -19,6 +19,7 @@ description: Dashboard side navigation template - uses global orb-side-nav style
         type="button"
         class="orb-side-nav__button"
         [class.orb-side-nav__button--disabled]="item.disabled"
+        [class.orb-side-nav__button--active]="isActive(item)"
         [disabled]="item.disabled"
         (click)="onItemClick(item)"
         (keydown)="onKeydown($event, item)"
@@ -27,7 +28,8 @@ description: Dashboard side navigation template - uses global orb-side-nav style
         (focus)="onMouseEnter(item)"
         (blur)="onMouseLeave()"
         [attr.aria-label]="item.tooltip"
-        [attr.aria-disabled]="item.disabled">
+        [attr.aria-disabled]="item.disabled"
+        [attr.aria-current]="isActive(item) ? 'page' : null">
         
         <fa-icon 
           [icon]="item.icon" 
