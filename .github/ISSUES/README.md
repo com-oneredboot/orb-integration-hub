@@ -5,6 +5,7 @@
 | Issue | Team | Title | Status | Impact |
 |-------|------|-------|--------|--------|
 | #76 | orb-schema-generator | Bug: VTL Resolvers Use ISO8601 Instead of Epoch Seconds for AWSTimestamp Fields | Open | High |
+| #19 | orb-infrastructure | Enhancement: Add UUID Utilities to orb-common for All Supported Languages | Open | Low |
 | #17 | orb-infrastructure | feat: Add timestamp utilities to orb-common for AWSTimestamp handling | Open | Medium |
 | #75 | orb-schema-generator | Bug: Lambda Type Auth Directives Not Generated in GraphQL Schema | Open | Critical |
 | #73 | orb-schema-generator | Enhancement: AppSyncApi Construct Missing Production Features (X-Ray, Secrets Manager, Scoped IAM) | Open | Medium |
