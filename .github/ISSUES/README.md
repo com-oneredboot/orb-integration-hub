@@ -4,6 +4,7 @@
 
 | Issue | Team | Title | Status | Impact |
 |-------|------|-------|--------|--------|
+| #79 | orb-schema-generator | Bug: TypeScript GraphQL Query Generator Not Updated for v0.19.0 Response Format | Open | High |
 | #78 | orb-schema-generator | Bug: Mutation VTL Response Doesn't Match GraphQL Schema (items wrapper mismatch) | Open | High |
 | #76 | orb-schema-generator | Bug: VTL Resolvers Use ISO8601 Instead of Epoch Seconds for AWSTimestamp Fields | Open | High |
 | #17 | orb-infrastructure | feat: Add timestamp utilities to orb-common for AWSTimestamp handling | Open | Medium |
