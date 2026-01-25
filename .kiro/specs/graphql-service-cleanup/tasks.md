@@ -8,22 +8,22 @@ This implementation plan standardizes GraphQL service implementations to use the
 
 ## Tasks
 
-- [ ] 1. Create error types and base infrastructure
-  - [ ] 1.1 Create `apps/web/src/app/core/errors/api-errors.ts` with ApiError, AuthenticationError, NetworkError classes
+- [x] 1. Create error types and base infrastructure
+  - [x] 1.1 Create `apps/web/src/app/core/errors/api-errors.ts` with ApiError, AuthenticationError, NetworkError classes
     - _Requirements: 6.1, 6.2, 6.3, 6.4_
-  - [ ] 1.2 Create `apps/web/src/app/core/types/graphql.types.ts` with Connection<T> and GraphQLResponseEnvelope<T> interfaces
+  - [x] 1.2 Create `apps/web/src/app/core/types/graphql.types.ts` with Connection<T> and GraphQLResponseEnvelope<T> interfaces
     - _Requirements: 2.2, 3.1, 3.2_
-  - [ ] 1.3 Write unit tests for error types
+  - [x] 1.3 Write unit tests for error types
     - _Requirements: 5.1, 5.2_
 
-- [ ] 2. Enhance ApiService base class
-  - [ ] 2.1 Add `executeMutation<T>()` method that extracts `item` from v0.19.0 envelope
+- [x] 2. Enhance ApiService base class
+  - [x] 2.1 Add `executeMutation<T>()` method that extracts `item` from v0.19.0 envelope
     - _Requirements: 1.1, 1.2, 1.3, 4.1_
-  - [ ] 2.2 Add `executeGetQuery<T>()` method that extracts `item` from v0.19.0 envelope
+  - [x] 2.2 Add `executeGetQuery<T>()` method that extracts `item` from v0.19.0 envelope
     - _Requirements: 2.1, 4.2_
-  - [ ] 2.3 Add `executeListQuery<T>()` method that extracts `items` from v0.19.0 envelope
+  - [x] 2.3 Add `executeListQuery<T>()` method that extracts `items` from v0.19.0 envelope
     - _Requirements: 2.2, 4.2_
-  - [ ] 2.4 Update `handleGraphQLError()` to use envelope `success` and `message` fields
+  - [x] 2.4 Update `handleGraphQLError()` to use envelope `success` and `message` fields
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 4.3_
   - [ ] 2.5 Write property test for error type mapping
     - **Property 2: Error Response Handling**
@@ -36,28 +36,32 @@ This implementation plan standardizes GraphQL service implementations to use the
   - Regenerate schemas with `pipenv run orb-schema generate`
   - Verify TypeScript GraphQL queries have correct format
 
-- [ ] 4. Update OrganizationService
-  - [ ] 4.1 Update imports to use new operation names (`ListByOwnerId` instead of `QueryByOwnerId`, add `OrganizationsGet`)
+- [x] 4. Update OrganizationService
+  - [x] 4.1 Update imports to use new operation names (`ListByOwnerId` instead of `QueryByOwnerId`, add `OrganizationsGet`)
     - _Requirements: 7.1, 7.4_
-  - [ ] 4.2 Refactor `createDraft()` to use `executeMutation()` and remove workaround code
+  - [x] 4.2 Refactor `createDraft()` to use `executeMutation()` and remove workaround code
     - _Requirements: 1.1, 7.1, 7.2, 7.3_
-  - [ ] 4.3 Refactor `createOrganization()` to use `executeMutation()`
+  - [x] 4.3 Refactor `createOrganization()` to use `executeMutation()`
     - _Requirements: 1.1, 7.1_
-  - [ ] 4.4 Refactor `updateOrganization()` to use `executeMutation()`
+  - [x] 4.4 Refactor `updateOrganization()` to use `executeMutation()`
     - _Requirements: 1.2, 7.1_
-  - [ ] 4.5 Refactor `deleteOrganization()` to use `executeMutation()`
+  - [x] 4.5 Refactor `deleteOrganization()` to use `executeMutation()`
     - _Requirements: 1.3, 7.1_
-  - [ ] 4.6 Refactor `getOrganization()` to use `executeGetQuery()` with new `OrganizationsGet` operation
+  - [x] 4.6 Refactor `getOrganization()` to use `executeGetQuery()` with new `OrganizationsGet` operation
     - _Requirements: 2.1, 7.1_
-  - [ ] 4.7 Refactor `getUserOrganizations()` to use `executeListQuery()` with `OrganizationsListByOwnerId`
+  - [x] 4.7 Refactor `getUserOrganizations()` to use `executeListQuery()` with `OrganizationsListByOwnerId`
     - _Requirements: 2.2, 7.1_
-  - [ ] 4.8 Remove custom response types (`OrganizationsResponse`, `OrganizationsCreateResponse`, etc.)
+  - [x] 4.8 Remove custom response types (`OrganizationsResponse`, `OrganizationsCreateResponse`, etc.)
     - _Requirements: 3.3, 7.4_
   - [ ] 4.9 Write property test for mutation response handling
     - **Property 1: Mutation Response Direct Return**
     - **Validates: Requirements 1.1, 1.2, 1.3**
   - [ ] 4.10 Write unit tests for OrganizationService
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
+
+- [x] 4b. Update Organization Components and Effects
+  - [x] 4b.1 Update `organizations-list.component.ts` to handle direct `IOrganizations` return
+  - [x] 4b.2 Update `organizations.effects.ts` to handle `Connection<IOrganizations>` and `IOrganizations` directly
 
 - [ ] 5. Checkpoint - Verify OrganizationService
   - Ensure all tests pass, ask the user if questions arise.

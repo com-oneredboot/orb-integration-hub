@@ -32,17 +32,11 @@ export class OrganizationsEffects {
       filter(([, currentUser]) => !!currentUser?.userId),
       switchMap(([, currentUser]) =>
         this.organizationService.getUserOrganizations(currentUser!.userId).pipe(
-          map(response => {
-            if (response.StatusCode === 200 && response.Data) {
-              return OrganizationsActions.loadOrganizationsSuccess({ 
-                organizations: response.Data 
-              });
-            } else {
-              return OrganizationsActions.loadOrganizationsFailure({ 
-                error: response.Message || 'Failed to load organizations' 
-              });
-            }
-          }),
+          map(connection => 
+            OrganizationsActions.loadOrganizationsSuccess({ 
+              organizations: connection.items 
+            })
+          ),
           catchError(error => 
             of(OrganizationsActions.loadOrganizationsFailure({ 
               error: error.message || 'Failed to load organizations' 
@@ -61,17 +55,9 @@ export class OrganizationsEffects {
       filter(([, currentUser]) => !!currentUser?.userId),
       switchMap(([, currentUser]) =>
         this.organizationService.createDraft(currentUser!.userId).pipe(
-          map(response => {
-            if (response.StatusCode === 200 && response.Data) {
-              return OrganizationsActions.createDraftOrganizationSuccess({ 
-                organization: response.Data 
-              });
-            } else {
-              return OrganizationsActions.createDraftOrganizationFailure({ 
-                error: response.Message || 'Failed to create draft organization' 
-              });
-            }
-          }),
+          map(organization => 
+            OrganizationsActions.createDraftOrganizationSuccess({ organization })
+          ),
           catchError(error => 
             of(OrganizationsActions.createDraftOrganizationFailure({ 
               error: error.message || 'Failed to create draft organization' 
@@ -96,17 +82,9 @@ export class OrganizationsEffects {
         }
 
         return this.organizationService.createOrganization(action.input).pipe(
-          map(response => {
-            if (response.StatusCode === 200 && response.Data) {
-              return OrganizationsActions.createOrganizationSuccess({ 
-                organization: response.Data 
-              });
-            } else {
-              return OrganizationsActions.createOrganizationFailure({ 
-                error: response.Message || 'Failed to create organization' 
-              });
-            }
-          }),
+          map(organization => 
+            OrganizationsActions.createOrganizationSuccess({ organization })
+          ),
           catchError(error => 
             of(OrganizationsActions.createOrganizationFailure({ 
               error: error.message || 'Failed to create organization' 
@@ -123,17 +101,9 @@ export class OrganizationsEffects {
       ofType(OrganizationsActions.updateOrganization),
       switchMap(action =>
         this.organizationService.updateOrganization(action.input).pipe(
-          map(response => {
-            if (response.StatusCode === 200 && response.Data) {
-              return OrganizationsActions.updateOrganizationSuccess({ 
-                organization: response.Data 
-              });
-            } else {
-              return OrganizationsActions.updateOrganizationFailure({ 
-                error: response.Message || 'Failed to update organization' 
-              });
-            }
-          }),
+          map(organization => 
+            OrganizationsActions.updateOrganizationSuccess({ organization })
+          ),
           catchError(error => 
             of(OrganizationsActions.updateOrganizationFailure({ 
               error: error.message || 'Failed to update organization' 
@@ -150,17 +120,11 @@ export class OrganizationsEffects {
       ofType(OrganizationsActions.deleteOrganization),
       switchMap(action =>
         this.organizationService.deleteOrganization(action.organizationId).pipe(
-          map(response => {
-            if (response.StatusCode === 200) {
-              return OrganizationsActions.deleteOrganizationSuccess({ 
-                organizationId: action.organizationId 
-              });
-            } else {
-              return OrganizationsActions.deleteOrganizationFailure({ 
-                error: response.Message || 'Failed to delete organization' 
-              });
-            }
-          }),
+          map(() => 
+            OrganizationsActions.deleteOrganizationSuccess({ 
+              organizationId: action.organizationId 
+            })
+          ),
           catchError(error => 
             of(OrganizationsActions.deleteOrganizationFailure({ 
               error: error.message || 'Failed to delete organization' 

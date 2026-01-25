@@ -128,14 +128,14 @@ export class OrganizationDetailPageComponent implements OnInit, OnDestroy {
     this.organizationService.getOrganization(id).pipe(
       take(1)
     ).subscribe({
-      next: (response) => {
-        if (response.StatusCode === 200 && response.Data) {
-          this.organization = response.Data;
+      next: (organization) => {
+        if (organization) {
+          this.organization = organization;
           this.isDraft = this.organization.status === OrganizationStatus.Pending;
           this.loadFormData();
           this.isLoading = false;
         } else {
-          this.loadError = response.Message || 'Organization not found';
+          this.loadError = 'Organization not found';
           this.isLoading = false;
         }
       },
@@ -215,20 +215,16 @@ export class OrganizationDetailPageComponent implements OnInit, OnDestroy {
     }).pipe(
       take(1)
     ).subscribe({
-      next: (response) => {
+      next: (organization) => {
         this.isSaving = false;
-        if (response.StatusCode === 200 && response.Data) {
-          this.organization = response.Data;
-          this.isDraft = this.organization.status === OrganizationStatus.Pending;
-          
-          // Refresh the organizations list in the store
-          this.store.dispatch(OrganizationsActions.loadOrganizations());
-          
-          // Navigate back to list
-          this.router.navigate(['/customers/organizations']);
-        } else {
-          this.saveError = response.Message || 'Failed to save organization';
-        }
+        this.organization = organization;
+        this.isDraft = this.organization.status === OrganizationStatus.Pending;
+        
+        // Refresh the organizations list in the store
+        this.store.dispatch(OrganizationsActions.loadOrganizations());
+        
+        // Navigate back to list
+        this.router.navigate(['/customers/organizations']);
       },
       error: (error) => {
         console.error('[OrganizationDetailPage] Error saving organization:', error);

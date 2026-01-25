@@ -228,3 +228,11 @@ export const UsersListByCognitoSub = /* GraphQL */ `
     }
   }
 `;
+
+
+// Legacy aliases for backward compatibility
+// TODO: Update services to use new operation names (ListBy* instead of QueryBy*)
+export const UsersQueryByUserId = UsersListByUserId;
+export const UsersQueryByEmail = UsersListByEmail;
+export const UsersQueryByCognitoId = UsersListByCognitoId;
+export const UsersQueryByCognitoSub = UsersListByCognitoSub;

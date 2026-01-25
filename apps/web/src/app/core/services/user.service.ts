@@ -20,8 +20,9 @@ import { CreateUserFromCognito } from "../graphql/CreateUserFromCognito.graphql"
 import { GetCurrentUser } from "../graphql/GetCurrentUser.graphql";
 import {
   UsersCreateInput, UsersUpdateInput,
-  UsersCreateResponse, UsersUpdateResponse, IUsers,
-  UsersListResponse, UsersResponse, Users
+  UsersUpdateResponse, IUsers,
+  UsersResponse, Users,
+  LegacyUsersListResponse, LegacyUsersCreateResponse
 } from "../models/UsersModel";
 import { UserGroup } from "../enums/UserGroupEnum";
 import { UserStatus } from "../enums/UserStatusEnum";
@@ -162,7 +163,7 @@ export class UserService extends ApiService {
       const graphqlInput = toGraphQLInput(userCreateInput as unknown as Record<string, unknown>);
 
       // Use userPool auth since user is already authenticated
-      const response = await this.mutate(UsersCreate, {"input": graphqlInput}, "userPool") as GraphQLResult<UsersCreateResponse>;
+      const response = await this.mutate(UsersCreate, {"input": graphqlInput}, "userPool") as GraphQLResult<LegacyUsersCreateResponse>;
       console.debug('[UserService][createUserRecordOnly] Response:', response);
 
       const statusCode = response.data?.StatusCode ?? 200;
@@ -198,7 +199,7 @@ export class UserService extends ApiService {
    * @param input UserQueryInput with backend-compatible fields
    * @returns UsersResponse object
    */
-  public async userExists(input: { userId?: string; email?: string }): Promise<UsersListResponse> {
+  public async userExists(input: { userId?: string; email?: string }): Promise<LegacyUsersListResponse> {
     try {
       let queryInput;
       let query;
@@ -217,7 +218,7 @@ export class UserService extends ApiService {
         query,
         { input: queryInput },
         'userPool'
-      ) as GraphQLResult<{ UsersQueryByUserId?: UsersListResponse; UsersQueryByEmail?: UsersListResponse }>;
+      ) as GraphQLResult<{ UsersQueryByUserId?: LegacyUsersListResponse; UsersQueryByEmail?: LegacyUsersListResponse }>;
 
       // Dynamically get the result based on which query was used
       let result;
@@ -246,7 +247,7 @@ export class UserService extends ApiService {
         StatusCode: statusCode,
         Message: message,
         Data: users
-      } as UsersListResponse;
+      } as LegacyUsersListResponse;
 
     } catch (error: unknown) {
       // Better error message handling
@@ -467,7 +468,7 @@ export class UserService extends ApiService {
     }
   }
 
-  public async userQueryByCognitoSub(cognitoSub: string): Promise<UsersListResponse> {
+  public async userQueryByCognitoSub(cognitoSub: string): Promise<LegacyUsersListResponse> {
     console.debug('userQueryByCognitoSub:', sanitizeCognitoSub(cognitoSub));
     try {
       // UsersQueryByCognitoSub requires Cognito auth
@@ -478,7 +479,7 @@ export class UserService extends ApiService {
             cognitoSub: cognitoSub
           }
         },
-        'userPool') as GraphQLResult<{ UsersQueryByCognitoSub: UsersListResponse }>;
+        'userPool') as GraphQLResult<{ UsersQueryByCognitoSub: LegacyUsersListResponse }>;
 
         const response = queryResult.data?.UsersQueryByCognitoSub;
         const users = response?.Data || [];
@@ -512,7 +513,7 @@ export class UserService extends ApiService {
     }
   }
 
-  public async userQueryByEmail(email: string): Promise<UsersListResponse> {
+  public async userQueryByEmail(email: string): Promise<LegacyUsersListResponse> {
     console.debug('userQueryByEmail:', sanitizeEmail(email));
     try {
       // UsersQueryByEmail requires Cognito auth (user must be signed in)
@@ -523,7 +524,7 @@ export class UserService extends ApiService {
             email: email
           }
         },
-        'userPool') as GraphQLResult<{ UsersQueryByEmail: UsersListResponse }>;
+        'userPool') as GraphQLResult<{ UsersQueryByEmail: LegacyUsersListResponse }>;
 
         const response = queryResult.data?.UsersQueryByEmail;
         const users = response?.Data || [];

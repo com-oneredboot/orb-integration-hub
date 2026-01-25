@@ -195,3 +195,26 @@ export class Users implements IUsers {
     this.mfaSetupComplete = data.mfaSetupComplete;
   }
 }
+
+
+// Legacy compatibility type - used by UserService
+// TODO: Migrate services to use new v0.19.0 format
+export type UsersResponse = {
+  StatusCode: number;
+  Message: string;
+  Data?: Users | null;
+};
+
+// Legacy list response type for backward compatibility
+export type LegacyUsersListResponse = {
+  StatusCode: number;
+  Message: string;
+  Data?: Users[] | null;
+};
+
+// Legacy create response type for backward compatibility
+export type LegacyUsersCreateResponse = {
+  StatusCode: number;
+  Message: string;
+  Data?: Users | null;
+};

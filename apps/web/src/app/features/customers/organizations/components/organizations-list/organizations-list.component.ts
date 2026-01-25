@@ -266,15 +266,11 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
       console.debug('[OrganizationsList] Creating draft organization for user:', user.userId);
       
       this.organizationService.createDraft(user.userId).pipe(take(1)).subscribe({
-        next: (response) => {
+        next: (organization) => {
           this.isCreatingDraft = false;
-          if (response.StatusCode === 200 && response.Data) {
-            console.debug('[OrganizationsList] Draft created:', response.Data.organizationId);
-            // Navigate to the detail page with the new organization ID
-            this.router.navigate(['/customers/organizations', response.Data.organizationId]);
-          } else {
-            console.error('[OrganizationsList] Failed to create draft:', response.Message);
-          }
+          console.debug('[OrganizationsList] Draft created:', organization.organizationId);
+          // Navigate to the detail page with the new organization ID
+          this.router.navigate(['/customers/organizations', organization.organizationId]);
         },
         error: (error) => {
           this.isCreatingDraft = false;

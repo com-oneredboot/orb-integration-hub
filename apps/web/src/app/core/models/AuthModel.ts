@@ -83,3 +83,12 @@ export class Auth implements IAuth {
     this.mfaSetupDetails = data.mfaSetupDetails;
   }
 }
+
+
+// Legacy compatibility type - used by CognitoService and UserService
+// TODO: Migrate services to use Auth class directly
+export type AuthResponse = {
+  StatusCode: number;
+  Message: string;
+  Data?: Auth | null;
+};
