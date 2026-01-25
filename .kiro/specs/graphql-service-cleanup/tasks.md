@@ -25,10 +25,10 @@ This implementation plan standardizes GraphQL service implementations to use the
     - _Requirements: 2.2, 4.2_
   - [x] 2.4 Update `handleGraphQLError()` to use envelope `success` and `message` fields
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 4.3_
-  - [ ] 2.5 Write property test for error type mapping
+  - [x] 2.5 Write property test for error type mapping
     - **Property 2: Error Response Handling**
     - **Validates: Requirements 1.4, 2.4, 6.1, 6.2, 6.3, 6.4**
-  - [ ] 2.6 Write unit tests for base class methods
+  - [x] 2.6 Write unit tests for base class methods
     - _Requirements: 5.1, 5.2, 5.3_
 
 - [ ] 3. Checkpoint - Wait for #79 fix
@@ -78,7 +78,7 @@ This implementation plan standardizes GraphQL service implementations to use the
     - _Requirements: 5.1, 5.2, 5.3_
 
 - [ ] 7. Update documentation
-  - [ ] 7.1 Create steering file `.kiro/steering/graphql-services.md` with patterns
+  - [x] 7.1 Create steering file `.kiro/steering/graphql-services.md` with patterns
     - _Requirements: 9.1, 9.2, 9.3, 9.4_
   - [ ] 7.2 Update coding standards in `repositories/orb-templates/docs/coding-standards/` (if writable)
     - _Requirements: 8.1, 8.2, 8.3, 8.4_
