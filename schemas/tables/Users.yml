@@ -35,6 +35,10 @@ model:
           - Users
           - UsersResponse
           - UsersUpdate
+          - UsersGet
+          - UsersListByUserId
+          - UsersListByEmail
+          - UsersListByCognitoSub
   keys:
     primary:
       partition: userId

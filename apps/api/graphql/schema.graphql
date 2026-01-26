@@ -1601,11 +1601,11 @@ type Query {
   ApplicationsListByApplicationId(input: ApplicationsListByApplicationIdInput!): ApplicationsListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   ApplicationsListByOrganizationId(input: ApplicationsListByOrganizationIdInput!): ApplicationsListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   ApplicationsListByOrganizationIdAndCreatedAt(input: ApplicationsListByOrganizationIdAndCreatedAtInput!): ApplicationsListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
-  UsersGet(input: UsersGetInput!): UsersGetResponse @aws_auth(cognito_groups: ["OWNER"])
-  UsersListByUserId(input: UsersListByUserIdInput!): UsersListResponse @aws_auth(cognito_groups: ["OWNER"])
-  UsersListByEmail(input: UsersListByEmailInput!): UsersListResponse @aws_auth(cognito_groups: ["OWNER"])
+  UsersGet(input: UsersGetInput!): UsersGetResponse @aws_auth(cognito_groups: ["OWNER", "USER"])
+  UsersListByUserId(input: UsersListByUserIdInput!): UsersListResponse @aws_auth(cognito_groups: ["OWNER", "USER"])
+  UsersListByEmail(input: UsersListByEmailInput!): UsersListResponse @aws_auth(cognito_groups: ["OWNER", "USER"])
   UsersListByCognitoId(input: UsersListByCognitoIdInput!): UsersListResponse @aws_auth(cognito_groups: ["OWNER"])
-  UsersListByCognitoSub(input: UsersListByCognitoSubInput!): UsersListResponse @aws_auth(cognito_groups: ["OWNER"])
+  UsersListByCognitoSub(input: UsersListByCognitoSubInput!): UsersListResponse @aws_auth(cognito_groups: ["OWNER", "USER"])
 }
 
 # Mutations
