@@ -184,9 +184,9 @@
   align-items: center;
   gap: v.$spacing-sm;
   padding: v.$spacing-xs v.$spacing-md;
-  background-color: transparent;
+  background-color: v.$orb-red;
   color: white;
-  border: 1px solid rgba(white, 0.6);
+  border: none;
   border-radius: v.$border-radius;
   font-size: v.$font-size-sm;
   font-weight: v.$font-weight-medium;
@@ -195,8 +195,7 @@
   text-decoration: none;
   
   &:hover {
-    background-color: rgba(white, 0.1);
-    border-color: white;
+    background-color: color.adjust(v.$orb-red, $lightness: -10%);
     transform: translateY(-1px);
   }
   
