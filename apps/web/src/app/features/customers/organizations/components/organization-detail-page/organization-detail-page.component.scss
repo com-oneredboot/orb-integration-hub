@@ -2,124 +2,76 @@
 @use '../../../../../../styles/mixins' as m;
 @use 'sass:color';
 
-.org-detail-page {
+// Organization Detail Page - uses global orb-card and orb-btn styles
+// Only component-specific styles defined here
+
+.org-detail-container {
+  width: 100%;
+  font-family: v.$font-family-base;
+}
+
+.org-detail-content {
   max-width: v.$page-max-width;
   margin: 0 auto;
-  padding: v.$spacing-lg;
+  padding: 0 v.$spacing-lg v.$spacing-lg;
+}
 
-  &__header {
-    margin-bottom: v.$spacing-xl;
+.org-detail-breadcrumb {
+  margin-bottom: v.$spacing-lg;
+}
+
+.org-detail-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: v.$spacing-xs;
+  color: v.$primary-color;
+  text-decoration: none;
+  font-size: v.$font-size-sm;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: color.adjust(v.$primary-color, $lightness: -10%);
+    text-decoration: underline;
   }
+}
 
-  &__breadcrumb {
+.org-detail-loading,
+.org-detail-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: v.$spacing-xl v.$spacing-lg;
+  text-align: center;
+  color: v.$text-secondary;
+
+  fa-icon {
     margin-bottom: v.$spacing-md;
   }
 
-  &__back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: v.$spacing-xs;
-    color: v.$primary-color;
-    text-decoration: none;
-    font-size: v.$font-size-sm;
-    font-family: v.$font-family-base;
-    transition: color 0.2s ease;
-
-    &:hover {
-      color: color.adjust(v.$primary-color, $lightness: -10%);
-      text-decoration: underline;
-    }
+  p {
+    margin: 0 0 v.$spacing-lg;
+    font-size: v.$font-size-lg;
   }
+}
 
-  &__title-row {
-    display: flex;
-    align-items: center;
-    gap: v.$spacing-md;
-    flex-wrap: wrap;
+.org-detail-error {
+  fa-icon {
+    color: v.$danger-color;
   }
+}
 
-  &__title {
-    display: flex;
-    align-items: center;
-    gap: v.$spacing-sm;
-    font-family: v.$font-family-heading;
-    font-size: v.$font-size-2xl;
-    font-weight: v.$font-weight-semibold;
-    color: v.$text-primary;
-    margin: 0;
-  }
+.org-detail-form-section {
+  max-width: 800px;
+  margin: 0 auto;
+}
 
-  &__icon {
-    color: v.$primary-color;
-  }
+// Form field styles
+.org-detail-field {
+  margin-bottom: v.$spacing-lg;
 
-  &__subtitle {
-    color: v.$text-secondary;
-    margin: v.$spacing-xs 0 0;
-    font-size: v.$font-size-base;
-    font-family: v.$font-family-base;
-  }
-
-  &__loading,
-  &__error {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: v.$spacing-2xl v.$spacing-lg;
-    text-align: center;
-    color: v.$text-secondary;
-
-    fa-icon {
-      margin-bottom: v.$spacing-md;
-    }
-
-    p {
-      margin: 0 0 v.$spacing-lg;
-      font-size: v.$font-size-lg;
-    }
-  }
-
-  &__error {
-    fa-icon {
-      color: v.$danger-color;
-    }
-  }
-
-  &__card {
-    background: v.$bg-secondary;
-    border-radius: v.$border-radius;
-    box-shadow: v.$shadow-sm;
-    overflow: hidden;
-  }
-
-  &__card-header {
-    @include m.card-header;
-    background: linear-gradient(135deg, v.$primary-color 0%, v.$logo-dark-red 100%);
-    color: v.$white;
-    padding: v.$spacing-md v.$spacing-lg;
-  }
-
-  &__card-title {
-    @include m.card-title;
-    display: flex;
-    align-items: center;
-    gap: v.$spacing-sm;
-    color: v.$white;
-    margin: 0;
-  }
-
-  &__card-body {
-    @include m.card-content;
-    padding: v.$spacing-lg;
-  }
-
-  &__field {
-    margin-bottom: v.$spacing-lg;
-
-    &:last-of-type {
-      margin-bottom: 0;
-    }
+  &:last-of-type {
+    margin-bottom: 0;
   }
 
   &__label {
@@ -128,7 +80,6 @@
     color: v.$text-primary;
     margin-bottom: v.$spacing-xs;
     font-size: v.$font-size-base;
-    font-family: v.$font-family-base;
   }
 
   &__required {
@@ -144,12 +95,11 @@
     font-family: v.$font-family-base;
     font-size: v.$input-font-size;
     color: v.$input-color;
-    border: 2px solid v.$gray-400; // Match auth flow - increased border width and darker color for visibility
+    border: 2px solid v.$gray-400;
     border-radius: v.$border-radius;
     background-color: v.$input-bg;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
-    // Placeholder styling for better visibility
     &::placeholder {
       color: v.$gray-500;
       opacity: 1;
@@ -161,7 +111,6 @@
       box-shadow: 0 0 0 3px rgba(v.$primary-color, 0.3);
     }
 
-    // High contrast focus for accessibility
     @media (prefers-contrast: high) {
       &:focus {
         box-shadow: 0 0 0 3px v.$primary-color;
@@ -184,7 +133,7 @@
     min-height: 100px;
   }
 
-  &__error-text {
+  &__error {
     display: flex;
     align-items: center;
     gap: v.$spacing-xs;
@@ -204,23 +153,24 @@
     margin-top: v.$spacing-xs;
     text-align: right;
   }
+}
 
-  &__metadata {
-    margin-top: v.$spacing-xl;
-    padding-top: v.$spacing-lg;
-    border-top: 1px solid v.$border-color;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: v.$spacing-md;
-  }
+// Metadata section
+.org-detail-metadata {
+  margin-top: v.$spacing-xl;
+  padding-top: v.$spacing-lg;
+  border-top: 1px solid v.$border-color;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: v.$spacing-md;
 
-  &__meta-item {
+  &__item {
     display: flex;
     flex-direction: column;
     gap: v.$spacing-xs;
   }
 
-  &__meta-label {
+  &__label {
     font-size: v.$font-size-xs;
     color: v.$text-secondary;
     text-transform: uppercase;
@@ -228,122 +178,78 @@
     font-weight: v.$font-weight-medium;
   }
 
-  &__meta-value {
+  &__value {
     font-size: v.$font-size-sm;
     color: v.$text-primary;
-    font-family: monospace;
+    font-family: v.$font-family-monospace;
     word-break: break-all;
   }
+}
 
-  &__save-error {
+// Save error
+.org-detail-save-error {
+  display: flex;
+  align-items: center;
+  gap: v.$spacing-sm;
+  padding: v.$spacing-md;
+  margin-top: v.$spacing-lg;
+  background: rgba(v.$danger-color, 0.05);
+  border: 1px solid rgba(v.$danger-color, 0.2);
+  border-radius: v.$border-radius;
+  border-left: 3px solid v.$danger-color;
+  color: v.$danger-color;
+  font-size: v.$font-size-sm;
+}
+
+// Actions footer
+.org-detail-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: v.$spacing-md v.$spacing-lg;
+  background: v.$gray-50;
+  border-top: 1px solid v.$border-color;
+
+  &__left,
+  &__right {
     display: flex;
-    align-items: center;
     gap: v.$spacing-sm;
-    padding: v.$spacing-md;
-    margin-top: v.$spacing-lg;
-    background: rgba(v.$danger-color, 0.05);
-    border: 1px solid rgba(v.$danger-color, 0.2);
-    border-radius: v.$border-radius;
-    border-left: 3px solid v.$danger-color;
+  }
+
+  &__delete {
     color: v.$danger-color;
-    font-size: v.$font-size-sm;
-  }
+    border-color: v.$danger-color;
 
-  &__card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: v.$spacing-md v.$spacing-lg;
-    background: v.$gray-50;
-    border-top: 1px solid v.$border-color;
-  }
-
-  &__actions-left,
-  &__actions-right {
-    display: flex;
-    gap: v.$spacing-sm;
-  }
-
-  &__btn {
-    display: inline-flex;
-    align-items: center;
-    gap: v.$spacing-xs;
-    padding: v.$spacing-sm v.$spacing-lg;
-    border: none;
-    border-radius: v.$border-radius;
-    font-family: v.$font-family-base;
-    font-size: v.$font-size-base;
-    font-weight: v.$font-weight-semibold;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    min-height: 44px; // Touch target size
-
-    &:focus {
-      outline: 3px solid rgba(v.$primary-color, 0.5);
-      outline-offset: 2px;
-    }
-
-    &:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-    }
-
-    &--primary {
-      background: v.$primary-color;
+    &:hover:not(:disabled) {
+      background: v.$danger-color;
       color: v.$white;
-
-      &:hover:not(:disabled) {
-        background: color.adjust(v.$primary-color, $lightness: -10%);
-        transform: translateY(-1px);
-      }
-    }
-
-    &--secondary {
-      background: v.$white;
-      color: v.$text-primary;
-      border: 2px solid v.$border-color;
-
-      &:hover:not(:disabled) {
-        background: v.$gray-100;
-        transform: translateY(-1px);
-      }
-    }
-
-    &--danger {
-      background: v.$white;
-      color: v.$danger-color;
-      border: 2px solid v.$danger-color;
-
-      &:hover:not(:disabled) {
-        background: v.$danger-color;
-        color: v.$white;
-        transform: translateY(-1px);
-      }
     }
   }
 }
 
+// Header icon styling
+.orb-page-header__icon-fa {
+  font-size: 2rem;
+  color: v.$primary-color;
+}
+
 // Responsive
 @media (max-width: 768px) {
-  .org-detail-page {
+  .org-detail-content {
     padding: v.$spacing-md;
+  }
 
-    &__title {
-      font-size: v.$font-size-xl;
-    }
+  .org-detail-actions {
+    flex-direction: column;
+    gap: v.$spacing-md;
 
-    &__card-footer {
-      flex-direction: column;
-      gap: v.$spacing-md;
-    }
-
-    &__actions-left,
-    &__actions-right {
+    &__left,
+    &__right {
       width: 100%;
       justify-content: center;
     }
 
-    &__btn {
+    .orb-btn {
       flex: 1;
       justify-content: center;
     }
@@ -370,11 +276,10 @@
 
 // Accessibility: Reduced motion preference
 @media (prefers-reduced-motion: reduce) {
-  .org-detail-page {
+  .org-detail-field {
     &__input,
     &__textarea,
-    &__error-text,
-    &__btn {
+    &__error {
       transition: none;
       animation: none;
     }
