@@ -569,8 +569,7 @@
 }
 
 // Header Status Badge (used in page headers)
-// Uses same muted green as CTA cards for consistency
-$header-green-muted: #7bc47f; // Same as CTA card muted green
+// Uses bold colors to match the strong black/red design system
 
 .orb-header-badge {
   display: inline-flex;
@@ -590,26 +589,26 @@ $header-green-muted: #7bc47f; // Same as CTA card muted green
 
   // Status variants
   &--active {
-    background-color: $header-green-muted;
+    background-color: v.$success-color;
     color: v.$white;
-    border: 2px solid $header-green-muted;
+    border: 2px solid v.$success-color;
   }
 
   &--pending {
-    background-color: rgba(v.$warning-color, 0.15);
-    color: color.adjust(v.$warning-color, $lightness: -15%);
+    background-color: v.$warning-color;
+    color: v.$white;
     border: 2px solid v.$warning-color;
   }
 
   &--suspended {
-    background-color: rgba(v.$danger-color, 0.15);
-    color: color.adjust(v.$danger-color, $lightness: -15%);
+    background-color: v.$danger-color;
+    color: v.$white;
     border: 2px solid v.$danger-color;
   }
 
   &--unknown {
-    background-color: rgba(v.$warning-color, 0.15);
-    color: color.adjust(v.$warning-color, $lightness: -15%);
+    background-color: v.$warning-color;
+    color: v.$white;
     border: 2px solid v.$warning-color;
   }
 }
