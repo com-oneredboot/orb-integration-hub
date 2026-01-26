@@ -24,8 +24,8 @@ import {
   UsersUpdateResponse, IUsers, Users
 } from "../models/UsersModel";
 import { 
-  AuthResponse, UsersResponse, LegacyUsersListResponse, LegacyUsersCreateResponse 
-} from "../models/legacy-types";
+  AuthResponse, UsersResponse, UsersListResponse, UsersCreateResponse 
+} from "../models/service-types";
 import { UserGroup } from "../enums/UserGroupEnum";
 import { UserStatus } from "../enums/UserStatusEnum";
 import { CognitoService } from "./cognito.service";
@@ -165,7 +165,7 @@ export class UserService extends ApiService {
       const graphqlInput = toGraphQLInput(userCreateInput as unknown as Record<string, unknown>);
 
       // Use userPool auth since user is already authenticated
-      const response = await this.mutate(UsersCreate, {"input": graphqlInput}, "userPool") as GraphQLResult<LegacyUsersCreateResponse>;
+      const response = await this.mutate(UsersCreate, {"input": graphqlInput}, "userPool") as GraphQLResult<UsersCreateResponse>;
       console.debug('[UserService][createUserRecordOnly] Response:', response);
 
       const statusCode = response.data?.StatusCode ?? 200;
@@ -201,7 +201,7 @@ export class UserService extends ApiService {
    * @param input UserQueryInput with backend-compatible fields
    * @returns UsersResponse object (legacy format for backward compatibility)
    */
-  public async userExists(input: { userId?: string; email?: string }): Promise<LegacyUsersListResponse> {
+  public async userExists(input: { userId?: string; email?: string }): Promise<UsersListResponse> {
     try {
       let queryInput;
       let query;
@@ -237,7 +237,7 @@ export class UserService extends ApiService {
         StatusCode: 200,
         Message: users.length > 0 ? 'User found' : 'User not found',
         Data: users
-      } as LegacyUsersListResponse;
+      } as UsersListResponse;
 
     } catch (error: unknown) {
       // Better error message handling
@@ -456,7 +456,7 @@ export class UserService extends ApiService {
   /**
    * Query a user by Cognito Sub using v0.19.0 list query.
    */
-  public async userQueryByCognitoSub(cognitoSub: string): Promise<LegacyUsersListResponse> {
+  public async userQueryByCognitoSub(cognitoSub: string): Promise<UsersListResponse> {
     console.debug('userQueryByCognitoSub:', sanitizeCognitoSub(cognitoSub));
     try {
       // Use v0.19.0 executeListQuery
@@ -502,7 +502,7 @@ export class UserService extends ApiService {
   /**
    * Query a user by email using v0.19.0 list query.
    */
-  public async userQueryByEmail(email: string): Promise<LegacyUsersListResponse> {
+  public async userQueryByEmail(email: string): Promise<UsersListResponse> {
     console.debug('userQueryByEmail:', sanitizeEmail(email));
     try {
       // Use v0.19.0 executeListQuery

@@ -18,6 +18,8 @@ import {
   faSave,
   faCopy,
   faSyncAlt,
+  faRefresh,
+  faHome,
   
   // User & Roles
   faCrown,
@@ -54,6 +56,7 @@ import {
   // Navigation & Movement
   faChevronLeft,
   faChevronRight,
+  faArrowLeft,
   faArrowRight,
   
   // Time & History
@@ -88,6 +91,8 @@ export function configureFontAwesome(library: FaIconLibrary): void {
     faSave,
     faCopy,
     faSyncAlt,
+    faRefresh,
+    faHome,
     
     // User & Roles
     faCrown,
@@ -124,6 +129,7 @@ export function configureFontAwesome(library: FaIconLibrary): void {
     // Navigation & Movement
     faChevronLeft,
     faChevronRight,
+    faArrowLeft,
     faArrowRight,
     
     // Time & History
@@ -157,6 +163,8 @@ export const registeredIcons = [
   'save',
   'copy',
   'sync-alt',
+  'refresh',
+  'home',
   
   // User & Roles
   'crown',
@@ -193,6 +201,7 @@ export const registeredIcons = [
   // Navigation & Movement
   'chevron-left',
   'chevron-right',
+  'arrow-left',
   'arrow-right',
   
   // Time & History

@@ -950,7 +950,8 @@ export class UserEffects {
                 console.debug('[Effect][refreshSession$] userQueryByEmail response:', {
                   statusCode: response.StatusCode,
                   dataLength: response.Data?.length,
-                  message: response.Message
+                  message: response.Message,
+                  groups: response.Data?.[0]?.groups
                 });
                 
                 // User found in backend
@@ -959,7 +960,8 @@ export class UserEffects {
                   console.debug('[Effect][refreshSession$] User loaded from backend:', {
                     userId: user.userId,
                     status: user.status,
-                    email: sanitizeEmail(user.email)
+                    email: sanitizeEmail(user.email),
+                    groups: user.groups
                   });
                   return UserActions.refreshSessionSuccess({ user });
                 }

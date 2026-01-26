@@ -245,14 +245,21 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
     this.currentUser$.pipe(take(1)).subscribe(user => {
       console.debug('[OrganizationsList] Current user:', user);
       console.debug('[OrganizationsList] User groups:', user?.groups);
+      console.debug('[OrganizationsList] Groups type:', typeof user?.groups, Array.isArray(user?.groups));
+      console.debug('[OrganizationsList] isUserCustomer result:', this.userService.isUserCustomer(user));
       
       if (!user?.userId) {
         console.warn('[OrganizationsList] No user ID available');
         return;
       }
       
-      if (!this.userService.isUserCustomer(user)) {
-        console.warn('[OrganizationsList] User is not a customer - cannot create organization');
+      // Allow CUSTOMER or OWNER to create organizations
+      const canCreate = user.groups?.includes('CUSTOMER') || user.groups?.includes('OWNER');
+      console.debug('[OrganizationsList] canCreate:', canCreate);
+      
+      if (!canCreate) {
+        console.warn('[OrganizationsList] User does not have CUSTOMER or OWNER group - cannot create organization');
+        console.warn('[OrganizationsList] Available groups:', user.groups);
         return;
       }
       
