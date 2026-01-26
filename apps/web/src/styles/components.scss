@@ -27,7 +27,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: v.$spacing-lg;
+    padding: v.$spacing-sm v.$spacing-lg;
     border-bottom: 1px solid v.$border-color;
     background: v.$orb-dark-blue;
     border-radius: v.$border-radius-lg v.$border-radius-lg 0 0; // Rounded top corners to match card
@@ -183,10 +183,10 @@
   display: inline-flex;
   align-items: center;
   gap: v.$spacing-sm;
-  padding: v.$spacing-sm v.$spacing-lg;
-  background-color: white;
-  color: v.$orb-red;
-  border: none;
+  padding: v.$spacing-xs v.$spacing-md;
+  background-color: transparent;
+  color: white;
+  border: 1px solid rgba(white, 0.6);
   border-radius: v.$border-radius;
   font-size: v.$font-size-sm;
   font-weight: v.$font-weight-medium;
@@ -195,7 +195,8 @@
   text-decoration: none;
   
   &:hover {
-    background-color: color.adjust(white, $lightness: -5%);
+    background-color: rgba(white, 0.1);
+    border-color: white;
     transform: translateY(-1px);
   }
   
