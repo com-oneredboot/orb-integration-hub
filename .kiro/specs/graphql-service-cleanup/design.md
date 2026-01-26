@@ -7,7 +7,7 @@ This design standardizes GraphQL service implementations across the frontend app
 ### Dependencies
 
 - **orb-schema-generator #78**: ✅ FIXED in v0.19.0 - GraphQL schema now has correct response types
-- **orb-schema-generator #79**: ✅ FIXED in v0.19.1 - TypeScript query generator updated for v0.19.0 format
+- **orb-schema-generator #79**: ✅ FIXED in v0.19.1 - TypeScript query generator updated for v0.19.1 format
 
 ### Status
 
