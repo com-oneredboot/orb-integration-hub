@@ -71,16 +71,21 @@ This implementation plan standardizes GraphQL service implementations to use the
   - ✅ Lint passes
   - ✅ Fixed organizations.selectors.ts to handle undefined state in tests
 
-- [ ] 6. Update remaining services
-  - [ ] 6.1 Update UserService to use new patterns (complex - has Cognito integration, legacy response types)
+- [x] 6. Update remaining services
+  - [x] 6.1 Update UserService to use new patterns (complex - has Cognito integration, legacy response types)
     - _Requirements: 4.4_
-    - Note: UserService uses legacy `StatusCode`, `Message`, `Data` wrappers - requires careful migration
+    - ✅ Updated imports to use v0.19.1 operation names (UsersListByUserId, UsersListByEmail, UsersListByCognitoSub)
+    - ✅ Created legacy-types.ts for backward-compatible Cognito response types
+    - ✅ Refactored userExists(), userQueryByUserId(), userQueryByCognitoSub(), userQueryByEmail() to use executeListQuery()
+    - ✅ Preserved legacy response format for Cognito integration compatibility
   - [x] 6.2 ~~Update ApplicationService to use new patterns~~ (N/A - ApplicationService does not exist)
     - _Requirements: 4.4_
   - [x] 6.3 ~~Update any other services using GraphQL~~ (N/A - only OrganizationService and UserService extend ApiService)
     - _Requirements: 4.4_
-  - [ ] 6.4 Write unit tests for updated services
+  - [x] 6.4 Write unit tests for updated services
     - _Requirements: 5.1, 5.2, 5.3_
+    - ✅ All 10 user.service tests pass
+    - ✅ All 59 api.service and organization.service tests pass
 
 - [ ] 7. Update documentation
   - [x] 7.1 Create steering file `.kiro/steering/graphql-services.md` with patterns

@@ -12,7 +12,8 @@ import { BehaviorSubject, Observable } from 'rxjs';
 // Application Imports
 import {ApiService} from "./api.service";
 import {
-  UsersCreate, UsersUpdate, UsersQueryByUserId, UsersQueryByEmail, UsersQueryByCognitoSub
+  UsersCreate, UsersUpdate,
+  UsersListByUserId, UsersListByEmail, UsersListByCognitoSub
 } from "../graphql/Users.graphql";
 import { SmsVerification } from "../graphql/SmsVerification.graphql";
 import { CheckEmailExists } from "../graphql/CheckEmailExists.graphql";
@@ -20,14 +21,15 @@ import { CreateUserFromCognito } from "../graphql/CreateUserFromCognito.graphql"
 import { GetCurrentUser } from "../graphql/GetCurrentUser.graphql";
 import {
   UsersCreateInput, UsersUpdateInput,
-  UsersUpdateResponse, IUsers,
-  UsersResponse, Users,
-  LegacyUsersListResponse, LegacyUsersCreateResponse
+  UsersUpdateResponse, IUsers, Users
 } from "../models/UsersModel";
+import { 
+  AuthResponse, UsersResponse, LegacyUsersListResponse, LegacyUsersCreateResponse 
+} from "../models/legacy-types";
 import { UserGroup } from "../enums/UserGroupEnum";
 import { UserStatus } from "../enums/UserStatusEnum";
 import { CognitoService } from "./cognito.service";
-import { Auth, AuthResponse } from "../models/AuthModel";
+import { Auth } from "../models/AuthModel";
 import { UserActions } from '../../features/user/store/user.actions';
 import { toGraphQLInput } from '../../graphql-utils';
 import { DebugLogService } from './debug-log.service';
@@ -195,9 +197,9 @@ export class UserService extends ApiService {
   }
 
   /**
-   * Check if a user exists
+   * Check if a user exists using v0.19.0 list queries.
    * @param input UserQueryInput with backend-compatible fields
-   * @returns UsersResponse object
+   * @returns UsersResponse object (legacy format for backward compatibility)
    */
   public async userExists(input: { userId?: string; email?: string }): Promise<LegacyUsersListResponse> {
     try {
@@ -205,34 +207,22 @@ export class UserService extends ApiService {
       let query;
       if (input.userId) {
         queryInput = { userId: input.userId };
-        query = UsersQueryByUserId;
+        query = UsersListByUserId;
       } else if (input.email) {
         queryInput = { email: input.email };
-        query = UsersQueryByEmail;
+        query = UsersListByEmail;
       } else {
         throw new Error('Must provide userId or email');
       }
 
-      // UsersQueryByUserId and UsersQueryByEmail require Cognito auth
-      const response = await this.query(
+      // Use v0.19.0 executeListQuery for list operations
+      const connection = await this.executeListQuery<IUsers>(
         query,
         { input: queryInput },
         'userPool'
-      ) as GraphQLResult<{ UsersQueryByUserId?: LegacyUsersListResponse; UsersQueryByEmail?: LegacyUsersListResponse }>;
+      );
 
-      // Dynamically get the result based on which query was used
-      let result;
-      if (input.userId) {
-        result = response.data?.UsersQueryByUserId;
-      } else if (input.email) {
-        result = response.data?.UsersQueryByEmail;
-      }
-      
-      const statusCode = result?.StatusCode ?? 200;
-      const message = result?.Message ?? '';
-      const Data = result?.Data ?? [];
-
-      const users = Data as IUsers[];
+      const users = connection.items;
 
       if (users.length > 1) {
         console.error('[userExists] Duplicate users found for input:', input, users);
@@ -244,8 +234,8 @@ export class UserService extends ApiService {
       }
 
       return {
-        StatusCode: statusCode,
-        Message: message,
+        StatusCode: 200,
+        Message: users.length > 0 ? 'User found' : 'User not found',
         Data: users
       } as LegacyUsersListResponse;
 
@@ -358,32 +348,27 @@ export class UserService extends ApiService {
   }
 
   /**
-   * Query a user by ID
+   * Query a user by ID using v0.19.0 list query.
    * @param userId User ID to query
    * @returns UsersResponse with user data
    * @deprecated Use getCurrentUserFromApi() for self-lookup - this requires OWNER group
    */
   public async userQueryByUserId(userId: string): Promise<UsersResponse> {
     console.debug('userQueryByUserId:', userId);
-    this.userDebugLog.logApi('UsersQueryByUserId', 'pending', { userId });
+    this.userDebugLog.logApi('UsersListByUserId', 'pending', { userId });
     
     try {
-      // UsersQueryByUserId requires Cognito auth
-      const response = await this.query(
-        UsersQueryByUserId,
-        {
-          input: {
-            userId: userId
-          }
-        }, 'userPool') as GraphQLResult<{ UsersQueryByUserId: { items: IUsers[] | null; nextToken: string | null } }>;
+      // Use v0.19.0 executeListQuery
+      const connection = await this.executeListQuery<IUsers>(
+        UsersListByUserId,
+        { input: { userId } },
+        'userPool'
+      );
 
-      console.debug('userQueryByUserId Response: ', response);
+      console.debug('userQueryByUserId Response:', connection);
       
-      // Extract items from the GraphQL response structure
-      const items = response.data?.UsersQueryByUserId?.items;
-      
-      if (!items || items.length === 0) {
-        this.userDebugLog.logApi('UsersQueryByUserId', 'success', { userId, found: false });
+      if (connection.items.length === 0) {
+        this.userDebugLog.logApi('UsersListByUserId', 'success', { userId, found: false });
         return {
           StatusCode: 404,
           Message: 'User not found',
@@ -392,8 +377,8 @@ export class UserService extends ApiService {
       }
       
       // Return the first user (should only be one for userId query)
-      const user = new Users(items[0]);
-      this.userDebugLog.logApi('UsersQueryByUserId', 'success', { userId, found: true });
+      const user = new Users(connection.items[0]);
+      this.userDebugLog.logApi('UsersListByUserId', 'success', { userId, found: true });
       
       return {
         StatusCode: 200,
@@ -404,7 +389,7 @@ export class UserService extends ApiService {
     } catch (error) {
       console.error('Error getting user:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error getting user';
-      this.userDebugLog.logApi('UsersQueryByUserId', 'failure', { userId }, errorMessage);
+      this.userDebugLog.logApi('UsersListByUserId', 'failure', { userId }, errorMessage);
       
       return {
         StatusCode: 500,
@@ -468,93 +453,95 @@ export class UserService extends ApiService {
     }
   }
 
+  /**
+   * Query a user by Cognito Sub using v0.19.0 list query.
+   */
   public async userQueryByCognitoSub(cognitoSub: string): Promise<LegacyUsersListResponse> {
     console.debug('userQueryByCognitoSub:', sanitizeCognitoSub(cognitoSub));
     try {
-      // UsersQueryByCognitoSub requires Cognito auth
-      const queryResult = await this.query(
-        UsersQueryByCognitoSub,
-        {
-          input: {
-            cognitoSub: cognitoSub
-          }
-        },
-        'userPool') as GraphQLResult<{ UsersQueryByCognitoSub: LegacyUsersListResponse }>;
+      // Use v0.19.0 executeListQuery
+      const connection = await this.executeListQuery<IUsers>(
+        UsersListByCognitoSub,
+        { input: { cognitoSub } },
+        'userPool'
+      );
 
-        const response = queryResult.data?.UsersQueryByCognitoSub;
-        const users = response?.Data || [];
+      const users = connection.items;
 
-        if (users.length > 1) {
-          return {
-            StatusCode: 500,
-            Message: 'Duplicate users found for this cognitoSub',
-            Data: []
-          };
-        }
-        if (users.length === 0) {
-          return {
-            StatusCode: 404,
-            Message: 'User not found.',
-            Data: []
-          };
-        }          
+      if (users.length > 1) {
+        return {
+          StatusCode: 500,
+          Message: 'Duplicate users found for this cognitoSub',
+          Data: []
+        };
+      }
+      if (users.length === 0) {
+        return {
+          StatusCode: 404,
+          Message: 'User not found.',
+          Data: []
+        };
+      }          
       
-      return response || { StatusCode: 500, Message: 'No response', Data: [] };
+      return {
+        StatusCode: 200,
+        Message: 'User found',
+        Data: users
+      };
 
     } catch (error) {
-
       console.error('Error getting user by cognitoSub:', error);
       return {
         StatusCode: 500,
         Message: 'Error getting user',
         Data: []
-      }
-
+      };
     }
   }
 
+  /**
+   * Query a user by email using v0.19.0 list query.
+   */
   public async userQueryByEmail(email: string): Promise<LegacyUsersListResponse> {
     console.debug('userQueryByEmail:', sanitizeEmail(email));
     try {
-      // UsersQueryByEmail requires Cognito auth (user must be signed in)
-      const queryResult = await this.query(
-        UsersQueryByEmail,
-        {
-          input: {
-            email: email
-          }
-        },
-        'userPool') as GraphQLResult<{ UsersQueryByEmail: LegacyUsersListResponse }>;
+      // Use v0.19.0 executeListQuery
+      const connection = await this.executeListQuery<IUsers>(
+        UsersListByEmail,
+        { input: { email } },
+        'userPool'
+      );
 
-        const response = queryResult.data?.UsersQueryByEmail;
-        const users = response?.Data || [];
+      const users = connection.items;
 
-        if (users.length > 1) {
-          return {
-            StatusCode: 500,
-            Message: 'Duplicate users found for this email or userId',
-            Data: []
-          };
-        }
-        if (users.length === 0) {
-          return {
-            StatusCode: 404,
-            Message: 'User not found.',
-            Data: []
-          };
-        }          
+      if (users.length > 1) {
+        return {
+          StatusCode: 500,
+          Message: 'Duplicate users found for this email or userId',
+          Data: []
+        };
+      }
+      if (users.length === 0) {
+        return {
+          StatusCode: 404,
+          Message: 'User not found.',
+          Data: []
+        };
+      }          
       
-      return response || { StatusCode: 500, Message: 'No response', Data: [] };
+      return {
+        StatusCode: 200,
+        Message: 'User found',
+        Data: users
+      };
 
     } catch (error) {
-
       console.error('Error getting user:', error);
       return {
         StatusCode: 500,
         Message: 'Error getting user',
         Data: []
-      }
-
+      };
     }
   }
 

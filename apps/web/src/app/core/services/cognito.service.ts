@@ -24,7 +24,8 @@ import {BehaviorSubject, Observable} from 'rxjs';
 
 // Application-specific imports
 import { UsersCreateInput, IUsers } from '../models/UsersModel';
-import { AuthResponse, Auth } from '../models/AuthModel';
+import { Auth } from '../models/AuthModel';
+import { AuthResponse } from '../models/legacy-types';
 import { AuthError } from "../models/AuthErrorModel";
 import { environment } from '../../../environments/environment';
 import { MfaSetupDetails } from '../models/MfaSetupDetailsModel';

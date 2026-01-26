@@ -86,7 +86,7 @@ describe('RecoveryService', () => {
             userServiceSpy.userExists.and.returnValue(Promise.resolve({
               StatusCode: dynamoExists ? 200 : 404,
               Message: dynamoExists ? 'Found' : 'Not found',
-              Data: dynamoExists ? [createMockUser()] : null
+              Data: dynamoExists ? [createMockUser()] : []
             }));
 
             // Call twice
@@ -131,7 +131,7 @@ describe('RecoveryService', () => {
             userServiceSpy.userExists.and.returnValue(Promise.resolve({
               StatusCode: dynamoExists ? 200 : 404,
               Message: dynamoExists ? 'Found' : 'Not found',
-              Data: dynamoExists ? [createMockUser()] : null
+              Data: dynamoExists ? [createMockUser()] : []
             }));
 
             const result = await service.smartCheck(email);
@@ -193,7 +193,7 @@ describe('RecoveryService', () => {
             userServiceSpy.userExists.and.returnValue(Promise.resolve({
               StatusCode: dynamoExists ? 200 : 404,
               Message: dynamoExists ? 'Found' : 'Not found',
-              Data: dynamoExists ? [createMockUser()] : null
+              Data: dynamoExists ? [createMockUser()] : []
             }));
 
             const result = await service.smartCheck(email);
@@ -248,7 +248,7 @@ describe('RecoveryService', () => {
             userServiceSpy.userExists.and.returnValue(Promise.resolve({
               StatusCode: dynamoExists ? 200 : 404,
               Message: dynamoExists ? 'Found' : 'Not found',
-              Data: dynamoExists ? [createMockUser()] : null
+              Data: dynamoExists ? [createMockUser()] : []
             }));
 
             const result = await service.smartCheck(email);
@@ -277,7 +277,7 @@ describe('RecoveryService', () => {
             userServiceSpy.userExists.and.returnValue(Promise.resolve({
               StatusCode: dynamoExists ? 200 : 404,
               Message: dynamoExists ? 'Found' : 'Not found',
-              Data: dynamoExists ? [createMockUser()] : null
+              Data: dynamoExists ? [createMockUser()] : []
             }));
 
             const result = await service.smartCheck(email);
