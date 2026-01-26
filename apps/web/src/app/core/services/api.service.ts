@@ -81,6 +81,12 @@ export abstract class ApiService {
     const mutationName = Object.keys(response.data)[0];
     const envelope = response.data[mutationName];
 
+    // Handle null envelope (can happen if mutation returns null or auth fails silently)
+    if (!envelope) {
+      console.error(`[ApiService] executeMutation: No envelope returned for ${mutationName}`);
+      throw new ApiError('No response envelope from mutation', 'NO_ENVELOPE');
+    }
+
     // Check envelope success field
     if (!envelope.success) {
       throw new ApiError(envelope.message || 'Mutation failed', `HTTP_${envelope.code}`);
@@ -127,6 +133,12 @@ export abstract class ApiService {
 
     const queryName = Object.keys(response.data)[0];
     const envelope = response.data[queryName];
+
+    // Handle null envelope (can happen if query returns null or auth fails silently)
+    if (!envelope) {
+      console.warn(`[ApiService] executeGetQuery: No envelope returned for ${queryName}`);
+      return null;
+    }
 
     // Check envelope success field
     if (!envelope.success) {
