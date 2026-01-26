@@ -179,14 +179,15 @@
 }
 
 // Standard Button Styles for Card Headers
+// Uses same background as header with white border for subtle but visible action
 .orb-card-btn {
   display: inline-flex;
   align-items: center;
   gap: v.$spacing-sm;
   padding: v.$spacing-xs v.$spacing-md;
-  background-color: v.$orb-red;
+  background-color: transparent;
   color: white;
-  border: none;
+  border: 1px solid white;
   border-radius: v.$border-radius;
   font-size: v.$font-size-sm;
   font-weight: v.$font-weight-medium;
@@ -195,7 +196,7 @@
   text-decoration: none;
   
   &:hover {
-    background-color: color.adjust(v.$orb-red, $lightness: -10%);
+    background-color: rgba(white, 0.15);
     transform: translateY(-1px);
   }
   
