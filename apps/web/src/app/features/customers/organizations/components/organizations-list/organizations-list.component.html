@@ -2,15 +2,10 @@
 <div class="orb-card">
   <!-- Header -->
   <div class="orb-card__header">
-    <div class="orb-card__title-section">
-      <h2 class="orb-card__title">
-        <fa-icon icon="building" class="orb-card__icon"></fa-icon>
-        Organizations
-      </h2>
-      <p class="orb-card__subtitle">
-        Manage your organizations and member details
-      </p>
-    </div>
+    <h2 class="orb-card__title">
+      <fa-icon icon="building" class="orb-card__icon"></fa-icon>
+      Organizations
+    </h2>
     <div class="orb-card__header-actions">
       <button class="orb-card-btn"
               [class.orb-card-btn--disabled]="!(currentUser$ | async)?.groups?.includes('CUSTOMER')"
