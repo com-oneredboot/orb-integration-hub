@@ -54,9 +54,10 @@ This implementation plan standardizes GraphQL service implementations to use the
     - _Requirements: 2.2, 7.1_
   - [x] 4.8 Remove custom response types (`OrganizationsResponse`, `OrganizationsCreateResponse`, etc.)
     - _Requirements: 3.3, 7.4_
-  - [ ] 4.9 Write property test for mutation response handling
+  - [x] 4.9 Write property test for mutation response handling
     - **Property 1: Mutation Response Direct Return**
     - **Validates: Requirements 1.1, 1.2, 1.3**
+    - ✅ 11 property tests (100 iterations each)
   - [x] 4.10 Write unit tests for OrganizationService
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
