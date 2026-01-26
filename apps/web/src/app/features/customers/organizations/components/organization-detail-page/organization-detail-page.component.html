@@ -147,7 +147,6 @@
           <div class="org-detail-actions__left">
             <button 
               class="orb-btn orb-btn--outline org-detail-actions__delete"
-              *ngIf="!isDraft"
               (click)="onDelete()"
               [disabled]="isSaving">
               <fa-icon icon="trash"></fa-icon>
