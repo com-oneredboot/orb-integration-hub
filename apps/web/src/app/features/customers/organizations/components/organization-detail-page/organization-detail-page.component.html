@@ -11,7 +11,7 @@
     <div class="org-detail-page__title-row">
       <h1 class="org-detail-page__title">
         <fa-icon icon="building" class="org-detail-page__icon"></fa-icon>
-        {{ isDraft ? 'Create Organization' : (organization?.name || 'Organization Details') }}
+        {{ isDraft ? 'Complete Organization Setup' : (organization?.name || 'Organization Details') }}
       </h1>
       <div class="org-detail-page__status" *ngIf="organization && !isDraft">
         <app-status-badge 
@@ -25,7 +25,10 @@
       </div>
     </div>
     <p class="org-detail-page__subtitle" *ngIf="isDraft">
-      Fill in the details below to create your new organization
+      Your organization was created but needs to be completed. Fill in the details below and click "Activate Organization" to finish setup.
+    </p>
+    <p class="org-detail-page__subtitle" *ngIf="!isDraft && !isLoading && !loadError">
+      Update your organization's information below.
     </p>
   </div>
 
@@ -150,7 +153,7 @@
             [disabled]="isSaving">
             <fa-icon icon="spinner" animation="spin" *ngIf="isSaving"></fa-icon>
             <fa-icon icon="save" *ngIf="!isSaving"></fa-icon>
-            {{ isDraft ? 'Create Organization' : 'Save Changes' }}
+            {{ isDraft ? 'Activate Organization' : 'Save Changes' }}
           </button>
         </div>
       </div>

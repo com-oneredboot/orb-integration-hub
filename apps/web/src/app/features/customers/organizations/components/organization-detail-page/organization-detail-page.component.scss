@@ -1,29 +1,32 @@
 @use '../../../../../../styles/variables' as v;
+@use '../../../../../../styles/mixins' as m;
+@use 'sass:color';
 
 .org-detail-page {
-  max-width: 800px;
+  max-width: v.$page-max-width;
   margin: 0 auto;
-  padding: 2rem;
+  padding: v.$spacing-lg;
 
   &__header {
-    margin-bottom: 2rem;
+    margin-bottom: v.$spacing-xl;
   }
 
   &__breadcrumb {
-    margin-bottom: 1rem;
+    margin-bottom: v.$spacing-md;
   }
 
   &__back-link {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: v.$spacing-xs;
     color: v.$primary-color;
     text-decoration: none;
-    font-size: 0.875rem;
+    font-size: v.$font-size-sm;
+    font-family: v.$font-family-base;
     transition: color 0.2s ease;
 
     &:hover {
-      color: v.$logo-dark-red;
+      color: color.adjust(v.$primary-color, $lightness: -10%);
       text-decoration: underline;
     }
   }
@@ -31,16 +34,17 @@
   &__title-row {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: v.$spacing-md;
     flex-wrap: wrap;
   }
 
   &__title {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    font-size: 1.75rem;
-    font-weight: 600;
+    gap: v.$spacing-sm;
+    font-family: v.$font-family-heading;
+    font-size: v.$font-size-2xl;
+    font-weight: v.$font-weight-semibold;
     color: v.$text-primary;
     margin: 0;
   }
@@ -51,8 +55,9 @@
 
   &__subtitle {
     color: v.$text-secondary;
-    margin: 0.5rem 0 0;
-    font-size: 1rem;
+    margin: v.$spacing-xs 0 0;
+    font-size: v.$font-size-base;
+    font-family: v.$font-family-base;
   }
 
   &__loading,
@@ -61,17 +66,17 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 4rem 2rem;
+    padding: v.$spacing-2xl v.$spacing-lg;
     text-align: center;
     color: v.$text-secondary;
 
     fa-icon {
-      margin-bottom: 1rem;
+      margin-bottom: v.$spacing-md;
     }
 
     p {
-      margin: 0 0 1.5rem;
-      font-size: 1.125rem;
+      margin: 0 0 v.$spacing-lg;
+      font-size: v.$font-size-lg;
     }
   }
 
@@ -82,33 +87,35 @@
   }
 
   &__card {
-    background: v.$white;
-    border-radius: v.$border-radius-lg;
-    box-shadow: v.$shadow-md;
+    background: v.$bg-secondary;
+    border-radius: v.$border-radius;
+    box-shadow: v.$shadow-sm;
     overflow: hidden;
   }
 
   &__card-header {
+    @include m.card-header;
     background: linear-gradient(135deg, v.$primary-color 0%, v.$logo-dark-red 100%);
-    color: white;
-    padding: 1.25rem 1.5rem;
+    color: v.$white;
+    padding: v.$spacing-md v.$spacing-lg;
   }
 
   &__card-title {
+    @include m.card-title;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    font-size: 1.125rem;
-    font-weight: 600;
+    gap: v.$spacing-sm;
+    color: v.$white;
     margin: 0;
   }
 
   &__card-body {
-    padding: 1.5rem;
+    @include m.card-content;
+    padding: v.$spacing-lg;
   }
 
   &__field {
-    margin-bottom: 1.5rem;
+    margin-bottom: v.$spacing-lg;
 
     &:last-of-type {
       margin-bottom: 0;
@@ -117,42 +124,57 @@
 
   &__label {
     display: block;
-    font-weight: 500;
+    font-weight: v.$font-weight-medium;
     color: v.$text-primary;
-    margin-bottom: 0.5rem;
-    font-size: 0.875rem;
+    margin-bottom: v.$spacing-xs;
+    font-size: v.$font-size-base;
+    font-family: v.$font-family-base;
   }
 
   &__required {
     color: v.$danger-color;
+    font-weight: v.$font-weight-bold;
   }
 
   &__input,
   &__textarea {
     width: 100%;
-    padding: 0.75rem 1rem;
-    border: 1px solid v.$border-color;
-    border-radius: v.$border-radius-md;
-    font-size: 1rem;
-    color: v.$text-primary;
-    background: white;
+    box-sizing: border-box;
+    padding: v.$spacing-sm v.$spacing-md;
+    font-family: v.$font-family-base;
+    font-size: v.$input-font-size;
+    color: v.$input-color;
+    border: 2px solid v.$gray-400; // Match auth flow - increased border width and darker color for visibility
+    border-radius: v.$border-radius;
+    background-color: v.$input-bg;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    // Placeholder styling for better visibility
+    &::placeholder {
+      color: v.$gray-500;
+      opacity: 1;
+    }
 
     &:focus {
       outline: none;
       border-color: v.$primary-color;
-      box-shadow: 0 0 0 3px rgba(v.$primary-color, 0.1);
+      box-shadow: 0 0 0 3px rgba(v.$primary-color, 0.3);
     }
 
-    &::placeholder {
-      color: v.$text-muted;
+    // High contrast focus for accessibility
+    @media (prefers-contrast: high) {
+      &:focus {
+        box-shadow: 0 0 0 3px v.$primary-color;
+        border-color: v.$primary-color;
+      }
     }
 
     &--error {
       border-color: v.$danger-color;
+      animation: shake 0.5s ease-in-out;
 
       &:focus {
-        box-shadow: 0 0 0 3px rgba(v.$danger-color, 0.1);
+        box-shadow: 0 0 0 3px rgba(v.$danger-color, 0.3);
       }
     }
   }
@@ -163,42 +185,51 @@
   }
 
   &__error-text {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+    font-size: v.$font-size-sm;
     color: v.$danger-color;
-    font-size: 0.8125rem;
-    margin-top: 0.375rem;
+    margin-top: v.$spacing-xs;
+    padding: v.$spacing-xs v.$spacing-sm;
+    background-color: rgba(v.$danger-color, 0.05);
+    border-radius: v.$border-radius-sm;
+    border-left: 3px solid v.$danger-color;
+    animation: slideDown 0.3s ease-out;
   }
 
   &__hint {
-    color: v.$text-muted;
-    font-size: 0.75rem;
-    margin-top: 0.375rem;
+    font-size: v.$font-size-xs;
+    color: v.$text-secondary;
+    margin-top: v.$spacing-xs;
     text-align: right;
   }
 
   &__metadata {
-    margin-top: 2rem;
-    padding-top: 1.5rem;
+    margin-top: v.$spacing-xl;
+    padding-top: v.$spacing-lg;
     border-top: 1px solid v.$border-color;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
+    gap: v.$spacing-md;
   }
 
   &__meta-item {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: v.$spacing-xs;
   }
 
   &__meta-label {
-    font-size: 0.75rem;
-    color: v.$text-muted;
+    font-size: v.$font-size-xs;
+    color: v.$text-secondary;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.5px;
+    font-weight: v.$font-weight-medium;
   }
 
   &__meta-value {
-    font-size: 0.875rem;
+    font-size: v.$font-size-sm;
     color: v.$text-primary;
     font-family: monospace;
     word-break: break-all;
@@ -207,75 +238,86 @@
   &__save-error {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 1rem;
-    margin-top: 1.5rem;
-    background: rgba(v.$danger-color, 0.1);
+    gap: v.$spacing-sm;
+    padding: v.$spacing-md;
+    margin-top: v.$spacing-lg;
+    background: rgba(v.$danger-color, 0.05);
     border: 1px solid rgba(v.$danger-color, 0.2);
-    border-radius: v.$border-radius-md;
+    border-radius: v.$border-radius;
+    border-left: 3px solid v.$danger-color;
     color: v.$danger-color;
-    font-size: 0.875rem;
+    font-size: v.$font-size-sm;
   }
 
   &__card-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.5rem;
-    background: v.$bg-secondary;
+    padding: v.$spacing-md v.$spacing-lg;
+    background: v.$gray-50;
     border-top: 1px solid v.$border-color;
   }
 
   &__actions-left,
   &__actions-right {
     display: flex;
-    gap: 0.75rem;
+    gap: v.$spacing-sm;
   }
 
   &__btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1.25rem;
+    gap: v.$spacing-xs;
+    padding: v.$spacing-sm v.$spacing-lg;
     border: none;
-    border-radius: v.$border-radius-md;
-    font-size: 0.875rem;
-    font-weight: 500;
+    border-radius: v.$border-radius;
+    font-family: v.$font-family-base;
+    font-size: v.$font-size-base;
+    font-weight: v.$font-weight-semibold;
     cursor: pointer;
     transition: all 0.2s ease;
+    min-height: 44px; // Touch target size
+
+    &:focus {
+      outline: 3px solid rgba(v.$primary-color, 0.5);
+      outline-offset: 2px;
+    }
 
     &:disabled {
-      opacity: 0.6;
+      opacity: 0.7;
       cursor: not-allowed;
     }
 
     &--primary {
       background: v.$primary-color;
-      color: white;
+      color: v.$white;
 
       &:hover:not(:disabled) {
-        background: v.$logo-dark-red;
+        background: color.adjust(v.$primary-color, $lightness: -10%);
+        transform: translateY(-1px);
       }
     }
 
     &--secondary {
-      background: white;
+      background: v.$white;
       color: v.$text-primary;
-      border: 1px solid v.$border-color;
+      border: 2px solid v.$border-color;
 
       &:hover:not(:disabled) {
-        background: v.$bg-secondary;
+        background: v.$gray-100;
+        transform: translateY(-1px);
       }
     }
 
     &--danger {
-      background: white;
+      background: v.$white;
       color: v.$danger-color;
-      border: 1px solid v.$danger-color;
+      border: 2px solid v.$danger-color;
 
       &:hover:not(:disabled) {
         background: v.$danger-color;
-        color: white;
+        color: v.$white;
+        transform: translateY(-1px);
       }
     }
   }
@@ -284,15 +326,15 @@
 // Responsive
 @media (max-width: 768px) {
   .org-detail-page {
-    padding: 1rem;
+    padding: v.$spacing-md;
 
     &__title {
-      font-size: 1.5rem;
+      font-size: v.$font-size-xl;
     }
 
     &__card-footer {
       flex-direction: column;
-      gap: 1rem;
+      gap: v.$spacing-md;
     }
 
     &__actions-left,
@@ -304,6 +346,37 @@
     &__btn {
       flex: 1;
       justify-content: center;
+    }
+  }
+}
+
+// Animations
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Accessibility: Reduced motion preference
+@media (prefers-reduced-motion: reduce) {
+  .org-detail-page {
+    &__input,
+    &__textarea,
+    &__error-text,
+    &__btn {
+      transition: none;
+      animation: none;
     }
   }
 }

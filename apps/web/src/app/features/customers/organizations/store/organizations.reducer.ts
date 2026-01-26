@@ -19,13 +19,16 @@ export const organizationsReducer = createReducer(
   })),
 
   on(OrganizationsActions.loadOrganizationsSuccess, (state, { organizations }): OrganizationsState => {
-    // Convert organizations to table rows with mock data for member/app counts
-    const organizationRows: OrganizationTableRow[] = organizations.map((org, index) => ({
+    // Convert organizations to table rows
+    // The user who created the organization is the OWNER (their userId matches ownerId)
+    // For now, we assume all organizations returned belong to the current user as owner
+    // TODO: When OrganizationUsers data is available, determine actual role from that
+    const organizationRows: OrganizationTableRow[] = organizations.map((org) => ({
       organization: org,
-      userRole: index === 0 ? 'OWNER' : 'ADMINISTRATOR', // Mock role data
-      isOwner: index === 0,
-      memberCount: Math.floor(Math.random() * 25) + 1, // Mock member count
-      applicationCount: Math.floor(Math.random() * 20) + 1 // Mock app count
+      userRole: 'OWNER', // User is owner of their own organizations
+      isOwner: true,
+      memberCount: 1, // At minimum, the owner is a member
+      applicationCount: 0 // Will be populated when we have application data
     }));
 
     return {
