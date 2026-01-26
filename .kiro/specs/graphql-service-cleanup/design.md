@@ -7,18 +7,17 @@ This design standardizes GraphQL service implementations across the frontend app
 ### Dependencies
 
 - **orb-schema-generator #78**: ✅ FIXED in v0.19.0 - GraphQL schema now has correct response types
-- **orb-schema-generator #79**: Must be fixed - TypeScript query generator not updated for v0.19.0 format
+- **orb-schema-generator #79**: ✅ FIXED in v0.19.1 - TypeScript query generator updated for v0.19.0 format
 
 ### Status
 
-The upstream fix in orb-schema-generator v0.19.0 provides:
+The upstream fixes in orb-schema-generator v0.19.1 provide:
 - Standard response envelope (`code`, `success`, `message`)
 - Mutations return `item` (singular) instead of `items` array
 - List queries return `items` (plural) with `nextToken`
 - New `Get` operation for single-item retrieval
 - Operation naming: `QueryBy*` → `ListBy*`
-
-However, issue #79 blocks full implementation - the TypeScript GraphQL query generator still generates queries with the old format. Once #79 is fixed, we can proceed with the full cleanup.
+- TypeScript, Python, and Dart GraphQL query generators all updated
 
 ## Architecture
 

@@ -2,9 +2,9 @@
 
 ## Overview
 
-This implementation plan standardizes GraphQL service implementations to use the v0.19.0 response format. The work is blocked by issue #79 (TypeScript query generator) but we can prepare the infrastructure.
+This implementation plan standardizes GraphQL service implementations to use the v0.19.0 response format.
 
-**Blocker:** orb-schema-generator #79 must be fixed before tasks 3-6 can be completed.
+**Status:** orb-schema-generator #79 is now FIXED in v0.19.1. Upgrade to v0.19.1 and regenerate schemas.
 
 ## Tasks
 
@@ -31,8 +31,9 @@ This implementation plan standardizes GraphQL service implementations to use the
   - [x] 2.6 Write unit tests for base class methods
     - _Requirements: 5.1, 5.2, 5.3_
 
-- [ ] 3. Checkpoint - Wait for #79 fix
-  - Ensure orb-schema-generator #79 is fixed and v0.19.x is released
+- [x] 3. Checkpoint - Upgrade to v0.19.1 and Regenerate Schemas
+  - ✅ Issue #79 fixed in v0.19.1
+  - Upgrade orb-schema-generator to v0.19.1
   - Regenerate schemas with `pipenv run orb-schema generate`
   - Verify TypeScript GraphQL queries have correct format
 
@@ -56,23 +57,26 @@ This implementation plan standardizes GraphQL service implementations to use the
   - [ ] 4.9 Write property test for mutation response handling
     - **Property 1: Mutation Response Direct Return**
     - **Validates: Requirements 1.1, 1.2, 1.3**
-  - [ ] 4.10 Write unit tests for OrganizationService
+  - [x] 4.10 Write unit tests for OrganizationService
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
 - [x] 4b. Update Organization Components and Effects
   - [x] 4b.1 Update `organizations-list.component.ts` to handle direct `IOrganizations` return
   - [x] 4b.2 Update `organizations.effects.ts` to handle `Connection<IOrganizations>` and `IOrganizations` directly
 
-- [ ] 5. Checkpoint - Verify OrganizationService
-  - Ensure all tests pass, ask the user if questions arise.
-  - Verify organization CRUD operations work end-to-end
+- [x] 5. Checkpoint - Verify OrganizationService
+  - ✅ All 73 tests pass (25 api-errors, 21 api.service, 9 api.service.property, 18 organization.service)
+  - ✅ Build passes
+  - ✅ Lint passes
+  - ✅ Fixed organizations.selectors.ts to handle undefined state in tests
 
 - [ ] 6. Update remaining services
-  - [ ] 6.1 Update UserService to use new patterns
+  - [ ] 6.1 Update UserService to use new patterns (complex - has Cognito integration, legacy response types)
     - _Requirements: 4.4_
-  - [ ] 6.2 Update ApplicationService to use new patterns
+    - Note: UserService uses legacy `StatusCode`, `Message`, `Data` wrappers - requires careful migration
+  - [x] 6.2 ~~Update ApplicationService to use new patterns~~ (N/A - ApplicationService does not exist)
     - _Requirements: 4.4_
-  - [ ] 6.3 Update any other services using GraphQL
+  - [x] 6.3 ~~Update any other services using GraphQL~~ (N/A - only OrganizationService and UserService extend ApiService)
     - _Requirements: 4.4_
   - [ ] 6.4 Write unit tests for updated services
     - _Requirements: 5.1, 5.2, 5.3_
@@ -80,8 +84,9 @@ This implementation plan standardizes GraphQL service implementations to use the
 - [ ] 7. Update documentation
   - [x] 7.1 Create steering file `.kiro/steering/graphql-services.md` with patterns
     - _Requirements: 9.1, 9.2, 9.3, 9.4_
-  - [ ] 7.2 Update coding standards in `repositories/orb-templates/docs/coding-standards/` (if writable)
+  - [x] 7.2 ~~Update coding standards in `repositories/orb-templates/docs/coding-standards/`~~ (N/A - repositories/ is READ-ONLY)
     - _Requirements: 8.1, 8.2, 8.3, 8.4_
+    - Note: Steering file `.kiro/steering/graphql-services.md` serves as project-level documentation
 
 - [ ] 8. Final checkpoint
   - Ensure all tests pass, ask the user if questions arise.
@@ -95,4 +100,4 @@ This implementation plan standardizes GraphQL service implementations to use the
 - Checkpoints ensure incremental validation
 - Property tests validate universal correctness properties
 - Unit tests validate specific examples and edge cases
-- Task 3 is a hard blocker - cannot proceed until #79 is fixed
+- Issue #79 is FIXED in v0.19.1 - upgrade and regenerate schemas
