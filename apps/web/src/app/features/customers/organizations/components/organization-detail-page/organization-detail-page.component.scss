@@ -284,3 +284,157 @@
     }
   }
 }
+
+// Applications Section
+// _Requirements: 2.2_
+.org-detail-applications {
+  margin-top: v.$spacing-lg;
+
+  .orb-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  &__loading,
+  &__error,
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: v.$spacing-xl v.$spacing-lg;
+    text-align: center;
+    color: v.$text-secondary;
+    gap: v.$spacing-sm;
+
+    fa-icon {
+      color: v.$gray-400;
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+
+  &__error {
+    fa-icon {
+      color: v.$danger-color;
+    }
+
+    button {
+      margin-top: v.$spacing-sm;
+    }
+  }
+
+  &__empty-hint {
+    font-size: v.$font-size-sm;
+    color: v.$text-secondary;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    padding: v.$spacing-md v.$spacing-lg;
+    border-bottom: 1px solid v.$border-color;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background-color: v.$gray-50;
+    }
+
+    &:focus {
+      outline: none;
+      background-color: rgba(v.$primary-color, 0.05);
+      box-shadow: inset 0 0 0 2px v.$primary-color;
+    }
+  }
+
+  &__info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: v.$spacing-xs;
+    min-width: 0;
+  }
+
+  &__name {
+    font-weight: v.$font-weight-medium;
+    color: v.$text-primary;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__id {
+    font-size: v.$font-size-xs;
+    color: v.$text-secondary;
+    font-family: v.$font-family-monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-md;
+    margin-right: v.$spacing-md;
+  }
+
+  &__env-count {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+    font-size: v.$font-size-sm;
+    color: v.$text-secondary;
+
+    fa-icon {
+      font-size: v.$font-size-xs;
+    }
+  }
+
+  &__arrow {
+    color: v.$gray-400;
+    transition: transform 0.2s ease;
+  }
+
+  &__row:hover &__arrow {
+    transform: translateX(4px);
+    color: v.$primary-color;
+  }
+}
+
+// Responsive for applications section
+@media (max-width: 768px) {
+  .org-detail-applications {
+    &__row {
+      flex-wrap: wrap;
+      gap: v.$spacing-sm;
+    }
+
+    &__info {
+      width: 100%;
+    }
+
+    &__meta {
+      width: 100%;
+      justify-content: space-between;
+      margin-right: 0;
+    }
+
+    &__arrow {
+      display: none;
+    }
+  }
+}

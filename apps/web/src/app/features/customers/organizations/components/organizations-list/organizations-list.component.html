@@ -80,8 +80,11 @@
 
 <!-- Application Count Cell -->
 <ng-template #appCountCell let-row>
-  <div class="orb-count">
+  <button 
+    class="orb-count orb-count--clickable"
+    (click)="onApplicationCountClick($event, row)"
+    [attr.aria-label]="'View ' + (row.organization.applicationCount || 0) + ' applications for ' + row.organization.name">
     <fa-icon icon="rocket" class="orb-count__icon"></fa-icon>
-    {{ row.applicationCount }}
-  </div>
+    {{ row.organization.applicationCount || 0 }}
+  </button>
 </ng-template>

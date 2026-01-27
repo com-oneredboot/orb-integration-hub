@@ -303,4 +303,16 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
         return 'inactive';
     }
   }
+
+  /**
+   * Handle click on application count cell
+   * Navigates to applications list filtered by organization
+   * _Requirements: 1.4_
+   */
+  onApplicationCountClick(event: Event, row: OrganizationTableRow): void {
+    event.stopPropagation(); // Prevent row click navigation
+    this.router.navigate(['/customers/applications'], {
+      queryParams: { organizationId: row.organization.organizationId }
+    });
+  }
 }

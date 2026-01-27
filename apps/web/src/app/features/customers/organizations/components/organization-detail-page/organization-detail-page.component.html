@@ -171,6 +171,79 @@
           </div>
         </div>
       </div>
+
+      <!-- Applications Section (only for non-draft organizations) -->
+      <!-- _Requirements: 2.2, 2.3, 2.6, 2.7, 2.8_ -->
+      <div class="orb-card org-detail-applications" *ngIf="!isDraft">
+        <div class="orb-card__header">
+          <h2 class="orb-card__title">
+            <fa-icon icon="rocket" class="orb-card__icon"></fa-icon>
+            Applications
+          </h2>
+          <button 
+            class="orb-btn orb-btn--primary orb-btn--sm"
+            (click)="onCreateApplication()"
+            aria-label="Create new application for this organization">
+            <fa-icon icon="plus"></fa-icon>
+            Create Application
+          </button>
+        </div>
+        <div class="orb-card__content">
+          <!-- Loading State -->
+          <div class="org-detail-applications__loading" *ngIf="isLoadingApplications">
+            <fa-icon icon="spinner" animation="spin"></fa-icon>
+            <span>Loading applications...</span>
+          </div>
+
+          <!-- Error State -->
+          <div class="org-detail-applications__error" *ngIf="applicationsError && !isLoadingApplications">
+            <fa-icon icon="exclamation-triangle"></fa-icon>
+            <span>{{ applicationsError }}</span>
+            <button class="orb-btn orb-btn--secondary orb-btn--sm" (click)="loadApplications()">
+              Retry
+            </button>
+          </div>
+
+          <!-- Empty State -->
+          <div class="org-detail-applications__empty" *ngIf="!isLoadingApplications && !applicationsError && applications.length === 0">
+            <fa-icon icon="rocket" size="2x"></fa-icon>
+            <p>No applications yet</p>
+            <p class="org-detail-applications__empty-hint">Create your first application to get started.</p>
+          </div>
+
+          <!-- Applications List -->
+          <div class="org-detail-applications__list" *ngIf="!isLoadingApplications && !applicationsError && applications.length > 0">
+            <div 
+              class="org-detail-applications__row"
+              *ngFor="let app of applications"
+              (click)="onApplicationClick(app)"
+              (keydown.enter)="onApplicationClick(app)"
+              tabindex="0"
+              role="button"
+              [attr.aria-label]="'View application ' + app.name">
+              <div class="org-detail-applications__info">
+                <span class="org-detail-applications__name">{{ app.name }}</span>
+                <span class="org-detail-applications__id">{{ app.applicationId }}</span>
+              </div>
+              <div class="org-detail-applications__meta">
+                <app-status-badge 
+                  [status]="app.status" 
+                  type="application"
+                  [showIcon]="true"
+                  [showLabel]="true"
+                  size="small"
+                  variant="chip">
+                </app-status-badge>
+                <span class="org-detail-applications__env-count">
+                  <fa-icon icon="server"></fa-icon>
+                  {{ getEnvironmentCount(app) }} environment{{ getEnvironmentCount(app) !== 1 ? 's' : '' }}
+                </span>
+              </div>
+              <fa-icon icon="chevron-right" class="org-detail-applications__arrow"></fa-icon>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

@@ -443,6 +443,32 @@
   &__icon {
     font-size: v.$font-size-xs;
   }
+
+  // Clickable count variant for navigation
+  &--clickable {
+    background: none;
+    border: none;
+    padding: v.$spacing-xs v.$spacing-sm;
+    border-radius: v.$border-radius-sm;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    font-size: inherit;
+
+    &:hover {
+      background-color: rgba(v.$primary-color, 0.1);
+      color: v.$primary-color;
+    }
+
+    &:focus {
+      outline: 2px solid v.$primary-color;
+      outline-offset: 2px;
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
 }
 
 // Global Empty State Styles

@@ -78,3 +78,8 @@ model:
       type: string
       required: false
       description: Organization-specific KMS key alias name
+    applicationCount:
+      type: integer
+      required: false
+      default: 0
+      description: Denormalized count of applications belonging to this organization

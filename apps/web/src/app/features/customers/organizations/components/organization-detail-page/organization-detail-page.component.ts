@@ -16,8 +16,11 @@ import { Observable, Subject, of } from 'rxjs';
 import { takeUntil, map, filter, take } from 'rxjs/operators';
 
 import { Organizations } from '../../../../../core/models/OrganizationsModel';
+import { IApplications } from '../../../../../core/models/ApplicationsModel';
 import { OrganizationStatus } from '../../../../../core/enums/OrganizationStatusEnum';
+import { ApplicationStatus } from '../../../../../core/enums/ApplicationStatusEnum';
 import { OrganizationService } from '../../../../../core/services/organization.service';
+import { ApplicationService } from '../../../../../core/services/application.service';
 import { OrganizationsActions } from '../../store/organizations.actions';
 import * as fromUser from '../../../../user/store/user.selectors';
 import { StatusBadgeComponent } from '../../../../../shared/components/ui/status-badge.component';
@@ -66,6 +69,12 @@ export class OrganizationDetailPageComponent implements OnInit, OnDestroy {
   isSaving = false;
   saveError: string | null = null;
   
+  // Applications section
+  // _Requirements: 2.1, 2.4, 2.5, 2.9_
+  applications: IApplications[] = [];
+  isLoadingApplications = false;
+  applicationsError: string | null = null;
+  
   // Debug
   debugMode$: Observable<boolean>;
   debugLogs$: Observable<DebugLogEntry[]> = of([]);
@@ -80,6 +89,7 @@ export class OrganizationDetailPageComponent implements OnInit, OnDestroy {
             organizationId: this.organization.organizationId,
             name: this.organization.name,
             status: this.organization.status,
+            applicationCount: this.organization.applicationCount,
             isDraft: this.isDraft
           } : { status: 'Loading...' }
         },
@@ -90,6 +100,15 @@ export class OrganizationDetailPageComponent implements OnInit, OnDestroy {
             validationErrors: this.validationErrors,
             isSaving: this.isSaving
           }
+        },
+        {
+          title: 'Applications',
+          data: {
+            count: this.applications.length,
+            isLoading: this.isLoadingApplications,
+            error: this.applicationsError,
+            applications: this.applications.map(a => ({ id: a.applicationId, name: a.name, status: a.status }))
+          }
         }
       ]
     };
@@ -99,7 +118,8 @@ export class OrganizationDetailPageComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private store: Store,
-    private organizationService: OrganizationService
+    private organizationService: OrganizationService,
+    private applicationService: ApplicationService
   ) {
     this.debugMode$ = this.store.select(fromUser.selectDebugMode);
   }
@@ -134,6 +154,12 @@ export class OrganizationDetailPageComponent implements OnInit, OnDestroy {
           this.isDraft = this.organization.status === OrganizationStatus.Pending;
           this.loadFormData();
           this.isLoading = false;
+          
+          // Load applications for non-draft organizations
+          // _Requirements: 2.1_
+          if (!this.isDraft) {
+            this.loadApplications();
+          }
         } else {
           this.loadError = 'Organization not found';
           this.isLoading = false;
@@ -288,5 +314,94 @@ export class OrganizationDetailPageComponent implements OnInit, OnDestroy {
       hour: '2-digit',
       minute: '2-digit'
     });
+  }
+
+  /**
+   * Load applications for this organization
+   * _Requirements: 2.1, 2.4_
+   */
+  loadApplications(): void {
+    if (!this.organizationId || this.isDraft) {
+      return;
+    }
+
+    this.isLoadingApplications = true;
+    this.applicationsError = null;
+
+    this.applicationService.getApplicationsByOrganization(this.organizationId).pipe(
+      take(1)
+    ).subscribe({
+      next: (connection) => {
+        // Filter out PENDING applications (drafts)
+        this.applications = connection.items.filter(
+          app => app.status !== ApplicationStatus.Pending
+        );
+        this.isLoadingApplications = false;
+        
+        // Sync application count if it differs
+        // _Requirements: 2.9_
+        this.syncApplicationCount();
+      },
+      error: (error) => {
+        console.error('[OrganizationDetailPage] Error loading applications:', error);
+        this.applicationsError = error.message || 'Failed to load applications';
+        this.isLoadingApplications = false;
+      }
+    });
+  }
+
+  /**
+   * Sync application count with actual count
+   * _Requirements: 2.9, 2.10, 2.11_
+   */
+  private syncApplicationCount(): void {
+    if (!this.organization) return;
+    
+    const actualCount = this.applications.length;
+    const storedCount = this.organization.applicationCount ?? 0;
+    
+    if (actualCount !== storedCount) {
+      console.debug('[OrganizationDetailPage] Syncing application count:', storedCount, '->', actualCount);
+      this.organizationService.updateOrganization({
+        ...this.organization,
+        applicationCount: actualCount
+      }).pipe(take(1)).subscribe({
+        next: (updated) => {
+          this.organization = updated;
+        },
+        error: (error) => {
+          console.error('[OrganizationDetailPage] Error syncing application count:', error);
+        }
+      });
+    }
+  }
+
+  /**
+   * Navigate to create a new application for this organization
+   * _Requirements: 2.5_
+   */
+  onCreateApplication(): void {
+    if (!this.organizationId) return;
+    
+    // Navigate to applications with organizationId pre-selected
+    this.router.navigate(['/customers/applications'], {
+      queryParams: { organizationId: this.organizationId, create: 'true' }
+    });
+  }
+
+  /**
+   * Navigate to application detail page
+   * _Requirements: 2.8_
+   */
+  onApplicationClick(application: IApplications): void {
+    this.router.navigate(['/customers/applications', application.applicationId]);
+  }
+
+  /**
+   * Get environment count for display
+   * _Requirements: 2.3_
+   */
+  getEnvironmentCount(application: IApplications): number {
+    return application.environments?.length || 0;
   }
 }

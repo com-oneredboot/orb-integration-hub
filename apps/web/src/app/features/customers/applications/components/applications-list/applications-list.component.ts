@@ -9,7 +9,7 @@
 import { Component, OnInit, OnDestroy, Output, EventEmitter, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Store } from '@ngrx/store';
 import { Subject, forkJoin, of } from 'rxjs';
@@ -61,11 +61,26 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
   constructor(
     private store: Store,
     private router: Router,
+    private route: ActivatedRoute,
     private applicationService: ApplicationService,
     private organizationService: OrganizationService
   ) {}
 
   ngOnInit(): void {
+    // Check for organization filter from query params
+    // _Requirements: 1.4_
+    this.route.queryParams.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(params => {
+      if (params['organizationId']) {
+        this.organizationFilter = params['organizationId'];
+        // Re-apply filters if data is already loaded
+        if (this.applicationRows.length > 0) {
+          this.applyFilters();
+        }
+      }
+    });
+
     this.store.select(fromUser.selectCurrentUser).pipe(
       take(1),
       filter(user => !!user)
