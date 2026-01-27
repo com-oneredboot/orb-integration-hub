@@ -4,14 +4,20 @@
  * Property-based tests for applications selectors using fast-check.
  * Validates universal correctness properties across all valid inputs.
  *
+ * NOTE: With the Organizations pattern, filtering is done in the REDUCER,
+ * not in selectors. These tests validate the reducer's filtering logic
+ * by testing the applyFilters behavior through reducer state transitions.
+ *
  * @see .kiro/specs/applications-management/design.md
  */
 
 import * as fc from 'fast-check';
 import * as selectors from './applications.selectors';
-import { ApplicationTableRow } from './applications.state';
+import { applicationsReducer } from './applications.reducer';
+import { ApplicationTableRow, initialApplicationsState } from './applications.state';
 import { IApplications } from '../../../../core/models/ApplicationsModel';
 import { ApplicationStatus } from '../../../../core/enums/ApplicationStatusEnum';
+import { ApplicationsActions } from './applications.actions';
 
 // Arbitrary for valid application status
 const applicationStatusArb = fc.constantFrom(
@@ -52,6 +58,45 @@ const applicationRowArb: fc.Arbitrary<ApplicationTableRow> = fc.record({
   lastActivity: fc.string(),
 });
 
+/**
+ * Helper to create a state with application rows and apply filters via reducer
+ */
+function createStateWithFilters(
+  applicationRows: ApplicationTableRow[],
+  searchTerm: string,
+  organizationFilter: string,
+  statusFilter: string
+) {
+  // Start with initial state and set application rows
+  let state = {
+    ...initialApplicationsState,
+    applicationRows,
+    filteredApplicationRows: applicationRows,
+  };
+
+  // Apply filters through reducer actions
+  if (searchTerm) {
+    state = applicationsReducer(
+      state,
+      ApplicationsActions.setSearchTerm({ searchTerm })
+    );
+  }
+  if (organizationFilter) {
+    state = applicationsReducer(
+      state,
+      ApplicationsActions.setOrganizationFilter({ organizationFilter })
+    );
+  }
+  if (statusFilter) {
+    state = applicationsReducer(
+      state,
+      ApplicationsActions.setStatusFilter({ statusFilter })
+    );
+  }
+
+  return state;
+}
+
 describe('Applications Selectors Property Tests', () => {
   describe('Property 2: Organization Filter Correctness', () => {
     /**
@@ -68,12 +113,14 @@ describe('Applications Selectors Property Tests', () => {
           fc.array(applicationRowArb, { minLength: 1, maxLength: 50 }),
           fc.uuid(),
           (applicationRows, filterOrgId) => {
-            const filtered = selectors.selectFilteredApplicationRows.projector(
+            const state = createStateWithFilters(
               applicationRows,
               '', // no search term
               filterOrgId,
               '' // no status filter
             );
+
+            const filtered = selectors.selectFilteredApplicationRows.projector(state);
 
             // All filtered results must match the organization filter
             return filtered.every((row) => row.organizationId === filterOrgId);
@@ -88,12 +135,14 @@ describe('Applications Selectors Property Tests', () => {
         fc.property(
           fc.array(applicationRowArb, { minLength: 0, maxLength: 50 }),
           (applicationRows) => {
-            const filtered = selectors.selectFilteredApplicationRows.projector(
+            const state = createStateWithFilters(
               applicationRows,
               '', // no search term
               '', // no organization filter
               '' // no status filter
             );
+
+            const filtered = selectors.selectFilteredApplicationRows.projector(state);
 
             // Should return all applications when no filter
             return filtered.length === applicationRows.length;
@@ -119,18 +168,22 @@ describe('Applications Selectors Property Tests', () => {
           fc.array(applicationRowArb, { minLength: 1, maxLength: 50 }),
           fc.string({ minLength: 1, maxLength: 20 }),
           (applicationRows, searchTerm) => {
-            const filtered = selectors.selectFilteredApplicationRows.projector(
+            const state = createStateWithFilters(
               applicationRows,
               searchTerm,
               '', // no organization filter
               '' // no status filter
             );
 
+            const filtered = selectors.selectFilteredApplicationRows.projector(state);
             const lowerSearch = searchTerm.toLowerCase();
 
             // All filtered results must contain the search term (case-insensitive)
-            return filtered.every((row) =>
-              row.application.name.toLowerCase().includes(lowerSearch)
+            // Note: reducer also searches applicationId, so we check both
+            return filtered.every(
+              (row) =>
+                row.application.name.toLowerCase().includes(lowerSearch) ||
+                row.application.applicationId.toLowerCase().includes(lowerSearch)
             );
           }
         ),
@@ -144,19 +197,22 @@ describe('Applications Selectors Property Tests', () => {
           fc.array(applicationRowArb, { minLength: 1, maxLength: 50 }),
           fc.string({ minLength: 1, maxLength: 10 }),
           (applicationRows, searchTerm) => {
-            const lowerFiltered = selectors.selectFilteredApplicationRows.projector(
+            const lowerState = createStateWithFilters(
               applicationRows,
               searchTerm.toLowerCase(),
               '',
               ''
             );
 
-            const upperFiltered = selectors.selectFilteredApplicationRows.projector(
+            const upperState = createStateWithFilters(
               applicationRows,
               searchTerm.toUpperCase(),
               '',
               ''
             );
+
+            const lowerFiltered = selectors.selectFilteredApplicationRows.projector(lowerState);
+            const upperFiltered = selectors.selectFilteredApplicationRows.projector(upperState);
 
             // Same results regardless of case
             return lowerFiltered.length === upperFiltered.length;
@@ -184,18 +240,21 @@ describe('Applications Selectors Property Tests', () => {
           fc.option(fc.uuid(), { nil: '' }),
           fc.option(applicationStatusArb, { nil: '' as unknown as ApplicationStatus }),
           (applicationRows, searchTerm, orgFilter, statusFilter) => {
-            const filtered = selectors.selectFilteredApplicationRows.projector(
+            const state = createStateWithFilters(
               applicationRows,
               searchTerm,
               orgFilter || '',
               statusFilter || ''
             );
 
+            const filtered = selectors.selectFilteredApplicationRows.projector(state);
+
             // Every filtered result must match ALL active filters
             return filtered.every((row) => {
               const matchesSearch =
                 !searchTerm ||
-                row.application.name.toLowerCase().includes(searchTerm.toLowerCase());
+                row.application.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                row.application.applicationId.toLowerCase().includes(searchTerm.toLowerCase());
 
               const matchesOrg = !orgFilter || row.organizationId === orgFilter;
 
@@ -218,12 +277,14 @@ describe('Applications Selectors Property Tests', () => {
           fc.option(fc.uuid(), { nil: '' }),
           fc.option(applicationStatusArb, { nil: '' as unknown as ApplicationStatus }),
           (applicationRows, searchTerm, orgFilter, statusFilter) => {
-            const filtered = selectors.selectFilteredApplicationRows.projector(
+            const state = createStateWithFilters(
               applicationRows,
               searchTerm,
               orgFilter || '',
               statusFilter || ''
             );
+
+            const filtered = selectors.selectFilteredApplicationRows.projector(state);
 
             // Filtered count should never exceed total count
             return filtered.length <= applicationRows.length;

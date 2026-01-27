@@ -66,6 +66,7 @@ export const ApplicationsActions = createActionGroup({
 
     // Application Rows Management (for table display)
     'Update Application Rows': props<{ applicationRows: ApplicationTableRow[] }>(),
+    'Update Filtered Application Rows': props<{ filteredRows: ApplicationTableRow[] }>(),
 
     // Error Management
     'Clear Errors': emptyProps(),

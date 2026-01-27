@@ -29,6 +29,7 @@ export interface ApplicationsState {
   // Core application data
   applications: IApplications[];
   applicationRows: ApplicationTableRow[];
+  filteredApplicationRows: ApplicationTableRow[];
   selectedApplication: IApplications | null;
 
   // UI State
@@ -63,6 +64,7 @@ export const initialApplicationsState: ApplicationsState = {
   // Core application data
   applications: [],
   applicationRows: [],
+  filteredApplicationRows: [],
   selectedApplication: null,
 
   // UI State

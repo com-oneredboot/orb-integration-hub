@@ -16,7 +16,6 @@ import { of, forkJoin } from 'rxjs';
 import { map, catchError, switchMap, withLatestFrom, filter } from 'rxjs/operators';
 
 import { ApplicationsActions } from './applications.actions';
-import { ApplicationTableRow } from './applications.state';
 import { ApplicationService } from '../../../../core/services/application.service';
 import { OrganizationService } from '../../../../core/services/organization.service';
 import { selectIsCreatingNew } from './applications.selectors';
@@ -33,26 +32,6 @@ export class ApplicationsEffects {
     private organizationService: OrganizationService,
     private store: Store
   ) {}
-
-  /**
-   * Helper to format last activity time
-   */
-  private formatLastActivity(dateValue: string | Date | number | undefined): string {
-    if (!dateValue) return 'Never';
-    const date = typeof dateValue === 'number' ? new Date(dateValue * 1000)
-      : dateValue instanceof Date ? dateValue : new Date(dateValue);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return diffMins + ' min ago';
-    if (diffHours < 24) return diffHours + ' hour' + (diffHours > 1 ? 's' : '') + ' ago';
-    if (diffDays < 7) return diffDays + ' day' + (diffDays > 1 ? 's' : '') + ' ago';
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  }
 
   /**
    * Load Applications Effect
@@ -117,26 +96,16 @@ export class ApplicationsEffects {
     return forkJoin(applicationRequests).pipe(
       map(results => {
         const allApplications: IApplications[] = [];
-        const applicationRows: ApplicationTableRow[] = [];
 
         for (const result of results) {
           for (const app of result.applications) {
             // Skip PENDING (draft) applications in list view
             if (app.status === ApplicationStatus.Pending) continue;
-
             allApplications.push(app);
-            applicationRows.push({
-              application: app,
-              organizationId: result.organization.organizationId,
-              organizationName: result.organization.name,
-              environmentCount: app.environments?.length || 0,
-              userRole: 'OWNER', // TODO: Get actual role from membership
-              lastActivity: this.formatLastActivity(app.updatedAt)
-            });
           }
         }
 
-        // Dispatch both applications and rows
+        // Dispatch applications - reducer will build applicationRows
         return ApplicationsActions.loadApplicationsSuccess({ applications: allApplications });
       }),
       catchError(error =>

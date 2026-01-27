@@ -669,3 +669,227 @@ formatDate(dateValue: string | Date | number | undefined): string {
 
 - **List Page:** `apps/web/src/app/features/customers/applications/components/applications-list/`
 - **Detail Page:** `apps/web/src/app/features/customers/applications/components/application-detail-page/`
+
+## NgRx Store Pattern Standard (Organizations Pattern)
+
+The Organizations feature is the **canonical reference implementation** for NgRx store patterns. All new features MUST follow this pattern exactly.
+
+### File Structure
+
+```
+features/customers/{resource}/
+├── store/
+│   ├── {resource}.state.ts      # State interface and initial state
+│   ├── {resource}.actions.ts    # Action definitions
+│   ├── {resource}.reducer.ts    # Reducer with filter logic
+│   ├── {resource}.selectors.ts  # Selectors (simple, from state)
+│   └── {resource}.effects.ts    # Effects (API calls only)
+└── components/
+    ├── {resource}-list/
+    └── {resource}-detail-page/
+```
+
+### State Pattern
+
+```typescript
+// {resource}.state.ts
+export interface ResourceTableRow {
+  resource: IResource;
+  userRole: string;
+  isOwner: boolean;
+  // Resource-specific fields
+  lastActivity: string;
+}
+
+export interface ResourcesState {
+  // Core data
+  resources: IResource[];
+  resourceRows: ResourceTableRow[];
+  filteredResourceRows: ResourceTableRow[];  // REQUIRED: Computed by reducer
+  selectedResource: IResource | null;
+
+  // UI State
+  isInCreateMode: boolean;
+  isCreatingNew: boolean;
+
+  // Filter state (stored in state, not computed)
+  searchTerm: string;
+  statusFilter: string;
+  // Resource-specific filters...
+
+  // Loading states
+  isLoading: boolean;
+  isSaving: boolean;
+  isDeleting: boolean;
+
+  // Error states
+  error: string | null;
+  saveError: string | null;
+  deleteError: string | null;
+
+  // Operation states
+  lastCreatedResource: IResource | null;
+  lastUpdatedResource: IResource | null;
+  lastDeletedResourceId: string | null;
+}
+```
+
+### Reducer Pattern (CRITICAL)
+
+The reducer MUST:
+1. Build `resourceRows` from raw data in `loadResourcesSuccess`
+2. Maintain `filteredResourceRows` whenever rows or filters change
+3. Use helper functions for filtering and formatting
+
+```typescript
+// {resource}.reducer.ts
+on(ResourceActions.loadResourcesSuccess, (state, { resources }): ResourcesState => {
+  // Build table rows from raw data
+  const resourceRows: ResourceTableRow[] = resources.map((resource) => ({
+    resource,
+    userRole: 'OWNER',
+    isOwner: true,
+    lastActivity: formatLastActivity(resource.updatedAt)
+  }));
+
+  return {
+    ...state,
+    isLoading: false,
+    resources,
+    resourceRows,
+    filteredResourceRows: resourceRows,  // Initialize filtered = all
+    error: null,
+  };
+}),
+
+// Filter actions MUST update filteredResourceRows
+on(ResourceActions.setSearchTerm, (state, { searchTerm }): ResourcesState => {
+  const filteredRows = state.resourceRows.filter(row =>
+    applyFilters(row, searchTerm, state.statusFilter)
+  );
+
+  return {
+    ...state,
+    searchTerm,
+    filteredResourceRows: filteredRows,
+  };
+}),
+
+// Helper functions at bottom of file
+function applyFilters(row: ResourceTableRow, searchTerm: string, statusFilter: string): boolean {
+  const matchesSearch = !searchTerm ||
+    row.resource.name.toLowerCase().includes(searchTerm.toLowerCase());
+  const matchesStatus = !statusFilter ||
+    row.resource.status === statusFilter;
+  return matchesSearch && matchesStatus;
+}
+
+function formatLastActivity(dateValue: string | Date | number | undefined): string {
+  if (!dateValue) return 'Never';
+  const date = typeof dateValue === 'number' ? new Date(dateValue * 1000)
+    : dateValue instanceof Date ? dateValue : new Date(dateValue);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return diffMins + ' min ago';
+  if (diffHours < 24) return diffHours + ' hour' + (diffHours > 1 ? 's' : '') + ' ago';
+  if (diffDays < 7) return diffDays + ' day' + (diffDays > 1 ? 's' : '') + ' ago';
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+```
+
+### Selector Pattern
+
+Selectors MUST be simple state accessors. Filtering is done in the reducer, NOT in selectors.
+
+```typescript
+// {resource}.selectors.ts
+// ✅ CORRECT - Simple state accessor
+export const selectFilteredResourceRows = createSelector(
+  selectResourcesState,
+  (state: ResourcesState) =>
+    state?.filteredResourceRows ?? initialResourcesState.filteredResourceRows
+);
+
+// ❌ WRONG - Computing filters in selector
+export const selectFilteredResourceRows = createSelector(
+  selectResourceRows,
+  selectSearchTerm,
+  selectStatusFilter,
+  (rows, searchTerm, statusFilter) => {
+    // DON'T DO THIS - filtering belongs in reducer
+    return rows.filter(row => ...);
+  }
+);
+```
+
+### Effect Pattern
+
+Effects handle API calls ONLY. They dispatch success/failure actions - the reducer handles state transformation.
+
+```typescript
+// {resource}.effects.ts
+loadResources$ = createEffect(() =>
+  this.actions$.pipe(
+    ofType(ResourceActions.loadResources, ResourceActions.refreshResources),
+    withLatestFrom(this.store.select(selectCurrentUser)),
+    filter(([, currentUser]) => !!currentUser?.userId),
+    switchMap(([, currentUser]) =>
+      this.resourceService.getResources(currentUser!.userId).pipe(
+        map(connection =>
+          ResourceActions.loadResourcesSuccess({ resources: connection.items })
+        ),
+        catchError(error =>
+          of(ResourceActions.loadResourcesFailure({
+            error: error.message || 'Failed to load resources'
+          }))
+        )
+      )
+    )
+  )
+);
+```
+
+### Component Pattern
+
+Components use selectors and dispatch actions. NO direct service calls for data operations.
+
+```typescript
+// {resource}-list.component.ts
+export class ResourceListComponent implements OnInit, OnDestroy {
+  // Store selectors - ALL data comes from store
+  resourceRows$: Observable<ResourceTableRow[]>;
+  filteredResourceRows$: Observable<ResourceTableRow[]>;
+  isLoading$: Observable<boolean>;
+
+  constructor(private store: Store) {
+    this.resourceRows$ = this.store.select(selectResourceRows);
+    this.filteredResourceRows$ = this.store.select(selectFilteredResourceRows);
+    this.isLoading$ = this.store.select(selectIsLoading);
+  }
+
+  ngOnInit(): void {
+    this.store.dispatch(ResourceActions.loadResources());
+  }
+
+  onFilterChange(): void {
+    this.store.dispatch(ResourceActions.setSearchTerm({ searchTerm: this.searchTerm }));
+    this.store.dispatch(ResourceActions.setStatusFilter({ statusFilter: this.statusFilter }));
+  }
+}
+```
+
+### Canonical Reference
+
+**Organizations** is the canonical implementation:
+- `apps/web/src/app/features/customers/organizations/store/organizations.state.ts`
+- `apps/web/src/app/features/customers/organizations/store/organizations.actions.ts`
+- `apps/web/src/app/features/customers/organizations/store/organizations.reducer.ts`
+- `apps/web/src/app/features/customers/organizations/store/organizations.selectors.ts`
+- `apps/web/src/app/features/customers/organizations/store/organizations.effects.ts`
+
+When creating a new feature, copy the Organizations store files and adapt them.

@@ -295,6 +295,7 @@ describe('Applications Store', () => {
       ...initialApplicationsState,
       applications: [mockApplication],
       applicationRows: [mockApplicationRow],
+      filteredApplicationRows: [mockApplicationRow],
       selectedApplication: mockApplication,
       searchTerm: 'test',
       organizationFilter: 'org-456',
@@ -323,85 +324,28 @@ describe('Applications Store', () => {
     });
 
     describe('selectFilteredApplicationRows', () => {
-      it('should filter by search term (case-insensitive)', () => {
-        const rows = [
-          mockApplicationRow,
-          {
-            ...mockApplicationRow,
-            application: { ...mockApplication, applicationId: 'app-2', name: 'Other App' },
-          },
-        ];
-        const result = selectors.selectFilteredApplicationRows.projector(
-          rows,
-          'test',
-          '',
-          ''
-        );
+      it('should return filtered application rows from state', () => {
+        const stateWithFiltered = {
+          ...mockState,
+          filteredApplicationRows: [mockApplicationRow],
+        };
+        const result = selectors.selectFilteredApplicationRows.projector(stateWithFiltered);
         expect(result.length).toBe(1);
         expect(result[0].application.name).toBe('Test Application');
       });
 
-      it('should filter by organization', () => {
-        const rows = [
-          mockApplicationRow,
-          {
-            ...mockApplicationRow,
-            application: { ...mockApplication, applicationId: 'app-2' },
-            organizationId: 'org-other',
-          },
-        ];
-        const result = selectors.selectFilteredApplicationRows.projector(
-          rows,
-          '',
-          'org-456',
-          ''
-        );
-        expect(result.length).toBe(1);
-        expect(result[0].organizationId).toBe('org-456');
+      it('should return empty array when state has no filtered rows', () => {
+        const stateWithEmpty = {
+          ...mockState,
+          filteredApplicationRows: [],
+        };
+        const result = selectors.selectFilteredApplicationRows.projector(stateWithEmpty);
+        expect(result).toEqual([]);
       });
 
-      it('should filter by status', () => {
-        const rows = [
-          mockApplicationRow,
-          {
-            ...mockApplicationRow,
-            application: {
-              ...mockApplication,
-              applicationId: 'app-2',
-              status: ApplicationStatus.Inactive,
-            },
-          },
-        ];
-        const result = selectors.selectFilteredApplicationRows.projector(
-          rows,
-          '',
-          '',
-          'ACTIVE'
-        );
-        expect(result.length).toBe(1);
-        expect(result[0].application.status).toBe(ApplicationStatus.Active);
-      });
-
-      it('should apply all filters together', () => {
-        const rows = [
-          mockApplicationRow,
-          {
-            ...mockApplicationRow,
-            application: { ...mockApplication, applicationId: 'app-2', name: 'Other' },
-          },
-          {
-            ...mockApplicationRow,
-            application: { ...mockApplication, applicationId: 'app-3' },
-            organizationId: 'org-other',
-          },
-        ];
-        const result = selectors.selectFilteredApplicationRows.projector(
-          rows,
-          'test',
-          'org-456',
-          'ACTIVE'
-        );
-        expect(result.length).toBe(1);
+      it('should return initial state when state is null', () => {
+        const result = selectors.selectFilteredApplicationRows.projector(null as unknown as ApplicationsState);
+        expect(result).toEqual([]);
       });
     });
 

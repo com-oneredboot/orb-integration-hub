@@ -12,6 +12,7 @@ import { createReducer, on } from '@ngrx/store';
 import { ApplicationsActions } from './applications.actions';
 import {
   ApplicationsState,
+  ApplicationTableRow,
   initialApplicationsState,
 } from './applications.state';
 
@@ -30,14 +31,26 @@ export const applicationsReducer = createReducer(
 
   on(
     ApplicationsActions.loadApplicationsSuccess,
-    (state, { applications }): ApplicationsState => ({
-      ...state,
-      isLoading: false,
-      applications,
-      // Note: applicationRows will be updated by the effect dispatching updateApplicationRows
-      // or can be derived via selectors
-      error: null,
-    })
+    (state, { applications }): ApplicationsState => {
+      // Convert applications to table rows (same pattern as organizations reducer)
+      const applicationRows: ApplicationTableRow[] = applications.map((app) => ({
+        application: app,
+        organizationId: app.organizationId,
+        organizationName: '', // Will be populated when we have org data
+        environmentCount: app.environments?.length || 0,
+        userRole: 'OWNER', // TODO: Get actual role from membership
+        lastActivity: formatLastActivity(app.updatedAt)
+      }));
+
+      return {
+        ...state,
+        isLoading: false,
+        applications,
+        applicationRows,
+        filteredApplicationRows: applicationRows,
+        error: null,
+      };
+    }
   ),
 
   on(
@@ -122,14 +135,21 @@ export const applicationsReducer = createReducer(
   on(
     ApplicationsActions.createApplicationSuccess,
     (state, { application }): ApplicationsState => {
-      // Check if application already exists (update) or is new (add)
-      const exists = state.applications.some(
-        (app) => app.applicationId === application.applicationId
-      );
-      const updatedApplications = exists
-        ? state.applications.map((app) =>
-            app.applicationId === application.applicationId ? application : app
-          )
+      // Replace placeholder with actual application
+      const updatedRows = state.applicationRows.map(row => {
+        if (row.application.applicationId === 'new-app-placeholder') {
+          return {
+            ...row,
+            application,
+            lastActivity: formatLastActivity(application.updatedAt)
+          };
+        }
+        return row;
+      });
+
+      // Also add to applications array if not already there
+      const updatedApplications = state.applications.some(app => app.applicationId === application.applicationId)
+        ? state.applications.map(app => app.applicationId === application.applicationId ? application : app)
         : [...state.applications, application];
 
       return {
@@ -138,6 +158,8 @@ export const applicationsReducer = createReducer(
         isCreatingNew: false,
         isInCreateMode: false,
         applications: updatedApplications,
+        applicationRows: updatedRows,
+        filteredApplicationRows: updatedRows.filter(row => applyFilters(row, state.searchTerm, state.organizationFilter, state.statusFilter)),
         selectedApplication: application,
         lastCreatedApplication: application,
         saveError: null,
@@ -167,13 +189,14 @@ export const applicationsReducer = createReducer(
   on(
     ApplicationsActions.updateApplicationSuccess,
     (state, { application }): ApplicationsState => {
-      const updatedApplications = state.applications.map((app) =>
+      // Update application in both arrays
+      const updatedApplications = state.applications.map(app =>
         app.applicationId === application.applicationId ? application : app
       );
 
-      const updatedRows = state.applicationRows.map((row) =>
+      const updatedRows = state.applicationRows.map(row =>
         row.application.applicationId === application.applicationId
-          ? { ...row, application }
+          ? { ...row, application, lastActivity: formatLastActivity(application.updatedAt) }
           : row
       );
 
@@ -182,6 +205,7 @@ export const applicationsReducer = createReducer(
         isSaving: false,
         applications: updatedApplications,
         applicationRows: updatedRows,
+        filteredApplicationRows: updatedRows.filter(row => applyFilters(row, state.searchTerm, state.organizationFilter, state.statusFilter)),
         selectedApplication:
           state.selectedApplication?.applicationId === application.applicationId
             ? application
@@ -214,18 +238,15 @@ export const applicationsReducer = createReducer(
   on(
     ApplicationsActions.deleteApplicationSuccess,
     (state, { applicationId }): ApplicationsState => {
-      const updatedApplications = state.applications.filter(
-        (app) => app.applicationId !== applicationId
-      );
-      const updatedRows = state.applicationRows.filter(
-        (row) => row.application.applicationId !== applicationId
-      );
+      const updatedApplications = state.applications.filter(app => app.applicationId !== applicationId);
+      const updatedRows = state.applicationRows.filter(row => row.application.applicationId !== applicationId);
 
       return {
         ...state,
         isDeleting: false,
         applications: updatedApplications,
         applicationRows: updatedRows,
+        filteredApplicationRows: updatedRows.filter(row => applyFilters(row, state.searchTerm, state.organizationFilter, state.statusFilter)),
         selectedApplication:
           state.selectedApplication?.applicationId === applicationId
             ? null
@@ -257,12 +278,27 @@ export const applicationsReducer = createReducer(
   // Create Mode Management
   on(
     ApplicationsActions.enterCreateMode,
-    (state, { placeholderApplication }): ApplicationsState => ({
-      ...state,
-      isInCreateMode: true,
-      isCreatingNew: true,
-      selectedApplication: placeholderApplication,
-    })
+    (state, { placeholderApplication }): ApplicationsState => {
+      const placeholderRow: ApplicationTableRow = {
+        application: placeholderApplication,
+        organizationId: placeholderApplication.organizationId || '',
+        organizationName: '',
+        environmentCount: 0,
+        userRole: 'OWNER',
+        lastActivity: 'Just now'
+      };
+
+      const updatedRows = [placeholderRow, ...state.applicationRows];
+
+      return {
+        ...state,
+        isInCreateMode: true,
+        isCreatingNew: true,
+        applicationRows: updatedRows,
+        filteredApplicationRows: updatedRows.filter(row => applyFilters(row, state.searchTerm, state.organizationFilter, state.statusFilter)),
+        selectedApplication: placeholderApplication,
+      };
+    }
   ),
 
   on(
@@ -276,49 +312,96 @@ export const applicationsReducer = createReducer(
 
   on(
     ApplicationsActions.cancelCreateMode,
-    (state): ApplicationsState => ({
-      ...state,
-      isInCreateMode: false,
-      isCreatingNew: false,
-      selectedApplication: null,
-      saveError: null,
-    })
+    (state): ApplicationsState => {
+      // Remove placeholder from lists
+      const updatedRows = state.applicationRows.filter(row => row.application.applicationId !== 'new-app-placeholder');
+
+      return {
+        ...state,
+        isInCreateMode: false,
+        isCreatingNew: false,
+        applicationRows: updatedRows,
+        filteredApplicationRows: updatedRows.filter(row => applyFilters(row, state.searchTerm, state.organizationFilter, state.statusFilter)),
+        selectedApplication: null,
+        saveError: null,
+      };
+    }
   ),
 
   // Filter Management
   on(
     ApplicationsActions.setSearchTerm,
-    (state, { searchTerm }): ApplicationsState => ({
-      ...state,
-      searchTerm,
-    })
+    (state, { searchTerm }): ApplicationsState => {
+      const filteredRows = state.applicationRows.filter(row =>
+        applyFilters(row, searchTerm, state.organizationFilter, state.statusFilter)
+      );
+
+      return {
+        ...state,
+        searchTerm,
+        filteredApplicationRows: filteredRows,
+      };
+    }
   ),
 
   on(
     ApplicationsActions.setOrganizationFilter,
-    (state, { organizationFilter }): ApplicationsState => ({
-      ...state,
-      organizationFilter,
-    })
+    (state, { organizationFilter }): ApplicationsState => {
+      const filteredRows = state.applicationRows.filter(row =>
+        applyFilters(row, state.searchTerm, organizationFilter, state.statusFilter)
+      );
+
+      return {
+        ...state,
+        organizationFilter,
+        filteredApplicationRows: filteredRows,
+      };
+    }
   ),
 
   on(
     ApplicationsActions.setStatusFilter,
-    (state, { statusFilter }): ApplicationsState => ({
-      ...state,
-      statusFilter,
-    })
+    (state, { statusFilter }): ApplicationsState => {
+      const filteredRows = state.applicationRows.filter(row =>
+        applyFilters(row, state.searchTerm, state.organizationFilter, statusFilter)
+      );
+
+      return {
+        ...state,
+        statusFilter,
+        filteredApplicationRows: filteredRows,
+      };
+    }
   ),
 
-  on(ApplicationsActions.applyFilters, (state): ApplicationsState => state),
+  on(
+    ApplicationsActions.applyFilters,
+    (state): ApplicationsState => {
+      const filteredRows = state.applicationRows.filter(row =>
+        applyFilters(row, state.searchTerm, state.organizationFilter, state.statusFilter)
+      );
+
+      return {
+        ...state,
+        filteredApplicationRows: filteredRows,
+      };
+    }
+  ),
 
   // Application Rows Management
   on(
     ApplicationsActions.updateApplicationRows,
-    (state, { applicationRows }): ApplicationsState => ({
-      ...state,
-      applicationRows,
-    })
+    (state, { applicationRows }): ApplicationsState => {
+      const filteredRows = applicationRows.filter(row =>
+        applyFilters(row, state.searchTerm, state.organizationFilter, state.statusFilter)
+      );
+
+      return {
+        ...state,
+        applicationRows,
+        filteredApplicationRows: filteredRows,
+      };
+    }
   ),
 
   // Error Management
@@ -390,3 +473,41 @@ export const applicationsReducer = createReducer(
     })
   )
 );
+
+// Helper function to apply filters
+function applyFilters(
+  row: ApplicationTableRow,
+  searchTerm: string,
+  organizationFilter: string,
+  statusFilter: string
+): boolean {
+  const matchesSearch = !searchTerm ||
+    row.application.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    row.application.applicationId.toLowerCase().includes(searchTerm.toLowerCase());
+
+  const matchesOrganization = !organizationFilter ||
+    row.organizationId === organizationFilter;
+
+  const matchesStatus = !statusFilter ||
+    row.application.status === statusFilter;
+
+  return matchesSearch && matchesOrganization && matchesStatus;
+}
+
+// Helper function to format last activity as relative time
+function formatLastActivity(dateValue: string | Date | number | undefined): string {
+  if (!dateValue) return 'Never';
+  const date = typeof dateValue === 'number' ? new Date(dateValue * 1000)
+    : dateValue instanceof Date ? dateValue : new Date(dateValue);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return diffMins + ' min ago';
+  if (diffHours < 24) return diffHours + ' hour' + (diffHours > 1 ? 's' : '') + ' ago';
+  if (diffDays < 7) return diffDays + ' day' + (diffDays > 1 ? 's' : '') + ' ago';
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}

@@ -53,39 +53,11 @@ export const selectStatusFilter = createSelector(
     state?.statusFilter ?? initialApplicationsState.statusFilter
 );
 
-// Filtered applications selector (applies all filters)
+// Filtered applications selector (from state, computed by reducer)
 export const selectFilteredApplicationRows = createSelector(
-  selectApplicationRows,
-  selectSearchTerm,
-  selectOrganizationFilter,
-  selectStatusFilter,
-  (applicationRows, searchTerm, organizationFilter, statusFilter) => {
-    let filtered = applicationRows;
-
-    // Apply search term filter (case-insensitive name search)
-    if (searchTerm) {
-      const lowerSearch = searchTerm.toLowerCase();
-      filtered = filtered.filter((row) =>
-        row.application.name.toLowerCase().includes(lowerSearch)
-      );
-    }
-
-    // Apply organization filter
-    if (organizationFilter) {
-      filtered = filtered.filter(
-        (row) => row.organizationId === organizationFilter
-      );
-    }
-
-    // Apply status filter
-    if (statusFilter) {
-      filtered = filtered.filter(
-        (row) => row.application.status === statusFilter
-      );
-    }
-
-    return filtered;
-  }
+  selectApplicationsState,
+  (state: ApplicationsState) =>
+    state?.filteredApplicationRows ?? initialApplicationsState.filteredApplicationRows
 );
 
 // UI state selectors
