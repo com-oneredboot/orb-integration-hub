@@ -42,6 +42,9 @@ class ApplicationGroupUserService:
         self.groups_table = self.dynamodb.Table(
             os.environ.get("APPLICATION_GROUPS_TABLE", "orb-integration-hub-dev-application-groups")
         )
+        self.applications_table = self.dynamodb.Table(
+            os.environ.get("APPLICATIONS_TABLE", "orb-integration-hub-dev-applications")
+        )
 
     def add_user_to_group(self, event: dict[str, Any]) -> dict[str, Any]:
         """Add a user to a group.
@@ -101,6 +104,9 @@ class ApplicationGroupUserService:
 
             # Update member count on group
             self._increment_member_count(group_id)
+
+            # Sync userCount on Applications table
+            self._increment_application_user_count(application_id)
 
             logger.info(f"Added user {user_id} to group {group_id}")
 
@@ -164,6 +170,11 @@ class ApplicationGroupUserService:
 
             # Decrement member count on group
             self._decrement_member_count(actual_group_id)
+
+            # Sync userCount on Applications table
+            application_id = membership.get("applicationId")
+            if application_id:
+                self._decrement_application_user_count(application_id)
 
             logger.info(f"Removed membership {actual_membership_id}")
 
@@ -346,6 +357,37 @@ class ApplicationGroupUserService:
             )
         except Exception as e:
             logger.error(f"Error decrementing member count: {e}")
+
+    def _increment_application_user_count(self, application_id: str) -> None:
+        """Increment the userCount on the Applications table."""
+        try:
+            self.applications_table.update_item(
+                Key={"applicationId": application_id},
+                UpdateExpression="SET userCount = if_not_exists(userCount, :zero) + :one, updatedAt = :now",
+                ExpressionAttributeValues={
+                    ":zero": 0,
+                    ":one": 1,
+                    ":now": int(datetime.now(tz=timezone.utc).timestamp()),
+                },
+            )
+        except Exception as e:
+            logger.error(f"Error incrementing application user count: {e}")
+
+    def _decrement_application_user_count(self, application_id: str) -> None:
+        """Decrement the userCount on the Applications table."""
+        try:
+            self.applications_table.update_item(
+                Key={"applicationId": application_id},
+                UpdateExpression="SET userCount = userCount - :one, updatedAt = :now",
+                ConditionExpression="userCount > :zero",
+                ExpressionAttributeValues={
+                    ":one": 1,
+                    ":zero": 0,
+                    ":now": int(datetime.now(tz=timezone.utc).timestamp()),
+                },
+            )
+        except Exception as e:
+            logger.error(f"Error decrementing application user count: {e}")
 
     def _error_response(self, code: str, message: str) -> dict[str, Any]:
         """Generate standardized error response."""

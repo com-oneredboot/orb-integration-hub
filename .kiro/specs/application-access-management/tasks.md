@@ -58,33 +58,33 @@ This implementation plan covers the Application Access Management system across 
     - **Property 3: Membership Uniqueness**
     - **Validates: Requirements 2.5**
 
-- [ ] 4. Implement backend services for role assignments
-  - [ ] 4.1 Create ApplicationGroupRoleService
+- [x] 4. Implement backend services for role assignments
+  - [x] 4.1 Create ApplicationGroupRoleService
     - assignRoleToGroup, updateGroupRole, removeGroupRole, getGroupRoles
     - Support different roles per environment
     - _Requirements: 3.1, 3.2, 3.3, 3.4_
-  - [ ] 4.2 Write property test for environment isolation
+  - [x] 4.2 Write property test for environment isolation
     - **Property 7: Group Role Environment Isolation**
     - **Validates: Requirements 3.4**
-  - [ ] 4.3 Create ApplicationUserRoleService
+  - [x] 4.3 Create ApplicationUserRoleService
     - assignRoleToUser, removeUserRole, getUserRoles
     - Support multiple roles per user per environment
     - _Requirements: 4.1, 4.2, 4.3_
 
-- [ ] 5. Update Applications table with count fields
-  - [ ] 5.1 Add groupCount, userCount, roleCount to Applications schema
+- [x] 5. Update Applications table with count fields
+  - [x] 5.1 Add groupCount, userCount, roleCount to Applications schema
     - Update Applications.yml with new optional fields
     - Regenerate models
     - _Requirements: 1.6, 2.7, 4.5_
-  - [ ] 5.2 Implement count sync logic in services
+  - [x] 5.2 Implement count sync logic in services
     - Update counts when groups/users/roles change
     - Follow same pattern as applicationCount sync
     - _Requirements: 1.6, 2.7, 4.5_
-  - [ ] 5.3 Write property test for count aggregation
+  - [x] 5.3 Write property test for count aggregation
     - **Property 12: Application Count Aggregation**
     - **Validates: Requirements 1.6**
 
-- [ ] 6. Phase 1 Checkpoint
+- [x] 6. Phase 1 Checkpoint
   - Ensure all Phase 1 tests pass
   - Deploy to dev environment
   - Verify CRUD operations work via GraphQL playground

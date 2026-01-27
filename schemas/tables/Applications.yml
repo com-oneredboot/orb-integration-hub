@@ -89,3 +89,15 @@ model:
         - TEST
         - PREVIEW
       description: List of available environments for this application (max 5 for starter plan)
+    groupCount:
+      type: number
+      required: false
+      description: Count of ACTIVE application groups (denormalized for display)
+    userCount:
+      type: number
+      required: false
+      description: Count of ACTIVE application group users (denormalized for display)
+    roleCount:
+      type: number
+      required: false
+      description: Count of ACTIVE direct user role assignments (denormalized for display)

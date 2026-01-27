@@ -46,6 +46,9 @@ class ApplicationGroupService:
                 "APPLICATION_GROUP_ROLES_TABLE", "orb-integration-hub-dev-application-group-roles"
             )
         )
+        self.applications_table = self.dynamodb.Table(
+            os.environ.get("APPLICATIONS_TABLE", "orb-integration-hub-dev-applications")
+        )
 
     def create_group(self, event: dict[str, Any]) -> dict[str, Any]:
         """Create a new application group.
@@ -91,6 +94,9 @@ class ApplicationGroupService:
                 Item=group_data,
                 ConditionExpression="attribute_not_exists(applicationGroupId)",
             )
+
+            # Sync groupCount on Applications table
+            self._increment_application_group_count(application_id)
 
             logger.info(f"Created group {group_id} for application {application_id}")
 
@@ -220,13 +226,21 @@ class ApplicationGroupService:
                 ConditionExpression="attribute_exists(applicationGroupId) AND #status <> :deleted",
             )
 
+            # Sync groupCount on Applications table
+            self._decrement_application_group_count(existing["applicationId"])
+
             # Cascade: Mark all group memberships as REMOVED
-            self._cascade_delete_memberships(group_id, now)
+            # Note: This also decrements userCount for each removed membership
+            removed_count = self._cascade_delete_memberships(
+                group_id, existing["applicationId"], now
+            )
 
             # Cascade: Mark all group role assignments as DELETED
             self._cascade_delete_role_assignments(group_id, now)
 
-            logger.info(f"Deleted group {group_id} with cascade")
+            logger.info(
+                f"Deleted group {group_id} with cascade (removed {removed_count} memberships)"
+            )
 
             return {
                 "code": 200,
@@ -345,8 +359,10 @@ class ApplicationGroupService:
             # Fail safe - assume name exists to prevent duplicates
             return True
 
-    def _cascade_delete_memberships(self, group_id: str, timestamp: int) -> None:
-        """Mark all memberships for a group as REMOVED."""
+    def _cascade_delete_memberships(
+        self, group_id: str, application_id: str, timestamp: int
+    ) -> int:
+        """Mark all memberships for a group as REMOVED and update userCount."""
         try:
             # Query all memberships for this group
             response = self.group_users_table.query(
@@ -355,6 +371,7 @@ class ApplicationGroupService:
                 FilterExpression=Attr("status").eq("ACTIVE"),
             )
 
+            removed_count = 0
             for item in response.get("Items", []):
                 self.group_users_table.update_item(
                     Key={"applicationGroupUserId": item["applicationGroupUserId"]},
@@ -365,13 +382,18 @@ class ApplicationGroupService:
                         ":updatedAt": timestamp,
                     },
                 )
+                removed_count += 1
 
-            logger.info(
-                f"Cascade deleted {len(response.get('Items', []))} memberships for group {group_id}"
-            )
+            # Decrement userCount on Applications table for all removed memberships
+            if removed_count > 0:
+                self._decrement_application_user_count(application_id, removed_count)
+
+            logger.info(f"Cascade deleted {removed_count} memberships for group {group_id}")
+            return removed_count
 
         except Exception as e:
             logger.error(f"Error cascading membership deletions: {e}")
+            return 0
 
     def _cascade_delete_role_assignments(self, group_id: str, timestamp: int) -> None:
         """Mark all role assignments for a group as DELETED."""
@@ -400,6 +422,52 @@ class ApplicationGroupService:
 
         except Exception as e:
             logger.error(f"Error cascading role assignment deletions: {e}")
+
+    def _increment_application_group_count(self, application_id: str) -> None:
+        """Increment the groupCount on the Applications table."""
+        try:
+            self.applications_table.update_item(
+                Key={"applicationId": application_id},
+                UpdateExpression="SET groupCount = if_not_exists(groupCount, :zero) + :one, updatedAt = :now",
+                ExpressionAttributeValues={
+                    ":zero": 0,
+                    ":one": 1,
+                    ":now": int(datetime.now(tz=timezone.utc).timestamp()),
+                },
+            )
+        except Exception as e:
+            logger.error(f"Error incrementing application group count: {e}")
+
+    def _decrement_application_group_count(self, application_id: str) -> None:
+        """Decrement the groupCount on the Applications table."""
+        try:
+            self.applications_table.update_item(
+                Key={"applicationId": application_id},
+                UpdateExpression="SET groupCount = groupCount - :one, updatedAt = :now",
+                ConditionExpression="groupCount > :zero",
+                ExpressionAttributeValues={
+                    ":one": 1,
+                    ":zero": 0,
+                    ":now": int(datetime.now(tz=timezone.utc).timestamp()),
+                },
+            )
+        except Exception as e:
+            logger.error(f"Error decrementing application group count: {e}")
+
+    def _decrement_application_user_count(self, application_id: str, count: int = 1) -> None:
+        """Decrement the userCount on the Applications table."""
+        try:
+            self.applications_table.update_item(
+                Key={"applicationId": application_id},
+                UpdateExpression="SET userCount = userCount - :count, updatedAt = :now",
+                ConditionExpression="userCount >= :count",
+                ExpressionAttributeValues={
+                    ":count": count,
+                    ":now": int(datetime.now(tz=timezone.utc).timestamp()),
+                },
+            )
+        except Exception as e:
+            logger.error(f"Error decrementing application user count: {e}")
 
     def _error_response(self, code: str, message: str) -> dict[str, Any]:
         """Generate standardized error response."""

@@ -38,6 +38,15 @@ class ApplicationsCreateInput(BaseModel):
         ...,
         description="List of available environments for this application (max 5 for starter plan)",
     )
+    group_count: Optional[float] = Field(
+        None, description="Count of ACTIVE application groups (denormalized for display)"
+    )
+    user_count: Optional[float] = Field(
+        None, description="Count of ACTIVE application group users (denormalized for display)"
+    )
+    role_count: Optional[float] = Field(
+        None, description="Count of ACTIVE direct user role assignments (denormalized for display)"
+    )
 
 
 class ApplicationsUpdateInput(BaseModel):
@@ -67,6 +76,15 @@ class ApplicationsUpdateInput(BaseModel):
     environments: Optional[List[str]] = Field(
         ...,
         description="List of available environments for this application (max 5 for starter plan)",
+    )
+    group_count: Optional[float] = Field(
+        None, description="Count of ACTIVE application groups (denormalized for display)"
+    )
+    user_count: Optional[float] = Field(
+        None, description="Count of ACTIVE application group users (denormalized for display)"
+    )
+    role_count: Optional[float] = Field(
+        None, description="Count of ACTIVE direct user role assignments (denormalized for display)"
     )
 
 
@@ -124,6 +142,15 @@ class Applications(BaseModel):
     environments: List[str] = Field(
         ...,
         description="List of available environments for this application (max 5 for starter plan)",
+    )
+    group_count: Optional[float] = Field(
+        None, description="Count of ACTIVE application groups (denormalized for display)"
+    )
+    user_count: Optional[float] = Field(
+        None, description="Count of ACTIVE application group users (denormalized for display)"
+    )
+    role_count: Optional[float] = Field(
+        None, description="Count of ACTIVE direct user role assignments (denormalized for display)"
     )
 
     @field_validator("created_at", mode="before")

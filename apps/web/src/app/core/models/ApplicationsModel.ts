@@ -19,6 +19,9 @@ export type ApplicationsCreateInput = {
   apiKey: string;
   apiKeyNext?: string;
   environments: string[];
+  groupCount?: number;
+  userCount?: number;
+  roleCount?: number;
 };
 
 export type ApplicationsUpdateInput = {
@@ -33,6 +36,9 @@ export type ApplicationsUpdateInput = {
   apiKey?: string;
   apiKeyNext?: string;
   environments?: string[];
+  groupCount?: number;
+  userCount?: number;
+  roleCount?: number;
 };
 
 export type ApplicationsQueryByApplicationIdInput = {
@@ -130,6 +136,9 @@ export interface IApplications {
   apiKey: string;
   apiKeyNext?: string;
   environments: string[];
+  groupCount?: number;
+  userCount?: number;
+  roleCount?: number;
 }
 
 export class Applications implements IApplications {
@@ -144,6 +153,9 @@ export class Applications implements IApplications {
   apiKey: string;
   apiKeyNext?: string;
   environments: string[];
+  groupCount?: number;
+  userCount?: number;
+  roleCount?: number;
 
   constructor(data: Partial<IApplications> = {}) {
     this.applicationId = data.applicationId ?? '';
@@ -157,5 +169,8 @@ export class Applications implements IApplications {
     this.apiKey = data.apiKey ?? '';
     this.apiKeyNext = data.apiKeyNext;
     this.environments = data.environments ?? [];
+    this.groupCount = data.groupCount;
+    this.userCount = data.userCount;
+    this.roleCount = data.roleCount;
   }
 }

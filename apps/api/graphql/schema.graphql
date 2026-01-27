@@ -181,6 +181,9 @@ type Applications {
   apiKey: String!
   apiKeyNext: String
   environments: [String]!
+  groupCount: Float
+  userCount: Float
+  roleCount: Float
 }
 
 type Users {
@@ -1938,6 +1941,9 @@ input ApplicationsCreateInput {
   apiKey: String!
   apiKeyNext: String
   environments: [String]!
+  groupCount: Float
+  userCount: Float
+  roleCount: Float
 }
 
 input ApplicationsUpdateInput {
@@ -1952,6 +1958,9 @@ input ApplicationsUpdateInput {
   apiKey: String
   apiKeyNext: String
   environments: [String]
+  groupCount: Float
+  userCount: Float
+  roleCount: Float
 }
 
 input ApplicationsDeleteInput {

@@ -22,6 +22,9 @@ export const ApplicationsCreate = /* GraphQL */ `
         apiKey
         apiKeyNext
         environments
+        groupCount
+        userCount
+        roleCount
       }
     }
   }
@@ -45,6 +48,9 @@ export const ApplicationsUpdate = /* GraphQL */ `
         apiKey
         apiKeyNext
         environments
+        groupCount
+        userCount
+        roleCount
       }
     }
   }
@@ -68,6 +74,9 @@ export const ApplicationsDelete = /* GraphQL */ `
         apiKey
         apiKeyNext
         environments
+        groupCount
+        userCount
+        roleCount
       }
     }
   }
@@ -91,6 +100,9 @@ export const ApplicationsDisable = /* GraphQL */ `
         apiKey
         apiKeyNext
         environments
+        groupCount
+        userCount
+        roleCount
       }
     }
   }
@@ -114,6 +126,9 @@ export const ApplicationsGet = /* GraphQL */ `
         apiKey
         apiKeyNext
         environments
+        groupCount
+        userCount
+        roleCount
       }
     }
   }
@@ -137,6 +152,9 @@ export const ApplicationsListByApplicationId = /* GraphQL */ `
         apiKey
         apiKeyNext
         environments
+        groupCount
+        userCount
+        roleCount
       }
       nextToken
     }
@@ -161,6 +179,9 @@ export const ApplicationsListByOrganizationId = /* GraphQL */ `
         apiKey
         apiKeyNext
         environments
+        groupCount
+        userCount
+        roleCount
       }
       nextToken
     }
@@ -185,6 +206,9 @@ export const ApplicationsListByOrganizationIdAndCreatedAt = /* GraphQL */ `
         apiKey
         apiKeyNext
         environments
+        groupCount
+        userCount
+        roleCount
       }
       nextToken
     }
