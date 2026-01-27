@@ -203,7 +203,7 @@ export class DashboardCtaService {
       if (appCount === 0) {
         cards.push({
           id: 'action-add-app',
-          icon: 'cube',
+          icon: 'rocket',
           title: 'Add Your First Application',
           description: 'Create an application to start integrating services. Applications provide API keys and configuration for connecting your software with our platform\'s powerful features.',
           actionLabel: 'Create Application',
@@ -215,7 +215,7 @@ export class DashboardCtaService {
         // Has orgs and apps → Show "Manage Applications"
         cards.push({
           id: 'action-manage-apps',
-          icon: 'cubes',
+          icon: 'rocket',
           title: 'Manage Applications',
           description: 'View and configure your applications, rotate API keys, update settings, and monitor usage across your integrated services.',
           actionLabel: 'View Applications',

@@ -153,8 +153,8 @@ These cards guide customers through resource creation and management.
 |----|------|-------|-------------|----------|-----------|
 | action-create-org | `plus-circle` | Create Your First Organization | Set up your business entity to get started. Organizations allow you to manage teams, applications, and integrations all in one place with centralized billing and access control. | low | `organizations.length === 0` |
 | action-manage-orgs | `building` | Manage Organizations | View and manage your existing organizations, update settings, invite or remove team members, and configure access permissions for your business entities. | low | `organizations.length > 0` |
-| action-add-app | `cube` | Add Your First Application | Create an application to start integrating services. Applications provide API keys and configuration for connecting your software with our platform's powerful features. | low | `applications.length === 0` |
-| action-manage-apps | `cubes` | Manage Applications | View and configure your applications, rotate API keys, update settings, and monitor usage across your integrated services. | low | `applications.length > 0` |
+| action-add-app | `rocket` | Add Your First Application | Create an application to start integrating services. Applications provide API keys and configuration for connecting your software with our platform's powerful features. | low | `applications.length === 0` |
+| action-manage-apps | `rocket` | Manage Applications | View and configure your applications, rotate API keys, update settings, and monitor usage across your integrated services. | low | `applications.length > 0` |
 | action-billing-warning | `credit-card` | Update Payment Method | Your payment method is expiring soon. Update your billing information to avoid service interruption. | medium | `paymentExpiringSoon` |
 | action-subscription-expired | `exclamation-triangle` | Subscription Expired | Your subscription has expired. Renew now to restore full access to all features and prevent data loss. | high | `subscriptionExpired` |
 
