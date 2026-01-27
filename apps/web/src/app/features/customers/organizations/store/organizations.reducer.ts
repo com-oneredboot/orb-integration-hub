@@ -311,6 +311,8 @@ export const organizationsReducer = createReducer(
 
   // Application Count Management (single organization)
   on(OrganizationsActions.updateOrganizationApplicationCount, (state, { organizationId, applicationCount }): OrganizationsState => {
+    console.debug('[OrganizationsReducer] updateOrganizationApplicationCount:', { organizationId, applicationCount });
+    
     // Update the specific organization's applicationCount in rows
     const updatedRows = state.organizationRows.map(row => 
       row.organization.organizationId === organizationId
@@ -329,6 +331,8 @@ export const organizationsReducer = createReducer(
     const updatedSelectedOrganization = state.selectedOrganization?.organizationId === organizationId
       ? { ...state.selectedOrganization, applicationCount }
       : state.selectedOrganization;
+
+    console.debug('[OrganizationsReducer] Updated rows count:', updatedRows.length);
 
     return {
       ...state,

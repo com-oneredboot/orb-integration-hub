@@ -178,6 +178,7 @@ export class OrganizationService extends ApiService {
       kmsKeyId: input.kmsKeyId,
       kmsKeyArn: input.kmsKeyArn,
       kmsAlias: input.kmsAlias,
+      applicationCount: input.applicationCount,
     };
 
     const graphqlInput = toGraphQLInput(updateInput as unknown as Record<string, unknown>);
@@ -198,6 +199,46 @@ export class OrganizationService extends ApiService {
           throw new Error('Organization not found. It may have been deleted.');
         }
         throw new Error('Failed to update organization. Please try again later.');
+      })
+    );
+  }
+
+  /**
+   * Update only the application count for an organization
+   * This is a lightweight update that only changes the applicationCount field.
+   *
+   * @param organizationId ID of organization to update
+   * @param applicationCount New application count
+   * @returns Observable<IOrganizations> The updated organization
+   */
+  public updateApplicationCount(organizationId: string, applicationCount: number): Observable<IOrganizations> {
+    console.debug('[OrganizationService] Updating application count:', { organizationId, applicationCount });
+
+    if (!organizationId) {
+      throw new Error('Organization ID is required');
+    }
+
+    const updateInput: OrganizationsUpdateInput = {
+      organizationId,
+      applicationCount,
+      updatedAt: new Date(),
+    };
+
+    const graphqlInput = toGraphQLInput(updateInput as unknown as Record<string, unknown>);
+
+    return from(
+      this.executeMutation<IOrganizations>(OrganizationsUpdate, { input: graphqlInput }, 'userPool')
+    ).pipe(
+      map((item) => {
+        console.debug('[OrganizationService] Application count updated:', item);
+        return new Organizations(item);
+      }),
+      catchError((error) => {
+        console.error('[OrganizationService] Error updating application count:', error);
+        if (isAuthenticationError(error)) {
+          throw new Error('You are not authorized to update this organization.');
+        }
+        throw new Error('Failed to update application count. Please try again later.');
       })
     );
   }

@@ -12,13 +12,13 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
-import { of, forkJoin, from } from 'rxjs';
+import { of, forkJoin } from 'rxjs';
 import { map, catchError, switchMap, withLatestFrom, filter, mergeMap } from 'rxjs/operators';
 
 import { ApplicationsActions } from './applications.actions';
 import { ApplicationService } from '../../../../core/services/application.service';
 import { OrganizationService } from '../../../../core/services/organization.service';
-import { selectIsCreatingNew } from './applications.selectors';
+import { selectIsCreatingNew, selectApplications } from './applications.selectors';
 import { selectCurrentUser } from '../../../user/store/user.selectors';
 import { selectOrganizations } from '../../organizations/store/organizations.selectors';
 import { OrganizationsActions } from '../../organizations/store/organizations.actions';
@@ -37,9 +37,6 @@ export class ApplicationsEffects {
   /**
    * Load Applications Effect
    * Loads all applications for the current user across all their organizations.
-   * Follows the same pattern as OrganizationsEffects.loadOrganizations$
-   *
-   * _Requirements: 1.1, 1.2_
    */
   loadApplications$ = createEffect(() =>
     this.actions$.pipe(
@@ -50,12 +47,10 @@ export class ApplicationsEffects {
       ),
       filter(([, currentUser]) => !!currentUser?.userId),
       switchMap(([, currentUser, organizations]) => {
-        // If we have organizations in store, use them; otherwise load them first
         if (organizations && organizations.length > 0) {
           return this.loadApplicationsForOrganizations(organizations);
         }
 
-        // Load organizations first, then applications
         return this.organizationService.getUserOrganizations(currentUser!.userId).pipe(
           switchMap(orgConnection => {
             const activeOrganizations = orgConnection.items.filter(org => org.status === 'ACTIVE');
@@ -74,9 +69,6 @@ export class ApplicationsEffects {
     )
   );
 
-  /**
-   * Helper to load applications for a list of organizations
-   */
   private loadApplicationsForOrganizations(organizations: { organizationId: string; name: string; status?: string }[]) {
     const activeOrganizations = organizations.filter(org => org.status === 'ACTIVE' || !org.status);
 
@@ -97,16 +89,12 @@ export class ApplicationsEffects {
     return forkJoin(applicationRequests).pipe(
       map(results => {
         const allApplications: IApplications[] = [];
-
         for (const result of results) {
           for (const app of result.applications) {
-            // Skip PENDING (draft) applications in list view
             if (app.status === ApplicationStatus.Pending) continue;
             allApplications.push(app);
           }
         }
-
-        // Dispatch applications - reducer will build applicationRows
         return ApplicationsActions.loadApplicationsSuccess({ applications: allApplications });
       }),
       catchError(error =>
@@ -119,9 +107,6 @@ export class ApplicationsEffects {
 
   /**
    * Load Single Application Effect
-   * Loads a specific application by ID for detail page use.
-   *
-   * _Requirements: 3.1_
    */
   loadApplication$ = createEffect(() =>
     this.actions$.pipe(
@@ -132,9 +117,7 @@ export class ApplicationsEffects {
             if (application) {
               return ApplicationsActions.loadApplicationSuccess({ application });
             }
-            return ApplicationsActions.loadApplicationFailure({
-              error: 'Application not found'
-            });
+            return ApplicationsActions.loadApplicationFailure({ error: 'Application not found' });
           }),
           catchError(error =>
             of(ApplicationsActions.loadApplicationFailure({
@@ -146,108 +129,94 @@ export class ApplicationsEffects {
     )
   );
 
-  // Create Draft Application Effect (create-on-click pattern)
+  /**
+   * Create Draft Application Effect (create-on-click pattern)
+   */
   createDraftApplication$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ApplicationsActions.createDraftApplication),
       withLatestFrom(this.store.select(selectCurrentUser)),
       filter(([, currentUser]) => !!currentUser?.userId),
       switchMap(([action, currentUser]) =>
-        this.applicationService
-          .createDraft(currentUser!.userId, action.organizationId || '')
-          .pipe(
-            map((application) =>
-              ApplicationsActions.createDraftApplicationSuccess({ application })
-            ),
-            catchError((error) =>
-              of(
-                ApplicationsActions.createDraftApplicationFailure({
-                  error: error.message || 'Failed to create draft application',
-                })
-              )
-            )
+        this.applicationService.createDraft(currentUser!.userId, action.organizationId || '').pipe(
+          map(application => ApplicationsActions.createDraftApplicationSuccess({ application })),
+          catchError(error =>
+            of(ApplicationsActions.createDraftApplicationFailure({
+              error: error.message || 'Failed to create draft application'
+            }))
           )
+        )
       )
     )
   );
 
-  // Create Application Effect
+  /**
+   * Create Application Effect
+   */
   createApplication$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ApplicationsActions.createApplication),
       withLatestFrom(this.store.select(selectIsCreatingNew)),
       switchMap(([action, isCreatingNew]) => {
-        // Only proceed if we're actually in create mode
         if (!isCreatingNew) {
-          return of(
-            ApplicationsActions.createApplicationFailure({
-              error: 'Not in create mode',
-            })
-          );
+          return of(ApplicationsActions.createApplicationFailure({ error: 'Not in create mode' }));
         }
-
         return this.applicationService.createApplication(action.input).pipe(
-          map((application) =>
-            ApplicationsActions.createApplicationSuccess({ application })
-          ),
-          catchError((error) =>
-            of(
-              ApplicationsActions.createApplicationFailure({
-                error: error.message || 'Failed to create application',
-              })
-            )
+          map(application => ApplicationsActions.createApplicationSuccess({ application })),
+          catchError(error =>
+            of(ApplicationsActions.createApplicationFailure({
+              error: error.message || 'Failed to create application'
+            }))
           )
         );
       })
     )
   );
 
-  // Update Application Effect
+  /**
+   * Update Application Effect
+   */
   updateApplication$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ApplicationsActions.updateApplication),
-      switchMap((action) =>
+      switchMap(action =>
         this.applicationService.updateApplication(action.input).pipe(
-          map((application) =>
-            ApplicationsActions.updateApplicationSuccess({ application })
-          ),
-          catchError((error) =>
-            of(
-              ApplicationsActions.updateApplicationFailure({
-                error: error.message || 'Failed to update application',
-              })
-            )
+          map(application => ApplicationsActions.updateApplicationSuccess({ application })),
+          catchError(error =>
+            of(ApplicationsActions.updateApplicationFailure({
+              error: error.message || 'Failed to update application'
+            }))
           )
         )
       )
     )
   );
 
-  // Delete Application Effect
+  /**
+   * Delete Application Effect
+   */
   deleteApplication$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ApplicationsActions.deleteApplication),
-      switchMap((action) =>
+      switchMap(action =>
         this.applicationService.deleteApplication(action.applicationId).pipe(
-          map(() =>
-            ApplicationsActions.deleteApplicationSuccess({
-              applicationId: action.applicationId,
-              organizationId: action.organizationId,
-            })
-          ),
-          catchError((error) =>
-            of(
-              ApplicationsActions.deleteApplicationFailure({
-                error: error.message || 'Failed to delete application',
-              })
-            )
+          map(() => ApplicationsActions.deleteApplicationSuccess({
+            applicationId: action.applicationId,
+            organizationId: action.organizationId
+          })),
+          catchError(error =>
+            of(ApplicationsActions.deleteApplicationFailure({
+              error: error.message || 'Failed to delete application'
+            }))
           )
         )
       )
     )
   );
 
-  // Auto-refresh applications after successful operations
+  /**
+   * Auto-refresh applications after successful operations
+   */
   refreshAfterSuccessfulOperation$ = createEffect(() =>
     this.actions$.pipe(
       ofType(
@@ -261,24 +230,28 @@ export class ApplicationsEffects {
 
   /**
    * Update Organization Application Count After Create
-   * When an application is created, query applications for that organization
-   * and update the organization's applicationCount in the store.
+   * Persists the updated count to the database.
    */
   updateOrgCountAfterCreate$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ApplicationsActions.createApplicationSuccess),
       filter(action => !!action.application.organizationId),
-      switchMap(action => 
+      switchMap(action =>
         this.applicationService.getApplicationsByOrganization(action.application.organizationId).pipe(
-          map(connection => {
-            // Count only non-PENDING applications
+          switchMap(connection => {
             const activeCount = connection.items.filter(
               app => app.status !== ApplicationStatus.Pending
             ).length;
-            return OrganizationsActions.updateOrganizationApplicationCount({
-              organizationId: action.application.organizationId,
-              applicationCount: activeCount
-            });
+            return this.organizationService.updateApplicationCount(
+              action.application.organizationId,
+              activeCount
+            ).pipe(
+              map(() => OrganizationsActions.updateOrganizationApplicationCount({
+                organizationId: action.application.organizationId,
+                applicationCount: activeCount
+              })),
+              catchError(() => of({ type: '[Organizations] Update Count Failed' }))
+            );
           }),
           catchError(() => of({ type: '[Organizations] Update Count Failed' }))
         )
@@ -288,24 +261,28 @@ export class ApplicationsEffects {
 
   /**
    * Update Organization Application Count After Delete
-   * When an application is deleted, query applications for that organization
-   * and update the organization's applicationCount in the store.
+   * Persists the updated count to the database.
    */
   updateOrgCountAfterDelete$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ApplicationsActions.deleteApplicationSuccess),
       filter(action => !!action.organizationId),
-      switchMap(action => 
+      switchMap(action =>
         this.applicationService.getApplicationsByOrganization(action.organizationId).pipe(
-          map(connection => {
-            // Count only non-PENDING applications
+          switchMap(connection => {
             const activeCount = connection.items.filter(
               app => app.status !== ApplicationStatus.Pending
             ).length;
-            return OrganizationsActions.updateOrganizationApplicationCount({
-              organizationId: action.organizationId,
-              applicationCount: activeCount
-            });
+            return this.organizationService.updateApplicationCount(
+              action.organizationId,
+              activeCount
+            ).pipe(
+              map(() => OrganizationsActions.updateOrganizationApplicationCount({
+                organizationId: action.organizationId,
+                applicationCount: activeCount
+              })),
+              catchError(() => of({ type: '[Organizations] Update Count Failed' }))
+            );
           }),
           catchError(() => of({ type: '[Organizations] Update Count Failed' }))
         )
@@ -314,43 +291,31 @@ export class ApplicationsEffects {
   );
 
   /**
-   * Verify Organization Application Count After Applications Load
-   * When applications are loaded (e.g., on organization detail page),
-   * verify and update the organization's applicationCount if it differs.
-   * This ensures the count stays in sync with actual application data.
+   * Sync Organization Application Count on Detail Page
+   * When organization detail page loads, verify the applicationCount matches
+   * the actual number of applications and update the database if needed.
    */
-  verifyOrgApplicationCount$ = createEffect(() =>
+  syncOrgApplicationCountOnDetailPage$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(ApplicationsActions.loadApplicationsSuccess),
-      withLatestFrom(this.store.select(selectOrganizations)),
-      mergeMap(([action, organizations]) => {
-        // Group applications by organizationId and count non-PENDING ones
-        const countsByOrg: Record<string, number> = {};
-        for (const app of action.applications) {
-          if (app.status !== ApplicationStatus.Pending && app.organizationId) {
-            countsByOrg[app.organizationId] = (countsByOrg[app.organizationId] || 0) + 1;
-          }
+      ofType(OrganizationsActions.loadOrganizationSuccess),
+      withLatestFrom(this.store.select(selectApplications)),
+      mergeMap(([action, applications]) => {
+        const organizationId = action.organization.organizationId;
+        const actualCount = applications.filter(
+          app => app.organizationId === organizationId && app.status !== ApplicationStatus.Pending
+        ).length;
+
+        if (action.organization.applicationCount !== actualCount) {
+          return this.organizationService.updateApplicationCount(organizationId, actualCount).pipe(
+            map(() => OrganizationsActions.updateOrganizationApplicationCount({
+              organizationId,
+              applicationCount: actualCount
+            })),
+            catchError(() => of({ type: '[Organizations] Application Count Update Failed' }))
+          );
         }
 
-        // Find organizations where the count differs from what we have
-        const updates: ReturnType<typeof OrganizationsActions.updateOrganizationApplicationCount>[] = [];
-        for (const org of organizations) {
-          const actualCount = countsByOrg[org.organizationId] || 0;
-          if (org.applicationCount !== actualCount) {
-            updates.push(
-              OrganizationsActions.updateOrganizationApplicationCount({
-                organizationId: org.organizationId,
-                applicationCount: actualCount
-              })
-            );
-          }
-        }
-
-        // Dispatch update actions for each organization that needs updating
-        if (updates.length > 0) {
-          return from(updates);
-        }
-        return of({ type: '[Organizations] Application Counts Verified' });
+        return of({ type: '[Organizations] Application Count Already Synced' });
       })
     )
   );
