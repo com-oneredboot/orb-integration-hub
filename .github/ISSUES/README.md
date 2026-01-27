@@ -23,6 +23,8 @@
 
 | Issue | Team | Title | Resolution Date |
 |-------|------|-------|-----------------|
+| #81 | orb-schema-generator | VTL Generator Creates Query Prefix for Disable Operations Instead of Mutation | 2026-01-27 |
+| #80 | orb-schema-generator | CDK code generation missing Get and ListBy resolvers | 2026-01-27 |
 | #79 | orb-schema-generator | Bug: TypeScript GraphQL Query Generator Not Updated for v0.19.0 Response Format | 2026-01-26 |
 | #19 | orb-infrastructure | Enhancement: Add UUID Utilities to orb-common for All Supported Languages | 2026-01-24 |
 | #77 | orb-schema-generator | VTL Generator includes sort key in partition-only GSI queries | 2026-01-24 |
