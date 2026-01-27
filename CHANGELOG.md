@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Organizations-Applications Integration feature
+  - Application count display on Organizations list with clickable navigation
+  - Applications section on Organization detail page with loading, error, and empty states
+  - Environment selection (Production, Staging, Development, Test, Preview) on Application detail page
+  - Cross-feature store synchronization for application count updates
+  - Property-based tests for all integration behaviors
+  - Spec: `.kiro/specs/organizations-applications-integration/`
 - Applications Management feature with real GraphQL operations
   - ApplicationService for CRUD operations extending ApiService
   - NgRx store (actions, reducer, effects, selectors) for state management

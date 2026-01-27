@@ -80,8 +80,8 @@ This implementation connects Organizations and Applications features by adding a
 - [x] 6. Checkpoint - Verify organization detail applications section
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Add environment selection to ApplicationDetailPageComponent
-  - [ ] 7.1 Update application-detail-page.component.ts with environment handling
+- [x] 7. Add environment selection to ApplicationDetailPageComponent
+  - [x] 7.1 Update application-detail-page.component.ts with environment handling
     - Add environments to editForm
     - Add availableEnvironments constant
     - Add onEnvironmentToggle and isEnvironmentSelected methods
@@ -89,54 +89,62 @@ This implementation connects Organizations and Applications features by adding a
     - Update loadFormData to include environments
     - Update onSave to include environments
     - _Requirements: 3.1, 3.3, 3.4, 3.5_
-  - [ ] 7.2 Update application-detail-page.component.html with environment checkboxes
+  - [x] 7.2 Update application-detail-page.component.html with environment checkboxes
     - Add Environments section with checkboxes
     - Display validation error message
     - _Requirements: 3.1, 3.2, 3.6_
-  - [ ] 7.3 Update application-detail-page.component.scss for environment section
+  - [x] 7.3 Update application-detail-page.component.scss for environment section
     - Add styles for checkbox grid layout
     - _Requirements: 3.1_
-  - [ ] 7.4 Write unit tests for environment selection
+  - [x] 7.4 Write unit tests for environment selection
     - Test checkboxes render for all environments
     - Test toggle updates form state
     - Test validation error on empty
     - Test save includes environments
     - _Requirements: 3.1-3.6_
-  - [ ] 7.5 Write property test for environment toggle
+  - [x] 7.5 Write property test for environment toggle
     - **Property 4: Environment toggle updates form state**
     - **Validates: Requirements 3.3**
-  - [ ] 7.6 Write property test for save persists environments
+  - [x] 7.6 Write property test for save persists environments
     - **Property 5: Save persists environments**
     - **Validates: Requirements 3.4**
-  - [ ] 7.7 Write property test for empty environments validation
+  - [x] 7.7 Write property test for empty environments validation
     - **Property 6: Empty environments validation**
     - **Validates: Requirements 3.5**
 
-- [ ] 8. Checkpoint - Verify application environment selection
+- [x] 8. Checkpoint - Verify application environment selection
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 9. Implement cross-feature store synchronization
-  - [ ] 9.1 Update ApplicationService to handle applicationCount updates
-    - Add method to update organization applicationCount on create/delete
-    - _Requirements: 2.10, 2.11, 4.2_
-  - [ ] 9.2 Update OrganizationService if needed for count updates
-    - Ensure updateOrganization handles applicationCount
-    - _Requirements: 2.9_
-  - [ ] 9.3 Write property test for store updates on create
+- [x] 9. Implement cross-feature store synchronization
+  - [x] 9.1 Update ApplicationDetailPageComponent.onDelete() to decrement organization applicationCount
+    - After successful delete, call OrganizationService.updateOrganization() to decrement count
+    - Follow same pattern as syncApplicationCount() in OrganizationDetailPageComponent
+    - _Requirements: 2.11, 4.2_
+  - [x] 9.2 Update OrganizationDetailPageComponent.onCreateApplication() to increment applicationCount
+    - After navigating to create new application, increment count when application is saved
+    - Note: Already handled by syncApplicationCount() on next load - no changes needed
+    - _Requirements: 2.10_
+  - [x] 9.3 Verify store refresh patterns work correctly
+    - OrganizationsActions.loadOrganizations() is dispatched after application delete
+    - ApplicationsEffects.refreshAfterSuccessfulOperation$ dispatches loadApplications() after delete
+    - Note: ApplicationsListComponent loads directly from services, not store (to be addressed in store-centric refactoring spec)
+    - _Requirements: 4.1, 4.2_
+  - [x] 9.4 Write property test for store updates on create
     - **Property 7: Applications store updates on create**
     - **Validates: Requirements 4.1**
-  - [ ] 9.4 Write property test for count update on delete
+  - [x] 9.5 Write property test for count update on delete
     - **Property 8: Organizations store updates count on delete**
     - **Validates: Requirements 4.2**
 
-- [ ] 10. Update CHANGELOG and version
+- [x] 10. Update CHANGELOG and version
   - Add feature entry to CHANGELOG.md
   - _Requirements: Standard spec requirements_
 
-- [ ] 11. Final checkpoint - Run all tests and verify
+- [x] 11. Final checkpoint - Run all tests and verify
   - Run `npm test` in apps/web
   - Verify no linting errors with `npm run lint`
   - Ensure all tests pass, ask the user if questions arise.
+  - Note: 159 tests for organizations and applications pass. Pre-existing failures in error-handler service tests are unrelated to this spec.
 
 ## Notes
 

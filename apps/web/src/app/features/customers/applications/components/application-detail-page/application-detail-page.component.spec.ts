@@ -189,6 +189,7 @@ describe('ApplicationDetailPageComponent', () => {
       component.editForm.name = 'Valid Name';
       component.editForm.organizationId = 'org-456';
       component.editForm.description = 'Valid description';
+      component.editForm.environments = ['PRODUCTION'];
 
       applicationService.updateApplication.and.returnValue(of(mockApplication));
 
@@ -196,7 +197,114 @@ describe('ApplicationDetailPageComponent', () => {
 
       expect(component.validationErrors.name).toBe('');
       expect(component.validationErrors.organizationId).toBe('');
+      expect(component.validationErrors.environments).toBe('');
       expect(applicationService.updateApplication).toHaveBeenCalled();
+    });
+
+    it('should require at least one environment', () => {
+      component.editForm.name = 'Valid Name';
+      component.editForm.organizationId = 'org-456';
+      component.editForm.environments = [];
+
+      component.onSave();
+
+      expect(component.validationErrors.environments).toBe(
+        'At least one environment must be selected'
+      );
+      expect(applicationService.updateApplication).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Environment Selection', () => {
+    beforeEach(fakeAsync(() => {
+      organizationService.getUserOrganizations.and.returnValue(
+        of({ items: [mockOrganization], nextToken: null })
+      );
+      applicationService.getApplication.and.returnValue(of(mockApplication));
+
+      fixture.detectChanges();
+      tick();
+    }));
+
+    it('should display all available environments', () => {
+      expect(component.availableEnvironments.length).toBe(5);
+      expect(component.availableEnvironments.map(e => e.value)).toEqual([
+        'PRODUCTION', 'STAGING', 'DEVELOPMENT', 'TEST', 'PREVIEW'
+      ]);
+    });
+
+    it('should load environments from application', () => {
+      expect(component.editForm.environments).toEqual(['PRODUCTION', 'STAGING']);
+    });
+
+    it('should toggle environment on when not selected', () => {
+      component.editForm.environments = ['PRODUCTION'];
+
+      component.onEnvironmentToggle('DEVELOPMENT');
+
+      expect(component.editForm.environments).toContain('DEVELOPMENT');
+      expect(component.editForm.environments).toContain('PRODUCTION');
+    });
+
+    it('should toggle environment off when selected', () => {
+      component.editForm.environments = ['PRODUCTION', 'STAGING'];
+
+      component.onEnvironmentToggle('STAGING');
+
+      expect(component.editForm.environments).not.toContain('STAGING');
+      expect(component.editForm.environments).toContain('PRODUCTION');
+    });
+
+    it('should correctly identify selected environments', () => {
+      component.editForm.environments = ['PRODUCTION', 'STAGING'];
+
+      expect(component.isEnvironmentSelected('PRODUCTION')).toBe(true);
+      expect(component.isEnvironmentSelected('STAGING')).toBe(true);
+      expect(component.isEnvironmentSelected('DEVELOPMENT')).toBe(false);
+    });
+
+    it('should clear validation error when environment is selected', () => {
+      component.editForm.environments = [];
+      component.validationErrors.environments = 'At least one environment must be selected';
+
+      component.onEnvironmentToggle('PRODUCTION');
+
+      expect(component.validationErrors.environments).toBe('');
+    });
+
+    it('should include environments in save payload', fakeAsync(() => {
+      component.editForm.name = 'Test App';
+      component.editForm.organizationId = 'org-456';
+      component.editForm.environments = ['PRODUCTION', 'DEVELOPMENT'];
+
+      applicationService.updateApplication.and.returnValue(of(mockApplication));
+
+      component.onSave();
+      tick();
+
+      expect(applicationService.updateApplication).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          environments: ['PRODUCTION', 'DEVELOPMENT']
+        })
+      );
+    }));
+
+    it('should render environment checkboxes in template', () => {
+      fixture.detectChanges();
+
+      const checkboxes = fixture.nativeElement.querySelectorAll(
+        '.app-detail-environments__checkbox'
+      );
+      expect(checkboxes.length).toBe(5);
+    });
+
+    it('should show selected state for checked environments', () => {
+      fixture.detectChanges();
+
+      const selectedItems = fixture.nativeElement.querySelectorAll(
+        '.app-detail-environments__item--selected'
+      );
+      expect(selectedItems.length).toBe(2); // PRODUCTION and STAGING from mockApplication
     });
   });
 
@@ -219,6 +327,7 @@ describe('ApplicationDetailPageComponent', () => {
     it('should change status to ACTIVE when saving PENDING application', fakeAsync(() => {
       component.editForm.name = 'Updated Name';
       component.editForm.organizationId = 'org-456';
+      component.editForm.environments = ['PRODUCTION'];
 
       const updatedApp = { ...mockPendingApplication, status: ApplicationStatus.Active };
       applicationService.updateApplication.and.returnValue(of(updatedApp));
@@ -404,6 +513,7 @@ describe('ApplicationDetailPageComponent', () => {
 
       component.editForm.name = 'Valid Name';
       component.editForm.organizationId = 'org-456';
+      component.editForm.environments = ['PRODUCTION'];
 
       applicationService.updateApplication.and.returnValue(
         throwError(() => new Error('Save failed'))

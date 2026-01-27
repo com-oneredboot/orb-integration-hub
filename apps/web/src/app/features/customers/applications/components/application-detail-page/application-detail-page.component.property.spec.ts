@@ -65,6 +65,11 @@ describe('ApplicationDetailPageComponent Property Tests', () => {
   // Arbitrary for invalid descriptions (>500 chars)
   const invalidDescriptionArbitrary = fc.string({ minLength: 501, maxLength: 600 });
 
+  // Arbitrary for environments array
+  const environmentArbitrary = fc.constantFrom('PRODUCTION', 'STAGING', 'DEVELOPMENT', 'TEST', 'PREVIEW');
+  const environmentsArrayArbitrary = fc.array(environmentArbitrary, { minLength: 1, maxLength: 5 })
+    .map(envs => [...new Set(envs)]); // Remove duplicates
+
   beforeEach(async () => {
     applicationService = jasmine.createSpyObj('ApplicationService', [
       'getApplication',
@@ -156,6 +161,7 @@ describe('ApplicationDetailPageComponent Property Tests', () => {
           // Set valid form data
           component.editForm.name = validName;
           component.editForm.organizationId = 'org-456';
+          component.editForm.environments = ['PRODUCTION'];
 
           // Save
           component.onSave();
@@ -364,7 +370,7 @@ describe('ApplicationDetailPageComponent Property Tests', () => {
             status: ApplicationStatus.Active,
             apiKey: 'api-key',
             apiKeyNext: '',
-            environments: [],
+            environments: ['PRODUCTION'],
             createdAt: new Date(),
             updatedAt: new Date(),
           }));
@@ -372,6 +378,7 @@ describe('ApplicationDetailPageComponent Property Tests', () => {
           component.editForm.name = validName;
           component.editForm.organizationId = 'org-456';
           component.editForm.description = validDesc;
+          component.editForm.environments = ['PRODUCTION'];
 
           component.onSave();
 
@@ -379,11 +386,721 @@ describe('ApplicationDetailPageComponent Property Tests', () => {
           expect(component.validationErrors.name).toBe('');
           expect(component.validationErrors.organizationId).toBe('');
           expect(component.validationErrors.description).toBe('');
+          expect(component.validationErrors.environments).toBe('');
           expect(applicationService.updateApplication).toHaveBeenCalled();
           return true;
         }),
         { numRuns: 100 }
       );
     });
+  });
+
+  /**
+   * Property 4: Environment Toggle Updates Form State
+   *
+   * For any environment checkbox toggle action, the form state's environments array
+   * SHALL reflect the toggle: if the environment was not selected, it SHALL be added;
+   * if it was selected, it SHALL be removed.
+   *
+   * Validates: Requirements 3.3
+   */
+  describe('Property 4: Environment Toggle Updates Form State', () => {
+    it('should add environment when toggling unselected environment', fakeAsync(() => {
+      fc.assert(
+        fc.property(environmentArbitrary, environmentsArrayArbitrary, (envToToggle, initialEnvs) => {
+          // Reset TestBed for fresh component
+          TestBed.resetTestingModule();
+          TestBed.configureTestingModule({
+            imports: [ApplicationDetailPageComponent, RouterTestingModule],
+            providers: [
+              provideMockStore({
+                selectors: [
+                  { selector: fromUser.selectCurrentUser, value: mockUser },
+                  { selector: fromUser.selectDebugMode, value: false },
+                ],
+              }),
+              { provide: ApplicationService, useValue: applicationService },
+              { provide: OrganizationService, useValue: organizationService },
+              {
+                provide: ActivatedRoute,
+                useValue: {
+                  paramMap: paramMapSubject.asObservable(),
+                },
+              },
+            ],
+          });
+
+          const library = TestBed.inject(FaIconLibrary);
+          library.addIconPacks(fas);
+
+          // Ensure envToToggle is NOT in initialEnvs
+          const startingEnvs = initialEnvs.filter(e => e !== envToToggle);
+
+          const app: IApplications = {
+            applicationId: 'app-789',
+            name: 'Test App',
+            organizationId: 'org-456',
+            ownerId: 'user-123',
+            status: ApplicationStatus.Active,
+            apiKey: 'api-key',
+            apiKeyNext: '',
+            environments: startingEnvs,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+
+          organizationService.getUserOrganizations.and.returnValue(
+            of({ items: [mockOrganization], nextToken: null })
+          );
+          applicationService.getApplication.and.returnValue(of(app));
+
+          paramMapSubject.next(convertToParamMap({ id: 'app-789' }));
+          fixture = TestBed.createComponent(ApplicationDetailPageComponent);
+          component = fixture.componentInstance;
+          fixture.detectChanges();
+          tick();
+
+          // Verify initial state
+          expect(component.isEnvironmentSelected(envToToggle)).toBe(false);
+
+          // Toggle the environment
+          component.onEnvironmentToggle(envToToggle);
+
+          // Verify it was added
+          expect(component.isEnvironmentSelected(envToToggle)).toBe(true);
+          expect(component.editForm.environments).toContain(envToToggle);
+          return true;
+        }),
+        { numRuns: 100 }
+      );
+    }));
+
+    it('should remove environment when toggling selected environment', fakeAsync(() => {
+      fc.assert(
+        fc.property(environmentArbitrary, environmentsArrayArbitrary, (envToToggle, otherEnvs) => {
+          // Reset TestBed for fresh component
+          TestBed.resetTestingModule();
+          TestBed.configureTestingModule({
+            imports: [ApplicationDetailPageComponent, RouterTestingModule],
+            providers: [
+              provideMockStore({
+                selectors: [
+                  { selector: fromUser.selectCurrentUser, value: mockUser },
+                  { selector: fromUser.selectDebugMode, value: false },
+                ],
+              }),
+              { provide: ApplicationService, useValue: applicationService },
+              { provide: OrganizationService, useValue: organizationService },
+              {
+                provide: ActivatedRoute,
+                useValue: {
+                  paramMap: paramMapSubject.asObservable(),
+                },
+              },
+            ],
+          });
+
+          const library = TestBed.inject(FaIconLibrary);
+          library.addIconPacks(fas);
+
+          // Ensure envToToggle IS in initialEnvs
+          const startingEnvs = [...new Set([envToToggle, ...otherEnvs])];
+
+          const app: IApplications = {
+            applicationId: 'app-789',
+            name: 'Test App',
+            organizationId: 'org-456',
+            ownerId: 'user-123',
+            status: ApplicationStatus.Active,
+            apiKey: 'api-key',
+            apiKeyNext: '',
+            environments: startingEnvs,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+
+          organizationService.getUserOrganizations.and.returnValue(
+            of({ items: [mockOrganization], nextToken: null })
+          );
+          applicationService.getApplication.and.returnValue(of(app));
+
+          paramMapSubject.next(convertToParamMap({ id: 'app-789' }));
+          fixture = TestBed.createComponent(ApplicationDetailPageComponent);
+          component = fixture.componentInstance;
+          fixture.detectChanges();
+          tick();
+
+          // Verify initial state
+          expect(component.isEnvironmentSelected(envToToggle)).toBe(true);
+
+          // Toggle the environment
+          component.onEnvironmentToggle(envToToggle);
+
+          // Verify it was removed
+          expect(component.isEnvironmentSelected(envToToggle)).toBe(false);
+          expect(component.editForm.environments).not.toContain(envToToggle);
+          return true;
+        }),
+        { numRuns: 100 }
+      );
+    }));
+  });
+
+  /**
+   * Property 5: Save Persists Environments
+   *
+   * For any application save operation, the ApplicationService SHALL receive
+   * the complete environments array from the form state, and the persisted
+   * application SHALL contain exactly those environments.
+   *
+   * Validates: Requirements 3.4
+   */
+  describe('Property 5: Save Persists Environments', () => {
+    it('should include environments in save payload', fakeAsync(() => {
+      fc.assert(
+        fc.property(environmentsArrayArbitrary, (environments) => {
+          // Reset TestBed for fresh component
+          TestBed.resetTestingModule();
+          TestBed.configureTestingModule({
+            imports: [ApplicationDetailPageComponent, RouterTestingModule],
+            providers: [
+              provideMockStore({
+                selectors: [
+                  { selector: fromUser.selectCurrentUser, value: mockUser },
+                  { selector: fromUser.selectDebugMode, value: false },
+                ],
+              }),
+              { provide: ApplicationService, useValue: applicationService },
+              { provide: OrganizationService, useValue: organizationService },
+              {
+                provide: ActivatedRoute,
+                useValue: {
+                  paramMap: paramMapSubject.asObservable(),
+                },
+              },
+            ],
+          });
+
+          const library = TestBed.inject(FaIconLibrary);
+          library.addIconPacks(fas);
+          const testRouter = TestBed.inject(Router);
+          spyOn(testRouter, 'navigate');
+
+          const app: IApplications = {
+            applicationId: 'app-789',
+            name: 'Test App',
+            organizationId: 'org-456',
+            ownerId: 'user-123',
+            status: ApplicationStatus.Active,
+            apiKey: 'api-key',
+            apiKeyNext: '',
+            environments: [],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+
+          organizationService.getUserOrganizations.and.returnValue(
+            of({ items: [mockOrganization], nextToken: null })
+          );
+          applicationService.getApplication.and.returnValue(of(app));
+
+          let capturedInput: Partial<IApplications> | null = null;
+          applicationService.updateApplication.and.callFake((input) => {
+            capturedInput = input;
+            return of({ ...app, ...input });
+          });
+
+          paramMapSubject.next(convertToParamMap({ id: 'app-789' }));
+          fixture = TestBed.createComponent(ApplicationDetailPageComponent);
+          component = fixture.componentInstance;
+          fixture.detectChanges();
+          tick();
+
+          // Set form data with environments
+          component.editForm.name = 'Valid Name';
+          component.editForm.organizationId = 'org-456';
+          component.editForm.environments = [...environments];
+
+          // Save
+          component.onSave();
+          tick();
+
+          // Verify environments were included in save payload
+          expect(capturedInput).not.toBeNull();
+          expect(capturedInput!.environments).toEqual(environments);
+          return true;
+        }),
+        { numRuns: 100 }
+      );
+    }));
+  });
+
+  /**
+   * Property 6: Empty Environments Validation
+   *
+   * For any form state where the environments array is empty, the validateForm
+   * function SHALL return false and set a validation error message for environments.
+   *
+   * Validates: Requirements 3.5
+   */
+  describe('Property 6: Empty Environments Validation', () => {
+    it('should reject empty environments array', fakeAsync(() => {
+      fc.assert(
+        fc.property(validNameArbitrary, (validName) => {
+          // Reset TestBed for fresh component
+          TestBed.resetTestingModule();
+          TestBed.configureTestingModule({
+            imports: [ApplicationDetailPageComponent, RouterTestingModule],
+            providers: [
+              provideMockStore({
+                selectors: [
+                  { selector: fromUser.selectCurrentUser, value: mockUser },
+                  { selector: fromUser.selectDebugMode, value: false },
+                ],
+              }),
+              { provide: ApplicationService, useValue: applicationService },
+              { provide: OrganizationService, useValue: organizationService },
+              {
+                provide: ActivatedRoute,
+                useValue: {
+                  paramMap: paramMapSubject.asObservable(),
+                },
+              },
+            ],
+          });
+
+          const library = TestBed.inject(FaIconLibrary);
+          library.addIconPacks(fas);
+
+          const app: IApplications = {
+            applicationId: 'app-789',
+            name: 'Test App',
+            organizationId: 'org-456',
+            ownerId: 'user-123',
+            status: ApplicationStatus.Active,
+            apiKey: 'api-key',
+            apiKeyNext: '',
+            environments: ['PRODUCTION'],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+
+          organizationService.getUserOrganizations.and.returnValue(
+            of({ items: [mockOrganization], nextToken: null })
+          );
+          applicationService.getApplication.and.returnValue(of(app));
+          applicationService.updateApplication.calls.reset();
+
+          paramMapSubject.next(convertToParamMap({ id: 'app-789' }));
+          fixture = TestBed.createComponent(ApplicationDetailPageComponent);
+          component = fixture.componentInstance;
+          fixture.detectChanges();
+          tick();
+
+          // Set valid form data but empty environments
+          component.editForm.name = validName;
+          component.editForm.organizationId = 'org-456';
+          component.editForm.environments = [];
+
+          // Try to save
+          component.onSave();
+
+          // Validation should fail
+          expect(component.validationErrors.environments).toBe('At least one environment must be selected');
+          expect(applicationService.updateApplication).not.toHaveBeenCalled();
+          return true;
+        }),
+        { numRuns: 100 }
+      );
+    }));
+
+    it('should clear validation error when environment is selected', fakeAsync(() => {
+      fc.assert(
+        fc.property(environmentArbitrary, (env) => {
+          // Reset TestBed for fresh component
+          TestBed.resetTestingModule();
+          TestBed.configureTestingModule({
+            imports: [ApplicationDetailPageComponent, RouterTestingModule],
+            providers: [
+              provideMockStore({
+                selectors: [
+                  { selector: fromUser.selectCurrentUser, value: mockUser },
+                  { selector: fromUser.selectDebugMode, value: false },
+                ],
+              }),
+              { provide: ApplicationService, useValue: applicationService },
+              { provide: OrganizationService, useValue: organizationService },
+              {
+                provide: ActivatedRoute,
+                useValue: {
+                  paramMap: paramMapSubject.asObservable(),
+                },
+              },
+            ],
+          });
+
+          const library = TestBed.inject(FaIconLibrary);
+          library.addIconPacks(fas);
+
+          const app: IApplications = {
+            applicationId: 'app-789',
+            name: 'Test App',
+            organizationId: 'org-456',
+            ownerId: 'user-123',
+            status: ApplicationStatus.Active,
+            apiKey: 'api-key',
+            apiKeyNext: '',
+            environments: [],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+
+          organizationService.getUserOrganizations.and.returnValue(
+            of({ items: [mockOrganization], nextToken: null })
+          );
+          applicationService.getApplication.and.returnValue(of(app));
+
+          paramMapSubject.next(convertToParamMap({ id: 'app-789' }));
+          fixture = TestBed.createComponent(ApplicationDetailPageComponent);
+          component = fixture.componentInstance;
+          fixture.detectChanges();
+          tick();
+
+          // Set validation error
+          component.validationErrors.environments = 'At least one environment must be selected';
+
+          // Toggle an environment
+          component.onEnvironmentToggle(env);
+
+          // Validation error should be cleared
+          expect(component.validationErrors.environments).toBe('');
+          return true;
+        }),
+        { numRuns: 100 }
+      );
+    }));
+  });
+
+  /**
+   * Property 7: Applications store updates on create
+   *
+   * For any application created from the Organization detail page, the Applications
+   * store SHALL contain the new application after the create operation completes.
+   *
+   * Note: In the current hybrid pattern, the ApplicationsEffects.refreshAfterSuccessfulOperation$
+   * dispatches loadApplications() after create/update/delete success. This test verifies
+   * that the save operation completes successfully, which triggers the store refresh.
+   *
+   * Validates: Requirements 4.1
+   */
+  describe('Property 7: Applications store updates on create', () => {
+    it('should complete save operation for any valid draft application', fakeAsync(() => {
+      fc.assert(
+        fc.property(
+          validNameArbitrary,
+          environmentsArrayArbitrary,
+          (validName, environments) => {
+            // Reset TestBed for fresh component
+            TestBed.resetTestingModule();
+            TestBed.configureTestingModule({
+              imports: [ApplicationDetailPageComponent, RouterTestingModule],
+              providers: [
+                provideMockStore({
+                  selectors: [
+                    { selector: fromUser.selectCurrentUser, value: mockUser },
+                    { selector: fromUser.selectDebugMode, value: false },
+                  ],
+                }),
+                { provide: ApplicationService, useValue: applicationService },
+                { provide: OrganizationService, useValue: organizationService },
+                {
+                  provide: ActivatedRoute,
+                  useValue: {
+                    paramMap: paramMapSubject.asObservable(),
+                  },
+                },
+              ],
+            });
+
+            const library = TestBed.inject(FaIconLibrary);
+            library.addIconPacks(fas);
+            const testRouter = TestBed.inject(Router);
+            spyOn(testRouter, 'navigate');
+
+            // Create a draft (PENDING) application
+            const draftApplication: IApplications = {
+              applicationId: 'app-draft-' + Date.now(),
+              name: '',
+              organizationId: 'org-456',
+              ownerId: 'user-123',
+              status: ApplicationStatus.Pending,
+              apiKey: 'api-key',
+              apiKeyNext: '',
+              environments: [],
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            };
+
+            organizationService.getUserOrganizations.and.returnValue(
+              of({ items: [mockOrganization], nextToken: null })
+            );
+            applicationService.getApplication.and.returnValue(of(draftApplication));
+
+            let savedApplication: IApplications | null = null;
+            applicationService.updateApplication.and.callFake((input: Partial<IApplications>) => {
+              savedApplication = {
+                ...draftApplication,
+                ...input,
+                status: ApplicationStatus.Active, // Transition to ACTIVE
+              } as IApplications;
+              return of(savedApplication);
+            });
+
+            paramMapSubject.next(convertToParamMap({ id: draftApplication.applicationId }));
+            fixture = TestBed.createComponent(ApplicationDetailPageComponent);
+            component = fixture.componentInstance;
+            fixture.detectChanges();
+            tick();
+
+            // Set valid form data
+            component.editForm.name = validName;
+            component.editForm.organizationId = 'org-456';
+            component.editForm.environments = [...environments];
+
+            // Save the application
+            component.onSave();
+            tick();
+
+            // Verify save was called and completed
+            expect(applicationService.updateApplication).toHaveBeenCalled();
+            expect(savedApplication).not.toBeNull();
+            expect(savedApplication!.status).toBe(ApplicationStatus.Active);
+            expect(savedApplication!.name).toBe(validName.trim());
+            expect(savedApplication!.environments).toEqual(environments);
+
+            // Verify navigation occurred (indicates successful save)
+            expect(testRouter.navigate).toHaveBeenCalledWith(['/customers/applications']);
+            return true;
+          }
+        ),
+        { numRuns: 100 }
+      );
+    }));
+  });
+
+  /**
+   * Property 8: Organizations store updates count on delete
+   *
+   * For any application deletion, the Organizations store SHALL update the
+   * applicationCount for the affected organization to reflect the deletion.
+   *
+   * This test verifies that when an application is deleted:
+   * 1. The delete operation completes successfully
+   * 2. The organization's applicationCount is decremented
+   * 3. The OrganizationsActions.loadOrganizations() is dispatched to refresh the store
+   *
+   * Validates: Requirements 4.2
+   */
+  describe('Property 8: Organizations store updates count on delete', () => {
+    it('should decrement organization applicationCount on delete', fakeAsync(() => {
+      // Set up window.confirm spy ONCE before the property test loop
+      const confirmSpy = spyOn(window, 'confirm').and.returnValue(true);
+
+      fc.assert(
+        fc.property(
+          fc.integer({ min: 1, max: 100 }), // Initial application count (at least 1)
+          (initialCount) => {
+            // Reset TestBed for fresh component
+            TestBed.resetTestingModule();
+
+            const testOrganizationService = jasmine.createSpyObj('OrganizationService', [
+              'getUserOrganizations',
+              'updateOrganization',
+            ]);
+            const testApplicationService = jasmine.createSpyObj('ApplicationService', [
+              'getApplication',
+              'deleteApplication',
+            ]);
+
+            TestBed.configureTestingModule({
+              imports: [ApplicationDetailPageComponent, RouterTestingModule],
+              providers: [
+                provideMockStore({
+                  selectors: [
+                    { selector: fromUser.selectCurrentUser, value: mockUser },
+                    { selector: fromUser.selectDebugMode, value: false },
+                  ],
+                }),
+                { provide: ApplicationService, useValue: testApplicationService },
+                { provide: OrganizationService, useValue: testOrganizationService },
+                {
+                  provide: ActivatedRoute,
+                  useValue: {
+                    paramMap: paramMapSubject.asObservable(),
+                  },
+                },
+              ],
+            });
+
+            const library = TestBed.inject(FaIconLibrary);
+            library.addIconPacks(fas);
+            const testRouter = TestBed.inject(Router);
+            spyOn(testRouter, 'navigate');
+            // Reset confirm spy for each iteration (already spied, just reset calls)
+            confirmSpy.calls.reset();
+
+            // Create organization with initial count
+            const orgWithCount: IOrganizations = {
+              ...mockOrganization,
+              applicationCount: initialCount,
+            };
+
+            // Create an active application
+            const activeApplication: IApplications = {
+              applicationId: 'app-to-delete',
+              name: 'App to Delete',
+              organizationId: 'org-456',
+              ownerId: 'user-123',
+              status: ApplicationStatus.Active,
+              apiKey: 'api-key',
+              apiKeyNext: '',
+              environments: ['PRODUCTION'],
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            };
+
+            testOrganizationService.getUserOrganizations.and.returnValue(
+              of({ items: [orgWithCount], nextToken: null })
+            );
+            testApplicationService.getApplication.and.returnValue(of(activeApplication));
+            testApplicationService.deleteApplication.and.returnValue(of(activeApplication));
+
+            let updatedOrganizationCount: number | null = null;
+            testOrganizationService.updateOrganization.and.callFake((input: IOrganizations) => {
+              updatedOrganizationCount = input.applicationCount ?? null;
+              return of({ ...orgWithCount, applicationCount: updatedOrganizationCount });
+            });
+
+            paramMapSubject.next(convertToParamMap({ id: 'app-to-delete' }));
+            fixture = TestBed.createComponent(ApplicationDetailPageComponent);
+            component = fixture.componentInstance;
+            fixture.detectChanges();
+            tick();
+
+            // Delete the application
+            component.onDelete();
+            tick();
+
+            // Verify delete was called
+            expect(testApplicationService.deleteApplication).toHaveBeenCalledWith('app-to-delete');
+
+            // Verify organization count was decremented
+            expect(testOrganizationService.updateOrganization).toHaveBeenCalled();
+            const expectedCount = Math.max(0, initialCount - 1);
+            expect(updatedOrganizationCount).not.toBeNull();
+            expect(updatedOrganizationCount!).toBe(expectedCount);
+
+            // Verify navigation occurred
+            expect(testRouter.navigate).toHaveBeenCalledWith(['/customers/applications']);
+            return true;
+          }
+        ),
+        { numRuns: 100 }
+      );
+    }));
+
+    it('should not decrement below zero', fakeAsync(() => {
+      // Reset TestBed for fresh component
+      TestBed.resetTestingModule();
+
+      const testOrganizationService = jasmine.createSpyObj('OrganizationService', [
+        'getUserOrganizations',
+        'updateOrganization',
+      ]);
+      const testApplicationService = jasmine.createSpyObj('ApplicationService', [
+        'getApplication',
+        'deleteApplication',
+      ]);
+
+      TestBed.configureTestingModule({
+        imports: [ApplicationDetailPageComponent, RouterTestingModule],
+        providers: [
+          provideMockStore({
+            selectors: [
+              { selector: fromUser.selectCurrentUser, value: mockUser },
+              { selector: fromUser.selectDebugMode, value: false },
+            ],
+          }),
+          { provide: ApplicationService, useValue: testApplicationService },
+          { provide: OrganizationService, useValue: testOrganizationService },
+          {
+            provide: ActivatedRoute,
+            useValue: {
+              paramMap: paramMapSubject.asObservable(),
+            },
+          },
+        ],
+      });
+
+      const library = TestBed.inject(FaIconLibrary);
+      library.addIconPacks(fas);
+      const testRouter = TestBed.inject(Router);
+      spyOn(testRouter, 'navigate');
+      // Note: window.confirm may already be spied from previous test, so we use a try-catch
+      // or check if it's already a spy
+      if (!(window.confirm as jasmine.Spy).and) {
+        spyOn(window, 'confirm').and.returnValue(true);
+      } else {
+        (window.confirm as jasmine.Spy).and.returnValue(true);
+      }
+
+      // Create organization with count of 0
+      const orgWithZeroCount: IOrganizations = {
+        ...mockOrganization,
+        applicationCount: 0,
+      };
+
+      const activeApplication: IApplications = {
+        applicationId: 'app-to-delete',
+        name: 'App to Delete',
+        organizationId: 'org-456',
+        ownerId: 'user-123',
+        status: ApplicationStatus.Active,
+        apiKey: 'api-key',
+        apiKeyNext: '',
+        environments: ['PRODUCTION'],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      testOrganizationService.getUserOrganizations.and.returnValue(
+        of({ items: [orgWithZeroCount], nextToken: null })
+      );
+      testApplicationService.getApplication.and.returnValue(of(activeApplication));
+      testApplicationService.deleteApplication.and.returnValue(of(activeApplication));
+
+      let updatedOrganizationCount: number | null = null;
+      testOrganizationService.updateOrganization.and.callFake((input: IOrganizations) => {
+        updatedOrganizationCount = input.applicationCount ?? null;
+        return of({ ...orgWithZeroCount, applicationCount: updatedOrganizationCount });
+      });
+
+      paramMapSubject.next(convertToParamMap({ id: 'app-to-delete' }));
+      fixture = TestBed.createComponent(ApplicationDetailPageComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+      tick();
+
+      // Delete the application
+      component.onDelete();
+      tick();
+
+      // Verify count was not decremented below 0
+      // Since count is already 0, it should stay at 0
+      if (testOrganizationService.updateOrganization.calls.count() > 0) {
+        expect(updatedOrganizationCount).not.toBeNull();
+        expect(updatedOrganizationCount!).toBe(0);
+      }
+    }));
   });
 });

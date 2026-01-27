@@ -207,6 +207,66 @@
     margin-top: v.$spacing-xs;
     text-align: right;
   }
+
+  &__description {
+    font-size: v.$font-size-sm;
+    color: v.$text-secondary;
+    margin: 0 0 v.$spacing-sm;
+  }
+}
+
+// Environments checkbox grid
+.app-detail-environments {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: v.$spacing-sm;
+
+  &__item {
+    display: flex;
+    align-items: flex-start;
+    gap: v.$spacing-sm;
+    padding: v.$spacing-sm v.$spacing-md;
+    border: 2px solid v.$gray-300;
+    border-radius: v.$border-radius;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+
+    &:hover {
+      border-color: v.$primary-color;
+      background-color: rgba(v.$primary-color, 0.05);
+    }
+
+    &--selected {
+      border-color: v.$primary-color;
+      background-color: rgba(v.$primary-color, 0.1);
+    }
+  }
+
+  &__checkbox {
+    margin-top: 2px;
+    width: 18px;
+    height: 18px;
+    accent-color: v.$primary-color;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__label {
+    font-weight: v.$font-weight-medium;
+    color: v.$text-primary;
+    font-size: v.$font-size-base;
+  }
+
+  &__description {
+    font-size: v.$font-size-xs;
+    color: v.$text-secondary;
+  }
 }
 
 // Metadata section

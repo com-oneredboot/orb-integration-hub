@@ -24,6 +24,7 @@ import { StatusBadgeComponent } from '../../../../../shared/components/ui/status
 import { DebugPanelComponent, DebugContext } from '../../../../../shared/components/debug/debug-panel.component';
 import { DebugLogEntry } from '../../../../../core/services/debug-log.service';
 import * as fromUser from '../../../../user/store/user.selectors';
+import { OrganizationsActions } from '../../../../customers/organizations/store/organizations.actions';
 
 @Component({
   selector: 'app-application-detail-page',
@@ -59,15 +60,26 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
   editForm = {
     name: '',
     description: '',
-    organizationId: ''
+    organizationId: '',
+    environments: [] as string[]
   };
 
   // Validation
   validationErrors = {
     name: '',
     description: '',
-    organizationId: ''
+    organizationId: '',
+    environments: ''
   };
+
+  // Available environments for selection
+  readonly availableEnvironments = [
+    { value: 'PRODUCTION', label: 'Production', description: 'Live production environment' },
+    { value: 'STAGING', label: 'Staging', description: 'Pre-production testing' },
+    { value: 'DEVELOPMENT', label: 'Development', description: 'Development and debugging' },
+    { value: 'TEST', label: 'Test', description: 'Automated testing' },
+    { value: 'PREVIEW', label: 'Preview', description: 'Feature previews and demos' }
+  ];
 
   // Save state
   isSaving = false;
@@ -251,7 +263,8 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
       this.editForm = {
         name: this.application.name || '',
         description: '',
-        organizationId: this.application.organizationId || ''
+        organizationId: this.application.organizationId || '',
+        environments: [...(this.application.environments || [])]
       };
 
       // Auto-select if only one organization and none selected
@@ -261,11 +274,29 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
     }
   }
 
+  onEnvironmentToggle(env: string): void {
+    const index = this.editForm.environments.indexOf(env);
+    if (index === -1) {
+      this.editForm.environments.push(env);
+    } else {
+      this.editForm.environments.splice(index, 1);
+    }
+    // Clear validation error when user makes a selection
+    if (this.editForm.environments.length > 0) {
+      this.validationErrors.environments = '';
+    }
+  }
+
+  isEnvironmentSelected(env: string): boolean {
+    return this.editForm.environments.includes(env);
+  }
+
   private clearValidationErrors(): void {
     this.validationErrors = {
       name: '',
       description: '',
-      organizationId: ''
+      organizationId: '',
+      environments: ''
     };
   }
 
@@ -297,6 +328,12 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
       isValid = false;
     }
 
+    // Environment validation - at least one required
+    if (this.editForm.environments.length === 0) {
+      this.validationErrors.environments = 'At least one environment must be selected';
+      isValid = false;
+    }
+
     return isValid;
   }
 
@@ -312,7 +349,8 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
       applicationId: this.application.applicationId,
       name: this.editForm.name.trim(),
       organizationId: this.editForm.organizationId,
-      status: this.isDraft ? ApplicationStatus.Active : this.application.status
+      status: this.isDraft ? ApplicationStatus.Active : this.application.status,
+      environments: this.editForm.environments
     };
 
     console.debug('[ApplicationDetail] Saving application:', updateData);
@@ -361,12 +399,18 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const organizationId = this.application.organizationId;
     this.isSaving = true;
     this.applicationService.deleteApplication(this.application.applicationId).pipe(
       takeUntil(this.destroy$)
     ).subscribe({
       next: () => {
         console.debug('[ApplicationDetail] Application deleted');
+        // Decrement organization's applicationCount
+        // _Requirements: 2.11, 4.2_
+        this.decrementOrganizationApplicationCount(organizationId);
+        // Refresh organizations store
+        this.store.dispatch(OrganizationsActions.loadOrganizations());
         this.router.navigate(['/customers/applications']);
       },
       error: (error) => {
@@ -375,6 +419,39 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
         this.isSaving = false;
       }
     });
+  }
+
+  /**
+   * Decrement the organization's applicationCount after deleting an application
+   * _Requirements: 2.11, 4.2_
+   */
+  private decrementOrganizationApplicationCount(organizationId: string): void {
+    if (!organizationId) return;
+
+    // Find the organization from our loaded list
+    const organization = this.organizations.find(org => org.organizationId === organizationId);
+    if (!organization) {
+      console.debug('[ApplicationDetail] Organization not found for count update:', organizationId);
+      return;
+    }
+
+    const currentCount = organization.applicationCount ?? 0;
+    const newCount = Math.max(0, currentCount - 1);
+
+    if (currentCount !== newCount) {
+      console.debug('[ApplicationDetail] Decrementing application count:', currentCount, '->', newCount);
+      this.organizationService.updateOrganization({
+        ...organization,
+        applicationCount: newCount
+      }).pipe(take(1)).subscribe({
+        next: () => {
+          console.debug('[ApplicationDetail] Organization applicationCount updated');
+        },
+        error: (error) => {
+          console.error('[ApplicationDetail] Error updating organization applicationCount:', error);
+        }
+      });
+    }
   }
 
   formatDate(dateValue: string | Date | number | undefined): string {

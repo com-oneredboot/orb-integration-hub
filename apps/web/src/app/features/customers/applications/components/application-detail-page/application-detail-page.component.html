@@ -147,6 +147,39 @@
             </div>
           </div>
 
+          <!-- Environments Field -->
+          <div class="app-detail-field">
+            <span class="app-detail-field__label" id="environments-label">
+              Environments <span class="app-detail-field__required">*</span>
+            </span>
+            <p class="app-detail-field__description">
+              Select the deployment environments for this application.
+            </p>
+            <div class="app-detail-environments"
+                 role="group"
+                 aria-labelledby="environments-label"
+                 [attr.aria-describedby]="validationErrors.environments ? 'env-error' : null">
+              <label
+                *ngFor="let env of availableEnvironments"
+                class="app-detail-environments__item"
+                [class.app-detail-environments__item--selected]="isEnvironmentSelected(env.value)">
+                <input
+                  type="checkbox"
+                  class="app-detail-environments__checkbox"
+                  [checked]="isEnvironmentSelected(env.value)"
+                  (change)="onEnvironmentToggle(env.value)"
+                  [attr.aria-label]="env.label + ': ' + env.description">
+                <span class="app-detail-environments__content">
+                  <span class="app-detail-environments__label">{{ env.label }}</span>
+                  <span class="app-detail-environments__description">{{ env.description }}</span>
+                </span>
+              </label>
+            </div>
+            <div class="app-detail-field__error" id="env-error" *ngIf="validationErrors.environments">
+              {{ validationErrors.environments }}
+            </div>
+          </div>
+
           <!-- Metadata (read-only, shown for existing apps) -->
           <div class="app-detail-metadata" *ngIf="!isDraft">
             <div class="app-detail-metadata__item">
