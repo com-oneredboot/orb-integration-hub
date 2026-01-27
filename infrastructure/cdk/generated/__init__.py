@@ -4,10 +4,14 @@ from .tables.ownership_transfer_requests_table import OwnershipTransferRequestsT
 from .tables.organizations_table import OrganizationsTable
 from .tables.notifications_table import NotificationsTable
 from .tables.privacy_requests_table import PrivacyRequestsTable
+from .tables.application_groups_table import ApplicationGroupsTable
 from .tables.application_users_table import ApplicationUsersTable
 from .tables.sms_rate_limit_table import SmsRateLimitTable
+from .tables.application_group_roles_table import ApplicationGroupRolesTable
 from .tables.organization_users_table import OrganizationUsersTable
+from .tables.application_user_roles_table import ApplicationUserRolesTable
 from .tables.application_roles_table import ApplicationRolesTable
+from .tables.application_group_users_table import ApplicationGroupUsersTable
 from .tables.roles_table import RolesTable
 from .tables.applications_table import ApplicationsTable
 from .tables.users_table import UsersTable
@@ -18,10 +22,14 @@ __all__ = [
     "OrganizationsTable",
     "NotificationsTable",
     "PrivacyRequestsTable",
+    "ApplicationGroupsTable",
     "ApplicationUsersTable",
     "SmsRateLimitTable",
+    "ApplicationGroupRolesTable",
     "OrganizationUsersTable",
+    "ApplicationUserRolesTable",
     "ApplicationRolesTable",
+    "ApplicationGroupUsersTable",
     "RolesTable",
     "ApplicationsTable",
     "UsersTable",

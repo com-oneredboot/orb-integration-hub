@@ -72,6 +72,17 @@ type PrivacyRequests {
   updatedAt: AWSTimestamp!
 }
 
+type ApplicationGroups {
+  applicationGroupId: String!
+  applicationId: String!
+  name: String!
+  description: String
+  status: ApplicationGroupStatus!
+  memberCount: Int
+  createdAt: AWSTimestamp!
+  updatedAt: AWSTimestamp!
+}
+
 type ApplicationUsers {
   applicationUserId: String!
   userId: String!
@@ -88,6 +99,19 @@ type SmsRateLimit {
   ttl: Float!
 }
 
+type ApplicationGroupRoles {
+  applicationGroupRoleId: String!
+  applicationGroupId: String!
+  applicationId: String!
+  environment: Environment!
+  roleId: String!
+  roleName: String!
+  permissions: [String]!
+  status: ApplicationGroupRoleStatus!
+  createdAt: AWSTimestamp!
+  updatedAt: AWSTimestamp!
+}
+
 type OrganizationUsers {
   userId: String!
   organizationId: String!
@@ -96,6 +120,19 @@ type OrganizationUsers {
   invitedBy: String
   invitedAt: AWSTimestamp
   joinedAt: AWSTimestamp
+  createdAt: AWSTimestamp!
+  updatedAt: AWSTimestamp!
+}
+
+type ApplicationUserRoles {
+  applicationUserRoleId: String!
+  userId: String!
+  applicationId: String!
+  environment: Environment!
+  roleId: String!
+  roleName: String!
+  permissions: [String]!
+  status: ApplicationUserRoleStatus!
   createdAt: AWSTimestamp!
   updatedAt: AWSTimestamp!
 }
@@ -109,6 +146,16 @@ type ApplicationRoles {
   roleType: RoleType!
   permissions: [String]!
   status: RoleStatus!
+  createdAt: AWSTimestamp!
+  updatedAt: AWSTimestamp!
+}
+
+type ApplicationGroupUsers {
+  applicationGroupUserId: String!
+  applicationGroupId: String!
+  userId: String!
+  applicationId: String!
+  status: ApplicationGroupUserStatus!
   createdAt: AWSTimestamp!
   updatedAt: AWSTimestamp!
 }
@@ -399,6 +446,49 @@ type PrivacyRequestsListResponse {
   nextToken: String
 }
 
+type ApplicationGroupsCreateResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationGroups
+}
+
+type ApplicationGroupsUpdateResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationGroups
+}
+
+type ApplicationGroupsDeleteResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationGroups
+}
+
+type ApplicationGroupsDisableResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationGroups
+}
+
+type ApplicationGroupsGetResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationGroups
+}
+
+type ApplicationGroupsListResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  items: [ApplicationGroups!]
+  nextToken: String
+}
+
 type ApplicationUsersCreateResponse {
   code: Int!
   success: Boolean!
@@ -485,6 +575,49 @@ type SmsRateLimitListResponse {
   nextToken: String
 }
 
+type ApplicationGroupRolesCreateResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationGroupRoles
+}
+
+type ApplicationGroupRolesUpdateResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationGroupRoles
+}
+
+type ApplicationGroupRolesDeleteResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationGroupRoles
+}
+
+type ApplicationGroupRolesDisableResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationGroupRoles
+}
+
+type ApplicationGroupRolesGetResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationGroupRoles
+}
+
+type ApplicationGroupRolesListResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  items: [ApplicationGroupRoles!]
+  nextToken: String
+}
+
 type OrganizationUsersCreateResponse {
   code: Int!
   success: Boolean!
@@ -528,6 +661,49 @@ type OrganizationUsersListResponse {
   nextToken: String
 }
 
+type ApplicationUserRolesCreateResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationUserRoles
+}
+
+type ApplicationUserRolesUpdateResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationUserRoles
+}
+
+type ApplicationUserRolesDeleteResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationUserRoles
+}
+
+type ApplicationUserRolesDisableResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationUserRoles
+}
+
+type ApplicationUserRolesGetResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationUserRoles
+}
+
+type ApplicationUserRolesListResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  items: [ApplicationUserRoles!]
+  nextToken: String
+}
+
 type ApplicationRolesCreateResponse {
   code: Int!
   success: Boolean!
@@ -568,6 +744,49 @@ type ApplicationRolesListResponse {
   success: Boolean!
   message: String
   items: [ApplicationRoles!]
+  nextToken: String
+}
+
+type ApplicationGroupUsersCreateResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationGroupUsers
+}
+
+type ApplicationGroupUsersUpdateResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationGroupUsers
+}
+
+type ApplicationGroupUsersDeleteResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationGroupUsers
+}
+
+type ApplicationGroupUsersDisableResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationGroupUsers
+}
+
+type ApplicationGroupUsersGetResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationGroupUsers
+}
+
+type ApplicationGroupUsersListResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  items: [ApplicationGroupUsers!]
   nextToken: String
 }
 
@@ -1099,6 +1318,68 @@ input PrivacyRequestsListByStatusAndDeadlineInput {
   nextToken: String
 }
 
+input ApplicationGroupsCreateInput {
+  applicationGroupId: String!
+  applicationId: String!
+  name: String!
+  description: String
+  status: ApplicationGroupStatus!
+  memberCount: Int
+  createdAt: AWSTimestamp!
+  updatedAt: AWSTimestamp!
+}
+
+input ApplicationGroupsUpdateInput {
+  applicationGroupId: String!
+  applicationId: String
+  name: String
+  description: String
+  status: ApplicationGroupStatus
+  memberCount: Int
+  createdAt: AWSTimestamp
+  updatedAt: AWSTimestamp
+}
+
+input ApplicationGroupsDeleteInput {
+  applicationGroupId: String!
+}
+
+input ApplicationGroupsDisableInput {
+  applicationGroupId: String!
+}
+
+input ApplicationGroupsGetInput {
+  applicationGroupId: String!
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationGroupsListByApplicationGroupIdInput {
+  applicationGroupId: String!
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationGroupsListByApplicationIdInput {
+  applicationId: String!
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationGroupsListByApplicationIdAndNameInput {
+  applicationId: String!
+  name: String
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationGroupsListByApplicationIdAndStatusInput {
+  applicationId: String!
+  status: String
+  limit: Int
+  nextToken: String
+}
+
 input ApplicationUsersCreateInput {
   applicationUserId: String!
   userId: String!
@@ -1197,6 +1478,85 @@ input SmsRateLimitListByPhoneNumberInput {
   nextToken: String
 }
 
+input ApplicationGroupRolesCreateInput {
+  applicationGroupRoleId: String!
+  applicationGroupId: String!
+  applicationId: String!
+  environment: Environment!
+  roleId: String!
+  roleName: String!
+  permissions: [String]!
+  status: ApplicationGroupRoleStatus!
+  createdAt: AWSTimestamp!
+  updatedAt: AWSTimestamp!
+}
+
+input ApplicationGroupRolesUpdateInput {
+  applicationGroupRoleId: String!
+  applicationGroupId: String
+  applicationId: String
+  environment: Environment
+  roleId: String
+  roleName: String
+  permissions: [String]
+  status: ApplicationGroupRoleStatus
+  createdAt: AWSTimestamp
+  updatedAt: AWSTimestamp
+}
+
+input ApplicationGroupRolesDeleteInput {
+  applicationGroupRoleId: String!
+}
+
+input ApplicationGroupRolesDisableInput {
+  applicationGroupRoleId: String!
+}
+
+input ApplicationGroupRolesGetInput {
+  applicationGroupRoleId: String!
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationGroupRolesListByApplicationGroupRoleIdInput {
+  applicationGroupRoleId: String!
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationGroupRolesListByApplicationGroupIdInput {
+  applicationGroupId: String!
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationGroupRolesListByApplicationGroupIdAndEnvironmentInput {
+  applicationGroupId: String!
+  environment: String
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationGroupRolesListByApplicationIdInput {
+  applicationId: String!
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationGroupRolesListByApplicationIdAndEnvironmentInput {
+  applicationId: String!
+  environment: String
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationGroupRolesListByApplicationGroupIdAndStatusInput {
+  applicationGroupId: String!
+  status: String
+  limit: Int
+  nextToken: String
+}
+
 input OrganizationUsersCreateInput {
   userId: String!
   organizationId: String!
@@ -1267,6 +1627,92 @@ input OrganizationUsersListByOrganizationIdAndRoleInput {
 input OrganizationUsersListByUserIdAndRoleInput {
   userId: String!
   role: String
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationUserRolesCreateInput {
+  applicationUserRoleId: String!
+  userId: String!
+  applicationId: String!
+  environment: Environment!
+  roleId: String!
+  roleName: String!
+  permissions: [String]!
+  status: ApplicationUserRoleStatus!
+  createdAt: AWSTimestamp!
+  updatedAt: AWSTimestamp!
+}
+
+input ApplicationUserRolesUpdateInput {
+  applicationUserRoleId: String!
+  userId: String
+  applicationId: String
+  environment: Environment
+  roleId: String
+  roleName: String
+  permissions: [String]
+  status: ApplicationUserRoleStatus
+  createdAt: AWSTimestamp
+  updatedAt: AWSTimestamp
+}
+
+input ApplicationUserRolesDeleteInput {
+  applicationUserRoleId: String!
+}
+
+input ApplicationUserRolesDisableInput {
+  applicationUserRoleId: String!
+}
+
+input ApplicationUserRolesGetInput {
+  applicationUserRoleId: String!
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationUserRolesListByApplicationUserRoleIdInput {
+  applicationUserRoleId: String!
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationUserRolesListByUserIdInput {
+  userId: String!
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationUserRolesListByUserIdAndEnvironmentInput {
+  userId: String!
+  environment: String
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationUserRolesListByApplicationIdInput {
+  applicationId: String!
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationUserRolesListByApplicationIdAndEnvironmentInput {
+  applicationId: String!
+  environment: String
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationUserRolesListByUserIdAndApplicationIdInput {
+  userId: String!
+  applicationId: String
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationUserRolesListByUserIdAndStatusInput {
+  userId: String!
+  status: String
   limit: Int
   nextToken: String
 }
@@ -1352,6 +1798,79 @@ input ApplicationRolesListByRoleIdInput {
 input ApplicationRolesListByRoleIdAndRoleTypeInput {
   roleId: String!
   roleType: String
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationGroupUsersCreateInput {
+  applicationGroupUserId: String!
+  applicationGroupId: String!
+  userId: String!
+  applicationId: String!
+  status: ApplicationGroupUserStatus!
+  createdAt: AWSTimestamp!
+  updatedAt: AWSTimestamp!
+}
+
+input ApplicationGroupUsersUpdateInput {
+  applicationGroupUserId: String!
+  applicationGroupId: String
+  userId: String
+  applicationId: String
+  status: ApplicationGroupUserStatus
+  createdAt: AWSTimestamp
+  updatedAt: AWSTimestamp
+}
+
+input ApplicationGroupUsersDeleteInput {
+  applicationGroupUserId: String!
+}
+
+input ApplicationGroupUsersDisableInput {
+  applicationGroupUserId: String!
+}
+
+input ApplicationGroupUsersGetInput {
+  applicationGroupUserId: String!
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationGroupUsersListByApplicationGroupUserIdInput {
+  applicationGroupUserId: String!
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationGroupUsersListByApplicationGroupIdInput {
+  applicationGroupId: String!
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationGroupUsersListByApplicationGroupIdAndUserIdInput {
+  applicationGroupId: String!
+  userId: String
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationGroupUsersListByUserIdInput {
+  userId: String!
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationGroupUsersListByUserIdAndApplicationGroupIdInput {
+  userId: String!
+  applicationGroupId: String
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationGroupUsersListByApplicationGroupIdAndStatusInput {
+  applicationGroupId: String!
+  status: String
   limit: Int
   nextToken: String
 }
@@ -1577,6 +2096,11 @@ type Query {
   PrivacyRequestsListByOrganizationIdAndReceivedAt(input: PrivacyRequestsListByOrganizationIdAndReceivedAtInput!): PrivacyRequestsListResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])
   PrivacyRequestsListByStatus(input: PrivacyRequestsListByStatusInput!): PrivacyRequestsListResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])
   PrivacyRequestsListByStatusAndDeadline(input: PrivacyRequestsListByStatusAndDeadlineInput!): PrivacyRequestsListResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])
+  ApplicationGroupsGet(input: ApplicationGroupsGetInput!): ApplicationGroupsGetResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupsListByApplicationGroupId(input: ApplicationGroupsListByApplicationGroupIdInput!): ApplicationGroupsListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupsListByApplicationId(input: ApplicationGroupsListByApplicationIdInput!): ApplicationGroupsListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupsListByApplicationIdAndName(input: ApplicationGroupsListByApplicationIdAndNameInput!): ApplicationGroupsListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupsListByApplicationIdAndStatus(input: ApplicationGroupsListByApplicationIdAndStatusInput!): ApplicationGroupsListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   ApplicationUsersGet(input: ApplicationUsersGetInput!): ApplicationUsersGetResponse @aws_auth(cognito_groups: ["OWNER"])
   ApplicationUsersListByApplicationUserId(input: ApplicationUsersListByApplicationUserIdInput!): ApplicationUsersListResponse @aws_auth(cognito_groups: ["OWNER"])
   ApplicationUsersListByUserId(input: ApplicationUsersListByUserIdInput!): ApplicationUsersListResponse @aws_auth(cognito_groups: ["OWNER"])
@@ -1585,12 +2109,27 @@ type Query {
   ApplicationUsersListByApplicationIdAndUserId(input: ApplicationUsersListByApplicationIdAndUserIdInput!): ApplicationUsersListResponse @aws_auth(cognito_groups: ["OWNER"])
   SmsRateLimitGet(input: SmsRateLimitGetInput!): SmsRateLimitGetResponse @aws_auth(cognito_groups: ["OWNER", "USER"])
   SmsRateLimitListByPhoneNumber(input: SmsRateLimitListByPhoneNumberInput!): SmsRateLimitListResponse @aws_auth(cognito_groups: ["OWNER", "USER"])
+  ApplicationGroupRolesGet(input: ApplicationGroupRolesGetInput!): ApplicationGroupRolesGetResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupRolesListByApplicationGroupRoleId(input: ApplicationGroupRolesListByApplicationGroupRoleIdInput!): ApplicationGroupRolesListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupRolesListByApplicationGroupId(input: ApplicationGroupRolesListByApplicationGroupIdInput!): ApplicationGroupRolesListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupRolesListByApplicationGroupIdAndEnvironment(input: ApplicationGroupRolesListByApplicationGroupIdAndEnvironmentInput!): ApplicationGroupRolesListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupRolesListByApplicationId(input: ApplicationGroupRolesListByApplicationIdInput!): ApplicationGroupRolesListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupRolesListByApplicationIdAndEnvironment(input: ApplicationGroupRolesListByApplicationIdAndEnvironmentInput!): ApplicationGroupRolesListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupRolesListByApplicationGroupIdAndStatus(input: ApplicationGroupRolesListByApplicationGroupIdAndStatusInput!): ApplicationGroupRolesListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   OrganizationUsersGet(input: OrganizationUsersGetInput!): OrganizationUsersGetResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   OrganizationUsersListByUserId(input: OrganizationUsersListByUserIdInput!): OrganizationUsersListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   OrganizationUsersListByOrganizationId(input: OrganizationUsersListByOrganizationIdInput!): OrganizationUsersListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   OrganizationUsersListByUserIdAndOrganizationId(input: OrganizationUsersListByUserIdAndOrganizationIdInput!): OrganizationUsersListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   OrganizationUsersListByOrganizationIdAndRole(input: OrganizationUsersListByOrganizationIdAndRoleInput!): OrganizationUsersListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   OrganizationUsersListByUserIdAndRole(input: OrganizationUsersListByUserIdAndRoleInput!): OrganizationUsersListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationUserRolesGet(input: ApplicationUserRolesGetInput!): ApplicationUserRolesGetResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationUserRolesListByApplicationUserRoleId(input: ApplicationUserRolesListByApplicationUserRoleIdInput!): ApplicationUserRolesListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationUserRolesListByUserId(input: ApplicationUserRolesListByUserIdInput!): ApplicationUserRolesListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationUserRolesListByUserIdAndEnvironment(input: ApplicationUserRolesListByUserIdAndEnvironmentInput!): ApplicationUserRolesListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationUserRolesListByApplicationId(input: ApplicationUserRolesListByApplicationIdInput!): ApplicationUserRolesListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationUserRolesListByApplicationIdAndEnvironment(input: ApplicationUserRolesListByApplicationIdAndEnvironmentInput!): ApplicationUserRolesListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationUserRolesListByUserIdAndApplicationId(input: ApplicationUserRolesListByUserIdAndApplicationIdInput!): ApplicationUserRolesListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationUserRolesListByUserIdAndStatus(input: ApplicationUserRolesListByUserIdAndStatusInput!): ApplicationUserRolesListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   ApplicationRolesGet(input: ApplicationRolesGetInput!): ApplicationRolesGetResponse @aws_auth(cognito_groups: ["OWNER"])
   ApplicationRolesListByApplicationRoleId(input: ApplicationRolesListByApplicationRoleIdInput!): ApplicationRolesListResponse @aws_auth(cognito_groups: ["OWNER"])
   ApplicationRolesListByUserId(input: ApplicationRolesListByUserIdInput!): ApplicationRolesListResponse @aws_auth(cognito_groups: ["OWNER"])
@@ -1599,6 +2138,13 @@ type Query {
   ApplicationRolesListByApplicationIdAndRoleId(input: ApplicationRolesListByApplicationIdAndRoleIdInput!): ApplicationRolesListResponse @aws_auth(cognito_groups: ["OWNER"])
   ApplicationRolesListByRoleId(input: ApplicationRolesListByRoleIdInput!): ApplicationRolesListResponse @aws_auth(cognito_groups: ["OWNER"])
   ApplicationRolesListByRoleIdAndRoleType(input: ApplicationRolesListByRoleIdAndRoleTypeInput!): ApplicationRolesListResponse @aws_auth(cognito_groups: ["OWNER"])
+  ApplicationGroupUsersGet(input: ApplicationGroupUsersGetInput!): ApplicationGroupUsersGetResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupUsersListByApplicationGroupUserId(input: ApplicationGroupUsersListByApplicationGroupUserIdInput!): ApplicationGroupUsersListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupUsersListByApplicationGroupId(input: ApplicationGroupUsersListByApplicationGroupIdInput!): ApplicationGroupUsersListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupUsersListByApplicationGroupIdAndUserId(input: ApplicationGroupUsersListByApplicationGroupIdAndUserIdInput!): ApplicationGroupUsersListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupUsersListByUserId(input: ApplicationGroupUsersListByUserIdInput!): ApplicationGroupUsersListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupUsersListByUserIdAndApplicationGroupId(input: ApplicationGroupUsersListByUserIdAndApplicationGroupIdInput!): ApplicationGroupUsersListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupUsersListByApplicationGroupIdAndStatus(input: ApplicationGroupUsersListByApplicationGroupIdAndStatusInput!): ApplicationGroupUsersListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   RolesGet(input: RolesGetInput!): RolesGetResponse @aws_auth(cognito_groups: ["OWNER"])
   RolesListByRoleId(input: RolesListByRoleIdInput!): RolesListResponse @aws_auth(cognito_groups: ["OWNER"])
   RolesListByUserId(input: RolesListByUserIdInput!): RolesListResponse @aws_auth(cognito_groups: ["OWNER"])
@@ -1634,6 +2180,10 @@ type Mutation {
   PrivacyRequestsUpdate(input: PrivacyRequestsUpdateInput!): PrivacyRequestsUpdateResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])
   PrivacyRequestsDelete(input: PrivacyRequestsDeleteInput!): PrivacyRequestsDeleteResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])
   PrivacyRequestsDisable(input: PrivacyRequestsDisableInput!): PrivacyRequestsDisableResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])
+  ApplicationGroupsCreate(input: ApplicationGroupsCreateInput!): ApplicationGroupsCreateResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupsUpdate(input: ApplicationGroupsUpdateInput!): ApplicationGroupsUpdateResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupsDelete(input: ApplicationGroupsDeleteInput!): ApplicationGroupsDeleteResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupsDisable(input: ApplicationGroupsDisableInput!): ApplicationGroupsDisableResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   ApplicationUsersCreate(input: ApplicationUsersCreateInput!): ApplicationUsersCreateResponse @aws_auth(cognito_groups: ["OWNER"])
   ApplicationUsersUpdate(input: ApplicationUsersUpdateInput!): ApplicationUsersUpdateResponse @aws_auth(cognito_groups: ["OWNER"])
   ApplicationUsersDelete(input: ApplicationUsersDeleteInput!): ApplicationUsersDeleteResponse @aws_auth(cognito_groups: ["OWNER"])
@@ -1642,14 +2192,26 @@ type Mutation {
   SmsRateLimitUpdate(input: SmsRateLimitUpdateInput!): SmsRateLimitUpdateResponse @aws_auth(cognito_groups: ["OWNER", "USER"])
   SmsRateLimitDelete(input: SmsRateLimitDeleteInput!): SmsRateLimitDeleteResponse @aws_auth(cognito_groups: ["OWNER", "USER"])
   SmsRateLimitDisable(input: SmsRateLimitDisableInput!): SmsRateLimitDisableResponse @aws_auth(cognito_groups: ["OWNER", "USER"])
+  ApplicationGroupRolesCreate(input: ApplicationGroupRolesCreateInput!): ApplicationGroupRolesCreateResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupRolesUpdate(input: ApplicationGroupRolesUpdateInput!): ApplicationGroupRolesUpdateResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupRolesDelete(input: ApplicationGroupRolesDeleteInput!): ApplicationGroupRolesDeleteResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupRolesDisable(input: ApplicationGroupRolesDisableInput!): ApplicationGroupRolesDisableResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   OrganizationUsersCreate(input: OrganizationUsersCreateInput!): OrganizationUsersCreateResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   OrganizationUsersUpdate(input: OrganizationUsersUpdateInput!): OrganizationUsersUpdateResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   OrganizationUsersDelete(input: OrganizationUsersDeleteInput!): OrganizationUsersDeleteResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   OrganizationUsersDisable(input: OrganizationUsersDisableInput!): OrganizationUsersDisableResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationUserRolesCreate(input: ApplicationUserRolesCreateInput!): ApplicationUserRolesCreateResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationUserRolesUpdate(input: ApplicationUserRolesUpdateInput!): ApplicationUserRolesUpdateResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationUserRolesDelete(input: ApplicationUserRolesDeleteInput!): ApplicationUserRolesDeleteResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationUserRolesDisable(input: ApplicationUserRolesDisableInput!): ApplicationUserRolesDisableResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   ApplicationRolesCreate(input: ApplicationRolesCreateInput!): ApplicationRolesCreateResponse @aws_auth(cognito_groups: ["OWNER"])
   ApplicationRolesUpdate(input: ApplicationRolesUpdateInput!): ApplicationRolesUpdateResponse @aws_auth(cognito_groups: ["OWNER"])
   ApplicationRolesDelete(input: ApplicationRolesDeleteInput!): ApplicationRolesDeleteResponse @aws_auth(cognito_groups: ["OWNER"])
   ApplicationRolesDisable(input: ApplicationRolesDisableInput!): ApplicationRolesDisableResponse @aws_auth(cognito_groups: ["OWNER"])
+  ApplicationGroupUsersCreate(input: ApplicationGroupUsersCreateInput!): ApplicationGroupUsersCreateResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupUsersUpdate(input: ApplicationGroupUsersUpdateInput!): ApplicationGroupUsersUpdateResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupUsersDelete(input: ApplicationGroupUsersDeleteInput!): ApplicationGroupUsersDeleteResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationGroupUsersDisable(input: ApplicationGroupUsersDisableInput!): ApplicationGroupUsersDisableResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   RolesCreate(input: RolesCreateInput!): RolesCreateResponse @aws_auth(cognito_groups: ["OWNER"])
   RolesUpdate(input: RolesUpdateInput!): RolesUpdateResponse @aws_auth(cognito_groups: ["OWNER"])
   RolesDelete(input: RolesDeleteInput!): RolesDeleteResponse @aws_auth(cognito_groups: ["OWNER"])
@@ -1665,6 +2227,18 @@ type Mutation {
 }
 
 # Enums
+
+enum ApplicationUserRoleStatus {
+  UNKNOWN
+  ACTIVE
+  DELETED
+}
+
+enum ApplicationGroupStatus {
+  UNKNOWN
+  ACTIVE
+  DELETED
+}
 
 enum RoleStatus {
   UNKNOWN
@@ -1749,6 +2323,15 @@ enum UserGroup {
   OWNER
 }
 
+enum Environment {
+  UNKNOWN
+  PRODUCTION
+  STAGING
+  DEVELOPMENT
+  TEST
+  PREVIEW
+}
+
 enum OrganizationStatus {
   ACTIVE
   INACTIVE
@@ -1801,6 +2384,13 @@ enum OrganizationUserRole {
   VIEWER
 }
 
+enum ApplicationGroupUserStatus {
+  UNKNOWN
+  ACTIVE
+  REMOVED
+  INVITED
+}
+
 enum PrivacyRequestStatus {
   RECEIVED
   PROCESSING
@@ -1833,4 +2423,10 @@ enum LegalBasis {
   CCPA_RIGHT_TO_KNOW
   CCPA_RIGHT_TO_DELETE
   CCPA_RIGHT_TO_OPT_OUT
+}
+
+enum ApplicationGroupRoleStatus {
+  UNKNOWN
+  ACTIVE
+  DELETED
 }

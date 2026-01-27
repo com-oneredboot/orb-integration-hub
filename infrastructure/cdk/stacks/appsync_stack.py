@@ -73,6 +73,11 @@ class AppSyncStack(Stack):
             "PrivacyRequests": dynamodb_stack.tables["privacy-requests"],
             "OwnershipTransferRequests": dynamodb_stack.tables["ownership-transfer-requests"],
             "SmsRateLimit": dynamodb_stack.tables["sms-rate-limit"],
+            # Application Access Management tables
+            "ApplicationGroups": dynamodb_stack.tables["application-groups"],
+            "ApplicationGroupUsers": dynamodb_stack.tables["application-group-users"],
+            "ApplicationGroupRoles": dynamodb_stack.tables["application-group-roles"],
+            "ApplicationUserRoles": dynamodb_stack.tables["application-user-roles"],
         }
 
         # Create AppSync API using generated construct

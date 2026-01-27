@@ -1,0 +1,104 @@
+# file: schemas/tables/ApplicationUserRoles.yml
+# author: orb-integration-hub
+# date: 2026-01-27
+# description: ApplicationUserRoles table schema for direct role assignments to users per environment
+
+type: dynamodb
+pitr_enabled: false
+version: '1.0'
+name: ApplicationUserRoles
+targets:
+  - api
+model:
+  authConfig:
+    cognitoAuthentication:
+      groups:
+        OWNER:
+          - '*'
+        EMPLOYEE:
+          - '*'
+        CUSTOMER:
+          - '*'
+  keys:
+    primary:
+      partition: applicationUserRoleId
+      description: Primary key for user-role assignments (unique for each assignment)
+    secondary:
+      - name: UserEnvRoleIndex
+        type: GSI
+        partition: userId
+        sort: environment
+        projection_type: ALL
+        description: Index for querying role assignments by user and environment
+      - name: AppEnvUserIndex
+        type: GSI
+        partition: applicationId
+        sort: environment
+        projection_type: ALL
+        description: Index for querying role assignments by application and environment
+      - name: UserAppIndex
+        type: GSI
+        partition: userId
+        sort: applicationId
+        projection_type: ALL
+        description: Index for querying role assignments by user and application
+      - name: UserStatusIndex
+        type: GSI
+        partition: userId
+        sort: status
+        projection_type: ALL
+        description: Index for querying role assignments by user and status
+  attributes:
+    applicationUserRoleId:
+      type: string
+      required: true
+      description: Unique identifier for the user-role assignment (primary key)
+    userId:
+      type: string
+      required: true
+      description: ID of the user (foreign key to Users)
+    applicationId:
+      type: string
+      required: true
+      description: ID of the application (foreign key to Applications)
+    environment:
+      type: string
+      required: true
+      enum_type: Environment
+      enum_values:
+        - PRODUCTION
+        - STAGING
+        - DEVELOPMENT
+        - TEST
+        - PREVIEW
+      description: Environment this role assignment applies to
+    roleId:
+      type: string
+      required: true
+      description: ID of the role (foreign key to Roles)
+    roleName:
+      type: string
+      required: true
+      description: Name of the role (denormalized for display)
+    permissions:
+      type: array
+      items:
+        type: string
+      required: true
+      description: List of permissions granted by this role (denormalized for fast resolution)
+    status:
+      type: string
+      required: true
+      enum_type: ApplicationUserRoleStatus
+      enum_values:
+        - ACTIVE
+        - DELETED
+      description: Current status of the role assignment
+    createdAt:
+      type: timestamp
+      required: true
+      description: When the role was assigned to the user
+    updatedAt:
+      type: timestamp
+      required: true
+      description: When the assignment was last updated

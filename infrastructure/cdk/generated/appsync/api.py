@@ -697,6 +697,121 @@ class AppSyncApi(Construct):
         )
 
 
+        # ApplicationGroups data source and resolvers
+        application_groups_data_source = self.api.add_dynamo_db_data_source(
+            "ApplicationGroupsDataSource",
+            tables["ApplicationGroups"],
+        )
+
+        application_groups_data_source.create_resolver(
+            "ApplicationGroupsCreateResolver",
+            type_name="Mutation",
+            field_name="ApplicationGroupsCreate",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupsCreate.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupsCreate.response.vtl")
+            ),
+        )
+
+        application_groups_data_source.create_resolver(
+            "ApplicationGroupsUpdateResolver",
+            type_name="Mutation",
+            field_name="ApplicationGroupsUpdate",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupsUpdate.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupsUpdate.response.vtl")
+            ),
+        )
+
+        application_groups_data_source.create_resolver(
+            "ApplicationGroupsDeleteResolver",
+            type_name="Mutation",
+            field_name="ApplicationGroupsDelete",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupsDelete.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupsDelete.response.vtl")
+            ),
+        )
+
+        application_groups_data_source.create_resolver(
+            "ApplicationGroupsDisableResolver",
+            type_name="Mutation",
+            field_name="ApplicationGroupsDisable",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupsDisable.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupsDisable.response.vtl")
+            ),
+        )
+
+        application_groups_data_source.create_resolver(
+            "ApplicationGroupsGetResolver",
+            type_name="Query",
+            field_name="ApplicationGroupsGet",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupsGet.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupsGet.response.vtl")
+            ),
+        )
+
+        application_groups_data_source.create_resolver(
+            "ApplicationGroupsListByApplicationGroupIdResolver",
+            type_name="Query",
+            field_name="ApplicationGroupsListByApplicationGroupId",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupsListByApplicationGroupId.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupsListByApplicationGroupId.response.vtl")
+            ),
+        )
+
+        application_groups_data_source.create_resolver(
+            "ApplicationGroupsListByApplicationIdResolver",
+            type_name="Query",
+            field_name="ApplicationGroupsListByApplicationId",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupsListByApplicationId.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupsListByApplicationId.response.vtl")
+            ),
+        )
+
+        application_groups_data_source.create_resolver(
+            "ApplicationGroupsListByApplicationIdAndNameResolver",
+            type_name="Query",
+            field_name="ApplicationGroupsListByApplicationIdAndName",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupsListByApplicationIdAndName.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupsListByApplicationIdAndName.response.vtl")
+            ),
+        )
+
+        application_groups_data_source.create_resolver(
+            "ApplicationGroupsListByApplicationIdAndStatusResolver",
+            type_name="Query",
+            field_name="ApplicationGroupsListByApplicationIdAndStatus",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupsListByApplicationIdAndStatus.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupsListByApplicationIdAndStatus.response.vtl")
+            ),
+        )
+
+
         # ApplicationUsers data source and resolvers
         application_users_data_source = self.api.add_dynamo_db_data_source(
             "ApplicationUsersDataSource",
@@ -903,6 +1018,145 @@ class AppSyncApi(Construct):
         )
 
 
+        # ApplicationGroupRoles data source and resolvers
+        application_group_roles_data_source = self.api.add_dynamo_db_data_source(
+            "ApplicationGroupRolesDataSource",
+            tables["ApplicationGroupRoles"],
+        )
+
+        application_group_roles_data_source.create_resolver(
+            "ApplicationGroupRolesCreateResolver",
+            type_name="Mutation",
+            field_name="ApplicationGroupRolesCreate",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupRolesCreate.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupRolesCreate.response.vtl")
+            ),
+        )
+
+        application_group_roles_data_source.create_resolver(
+            "ApplicationGroupRolesUpdateResolver",
+            type_name="Mutation",
+            field_name="ApplicationGroupRolesUpdate",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupRolesUpdate.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupRolesUpdate.response.vtl")
+            ),
+        )
+
+        application_group_roles_data_source.create_resolver(
+            "ApplicationGroupRolesDeleteResolver",
+            type_name="Mutation",
+            field_name="ApplicationGroupRolesDelete",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupRolesDelete.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupRolesDelete.response.vtl")
+            ),
+        )
+
+        application_group_roles_data_source.create_resolver(
+            "ApplicationGroupRolesDisableResolver",
+            type_name="Mutation",
+            field_name="ApplicationGroupRolesDisable",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupRolesDisable.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupRolesDisable.response.vtl")
+            ),
+        )
+
+        application_group_roles_data_source.create_resolver(
+            "ApplicationGroupRolesGetResolver",
+            type_name="Query",
+            field_name="ApplicationGroupRolesGet",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesGet.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesGet.response.vtl")
+            ),
+        )
+
+        application_group_roles_data_source.create_resolver(
+            "ApplicationGroupRolesListByApplicationGroupRoleIdResolver",
+            type_name="Query",
+            field_name="ApplicationGroupRolesListByApplicationGroupRoleId",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupRoleId.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupRoleId.response.vtl")
+            ),
+        )
+
+        application_group_roles_data_source.create_resolver(
+            "ApplicationGroupRolesListByApplicationGroupIdResolver",
+            type_name="Query",
+            field_name="ApplicationGroupRolesListByApplicationGroupId",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupId.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupId.response.vtl")
+            ),
+        )
+
+        application_group_roles_data_source.create_resolver(
+            "ApplicationGroupRolesListByApplicationGroupIdAndEnvironmentResolver",
+            type_name="Query",
+            field_name="ApplicationGroupRolesListByApplicationGroupIdAndEnvironment",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupIdAndEnvironment.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupIdAndEnvironment.response.vtl")
+            ),
+        )
+
+        application_group_roles_data_source.create_resolver(
+            "ApplicationGroupRolesListByApplicationIdResolver",
+            type_name="Query",
+            field_name="ApplicationGroupRolesListByApplicationId",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationId.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationId.response.vtl")
+            ),
+        )
+
+        application_group_roles_data_source.create_resolver(
+            "ApplicationGroupRolesListByApplicationIdAndEnvironmentResolver",
+            type_name="Query",
+            field_name="ApplicationGroupRolesListByApplicationIdAndEnvironment",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationIdAndEnvironment.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationIdAndEnvironment.response.vtl")
+            ),
+        )
+
+        application_group_roles_data_source.create_resolver(
+            "ApplicationGroupRolesListByApplicationGroupIdAndStatusResolver",
+            type_name="Query",
+            field_name="ApplicationGroupRolesListByApplicationGroupIdAndStatus",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupIdAndStatus.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupIdAndStatus.response.vtl")
+            ),
+        )
+
+
         # OrganizationUsers data source and resolvers
         organization_users_data_source = self.api.add_dynamo_db_data_source(
             "OrganizationUsersDataSource",
@@ -1026,6 +1280,157 @@ class AppSyncApi(Construct):
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
                 str(Path(__file__).parent / "resolvers/Query.OrganizationUsersListByUserIdAndRole.response.vtl")
+            ),
+        )
+
+
+        # ApplicationUserRoles data source and resolvers
+        application_user_roles_data_source = self.api.add_dynamo_db_data_source(
+            "ApplicationUserRolesDataSource",
+            tables["ApplicationUserRoles"],
+        )
+
+        application_user_roles_data_source.create_resolver(
+            "ApplicationUserRolesCreateResolver",
+            type_name="Mutation",
+            field_name="ApplicationUserRolesCreate",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationUserRolesCreate.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationUserRolesCreate.response.vtl")
+            ),
+        )
+
+        application_user_roles_data_source.create_resolver(
+            "ApplicationUserRolesUpdateResolver",
+            type_name="Mutation",
+            field_name="ApplicationUserRolesUpdate",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationUserRolesUpdate.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationUserRolesUpdate.response.vtl")
+            ),
+        )
+
+        application_user_roles_data_source.create_resolver(
+            "ApplicationUserRolesDeleteResolver",
+            type_name="Mutation",
+            field_name="ApplicationUserRolesDelete",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationUserRolesDelete.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationUserRolesDelete.response.vtl")
+            ),
+        )
+
+        application_user_roles_data_source.create_resolver(
+            "ApplicationUserRolesDisableResolver",
+            type_name="Mutation",
+            field_name="ApplicationUserRolesDisable",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationUserRolesDisable.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationUserRolesDisable.response.vtl")
+            ),
+        )
+
+        application_user_roles_data_source.create_resolver(
+            "ApplicationUserRolesGetResolver",
+            type_name="Query",
+            field_name="ApplicationUserRolesGet",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesGet.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesGet.response.vtl")
+            ),
+        )
+
+        application_user_roles_data_source.create_resolver(
+            "ApplicationUserRolesListByApplicationUserRoleIdResolver",
+            type_name="Query",
+            field_name="ApplicationUserRolesListByApplicationUserRoleId",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByApplicationUserRoleId.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByApplicationUserRoleId.response.vtl")
+            ),
+        )
+
+        application_user_roles_data_source.create_resolver(
+            "ApplicationUserRolesListByUserIdResolver",
+            type_name="Query",
+            field_name="ApplicationUserRolesListByUserId",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByUserId.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByUserId.response.vtl")
+            ),
+        )
+
+        application_user_roles_data_source.create_resolver(
+            "ApplicationUserRolesListByUserIdAndEnvironmentResolver",
+            type_name="Query",
+            field_name="ApplicationUserRolesListByUserIdAndEnvironment",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByUserIdAndEnvironment.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByUserIdAndEnvironment.response.vtl")
+            ),
+        )
+
+        application_user_roles_data_source.create_resolver(
+            "ApplicationUserRolesListByApplicationIdResolver",
+            type_name="Query",
+            field_name="ApplicationUserRolesListByApplicationId",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByApplicationId.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByApplicationId.response.vtl")
+            ),
+        )
+
+        application_user_roles_data_source.create_resolver(
+            "ApplicationUserRolesListByApplicationIdAndEnvironmentResolver",
+            type_name="Query",
+            field_name="ApplicationUserRolesListByApplicationIdAndEnvironment",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByApplicationIdAndEnvironment.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByApplicationIdAndEnvironment.response.vtl")
+            ),
+        )
+
+        application_user_roles_data_source.create_resolver(
+            "ApplicationUserRolesListByUserIdAndApplicationIdResolver",
+            type_name="Query",
+            field_name="ApplicationUserRolesListByUserIdAndApplicationId",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByUserIdAndApplicationId.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByUserIdAndApplicationId.response.vtl")
+            ),
+        )
+
+        application_user_roles_data_source.create_resolver(
+            "ApplicationUserRolesListByUserIdAndStatusResolver",
+            type_name="Query",
+            field_name="ApplicationUserRolesListByUserIdAndStatus",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByUserIdAndStatus.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByUserIdAndStatus.response.vtl")
             ),
         )
 
@@ -1177,6 +1582,145 @@ class AppSyncApi(Construct):
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
                 str(Path(__file__).parent / "resolvers/Query.ApplicationRolesListByRoleIdAndRoleType.response.vtl")
+            ),
+        )
+
+
+        # ApplicationGroupUsers data source and resolvers
+        application_group_users_data_source = self.api.add_dynamo_db_data_source(
+            "ApplicationGroupUsersDataSource",
+            tables["ApplicationGroupUsers"],
+        )
+
+        application_group_users_data_source.create_resolver(
+            "ApplicationGroupUsersCreateResolver",
+            type_name="Mutation",
+            field_name="ApplicationGroupUsersCreate",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupUsersCreate.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupUsersCreate.response.vtl")
+            ),
+        )
+
+        application_group_users_data_source.create_resolver(
+            "ApplicationGroupUsersUpdateResolver",
+            type_name="Mutation",
+            field_name="ApplicationGroupUsersUpdate",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupUsersUpdate.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupUsersUpdate.response.vtl")
+            ),
+        )
+
+        application_group_users_data_source.create_resolver(
+            "ApplicationGroupUsersDeleteResolver",
+            type_name="Mutation",
+            field_name="ApplicationGroupUsersDelete",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupUsersDelete.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupUsersDelete.response.vtl")
+            ),
+        )
+
+        application_group_users_data_source.create_resolver(
+            "ApplicationGroupUsersDisableResolver",
+            type_name="Mutation",
+            field_name="ApplicationGroupUsersDisable",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupUsersDisable.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupUsersDisable.response.vtl")
+            ),
+        )
+
+        application_group_users_data_source.create_resolver(
+            "ApplicationGroupUsersGetResolver",
+            type_name="Query",
+            field_name="ApplicationGroupUsersGet",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersGet.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersGet.response.vtl")
+            ),
+        )
+
+        application_group_users_data_source.create_resolver(
+            "ApplicationGroupUsersListByApplicationGroupUserIdResolver",
+            type_name="Query",
+            field_name="ApplicationGroupUsersListByApplicationGroupUserId",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupUserId.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupUserId.response.vtl")
+            ),
+        )
+
+        application_group_users_data_source.create_resolver(
+            "ApplicationGroupUsersListByApplicationGroupIdResolver",
+            type_name="Query",
+            field_name="ApplicationGroupUsersListByApplicationGroupId",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupId.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupId.response.vtl")
+            ),
+        )
+
+        application_group_users_data_source.create_resolver(
+            "ApplicationGroupUsersListByApplicationGroupIdAndUserIdResolver",
+            type_name="Query",
+            field_name="ApplicationGroupUsersListByApplicationGroupIdAndUserId",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupIdAndUserId.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupIdAndUserId.response.vtl")
+            ),
+        )
+
+        application_group_users_data_source.create_resolver(
+            "ApplicationGroupUsersListByUserIdResolver",
+            type_name="Query",
+            field_name="ApplicationGroupUsersListByUserId",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByUserId.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByUserId.response.vtl")
+            ),
+        )
+
+        application_group_users_data_source.create_resolver(
+            "ApplicationGroupUsersListByUserIdAndApplicationGroupIdResolver",
+            type_name="Query",
+            field_name="ApplicationGroupUsersListByUserIdAndApplicationGroupId",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByUserIdAndApplicationGroupId.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByUserIdAndApplicationGroupId.response.vtl")
+            ),
+        )
+
+        application_group_users_data_source.create_resolver(
+            "ApplicationGroupUsersListByApplicationGroupIdAndStatusResolver",
+            type_name="Query",
+            field_name="ApplicationGroupUsersListByApplicationGroupIdAndStatus",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupIdAndStatus.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupIdAndStatus.response.vtl")
             ),
         )
 

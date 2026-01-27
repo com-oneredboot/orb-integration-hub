@@ -1,0 +1,17 @@
+type: registry
+version: '1.0'
+name: ApplicationUserRoleStatus
+targets:
+  - api
+description: "Application user role assignment status"
+
+items:
+  UNKNOWN:
+    value: "UNKNOWN"
+    description: "Unknown status"
+  ACTIVE:
+    value: "ACTIVE"
+    description: "Active role assignment"
+  DELETED:
+    value: "DELETED"
+    description: "Deleted role assignment"

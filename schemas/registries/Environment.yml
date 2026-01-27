@@ -1,0 +1,26 @@
+type: registry
+version: '1.0'
+name: Environment
+targets:
+  - api
+description: "Application deployment environments"
+
+items:
+  UNKNOWN:
+    value: "UNKNOWN"
+    description: "Unknown environment"
+  PRODUCTION:
+    value: "PRODUCTION"
+    description: "Production environment"
+  STAGING:
+    value: "STAGING"
+    description: "Staging environment"
+  DEVELOPMENT:
+    value: "DEVELOPMENT"
+    description: "Development environment"
+  TEST:
+    value: "TEST"
+    description: "Test environment"
+  PREVIEW:
+    value: "PREVIEW"
+    description: "Preview environment"

@@ -4,10 +4,14 @@ from .ownership_transfer_requests_table import OwnershipTransferRequestsTable
 from .organizations_table import OrganizationsTable
 from .notifications_table import NotificationsTable
 from .privacy_requests_table import PrivacyRequestsTable
+from .application_groups_table import ApplicationGroupsTable
 from .application_users_table import ApplicationUsersTable
 from .sms_rate_limit_table import SmsRateLimitTable
+from .application_group_roles_table import ApplicationGroupRolesTable
 from .organization_users_table import OrganizationUsersTable
+from .application_user_roles_table import ApplicationUserRolesTable
 from .application_roles_table import ApplicationRolesTable
+from .application_group_users_table import ApplicationGroupUsersTable
 from .roles_table import RolesTable
 from .applications_table import ApplicationsTable
 from .users_table import UsersTable

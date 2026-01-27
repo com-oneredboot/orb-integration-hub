@@ -55,6 +55,12 @@ class DynamoDBStack(Stack):
         self._create_ownership_transfer_requests_table()
         self._create_sms_rate_limit_table()
 
+        # Application Access Management tables
+        self._create_application_groups_table()
+        self._create_application_group_users_table()
+        self._create_application_group_roles_table()
+        self._create_application_user_roles_table()
+
     def _apply_tags(self) -> None:
         """Apply standard tags to all resources in this stack."""
         for key, value in self.config.standard_tags.items():
@@ -636,3 +642,252 @@ class DynamoDBStack(Stack):
 
         self.tables["sms-rate-limit"] = table
         self._export_table_params(table, "sms-rate-limit")
+
+
+    def _create_application_groups_table(self) -> None:
+        """Create ApplicationGroups table for managing user groups within applications."""
+        table = dynamodb.Table(
+            self,
+            "ApplicationGroupsTable",
+            table_name=self._table_name("application-groups"),
+            partition_key=dynamodb.Attribute(
+                name="applicationGroupId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
+            point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
+                point_in_time_recovery_enabled=True
+            ),
+            removal_policy=RemovalPolicy.RETAIN,
+        )
+
+        # GSI: ApplicationGroupsIndex - query groups by application with name ordering
+        table.add_global_secondary_index(
+            index_name="ApplicationGroupsIndex",
+            partition_key=dynamodb.Attribute(
+                name="applicationId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            sort_key=dynamodb.Attribute(
+                name="name",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            projection_type=dynamodb.ProjectionType.ALL,
+        )
+
+        # GSI: ApplicationStatusIndex - query groups by application and status
+        table.add_global_secondary_index(
+            index_name="ApplicationStatusIndex",
+            partition_key=dynamodb.Attribute(
+                name="applicationId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            sort_key=dynamodb.Attribute(
+                name="status",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            projection_type=dynamodb.ProjectionType.ALL,
+        )
+
+        self.tables["application-groups"] = table
+        self._export_table_params(table, "application-groups")
+
+    def _create_application_group_users_table(self) -> None:
+        """Create ApplicationGroupUsers table for managing user membership in groups."""
+        table = dynamodb.Table(
+            self,
+            "ApplicationGroupUsersTable",
+            table_name=self._table_name("application-group-users"),
+            partition_key=dynamodb.Attribute(
+                name="applicationGroupUserId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
+            point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
+                point_in_time_recovery_enabled=True
+            ),
+            removal_policy=RemovalPolicy.RETAIN,
+        )
+
+        # GSI: GroupUsersIndex - query users by group
+        table.add_global_secondary_index(
+            index_name="GroupUsersIndex",
+            partition_key=dynamodb.Attribute(
+                name="applicationGroupId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            sort_key=dynamodb.Attribute(
+                name="userId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            projection_type=dynamodb.ProjectionType.ALL,
+        )
+
+        # GSI: UserGroupsIndex - query groups by user
+        table.add_global_secondary_index(
+            index_name="UserGroupsIndex",
+            partition_key=dynamodb.Attribute(
+                name="userId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            sort_key=dynamodb.Attribute(
+                name="applicationGroupId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            projection_type=dynamodb.ProjectionType.ALL,
+        )
+
+        # GSI: GroupStatusIndex - query memberships by group and status
+        table.add_global_secondary_index(
+            index_name="GroupStatusIndex",
+            partition_key=dynamodb.Attribute(
+                name="applicationGroupId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            sort_key=dynamodb.Attribute(
+                name="status",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            projection_type=dynamodb.ProjectionType.ALL,
+        )
+
+        self.tables["application-group-users"] = table
+        self._export_table_params(table, "application-group-users")
+
+    def _create_application_group_roles_table(self) -> None:
+        """Create ApplicationGroupRoles table for assigning roles to groups per environment."""
+        table = dynamodb.Table(
+            self,
+            "ApplicationGroupRolesTable",
+            table_name=self._table_name("application-group-roles"),
+            partition_key=dynamodb.Attribute(
+                name="applicationGroupRoleId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
+            point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
+                point_in_time_recovery_enabled=True
+            ),
+            removal_policy=RemovalPolicy.RETAIN,
+        )
+
+        # GSI: GroupEnvRoleIndex - query role assignments by group and environment
+        table.add_global_secondary_index(
+            index_name="GroupEnvRoleIndex",
+            partition_key=dynamodb.Attribute(
+                name="applicationGroupId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            sort_key=dynamodb.Attribute(
+                name="environment",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            projection_type=dynamodb.ProjectionType.ALL,
+        )
+
+        # GSI: AppEnvGroupIndex - query role assignments by application and environment
+        table.add_global_secondary_index(
+            index_name="AppEnvGroupIndex",
+            partition_key=dynamodb.Attribute(
+                name="applicationId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            sort_key=dynamodb.Attribute(
+                name="environment",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            projection_type=dynamodb.ProjectionType.ALL,
+        )
+
+        # GSI: GroupStatusIndex - query role assignments by group and status
+        table.add_global_secondary_index(
+            index_name="GroupStatusIndex",
+            partition_key=dynamodb.Attribute(
+                name="applicationGroupId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            sort_key=dynamodb.Attribute(
+                name="status",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            projection_type=dynamodb.ProjectionType.ALL,
+        )
+
+        self.tables["application-group-roles"] = table
+        self._export_table_params(table, "application-group-roles")
+
+    def _create_application_user_roles_table(self) -> None:
+        """Create ApplicationUserRoles table for direct role assignments to users per environment."""
+        table = dynamodb.Table(
+            self,
+            "ApplicationUserRolesTable",
+            table_name=self._table_name("application-user-roles"),
+            partition_key=dynamodb.Attribute(
+                name="applicationUserRoleId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
+            point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
+                point_in_time_recovery_enabled=True
+            ),
+            removal_policy=RemovalPolicy.RETAIN,
+        )
+
+        # GSI: UserEnvRoleIndex - query role assignments by user and environment
+        table.add_global_secondary_index(
+            index_name="UserEnvRoleIndex",
+            partition_key=dynamodb.Attribute(
+                name="userId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            sort_key=dynamodb.Attribute(
+                name="environment",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            projection_type=dynamodb.ProjectionType.ALL,
+        )
+
+        # GSI: AppEnvUserIndex - query role assignments by application and environment
+        table.add_global_secondary_index(
+            index_name="AppEnvUserIndex",
+            partition_key=dynamodb.Attribute(
+                name="applicationId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            sort_key=dynamodb.Attribute(
+                name="environment",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            projection_type=dynamodb.ProjectionType.ALL,
+        )
+
+        # GSI: UserAppIndex - query role assignments by user and application
+        table.add_global_secondary_index(
+            index_name="UserAppIndex",
+            partition_key=dynamodb.Attribute(
+                name="userId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            sort_key=dynamodb.Attribute(
+                name="applicationId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            projection_type=dynamodb.ProjectionType.ALL,
+        )
+
+        # GSI: UserStatusIndex - query role assignments by user and status
+        table.add_global_secondary_index(
+            index_name="UserStatusIndex",
+            partition_key=dynamodb.Attribute(
+                name="userId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            sort_key=dynamodb.Attribute(
+                name="status",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            projection_type=dynamodb.ProjectionType.ALL,
+        )
+
+        self.tables["application-user-roles"] = table
+        self._export_table_params(table, "application-user-roles")

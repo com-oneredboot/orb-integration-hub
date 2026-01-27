@@ -1,0 +1,98 @@
+# file: schemas/tables/ApplicationGroupRoles.yml
+# author: orb-integration-hub
+# date: 2026-01-27
+# description: ApplicationGroupRoles table schema for assigning roles to groups per environment
+
+type: dynamodb
+pitr_enabled: false
+version: '1.0'
+name: ApplicationGroupRoles
+targets:
+  - api
+model:
+  authConfig:
+    cognitoAuthentication:
+      groups:
+        OWNER:
+          - '*'
+        EMPLOYEE:
+          - '*'
+        CUSTOMER:
+          - '*'
+  keys:
+    primary:
+      partition: applicationGroupRoleId
+      description: Primary key for group-role assignments (unique for each assignment)
+    secondary:
+      - name: GroupEnvRoleIndex
+        type: GSI
+        partition: applicationGroupId
+        sort: environment
+        projection_type: ALL
+        description: Index for querying role assignments by group and environment
+      - name: AppEnvGroupIndex
+        type: GSI
+        partition: applicationId
+        sort: environment
+        projection_type: ALL
+        description: Index for querying role assignments by application and environment
+      - name: GroupStatusIndex
+        type: GSI
+        partition: applicationGroupId
+        sort: status
+        projection_type: ALL
+        description: Index for querying role assignments by group and status
+  attributes:
+    applicationGroupRoleId:
+      type: string
+      required: true
+      description: Unique identifier for the group-role assignment (primary key)
+    applicationGroupId:
+      type: string
+      required: true
+      description: ID of the group (foreign key to ApplicationGroups)
+    applicationId:
+      type: string
+      required: true
+      description: ID of the application (denormalized for queries)
+    environment:
+      type: string
+      required: true
+      enum_type: Environment
+      enum_values:
+        - PRODUCTION
+        - STAGING
+        - DEVELOPMENT
+        - TEST
+        - PREVIEW
+      description: Environment this role assignment applies to
+    roleId:
+      type: string
+      required: true
+      description: ID of the role (foreign key to Roles)
+    roleName:
+      type: string
+      required: true
+      description: Name of the role (denormalized for display)
+    permissions:
+      type: array
+      items:
+        type: string
+      required: true
+      description: List of permissions granted by this role (denormalized for fast resolution)
+    status:
+      type: string
+      required: true
+      enum_type: ApplicationGroupRoleStatus
+      enum_values:
+        - ACTIVE
+        - DELETED
+      description: Current status of the role assignment
+    createdAt:
+      type: timestamp
+      required: true
+      description: When the role was assigned to the group
+    updatedAt:
+      type: timestamp
+      required: true
+      description: When the assignment was last updated

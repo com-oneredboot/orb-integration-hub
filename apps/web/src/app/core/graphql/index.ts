@@ -5,7 +5,11 @@
  * Re-exports all GraphQL query definitions for convenient imports
  */
 
+export * from './ApplicationGroupRoles.graphql';
+export * from './ApplicationGroupUsers.graphql';
+export * from './ApplicationGroups.graphql';
 export * from './ApplicationRoles.graphql';
+export * from './ApplicationUserRoles.graphql';
 export * from './ApplicationUsers.graphql';
 export * from './Applications.graphql';
 export * from './CheckEmailExists.graphql';
