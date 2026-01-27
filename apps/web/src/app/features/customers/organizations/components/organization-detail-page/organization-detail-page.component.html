@@ -1,257 +1,270 @@
 <!-- Organization Detail Page Template -->
-<div class="org-detail-container">
-  <!-- Page Header -->
-  <div class="orb-page-header">
-    <div class="orb-page-header__content">
-      <div class="orb-page-header__flex-container">
-        <div class="orb-page-header__logo-section">
-          <img src="assets/orb-logo.jpg" alt="Orb Integration Hub Logo" class="orb-page-header__logo">
-        </div>
-        <div class="orb-page-header__text-section">
-          <div class="orb-page-header__greeting">
-            <div class="orb-page-header__icon-title">
-              <fa-icon icon="building" class="orb-page-header__icon-fa"></fa-icon>
-              <h1 class="orb-page-header__title">
-                {{ isDraft ? 'Complete Organization Setup' : (organization?.name || 'Organization Details') }}
-              </h1>
-            </div>
-            <p class="orb-page-header__subtitle" *ngIf="isDraft" class="orb-page-header__subtitle--warning">
-              Your organization was created but needs to be completed. Fill in the details below and click "Activate Organization" to finish setup.
-            </p>
-            <p class="orb-page-header__subtitle" *ngIf="!isDraft && !isLoading && !loadError">
-              Update your organization's information below.
-            </p>
-            <div class="orb-page-header__status" *ngIf="organization && !isDraft">
-              <app-status-badge 
-                [status]="organization.status" 
-                type="organization"
-                [showIcon]="true"
-                [showLabel]="true"
-                size="medium"
-                variant="chip">
-              </app-status-badge>
-            </div>
+<!-- Uses NgRx store as single source of truth (store-first pattern) -->
+<!-- @see .kiro/specs/store-centric-refactoring/design.md -->
+
+<ng-container *ngIf="{
+  isLoading: isLoading$ | async,
+  isSaving: isSaving$ | async,
+  isDeleting: isDeleting$ | async,
+  saveError: saveError$ | async,
+  applications: applications$ | async,
+  isLoadingApplications: isLoadingApplications$ | async,
+  applicationsError: applicationsError$ | async
+} as data">
+  <div class="org-detail-container">
+    <!-- Page Header -->
+    <div class="orb-page-header">
+      <div class="orb-page-header__content">
+        <div class="orb-page-header__flex-container">
+          <div class="orb-page-header__logo-section">
+            <img src="assets/orb-logo.jpg" alt="Orb Integration Hub Logo" class="orb-page-header__logo">
           </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Back Link -->
-  <div class="org-detail-content">
-    <div class="org-detail-breadcrumb">
-      <a routerLink="/customers/organizations" class="org-detail-back-link">
-        <fa-icon icon="arrow-left"></fa-icon>
-        Back to Organizations
-      </a>
-    </div>
-
-    <!-- Loading State -->
-    <div class="org-detail-loading" *ngIf="isLoading">
-      <fa-icon icon="spinner" animation="spin" size="2x"></fa-icon>
-      <p>Loading organization...</p>
-    </div>
-
-    <!-- Error State -->
-    <div class="org-detail-error" *ngIf="loadError && !isLoading">
-      <fa-icon icon="exclamation-triangle" size="2x"></fa-icon>
-      <p>{{ loadError }}</p>
-      <button class="orb-btn orb-btn--secondary" routerLink="/customers/organizations">
-        Back to Organizations
-      </button>
-    </div>
-
-    <!-- Content -->
-    <div class="org-detail-form-section" *ngIf="organization && !isLoading && !loadError">
-      <!-- Form Card using global orb-card styles -->
-      <div class="orb-card">
-        <div class="orb-card__header">
-          <h2 class="orb-card__title">
-            <fa-icon icon="info-circle" class="orb-card__icon"></fa-icon>
-            Organization Information
-          </h2>
-        </div>
-        <div class="orb-card__content orb-card__content--padded">
-          <!-- Name Field -->
-          <div class="org-detail-field">
-            <label class="org-detail-field__label" for="org-name">
-              Organization Name <span class="org-detail-field__required">*</span>
-            </label>
-            <input 
-              type="text" 
-              id="org-name"
-              class="org-detail-field__input"
-              [class.org-detail-field__input--error]="validationErrors.name"
-              [(ngModel)]="editForm.name"
-              placeholder="Enter organization name"
-              maxlength="100"
-              [attr.aria-invalid]="validationErrors.name ? 'true' : 'false'"
-              [attr.aria-describedby]="validationErrors.name ? 'name-error' : null">
-            <div class="org-detail-field__error" id="name-error" *ngIf="validationErrors.name">
-              {{ validationErrors.name }}
-            </div>
-            <div class="org-detail-field__hint">
-              {{ editForm.name.length }}/100 characters
-            </div>
-          </div>
-
-          <!-- Description Field -->
-          <div class="org-detail-field">
-            <label class="org-detail-field__label" for="org-description">
-              Description
-            </label>
-            <textarea 
-              id="org-description"
-              class="org-detail-field__textarea"
-              [class.org-detail-field__textarea--error]="validationErrors.description"
-              [(ngModel)]="editForm.description"
-              placeholder="Enter a brief description of your organization"
-              maxlength="500"
-              rows="4"
-              [attr.aria-invalid]="validationErrors.description ? 'true' : 'false'"
-              [attr.aria-describedby]="validationErrors.description ? 'desc-error' : null">
-            </textarea>
-            <div class="org-detail-field__error" id="desc-error" *ngIf="validationErrors.description">
-              {{ validationErrors.description }}
-            </div>
-            <div class="org-detail-field__hint">
-              {{ editForm.description.length }}/500 characters
-            </div>
-          </div>
-
-          <!-- Metadata (read-only, shown for existing orgs) -->
-          <div class="org-detail-metadata" *ngIf="!isDraft">
-            <div class="org-detail-metadata__item">
-              <span class="org-detail-metadata__label">Organization ID</span>
-              <span class="org-detail-metadata__value">{{ organization.organizationId }}</span>
-            </div>
-            <div class="org-detail-metadata__item">
-              <span class="org-detail-metadata__label">Created</span>
-              <span class="org-detail-metadata__value">{{ formatDate(organization.createdAt) }}</span>
-            </div>
-            <div class="org-detail-metadata__item">
-              <span class="org-detail-metadata__label">Last Updated</span>
-              <span class="org-detail-metadata__value">{{ formatDate(organization.updatedAt) }}</span>
-            </div>
-          </div>
-
-          <!-- Save Error -->
-          <div class="org-detail-save-error" *ngIf="saveError">
-            <fa-icon icon="exclamation-circle"></fa-icon>
-            {{ saveError }}
-          </div>
-        </div>
-
-        <!-- Actions Footer -->
-        <div class="org-detail-actions">
-          <div class="org-detail-actions__left">
-            <button 
-              class="orb-btn orb-btn--outline org-detail-actions__delete"
-              (click)="onDelete()"
-              [disabled]="isSaving">
-              <fa-icon icon="trash"></fa-icon>
-              Delete
-            </button>
-          </div>
-          <div class="org-detail-actions__right">
-            <button 
-              class="orb-btn orb-btn--secondary"
-              (click)="onCancel()"
-              [disabled]="isSaving">
-              Cancel
-            </button>
-            <button 
-              class="orb-btn orb-btn--primary"
-              (click)="onSave()"
-              [disabled]="isSaving">
-              <fa-icon icon="spinner" animation="spin" *ngIf="isSaving"></fa-icon>
-              <fa-icon icon="save" *ngIf="!isSaving"></fa-icon>
-              {{ isDraft ? 'Activate Organization' : 'Save Changes' }}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Applications Section (only for non-draft organizations) -->
-      <!-- _Requirements: 2.2, 2.3, 2.6, 2.7, 2.8_ -->
-      <div class="orb-card org-detail-applications" *ngIf="!isDraft">
-        <div class="orb-card__header">
-          <h2 class="orb-card__title">
-            <fa-icon icon="rocket" class="orb-card__icon"></fa-icon>
-            Applications
-          </h2>
-          <button 
-            class="orb-btn orb-btn--primary orb-btn--sm"
-            (click)="onCreateApplication()"
-            aria-label="Create new application for this organization">
-            <fa-icon icon="plus"></fa-icon>
-            Create Application
-          </button>
-        </div>
-        <div class="orb-card__content">
-          <!-- Loading State -->
-          <div class="org-detail-applications__loading" *ngIf="isLoadingApplications">
-            <fa-icon icon="spinner" animation="spin"></fa-icon>
-            <span>Loading applications...</span>
-          </div>
-
-          <!-- Error State -->
-          <div class="org-detail-applications__error" *ngIf="applicationsError && !isLoadingApplications">
-            <fa-icon icon="exclamation-triangle"></fa-icon>
-            <span>{{ applicationsError }}</span>
-            <button class="orb-btn orb-btn--secondary orb-btn--sm" (click)="loadApplications()">
-              Retry
-            </button>
-          </div>
-
-          <!-- Empty State -->
-          <div class="org-detail-applications__empty" *ngIf="!isLoadingApplications && !applicationsError && applications.length === 0">
-            <fa-icon icon="rocket" size="2x"></fa-icon>
-            <p>No applications yet</p>
-            <p class="org-detail-applications__empty-hint">Create your first application to get started.</p>
-          </div>
-
-          <!-- Applications List -->
-          <div class="org-detail-applications__list" *ngIf="!isLoadingApplications && !applicationsError && applications.length > 0">
-            <div 
-              class="org-detail-applications__row"
-              *ngFor="let app of applications"
-              (click)="onApplicationClick(app)"
-              (keydown.enter)="onApplicationClick(app)"
-              tabindex="0"
-              role="button"
-              [attr.aria-label]="'View application ' + app.name">
-              <div class="org-detail-applications__info">
-                <span class="org-detail-applications__name">{{ app.name }}</span>
-                <span class="org-detail-applications__id">{{ app.applicationId }}</span>
+          <div class="orb-page-header__text-section">
+            <div class="orb-page-header__greeting">
+              <div class="orb-page-header__icon-title">
+                <fa-icon icon="building" class="orb-page-header__icon-fa"></fa-icon>
+                <h1 class="orb-page-header__title">
+                  {{ isDraft ? 'Complete Organization Setup' : (organization?.name || 'Organization Details') }}
+                </h1>
               </div>
-              <div class="org-detail-applications__meta">
-                <app-status-badge 
-                  [status]="app.status" 
-                  type="application"
+              <p class="orb-page-header__subtitle" *ngIf="isDraft" class="orb-page-header__subtitle--warning">
+                Your organization was created but needs to be completed. Fill in the details below and click "Activate Organization" to finish setup.
+              </p>
+              <p class="orb-page-header__subtitle" *ngIf="!isDraft && !data.isLoading && !loadError">
+                Update your organization's information below.
+              </p>
+              <div class="orb-page-header__status" *ngIf="organization && !isDraft">
+                <app-status-badge
+                  [status]="organization.status"
+                  type="organization"
                   [showIcon]="true"
                   [showLabel]="true"
-                  size="small"
+                  size="medium"
                   variant="chip">
                 </app-status-badge>
-                <span class="org-detail-applications__env-count">
-                  <fa-icon icon="server"></fa-icon>
-                  {{ getEnvironmentCount(app) }} environment{{ getEnvironmentCount(app) !== 1 ? 's' : '' }}
-                </span>
               </div>
-              <fa-icon icon="chevron-right" class="org-detail-applications__arrow"></fa-icon>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Debug Panel -->
-  <app-debug-panel
-    [visible]="(debugMode$ | async) || false"
-    [title]="'Organization Detail Debug'"
-    [logs$]="debugLogs$"
-    [context]="debugContext">
-  </app-debug-panel>
-</div>
+    <!-- Back Link -->
+    <div class="org-detail-content">
+      <div class="org-detail-breadcrumb">
+        <a routerLink="/customers/organizations" class="org-detail-back-link">
+          <fa-icon icon="arrow-left"></fa-icon>
+          Back to Organizations
+        </a>
+      </div>
+
+      <!-- Loading State -->
+      <div class="org-detail-loading" *ngIf="data.isLoading">
+        <fa-icon icon="spinner" animation="spin" size="2x"></fa-icon>
+        <p>Loading organization...</p>
+      </div>
+
+      <!-- Error State -->
+      <div class="org-detail-error" *ngIf="loadError && !data.isLoading">
+        <fa-icon icon="exclamation-triangle" size="2x"></fa-icon>
+        <p>{{ loadError }}</p>
+        <button class="orb-btn orb-btn--secondary" routerLink="/customers/organizations">
+          Back to Organizations
+        </button>
+      </div>
+
+      <!-- Content -->
+      <div class="org-detail-form-section" *ngIf="organization && !data.isLoading && !loadError">
+        <!-- Form Card using global orb-card styles -->
+        <div class="orb-card">
+          <div class="orb-card__header">
+            <h2 class="orb-card__title">
+              <fa-icon icon="info-circle" class="orb-card__icon"></fa-icon>
+              Organization Information
+            </h2>
+          </div>
+          <div class="orb-card__content orb-card__content--padded">
+            <!-- Name Field -->
+            <div class="org-detail-field">
+              <label class="org-detail-field__label" for="org-name">
+                Organization Name <span class="org-detail-field__required">*</span>
+              </label>
+              <input
+                type="text"
+                id="org-name"
+                class="org-detail-field__input"
+                [class.org-detail-field__input--error]="validationErrors.name"
+                [(ngModel)]="editForm.name"
+                placeholder="Enter organization name"
+                maxlength="100"
+                [attr.aria-invalid]="validationErrors.name ? 'true' : 'false'"
+                [attr.aria-describedby]="validationErrors.name ? 'name-error' : null">
+              <div class="org-detail-field__error" id="name-error" *ngIf="validationErrors.name">
+                {{ validationErrors.name }}
+              </div>
+              <div class="org-detail-field__hint">
+                {{ editForm.name.length }}/100 characters
+              </div>
+            </div>
+
+            <!-- Description Field -->
+            <div class="org-detail-field">
+              <label class="org-detail-field__label" for="org-description">
+                Description
+              </label>
+              <textarea
+                id="org-description"
+                class="org-detail-field__textarea"
+                [class.org-detail-field__textarea--error]="validationErrors.description"
+                [(ngModel)]="editForm.description"
+                placeholder="Enter a brief description of your organization"
+                maxlength="500"
+                rows="4"
+                [attr.aria-invalid]="validationErrors.description ? 'true' : 'false'"
+                [attr.aria-describedby]="validationErrors.description ? 'desc-error' : null">
+              </textarea>
+              <div class="org-detail-field__error" id="desc-error" *ngIf="validationErrors.description">
+                {{ validationErrors.description }}
+              </div>
+              <div class="org-detail-field__hint">
+                {{ editForm.description.length }}/500 characters
+              </div>
+            </div>
+
+            <!-- Metadata (read-only, shown for existing orgs) -->
+            <div class="org-detail-metadata" *ngIf="!isDraft">
+              <div class="org-detail-metadata__item">
+                <span class="org-detail-metadata__label">Organization ID</span>
+                <span class="org-detail-metadata__value">{{ organization.organizationId }}</span>
+              </div>
+              <div class="org-detail-metadata__item">
+                <span class="org-detail-metadata__label">Created</span>
+                <span class="org-detail-metadata__value">{{ formatDate(organization.createdAt) }}</span>
+              </div>
+              <div class="org-detail-metadata__item">
+                <span class="org-detail-metadata__label">Last Updated</span>
+                <span class="org-detail-metadata__value">{{ formatDate(organization.updatedAt) }}</span>
+              </div>
+            </div>
+
+            <!-- Save Error -->
+            <div class="org-detail-save-error" *ngIf="data.saveError">
+              <fa-icon icon="exclamation-circle"></fa-icon>
+              {{ data.saveError }}
+            </div>
+          </div>
+
+          <!-- Actions Footer -->
+          <div class="org-detail-actions">
+            <div class="org-detail-actions__left">
+              <button
+                class="orb-btn orb-btn--outline org-detail-actions__delete"
+                (click)="onDelete()"
+                [disabled]="data.isSaving || data.isDeleting">
+                <fa-icon icon="spinner" animation="spin" *ngIf="data.isDeleting"></fa-icon>
+                <fa-icon icon="trash" *ngIf="!data.isDeleting"></fa-icon>
+                Delete
+              </button>
+            </div>
+            <div class="org-detail-actions__right">
+              <button
+                class="orb-btn orb-btn--secondary"
+                (click)="onCancel()"
+                [disabled]="data.isSaving || data.isDeleting">
+                Cancel
+              </button>
+              <button
+                class="orb-btn orb-btn--primary"
+                (click)="onSave()"
+                [disabled]="data.isSaving || data.isDeleting">
+                <fa-icon icon="spinner" animation="spin" *ngIf="data.isSaving"></fa-icon>
+                <fa-icon icon="save" *ngIf="!data.isSaving"></fa-icon>
+                {{ isDraft ? 'Activate Organization' : 'Save Changes' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Applications Section (only for non-draft organizations) -->
+        <div class="orb-card org-detail-applications" *ngIf="!isDraft">
+          <div class="orb-card__header">
+            <h2 class="orb-card__title">
+              <fa-icon icon="rocket" class="orb-card__icon"></fa-icon>
+              Applications
+            </h2>
+            <button
+              class="orb-btn orb-btn--primary orb-btn--sm"
+              (click)="onCreateApplication()"
+              aria-label="Create new application for this organization">
+              <fa-icon icon="plus"></fa-icon>
+              Create Application
+            </button>
+          </div>
+          <div class="orb-card__content">
+            <!-- Loading State -->
+            <div class="org-detail-applications__loading" *ngIf="data.isLoadingApplications">
+              <fa-icon icon="spinner" animation="spin"></fa-icon>
+              <span>Loading applications...</span>
+            </div>
+
+            <!-- Error State -->
+            <div class="org-detail-applications__error" *ngIf="data.applicationsError && !data.isLoadingApplications">
+              <fa-icon icon="exclamation-triangle"></fa-icon>
+              <span>{{ data.applicationsError }}</span>
+              <button class="orb-btn orb-btn--secondary orb-btn--sm" (click)="loadApplications()">
+                Retry
+              </button>
+            </div>
+
+            <!-- Empty State -->
+            <div class="org-detail-applications__empty" *ngIf="!data.isLoadingApplications && !data.applicationsError && data.applications && data.applications.length === 0">
+              <fa-icon icon="rocket" size="2x"></fa-icon>
+              <p>No applications yet</p>
+              <p class="org-detail-applications__empty-hint">Create your first application to get started.</p>
+            </div>
+
+            <!-- Applications List -->
+            <div class="org-detail-applications__list" *ngIf="!data.isLoadingApplications && !data.applicationsError && data.applications && data.applications.length > 0">
+              <div
+                class="org-detail-applications__row"
+                *ngFor="let app of data.applications"
+                (click)="onApplicationClick(app)"
+                (keydown.enter)="onApplicationClick(app)"
+                tabindex="0"
+                role="button"
+                [attr.aria-label]="'View application ' + app.name">
+                <div class="org-detail-applications__info">
+                  <span class="org-detail-applications__name">{{ app.name }}</span>
+                  <span class="org-detail-applications__id">{{ app.applicationId }}</span>
+                </div>
+                <div class="org-detail-applications__meta">
+                  <app-status-badge
+                    [status]="app.status"
+                    type="application"
+                    [showIcon]="true"
+                    [showLabel]="true"
+                    size="small"
+                    variant="chip">
+                  </app-status-badge>
+                  <span class="org-detail-applications__env-count">
+                    <fa-icon icon="server"></fa-icon>
+                    {{ getEnvironmentCount(app) }} environment{{ getEnvironmentCount(app) !== 1 ? 's' : '' }}
+                  </span>
+                </div>
+                <fa-icon icon="chevron-right" class="org-detail-applications__arrow"></fa-icon>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Debug Panel -->
+    <app-debug-panel
+      [visible]="(debugMode$ | async) || false"
+      [title]="'Organization Detail Debug'"
+      [logs$]="debugLogs$"
+      [context]="debugContext">
+    </app-debug-panel>
+  </div>
+</ng-container>

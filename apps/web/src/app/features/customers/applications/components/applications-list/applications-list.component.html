@@ -1,4 +1,7 @@
 <!-- Applications List Component Template -->
+<!-- Uses NgRx store as single source of truth (store-first pattern) -->
+<!-- @see .kiro/specs/store-centric-refactoring/design.md -->
+
 <div class="orb-card">
 
   <!-- Header -->
@@ -40,7 +43,7 @@
         [(ngModel)]="organizationFilter"
         (change)="onFilterChange()">
         <option value="">All Organizations</option>
-        <option *ngFor="let org of organizations" [value]="org.organizationId">
+        <option *ngFor="let org of organizations$ | async" [value]="org.organizationId">
           {{ org.name }}
         </option>
       </select>
@@ -61,98 +64,104 @@
   </div>
 
   <!-- Applications Table -->
-  <div class="orb-card__content orb-card__content--table">
-    <div class="orb-table">
-      <div class="orb-table__container">
-        <table class="orb-table__element">
-        <thead>
-          <tr>
-            <th class="orb-table__header">Application</th>
-            <th class="orb-table__header">Status</th>
-            <th class="orb-table__header">Organization</th>
-            <th class="orb-table__header">Environments</th>
-            <th class="orb-table__header">Role</th>
-            <th class="orb-table__header">Last Activity</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let row of filteredApplicationRows; trackBy: trackByApplicationId"
-              class="orb-table__row orb-table__row--clickable"
-              [class.orb-table__row--selected]="row.application.applicationId === selectedApplication?.applicationId"
-              (click)="onRowClick(row.application)">
+  <ng-container *ngIf="{ 
+    rows: filteredApplicationRows$ | async,
+    allRows: applicationRows$ | async,
+    loading: isLoading$ | async
+  } as data">
+    <div class="orb-card__content orb-card__content--table">
+      <div class="orb-table">
+        <div class="orb-table__container">
+          <table class="orb-table__element">
+          <thead>
+            <tr>
+              <th class="orb-table__header">Application</th>
+              <th class="orb-table__header">Status</th>
+              <th class="orb-table__header">Organization</th>
+              <th class="orb-table__header">Environments</th>
+              <th class="orb-table__header">Role</th>
+              <th class="orb-table__header">Last Activity</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of data.rows; trackBy: trackByApplicationId"
+                class="orb-table__row orb-table__row--clickable"
+                [class.orb-table__row--selected]="row.application.applicationId === selectedApplication?.applicationId"
+                (click)="onRowClick(row.application)">
 
-            <!-- Application Info -->
-            <td class="orb-table__cell">
-              <div class="orb-info">
-                <div class="orb-info__name">{{ row.application.name }}</div>
-                <div class="orb-info__id">{{ row.application.applicationId }}</div>
-              </div>
-            </td>
+              <!-- Application Info -->
+              <td class="orb-table__cell">
+                <div class="orb-info">
+                  <div class="orb-info__name">{{ row.application.name }}</div>
+                  <div class="orb-info__id">{{ row.application.applicationId }}</div>
+                </div>
+              </td>
 
-            <!-- Status -->
-            <td class="orb-table__cell">
-              <app-status-badge
-                [status]="row.application.status || 'ACTIVE'"
-                type="application"
-                [showIcon]="true"
-                [showLabel]="true"
-                size="small"
-                variant="chip">
-              </app-status-badge>
-            </td>
+              <!-- Status -->
+              <td class="orb-table__cell">
+                <app-status-badge
+                  [status]="row.application.status || 'ACTIVE'"
+                  type="application"
+                  [showIcon]="true"
+                  [showLabel]="true"
+                  size="small"
+                  variant="chip">
+                </app-status-badge>
+              </td>
 
-            <!-- Organization -->
-            <td class="orb-table__cell">
-              <span class="orb-info__name">{{ row.organizationName }}</span>
-            </td>
+              <!-- Organization -->
+              <td class="orb-table__cell">
+                <span class="orb-info__name">{{ row.organizationName }}</span>
+              </td>
 
-            <!-- Environment Count -->
-            <td class="orb-table__cell">
-              <div class="orb-count">
-                <fa-icon icon="server" class="orb-count__icon"></fa-icon>
-                {{ row.environmentCount }}
-              </div>
-            </td>
+              <!-- Environment Count -->
+              <td class="orb-table__cell">
+                <div class="orb-count">
+                  <fa-icon icon="server" class="orb-count__icon"></fa-icon>
+                  {{ row.environmentCount }}
+                </div>
+              </td>
 
-            <!-- Role -->
-            <td class="orb-table__cell">
-              <span class="orb-role-badge orb-role-badge--{{ getRoleClass(row.userRole) }}">
-                {{ row.userRole }}
-              </span>
-            </td>
+              <!-- Role -->
+              <td class="orb-table__cell">
+                <span class="orb-role-badge orb-role-badge--{{ getRoleClass(row.userRole) }}">
+                  {{ row.userRole }}
+                </span>
+              </td>
 
-            <!-- Last Activity -->
-            <td class="orb-table__cell">
-              <span class="orb-info__id">{{ row.lastActivity }}</span>
-            </td>
+              <!-- Last Activity -->
+              <td class="orb-table__cell">
+                <span class="orb-info__id">{{ row.lastActivity }}</span>
+              </td>
 
-          </tr>
+            </tr>
 
-          <!-- Loading State -->
-          <tr *ngIf="isLoading" class="orb-table__row orb-table__row--loading">
-            <td colspan="6" class="orb-table__cell orb-table__cell--loading">
-              <div class="orb-table__loading">
-                <fa-icon icon="spinner" class="orb-table__loading-icon fa-spin"></fa-icon>
-                Loading applications...
-              </div>
-            </td>
-          </tr>
+            <!-- Loading State -->
+            <tr *ngIf="data.loading" class="orb-table__row orb-table__row--loading">
+              <td colspan="6" class="orb-table__cell orb-table__cell--loading">
+                <div class="orb-table__loading">
+                  <fa-icon icon="spinner" class="orb-table__loading-icon fa-spin"></fa-icon>
+                  Loading applications...
+                </div>
+              </td>
+            </tr>
 
-          <!-- Empty State -->
-          <tr *ngIf="!isLoading && filteredApplicationRows.length === 0"
-              class="orb-table__row orb-table__row--empty">
-            <td colspan="6" class="orb-table__cell orb-table__cell--empty">
-              <div class="orb-table__empty">
-                <fa-icon icon="rocket" class="orb-table__empty-icon"></fa-icon>
-                <p class="orb-table__empty-text">
-                  {{ applicationRows.length === 0 ? 'No applications found. Create your first application to get started.' : 'No applications match your filters' }}
-                </p>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            <!-- Empty State -->
+            <tr *ngIf="!data.loading && (!data.rows || data.rows.length === 0)"
+                class="orb-table__row orb-table__row--empty">
+              <td colspan="6" class="orb-table__cell orb-table__cell--empty">
+                <div class="orb-table__empty">
+                  <fa-icon icon="rocket" class="orb-table__empty-icon"></fa-icon>
+                  <p class="orb-table__empty-text">
+                    {{ (!data.allRows || data.allRows.length === 0) ? 'No applications found. Create your first application to get started.' : 'No applications match your filters' }}
+                  </p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-  </div>
+    </div>
+  </ng-container>
 </div>

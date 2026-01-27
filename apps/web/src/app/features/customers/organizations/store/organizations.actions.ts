@@ -11,10 +11,15 @@ import { OrganizationTableRow } from './organizations.state';
 export const OrganizationsActions = createActionGroup({
   source: 'Organizations',
   events: {
-    // Load Organizations
+    // Load Organizations (list)
     'Load Organizations': emptyProps(),
     'Load Organizations Success': props<{ organizations: Organizations[] }>(),
     'Load Organizations Failure': props<{ error: string }>(),
+
+    // Load Single Organization (detail page)
+    'Load Organization': props<{ organizationId: string }>(),
+    'Load Organization Success': props<{ organization: Organizations }>(),
+    'Load Organization Failure': props<{ error: string }>(),
 
     // Create Draft Organization (create-on-click pattern)
     'Create Draft Organization': emptyProps(),

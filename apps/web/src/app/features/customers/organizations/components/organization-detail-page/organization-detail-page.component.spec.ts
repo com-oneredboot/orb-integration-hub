@@ -1,26 +1,30 @@
 /**
  * OrganizationDetailPageComponent Unit Tests
  *
- * Tests for organization detail page including applications section.
+ * Tests for organization detail page using NgRx store-first pattern.
  *
- * @see .kiro/specs/organizations-applications-integration/design.md
- * _Requirements: 2.1-2.8_
+ * @see .kiro/specs/store-centric-refactoring/design.md
+ * _Requirements: 4.1-4.4, 7.1_
  */
 
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { Router, ActivatedRoute, convertToParamMap } from '@angular/router';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
-import { of, throwError, BehaviorSubject } from 'rxjs';
+import { provideMockActions } from '@ngrx/effects/testing';
+import { BehaviorSubject, ReplaySubject } from 'rxjs';
 import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
 import { fas } from '@fortawesome/free-solid-svg-icons';
+import { Action } from '@ngrx/store';
 
 import { OrganizationDetailPageComponent } from './organization-detail-page.component';
-import { OrganizationService } from '../../../../../core/services/organization.service';
-import { ApplicationService } from '../../../../../core/services/application.service';
 import { Organizations } from '../../../../../core/models/OrganizationsModel';
 import { IApplications } from '../../../../../core/models/ApplicationsModel';
 import { OrganizationStatus } from '../../../../../core/enums/OrganizationStatusEnum';
 import { ApplicationStatus } from '../../../../../core/enums/ApplicationStatusEnum';
+import { OrganizationsActions } from '../../store/organizations.actions';
+import { ApplicationsActions } from '../../../applications/store/applications.actions';
+import * as fromOrganizations from '../../store/organizations.selectors';
+import * as fromApplications from '../../../applications/store/applications.selectors';
 import * as fromUser from '../../../../user/store/user.selectors';
 
 describe('OrganizationDetailPageComponent', () => {
@@ -28,8 +32,7 @@ describe('OrganizationDetailPageComponent', () => {
   let fixture: ComponentFixture<OrganizationDetailPageComponent>;
   let store: MockStore;
   let router: Router;
-  let organizationService: jasmine.SpyObj<OrganizationService>;
-  let applicationService: jasmine.SpyObj<ApplicationService>;
+  let actions$: ReplaySubject<Action>;
   let paramMapSubject: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
 
   const mockOrganization: Organizations = new Organizations({
@@ -81,25 +84,47 @@ describe('OrganizationDetailPageComponent', () => {
     },
   ];
 
+  const initialState = {
+    organizations: {
+      organizations: [],
+      selectedOrganization: null,
+      isLoading: false,
+      isSaving: false,
+      isDeleting: false,
+      error: null,
+      saveError: null,
+      deleteError: null,
+    },
+    applications: {
+      applications: [],
+      isLoading: false,
+      error: null,
+    },
+  };
+
   beforeEach(async () => {
-    organizationService = jasmine.createSpyObj('OrganizationService', [
-      'getOrganization',
-      'updateOrganization',
-      'deleteOrganization',
-    ]);
-    applicationService = jasmine.createSpyObj('ApplicationService', [
-      'getApplicationsByOrganization',
-    ]);
+    actions$ = new ReplaySubject<Action>(1);
     paramMapSubject = new BehaviorSubject(convertToParamMap({ id: 'org-123' }));
 
     await TestBed.configureTestingModule({
       imports: [OrganizationDetailPageComponent],
       providers: [
         provideMockStore({
-          selectors: [{ selector: fromUser.selectDebugMode, value: false }],
+          initialState,
+          selectors: [
+            { selector: fromOrganizations.selectSelectedOrganization, value: null },
+            { selector: fromOrganizations.selectIsLoading, value: false },
+            { selector: fromOrganizations.selectIsSaving, value: false },
+            { selector: fromOrganizations.selectIsDeleting, value: false },
+            { selector: fromOrganizations.selectError, value: null },
+            { selector: fromOrganizations.selectSaveError, value: null },
+            { selector: fromApplications.selectApplications, value: [] },
+            { selector: fromApplications.selectIsLoading, value: false },
+            { selector: fromApplications.selectError, value: null },
+            { selector: fromUser.selectDebugMode, value: false },
+          ],
         }),
-        { provide: OrganizationService, useValue: organizationService },
-        { provide: ApplicationService, useValue: applicationService },
+        provideMockActions(() => actions$),
         {
           provide: ActivatedRoute,
           useValue: {
@@ -116,6 +141,7 @@ describe('OrganizationDetailPageComponent', () => {
     store = TestBed.inject(MockStore);
     router = TestBed.inject(Router);
     spyOn(router, 'navigate');
+    spyOn(store, 'dispatch').and.callThrough();
 
     fixture = TestBed.createComponent(OrganizationDetailPageComponent);
     component = fixture.componentInstance;
@@ -129,84 +155,113 @@ describe('OrganizationDetailPageComponent', () => {
     expect(component).toBeTruthy();
   });
 
-
-  describe('Organization Loading', () => {
-    it('should load organization on init', fakeAsync(() => {
-      organizationService.getOrganization.and.returnValue(of(mockOrganization));
-      applicationService.getApplicationsByOrganization.and.returnValue(
-        of({ items: mockApplications, nextToken: null })
-      );
-
+  describe('Store Dispatches', () => {
+    it('should dispatch loadOrganization on init', fakeAsync(() => {
       fixture.detectChanges();
       tick();
 
-      expect(organizationService.getOrganization).toHaveBeenCalledWith('org-123');
+      expect(store.dispatch).toHaveBeenCalledWith(
+        OrganizationsActions.loadOrganization({ organizationId: 'org-123' })
+      );
+    }));
+
+    it('should dispatch loadApplications on init', fakeAsync(() => {
+      fixture.detectChanges();
+      tick();
+
+      expect(store.dispatch).toHaveBeenCalledWith(
+        ApplicationsActions.loadApplications()
+      );
+    }));
+
+    it('should dispatch updateOrganization on save', fakeAsync(() => {
+      store.overrideSelector(fromOrganizations.selectSelectedOrganization, mockOrganization);
+      store.refreshState();
+      fixture.detectChanges();
+      tick();
+
+      component.editForm.name = 'Updated Name';
+      component.onSave();
+
+      expect(store.dispatch).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          type: '[Organizations] Update Organization',
+        })
+      );
+    }));
+
+    it('should dispatch deleteOrganization on delete', fakeAsync(() => {
+      store.overrideSelector(fromOrganizations.selectSelectedOrganization, mockOrganization);
+      store.refreshState();
+      fixture.detectChanges();
+      tick();
+
+      spyOn(window, 'confirm').and.returnValue(true);
+      component.onDelete();
+
+      expect(store.dispatch).toHaveBeenCalledWith(
+        OrganizationsActions.deleteOrganization({ organizationId: 'org-123' })
+      );
+    }));
+
+    it('should dispatch deleteOrganization on cancel for draft', fakeAsync(() => {
+      store.overrideSelector(fromOrganizations.selectSelectedOrganization, mockDraftOrganization);
+      store.refreshState();
+      fixture.detectChanges();
+      tick();
+
+      component.onCancel();
+
+      expect(store.dispatch).toHaveBeenCalledWith(
+        OrganizationsActions.deleteOrganization({ organizationId: 'org-draft' })
+      );
+    }));
+  });
+
+  describe('Store Selectors', () => {
+    it('should update organization from store selector', fakeAsync(() => {
+      store.overrideSelector(fromOrganizations.selectSelectedOrganization, mockOrganization);
+      store.refreshState();
+      fixture.detectChanges();
+      tick();
+
       expect(component.organization).toEqual(mockOrganization);
-      expect(component.isLoading).toBe(false);
+      expect(component.isDraft).toBe(false);
     }));
 
     it('should set isDraft to true for PENDING organizations', fakeAsync(() => {
-      paramMapSubject.next(convertToParamMap({ id: 'org-draft' }));
-      organizationService.getOrganization.and.returnValue(of(mockDraftOrganization));
-
+      store.overrideSelector(fromOrganizations.selectSelectedOrganization, mockDraftOrganization);
+      store.refreshState();
       fixture.detectChanges();
       tick();
 
       expect(component.isDraft).toBe(true);
     }));
 
-    it('should handle organization not found', fakeAsync(() => {
-      organizationService.getOrganization.and.returnValue(of(null));
-
+    it('should update loadError from store error selector', fakeAsync(() => {
+      store.overrideSelector(fromOrganizations.selectError, 'Organization not found');
+      store.refreshState();
       fixture.detectChanges();
       tick();
 
       expect(component.loadError).toBe('Organization not found');
-      expect(component.isLoading).toBe(false);
     }));
 
-    it('should handle organization loading error', fakeAsync(() => {
-      organizationService.getOrganization.and.returnValue(
-        throwError(() => new Error('Network error'))
-      );
-
+    it('should filter applications by organizationId', fakeAsync(() => {
+      store.overrideSelector(fromOrganizations.selectSelectedOrganization, mockOrganization);
+      store.overrideSelector(fromApplications.selectApplications, mockApplications);
+      store.refreshState();
       fixture.detectChanges();
       tick();
 
-      expect(component.loadError).toBe('Network error');
-      expect(component.isLoading).toBe(false);
-    }));
-  });
-
-  describe('Applications Section', () => {
-    beforeEach(() => {
-      organizationService.getOrganization.and.returnValue(of(mockOrganization));
-    });
-
-    it('should load applications for non-draft organizations', fakeAsync(() => {
-      applicationService.getApplicationsByOrganization.and.returnValue(
-        of({ items: mockApplications, nextToken: null })
-      );
-
-      fixture.detectChanges();
-      tick();
-
-      expect(applicationService.getApplicationsByOrganization).toHaveBeenCalledWith('org-123');
-      expect(component.applications.length).toBe(2);
-      expect(component.isLoadingApplications).toBe(false);
+      // The applications$ observable filters by organizationId
+      component.applications$.subscribe(apps => {
+        expect(apps.length).toBe(2);
+        expect(apps.every(a => a.organizationId === 'org-123')).toBe(true);
+      });
     }));
 
-    it('should NOT load applications for draft organizations', fakeAsync(() => {
-      paramMapSubject.next(convertToParamMap({ id: 'org-draft' }));
-      organizationService.getOrganization.and.returnValue(of(mockDraftOrganization));
-
-      fixture.detectChanges();
-      tick();
-
-      expect(applicationService.getApplicationsByOrganization).not.toHaveBeenCalled();
-    }));
-
-    it('should filter out PENDING applications from the list', fakeAsync(() => {
+    it('should filter out PENDING applications', fakeAsync(() => {
       const appsWithPending: IApplications[] = [
         ...mockApplications,
         {
@@ -222,53 +277,46 @@ describe('OrganizationDetailPageComponent', () => {
           updatedAt: new Date(),
         },
       ];
-      applicationService.getApplicationsByOrganization.and.returnValue(
-        of({ items: appsWithPending, nextToken: null })
-      );
-
+      store.overrideSelector(fromOrganizations.selectSelectedOrganization, mockOrganization);
+      store.overrideSelector(fromApplications.selectApplications, appsWithPending);
+      store.refreshState();
       fixture.detectChanges();
       tick();
 
-      expect(component.applications.length).toBe(2);
-      expect(component.applications.every(a => a.status !== ApplicationStatus.Pending)).toBe(true);
+      component.applications$.subscribe(apps => {
+        expect(apps.length).toBe(2);
+        expect(apps.every((a: IApplications) => a.status !== ApplicationStatus.Pending)).toBe(true);
+      });
+    }));
+  });
+
+  describe('Navigation on Success Actions', () => {
+    it('should navigate to list on updateOrganizationSuccess', fakeAsync(() => {
+      fixture.detectChanges();
+      tick();
+
+      actions$.next(OrganizationsActions.updateOrganizationSuccess({ organization: mockOrganization }));
+      tick();
+
+      expect(router.navigate).toHaveBeenCalledWith(['/customers/organizations']);
     }));
 
-    it('should handle applications loading error', fakeAsync(() => {
-      applicationService.getApplicationsByOrganization.and.returnValue(
-        throwError(() => new Error('Failed to load applications'))
-      );
-
+    it('should navigate to list on deleteOrganizationSuccess', fakeAsync(() => {
       fixture.detectChanges();
       tick();
 
-      expect(component.applicationsError).toBe('Failed to load applications');
-      expect(component.isLoadingApplications).toBe(false);
-    }));
-
-    it('should display empty state when no applications exist', fakeAsync(() => {
-      applicationService.getApplicationsByOrganization.and.returnValue(
-        of({ items: [], nextToken: null })
-      );
-      // Mock updateOrganization for count sync (2 -> 0)
-      organizationService.updateOrganization.and.returnValue(
-        of(new Organizations({ ...mockOrganization, applicationCount: 0 }))
-      );
-
-      fixture.detectChanges();
+      actions$.next(OrganizationsActions.deleteOrganizationSuccess({ organizationId: 'org-123' }));
       tick();
 
-      expect(component.applications.length).toBe(0);
-      expect(component.isLoadingApplications).toBe(false);
-      expect(component.applicationsError).toBeNull();
+      expect(router.navigate).toHaveBeenCalledWith(['/customers/organizations']);
     }));
   });
 
   describe('Application Navigation', () => {
     beforeEach(fakeAsync(() => {
-      organizationService.getOrganization.and.returnValue(of(mockOrganization));
-      applicationService.getApplicationsByOrganization.and.returnValue(
-        of({ items: mockApplications, nextToken: null })
-      );
+      store.overrideSelector(fromOrganizations.selectSelectedOrganization, mockOrganization);
+      store.overrideSelector(fromApplications.selectApplications, mockApplications);
+      store.refreshState();
       fixture.detectChanges();
       tick();
     }));
@@ -307,43 +355,61 @@ describe('OrganizationDetailPageComponent', () => {
     });
   });
 
-  describe('Application Count Sync', () => {
-    it('should sync application count when it differs from actual count', fakeAsync(() => {
-      const orgWithWrongCount = new Organizations({
-        ...mockOrganization,
-        applicationCount: 5, // Wrong count
-      });
-      organizationService.getOrganization.and.returnValue(of(orgWithWrongCount));
-      applicationService.getApplicationsByOrganization.and.returnValue(
-        of({ items: mockApplications, nextToken: null })
-      );
-      organizationService.updateOrganization.and.returnValue(
-        of(new Organizations({ ...orgWithWrongCount, applicationCount: 2 }))
-      );
-
+  describe('Form Validation', () => {
+    beforeEach(fakeAsync(() => {
+      store.overrideSelector(fromOrganizations.selectSelectedOrganization, mockOrganization);
+      store.refreshState();
       fixture.detectChanges();
       tick();
-
-      expect(organizationService.updateOrganization).toHaveBeenCalled();
-      const updateCall = organizationService.updateOrganization.calls.mostRecent().args[0];
-      expect(updateCall.applicationCount).toBe(2);
     }));
 
-    it('should NOT sync application count when it matches', fakeAsync(() => {
-      organizationService.getOrganization.and.returnValue(of(mockOrganization));
-      applicationService.getApplicationsByOrganization.and.returnValue(
-        of({ items: mockApplications, nextToken: null })
-      );
+    it('should validate required name', () => {
+      component.editForm.name = '';
+      component.onSave();
 
+      expect(component.validationErrors.name).toBe('Organization name is required');
+    });
+
+    it('should validate name minimum length', () => {
+      component.editForm.name = 'A';
+      component.onSave();
+
+      expect(component.validationErrors.name).toBe('Organization name must be at least 2 characters');
+    });
+
+    it('should validate name maximum length', () => {
+      component.editForm.name = 'A'.repeat(101);
+      component.onSave();
+
+      expect(component.validationErrors.name).toBe('Organization name cannot exceed 100 characters');
+    });
+
+    it('should validate description maximum length', () => {
+      component.editForm.description = 'A'.repeat(501);
+      component.onSave();
+
+      expect(component.validationErrors.description).toBe('Description cannot exceed 500 characters');
+    });
+  });
+
+  describe('Reload Applications', () => {
+    it('should dispatch loadApplications on retry', () => {
+      component.loadApplications();
+
+      expect(store.dispatch).toHaveBeenCalledWith(ApplicationsActions.loadApplications());
+    });
+  });
+
+  describe('Cancel Behavior', () => {
+    it('should navigate back for non-draft organizations', fakeAsync(() => {
+      store.overrideSelector(fromOrganizations.selectSelectedOrganization, mockOrganization);
+      store.refreshState();
       fixture.detectChanges();
       tick();
 
-      // updateOrganization should not be called for count sync
-      // (it may be called for other reasons, so we check the call args)
-      const syncCalls = organizationService.updateOrganization.calls.all().filter(
-        call => call.args[0].applicationCount !== undefined
-      );
-      expect(syncCalls.length).toBe(0);
+      component.onCancel();
+
+      expect(router.navigate).toHaveBeenCalledWith(['/customers/organizations']);
     }));
   });
 });

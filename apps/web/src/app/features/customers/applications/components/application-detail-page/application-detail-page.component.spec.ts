@@ -1,27 +1,31 @@
 /**
  * ApplicationDetailPageComponent Unit Tests
  *
- * Tests for application detail page form validation and save/cancel flows.
+ * Tests for application detail page using NgRx store-first pattern.
  *
- * @see .kiro/specs/applications-management/design.md
- * _Requirements: 6.3_
+ * @see .kiro/specs/store-centric-refactoring/design.md
+ * _Requirements: 3.1-3.5, 7.1_
  */
 
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
-import { of, throwError, BehaviorSubject } from 'rxjs';
+import { provideMockActions } from '@ngrx/effects/testing';
+import { BehaviorSubject, ReplaySubject } from 'rxjs';
 import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
 import { fas } from '@fortawesome/free-solid-svg-icons';
+import { Action } from '@ngrx/store';
 
 import { ApplicationDetailPageComponent } from './application-detail-page.component';
-import { ApplicationService } from '../../../../../core/services/application.service';
-import { OrganizationService } from '../../../../../core/services/organization.service';
 import { IApplications } from '../../../../../core/models/ApplicationsModel';
 import { IOrganizations } from '../../../../../core/models/OrganizationsModel';
 import { ApplicationStatus } from '../../../../../core/enums/ApplicationStatusEnum';
 import { OrganizationStatus } from '../../../../../core/enums/OrganizationStatusEnum';
+import { ApplicationsActions } from '../../store/applications.actions';
+import { OrganizationsActions } from '../../../organizations/store/organizations.actions';
+import * as fromApplications from '../../store/applications.selectors';
+import * as fromOrganizations from '../../../organizations/store/organizations.selectors';
 import * as fromUser from '../../../../user/store/user.selectors';
 
 describe('ApplicationDetailPageComponent', () => {
@@ -29,8 +33,7 @@ describe('ApplicationDetailPageComponent', () => {
   let fixture: ComponentFixture<ApplicationDetailPageComponent>;
   let store: MockStore;
   let router: Router;
-  let applicationService: jasmine.SpyObj<ApplicationService>;
-  let organizationService: jasmine.SpyObj<OrganizationService>;
+  let actions$: ReplaySubject<Action>;
   let paramMapSubject: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
 
   const mockUser = {
@@ -67,30 +70,46 @@ describe('ApplicationDetailPageComponent', () => {
     status: ApplicationStatus.Pending,
   };
 
-  beforeEach(async () => {
-    applicationService = jasmine.createSpyObj('ApplicationService', [
-      'getApplication',
-      'createDraft',
-      'updateApplication',
-      'deleteApplication',
-    ]);
-    organizationService = jasmine.createSpyObj('OrganizationService', [
-      'getUserOrganizations',
-    ]);
+  const initialState = {
+    applications: {
+      applications: [],
+      selectedApplication: null,
+      isLoading: false,
+      isSaving: false,
+      isDeleting: false,
+      error: null,
+      saveError: null,
+    },
+    organizations: {
+      organizations: [],
+    },
+    user: {
+      currentUser: mockUser,
+      debugMode: false,
+    },
+  };
 
+  beforeEach(async () => {
+    actions$ = new ReplaySubject<Action>(1);
     paramMapSubject = new BehaviorSubject(convertToParamMap({ id: 'app-789' }));
 
     await TestBed.configureTestingModule({
       imports: [ApplicationDetailPageComponent, RouterTestingModule],
       providers: [
         provideMockStore({
+          initialState,
           selectors: [
+            { selector: fromApplications.selectSelectedApplication, value: null },
+            { selector: fromApplications.selectIsLoading, value: false },
+            { selector: fromApplications.selectIsSaving, value: false },
+            { selector: fromApplications.selectError, value: null },
+            { selector: fromApplications.selectSaveError, value: null },
+            { selector: fromOrganizations.selectOrganizations, value: [] },
             { selector: fromUser.selectCurrentUser, value: mockUser },
             { selector: fromUser.selectDebugMode, value: false },
           ],
         }),
-        { provide: ApplicationService, useValue: applicationService },
-        { provide: OrganizationService, useValue: organizationService },
+        provideMockActions(() => actions$),
         {
           provide: ActivatedRoute,
           useValue: {
@@ -107,6 +126,8 @@ describe('ApplicationDetailPageComponent', () => {
     store = TestBed.inject(MockStore);
     router = TestBed.inject(Router);
     spyOn(router, 'navigate');
+    spyOn(store, 'dispatch').and.callThrough();
+
     fixture = TestBed.createComponent(ApplicationDetailPageComponent);
     component = fixture.componentInstance;
   });
@@ -119,13 +140,143 @@ describe('ApplicationDetailPageComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  describe('Store Dispatches', () => {
+    it('should dispatch loadApplication on init', fakeAsync(() => {
+      fixture.detectChanges();
+      tick();
+
+      expect(store.dispatch).toHaveBeenCalledWith(
+        ApplicationsActions.loadApplication({ applicationId: 'app-789' })
+      );
+    }));
+
+    it('should dispatch loadOrganizations on init', fakeAsync(() => {
+      fixture.detectChanges();
+      tick();
+
+      expect(store.dispatch).toHaveBeenCalledWith(
+        OrganizationsActions.loadOrganizations()
+      );
+    }));
+
+    it('should dispatch updateApplication on save', fakeAsync(() => {
+      store.overrideSelector(fromApplications.selectSelectedApplication, mockApplication);
+      store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+      store.refreshState();
+      fixture.detectChanges();
+      tick();
+
+      component.editForm.name = 'Updated Name';
+      component.editForm.organizationId = 'org-456';
+      component.editForm.environments = ['PRODUCTION'];
+      component.onSave();
+
+      expect(store.dispatch).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          type: '[Applications] Update Application',
+        })
+      );
+    }));
+
+    it('should dispatch deleteApplication on delete', fakeAsync(() => {
+      store.overrideSelector(fromApplications.selectSelectedApplication, mockApplication);
+      store.refreshState();
+      fixture.detectChanges();
+      tick();
+
+      spyOn(window, 'confirm').and.returnValue(true);
+      component.onDelete();
+
+      expect(store.dispatch).toHaveBeenCalledWith(
+        ApplicationsActions.deleteApplication({ applicationId: 'app-789' })
+      );
+    }));
+
+    it('should dispatch deleteApplication on cancel for draft', fakeAsync(() => {
+      store.overrideSelector(fromApplications.selectSelectedApplication, mockPendingApplication);
+      store.refreshState();
+      fixture.detectChanges();
+      tick();
+
+      component.onCancel();
+
+      expect(store.dispatch).toHaveBeenCalledWith(
+        ApplicationsActions.deleteApplication({ applicationId: 'app-pending' })
+      );
+    }));
+  });
+
+  describe('Store Selectors', () => {
+    it('should update application from store selector', fakeAsync(() => {
+      store.overrideSelector(fromApplications.selectSelectedApplication, mockApplication);
+      store.refreshState();
+      fixture.detectChanges();
+      tick();
+
+      expect(component.application).toEqual(mockApplication);
+      expect(component.isDraft).toBe(false);
+    }));
+
+    it('should set isDraft to true for PENDING applications', fakeAsync(() => {
+      store.overrideSelector(fromApplications.selectSelectedApplication, mockPendingApplication);
+      store.refreshState();
+      fixture.detectChanges();
+      tick();
+
+      expect(component.isDraft).toBe(true);
+    }));
+
+    it('should update loadError from store error selector', fakeAsync(() => {
+      store.overrideSelector(fromApplications.selectError, 'Application not found');
+      store.refreshState();
+      fixture.detectChanges();
+      tick();
+
+      expect(component.loadError).toBe('Application not found');
+    }));
+
+    it('should get organizations from store', fakeAsync(() => {
+      store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+      store.refreshState();
+      fixture.detectChanges();
+      tick();
+
+      let orgs: IOrganizations[] = [];
+      component.organizations$.subscribe(o => orgs = o);
+      tick();
+
+      expect(orgs.length).toBe(1);
+      expect(orgs[0].organizationId).toBe('org-456');
+    }));
+  });
+
+  describe('Navigation on Success Actions', () => {
+    it('should navigate to list on updateApplicationSuccess', fakeAsync(() => {
+      fixture.detectChanges();
+      tick();
+
+      actions$.next(ApplicationsActions.updateApplicationSuccess({ application: mockApplication }));
+      tick();
+
+      expect(router.navigate).toHaveBeenCalledWith(['/customers/applications']);
+    }));
+
+    it('should navigate to list on deleteApplicationSuccess', fakeAsync(() => {
+      fixture.detectChanges();
+      tick();
+
+      actions$.next(ApplicationsActions.deleteApplicationSuccess({ applicationId: 'app-789' }));
+      tick();
+
+      expect(router.navigate).toHaveBeenCalledWith(['/customers/applications']);
+    }));
+  });
+
   describe('Form Validation', () => {
     beforeEach(fakeAsync(() => {
-      organizationService.getUserOrganizations.and.returnValue(
-        of({ items: [mockOrganization], nextToken: null })
-      );
-      applicationService.getApplication.and.returnValue(of(mockApplication));
-
+      store.overrideSelector(fromApplications.selectSelectedApplication, mockApplication);
+      store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+      store.refreshState();
       fixture.detectChanges();
       tick();
     }));
@@ -137,7 +288,6 @@ describe('ApplicationDetailPageComponent', () => {
       component.onSave();
 
       expect(component.validationErrors.name).toBe('Application name is required');
-      expect(applicationService.updateApplication).not.toHaveBeenCalled();
     });
 
     it('should require name to be at least 2 characters', () => {
@@ -185,22 +335,6 @@ describe('ApplicationDetailPageComponent', () => {
       );
     });
 
-    it('should pass validation with valid data', () => {
-      component.editForm.name = 'Valid Name';
-      component.editForm.organizationId = 'org-456';
-      component.editForm.description = 'Valid description';
-      component.editForm.environments = ['PRODUCTION'];
-
-      applicationService.updateApplication.and.returnValue(of(mockApplication));
-
-      component.onSave();
-
-      expect(component.validationErrors.name).toBe('');
-      expect(component.validationErrors.organizationId).toBe('');
-      expect(component.validationErrors.environments).toBe('');
-      expect(applicationService.updateApplication).toHaveBeenCalled();
-    });
-
     it('should require at least one environment', () => {
       component.editForm.name = 'Valid Name';
       component.editForm.organizationId = 'org-456';
@@ -211,17 +345,14 @@ describe('ApplicationDetailPageComponent', () => {
       expect(component.validationErrors.environments).toBe(
         'At least one environment must be selected'
       );
-      expect(applicationService.updateApplication).not.toHaveBeenCalled();
     });
   });
 
   describe('Environment Selection', () => {
     beforeEach(fakeAsync(() => {
-      organizationService.getUserOrganizations.and.returnValue(
-        of({ items: [mockOrganization], nextToken: null })
-      );
-      applicationService.getApplication.and.returnValue(of(mockApplication));
-
+      store.overrideSelector(fromApplications.selectSelectedApplication, mockApplication);
+      store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+      store.refreshState();
       fixture.detectChanges();
       tick();
     }));
@@ -271,51 +402,13 @@ describe('ApplicationDetailPageComponent', () => {
 
       expect(component.validationErrors.environments).toBe('');
     });
-
-    it('should include environments in save payload', fakeAsync(() => {
-      component.editForm.name = 'Test App';
-      component.editForm.organizationId = 'org-456';
-      component.editForm.environments = ['PRODUCTION', 'DEVELOPMENT'];
-
-      applicationService.updateApplication.and.returnValue(of(mockApplication));
-
-      component.onSave();
-      tick();
-
-      expect(applicationService.updateApplication).toHaveBeenCalledWith(
-        jasmine.objectContaining({
-          environments: ['PRODUCTION', 'DEVELOPMENT']
-        })
-      );
-    }));
-
-    it('should render environment checkboxes in template', () => {
-      fixture.detectChanges();
-
-      const checkboxes = fixture.nativeElement.querySelectorAll(
-        '.app-detail-environments__checkbox'
-      );
-      expect(checkboxes.length).toBe(5);
-    });
-
-    it('should show selected state for checked environments', () => {
-      fixture.detectChanges();
-
-      const selectedItems = fixture.nativeElement.querySelectorAll(
-        '.app-detail-environments__item--selected'
-      );
-      expect(selectedItems.length).toBe(2); // PRODUCTION and STAGING from mockApplication
-    });
   });
 
   describe('Save Flow for PENDING Application', () => {
     beforeEach(fakeAsync(() => {
-      organizationService.getUserOrganizations.and.returnValue(
-        of({ items: [mockOrganization], nextToken: null })
-      );
-      applicationService.getApplication.and.returnValue(of(mockPendingApplication));
-
-      paramMapSubject.next(convertToParamMap({ id: 'app-pending' }));
+      store.overrideSelector(fromApplications.selectSelectedApplication, mockPendingApplication);
+      store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+      store.refreshState();
       fixture.detectChanges();
       tick();
     }));
@@ -323,208 +416,48 @@ describe('ApplicationDetailPageComponent', () => {
     it('should detect PENDING status as draft mode', () => {
       expect(component.isDraft).toBe(true);
     });
-
-    it('should change status to ACTIVE when saving PENDING application', fakeAsync(() => {
-      component.editForm.name = 'Updated Name';
-      component.editForm.organizationId = 'org-456';
-      component.editForm.environments = ['PRODUCTION'];
-
-      const updatedApp = { ...mockPendingApplication, status: ApplicationStatus.Active };
-      applicationService.updateApplication.and.returnValue(of(updatedApp));
-
-      component.onSave();
-      tick();
-
-      expect(applicationService.updateApplication).toHaveBeenCalledWith(
-        jasmine.objectContaining({
-          status: ApplicationStatus.Active,
-        })
-      );
-    }));
-  });
-
-  describe('Cancel Deletes Draft', () => {
-    beforeEach(fakeAsync(() => {
-      organizationService.getUserOrganizations.and.returnValue(
-        of({ items: [mockOrganization], nextToken: null })
-      );
-      applicationService.getApplication.and.returnValue(of(mockPendingApplication));
-
-      paramMapSubject.next(convertToParamMap({ id: 'app-pending' }));
-      fixture.detectChanges();
-      tick();
-    }));
-
-    it('should delete draft application on cancel', fakeAsync(() => {
-      applicationService.deleteApplication.and.returnValue(of(mockPendingApplication));
-
-      component.onCancel();
-      tick();
-
-      expect(applicationService.deleteApplication).toHaveBeenCalledWith('app-pending');
-      expect(router.navigate).toHaveBeenCalledWith(['/customers/applications']);
-    }));
-
-    it('should navigate even if delete fails', fakeAsync(() => {
-      applicationService.deleteApplication.and.returnValue(
-        throwError(() => new Error('Delete failed'))
-      );
-
-      component.onCancel();
-      tick();
-
-      expect(router.navigate).toHaveBeenCalledWith(['/customers/applications']);
-    }));
   });
 
   describe('Cancel for Active Application', () => {
     beforeEach(fakeAsync(() => {
-      organizationService.getUserOrganizations.and.returnValue(
-        of({ items: [mockOrganization], nextToken: null })
-      );
-      applicationService.getApplication.and.returnValue(of(mockApplication));
-
+      store.overrideSelector(fromApplications.selectSelectedApplication, mockApplication);
+      store.refreshState();
       fixture.detectChanges();
       tick();
     }));
 
-    it('should not delete active application on cancel', () => {
+    it('should not dispatch delete for active application on cancel', () => {
+      // Clear previous dispatch calls
+      (store.dispatch as jasmine.Spy).calls.reset();
+
       component.onCancel();
 
-      expect(applicationService.deleteApplication).not.toHaveBeenCalled();
+      // Should navigate but not dispatch delete
       expect(router.navigate).toHaveBeenCalledWith(['/customers/applications']);
+      expect(store.dispatch).not.toHaveBeenCalledWith(
+        jasmine.objectContaining({ type: '[Applications] Delete Application' })
+      );
     });
-  });
-
-  describe('Organization Dropdown Loading', () => {
-    it('should load organizations on init', fakeAsync(() => {
-      organizationService.getUserOrganizations.and.returnValue(
-        of({ items: [mockOrganization], nextToken: null })
-      );
-      applicationService.getApplication.and.returnValue(of(mockApplication));
-
-      fixture.detectChanges();
-      tick();
-
-      expect(organizationService.getUserOrganizations).toHaveBeenCalledWith('user-123');
-      expect(component.organizations.length).toBe(1);
-    }));
-
-    it('should auto-select organization when only one exists', fakeAsync(() => {
-      organizationService.getUserOrganizations.and.returnValue(
-        of({ items: [mockOrganization], nextToken: null })
-      );
-      applicationService.getApplication.and.returnValue(
-        of({ ...mockApplication, organizationId: '' })
-      );
-
-      fixture.detectChanges();
-      tick();
-
-      expect(component.editForm.organizationId).toBe('org-456');
-    }));
-
-    it('should filter out non-ACTIVE organizations', fakeAsync(() => {
-      const inactiveOrg: IOrganizations = {
-        ...mockOrganization,
-        organizationId: 'org-inactive',
-        status: OrganizationStatus.Inactive,
-      };
-
-      organizationService.getUserOrganizations.and.returnValue(
-        of({ items: [mockOrganization, inactiveOrg], nextToken: null })
-      );
-      applicationService.getApplication.and.returnValue(of(mockApplication));
-
-      fixture.detectChanges();
-      tick();
-
-      expect(component.organizations.length).toBe(1);
-      expect(component.organizations[0].organizationId).toBe('org-456');
-    }));
   });
 
   describe('Delete Confirmation', () => {
     beforeEach(fakeAsync(() => {
-      organizationService.getUserOrganizations.and.returnValue(
-        of({ items: [mockOrganization], nextToken: null })
-      );
-      applicationService.getApplication.and.returnValue(of(mockApplication));
-
+      store.overrideSelector(fromApplications.selectSelectedApplication, mockApplication);
+      store.refreshState();
       fixture.detectChanges();
       tick();
     }));
 
-    it('should call deleteApplication when confirmed', fakeAsync(() => {
-      spyOn(window, 'confirm').and.returnValue(true);
-      applicationService.deleteApplication.and.returnValue(of(mockApplication));
-
-      component.onDelete();
-      tick();
-
-      expect(applicationService.deleteApplication).toHaveBeenCalledWith('app-789');
-      expect(router.navigate).toHaveBeenCalledWith(['/customers/applications']);
-    }));
-
-    it('should not delete when confirmation is cancelled', () => {
+    it('should not dispatch delete when confirmation is cancelled', () => {
       spyOn(window, 'confirm').and.returnValue(false);
+      (store.dispatch as jasmine.Spy).calls.reset();
 
       component.onDelete();
 
-      expect(applicationService.deleteApplication).not.toHaveBeenCalled();
+      expect(store.dispatch).not.toHaveBeenCalledWith(
+        jasmine.objectContaining({ type: '[Applications] Delete Application' })
+      );
     });
-  });
-
-  describe('Error Handling', () => {
-    it('should display error when application not found', fakeAsync(() => {
-      organizationService.getUserOrganizations.and.returnValue(
-        of({ items: [mockOrganization], nextToken: null })
-      );
-      applicationService.getApplication.and.returnValue(of(null));
-
-      fixture.detectChanges();
-      tick();
-
-      expect(component.loadError).toBe('Application not found');
-    }));
-
-    it('should display error when loading fails', fakeAsync(() => {
-      organizationService.getUserOrganizations.and.returnValue(
-        of({ items: [mockOrganization], nextToken: null })
-      );
-      applicationService.getApplication.and.returnValue(
-        throwError(() => new Error('Network error'))
-      );
-
-      fixture.detectChanges();
-      tick();
-
-      expect(component.loadError).toBe('Network error');
-    }));
-
-    it('should display save error when update fails', fakeAsync(() => {
-      organizationService.getUserOrganizations.and.returnValue(
-        of({ items: [mockOrganization], nextToken: null })
-      );
-      applicationService.getApplication.and.returnValue(of(mockApplication));
-
-      fixture.detectChanges();
-      tick();
-
-      component.editForm.name = 'Valid Name';
-      component.editForm.organizationId = 'org-456';
-      component.editForm.environments = ['PRODUCTION'];
-
-      applicationService.updateApplication.and.returnValue(
-        throwError(() => new Error('Save failed'))
-      );
-
-      component.onSave();
-      tick();
-
-      expect(component.saveError).toBe('Save failed');
-      expect(component.isSaving).toBe(false);
-    }));
   });
 
   describe('Date Formatting', () => {

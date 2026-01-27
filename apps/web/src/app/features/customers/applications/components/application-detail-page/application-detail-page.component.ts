@@ -3,7 +3,10 @@
  *
  * Standalone page for viewing/editing a single application.
  * Handles both PENDING (create) and ACTIVE (edit) modes based on application status.
- * Uses the create-on-click pattern with real GraphQL operations.
+ * Uses the create-on-click pattern with NgRx store as single source of truth.
+ *
+ * @see .kiro/specs/store-centric-refactoring/design.md
+ * _Requirements: 3.1, 3.2, 3.3, 3.4_
  */
 
 import { Component, OnInit, OnDestroy } from '@angular/core';
@@ -12,19 +15,23 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Store } from '@ngrx/store';
+import { Actions, ofType } from '@ngrx/effects';
 import { Observable, Subject, of } from 'rxjs';
 import { takeUntil, map, filter, take } from 'rxjs/operators';
 
 import { IApplications } from '../../../../../core/models/ApplicationsModel';
 import { IOrganizations } from '../../../../../core/models/OrganizationsModel';
 import { ApplicationStatus } from '../../../../../core/enums/ApplicationStatusEnum';
-import { ApplicationService } from '../../../../../core/services/application.service';
-import { OrganizationService } from '../../../../../core/services/organization.service';
 import { StatusBadgeComponent } from '../../../../../shared/components/ui/status-badge.component';
 import { DebugPanelComponent, DebugContext } from '../../../../../shared/components/debug/debug-panel.component';
 import { DebugLogEntry } from '../../../../../core/services/debug-log.service';
+
+// Store imports
+import { ApplicationsActions } from '../../store/applications.actions';
+import * as fromApplications from '../../store/applications.selectors';
+import * as fromOrganizations from '../../../organizations/store/organizations.selectors';
 import * as fromUser from '../../../../user/store/user.selectors';
-import { OrganizationsActions } from '../../../../customers/organizations/store/organizations.actions';
+import { OrganizationsActions } from '../../../organizations/store/organizations.actions';
 
 @Component({
   selector: 'app-application-detail-page',
@@ -43,20 +50,24 @@ import { OrganizationsActions } from '../../../../customers/organizations/store/
 export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
-  // Application data
+  // Store selectors - ALL data comes from store
+  application$: Observable<IApplications | null>;
+  isLoading$: Observable<boolean>;
+  isSaving$: Observable<boolean>;
+  error$: Observable<string | null>;
+  saveError$: Observable<string | null>;
+  organizations$: Observable<IOrganizations[]>;
+  debugMode$: Observable<boolean>;
+
+  // Local state for template binding
   application: IApplications | null = null;
   applicationId: string | null = null;
-  isLoading = true;
   loadError: string | null = null;
-
-  // Organizations for dropdown
-  organizations: IOrganizations[] = [];
-  organizationsLoading = false;
 
   // Mode detection
   isDraft = false;
 
-  // Form data
+  // Form data (local UI state - allowed)
   editForm = {
     name: '',
     description: '',
@@ -64,7 +75,7 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
     environments: [] as string[]
   };
 
-  // Validation
+  // Validation (local UI state - allowed)
   validationErrors = {
     name: '',
     description: '',
@@ -81,16 +92,11 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
     { value: 'PREVIEW', label: 'Preview', description: 'Feature previews and demos' }
   ];
 
-  // Save state
-  isSaving = false;
-  saveError: string | null = null;
-
-  // Current user
-  private currentUserId: string | null = null;
-
   // Debug
-  debugMode$: Observable<boolean>;
   debugLogs$: Observable<DebugLogEntry[]> = of([]);
+
+  // Current user ID for draft creation
+  private currentUserId: string | null = null;
 
   get debugContext(): DebugContext {
     return {
@@ -110,9 +116,7 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
           title: 'Form State',
           data: {
             editForm: this.editForm,
-            validationErrors: this.validationErrors,
-            isSaving: this.isSaving,
-            organizationsCount: this.organizations.length
+            validationErrors: this.validationErrors
           }
         }
       ]
@@ -123,21 +127,70 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private store: Store,
-    private applicationService: ApplicationService,
-    private organizationService: OrganizationService
+    private actions$: Actions
   ) {
+    // Initialize store selectors
+    this.application$ = this.store.select(fromApplications.selectSelectedApplication);
+    this.isLoading$ = this.store.select(fromApplications.selectIsLoading);
+    this.isSaving$ = this.store.select(fromApplications.selectIsSaving);
+    this.error$ = this.store.select(fromApplications.selectError);
+    this.saveError$ = this.store.select(fromApplications.selectSaveError);
+    this.organizations$ = this.store.select(fromOrganizations.selectOrganizations);
     this.debugMode$ = this.store.select(fromUser.selectDebugMode);
+
+    // Subscribe to application changes to sync local state
+    this.application$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(app => {
+      if (app) {
+        this.application = app;
+        this.isDraft = app.status === ApplicationStatus.Pending;
+        this.loadFormData();
+      }
+    });
+
+    // Subscribe to error changes
+    this.error$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(error => {
+      this.loadError = error;
+    });
+
+    // Listen for successful operations to navigate
+    this.actions$.pipe(
+      ofType(
+        ApplicationsActions.updateApplicationSuccess,
+        ApplicationsActions.deleteApplicationSuccess
+      ),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.router.navigate(['/customers/applications']);
+    });
+
+    // Listen for draft creation success to update URL
+    this.actions$.pipe(
+      ofType(ApplicationsActions.createDraftApplicationSuccess),
+      takeUntil(this.destroy$)
+    ).subscribe(action => {
+      this.applicationId = action.application.applicationId;
+      this.router.navigate(
+        ['/customers/applications', action.application.applicationId],
+        { replaceUrl: true }
+      );
+    });
   }
 
   ngOnInit(): void {
-    // Get current user first, then load data
+    // Get current user ID for draft creation
     this.store.select(fromUser.selectCurrentUser).pipe(
       take(1),
       filter(user => !!user)
     ).subscribe(user => {
       this.currentUserId = user!.userId;
-      this.loadOrganizations();
     });
+
+    // Ensure organizations are loaded
+    this.store.dispatch(OrganizationsActions.loadOrganizations());
 
     // Get application ID from route
     this.route.paramMap.pipe(
@@ -155,122 +208,47 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private loadOrganizations(): void {
-    if (!this.currentUserId) return;
-
-    this.organizationsLoading = true;
-    this.organizationService.getUserOrganizations(this.currentUserId).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: (connection) => {
-        // Filter to only show ACTIVE organizations
-        this.organizations = connection.items.filter(
-          org => org.status === 'ACTIVE'
-        );
-        this.organizationsLoading = false;
-
-        // Auto-select if only one organization
-        if (this.organizations.length === 1 && !this.editForm.organizationId) {
-          this.editForm.organizationId = this.organizations[0].organizationId;
-        }
-      },
-      error: (error) => {
-        console.error('[ApplicationDetail] Error loading organizations:', error);
-        this.organizationsLoading = false;
-      }
-    });
-  }
-
   private loadApplication(id: string): void {
-    this.isLoading = true;
-    this.loadError = null;
-
     // Check if this is a new draft (temp ID pattern)
     if (id.startsWith('new-')) {
       this.createDraftApplication();
       return;
     }
 
-    // Load existing application
-    this.applicationService.getApplication(id).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: (app) => {
-        if (app) {
-          this.application = app;
-          this.isDraft = app.status === ApplicationStatus.Pending;
-          this.loadFormData();
-        } else {
-          this.loadError = 'Application not found';
-        }
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('[ApplicationDetail] Error loading application:', error);
-        this.loadError = error.message || 'Failed to load application';
-        this.isLoading = false;
-      }
-    });
+    // Dispatch action to load application - effects handle service call
+    this.store.dispatch(ApplicationsActions.loadApplication({ applicationId: id }));
   }
 
   private createDraftApplication(): void {
     if (!this.currentUserId) {
       this.loadError = 'You must be signed in to create an application';
-      this.isLoading = false;
       return;
     }
 
-    // Wait for organizations to load, then create draft
-    const checkOrgsAndCreate = () => {
-      if (this.organizationsLoading) {
-        setTimeout(checkOrgsAndCreate, 100);
-        return;
-      }
-
+    // Wait for organizations to be available, then dispatch create draft action
+    this.organizations$.pipe(
+      filter(orgs => orgs.length > 0),
+      take(1)
+    ).subscribe(organizations => {
       // Auto-select organization if only one
-      const orgId = this.organizations.length === 1 ? this.organizations[0].organizationId : '';
+      const orgId = organizations.length === 1 ? organizations[0].organizationId : '';
 
-      this.applicationService.createDraft(this.currentUserId!, orgId).pipe(
-        takeUntil(this.destroy$)
-      ).subscribe({
-        next: (app) => {
-          this.application = app;
-          this.isDraft = true;
-          this.applicationId = app.applicationId;
-
-          // Update URL to real ID (replace temp ID)
-          this.router.navigate(
-            ['/customers/applications', app.applicationId],
-            { replaceUrl: true }
-          );
-
-          this.loadFormData();
-          this.isLoading = false;
-        },
-        error: (error) => {
-          console.error('[ApplicationDetail] Error creating draft:', error);
-          this.loadError = error.message || 'Failed to create application';
-          this.isLoading = false;
-        }
-      });
-    };
-
-    checkOrgsAndCreate();
+      // Dispatch action - effects handle service call
+      this.store.dispatch(ApplicationsActions.createDraftApplication({
+        ownerId: this.currentUserId!,
+        organizationId: orgId
+      }));
+    });
   }
 
   private loadFormData(): void {
     if (this.application) {
       this.editForm = {
         name: this.application.name || '',
-        description: '',
+        description: this.application.description || '',
         organizationId: this.application.organizationId || '',
         environments: [...(this.application.environments || [])]
       };
-
-      // Auto-select if only one organization and none selected
-      if (!this.editForm.organizationId && this.organizations.length === 1) {
-        this.editForm.organizationId = this.organizations[0].organizationId;
-      }
     }
   }
 
@@ -342,51 +320,25 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.isSaving = true;
-    this.saveError = null;
-
     const updateData = {
       applicationId: this.application.applicationId,
       name: this.editForm.name.trim(),
+      description: this.editForm.description.trim(),
       organizationId: this.editForm.organizationId,
       status: this.isDraft ? ApplicationStatus.Active : this.application.status,
       environments: this.editForm.environments
     };
 
-    console.debug('[ApplicationDetail] Saving application:', updateData);
-
-    this.applicationService.updateApplication(updateData).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: (updatedApp) => {
-        console.debug('[ApplicationDetail] Application saved:', updatedApp);
-        this.isSaving = false;
-        this.router.navigate(['/customers/applications']);
-      },
-      error: (error) => {
-        console.error('[ApplicationDetail] Error saving application:', error);
-        this.saveError = error.message || 'Failed to save application';
-        this.isSaving = false;
-      }
-    });
+    // Dispatch action - effects handle service call
+    this.store.dispatch(ApplicationsActions.updateApplication({ input: updateData }));
   }
 
   onCancel(): void {
     // If draft, delete it before navigating away
     if (this.isDraft && this.application) {
-      this.applicationService.deleteApplication(this.application.applicationId).pipe(
-        takeUntil(this.destroy$)
-      ).subscribe({
-        next: () => {
-          console.debug('[ApplicationDetail] Draft deleted on cancel');
-          this.router.navigate(['/customers/applications']);
-        },
-        error: (error) => {
-          console.error('[ApplicationDetail] Error deleting draft:', error);
-          // Navigate anyway
-          this.router.navigate(['/customers/applications']);
-        }
-      });
+      this.store.dispatch(ApplicationsActions.deleteApplication({
+        applicationId: this.application.applicationId
+      }));
     } else {
       this.router.navigate(['/customers/applications']);
     }
@@ -399,59 +351,10 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const organizationId = this.application.organizationId;
-    this.isSaving = true;
-    this.applicationService.deleteApplication(this.application.applicationId).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: () => {
-        console.debug('[ApplicationDetail] Application deleted');
-        // Decrement organization's applicationCount
-        // _Requirements: 2.11, 4.2_
-        this.decrementOrganizationApplicationCount(organizationId);
-        // Refresh organizations store
-        this.store.dispatch(OrganizationsActions.loadOrganizations());
-        this.router.navigate(['/customers/applications']);
-      },
-      error: (error) => {
-        console.error('[ApplicationDetail] Error deleting application:', error);
-        this.saveError = error.message || 'Failed to delete application';
-        this.isSaving = false;
-      }
-    });
-  }
-
-  /**
-   * Decrement the organization's applicationCount after deleting an application
-   * _Requirements: 2.11, 4.2_
-   */
-  private decrementOrganizationApplicationCount(organizationId: string): void {
-    if (!organizationId) return;
-
-    // Find the organization from our loaded list
-    const organization = this.organizations.find(org => org.organizationId === organizationId);
-    if (!organization) {
-      console.debug('[ApplicationDetail] Organization not found for count update:', organizationId);
-      return;
-    }
-
-    const currentCount = organization.applicationCount ?? 0;
-    const newCount = Math.max(0, currentCount - 1);
-
-    if (currentCount !== newCount) {
-      console.debug('[ApplicationDetail] Decrementing application count:', currentCount, '->', newCount);
-      this.organizationService.updateOrganization({
-        ...organization,
-        applicationCount: newCount
-      }).pipe(take(1)).subscribe({
-        next: () => {
-          console.debug('[ApplicationDetail] Organization applicationCount updated');
-        },
-        error: (error) => {
-          console.error('[ApplicationDetail] Error updating organization applicationCount:', error);
-        }
-      });
-    }
+    // Dispatch action - effects handle service call
+    this.store.dispatch(ApplicationsActions.deleteApplication({
+      applicationId: this.application.applicationId
+    }));
   }
 
   formatDate(dateValue: string | Date | number | undefined): string {

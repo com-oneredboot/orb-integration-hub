@@ -34,12 +34,43 @@ export const applicationsReducer = createReducer(
       ...state,
       isLoading: false,
       applications,
+      // Note: applicationRows will be updated by the effect dispatching updateApplicationRows
+      // or can be derived via selectors
       error: null,
     })
   ),
 
   on(
     ApplicationsActions.loadApplicationsFailure,
+    (state, { error }): ApplicationsState => ({
+      ...state,
+      isLoading: false,
+      error,
+    })
+  ),
+
+  // Load Single Application
+  on(
+    ApplicationsActions.loadApplication,
+    (state): ApplicationsState => ({
+      ...state,
+      isLoading: true,
+      error: null,
+    })
+  ),
+
+  on(
+    ApplicationsActions.loadApplicationSuccess,
+    (state, { application }): ApplicationsState => ({
+      ...state,
+      isLoading: false,
+      selectedApplication: application,
+      error: null,
+    })
+  ),
+
+  on(
+    ApplicationsActions.loadApplicationFailure,
     (state, { error }): ApplicationsState => ({
       ...state,
       isLoading: false,

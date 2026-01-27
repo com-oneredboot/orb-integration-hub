@@ -13,6 +13,7 @@ export const ApplicationsCreate = /* GraphQL */ `
       item {
         applicationId
         name
+        description
         organizationId
         ownerId
         status
@@ -35,6 +36,7 @@ export const ApplicationsUpdate = /* GraphQL */ `
       item {
         applicationId
         name
+        description
         organizationId
         ownerId
         status
@@ -57,6 +59,7 @@ export const ApplicationsDelete = /* GraphQL */ `
       item {
         applicationId
         name
+        description
         organizationId
         ownerId
         status
@@ -79,6 +82,7 @@ export const ApplicationsDisable = /* GraphQL */ `
       item {
         applicationId
         name
+        description
         organizationId
         ownerId
         status
@@ -101,6 +105,7 @@ export const ApplicationsGet = /* GraphQL */ `
       item {
         applicationId
         name
+        description
         organizationId
         ownerId
         status
@@ -123,6 +128,7 @@ export const ApplicationsListByApplicationId = /* GraphQL */ `
       items {
         applicationId
         name
+        description
         organizationId
         ownerId
         status
@@ -146,6 +152,7 @@ export const ApplicationsListByOrganizationId = /* GraphQL */ `
       items {
         applicationId
         name
+        description
         organizationId
         ownerId
         status
@@ -169,6 +176,7 @@ export const ApplicationsListByOrganizationIdAndCreatedAt = /* GraphQL */ `
       items {
         applicationId
         name
+        description
         organizationId
         ownerId
         status

@@ -19,6 +19,7 @@ class ApplicationsCreateInput(BaseModel):
         ..., description="Unique identifier for the application (primary key)"
     )
     name: str = Field(..., description="Name of the application")
+    description: Optional[str] = Field(None, description="Brief description of the application")
     organization_id: str = Field(
         ...,
         description="ID of the organization this application belongs to (foreign key to Organizations)",
@@ -46,6 +47,7 @@ class ApplicationsUpdateInput(BaseModel):
         ..., description="Unique identifier for the application (primary key)"
     )
     name: Optional[str] = Field(..., description="Name of the application")
+    description: Optional[str] = Field(None, description="Brief description of the application")
     organization_id: Optional[str] = Field(
         ...,
         description="ID of the organization this application belongs to (foreign key to Organizations)",
@@ -104,6 +106,7 @@ class Applications(BaseModel):
         ..., description="Unique identifier for the application (primary key)"
     )
     name: str = Field(..., description="Name of the application")
+    description: Optional[str] = Field(None, description="Brief description of the application")
     organization_id: str = Field(
         ...,
         description="ID of the organization this application belongs to (foreign key to Organizations)",

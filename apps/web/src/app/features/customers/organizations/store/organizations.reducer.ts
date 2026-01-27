@@ -48,6 +48,26 @@ export const organizationsReducer = createReducer(
     error
   })),
 
+  // Load Single Organization (detail page)
+  on(OrganizationsActions.loadOrganization, (state): OrganizationsState => ({
+    ...state,
+    isLoading: true,
+    error: null
+  })),
+
+  on(OrganizationsActions.loadOrganizationSuccess, (state, { organization }): OrganizationsState => ({
+    ...state,
+    isLoading: false,
+    selectedOrganization: organization,
+    error: null
+  })),
+
+  on(OrganizationsActions.loadOrganizationFailure, (state, { error }): OrganizationsState => ({
+    ...state,
+    isLoading: false,
+    error
+  })),
+
   // Create Organization
   on(OrganizationsActions.createOrganization, (state): OrganizationsState => ({
     ...state,

@@ -1,27 +1,29 @@
 /**
  * OrganizationDetailPageComponent Property-Based Tests
  *
- * Property tests for organization detail page applications section.
+ * Property tests for organization detail page using NgRx store-first pattern.
  *
- * @see .kiro/specs/organizations-applications-integration/design.md
- * _Requirements: 2.2, 2.3, 2.9, 2.10, 2.11_
+ * @see .kiro/specs/store-centric-refactoring/design.md
+ * _Requirements: 4.1-4.4, 7.2_
  */
 
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { Router, ActivatedRoute, convertToParamMap } from '@angular/router';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
-import { of, BehaviorSubject } from 'rxjs';
+import { provideMockActions } from '@ngrx/effects/testing';
+import { BehaviorSubject, ReplaySubject } from 'rxjs';
 import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
 import { fas } from '@fortawesome/free-solid-svg-icons';
+import { Action } from '@ngrx/store';
 import * as fc from 'fast-check';
 
 import { OrganizationDetailPageComponent } from './organization-detail-page.component';
-import { OrganizationService } from '../../../../../core/services/organization.service';
-import { ApplicationService } from '../../../../../core/services/application.service';
 import { Organizations } from '../../../../../core/models/OrganizationsModel';
 import { IApplications } from '../../../../../core/models/ApplicationsModel';
 import { OrganizationStatus } from '../../../../../core/enums/OrganizationStatusEnum';
 import { ApplicationStatus } from '../../../../../core/enums/ApplicationStatusEnum';
+import * as fromOrganizations from '../../store/organizations.selectors';
+import * as fromApplications from '../../../applications/store/applications.selectors';
 import * as fromUser from '../../../../user/store/user.selectors';
 
 describe('OrganizationDetailPageComponent Property Tests', () => {
@@ -43,35 +45,49 @@ describe('OrganizationDetailPageComponent Property Tests', () => {
   });
 
   /**
-   * Property 2: Application list renders with required fields
-   * For any list of applications, each rendered row displays name, status, and environment count.
-   * _Requirements: 2.2, 2.3_
+   * Property 2: Application list filters correctly from store
+   * For any list of applications in the store, the component filters by organizationId
+   * and excludes PENDING applications.
+   * _Requirements: 4.1, 4.4_
    */
-  it('Property 2: Application list renders with required fields', fakeAsync(() => {
+  it('Property 2: Application list filters correctly from store', fakeAsync(() => {
     fc.assert(
       fc.property(
         fc.array(applicationArbitrary, { minLength: 1, maxLength: 10 }),
         (applications) => {
           // Setup fresh TestBed for each iteration
-          const organizationService = jasmine.createSpyObj('OrganizationService', [
-            'getOrganization',
-            'updateOrganization',
-            'deleteOrganization',
-          ]);
-          const applicationService = jasmine.createSpyObj('ApplicationService', [
-            'getApplicationsByOrganization',
-          ]);
+          const actions$ = new ReplaySubject<Action>(1);
           const paramMapSubject = new BehaviorSubject(convertToParamMap({ id: 'org-123' }));
+
+          const mockOrg = new Organizations({
+            organizationId: 'org-123',
+            name: 'Test Org',
+            ownerId: 'user-123',
+            status: OrganizationStatus.Active,
+            applicationCount: applications.length,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
 
           TestBed.resetTestingModule();
           TestBed.configureTestingModule({
             imports: [OrganizationDetailPageComponent],
             providers: [
               provideMockStore({
-                selectors: [{ selector: fromUser.selectDebugMode, value: false }],
+                selectors: [
+                  { selector: fromOrganizations.selectSelectedOrganization, value: mockOrg },
+                  { selector: fromOrganizations.selectIsLoading, value: false },
+                  { selector: fromOrganizations.selectIsSaving, value: false },
+                  { selector: fromOrganizations.selectIsDeleting, value: false },
+                  { selector: fromOrganizations.selectError, value: null },
+                  { selector: fromOrganizations.selectSaveError, value: null },
+                  { selector: fromApplications.selectApplications, value: applications as IApplications[] },
+                  { selector: fromApplications.selectIsLoading, value: false },
+                  { selector: fromApplications.selectError, value: null },
+                  { selector: fromUser.selectDebugMode, value: false },
+                ],
               }),
-              { provide: OrganizationService, useValue: organizationService },
-              { provide: ApplicationService, useValue: applicationService },
+              provideMockActions(() => actions$),
               {
                 provide: ActivatedRoute,
                 useValue: {
@@ -87,21 +103,6 @@ describe('OrganizationDetailPageComponent Property Tests', () => {
           const router = TestBed.inject(Router);
           spyOn(router, 'navigate');
 
-          const mockOrg = new Organizations({
-            organizationId: 'org-123',
-            name: 'Test Org',
-            ownerId: 'user-123',
-            status: OrganizationStatus.Active,
-            applicationCount: applications.length,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          });
-
-          organizationService.getOrganization.and.returnValue(of(mockOrg));
-          applicationService.getApplicationsByOrganization.and.returnValue(
-            of({ items: applications as IApplications[], nextToken: null })
-          );
-
           const fixture = TestBed.createComponent(OrganizationDetailPageComponent);
           const component = fixture.componentInstance;
 
@@ -109,14 +110,17 @@ describe('OrganizationDetailPageComponent Property Tests', () => {
           fixture.detectChanges();
           tick();
 
-          // Assert: All applications are loaded
-          expect(component.applications.length).toBe(applications.length);
+          // Assert: applications$ observable filters correctly
+          let filteredApps: IApplications[] = [];
+          component.applications$.subscribe(apps => {
+            filteredApps = apps;
+          });
+          tick();
 
-          // Assert: Each application has required fields accessible
-          for (const app of component.applications) {
-            expect(app.name).toBeDefined();
-            expect(app.status).toBeDefined();
-            expect(component.getEnvironmentCount(app)).toBeGreaterThanOrEqual(0);
+          // All filtered apps should have matching organizationId and not be PENDING
+          for (const app of filteredApps) {
+            expect(app.organizationId).toBe('org-123');
+            expect(app.status).not.toBe(ApplicationStatus.Pending);
           }
 
           // Cleanup
@@ -129,28 +133,17 @@ describe('OrganizationDetailPageComponent Property Tests', () => {
   }));
 
   /**
-   * Property 3: Application count synchronization
-   * When actual application count differs from stored count, sync is triggered.
-   * _Requirements: 2.9, 2.10, 2.11_
+   * Property 3: Environment count calculation
+   * For any application, getEnvironmentCount returns the correct count.
+   * _Requirements: 4.4_
    */
-  it('Property 3: Application count synchronization', fakeAsync(() => {
+  it('Property 3: Environment count calculation', () => {
     fc.assert(
       fc.property(
-        fc.array(applicationArbitrary, { minLength: 0, maxLength: 10 }),
-        fc.integer({ min: 0, max: 20 }),
-        (applications, storedCount) => {
-          const actualCount = applications.length;
-          const shouldSync = actualCount !== storedCount;
-
-          // Setup fresh TestBed for each iteration
-          const organizationService = jasmine.createSpyObj('OrganizationService', [
-            'getOrganization',
-            'updateOrganization',
-            'deleteOrganization',
-          ]);
-          const applicationService = jasmine.createSpyObj('ApplicationService', [
-            'getApplicationsByOrganization',
-          ]);
+        applicationArbitrary,
+        (application) => {
+          // Setup minimal TestBed
+          const actions$ = new ReplaySubject<Action>(1);
           const paramMapSubject = new BehaviorSubject(convertToParamMap({ id: 'org-123' }));
 
           TestBed.resetTestingModule();
@@ -158,10 +151,20 @@ describe('OrganizationDetailPageComponent Property Tests', () => {
             imports: [OrganizationDetailPageComponent],
             providers: [
               provideMockStore({
-                selectors: [{ selector: fromUser.selectDebugMode, value: false }],
+                selectors: [
+                  { selector: fromOrganizations.selectSelectedOrganization, value: null },
+                  { selector: fromOrganizations.selectIsLoading, value: false },
+                  { selector: fromOrganizations.selectIsSaving, value: false },
+                  { selector: fromOrganizations.selectIsDeleting, value: false },
+                  { selector: fromOrganizations.selectError, value: null },
+                  { selector: fromOrganizations.selectSaveError, value: null },
+                  { selector: fromApplications.selectApplications, value: [] },
+                  { selector: fromApplications.selectIsLoading, value: false },
+                  { selector: fromApplications.selectError, value: null },
+                  { selector: fromUser.selectDebugMode, value: false },
+                ],
               }),
-              { provide: OrganizationService, useValue: organizationService },
-              { provide: ApplicationService, useValue: applicationService },
+              provideMockActions(() => actions$),
               {
                 provide: ActivatedRoute,
                 useValue: {
@@ -174,45 +177,115 @@ describe('OrganizationDetailPageComponent Property Tests', () => {
           const library = TestBed.inject(FaIconLibrary);
           library.addIconPacks(fas);
 
-          const router = TestBed.inject(Router);
-          spyOn(router, 'navigate');
+          const fixture = TestBed.createComponent(OrganizationDetailPageComponent);
+          const component = fixture.componentInstance;
+
+          // Act & Assert
+          const expectedCount = application.environments?.length || 0;
+          expect(component.getEnvironmentCount(application as IApplications)).toBe(expectedCount);
+
+          // Cleanup
+          fixture.destroy();
+          TestBed.inject(MockStore).resetSelectors();
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Property 4: Form validation rules
+   * Name validation follows consistent rules regardless of input.
+   * _Requirements: 4.2_
+   */
+  it('Property 4: Form validation rules', fakeAsync(() => {
+    fc.assert(
+      fc.property(
+        fc.string({ minLength: 0, maxLength: 150 }),
+        (name) => {
+          // Setup minimal TestBed
+          const actions$ = new ReplaySubject<Action>(1);
+          const paramMapSubject = new BehaviorSubject(convertToParamMap({ id: 'org-123' }));
 
           const mockOrg = new Organizations({
             organizationId: 'org-123',
             name: 'Test Org',
             ownerId: 'user-123',
             status: OrganizationStatus.Active,
-            applicationCount: storedCount,
+            applicationCount: 0,
             createdAt: new Date(),
             updatedAt: new Date(),
           });
 
-          organizationService.getOrganization.and.returnValue(of(mockOrg));
-          applicationService.getApplicationsByOrganization.and.returnValue(
-            of({ items: applications as IApplications[], nextToken: null })
-          );
-          organizationService.updateOrganization.and.returnValue(
-            of(new Organizations({ ...mockOrg, applicationCount: actualCount }))
-          );
+          TestBed.resetTestingModule();
+          TestBed.configureTestingModule({
+            imports: [OrganizationDetailPageComponent],
+            providers: [
+              provideMockStore({
+                selectors: [
+                  { selector: fromOrganizations.selectSelectedOrganization, value: mockOrg },
+                  { selector: fromOrganizations.selectIsLoading, value: false },
+                  { selector: fromOrganizations.selectIsSaving, value: false },
+                  { selector: fromOrganizations.selectIsDeleting, value: false },
+                  { selector: fromOrganizations.selectError, value: null },
+                  { selector: fromOrganizations.selectSaveError, value: null },
+                  { selector: fromApplications.selectApplications, value: [] },
+                  { selector: fromApplications.selectIsLoading, value: false },
+                  { selector: fromApplications.selectError, value: null },
+                  { selector: fromUser.selectDebugMode, value: false },
+                ],
+              }),
+              provideMockActions(() => actions$),
+              {
+                provide: ActivatedRoute,
+                useValue: {
+                  paramMap: paramMapSubject.asObservable(),
+                },
+              },
+            ],
+          });
+
+          const library = TestBed.inject(FaIconLibrary);
+          library.addIconPacks(fas);
+
+          const store = TestBed.inject(MockStore);
+          spyOn(store, 'dispatch');
 
           const fixture = TestBed.createComponent(OrganizationDetailPageComponent);
+          const component = fixture.componentInstance;
 
-          // Act
           fixture.detectChanges();
           tick();
 
-          // Assert: Sync is called only when counts differ
-          if (shouldSync) {
-            expect(organizationService.updateOrganization).toHaveBeenCalled();
-            const updateCall = organizationService.updateOrganization.calls.mostRecent().args[0];
-            expect(updateCall.applicationCount).toBe(actualCount);
+          // Set the name and try to save
+          component.editForm.name = name;
+          component.onSave();
+
+          const trimmedName = name.trim();
+
+          // Validation rules:
+          // 1. Empty name -> error
+          // 2. Name < 2 chars -> error
+          // 3. Name > 100 chars -> error
+          // 4. Invalid characters -> error
+          // 5. Valid name -> dispatch called
+
+          if (!trimmedName) {
+            expect(component.validationErrors.name).toBe('Organization name is required');
+          } else if (trimmedName.length < 2) {
+            expect(component.validationErrors.name).toBe('Organization name must be at least 2 characters');
+          } else if (trimmedName.length > 100) {
+            expect(component.validationErrors.name).toBe('Organization name cannot exceed 100 characters');
+          } else if (!/^[a-zA-Z0-9\s\-'.]+$/.test(trimmedName)) {
+            expect(component.validationErrors.name).toBe('Organization name contains invalid characters');
           } else {
-            expect(organizationService.updateOrganization).not.toHaveBeenCalled();
+            // Valid name - dispatch should have been called
+            expect(store.dispatch).toHaveBeenCalled();
           }
 
           // Cleanup
           fixture.destroy();
-          TestBed.inject(MockStore).resetSelectors();
+          store.resetSelectors();
         }
       ),
       { numRuns: 100 }

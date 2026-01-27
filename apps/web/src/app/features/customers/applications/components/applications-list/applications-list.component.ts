@@ -3,7 +3,10 @@
  *
  * Displays a list of applications with filtering and selection capabilities.
  * Uses create-on-click pattern for new applications.
- * Loads real data from ApplicationService.
+ * Uses NgRx store as single source of truth (store-first pattern).
+ *
+ * @see .kiro/specs/store-centric-refactoring/design.md
+ * _Requirements: 2.1, 2.2, 2.3, 2.4_
  */
 
 import { Component, OnInit, OnDestroy, Output, EventEmitter, Input } from '@angular/core';
@@ -12,24 +15,16 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Store } from '@ngrx/store';
-import { Subject, forkJoin, of } from 'rxjs';
-import { takeUntil, switchMap, map, catchError, take, filter } from 'rxjs/operators';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { StatusBadgeComponent } from '../../../../../shared/components/ui/status-badge.component';
 
 import { IApplications } from '../../../../../core/models/ApplicationsModel';
 import { IOrganizations } from '../../../../../core/models/OrganizationsModel';
-import { ApplicationStatus } from '../../../../../core/enums/ApplicationStatusEnum';
-import { ApplicationService } from '../../../../../core/services/application.service';
-import { OrganizationService } from '../../../../../core/services/organization.service';
-import * as fromUser from '../../../../user/store/user.selectors';
-
-export interface ApplicationListRow {
-  application: IApplications;
-  organizationName: string;
-  environmentCount: number;
-  userRole: string;
-  lastActivity: string;
-}
+import { ApplicationsActions } from '../../store/applications.actions';
+import * as fromApplications from '../../store/applications.selectors';
+import * as fromOrganizations from '../../../organizations/store/organizations.selectors';
+import { ApplicationTableRow } from '../../store/applications.state';
 
 @Component({
   selector: 'app-applications-list',
@@ -47,24 +42,43 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
   @Output() applicationSelected = new EventEmitter<IApplications>();
   @Input() selectedApplication: IApplications | null = null;
 
-  applicationRows: ApplicationListRow[] = [];
-  filteredApplicationRows: ApplicationListRow[] = [];
-  isLoading = false;
-  organizations: IOrganizations[] = [];
+  // Store selectors - ALL data comes from store
+  applicationRows$: Observable<ApplicationTableRow[]>;
+  filteredApplicationRows$: Observable<ApplicationTableRow[]>;
+  isLoading$: Observable<boolean>;
+  isCreatingNew$: Observable<boolean>;
+  organizations$: Observable<IOrganizations[]>;
+  searchTerm$: Observable<string>;
+  organizationFilter$: Observable<string>;
+  statusFilter$: Observable<string>;
+
+  // Local UI state for form binding (synced with store)
   searchTerm = '';
   organizationFilter = '';
   statusFilter = '';
 
   private destroy$ = new Subject<void>();
-  private currentUserId: string | null = null;
 
   constructor(
     private store: Store,
     private router: Router,
-    private route: ActivatedRoute,
-    private applicationService: ApplicationService,
-    private organizationService: OrganizationService
-  ) {}
+    private route: ActivatedRoute
+  ) {
+    // Initialize store selectors
+    this.applicationRows$ = this.store.select(fromApplications.selectApplicationRows);
+    this.filteredApplicationRows$ = this.store.select(fromApplications.selectFilteredApplicationRows);
+    this.isLoading$ = this.store.select(fromApplications.selectIsLoading);
+    this.isCreatingNew$ = this.store.select(fromApplications.selectIsCreatingNew);
+    this.organizations$ = this.store.select(fromOrganizations.selectOrganizations);
+    this.searchTerm$ = this.store.select(fromApplications.selectSearchTerm);
+    this.organizationFilter$ = this.store.select(fromApplications.selectOrganizationFilter);
+    this.statusFilter$ = this.store.select(fromApplications.selectStatusFilter);
+
+    // Sync local form state with store
+    this.searchTerm$.pipe(takeUntil(this.destroy$)).subscribe(term => this.searchTerm = term);
+    this.organizationFilter$.pipe(takeUntil(this.destroy$)).subscribe(filter => this.organizationFilter = filter);
+    this.statusFilter$.pipe(takeUntil(this.destroy$)).subscribe(filter => this.statusFilter = filter);
+  }
 
   ngOnInit(): void {
     // Check for organization filter from query params
@@ -73,21 +87,14 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe(params => {
       if (params['organizationId']) {
-        this.organizationFilter = params['organizationId'];
-        // Re-apply filters if data is already loaded
-        if (this.applicationRows.length > 0) {
-          this.applyFilters();
-        }
+        this.store.dispatch(ApplicationsActions.setOrganizationFilter({
+          organizationFilter: params['organizationId']
+        }));
       }
     });
 
-    this.store.select(fromUser.selectCurrentUser).pipe(
-      take(1),
-      filter(user => !!user)
-    ).subscribe(user => {
-      this.currentUserId = user!.userId;
-      this.loadApplications();
-    });
+    // Dispatch load action - effects handle service call
+    this.store.dispatch(ApplicationsActions.loadApplications());
   }
 
   ngOnDestroy(): void {
@@ -95,80 +102,23 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private loadApplications(): void {
-    if (!this.currentUserId) return;
-    this.isLoading = true;
-
-    this.organizationService.getUserOrganizations(this.currentUserId).pipe(
-      takeUntil(this.destroy$),
-      switchMap(orgConnection => {
-        this.organizations = orgConnection.items.filter(org => org.status === 'ACTIVE');
-        if (this.organizations.length === 0) return of([]);
-
-        const appRequests = this.organizations.map(org =>
-          this.applicationService.getApplicationsByOrganization(org.organizationId).pipe(
-            map(appConnection => ({ organization: org, applications: appConnection.items })),
-            catchError(() => of({ organization: org, applications: [] as IApplications[] }))
-          )
-        );
-        return forkJoin(appRequests);
-      })
-    ).subscribe({
-      next: (results) => {
-        this.applicationRows = [];
-        for (const result of results) {
-          for (const app of result.applications) {
-            if (app.status === ApplicationStatus.Pending) continue;
-            this.applicationRows.push({
-              application: app,
-              organizationName: result.organization.name,
-              environmentCount: app.environments?.length || 0,
-              userRole: 'OWNER',
-              lastActivity: this.formatLastActivity(app.updatedAt)
-            });
-          }
-        }
-        this.applyFilters();
-        this.isLoading = false;
-      },
-      error: () => { this.isLoading = false; }
-    });
-  }
-
-  private formatLastActivity(dateValue: string | Date | number | undefined): string {
-    if (!dateValue) return 'Never';
-    const date = typeof dateValue === 'number' ? new Date(dateValue * 1000)
-      : dateValue instanceof Date ? dateValue : new Date(dateValue);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return diffMins + ' min ago';
-    if (diffHours < 24) return diffHours + ' hour' + (diffHours > 1 ? 's' : '') + ' ago';
-    if (diffDays < 7) return diffDays + ' day' + (diffDays > 1 ? 's' : '') + ' ago';
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  }
-
-  trackByApplicationId(_index: number, row: ApplicationListRow): string {
+  trackByApplicationId(_index: number, row: ApplicationTableRow): string {
     return row.application.applicationId;
   }
 
-  onSearchChange(): void { this.applyFilters(); }
-  onFilterChange(): void { this.applyFilters(); }
+  onSearchChange(): void {
+    // Dispatch action - reducer updates state
+    this.store.dispatch(ApplicationsActions.setSearchTerm({ searchTerm: this.searchTerm }));
+  }
 
-  private applyFilters(): void {
-    this.filteredApplicationRows = this.applicationRows.filter(row => {
-      const matchesSearch = !this.searchTerm ||
-        row.application.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        row.application.applicationId.toLowerCase().includes(this.searchTerm.toLowerCase());
-      const matchesOrganization = !this.organizationFilter ||
-        row.application.organizationId === this.organizationFilter;
-      const matchesStatus = !this.statusFilter || row.application.status === this.statusFilter;
-      return matchesSearch && matchesOrganization && matchesStatus;
-    });
+  onFilterChange(): void {
+    // Dispatch filter actions - reducer updates state
+    this.store.dispatch(ApplicationsActions.setOrganizationFilter({
+      organizationFilter: this.organizationFilter
+    }));
+    this.store.dispatch(ApplicationsActions.setStatusFilter({
+      statusFilter: this.statusFilter
+    }));
   }
 
   getRoleClass(role: string): string {
@@ -176,6 +126,7 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
   }
 
   onApplicationSelected(application: IApplications): void {
+    this.store.dispatch(ApplicationsActions.selectApplication({ application }));
     this.applicationSelected.emit(application);
   }
 
@@ -184,6 +135,8 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
   }
 
   onCreateApplication(): void {
+    // Create-on-click pattern: navigate to detail page with temp ID
+    // The detail page will handle creating the draft
     const tempId = 'new-' + Date.now();
     this.router.navigate(['/customers/applications', tempId]);
   }

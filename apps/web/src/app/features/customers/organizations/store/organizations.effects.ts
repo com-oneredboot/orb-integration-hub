@@ -24,7 +24,7 @@ export class OrganizationsEffects {
     private store: Store
   ) {}
 
-  // Load Organizations Effect
+  // Load Organizations Effect (list)
   loadOrganizations$ = createEffect(() =>
     this.actions$.pipe(
       ofType(OrganizationsActions.loadOrganizations, OrganizationsActions.refreshOrganizations),
@@ -40,6 +40,30 @@ export class OrganizationsEffects {
           catchError(error => 
             of(OrganizationsActions.loadOrganizationsFailure({ 
               error: error.message || 'Failed to load organizations' 
+            }))
+          )
+        )
+      )
+    )
+  );
+
+  // Load Single Organization Effect (detail page)
+  loadOrganization$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(OrganizationsActions.loadOrganization),
+      switchMap(action =>
+        this.organizationService.getOrganization(action.organizationId).pipe(
+          map(organization => {
+            if (organization) {
+              return OrganizationsActions.loadOrganizationSuccess({ organization });
+            }
+            return OrganizationsActions.loadOrganizationFailure({ 
+              error: 'Organization not found' 
+            });
+          }),
+          catchError(error => 
+            of(OrganizationsActions.loadOrganizationFailure({ 
+              error: error.message || 'Failed to load organization' 
             }))
           )
         )

@@ -125,6 +125,7 @@ type Roles {
 type Applications {
   applicationId: String!
   name: String!
+  description: String
   organizationId: String!
   ownerId: String!
   status: ApplicationStatus!
@@ -1409,6 +1410,7 @@ input RolesListByUserIdAndRoleTypeInput {
 input ApplicationsCreateInput {
   applicationId: String!
   name: String!
+  description: String
   organizationId: String!
   ownerId: String!
   status: ApplicationStatus!
@@ -1422,6 +1424,7 @@ input ApplicationsCreateInput {
 input ApplicationsUpdateInput {
   applicationId: String!
   name: String
+  description: String
   organizationId: String
   ownerId: String
   status: ApplicationStatus

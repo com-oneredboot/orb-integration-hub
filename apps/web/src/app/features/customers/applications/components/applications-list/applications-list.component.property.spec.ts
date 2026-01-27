@@ -11,7 +11,7 @@
  */
 
 import * as fc from 'fast-check';
-import { ApplicationListRow } from './applications-list.component';
+import { ApplicationTableRow } from '../../store/applications.state';
 import { IApplications } from '../../../../../core/models/ApplicationsModel';
 import { ApplicationStatus } from '../../../../../core/enums/ApplicationStatusEnum';
 
@@ -43,9 +43,10 @@ const applicationArb: fc.Arbitrary<IApplications> = fc.record({
   updatedAt: fc.date(),
 });
 
-// Arbitrary for ApplicationListRow
-const applicationRowArb: fc.Arbitrary<ApplicationListRow> = fc.record({
+// Arbitrary for ApplicationTableRow
+const applicationRowArb: fc.Arbitrary<ApplicationTableRow> = fc.record({
   application: applicationArb,
+  organizationId: fc.uuid(),
   organizationName: fc.string({ minLength: 1, maxLength: 50 }),
   environmentCount: fc.integer({ min: 0, max: 10 }),
   userRole: fc.constantFrom('OWNER', 'ADMINISTRATOR', 'DEVELOPER', 'VIEWER'),
@@ -54,11 +55,11 @@ const applicationRowArb: fc.Arbitrary<ApplicationListRow> = fc.record({
 
 // Helper function that mirrors the component's applyFilters logic
 function applyFilters(
-  rows: ApplicationListRow[],
+  rows: ApplicationTableRow[],
   searchTerm: string,
   organizationFilter: string,
   statusFilter: string
-): ApplicationListRow[] {
+): ApplicationTableRow[] {
   return rows.filter((row) => {
     const matchesSearch =
       !searchTerm ||

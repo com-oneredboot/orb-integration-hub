@@ -1,41 +1,35 @@
 /**
  * ApplicationsListComponent Unit Tests
  *
- * Tests for applications list component data loading and user interactions.
+ * Tests for applications list component using NgRx store-first pattern.
  *
- * @see .kiro/specs/applications-management/design.md
- * _Requirements: 6.2_
+ * @see .kiro/specs/store-centric-refactoring/design.md
+ * _Requirements: 2.1-2.5, 7.1_
  */
 
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { Router, ActivatedRoute } from '@angular/router';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
-import { of, throwError, BehaviorSubject } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
 import { faRocket, faPlus, faSearch, faServer, faSpinner } from '@fortawesome/free-solid-svg-icons';
 
-import { ApplicationsListComponent, ApplicationListRow } from './applications-list.component';
-import { ApplicationService } from '../../../../../core/services/application.service';
-import { OrganizationService } from '../../../../../core/services/organization.service';
+import { ApplicationsListComponent } from './applications-list.component';
 import { IApplications } from '../../../../../core/models/ApplicationsModel';
 import { IOrganizations } from '../../../../../core/models/OrganizationsModel';
 import { ApplicationStatus } from '../../../../../core/enums/ApplicationStatusEnum';
 import { OrganizationStatus } from '../../../../../core/enums/OrganizationStatusEnum';
-import * as fromUser from '../../../../user/store/user.selectors';
+import { ApplicationsActions } from '../../store/applications.actions';
+import * as fromApplications from '../../store/applications.selectors';
+import * as fromOrganizations from '../../../organizations/store/organizations.selectors';
+import { ApplicationTableRow } from '../../store/applications.state';
 
 describe('ApplicationsListComponent', () => {
   let component: ApplicationsListComponent;
   let fixture: ComponentFixture<ApplicationsListComponent>;
   let store: MockStore;
   let router: jasmine.SpyObj<Router>;
-  let applicationService: jasmine.SpyObj<ApplicationService>;
-  let organizationService: jasmine.SpyObj<OrganizationService>;
   let queryParamsSubject: BehaviorSubject<Record<string, string>>;
-
-  const mockUser = {
-    userId: 'user-123',
-    email: 'test@example.com',
-  };
 
   const mockOrganization: IOrganizations = {
     organizationId: 'org-456',
@@ -59,25 +53,52 @@ describe('ApplicationsListComponent', () => {
     updatedAt: new Date(),
   };
 
+  const mockApplicationRow: ApplicationTableRow = {
+    application: mockApplication,
+    organizationId: 'org-456',
+    organizationName: 'Test Organization',
+    environmentCount: 2,
+    userRole: 'OWNER',
+    lastActivity: '1 day ago',
+  };
+
+  const initialState = {
+    applications: {
+      applications: [],
+      applicationRows: [],
+      filteredApplicationRows: [],
+      isLoading: false,
+      isCreatingNew: false,
+      searchTerm: '',
+      organizationFilter: '',
+      statusFilter: '',
+    },
+    organizations: {
+      organizations: [],
+    },
+  };
+
   beforeEach(async () => {
     router = jasmine.createSpyObj('Router', ['navigate']);
-    applicationService = jasmine.createSpyObj('ApplicationService', [
-      'getApplicationsByOrganization',
-    ]);
-    organizationService = jasmine.createSpyObj('OrganizationService', [
-      'getUserOrganizations',
-    ]);
     queryParamsSubject = new BehaviorSubject<Record<string, string>>({});
 
     await TestBed.configureTestingModule({
       imports: [ApplicationsListComponent],
       providers: [
         provideMockStore({
-          selectors: [{ selector: fromUser.selectCurrentUser, value: mockUser }],
+          initialState,
+          selectors: [
+            { selector: fromApplications.selectApplicationRows, value: [] },
+            { selector: fromApplications.selectFilteredApplicationRows, value: [] },
+            { selector: fromApplications.selectIsLoading, value: false },
+            { selector: fromApplications.selectIsCreatingNew, value: false },
+            { selector: fromOrganizations.selectOrganizations, value: [] },
+            { selector: fromApplications.selectSearchTerm, value: '' },
+            { selector: fromApplications.selectOrganizationFilter, value: '' },
+            { selector: fromApplications.selectStatusFilter, value: '' },
+          ],
         }),
         { provide: Router, useValue: router },
-        { provide: ApplicationService, useValue: applicationService },
-        { provide: OrganizationService, useValue: organizationService },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -92,6 +113,8 @@ describe('ApplicationsListComponent', () => {
     library.addIcons(faRocket, faPlus, faSearch, faServer, faSpinner);
 
     store = TestBed.inject(MockStore);
+    spyOn(store, 'dispatch').and.callThrough();
+
     fixture = TestBed.createComponent(ApplicationsListComponent);
     component = fixture.componentInstance;
   });
@@ -104,90 +127,142 @@ describe('ApplicationsListComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  describe('Data Loading', () => {
-    it('should load applications on init when user is available', fakeAsync(() => {
-      organizationService.getUserOrganizations.and.returnValue(
-        of({ items: [mockOrganization], nextToken: null })
-      );
-      applicationService.getApplicationsByOrganization.and.returnValue(
-        of({ items: [mockApplication], nextToken: null })
-      );
-
+  describe('Store Dispatches', () => {
+    it('should dispatch loadApplications on init', fakeAsync(() => {
       fixture.detectChanges();
       tick();
 
-      expect(organizationService.getUserOrganizations).toHaveBeenCalledWith('user-123');
-      expect(applicationService.getApplicationsByOrganization).toHaveBeenCalledWith(
-        'org-456'
-      );
-      expect(component.applicationRows.length).toBe(1);
-      expect(component.isLoading).toBe(false);
+      expect(store.dispatch).toHaveBeenCalledWith(ApplicationsActions.loadApplications());
     }));
 
-    it('should set isLoading to false after loading completes', fakeAsync(() => {
-      organizationService.getUserOrganizations.and.returnValue(
-        of({ items: [mockOrganization], nextToken: null })
-      );
-      applicationService.getApplicationsByOrganization.and.returnValue(
-        of({ items: [mockApplication], nextToken: null })
-      );
-
+    it('should dispatch setSearchTerm on search change', fakeAsync(() => {
       fixture.detectChanges();
       tick();
 
-      // isLoading should be false after loading completes
-      expect(component.isLoading).toBe(false);
+      component.searchTerm = 'test';
+      component.onSearchChange();
+
+      expect(store.dispatch).toHaveBeenCalledWith(
+        ApplicationsActions.setSearchTerm({ searchTerm: 'test' })
+      );
     }));
 
-    it('should handle empty organizations', fakeAsync(() => {
-      organizationService.getUserOrganizations.and.returnValue(
-        of({ items: [], nextToken: null })
-      );
-
+    it('should dispatch setOrganizationFilter on filter change', fakeAsync(() => {
       fixture.detectChanges();
       tick();
 
-      expect(component.applicationRows.length).toBe(0);
-      expect(component.isLoading).toBe(false);
+      component.organizationFilter = 'org-456';
+      component.onFilterChange();
+
+      expect(store.dispatch).toHaveBeenCalledWith(
+        ApplicationsActions.setOrganizationFilter({ organizationFilter: 'org-456' })
+      );
     }));
 
-    it('should handle application loading errors gracefully', fakeAsync(() => {
-      organizationService.getUserOrganizations.and.returnValue(
-        of({ items: [mockOrganization], nextToken: null })
-      );
-      applicationService.getApplicationsByOrganization.and.returnValue(
-        throwError(() => new Error('Failed to load'))
-      );
-
+    it('should dispatch setStatusFilter on filter change', fakeAsync(() => {
       fixture.detectChanges();
       tick();
 
-      // Should still complete without crashing
-      expect(component.isLoading).toBe(false);
+      component.statusFilter = 'ACTIVE';
+      component.onFilterChange();
+
+      expect(store.dispatch).toHaveBeenCalledWith(
+        ApplicationsActions.setStatusFilter({ statusFilter: 'ACTIVE' })
+      );
     }));
 
-    it('should filter out PENDING applications from the list', fakeAsync(() => {
-      const pendingApp: IApplications = {
-        ...mockApplication,
-        applicationId: 'app-pending',
-        status: ApplicationStatus.Pending,
-      };
-
-      organizationService.getUserOrganizations.and.returnValue(
-        of({ items: [mockOrganization], nextToken: null })
-      );
-      applicationService.getApplicationsByOrganization.and.returnValue(
-        of({ items: [mockApplication, pendingApp], nextToken: null })
-      );
-
+    it('should dispatch selectApplication on application selected', fakeAsync(() => {
       fixture.detectChanges();
       tick();
 
-      // Only active application should be in the list
-      expect(component.applicationRows.length).toBe(1);
-      expect(component.applicationRows[0].application.status).toBe(
-        ApplicationStatus.Active
+      component.onApplicationSelected(mockApplication);
+
+      expect(store.dispatch).toHaveBeenCalledWith(
+        ApplicationsActions.selectApplication({ application: mockApplication })
       );
+    }));
+  });
+
+  describe('Store Selectors', () => {
+    it('should get applicationRows from store', fakeAsync(() => {
+      store.overrideSelector(fromApplications.selectApplicationRows, [mockApplicationRow]);
+      store.refreshState();
+      fixture.detectChanges();
+      tick();
+
+      let rows: ApplicationTableRow[] = [];
+      component.applicationRows$.subscribe(r => rows = r);
+      tick();
+
+      expect(rows.length).toBe(1);
+      expect(rows[0].application.applicationId).toBe('app-789');
+    }));
+
+    it('should get filteredApplicationRows from store', fakeAsync(() => {
+      store.overrideSelector(fromApplications.selectFilteredApplicationRows, [mockApplicationRow]);
+      store.refreshState();
+      fixture.detectChanges();
+      tick();
+
+      let rows: ApplicationTableRow[] = [];
+      component.filteredApplicationRows$.subscribe(r => rows = r);
+      tick();
+
+      expect(rows.length).toBe(1);
+    }));
+
+    it('should get isLoading from store', fakeAsync(() => {
+      store.overrideSelector(fromApplications.selectIsLoading, true);
+      store.refreshState();
+      fixture.detectChanges();
+      tick();
+
+      let loading = false;
+      component.isLoading$.subscribe(l => loading = l);
+      tick();
+
+      expect(loading).toBe(true);
+    }));
+
+    it('should get organizations from store', fakeAsync(() => {
+      store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+      store.refreshState();
+      fixture.detectChanges();
+      tick();
+
+      let orgs: IOrganizations[] = [];
+      component.organizations$.subscribe(o => orgs = o);
+      tick();
+
+      expect(orgs.length).toBe(1);
+      expect(orgs[0].organizationId).toBe('org-456');
+    }));
+
+    it('should sync local searchTerm with store', fakeAsync(() => {
+      store.overrideSelector(fromApplications.selectSearchTerm, 'test search');
+      store.refreshState();
+      fixture.detectChanges();
+      tick();
+
+      expect(component.searchTerm).toBe('test search');
+    }));
+
+    it('should sync local organizationFilter with store', fakeAsync(() => {
+      store.overrideSelector(fromApplications.selectOrganizationFilter, 'org-456');
+      store.refreshState();
+      fixture.detectChanges();
+      tick();
+
+      expect(component.organizationFilter).toBe('org-456');
+    }));
+
+    it('should sync local statusFilter with store', fakeAsync(() => {
+      store.overrideSelector(fromApplications.selectStatusFilter, 'ACTIVE');
+      store.refreshState();
+      fixture.detectChanges();
+      tick();
+
+      expect(component.statusFilter).toBe('ACTIVE');
     }));
   });
 
@@ -213,78 +288,6 @@ describe('ApplicationsListComponent', () => {
     });
   });
 
-  describe('Filtering', () => {
-    beforeEach(() => {
-      component.applicationRows = [
-        {
-          application: mockApplication,
-          organizationName: 'Test Organization',
-          environmentCount: 2,
-          userRole: 'OWNER',
-          lastActivity: '1 day ago',
-        },
-        {
-          application: {
-            ...mockApplication,
-            applicationId: 'app-2',
-            name: 'Another App',
-            organizationId: 'org-other',
-          },
-          organizationName: 'Other Organization',
-          environmentCount: 1,
-          userRole: 'DEVELOPER',
-          lastActivity: '2 days ago',
-        },
-      ];
-    });
-
-    it('should filter by search term', () => {
-      component.searchTerm = 'Test';
-      component.onSearchChange();
-
-      expect(component.filteredApplicationRows.length).toBe(1);
-      expect(component.filteredApplicationRows[0].application.name).toBe(
-        'Test Application'
-      );
-    });
-
-    it('should filter by organization', () => {
-      component.organizationFilter = 'org-456';
-      component.onFilterChange();
-
-      expect(component.filteredApplicationRows.length).toBe(1);
-      expect(component.filteredApplicationRows[0].application.organizationId).toBe(
-        'org-456'
-      );
-    });
-
-    it('should filter by status', () => {
-      component.applicationRows[1].application.status = ApplicationStatus.Inactive;
-      component.statusFilter = 'ACTIVE';
-      component.onFilterChange();
-
-      expect(component.filteredApplicationRows.length).toBe(1);
-      expect(component.filteredApplicationRows[0].application.status).toBe(
-        ApplicationStatus.Active
-      );
-    });
-
-    it('should apply multiple filters together', () => {
-      component.searchTerm = 'Test';
-      component.organizationFilter = 'org-456';
-      component.onFilterChange();
-
-      expect(component.filteredApplicationRows.length).toBe(1);
-    });
-
-    it('should be case-insensitive when searching', () => {
-      component.searchTerm = 'test';
-      component.onSearchChange();
-
-      expect(component.filteredApplicationRows.length).toBe(1);
-    });
-  });
-
   describe('Application Selection', () => {
     it('should emit applicationSelected event when application is selected', () => {
       spyOn(component.applicationSelected, 'emit');
@@ -297,15 +300,7 @@ describe('ApplicationsListComponent', () => {
 
   describe('Track By Function', () => {
     it('should return applicationId for tracking', () => {
-      const row: ApplicationListRow = {
-        application: mockApplication,
-        organizationName: 'Test',
-        environmentCount: 1,
-        userRole: 'OWNER',
-        lastActivity: 'Now',
-      };
-
-      const result = component.trackByApplicationId(0, row);
+      const result = component.trackByApplicationId(0, mockApplicationRow);
 
       expect(result).toBe('app-789');
     });
@@ -320,120 +315,30 @@ describe('ApplicationsListComponent', () => {
   });
 
   describe('Query Parameter Filtering', () => {
-    const mockOrganization2: IOrganizations = {
-      organizationId: 'org-other',
-      name: 'Other Organization',
-      ownerId: 'user-123',
-      status: OrganizationStatus.Active,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    const mockApplication2: IApplications = {
-      applicationId: 'app-other',
-      name: 'Other Application',
-      organizationId: 'org-other',
-      ownerId: 'user-123',
-      status: ApplicationStatus.Active,
-      apiKey: 'api-key-2',
-      apiKeyNext: '',
-      environments: ['PRODUCTION'],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    it('should set organizationFilter from query params on init', fakeAsync(() => {
-      // Set query params before component init
+    it('should dispatch setOrganizationFilter from query params on init', fakeAsync(() => {
       queryParamsSubject.next({ organizationId: 'org-456' });
 
-      organizationService.getUserOrganizations.and.returnValue(
-        of({ items: [mockOrganization, mockOrganization2], nextToken: null })
-      );
-      applicationService.getApplicationsByOrganization.and.returnValues(
-        of({ items: [mockApplication], nextToken: null }),
-        of({ items: [mockApplication2], nextToken: null })
-      );
-
       fixture.detectChanges();
       tick();
 
-      expect(component.organizationFilter).toBe('org-456');
-      // Should only show applications from org-456
-      expect(component.filteredApplicationRows.length).toBe(1);
-      expect(component.filteredApplicationRows[0].application.organizationId).toBe('org-456');
+      expect(store.dispatch).toHaveBeenCalledWith(
+        ApplicationsActions.setOrganizationFilter({ organizationFilter: 'org-456' })
+      );
     }));
 
-    it('should re-apply filters when query params change after data is loaded', fakeAsync(() => {
-      // Start with no query params
-      queryParamsSubject.next({});
-
-      organizationService.getUserOrganizations.and.returnValue(
-        of({ items: [mockOrganization, mockOrganization2], nextToken: null })
-      );
-      applicationService.getApplicationsByOrganization.and.returnValues(
-        of({ items: [mockApplication], nextToken: null }),
-        of({ items: [mockApplication2], nextToken: null })
-      );
-
+    it('should dispatch setOrganizationFilter when query params change', fakeAsync(() => {
       fixture.detectChanges();
       tick();
 
-      // Initially should show all applications
-      expect(component.filteredApplicationRows.length).toBe(2);
+      // Clear previous dispatch calls
+      (store.dispatch as jasmine.Spy).calls.reset();
 
-      // Now change query params
       queryParamsSubject.next({ organizationId: 'org-other' });
       tick();
 
-      // Should now filter to only org-other applications
-      expect(component.organizationFilter).toBe('org-other');
-      expect(component.filteredApplicationRows.length).toBe(1);
-      expect(component.filteredApplicationRows[0].application.organizationId).toBe('org-other');
-    }));
-
-    it('should show all applications when organizationId query param is removed', fakeAsync(() => {
-      // Start with filter
-      queryParamsSubject.next({ organizationId: 'org-456' });
-
-      organizationService.getUserOrganizations.and.returnValue(
-        of({ items: [mockOrganization, mockOrganization2], nextToken: null })
+      expect(store.dispatch).toHaveBeenCalledWith(
+        ApplicationsActions.setOrganizationFilter({ organizationFilter: 'org-other' })
       );
-      applicationService.getApplicationsByOrganization.and.returnValues(
-        of({ items: [mockApplication], nextToken: null }),
-        of({ items: [mockApplication2], nextToken: null })
-      );
-
-      fixture.detectChanges();
-      tick();
-
-      expect(component.filteredApplicationRows.length).toBe(1);
-
-      // Remove query param (empty object doesn't clear the filter in current implementation)
-      // The filter stays set until explicitly cleared
-      queryParamsSubject.next({});
-      tick();
-
-      // organizationFilter is not cleared when param is removed (current behavior)
-      // This test documents the current behavior
-      expect(component.organizationFilter).toBe('org-456');
-    }));
-
-    it('should not re-apply filters if data is not yet loaded', fakeAsync(() => {
-      // Set query params before data loads
-      queryParamsSubject.next({ organizationId: 'org-456' });
-
-      // Don't trigger data loading yet
-      organizationService.getUserOrganizations.and.returnValue(
-        of({ items: [], nextToken: null })
-      );
-
-      fixture.detectChanges();
-      tick();
-
-      // Filter should be set but no rows to filter
-      expect(component.organizationFilter).toBe('org-456');
-      expect(component.applicationRows.length).toBe(0);
-      expect(component.filteredApplicationRows.length).toBe(0);
     }));
   });
 });

@@ -440,6 +440,125 @@ All components must be accessible:
 - Support reduced motion preferences
 - Meet WCAG 2.1 AA contrast requirements
 
+## NgRx Store-First Architecture
+
+**MANDATORY**: All page components MUST use NgRx store as the single source of truth. Components dispatch actions and subscribe to selectors - they do NOT call services directly for data operations.
+
+### Store-First Data Flow
+
+```
+Component → Dispatch Action → Effect → Service → API
+                                         ↓
+Component ← Selector ← Reducer ← Success/Failure Action
+```
+
+### Anti-Pattern (PROHIBITED)
+
+```typescript
+// ❌ WRONG - Direct service calls bypass the store
+export class ResourceListComponent {
+  resources: Resource[] = [];  // Local state duplicates store
+  isLoading = false;           // Local loading state
+  
+  ngOnInit(): void {
+    this.isLoading = true;
+    this.resourceService.getResources().subscribe(data => {  // Direct call
+      this.resources = data;
+      this.isLoading = false;
+    });
+  }
+}
+```
+
+### Correct Pattern (REQUIRED)
+
+```typescript
+// ✅ CORRECT - All data flows through store
+export class ResourceListComponent {
+  // Store selectors - ALL data comes from store
+  resources$: Observable<Resource[]>;
+  isLoading$: Observable<boolean>;
+  
+  constructor(private store: Store) {
+    this.resources$ = this.store.select(selectResources);
+    this.isLoading$ = this.store.select(selectIsLoading);
+  }
+  
+  ngOnInit(): void {
+    // Dispatch action - effects handle service call
+    this.store.dispatch(ResourceActions.loadResources());
+  }
+  
+  onSave(resource: Resource): void {
+    // Dispatch action - effects handle service call
+    this.store.dispatch(ResourceActions.updateResource({ input: resource }));
+  }
+}
+```
+
+### Required Store Elements
+
+**For List Pages:**
+
+| Element | Type | Purpose |
+|---------|------|---------|
+| `selectResources` | Selector | Raw resource array |
+| `selectResourceRows` | Selector | Transformed table rows |
+| `selectFilteredResourceRows` | Selector | Filtered/sorted rows |
+| `selectIsLoading` | Selector | Loading state |
+| `selectIsCreatingNew` | Selector | Create mode state |
+| `loadResources` | Action | Trigger data load |
+| `setSearchTerm` | Action | Update search filter |
+| `setStatusFilter` | Action | Update status filter |
+| `loadResources$` | Effect | Handle API call |
+
+**For Detail Pages:**
+
+| Element | Type | Purpose |
+|---------|------|---------|
+| `selectSelectedResource` | Selector | Current resource |
+| `selectIsLoading` | Selector | Loading state |
+| `selectIsSaving` | Selector | Save in progress |
+| `selectError` | Selector | Error message |
+| `loadResource` | Action | Load single resource |
+| `updateResource` | Action | Save changes |
+| `deleteResource` | Action | Delete resource |
+| `loadResource$` | Effect | Handle load API call |
+| `updateResource$` | Effect | Handle save API call |
+
+### Allowed Local State
+
+Only UI-specific state that doesn't represent data may be local:
+
+| Allowed | Not Allowed |
+|---------|-------------|
+| Grid pagination state | Resource data |
+| Sort direction | Loading flags |
+| Form dirty state | Error messages |
+| Modal open/closed | Filter values |
+| Dropdown expanded | Selected items |
+
+### Reference Implementations
+
+**Good (Store-First):**
+- `OrganizationsListComponent` - 5 selectors, 8 dispatches, 1 service call (draft only)
+- `AuthFlowComponent` - 12 selectors, 29 dispatches
+
+**Bad (Hybrid - needs refactoring):**
+- `ApplicationsListComponent` - 0 dispatches, direct service calls
+- `ApplicationDetailPageComponent` - 7 direct service calls
+
+### Checklist for New Components
+
+Before submitting a PR, verify:
+
+- [ ] All data comes from store selectors (no local data state)
+- [ ] All CRUD operations dispatch actions (no direct service calls)
+- [ ] Loading/saving states come from store selectors
+- [ ] Errors come from store selectors
+- [ ] Effects exist for all async operations
+- [ ] Unit tests mock the store and verify dispatches
+
 ## List and Detail Page Standards
 
 All resource list and detail pages MUST follow these patterns for consistency.

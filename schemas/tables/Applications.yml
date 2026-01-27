@@ -41,6 +41,10 @@ model:
       type: string
       required: true
       description: Name of the application
+    description:
+      type: string
+      required: false
+      description: Brief description of the application
     organizationId:
       type: string
       required: true

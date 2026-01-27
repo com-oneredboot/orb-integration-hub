@@ -10,6 +10,7 @@ import { ApplicationStatus } from '../../core/enums/ApplicationStatusEnum';
 export type ApplicationsCreateInput = {
   applicationId: string;
   name: string;
+  description?: string;
   organizationId: string;
   ownerId: string;
   status: ApplicationStatus;
@@ -23,6 +24,7 @@ export type ApplicationsCreateInput = {
 export type ApplicationsUpdateInput = {
   applicationId?: string;
   name?: string;
+  description?: string;
   organizationId?: string;
   ownerId?: string;
   status?: ApplicationStatus;
@@ -119,6 +121,7 @@ export type ApplicationsListByOrganizationIdResponse = {
 export interface IApplications {
   applicationId: string;
   name: string;
+  description?: string;
   organizationId: string;
   ownerId: string;
   status: ApplicationStatus;
@@ -132,6 +135,7 @@ export interface IApplications {
 export class Applications implements IApplications {
   applicationId: string;
   name: string;
+  description?: string;
   organizationId: string;
   ownerId: string;
   status: ApplicationStatus;
@@ -144,6 +148,7 @@ export class Applications implements IApplications {
   constructor(data: Partial<IApplications> = {}) {
     this.applicationId = data.applicationId ?? '';
     this.name = data.name ?? '';
+    this.description = data.description;
     this.organizationId = data.organizationId ?? '';
     this.ownerId = data.ownerId ?? '';
     this.status = data.status ?? ApplicationStatus.Active;

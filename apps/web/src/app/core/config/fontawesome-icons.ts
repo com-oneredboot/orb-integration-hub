@@ -20,6 +20,7 @@ import {
   faSyncAlt,
   faRefresh,
   faHome,
+  faTrash,
   
   // User & Roles
   faCrown,
@@ -93,6 +94,7 @@ export function configureFontAwesome(library: FaIconLibrary): void {
     faSyncAlt,
     faRefresh,
     faHome,
+    faTrash,
     
     // User & Roles
     faCrown,
@@ -165,6 +167,7 @@ export const registeredIcons = [
   'sync-alt',
   'refresh',
   'home',
+  'trash',
   
   // User & Roles
   'crown',

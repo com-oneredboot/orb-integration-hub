@@ -5,7 +5,8 @@
  * Follows the same patterns as OrganizationsActions.
  *
  * @see .kiro/specs/applications-management/design.md
- * _Requirements: 5.1_
+ * @see .kiro/specs/store-centric-refactoring/design.md
+ * _Requirements: 5.1, 2.2, 3.2_
  */
 
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
@@ -19,10 +20,15 @@ import { ApplicationTableRow } from './applications.state';
 export const ApplicationsActions = createActionGroup({
   source: 'Applications',
   events: {
-    // Load Applications
+    // Load Applications (all for user)
     'Load Applications': emptyProps(),
     'Load Applications Success': props<{ applications: IApplications[] }>(),
     'Load Applications Failure': props<{ error: string }>(),
+
+    // Load Single Application (for detail page)
+    'Load Application': props<{ applicationId: string }>(),
+    'Load Application Success': props<{ application: IApplications }>(),
+    'Load Application Failure': props<{ error: string }>(),
 
     // Create Draft Application (create-on-click pattern)
     'Create Draft Application': props<{ ownerId: string; organizationId?: string }>(),
