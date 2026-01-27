@@ -65,6 +65,8 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
   @ViewChild('memberCountCell', { static: true }) memberCountCell!: TemplateRef<any>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   @ViewChild('appCountCell', { static: true }) appCountCell!: TemplateRef<any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  @ViewChild('lastActivityCell', { static: true }) lastActivityCell!: TemplateRef<any>;
 
   // User data
   currentUser$: Observable<IUsers | null>;
@@ -135,7 +137,7 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
         sortable: true,
         filterable: true,
         cellTemplate: this.orgInfoCell,
-        width: '30%'
+        width: '25%'
       },
       {
         field: 'organization',
@@ -150,7 +152,7 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
           { value: 'SUSPENDED', label: 'Suspended' }
         ],
         cellTemplate: this.statusCell,
-        width: '15%'
+        width: '12%'
       },
       {
         field: 'userRole',
@@ -164,14 +166,14 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
           { value: 'CUSTOMER', label: 'Customer' }
         ],
         cellTemplate: this.roleCell,
-        width: '15%'
+        width: '12%'
       },
       {
         field: 'memberCount',
         header: 'Members',
         sortable: true,
         cellTemplate: this.memberCountCell,
-        width: '15%',
+        width: '12%',
         hideOnMobile: true
       },
       {
@@ -179,6 +181,14 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
         header: 'Applications',
         sortable: true,
         cellTemplate: this.appCountCell,
+        width: '12%',
+        hideOnMobile: true
+      },
+      {
+        field: 'lastActivity',
+        header: 'Last Activity',
+        sortable: true,
+        cellTemplate: this.lastActivityCell,
         width: '15%',
         hideOnMobile: true
       }

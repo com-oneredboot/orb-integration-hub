@@ -88,3 +88,8 @@
     {{ row.organization.applicationCount || 0 }}
   </button>
 </ng-template>
+
+<!-- Last Activity Cell -->
+<ng-template #lastActivityCell let-row>
+  <span class="orb-info__id">{{ row.lastActivity }}</span>
+</ng-template>

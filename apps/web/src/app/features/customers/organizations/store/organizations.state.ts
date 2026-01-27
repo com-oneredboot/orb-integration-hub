@@ -12,6 +12,7 @@ export interface OrganizationTableRow {
   isOwner: boolean;
   memberCount: number;
   applicationCount: number;
+  lastActivity: string;
 }
 
 export interface OrganizationsState {

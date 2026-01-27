@@ -53,6 +53,7 @@ describe('OrganizationsListComponent', () => {
     isOwner: true,
     memberCount: 3,
     applicationCount: 5,
+    lastActivity: '1 day ago',
   };
 
   beforeEach(async () => {

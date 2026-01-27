@@ -28,7 +28,8 @@ export const organizationsReducer = createReducer(
       userRole: 'OWNER', // User is owner of their own organizations
       isOwner: true,
       memberCount: 1, // At minimum, the owner is a member
-      applicationCount: 0 // Will be populated when we have application data
+      applicationCount: 0, // Will be populated when we have application data
+      lastActivity: formatLastActivity(org.updatedAt)
     }));
 
     return {
@@ -62,7 +63,8 @@ export const organizationsReducer = createReducer(
           ...row,
           organization,
           memberCount: 1, // User who created it
-          applicationCount: 0
+          applicationCount: 0,
+          lastActivity: formatLastActivity(organization.updatedAt)
         };
       }
       return row;
@@ -108,7 +110,7 @@ export const organizationsReducer = createReducer(
 
     const updatedRows = state.organizationRows.map(row => 
       row.organization.organizationId === organization.organizationId 
-        ? { ...row, organization }
+        ? { ...row, organization, lastActivity: formatLastActivity(organization.updatedAt) }
         : row
     );
 
@@ -184,7 +186,8 @@ export const organizationsReducer = createReducer(
       userRole: 'OWNER',
       isOwner: true,
       memberCount: 0,
-      applicationCount: 0
+      applicationCount: 0,
+      lastActivity: 'Just now'
     };
 
     const updatedRows = [placeholderRow, ...state.organizationRows];
@@ -350,4 +353,22 @@ function applyFilters(
     row.userRole === roleFilter;
   
   return matchesSearch && matchesStatus && matchesRole;
+}
+
+// Helper function to format last activity as relative time
+function formatLastActivity(dateValue: string | Date | number | undefined): string {
+  if (!dateValue) return 'Never';
+  const date = typeof dateValue === 'number' ? new Date(dateValue * 1000)
+    : dateValue instanceof Date ? dateValue : new Date(dateValue);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return diffMins + ' min ago';
+  if (diffHours < 24) return diffHours + ' hour' + (diffHours > 1 ? 's' : '') + ' ago';
+  if (diffDays < 7) return diffDays + ' day' + (diffDays > 1 ? 's' : '') + ' ago';
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }

@@ -439,3 +439,114 @@ All components must be accessible:
 - Maintain focus management in modals/dialogs
 - Support reduced motion preferences
 - Meet WCAG 2.1 AA contrast requirements
+
+## List and Detail Page Standards
+
+All resource list and detail pages MUST follow these patterns for consistency.
+
+### List Page Requirements
+
+Every list page MUST include these columns:
+
+| Column | Description | Required |
+|--------|-------------|----------|
+| Resource Info | Name + ID in two-line format | Yes |
+| Status | Status badge with icon | Yes |
+| Role | User's role for this resource | Yes |
+| Last Activity | Relative time (e.g., "2 hours ago") | Yes |
+| Resource-specific counts | Members, Applications, etc. | As applicable |
+
+**Last Activity Column:**
+- Display relative time using `formatLastActivity()` helper
+- Format: "Just now", "X min ago", "X hours ago", "X days ago", or "Mon DD" for older
+- Source from `updatedAt` field
+
+**Example Table Row Interface:**
+
+```typescript
+interface ResourceTableRow {
+  resource: IResource;
+  userRole: string;
+  isOwner: boolean;
+  // Resource-specific counts
+  memberCount: number;
+  applicationCount: number;
+  // Required for all list pages
+  lastActivity: string;
+}
+```
+
+**formatLastActivity Helper:**
+
+```typescript
+function formatLastActivity(dateValue: string | Date | number | undefined): string {
+  if (!dateValue) return 'Never';
+  const date = typeof dateValue === 'number' ? new Date(dateValue * 1000)
+    : dateValue instanceof Date ? dateValue : new Date(dateValue);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return diffMins + ' min ago';
+  if (diffHours < 24) return diffHours + ' hour' + (diffHours > 1 ? 's' : '') + ' ago';
+  if (diffDays < 7) return diffDays + ' day' + (diffDays > 1 ? 's' : '') + ' ago';
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+```
+
+### Detail Page Requirements
+
+Every detail page MUST include a metadata section showing:
+
+| Field | Description | Required |
+|-------|-------------|----------|
+| Resource ID | Full UUID | Yes |
+| Created | Formatted date/time | Yes |
+| Last Updated | Formatted date/time | Yes |
+
+**Example Metadata Section:**
+
+```html
+<div class="resource-detail-metadata" *ngIf="!isDraft">
+  <div class="resource-detail-metadata__item">
+    <span class="resource-detail-metadata__label">Resource ID</span>
+    <span class="resource-detail-metadata__value">{{ resource.resourceId }}</span>
+  </div>
+  <div class="resource-detail-metadata__item">
+    <span class="resource-detail-metadata__label">Created</span>
+    <span class="resource-detail-metadata__value">{{ formatDate(resource.createdAt) }}</span>
+  </div>
+  <div class="resource-detail-metadata__item">
+    <span class="resource-detail-metadata__label">Last Updated</span>
+    <span class="resource-detail-metadata__value">{{ formatDate(resource.updatedAt) }}</span>
+  </div>
+</div>
+```
+
+**formatDate Helper:**
+
+```typescript
+formatDate(dateValue: string | Date | number | undefined): string {
+  if (!dateValue) return 'N/A';
+  const date = typeof dateValue === 'number'
+    ? new Date(dateValue * 1000)
+    : dateValue instanceof Date
+      ? dateValue
+      : new Date(dateValue);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+```
+
+### Reference Implementations
+
+- **List Page:** `apps/web/src/app/features/customers/applications/components/applications-list/`
+- **Detail Page:** `apps/web/src/app/features/customers/applications/components/application-detail-page/`

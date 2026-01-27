@@ -52,6 +52,7 @@ describe('OrganizationsListComponent Property Tests', () => {
             isOwner: true,
             memberCount: 0,
             applicationCount: organization.applicationCount || 0,
+            lastActivity: 'Just now',
           };
 
           // The table row's applicationCount should match the organization's applicationCount
@@ -109,6 +110,7 @@ describe('OrganizationsListComponent Property Tests', () => {
               isOwner: true,
               memberCount: 0,
               applicationCount: org.applicationCount || 0,
+              lastActivity: 'Just now',
             }));
 
             // Each table row's applicationCount should match its organization's applicationCount
