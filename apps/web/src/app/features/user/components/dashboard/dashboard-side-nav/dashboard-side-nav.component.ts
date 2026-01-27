@@ -37,7 +37,7 @@ export class DashboardSideNavComponent implements OnInit, OnDestroy {
     },
     {
       id: 'applications',
-      icon: 'cube',
+      icon: 'rocket',
       tooltip: 'Applications',
       route: '/customers/applications'
     },
