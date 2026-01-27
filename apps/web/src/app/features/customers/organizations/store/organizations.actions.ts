@@ -60,6 +60,9 @@ export const OrganizationsActions = createActionGroup({
     // Organization Rows Management (for table display)
     'Update Organization Rows': props<{ organizationRows: OrganizationTableRow[] }>(),
     'Update Filtered Organization Rows': props<{ filteredRows: OrganizationTableRow[] }>(),
+    
+    // Application Count Management
+    'Update Organization Application Counts': props<{ applicationCountsByOrg: Record<string, number> }>(),
 
     // Error Management
     'Clear Errors': emptyProps(),

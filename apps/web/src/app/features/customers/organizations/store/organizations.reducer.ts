@@ -309,6 +309,22 @@ export const organizationsReducer = createReducer(
     filteredOrganizationRows: filteredRows
   })),
 
+  // Application Count Management
+  on(OrganizationsActions.updateOrganizationApplicationCounts, (state, { applicationCountsByOrg }): OrganizationsState => {
+    const updatedRows = state.organizationRows.map(row => ({
+      ...row,
+      applicationCount: applicationCountsByOrg[row.organization.organizationId] ?? row.applicationCount
+    }));
+
+    return {
+      ...state,
+      organizationRows: updatedRows,
+      filteredOrganizationRows: updatedRows.filter(row => 
+        applyFilters(row, state.searchTerm, state.statusFilter, state.roleFilter)
+      )
+    };
+  }),
+
   // Error Management
   on(OrganizationsActions.clearErrors, (state): OrganizationsState => ({
     ...state,

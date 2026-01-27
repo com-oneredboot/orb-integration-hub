@@ -21,6 +21,7 @@ import { OrganizationService } from '../../../../core/services/organization.serv
 import { selectIsCreatingNew } from './applications.selectors';
 import { selectCurrentUser } from '../../../user/store/user.selectors';
 import { selectOrganizations } from '../../organizations/store/organizations.selectors';
+import { OrganizationsActions } from '../../organizations/store/organizations.actions';
 import { IApplications } from '../../../../core/models/ApplicationsModel';
 import { ApplicationStatus } from '../../../../core/enums/ApplicationStatusEnum';
 
@@ -254,6 +255,37 @@ export class ApplicationsEffects {
         ApplicationsActions.deleteApplicationSuccess
       ),
       switchMap(() => of(ApplicationsActions.loadApplications()))
+    )
+  );
+
+  /**
+   * Update Organization Application Counts Effect
+   * When applications are loaded successfully, calculate counts per organization
+   * and update the organizations store.
+   */
+  updateOrganizationApplicationCounts$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ApplicationsActions.loadApplicationsSuccess),
+      withLatestFrom(this.store.select(selectOrganizations)),
+      map(([action, organizations]) => {
+        // Calculate application counts per organization
+        const applicationCountsByOrg: Record<string, number> = {};
+        
+        // Initialize all organizations with 0
+        for (const org of organizations) {
+          applicationCountsByOrg[org.organizationId] = 0;
+        }
+        
+        // Count applications per organization (only ACTIVE ones)
+        for (const app of action.applications) {
+          if (app.status !== ApplicationStatus.Pending && app.organizationId) {
+            applicationCountsByOrg[app.organizationId] = 
+              (applicationCountsByOrg[app.organizationId] || 0) + 1;
+          }
+        }
+        
+        return OrganizationsActions.updateOrganizationApplicationCounts({ applicationCountsByOrg });
+      })
     )
   );
 }
