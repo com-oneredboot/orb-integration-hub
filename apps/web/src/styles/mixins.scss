@@ -283,7 +283,13 @@
 @mixin page-content {
   flex: 1;
   padding: 2rem;
+  padding-right: 100px; // Reserve space for quick actions tab (56px width + 44px buffer)
   min-height: 0;
+  
+  @media (max-width: 768px) {
+    padding-right: 2rem; // Normal padding on mobile (quick actions moves to bottom)
+    padding-bottom: 80px; // Reserve space for bottom quick actions bar
+  }
 }
 
 // Status Badge Mixins

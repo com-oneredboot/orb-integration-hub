@@ -1,8 +1,9 @@
 /**
  * Applications Component
  * 
- * Main container for applications management with master-detail layout.
+ * Main container for applications management.
  * Available only to CUSTOMER role users.
+ * Uses create-on-click pattern - detail view is a separate route.
  */
 
 import { Component, OnInit } from '@angular/core';
@@ -14,7 +15,6 @@ import { Observable, of } from 'rxjs';
 
 import { Applications } from '../../../core/models/ApplicationsModel';
 import { ApplicationsListComponent } from './components/applications-list/applications-list.component';
-import { ApplicationDetailComponent } from './components/application-detail/application-detail.component';
 import * as fromUser from '../../user/store/user.selectors';
 import { DebugPanelComponent, DebugContext } from '../../../shared/components/debug/debug-panel.component';
 import { DebugLogEntry } from '../../../core/services/debug-log.service';
@@ -27,7 +27,6 @@ import { DebugLogEntry } from '../../../core/services/debug-log.service';
     RouterModule,
     FontAwesomeModule,
     ApplicationsListComponent,
-    ApplicationDetailComponent,
     DebugPanelComponent
   ],
   templateUrl: './applications.component.html',
@@ -35,11 +34,6 @@ import { DebugLogEntry } from '../../../core/services/debug-log.service';
 })
 export class ApplicationsComponent implements OnInit {
   selectedApplication: Applications | null = null;
-  selectedApplicationOrganizationName = '';
-  selectedApplicationEnvironmentCount = 0;
-  selectedApplicationApiCallsToday = 0;
-  selectedApplicationLastActivity = '';
-  totalApplications = 8; // Will be updated when applications are loaded
   debugMode$: Observable<boolean>;
   
   // Empty logs observable for debug panel
@@ -51,22 +45,9 @@ export class ApplicationsComponent implements OnInit {
       page: 'Applications',
       additionalSections: [
         {
-          title: 'Selected Application',
-          data: this.selectedApplication ? {
-            applicationData: this.selectedApplication,
-            organizationName: this.selectedApplicationOrganizationName,
-            environmentCount: this.selectedApplicationEnvironmentCount,
-            apiCallsToday: this.selectedApplicationApiCallsToday,
-            lastActivity: this.selectedApplicationLastActivity
-          } : { status: 'No Application Selected' }
-        },
-        {
           title: 'Component State',
           data: {
             selectedApplicationId: this.selectedApplication?.applicationId || 'None',
-            selectedApplicationName: this.selectedApplication?.name || 'None',
-            selectedApplicationStatus: this.selectedApplication?.status || 'None',
-            totalApplications: this.totalApplications,
             componentInitialized: true
           }
         }
@@ -85,69 +66,5 @@ export class ApplicationsComponent implements OnInit {
 
   onApplicationSelected(application: Applications): void {
     this.selectedApplication = application;
-    
-    // TODO: Load actual application stats from service
-    // For now, use mock data based on application
-    this.loadApplicationStats(application);
-  }
-
-  private loadApplicationStats(application: Applications): void {
-    // TODO: Replace with actual service calls
-    // Mock data for demonstration
-    switch (application.applicationId) {
-      case 'app_001':
-        this.selectedApplicationOrganizationName = 'Acme Corporation';
-        this.selectedApplicationEnvironmentCount = 3;
-        this.selectedApplicationApiCallsToday = 1247;
-        this.selectedApplicationLastActivity = '2 hours ago';
-        break;
-      case 'app_002':
-        this.selectedApplicationOrganizationName = 'Acme Corporation';
-        this.selectedApplicationEnvironmentCount = 2;
-        this.selectedApplicationApiCallsToday = 856;
-        this.selectedApplicationLastActivity = '1 day ago';
-        break;
-      case 'app_003':
-        this.selectedApplicationOrganizationName = 'Beta Industries';
-        this.selectedApplicationEnvironmentCount = 4;
-        this.selectedApplicationApiCallsToday = 2103;
-        this.selectedApplicationLastActivity = '3 hours ago';
-        break;
-      case 'app_004':
-        this.selectedApplicationOrganizationName = 'Acme Corporation';
-        this.selectedApplicationEnvironmentCount = 5;
-        this.selectedApplicationApiCallsToday = 3250;
-        this.selectedApplicationLastActivity = '6 hours ago';
-        break;
-      case 'app_005':
-        this.selectedApplicationOrganizationName = 'Gamma Solutions';
-        this.selectedApplicationEnvironmentCount = 3;
-        this.selectedApplicationApiCallsToday = 892;
-        this.selectedApplicationLastActivity = '4 hours ago';
-        break;
-      case 'app_006':
-        this.selectedApplicationOrganizationName = 'Beta Industries';
-        this.selectedApplicationEnvironmentCount = 6;
-        this.selectedApplicationApiCallsToday = 5621;
-        this.selectedApplicationLastActivity = '12 hours ago';
-        break;
-      case 'app_007':
-        this.selectedApplicationOrganizationName = 'Gamma Solutions';
-        this.selectedApplicationEnvironmentCount = 2;
-        this.selectedApplicationApiCallsToday = 1834;
-        this.selectedApplicationLastActivity = '30 minutes ago';
-        break;
-      case 'app_008':
-        this.selectedApplicationOrganizationName = 'Acme Corporation';
-        this.selectedApplicationEnvironmentCount = 4;
-        this.selectedApplicationApiCallsToday = 742;
-        this.selectedApplicationLastActivity = '18 hours ago';
-        break;
-      default:
-        this.selectedApplicationOrganizationName = '';
-        this.selectedApplicationEnvironmentCount = 0;
-        this.selectedApplicationApiCallsToday = 0;
-        this.selectedApplicationLastActivity = 'Never';
-    }
   }
 }

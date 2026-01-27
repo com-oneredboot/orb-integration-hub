@@ -1,0 +1,212 @@
+<!-- Application Detail Page Template -->
+<div class="app-detail-container">
+  <!-- Page Header -->
+  <div class="orb-page-header">
+    <div class="orb-page-header__content">
+      <div class="orb-page-header__flex-container">
+        <div class="orb-page-header__logo-section">
+          <img src="assets/orb-logo.jpg" alt="Orb Integration Hub Logo" class="orb-page-header__logo">
+        </div>
+        <div class="orb-page-header__text-section">
+          <div class="orb-page-header__greeting">
+            <div class="orb-page-header__icon-title">
+              <fa-icon icon="rocket" class="orb-page-header__icon-fa"></fa-icon>
+              <h1 class="orb-page-header__title">
+                {{ isDraft ? 'Complete Application Setup' : (application?.name || 'Application Details') }}
+              </h1>
+            </div>
+            <p class="orb-page-header__subtitle" *ngIf="isDraft">
+              Your application was created but needs to be completed. Fill in the details below and click "Activate Application" to finish setup.
+            </p>
+            <p class="orb-page-header__subtitle" *ngIf="!isDraft && !isLoading && !loadError">
+              Update your application's information below.
+            </p>
+            <div class="orb-page-header__status" *ngIf="application && !isDraft">
+              <app-status-badge
+                [status]="application.status"
+                type="application"
+                [showIcon]="true"
+                [showLabel]="true"
+                size="medium"
+                variant="chip">
+              </app-status-badge>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Back Link -->
+  <div class="app-detail-content">
+    <div class="app-detail-breadcrumb">
+      <a routerLink="/customers/applications" class="app-detail-back-link">
+        <fa-icon icon="arrow-left"></fa-icon>
+        Back to Applications
+      </a>
+    </div>
+
+    <!-- Loading State -->
+    <div class="app-detail-loading" *ngIf="isLoading">
+      <fa-icon icon="spinner" animation="spin" size="2x"></fa-icon>
+      <p>Loading application...</p>
+    </div>
+
+    <!-- Error State -->
+    <div class="app-detail-error" *ngIf="loadError && !isLoading">
+      <fa-icon icon="exclamation-triangle" size="2x"></fa-icon>
+      <p>{{ loadError }}</p>
+      <button class="orb-btn orb-btn--secondary" routerLink="/customers/applications">
+        Back to Applications
+      </button>
+    </div>
+
+    <!-- Content -->
+    <div class="app-detail-form-section" *ngIf="application && !isLoading && !loadError">
+      <!-- Form Card using global orb-card styles -->
+      <div class="orb-card">
+        <div class="orb-card__header">
+          <h2 class="orb-card__title">
+            <fa-icon icon="info-circle" class="orb-card__icon"></fa-icon>
+            Application Information
+          </h2>
+        </div>
+        <div class="orb-card__content orb-card__content--padded">
+          <!-- Organization Field -->
+          <div class="app-detail-field">
+            <label class="app-detail-field__label" for="app-organization">
+              Organization <span class="app-detail-field__required">*</span>
+            </label>
+            <div *ngIf="organizations.length === 0 && !organizationsLoading" class="app-detail-field__no-orgs">
+              <fa-icon icon="exclamation-circle"></fa-icon>
+              <span>No organizations available. <a routerLink="/customers/organizations">Create one first</a>.</span>
+            </div>
+            <select
+              *ngIf="organizations.length > 0 || organizationsLoading"
+              id="app-organization"
+              class="app-detail-field__select"
+              [class.app-detail-field__select--error]="validationErrors.organizationId"
+              [(ngModel)]="editForm.organizationId"
+              [disabled]="organizationsLoading"
+              [attr.aria-invalid]="validationErrors.organizationId ? 'true' : 'false'"
+              [attr.aria-describedby]="validationErrors.organizationId ? 'org-error' : null">
+              <option value="" disabled>{{ organizationsLoading ? 'Loading organizations...' : 'Select an organization' }}</option>
+              <option *ngFor="let org of organizations" [value]="org.organizationId">
+                {{ org.name }}
+              </option>
+            </select>
+            <div class="app-detail-field__error" id="org-error" *ngIf="validationErrors.organizationId">
+              {{ validationErrors.organizationId }}
+            </div>
+          </div>
+
+          <!-- Name Field -->
+          <div class="app-detail-field">
+            <label class="app-detail-field__label" for="app-name">
+              Application Name <span class="app-detail-field__required">*</span>
+            </label>
+            <input
+              type="text"
+              id="app-name"
+              class="app-detail-field__input"
+              [class.app-detail-field__input--error]="validationErrors.name"
+              [(ngModel)]="editForm.name"
+              placeholder="Enter application name"
+              maxlength="100"
+              [attr.aria-invalid]="validationErrors.name ? 'true' : 'false'"
+              [attr.aria-describedby]="validationErrors.name ? 'name-error' : null">
+            <div class="app-detail-field__error" id="name-error" *ngIf="validationErrors.name">
+              {{ validationErrors.name }}
+            </div>
+            <div class="app-detail-field__hint">
+              {{ editForm.name.length }}/100 characters
+            </div>
+          </div>
+
+          <!-- Description Field -->
+          <div class="app-detail-field">
+            <label class="app-detail-field__label" for="app-description">
+              Description
+            </label>
+            <textarea
+              id="app-description"
+              class="app-detail-field__textarea"
+              [class.app-detail-field__textarea--error]="validationErrors.description"
+              [(ngModel)]="editForm.description"
+              placeholder="Enter a brief description of your application"
+              maxlength="500"
+              rows="4"
+              [attr.aria-invalid]="validationErrors.description ? 'true' : 'false'"
+              [attr.aria-describedby]="validationErrors.description ? 'desc-error' : null">
+            </textarea>
+            <div class="app-detail-field__error" id="desc-error" *ngIf="validationErrors.description">
+              {{ validationErrors.description }}
+            </div>
+            <div class="app-detail-field__hint">
+              {{ editForm.description.length }}/500 characters
+            </div>
+          </div>
+
+          <!-- Metadata (read-only, shown for existing apps) -->
+          <div class="app-detail-metadata" *ngIf="!isDraft">
+            <div class="app-detail-metadata__item">
+              <span class="app-detail-metadata__label">Application ID</span>
+              <span class="app-detail-metadata__value">{{ application.applicationId }}</span>
+            </div>
+            <div class="app-detail-metadata__item">
+              <span class="app-detail-metadata__label">Created</span>
+              <span class="app-detail-metadata__value">{{ formatDate(application.createdAt) }}</span>
+            </div>
+            <div class="app-detail-metadata__item">
+              <span class="app-detail-metadata__label">Last Updated</span>
+              <span class="app-detail-metadata__value">{{ formatDate(application.updatedAt) }}</span>
+            </div>
+          </div>
+
+          <!-- Save Error -->
+          <div class="app-detail-save-error" *ngIf="saveError">
+            <fa-icon icon="exclamation-circle"></fa-icon>
+            {{ saveError }}
+          </div>
+        </div>
+
+        <!-- Actions Footer -->
+        <div class="app-detail-actions">
+          <div class="app-detail-actions__left">
+            <button
+              class="orb-btn orb-btn--outline app-detail-actions__delete"
+              (click)="onDelete()"
+              [disabled]="isSaving">
+              <fa-icon icon="trash"></fa-icon>
+              Delete
+            </button>
+          </div>
+          <div class="app-detail-actions__right">
+            <button
+              class="orb-btn orb-btn--secondary"
+              (click)="onCancel()"
+              [disabled]="isSaving">
+              Cancel
+            </button>
+            <button
+              class="orb-btn orb-btn--primary"
+              (click)="onSave()"
+              [disabled]="isSaving || organizations.length === 0">
+              <fa-icon icon="spinner" animation="spin" *ngIf="isSaving"></fa-icon>
+              <fa-icon icon="save" *ngIf="!isSaving"></fa-icon>
+              {{ isDraft ? 'Activate Application' : 'Save Changes' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Debug Panel -->
+  <app-debug-panel
+    [visible]="(debugMode$ | async) || false"
+    [title]="'Application Detail Debug'"
+    [logs$]="debugLogs$"
+    [context]="debugContext">
+  </app-debug-panel>
+</div>

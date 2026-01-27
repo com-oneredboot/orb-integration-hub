@@ -1,24 +1,30 @@
 /**
  * Applications List Component
- * 
+ *
  * Displays a list of applications with filtering and selection capabilities.
- * Uses radio button selection for master-detail pattern.
+ * Uses create-on-click pattern for new applications.
+ * Loads real data from ApplicationService.
  */
 
 import { Component, OnInit, OnDestroy, Output, EventEmitter, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { Observable, Subject } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { Subject, forkJoin, of } from 'rxjs';
+import { takeUntil, switchMap, map, catchError, take, filter } from 'rxjs/operators';
 import { StatusBadgeComponent } from '../../../../../shared/components/ui/status-badge.component';
 
-import { Applications } from '../../../../../core/models/ApplicationsModel';
+import { IApplications } from '../../../../../core/models/ApplicationsModel';
+import { IOrganizations } from '../../../../../core/models/OrganizationsModel';
 import { ApplicationStatus } from '../../../../../core/enums/ApplicationStatusEnum';
-import { Users } from '../../../../../core/models/UsersModel';
-import { UserService } from '../../../../../core/services/user.service';
+import { ApplicationService } from '../../../../../core/services/application.service';
+import { OrganizationService } from '../../../../../core/services/organization.service';
+import * as fromUser from '../../../../user/store/user.selectors';
 
 export interface ApplicationListRow {
-  application: Applications;
+  application: IApplications;
   organizationName: string;
   environmentCount: number;
   userRole: string;
@@ -29,7 +35,7 @@ export interface ApplicationListRow {
   selector: 'app-applications-list',
   standalone: true,
   imports: [
-    CommonModule, 
+    CommonModule,
     FormsModule,
     FontAwesomeModule,
     StatusBadgeComponent
@@ -38,29 +44,35 @@ export interface ApplicationListRow {
   styleUrls: ['./applications-list.component.scss']
 })
 export class ApplicationsListComponent implements OnInit, OnDestroy {
-  @Output() applicationSelected = new EventEmitter<Applications>();
-  @Input() selectedApplication: Applications | null = null;
+  @Output() applicationSelected = new EventEmitter<IApplications>();
+  @Input() selectedApplication: IApplications | null = null;
 
-  currentUser$: Observable<Users | null>;
   applicationRows: ApplicationListRow[] = [];
   filteredApplicationRows: ApplicationListRow[] = [];
   isLoading = false;
-  
-  // Filters
+  organizations: IOrganizations[] = [];
   searchTerm = '';
   organizationFilter = '';
-  roleFilter = '';
-  
+  statusFilter = '';
+
   private destroy$ = new Subject<void>();
+  private currentUserId: string | null = null;
 
   constructor(
-    private userService: UserService
-  ) {
-    this.currentUser$ = this.userService.getCurrentUser$();
-  }
+    private store: Store,
+    private router: Router,
+    private applicationService: ApplicationService,
+    private organizationService: OrganizationService
+  ) {}
 
   ngOnInit(): void {
-    this.loadApplications();
+    this.store.select(fromUser.selectCurrentUser).pipe(
+      take(1),
+      filter(user => !!user)
+    ).subscribe(user => {
+      this.currentUserId = user!.userId;
+      this.loadApplications();
+    });
   }
 
   ngOnDestroy(): void {
@@ -69,190 +81,78 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
   }
 
   private loadApplications(): void {
+    if (!this.currentUserId) return;
     this.isLoading = true;
-    
-    // TODO: Replace with actual application service call
-    setTimeout(() => {
-      this.applicationRows = this.getMockApplications();
-      this.applyFilters();
-      this.isLoading = false;
-    }, 1000);
+
+    this.organizationService.getUserOrganizations(this.currentUserId).pipe(
+      takeUntil(this.destroy$),
+      switchMap(orgConnection => {
+        this.organizations = orgConnection.items.filter(org => org.status === 'ACTIVE');
+        if (this.organizations.length === 0) return of([]);
+
+        const appRequests = this.organizations.map(org =>
+          this.applicationService.getApplicationsByOrganization(org.organizationId).pipe(
+            map(appConnection => ({ organization: org, applications: appConnection.items })),
+            catchError(() => of({ organization: org, applications: [] as IApplications[] }))
+          )
+        );
+        return forkJoin(appRequests);
+      })
+    ).subscribe({
+      next: (results) => {
+        this.applicationRows = [];
+        for (const result of results) {
+          for (const app of result.applications) {
+            if (app.status === ApplicationStatus.Pending) continue;
+            this.applicationRows.push({
+              application: app,
+              organizationName: result.organization.name,
+              environmentCount: app.environments?.length || 0,
+              userRole: 'OWNER',
+              lastActivity: this.formatLastActivity(app.updatedAt)
+            });
+          }
+        }
+        this.applyFilters();
+        this.isLoading = false;
+      },
+      error: () => { this.isLoading = false; }
+    });
   }
 
-  private getMockApplications(): ApplicationListRow[] {
-    return [
-      {
-        application: {
-          applicationId: 'app_001',
-          organizationId: 'org_1',
-          name: 'Customer Portal',
-          ownerId: 'user_123',
-          status: ApplicationStatus.Active,
-          apiKey: 'ak_live_cp_84f3d2a1...',
-          apiKeyNext: '',
-          environments: [],
-          createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-          updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000)
-        },
-        organizationName: 'Acme Corporation',
-        environmentCount: 3,
-        userRole: 'OWNER',
-        lastActivity: '2 hours ago'
-      },
-      {
-        application: {
-          applicationId: 'app_002',
-          organizationId: 'org_1',
-          name: 'Admin Dashboard',
-          ownerId: 'user_123',
-          status: ApplicationStatus.Active,
-          apiKey: 'ak_live_ad_2b8f5c47...',
-          apiKeyNext: '',
-          environments: [],
-          createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
-          updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000)
-        },
-        organizationName: 'Acme Corporation',
-        environmentCount: 2,
-        userRole: 'ADMINISTRATOR',
-        lastActivity: '1 day ago'
-      },
-      {
-        application: {
-          applicationId: 'app_003',
-          organizationId: 'org_2',
-          name: 'Mobile App Backend',
-          ownerId: 'user_456',
-          status: ApplicationStatus.Active,
-          apiKey: 'ak_live_mb_7c9e1f33...',
-          apiKeyNext: '',
-          environments: [],
-          createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
-          updatedAt: new Date(Date.now() - 3 * 60 * 60 * 1000)
-        },
-        organizationName: 'Beta Industries',
-        environmentCount: 4,
-        userRole: 'DEVELOPER',
-        lastActivity: '3 hours ago'
-      },
-      {
-        application: {
-          applicationId: 'app_004',
-          organizationId: 'org_1',
-          name: 'E-Commerce API',
-          ownerId: 'user_789',
-          status: ApplicationStatus.Active,
-          apiKey: 'ak_live_ec_4d6b8e91...',
-          apiKeyNext: '',
-          environments: [],
-          createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
-          updatedAt: new Date(Date.now() - 6 * 60 * 60 * 1000)
-        },
-        organizationName: 'Acme Corporation',
-        environmentCount: 5,
-        userRole: 'DEVELOPER',
-        lastActivity: '6 hours ago'
-      },
-      {
-        application: {
-          applicationId: 'app_005',
-          organizationId: 'org_3',
-          name: 'Analytics Service',
-          ownerId: 'user_321',
-          status: ApplicationStatus.Active,
-          apiKey: 'ak_live_as_9f2c5b67...',
-          apiKeyNext: '',
-          environments: [],
-          createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
-          updatedAt: new Date(Date.now() - 4 * 60 * 60 * 1000)
-        },
-        organizationName: 'Gamma Solutions',
-        environmentCount: 3,
-        userRole: 'ADMINISTRATOR',
-        lastActivity: '4 hours ago'
-      },
-      {
-        application: {
-          applicationId: 'app_006',
-          organizationId: 'org_2',
-          name: 'Payment Gateway',
-          ownerId: 'user_654',
-          status: ApplicationStatus.Active,
-          apiKey: 'ak_live_pg_1a3e7f42...',
-          apiKeyNext: '',
-          environments: [],
-          createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
-          updatedAt: new Date(Date.now() - 12 * 60 * 60 * 1000)
-        },
-        organizationName: 'Beta Industries',
-        environmentCount: 6,
-        userRole: 'OWNER',
-        lastActivity: '12 hours ago'
-      },
-      {
-        application: {
-          applicationId: 'app_007',
-          organizationId: 'org_3',
-          name: 'Notification Service',
-          ownerId: 'user_987',
-          status: ApplicationStatus.Active,
-          apiKey: 'ak_live_ns_5e8d2c76...',
-          apiKeyNext: '',
-          environments: [],
-          createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-          updatedAt: new Date(Date.now() - 30 * 60 * 1000)
-        },
-        organizationName: 'Gamma Solutions',
-        environmentCount: 2,
-        userRole: 'VIEWER',
-        lastActivity: '30 minutes ago'
-      },
-      {
-        application: {
-          applicationId: 'app_008',
-          organizationId: 'org_1',
-          name: 'Inventory Management',
-          ownerId: 'user_147',
-          status: ApplicationStatus.Active,
-          apiKey: 'ak_live_im_8b4f6a92...',
-          apiKeyNext: '',
-          environments: [],
-          createdAt: new Date(Date.now() - 75 * 24 * 60 * 60 * 1000),
-          updatedAt: new Date(Date.now() - 18 * 60 * 60 * 1000)
-        },
-        organizationName: 'Acme Corporation',
-        environmentCount: 4,
-        userRole: 'DEVELOPER',
-        lastActivity: '18 hours ago'
-      }
-    ];
+  private formatLastActivity(dateValue: string | Date | number | undefined): string {
+    if (!dateValue) return 'Never';
+    const date = typeof dateValue === 'number' ? new Date(dateValue * 1000)
+      : dateValue instanceof Date ? dateValue : new Date(dateValue);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return diffMins + ' min ago';
+    if (diffHours < 24) return diffHours + ' hour' + (diffHours > 1 ? 's' : '') + ' ago';
+    if (diffDays < 7) return diffDays + ' day' + (diffDays > 1 ? 's' : '') + ' ago';
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
-  trackByApplicationId(index: number, row: ApplicationListRow): string {
+  trackByApplicationId(_index: number, row: ApplicationListRow): string {
     return row.application.applicationId;
   }
 
-  onSearchChange(): void {
-    this.applyFilters();
-  }
-
-  onFilterChange(): void {
-    this.applyFilters();
-  }
+  onSearchChange(): void { this.applyFilters(); }
+  onFilterChange(): void { this.applyFilters(); }
 
   private applyFilters(): void {
     this.filteredApplicationRows = this.applicationRows.filter(row => {
-      const matchesSearch = !this.searchTerm || 
+      const matchesSearch = !this.searchTerm ||
         row.application.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         row.application.applicationId.toLowerCase().includes(this.searchTerm.toLowerCase());
-      
-      const matchesOrganization = !this.organizationFilter || 
-        row.organizationName === this.organizationFilter;
-      
-      const matchesRole = !this.roleFilter || 
-        row.userRole === this.roleFilter;
-      
-      return matchesSearch && matchesOrganization && matchesRole;
+      const matchesOrganization = !this.organizationFilter ||
+        row.application.organizationId === this.organizationFilter;
+      const matchesStatus = !this.statusFilter || row.application.status === this.statusFilter;
+      return matchesSearch && matchesOrganization && matchesStatus;
     });
   }
 
@@ -260,21 +160,16 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
     return role.toLowerCase().replace('_', '-');
   }
 
-  onApplicationSelected(application: Applications): void {
+  onApplicationSelected(application: IApplications): void {
     this.applicationSelected.emit(application);
   }
 
-  onManageApplication(application: Applications): void {
-    console.log('Managing application:', application.name);
-    // TODO: Navigate to application management page
-  }
-
-  onViewApplication(application: Applications): void {
-    this.onApplicationSelected(application);
+  onRowClick(application: IApplications): void {
+    this.router.navigate(['/customers/applications', application.applicationId]);
   }
 
   onCreateApplication(): void {
-    console.log('Creating new application');
-    // TODO: Navigate to application creation page
+    const tempId = 'new-' + Date.now();
+    this.router.navigate(['/customers/applications', tempId]);
   }
 }

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Applications Management feature with real GraphQL operations
+  - ApplicationService for CRUD operations extending ApiService
+  - NgRx store (actions, reducer, effects, selectors) for state management
+  - ApplicationsListComponent with filtering, sorting, and pagination
+  - ApplicationDetailPageComponent with form validation and create-on-click pattern
+  - Unit tests for all components and services
+  - Property-based tests for correctness properties (CRUD round-trip, filtering, validation)
+  - Spec: `.kiro/specs/applications-management/`
+
 ### Fixed
 - CDK tests failing in CI due to missing `generated` module
   - Removed schema generation from CI workflow (generated code must be committed)

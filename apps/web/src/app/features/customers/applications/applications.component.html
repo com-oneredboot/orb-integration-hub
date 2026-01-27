@@ -19,15 +19,15 @@ description: HTML template file for applications management
               <h1 class="orb-page-header__title">Applications Management</h1>
             </div>
             <p class="orb-page-header__subtitle">
-              Manage your applications and monitor performance metrics
+              Applications are the core of your integration platform. Each application has its own API keys, environments, and configuration.
             </p>
             <p class="orb-page-header__hint">
-              Choose an application from the list to view its details and manage settings.
+              Create applications to connect your services. Configure environments for development, staging, and production workflows.
             </p>
             <div class="orb-page-header__status">
               <span class="orb-header-badge orb-header-badge--active">
                 <fa-icon icon="rocket" class="orb-header-badge__icon"></fa-icon>
-                {{ totalApplications || 8 }} Applications Available
+                Applications Active
               </span>
             </div>
           </div>
@@ -41,28 +41,11 @@ description: HTML template file for applications management
     <div class="applications-page">
       <!-- Main Content -->
       <div class="applications-page__content">
-        <div class="applications-page__layout">
-          
-          <!-- Applications List -->
-          <div class="applications-page__list-panel">
-            <app-applications-list
-              [selectedApplication]="selectedApplication"
-              (applicationSelected)="onApplicationSelected($event)">
-            </app-applications-list>
-          </div>
-
-          <!-- Application Detail -->
-          <div class="applications-page__detail-panel">
-            <app-application-detail
-              [application]="selectedApplication"
-              [organizationName]="selectedApplicationOrganizationName"
-              [environmentCount]="selectedApplicationEnvironmentCount"
-              [apiCallsToday]="selectedApplicationApiCallsToday"
-              [lastActivity]="selectedApplicationLastActivity">
-            </app-application-detail>
-          </div>
-
-        </div>
+        <!-- Applications List (full width - detail is now a separate route) -->
+        <app-applications-list
+          [selectedApplication]="selectedApplication"
+          (applicationSelected)="onApplicationSelected($event)">
+        </app-applications-list>
       </div>
     </div>
   </div>

@@ -245,6 +245,14 @@
         background-color: v.$gray-100;
       }
       
+      &--clickable {
+        cursor: pointer;
+        
+        &:hover {
+          background-color: rgba(v.$primary-color, 0.05);
+        }
+      }
+      
       &--selected {
         background-color: rgba(v.$primary-color, 0.1) !important;
       }
@@ -1231,7 +1239,7 @@
 // =============================================================================
 
 // Muted color definitions (50% lighter/softer versions)
-$cta-green-muted: #7bc47f; // Muted green (was #22c55e)
+$cta-green-muted: #2B8A3E; // Solid green (was muted #7bc47f)
 $cta-yellow-muted: #f5c872; // Muted yellow/amber (was #f59e0b)
 $cta-orange-muted: #f5a66b; // Muted orange (was #f97316)
 
@@ -1469,14 +1477,15 @@ $cta-orange-muted: #f5a66b; // Muted orange (was #f97316)
 .orb-side-nav {
   position: fixed;
   top: 80px; // Just below the main menu bar
-  right: v.$spacing-md;
+  right: 0; // Flush against right edge
   display: flex;
   flex-direction: column;
   background: v.$orb-red;
-  border-radius: v.$border-radius-lg;
-  box-shadow: v.$shadow-lg;
+  border-radius: v.$border-radius-lg 0 0 v.$border-radius-lg; // Tab shape: rounded left, flat right
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15); // Shadow on left side only
   padding: v.$spacing-sm;
   z-index: 100;
+  width: 56px; // Fixed narrow width
   
   &__list {
     list-style: none;
@@ -1495,8 +1504,8 @@ $cta-orange-muted: #f5a66b; // Muted orange (was #f97316)
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
     border: none;
     border-radius: v.$border-radius;
     background: transparent;
@@ -1581,6 +1590,9 @@ $cta-orange-muted: #f5a66b; // Muted orange (was #f97316)
     transform: translateX(50%);
     flex-direction: row;
     padding: v.$spacing-xs;
+    width: auto; // Auto width on mobile
+    border-radius: v.$border-radius-lg; // Full rounded on mobile
+    box-shadow: v.$shadow-lg;
     
     &__list {
       flex-direction: row;
