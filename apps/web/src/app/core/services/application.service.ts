@@ -118,6 +118,7 @@ export class ApplicationService extends ApiService {
     const createInput: ApplicationsCreateInput = {
       applicationId: input.applicationId || this.generateUUID(),
       name: input.name || '',
+      description: input.description || '',
       organizationId: input.organizationId || '',
       ownerId: input.ownerId || '',
       status: input.status || ApplicationStatus.Pending,
@@ -170,6 +171,7 @@ export class ApplicationService extends ApiService {
     const updateInput: ApplicationsUpdateInput = {
       applicationId: input.applicationId,
       name: input.name,
+      description: input.description,
       organizationId: input.organizationId,
       ownerId: input.ownerId,
       status: input.status,
