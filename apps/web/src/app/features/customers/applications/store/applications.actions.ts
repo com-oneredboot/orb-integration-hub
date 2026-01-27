@@ -46,8 +46,8 @@ export const ApplicationsActions = createActionGroup({
     'Update Application Failure': props<{ error: string }>(),
 
     // Delete Application
-    'Delete Application': props<{ applicationId: string }>(),
-    'Delete Application Success': props<{ applicationId: string }>(),
+    'Delete Application': props<{ applicationId: string; organizationId: string }>(),
+    'Delete Application Success': props<{ applicationId: string; organizationId: string }>(),
     'Delete Application Failure': props<{ error: string }>(),
 
     // Selection Management

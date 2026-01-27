@@ -337,7 +337,8 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
     // If draft, delete it before navigating away
     if (this.isDraft && this.application) {
       this.store.dispatch(ApplicationsActions.deleteApplication({
-        applicationId: this.application.applicationId
+        applicationId: this.application.applicationId,
+        organizationId: this.application.organizationId
       }));
     } else {
       this.router.navigate(['/customers/applications']);
@@ -353,7 +354,8 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
 
     // Dispatch action - effects handle service call
     this.store.dispatch(ApplicationsActions.deleteApplication({
-      applicationId: this.application.applicationId
+      applicationId: this.application.applicationId,
+      organizationId: this.application.organizationId
     }));
   }
 

@@ -61,8 +61,8 @@ export const OrganizationsActions = createActionGroup({
     'Update Organization Rows': props<{ organizationRows: OrganizationTableRow[] }>(),
     'Update Filtered Organization Rows': props<{ filteredRows: OrganizationTableRow[] }>(),
     
-    // Application Count Management
-    'Update Organization Application Counts': props<{ applicationCountsByOrg: Record<string, number> }>(),
+    // Application Count Management (single organization)
+    'Update Organization Application Count': props<{ organizationId: string; applicationCount: number }>(),
 
     // Error Management
     'Clear Errors': emptyProps(),

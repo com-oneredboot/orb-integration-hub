@@ -320,7 +320,7 @@ describe('ApplicationsEffects', () => {
     it('should dispatch deleteApplicationSuccess on successful deletion', (done) => {
       applicationServiceSpy.deleteApplication.and.returnValue(of(mockApplication));
 
-      actions$ = of(ApplicationsActions.deleteApplication({ applicationId: 'app-123' }));
+      actions$ = of(ApplicationsActions.deleteApplication({ applicationId: 'app-123', organizationId: 'org-123' }));
 
       effects.deleteApplication$.subscribe(action => {
         expect(action.type).toBe('[Applications] Delete Application Success');
@@ -338,7 +338,7 @@ describe('ApplicationsEffects', () => {
         throwError(() => new Error('Delete failed'))
       );
 
-      actions$ = of(ApplicationsActions.deleteApplication({ applicationId: 'app-123' }));
+      actions$ = of(ApplicationsActions.deleteApplication({ applicationId: 'app-123', organizationId: 'org-123' }));
 
       effects.deleteApplication$.subscribe(action => {
         expect(action.type).toBe('[Applications] Delete Application Failure');
@@ -367,7 +367,7 @@ describe('ApplicationsEffects', () => {
     });
 
     it('should dispatch loadApplications after deleteApplicationSuccess', (done) => {
-      actions$ = of(ApplicationsActions.deleteApplicationSuccess({ applicationId: 'app-123' }));
+      actions$ = of(ApplicationsActions.deleteApplicationSuccess({ applicationId: 'app-123', organizationId: 'org-123' }));
 
       effects.refreshAfterSuccessfulOperation$.subscribe(action => {
         expect(action.type).toBe('[Applications] Load Applications');

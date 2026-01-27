@@ -232,6 +232,7 @@ export class ApplicationsEffects {
           map(() =>
             ApplicationsActions.deleteApplicationSuccess({
               applicationId: action.applicationId,
+              organizationId: action.organizationId,
             })
           ),
           catchError((error) =>
@@ -259,32 +260,97 @@ export class ApplicationsEffects {
   );
 
   /**
-   * Update Organization Application Counts Effect
-   * When applications are loaded successfully, calculate counts per organization
-   * and update the organizations store.
+   * Update Organization Application Count After Create
+   * When an application is created, query applications for that organization
+   * and update the organization's applicationCount in the store.
    */
-  updateOrganizationApplicationCounts$ = createEffect(() =>
+  updateOrgCountAfterCreate$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ApplicationsActions.createApplicationSuccess),
+      filter(action => !!action.application.organizationId),
+      switchMap(action => 
+        this.applicationService.getApplicationsByOrganization(action.application.organizationId).pipe(
+          map(connection => {
+            // Count only non-PENDING applications
+            const activeCount = connection.items.filter(
+              app => app.status !== ApplicationStatus.Pending
+            ).length;
+            return OrganizationsActions.updateOrganizationApplicationCount({
+              organizationId: action.application.organizationId,
+              applicationCount: activeCount
+            });
+          }),
+          catchError(() => of({ type: '[Organizations] Update Count Failed' }))
+        )
+      )
+    )
+  );
+
+  /**
+   * Update Organization Application Count After Delete
+   * When an application is deleted, query applications for that organization
+   * and update the organization's applicationCount in the store.
+   */
+  updateOrgCountAfterDelete$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ApplicationsActions.deleteApplicationSuccess),
+      filter(action => !!action.organizationId),
+      switchMap(action => 
+        this.applicationService.getApplicationsByOrganization(action.organizationId).pipe(
+          map(connection => {
+            // Count only non-PENDING applications
+            const activeCount = connection.items.filter(
+              app => app.status !== ApplicationStatus.Pending
+            ).length;
+            return OrganizationsActions.updateOrganizationApplicationCount({
+              organizationId: action.organizationId,
+              applicationCount: activeCount
+            });
+          }),
+          catchError(() => of({ type: '[Organizations] Update Count Failed' }))
+        )
+      )
+    )
+  );
+
+  /**
+   * Verify Organization Application Count After Applications Load
+   * When applications are loaded (e.g., on organization detail page),
+   * verify and update the organization's applicationCount if it differs.
+   * This ensures the count stays in sync with actual application data.
+   */
+  verifyOrgApplicationCount$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ApplicationsActions.loadApplicationsSuccess),
       withLatestFrom(this.store.select(selectOrganizations)),
-      map(([action, organizations]) => {
-        // Calculate application counts per organization
-        const applicationCountsByOrg: Record<string, number> = {};
-        
-        // Initialize all organizations with 0
-        for (const org of organizations) {
-          applicationCountsByOrg[org.organizationId] = 0;
-        }
-        
-        // Count applications per organization (only ACTIVE ones)
+      switchMap(([action, organizations]) => {
+        // Group applications by organizationId and count non-PENDING ones
+        const countsByOrg: Record<string, number> = {};
         for (const app of action.applications) {
           if (app.status !== ApplicationStatus.Pending && app.organizationId) {
-            applicationCountsByOrg[app.organizationId] = 
-              (applicationCountsByOrg[app.organizationId] || 0) + 1;
+            countsByOrg[app.organizationId] = (countsByOrg[app.organizationId] || 0) + 1;
           }
         }
-        
-        return OrganizationsActions.updateOrganizationApplicationCounts({ applicationCountsByOrg });
+
+        // Find organizations where the count differs from what we have
+        const updates: { organizationId: string; applicationCount: number }[] = [];
+        for (const org of organizations) {
+          const actualCount = countsByOrg[org.organizationId] || 0;
+          if (org.applicationCount !== actualCount) {
+            updates.push({
+              organizationId: org.organizationId,
+              applicationCount: actualCount
+            });
+          }
+        }
+
+        // Dispatch update actions for each organization that needs updating
+        if (updates.length > 0) {
+          return updates.map(update => 
+            OrganizationsActions.updateOrganizationApplicationCount(update)
+          );
+        }
+        return [{ type: '[Organizations] Application Counts Verified' }];
       })
     )
   );

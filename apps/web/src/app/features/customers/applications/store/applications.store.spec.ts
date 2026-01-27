@@ -172,6 +172,7 @@ describe('Applications Store', () => {
       it('should set isDeleting to true on deleteApplication', () => {
         const action = ApplicationsActions.deleteApplication({
           applicationId: 'app-123',
+          organizationId: 'org-123',
         });
         const state = applicationsReducer(initialApplicationsState, action);
 
@@ -187,6 +188,7 @@ describe('Applications Store', () => {
         };
         const action = ApplicationsActions.deleteApplicationSuccess({
           applicationId: 'app-123',
+          organizationId: 'org-123',
         });
         const state = applicationsReducer(initialState, action);
 

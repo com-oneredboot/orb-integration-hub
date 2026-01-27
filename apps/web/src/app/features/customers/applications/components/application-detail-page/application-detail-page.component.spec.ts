@@ -188,7 +188,7 @@ describe('ApplicationDetailPageComponent', () => {
       component.onDelete();
 
       expect(store.dispatch).toHaveBeenCalledWith(
-        ApplicationsActions.deleteApplication({ applicationId: 'app-789' })
+        ApplicationsActions.deleteApplication({ applicationId: 'app-789', organizationId: 'org-456' })
       );
     }));
 
@@ -201,7 +201,7 @@ describe('ApplicationDetailPageComponent', () => {
       component.onCancel();
 
       expect(store.dispatch).toHaveBeenCalledWith(
-        ApplicationsActions.deleteApplication({ applicationId: 'app-pending' })
+        ApplicationsActions.deleteApplication({ applicationId: 'app-pending', organizationId: 'org-456' })
       );
     }));
   });
@@ -265,7 +265,7 @@ describe('ApplicationDetailPageComponent', () => {
       fixture.detectChanges();
       tick();
 
-      actions$.next(ApplicationsActions.deleteApplicationSuccess({ applicationId: 'app-789' }));
+      actions$.next(ApplicationsActions.deleteApplicationSuccess({ applicationId: 'app-789', organizationId: 'org-123' }));
       tick();
 
       expect(router.navigate).toHaveBeenCalledWith(['/customers/applications']);

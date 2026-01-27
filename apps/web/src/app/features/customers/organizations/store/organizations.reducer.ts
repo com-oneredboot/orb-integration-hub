@@ -28,7 +28,7 @@ export const organizationsReducer = createReducer(
       userRole: 'OWNER', // User is owner of their own organizations
       isOwner: true,
       memberCount: 1, // At minimum, the owner is a member
-      applicationCount: 0, // Will be populated when we have application data
+      applicationCount: org.applicationCount ?? 0, // Use value from database
       lastActivity: formatLastActivity(org.updatedAt)
     }));
 
@@ -309,19 +309,38 @@ export const organizationsReducer = createReducer(
     filteredOrganizationRows: filteredRows
   })),
 
-  // Application Count Management
-  on(OrganizationsActions.updateOrganizationApplicationCounts, (state, { applicationCountsByOrg }): OrganizationsState => {
-    const updatedRows = state.organizationRows.map(row => ({
-      ...row,
-      applicationCount: applicationCountsByOrg[row.organization.organizationId] ?? row.applicationCount
-    }));
+  // Application Count Management (single organization)
+  on(OrganizationsActions.updateOrganizationApplicationCount, (state, { organizationId, applicationCount }): OrganizationsState => {
+    // Update the specific organization's applicationCount in rows
+    const updatedRows = state.organizationRows.map(row => 
+      row.organization.organizationId === organizationId
+        ? { ...row, applicationCount }
+        : row
+    );
+
+    // Also update the organization object itself if it has applicationCount
+    const updatedOrganizations = state.organizations.map(org =>
+      org.organizationId === organizationId
+        ? { ...org, applicationCount }
+        : org
+    );
+
+    // Update selectedOrganization if it matches
+    const updatedSelectedOrganization = state.selectedOrganization?.organizationId === organizationId
+      ? { ...state.selectedOrganization, applicationCount }
+      : state.selectedOrganization;
 
     return {
       ...state,
+      organizations: updatedOrganizations,
       organizationRows: updatedRows,
       filteredOrganizationRows: updatedRows.filter(row => 
         applyFilters(row, state.searchTerm, state.statusFilter, state.roleFilter)
-      )
+      ),
+      selectedOrganization: updatedSelectedOrganization,
+      selectedOrganizationApplicationCount: state.selectedOrganization?.organizationId === organizationId
+        ? applicationCount
+        : state.selectedOrganizationApplicationCount
     };
   }),
 
