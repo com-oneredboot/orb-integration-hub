@@ -244,22 +244,23 @@
       &:hover {
         background-color: v.$gray-100;
       }
+    }
+    
+    tbody tr.orb-table__row--clickable {
+      cursor: pointer;
       
-      &--clickable {
-        cursor: pointer;
-        
-        &:hover {
-          background-color: rgba(v.$primary-color, 0.05);
-        }
+      &:hover {
+        background-color: rgba(v.$primary-color, 0.05);
       }
-      
-      &--selected {
-        background-color: rgba(v.$primary-color, 0.1) !important;
-      }
-      
-      &--loading, &--empty {
-        background-color: v.$white !important;
-      }
+    }
+    
+    tbody tr.orb-table__row--selected {
+      background-color: rgba(v.$primary-color, 0.1) !important;
+    }
+    
+    tbody tr.orb-table__row--loading,
+    tbody tr.orb-table__row--empty {
+      background-color: v.$white !important;
     }
   }
   
