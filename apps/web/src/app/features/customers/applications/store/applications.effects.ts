@@ -12,8 +12,8 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
-import { of, forkJoin } from 'rxjs';
-import { map, catchError, switchMap, withLatestFrom, filter } from 'rxjs/operators';
+import { of, forkJoin, from } from 'rxjs';
+import { map, catchError, switchMap, withLatestFrom, filter, mergeMap } from 'rxjs/operators';
 
 import { ApplicationsActions } from './applications.actions';
 import { ApplicationService } from '../../../../core/services/application.service';
@@ -323,7 +323,7 @@ export class ApplicationsEffects {
     this.actions$.pipe(
       ofType(ApplicationsActions.loadApplicationsSuccess),
       withLatestFrom(this.store.select(selectOrganizations)),
-      switchMap(([action, organizations]) => {
+      mergeMap(([action, organizations]) => {
         // Group applications by organizationId and count non-PENDING ones
         const countsByOrg: Record<string, number> = {};
         for (const app of action.applications) {
@@ -333,24 +333,24 @@ export class ApplicationsEffects {
         }
 
         // Find organizations where the count differs from what we have
-        const updates: { organizationId: string; applicationCount: number }[] = [];
+        const updates: ReturnType<typeof OrganizationsActions.updateOrganizationApplicationCount>[] = [];
         for (const org of organizations) {
           const actualCount = countsByOrg[org.organizationId] || 0;
           if (org.applicationCount !== actualCount) {
-            updates.push({
-              organizationId: org.organizationId,
-              applicationCount: actualCount
-            });
+            updates.push(
+              OrganizationsActions.updateOrganizationApplicationCount({
+                organizationId: org.organizationId,
+                applicationCount: actualCount
+              })
+            );
           }
         }
 
         // Dispatch update actions for each organization that needs updating
         if (updates.length > 0) {
-          return updates.map(update => 
-            OrganizationsActions.updateOrganizationApplicationCount(update)
-          );
+          return from(updates);
         }
-        return [{ type: '[Organizations] Application Counts Verified' }];
+        return of({ type: '[Organizations] Application Counts Verified' });
       })
     )
   );
