@@ -6,6 +6,7 @@
 
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { Organizations, OrganizationsCreateInput, OrganizationsUpdateInput } from '../../../../core/models/OrganizationsModel';
+import { IApplications } from '../../../../core/models/ApplicationsModel';
 import { OrganizationTableRow } from './organizations.state';
 
 export const OrganizationsActions = createActionGroup({
@@ -76,6 +77,11 @@ export const OrganizationsActions = createActionGroup({
 
     // Utility Actions
     'Reset State': emptyProps(),
-    'Refresh Organizations': emptyProps()
+    'Refresh Organizations': emptyProps(),
+
+    // Organization Applications (for Applications tab)
+    'Load Organization Applications': props<{ organizationId: string }>(),
+    'Load Organization Applications Success': props<{ organizationId: string; applications: IApplications[] }>(),
+    'Load Organization Applications Failure': props<{ organizationId: string; error: string }>()
   }
 });

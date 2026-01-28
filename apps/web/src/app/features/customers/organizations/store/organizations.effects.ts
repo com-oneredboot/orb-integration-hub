@@ -12,6 +12,7 @@ import { map, catchError, switchMap, withLatestFrom, filter } from 'rxjs/operato
 
 import { OrganizationsActions } from './organizations.actions';
 import { OrganizationService } from '../../../../core/services/organization.service';
+import { ApplicationService } from '../../../../core/services/application.service';
 import { selectIsCreatingNew } from './organizations.selectors';
 import { selectCurrentUser } from '../../../user/store/user.selectors';
 
@@ -21,6 +22,7 @@ export class OrganizationsEffects {
   constructor(
     private actions$: Actions,
     private organizationService: OrganizationService,
+    private applicationService: ApplicationService,
     private store: Store
   ) {}
 
@@ -172,6 +174,31 @@ export class OrganizationsEffects {
         of(OrganizationsActions.loadOrganizations()).pipe(
           // Optional: add delay here if needed for backend consistency
           // delay(1000)
+        )
+      )
+    )
+  );
+
+  // Load Organization Applications Effect (for Applications tab)
+  loadOrganizationApplications$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(OrganizationsActions.loadOrganizationApplications),
+      withLatestFrom(this.store.select(selectCurrentUser)),
+      filter(([, currentUser]) => !!currentUser?.userId),
+      switchMap(([action]) =>
+        this.applicationService.getApplicationsByOrganization(action.organizationId).pipe(
+          map(connection => 
+            OrganizationsActions.loadOrganizationApplicationsSuccess({ 
+              organizationId: action.organizationId,
+              applications: connection.items 
+            })
+          ),
+          catchError(error => 
+            of(OrganizationsActions.loadOrganizationApplicationsFailure({ 
+              organizationId: action.organizationId,
+              error: error.message || 'Failed to load applications' 
+            }))
+          )
         )
       )
     )

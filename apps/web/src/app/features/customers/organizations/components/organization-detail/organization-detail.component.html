@@ -70,6 +70,15 @@
       Members
     </button>
     <button class="organization-detail__tab"
+            [class.organization-detail__tab--active]="activeTab === 'applications'"
+            (click)="setActiveTab('applications')">
+      <fa-icon icon="rocket" class="organization-detail__tab-icon"></fa-icon>
+      Applications
+      <span class="organization-detail__tab-badge" *ngIf="(applicationCount$ | async) as count">
+        {{ count }}
+      </span>
+    </button>
+    <button class="organization-detail__tab"
             [class.organization-detail__tab--active]="activeTab === 'danger'"
             (click)="setActiveTab('danger')">
       <fa-icon icon="exclamation-triangle" class="organization-detail__tab-icon"></fa-icon>
@@ -207,6 +216,74 @@
           <li>Invite new members</li>
           <li>Remove members from organization</li>
         </ul>
+      </div>
+    </div>
+
+    <!-- Applications Tab -->
+    <div class="organization-detail__tab-panel"
+         [class.organization-detail__tab-panel--active]="activeTab === 'applications'">
+      
+      <!-- Header with Create Button -->
+      <div class="organization-detail__section-header">
+        <h4 class="organization-detail__section-title">Applications</h4>
+        <button class="organization-detail__action organization-detail__action--primary-dark"
+                (click)="onCreateApplication()">
+          <fa-icon icon="plus" class="organization-detail__action-icon"></fa-icon>
+          Create Application
+        </button>
+      </div>
+
+      <!-- Loading State -->
+      <div class="organization-detail__loading" *ngIf="isLoadingApplications$ | async">
+        <fa-icon icon="spinner" class="fa-spin organization-detail__loading-icon"></fa-icon>
+        <span>Loading applications...</span>
+      </div>
+
+      <!-- Error State -->
+      <div class="organization-detail__applications-error" *ngIf="applicationsError$ | async as error">
+        <fa-icon icon="exclamation-triangle" class="organization-detail__applications-error-icon"></fa-icon>
+        <span>{{ error }}</span>
+        <button class="organization-detail__retry-btn" (click)="loadApplications()">Retry</button>
+      </div>
+
+      <!-- Applications List -->
+      <div class="organization-detail__applications-list" 
+           *ngIf="(isLoadingApplications$ | async) === false && (applicationsError$ | async) === null">
+        <ng-container *ngIf="applications$ | async as apps">
+          <!-- Empty State -->
+          <div class="organization-detail__empty-applications" *ngIf="apps.length === 0">
+            <fa-icon icon="rocket" class="organization-detail__empty-applications-icon"></fa-icon>
+            <p class="organization-detail__empty-applications-text">No applications yet</p>
+            <p class="organization-detail__empty-applications-hint">
+              Create your first application to get started.
+            </p>
+          </div>
+
+          <!-- Application Rows -->
+          <div class="organization-detail__app-row"
+               *ngFor="let app of apps"
+               (click)="onApplicationClick(app)"
+               (keydown.enter)="onApplicationClick(app)"
+               tabindex="0"
+               role="button"
+               [attr.aria-label]="'View application ' + app.name">
+            <div class="organization-detail__app-info">
+              <span class="organization-detail__app-name">{{ app.name }}</span>
+              <span class="organization-detail__app-id">{{ app.applicationId }}</span>
+            </div>
+            <div class="organization-detail__app-meta">
+              <span class="organization-detail__app-status"
+                    [ngClass]="'organization-detail__app-status--' + (app.status || 'active').toLowerCase()">
+                {{ app.status || 'Active' }}
+              </span>
+              <span class="organization-detail__app-env-count">
+                <fa-icon icon="server"></fa-icon>
+                {{ getEnvironmentCount(app) }}
+              </span>
+            </div>
+            <fa-icon icon="chevron-right" class="organization-detail__app-arrow"></fa-icon>
+          </div>
+        </ng-container>
       </div>
     </div>
 

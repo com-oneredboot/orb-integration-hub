@@ -165,3 +165,30 @@ export const selectOrganizationRowById = (organizationId: string) => createSelec
   selectOrganizationRows,
   (organizationRows) => organizationRows.find(row => row.organization.organizationId === organizationId)
 );
+
+
+// Organization Applications selectors (for Applications tab)
+export const selectOrganizationApplications = (organizationId: string) => createSelector(
+  selectOrganizationsState,
+  (state: OrganizationsState) => state?.organizationApplications[organizationId] ?? []
+);
+
+export const selectIsLoadingOrganizationApplications = (organizationId: string) => createSelector(
+  selectOrganizationsState,
+  (state: OrganizationsState) => state?.loadingApplications[organizationId] ?? false
+);
+
+export const selectOrganizationApplicationsError = (organizationId: string) => createSelector(
+  selectOrganizationsState,
+  (state: OrganizationsState) => state?.applicationsError[organizationId] ?? null
+);
+
+export const selectOrganizationApplicationCount = (organizationId: string) => createSelector(
+  selectOrganizationApplications(organizationId),
+  (applications) => applications.length
+);
+
+export const selectHasLoadedOrganizationApplications = (organizationId: string) => createSelector(
+  selectOrganizationsState,
+  (state: OrganizationsState) => organizationId in (state?.organizationApplications ?? {})
+);

@@ -391,6 +391,47 @@ export const organizationsReducer = createReducer(
     ...state,
     isLoading: true,
     error: null
+  })),
+
+  // Organization Applications (for Applications tab)
+  on(OrganizationsActions.loadOrganizationApplications, (state, { organizationId }): OrganizationsState => ({
+    ...state,
+    loadingApplications: {
+      ...state.loadingApplications,
+      [organizationId]: true
+    },
+    applicationsError: {
+      ...state.applicationsError,
+      [organizationId]: null
+    }
+  })),
+
+  on(OrganizationsActions.loadOrganizationApplicationsSuccess, (state, { organizationId, applications }): OrganizationsState => ({
+    ...state,
+    organizationApplications: {
+      ...state.organizationApplications,
+      [organizationId]: applications
+    },
+    loadingApplications: {
+      ...state.loadingApplications,
+      [organizationId]: false
+    },
+    applicationsError: {
+      ...state.applicationsError,
+      [organizationId]: null
+    }
+  })),
+
+  on(OrganizationsActions.loadOrganizationApplicationsFailure, (state, { organizationId, error }): OrganizationsState => ({
+    ...state,
+    loadingApplications: {
+      ...state.loadingApplications,
+      [organizationId]: false
+    },
+    applicationsError: {
+      ...state.applicationsError,
+      [organizationId]: error
+    }
   }))
 );
 

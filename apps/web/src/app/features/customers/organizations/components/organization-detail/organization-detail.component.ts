@@ -8,12 +8,14 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { Organizations } from '../../../../../core/models/OrganizationsModel';
+import { IApplications } from '../../../../../core/models/ApplicationsModel';
 import { OrganizationStatus } from '../../../../../core/enums/OrganizationStatusEnum';
 import { OrganizationsActions } from '../../store/organizations.actions';
 import * as fromOrganizations from '../../store/organizations.selectors';
@@ -64,7 +66,14 @@ export class OrganizationDetailComponent implements OnChanges, OnDestroy {
   isSaving$: Observable<boolean>;
   saveError$: Observable<string | null>;
 
-  constructor(private store: Store) {
+  // Applications tab observables
+  applications$!: Observable<IApplications[]>;
+  isLoadingApplications$!: Observable<boolean>;
+  applicationsError$!: Observable<string | null>;
+  applicationCount$!: Observable<number>;
+  private applicationsLoaded = false;
+
+  constructor(private store: Store, private router: Router) {
     // Initialize store observables
     this.isSaving$ = this.store.select(fromOrganizations.selectIsSaving);
     this.saveError$ = this.store.select(fromOrganizations.selectSaveError);
@@ -89,14 +98,28 @@ export class OrganizationDetailComponent implements OnChanges, OnDestroy {
     });
   }
 
+  private initializeApplicationsObservables(): void {
+    if (this.organization?.organizationId) {
+      const orgId = this.organization.organizationId;
+      this.applications$ = this.store.select(fromOrganizations.selectOrganizationApplications(orgId));
+      this.isLoadingApplications$ = this.store.select(fromOrganizations.selectIsLoadingOrganizationApplications(orgId));
+      this.applicationsError$ = this.store.select(fromOrganizations.selectOrganizationApplicationsError(orgId));
+      this.applicationCount$ = this.store.select(fromOrganizations.selectOrganizationApplicationCount(orgId));
+    }
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['organization']) {
       if (this.organization) {
         console.log('Organization selected:', this.organization.name);
         // Reset to overview tab when organization changes
         this.activeTab = 'overview';
+        // Reset applications loaded flag for new organization
+        this.applicationsLoaded = false;
         // Load form data
         this.loadFormData();
+        // Initialize applications observables for this organization
+        this.initializeApplicationsObservables();
       }
     }
     
@@ -142,6 +165,35 @@ export class OrganizationDetailComponent implements OnChanges, OnDestroy {
 
   setActiveTab(tab: string): void {
     this.activeTab = tab;
+    
+    // Lazy load applications when tab is first selected
+    if (tab === 'applications' && !this.applicationsLoaded && this.organization?.organizationId) {
+      this.loadApplications();
+    }
+  }
+
+  loadApplications(): void {
+    if (this.organization?.organizationId) {
+      this.store.dispatch(OrganizationsActions.loadOrganizationApplications({
+        organizationId: this.organization.organizationId
+      }));
+      this.applicationsLoaded = true;
+    }
+  }
+
+  onApplicationClick(application: IApplications): void {
+    this.router.navigate(['/customers/applications', application.applicationId]);
+  }
+
+  onCreateApplication(): void {
+    const tempId = 'new-' + Date.now();
+    this.router.navigate(['/customers/applications', tempId], {
+      queryParams: { organizationId: this.organization?.organizationId }
+    });
+  }
+
+  getEnvironmentCount(application: IApplications): number {
+    return application.environments?.length || 0;
   }
 
   // Status handling now uses global StatusBadgeComponent

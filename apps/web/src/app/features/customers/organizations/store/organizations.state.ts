@@ -5,6 +5,7 @@
  */
 
 import { Organizations } from '../../../../core/models/OrganizationsModel';
+import { IApplications } from '../../../../core/models/ApplicationsModel';
 
 export interface OrganizationTableRow {
   organization: Organizations;
@@ -22,6 +23,11 @@ export interface OrganizationsState {
   selectedOrganization: Organizations | null;
   selectedOrganizationMemberCount: number;
   selectedOrganizationApplicationCount: number;
+
+  // Organization Applications (for Applications tab)
+  organizationApplications: Record<string, IApplications[]>;
+  loadingApplications: Record<string, boolean>;
+  applicationsError: Record<string, string | null>;
 
   // UI State
   isInCreateMode: boolean;
@@ -56,6 +62,11 @@ export const initialOrganizationsState: OrganizationsState = {
   selectedOrganization: null,
   selectedOrganizationMemberCount: 0,
   selectedOrganizationApplicationCount: 0,
+
+  // Organization Applications (for Applications tab)
+  organizationApplications: {},
+  loadingApplications: {},
+  applicationsError: {},
 
   // UI State
   isInCreateMode: false,
