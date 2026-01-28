@@ -359,15 +359,48 @@
 
                 <!-- Environment Key Rows -->
                 <div class="security-key-list" *ngIf="environmentKeyRows.length > 0">
-                  <div class="security-key-row" *ngFor="let row of environmentKeyRows">
+                  <div 
+                    class="security-key-row" 
+                    [class.security-key-row--generated]="isNewlyGeneratedKey(row)"
+                    *ngFor="let row of environmentKeyRows">
                     <!-- Environment Badge -->
                     <div class="security-key-row__env" [ngClass]="'security-key-row__env--' + row.environment.toLowerCase()">
                       <fa-icon icon="circle" class="security-key-row__env-icon"></fa-icon>
                       <span class="security-key-row__env-label">{{ row.environmentLabel }}</span>
                     </div>
 
-                    <!-- Key Info (when key exists) -->
-                    <div class="security-key-row__info" *ngIf="row.hasKey">
+                    <!-- Newly Generated Key Display -->
+                    <div class="security-key-row__generated" *ngIf="isNewlyGeneratedKey(row)">
+                      <div class="security-key-row__generated-header">
+                        <fa-icon icon="check-circle" class="security-key-row__generated-icon"></fa-icon>
+                        <span class="security-key-row__generated-title">API Key Generated</span>
+                      </div>
+                      <div class="security-key-row__generated-key">
+                        <code class="security-key-row__full-key">{{ generatedKeyDisplay?.fullKey }}</code>
+                        <button
+                          type="button"
+                          class="orb-btn orb-btn--secondary orb-btn--sm security-key-row__copy-btn"
+                          (click)="copyGeneratedKey()"
+                          [attr.aria-label]="copySuccess ? 'Copied!' : 'Copy API key to clipboard'">
+                          <fa-icon [icon]="copySuccess ? 'check' : 'copy'"></fa-icon>
+                          {{ copySuccess ? 'Copied!' : 'Copy' }}
+                        </button>
+                      </div>
+                      <div class="security-key-row__generated-warning">
+                        <fa-icon icon="exclamation-triangle"></fa-icon>
+                        <span>Copy this key now. It won't be shown again.</span>
+                      </div>
+                      <button
+                        type="button"
+                        class="security-key-row__dismiss"
+                        (click)="dismissGeneratedKey()"
+                        aria-label="Dismiss key display">
+                        <fa-icon icon="times"></fa-icon>
+                      </button>
+                    </div>
+
+                    <!-- Key Info (when key exists and not newly generated) -->
+                    <div class="security-key-row__info" *ngIf="row.hasKey && !isNewlyGeneratedKey(row)">
                       <span class="security-key-row__prefix">{{ row.apiKey?.keyPrefix }}...</span>
                       <app-status-badge
                         [status]="row.apiKey?.status || ''"
@@ -383,12 +416,12 @@
                     </div>
 
                     <!-- No Key State -->
-                    <div class="security-key-row__no-key" *ngIf="!row.hasKey">
+                    <div class="security-key-row__no-key" *ngIf="!row.hasKey && !isNewlyGeneratedKey(row)">
                       <span>No API key</span>
                     </div>
 
-                    <!-- Actions -->
-                    <div class="security-key-row__actions">
+                    <!-- Actions (hidden when showing generated key) -->
+                    <div class="security-key-row__actions" *ngIf="!isNewlyGeneratedKey(row)">
                       <button
                         *ngIf="row.canGenerate"
                         class="orb-btn orb-btn--primary orb-btn--sm"

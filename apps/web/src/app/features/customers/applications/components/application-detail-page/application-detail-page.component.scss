@@ -634,6 +634,103 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   }
 
+  // Expanded state when showing generated key
+  &--generated {
+    flex-wrap: wrap;
+    background: rgba(v.$success-color, 0.05);
+    border-color: v.$success-color;
+    position: relative;
+  }
+
+  &__generated {
+    flex: 1;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: v.$spacing-sm;
+    padding: v.$spacing-sm;
+    background: v.$white;
+    border-radius: v.$border-radius-sm;
+    border: 1px solid rgba(v.$success-color, 0.3);
+  }
+
+  &__generated-header {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+    color: v.$success-color;
+    font-weight: v.$font-weight-medium;
+  }
+
+  &__generated-icon {
+    font-size: 1rem;
+  }
+
+  &__generated-title {
+    font-size: v.$font-size-sm;
+  }
+
+  &__generated-key {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-sm;
+    flex-wrap: wrap;
+  }
+
+  &__full-key {
+    flex: 1;
+    min-width: 200px;
+    padding: v.$spacing-sm;
+    font-family: v.$font-family-monospace;
+    font-size: v.$font-size-sm;
+    background: v.$gray-100;
+    border-radius: v.$border-radius-sm;
+    word-break: break-all;
+    color: v.$text-primary;
+  }
+
+  &__copy-btn {
+    flex-shrink: 0;
+  }
+
+  &__generated-warning {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+    padding: v.$spacing-xs v.$spacing-sm;
+    background: rgba(v.$warning-color, 0.1);
+    border-radius: v.$border-radius-sm;
+    font-size: v.$font-size-xs;
+    color: color.adjust(v.$warning-color, $lightness: -15%);
+
+    fa-icon {
+      color: v.$warning-color;
+    }
+  }
+
+  &__dismiss {
+    position: absolute;
+    top: v.$spacing-sm;
+    right: v.$spacing-sm;
+    padding: v.$spacing-xs;
+    background: transparent;
+    border: none;
+    color: v.$text-secondary;
+    cursor: pointer;
+    border-radius: v.$border-radius-sm;
+    transition: color 0.2s ease, background-color 0.2s ease;
+
+    &:hover {
+      color: v.$text-primary;
+      background: v.$gray-200;
+    }
+
+    &:focus {
+      outline: 2px solid v.$primary-color;
+      outline-offset: 2px;
+    }
+  }
+
   &__env {
     display: inline-flex;
     align-items: center;

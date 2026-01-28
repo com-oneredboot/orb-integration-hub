@@ -134,6 +134,10 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
   // API key validation error (shown when trying to activate without all keys)
   apiKeyValidationError: string | null = null;
 
+  // Generated key display state (shown after key generation)
+  generatedKeyDisplay: { environment: string; fullKey: string } | null = null;
+  copySuccess = false;
+
   // Available environments for selection
   readonly availableEnvironments = [
     { value: 'PRODUCTION', label: 'Production', description: 'Live production environment' },
@@ -220,6 +224,19 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
     ).subscribe(keys => {
       this.apiKeys = keys;
       this.updateEnvironmentKeyRows();
+    });
+
+    // Subscribe to generated key changes (for inline display after generation)
+    this.generatedKey$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(generatedKey => {
+      if (generatedKey) {
+        this.generatedKeyDisplay = {
+          environment: generatedKey.environment,
+          fullKey: generatedKey.fullKey
+        };
+        this.copySuccess = false;
+      }
     });
 
     // Subscribe to error changes
@@ -485,6 +502,11 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
     if (tab !== ApplicationDetailTab.Details) {
       this.apiKeyValidationError = null;
     }
+    // Clear generated key display when navigating away from Security tab
+    if (tab !== ApplicationDetailTab.Security) {
+      this.generatedKeyDisplay = null;
+      this.copySuccess = false;
+    }
   }
 
   // Groups tab event handlers
@@ -607,5 +629,39 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
     if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
     if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  /**
+   * Copy the generated API key to clipboard
+   */
+  async copyGeneratedKey(): Promise<void> {
+    if (!this.generatedKeyDisplay?.fullKey) return;
+
+    try {
+      await navigator.clipboard.writeText(this.generatedKeyDisplay.fullKey);
+      this.copySuccess = true;
+      // Reset success indicator after 2 seconds
+      setTimeout(() => {
+        this.copySuccess = false;
+      }, 2000);
+    } catch {
+      // Fallback: select the text for manual copy
+      console.error('Failed to copy to clipboard');
+    }
+  }
+
+  /**
+   * Dismiss the generated key display
+   */
+  dismissGeneratedKey(): void {
+    this.generatedKeyDisplay = null;
+    this.copySuccess = false;
+  }
+
+  /**
+   * Check if a row has a newly generated key to display
+   */
+  isNewlyGeneratedKey(row: EnvironmentKeyRow): boolean {
+    return this.generatedKeyDisplay?.environment === row.environment;
   }
 }
