@@ -207,17 +207,17 @@ This implementation plan covers the Application Access Management system across 
 
 ### Phase 4: Frontend Integration
 
-- [ ] 16. Create NgRx store for groups
-  - [ ] 16.1 Create groups store files
+- [x] 16. Create NgRx store for groups
+  - [x] 16.1 Create groups store files
     - groups.state.ts, groups.actions.ts, groups.reducer.ts
     - groups.selectors.ts, groups.effects.ts
     - Follow organizations store pattern
     - _Requirements: 8.1, 8.5_
-  - [ ] 16.2 Create GroupService for API calls
+  - [x] 16.2 Create GroupService for API calls
     - CRUD operations for groups
     - Membership operations
     - _Requirements: 8.1, 8.3_
-  - [ ] 16.3 Write unit tests for groups store
+  - [x] 16.3 Write unit tests for groups store
     - Test actions, reducer, selectors
     - _Requirements: 8.5_
 
