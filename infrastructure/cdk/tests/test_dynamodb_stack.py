@@ -42,16 +42,16 @@ def template(test_config: Config) -> Template:
 class TestDynamoDBStackTableCount:
     """Tests for table count."""
 
-    def test_creates_fifteen_tables(self, template: Template) -> None:
-        """Verify exactly 15 DynamoDB tables are created.
+    def test_creates_sixteen_tables(self, template: Template) -> None:
+        """Verify exactly 16 DynamoDB tables are created.
         
         Tables: Users, Organizations, OrganizationUsers, Applications,
         ApplicationUsers, ApplicationRoles, Roles, Notifications,
         PrivacyRequests, OwnershipTransferRequests, SmsRateLimit,
         ApplicationGroups, ApplicationGroupUsers, ApplicationGroupRoles,
-        ApplicationUserRoles
+        ApplicationUserRoles, ApplicationApiKeys
         """
-        template.resource_count_is("AWS::DynamoDB::Table", 15)
+        template.resource_count_is("AWS::DynamoDB::Table", 16)
 
 
 class TestDynamoDBStackUsersTable:
