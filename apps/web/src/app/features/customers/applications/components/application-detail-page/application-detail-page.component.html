@@ -74,8 +74,8 @@
 
       <!-- Content with Tabs -->
       <div class="app-detail-tabs-section" *ngIf="application && !data.isLoading && !loadError">
-        <!-- Tab Navigation (hidden in draft mode) -->
-        <nav class="app-detail-tabs" *ngIf="!isDraft" role="tablist" aria-label="Application sections">
+        <!-- Tab Navigation (always shown - users need Security tab to generate keys before activation) -->
+        <nav class="app-detail-tabs" role="tablist" aria-label="Application sections">
           <button
             class="app-detail-tabs__tab"
             [class.app-detail-tabs__tab--active]="activeTab === ApplicationDetailTab.Details"
@@ -258,6 +258,25 @@
                   <fa-icon icon="exclamation-circle"></fa-icon>
                   {{ data.saveError }}
                 </div>
+
+                <!-- API Key Validation Error -->
+                <div class="app-detail-api-key-error" *ngIf="apiKeyValidationError">
+                  <div class="app-detail-api-key-error__content">
+                    <fa-icon icon="key" class="app-detail-api-key-error__icon"></fa-icon>
+                    <div class="app-detail-api-key-error__text">
+                      <p class="app-detail-api-key-error__message">{{ apiKeyValidationError }}</p>
+                      <button
+                        type="button"
+                        class="app-detail-api-key-error__link"
+                        (click)="setActiveTab(ApplicationDetailTab.Security)"
+                        (keydown.enter)="setActiveTab(ApplicationDetailTab.Security)"
+                        (keydown.space)="setActiveTab(ApplicationDetailTab.Security)">
+                        <fa-icon icon="arrow-right"></fa-icon>
+                        Go to Security Tab
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <!-- Actions Footer -->
@@ -308,7 +327,7 @@
           <!-- Security Tab Panel -->
           <div
             class="app-detail-tab-panel"
-            *ngIf="activeTab === ApplicationDetailTab.Security && !isDraft"
+            *ngIf="activeTab === ApplicationDetailTab.Security"
             role="tabpanel"
             id="panel-security"
             [attr.aria-labelledby]="'tab-security'">

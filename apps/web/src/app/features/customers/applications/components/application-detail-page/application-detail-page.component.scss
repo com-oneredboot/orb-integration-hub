@@ -402,6 +402,74 @@
   font-size: v.$font-size-sm;
 }
 
+// API Key validation error (yellow/warning style)
+.app-detail-api-key-error {
+  margin-top: v.$spacing-lg;
+  padding: v.$spacing-md;
+  background: rgba(v.$warning-color, 0.08);
+  border: 1px solid rgba(v.$warning-color, 0.3);
+  border-radius: v.$border-radius;
+  border-left: 4px solid v.$warning-color;
+  animation: slideDown 0.3s ease-out;
+
+  &__content {
+    display: flex;
+    align-items: flex-start;
+    gap: v.$spacing-md;
+  }
+
+  &__icon {
+    color: v.$warning-color;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: v.$spacing-sm;
+  }
+
+  &__message {
+    margin: 0;
+    font-size: v.$font-size-sm;
+    color: v.$text-primary;
+    line-height: 1.5;
+  }
+
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+    padding: v.$spacing-xs v.$spacing-sm;
+    font-family: v.$font-family-base;
+    font-size: v.$font-size-sm;
+    font-weight: v.$font-weight-medium;
+    color: v.$primary-color;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: color.adjust(v.$primary-color, $lightness: -10%);
+      text-decoration: underline;
+    }
+
+    &:focus {
+      outline: 2px solid v.$primary-color;
+      outline-offset: 2px;
+      border-radius: v.$border-radius-sm;
+    }
+
+    fa-icon {
+      font-size: v.$font-size-xs;
+    }
+  }
+}
+
 // Actions footer
 .app-detail-actions {
   display: flex;

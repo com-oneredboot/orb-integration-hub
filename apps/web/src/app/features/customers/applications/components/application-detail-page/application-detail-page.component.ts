@@ -34,6 +34,9 @@ import { DebugLogEntry } from '../../../../../core/services/debug-log.service';
 // Child components
 import { GroupsListComponent } from '../groups-list/groups-list.component';
 
+// Validation utilities
+import { validateApplicationApiKeys, formatMissingEnvironments } from '../../utils/api-key-validation';
+
 // Store imports
 import { ApplicationsActions } from '../../store/applications.actions';
 import * as fromApplications from '../../store/applications.selectors';
@@ -128,6 +131,9 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
     environments: ''
   };
 
+  // API key validation error (shown when trying to activate without all keys)
+  apiKeyValidationError: string | null = null;
+
   // Available environments for selection
   readonly availableEnvironments = [
     { value: 'PRODUCTION', label: 'Production', description: 'Live production environment' },
@@ -203,10 +209,8 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
         this.isDraft = app.status === ApplicationStatus.Pending;
         this.loadFormData();
         this.updateEnvironmentKeyRows();
-        // Load API keys when application is loaded (not for drafts)
-        if (!this.isDraft) {
-          this.loadApiKeys();
-        }
+        // Load API keys for all applications (including drafts for validation)
+        this.loadApiKeys();
       }
     });
 
@@ -404,6 +408,19 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Clear any previous API key validation error
+    this.apiKeyValidationError = null;
+
+    // If activating a draft, validate that all environments have API keys
+    if (this.isDraft) {
+      const validation = validateApplicationApiKeys(this.application, this.apiKeys);
+      if (!validation.isValid) {
+        const envList = formatMissingEnvironments(validation.missingEnvironments);
+        this.apiKeyValidationError = `Cannot activate: API keys are required for ${envList}. Configure keys in the Security tab before activating.`;
+        return;
+      }
+    }
+
     const updateData = {
       applicationId: this.application.applicationId,
       name: this.editForm.name.trim(),
@@ -462,11 +479,12 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
 
   // Tab navigation
   setActiveTab(tab: ApplicationDetailTab): void {
-    // Don't allow switching tabs in draft mode - user must complete setup first
-    if (this.isDraft && tab !== ApplicationDetailTab.Details) {
-      return;
-    }
+    // Allow all tabs - users need to access Security tab to generate keys before activation
     this.activeTab = tab;
+    // Clear API key validation error when navigating away from Details
+    if (tab !== ApplicationDetailTab.Details) {
+      this.apiKeyValidationError = null;
+    }
   }
 
   // Groups tab event handlers
