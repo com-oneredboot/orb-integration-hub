@@ -33,14 +33,29 @@ import { DebugLogEntry } from '../../../../../core/services/debug-log.service';
 
 // Child components
 import { GroupsListComponent } from '../groups-list/groups-list.component';
-import { ApiKeysListComponent } from '../api-keys-list/api-keys-list.component';
 
 // Store imports
 import { ApplicationsActions } from '../../store/applications.actions';
 import * as fromApplications from '../../store/applications.selectors';
 import * as fromOrganizations from '../../../organizations/store/organizations.selectors';
 import * as fromUser from '../../../../user/store/user.selectors';
+import * as fromApiKeys from '../../store/api-keys/api-keys.selectors';
 import { OrganizationsActions } from '../../../organizations/store/organizations.actions';
+import { ApiKeysActions } from '../../store/api-keys/api-keys.actions';
+import { ApplicationApiKeyStatus } from '../../../../../core/enums/ApplicationApiKeyStatusEnum';
+
+/**
+ * Interface for environment-based API key row display
+ */
+export interface EnvironmentKeyRow {
+  environment: string;
+  environmentLabel: string;
+  apiKey: IApplicationApiKeys | null;
+  hasKey: boolean;
+  canRotate: boolean;
+  canRevoke: boolean;
+  canGenerate: boolean;
+}
 
 /**
  * Tab identifiers for the application detail page
@@ -48,7 +63,7 @@ import { OrganizationsActions } from '../../../organizations/store/organizations
 export enum ApplicationDetailTab {
   Details = 'details',
   Groups = 'groups',
-  ApiKeys = 'api-keys',
+  Security = 'security',  // Renamed from ApiKeys
 }
 
 @Component({
@@ -62,7 +77,6 @@ export enum ApplicationDetailTab {
     StatusBadgeComponent,
     DebugPanelComponent,
     GroupsListComponent,
-    ApiKeysListComponent,
   ],
   templateUrl: './application-detail-page.component.html',
   styleUrls: ['./application-detail-page.component.scss']
@@ -81,12 +95,19 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
   error$: Observable<string | null>;
   saveError$: Observable<string | null>;
   organizations$: Observable<IOrganizations[]>;
+  apiKeys$: Observable<IApplicationApiKeys[]>;
+  isGeneratingKey$: Observable<boolean>;
+  isRotatingKey$: Observable<boolean>;
+  isRevokingKey$: Observable<boolean>;
+  generatedKey$: Observable<{ environment: Environment; fullKey: string } | null>;
   debugMode$: Observable<boolean>;
 
   // Local state for template binding
   application: IApplications | null = null;
   applicationId: string | null = null;
   loadError: string | null = null;
+  apiKeys: IApplicationApiKeys[] = [];
+  environmentKeyRows: EnvironmentKeyRow[] = [];
 
   // Mode detection
   isDraft = false;
@@ -166,6 +187,11 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
     this.error$ = this.store.select(fromApplications.selectError);
     this.saveError$ = this.store.select(fromApplications.selectSaveError);
     this.organizations$ = this.store.select(fromOrganizations.selectOrganizations);
+    this.apiKeys$ = this.store.select(fromApiKeys.selectApiKeys);
+    this.isGeneratingKey$ = this.store.select(fromApiKeys.selectIsGenerating);
+    this.isRotatingKey$ = this.store.select(fromApiKeys.selectIsRotating);
+    this.isRevokingKey$ = this.store.select(fromApiKeys.selectIsRevoking);
+    this.generatedKey$ = this.store.select(fromApiKeys.selectGeneratedKey);
     this.debugMode$ = this.store.select(fromUser.selectDebugMode);
 
     // Subscribe to application changes to sync local state
@@ -176,7 +202,20 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
         this.application = app;
         this.isDraft = app.status === ApplicationStatus.Pending;
         this.loadFormData();
+        this.updateEnvironmentKeyRows();
+        // Load API keys when application is loaded (not for drafts)
+        if (!this.isDraft) {
+          this.loadApiKeys();
+        }
       }
+    });
+
+    // Subscribe to API keys changes
+    this.apiKeys$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(keys => {
+      this.apiKeys = keys;
+      this.updateEnvironmentKeyRows();
     });
 
     // Subscribe to error changes
@@ -247,6 +286,21 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
 
     // Dispatch action to load application - effects handle service call
     this.store.dispatch(ApplicationsActions.loadApplication({ applicationId: id }));
+  }
+
+  /**
+   * Load API keys for the current application
+   */
+  private loadApiKeys(): void {
+    if (this.application) {
+      this.store.dispatch(ApiKeysActions.setApplicationContext({
+        applicationId: this.application.applicationId,
+        organizationId: this.application.organizationId
+      }));
+      this.store.dispatch(ApiKeysActions.loadApiKeys({
+        applicationId: this.application.applicationId
+      }));
+    }
   }
 
   private createDraftApplication(): void {
@@ -445,5 +499,95 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
   onRevokeApiKey(apiKey: IApplicationApiKeys): void {
     // Handle API key revocation (handled by ApiKeysListComponent)
     console.log('Revoke API key:', apiKey.applicationApiKeyId);
+  }
+
+  // Security tab action handlers
+  onGenerateKeyForEnvironment(environment: string): void {
+    if (!this.application) return;
+
+    this.store.dispatch(ApiKeysActions.generateApiKey({
+      applicationId: this.application.applicationId,
+      organizationId: this.application.organizationId,
+      environment: environment as Environment
+    }));
+  }
+
+  onRotateKeyForRow(row: EnvironmentKeyRow): void {
+    if (!this.application || !row.apiKey) return;
+
+    this.store.dispatch(ApiKeysActions.rotateApiKey({
+      apiKeyId: row.apiKey.applicationApiKeyId,
+      applicationId: this.application.applicationId,
+      environment: row.environment as Environment
+    }));
+  }
+
+  onRevokeKeyForRow(row: EnvironmentKeyRow): void {
+    if (!this.application || !row.apiKey) return;
+
+    if (!confirm(`Are you sure you want to revoke the API key for ${row.environmentLabel}? This action cannot be undone.`)) {
+      return;
+    }
+
+    this.store.dispatch(ApiKeysActions.revokeApiKey({
+      apiKeyId: row.apiKey.applicationApiKeyId,
+      applicationId: this.application.applicationId,
+      environment: row.environment as Environment
+    }));
+  }
+
+  // Environment Key Row helpers
+  private updateEnvironmentKeyRows(): void {
+    this.environmentKeyRows = this.computeEnvironmentKeyRows();
+  }
+
+  private computeEnvironmentKeyRows(): EnvironmentKeyRow[] {
+    const environments = this.application?.environments || [];
+    const apiKeys = this.apiKeys || [];
+
+    return environments.map(env => {
+      // Find active or rotating key for this environment (exclude revoked)
+      const apiKey = apiKeys.find(k =>
+        k.environment === env &&
+        k.status !== ApplicationApiKeyStatus.Revoked &&
+        k.status !== ApplicationApiKeyStatus.Expired
+      ) || null;
+      const hasKey = !!apiKey;
+
+      return {
+        environment: env,
+        environmentLabel: this.getEnvironmentLabel(env),
+        apiKey,
+        hasKey,
+        canRotate: hasKey && (apiKey!.status === ApplicationApiKeyStatus.Active || apiKey!.status === ApplicationApiKeyStatus.Rotating),
+        canRevoke: hasKey && (apiKey!.status === ApplicationApiKeyStatus.Active || apiKey!.status === ApplicationApiKeyStatus.Rotating),
+        canGenerate: !hasKey,
+      };
+    });
+  }
+
+  getEnvironmentLabel(env: string): string {
+    const found = this.availableEnvironments.find(e => e.value === env);
+    return found?.label || env;
+  }
+
+  formatRelativeTime(dateValue: string | Date | number | undefined): string {
+    if (!dateValue) return 'Never';
+    const date = typeof dateValue === 'number'
+      ? new Date(dateValue * 1000)
+      : dateValue instanceof Date
+        ? dateValue
+        : new Date(dateValue);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 }

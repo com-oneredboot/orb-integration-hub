@@ -101,14 +101,14 @@
           </button>
           <button
             class="app-detail-tabs__tab"
-            [class.app-detail-tabs__tab--active]="activeTab === ApplicationDetailTab.ApiKeys"
-            (click)="setActiveTab(ApplicationDetailTab.ApiKeys)"
+            [class.app-detail-tabs__tab--active]="activeTab === ApplicationDetailTab.Security"
+            (click)="setActiveTab(ApplicationDetailTab.Security)"
             role="tab"
-            [attr.aria-selected]="activeTab === ApplicationDetailTab.ApiKeys"
-            [attr.aria-controls]="'panel-api-keys'"
-            id="tab-api-keys">
-            <fa-icon icon="key"></fa-icon>
-            API Keys
+            [attr.aria-selected]="activeTab === ApplicationDetailTab.Security"
+            [attr.aria-controls]="'panel-security'"
+            id="tab-security">
+            <fa-icon icon="shield-alt"></fa-icon>
+            Security
           </button>
         </nav>
 
@@ -305,21 +305,100 @@
             </app-groups-list>
           </div>
 
-          <!-- API Keys Tab Panel -->
+          <!-- Security Tab Panel -->
           <div
             class="app-detail-tab-panel"
-            *ngIf="activeTab === ApplicationDetailTab.ApiKeys && !isDraft"
+            *ngIf="activeTab === ApplicationDetailTab.Security && !isDraft"
             role="tabpanel"
-            id="panel-api-keys"
-            [attr.aria-labelledby]="'tab-api-keys'">
-            <app-api-keys-list
-              [applicationId]="application.applicationId"
-              [organizationId]="application.organizationId"
-              (keySelected)="onApiKeySelected($event)"
-              (generateKey)="onGenerateApiKey($event)"
-              (rotateKey)="onRotateApiKey($event)"
-              (revokeKey)="onRevokeApiKey($event)">
-            </app-api-keys-list>
+            id="panel-security"
+            [attr.aria-labelledby]="'tab-security'">
+            
+            <!-- API Keys Card -->
+            <div class="orb-card">
+              <div class="orb-card__header">
+                <h2 class="orb-card__title">
+                  <fa-icon icon="key" class="orb-card__icon"></fa-icon>
+                  API Keys
+                </h2>
+              </div>
+              <div class="orb-card__content">
+                <!-- Empty State -->
+                <div class="security-empty" *ngIf="environmentKeyRows.length === 0">
+                  <fa-icon icon="info-circle" size="2x"></fa-icon>
+                  <p class="security-empty__text">No environments configured</p>
+                  <p class="security-empty__hint">
+                    <button
+                      type="button"
+                      class="security-empty__link"
+                      (click)="setActiveTab(ApplicationDetailTab.Details)"
+                      (keydown.enter)="setActiveTab(ApplicationDetailTab.Details)"
+                      (keydown.space)="setActiveTab(ApplicationDetailTab.Details)">
+                      Configure environments in the Details tab
+                    </button>
+                  </p>
+                </div>
+
+                <!-- Environment Key Rows -->
+                <div class="security-key-list" *ngIf="environmentKeyRows.length > 0">
+                  <div class="security-key-row" *ngFor="let row of environmentKeyRows">
+                    <!-- Environment Badge -->
+                    <div class="security-key-row__env" [ngClass]="'security-key-row__env--' + row.environment.toLowerCase()">
+                      <fa-icon icon="circle" class="security-key-row__env-icon"></fa-icon>
+                      <span class="security-key-row__env-label">{{ row.environmentLabel }}</span>
+                    </div>
+
+                    <!-- Key Info (when key exists) -->
+                    <div class="security-key-row__info" *ngIf="row.hasKey">
+                      <span class="security-key-row__prefix">{{ row.apiKey?.keyPrefix }}...</span>
+                      <app-status-badge
+                        [status]="row.apiKey?.status || ''"
+                        type="apiKey"
+                        [showIcon]="true"
+                        [showLabel]="true"
+                        size="small"
+                        variant="chip">
+                      </app-status-badge>
+                      <span class="security-key-row__last-used" *ngIf="row.apiKey?.lastUsedAt">
+                        Last used: {{ formatRelativeTime(row.apiKey?.lastUsedAt) }}
+                      </span>
+                    </div>
+
+                    <!-- No Key State -->
+                    <div class="security-key-row__no-key" *ngIf="!row.hasKey">
+                      <span>No API key</span>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="security-key-row__actions">
+                      <button
+                        *ngIf="row.canGenerate"
+                        class="orb-btn orb-btn--primary orb-btn--sm"
+                        (click)="onGenerateKeyForEnvironment(row.environment)"
+                        [disabled]="(isGeneratingKey$ | async)">
+                        <fa-icon icon="plus"></fa-icon>
+                        Generate Key
+                      </button>
+                      <button
+                        *ngIf="row.canRotate"
+                        class="orb-btn orb-btn--secondary orb-btn--sm"
+                        (click)="onRotateKeyForRow(row)"
+                        [disabled]="(isRotatingKey$ | async)">
+                        <fa-icon icon="sync-alt"></fa-icon>
+                        Rotate
+                      </button>
+                      <button
+                        *ngIf="row.canRevoke"
+                        class="orb-btn orb-btn--outline orb-btn--sm"
+                        (click)="onRevokeKeyForRow(row)"
+                        [disabled]="(isRevokingKey$ | async)">
+                        <fa-icon icon="ban"></fa-icon>
+                        Revoke
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
