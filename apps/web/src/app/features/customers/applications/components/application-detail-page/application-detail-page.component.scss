@@ -35,69 +35,8 @@
   }
 }
 
-// Tab navigation
-.app-detail-tabs {
-  display: flex;
-  gap: v.$spacing-xs;
-  margin-bottom: v.$spacing-lg;
-  border-bottom: 2px solid v.$gray-200;
-  padding-bottom: 0;
-
-  &__tab {
-    display: inline-flex;
-    align-items: center;
-    gap: v.$spacing-xs;
-    padding: v.$spacing-sm v.$spacing-md;
-    font-family: v.$font-family-base;
-    font-size: v.$font-size-base;
-    font-weight: v.$font-weight-medium;
-    color: v.$text-secondary;
-    background: transparent;
-    border: none;
-    border-bottom: 3px solid transparent;
-    margin-bottom: -2px;
-    cursor: pointer;
-    transition: color 0.2s ease, border-color 0.2s ease;
-
-    fa-icon {
-      font-size: v.$font-size-sm;
-    }
-
-    &:hover {
-      color: v.$primary-color;
-    }
-
-    // Clean focus state - no red background/outline, just subtle indicator
-    &:focus {
-      outline: none;
-    }
-
-    &:focus-visible {
-      outline: 2px solid v.$primary-color;
-      outline-offset: -2px;
-      border-radius: v.$border-radius-sm v.$border-radius-sm 0 0;
-    }
-
-    &--active {
-      color: v.$primary-color;
-      border-bottom-color: v.$primary-color;
-    }
-  }
-
-  &__count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 v.$spacing-xs;
-    font-size: v.$font-size-xs;
-    font-weight: v.$font-weight-bold;
-    color: v.$white;
-    background: v.$primary-color;
-    border-radius: 10px;
-  }
-}
+// Tab navigation - uses global orb-tabs classes from components.scss
+// Only component-specific tab panel styles defined here
 
 .app-detail-tabs-section {
   // Container for tabs and panels
@@ -556,10 +495,6 @@
 
   .app-detail-tab-panel {
     animation: none;
-  }
-
-  .app-detail-tabs__tab {
-    transition: none;
   }
 }
 

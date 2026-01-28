@@ -75,50 +75,51 @@
       <!-- Content with Tabs -->
       <div class="app-detail-tabs-section" *ngIf="application && !data.isLoading && !loadError">
         <!-- Tab Navigation (always shown - users need Security tab to generate keys before activation) -->
-        <nav class="app-detail-tabs" role="tablist" aria-label="Application sections">
+        <!-- Uses global orb-tabs classes from components.scss -->
+        <nav class="orb-tabs" role="tablist" aria-label="Application sections">
           <button
-            class="app-detail-tabs__tab"
-            [class.app-detail-tabs__tab--active]="activeTab === ApplicationDetailTab.Overview"
+            class="orb-tabs__tab"
+            [class.orb-tabs__tab--active]="activeTab === ApplicationDetailTab.Overview"
             (click)="setActiveTab(ApplicationDetailTab.Overview)"
             role="tab"
             [attr.aria-selected]="activeTab === ApplicationDetailTab.Overview"
             [attr.aria-controls]="'panel-overview'"
             id="tab-overview">
-            <fa-icon icon="info-circle"></fa-icon>
+            <fa-icon icon="info-circle" class="orb-tabs__icon"></fa-icon>
             Overview
           </button>
           <button
-            class="app-detail-tabs__tab"
-            [class.app-detail-tabs__tab--active]="activeTab === ApplicationDetailTab.Groups"
+            class="orb-tabs__tab"
+            [class.orb-tabs__tab--active]="activeTab === ApplicationDetailTab.Groups"
             (click)="setActiveTab(ApplicationDetailTab.Groups)"
             role="tab"
             [attr.aria-selected]="activeTab === ApplicationDetailTab.Groups"
             [attr.aria-controls]="'panel-groups'"
             id="tab-groups">
-            <fa-icon icon="users"></fa-icon>
+            <fa-icon icon="users" class="orb-tabs__icon"></fa-icon>
             Groups
-            <span class="app-detail-tabs__count" *ngIf="application.groupCount">{{ application.groupCount }}</span>
+            <span class="orb-tabs__badge" *ngIf="application.groupCount">{{ application.groupCount }}</span>
           </button>
           <button
-            class="app-detail-tabs__tab"
-            [class.app-detail-tabs__tab--active]="activeTab === ApplicationDetailTab.Security"
+            class="orb-tabs__tab"
+            [class.orb-tabs__tab--active]="activeTab === ApplicationDetailTab.Security"
             (click)="setActiveTab(ApplicationDetailTab.Security)"
             role="tab"
             [attr.aria-selected]="activeTab === ApplicationDetailTab.Security"
             [attr.aria-controls]="'panel-security'"
             id="tab-security">
-            <fa-icon icon="shield-alt"></fa-icon>
+            <fa-icon icon="shield-alt" class="orb-tabs__icon"></fa-icon>
             Security
           </button>
           <button
-            class="app-detail-tabs__tab app-detail-tabs__tab--danger"
-            [class.app-detail-tabs__tab--active]="activeTab === ApplicationDetailTab.Danger"
+            class="orb-tabs__tab orb-tabs__tab--danger"
+            [class.orb-tabs__tab--active]="activeTab === ApplicationDetailTab.Danger"
             (click)="setActiveTab(ApplicationDetailTab.Danger)"
             role="tab"
             [attr.aria-selected]="activeTab === ApplicationDetailTab.Danger"
             [attr.aria-controls]="'panel-danger'"
             id="tab-danger">
-            <fa-icon icon="exclamation-triangle"></fa-icon>
+            <fa-icon icon="exclamation-triangle" class="orb-tabs__icon"></fa-icon>
             Danger Zone
           </button>
         </nav>
