@@ -2,13 +2,14 @@
  * OrganizationDetailPageComponent Property-Based Tests
  *
  * Property tests for organization detail page using NgRx store-first pattern.
+ * Updated for tabbed interface with Applications tab.
  *
- * @see .kiro/specs/store-centric-refactoring/design.md
+ * @see .kiro/specs/organization-applications-tab/design.md
  * _Requirements: 4.1-4.4, 7.2_
  */
 
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { Router, ActivatedRoute, convertToParamMap } from '@angular/router';
+import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { BehaviorSubject, ReplaySubject } from 'rxjs';
@@ -23,7 +24,6 @@ import { IApplications } from '../../../../../core/models/ApplicationsModel';
 import { OrganizationStatus } from '../../../../../core/enums/OrganizationStatusEnum';
 import { ApplicationStatus } from '../../../../../core/enums/ApplicationStatusEnum';
 import * as fromOrganizations from '../../store/organizations.selectors';
-import * as fromApplications from '../../../applications/store/applications.selectors';
 import * as fromUser from '../../../../user/store/user.selectors';
 
 describe('OrganizationDetailPageComponent Property Tests', () => {
@@ -43,94 +43,6 @@ describe('OrganizationDetailPageComponent Property Tests', () => {
     createdAt: fc.date(),
     updatedAt: fc.date(),
   });
-
-  /**
-   * Property 2: Application list filters correctly from store
-   * For any list of applications in the store, the component filters by organizationId
-   * and excludes PENDING applications.
-   * _Requirements: 4.1, 4.4_
-   */
-  it('Property 2: Application list filters correctly from store', fakeAsync(() => {
-    fc.assert(
-      fc.property(
-        fc.array(applicationArbitrary, { minLength: 1, maxLength: 10 }),
-        (applications) => {
-          // Setup fresh TestBed for each iteration
-          const actions$ = new ReplaySubject<Action>(1);
-          const paramMapSubject = new BehaviorSubject(convertToParamMap({ id: 'org-123' }));
-
-          const mockOrg = new Organizations({
-            organizationId: 'org-123',
-            name: 'Test Org',
-            ownerId: 'user-123',
-            status: OrganizationStatus.Active,
-            applicationCount: applications.length,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          });
-
-          TestBed.resetTestingModule();
-          TestBed.configureTestingModule({
-            imports: [OrganizationDetailPageComponent],
-            providers: [
-              provideMockStore({
-                selectors: [
-                  { selector: fromOrganizations.selectSelectedOrganization, value: mockOrg },
-                  { selector: fromOrganizations.selectIsLoading, value: false },
-                  { selector: fromOrganizations.selectIsSaving, value: false },
-                  { selector: fromOrganizations.selectIsDeleting, value: false },
-                  { selector: fromOrganizations.selectError, value: null },
-                  { selector: fromOrganizations.selectSaveError, value: null },
-                  { selector: fromApplications.selectApplications, value: applications as IApplications[] },
-                  { selector: fromApplications.selectIsLoading, value: false },
-                  { selector: fromApplications.selectError, value: null },
-                  { selector: fromUser.selectDebugMode, value: false },
-                ],
-              }),
-              provideMockActions(() => actions$),
-              {
-                provide: ActivatedRoute,
-                useValue: {
-                  paramMap: paramMapSubject.asObservable(),
-                },
-              },
-            ],
-          });
-
-          const library = TestBed.inject(FaIconLibrary);
-          library.addIconPacks(fas);
-
-          const router = TestBed.inject(Router);
-          spyOn(router, 'navigate');
-
-          const fixture = TestBed.createComponent(OrganizationDetailPageComponent);
-          const component = fixture.componentInstance;
-
-          // Act
-          fixture.detectChanges();
-          tick();
-
-          // Assert: applications$ observable filters correctly
-          let filteredApps: IApplications[] = [];
-          component.applications$.subscribe(apps => {
-            filteredApps = apps;
-          });
-          tick();
-
-          // All filtered apps should have matching organizationId and not be PENDING
-          for (const app of filteredApps) {
-            expect(app.organizationId).toBe('org-123');
-            expect(app.status).not.toBe(ApplicationStatus.Pending);
-          }
-
-          // Cleanup
-          fixture.destroy();
-          TestBed.inject(MockStore).resetSelectors();
-        }
-      ),
-      { numRuns: 100 }
-    );
-  }));
 
   /**
    * Property 3: Environment count calculation
@@ -158,9 +70,6 @@ describe('OrganizationDetailPageComponent Property Tests', () => {
                   { selector: fromOrganizations.selectIsDeleting, value: false },
                   { selector: fromOrganizations.selectError, value: null },
                   { selector: fromOrganizations.selectSaveError, value: null },
-                  { selector: fromApplications.selectApplications, value: [] },
-                  { selector: fromApplications.selectIsLoading, value: false },
-                  { selector: fromApplications.selectError, value: null },
                   { selector: fromUser.selectDebugMode, value: false },
                 ],
               }),
@@ -229,9 +138,6 @@ describe('OrganizationDetailPageComponent Property Tests', () => {
                   { selector: fromOrganizations.selectIsDeleting, value: false },
                   { selector: fromOrganizations.selectError, value: null },
                   { selector: fromOrganizations.selectSaveError, value: null },
-                  { selector: fromApplications.selectApplications, value: [] },
-                  { selector: fromApplications.selectIsLoading, value: false },
-                  { selector: fromApplications.selectError, value: null },
                   { selector: fromUser.selectDebugMode, value: false },
                 ],
               }),

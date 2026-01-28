@@ -2,8 +2,9 @@
  * OrganizationDetailPageComponent Unit Tests
  *
  * Tests for organization detail page using NgRx store-first pattern.
+ * Updated for tabbed interface with Applications tab.
  *
- * @see .kiro/specs/store-centric-refactoring/design.md
+ * @see .kiro/specs/organization-applications-tab/design.md
  * _Requirements: 4.1-4.4, 7.1_
  */
 
@@ -22,9 +23,7 @@ import { IApplications } from '../../../../../core/models/ApplicationsModel';
 import { OrganizationStatus } from '../../../../../core/enums/OrganizationStatusEnum';
 import { ApplicationStatus } from '../../../../../core/enums/ApplicationStatusEnum';
 import { OrganizationsActions } from '../../store/organizations.actions';
-import { ApplicationsActions } from '../../../applications/store/applications.actions';
 import * as fromOrganizations from '../../store/organizations.selectors';
-import * as fromApplications from '../../../applications/store/applications.selectors';
 import * as fromUser from '../../../../user/store/user.selectors';
 
 describe('OrganizationDetailPageComponent', () => {
@@ -88,17 +87,15 @@ describe('OrganizationDetailPageComponent', () => {
     organizations: {
       organizations: [],
       selectedOrganization: null,
+      organizationApplications: {},
+      loadingApplications: {},
+      applicationsError: {},
       isLoading: false,
       isSaving: false,
       isDeleting: false,
       error: null,
       saveError: null,
       deleteError: null,
-    },
-    applications: {
-      applications: [],
-      isLoading: false,
-      error: null,
     },
   };
 
@@ -118,9 +115,6 @@ describe('OrganizationDetailPageComponent', () => {
             { selector: fromOrganizations.selectIsDeleting, value: false },
             { selector: fromOrganizations.selectError, value: null },
             { selector: fromOrganizations.selectSaveError, value: null },
-            { selector: fromApplications.selectApplications, value: [] },
-            { selector: fromApplications.selectIsLoading, value: false },
-            { selector: fromApplications.selectError, value: null },
             { selector: fromUser.selectDebugMode, value: false },
           ],
         }),
@@ -162,15 +156,6 @@ describe('OrganizationDetailPageComponent', () => {
 
       expect(store.dispatch).toHaveBeenCalledWith(
         OrganizationsActions.loadOrganization({ organizationId: 'org-123' })
-      );
-    }));
-
-    it('should dispatch loadApplications on init', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      expect(store.dispatch).toHaveBeenCalledWith(
-        ApplicationsActions.loadApplications()
       );
     }));
 
@@ -216,6 +201,22 @@ describe('OrganizationDetailPageComponent', () => {
         OrganizationsActions.deleteOrganization({ organizationId: 'org-draft' })
       );
     }));
+
+    it('should dispatch loadOrganizationApplications when applications tab is selected', fakeAsync(() => {
+      store.overrideSelector(fromOrganizations.selectSelectedOrganization, mockOrganization);
+      store.refreshState();
+      fixture.detectChanges();
+      tick();
+
+      // Clear previous dispatch calls
+      (store.dispatch as jasmine.Spy).calls.reset();
+
+      component.setActiveTab('applications');
+
+      expect(store.dispatch).toHaveBeenCalledWith(
+        OrganizationsActions.loadOrganizationApplications({ organizationId: 'org-123' })
+      );
+    }));
   });
 
   describe('Store Selectors', () => {
@@ -246,47 +247,51 @@ describe('OrganizationDetailPageComponent', () => {
 
       expect(component.loadError).toBe('Organization not found');
     }));
+  });
 
-    it('should filter applications by organizationId', fakeAsync(() => {
+  describe('Tab Management', () => {
+    beforeEach(fakeAsync(() => {
       store.overrideSelector(fromOrganizations.selectSelectedOrganization, mockOrganization);
-      store.overrideSelector(fromApplications.selectApplications, mockApplications);
       store.refreshState();
       fixture.detectChanges();
       tick();
-
-      // The applications$ observable filters by organizationId
-      component.applications$.subscribe(apps => {
-        expect(apps.length).toBe(2);
-        expect(apps.every(a => a.organizationId === 'org-123')).toBe(true);
-      });
     }));
 
-    it('should filter out PENDING applications', fakeAsync(() => {
-      const appsWithPending: IApplications[] = [
-        ...mockApplications,
-        {
-          applicationId: 'app-pending',
-          name: 'Pending App',
-          organizationId: 'org-123',
-          ownerId: 'user-123',
-          status: ApplicationStatus.Pending,
-          apiKey: '',
-          apiKeyNext: '',
-          environments: [],
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ];
-      store.overrideSelector(fromOrganizations.selectSelectedOrganization, mockOrganization);
-      store.overrideSelector(fromApplications.selectApplications, appsWithPending);
-      store.refreshState();
-      fixture.detectChanges();
-      tick();
+    it('should default to overview tab', () => {
+      expect(component.activeTab).toBe('overview');
+    });
 
-      component.applications$.subscribe(apps => {
-        expect(apps.length).toBe(2);
-        expect(apps.every((a: IApplications) => a.status !== ApplicationStatus.Pending)).toBe(true);
-      });
+    it('should switch to security tab', () => {
+      component.setActiveTab('security');
+      expect(component.activeTab).toBe('security');
+    });
+
+    it('should switch to stats tab', () => {
+      component.setActiveTab('stats');
+      expect(component.activeTab).toBe('stats');
+    });
+
+    it('should switch to applications tab', () => {
+      component.setActiveTab('applications');
+      expect(component.activeTab).toBe('applications');
+    });
+
+    it('should switch to danger tab', () => {
+      component.setActiveTab('danger');
+      expect(component.activeTab).toBe('danger');
+    });
+
+    it('should only load applications once when tab is selected multiple times', fakeAsync(() => {
+      (store.dispatch as jasmine.Spy).calls.reset();
+
+      component.setActiveTab('applications');
+      component.setActiveTab('overview');
+      component.setActiveTab('applications');
+
+      const loadAppsCalls = (store.dispatch as jasmine.Spy).calls.allArgs()
+        .filter((args: unknown[]) => (args[0] as Action).type === '[Organizations] Load Organization Applications');
+
+      expect(loadAppsCalls.length).toBe(1);
     }));
   });
 
@@ -315,7 +320,6 @@ describe('OrganizationDetailPageComponent', () => {
   describe('Application Navigation', () => {
     beforeEach(fakeAsync(() => {
       store.overrideSelector(fromOrganizations.selectSelectedOrganization, mockOrganization);
-      store.overrideSelector(fromApplications.selectApplications, mockApplications);
       store.refreshState();
       fixture.detectChanges();
       tick();
@@ -393,10 +397,20 @@ describe('OrganizationDetailPageComponent', () => {
   });
 
   describe('Reload Applications', () => {
-    it('should dispatch loadApplications on retry', () => {
+    beforeEach(fakeAsync(() => {
+      store.overrideSelector(fromOrganizations.selectSelectedOrganization, mockOrganization);
+      store.refreshState();
+      fixture.detectChanges();
+      tick();
+    }));
+
+    it('should dispatch loadOrganizationApplications on retry', () => {
+      (store.dispatch as jasmine.Spy).calls.reset();
       component.loadApplications();
 
-      expect(store.dispatch).toHaveBeenCalledWith(ApplicationsActions.loadApplications());
+      expect(store.dispatch).toHaveBeenCalledWith(
+        OrganizationsActions.loadOrganizationApplications({ organizationId: 'org-123' })
+      );
     });
   });
 

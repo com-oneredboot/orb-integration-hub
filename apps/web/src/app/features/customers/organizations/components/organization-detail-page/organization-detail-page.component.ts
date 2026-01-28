@@ -22,7 +22,6 @@ import { takeUntil, map, filter } from 'rxjs/operators';
 import { Organizations } from '../../../../../core/models/OrganizationsModel';
 import { IApplications } from '../../../../../core/models/ApplicationsModel';
 import { OrganizationStatus } from '../../../../../core/enums/OrganizationStatusEnum';
-import { ApplicationStatus } from '../../../../../core/enums/ApplicationStatusEnum';
 import { StatusBadgeComponent } from '../../../../../shared/components/ui/status-badge.component';
 import { DebugPanelComponent, DebugContext } from '../../../../../shared/components/debug/debug-panel.component';
 import { DebugLogEntry } from '../../../../../core/services/debug-log.service';
@@ -30,9 +29,7 @@ import { DebugLogEntry } from '../../../../../core/services/debug-log.service';
 // Store imports
 import { OrganizationsActions } from '../../store/organizations.actions';
 import * as fromOrganizations from '../../store/organizations.selectors';
-import * as fromApplications from '../../../applications/store/applications.selectors';
 import * as fromUser from '../../../../user/store/user.selectors';
-import { ApplicationsActions } from '../../../applications/store/applications.actions';
 
 @Component({
   selector: 'app-organization-detail-page',
@@ -61,6 +58,7 @@ export class OrganizationDetailPageComponent implements OnInit, OnDestroy {
   applications$: Observable<IApplications[]>;
   isLoadingApplications$: Observable<boolean>;
   applicationsError$: Observable<string | null>;
+  applicationCount$: Observable<number>;
   debugMode$: Observable<boolean>;
 
   // Local state for template binding
@@ -70,6 +68,10 @@ export class OrganizationDetailPageComponent implements OnInit, OnDestroy {
 
   // Mode detection
   isDraft = false;
+
+  // Tab management
+  activeTab: 'overview' | 'security' | 'stats' | 'members' | 'applications' | 'danger' = 'overview';
+  private applicationsLoaded = false;
 
   // Form data (local UI state - allowed)
   editForm = {
@@ -126,14 +128,11 @@ export class OrganizationDetailPageComponent implements OnInit, OnDestroy {
     this.saveError$ = this.store.select(fromOrganizations.selectSaveError);
     this.debugMode$ = this.store.select(fromUser.selectDebugMode);
 
-    // Applications for this organization - filter from applications store
-    this.applications$ = this.store.select(fromApplications.selectApplications).pipe(
-      map(applications => applications.filter(
-        app => app.organizationId === this.organizationId && app.status !== ApplicationStatus.Pending
-      ))
-    );
-    this.isLoadingApplications$ = this.store.select(fromApplications.selectIsLoading);
-    this.applicationsError$ = this.store.select(fromApplications.selectError);
+    // Initialize applications observables as empty - will be set when organizationId is known
+    this.applications$ = of([]);
+    this.isLoadingApplications$ = of(false);
+    this.applicationsError$ = of(null);
+    this.applicationCount$ = of(0);
 
     // Subscribe to organization changes to sync local state
     this.organization$.pipe(
@@ -143,6 +142,8 @@ export class OrganizationDetailPageComponent implements OnInit, OnDestroy {
         this.organization = organization;
         this.isDraft = organization.status === OrganizationStatus.Pending;
         this.loadFormData();
+        // Initialize applications observables for this organization
+        this.initializeApplicationsObservables(organization.organizationId);
       }
     });
 
@@ -165,6 +166,13 @@ export class OrganizationDetailPageComponent implements OnInit, OnDestroy {
     });
   }
 
+  private initializeApplicationsObservables(organizationId: string): void {
+    this.applications$ = this.store.select(fromOrganizations.selectOrganizationApplications(organizationId));
+    this.isLoadingApplications$ = this.store.select(fromOrganizations.selectIsLoadingOrganizationApplications(organizationId));
+    this.applicationsError$ = this.store.select(fromOrganizations.selectOrganizationApplicationsError(organizationId));
+    this.applicationCount$ = this.store.select(fromOrganizations.selectOrganizationApplicationCount(organizationId));
+  }
+
   ngOnInit(): void {
     // Get organization ID from route
     this.route.paramMap.pipe(
@@ -185,9 +193,8 @@ export class OrganizationDetailPageComponent implements OnInit, OnDestroy {
   private loadOrganization(id: string): void {
     // Dispatch action to load organization - effects handle service call
     this.store.dispatch(OrganizationsActions.loadOrganization({ organizationId: id }));
-
-    // Also load applications for this organization
-    this.store.dispatch(ApplicationsActions.loadApplications());
+    // Reset applications loaded flag for new organization
+    this.applicationsLoaded = false;
   }
 
   private loadFormData(): void {
@@ -287,7 +294,12 @@ export class OrganizationDetailPageComponent implements OnInit, OnDestroy {
    * Reload applications for this organization
    */
   loadApplications(): void {
-    this.store.dispatch(ApplicationsActions.loadApplications());
+    if (this.organizationId) {
+      this.store.dispatch(OrganizationsActions.loadOrganizationApplications({
+        organizationId: this.organizationId
+      }));
+      this.applicationsLoaded = true;
+    }
   }
 
   /**
@@ -331,5 +343,17 @@ export class OrganizationDetailPageComponent implements OnInit, OnDestroy {
       hour: '2-digit',
       minute: '2-digit'
     });
+  }
+
+  /**
+   * Set active tab and lazy load applications when needed
+   */
+  setActiveTab(tab: 'overview' | 'security' | 'stats' | 'members' | 'applications' | 'danger'): void {
+    this.activeTab = tab;
+
+    // Lazy load applications when tab is first selected
+    if (tab === 'applications' && !this.applicationsLoaded && this.organizationId) {
+      this.loadApplications();
+    }
   }
 }
