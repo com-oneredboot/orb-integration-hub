@@ -1,0 +1,164 @@
+<div class="group-role-assignment">
+  <div class="group-role-assignment__header">
+    <h3 class="group-role-assignment__title">Role Assignments</h3>
+    <p class="group-role-assignment__description">
+      Assign roles to this group for each environment. Members of this group will inherit these permissions.
+    </p>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoadingRoles$ | async" class="group-role-assignment__loading">
+    <span class="group-role-assignment__loading-spinner"></span>
+    <span>Loading role assignments...</span>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="rolesError$ | async as error" class="group-role-assignment__error">
+    <span class="group-role-assignment__error-icon">⚠</span>
+    <span>{{ error }}</span>
+  </div>
+
+  <!-- Role Assignments Table -->
+  <div *ngIf="!(isLoadingRoles$ | async)" class="group-role-assignment__table">
+    <div class="group-role-assignment__table-header">
+      <div class="group-role-assignment__col group-role-assignment__col--environment">Environment</div>
+      <div class="group-role-assignment__col group-role-assignment__col--role">Role</div>
+      <div class="group-role-assignment__col group-role-assignment__col--permissions">Permissions</div>
+      <div class="group-role-assignment__col group-role-assignment__col--actions">Actions</div>
+    </div>
+
+    <div class="group-role-assignment__table-body">
+      <div
+        *ngFor="let row of roleAssignmentRows"
+        class="group-role-assignment__row"
+        [class.group-role-assignment__row--editing]="editingEnvironment === row.environment"
+      >
+        <!-- Environment Column -->
+        <div class="group-role-assignment__col group-role-assignment__col--environment">
+          <span
+            class="group-role-assignment__environment-badge"
+            [ngClass]="'group-role-assignment__environment-badge--' + getEnvironmentClass(row.environment)"
+          >
+            {{ row.environmentLabel }}
+          </span>
+        </div>
+
+        <!-- Role Column -->
+        <div class="group-role-assignment__col group-role-assignment__col--role">
+          <!-- Edit Mode -->
+          <ng-container *ngIf="editingEnvironment === row.environment; else displayRole">
+            <select
+              class="group-role-assignment__role-select"
+              [(ngModel)]="selectedRoleId"
+              [disabled]="isSavingRole$ | async"
+            >
+              <option value="">Select a role...</option>
+              <option *ngFor="let role of availableRoles" [value]="role.roleId">
+                {{ role.roleName }}
+              </option>
+            </select>
+          </ng-container>
+
+          <!-- Display Mode -->
+          <ng-template #displayRole>
+            <ng-container *ngIf="row.isAssigned && row.roleAssignment; else noRole">
+              <span
+                class="group-role-assignment__role-badge"
+                [ngClass]="'group-role-assignment__role-badge--' + getRoleTypeClass(row.roleAssignment.roleName === 'Admin' ? 'ADMIN' : row.roleAssignment.roleName === 'User' ? 'USER' : 'GUEST')"
+              >
+                {{ row.roleAssignment.roleName }}
+              </span>
+            </ng-container>
+            <ng-template #noRole>
+              <span class="group-role-assignment__no-role">Not assigned</span>
+            </ng-template>
+          </ng-template>
+        </div>
+
+        <!-- Permissions Column -->
+        <div class="group-role-assignment__col group-role-assignment__col--permissions">
+          <ng-container *ngIf="row.isAssigned && row.roleAssignment; else noPermissions">
+            <span class="group-role-assignment__permissions">
+              {{ formatPermissions(row.roleAssignment.permissions) }}
+            </span>
+          </ng-container>
+          <ng-template #noPermissions>
+            <span class="group-role-assignment__no-permissions">—</span>
+          </ng-template>
+        </div>
+
+        <!-- Actions Column -->
+        <div class="group-role-assignment__col group-role-assignment__col--actions">
+          <!-- Edit Mode Actions -->
+          <ng-container *ngIf="editingEnvironment === row.environment; else displayActions">
+            <button
+              class="group-role-assignment__btn group-role-assignment__btn--save"
+              [disabled]="!selectedRoleId || (isSavingRole$ | async)"
+              (click)="onAssignRole(row.environment)"
+              title="Save role assignment"
+            >
+              <span *ngIf="isSavingRole$ | async" class="group-role-assignment__btn-spinner"></span>
+              <span *ngIf="!(isSavingRole$ | async)">Save</span>
+            </button>
+            <button
+              class="group-role-assignment__btn group-role-assignment__btn--cancel"
+              [disabled]="isSavingRole$ | async"
+              (click)="onCancelAssign()"
+              title="Cancel"
+            >
+              Cancel
+            </button>
+          </ng-container>
+
+          <!-- Display Mode Actions -->
+          <ng-template #displayActions>
+            <ng-container *ngIf="row.isAssigned; else assignAction">
+              <button
+                class="group-role-assignment__btn group-role-assignment__btn--edit"
+                [disabled]="isDeletingRole$ | async"
+                (click)="onStartAssign(row.environment)"
+                title="Change role"
+              >
+                Change
+              </button>
+              <button
+                class="group-role-assignment__btn group-role-assignment__btn--remove"
+                [disabled]="isDeletingRole$ | async"
+                (click)="onRemoveRole(row)"
+                title="Remove role"
+              >
+                <span *ngIf="isDeletingRole$ | async" class="group-role-assignment__btn-spinner"></span>
+                <span *ngIf="!(isDeletingRole$ | async)">Remove</span>
+              </button>
+            </ng-container>
+            <ng-template #assignAction>
+              <button
+                class="group-role-assignment__btn group-role-assignment__btn--assign"
+                (click)="onStartAssign(row.environment)"
+                title="Assign role"
+              >
+                Assign Role
+              </button>
+            </ng-template>
+          </ng-template>
+        </div>
+
+        <!-- Save Error for this row -->
+        <div
+          *ngIf="editingEnvironment === row.environment && (rolesSaveError$ | async) as saveError"
+          class="group-role-assignment__row-error"
+        >
+          {{ saveError }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help Text -->
+  <div class="group-role-assignment__help">
+    <p>
+      <strong>Note:</strong> Role assignments are environment-specific. A group can have different roles
+      in different environments (e.g., Admin in Development, User in Production).
+    </p>
+  </div>
+</div>

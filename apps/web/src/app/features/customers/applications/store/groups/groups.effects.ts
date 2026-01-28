@@ -220,6 +220,75 @@ export class GroupsEffects {
   );
 
   /**
+   * Load Group Roles Effect
+   */
+  loadGroupRoles$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(GroupsActions.loadGroupRoles),
+      switchMap((action) =>
+        this.groupService.getGroupRoles(action.groupId).pipe(
+          map((connection) =>
+            GroupsActions.loadGroupRolesSuccess({ roles: connection.items })
+          ),
+          catchError((error) =>
+            of(
+              GroupsActions.loadGroupRolesFailure({
+                error: error.message || 'Failed to load group roles',
+              })
+            )
+          )
+        )
+      )
+    )
+  );
+
+  /**
+   * Assign Role to Group Effect
+   */
+  assignRoleToGroup$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(GroupsActions.assignRoleToGroup),
+      switchMap((action) =>
+        this.groupService.assignRoleToGroup(action.input).pipe(
+          map((role) => GroupsActions.assignRoleToGroupSuccess({ role })),
+          catchError((error) =>
+            of(
+              GroupsActions.assignRoleToGroupFailure({
+                error: error.message || 'Failed to assign role to group',
+              })
+            )
+          )
+        )
+      )
+    )
+  );
+
+  /**
+   * Remove Role from Group Effect
+   */
+  removeRoleFromGroup$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(GroupsActions.removeRoleFromGroup),
+      switchMap((action) =>
+        this.groupService.removeRoleFromGroup(action.roleAssignmentId).pipe(
+          map(() =>
+            GroupsActions.removeRoleFromGroupSuccess({
+              roleAssignmentId: action.roleAssignmentId,
+            })
+          ),
+          catchError((error) =>
+            of(
+              GroupsActions.removeRoleFromGroupFailure({
+                error: error.message || 'Failed to remove role from group',
+              })
+            )
+          )
+        )
+      )
+    )
+  );
+
+  /**
    * Auto-refresh groups after successful operations
    */
   refreshAfterSuccessfulOperation$ = createEffect(() =>

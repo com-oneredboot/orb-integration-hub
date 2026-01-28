@@ -10,6 +10,7 @@
 
 import { IApplicationGroups } from '../../../../../core/models/ApplicationGroupsModel';
 import { IApplicationGroupUsers } from '../../../../../core/models/ApplicationGroupUsersModel';
+import { IApplicationGroupRoles } from '../../../../../core/models/ApplicationGroupRolesModel';
 
 /**
  * Represents a row in the groups table with enriched data
@@ -34,6 +35,9 @@ export interface GroupsState {
   // Group members
   groupMembers: IApplicationGroupUsers[];
 
+  // Group role assignments
+  groupRoles: IApplicationGroupRoles[];
+
   // Current application context
   currentApplicationId: string | null;
 
@@ -50,17 +54,25 @@ export interface GroupsState {
   isSaving: boolean;
   isDeleting: boolean;
   isLoadingMembers: boolean;
+  isLoadingRoles: boolean;
+  isSavingRole: boolean;
+  isDeletingRole: boolean;
 
   // Error states
   error: string | null;
   saveError: string | null;
   deleteError: string | null;
   membersError: string | null;
+  rolesError: string | null;
+  rolesSaveError: string | null;
+  rolesDeleteError: string | null;
 
   // Operation states
   lastCreatedGroup: IApplicationGroups | null;
   lastUpdatedGroup: IApplicationGroups | null;
   lastDeletedGroupId: string | null;
+  lastAssignedRole: IApplicationGroupRoles | null;
+  lastRemovedRoleId: string | null;
 }
 
 /**
@@ -75,6 +87,9 @@ export const initialGroupsState: GroupsState = {
 
   // Group members
   groupMembers: [],
+
+  // Group role assignments
+  groupRoles: [],
 
   // Current application context
   currentApplicationId: null,
@@ -92,15 +107,23 @@ export const initialGroupsState: GroupsState = {
   isSaving: false,
   isDeleting: false,
   isLoadingMembers: false,
+  isLoadingRoles: false,
+  isSavingRole: false,
+  isDeletingRole: false,
 
   // Error states
   error: null,
   saveError: null,
   deleteError: null,
   membersError: null,
+  rolesError: null,
+  rolesSaveError: null,
+  rolesDeleteError: null,
 
   // Operation states
   lastCreatedGroup: null,
   lastUpdatedGroup: null,
   lastDeletedGroupId: null,
+  lastAssignedRole: null,
+  lastRemovedRoleId: null,
 };

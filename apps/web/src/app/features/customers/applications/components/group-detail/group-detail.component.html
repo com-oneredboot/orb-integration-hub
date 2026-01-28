@@ -36,6 +36,12 @@
       (click)="setActiveTab('members')">
       Members
     </button>
+    <button
+      class="group-detail__tab"
+      [class.group-detail__tab--active]="activeTab === 'roles'"
+      (click)="setActiveTab('roles')">
+      Roles
+    </button>
   </div>
 
   <!-- Error Message -->
@@ -186,6 +192,14 @@
           </button>
         </div>
       </div>
+    </div>
+
+    <!-- Roles Tab -->
+    <div *ngIf="activeTab === 'roles' && !isInCreateMode" class="group-detail__roles">
+      <app-group-role-assignment
+        [group]="group"
+        [applicationId]="applicationId">
+      </app-group-role-assignment>
     </div>
   </div>
 </div>

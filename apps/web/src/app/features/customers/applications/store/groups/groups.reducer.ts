@@ -382,6 +382,133 @@ export const groupsReducer = createReducer(
     })
   ),
 
+  // Group Role Assignment Management
+  on(
+    GroupsActions.loadGroupRoles,
+    (state): GroupsState => ({
+      ...state,
+      isLoadingRoles: true,
+      rolesError: null,
+    })
+  ),
+
+  on(
+    GroupsActions.loadGroupRolesSuccess,
+    (state, { roles }): GroupsState => ({
+      ...state,
+      isLoadingRoles: false,
+      groupRoles: roles,
+      rolesError: null,
+    })
+  ),
+
+  on(
+    GroupsActions.loadGroupRolesFailure,
+    (state, { error }): GroupsState => ({
+      ...state,
+      isLoadingRoles: false,
+      rolesError: error,
+    })
+  ),
+
+  on(
+    GroupsActions.assignRoleToGroup,
+    (state): GroupsState => ({
+      ...state,
+      isSavingRole: true,
+      rolesSaveError: null,
+    })
+  ),
+
+  on(
+    GroupsActions.assignRoleToGroupSuccess,
+    (state, { role }): GroupsState => {
+      // Replace existing role for same environment or add new
+      const existingIndex = state.groupRoles.findIndex(
+        (r) =>
+          r.applicationGroupId === role.applicationGroupId &&
+          r.environment === role.environment
+      );
+
+      const updatedRoles =
+        existingIndex >= 0
+          ? state.groupRoles.map((r, i) => (i === existingIndex ? role : r))
+          : [...state.groupRoles, role];
+
+      return {
+        ...state,
+        isSavingRole: false,
+        groupRoles: updatedRoles,
+        lastAssignedRole: role,
+        rolesSaveError: null,
+      };
+    }
+  ),
+
+  on(
+    GroupsActions.assignRoleToGroupFailure,
+    (state, { error }): GroupsState => ({
+      ...state,
+      isSavingRole: false,
+      rolesSaveError: error,
+    })
+  ),
+
+  on(
+    GroupsActions.removeRoleFromGroup,
+    (state): GroupsState => ({
+      ...state,
+      isDeletingRole: true,
+      rolesDeleteError: null,
+    })
+  ),
+
+  on(
+    GroupsActions.removeRoleFromGroupSuccess,
+    (state, { roleAssignmentId }): GroupsState => ({
+      ...state,
+      isDeletingRole: false,
+      groupRoles: state.groupRoles.filter(
+        (r) => r.applicationGroupRoleId !== roleAssignmentId
+      ),
+      lastRemovedRoleId: roleAssignmentId,
+      rolesDeleteError: null,
+    })
+  ),
+
+  on(
+    GroupsActions.removeRoleFromGroupFailure,
+    (state, { error }): GroupsState => ({
+      ...state,
+      isDeletingRole: false,
+      rolesDeleteError: error,
+    })
+  ),
+
+  on(
+    GroupsActions.clearRolesError,
+    (state): GroupsState => ({
+      ...state,
+      rolesError: null,
+    })
+  ),
+
+  on(
+    GroupsActions.clearRolesSaveError,
+    (state): GroupsState => ({
+      ...state,
+      rolesSaveError: null,
+    })
+  ),
+
+  on(
+    GroupsActions.clearRolesDeleteError,
+    (state): GroupsState => ({
+      ...state,
+      rolesDeleteError: null,
+    })
+  ),
+
   // Error Management
   on(
     GroupsActions.clearErrors,

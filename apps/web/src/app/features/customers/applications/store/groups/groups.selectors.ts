@@ -43,6 +43,59 @@ export const selectGroupMembers = createSelector(
   (state: GroupsState) => state?.groupMembers ?? initialGroupsState.groupMembers
 );
 
+// Group role assignments selectors
+export const selectGroupRoles = createSelector(
+  selectGroupsState,
+  (state: GroupsState) => state?.groupRoles ?? initialGroupsState.groupRoles
+);
+
+export const selectIsLoadingRoles = createSelector(
+  selectGroupsState,
+  (state: GroupsState) =>
+    state?.isLoadingRoles ?? initialGroupsState.isLoadingRoles
+);
+
+export const selectIsSavingRole = createSelector(
+  selectGroupsState,
+  (state: GroupsState) =>
+    state?.isSavingRole ?? initialGroupsState.isSavingRole
+);
+
+export const selectIsDeletingRole = createSelector(
+  selectGroupsState,
+  (state: GroupsState) =>
+    state?.isDeletingRole ?? initialGroupsState.isDeletingRole
+);
+
+export const selectRolesError = createSelector(
+  selectGroupsState,
+  (state: GroupsState) => state?.rolesError ?? initialGroupsState.rolesError
+);
+
+export const selectRolesSaveError = createSelector(
+  selectGroupsState,
+  (state: GroupsState) =>
+    state?.rolesSaveError ?? initialGroupsState.rolesSaveError
+);
+
+export const selectRolesDeleteError = createSelector(
+  selectGroupsState,
+  (state: GroupsState) =>
+    state?.rolesDeleteError ?? initialGroupsState.rolesDeleteError
+);
+
+export const selectLastAssignedRole = createSelector(
+  selectGroupsState,
+  (state: GroupsState) =>
+    state?.lastAssignedRole ?? initialGroupsState.lastAssignedRole
+);
+
+export const selectLastRemovedRoleId = createSelector(
+  selectGroupsState,
+  (state: GroupsState) =>
+    state?.lastRemovedRoleId ?? initialGroupsState.lastRemovedRoleId
+);
+
 // Filter selectors
 export const selectSearchTerm = createSelector(
   selectGroupsState,

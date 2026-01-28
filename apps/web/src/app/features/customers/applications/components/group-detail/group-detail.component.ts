@@ -37,11 +37,12 @@ import {
   selectLastUpdatedGroup,
   selectMembersError,
 } from '../../store/groups/groups.selectors';
+import { GroupRoleAssignmentComponent } from '../group-role-assignment/group-role-assignment.component';
 
 @Component({
   selector: 'app-group-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, FontAwesomeModule],
+  imports: [CommonModule, FormsModule, FontAwesomeModule, GroupRoleAssignmentComponent],
   templateUrl: './group-detail.component.html',
   styleUrls: ['./group-detail.component.scss'],
 })

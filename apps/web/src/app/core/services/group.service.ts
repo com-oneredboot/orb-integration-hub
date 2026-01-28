@@ -26,6 +26,11 @@ import {
   ApplicationGroupUsersListByApplicationGroupId,
 } from '../graphql/ApplicationGroupUsers.graphql';
 import {
+  ApplicationGroupRolesCreate,
+  ApplicationGroupRolesDelete,
+  ApplicationGroupRolesListByApplicationGroupId,
+} from '../graphql/ApplicationGroupRoles.graphql';
+import {
   ApplicationGroups,
   ApplicationGroupsCreateInput,
   ApplicationGroupsUpdateInput,
@@ -36,8 +41,15 @@ import {
   ApplicationGroupUsersCreateInput,
   IApplicationGroupUsers,
 } from '../models/ApplicationGroupUsersModel';
+import {
+  ApplicationGroupRoles,
+  ApplicationGroupRolesCreateInput,
+  IApplicationGroupRoles,
+} from '../models/ApplicationGroupRolesModel';
 import { ApplicationGroupStatus } from '../enums/ApplicationGroupStatusEnum';
 import { ApplicationGroupUserStatus } from '../enums/ApplicationGroupUserStatusEnum';
+import { ApplicationGroupRoleStatus } from '../enums/ApplicationGroupRoleStatusEnum';
+import { Environment } from '../enums/EnvironmentEnum';
 import { toGraphQLInput } from '../../graphql-utils';
 import { Connection } from '../types/graphql.types';
 import { isAuthenticationError } from '../errors/api-errors';
@@ -434,6 +446,160 @@ export class GroupService extends ApiService {
           throw new Error('Membership not found. It may have already been removed.');
         }
         throw new Error('Failed to remove member from group. Please try again later.');
+      })
+    );
+  }
+
+  // ============================================================================
+  // Group Role Assignment Operations
+  // ============================================================================
+
+  /**
+   * Get all role assignments for a group
+   *
+   * @param groupId The group ID
+   * @param limit Optional limit for pagination
+   * @param nextToken Optional token for pagination
+   * @returns Observable<Connection<IApplicationGroupRoles>> Paginated list of role assignments
+   *
+   * _Requirements: 8.2_
+   */
+  public getGroupRoles(
+    groupId: string,
+    limit?: number,
+    nextToken?: string
+  ): Observable<Connection<IApplicationGroupRoles>> {
+    console.debug('[GroupService] Getting roles for group:', groupId);
+
+    if (!groupId) {
+      throw new Error('Group ID is required');
+    }
+
+    return from(
+      this.executeListQuery<IApplicationGroupRoles>(
+        ApplicationGroupRolesListByApplicationGroupId,
+        { input: { applicationGroupId: groupId, limit, nextToken } },
+        'userPool'
+      )
+    ).pipe(
+      map((connection) => {
+        console.debug('[GroupService] Roles retrieved:', connection.items.length);
+        return {
+          items: connection.items.map((item) => new ApplicationGroupRoles(item)),
+          nextToken: connection.nextToken,
+        };
+      }),
+      catchError((error) => {
+        console.error('[GroupService] Error getting group roles:', error);
+        if (isAuthenticationError(error)) {
+          throw new Error('You are not authorized to view group roles.');
+        }
+        throw new Error('Failed to retrieve group roles. Please try again later.');
+      })
+    );
+  }
+
+  /**
+   * Assign a role to a group for a specific environment
+   *
+   * @param input Role assignment data
+   * @returns Observable<IApplicationGroupRoles> The created role assignment
+   *
+   * _Requirements: 8.2_
+   */
+  public assignRoleToGroup(
+    input: Partial<ApplicationGroupRolesCreateInput>
+  ): Observable<IApplicationGroupRoles> {
+    console.debug('[GroupService] Assigning role to group:', input);
+
+    if (!input.applicationGroupId) {
+      throw new Error('Group ID is required');
+    }
+    if (!input.applicationId) {
+      throw new Error('Application ID is required');
+    }
+    if (!input.environment) {
+      throw new Error('Environment is required');
+    }
+    if (!input.roleId) {
+      throw new Error('Role ID is required');
+    }
+
+    const now = new Date();
+    const createInput: ApplicationGroupRolesCreateInput = {
+      applicationGroupRoleId: input.applicationGroupRoleId || this.generateUUID(),
+      applicationGroupId: input.applicationGroupId,
+      applicationId: input.applicationId,
+      environment: input.environment,
+      roleId: input.roleId,
+      roleName: input.roleName || '',
+      permissions: input.permissions || [],
+      status: input.status || ApplicationGroupRoleStatus.Active,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const graphqlInput = toGraphQLInput(createInput as unknown as Record<string, unknown>);
+
+    return from(
+      this.executeMutation<IApplicationGroupRoles>(
+        ApplicationGroupRolesCreate,
+        { input: graphqlInput },
+        'userPool'
+      )
+    ).pipe(
+      map((item) => {
+        console.debug('[GroupService] Role assigned to group:', item);
+        return new ApplicationGroupRoles(item);
+      }),
+      catchError((error) => {
+        console.error('[GroupService] Error assigning role to group:', error);
+        if (isAuthenticationError(error)) {
+          throw new Error('You are not authorized to assign roles to this group.');
+        }
+        if (error?.message?.includes('already exists')) {
+          throw new Error('This role is already assigned to this group for this environment.');
+        }
+        throw new Error('Failed to assign role to group. Please try again later.');
+      })
+    );
+  }
+
+  /**
+   * Remove a role assignment from a group
+   *
+   * @param roleAssignmentId The role assignment ID to remove
+   * @returns Observable<IApplicationGroupRoles> The deleted role assignment
+   *
+   * _Requirements: 8.2_
+   */
+  public removeRoleFromGroup(roleAssignmentId: string): Observable<IApplicationGroupRoles> {
+    console.debug('[GroupService] Removing role from group:', roleAssignmentId);
+
+    if (!roleAssignmentId) {
+      throw new Error('Role assignment ID is required');
+    }
+
+    return from(
+      this.executeMutation<IApplicationGroupRoles>(
+        ApplicationGroupRolesDelete,
+        { input: { applicationGroupRoleId: roleAssignmentId } },
+        'userPool'
+      )
+    ).pipe(
+      map((item) => {
+        console.debug('[GroupService] Role removed from group:', item);
+        return new ApplicationGroupRoles(item);
+      }),
+      catchError((error) => {
+        console.error('[GroupService] Error removing role from group:', error);
+        if (isAuthenticationError(error)) {
+          throw new Error('You are not authorized to remove roles from this group.');
+        }
+        if (error?.message?.includes('not found')) {
+          throw new Error('Role assignment not found. It may have already been removed.');
+        }
+        throw new Error('Failed to remove role from group. Please try again later.');
       })
     );
   }

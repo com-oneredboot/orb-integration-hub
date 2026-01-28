@@ -221,7 +221,7 @@ This implementation plan covers the Application Access Management system across 
     - Test actions, reducer, selectors
     - _Requirements: 8.5_
 
-- [-] 17. Create group management UI components
+- [x] 17. Create group management UI components
   - [x] 17.1 Create GroupsListComponent
     - Display groups for application with member counts
     - Add/edit/delete group actions
@@ -230,7 +230,7 @@ This implementation plan covers the Application Access Management system across 
     - Display group info and member list
     - Add/remove member functionality
     - _Requirements: 8.3, 8.4_
-  - [ ] 17.3 Create GroupRoleAssignmentComponent
+  - [x] 17.3 Create GroupRoleAssignmentComponent
     - Assign roles to group per environment
     - Display current role assignments
     - _Requirements: 8.2_
