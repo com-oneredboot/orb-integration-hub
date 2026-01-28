@@ -1,0 +1,87 @@
+<!-- Groups List Component Template -->
+<div class="groups-list">
+  <!-- Header -->
+  <div class="groups-list__header">
+    <h3 class="groups-list__title">
+      <fa-icon icon="users" class="groups-list__icon"></fa-icon>
+      Groups
+    </h3>
+    <div class="groups-list__actions">
+      <button
+        class="groups-list__btn"
+        (click)="onCreateGroup()"
+        [disabled]="isCreatingNew$ | async"
+        aria-label="Create new group">
+        <fa-icon icon="plus" class="groups-list__btn-icon"></fa-icon>
+        Create Group
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error$ | async as error" class="groups-list__error" role="alert">
+    <fa-icon icon="exclamation-triangle" class="groups-list__error-icon"></fa-icon>
+    {{ error }}
+  </div>
+
+  <!-- Data Grid -->
+  <div class="groups-list__content">
+    <app-data-grid
+      [columns]="columns"
+      [data]="(filteredGroupRows$ | async) || []"
+      [pageState]="pageState"
+      [sortState]="sortState"
+      [filterState]="filterState"
+      [loading]="(isLoading$ | async) || false"
+      [showFilters]="true"
+      [showPagination]="true"
+      [showReset]="true"
+      [selectable]="false"
+      trackByField="group"
+      emptyMessage="No groups found. Create your first group to organize users."
+      (pageChange)="onPageChange($event)"
+      (sortChange)="onSortChange($event)"
+      (filterChange)="onFilterChange($event)"
+      (resetGrid)="onResetGrid()"
+      (rowClick)="onRowClick($event)">
+    </app-data-grid>
+  </div>
+</div>
+
+<!-- Custom Cell Templates -->
+
+<!-- Group Info Cell -->
+<ng-template #groupInfoCell let-row>
+  <div class="groups-list__info">
+    <div class="groups-list__name">{{ row.group.name }}</div>
+    <div class="groups-list__description" *ngIf="row.group.description">
+      {{ row.group.description }}
+    </div>
+    <div class="groups-list__id">{{ row.group.applicationGroupId }}</div>
+  </div>
+</ng-template>
+
+<!-- Status Cell -->
+<ng-template #statusCell let-row>
+  <app-status-badge
+    [status]="row.group.status"
+    type="group"
+    [showIcon]="true"
+    [showLabel]="true"
+    size="small"
+    variant="chip">
+  </app-status-badge>
+</ng-template>
+
+<!-- Member Count Cell -->
+<ng-template #memberCountCell let-row>
+  <div class="groups-list__count">
+    <fa-icon icon="user" class="groups-list__count-icon"></fa-icon>
+    {{ row.memberCount }}
+  </div>
+</ng-template>
+
+<!-- Last Activity Cell -->
+<ng-template #lastActivityCell let-row>
+  <span class="groups-list__activity">{{ row.lastActivity }}</span>
+</ng-template>
