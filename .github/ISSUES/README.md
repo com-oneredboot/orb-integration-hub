@@ -4,6 +4,7 @@
 
 | Issue | Team | Title | Status | Impact |
 |-------|------|-------|--------|--------|
+| #83 | orb-schema-generator | Enhancement: Multi-AppSync API Support with Lambda Authorizer | Open | High |
 | #78 | orb-schema-generator | Bug: Mutation VTL Response Doesn't Match GraphQL Schema (items wrapper mismatch) | Open | High |
 | #76 | orb-schema-generator | Bug: VTL Resolvers Use ISO8601 Instead of Epoch Seconds for AWSTimestamp Fields | Open | High |
 | #17 | orb-infrastructure | feat: Add timestamp utilities to orb-common for AWSTimestamp handling | Open | Medium |

@@ -274,23 +274,48 @@ This implementation plan covers the Application Access Management system across 
     - Display groupCount, userCount, roleCount
     - _Requirements: 1.6, 2.7, 4.5_
 
-- [ ] 21. Phase 4 Checkpoint
+- [x] 21. Phase 4 Checkpoint
   - Ensure all frontend tests pass
   - Test UI flows end-to-end
   - Verify store-first pattern is followed
   - Ask user if questions arise
 
-### Phase 5: SDK Package
+### Phase 5: SDK Infrastructure & Package
 
-- [ ] 22. Create TypeScript SDK package structure
-  - [ ] 22.1 Initialize npm package
+**BLOCKED**: Waiting on orb-schema-generator #83 (Multi-AppSync API Support with Lambda Authorizer)
+
+- [ ] 22. Create SDK AppSync infrastructure (BLOCKED)
+  - [ ] 22.1 Update schema-generator.yml with dual-AppSync configuration
+    - Add `appsync.sdk` configuration with Lambda authorizer
+    - Configure table filtering (exclude ApplicationApiKeys)
+    - _Requirements: 7.1, 10.1_
+    - _Blocked by: orb-schema-generator #83_
+  - [ ] 22.2 Create API Key Authorizer Lambda
+    - Validate orb_{env}_{key} format
+    - Lookup key hash in ApplicationApiKeys table
+    - Return org/app/env context on success
+    - _Requirements: 7.1, 7.2, 7.3_
+  - [ ] 22.3 Generate SDK AppSync API and deploy
+    - Run orb-schema-generator with new config
+    - Create appsync_sdk_stack.py
+    - Deploy to dev environment
+    - _Requirements: 10.1_
+    - _Blocked by: orb-schema-generator #83_
+  - [ ] 22.4 Create SDK GraphQL schema subset
+    - Define sdk-schema.graphql with SDK-only operations
+    - Exclude API key management operations
+    - _Requirements: 10.2, 10.3, 10.4_
+
+- [ ] 23. Create TypeScript SDK package structure
+  - [ ] 23.1 Initialize npm package
     - Create packages/sdk-typescript directory
     - Set up package.json with proper metadata
     - Configure TypeScript compilation
     - _Requirements: 10.1, 10.5_
-  - [ ] 22.2 Create SDK client class
+  - [ ] 23.2 Create SDK client class
     - OrbIntegrationClient with API key authentication
-    - Base HTTP client with error handling
+    - GraphQL client pointing to SDK AppSync endpoint
+    - Base error handling
     - _Requirements: 10.1_
 
 - [ ] 23. Implement SDK user management functions
@@ -373,3 +398,17 @@ This implementation plan covers the Application Access Management system across 
 - Unit tests validate specific examples and edge cases
 - Follow orb-templates guidance for documentation, versions, changelogs
 - Both TypeScript and Python SDKs will be published
+
+## Blockers
+
+| Issue | Team | Description | Impact |
+|-------|------|-------------|--------|
+| #83 | orb-schema-generator | Multi-AppSync API Support with Lambda Authorizer | Blocks Phase 5 tasks 22.1, 22.3 |
+
+Phase 5 requires a second AppSync API with AWS_LAMBDA authorization for SDK access. This is blocked until orb-schema-generator supports:
+- Multiple AppSync APIs in configuration
+- AWS_LAMBDA authorization mode
+- Lambda authorizer configuration
+- Per-API table/operation filtering
+
+Once #83 is resolved, update orb-schema-generator and continue with Phase 5.

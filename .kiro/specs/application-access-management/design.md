@@ -14,37 +14,103 @@ The design follows the existing orb-integration-hub patterns including schema-dr
 
 ## Architecture
 
+The system uses a dual-AppSync architecture to separate internal user traffic from external SDK traffic:
+
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        External Teams                                │
-│                    (using SDK packages)                              │
-└─────────────────────────────────────────────────────────────────────┘
-                                │
-                                │ Application API Key
-                                ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                      API Gateway / AppSync                           │
-│                   (API Key Validation Lambda)                        │
-└─────────────────────────────────────────────────────────────────────┘
-                                │
-                                │ Org/App/Env Context
-                                ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                        GraphQL Resolvers                             │
-│         (Groups, Roles, Permissions, API Keys)                       │
-└─────────────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                         DynamoDB Tables                              │
-│  ┌──────────────┐  ┌──────────────────┐  ┌────────────────────┐    │
-│  │ApplicationGroup│  │ApplicationGroupUser│  │ApplicationGroupRole│    │
-│  └──────────────┘  └──────────────────┘  └────────────────────┘    │
-│  ┌──────────────────┐  ┌─────────────────┐                          │
-│  │ApplicationUserRole│  │ApplicationApiKey │                          │
-│  └──────────────────┘  └─────────────────┘                          │
-└─────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              CLIENTS                                             │
+├─────────────────────────────────┬───────────────────────────────────────────────┤
+│     Web/Mobile App Users        │           External Teams (SDK)                 │
+│     (Cognito Auth)              │           (Application API Key)                │
+└─────────────────────────────────┴───────────────────────────────────────────────┘
+                │                                        │
+                │ JWT Token                              │ orb_{env}_{key}
+                ▼                                        ▼
+┌─────────────────────────────────┐    ┌───────────────────────────────────────────┐
+│     AppSync API (Primary)       │    │         AppSync SDK API                    │
+│  ┌───────────────────────────┐  │    │  ┌─────────────────────────────────────┐  │
+│  │ Auth: Cognito + API Key   │  │    │  │ Auth: AWS_LAMBDA Authorizer         │  │
+│  │ Full schema access        │  │    │  │ SDK operations only                 │  │
+│  │ Admin operations          │  │    │  │ No API key management               │  │
+│  └───────────────────────────┘  │    │  └─────────────────────────────────────┘  │
+└─────────────────────────────────┘    │                    │                       │
+                │                       │                    ▼                       │
+                │                       │    ┌─────────────────────────────────────┐│
+                │                       │    │   API Key Authorizer Lambda         ││
+                │                       │    │   - Validates orb_{env}_{key}       ││
+                │                       │    │   - Returns org/app/env context     ││
+                │                       │    │   - Rate limiting                   ││
+                │                       │    └─────────────────────────────────────┘│
+                │                       └───────────────────────────────────────────┘
+                │                                        │
+                └────────────────────┬───────────────────┘
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              DynamoDB Tables                                     │
+│  ┌──────────────┐  ┌──────────────────┐  ┌────────────────────┐                 │
+│  │ApplicationGroup│  │ApplicationGroupUser│  │ApplicationGroupRole│                 │
+│  └──────────────┘  └──────────────────┘  └────────────────────┘                 │
+│  ┌──────────────────┐  ┌─────────────────┐                                       │
+│  │ApplicationUserRole│  │ApplicationApiKey │                                       │
+│  └──────────────────┘  └─────────────────┘                                       │
+└─────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+### Dual-AppSync Rationale
+
+1. **Security Isolation** - SDK traffic is completely separate from user traffic. Compromised SDK keys cannot affect the main API.
+2. **Different Auth Models** - Primary API uses Cognito; SDK API uses custom Lambda authorizer for Application API Keys.
+3. **Schema Control** - SDK exposes only necessary operations, not admin functions like API key management.
+4. **Independent Scaling** - SDK API can scale independently based on external developer usage.
+5. **Separate WAF/Rate Limits** - Different protection rules for different traffic patterns.
+
+### SDK AppSync Configuration
+
+The SDK AppSync API will be configured via orb-schema-generator (pending feature #83):
+
+```yaml
+appsync:
+  api:      # Primary API (existing)
+    name: "${project}-${env}-appsync-api"
+    auth:
+      default: AMAZON_COGNITO_USER_POOLS
+      additional:
+        - API_KEY
+    tables: all
+    
+  sdk:      # SDK API (new)
+    name: "${project}-${env}-appsync-sdk"
+    auth:
+      default: AWS_LAMBDA
+      lambda_authorizer:
+        function_name: api-key-authorizer
+        result_ttl_seconds: 300
+    tables:
+      - ApplicationGroups
+      - ApplicationGroupUsers
+      - ApplicationGroupRoles
+      - ApplicationUserRoles
+      # Note: ApplicationApiKeys NOT exposed to SDK
+    exclude_operations:
+      - "ApplicationApiKeys*"
+```
+
+### SDK Operations (Exposed via SDK AppSync)
+
+The SDK API exposes only operations external developers need:
+
+| Category | Operations |
+|----------|------------|
+| Groups | Create, Update, Delete, Get, List |
+| Membership | AddMember, RemoveMember, ListMembers |
+| Roles | AssignRole, RemoveRole, GetUserRoles |
+| Permissions | GetUserPermissions, HasPermission |
+
+Operations NOT exposed to SDK:
+- API Key management (generate, rotate, revoke)
+- Organization management
+- Application creation/deletion
+- Admin operations
 
 ## Components and Interfaces
 
@@ -434,6 +500,89 @@ class ApiKeyService {
    */
   async validateKey(key: string): Promise<ApiKeyContext | null>;
 }
+```
+
+### Phase 5: SDK AppSync Lambda Authorizer
+
+The Lambda authorizer validates Application API Keys and returns identity context for the SDK AppSync API.
+
+```python
+# apps/api/lambdas/api_key_authorizer/handler.py
+
+def handler(event: dict, context: Any) -> dict:
+    """
+    AppSync Lambda Authorizer for SDK API.
+    
+    Validates Application API Keys (orb_{env}_{key} format) and returns
+    authorization response with identity context.
+    
+    Args:
+        event: AppSync authorization request
+            - authorizationToken: The API key from request header
+            - requestContext: AppSync request metadata
+        context: Lambda context
+        
+    Returns:
+        Authorization response:
+            - isAuthorized: bool
+            - resolverContext: dict with org/app/env context
+            - deniedFields: list (empty if authorized)
+            - ttlOverride: int (cache TTL in seconds)
+    """
+    pass
+```
+
+#### Authorizer Response Format
+
+```python
+# Successful authorization
+{
+    "isAuthorized": True,
+    "resolverContext": {
+        "organizationId": "org-123",
+        "applicationId": "app-456", 
+        "environment": "DEVELOPMENT",
+        "keyId": "key-789"
+    },
+    "deniedFields": [],
+    "ttlOverride": 300  # Cache for 5 minutes
+}
+
+# Failed authorization
+{
+    "isAuthorized": False,
+    "resolverContext": {},
+    "deniedFields": ["*"],
+    "ttlOverride": 0  # Don't cache failures
+}
+```
+
+#### Authorizer Flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    SDK Request with API Key                      │
+│              Authorization: orb_dev_a1b2c3d4...                  │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Lambda Authorizer                             │
+│  1. Extract key from authorizationToken                          │
+│  2. Validate key format (orb_{env}_{random})                     │
+│  3. Hash key and lookup in ApplicationApiKeys table              │
+│  4. Check status (ACTIVE or ROTATING)                            │
+│  5. Check expiration                                             │
+│  6. Update lastUsedAt timestamp                                  │
+│  7. Return context or deny                                       │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+                    ┌───────────┴───────────┐
+                    ▼                       ▼
+            ┌─────────────┐         ┌─────────────┐
+            │ Authorized  │         │   Denied    │
+            │ + Context   │         │   401/403   │
+            └─────────────┘         └─────────────┘
 ```
 
 ## Data Models
