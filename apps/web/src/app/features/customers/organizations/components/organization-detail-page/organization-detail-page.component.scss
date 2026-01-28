@@ -512,8 +512,8 @@
 
   &__danger-action {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: v.$spacing-md;
     padding: v.$spacing-lg;
     border: 1px solid v.$border-color;
     border-radius: v.$border-radius;
@@ -522,7 +522,6 @@
 
   &__danger-action-info {
     flex: 1;
-    margin-right: v.$spacing-lg;
   }
 
   &__danger-action-title {
@@ -616,13 +615,7 @@
     }
 
     &__danger-action {
-      flex-direction: column;
-      gap: v.$spacing-md;
       text-align: center;
-    }
-
-    &__danger-action-info {
-      margin-right: 0;
     }
   }
 }

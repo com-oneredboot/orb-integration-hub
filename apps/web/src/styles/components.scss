@@ -1229,6 +1229,23 @@
     }
   }
   
+  // Danger button - red background for destructive actions
+  &--danger {
+    background: v.$danger-color;
+    color: v.$orb-white;
+    border: 1px solid v.$danger-color;
+    
+    &:hover:not(:disabled) {
+      background: color.adjust(v.$danger-color, $lightness: -10%);
+      border-color: color.adjust(v.$danger-color, $lightness: -10%);
+      transform: translateY(-1px);
+    }
+    
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+  }
+  
   // Size variants
   &--sm {
     padding: v.$spacing-xs v.$spacing-sm;
