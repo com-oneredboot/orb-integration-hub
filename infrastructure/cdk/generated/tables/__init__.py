@@ -5,6 +5,7 @@ from .organizations_table import OrganizationsTable
 from .notifications_table import NotificationsTable
 from .privacy_requests_table import PrivacyRequestsTable
 from .application_groups_table import ApplicationGroupsTable
+from .application_api_keys_table import ApplicationApiKeysTable
 from .application_users_table import ApplicationUsersTable
 from .sms_rate_limit_table import SmsRateLimitTable
 from .application_group_roles_table import ApplicationGroupRolesTable

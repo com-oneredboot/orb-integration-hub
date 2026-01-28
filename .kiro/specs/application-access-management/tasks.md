@@ -92,45 +92,45 @@ This implementation plan covers the Application Access Management system across 
 
 ### Phase 2: Permission Resolution
 
-- [ ] 7. Implement permission resolution service
-  - [ ] 7.1 Create PermissionResolutionService
+- [x] 7. Implement permission resolution service
+  - [x] 7.1 Create PermissionResolutionService
     - resolvePermissions(userId, applicationId, environment)
     - Collect direct roles and group roles
     - Merge permissions with direct role priority
     - _Requirements: 5.1, 5.2, 5.3, 5.4_
-  - [ ] 7.2 Write property test for permission resolution determinism
+  - [x] 7.2 Write property test for permission resolution determinism
     - **Property 4: Permission Resolution Determinism**
     - **Validates: Requirements 5.6**
-  - [ ] 7.3 Write property test for direct role priority
+  - [x] 7.3 Write property test for direct role priority
     - **Property 5: Direct Role Priority**
     - **Validates: Requirements 4.4, 5.4**
-  - [ ] 7.4 Write property test for permission union
+  - [x] 7.4 Write property test for permission union
     - **Property 6: Permission Union**
     - **Validates: Requirements 5.3**
 
-- [ ] 8. Implement permission caching
-  - [ ] 8.1 Add caching layer to PermissionResolutionService
+- [x] 8. Implement permission caching
+  - [x] 8.1 Add caching layer to PermissionResolutionService
     - Cache resolved permissions with TTL
     - Implement cache invalidation on role/group changes
     - _Requirements: 5.5_
-  - [ ] 8.2 Add hasPermission convenience method
+  - [x] 8.2 Add hasPermission convenience method
     - Check if user has specific permission
     - Use cached resolution
     - _Requirements: 5.1_
 
-- [ ] 9. Implement cascade operations
-  - [ ] 9.1 Add cascade delete for groups
+- [x] 9. Implement cascade operations
+  - [x] 9.1 Add cascade delete for groups
     - When group deleted, mark all memberships and role assignments as deleted
     - _Requirements: 1.3_
-  - [ ] 9.2 Write property test for cascade delete
+  - [x] 9.2 Write property test for cascade delete
     - **Property 2: Group Deletion Cascades**
     - **Validates: Requirements 1.3**
-  - [ ] 9.3 Add permission inheritance on membership change
+  - [x] 9.3 Add permission inheritance on membership change
     - When user added to group, inherit group's role permissions
     - When user removed, revoke inherited permissions
     - _Requirements: 2.3, 2.6_
 
-- [ ] 10. Phase 2 Checkpoint
+- [x] 10. Phase 2 Checkpoint
   - Ensure all Phase 2 tests pass
   - Test permission resolution with various scenarios
   - Verify caching works correctly
@@ -138,68 +138,68 @@ This implementation plan covers the Application Access Management system across 
 
 ### Phase 3: API Key Management
 
-- [ ] 11. Create API key schema and infrastructure
-  - [ ] 11.1 Create ApplicationApiKeys.yml schema
+- [x] 11. Create API key schema and infrastructure
+  - [x] 11.1 Create ApplicationApiKeys.yml schema
     - Define table with applicationApiKeyId PK
     - Add GSIs for appId+env and keyHash lookups
     - Include status, expiresAt, lastUsedAt fields
     - _Requirements: 6.2_
-  - [ ] 11.2 Create ApplicationApiKeyStatus registry enum
+  - [x] 11.2 Create ApplicationApiKeyStatus registry enum
     - ACTIVE, ROTATING, REVOKED, EXPIRED
     - _Requirements: 6.2_
-  - [ ] 11.3 Generate code and update CDK stack
+  - [x] 11.3 Generate code and update CDK stack
     - Run orb-schema-generator
     - Add table to dynamodb_stack.py
     - _Requirements: 6.2_
 
-- [ ] 12. Implement API key service
-  - [ ] 12.1 Create ApiKeyService with key generation
+- [x] 12. Implement API key service
+  - [x] 12.1 Create ApiKeyService with key generation
     - generateKey(applicationId, environment)
     - Generate cryptographically secure key with format orb_{env}_{random}
     - Store only hash in database
     - _Requirements: 6.1, 6.2_
-  - [ ] 12.2 Write property test for key uniqueness
+  - [x] 12.2 Write property test for key uniqueness
     - **Property 8: API Key Uniqueness**
     - **Validates: Requirements 6.1**
-  - [ ] 12.3 Implement key validation
+  - [x] 12.3 Implement key validation
     - validateKey(key) returns context or null
     - Hash incoming key and lookup in database
     - _Requirements: 6.6_
-  - [ ] 12.4 Write property test for validation round-trip
+  - [x] 12.4 Write property test for validation round-trip
     - **Property 9: API Key Validation Round-Trip**
     - **Validates: Requirements 6.6, 7.1**
 
-- [ ] 13. Implement key rotation and revocation
-  - [ ] 13.1 Implement key rotation
+- [x] 13. Implement key rotation and revocation
+  - [x] 13.1 Implement key rotation
     - rotateKey(applicationId, environment)
     - Generate new key, move current to nextKeyHash
     - Both keys valid during rotation period
     - _Requirements: 6.3_
-  - [ ] 13.2 Write property test for dual validity during rotation
+  - [x] 13.2 Write property test for dual validity during rotation
     - **Property 11: API Key Rotation Dual Validity**
     - **Validates: Requirements 6.3**
-  - [ ] 13.3 Implement key revocation
+  - [x] 13.3 Implement key revocation
     - revokeKey(applicationId, environment)
     - Immediately invalidate key
     - _Requirements: 6.4_
-  - [ ] 13.4 Write property test for revocation enforcement
+  - [x] 13.4 Write property test for revocation enforcement
     - **Property 10: API Key Revocation Enforcement**
     - **Validates: Requirements 6.4, 7.3**
 
-- [ ] 14. Implement API key authentication
-  - [ ] 14.1 Create Lambda authorizer for API key validation
+- [x] 14. Implement API key authentication
+  - [x] 14.1 Create Lambda authorizer for API key validation
     - Validate key and return policy with context
     - Handle invalid/expired/revoked keys with 401
     - _Requirements: 7.1, 7.2, 7.3_
-  - [ ] 14.2 Add rate limiting for API key requests
+  - [x] 14.2 Add rate limiting for API key requests
     - Track request counts per key
     - Return 429 when limit exceeded
     - _Requirements: 7.5_
-  - [ ] 14.3 Add audit logging for API key usage
+  - [x] 14.3 Add audit logging for API key usage
     - Log key usage with timestamp and request details
     - _Requirements: 7.4_
 
-- [ ] 15. Phase 3 Checkpoint
+- [x] 15. Phase 3 Checkpoint
   - Ensure all Phase 3 tests pass
   - Test key generation, rotation, revocation flow
   - Verify Lambda authorizer works correctly

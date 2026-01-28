@@ -812,6 +812,121 @@ class AppSyncApi(Construct):
         )
 
 
+        # ApplicationApiKeys data source and resolvers
+        application_api_keys_data_source = self.api.add_dynamo_db_data_source(
+            "ApplicationApiKeysDataSource",
+            tables["ApplicationApiKeys"],
+        )
+
+        application_api_keys_data_source.create_resolver(
+            "ApplicationApiKeysCreateResolver",
+            type_name="Mutation",
+            field_name="ApplicationApiKeysCreate",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationApiKeysCreate.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationApiKeysCreate.response.vtl")
+            ),
+        )
+
+        application_api_keys_data_source.create_resolver(
+            "ApplicationApiKeysUpdateResolver",
+            type_name="Mutation",
+            field_name="ApplicationApiKeysUpdate",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationApiKeysUpdate.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationApiKeysUpdate.response.vtl")
+            ),
+        )
+
+        application_api_keys_data_source.create_resolver(
+            "ApplicationApiKeysDeleteResolver",
+            type_name="Mutation",
+            field_name="ApplicationApiKeysDelete",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationApiKeysDelete.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationApiKeysDelete.response.vtl")
+            ),
+        )
+
+        application_api_keys_data_source.create_resolver(
+            "ApplicationApiKeysDisableResolver",
+            type_name="Mutation",
+            field_name="ApplicationApiKeysDisable",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationApiKeysDisable.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Mutation.ApplicationApiKeysDisable.response.vtl")
+            ),
+        )
+
+        application_api_keys_data_source.create_resolver(
+            "ApplicationApiKeysGetResolver",
+            type_name="Query",
+            field_name="ApplicationApiKeysGet",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationApiKeysGet.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationApiKeysGet.response.vtl")
+            ),
+        )
+
+        application_api_keys_data_source.create_resolver(
+            "ApplicationApiKeysListByApplicationApiKeyIdResolver",
+            type_name="Query",
+            field_name="ApplicationApiKeysListByApplicationApiKeyId",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationApiKeysListByApplicationApiKeyId.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationApiKeysListByApplicationApiKeyId.response.vtl")
+            ),
+        )
+
+        application_api_keys_data_source.create_resolver(
+            "ApplicationApiKeysListByApplicationIdResolver",
+            type_name="Query",
+            field_name="ApplicationApiKeysListByApplicationId",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationApiKeysListByApplicationId.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationApiKeysListByApplicationId.response.vtl")
+            ),
+        )
+
+        application_api_keys_data_source.create_resolver(
+            "ApplicationApiKeysListByApplicationIdAndEnvironmentResolver",
+            type_name="Query",
+            field_name="ApplicationApiKeysListByApplicationIdAndEnvironment",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationApiKeysListByApplicationIdAndEnvironment.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationApiKeysListByApplicationIdAndEnvironment.response.vtl")
+            ),
+        )
+
+        application_api_keys_data_source.create_resolver(
+            "ApplicationApiKeysListByKeyHashResolver",
+            type_name="Query",
+            field_name="ApplicationApiKeysListByKeyHash",
+            request_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationApiKeysListByKeyHash.request.vtl")
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_file(
+                str(Path(__file__).parent / "resolvers/Query.ApplicationApiKeysListByKeyHash.response.vtl")
+            ),
+        )
+
+
         # ApplicationUsers data source and resolvers
         application_users_data_source = self.api.add_dynamo_db_data_source(
             "ApplicationUsersDataSource",

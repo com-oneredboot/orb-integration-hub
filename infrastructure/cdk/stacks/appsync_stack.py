@@ -78,6 +78,7 @@ class AppSyncStack(Stack):
             "ApplicationGroupUsers": dynamodb_stack.tables["application-group-users"],
             "ApplicationGroupRoles": dynamodb_stack.tables["application-group-roles"],
             "ApplicationUserRoles": dynamodb_stack.tables["application-user-roles"],
+            "ApplicationApiKeys": dynamodb_stack.tables["ApplicationApiKeys"],
         }
 
         # Create AppSync API using generated construct

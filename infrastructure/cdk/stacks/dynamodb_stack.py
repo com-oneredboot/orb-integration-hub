@@ -60,6 +60,7 @@ class DynamoDBStack(Stack):
         self._create_application_group_users_table()
         self._create_application_group_roles_table()
         self._create_application_user_roles_table()
+        self._create_application_api_keys_table()
 
     def _apply_tags(self) -> None:
         """Apply standard tags to all resources in this stack."""
@@ -891,3 +892,61 @@ class DynamoDBStack(Stack):
 
         self.tables["application-user-roles"] = table
         self._export_table_params(table, "application-user-roles")
+
+    def _create_application_api_keys_table(self) -> None:
+        """Create ApplicationApiKeys table for managing API keys per application/environment."""
+        table = dynamodb.Table(
+            self,
+            "ApplicationApiKeysTable",
+            table_name=self._table_name("application-api-keys"),
+            partition_key=dynamodb.Attribute(
+                name="applicationApiKeyId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
+            point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
+                point_in_time_recovery_enabled=True
+            ),
+            removal_policy=RemovalPolicy.RETAIN,
+        )
+
+        # GSI: AppEnvKeyIndex - query keys by application and environment
+        table.add_global_secondary_index(
+            index_name="AppEnvKeyIndex",
+            partition_key=dynamodb.Attribute(
+                name="applicationId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            sort_key=dynamodb.Attribute(
+                name="environment",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            projection_type=dynamodb.ProjectionType.ALL,
+        )
+
+        # GSI: KeyLookupIndex - lookup keys by hash for validation
+        table.add_global_secondary_index(
+            index_name="KeyLookupIndex",
+            partition_key=dynamodb.Attribute(
+                name="keyHash",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            projection_type=dynamodb.ProjectionType.ALL,
+        )
+
+        # GSI: OrgEnvKeyIndex - query keys by organization and environment
+        table.add_global_secondary_index(
+            index_name="OrgEnvKeyIndex",
+            partition_key=dynamodb.Attribute(
+                name="organizationId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            sort_key=dynamodb.Attribute(
+                name="environment",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            projection_type=dynamodb.ProjectionType.ALL,
+        )
+
+        self.tables["ApplicationApiKeys"] = table
+        self._export_table_params(table, "application-api-keys")

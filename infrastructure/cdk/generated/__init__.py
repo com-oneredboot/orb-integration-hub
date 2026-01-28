@@ -5,6 +5,7 @@ from .tables.organizations_table import OrganizationsTable
 from .tables.notifications_table import NotificationsTable
 from .tables.privacy_requests_table import PrivacyRequestsTable
 from .tables.application_groups_table import ApplicationGroupsTable
+from .tables.application_api_keys_table import ApplicationApiKeysTable
 from .tables.application_users_table import ApplicationUsersTable
 from .tables.sms_rate_limit_table import SmsRateLimitTable
 from .tables.application_group_roles_table import ApplicationGroupRolesTable
@@ -23,6 +24,7 @@ __all__ = [
     "NotificationsTable",
     "PrivacyRequestsTable",
     "ApplicationGroupsTable",
+    "ApplicationApiKeysTable",
     "ApplicationUsersTable",
     "SmsRateLimitTable",
     "ApplicationGroupRolesTable",

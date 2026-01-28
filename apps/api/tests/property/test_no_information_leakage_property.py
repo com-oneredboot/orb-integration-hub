@@ -15,13 +15,12 @@ the output SHALL NOT contain:
 - Database query details
 """
 
-import os
 import re
 from pathlib import Path
 from typing import NamedTuple
 
 import pytest
-from hypothesis import given, settings, assume
+from hypothesis import given, settings
 import hypothesis.strategies as st
 
 

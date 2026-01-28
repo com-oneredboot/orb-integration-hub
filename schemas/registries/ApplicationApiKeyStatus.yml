@@ -1,0 +1,23 @@
+type: registry
+version: '1.0'
+name: ApplicationApiKeyStatus
+targets:
+  - api
+description: "Application API key status"
+
+items:
+  UNKNOWN:
+    value: "UNKNOWN"
+    description: "Unknown status"
+  ACTIVE:
+    value: "ACTIVE"
+    description: "Active API key"
+  ROTATING:
+    value: "ROTATING"
+    description: "Key is being rotated (both old and new keys valid)"
+  REVOKED:
+    value: "REVOKED"
+    description: "Key has been revoked and is no longer valid"
+  EXPIRED:
+    value: "EXPIRED"
+    description: "Key has expired and is no longer valid"

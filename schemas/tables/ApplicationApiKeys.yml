@@ -1,0 +1,97 @@
+# file: schemas/tables/ApplicationApiKeys.yml
+# author: orb-integration-hub
+# date: 2026-01-27
+# description: ApplicationApiKeys table schema for managing API keys per application environment
+
+type: dynamodb
+pitr_enabled: false
+version: '1.0'
+name: ApplicationApiKeys
+targets:
+  - api
+model:
+  authConfig:
+    cognitoAuthentication:
+      groups:
+        OWNER:
+          - '*'
+        EMPLOYEE:
+          - '*'
+  keys:
+    primary:
+      partition: applicationApiKeyId
+      description: Primary key for API keys (unique for each key)
+    secondary:
+      - name: AppEnvKeyIndex
+        type: GSI
+        partition: applicationId
+        sort: environment
+        projection_type: ALL
+        description: Index for querying keys by application and environment
+      - name: KeyLookupIndex
+        type: GSI
+        partition: keyHash
+        projection_type: ALL
+        description: Index for looking up keys by hash during validation
+  attributes:
+    applicationApiKeyId:
+      type: string
+      required: true
+      description: Unique identifier for the API key record (primary key)
+    applicationId:
+      type: string
+      required: true
+      description: ID of the application this key belongs to (foreign key to Applications)
+    organizationId:
+      type: string
+      required: true
+      description: ID of the organization (denormalized for context)
+    environment:
+      type: string
+      required: true
+      enum_type: Environment
+      enum_values:
+        - PRODUCTION
+        - STAGING
+        - DEVELOPMENT
+        - TEST
+        - PREVIEW
+      description: Environment this key is valid for
+    keyHash:
+      type: string
+      required: true
+      description: SHA-256 hash of the API key (for secure lookup)
+    keyPrefix:
+      type: string
+      required: true
+      description: First 12 chars of key for display (e.g., orb_dev_xxxx)
+    status:
+      type: string
+      required: true
+      enum_type: ApplicationApiKeyStatus
+      enum_values:
+        - ACTIVE
+        - ROTATING
+        - REVOKED
+        - EXPIRED
+      description: Current status of the API key
+    nextKeyHash:
+      type: string
+      required: false
+      description: Hash of the next key during rotation (both keys valid)
+    expiresAt:
+      type: timestamp
+      required: false
+      description: Optional expiration timestamp for the key
+    lastUsedAt:
+      type: timestamp
+      required: false
+      description: Timestamp of last key usage
+    createdAt:
+      type: timestamp
+      required: true
+      description: When the key was created
+    updatedAt:
+      type: timestamp
+      required: true
+      description: When the key was last updated

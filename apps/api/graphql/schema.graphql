@@ -83,6 +83,21 @@ type ApplicationGroups {
   updatedAt: AWSTimestamp!
 }
 
+type ApplicationApiKeys {
+  applicationApiKeyId: String!
+  applicationId: String!
+  organizationId: String!
+  environment: Environment!
+  keyHash: String!
+  keyPrefix: String!
+  status: ApplicationApiKeyStatus!
+  nextKeyHash: String
+  expiresAt: AWSTimestamp
+  lastUsedAt: AWSTimestamp
+  createdAt: AWSTimestamp!
+  updatedAt: AWSTimestamp!
+}
+
 type ApplicationUsers {
   applicationUserId: String!
   userId: String!
@@ -489,6 +504,49 @@ type ApplicationGroupsListResponse {
   success: Boolean!
   message: String
   items: [ApplicationGroups!]
+  nextToken: String
+}
+
+type ApplicationApiKeysCreateResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationApiKeys
+}
+
+type ApplicationApiKeysUpdateResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationApiKeys
+}
+
+type ApplicationApiKeysDeleteResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationApiKeys
+}
+
+type ApplicationApiKeysDisableResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationApiKeys
+}
+
+type ApplicationApiKeysGetResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  item: ApplicationApiKeys
+}
+
+type ApplicationApiKeysListResponse {
+  code: Int!
+  success: Boolean!
+  message: String
+  items: [ApplicationApiKeys!]
   nextToken: String
 }
 
@@ -1383,6 +1441,75 @@ input ApplicationGroupsListByApplicationIdAndStatusInput {
   nextToken: String
 }
 
+input ApplicationApiKeysCreateInput {
+  applicationApiKeyId: String!
+  applicationId: String!
+  organizationId: String!
+  environment: Environment!
+  keyHash: String!
+  keyPrefix: String!
+  status: ApplicationApiKeyStatus!
+  nextKeyHash: String
+  expiresAt: AWSTimestamp
+  lastUsedAt: AWSTimestamp
+  createdAt: AWSTimestamp!
+  updatedAt: AWSTimestamp!
+}
+
+input ApplicationApiKeysUpdateInput {
+  applicationApiKeyId: String!
+  applicationId: String
+  organizationId: String
+  environment: Environment
+  keyHash: String
+  keyPrefix: String
+  status: ApplicationApiKeyStatus
+  nextKeyHash: String
+  expiresAt: AWSTimestamp
+  lastUsedAt: AWSTimestamp
+  createdAt: AWSTimestamp
+  updatedAt: AWSTimestamp
+}
+
+input ApplicationApiKeysDeleteInput {
+  applicationApiKeyId: String!
+}
+
+input ApplicationApiKeysDisableInput {
+  applicationApiKeyId: String!
+}
+
+input ApplicationApiKeysGetInput {
+  applicationApiKeyId: String!
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationApiKeysListByApplicationApiKeyIdInput {
+  applicationApiKeyId: String!
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationApiKeysListByApplicationIdInput {
+  applicationId: String!
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationApiKeysListByApplicationIdAndEnvironmentInput {
+  applicationId: String!
+  environment: String
+  limit: Int
+  nextToken: String
+}
+
+input ApplicationApiKeysListByKeyHashInput {
+  keyHash: String!
+  limit: Int
+  nextToken: String
+}
+
 input ApplicationUsersCreateInput {
   applicationUserId: String!
   userId: String!
@@ -2110,6 +2237,11 @@ type Query {
   ApplicationGroupsListByApplicationId(input: ApplicationGroupsListByApplicationIdInput!): ApplicationGroupsListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   ApplicationGroupsListByApplicationIdAndName(input: ApplicationGroupsListByApplicationIdAndNameInput!): ApplicationGroupsListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   ApplicationGroupsListByApplicationIdAndStatus(input: ApplicationGroupsListByApplicationIdAndStatusInput!): ApplicationGroupsListResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationApiKeysGet(input: ApplicationApiKeysGetInput!): ApplicationApiKeysGetResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])
+  ApplicationApiKeysListByApplicationApiKeyId(input: ApplicationApiKeysListByApplicationApiKeyIdInput!): ApplicationApiKeysListResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])
+  ApplicationApiKeysListByApplicationId(input: ApplicationApiKeysListByApplicationIdInput!): ApplicationApiKeysListResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])
+  ApplicationApiKeysListByApplicationIdAndEnvironment(input: ApplicationApiKeysListByApplicationIdAndEnvironmentInput!): ApplicationApiKeysListResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])
+  ApplicationApiKeysListByKeyHash(input: ApplicationApiKeysListByKeyHashInput!): ApplicationApiKeysListResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])
   ApplicationUsersGet(input: ApplicationUsersGetInput!): ApplicationUsersGetResponse @aws_auth(cognito_groups: ["OWNER"])
   ApplicationUsersListByApplicationUserId(input: ApplicationUsersListByApplicationUserIdInput!): ApplicationUsersListResponse @aws_auth(cognito_groups: ["OWNER"])
   ApplicationUsersListByUserId(input: ApplicationUsersListByUserIdInput!): ApplicationUsersListResponse @aws_auth(cognito_groups: ["OWNER"])
@@ -2193,6 +2325,10 @@ type Mutation {
   ApplicationGroupsUpdate(input: ApplicationGroupsUpdateInput!): ApplicationGroupsUpdateResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   ApplicationGroupsDelete(input: ApplicationGroupsDeleteInput!): ApplicationGroupsDeleteResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   ApplicationGroupsDisable(input: ApplicationGroupsDisableInput!): ApplicationGroupsDisableResponse @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
+  ApplicationApiKeysCreate(input: ApplicationApiKeysCreateInput!): ApplicationApiKeysCreateResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])
+  ApplicationApiKeysUpdate(input: ApplicationApiKeysUpdateInput!): ApplicationApiKeysUpdateResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])
+  ApplicationApiKeysDelete(input: ApplicationApiKeysDeleteInput!): ApplicationApiKeysDeleteResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])
+  ApplicationApiKeysDisable(input: ApplicationApiKeysDisableInput!): ApplicationApiKeysDisableResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])
   ApplicationUsersCreate(input: ApplicationUsersCreateInput!): ApplicationUsersCreateResponse @aws_auth(cognito_groups: ["OWNER"])
   ApplicationUsersUpdate(input: ApplicationUsersUpdateInput!): ApplicationUsersUpdateResponse @aws_auth(cognito_groups: ["OWNER"])
   ApplicationUsersDelete(input: ApplicationUsersDeleteInput!): ApplicationUsersDeleteResponse @aws_auth(cognito_groups: ["OWNER"])
@@ -2323,6 +2459,14 @@ enum NotificationType {
   ORGANIZATION_INVITATION_RECEIVED
   ORGANIZATION_INVITATION_ACCEPTED
   ORGANIZATION_INVITATION_REJECTED
+}
+
+enum ApplicationApiKeyStatus {
+  UNKNOWN
+  ACTIVE
+  ROTATING
+  REVOKED
+  EXPIRED
 }
 
 enum UserGroup {

@@ -16,7 +16,6 @@ Lambda event parameters), validation SHALL be performed before processing, inclu
 
 import re
 import uuid
-from typing import Callable
 
 import pytest
 from hypothesis import given, settings, assume
