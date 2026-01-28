@@ -17,7 +17,7 @@ repos:
   - repo: local
     hooks:
       # ============================================
-      # Python Hooks
+      # Python Hooks (Backend API)
       # ============================================
 
       # Black - Code formatting
@@ -54,6 +54,32 @@ repos:
         types: [python]
         files: ^apps/api/.*\.py$
         exclude: ^apps/api/(tests/|.*test.*\.py$|core/testing/)
+
+      # ============================================
+      # Python Hooks (Infrastructure)
+      # ============================================
+
+      - id: black-infra
+        name: Format infrastructure Python with black
+        entry: bash -c 'cd infrastructure && pipenv run black --line-length=100 "$@"' --
+        language: system
+        types: [python]
+        files: ^infrastructure/.*\.py$
+
+      - id: ruff-infra
+        name: Lint infrastructure Python with ruff
+        entry: bash -c 'cd infrastructure && pipenv run ruff check "$@"' --
+        language: system
+        types: [python]
+        files: ^infrastructure/.*\.py$
+
+      - id: mypy-infra
+        name: Type check infrastructure with mypy
+        entry: bash -c 'cd infrastructure && pipenv run mypy --ignore-missing-imports "$@"' --
+        language: system
+        types: [python]
+        files: ^infrastructure/.*\.py$
+        exclude: ^infrastructure/cdk\.out/
 
       # ============================================
       # Frontend Hooks (Angular/TypeScript)
@@ -99,6 +125,13 @@ repos:
         files: ^infrastructure/.*\.py$
         pass_filenames: false
 
+      - id: cdk-tests
+        name: Run CDK infrastructure tests
+        entry: bash -c 'cd infrastructure && PIPENV_IGNORE_VIRTUALENVS=1 pipenv run pytest cdk/tests/ --tb=short -q'
+        language: system
+        files: ^infrastructure/.*\.py$
+        pass_filenames: false
+
       # ============================================
       # Test Hooks
       # ============================================
@@ -108,4 +141,11 @@ repos:
         entry: bash -c 'cd apps/api && pipenv run pytest lambdas/ core/testing/ --tb=short -q'
         language: system
         files: ^apps/api/.*\.py$
+        pass_filenames: false
+
+      - id: frontend-tests
+        name: Run frontend tests
+        entry: bash -c 'cd apps/web && npm test -- --no-watch --browsers=ChromeHeadless'
+        language: system
+        files: ^apps/web/.*\.(ts|html)$
         pass_filenames: false
