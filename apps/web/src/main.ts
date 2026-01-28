@@ -17,6 +17,8 @@ import { organizationsReducer } from './app/features/customers/organizations/sto
 import { OrganizationsEffects } from './app/features/customers/organizations/store/organizations.effects';
 import { applicationsReducer } from './app/features/customers/applications/store/applications.reducer';
 import { ApplicationsEffects } from './app/features/customers/applications/store/applications.effects';
+import { apiKeysReducer } from './app/features/customers/applications/store/api-keys/api-keys.reducer';
+import { ApiKeysEffects } from './app/features/customers/applications/store/api-keys/api-keys.effects';
 import { BrowserModule } from '@angular/platform-browser';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule, FaIconLibrary } from '@fortawesome/angular-fontawesome';
@@ -88,9 +90,10 @@ bootstrapApplication(AppComponent, {
     provideStore({ 
       user: userReducer,
       organizations: organizationsReducer,
-      applications: applicationsReducer
+      applications: applicationsReducer,
+      apiKeys: apiKeysReducer
     }),
-    provideEffects([UserEffects, OrganizationsEffects, ApplicationsEffects]),
+    provideEffects([UserEffects, OrganizationsEffects, ApplicationsEffects, ApiKeysEffects]),
     provideHttpClient(withInterceptorsFromDi()),
     importProvidersFrom(BrowserModule, ReactiveFormsModule, FontAwesomeModule, NgOptimizedImage),
     // Provide the configured icon library

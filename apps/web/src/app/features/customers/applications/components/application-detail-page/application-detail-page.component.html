@@ -402,7 +402,7 @@
               </div>
             </div>
 
-            <!-- Key Info (when key exists and not newly generated) -->
+            <!-- Active Key Info -->
             <div class="orb-info orb-info--inline" *ngIf="row.hasKey && !isNewlyGeneratedKey(row)">
               <code class="orb-info__id">{{ row.apiKey?.keyPrefix }}...</code>
               <app-status-badge
@@ -413,43 +413,82 @@
                 size="small"
                 variant="chip">
               </app-status-badge>
-              <span class="orb-info__id" *ngIf="row.apiKey?.lastUsedAt">
-                Last used: {{ formatRelativeTime(row.apiKey?.lastUsedAt) }}
-              </span>
+              <button
+                type="button"
+                class="orb-btn orb-btn--secondary orb-btn--sm"
+                (click)="$event.stopPropagation()"
+                [attr.aria-label]="'Copy key prefix'">
+                <fa-icon icon="copy"></fa-icon>
+              </button>
             </div>
 
-            <!-- No Key State (CTA) -->
-            <div class="orb-info orb-info--muted" *ngIf="!row.hasKey && !isNewlyGeneratedKey(row)">
+            <!-- Revoked Key State -->
+            <div class="orb-info orb-info--inline" *ngIf="row.isRevoked && !isNewlyGeneratedKey(row)">
+              <app-status-badge
+                status="REVOKED"
+                type="apiKey"
+                [showIcon]="true"
+                [showLabel]="true"
+                size="small"
+                variant="chip">
+              </app-status-badge>
+              <span class="orb-info__id">Key has been revoked</span>
+            </div>
+
+            <!-- Expired Key State -->
+            <div class="orb-info orb-info--inline" *ngIf="row.isExpired && !isNewlyGeneratedKey(row)">
+              <app-status-badge
+                status="EXPIRED"
+                type="apiKey"
+                [showIcon]="true"
+                [showLabel]="true"
+                size="small"
+                variant="chip">
+              </app-status-badge>
+              <span class="orb-info__id">Key has expired</span>
+            </div>
+
+            <!-- No Key State -->
+            <div class="orb-info orb-info--muted" *ngIf="row.canGenerate && !isNewlyGeneratedKey(row)">
               <fa-icon icon="info-circle"></fa-icon>
-              <span class="orb-info__id">No API key configured for this environment</span>
+              <span class="orb-info__id">No API key configured</span>
             </div>
           </ng-template>
 
           <!-- Actions Cell -->
           <ng-template #actionsCell let-row>
             <div class="security-key-actions" *ngIf="!isNewlyGeneratedKey(row)">
-              <!-- Generate Key CTA Button -->
+              <!-- Generate Key Button (no key exists or key is revoked/expired) -->
               <button
-                *ngIf="row.canGenerate"
+                *ngIf="row.canGenerate && !row.hasKey"
                 class="orb-btn orb-btn--primary orb-btn--sm"
                 (click)="onGenerateKeyForEnvironment(row.environment); $event.stopPropagation()"
                 [disabled]="(isGeneratingKey$ | async)">
                 <fa-icon icon="plus"></fa-icon>
-                Generate Key
+                Generate
               </button>
-              <!-- Rotate Button -->
+              <!-- Regenerate Button (key is revoked or expired) -->
+              <button
+                *ngIf="row.canGenerate && row.hasKey === false && (row.isRevoked || row.isExpired)"
+                class="orb-btn orb-btn--primary orb-btn--sm"
+                (click)="onGenerateKeyForEnvironment(row.environment); $event.stopPropagation()"
+                [disabled]="(isGeneratingKey$ | async)">
+                <fa-icon icon="redo"></fa-icon>
+                Regenerate
+              </button>
+              <!-- Rotate Button (active key) -->
               <button
                 *ngIf="row.canRotate"
                 class="orb-btn orb-btn--secondary orb-btn--sm"
                 (click)="onRotateKeyForRow(row); $event.stopPropagation()"
-                [disabled]="(isRotatingKey$ | async)">
-                <fa-icon icon="sync-alt"></fa-icon>
+                [disabled]="(isGeneratingKey$ | async)">
+                <fa-icon icon="sync"></fa-icon>
                 Rotate
               </button>
-              <!-- Revoke Button -->
+              <!-- Revoke Button (active key) -->
               <button
                 *ngIf="row.canRevoke"
-                class="orb-btn orb-btn--outline orb-btn--sm"
+                class="orb-btn orb-btn--danger orb-btn--sm"
                 (click)="onRevokeKeyForRow(row); $event.stopPropagation()"
                 [disabled]="(isRevokingKey$ | async)">
                 <fa-icon icon="ban"></fa-icon>

@@ -59,6 +59,7 @@ import * as fromUser from '../../../../user/store/user.selectors';
 import * as fromApiKeys from '../../store/api-keys/api-keys.selectors';
 import { OrganizationsActions } from '../../../organizations/store/organizations.actions';
 import { ApiKeysActions } from '../../store/api-keys/api-keys.actions';
+import { GeneratedKeyResult } from '../../store/api-keys/api-keys.state';
 import { ApplicationApiKeyStatus } from '../../../../../core/enums/ApplicationApiKeyStatusEnum';
 
 /**
@@ -69,9 +70,11 @@ export interface EnvironmentKeyRow {
   environmentLabel: string;
   apiKey: IApplicationApiKeys | null;
   hasKey: boolean;
-  canRotate: boolean;
+  isRevoked: boolean;
+  isExpired: boolean;
   canRevoke: boolean;
   canGenerate: boolean;
+  canRotate: boolean;
 }
 
 /**
@@ -128,9 +131,8 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
   organizations$: Observable<IOrganizations[]>;
   apiKeys$: Observable<IApplicationApiKeys[]>;
   isGeneratingKey$: Observable<boolean>;
-  isRotatingKey$: Observable<boolean>;
   isRevokingKey$: Observable<boolean>;
-  generatedKey$: Observable<{ environment: Environment; fullKey: string } | null>;
+  generatedKey$: Observable<GeneratedKeyResult | null>;
   debugMode$: Observable<boolean>;
 
   // Local state for template binding
@@ -163,7 +165,7 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
   apiKeyValidationError: string | null = null;
 
   // Generated key display state (shown after key generation)
-  generatedKeyDisplay: { environment: string; fullKey: string } | null = null;
+  generatedKeyDisplay: GeneratedKeyResult | null = null;
   copySuccess = false;
 
   // Available environments for selection
@@ -227,7 +229,6 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
     this.organizations$ = this.store.select(fromOrganizations.selectOrganizations);
     this.apiKeys$ = this.store.select(fromApiKeys.selectApiKeys);
     this.isGeneratingKey$ = this.store.select(fromApiKeys.selectIsGenerating);
-    this.isRotatingKey$ = this.store.select(fromApiKeys.selectIsRotating);
     this.isRevokingKey$ = this.store.select(fromApiKeys.selectIsRevoking);
     this.generatedKey$ = this.store.select(fromApiKeys.selectGeneratedKey);
     this.debugMode$ = this.store.select(fromUser.selectDebugMode);
@@ -259,10 +260,7 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe(generatedKey => {
       if (generatedKey) {
-        this.generatedKeyDisplay = {
-          environment: generatedKey.environment,
-          fullKey: generatedKey.fullKey
-        };
+        this.generatedKeyDisplay = generatedKey;
         this.copySuccess = false;
       }
     });
@@ -385,16 +383,29 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
       {
         field: 'environmentLabel',
         header: 'Environment',
-        sortable: false,
-        filterable: false,
+        sortable: true,
+        filterable: true,
+        filterType: 'select',
+        filterOptions: [
+          { value: 'PRODUCTION', label: 'Production' },
+          { value: 'STAGING', label: 'Staging' },
+          { value: 'DEVELOPMENT', label: 'Development' },
+          { value: 'TEST', label: 'Test' },
+          { value: 'PREVIEW', label: 'Preview' },
+        ],
         cellTemplate: this.environmentCell,
         width: '25%',
       },
       {
-        field: 'apiKey',
-        header: 'API Key',
-        sortable: false,
-        filterable: false,
+        field: 'hasKey',
+        header: 'Status',
+        sortable: true,
+        filterable: true,
+        filterType: 'select',
+        filterOptions: [
+          { value: 'true', label: 'Configured' },
+          { value: 'false', label: 'Not Configured' },
+        ],
         cellTemplate: this.keyInfoCell,
         width: '45%',
       },
@@ -562,7 +573,6 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
 
   // Tab navigation
   setActiveTab(tab: ApplicationDetailTab): void {
-    // Allow all tabs - users need to access Security tab to generate keys before activation
     this.activeTab = tab;
     // Clear API key validation error when navigating away from Overview
     if (tab !== ApplicationDetailTab.Overview) {
@@ -573,8 +583,11 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
       this.generatedKeyDisplay = null;
       this.copySuccess = false;
     }
-    // Ensure environment key rows are up-to-date when entering Security tab
-    if (tab === ApplicationDetailTab.Security) {
+    // Load API keys when entering Security tab
+    if (tab === ApplicationDetailTab.Security && this.application) {
+      this.store.dispatch(ApiKeysActions.loadApiKeys({
+        applicationId: this.application.applicationId
+      }));
       this.updateEnvironmentKeyRows();
     }
   }
@@ -602,7 +615,7 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
   }
 
   onRotateApiKey(apiKey: IApplicationApiKeys): void {
-    // Handle API key rotation (handled by ApiKeysListComponent)
+    // Handle API key rotation (future implementation)
     console.log('Rotate API key:', apiKey.applicationApiKeyId);
   }
 
@@ -622,16 +635,6 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
     }));
   }
 
-  onRotateKeyForRow(row: EnvironmentKeyRow): void {
-    if (!this.application || !row.apiKey) return;
-
-    this.store.dispatch(ApiKeysActions.rotateApiKey({
-      apiKeyId: row.apiKey.applicationApiKeyId,
-      applicationId: this.application.applicationId,
-      environment: row.environment as Environment
-    }));
-  }
-
   onRevokeKeyForRow(row: EnvironmentKeyRow): void {
     if (!this.application || !row.apiKey) return;
 
@@ -640,6 +643,21 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
     }
 
     this.store.dispatch(ApiKeysActions.revokeApiKey({
+      apiKeyId: row.apiKey.applicationApiKeyId,
+      applicationId: this.application.applicationId,
+      environment: row.environment as Environment
+    }));
+  }
+
+  onRegenerateKeyForRow(row: EnvironmentKeyRow): void {
+    // Regenerate is just generating a new key for the environment
+    this.onGenerateKeyForEnvironment(row.environment);
+  }
+
+  onRotateKeyForRow(row: EnvironmentKeyRow): void {
+    if (!this.application || !row.apiKey) return;
+
+    this.store.dispatch(ApiKeysActions.rotateApiKey({
       apiKeyId: row.apiKey.applicationApiKeyId,
       applicationId: this.application.applicationId,
       environment: row.environment as Environment
@@ -677,32 +695,45 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
   // Environment Key Row helpers
   private updateEnvironmentKeyRows(): void {
     this.environmentKeyRows = this.computeEnvironmentKeyRows();
+    // Update page state with total items count
+    this.apiKeysPageState = {
+      ...this.apiKeysPageState,
+      totalItems: this.environmentKeyRows.length,
+      totalPages: Math.ceil(this.environmentKeyRows.length / this.apiKeysPageState.pageSize) || 1
+    };
   }
 
   private computeEnvironmentKeyRows(): EnvironmentKeyRow[] {
-    // Always use editForm.environments to reflect current form state
-    // This ensures the Security tab shows rows for all selected environments,
-    // whether saved or unsaved
-    const environments = this.editForm.environments || [];
+    // Get environments from the application (store state)
+    // This is the source of truth for which environments need API keys
+    const environments = this.application?.environments || [];
     const apiKeys = this.apiKeys || [];
 
+    // For each environment configured on the application, create a row
+    // If an API key exists for that environment, show it
+    // If no API key exists, show a "Generate" CTA
     return environments.map(env => {
-      // Find active or rotating key for this environment (exclude revoked)
-      const apiKey = apiKeys.find(k =>
-        k.environment === env &&
-        k.status !== ApplicationApiKeyStatus.Revoked &&
-        k.status !== ApplicationApiKeyStatus.Expired
-      ) || null;
-      const hasKey = !!apiKey;
+      // Find any key for this environment (including revoked/expired)
+      const apiKey = apiKeys.find(k => k.environment === env) || null;
+      
+      const isRevoked = apiKey?.status === ApplicationApiKeyStatus.Revoked;
+      const isExpired = apiKey?.status === ApplicationApiKeyStatus.Expired;
+      const isActive = apiKey?.status === ApplicationApiKeyStatus.Active;
+      const isRotating = apiKey?.status === ApplicationApiKeyStatus.Rotating;
+      const hasActiveKey = !!apiKey && (isActive || isRotating);
 
       return {
         environment: env,
         environmentLabel: this.getEnvironmentLabel(env),
         apiKey,
-        hasKey,
-        canRotate: hasKey && (apiKey!.status === ApplicationApiKeyStatus.Active || apiKey!.status === ApplicationApiKeyStatus.Rotating),
-        canRevoke: hasKey && (apiKey!.status === ApplicationApiKeyStatus.Active || apiKey!.status === ApplicationApiKeyStatus.Rotating),
-        canGenerate: !hasKey,
+        hasKey: hasActiveKey,
+        isRevoked,
+        isExpired,
+        canRevoke: hasActiveKey,
+        // canGenerate is true when no key exists OR key is revoked/expired
+        canGenerate: !apiKey || isRevoked || isExpired,
+        // canRotate is true only for active/rotating keys
+        canRotate: hasActiveKey,
       };
     });
   }
@@ -761,8 +792,11 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
 
   /**
    * Check if a row has a newly generated key to display
+   * Compares the environment string from the row with the Environment enum value
    */
   isNewlyGeneratedKey(row: EnvironmentKeyRow): boolean {
-    return this.generatedKeyDisplay?.environment === row.environment;
+    if (!this.generatedKeyDisplay) return false;
+    // Environment enum values match the string values (e.g., Environment.Development === 'DEVELOPMENT')
+    return this.generatedKeyDisplay.environment === row.environment;
   }
 }
