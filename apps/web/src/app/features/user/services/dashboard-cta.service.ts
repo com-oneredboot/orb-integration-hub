@@ -5,7 +5,11 @@
 
 import { Injectable } from '@angular/core';
 import { IUsers } from '../../../core/models/UsersModel';
+import { IApplications } from '../../../core/models/ApplicationsModel';
+import { IApplicationApiKeys } from '../../../core/models/ApplicationApiKeysModel';
 import { CtaCard, CtaCardCategory } from '../components/dashboard/dashboard.types';
+import { validateApplicationApiKeys } from '../../customers/applications/utils/api-key-validation';
+import { ApplicationStatus } from '../../../core/enums/ApplicationStatusEnum';
 
 /**
  * Service responsible for generating CTA cards for the dashboard
@@ -224,6 +228,59 @@ export class DashboardCtaService {
           category: 'action'
         });
       }
+    }
+
+    return cards;
+  }
+
+  /**
+   * Get CTA cards for applications with missing API keys.
+   * Each application with at least one environment lacking an active API key
+   * generates one CTA card with medium (yellow) severity.
+   *
+   * @param applications Array of applications to check
+   * @param apiKeysByApp Map of applicationId to array of API keys
+   * @returns Array of API key CTA cards
+   *
+   * @see .kiro/specs/api-key-configuration-flow/design.md
+   * _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
+   */
+  getApiKeyCtaCards(
+    applications: IApplications[],
+    apiKeysByApp: Map<string, IApplicationApiKeys[]>
+  ): CtaCard[] {
+    const cards: CtaCard[] = [];
+
+    for (const app of applications) {
+      // Only check PENDING or ACTIVE applications
+      if (app.status !== ApplicationStatus.Pending && app.status !== ApplicationStatus.Active) {
+        continue;
+      }
+
+      // Skip apps with no environments configured
+      if (!app.environments || app.environments.length === 0) {
+        continue;
+      }
+
+      const keys = apiKeysByApp.get(app.applicationId) || [];
+      const validation = validateApplicationApiKeys(app, keys);
+
+      // Skip if all environments have active keys
+      if (validation.isValid) {
+        continue;
+      }
+
+      cards.push({
+        id: `api-keys-${app.applicationId}`,
+        icon: 'key',
+        title: `"${app.name}" needs API keys`,
+        description: `${validation.missingEnvironments.length} of ${validation.totalEnvironments} environment${validation.totalEnvironments > 1 ? 's' : ''} need API keys configured.`,
+        actionLabel: 'Configure Keys',
+        actionRoute: `/customers/applications/${app.applicationId}`,
+        actionQueryParams: { tab: 'security' },
+        priority: 50, // Between health (10-40) and action (100+)
+        category: 'health' // Uses yellow/warning styling
+      });
     }
 
     return cards;

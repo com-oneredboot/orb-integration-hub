@@ -4,9 +4,15 @@
 // description: Unit tests for DashboardCtaService
 
 import { TestBed } from '@angular/core/testing';
+import * as fc from 'fast-check';
 import { DashboardCtaService } from './dashboard-cta.service';
 import { IUsers } from '../../../core/models/UsersModel';
+import { IApplications } from '../../../core/models/ApplicationsModel';
+import { IApplicationApiKeys } from '../../../core/models/ApplicationApiKeysModel';
 import { UserStatus } from '../../../core/enums/UserStatusEnum';
+import { ApplicationStatus } from '../../../core/enums/ApplicationStatusEnum';
+import { ApplicationApiKeyStatus } from '../../../core/enums/ApplicationApiKeyStatusEnum';
+import { Environment } from '../../../core/enums/EnvironmentEnum';
 
 describe('DashboardCtaService', () => {
   let service: DashboardCtaService;
@@ -421,6 +427,229 @@ describe('DashboardCtaService', () => {
       const ids = cards.map(c => c.id);
       const uniqueIds = new Set(ids);
       expect(uniqueIds.size).toBe(ids.length);
+    });
+  });
+
+  describe('getApiKeyCtaCards', () => {
+    // Test data generators
+    const environmentStringArb = fc.constantFrom('PRODUCTION', 'STAGING', 'DEVELOPMENT', 'TEST', 'PREVIEW');
+
+    // Helper to create a mock application
+    const createMockApplication = (
+      id: string,
+      environments: string[],
+      status: ApplicationStatus = ApplicationStatus.Pending
+    ): IApplications => ({
+      applicationId: id,
+      organizationId: 'org-123',
+      name: `App ${id}`,
+      description: 'Test application',
+      status,
+      environments,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ownerId: 'user-123'
+    } as IApplications);
+
+    // Helper to create a mock API key
+    const createMockApiKey = (
+      appId: string,
+      environment: string,
+      status: ApplicationApiKeyStatus
+    ): IApplicationApiKeys => ({
+      applicationApiKeyId: `key-${appId}-${environment}`,
+      applicationId: appId,
+      organizationId: 'org-123',
+      environment: environment as Environment,
+      status,
+      keyPrefix: `orb_${environment.toLowerCase().substring(0, 2)}_`,
+      keyHash: 'mock-hash',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    } as IApplicationApiKeys);
+
+    describe('Unit Tests', () => {
+      it('should return empty array for empty applications', () => {
+        const cards = service.getApiKeyCtaCards([], new Map());
+        expect(cards).toEqual([]);
+      });
+
+      it('should return empty array for applications with no environments', () => {
+        const app = createMockApplication('app-1', []);
+        const cards = service.getApiKeyCtaCards([app], new Map());
+        expect(cards).toEqual([]);
+      });
+
+      it('should return CTA for application with missing keys', () => {
+        const app = createMockApplication('app-1', ['PRODUCTION', 'STAGING']);
+        const cards = service.getApiKeyCtaCards([app], new Map());
+        
+        expect(cards.length).toBe(1);
+        expect(cards[0].id).toBe('api-keys-app-1');
+        expect(cards[0].title).toContain('App app-1');
+        expect(cards[0].description).toContain('2 of 2');
+      });
+
+      it('should not return CTA for fully configured application', () => {
+        const app = createMockApplication('app-1', ['PRODUCTION']);
+        const keys = new Map<string, IApplicationApiKeys[]>([
+          ['app-1', [createMockApiKey('app-1', 'PRODUCTION', ApplicationApiKeyStatus.Active)]]
+        ]);
+        
+        const cards = service.getApiKeyCtaCards([app], keys);
+        expect(cards.length).toBe(0);
+      });
+
+      it('should return CTA for partially configured application', () => {
+        const app = createMockApplication('app-1', ['PRODUCTION', 'STAGING']);
+        const keys = new Map<string, IApplicationApiKeys[]>([
+          ['app-1', [createMockApiKey('app-1', 'PRODUCTION', ApplicationApiKeyStatus.Active)]]
+        ]);
+        
+        const cards = service.getApiKeyCtaCards([app], keys);
+        expect(cards.length).toBe(1);
+        expect(cards[0].description).toContain('1 of 2');
+      });
+
+      it('should skip INACTIVE applications', () => {
+        const app = createMockApplication('app-1', ['PRODUCTION'], ApplicationStatus.Inactive);
+        const cards = service.getApiKeyCtaCards([app], new Map());
+        expect(cards.length).toBe(0);
+      });
+
+      it('should include PENDING applications', () => {
+        const app = createMockApplication('app-1', ['PRODUCTION'], ApplicationStatus.Pending);
+        const cards = service.getApiKeyCtaCards([app], new Map());
+        expect(cards.length).toBe(1);
+      });
+
+      it('should include ACTIVE applications', () => {
+        const app = createMockApplication('app-1', ['PRODUCTION'], ApplicationStatus.Active);
+        const cards = service.getApiKeyCtaCards([app], new Map());
+        expect(cards.length).toBe(1);
+      });
+
+      it('should use health category for yellow styling', () => {
+        const app = createMockApplication('app-1', ['PRODUCTION']);
+        const cards = service.getApiKeyCtaCards([app], new Map());
+        expect(cards[0].category).toBe('health');
+      });
+
+      it('should navigate to Security tab', () => {
+        const app = createMockApplication('app-1', ['PRODUCTION']);
+        const cards = service.getApiKeyCtaCards([app], new Map());
+        expect(cards[0].actionRoute).toBe('/customers/applications/app-1');
+        expect(cards[0].actionQueryParams).toEqual({ tab: 'security' });
+      });
+    });
+
+    describe('Property Tests', () => {
+      /**
+       * Feature: api-key-configuration-flow, Property 2: CTA Generation Correctness
+       * Validates: Requirements 2.1, 2.5
+       *
+       * For any set of applications, the Dashboard_CTA_Service SHALL generate
+       * exactly one CTA card for each application that has at least one environment
+       * without an active API key, and zero CTAs for fully configured applications.
+       */
+      it('Property 2: generates exactly one CTA per application with missing keys', () => {
+        fc.assert(
+          fc.property(
+            // Generate 1-5 unique application IDs
+            fc.uniqueArray(fc.uuid(), { minLength: 1, maxLength: 5 }),
+            // For each app, generate 1-3 environments
+            fc.func(fc.uniqueArray(environmentStringArb, { minLength: 1, maxLength: 3 })),
+            // For each app, decide if it has all keys configured
+            fc.func(fc.boolean()),
+            (appIds, getEnvs, hasAllKeys) => {
+              // Create applications
+              const applications = appIds.map((id, i) => 
+                createMockApplication(id, getEnvs(i))
+              );
+
+              // Create API keys map - some apps fully configured, some not
+              const apiKeysByApp = new Map<string, IApplicationApiKeys[]>();
+              const expectedCtaCount = applications.filter((app, i) => {
+                const envs = app.environments || [];
+                if (envs.length === 0) return false;
+                
+                if (hasAllKeys(i)) {
+                  // Fully configured - create keys for all environments
+                  apiKeysByApp.set(
+                    app.applicationId,
+                    envs.map(env => createMockApiKey(app.applicationId, env, ApplicationApiKeyStatus.Active))
+                  );
+                  return false;
+                } else {
+                  // Not fully configured - no keys
+                  return true;
+                }
+              }).length;
+
+              const cards = service.getApiKeyCtaCards(applications, apiKeysByApp);
+
+              // Verify exactly one CTA per app with missing keys
+              expect(cards.length).toBe(expectedCtaCount);
+
+              // Verify each CTA has unique app ID
+              const ctaAppIds = cards.map(c => c.id.replace('api-keys-', ''));
+              expect(new Set(ctaAppIds).size).toBe(ctaAppIds.length);
+            }
+          ),
+          { numRuns: 100 }
+        );
+      });
+
+      /**
+       * Feature: api-key-configuration-flow, Property 3: CTA Content Correctness
+       * Validates: Requirements 2.3
+       *
+       * For any application with missing API keys, the generated CTA card SHALL
+       * contain the application name and the correct count of missing environments.
+       */
+      it('Property 3: CTA content contains correct app name and missing count', () => {
+        fc.assert(
+          fc.property(
+            fc.uuid(),
+            fc.string({ minLength: 1, maxLength: 50 }),
+            fc.uniqueArray(environmentStringArb, { minLength: 1, maxLength: 5 }),
+            fc.integer({ min: 0 }),
+            (appId, appName, environments, configuredCount) => {
+              // Ensure we have at least one missing environment
+              const actualConfigured = Math.min(configuredCount, environments.length - 1);
+              const expectedMissing = environments.length - actualConfigured;
+
+              const app: IApplications = {
+                applicationId: appId,
+                organizationId: 'org-123',
+                name: appName,
+                description: 'Test',
+                status: ApplicationStatus.Pending,
+                environments,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                ownerId: 'user-123'
+              } as IApplications;
+
+              // Create keys for some environments
+              const keys = environments
+                .slice(0, actualConfigured)
+                .map(env => createMockApiKey(appId, env, ApplicationApiKeyStatus.Active));
+
+              const apiKeysByApp = new Map<string, IApplicationApiKeys[]>([
+                [appId, keys]
+              ]);
+
+              const cards = service.getApiKeyCtaCards([app], apiKeysByApp);
+
+              expect(cards.length).toBe(1);
+              expect(cards[0].title).toContain(appName);
+              expect(cards[0].description).toContain(`${expectedMissing} of ${environments.length}`);
+            }
+          ),
+          { numRuns: 100 }
+        );
+      });
     });
   });
 });

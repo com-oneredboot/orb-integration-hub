@@ -28,25 +28,25 @@ This implementation adds API key validation to the application activation flow, 
     - Style with warning colors
     - _Requirements: 1.4, 4.1, 4.2_
 
-- [ ] 3. Checkpoint - Verify activation validation
+- [x] 3. Checkpoint - Verify activation validation
   - Test that activation fails with missing keys
   - Test that activation succeeds with all keys configured
   - Verify error message shows correct environments
 
-- [ ] 4. Add dashboard CTA for missing API keys
-  - [ ] 4.1 Extend DashboardCtaService with API key check
+- [x] 4. Add dashboard CTA for missing API keys
+  - [x] 4.1 Extend DashboardCtaService with API key check
     - Add `getApiKeyCtaCards()` method
     - Integrate with existing CTA generation
     - _Requirements: 2.1, 2.5_
-  - [ ] 4.2 Create API key CTA card template
-    - Use medium severity (yellow) styling
+  - [x] 4.2 Create API key CTA card template
+    - Use medium severity (yellow) styling via 'health' category
     - Show app name and missing key count
-    - Action navigates to Security tab
+    - Action navigates to Security tab with query param
     - _Requirements: 2.2, 2.3, 2.4_
-  - [ ] 4.3 Write property test for CTA generation
+  - [x] 4.3 Write property test for CTA generation
     - **Property 2: CTA Generation Correctness**
     - **Validates: Requirements 2.1, 2.5**
-  - [ ] 4.4 Write property test for CTA content
+  - [x] 4.4 Write property test for CTA content
     - **Property 3: CTA Content Correctness**
     - **Validates: Requirements 2.3**
 
