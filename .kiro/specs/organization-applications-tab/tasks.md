@@ -6,7 +6,7 @@ This implementation plan adds an "Applications" tab to the Organization Detail c
 
 ## Tasks
 
-- [ ] 1. Update organizations store for applications loading
+- [x] 1. Update organizations store for applications loading
   - [x] 1.1 Add actions for loading organization applications
     - Add loadOrganizationApplications, success, and failure actions
     - _Requirements: 3.1, 3.2_
@@ -41,18 +41,18 @@ This implementation plan adds an "Applications" tab to the Organization Detail c
     - Match existing tab panel styling
     - _Requirements: 4.1_
 
-- [ ] 3. Write tests
-  - [ ] 3.1 Write unit tests for new store additions
+- [x] 3. Write tests
+  - [x] 3.1 Write unit tests for new store additions
     - Test actions, reducer, selectors
     - _Requirements: 4.4_
-  - [ ] 3.2 Write property test for application count badge
+  - [x] 3.2 Write property test for application count badge
     - **Property 1: Application Count Badge Accuracy**
     - **Validates: Requirements 1.4**
-  - [ ] 3.3 Write property test for application row content
+  - [x] 3.3 Write property test for application row content
     - **Property 2: Application Row Content Completeness**
     - **Validates: Requirements 2.1**
 
-- [ ] 4. Checkpoint
+- [x] 4. Checkpoint
   - Ensure all tests pass
   - Verify tab displays correctly with applications
   - Test navigation to application detail
