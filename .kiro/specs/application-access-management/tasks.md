@@ -235,12 +235,12 @@ This implementation plan covers the Application Access Management system across 
     - Display current role assignments
     - _Requirements: 8.2_
 
-- [ ] 18. Create NgRx store for API keys
-  - [ ] 18.1 Create api-keys store files
+- [x] 18. Create NgRx store for API keys
+  - [x] 18.1 Create api-keys store files
     - api-keys.state.ts, api-keys.actions.ts, api-keys.reducer.ts
     - api-keys.selectors.ts, api-keys.effects.ts
     - _Requirements: 9.1, 9.5_
-  - [ ] 18.2 Create ApiKeyService for API calls
+  - [x] 18.2 Create ApiKeyService for API calls
     - Generate, rotate, revoke operations
     - _Requirements: 9.1_
   - [ ] 18.3 Write unit tests for api-keys store
