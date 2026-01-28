@@ -50,32 +50,32 @@ This implementation adds API key validation to the application activation flow, 
     - **Property 3: CTA Content Correctness**
     - **Validates: Requirements 2.3**
 
-- [ ] 5. Checkpoint - Verify dashboard CTA
+- [x] 5. Checkpoint - Verify dashboard CTA
   - Test CTA appears for apps with missing keys
   - Test CTA does not appear for fully configured apps
   - Test navigation to Security tab works
 
-- [ ] 6. Implement inline key display after generation
-  - [ ] 6.1 Add generated key state to component
+- [x] 6. Implement inline key display after generation
+  - [x] 6.1 Add generated key state to component
     - Add `generatedKeyDisplay` property to component
     - Update on successful key generation
     - Clear on tab change
     - _Requirements: 3.1, 3.4, 3.5_
-  - [ ] 6.2 Update Security tab template for inline key display
+  - [x] 6.2 Update Security tab template for inline key display
     - Add expanded row state when key is newly generated
     - Show full key with copy button
     - Show warning message
     - _Requirements: 3.1, 3.2, 3.3_
-  - [ ] 6.3 Implement copy-to-clipboard functionality
+  - [x] 6.3 Implement copy-to-clipboard functionality
     - Add copy button with clipboard API
     - Show success/error feedback
     - _Requirements: 3.2_
-  - [ ] 6.4 Add SCSS for inline key display
+  - [x] 6.4 Add SCSS for inline key display
     - Style expanded row state
     - Style copy button and warning message
     - _Requirements: 3.1, 3.3_
 
-- [ ] 7. Checkpoint - Verify inline key display
+- [x] 7. Checkpoint - Verify inline key display
   - Test key appears after generation
   - Test copy button works
   - Test key clears on tab change

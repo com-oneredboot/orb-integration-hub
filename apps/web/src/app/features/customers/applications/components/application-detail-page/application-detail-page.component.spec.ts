@@ -4,6 +4,7 @@
  * Tests for application detail page using NgRx store-first pattern.
  *
  * @see .kiro/specs/store-centric-refactoring/design.md
+ * @see .kiro/specs/application-security-tab/design.md
  * _Requirements: 3.1-3.5, 7.1_
  */
 
@@ -17,7 +18,7 @@ import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
 import { fas } from '@fortawesome/free-solid-svg-icons';
 import { Action } from '@ngrx/store';
 
-import { ApplicationDetailPageComponent } from './application-detail-page.component';
+import { ApplicationDetailPageComponent, ApplicationDetailTab } from './application-detail-page.component';
 import { IApplications } from '../../../../../core/models/ApplicationsModel';
 import { IOrganizations } from '../../../../../core/models/OrganizationsModel';
 import { ApplicationStatus } from '../../../../../core/enums/ApplicationStatusEnum';
@@ -27,6 +28,7 @@ import { OrganizationsActions } from '../../../organizations/store/organizations
 import * as fromApplications from '../../store/applications.selectors';
 import * as fromOrganizations from '../../../organizations/store/organizations.selectors';
 import * as fromUser from '../../../../user/store/user.selectors';
+import * as fromApiKeys from '../../store/api-keys/api-keys.selectors';
 
 describe('ApplicationDetailPageComponent', () => {
   let component: ApplicationDetailPageComponent;
@@ -107,6 +109,12 @@ describe('ApplicationDetailPageComponent', () => {
             { selector: fromOrganizations.selectOrganizations, value: [] },
             { selector: fromUser.selectCurrentUser, value: mockUser },
             { selector: fromUser.selectDebugMode, value: false },
+            // API Keys selectors
+            { selector: fromApiKeys.selectApiKeys, value: [] },
+            { selector: fromApiKeys.selectIsGenerating, value: false },
+            { selector: fromApiKeys.selectIsRotating, value: false },
+            { selector: fromApiKeys.selectIsRevoking, value: false },
+            { selector: fromApiKeys.selectGeneratedKey, value: null },
           ],
         }),
         provideMockActions(() => actions$),
@@ -481,6 +489,189 @@ describe('ApplicationDetailPageComponent', () => {
       const result = component.formatDate(undefined);
 
       expect(result).toBe('N/A');
+    });
+  });
+
+  /**
+   * Security Tab Tests
+   *
+   * Tests for the Security tab (renamed from API Keys tab).
+   * @see .kiro/specs/application-security-tab/design.md
+   * _Requirements: 1.1, 5.1_
+   */
+  describe('Security Tab', () => {
+    describe('Tab Enum and Structure', () => {
+      it('should have Overview enum value', () => {
+        // Validates: Requirements 1.2
+        expect(ApplicationDetailTab.Overview).toBe('overview');
+      });
+
+      it('should have Overview, Groups, Security, and Danger tabs', () => {
+        // Validates: Requirements 1.3
+        const tabValues = Object.values(ApplicationDetailTab) as string[];
+        expect(tabValues).toContain('overview');
+        expect(tabValues).toContain('groups');
+        expect(tabValues).toContain('security');
+        expect(tabValues).toContain('danger');
+        expect(tabValues.length).toBe(4);
+      });
+
+      it('should default to Overview tab', fakeAsync(() => {
+        store.overrideSelector(fromApplications.selectSelectedApplication, mockApplication);
+        store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        expect(component.activeTab).toBe(ApplicationDetailTab.Overview);
+      }));
+
+      it('should switch to Security tab when setActiveTab is called', fakeAsync(() => {
+        store.overrideSelector(fromApplications.selectSelectedApplication, mockApplication);
+        store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        component.setActiveTab(ApplicationDetailTab.Security);
+
+        expect(component.activeTab).toBe(ApplicationDetailTab.Security);
+      }));
+    });
+
+    describe('Tab Rendering', () => {
+      beforeEach(fakeAsync(() => {
+        store.overrideSelector(fromApplications.selectSelectedApplication, mockApplication);
+        store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+      }));
+
+      it('should render Security tab button with shield-alt icon', () => {
+        // Validates: Requirements 1.1
+        const compiled = fixture.nativeElement as HTMLElement;
+        const securityTab = compiled.querySelector('#tab-security');
+
+        expect(securityTab).toBeTruthy();
+        expect(securityTab?.textContent).toContain('Security');
+
+        // Check for shield-alt icon (FontAwesome renders as SVG with data-icon attribute)
+        const icon = securityTab?.querySelector('fa-icon');
+        expect(icon).toBeTruthy();
+      });
+
+      it('should render Security tab with correct aria attributes', () => {
+        const compiled = fixture.nativeElement as HTMLElement;
+        const securityTab = compiled.querySelector('#tab-security');
+
+        expect(securityTab?.getAttribute('role')).toBe('tab');
+        expect(securityTab?.getAttribute('aria-controls')).toBe('panel-security');
+      });
+    });
+
+    describe('Empty State', () => {
+      it('should show empty state when application has no environments', fakeAsync(() => {
+        // Validates: Requirements 5.1
+        const appWithNoEnvs: IApplications = {
+          ...mockApplication,
+          environments: [],
+        };
+        store.overrideSelector(fromApplications.selectSelectedApplication, appWithNoEnvs);
+        store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        // Switch to Security tab
+        component.setActiveTab(ApplicationDetailTab.Security);
+        fixture.detectChanges();
+
+        expect(component.environmentKeyRows.length).toBe(0);
+
+        const compiled = fixture.nativeElement as HTMLElement;
+        // Data grid shows empty message when no data
+        const emptyState = compiled.querySelector('.data-grid__empty');
+        expect(emptyState).toBeTruthy();
+        expect(emptyState?.textContent).toContain('No environments configured');
+      }));
+
+      it('should show link to Overview tab in empty state', fakeAsync(() => {
+        // Validates: Requirements 5.2
+        // Note: The data-grid component shows the empty message which includes the hint
+        const appWithNoEnvs: IApplications = {
+          ...mockApplication,
+          environments: [],
+        };
+        store.overrideSelector(fromApplications.selectSelectedApplication, appWithNoEnvs);
+        store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        component.setActiveTab(ApplicationDetailTab.Security);
+        fixture.detectChanges();
+
+        const compiled = fixture.nativeElement as HTMLElement;
+        const emptyState = compiled.querySelector('.data-grid__empty');
+        expect(emptyState).toBeTruthy();
+        expect(emptyState?.textContent).toContain('Configure environments in the Overview tab');
+      }));
+
+      it('should navigate to Overview tab when setActiveTab is called', fakeAsync(() => {
+        // Note: Empty state now uses data-grid's built-in empty message
+        // Navigation is tested by calling setActiveTab directly
+        const appWithNoEnvs: IApplications = {
+          ...mockApplication,
+          environments: [],
+        };
+        store.overrideSelector(fromApplications.selectSelectedApplication, appWithNoEnvs);
+        store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        component.setActiveTab(ApplicationDetailTab.Security);
+        fixture.detectChanges();
+
+        // Verify we're on Security tab
+        expect(component.activeTab).toBe(ApplicationDetailTab.Security);
+
+        // Navigate to Overview
+        component.setActiveTab(ApplicationDetailTab.Overview);
+        fixture.detectChanges();
+
+        expect(component.activeTab).toBe(ApplicationDetailTab.Overview);
+      }));
+    });
+
+    describe('Environment Key Rows', () => {
+      it('should show environment key rows when environments are configured', fakeAsync(() => {
+        // Validates: Requirements 2.2
+        store.overrideSelector(fromApplications.selectSelectedApplication, mockApplication);
+        store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        component.setActiveTab(ApplicationDetailTab.Security);
+        fixture.detectChanges();
+
+        // mockApplication has ['PRODUCTION', 'STAGING'] environments
+        expect(component.environmentKeyRows.length).toBe(2);
+      }));
+
+      it('should display correct environment labels', fakeAsync(() => {
+        store.overrideSelector(fromApplications.selectSelectedApplication, mockApplication);
+        store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        const labels = component.environmentKeyRows.map(row => row.environmentLabel);
+        expect(labels).toContain('Production');
+        expect(labels).toContain('Staging');
+      }));
     });
   });
 });

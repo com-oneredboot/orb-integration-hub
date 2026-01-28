@@ -25,6 +25,7 @@ import { OrganizationStatus } from '../../../../../core/enums/OrganizationStatus
 import { StatusBadgeComponent } from '../../../../../shared/components/ui/status-badge.component';
 import { DebugPanelComponent, DebugContext } from '../../../../../shared/components/debug/debug-panel.component';
 import { DebugLogEntry } from '../../../../../core/services/debug-log.service';
+import { DangerZoneCardComponent } from '../../../../../shared/components/danger-zone-card/danger-zone-card.component';
 
 // Store imports
 import { OrganizationsActions } from '../../store/organizations.actions';
@@ -40,7 +41,8 @@ import * as fromUser from '../../../../user/store/user.selectors';
     FormsModule,
     FontAwesomeModule,
     StatusBadgeComponent,
-    DebugPanelComponent
+    DebugPanelComponent,
+    DangerZoneCardComponent
   ],
   templateUrl: './organization-detail-page.component.html',
   styleUrls: ['./organization-detail-page.component.scss']

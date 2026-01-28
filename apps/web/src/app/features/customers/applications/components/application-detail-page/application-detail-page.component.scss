@@ -498,137 +498,52 @@
   }
 }
 
-// Security Tab Styles
-.security-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: v.$spacing-xl v.$spacing-lg;
-  text-align: center;
-  color: v.$text-secondary;
+// Security Tab Styles - Uses DataGridComponent with global orb-* classes
+// Custom cell template styles only (not duplicating global styles)
 
-  fa-icon {
-    color: v.$gray-400;
-    margin-bottom: v.$spacing-md;
-  }
-
-  &__text {
-    margin: 0 0 v.$spacing-sm;
-    font-size: v.$font-size-lg;
-    font-weight: v.$font-weight-medium;
-    color: v.$text-primary;
-  }
-
-  &__hint {
-    margin: 0;
-    font-size: v.$font-size-sm;
-  }
-
-  &__link {
-    color: v.$primary-color;
-    cursor: pointer;
-    text-decoration: underline;
-    background: none;
-    border: none;
-    padding: 0;
-    font-family: inherit;
-    font-size: inherit;
-
-    &:hover {
-      text-decoration: none;
-    }
-
-    &:focus {
-      outline: 2px solid v.$primary-color;
-      outline-offset: 2px;
-      border-radius: 2px;
-    }
-  }
-}
-
-.security-key-list {
+// Generated key display (shown inline in data grid cell after key generation)
+.security-key-generated {
   display: flex;
   flex-direction: column;
   gap: v.$spacing-sm;
-  padding: v.$spacing-md;
-}
+  padding: v.$spacing-sm;
+  background: rgba(v.$success-color, 0.05);
+  border: 1px solid rgba(v.$success-color, 0.3);
+  border-radius: v.$border-radius-sm;
 
-.security-key-row {
-  display: flex;
-  align-items: center;
-  gap: v.$spacing-md;
-  padding: v.$spacing-md;
-  background: v.$gray-50;
-  border: 1px solid v.$border-color;
-  border-radius: v.$border-radius;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-
-  &:hover {
-    border-color: v.$gray-400;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  }
-
-  // Expanded state when showing generated key
-  &--generated {
-    flex-wrap: wrap;
-    background: rgba(v.$success-color, 0.05);
-    border-color: v.$success-color;
-    position: relative;
-  }
-
-  &__generated {
-    flex: 1;
-    min-width: 300px;
-    display: flex;
-    flex-direction: column;
-    gap: v.$spacing-sm;
-    padding: v.$spacing-sm;
-    background: v.$white;
-    border-radius: v.$border-radius-sm;
-    border: 1px solid rgba(v.$success-color, 0.3);
-  }
-
-  &__generated-header {
+  &__header {
     display: flex;
     align-items: center;
     gap: v.$spacing-xs;
     color: v.$success-color;
     font-weight: v.$font-weight-medium;
-  }
-
-  &__generated-icon {
-    font-size: 1rem;
-  }
-
-  &__generated-title {
     font-size: v.$font-size-sm;
   }
 
-  &__generated-key {
+  &__icon {
+    font-size: 1rem;
+  }
+
+  &__key {
     display: flex;
     align-items: center;
     gap: v.$spacing-sm;
     flex-wrap: wrap;
+
+    code {
+      flex: 1;
+      min-width: 200px;
+      padding: v.$spacing-sm;
+      font-family: v.$font-family-monospace;
+      font-size: v.$font-size-sm;
+      background: v.$gray-100;
+      border-radius: v.$border-radius-sm;
+      word-break: break-all;
+      color: v.$text-primary;
+    }
   }
 
-  &__full-key {
-    flex: 1;
-    min-width: 200px;
-    padding: v.$spacing-sm;
-    font-family: v.$font-family-monospace;
-    font-size: v.$font-size-sm;
-    background: v.$gray-100;
-    border-radius: v.$border-radius-sm;
-    word-break: break-all;
-    color: v.$text-primary;
-  }
-
-  &__copy-btn {
-    flex-shrink: 0;
-  }
-
-  &__generated-warning {
+  &__warning {
     display: flex;
     align-items: center;
     gap: v.$spacing-xs;
@@ -642,153 +557,12 @@
       color: v.$warning-color;
     }
   }
-
-  &__dismiss {
-    position: absolute;
-    top: v.$spacing-sm;
-    right: v.$spacing-sm;
-    padding: v.$spacing-xs;
-    background: transparent;
-    border: none;
-    color: v.$text-secondary;
-    cursor: pointer;
-    border-radius: v.$border-radius-sm;
-    transition: color 0.2s ease, background-color 0.2s ease;
-
-    &:hover {
-      color: v.$text-primary;
-      background: v.$gray-200;
-    }
-
-    &:focus {
-      outline: 2px solid v.$primary-color;
-      outline-offset: 2px;
-    }
-  }
-
-  &__env {
-    display: inline-flex;
-    align-items: center;
-    gap: v.$spacing-xs;
-    padding: v.$spacing-xs v.$spacing-sm;
-    border-radius: v.$border-radius-sm;
-    font-size: v.$font-size-sm;
-    font-weight: v.$font-weight-medium;
-    min-width: 120px;
-
-    // Environment color variants
-    &--production {
-      background: #fef2f2;
-      color: #dc2626;
-
-      .security-key-row__env-icon {
-        color: #dc2626;
-      }
-    }
-
-    &--staging {
-      background: #fffbeb;
-      color: #d97706;
-
-      .security-key-row__env-icon {
-        color: #d97706;
-      }
-    }
-
-    &--development {
-      background: #eff6ff;
-      color: #2563eb;
-
-      .security-key-row__env-icon {
-        color: #2563eb;
-      }
-    }
-
-    &--test {
-      background: #f5f3ff;
-      color: #7c3aed;
-
-      .security-key-row__env-icon {
-        color: #7c3aed;
-      }
-    }
-
-    &--preview {
-      background: #f9fafb;
-      color: #6b7280;
-
-      .security-key-row__env-icon {
-        color: #6b7280;
-      }
-    }
-  }
-
-  &__env-icon {
-    font-size: 8px;
-  }
-
-  &__env-label {
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  &__info {
-    display: flex;
-    align-items: center;
-    gap: v.$spacing-md;
-    flex: 1;
-  }
-
-  &__prefix {
-    font-family: v.$font-family-monospace;
-    font-size: v.$font-size-sm;
-    color: v.$text-primary;
-    background: v.$white;
-    padding: v.$spacing-xs v.$spacing-sm;
-    border-radius: v.$border-radius-sm;
-    border: 1px solid v.$border-color;
-  }
-
-  &__last-used {
-    font-size: v.$font-size-xs;
-    color: v.$text-secondary;
-  }
-
-  &__no-key {
-    flex: 1;
-    font-size: v.$font-size-sm;
-    color: v.$text-secondary;
-    font-style: italic;
-  }
-
-  &__actions {
-    display: flex;
-    align-items: center;
-    gap: v.$spacing-sm;
-    margin-left: auto;
-  }
 }
 
-// Responsive adjustments for security tab
-@media (max-width: 768px) {
-  .security-key-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: v.$spacing-sm;
-
-    &__env {
-      min-width: auto;
-    }
-
-    &__info {
-      flex-wrap: wrap;
-      width: 100%;
-    }
-
-    &__actions {
-      width: 100%;
-      justify-content: flex-end;
-      margin-left: 0;
-    }
-  }
+// Action buttons container for data grid cells
+.security-key-actions {
+  display: flex;
+  align-items: center;
+  gap: v.$spacing-sm;
+  justify-content: flex-end;
 }

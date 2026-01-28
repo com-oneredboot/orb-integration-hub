@@ -4,6 +4,7 @@
  * Property tests for application detail page using NgRx store-first pattern.
  *
  * @see .kiro/specs/store-centric-refactoring/design.md
+ * @see .kiro/specs/application-security-tab/design.md
  * _Requirements: 3.1-3.5, 7.2_
  */
 
@@ -18,14 +19,18 @@ import { fas } from '@fortawesome/free-solid-svg-icons';
 import { Action } from '@ngrx/store';
 import * as fc from 'fast-check';
 
-import { ApplicationDetailPageComponent } from './application-detail-page.component';
+import { ApplicationDetailPageComponent, ApplicationDetailTab } from './application-detail-page.component';
 import { IApplications } from '../../../../../core/models/ApplicationsModel';
 import { IOrganizations } from '../../../../../core/models/OrganizationsModel';
+import { IApplicationApiKeys } from '../../../../../core/models/ApplicationApiKeysModel';
 import { ApplicationStatus } from '../../../../../core/enums/ApplicationStatusEnum';
 import { OrganizationStatus } from '../../../../../core/enums/OrganizationStatusEnum';
+import { ApplicationApiKeyStatus } from '../../../../../core/enums/ApplicationApiKeyStatusEnum';
+import { Environment } from '../../../../../core/enums/EnvironmentEnum';
 import * as fromApplications from '../../store/applications.selectors';
 import * as fromOrganizations from '../../../organizations/store/organizations.selectors';
 import * as fromUser from '../../../../user/store/user.selectors';
+import * as fromApiKeys from '../../store/api-keys/api-keys.selectors';
 
 describe('ApplicationDetailPageComponent Property Tests', () => {
   const mockUser = {
@@ -507,6 +512,557 @@ describe('ApplicationDetailPageComponent Property Tests', () => {
           return true;
         }),
         { numRuns: 50 }
+      );
+    }));
+  });
+
+  /**
+   * Security Tab Property Tests
+   *
+   * Property-based tests for the Security tab functionality.
+   * @see .kiro/specs/application-security-tab/design.md
+   */
+
+  // Helper to create mock API key
+  const createMockApiKey = (
+    environment: string,
+    status: ApplicationApiKeyStatus = ApplicationApiKeyStatus.Active
+  ): IApplicationApiKeys => ({
+    applicationApiKeyId: `key-${environment}-${Date.now()}`,
+    applicationId: 'app-789',
+    organizationId: 'org-456',
+    environment: environment as Environment,
+    keyPrefix: `orb_${environment.toLowerCase().substring(0, 2)}_abc`,
+    keyHash: 'mock-hash-value',
+    status,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+
+  // Arbitrary for API key status
+  const apiKeyStatusArbitrary = fc.constantFrom(
+    ApplicationApiKeyStatus.Active,
+    ApplicationApiKeyStatus.Rotating,
+    ApplicationApiKeyStatus.Revoked,
+    ApplicationApiKeyStatus.Expired
+  );
+
+  /**
+   * Feature: application-security-tab, Property 1: Environment Row Count Matches Selected Environments
+   * Validates: Requirements 2.2
+   *
+   * For any application with N selected environments, the Security tab SHALL display exactly N environment key rows.
+   */
+  describe('Security Tab Property 1: Environment Row Count Matches Selected Environments', () => {
+    it('should display exactly N environment key rows for N selected environments', fakeAsync(() => {
+      fc.assert(
+        fc.property(environmentsArrayArbitrary, (environments) => {
+          const actions$ = new ReplaySubject<Action>(1);
+          const paramMapSubject = new BehaviorSubject(convertToParamMap({ id: 'app-789' }));
+
+          const app: IApplications = {
+            applicationId: 'app-789',
+            name: 'Test App',
+            organizationId: 'org-456',
+            ownerId: 'user-123',
+            status: ApplicationStatus.Active,
+            apiKey: 'api-key',
+            apiKeyNext: '',
+            environments: environments,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+
+          TestBed.resetTestingModule();
+          TestBed.configureTestingModule({
+            imports: [ApplicationDetailPageComponent, RouterTestingModule],
+            providers: [
+              provideMockStore({
+                selectors: [
+                  { selector: fromApplications.selectSelectedApplication, value: app },
+                  { selector: fromApplications.selectIsLoading, value: false },
+                  { selector: fromApplications.selectIsSaving, value: false },
+                  { selector: fromApplications.selectError, value: null },
+                  { selector: fromApplications.selectSaveError, value: null },
+                  { selector: fromOrganizations.selectOrganizations, value: [mockOrganization] },
+                  { selector: fromUser.selectCurrentUser, value: mockUser },
+                  { selector: fromUser.selectDebugMode, value: false },
+                  { selector: fromApiKeys.selectApiKeys, value: [] },
+                  { selector: fromApiKeys.selectIsGenerating, value: false },
+                  { selector: fromApiKeys.selectIsRotating, value: false },
+                  { selector: fromApiKeys.selectIsRevoking, value: false },
+                  { selector: fromApiKeys.selectGeneratedKey, value: null },
+                ],
+              }),
+              provideMockActions(() => actions$),
+              {
+                provide: ActivatedRoute,
+                useValue: { paramMap: paramMapSubject.asObservable() },
+              },
+            ],
+          });
+
+          const library = TestBed.inject(FaIconLibrary);
+          library.addIconPacks(fas);
+
+          const fixture = TestBed.createComponent(ApplicationDetailPageComponent);
+          const component = fixture.componentInstance;
+          fixture.detectChanges();
+          tick();
+
+          // Switch to Security tab
+          component.setActiveTab(ApplicationDetailTab.Security);
+          fixture.detectChanges();
+
+          // Property: row count equals environment count
+          expect(component.environmentKeyRows.length).toBe(environments.length);
+
+          // Each environment should have a corresponding row
+          environments.forEach(env => {
+            const row = component.environmentKeyRows.find(r => r.environment === env);
+            expect(row).toBeTruthy();
+          });
+
+          fixture.destroy();
+          TestBed.inject(MockStore).resetSelectors();
+          return true;
+        }),
+        { numRuns: 100 }
+      );
+    }));
+  });
+
+  /**
+   * Feature: application-security-tab, Property 2: Environment Row Content Correctness
+   * Validates: Requirements 2.3, 2.4, 4.1, 4.2
+   *
+   * For any environment key row:
+   * - If the environment has an active API key, the row SHALL display the key prefix, status badge, and action buttons (Rotate, Revoke)
+   * - If the environment has no API key (or only revoked keys), the row SHALL display "No API key" and a "Generate Key" CTA
+   */
+  describe('Security Tab Property 2: Environment Row Content Correctness', () => {
+    it('should show key info and action buttons when environment has active key', fakeAsync(() => {
+      fc.assert(
+        fc.property(environmentArbitrary, (environment) => {
+          const actions$ = new ReplaySubject<Action>(1);
+          const paramMapSubject = new BehaviorSubject(convertToParamMap({ id: 'app-789' }));
+
+          const app: IApplications = {
+            applicationId: 'app-789',
+            name: 'Test App',
+            organizationId: 'org-456',
+            ownerId: 'user-123',
+            status: ApplicationStatus.Active,
+            apiKey: 'api-key',
+            apiKeyNext: '',
+            environments: [environment],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+
+          const mockApiKey = createMockApiKey(environment, ApplicationApiKeyStatus.Active);
+
+          TestBed.resetTestingModule();
+          TestBed.configureTestingModule({
+            imports: [ApplicationDetailPageComponent, RouterTestingModule],
+            providers: [
+              provideMockStore({
+                selectors: [
+                  { selector: fromApplications.selectSelectedApplication, value: app },
+                  { selector: fromApplications.selectIsLoading, value: false },
+                  { selector: fromApplications.selectIsSaving, value: false },
+                  { selector: fromApplications.selectError, value: null },
+                  { selector: fromApplications.selectSaveError, value: null },
+                  { selector: fromOrganizations.selectOrganizations, value: [mockOrganization] },
+                  { selector: fromUser.selectCurrentUser, value: mockUser },
+                  { selector: fromUser.selectDebugMode, value: false },
+                  { selector: fromApiKeys.selectApiKeys, value: [mockApiKey] },
+                  { selector: fromApiKeys.selectIsGenerating, value: false },
+                  { selector: fromApiKeys.selectIsRotating, value: false },
+                  { selector: fromApiKeys.selectIsRevoking, value: false },
+                  { selector: fromApiKeys.selectGeneratedKey, value: null },
+                ],
+              }),
+              provideMockActions(() => actions$),
+              {
+                provide: ActivatedRoute,
+                useValue: { paramMap: paramMapSubject.asObservable() },
+              },
+            ],
+          });
+
+          const library = TestBed.inject(FaIconLibrary);
+          library.addIconPacks(fas);
+
+          const fixture = TestBed.createComponent(ApplicationDetailPageComponent);
+          const component = fixture.componentInstance;
+          fixture.detectChanges();
+          tick();
+
+          component.setActiveTab(ApplicationDetailTab.Security);
+          fixture.detectChanges();
+
+          const row = component.environmentKeyRows.find(r => r.environment === environment);
+          expect(row).toBeTruthy();
+
+          // Property: row with active key should have correct state
+          expect(row!.hasKey).toBe(true);
+          expect(row!.apiKey).toBeTruthy();
+          expect(row!.apiKey!.keyPrefix).toBeTruthy();
+          expect(row!.canRotate).toBe(true);
+          expect(row!.canRevoke).toBe(true);
+          expect(row!.canGenerate).toBe(false);
+
+          fixture.destroy();
+          TestBed.inject(MockStore).resetSelectors();
+          return true;
+        }),
+        { numRuns: 100 }
+      );
+    }));
+
+    it('should show Generate Key CTA when environment has no key', fakeAsync(() => {
+      fc.assert(
+        fc.property(environmentArbitrary, (environment) => {
+          const actions$ = new ReplaySubject<Action>(1);
+          const paramMapSubject = new BehaviorSubject(convertToParamMap({ id: 'app-789' }));
+
+          const app: IApplications = {
+            applicationId: 'app-789',
+            name: 'Test App',
+            organizationId: 'org-456',
+            ownerId: 'user-123',
+            status: ApplicationStatus.Active,
+            apiKey: 'api-key',
+            apiKeyNext: '',
+            environments: [environment],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+
+          TestBed.resetTestingModule();
+          TestBed.configureTestingModule({
+            imports: [ApplicationDetailPageComponent, RouterTestingModule],
+            providers: [
+              provideMockStore({
+                selectors: [
+                  { selector: fromApplications.selectSelectedApplication, value: app },
+                  { selector: fromApplications.selectIsLoading, value: false },
+                  { selector: fromApplications.selectIsSaving, value: false },
+                  { selector: fromApplications.selectError, value: null },
+                  { selector: fromApplications.selectSaveError, value: null },
+                  { selector: fromOrganizations.selectOrganizations, value: [mockOrganization] },
+                  { selector: fromUser.selectCurrentUser, value: mockUser },
+                  { selector: fromUser.selectDebugMode, value: false },
+                  { selector: fromApiKeys.selectApiKeys, value: [] }, // No keys
+                  { selector: fromApiKeys.selectIsGenerating, value: false },
+                  { selector: fromApiKeys.selectIsRotating, value: false },
+                  { selector: fromApiKeys.selectIsRevoking, value: false },
+                  { selector: fromApiKeys.selectGeneratedKey, value: null },
+                ],
+              }),
+              provideMockActions(() => actions$),
+              {
+                provide: ActivatedRoute,
+                useValue: { paramMap: paramMapSubject.asObservable() },
+              },
+            ],
+          });
+
+          const library = TestBed.inject(FaIconLibrary);
+          library.addIconPacks(fas);
+
+          const fixture = TestBed.createComponent(ApplicationDetailPageComponent);
+          const component = fixture.componentInstance;
+          fixture.detectChanges();
+          tick();
+
+          component.setActiveTab(ApplicationDetailTab.Security);
+          fixture.detectChanges();
+
+          const row = component.environmentKeyRows.find(r => r.environment === environment);
+          expect(row).toBeTruthy();
+
+          // Property: row without key should show Generate CTA
+          expect(row!.hasKey).toBe(false);
+          expect(row!.apiKey).toBeNull();
+          expect(row!.canGenerate).toBe(true);
+          expect(row!.canRotate).toBe(false);
+          expect(row!.canRevoke).toBe(false);
+
+          fixture.destroy();
+          TestBed.inject(MockStore).resetSelectors();
+          return true;
+        }),
+        { numRuns: 100 }
+      );
+    }));
+
+    it('should show Generate Key CTA when environment only has revoked keys', fakeAsync(() => {
+      fc.assert(
+        fc.property(environmentArbitrary, (environment) => {
+          const actions$ = new ReplaySubject<Action>(1);
+          const paramMapSubject = new BehaviorSubject(convertToParamMap({ id: 'app-789' }));
+
+          const app: IApplications = {
+            applicationId: 'app-789',
+            name: 'Test App',
+            organizationId: 'org-456',
+            ownerId: 'user-123',
+            status: ApplicationStatus.Active,
+            apiKey: 'api-key',
+            apiKeyNext: '',
+            environments: [environment],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+
+          // Only revoked key exists
+          const revokedKey = createMockApiKey(environment, ApplicationApiKeyStatus.Revoked);
+
+          TestBed.resetTestingModule();
+          TestBed.configureTestingModule({
+            imports: [ApplicationDetailPageComponent, RouterTestingModule],
+            providers: [
+              provideMockStore({
+                selectors: [
+                  { selector: fromApplications.selectSelectedApplication, value: app },
+                  { selector: fromApplications.selectIsLoading, value: false },
+                  { selector: fromApplications.selectIsSaving, value: false },
+                  { selector: fromApplications.selectError, value: null },
+                  { selector: fromApplications.selectSaveError, value: null },
+                  { selector: fromOrganizations.selectOrganizations, value: [mockOrganization] },
+                  { selector: fromUser.selectCurrentUser, value: mockUser },
+                  { selector: fromUser.selectDebugMode, value: false },
+                  { selector: fromApiKeys.selectApiKeys, value: [revokedKey] },
+                  { selector: fromApiKeys.selectIsGenerating, value: false },
+                  { selector: fromApiKeys.selectIsRotating, value: false },
+                  { selector: fromApiKeys.selectIsRevoking, value: false },
+                  { selector: fromApiKeys.selectGeneratedKey, value: null },
+                ],
+              }),
+              provideMockActions(() => actions$),
+              {
+                provide: ActivatedRoute,
+                useValue: { paramMap: paramMapSubject.asObservable() },
+              },
+            ],
+          });
+
+          const library = TestBed.inject(FaIconLibrary);
+          library.addIconPacks(fas);
+
+          const fixture = TestBed.createComponent(ApplicationDetailPageComponent);
+          const component = fixture.componentInstance;
+          fixture.detectChanges();
+          tick();
+
+          component.setActiveTab(ApplicationDetailTab.Security);
+          fixture.detectChanges();
+
+          const row = component.environmentKeyRows.find(r => r.environment === environment);
+          expect(row).toBeTruthy();
+
+          // Property: row with only revoked key should show Generate CTA
+          expect(row!.hasKey).toBe(false);
+          expect(row!.canGenerate).toBe(true);
+          expect(row!.canRotate).toBe(false);
+          expect(row!.canRevoke).toBe(false);
+
+          fixture.destroy();
+          TestBed.inject(MockStore).resetSelectors();
+          return true;
+        }),
+        { numRuns: 100 }
+      );
+    }));
+  });
+
+  /**
+   * Feature: application-security-tab, Property 3: Action Button Visibility Based on Key Status
+   * Validates: Requirements 4.1, 4.2, 4.5
+   *
+   * For any API key with a given status:
+   * - ACTIVE status → Rotate and Revoke buttons visible, Generate hidden
+   * - ROTATING status → Rotate and Revoke buttons visible, Generate hidden
+   * - REVOKED status → Generate button visible, Rotate and Revoke hidden
+   * - No key → Generate button visible, Rotate and Revoke hidden
+   */
+  describe('Security Tab Property 3: Action Button Visibility Based on Key Status', () => {
+    it('should show correct buttons based on API key status', fakeAsync(() => {
+      fc.assert(
+        fc.property(environmentArbitrary, apiKeyStatusArbitrary, (environment, status) => {
+          const actions$ = new ReplaySubject<Action>(1);
+          const paramMapSubject = new BehaviorSubject(convertToParamMap({ id: 'app-789' }));
+
+          const app: IApplications = {
+            applicationId: 'app-789',
+            name: 'Test App',
+            organizationId: 'org-456',
+            ownerId: 'user-123',
+            status: ApplicationStatus.Active,
+            apiKey: 'api-key',
+            apiKeyNext: '',
+            environments: [environment],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+
+          const mockApiKey = createMockApiKey(environment, status);
+
+          TestBed.resetTestingModule();
+          TestBed.configureTestingModule({
+            imports: [ApplicationDetailPageComponent, RouterTestingModule],
+            providers: [
+              provideMockStore({
+                selectors: [
+                  { selector: fromApplications.selectSelectedApplication, value: app },
+                  { selector: fromApplications.selectIsLoading, value: false },
+                  { selector: fromApplications.selectIsSaving, value: false },
+                  { selector: fromApplications.selectError, value: null },
+                  { selector: fromApplications.selectSaveError, value: null },
+                  { selector: fromOrganizations.selectOrganizations, value: [mockOrganization] },
+                  { selector: fromUser.selectCurrentUser, value: mockUser },
+                  { selector: fromUser.selectDebugMode, value: false },
+                  { selector: fromApiKeys.selectApiKeys, value: [mockApiKey] },
+                  { selector: fromApiKeys.selectIsGenerating, value: false },
+                  { selector: fromApiKeys.selectIsRotating, value: false },
+                  { selector: fromApiKeys.selectIsRevoking, value: false },
+                  { selector: fromApiKeys.selectGeneratedKey, value: null },
+                ],
+              }),
+              provideMockActions(() => actions$),
+              {
+                provide: ActivatedRoute,
+                useValue: { paramMap: paramMapSubject.asObservable() },
+              },
+            ],
+          });
+
+          const library = TestBed.inject(FaIconLibrary);
+          library.addIconPacks(fas);
+
+          const fixture = TestBed.createComponent(ApplicationDetailPageComponent);
+          const component = fixture.componentInstance;
+          fixture.detectChanges();
+          tick();
+
+          component.setActiveTab(ApplicationDetailTab.Security);
+          fixture.detectChanges();
+
+          const row = component.environmentKeyRows.find(r => r.environment === environment);
+          expect(row).toBeTruthy();
+
+          // Property: button visibility based on status
+          switch (status) {
+            case ApplicationApiKeyStatus.Active:
+              // ACTIVE → Rotate and Revoke visible, Generate hidden
+              expect(row!.canRotate).toBe(true);
+              expect(row!.canRevoke).toBe(true);
+              expect(row!.canGenerate).toBe(false);
+              break;
+
+            case ApplicationApiKeyStatus.Rotating:
+              // ROTATING → Rotate and Revoke visible, Generate hidden
+              expect(row!.canRotate).toBe(true);
+              expect(row!.canRevoke).toBe(true);
+              expect(row!.canGenerate).toBe(false);
+              break;
+
+            case ApplicationApiKeyStatus.Revoked:
+              // REVOKED → Generate visible, Rotate and Revoke hidden
+              expect(row!.canGenerate).toBe(true);
+              expect(row!.canRotate).toBe(false);
+              expect(row!.canRevoke).toBe(false);
+              break;
+
+            case ApplicationApiKeyStatus.Expired:
+              // EXPIRED → Generate visible, Rotate and Revoke hidden
+              expect(row!.canGenerate).toBe(true);
+              expect(row!.canRotate).toBe(false);
+              expect(row!.canRevoke).toBe(false);
+              break;
+          }
+
+          fixture.destroy();
+          TestBed.inject(MockStore).resetSelectors();
+          return true;
+        }),
+        { numRuns: 100 }
+      );
+    }));
+
+    it('should show Generate button when no key exists for environment', fakeAsync(() => {
+      fc.assert(
+        fc.property(environmentsArrayArbitrary, (environments) => {
+          const actions$ = new ReplaySubject<Action>(1);
+          const paramMapSubject = new BehaviorSubject(convertToParamMap({ id: 'app-789' }));
+
+          const app: IApplications = {
+            applicationId: 'app-789',
+            name: 'Test App',
+            organizationId: 'org-456',
+            ownerId: 'user-123',
+            status: ApplicationStatus.Active,
+            apiKey: 'api-key',
+            apiKeyNext: '',
+            environments: environments,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+
+          TestBed.resetTestingModule();
+          TestBed.configureTestingModule({
+            imports: [ApplicationDetailPageComponent, RouterTestingModule],
+            providers: [
+              provideMockStore({
+                selectors: [
+                  { selector: fromApplications.selectSelectedApplication, value: app },
+                  { selector: fromApplications.selectIsLoading, value: false },
+                  { selector: fromApplications.selectIsSaving, value: false },
+                  { selector: fromApplications.selectError, value: null },
+                  { selector: fromApplications.selectSaveError, value: null },
+                  { selector: fromOrganizations.selectOrganizations, value: [mockOrganization] },
+                  { selector: fromUser.selectCurrentUser, value: mockUser },
+                  { selector: fromUser.selectDebugMode, value: false },
+                  { selector: fromApiKeys.selectApiKeys, value: [] }, // No keys
+                  { selector: fromApiKeys.selectIsGenerating, value: false },
+                  { selector: fromApiKeys.selectIsRotating, value: false },
+                  { selector: fromApiKeys.selectIsRevoking, value: false },
+                  { selector: fromApiKeys.selectGeneratedKey, value: null },
+                ],
+              }),
+              provideMockActions(() => actions$),
+              {
+                provide: ActivatedRoute,
+                useValue: { paramMap: paramMapSubject.asObservable() },
+              },
+            ],
+          });
+
+          const library = TestBed.inject(FaIconLibrary);
+          library.addIconPacks(fas);
+
+          const fixture = TestBed.createComponent(ApplicationDetailPageComponent);
+          const component = fixture.componentInstance;
+          fixture.detectChanges();
+          tick();
+
+          component.setActiveTab(ApplicationDetailTab.Security);
+          fixture.detectChanges();
+
+          // Property: all rows without keys should show Generate button
+          component.environmentKeyRows.forEach(row => {
+            expect(row.canGenerate).toBe(true);
+            expect(row.canRotate).toBe(false);
+            expect(row.canRevoke).toBe(false);
+          });
+
+          fixture.destroy();
+          TestBed.inject(MockStore).resetSelectors();
+          return true;
+        }),
+        { numRuns: 100 }
       );
     }));
   });

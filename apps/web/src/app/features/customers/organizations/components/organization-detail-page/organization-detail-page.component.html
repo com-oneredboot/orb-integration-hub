@@ -357,38 +357,14 @@
 
           <!-- Danger Zone Tab -->
           <div class="org-detail-page__tab-panel" *ngIf="activeTab === 'danger'">
-            <div class="orb-card orb-card--danger">
-              <div class="orb-card__header">
-                <h2 class="orb-card__title orb-card__title--danger">
-                  <fa-icon icon="exclamation-triangle" class="orb-card__icon"></fa-icon>
-                  Danger Zone
-                </h2>
-              </div>
-              <div class="orb-card__content orb-card__content--padded">
-                <p class="org-detail-page__danger-warning">
-                  These actions are permanent and cannot be undone. Please proceed with caution.
-                </p>
-                
-                <div class="org-detail-page__danger-actions">
-                  <div class="org-detail-page__danger-action">
-                    <div class="org-detail-page__danger-action-info">
-                      <h4 class="org-detail-page__danger-action-title">Delete Organization</h4>
-                      <p class="org-detail-page__danger-action-desc">
-                        Permanently delete this organization and all associated data. This action cannot be undone.
-                      </p>
-                    </div>
-                    <button
-                      class="orb-btn orb-btn--danger"
-                      (click)="onDelete()"
-                      [disabled]="data.isSaving || data.isDeleting">
-                      <fa-icon icon="spinner" animation="spin" *ngIf="data.isDeleting"></fa-icon>
-                      <fa-icon icon="trash" *ngIf="!data.isDeleting"></fa-icon>
-                      Delete Organization
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <app-danger-zone-card
+              title="Delete Organization"
+              description="Permanently delete this organization and all associated data. This action cannot be undone."
+              buttonText="Delete Organization"
+              [isLoading]="data.isDeleting"
+              [disabled]="data.isSaving"
+              (action)="onDelete()">
+            </app-danger-zone-card>
           </div>
 
         </div>

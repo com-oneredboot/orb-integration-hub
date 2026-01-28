@@ -72,23 +72,23 @@ This implementation restructures the Application Detail Page's "API Keys" tab in
   - Test generate/rotate/revoke actions work
   - Ask user if questions arise
 
-- [ ] 7. Write tests
-  - [ ] 7.1 Write unit tests for tab rename and structure
+- [x] 7. Write tests
+  - [x] 7.1 Write unit tests for tab rename and structure
     - Test enum value exists
     - Test tab renders with correct icon and label
     - Test empty state renders when no environments
     - _Requirements: 1.1, 5.1_
-  - [ ] 7.2 Write property test for environment row count
+  - [x] 7.2 Write property test for environment row count
     - **Property 1: Environment Row Count Matches Selected Environments**
     - **Validates: Requirements 2.2**
-  - [ ] 7.3 Write property test for row content correctness
+  - [x] 7.3 Write property test for row content correctness
     - **Property 2: Environment Row Content Correctness**
     - **Validates: Requirements 2.3, 2.4, 4.1, 4.2**
-  - [ ] 7.4 Write property test for action button visibility
+  - [x] 7.4 Write property test for action button visibility
     - **Property 3: Action Button Visibility Based on Key Status**
     - **Validates: Requirements 4.1, 4.2, 4.5**
 
-- [ ] 8. Final checkpoint
+- [x] 8. Final checkpoint
   - Ensure all tests pass
   - Verify UI matches design
   - Test all user flows (generate, rotate, revoke)

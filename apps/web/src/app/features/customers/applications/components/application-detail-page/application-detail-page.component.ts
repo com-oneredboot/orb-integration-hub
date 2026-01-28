@@ -4,14 +4,14 @@
  * Standalone page for viewing/editing a single application.
  * Handles both PENDING (create) and ACTIVE (edit) modes based on application status.
  * Uses the create-on-click pattern with NgRx store as single source of truth.
- * Includes tabbed interface for Details, Groups, and API Keys.
+ * Includes tabbed interface for Overview, Groups, Security, and Danger Zone.
  *
  * @see .kiro/specs/store-centric-refactoring/design.md
  * @see .kiro/specs/application-access-management/design.md
  * _Requirements: 3.1, 3.2, 3.3, 3.4, 8.1, 9.1_
  */
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, TemplateRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -33,6 +33,20 @@ import { DebugLogEntry } from '../../../../../core/services/debug-log.service';
 
 // Child components
 import { GroupsListComponent } from '../groups-list/groups-list.component';
+import { DangerZoneCardComponent } from '../../../../../shared/components/danger-zone-card/danger-zone-card.component';
+
+// Data Grid
+import {
+  DataGridComponent,
+  ColumnDefinition,
+  PageState,
+  SortState,
+  FilterState,
+  PageChangeEvent,
+  SortChangeEvent,
+  FilterChangeEvent,
+  DEFAULT_PAGE_STATE,
+} from '../../../../../shared/components/data-grid';
 
 // Validation utilities
 import { validateApplicationApiKeys, formatMissingEnvironments } from '../../utils/api-key-validation';
@@ -64,9 +78,10 @@ export interface EnvironmentKeyRow {
  * Tab identifiers for the application detail page
  */
 export enum ApplicationDetailTab {
-  Details = 'details',
+  Overview = 'overview',  // Renamed from Details
   Groups = 'groups',
-  Security = 'security',  // Renamed from ApiKeys
+  Security = 'security',
+  Danger = 'danger',  // New tab for delete action
 }
 
 @Component({
@@ -80,6 +95,8 @@ export enum ApplicationDetailTab {
     StatusBadgeComponent,
     DebugPanelComponent,
     GroupsListComponent,
+    DangerZoneCardComponent,
+    DataGridComponent,
   ],
   templateUrl: './application-detail-page.component.html',
   styleUrls: ['./application-detail-page.component.scss']
@@ -89,7 +106,18 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
 
   // Tab state
   readonly ApplicationDetailTab = ApplicationDetailTab;
-  activeTab: ApplicationDetailTab = ApplicationDetailTab.Details;
+  activeTab: ApplicationDetailTab = ApplicationDetailTab.Overview;
+
+  // Template references for API keys grid custom cells
+  @ViewChild('environmentCell', { static: true }) environmentCell!: TemplateRef<unknown>;
+  @ViewChild('keyInfoCell', { static: true }) keyInfoCell!: TemplateRef<unknown>;
+  @ViewChild('actionsCell', { static: true }) actionsCell!: TemplateRef<unknown>;
+
+  // API Keys grid configuration
+  apiKeysColumns: ColumnDefinition<EnvironmentKeyRow>[] = [];
+  apiKeysPageState: PageState = { ...DEFAULT_PAGE_STATE, pageSize: 10 };
+  apiKeysSortState: SortState | null = null;
+  apiKeysFilterState: FilterState = {};
 
   // Store selectors - ALL data comes from store
   application$: Observable<IApplications | null>;
@@ -271,6 +299,9 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Initialize API keys grid columns
+    this.initializeApiKeysColumns();
+
     // Get current user ID for draft creation
     this.store.select(fromUser.selectCurrentUser).pipe(
       take(1),
@@ -346,6 +377,39 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Initialize API keys grid columns with custom cell templates
+   */
+  private initializeApiKeysColumns(): void {
+    this.apiKeysColumns = [
+      {
+        field: 'environmentLabel',
+        header: 'Environment',
+        sortable: false,
+        filterable: false,
+        cellTemplate: this.environmentCell,
+        width: '25%',
+      },
+      {
+        field: 'apiKey',
+        header: 'API Key',
+        sortable: false,
+        filterable: false,
+        cellTemplate: this.keyInfoCell,
+        width: '45%',
+      },
+      {
+        field: 'actions',
+        header: 'Actions',
+        sortable: false,
+        filterable: false,
+        cellTemplate: this.actionsCell,
+        width: '30%',
+        align: 'right',
+      },
+    ];
+  }
+
   private loadFormData(): void {
     if (this.application) {
       this.editForm = {
@@ -368,6 +432,8 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
     if (this.editForm.environments.length > 0) {
       this.validationErrors.environments = '';
     }
+    // Update environment key rows to reflect form changes
+    this.updateEnvironmentKeyRows();
   }
 
   isEnvironmentSelected(env: string): boolean {
@@ -498,14 +564,18 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
   setActiveTab(tab: ApplicationDetailTab): void {
     // Allow all tabs - users need to access Security tab to generate keys before activation
     this.activeTab = tab;
-    // Clear API key validation error when navigating away from Details
-    if (tab !== ApplicationDetailTab.Details) {
+    // Clear API key validation error when navigating away from Overview
+    if (tab !== ApplicationDetailTab.Overview) {
       this.apiKeyValidationError = null;
     }
     // Clear generated key display when navigating away from Security tab
     if (tab !== ApplicationDetailTab.Security) {
       this.generatedKeyDisplay = null;
       this.copySuccess = false;
+    }
+    // Ensure environment key rows are up-to-date when entering Security tab
+    if (tab === ApplicationDetailTab.Security) {
+      this.updateEnvironmentKeyRows();
     }
   }
 
@@ -576,13 +646,44 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
     }));
   }
 
+  // API Keys grid event handlers
+  onApiKeysPageChange(event: PageChangeEvent): void {
+    this.apiKeysPageState = {
+      ...this.apiKeysPageState,
+      currentPage: event.page,
+      pageSize: event.pageSize,
+      totalPages: Math.ceil(this.apiKeysPageState.totalItems / event.pageSize),
+    };
+  }
+
+  onApiKeysSortChange(event: SortChangeEvent): void {
+    if (event.direction) {
+      this.apiKeysSortState = { field: event.field, direction: event.direction };
+    } else {
+      this.apiKeysSortState = null;
+    }
+  }
+
+  onApiKeysFilterChange(event: FilterChangeEvent): void {
+    this.apiKeysFilterState = event.filters;
+  }
+
+  onApiKeysResetGrid(): void {
+    this.apiKeysPageState = { ...DEFAULT_PAGE_STATE, pageSize: 10 };
+    this.apiKeysSortState = null;
+    this.apiKeysFilterState = {};
+  }
+
   // Environment Key Row helpers
   private updateEnvironmentKeyRows(): void {
     this.environmentKeyRows = this.computeEnvironmentKeyRows();
   }
 
   private computeEnvironmentKeyRows(): EnvironmentKeyRow[] {
-    const environments = this.application?.environments || [];
+    // Always use editForm.environments to reflect current form state
+    // This ensures the Security tab shows rows for all selected environments,
+    // whether saved or unsaved
+    const environments = this.editForm.environments || [];
     const apiKeys = this.apiKeys || [];
 
     return environments.map(env => {

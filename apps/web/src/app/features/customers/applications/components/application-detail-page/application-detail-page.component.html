@@ -349,13 +349,19 @@
                   [columns]="apiKeysColumns"
                   [data]="environmentKeyRows"
                   [pageState]="apiKeysPageState"
-                  [loading]="false"
-                  [showFilters]="false"
-                  [showPagination]="false"
-                  [showReset]="false"
+                  [sortState]="apiKeysSortState"
+                  [filterState]="apiKeysFilterState"
+                  [loading]="(isLoading$ | async) || false"
+                  [showFilters]="true"
+                  [showPagination]="true"
+                  [showReset]="true"
                   [selectable]="false"
                   trackByField="environment"
-                  emptyMessage="No environments configured. Configure environments in the Overview tab.">
+                  emptyMessage="No environments configured. Configure environments in the Overview tab."
+                  (pageChange)="onApiKeysPageChange($event)"
+                  (sortChange)="onApiKeysSortChange($event)"
+                  (filterChange)="onApiKeysFilterChange($event)"
+                  (resetGrid)="onApiKeysResetGrid()">
                 </app-data-grid>
               </div>
             </div>
