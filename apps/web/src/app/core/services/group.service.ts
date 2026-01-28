@@ -49,7 +49,6 @@ import {
 import { ApplicationGroupStatus } from '../enums/ApplicationGroupStatusEnum';
 import { ApplicationGroupUserStatus } from '../enums/ApplicationGroupUserStatusEnum';
 import { ApplicationGroupRoleStatus } from '../enums/ApplicationGroupRoleStatusEnum';
-import { Environment } from '../enums/EnvironmentEnum';
 import { toGraphQLInput } from '../../graphql-utils';
 import { Connection } from '../types/graphql.types';
 import { isAuthenticationError } from '../errors/api-errors';

@@ -19,7 +19,7 @@
   </div>
 
   <!-- Role Assignments Table -->
-  <div *ngIf="!(isLoadingRoles$ | async)" class="group-role-assignment__table">
+  <div *ngIf="(isLoadingRoles$ | async) === false" class="group-role-assignment__table">
     <div class="group-role-assignment__table-header">
       <div class="group-role-assignment__col group-role-assignment__col--environment">Environment</div>
       <div class="group-role-assignment__col group-role-assignment__col--role">Role</div>
@@ -98,7 +98,7 @@
               title="Save role assignment"
             >
               <span *ngIf="isSavingRole$ | async" class="group-role-assignment__btn-spinner"></span>
-              <span *ngIf="!(isSavingRole$ | async)">Save</span>
+              <span *ngIf="(isSavingRole$ | async) === false">Save</span>
             </button>
             <button
               class="group-role-assignment__btn group-role-assignment__btn--cancel"
@@ -128,7 +128,7 @@
                 title="Remove role"
               >
                 <span *ngIf="isDeletingRole$ | async" class="group-role-assignment__btn-spinner"></span>
-                <span *ngIf="!(isDeletingRole$ | async)">Remove</span>
+                <span *ngIf="(isDeletingRole$ | async) === false">Remove</span>
               </button>
             </ng-container>
             <ng-template #assignAction>

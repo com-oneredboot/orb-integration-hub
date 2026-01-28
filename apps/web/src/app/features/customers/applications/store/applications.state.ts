@@ -18,6 +18,9 @@ export interface ApplicationTableRow {
   organizationId: string;
   organizationName: string;
   environmentCount: number;
+  groupCount: number;
+  userCount: number;
+  roleCount: number;
   userRole: string;
   lastActivity: string;
 }

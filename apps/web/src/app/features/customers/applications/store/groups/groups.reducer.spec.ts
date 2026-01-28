@@ -9,7 +9,7 @@
 
 import { groupsReducer } from './groups.reducer';
 import { GroupsActions } from './groups.actions';
-import { GroupsState, GroupTableRow, initialGroupsState } from './groups.state';
+import { GroupsState, initialGroupsState } from './groups.state';
 import { IApplicationGroups } from '../../../../../core/models/ApplicationGroupsModel';
 import { IApplicationGroupUsers } from '../../../../../core/models/ApplicationGroupUsersModel';
 import { ApplicationGroupStatus } from '../../../../../core/enums/ApplicationGroupStatusEnum';

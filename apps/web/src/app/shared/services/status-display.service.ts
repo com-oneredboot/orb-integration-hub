@@ -190,6 +190,64 @@ export class StatusDisplayService {
     }
   };
 
+  // Group Status Configurations
+  private readonly groupStatusConfig: Record<string, StatusConfig> = {
+    'ACTIVE': {
+      label: 'Active',
+      cssClass: 'group-status-active',
+      icon: 'check-circle',
+      color: '#2B8A3E',
+      bgColor: 'rgba(43, 138, 62, 0.1)',
+      borderColor: 'rgba(43, 138, 62, 0.2)',
+      priority: 2
+    },
+    'DELETED': {
+      label: 'Deleted',
+      cssClass: 'group-status-deleted',
+      icon: 'trash',
+      color: '#ef4444',
+      bgColor: '#fee2e2',
+      priority: 1
+    }
+  };
+
+  // API Key Status Configurations
+  private readonly apiKeyStatusConfig: Record<string, StatusConfig> = {
+    'ACTIVE': {
+      label: 'Active',
+      cssClass: 'apikey-status-active',
+      icon: 'check-circle',
+      color: '#2B8A3E',
+      bgColor: 'rgba(43, 138, 62, 0.1)',
+      borderColor: 'rgba(43, 138, 62, 0.2)',
+      priority: 4
+    },
+    'ROTATING': {
+      label: 'Rotating',
+      cssClass: 'apikey-status-rotating',
+      icon: 'sync-alt',
+      color: '#f59e0b',
+      bgColor: '#fef3c7',
+      priority: 3
+    },
+    'REVOKED': {
+      label: 'Revoked',
+      cssClass: 'apikey-status-revoked',
+      icon: 'ban',
+      color: '#ef4444',
+      bgColor: '#fee2e2',
+      priority: 2
+    },
+    'EXPIRED': {
+      label: 'Expired',
+      cssClass: 'apikey-status-expired',
+      icon: 'clock',
+      color: '#6b7280',
+      bgColor: '#f3f4f6',
+      priority: 1
+    }
+  };
+
   /**
    * Get status configuration for user status
    */
@@ -216,6 +274,20 @@ export class StatusDisplayService {
    */
   getVerificationStatusConfig(status: string): StatusConfig {
     return this.verificationStatusConfig[status?.toUpperCase()] || this.getDefaultConfig(status);
+  }
+
+  /**
+   * Get status configuration for group status
+   */
+  getGroupStatusConfig(status: string): StatusConfig {
+    return this.groupStatusConfig[status?.toUpperCase()] || this.getDefaultConfig(status);
+  }
+
+  /**
+   * Get status configuration for API key status
+   */
+  getApiKeyStatusConfig(status: string): StatusConfig {
+    return this.apiKeyStatusConfig[status?.toUpperCase()] || this.getDefaultConfig(status);
   }
 
   /**
@@ -328,7 +400,7 @@ export class StatusDisplayService {
   /**
    * Check if status indicates an active/healthy state
    */
-  isHealthyStatus(status: string, _type: 'user' | 'organization' | 'application' | 'verification'): boolean {
+  isHealthyStatus(status: string, _type: 'user' | 'organization' | 'application' | 'verification' | 'group' | 'apiKey'): boolean {
     const healthyStatuses = ['ACTIVE', 'VERIFIED', 'RUNNING'];
     return healthyStatuses.includes(status?.toUpperCase());
   }
@@ -336,16 +408,16 @@ export class StatusDisplayService {
   /**
    * Check if status indicates a warning state
    */
-  isWarningStatus(status: string, _type: 'user' | 'organization' | 'application' | 'verification'): boolean {
-    const warningStatuses = ['PENDING', 'DEPLOYING', 'MAINTENANCE'];
+  isWarningStatus(status: string, _type: 'user' | 'organization' | 'application' | 'verification' | 'group' | 'apiKey'): boolean {
+    const warningStatuses = ['PENDING', 'DEPLOYING', 'MAINTENANCE', 'ROTATING'];
     return warningStatuses.includes(status?.toUpperCase());
   }
 
   /**
    * Check if status indicates an error/critical state
    */
-  isErrorStatus(status: string, _type: 'user' | 'organization' | 'application' | 'verification'): boolean {
-    const errorStatuses = ['SUSPENDED', 'ERROR', 'CANCELLED', 'UNVERIFIED'];
+  isErrorStatus(status: string, _type: 'user' | 'organization' | 'application' | 'verification' | 'group' | 'apiKey'): boolean {
+    const errorStatuses = ['SUSPENDED', 'ERROR', 'CANCELLED', 'UNVERIFIED', 'REVOKED', 'DELETED', 'EXPIRED'];
     return errorStatuses.includes(status?.toUpperCase());
   }
 

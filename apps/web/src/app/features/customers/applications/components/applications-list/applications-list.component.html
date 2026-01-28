@@ -79,6 +79,8 @@
               <th class="orb-table__header">Status</th>
               <th class="orb-table__header">Organization</th>
               <th class="orb-table__header">Environments</th>
+              <th class="orb-table__header">Groups</th>
+              <th class="orb-table__header">Users</th>
               <th class="orb-table__header">Role</th>
               <th class="orb-table__header">Last Activity</th>
             </tr>
@@ -122,6 +124,22 @@
                 </div>
               </td>
 
+              <!-- Group Count -->
+              <td class="orb-table__cell">
+                <div class="orb-count">
+                  <fa-icon icon="users" class="orb-count__icon"></fa-icon>
+                  {{ row.groupCount }}
+                </div>
+              </td>
+
+              <!-- User Count -->
+              <td class="orb-table__cell">
+                <div class="orb-count">
+                  <fa-icon icon="user" class="orb-count__icon"></fa-icon>
+                  {{ row.userCount }}
+                </div>
+              </td>
+
               <!-- Role -->
               <td class="orb-table__cell">
                 <span class="orb-role-badge orb-role-badge--{{ getRoleClass(row.userRole) }}">
@@ -138,7 +156,7 @@
 
             <!-- Loading State -->
             <tr *ngIf="data.loading" class="orb-table__row orb-table__row--loading">
-              <td colspan="6" class="orb-table__cell orb-table__cell--loading">
+              <td colspan="8" class="orb-table__cell orb-table__cell--loading">
                 <div class="orb-table__loading">
                   <fa-icon icon="spinner" class="orb-table__loading-icon fa-spin"></fa-icon>
                   Loading applications...
@@ -149,7 +167,7 @@
             <!-- Empty State -->
             <tr *ngIf="!data.loading && (!data.rows || data.rows.length === 0)"
                 class="orb-table__row orb-table__row--empty">
-              <td colspan="6" class="orb-table__cell orb-table__cell--empty">
+              <td colspan="8" class="orb-table__cell orb-table__cell--empty">
                 <div class="orb-table__empty">
                   <fa-icon icon="rocket" class="orb-table__empty-icon"></fa-icon>
                   <p class="orb-table__empty-text">

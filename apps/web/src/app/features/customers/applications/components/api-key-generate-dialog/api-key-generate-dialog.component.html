@@ -1,0 +1,137 @@
+<!-- API Key Generate Dialog Template -->
+<div *ngIf="isOpen" class="dialog-overlay" (click)="onClose()" (keydown.escape)="onClose()" tabindex="-1" role="presentation">
+  <div class="dialog" (click)="$event.stopPropagation()" (keydown.escape)="$event.stopPropagation()" role="dialog" aria-labelledby="dialog-title" aria-modal="true">
+    
+    <!-- Form State -->
+    <ng-container *ngIf="dialogState === 'form'">
+      <div class="dialog__header">
+        <h3 id="dialog-title" class="dialog__title">
+          <fa-icon icon="key" class="dialog__title-icon"></fa-icon>
+          Generate API Key
+        </h3>
+        <button
+          class="dialog__close"
+          (click)="onClose()"
+          aria-label="Close dialog">
+          <fa-icon icon="times"></fa-icon>
+        </button>
+      </div>
+
+      <div class="dialog__body">
+        <!-- Error Message -->
+        <div *ngIf="generateError$ | async as error" class="dialog__error" role="alert">
+          <fa-icon icon="exclamation-triangle"></fa-icon>
+          {{ error }}
+        </div>
+
+        <div class="dialog__form-group">
+          <label for="environment-select" class="dialog__label">Environment</label>
+          <select
+            id="environment-select"
+            class="dialog__select"
+            [(ngModel)]="selectedEnvironment">
+            <option *ngFor="let env of environments" [ngValue]="env">
+              {{ environmentLabels[env] }}
+            </option>
+          </select>
+          <p class="dialog__help-text">
+            Select the environment this API key will be used for.
+          </p>
+        </div>
+
+        <div class="dialog__info">
+          <fa-icon icon="info-circle" class="dialog__info-icon"></fa-icon>
+          <p>
+            API keys provide full access to your application's API.
+            Keep them secure and never expose them in client-side code.
+          </p>
+        </div>
+      </div>
+
+      <div class="dialog__footer">
+        <button class="dialog__btn dialog__btn--secondary" (click)="onClose()">
+          Cancel
+        </button>
+        <button
+          class="dialog__btn dialog__btn--primary"
+          (click)="onGenerate()"
+          [disabled]="isGenerating$ | async">
+          <fa-icon *ngIf="isGenerating$ | async" icon="spinner" [spin]="true"></fa-icon>
+          <span *ngIf="(isGenerating$ | async) === false">Generate Key</span>
+          <span *ngIf="isGenerating$ | async">Generating...</span>
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- Generated State -->
+    <ng-container *ngIf="dialogState === 'generated' && (generatedKey$ | async) as generatedKey">
+      <div class="dialog__header">
+        <h3 id="dialog-title" class="dialog__title">
+          <fa-icon icon="check-circle" class="dialog__title-icon dialog__title-icon--success"></fa-icon>
+          API Key Generated
+        </h3>
+      </div>
+
+      <div class="dialog__body">
+        <!-- Confirmation Warning -->
+        <div *ngIf="confirmClose" class="dialog__confirm-warning" role="alert">
+          <fa-icon icon="exclamation-triangle"></fa-icon>
+          <div>
+            <strong>Are you sure?</strong>
+            <p>You haven't copied the key yet. Once you close this dialog, you won't be able to see it again.</p>
+          </div>
+        </div>
+
+        <ng-container *ngIf="!confirmClose">
+          <div class="dialog__warning">
+            <fa-icon icon="exclamation-triangle" class="dialog__warning-icon"></fa-icon>
+            <strong>Important:</strong> Copy this key now. You won't be able to see it again!
+          </div>
+
+          <div class="dialog__key-display">
+            <code class="dialog__key-value">{{ generatedKey.fullKey }}</code>
+            <button
+              class="dialog__copy-btn"
+              (click)="copyKeyToClipboard(generatedKey.fullKey)"
+              [class.dialog__copy-btn--copied]="keyCopied"
+              aria-label="Copy API key to clipboard">
+              <fa-icon [icon]="keyCopied ? 'check' : 'copy'"></fa-icon>
+              {{ keyCopied ? 'Copied!' : 'Copy' }}
+            </button>
+          </div>
+
+          <div class="dialog__key-info">
+            <div class="dialog__key-info-item">
+              <span class="dialog__key-info-label">Environment:</span>
+              <span class="dialog__env-badge"
+                [ngClass]="'dialog__env-badge--' + getEnvironmentClass(generatedKey.environment)">
+                {{ environmentLabels[generatedKey.environment] }}
+              </span>
+            </div>
+            <div class="dialog__key-info-item">
+              <span class="dialog__key-info-label">Key Prefix:</span>
+              <code>{{ generatedKey.keyPrefix }}</code>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+
+      <div class="dialog__footer">
+        <ng-container *ngIf="confirmClose">
+          <button class="dialog__btn dialog__btn--secondary" (click)="onCancelClose()">
+            Go Back
+          </button>
+          <button class="dialog__btn dialog__btn--danger" (click)="onConfirmClose()">
+            Close Anyway
+          </button>
+        </ng-container>
+        <ng-container *ngIf="!confirmClose">
+          <button class="dialog__btn dialog__btn--primary" (click)="onClose()">
+            {{ keyCopied ? 'Done' : 'Close' }}
+          </button>
+        </ng-container>
+      </div>
+    </ng-container>
+
+  </div>
+</div>

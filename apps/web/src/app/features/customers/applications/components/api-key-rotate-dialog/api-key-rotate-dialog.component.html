@@ -1,0 +1,146 @@
+<!-- API Key Rotate Dialog Template -->
+<div *ngIf="isOpen" class="dialog-overlay" (click)="onClose()" (keydown.escape)="onClose()" tabindex="-1" role="presentation">
+  <div class="dialog" (click)="$event.stopPropagation()" (keydown.escape)="$event.stopPropagation()" role="dialog" aria-labelledby="dialog-title" aria-modal="true">
+    
+    <!-- Confirm State -->
+    <ng-container *ngIf="dialogState === 'confirm'">
+      <div class="dialog__header">
+        <h3 id="dialog-title" class="dialog__title">
+          <fa-icon icon="sync-alt" class="dialog__title-icon"></fa-icon>
+          Rotate API Key
+        </h3>
+        <button
+          class="dialog__close"
+          (click)="onClose()"
+          aria-label="Close dialog">
+          <fa-icon icon="times"></fa-icon>
+        </button>
+      </div>
+
+      <div class="dialog__body">
+        <!-- Error Message -->
+        <div *ngIf="rotateError$ | async as error" class="dialog__error" role="alert">
+          <fa-icon icon="exclamation-triangle"></fa-icon>
+          {{ error }}
+        </div>
+
+        <div class="dialog__info">
+          <fa-icon icon="info-circle" class="dialog__info-icon"></fa-icon>
+          <div>
+            <p><strong>What happens during rotation:</strong></p>
+            <ul>
+              <li>A new API key will be generated</li>
+              <li>Both the current and new keys will be valid during the rotation period</li>
+              <li>Update your applications to use the new key</li>
+              <li>The old key will remain valid until you complete the rotation</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="dialog__key-details">
+          <div class="dialog__key-detail">
+            <span class="dialog__key-label">Current Key:</span>
+            <code class="dialog__key-prefix">{{ apiKey.keyPrefix }}...</code>
+          </div>
+          <div class="dialog__key-detail">
+            <span class="dialog__key-label">Environment:</span>
+            <span class="dialog__env-badge"
+              [ngClass]="'dialog__env-badge--' + getEnvironmentClass(apiKey.environment)">
+              {{ environmentLabels[apiKey.environment] }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dialog__footer">
+        <button class="dialog__btn dialog__btn--secondary" (click)="onClose()">
+          Cancel
+        </button>
+        <button
+          class="dialog__btn dialog__btn--primary"
+          (click)="onRotate()"
+          [disabled]="isRotating$ | async">
+          <fa-icon icon="sync-alt"></fa-icon>
+          Rotate Key
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- Rotating State -->
+    <ng-container *ngIf="dialogState === 'rotating'">
+      <div class="dialog__header">
+        <h3 id="dialog-title" class="dialog__title">
+          <fa-icon icon="spinner" [spin]="true" class="dialog__title-icon"></fa-icon>
+          Rotating API Key...
+        </h3>
+      </div>
+
+      <div class="dialog__body dialog__body--center">
+        <p>Please wait while we generate your new API key.</p>
+      </div>
+    </ng-container>
+
+    <!-- Completed State -->
+    <ng-container *ngIf="dialogState === 'completed' && (generatedKey$ | async) as newKey">
+      <div class="dialog__header">
+        <h3 id="dialog-title" class="dialog__title">
+          <fa-icon icon="check-circle" class="dialog__title-icon dialog__title-icon--success"></fa-icon>
+          Key Rotation Started
+        </h3>
+      </div>
+
+      <div class="dialog__body">
+        <div class="dialog__warning">
+          <fa-icon icon="exclamation-triangle" class="dialog__warning-icon"></fa-icon>
+          <strong>Important:</strong> Copy the new key now. You won't be able to see it again!
+        </div>
+
+        <div class="dialog__keys-section">
+          <div class="dialog__key-block">
+            <h4 class="dialog__key-block-title">
+              <fa-icon icon="key" class="dialog__key-block-icon"></fa-icon>
+              New Key (Primary)
+            </h4>
+            <div class="dialog__key-display">
+              <code class="dialog__key-value">{{ newKey.fullKey }}</code>
+              <button
+                class="dialog__copy-btn"
+                (click)="copyKeyToClipboard(newKey.fullKey)"
+                [class.dialog__copy-btn--copied]="newKeyCopied"
+                aria-label="Copy new API key to clipboard">
+                <fa-icon [icon]="newKeyCopied ? 'check' : 'copy'"></fa-icon>
+                {{ newKeyCopied ? 'Copied!' : 'Copy' }}
+              </button>
+            </div>
+          </div>
+
+          <div class="dialog__key-block dialog__key-block--secondary">
+            <h4 class="dialog__key-block-title">
+              <fa-icon icon="history" class="dialog__key-block-icon"></fa-icon>
+              Previous Key (Still Valid)
+            </h4>
+            <div class="dialog__key-display dialog__key-display--muted">
+              <code class="dialog__key-value">{{ apiKey.keyPrefix }}...</code>
+              <span class="dialog__key-status">Active during rotation</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dialog__info dialog__info--success">
+          <fa-icon icon="check-circle" class="dialog__info-icon"></fa-icon>
+          <p>
+            Both keys are now valid. Update your applications to use the new key,
+            then complete the rotation to invalidate the old key.
+          </p>
+        </div>
+      </div>
+
+      <div class="dialog__footer">
+        <button class="dialog__btn dialog__btn--primary" (click)="onClose()">
+          Done
+        </button>
+      </div>
+    </ng-container>
+
+  </div>
+</div>

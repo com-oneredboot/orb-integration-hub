@@ -124,7 +124,7 @@ export class GroupRoleAssignmentComponent implements OnChanges, OnDestroy {
   roleAssignmentRows: RoleAssignmentRow[] = [];
 
   // Selected role for assignment
-  selectedRoleId: string = '';
+  selectedRoleId = '';
   selectedEnvironment: Environment | null = null;
 
   // Edit mode tracking

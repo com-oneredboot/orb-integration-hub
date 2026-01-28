@@ -162,7 +162,7 @@
       </div>
 
       <!-- Members List -->
-      <div *ngIf="!(isLoadingMembers$ | async)" class="group-detail__members-list">
+      <div *ngIf="(isLoadingMembers$ | async) === false" class="group-detail__members-list">
         <div
           *ngFor="let member of members$ | async"
           class="group-detail__member">

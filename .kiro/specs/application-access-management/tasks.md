@@ -243,34 +243,34 @@ This implementation plan covers the Application Access Management system across 
   - [x] 18.2 Create ApiKeyService for API calls
     - Generate, rotate, revoke operations
     - _Requirements: 9.1_
-  - [ ] 18.3 Write unit tests for api-keys store
+  - [x] 18.3 Write unit tests for api-keys store
     - Test actions, reducer, selectors
     - _Requirements: 9.5_
 
-- [ ] 19. Create API key management UI components
-  - [ ] 19.1 Create ApiKeysListComponent
+- [x] 19. Create API key management UI components
+  - [x] 19.1 Create ApiKeysListComponent
     - Display keys per environment with masked values
     - Generate, rotate, revoke actions
     - _Requirements: 9.1, 9.5_
-  - [ ] 19.2 Create ApiKeyGenerateDialogComponent
+  - [x] 19.2 Create ApiKeyGenerateDialogComponent
     - Show generated key once with copy button
     - Require confirmation before closing
     - _Requirements: 9.2, 9.6_
-  - [ ] 19.3 Create ApiKeyRotateDialogComponent
+  - [x] 19.3 Create ApiKeyRotateDialogComponent
     - Show both current and next keys during rotation
     - _Requirements: 9.3_
-  - [ ] 19.4 Create ApiKeyRevokeDialogComponent
+  - [x] 19.4 Create ApiKeyRevokeDialogComponent
     - Confirmation dialog before revocation
     - _Requirements: 9.4_
 
-- [ ] 20. Integrate into application detail page
-  - [ ] 20.1 Add Groups tab to application detail page
+- [x] 20. Integrate into application detail page
+  - [x] 20.1 Add Groups tab to application detail page
     - Wire up GroupsListComponent
     - _Requirements: 8.1_
-  - [ ] 20.2 Add API Keys tab to application detail page
+  - [x] 20.2 Add API Keys tab to application detail page
     - Wire up ApiKeysListComponent
     - _Requirements: 9.1_
-  - [ ] 20.3 Update application list with new counts
+  - [x] 20.3 Update application list with new counts
     - Display groupCount, userCount, roleCount
     - _Requirements: 1.6, 2.7, 4.5_
 

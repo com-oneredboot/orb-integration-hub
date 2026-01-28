@@ -49,6 +49,9 @@ const applicationRowArb: fc.Arbitrary<ApplicationTableRow> = fc.record({
   organizationId: fc.uuid(),
   organizationName: fc.string({ minLength: 1, maxLength: 50 }),
   environmentCount: fc.integer({ min: 0, max: 10 }),
+  groupCount: fc.integer({ min: 0, max: 100 }),
+  userCount: fc.integer({ min: 0, max: 1000 }),
+  roleCount: fc.integer({ min: 0, max: 50 }),
   userRole: fc.constantFrom('OWNER', 'ADMINISTRATOR', 'DEVELOPER', 'VIEWER'),
   lastActivity: fc.string(),
 });

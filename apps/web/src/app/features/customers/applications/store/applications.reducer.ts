@@ -38,6 +38,9 @@ export const applicationsReducer = createReducer(
         organizationId: app.organizationId,
         organizationName: '', // Will be populated when we have org data
         environmentCount: app.environments?.length || 0,
+        groupCount: app.groupCount || 0,
+        userCount: app.userCount || 0,
+        roleCount: app.roleCount || 0,
         userRole: 'OWNER', // TODO: Get actual role from membership
         lastActivity: formatLastActivity(app.updatedAt)
       }));
@@ -141,6 +144,9 @@ export const applicationsReducer = createReducer(
           return {
             ...row,
             application,
+            groupCount: application.groupCount || 0,
+            userCount: application.userCount || 0,
+            roleCount: application.roleCount || 0,
             lastActivity: formatLastActivity(application.updatedAt)
           };
         }
@@ -196,7 +202,14 @@ export const applicationsReducer = createReducer(
 
       const updatedRows = state.applicationRows.map(row =>
         row.application.applicationId === application.applicationId
-          ? { ...row, application, lastActivity: formatLastActivity(application.updatedAt) }
+          ? {
+              ...row,
+              application,
+              groupCount: application.groupCount || 0,
+              userCount: application.userCount || 0,
+              roleCount: application.roleCount || 0,
+              lastActivity: formatLastActivity(application.updatedAt)
+            }
           : row
       );
 
@@ -284,6 +297,9 @@ export const applicationsReducer = createReducer(
         organizationId: placeholderApplication.organizationId || '',
         organizationName: '',
         environmentCount: 0,
+        groupCount: 0,
+        userCount: 0,
+        roleCount: 0,
         userRole: 'OWNER',
         lastActivity: 'Just now'
       };

@@ -4,9 +4,11 @@
  * Standalone page for viewing/editing a single application.
  * Handles both PENDING (create) and ACTIVE (edit) modes based on application status.
  * Uses the create-on-click pattern with NgRx store as single source of truth.
+ * Includes tabbed interface for Details, Groups, and API Keys.
  *
  * @see .kiro/specs/store-centric-refactoring/design.md
- * _Requirements: 3.1, 3.2, 3.3, 3.4_
+ * @see .kiro/specs/application-access-management/design.md
+ * _Requirements: 3.1, 3.2, 3.3, 3.4, 8.1, 9.1_
  */
 
 import { Component, OnInit, OnDestroy } from '@angular/core';
@@ -21,10 +23,17 @@ import { takeUntil, map, filter, take } from 'rxjs/operators';
 
 import { IApplications } from '../../../../../core/models/ApplicationsModel';
 import { IOrganizations } from '../../../../../core/models/OrganizationsModel';
+import { IApplicationGroups } from '../../../../../core/models/ApplicationGroupsModel';
+import { IApplicationApiKeys } from '../../../../../core/models/ApplicationApiKeysModel';
 import { ApplicationStatus } from '../../../../../core/enums/ApplicationStatusEnum';
+import { Environment } from '../../../../../core/enums/EnvironmentEnum';
 import { StatusBadgeComponent } from '../../../../../shared/components/ui/status-badge.component';
 import { DebugPanelComponent, DebugContext } from '../../../../../shared/components/debug/debug-panel.component';
 import { DebugLogEntry } from '../../../../../core/services/debug-log.service';
+
+// Child components
+import { GroupsListComponent } from '../groups-list/groups-list.component';
+import { ApiKeysListComponent } from '../api-keys-list/api-keys-list.component';
 
 // Store imports
 import { ApplicationsActions } from '../../store/applications.actions';
@@ -32,6 +41,15 @@ import * as fromApplications from '../../store/applications.selectors';
 import * as fromOrganizations from '../../../organizations/store/organizations.selectors';
 import * as fromUser from '../../../../user/store/user.selectors';
 import { OrganizationsActions } from '../../../organizations/store/organizations.actions';
+
+/**
+ * Tab identifiers for the application detail page
+ */
+export enum ApplicationDetailTab {
+  Details = 'details',
+  Groups = 'groups',
+  ApiKeys = 'api-keys',
+}
 
 @Component({
   selector: 'app-application-detail-page',
@@ -42,13 +60,19 @@ import { OrganizationsActions } from '../../../organizations/store/organizations
     FormsModule,
     FontAwesomeModule,
     StatusBadgeComponent,
-    DebugPanelComponent
+    DebugPanelComponent,
+    GroupsListComponent,
+    ApiKeysListComponent,
   ],
   templateUrl: './application-detail-page.component.html',
   styleUrls: ['./application-detail-page.component.scss']
 })
 export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+
+  // Tab state
+  readonly ApplicationDetailTab = ApplicationDetailTab;
+  activeTab: ApplicationDetailTab = ApplicationDetailTab.Details;
 
   // Store selectors - ALL data comes from store
   application$: Observable<IApplications | null>;
@@ -111,6 +135,12 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
             status: this.application.status,
             isDraft: this.isDraft
           } : { status: 'Loading...' }
+        },
+        {
+          title: 'Tab State',
+          data: {
+            activeTab: this.activeTab
+          }
         },
         {
           title: 'Form State',
@@ -374,5 +404,46 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
       hour: '2-digit',
       minute: '2-digit'
     });
+  }
+
+  // Tab navigation
+  setActiveTab(tab: ApplicationDetailTab): void {
+    // Don't allow switching tabs in draft mode - user must complete setup first
+    if (this.isDraft && tab !== ApplicationDetailTab.Details) {
+      return;
+    }
+    this.activeTab = tab;
+  }
+
+  // Groups tab event handlers
+  onGroupSelected(group: IApplicationGroups): void {
+    // Navigate to group detail page (future implementation)
+    console.log('Group selected:', group.applicationGroupId);
+  }
+
+  onCreateGroup(): void {
+    // Open group creation dialog (future implementation)
+    console.log('Create group requested');
+  }
+
+  // API Keys tab event handlers
+  onApiKeySelected(apiKey: IApplicationApiKeys): void {
+    // Handle API key selection (future implementation)
+    console.log('API key selected:', apiKey.applicationApiKeyId);
+  }
+
+  onGenerateApiKey(environment: Environment): void {
+    // Handle API key generation (handled by ApiKeysListComponent)
+    console.log('Generate API key for environment:', environment);
+  }
+
+  onRotateApiKey(apiKey: IApplicationApiKeys): void {
+    // Handle API key rotation (handled by ApiKeysListComponent)
+    console.log('Rotate API key:', apiKey.applicationApiKeyId);
+  }
+
+  onRevokeApiKey(apiKey: IApplicationApiKeys): void {
+    // Handle API key revocation (handled by ApiKeysListComponent)
+    console.log('Revoke API key:', apiKey.applicationApiKeyId);
   }
 }

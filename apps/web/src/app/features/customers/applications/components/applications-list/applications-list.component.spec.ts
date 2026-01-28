@@ -58,6 +58,9 @@ describe('ApplicationsListComponent', () => {
     organizationId: 'org-456',
     organizationName: 'Test Organization',
     environmentCount: 2,
+    groupCount: 0,
+    userCount: 0,
+    roleCount: 0,
     userRole: 'OWNER',
     lastActivity: '1 day ago',
   };

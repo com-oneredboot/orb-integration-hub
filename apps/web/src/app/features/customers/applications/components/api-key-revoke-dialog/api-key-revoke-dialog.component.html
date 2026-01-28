@@ -1,0 +1,131 @@
+<!-- API Key Revoke Dialog Template -->
+<div *ngIf="isOpen" class="dialog-overlay" (click)="onClose()" (keydown.escape)="onClose()" tabindex="-1" role="presentation">
+  <div class="dialog" (click)="$event.stopPropagation()" (keydown.escape)="$event.stopPropagation()" role="dialog" aria-labelledby="dialog-title" aria-modal="true">
+    
+    <!-- Confirmation State -->
+    <ng-container *ngIf="!isRevoked">
+      <div class="dialog__header dialog__header--danger">
+        <h3 id="dialog-title" class="dialog__title">
+          <fa-icon icon="ban" class="dialog__title-icon"></fa-icon>
+          Revoke API Key
+        </h3>
+        <button
+          class="dialog__close"
+          (click)="onClose()"
+          aria-label="Close dialog">
+          <fa-icon icon="times"></fa-icon>
+        </button>
+      </div>
+
+      <div class="dialog__body">
+        <!-- Error Message -->
+        <div *ngIf="revokeError$ | async as error" class="dialog__error" role="alert">
+          <fa-icon icon="exclamation-triangle"></fa-icon>
+          {{ error }}
+        </div>
+
+        <div class="dialog__warning dialog__warning--danger">
+          <fa-icon icon="exclamation-triangle" class="dialog__warning-icon"></fa-icon>
+          <div>
+            <strong>Warning: This action cannot be undone!</strong>
+            <p>
+              Revoking this API key will immediately invalidate it. Any applications
+              using this key will no longer be able to authenticate.
+            </p>
+          </div>
+        </div>
+
+        <div class="dialog__key-details">
+          <div class="dialog__key-detail">
+            <span class="dialog__key-label">Key:</span>
+            <code class="dialog__key-prefix">{{ apiKey.keyPrefix }}...</code>
+          </div>
+          <div class="dialog__key-detail">
+            <span class="dialog__key-label">Environment:</span>
+            <span class="dialog__env-badge"
+              [ngClass]="'dialog__env-badge--' + getEnvironmentClass(apiKey.environment)">
+              {{ environmentLabels[apiKey.environment] }}
+            </span>
+          </div>
+          <div class="dialog__key-detail">
+            <span class="dialog__key-label">Key ID:</span>
+            <code class="dialog__key-id">{{ apiKey.applicationApiKeyId }}</code>
+          </div>
+        </div>
+
+        <div class="dialog__confirmation">
+          <label for="confirmation-input" class="dialog__label">
+            Type <strong>revoke</strong> to confirm:
+          </label>
+          <input
+            id="confirmation-input"
+            type="text"
+            class="dialog__input"
+            [(ngModel)]="confirmationText"
+            placeholder="revoke"
+            autocomplete="off"
+          />
+        </div>
+      </div>
+
+      <div class="dialog__footer">
+        <button class="dialog__btn dialog__btn--secondary" (click)="onClose()">
+          Cancel
+        </button>
+        <button
+          class="dialog__btn dialog__btn--danger"
+          (click)="onRevoke()"
+          [disabled]="!isConfirmationValid || (isRevoking$ | async)">
+          <fa-icon *ngIf="isRevoking$ | async" icon="spinner" [spin]="true"></fa-icon>
+          <fa-icon *ngIf="(isRevoking$ | async) === false" icon="ban"></fa-icon>
+          <span *ngIf="(isRevoking$ | async) === false">Revoke Key</span>
+          <span *ngIf="isRevoking$ | async">Revoking...</span>
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- Revoked State -->
+    <ng-container *ngIf="isRevoked">
+      <div class="dialog__header">
+        <h3 id="dialog-title" class="dialog__title">
+          <fa-icon icon="check-circle" class="dialog__title-icon dialog__title-icon--success"></fa-icon>
+          API Key Revoked
+        </h3>
+      </div>
+
+      <div class="dialog__body">
+        <div class="dialog__success">
+          <fa-icon icon="check-circle" class="dialog__success-icon"></fa-icon>
+          <div>
+            <strong>The API key has been revoked.</strong>
+            <p>
+              This key is no longer valid and cannot be used for authentication.
+              Any applications using this key will need to be updated with a new key.
+            </p>
+          </div>
+        </div>
+
+        <div class="dialog__key-details dialog__key-details--muted">
+          <div class="dialog__key-detail">
+            <span class="dialog__key-label">Revoked Key:</span>
+            <code class="dialog__key-prefix dialog__key-prefix--revoked">{{ apiKey.keyPrefix }}...</code>
+          </div>
+          <div class="dialog__key-detail">
+            <span class="dialog__key-label">Environment:</span>
+            <span class="dialog__env-badge"
+              [ngClass]="'dialog__env-badge--' + getEnvironmentClass(apiKey.environment)">
+              {{ environmentLabels[apiKey.environment] }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dialog__footer">
+        <button class="dialog__btn dialog__btn--primary" (click)="onClose()">
+          Done
+        </button>
+      </div>
+    </ng-container>
+
+  </div>
+</div>

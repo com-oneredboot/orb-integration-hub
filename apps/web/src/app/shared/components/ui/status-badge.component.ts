@@ -35,7 +35,7 @@ import { StatusDisplayService, StatusConfig } from '../../services/status-displa
 export class StatusBadgeComponent implements OnInit, OnChanges {
   // Core Properties
   @Input() status!: string;
-  @Input() type: 'user' | 'organization' | 'application' | 'verification' = 'user';
+  @Input() type: 'user' | 'organization' | 'application' | 'verification' | 'group' | 'apiKey' = 'user';
   
   // Display Options
   @Input() showIcon = true;
@@ -73,6 +73,12 @@ export class StatusBadgeComponent implements OnInit, OnChanges {
         break;
       case 'verification':
         this.statusConfig = this.statusDisplayService.getVerificationStatusConfig(this.status);
+        break;
+      case 'group':
+        this.statusConfig = this.statusDisplayService.getGroupStatusConfig(this.status);
+        break;
+      case 'apiKey':
+        this.statusConfig = this.statusDisplayService.getApiKeyStatusConfig(this.status);
         break;
       default:
         this.statusConfig = this.statusDisplayService.getUserStatusConfig(this.status);

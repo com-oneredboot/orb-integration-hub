@@ -1,0 +1,218 @@
+<!-- API Keys List Component Template -->
+<div class="api-keys-list">
+  <!-- Header -->
+  <div class="api-keys-list__header">
+    <h3 class="api-keys-list__title">
+      <fa-icon icon="key" class="api-keys-list__icon"></fa-icon>
+      API Keys
+    </h3>
+    <div class="api-keys-list__actions">
+      <button
+        class="api-keys-list__btn"
+        (click)="openGenerateDialog()"
+        [disabled]="isGenerating$ | async"
+        aria-label="Generate new API key">
+        <fa-icon icon="plus" class="api-keys-list__btn-icon"></fa-icon>
+        Generate Key
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error$ | async as error" class="api-keys-list__error" role="alert">
+    <fa-icon icon="exclamation-triangle" class="api-keys-list__error-icon"></fa-icon>
+    {{ error }}
+  </div>
+
+  <!-- Data Grid -->
+  <div class="api-keys-list__content">
+    <app-data-grid
+      [columns]="columns"
+      [data]="(filteredApiKeyRows$ | async) || []"
+      [pageState]="pageState"
+      [sortState]="sortState"
+      [filterState]="filterState"
+      [loading]="(isLoading$ | async) || false"
+      [showFilters]="true"
+      [showPagination]="true"
+      [showReset]="true"
+      [selectable]="false"
+      trackByField="apiKey"
+      emptyMessage="No API keys found. Generate your first key to enable programmatic access."
+      (pageChange)="onPageChange($event)"
+      (sortChange)="onSortChange($event)"
+      (filterChange)="onFilterChange($event)"
+      (resetGrid)="onResetGrid()"
+      (rowClick)="onRowClick($event)">
+    </app-data-grid>
+  </div>
+</div>
+
+<!-- Custom Cell Templates -->
+
+<!-- Key Info Cell -->
+<ng-template #keyInfoCell let-row>
+  <div class="api-keys-list__info">
+    <code class="api-keys-list__prefix">{{ row.apiKey.keyPrefix }}...</code>
+    <div class="api-keys-list__id">{{ row.apiKey.applicationApiKeyId }}</div>
+  </div>
+</ng-template>
+
+<!-- Environment Cell -->
+<ng-template #environmentCell let-row>
+  <span
+    class="api-keys-list__env-badge"
+    [ngClass]="'api-keys-list__env-badge--' + getEnvironmentClass(row.apiKey.environment)">
+    {{ row.environmentLabel }}
+  </span>
+</ng-template>
+
+<!-- Status Cell -->
+<ng-template #statusCell let-row>
+  <app-status-badge
+    [status]="row.apiKey.status"
+    type="apiKey"
+    [showIcon]="true"
+    [showLabel]="true"
+    size="small"
+    variant="chip">
+  </app-status-badge>
+</ng-template>
+
+<!-- Last Activity Cell -->
+<ng-template #lastActivityCell let-row>
+  <span class="api-keys-list__activity">{{ row.lastActivity }}</span>
+</ng-template>
+
+<!-- Actions Cell -->
+<ng-template #actionsCell let-row>
+  <div class="api-keys-list__row-actions">
+    <button
+      *ngIf="canRotate(row)"
+      class="api-keys-list__action-btn api-keys-list__action-btn--rotate"
+      (click)="onRotateKey(row); $event.stopPropagation()"
+      [disabled]="(isRotating$ | async) || (isRevoking$ | async)"
+      title="Rotate key"
+      aria-label="Rotate API key">
+      <fa-icon icon="sync-alt"></fa-icon>
+    </button>
+    <button
+      *ngIf="canRevoke(row)"
+      class="api-keys-list__action-btn api-keys-list__action-btn--revoke"
+      (click)="onRevokeKey(row); $event.stopPropagation()"
+      [disabled]="(isRotating$ | async) || (isRevoking$ | async)"
+      title="Revoke key"
+      aria-label="Revoke API key">
+      <fa-icon icon="ban"></fa-icon>
+    </button>
+  </div>
+</ng-template>
+
+<!-- Generate Key Dialog -->
+<div *ngIf="showGenerateDialog" class="api-keys-list__dialog-overlay" (click)="closeGenerateDialog()" (keydown.escape)="closeGenerateDialog()" tabindex="-1" role="presentation">
+  <div class="api-keys-list__dialog" (click)="$event.stopPropagation()" (keydown.escape)="$event.stopPropagation()" role="dialog" aria-labelledby="generate-dialog-title" aria-modal="true">
+    <div class="api-keys-list__dialog-header">
+      <h3 id="generate-dialog-title" class="api-keys-list__dialog-title">Generate API Key</h3>
+      <button
+        class="api-keys-list__dialog-close"
+        (click)="closeGenerateDialog()"
+        aria-label="Close dialog">
+        <fa-icon icon="times"></fa-icon>
+      </button>
+    </div>
+
+    <div class="api-keys-list__dialog-body">
+      <div class="api-keys-list__form-group">
+        <label for="environment-select" class="api-keys-list__label">Environment</label>
+        <select
+          id="environment-select"
+          class="api-keys-list__select"
+          [(ngModel)]="selectedEnvironment">
+          <option *ngFor="let env of environments" [ngValue]="env">
+            {{ environmentLabels[env] }}
+          </option>
+        </select>
+        <p class="api-keys-list__help-text">
+          Select the environment this API key will be used for.
+        </p>
+      </div>
+
+      <div class="api-keys-list__form-info">
+        <fa-icon icon="info-circle" class="api-keys-list__info-icon"></fa-icon>
+        <p>
+          API keys provide full access to your application's API.
+          Keep them secure and never expose them in client-side code.
+        </p>
+      </div>
+    </div>
+
+    <div class="api-keys-list__dialog-footer">
+      <button
+        class="api-keys-list__btn api-keys-list__btn--secondary"
+        (click)="closeGenerateDialog()">
+        Cancel
+      </button>
+      <button
+        class="api-keys-list__btn"
+        (click)="onGenerateKey()"
+        [disabled]="isGenerating$ | async">
+        <fa-icon *ngIf="isGenerating$ | async" icon="spinner" animation="spin"></fa-icon>
+        <span *ngIf="(isGenerating$ | async) === false">Generate Key</span>
+        <span *ngIf="isGenerating$ | async">Generating...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Generated Key Dialog -->
+<div *ngIf="showGeneratedKeyDialog && (generatedKey$ | async) as generatedKey" class="api-keys-list__dialog-overlay">
+  <div class="api-keys-list__dialog api-keys-list__dialog--wide" role="dialog" aria-labelledby="generated-key-dialog-title">
+    <div class="api-keys-list__dialog-header">
+      <h3 id="generated-key-dialog-title" class="api-keys-list__dialog-title">
+        <fa-icon icon="check-circle" class="api-keys-list__success-icon"></fa-icon>
+        API Key Generated
+      </h3>
+    </div>
+
+    <div class="api-keys-list__dialog-body">
+      <div class="api-keys-list__warning">
+        <fa-icon icon="exclamation-triangle" class="api-keys-list__warning-icon"></fa-icon>
+        <strong>Important:</strong> Copy this key now. You won't be able to see it again!
+      </div>
+
+      <div class="api-keys-list__key-display">
+        <code class="api-keys-list__key-value">{{ generatedKey.fullKey }}</code>
+        <button
+          class="api-keys-list__copy-btn"
+          (click)="copyKeyToClipboard(generatedKey.fullKey)"
+          [class.api-keys-list__copy-btn--copied]="keyCopied"
+          aria-label="Copy API key to clipboard">
+          <fa-icon [icon]="keyCopied ? 'check' : 'copy'"></fa-icon>
+          {{ keyCopied ? 'Copied!' : 'Copy' }}
+        </button>
+      </div>
+
+      <div class="api-keys-list__key-info">
+        <div class="api-keys-list__key-info-item">
+          <span class="api-keys-list__key-info-label">Environment:</span>
+          <span class="api-keys-list__env-badge"
+            [ngClass]="'api-keys-list__env-badge--' + getEnvironmentClass(generatedKey.environment)">
+            {{ environmentLabels[generatedKey.environment] }}
+          </span>
+        </div>
+        <div class="api-keys-list__key-info-item">
+          <span class="api-keys-list__key-info-label">Key Prefix:</span>
+          <code>{{ generatedKey.keyPrefix }}</code>
+        </div>
+      </div>
+    </div>
+
+    <div class="api-keys-list__dialog-footer">
+      <button
+        class="api-keys-list__btn"
+        (click)="closeGeneratedKeyDialog()">
+        Done
+      </button>
+    </div>
+  </div>
+</div>
