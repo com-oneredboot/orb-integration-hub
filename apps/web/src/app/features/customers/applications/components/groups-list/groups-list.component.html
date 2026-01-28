@@ -1,18 +1,20 @@
 <!-- Groups List Component Template -->
-<div class="groups-list">
+<!-- Uses global orb-* CSS classes from components.scss for consistency -->
+<!-- @see organizations-list.component.html for canonical reference -->
+<div class="orb-card">
   <!-- Header -->
-  <div class="groups-list__header">
-    <h3 class="groups-list__title">
-      <fa-icon icon="users" class="groups-list__icon"></fa-icon>
+  <div class="orb-card__header">
+    <h2 class="orb-card__title">
+      <fa-icon icon="users" class="orb-card__icon"></fa-icon>
       Groups
-    </h3>
-    <div class="groups-list__actions">
+    </h2>
+    <div class="orb-card__header-actions">
       <button
-        class="groups-list__btn"
+        class="orb-card-btn"
         (click)="onCreateGroup()"
         [disabled]="isCreatingNew$ | async"
         aria-label="Create new group">
-        <fa-icon icon="plus" class="groups-list__btn-icon"></fa-icon>
+        <fa-icon icon="plus" class="orb-card-btn__icon"></fa-icon>
         Create Group
       </button>
     </div>
@@ -20,12 +22,12 @@
 
   <!-- Error Message -->
   <div *ngIf="error$ | async as error" class="groups-list__error" role="alert">
-    <fa-icon icon="exclamation-triangle" class="groups-list__error-icon"></fa-icon>
+    <fa-icon icon="exclamation-triangle"></fa-icon>
     {{ error }}
   </div>
 
   <!-- Data Grid -->
-  <div class="groups-list__content">
+  <div class="orb-card__content">
     <app-data-grid
       [columns]="columns"
       [data]="(filteredGroupRows$ | async) || []"
@@ -52,12 +54,12 @@
 
 <!-- Group Info Cell -->
 <ng-template #groupInfoCell let-row>
-  <div class="groups-list__info">
-    <div class="groups-list__name">{{ row.group.name }}</div>
-    <div class="groups-list__description" *ngIf="row.group.description">
+  <div class="orb-info">
+    <div class="orb-info__name">{{ row.group.name }}</div>
+    <div class="orb-info__id" *ngIf="row.group.description">
       {{ row.group.description }}
     </div>
-    <div class="groups-list__id">{{ row.group.applicationGroupId }}</div>
+    <div class="orb-info__id">{{ row.group.applicationGroupId }}</div>
   </div>
 </ng-template>
 
@@ -75,13 +77,13 @@
 
 <!-- Member Count Cell -->
 <ng-template #memberCountCell let-row>
-  <div class="groups-list__count">
-    <fa-icon icon="user" class="groups-list__count-icon"></fa-icon>
+  <div class="orb-count">
+    <fa-icon icon="user" class="orb-count__icon"></fa-icon>
     {{ row.memberCount }}
   </div>
 </ng-template>
 
 <!-- Last Activity Cell -->
 <ng-template #lastActivityCell let-row>
-  <span class="groups-list__activity">{{ row.lastActivity }}</span>
+  <span class="orb-info__id">{{ row.lastActivity }}</span>
 </ng-template>

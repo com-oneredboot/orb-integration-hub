@@ -1,6 +1,6 @@
 <!-- Application Detail Page Template -->
 <!-- Uses NgRx store as single source of truth (store-first pattern) -->
-<!-- Includes tabbed interface for Details, Groups, and API Keys -->
+<!-- Includes tabbed interface for Overview, Groups, Security, and Danger Zone -->
 <!-- @see .kiro/specs/store-centric-refactoring/design.md -->
 <!-- @see .kiro/specs/application-access-management/design.md -->
 
@@ -78,14 +78,14 @@
         <nav class="app-detail-tabs" role="tablist" aria-label="Application sections">
           <button
             class="app-detail-tabs__tab"
-            [class.app-detail-tabs__tab--active]="activeTab === ApplicationDetailTab.Details"
-            (click)="setActiveTab(ApplicationDetailTab.Details)"
+            [class.app-detail-tabs__tab--active]="activeTab === ApplicationDetailTab.Overview"
+            (click)="setActiveTab(ApplicationDetailTab.Overview)"
             role="tab"
-            [attr.aria-selected]="activeTab === ApplicationDetailTab.Details"
-            [attr.aria-controls]="'panel-details'"
-            id="tab-details">
+            [attr.aria-selected]="activeTab === ApplicationDetailTab.Overview"
+            [attr.aria-controls]="'panel-overview'"
+            id="tab-overview">
             <fa-icon icon="info-circle"></fa-icon>
-            Details
+            Overview
           </button>
           <button
             class="app-detail-tabs__tab"
@@ -110,17 +110,28 @@
             <fa-icon icon="shield-alt"></fa-icon>
             Security
           </button>
+          <button
+            class="app-detail-tabs__tab app-detail-tabs__tab--danger"
+            [class.app-detail-tabs__tab--active]="activeTab === ApplicationDetailTab.Danger"
+            (click)="setActiveTab(ApplicationDetailTab.Danger)"
+            role="tab"
+            [attr.aria-selected]="activeTab === ApplicationDetailTab.Danger"
+            [attr.aria-controls]="'panel-danger'"
+            id="tab-danger">
+            <fa-icon icon="exclamation-triangle"></fa-icon>
+            Danger Zone
+          </button>
         </nav>
 
         <!-- Tab Panels -->
         <div class="app-detail-tab-panels">
-          <!-- Details Tab Panel -->
+          <!-- Overview Tab Panel -->
           <div
             class="app-detail-tab-panel"
-            *ngIf="activeTab === ApplicationDetailTab.Details || isDraft"
+            *ngIf="activeTab === ApplicationDetailTab.Overview || isDraft"
             role="tabpanel"
-            id="panel-details"
-            [attr.aria-labelledby]="'tab-details'">
+            id="panel-overview"
+            [attr.aria-labelledby]="'tab-overview'">
             <!-- Form Card using global orb-card styles -->
             <div class="orb-card">
               <div class="orb-card__header">
@@ -281,15 +292,6 @@
 
               <!-- Actions Footer -->
               <div class="app-detail-actions">
-                <div class="app-detail-actions__left">
-                  <button
-                    class="orb-btn orb-btn--outline app-detail-actions__delete"
-                    (click)="onDelete()"
-                    [disabled]="data.isSaving">
-                    <fa-icon icon="trash"></fa-icon>
-                    Delete
-                  </button>
-                </div>
                 <div class="app-detail-actions__right">
                   <button
                     class="orb-btn orb-btn--secondary"
@@ -341,116 +343,139 @@
                 </h2>
               </div>
               <div class="orb-card__content">
-                <!-- Empty State -->
-                <div class="security-empty" *ngIf="environmentKeyRows.length === 0">
-                  <fa-icon icon="info-circle" size="2x"></fa-icon>
-                  <p class="security-empty__text">No environments configured</p>
-                  <p class="security-empty__hint">
-                    <button
-                      type="button"
-                      class="security-empty__link"
-                      (click)="setActiveTab(ApplicationDetailTab.Details)"
-                      (keydown.enter)="setActiveTab(ApplicationDetailTab.Details)"
-                      (keydown.space)="setActiveTab(ApplicationDetailTab.Details)">
-                      Configure environments in the Details tab
-                    </button>
-                  </p>
-                </div>
-
-                <!-- Environment Key Rows -->
-                <div class="security-key-list" *ngIf="environmentKeyRows.length > 0">
-                  <div 
-                    class="security-key-row" 
-                    [class.security-key-row--generated]="isNewlyGeneratedKey(row)"
-                    *ngFor="let row of environmentKeyRows">
-                    <!-- Environment Badge -->
-                    <div class="security-key-row__env" [ngClass]="'security-key-row__env--' + row.environment.toLowerCase()">
-                      <fa-icon icon="circle" class="security-key-row__env-icon"></fa-icon>
-                      <span class="security-key-row__env-label">{{ row.environmentLabel }}</span>
-                    </div>
-
-                    <!-- Newly Generated Key Display -->
-                    <div class="security-key-row__generated" *ngIf="isNewlyGeneratedKey(row)">
-                      <div class="security-key-row__generated-header">
-                        <fa-icon icon="check-circle" class="security-key-row__generated-icon"></fa-icon>
-                        <span class="security-key-row__generated-title">API Key Generated</span>
-                      </div>
-                      <div class="security-key-row__generated-key">
-                        <code class="security-key-row__full-key">{{ generatedKeyDisplay?.fullKey }}</code>
-                        <button
-                          type="button"
-                          class="orb-btn orb-btn--secondary orb-btn--sm security-key-row__copy-btn"
-                          (click)="copyGeneratedKey()"
-                          [attr.aria-label]="copySuccess ? 'Copied!' : 'Copy API key to clipboard'">
-                          <fa-icon [icon]="copySuccess ? 'check' : 'copy'"></fa-icon>
-                          {{ copySuccess ? 'Copied!' : 'Copy' }}
-                        </button>
-                      </div>
-                      <div class="security-key-row__generated-warning">
-                        <fa-icon icon="exclamation-triangle"></fa-icon>
-                        <span>Copy this key now. It won't be shown again.</span>
-                      </div>
-                      <button
-                        type="button"
-                        class="security-key-row__dismiss"
-                        (click)="dismissGeneratedKey()"
-                        aria-label="Dismiss key display">
-                        <fa-icon icon="times"></fa-icon>
-                      </button>
-                    </div>
-
-                    <!-- Key Info (when key exists and not newly generated) -->
-                    <div class="security-key-row__info" *ngIf="row.hasKey && !isNewlyGeneratedKey(row)">
-                      <span class="security-key-row__prefix">{{ row.apiKey?.keyPrefix }}...</span>
-                      <app-status-badge
-                        [status]="row.apiKey?.status || ''"
-                        type="apiKey"
-                        [showIcon]="true"
-                        [showLabel]="true"
-                        size="small"
-                        variant="chip">
-                      </app-status-badge>
-                      <span class="security-key-row__last-used" *ngIf="row.apiKey?.lastUsedAt">
-                        Last used: {{ formatRelativeTime(row.apiKey?.lastUsedAt) }}
-                      </span>
-                    </div>
-
-                    <!-- No Key State -->
-                    <div class="security-key-row__no-key" *ngIf="!row.hasKey && !isNewlyGeneratedKey(row)">
-                      <span>No API key</span>
-                    </div>
-
-                    <!-- Actions (hidden when showing generated key) -->
-                    <div class="security-key-row__actions" *ngIf="!isNewlyGeneratedKey(row)">
-                      <button
-                        *ngIf="row.canGenerate"
-                        class="orb-btn orb-btn--primary orb-btn--sm"
-                        (click)="onGenerateKeyForEnvironment(row.environment)"
-                        [disabled]="(isGeneratingKey$ | async)">
-                        <fa-icon icon="plus"></fa-icon>
-                        Generate Key
-                      </button>
-                      <button
-                        *ngIf="row.canRotate"
-                        class="orb-btn orb-btn--secondary orb-btn--sm"
-                        (click)="onRotateKeyForRow(row)"
-                        [disabled]="(isRotatingKey$ | async)">
-                        <fa-icon icon="sync-alt"></fa-icon>
-                        Rotate
-                      </button>
-                      <button
-                        *ngIf="row.canRevoke"
-                        class="orb-btn orb-btn--outline orb-btn--sm"
-                        (click)="onRevokeKeyForRow(row)"
-                        [disabled]="(isRevokingKey$ | async)">
-                        <fa-icon icon="ban"></fa-icon>
-                        Revoke
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                <!-- Data Grid -->
+                <app-data-grid
+                  [columns]="apiKeysColumns"
+                  [data]="environmentKeyRows"
+                  [pageState]="apiKeysPageState"
+                  [loading]="false"
+                  [showFilters]="false"
+                  [showPagination]="false"
+                  [showReset]="false"
+                  [selectable]="false"
+                  trackByField="environment"
+                  emptyMessage="No environments configured. Configure environments in the Overview tab.">
+                </app-data-grid>
               </div>
             </div>
+          </div>
+
+          <!-- Custom Cell Templates for API Keys Grid -->
+
+          <!-- Environment Cell -->
+          <ng-template #environmentCell let-row>
+            <span
+              class="orb-role-badge orb-role-badge--{{ row.environment.toLowerCase() }}">
+              {{ row.environmentLabel }}
+            </span>
+          </ng-template>
+
+          <!-- Key Info Cell -->
+          <ng-template #keyInfoCell let-row>
+            <!-- Newly Generated Key Display -->
+            <div class="security-key-generated" *ngIf="isNewlyGeneratedKey(row)">
+              <div class="security-key-generated__header">
+                <fa-icon icon="check-circle" class="security-key-generated__icon"></fa-icon>
+                <span>API Key Generated</span>
+              </div>
+              <div class="security-key-generated__key">
+                <code>{{ generatedKeyDisplay?.fullKey }}</code>
+                <button
+                  type="button"
+                  class="orb-btn orb-btn--secondary orb-btn--sm"
+                  (click)="copyGeneratedKey(); $event.stopPropagation()"
+                  [attr.aria-label]="copySuccess ? 'Copied!' : 'Copy API key'">
+                  <fa-icon [icon]="copySuccess ? 'check' : 'copy'"></fa-icon>
+                  {{ copySuccess ? 'Copied!' : 'Copy' }}
+                </button>
+              </div>
+              <div class="security-key-generated__warning">
+                <fa-icon icon="exclamation-triangle"></fa-icon>
+                <span>Copy this key now. It won't be shown again.</span>
+              </div>
+            </div>
+
+            <!-- Key Info (when key exists and not newly generated) -->
+            <div class="orb-info orb-info--inline" *ngIf="row.hasKey && !isNewlyGeneratedKey(row)">
+              <code class="orb-info__id">{{ row.apiKey?.keyPrefix }}...</code>
+              <app-status-badge
+                [status]="row.apiKey?.status || ''"
+                type="apiKey"
+                [showIcon]="true"
+                [showLabel]="true"
+                size="small"
+                variant="chip">
+              </app-status-badge>
+              <span class="orb-info__id" *ngIf="row.apiKey?.lastUsedAt">
+                Last used: {{ formatRelativeTime(row.apiKey?.lastUsedAt) }}
+              </span>
+            </div>
+
+            <!-- No Key State (CTA) -->
+            <div class="orb-info orb-info--muted" *ngIf="!row.hasKey && !isNewlyGeneratedKey(row)">
+              <fa-icon icon="info-circle"></fa-icon>
+              <span class="orb-info__id">No API key configured for this environment</span>
+            </div>
+          </ng-template>
+
+          <!-- Actions Cell -->
+          <ng-template #actionsCell let-row>
+            <div class="security-key-actions" *ngIf="!isNewlyGeneratedKey(row)">
+              <!-- Generate Key CTA Button -->
+              <button
+                *ngIf="row.canGenerate"
+                class="orb-btn orb-btn--primary orb-btn--sm"
+                (click)="onGenerateKeyForEnvironment(row.environment); $event.stopPropagation()"
+                [disabled]="(isGeneratingKey$ | async)">
+                <fa-icon icon="plus"></fa-icon>
+                Generate Key
+              </button>
+              <!-- Rotate Button -->
+              <button
+                *ngIf="row.canRotate"
+                class="orb-btn orb-btn--secondary orb-btn--sm"
+                (click)="onRotateKeyForRow(row); $event.stopPropagation()"
+                [disabled]="(isRotatingKey$ | async)">
+                <fa-icon icon="sync-alt"></fa-icon>
+                Rotate
+              </button>
+              <!-- Revoke Button -->
+              <button
+                *ngIf="row.canRevoke"
+                class="orb-btn orb-btn--outline orb-btn--sm"
+                (click)="onRevokeKeyForRow(row); $event.stopPropagation()"
+                [disabled]="(isRevokingKey$ | async)">
+                <fa-icon icon="ban"></fa-icon>
+                Revoke
+              </button>
+            </div>
+            <!-- Dismiss button for newly generated key -->
+            <div class="security-key-actions" *ngIf="isNewlyGeneratedKey(row)">
+              <button
+                type="button"
+                class="orb-btn orb-btn--secondary orb-btn--sm"
+                (click)="dismissGeneratedKey(); $event.stopPropagation()"
+                aria-label="Dismiss">
+                <fa-icon icon="times"></fa-icon>
+                Dismiss
+              </button>
+            </div>
+          </ng-template>
+
+          <!-- Danger Zone Tab Panel -->
+          <div
+            class="app-detail-tab-panel"
+            *ngIf="activeTab === ApplicationDetailTab.Danger"
+            role="tabpanel"
+            id="panel-danger"
+            [attr.aria-labelledby]="'tab-danger'">
+            <app-danger-zone-card
+              title="Delete Application"
+              description="Permanently delete this application and all associated data including API keys and groups. This action cannot be undone."
+              buttonText="Delete Application"
+              [isLoading]="data.isSaving"
+              (action)="onDelete()">
+            </app-danger-zone-card>
           </div>
         </div>
       </div>

@@ -893,3 +893,264 @@ export class ResourceListComponent implements OnInit, OnDestroy {
 - `apps/web/src/app/features/customers/organizations/store/organizations.effects.ts`
 
 When creating a new feature, copy the Organizations store files and adapt them.
+
+## DataGridComponent (REQUIRED for List Pages)
+
+**MANDATORY**: All list pages MUST use the shared `DataGridComponent`. DO NOT create custom table implementations.
+
+Located at: `apps/web/src/app/shared/components/data-grid/data-grid.component.ts`
+
+### When to Use
+
+- Any page displaying tabular data (organizations, applications, users, groups, etc.)
+- Any list that needs pagination, sorting, or filtering
+- Anywhere you would otherwise create a `<table>` element
+
+### Usage
+
+```typescript
+import { DataGridComponent } from '../../../shared/components/data-grid/data-grid.component';
+import { ColumnDefinition, PageState, SortState, FilterState } from '../../../shared/components/data-grid/data-grid.types';
+
+@Component({
+  imports: [DataGridComponent],
+})
+export class MyListComponent {
+  columns: ColumnDefinition<MyTableRow>[] = [
+    { field: 'name', header: 'Name', sortable: true, filterable: true },
+    { field: 'status', header: 'Status', sortable: true },
+    { field: 'role', header: 'Role', cellTemplate: this.roleCell },
+  ];
+  
+  pageState: PageState = { currentPage: 1, pageSize: 10, totalItems: 0, totalPages: 0 };
+  sortState: SortState | null = null;
+  filterState: FilterState = {};
+}
+```
+
+### Template
+
+```html
+<app-data-grid
+  [columns]="columns"
+  [data]="(filteredRows$ | async) || []"
+  [pageState]="pageState"
+  [sortState]="sortState"
+  [filterState]="filterState"
+  [loading]="(isLoading$ | async) || false"
+  [showFilters]="true"
+  [showPagination]="true"
+  [showReset]="true"
+  [selectable]="false"
+  trackByField="resource"
+  emptyMessage="No items found"
+  (pageChange)="onPageChange($event)"
+  (sortChange)="onSortChange($event)"
+  (filterChange)="onFilterChange($event)"
+  (resetGrid)="onResetGrid()"
+  (rowClick)="onRowClick($event)">
+</app-data-grid>
+```
+
+### Custom Cell Templates
+
+Use `ng-template` with template references for custom cell rendering:
+
+```html
+<!-- Define templates after the data-grid -->
+<ng-template #infoCell let-row>
+  <div class="orb-info">
+    <div class="orb-info__name">{{ row.resource.name }}</div>
+    <div class="orb-info__id">{{ row.resource.id }}</div>
+  </div>
+</ng-template>
+
+<ng-template #roleCell let-row>
+  <span class="orb-role-badge orb-role-badge--{{ getRoleClass(row.userRole) }}">
+    {{ row.userRole }}
+  </span>
+</ng-template>
+```
+
+Then reference in column definition:
+
+```typescript
+@ViewChild('infoCell') infoCell!: TemplateRef<unknown>;
+@ViewChild('roleCell') roleCell!: TemplateRef<unknown>;
+
+ngAfterViewInit(): void {
+  this.columns = [
+    { field: 'name', header: 'Resource', cellTemplate: this.infoCell },
+    { field: 'role', header: 'Role', cellTemplate: this.roleCell },
+  ];
+}
+```
+
+### Canonical Reference
+
+See `organizations-list.component.html` for the complete pattern:
+`apps/web/src/app/features/customers/organizations/components/organizations-list/`
+
+## Global CSS Classes (REQUIRED)
+
+**CRITICAL**: Use global `orb-*` classes from `apps/web/src/styles/components.scss`. DO NOT duplicate these styles in component SCSS files.
+
+### Card Layout Classes
+
+| Class | Purpose |
+|-------|---------|
+| `orb-card` | Main card container with shadow and hover effects |
+| `orb-card__header` | Black header bar with rounded top corners |
+| `orb-card__title` | White title text with icon |
+| `orb-card__icon` | Icon in card title |
+| `orb-card__header-actions` | Container for header buttons |
+| `orb-card__content` | Card body content area |
+| `orb-card__content--padded` | Content with padding |
+| `orb-card__content--table` | Content without padding (for tables) |
+
+### Button Classes
+
+| Class | Purpose |
+|-------|---------|
+| `orb-card-btn` | White-bordered button for card headers |
+| `orb-card-btn__icon` | Icon inside card button |
+| `orb-btn` | Base button class |
+| `orb-btn--primary` | Red primary button |
+| `orb-btn--secondary` | Gray secondary button |
+| `orb-btn--outline` | Transparent with red border |
+| `orb-btn--danger` | Red danger button |
+| `orb-btn--sm` / `orb-btn--lg` | Size variants |
+
+### Table Cell Classes
+
+| Class | Purpose |
+|-------|---------|
+| `orb-info` | Two-line info display (name + ID) |
+| `orb-info__name` | Primary name text (bold, dark blue) |
+| `orb-info__id` | Secondary ID text (small, gray, monospace) |
+| `orb-info--inline` | Inline variant for horizontal layout |
+| `orb-info--muted` | Muted color variant |
+| `orb-count` | Count display with icon |
+| `orb-count__icon` | Icon in count display |
+| `orb-count--clickable` | Clickable count button variant |
+| `orb-role-badge` | Role badge base class |
+| `orb-role-badge--owner` | Owner role (purple) |
+| `orb-role-badge--administrator` | Admin role (blue) |
+| `orb-role-badge--developer` | Developer role (green) |
+| `orb-role-badge--viewer` | Viewer role (gray) |
+
+### Status Badge Classes
+
+| Class | Purpose |
+|-------|---------|
+| `status-badge` | Base status badge |
+| `status-badge--small/medium/large` | Size variants |
+| `status-badge--badge/chip/text` | Display variants |
+| `orb-header-badge` | Bold header badge |
+| `orb-header-badge--active` | Green active status |
+| `orb-header-badge--pending` | Yellow pending status |
+| `orb-header-badge--suspended` | Red suspended status |
+
+### Filter Classes
+
+| Class | Purpose |
+|-------|---------|
+| `orb-filters` | Filter section container |
+| `orb-filters__group` | Individual filter group |
+| `orb-filters__label` | Filter label |
+| `orb-filters__input` | Text input with icon support |
+| `orb-filters__select` | Dropdown select |
+| `orb-filters__icon` | Icon inside input |
+
+### Tab Navigation Classes
+
+| Class | Purpose |
+|-------|---------|
+| `orb-tabs` | Tab container |
+| `orb-tabs__tab` | Individual tab button |
+| `orb-tabs__tab--active` | Active tab state |
+| `orb-tabs__tab--danger` | Danger/delete tab variant |
+| `orb-tabs__icon` | Icon in tab |
+| `orb-tabs__badge` | Count badge in tab |
+
+### Usage Example
+
+```html
+<!-- Card with header and data grid -->
+<div class="orb-card">
+  <div class="orb-card__header">
+    <h2 class="orb-card__title">
+      <fa-icon icon="building" class="orb-card__icon"></fa-icon>
+      Organizations
+    </h2>
+    <div class="orb-card__header-actions">
+      <button class="orb-card-btn" (click)="onCreate()">
+        <fa-icon icon="plus" class="orb-card-btn__icon"></fa-icon>
+        Create
+      </button>
+    </div>
+  </div>
+  <div class="orb-card__content">
+    <app-data-grid ...></app-data-grid>
+  </div>
+</div>
+
+<!-- Cell templates using global classes -->
+<ng-template #infoCell let-row>
+  <div class="orb-info">
+    <div class="orb-info__name">{{ row.name }}</div>
+    <div class="orb-info__id">{{ row.id }}</div>
+  </div>
+</ng-template>
+
+<ng-template #roleCell let-row>
+  <span class="orb-role-badge orb-role-badge--{{ row.role.toLowerCase() }}">
+    {{ row.role }}
+  </span>
+</ng-template>
+
+<ng-template #countCell let-row>
+  <div class="orb-count">
+    <fa-icon icon="users" class="orb-count__icon"></fa-icon>
+    {{ row.memberCount }}
+  </div>
+</ng-template>
+```
+
+### DO NOT Duplicate CSS
+
+**PROHIBITED**: Creating component-specific styles that duplicate global classes.
+
+```scss
+// ❌ WRONG - Duplicating global styles in component SCSS
+.my-component {
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  &__name {
+    font-weight: 500;
+    color: #1a365d;
+  }
+  &__id {
+    font-size: 12px;
+    color: #6b7280;
+  }
+}
+```
+
+```html
+<!-- ✅ CORRECT - Use global orb-* classes -->
+<div class="orb-info">
+  <div class="orb-info__name">{{ name }}</div>
+  <div class="orb-info__id">{{ id }}</div>
+</div>
+```
+
+### Canonical Reference for CSS Patterns
+
+**Organizations list** is the canonical reference for list page CSS:
+`apps/web/src/app/features/customers/organizations/components/organizations-list/organizations-list.component.html`
+
+When building any list page, copy the HTML structure and CSS classes from organizations-list exactly.
