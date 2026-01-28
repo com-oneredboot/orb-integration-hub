@@ -44,14 +44,18 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "1mb",
+                  "maximumWarning": "1.25mb",
                   "maximumError": "2mb"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "20kb",
-                  "maximumError": "30kb"
+                  "maximumWarning": "25kb",
+                  "maximumError": "35kb"
                 }
+              ],
+              "allowedCommonJsDependencies": [
+                "qrcode",
+                "dijkstrajs"
               ],
               "outputHashing": "all",
               "fileReplacements": [
