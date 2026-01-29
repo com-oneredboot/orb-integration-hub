@@ -21,8 +21,11 @@ import { Action } from '@ngrx/store';
 import { ApplicationDetailPageComponent, ApplicationDetailTab } from './application-detail-page.component';
 import { IApplications } from '../../../../../core/models/ApplicationsModel';
 import { IOrganizations } from '../../../../../core/models/OrganizationsModel';
+import { IApplicationApiKeys } from '../../../../../core/models/ApplicationApiKeysModel';
 import { ApplicationStatus } from '../../../../../core/enums/ApplicationStatusEnum';
 import { OrganizationStatus } from '../../../../../core/enums/OrganizationStatusEnum';
+import { ApplicationApiKeyStatus } from '../../../../../core/enums/ApplicationApiKeyStatusEnum';
+import { Environment } from '../../../../../core/enums/EnvironmentEnum';
 import { ApplicationsActions } from '../../store/applications.actions';
 import { OrganizationsActions } from '../../../organizations/store/organizations.actions';
 import * as fromApplications from '../../store/applications.selectors';
@@ -671,6 +674,307 @@ describe('ApplicationDetailPageComponent', () => {
         const labels = component.environmentKeyRows.map(row => row.environmentLabel);
         expect(labels).toContain('Production');
         expect(labels).toContain('Staging');
+      }));
+    });
+  });
+
+  /**
+   * API Key Activation Validation Tests
+   *
+   * Tests for the activation flow that validates API keys are configured
+   * before allowing an application to be activated.
+   *
+   * @see .kiro/specs/api-key-configuration-flow/design.md
+   * _Requirements: 1.1, 1.2, 1.4, 4.1, 4.2_
+   */
+  describe('API Key Activation Validation', () => {
+    // Helper to create mock API key
+    const createMockApiKey = (environment: string, status: ApplicationApiKeyStatus): IApplicationApiKeys => ({
+      applicationApiKeyId: `key-${environment}`,
+      applicationId: 'app-pending',
+      organizationId: 'org-456',
+      environment: environment as Environment,
+      status,
+      keyPrefix: `orb_${environment.toLowerCase().substring(0, 2)}_`,
+      keyHash: 'mock-hash',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    } as IApplicationApiKeys);
+
+    describe('Activation Blocked Without API Keys', () => {
+      beforeEach(fakeAsync(() => {
+        // Set up a PENDING application (draft mode)
+        store.overrideSelector(fromApplications.selectSelectedApplication, mockPendingApplication);
+        store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+        // No API keys configured
+        store.overrideSelector(fromApiKeys.selectApiKeys, []);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+      }));
+
+      it('should show validation error when activating without API keys', fakeAsync(() => {
+        // Validates: Requirements 1.1, 4.1
+        component.editForm.name = 'Valid Name';
+        component.editForm.organizationId = 'org-456';
+        component.editForm.environments = ['PRODUCTION', 'STAGING'];
+
+        component.onSave();
+        tick();
+
+        expect(component.apiKeyValidationError).toBeTruthy();
+        expect(component.apiKeyValidationError).toContain('Cannot activate');
+        expect(component.apiKeyValidationError).toContain('API keys are required');
+      }));
+
+      it('should list missing environments in error message', fakeAsync(() => {
+        // Validates: Requirements 1.4, 4.1
+        component.editForm.name = 'Valid Name';
+        component.editForm.organizationId = 'org-456';
+        component.editForm.environments = ['PRODUCTION', 'STAGING'];
+
+        component.onSave();
+        tick();
+
+        expect(component.apiKeyValidationError).toContain('Production');
+        expect(component.apiKeyValidationError).toContain('Staging');
+      }));
+
+      it('should include Security tab reference in error message', fakeAsync(() => {
+        // Validates: Requirements 4.2
+        component.editForm.name = 'Valid Name';
+        component.editForm.organizationId = 'org-456';
+        component.editForm.environments = ['PRODUCTION'];
+
+        component.onSave();
+        tick();
+
+        expect(component.apiKeyValidationError).toContain('Security tab');
+      }));
+
+      it('should not dispatch updateApplication when validation fails', fakeAsync(() => {
+        // Validates: Requirements 1.1
+        (store.dispatch as jasmine.Spy).calls.reset();
+
+        component.editForm.name = 'Valid Name';
+        component.editForm.organizationId = 'org-456';
+        component.editForm.environments = ['PRODUCTION'];
+
+        component.onSave();
+        tick();
+
+        expect(store.dispatch).not.toHaveBeenCalledWith(
+          jasmine.objectContaining({ type: '[Applications] Update Application' })
+        );
+      }));
+    });
+
+    describe('Activation Allowed With API Keys', () => {
+      beforeEach(fakeAsync(() => {
+        store.overrideSelector(fromApplications.selectSelectedApplication, mockPendingApplication);
+        store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+        // All environments have active API keys
+        store.overrideSelector(fromApiKeys.selectApiKeys, [
+          createMockApiKey('PRODUCTION', ApplicationApiKeyStatus.Active),
+          createMockApiKey('STAGING', ApplicationApiKeyStatus.Active)
+        ]);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+      }));
+
+      it('should allow activation when all environments have active keys', fakeAsync(() => {
+        // Validates: Requirements 1.2
+        component.editForm.name = 'Valid Name';
+        component.editForm.organizationId = 'org-456';
+        component.editForm.environments = ['PRODUCTION', 'STAGING'];
+
+        component.onSave();
+        tick();
+
+        expect(component.apiKeyValidationError).toBeNull();
+        expect(store.dispatch).toHaveBeenCalledWith(
+          jasmine.objectContaining({ type: '[Applications] Update Application' })
+        );
+      }));
+
+      it('should allow activation with ROTATING status keys', fakeAsync(() => {
+        // Validates: Requirements 1.2
+        store.overrideSelector(fromApiKeys.selectApiKeys, [
+          createMockApiKey('PRODUCTION', ApplicationApiKeyStatus.Rotating),
+          createMockApiKey('STAGING', ApplicationApiKeyStatus.Active)
+        ]);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        component.editForm.name = 'Valid Name';
+        component.editForm.organizationId = 'org-456';
+        component.editForm.environments = ['PRODUCTION', 'STAGING'];
+
+        component.onSave();
+        tick();
+
+        expect(component.apiKeyValidationError).toBeNull();
+      }));
+    });
+
+    describe('Partial API Key Configuration', () => {
+      beforeEach(fakeAsync(() => {
+        store.overrideSelector(fromApplications.selectSelectedApplication, mockPendingApplication);
+        store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+        // Only PRODUCTION has an active key
+        store.overrideSelector(fromApiKeys.selectApiKeys, [
+          createMockApiKey('PRODUCTION', ApplicationApiKeyStatus.Active)
+        ]);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+      }));
+
+      it('should show error for missing environments only', fakeAsync(() => {
+        // Validates: Requirements 1.3, 1.4
+        component.editForm.name = 'Valid Name';
+        component.editForm.organizationId = 'org-456';
+        component.editForm.environments = ['PRODUCTION', 'STAGING'];
+
+        component.onSave();
+        tick();
+
+        expect(component.apiKeyValidationError).toContain('Staging');
+        expect(component.apiKeyValidationError).not.toContain('Production');
+      }));
+    });
+
+    describe('Revoked/Expired Keys Not Counted', () => {
+      beforeEach(fakeAsync(() => {
+        store.overrideSelector(fromApplications.selectSelectedApplication, mockPendingApplication);
+        store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+      }));
+
+      it('should not count REVOKED keys as valid', fakeAsync(() => {
+        // Validates: Requirements 1.2
+        store.overrideSelector(fromApiKeys.selectApiKeys, [
+          createMockApiKey('PRODUCTION', ApplicationApiKeyStatus.Revoked),
+          createMockApiKey('STAGING', ApplicationApiKeyStatus.Active)
+        ]);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        component.editForm.name = 'Valid Name';
+        component.editForm.organizationId = 'org-456';
+        component.editForm.environments = ['PRODUCTION', 'STAGING'];
+
+        component.onSave();
+        tick();
+
+        expect(component.apiKeyValidationError).toContain('Production');
+      }));
+
+      it('should not count EXPIRED keys as valid', fakeAsync(() => {
+        // Validates: Requirements 1.2
+        store.overrideSelector(fromApiKeys.selectApiKeys, [
+          createMockApiKey('PRODUCTION', ApplicationApiKeyStatus.Expired),
+          createMockApiKey('STAGING', ApplicationApiKeyStatus.Active)
+        ]);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        component.editForm.name = 'Valid Name';
+        component.editForm.organizationId = 'org-456';
+        component.editForm.environments = ['PRODUCTION', 'STAGING'];
+
+        component.onSave();
+        tick();
+
+        expect(component.apiKeyValidationError).toContain('Production');
+      }));
+    });
+
+    describe('Error Message Clearing', () => {
+      beforeEach(fakeAsync(() => {
+        store.overrideSelector(fromApplications.selectSelectedApplication, mockPendingApplication);
+        store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+        store.overrideSelector(fromApiKeys.selectApiKeys, []);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+      }));
+
+      it('should clear error when switching away from Overview tab', fakeAsync(() => {
+        // Validates: Requirements 4.1
+        component.editForm.name = 'Valid Name';
+        component.editForm.organizationId = 'org-456';
+        component.editForm.environments = ['PRODUCTION'];
+
+        component.onSave();
+        tick();
+        expect(component.apiKeyValidationError).toBeTruthy();
+
+        component.setActiveTab(ApplicationDetailTab.Security);
+        tick();
+
+        expect(component.apiKeyValidationError).toBeNull();
+      }));
+
+      it('should clear error on next save attempt', fakeAsync(() => {
+        // Validates: Requirements 4.1
+        // mockPendingApplication has environments: ['PRODUCTION', 'STAGING']
+        component.editForm.name = 'Valid Name';
+        component.editForm.organizationId = 'org-456';
+        component.editForm.environments = ['PRODUCTION', 'STAGING'];
+
+        component.onSave();
+        tick();
+        expect(component.apiKeyValidationError).toBeTruthy();
+
+        // Add the missing keys for both environments
+        const newApiKeys = [
+          createMockApiKey('PRODUCTION', ApplicationApiKeyStatus.Active),
+          createMockApiKey('STAGING', ApplicationApiKeyStatus.Active)
+        ];
+        store.overrideSelector(fromApiKeys.selectApiKeys, newApiKeys);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        // Manually update the component's apiKeys since the subscription may not have fired
+        component.apiKeys = newApiKeys;
+
+        component.onSave();
+        tick();
+
+        expect(component.apiKeyValidationError).toBeNull();
+      }));
+    });
+
+    describe('Active Application Updates', () => {
+      beforeEach(fakeAsync(() => {
+        // Active application (not draft)
+        store.overrideSelector(fromApplications.selectSelectedApplication, mockApplication);
+        store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+        store.overrideSelector(fromApiKeys.selectApiKeys, []);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+      }));
+
+      it('should not validate API keys for active application updates', fakeAsync(() => {
+        // Validates: Requirements 1.1 (validation only for activation)
+        component.editForm.name = 'Updated Name';
+        component.editForm.organizationId = 'org-456';
+        component.editForm.environments = ['PRODUCTION', 'STAGING'];
+
+        component.onSave();
+        tick();
+
+        // Should not show validation error for active apps
+        expect(component.apiKeyValidationError).toBeNull();
+        expect(store.dispatch).toHaveBeenCalledWith(
+          jasmine.objectContaining({ type: '[Applications] Update Application' })
+        );
       }));
     });
   });

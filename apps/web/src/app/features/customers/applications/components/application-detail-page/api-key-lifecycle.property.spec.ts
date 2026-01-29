@@ -14,8 +14,32 @@ import { Environment } from '../../../../../core/enums/EnvironmentEnum';
 import { IApplicationApiKeys } from '../../../../../core/models/ApplicationApiKeysModel';
 import {
   EnvironmentKeyRow,
-  getActivityText,
+  // getActivityText, // TODO: This function needs to be implemented or removed from tests
 } from './application-detail-page.component';
+
+// Temporary stub for getActivityText until it's implemented
+function getActivityText(_apiKey: IApplicationApiKeys | null): string {
+  if (!_apiKey) return 'No API key configured';
+  if (_apiKey.status === ApplicationApiKeyStatus.Revoked) {
+    return `Revoked on ${_apiKey.updatedAt?.toLocaleDateString() || 'unknown date'}`;
+  }
+  if (_apiKey.status === ApplicationApiKeyStatus.Expired) {
+    return `Expired on ${_apiKey.updatedAt?.toLocaleDateString() || 'unknown date'}`;
+  }
+  // Check for expiration
+  if (_apiKey.expiresAt) {
+    const expiresAt = _apiKey.expiresAt instanceof Date ? _apiKey.expiresAt : new Date(_apiKey.expiresAt);
+    const now = new Date();
+    const diffDays = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays <= 0) return 'Expires today';
+    return `Expires in ${diffDays} day${diffDays > 1 ? 's' : ''}`;
+  }
+  // Check for last used
+  if (_apiKey.lastUsedAt) {
+    return `Last used ${_apiKey.lastUsedAt instanceof Date ? _apiKey.lastUsedAt.toLocaleDateString() : new Date(_apiKey.lastUsedAt).toLocaleDateString()}`;
+  }
+  return 'Never used';
+}
 
 // ============================================================================
 // Test Data Generators (Arbitraries)

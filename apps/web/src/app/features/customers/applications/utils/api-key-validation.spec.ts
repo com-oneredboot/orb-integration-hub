@@ -244,4 +244,45 @@ describe('formatMissingEnvironments', () => {
     expect(formatMissingEnvironments(['PRODUCTION', 'STAGING', 'DEVELOPMENT']))
       .toBe('Production, Staging, and Development');
   });
+
+  /**
+   * Feature: api-key-configuration-flow, Property 4: Activation Error Message Correctness
+   * Validates: Requirements 1.4, 4.1
+   *
+   * For any list of missing environments, the formatted error message SHALL
+   * contain all environment labels and use proper grammar (Oxford comma for 3+).
+   */
+  describe('Property Tests', () => {
+    it('Property 4: error message contains all missing environment labels', () => {
+      fc.assert(
+        fc.property(
+          // Generate unique environments (1-5)
+          fc.uniqueArray(environmentStringArb, { minLength: 1, maxLength: 5 }),
+          (environments) => {
+            const formatted = formatMissingEnvironments(environments);
+
+            // All environments should appear in the formatted string
+            for (const env of environments) {
+              const label = getEnvironmentLabel(env);
+              expect(formatted).toContain(label);
+            }
+
+            // Check grammar rules
+            if (environments.length === 1) {
+              // Single environment: just the label
+              expect(formatted).toBe(getEnvironmentLabel(environments[0]));
+            } else if (environments.length === 2) {
+              // Two environments: "X and Y"
+              expect(formatted).toContain(' and ');
+              expect(formatted).not.toContain(',');
+            } else {
+              // Three or more: Oxford comma "X, Y, and Z"
+              expect(formatted).toContain(', and ');
+            }
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+  });
 });

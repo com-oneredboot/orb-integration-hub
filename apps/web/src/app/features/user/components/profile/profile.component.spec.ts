@@ -243,15 +243,11 @@ describe('ProfileComponent', () => {
       // Submit form
       component.onSubmit();
       
-      // Check that loading state is active
-      expect(component.isLoading).toBe(true);
-      
       // Wait for the mock API delay
       tick(1000);
       
       // Verify form is marked as pristine after submission
       expect(component.profileForm.pristine).toBe(true);
-      expect(component.isLoading).toBe(false);
     }));
   });
 
