@@ -17,7 +17,10 @@ class RolesCreateInput(BaseModel):
     """Roles create input."""
 
     role_id: str = Field(..., description="Unique identifier for the role (primary key)")
-    user_id: Optional[str] = Field(None, description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.")
+    user_id: Optional[str] = Field(
+        None,
+        description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.",
+    )
     role_type: RoleType = Field(..., description="Type of the role")
     status: RoleStatus = Field(..., description="Current status of the role")
     created_at: datetime = Field(..., description="When the role was created")
@@ -28,7 +31,10 @@ class RolesUpdateInput(BaseModel):
     """Roles update input."""
 
     role_id: Optional[str] = Field(..., description="Unique identifier for the role (primary key)")
-    user_id: Optional[str] = Field(None, description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.")
+    user_id: Optional[str] = Field(
+        None,
+        description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.",
+    )
     role_type: Optional[RoleType] = Field(..., description="Type of the role")
     status: Optional[RoleStatus] = Field(..., description="Current status of the role")
     created_at: Optional[datetime] = Field(..., description="When the role was created")
@@ -46,7 +52,6 @@ class RolesDisableInput(BaseModel):
 
     role_id: str
     disabled: bool
-
 
 
 # Query Input Types
@@ -69,7 +74,10 @@ class Roles(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     role_id: str = Field(..., description="Unique identifier for the role (primary key)")
-    user_id: Optional[str] = Field(None, description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.")
+    user_id: Optional[str] = Field(
+        None,
+        description="(Deprecated) ID of the user this role belongs to. Use ApplicationRoles for user-role mapping.",
+    )
     role_type: RoleType = Field(..., description="Type of the role")
     status: RoleStatus = Field(..., description="Current status of the role")
     created_at: datetime = Field(..., description="When the role was created")

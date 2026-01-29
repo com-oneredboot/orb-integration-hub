@@ -16,15 +16,26 @@ from ..enums.notification_type_enum import NotificationType
 class NotificationsCreateInput(BaseModel):
     """Notifications create input."""
 
-    notification_id: str = Field(..., description="Unique identifier for the notification (primary key)")
-    recipient_user_id: str = Field(..., description="ID of the user who should receive this notification (foreign key to Users)")
-    sender_user_id: Optional[str] = Field(None, description="ID of the user who triggered this notification (foreign key to Users)")
+    notification_id: str = Field(
+        ..., description="Unique identifier for the notification (primary key)"
+    )
+    recipient_user_id: str = Field(
+        ...,
+        description="ID of the user who should receive this notification (foreign key to Users)",
+    )
+    sender_user_id: Optional[str] = Field(
+        None, description="ID of the user who triggered this notification (foreign key to Users)"
+    )
     type: NotificationType = Field(..., description="Type of notification")
     status: NotificationStatus = Field(..., description="Current status of the notification")
     title: str = Field(..., description="Title/subject of the notification")
     message: str = Field(..., description="Content/body of the notification")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Additional context data (applicationId, organizationId, etc.)")
-    expires_at: Optional[datetime] = Field(None, description="When the notification expires (for time-sensitive actions)")
+    metadata: Optional[Dict[str, Any]] = Field(
+        None, description="Additional context data (applicationId, organizationId, etc.)"
+    )
+    expires_at: Optional[datetime] = Field(
+        None, description="When the notification expires (for time-sensitive actions)"
+    )
     created_at: datetime = Field(..., description="When the notification was created")
     updated_at: datetime = Field(..., description="When the notification was last updated")
 
@@ -32,17 +43,32 @@ class NotificationsCreateInput(BaseModel):
 class NotificationsUpdateInput(BaseModel):
     """Notifications update input."""
 
-    notification_id: Optional[str] = Field(..., description="Unique identifier for the notification (primary key)")
-    recipient_user_id: Optional[str] = Field(..., description="ID of the user who should receive this notification (foreign key to Users)")
-    sender_user_id: Optional[str] = Field(None, description="ID of the user who triggered this notification (foreign key to Users)")
+    notification_id: Optional[str] = Field(
+        ..., description="Unique identifier for the notification (primary key)"
+    )
+    recipient_user_id: Optional[str] = Field(
+        ...,
+        description="ID of the user who should receive this notification (foreign key to Users)",
+    )
+    sender_user_id: Optional[str] = Field(
+        None, description="ID of the user who triggered this notification (foreign key to Users)"
+    )
     type: Optional[NotificationType] = Field(..., description="Type of notification")
-    status: Optional[NotificationStatus] = Field(..., description="Current status of the notification")
+    status: Optional[NotificationStatus] = Field(
+        ..., description="Current status of the notification"
+    )
     title: Optional[str] = Field(..., description="Title/subject of the notification")
     message: Optional[str] = Field(..., description="Content/body of the notification")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Additional context data (applicationId, organizationId, etc.)")
-    expires_at: Optional[datetime] = Field(None, description="When the notification expires (for time-sensitive actions)")
+    metadata: Optional[Dict[str, Any]] = Field(
+        None, description="Additional context data (applicationId, organizationId, etc.)"
+    )
+    expires_at: Optional[datetime] = Field(
+        None, description="When the notification expires (for time-sensitive actions)"
+    )
     created_at: Optional[datetime] = Field(..., description="When the notification was created")
-    updated_at: Optional[datetime] = Field(..., description="When the notification was last updated")
+    updated_at: Optional[datetime] = Field(
+        ..., description="When the notification was last updated"
+    )
 
 
 class NotificationsDeleteInput(BaseModel):
@@ -56,7 +82,6 @@ class NotificationsDisableInput(BaseModel):
 
     notification_id: str
     disabled: bool
-
 
 
 # Query Input Types
@@ -84,15 +109,26 @@ class Notifications(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    notification_id: str = Field(..., description="Unique identifier for the notification (primary key)")
-    recipient_user_id: str = Field(..., description="ID of the user who should receive this notification (foreign key to Users)")
-    sender_user_id: Optional[str] = Field(None, description="ID of the user who triggered this notification (foreign key to Users)")
+    notification_id: str = Field(
+        ..., description="Unique identifier for the notification (primary key)"
+    )
+    recipient_user_id: str = Field(
+        ...,
+        description="ID of the user who should receive this notification (foreign key to Users)",
+    )
+    sender_user_id: Optional[str] = Field(
+        None, description="ID of the user who triggered this notification (foreign key to Users)"
+    )
     type: NotificationType = Field(..., description="Type of notification")
     status: NotificationStatus = Field(..., description="Current status of the notification")
     title: str = Field(..., description="Title/subject of the notification")
     message: str = Field(..., description="Content/body of the notification")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Additional context data (applicationId, organizationId, etc.)")
-    expires_at: Optional[datetime] = Field(None, description="When the notification expires (for time-sensitive actions)")
+    metadata: Optional[Dict[str, Any]] = Field(
+        None, description="Additional context data (applicationId, organizationId, etc.)"
+    )
+    expires_at: Optional[datetime] = Field(
+        None, description="When the notification expires (for time-sensitive actions)"
+    )
     created_at: datetime = Field(..., description="When the notification was created")
     updated_at: datetime = Field(..., description="When the notification was last updated")
 

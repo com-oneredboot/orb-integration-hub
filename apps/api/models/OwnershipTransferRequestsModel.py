@@ -16,30 +16,48 @@ class OwnershipTransferRequestsCreateInput(BaseModel):
 
     transfer_id: str = Field(..., description="Unique identifier for the transfer request")
     organization_id: str = Field(..., description="ID of the organization being transferred")
-    current_owner_id: str = Field(..., description="ID of the current owner initiating the transfer")
+    current_owner_id: str = Field(
+        ..., description="ID of the current owner initiating the transfer"
+    )
     new_owner_id: str = Field(..., description="ID of the user receiving ownership")
-    status: OwnershipTransferStatus = Field(..., description="Current status of the transfer request")
+    status: OwnershipTransferStatus = Field(
+        ..., description="Current status of the transfer request"
+    )
     reason: Optional[str] = Field(None, description="Reason for the ownership transfer")
     expires_at: str = Field(..., description="When the transfer request expires (ISO 8601 format)")
     completed_at: Optional[str] = Field(None, description="When the transfer was completed")
     cancelled_at: Optional[str] = Field(None, description="When the transfer was cancelled")
-    created_at: str = Field(..., description="When the transfer request was created (ISO 8601 format)")
+    created_at: str = Field(
+        ..., description="When the transfer request was created (ISO 8601 format)"
+    )
     updated_at: str = Field(..., description="When the transfer request was last updated")
 
 
 class OwnershipTransferRequestsUpdateInput(BaseModel):
     """OwnershipTransferRequests update input."""
 
-    transfer_id: Optional[str] = Field(..., description="Unique identifier for the transfer request")
-    organization_id: Optional[str] = Field(..., description="ID of the organization being transferred")
-    current_owner_id: Optional[str] = Field(..., description="ID of the current owner initiating the transfer")
+    transfer_id: Optional[str] = Field(
+        ..., description="Unique identifier for the transfer request"
+    )
+    organization_id: Optional[str] = Field(
+        ..., description="ID of the organization being transferred"
+    )
+    current_owner_id: Optional[str] = Field(
+        ..., description="ID of the current owner initiating the transfer"
+    )
     new_owner_id: Optional[str] = Field(..., description="ID of the user receiving ownership")
-    status: Optional[OwnershipTransferStatus] = Field(..., description="Current status of the transfer request")
+    status: Optional[OwnershipTransferStatus] = Field(
+        ..., description="Current status of the transfer request"
+    )
     reason: Optional[str] = Field(None, description="Reason for the ownership transfer")
-    expires_at: Optional[str] = Field(..., description="When the transfer request expires (ISO 8601 format)")
+    expires_at: Optional[str] = Field(
+        ..., description="When the transfer request expires (ISO 8601 format)"
+    )
     completed_at: Optional[str] = Field(None, description="When the transfer was completed")
     cancelled_at: Optional[str] = Field(None, description="When the transfer was cancelled")
-    created_at: Optional[str] = Field(..., description="When the transfer request was created (ISO 8601 format)")
+    created_at: Optional[str] = Field(
+        ..., description="When the transfer request was created (ISO 8601 format)"
+    )
     updated_at: Optional[str] = Field(..., description="When the transfer request was last updated")
 
 
@@ -54,7 +72,6 @@ class OwnershipTransferRequestsDisableInput(BaseModel):
 
     transfer_id: str
     disabled: bool
-
 
 
 # Query Input Types
@@ -90,14 +107,20 @@ class OwnershipTransferRequests(BaseModel):
 
     transfer_id: str = Field(..., description="Unique identifier for the transfer request")
     organization_id: str = Field(..., description="ID of the organization being transferred")
-    current_owner_id: str = Field(..., description="ID of the current owner initiating the transfer")
+    current_owner_id: str = Field(
+        ..., description="ID of the current owner initiating the transfer"
+    )
     new_owner_id: str = Field(..., description="ID of the user receiving ownership")
-    status: OwnershipTransferStatus = Field(..., description="Current status of the transfer request")
+    status: OwnershipTransferStatus = Field(
+        ..., description="Current status of the transfer request"
+    )
     reason: Optional[str] = Field(None, description="Reason for the ownership transfer")
     expires_at: str = Field(..., description="When the transfer request expires (ISO 8601 format)")
     completed_at: Optional[str] = Field(None, description="When the transfer was completed")
     cancelled_at: Optional[str] = Field(None, description="When the transfer was cancelled")
-    created_at: str = Field(..., description="When the transfer request was created (ISO 8601 format)")
+    created_at: str = Field(
+        ..., description="When the transfer request was created (ISO 8601 format)"
+    )
     updated_at: str = Field(..., description="When the transfer request was last updated")
 
 

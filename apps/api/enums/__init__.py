@@ -29,4 +29,29 @@ from .schema_type_enum import SchemaType
 from .user_group_enum import UserGroup
 from .user_status_enum import UserStatus
 
-__all__ = ['ApplicationApiKeyStatus', 'ApplicationGroupRoleStatus', 'ApplicationGroupStatus', 'ApplicationGroupUserStatus', 'ApplicationRoleStatus', 'ApplicationStatus', 'ApplicationUserRoleStatus', 'ApplicationUserStatus', 'Environment', 'ErrorRegistry', 'LegalBasis', 'NotificationStatus', 'NotificationType', 'OrganizationStatus', 'OrganizationUserRole', 'OrganizationUserStatus', 'OwnershipTransferStatus', 'PrivacyRequestStatus', 'PrivacyRequestType', 'RoleStatus', 'RoleType', 'SchemaType', 'UserGroup', 'UserStatus']
+__all__ = [
+    "ApplicationApiKeyStatus",
+    "ApplicationGroupRoleStatus",
+    "ApplicationGroupStatus",
+    "ApplicationGroupUserStatus",
+    "ApplicationRoleStatus",
+    "ApplicationStatus",
+    "ApplicationUserRoleStatus",
+    "ApplicationUserStatus",
+    "Environment",
+    "ErrorRegistry",
+    "LegalBasis",
+    "NotificationStatus",
+    "NotificationType",
+    "OrganizationStatus",
+    "OrganizationUserRole",
+    "OrganizationUserStatus",
+    "OwnershipTransferStatus",
+    "PrivacyRequestStatus",
+    "PrivacyRequestType",
+    "RoleStatus",
+    "RoleType",
+    "SchemaType",
+    "UserGroup",
+    "UserStatus",
+]
