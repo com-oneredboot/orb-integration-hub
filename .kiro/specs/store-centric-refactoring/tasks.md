@@ -243,20 +243,20 @@
 ## Phase 5: Profile Component Refactor (Optional)
 
 ### Task 5.1: Add User Update Effects
-- [ ] Add `updateProfile$` effect to user effects
-- [ ] Add `sendPhoneVerification$` effect
-- [ ] Add `verifyPhone$` effect
-- [ ] Add corresponding actions
+- [x] Add `updateProfile$` effect to user effects
+- [x] Add `setupPhone$` effect (sendPhoneVerification)
+- [x] Add `verifyPhone$` effect
+- [x] Add corresponding actions
 
 **File:** `apps/web/src/app/features/user/store/user.effects.ts`
 
 **Requirements:** 5.1
 
 ### Task 5.2: Replace Service Calls with Action Dispatches
-- [ ] Replace `userService.userUpdate()` with `updateProfile` dispatch
-- [ ] Replace `userService.sendSMSVerificationCode()` with dispatch
-- [ ] Replace `userService.verifySMSCode()` with dispatch
-- [ ] Remove local loading states
+- [x] Replace `userService.userUpdate()` with `updateProfile` dispatch
+- [x] Replace `userService.sendSMSVerificationCode()` with `setupPhone` dispatch
+- [x] Replace `userService.verifySMSCode()` with `verifyPhone` dispatch
+- [x] Remove local loading states (now uses store selectors)
 
 **File:** `apps/web/src/app/features/user/components/profile/profile.component.ts`
 
@@ -333,12 +333,12 @@
 | 2 | Applications List Component | Critical | ✅ Complete |
 | 3 | Application Detail Page | Critical | ✅ Complete |
 | 4 | Organization Detail Page | High | ✅ Complete |
-| 5 | Profile Component | Medium (Optional) | Not Started (Optional) |
+| 5 | Profile Component | Medium (Optional) | ✅ Complete (except tests) |
 | 6 | Steering File Updates | Required | ✅ Complete |
 | 7 | Final Verification | Required | ✅ Complete (except git commit) |
 
 **Remaining Tasks:**
+- Task 5.3: Profile component unit tests (optional)
 - Task 7.5: Git commit (user action required)
-- Phase 5 (Optional): Profile component refactor
 
 **All critical and high priority tasks are complete.**

@@ -1,17 +1,16 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
+import { Actions, ofType } from '@ngrx/effects';
 import { Observable, Subject, takeUntil, take } from 'rxjs';
-import { IUsers, UsersUpdateInput } from '../../../../core/models/UsersModel';
+import { IUsers, Users } from '../../../../core/models/UsersModel';
 import * as fromUser from '../../store/user.selectors';
 import { UserActions } from '../../store/user.actions';
-import { UserService } from '../../../../core/services/user.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { RouterModule } from '@angular/router';
-import { Users } from '../../../../core/models/UsersModel';
 import { StatusBadgeComponent } from '../../../../shared/components/ui/status-badge.component';
 import { UserStatus } from '../../../../core/enums/UserStatusEnum';
 import { DebugLogService, DebugLogEntry } from '../../../../core/services/debug-log.service';
@@ -67,9 +66,10 @@ export interface PhoneVerificationState {
 })
 export class ProfileComponent implements OnInit, OnDestroy {
   currentUser$: Observable<IUsers | null>;
+  isLoading$: Observable<boolean>;
+  error$: Observable<string | null>;
   debugMode$: Observable<boolean>;
   profileForm: FormGroup;
-  isLoading = false;
   isEditMode = false;
   private destroy$ = new Subject<void>();
 
@@ -131,13 +131,15 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   constructor(
     private store: Store,
-    private userService: UserService,
+    private actions$: Actions,
     private fb: FormBuilder,
     private router: Router,
     private route: ActivatedRoute,
     private debugLogService: DebugLogService
   ) {
     this.currentUser$ = this.store.select(fromUser.selectCurrentUser);
+    this.isLoading$ = this.store.select(fromUser.selectIsLoading);
+    this.error$ = this.store.select(fromUser.selectError);
     this.debugMode$ = this.store.select(fromUser.selectDebugMode);
     this.debugLogs$ = this.debugLogService.logs$;
 
@@ -154,6 +156,52 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     // Initialize step-based forms
     this.initForms();
+
+    // Subscribe to profile update success for navigation
+    this.actions$.pipe(
+      ofType(UserActions.updateProfileSuccess),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      // If in flow mode, advance to next step
+      if (this.setupState.isFlowMode && this.setupState.currentStep !== ProfileSetupStep.COMPLETE) {
+        // Step advancement is handled in the submit methods
+      }
+    });
+
+    // Subscribe to phone setup success
+    this.actions$.pipe(
+      ofType(UserActions.setupPhoneSuccess),
+      takeUntil(this.destroy$)
+    ).subscribe(({ expiresAt }) => {
+      this.phoneVerificationState.codeSent = true;
+      this.phoneVerificationState.codeExpiration = new Date(expiresAt);
+      this.phoneVerificationState.cooldownUntil = new Date(Date.now() + 60 * 1000);
+    });
+
+    // Subscribe to phone setup failure
+    this.actions$.pipe(
+      ofType(UserActions.setupPhoneFailure),
+      takeUntil(this.destroy$)
+    ).subscribe(({ error }) => {
+      this.phoneVerificationState.error = error;
+    });
+
+    // Subscribe to phone verification success
+    this.actions$.pipe(
+      ofType(UserActions.verifyPhoneSuccess),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      // Phone verified, show summary
+      this.showSummary();
+    });
+
+    // Subscribe to phone verification failure
+    this.actions$.pipe(
+      ofType(UserActions.verifyPhoneFailure),
+      takeUntil(this.destroy$)
+    ).subscribe(({ error }) => {
+      this.phoneVerificationState.error = error;
+    });
   }
 
   /**
@@ -174,7 +222,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         nameFormValid: this.nameForm?.valid,
         phoneFormValid: this.phoneForm?.valid,
         verifyFormValid: this.verifyForm?.valid,
-        isLoading: this.isLoading
+        isLoading: 'see store'
       },
       storeState: {
         flowMode: this.setupState.isFlowMode,
@@ -442,50 +490,36 @@ export class ProfileComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.isLoading = true;
-
-    try {
-      const user = await this.getCurrentUser();
-      if (!user || !user.userId) {
-        console.error('Cannot update profile: No user ID available');
-        return;
-      }
-
-      const formValues = this.nameForm.value;
-      const updateInput: UsersUpdateInput = {
-        userId: user.userId,
-        cognitoId: user.cognitoId,
-        cognitoSub: user.cognitoSub,
-        email: user.email,
-        emailVerified: user.emailVerified,
-        phoneNumber: user.phoneNumber,
-        phoneVerified: user.phoneVerified,
-        firstName: formValues.firstName?.trim(),
-        lastName: formValues.lastName?.trim(),
-        groups: user.groups,
-        status: user.status,
-        mfaEnabled: user.mfaEnabled || false,
-        mfaSetupComplete: user.mfaSetupComplete || false,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      };
-
-      const response = await this.userService.userUpdate(updateInput);
-
-      if (response.StatusCode === 200 && response.Data) {
-        this.store.dispatch(UserActions.updateProfileSuccess({
-          user: new Users(response.Data),
-          message: 'Name updated successfully'
-        }));
-        this.nextStep();
-      } else {
-        console.error('Failed to update name:', response.Message);
-      }
-    } catch (error) {
-      console.error('Error updating name:', error);
-    } finally {
-      this.isLoading = false;
+    const user = await this.getCurrentUser();
+    if (!user || !user.userId) {
+      console.error('Cannot update profile: No user ID available');
+      return;
     }
+
+    const formValues = this.nameForm.value;
+    const updateInput = new Users({
+      userId: user.userId,
+      cognitoId: user.cognitoId,
+      cognitoSub: user.cognitoSub,
+      email: user.email,
+      emailVerified: user.emailVerified,
+      phoneNumber: user.phoneNumber,
+      phoneVerified: user.phoneVerified,
+      firstName: formValues.firstName?.trim(),
+      lastName: formValues.lastName?.trim(),
+      groups: user.groups,
+      status: user.status,
+      mfaEnabled: user.mfaEnabled || false,
+      mfaSetupComplete: user.mfaSetupComplete || false,
+      createdAt: user.createdAt,
+      updatedAt: new Date(),
+    });
+
+    // Dispatch action - effect handles service call
+    this.store.dispatch(UserActions.updateProfile({ input: updateInput }));
+    
+    // Move to next step (effect will update the store)
+    this.nextStep();
   }
 
   /**
@@ -499,61 +533,43 @@ export class ProfileComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.isLoading = true;
-
-    try {
-      const user = await this.getCurrentUser();
-      if (!user || !user.userId) {
-        console.error('Cannot update profile: No user ID available');
-        return;
-      }
-
-      const formValues = this.phoneForm.value;
-      const updateInput: UsersUpdateInput = {
-        userId: user.userId,
-        cognitoId: user.cognitoId,
-        cognitoSub: user.cognitoSub,
-        email: user.email,
-        emailVerified: user.emailVerified,
-        phoneNumber: formValues.phoneNumber?.trim(),
-        phoneVerified: false, // Phone is not verified yet
-        firstName: user.firstName,
-        lastName: user.lastName,
-        groups: user.groups,
-        status: user.status,
-        mfaEnabled: user.mfaEnabled || false,
-        mfaSetupComplete: user.mfaSetupComplete || false,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      };
-
-      const response = await this.userService.userUpdate(updateInput);
-
-      if (response.StatusCode === 200 && response.Data) {
-        this.store.dispatch(UserActions.updateProfileSuccess({
-          user: new Users(response.Data),
-          message: 'Phone number updated successfully'
-        }));
-        
-        // Move to PHONE_VERIFY step and set codeSent=true immediately
-        // This shows the code input UI right away while SMS is being sent
-        this.nextStep();
-        this.phoneVerificationState.codeSent = true;
-        this.phoneVerificationState.codeExpiration = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-        
-        // Send verification code in background - UI already shows code input
-        this.sendVerificationCode().catch(error => {
-          console.error('Error sending verification code:', error);
-          this.phoneVerificationState.error = 'Failed to send verification code. Click "Resend Code" to try again.';
-        });
-      } else {
-        console.error('Failed to update phone:', response.Message);
-      }
-    } catch (error) {
-      console.error('Error updating phone:', error);
-    } finally {
-      this.isLoading = false;
+    const user = await this.getCurrentUser();
+    if (!user || !user.userId) {
+      console.error('Cannot update profile: No user ID available');
+      return;
     }
+
+    const formValues = this.phoneForm.value;
+    const phoneNumber = formValues.phoneNumber?.trim();
+    
+    const updateInput = new Users({
+      userId: user.userId,
+      cognitoId: user.cognitoId,
+      cognitoSub: user.cognitoSub,
+      email: user.email,
+      emailVerified: user.emailVerified,
+      phoneNumber: phoneNumber,
+      phoneVerified: false, // Phone is not verified yet
+      firstName: user.firstName,
+      lastName: user.lastName,
+      groups: user.groups,
+      status: user.status,
+      mfaEnabled: user.mfaEnabled || false,
+      mfaSetupComplete: user.mfaSetupComplete || false,
+      createdAt: user.createdAt,
+      updatedAt: new Date(),
+    });
+
+    // Dispatch action to update profile - effect handles service call
+    this.store.dispatch(UserActions.updateProfile({ input: updateInput }));
+    
+    // Move to PHONE_VERIFY step
+    this.nextStep();
+    this.phoneVerificationState.codeSent = true;
+    this.phoneVerificationState.codeExpiration = new Date(Date.now() + 10 * 60 * 1000);
+    
+    // Dispatch action to send verification code - effect handles service call
+    this.store.dispatch(UserActions.setupPhone({ phoneNumber }));
   }
 
   /**
@@ -567,59 +583,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.isLoading = true;
     this.phoneVerificationState.error = null;
 
-    try {
-      const code = this.verifyForm.get('verificationCode')?.value;
-      const user = await this.getCurrentUser();
-      
-      if (!user?.phoneNumber) {
-        this.phoneVerificationState.error = 'No phone number to verify';
-        return;
-      }
-
-      // Call the SMS verification service to verify the code
-      const isValid = await this.userService.verifySMSCode(user.phoneNumber, code);
-
-      if (isValid) {
-        // Update user with phoneVerified = true
-        const updateInput: UsersUpdateInput = {
-          userId: user.userId,
-          cognitoId: user.cognitoId,
-          cognitoSub: user.cognitoSub,
-          email: user.email,
-          emailVerified: user.emailVerified,
-          phoneNumber: user.phoneNumber,
-          phoneVerified: true,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          groups: user.groups,
-          status: UserStatus.Active, // User is now active
-          mfaEnabled: user.mfaEnabled || false,
-          mfaSetupComplete: user.mfaSetupComplete || false,
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt,
-        };
-
-        const updateResponse = await this.userService.userUpdate(updateInput);
-
-        if (updateResponse.StatusCode === 200 && updateResponse.Data) {
-          this.store.dispatch(UserActions.updateProfileSuccess({
-            user: new Users(updateResponse.Data),
-            message: 'Phone verified successfully'
-          }));
-          this.showSummary();
-        }
-      } else {
-        this.phoneVerificationState.error = 'Invalid verification code. Please try again.';
-      }
-    } catch (error) {
-      console.error('Error verifying phone:', error);
-      this.phoneVerificationState.error = 'Verification failed. Please try again.';
-    } finally {
-      this.isLoading = false;
-    }
+    const code = this.verifyForm.get('verificationCode')?.value;
+    
+    // Dispatch action to verify phone - effect handles service call and user update
+    this.store.dispatch(UserActions.verifyPhone({ code }));
   }
 
   // ============================================
@@ -630,34 +599,17 @@ export class ProfileComponent implements OnInit, OnDestroy {
    * Send verification code to user's phone
    */
   async sendVerificationCode(): Promise<void> {
-    this.isLoading = true;
     this.phoneVerificationState.error = null;
 
-    try {
-      const user = await this.getCurrentUser();
-      
-      if (!user?.phoneNumber) {
-        this.phoneVerificationState.error = 'No phone number available';
-        return;
-      }
-
-      // Call the SMS verification service
-      const response = await this.userService.sendSMSVerificationCode(user.phoneNumber);
-
-      if (response.success) {
-        // Code sent successfully - update expiration and cooldown
-        this.phoneVerificationState.codeSent = true;
-        this.phoneVerificationState.codeExpiration = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-        this.phoneVerificationState.cooldownUntil = new Date(Date.now() + 60 * 1000); // 60 seconds cooldown
-      } else {
-        this.phoneVerificationState.error = response.message || 'Failed to send verification code';
-      }
-    } catch (error) {
-      console.error('Error sending verification code:', error);
-      this.phoneVerificationState.error = 'Failed to send verification code. Please try again.';
-    } finally {
-      this.isLoading = false;
+    const user = await this.getCurrentUser();
+    
+    if (!user?.phoneNumber) {
+      this.phoneVerificationState.error = 'No phone number available';
+      return;
     }
+
+    // Dispatch action - effect handles service call
+    this.store.dispatch(UserActions.setupPhone({ phoneNumber: user.phoneNumber }));
   }
 
   /**
@@ -777,64 +729,42 @@ export class ProfileComponent implements OnInit, OnDestroy {
       return;
     }
     
-    this.isLoading = true;
+    // Get current user to retrieve the userId
+    const user = await this.getCurrentUser();
     
-    try {
-      // Get current user to retrieve the userId
-      const user = await this.getCurrentUser();
-      
-      if (!user || !user.userId) {
-        console.error('Cannot update profile: No user ID available');
-        return;
-      }
-      
-      // Create update input from form values
-      const formValues = this.profileForm.value;
-      const updateInput: UsersUpdateInput = {
-        userId: user.userId,
-        cognitoId: user.cognitoId,
-        cognitoSub: user.cognitoSub,
-        email: user.email,
-        emailVerified: user.emailVerified,
-        phoneNumber: user.phoneNumber,
-        phoneVerified: user.phoneVerified,
-        firstName: formValues.firstName?.trim() || user.firstName,
-        lastName: formValues.lastName?.trim() || user.lastName,
-        groups: user.groups,
-        status: user.status,
-        mfaEnabled: false,
-        mfaSetupComplete: false,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      };
-      
-      // Call the userService to update the profile
-      console.log('Updating user profile:', updateInput);
-      
-      const response = await this.userService.userUpdate(updateInput);
-      
-      if (response.StatusCode === 200 && response.Data) {
-        // Update the store with the updated user data
-        this.store.dispatch(UserActions.updateProfileSuccess({
-          user: new Users(response.Data),
-          message: 'Profile updated successfully'
-        }));
-        
-        // Mark form as pristine after successful update
-        this.profileForm.markAsPristine();
-        
-        // Exit edit mode
-        this.onFormSuccess();
-        
-        console.log('Profile updated successfully');
-      } else {
-        console.error('Failed to update profile:', response.Message);
-      }
-    } catch (error) {
-      console.error('Error updating profile:', error);
-    } finally {
-      this.isLoading = false;
+    if (!user || !user.userId) {
+      console.error('Cannot update profile: No user ID available');
+      return;
     }
+    
+    // Create update input from form values
+    const formValues = this.profileForm.value;
+    const updateInput = new Users({
+      userId: user.userId,
+      cognitoId: user.cognitoId,
+      cognitoSub: user.cognitoSub,
+      email: user.email,
+      emailVerified: user.emailVerified,
+      phoneNumber: user.phoneNumber,
+      phoneVerified: user.phoneVerified,
+      firstName: formValues.firstName?.trim() || user.firstName,
+      lastName: formValues.lastName?.trim() || user.lastName,
+      groups: user.groups,
+      status: user.status,
+      mfaEnabled: user.mfaEnabled || false,
+      mfaSetupComplete: user.mfaSetupComplete || false,
+      createdAt: user.createdAt,
+      updatedAt: new Date(),
+    });
+    
+    // Dispatch action - effect handles service call
+    this.store.dispatch(UserActions.updateProfile({ input: updateInput }));
+    
+    // Mark form as pristine after dispatch
+    this.profileForm.markAsPristine();
+    
+    // Exit edit mode
+    this.onFormSuccess();
   }
   
   /**
@@ -849,10 +779,23 @@ export class ProfileComponent implements OnInit, OnDestroy {
   /**
    * Public method to check if a user is valid
    * @param user The user to check
-   * @returns True if the user has all required attributes, false otherwise
+   * @returns True if the user has all required attributes and is ACTIVE, false otherwise
    */
   public isUserValid(user: IUsers | null): boolean {
-    return this.userService.isUserValid(user);
+    if (!user) return false;
+    
+    // User is valid if they have all required attributes and are ACTIVE
+    const hasRequiredFields = 
+      !!user.email &&
+      !!user.firstName &&
+      !!user.lastName &&
+      !!user.phoneNumber &&
+      !!user.emailVerified &&
+      !!user.phoneVerified &&
+      !!user.mfaEnabled &&
+      !!user.mfaSetupComplete;
+    
+    return hasRequiredFields && user.status === UserStatus.Active;
   }
   
   /**

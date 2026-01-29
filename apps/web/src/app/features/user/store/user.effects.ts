@@ -1219,6 +1219,31 @@ export class UserEffects {
     )
   );
 
+  // Update user profile
+  updateProfile$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(UserActions.updateProfile),
+      switchMap(({ input }) => {
+        return from(this.userService.userUpdate(input)).pipe(
+          map(response => {
+            if (response.StatusCode === 200 && response.Data) {
+              return UserActions.updateProfileSuccess({
+                user: response.Data,
+                message: 'Profile updated successfully'
+              });
+            }
+            return UserActions.updateProfileFailure({
+              error: response.Message || 'Failed to update profile'
+            });
+          }),
+          catchError(_error => of(UserActions.updateProfileFailure({
+            error: _error instanceof Error ? _error.message : 'Failed to update profile'
+          })))
+        );
+      })
+    )
+  );
+
 
   constructor(
     private actions$: Actions,

@@ -144,7 +144,9 @@ export const UserActions = createActionGroup({
     'Confirm Password Reset Success': props<{ message: string }>(),
     'Confirm Password Reset Failure': props<{ error: string }>(),
 
-    // Profile Update (updates store without triggering auth flow completion)
-    'Update Profile Success': props<{ user: IUsers, message: string }>()
+    // Profile Update
+    'Update Profile': props<{ input: IUsers }>(),
+    'Update Profile Success': props<{ user: IUsers, message: string }>(),
+    'Update Profile Failure': props<{ error: string }>()
   }
 });
