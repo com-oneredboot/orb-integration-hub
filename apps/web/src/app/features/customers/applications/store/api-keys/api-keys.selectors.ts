@@ -50,6 +50,13 @@ export const selectGeneratedKey = createSelector(
     state?.generatedKey ?? initialApiKeysState.generatedKey
 );
 
+// Regenerated key result selector
+export const selectRegeneratedKeyResult = createSelector(
+  selectApiKeysState,
+  (state: ApiKeysState) =>
+    state?.regeneratedKeyResult ?? initialApiKeysState.regeneratedKeyResult
+);
+
 // Filter selectors
 export const selectSearchTerm = createSelector(
   selectApiKeysState,
@@ -93,6 +100,12 @@ export const selectIsRotating = createSelector(
 export const selectIsRevoking = createSelector(
   selectApiKeysState,
   (state: ApiKeysState) => state?.isRevoking ?? initialApiKeysState.isRevoking
+);
+
+// Regenerating state selector
+export const selectIsRegenerating = createSelector(
+  selectApiKeysState,
+  (state: ApiKeysState) => state?.isRegenerating ?? initialApiKeysState.isRegenerating
 );
 
 // Error selectors

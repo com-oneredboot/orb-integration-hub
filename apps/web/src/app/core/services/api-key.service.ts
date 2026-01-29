@@ -56,6 +56,16 @@ export interface ApiKeyRotationResult {
   newKey: GeneratedKeyResult;
 }
 
+/**
+ * Result of a key regeneration operation
+ * Contains both the old key (now ROTATING) and the new key (ACTIVE)
+ */
+export interface ApiKeyRegenerationResult {
+  oldKey: IApplicationApiKeys;
+  newKey: IApplicationApiKeys;
+  newKeyFullValue: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -73,12 +83,26 @@ export class ApiKeyService extends ApiService {
 
   /**
    * Generate a cryptographically secure API key string
-   * Format: orb_{env}_{random32chars}
+   * Format: orb_api_{env}_{random32chars}
+   * _Requirements: 3.5, 9.1_
    */
   private generateApiKeyString(environment: Environment): string {
     const envPrefix = this.getEnvironmentPrefix(environment);
     const randomPart = this.generateSecureRandomString(32);
-    return `orb_${envPrefix}_${randomPart}`;
+    return `orb_api_${envPrefix}_${randomPart}`;
+  }
+
+  /**
+   * Generate the display prefix for an API key
+   * Format: orb_api_{first_4}****
+   * _Requirements: 9.1, 9.2_
+   */
+  private generateKeyPrefix(fullKey: string): string {
+    // Extract the first 4 characters after "orb_api_" prefix
+    const prefixStart = 'orb_api_';
+    const afterPrefix = fullKey.substring(prefixStart.length);
+    const first4 = afterPrefix.substring(0, 4);
+    return `${prefixStart}${first4}****`;
   }
 
   /**
@@ -198,7 +222,7 @@ export class ApiKeyService extends ApiService {
 
     // Generate the full key
     const fullKey = this.generateApiKeyString(environment);
-    const keyPrefix = fullKey.substring(0, 12); // e.g., "orb_dev_xxxx"
+    const keyPrefix = this.generateKeyPrefix(fullKey);
     const apiKeyId = this.generateUUID();
 
     // Hash the key for storage
@@ -282,7 +306,7 @@ export class ApiKeyService extends ApiService {
 
     // Generate the new key
     const newFullKey = this.generateApiKeyString(environment);
-    const newKeyPrefix = newFullKey.substring(0, 12);
+    const newKeyPrefix = this.generateKeyPrefix(newFullKey);
 
     // Hash the new key
     return from(this.hashKey(newFullKey)).pipe(
@@ -333,12 +357,131 @@ export class ApiKeyService extends ApiService {
   }
 
   /**
+   * Regenerate an API key with a 7-day grace period
+   * Creates a new ACTIVE key and marks the old one as ROTATING with expiresAt set to 7 days.
+   * Both keys are valid during the grace period.
+   *
+   * @param apiKeyId The API key ID to regenerate
+   * @param applicationId The application ID
+   * @param organizationId The organization ID
+   * @param environment The environment
+   * @returns Observable<ApiKeyRegenerationResult> Both the old and new keys
+   *
+   * _Requirements: 4.1, 4.2_
+   */
+  public regenerateApiKey(
+    apiKeyId: string,
+    applicationId: string,
+    organizationId: string,
+    environment: Environment
+  ): Observable<ApiKeyRegenerationResult> {
+    console.debug('[ApiKeyService] Regenerating API key:', apiKeyId);
+
+    if (!apiKeyId) {
+      throw new Error('API key ID is required');
+    }
+    if (!applicationId) {
+      throw new Error('Application ID is required');
+    }
+    if (!organizationId) {
+      throw new Error('Organization ID is required');
+    }
+
+    // Generate the new key
+    const newFullKey = this.generateApiKeyString(environment);
+    const newKeyPrefix = this.generateKeyPrefix(newFullKey);
+    const newApiKeyId = this.generateUUID();
+
+    // Calculate expiration (7 days from now)
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    // TTL is 30 days after expiration
+    const ttl = Math.floor((expiresAt.getTime() + 30 * 24 * 60 * 60 * 1000) / 1000);
+
+    // Hash the new key
+    return from(this.hashKey(newFullKey)).pipe(
+      switchMap((newKeyHash) => {
+        // First, update the old key to ROTATING status with expiration
+        const updateOldKeyInput: ApplicationApiKeysUpdateInput = {
+          applicationApiKeyId: apiKeyId,
+          status: ApplicationApiKeyStatus.Rotating,
+          expiresAt: expiresAt,
+          ttl: ttl,
+          updatedAt: now,
+        };
+
+        const graphqlUpdateInput = toGraphQLInput(
+          updateOldKeyInput as unknown as Record<string, unknown>
+        );
+
+        return from(
+          this.executeMutation<IApplicationApiKeys>(
+            ApplicationApiKeysUpdate,
+            { input: graphqlUpdateInput },
+            'userPool'
+          )
+        ).pipe(
+          switchMap((oldKeyResult) => {
+            // Then create the new ACTIVE key
+            const createNewKeyInput: ApplicationApiKeysCreateInput = {
+              applicationApiKeyId: newApiKeyId,
+              applicationId,
+              organizationId,
+              environment,
+              keyHash: newKeyHash,
+              keyPrefix: newKeyPrefix,
+              status: ApplicationApiKeyStatus.Active,
+              createdAt: now,
+              updatedAt: now,
+            };
+
+            const graphqlCreateInput = toGraphQLInput(
+              createNewKeyInput as unknown as Record<string, unknown>
+            );
+
+            return from(
+              this.executeMutation<IApplicationApiKeys>(
+                ApplicationApiKeysCreate,
+                { input: graphqlCreateInput },
+                'userPool'
+              )
+            ).pipe(
+              map((newKeyResult) => {
+                console.debug('[ApiKeyService] API key regenerated:', {
+                  oldKey: oldKeyResult,
+                  newKey: newKeyResult,
+                });
+                return {
+                  oldKey: new ApplicationApiKeys(oldKeyResult),
+                  newKey: new ApplicationApiKeys(newKeyResult),
+                  newKeyFullValue: newFullKey,
+                };
+              })
+            );
+          })
+        );
+      }),
+      catchError((error) => {
+        console.error('[ApiKeyService] Error regenerating API key:', error);
+        if (isAuthenticationError(error)) {
+          throw new Error('You are not authorized to regenerate API keys.');
+        }
+        if (error?.message?.includes('not found')) {
+          throw new Error('API key not found. It may have been deleted.');
+        }
+        throw new Error('Failed to regenerate API key. Please try again later.');
+      })
+    );
+  }
+
+  /**
    * Revoke an API key immediately
+   * Sets revokedAt to now, expiresAt to now (for 30-day TTL countdown), and ttl for auto-deletion.
    *
    * @param apiKeyId The API key ID to revoke
    * @returns Observable<IApplicationApiKeys> The revoked API key
    *
-   * _Requirements: 9.4_
+   * _Requirements: 5.2, 8.1_
    */
   public revokeApiKey(apiKeyId: string): Observable<IApplicationApiKeys> {
     console.debug('[ApiKeyService] Revoking API key:', apiKeyId);
@@ -347,10 +490,17 @@ export class ApiKeyService extends ApiService {
       throw new Error('API key ID is required');
     }
 
+    const now = new Date();
+    // TTL is 30 days after revocation
+    const ttl = Math.floor((now.getTime() + 30 * 24 * 60 * 60 * 1000) / 1000);
+
     const updateInput: ApplicationApiKeysUpdateInput = {
       applicationApiKeyId: apiKeyId,
       status: ApplicationApiKeyStatus.Revoked,
-      updatedAt: new Date(),
+      revokedAt: now,
+      expiresAt: now, // Set expiresAt to revocation date per requirement 8.1
+      ttl: ttl,
+      updatedAt: now,
     };
 
     const graphqlInput = toGraphQLInput(

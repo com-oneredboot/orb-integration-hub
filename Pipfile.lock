@@ -387,11 +387,11 @@
         },
         "orb-schema-generator": {
             "hashes": [
-                "sha256:15bd92a3f747890ebd95de6b5f38ec5f351e1b648f33ee088646535bcd0449c4"
+                "sha256:94f152623d10f3bf334df74085760f45aa121e07e17ce132f069d2a646330dc0"
             ],
             "index": "codeartifact",
             "markers": "python_version >= '3.12'",
-            "version": "==0.18.3"
+            "version": "==1.0.1"
         },
         "packaging": {
             "hashes": [

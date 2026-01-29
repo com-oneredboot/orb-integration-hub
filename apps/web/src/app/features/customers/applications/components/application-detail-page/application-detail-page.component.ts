@@ -11,7 +11,7 @@
  * _Requirements: 3.1, 3.2, 3.3, 3.4, 8.1, 9.1_
  */
 
-import { Component, OnInit, OnDestroy, ViewChild, TemplateRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, TemplateRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -104,7 +104,7 @@ export enum ApplicationDetailTab {
   templateUrl: './application-detail-page.component.html',
   styleUrls: ['./application-detail-page.component.scss']
 })
-export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
+export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterViewInit {
   private destroy$ = new Subject<void>();
 
   // Tab state
@@ -112,9 +112,9 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
   activeTab: ApplicationDetailTab = ApplicationDetailTab.Overview;
 
   // Template references for API keys grid custom cells
-  @ViewChild('environmentCell', { static: true }) environmentCell!: TemplateRef<unknown>;
-  @ViewChild('keyInfoCell', { static: true }) keyInfoCell!: TemplateRef<unknown>;
-  @ViewChild('actionsCell', { static: true }) actionsCell!: TemplateRef<unknown>;
+  @ViewChild('environmentCell', { static: false }) environmentCell!: TemplateRef<unknown>;
+  @ViewChild('keyInfoCell', { static: false }) keyInfoCell!: TemplateRef<unknown>;
+  @ViewChild('actionsCell', { static: false }) actionsCell!: TemplateRef<unknown>;
 
   // API Keys grid configuration
   apiKeysColumns: ColumnDefinition<EnvironmentKeyRow>[] = [];
@@ -297,9 +297,6 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Initialize API keys grid columns
-    this.initializeApiKeysColumns();
-
     // Get current user ID for draft creation
     this.store.select(fromUser.selectCurrentUser).pipe(
       take(1),
@@ -320,6 +317,10 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy {
       this.applicationId = id;
       this.loadApplication(id!);
     });
+  }
+
+  ngAfterViewInit(): void {
+    this.initializeApiKeysColumns();
   }
 
   ngOnDestroy(): void {

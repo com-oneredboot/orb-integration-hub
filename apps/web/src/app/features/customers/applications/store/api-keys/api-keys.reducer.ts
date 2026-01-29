@@ -170,6 +170,93 @@ export const apiKeysReducer = createReducer(
     })
   ),
 
+  // Regenerate API Key (creates new ACTIVE, marks old as ROTATING)
+  on(
+    ApiKeysActions.regenerateApiKey,
+    (state): ApiKeysState => ({
+      ...state,
+      isRegenerating: true,
+      regenerateError: null,
+      regeneratedKeyResult: null,
+    })
+  ),
+
+  on(
+    ApiKeysActions.regenerateApiKeySuccess,
+    (state, { oldKey, newKey, regeneratedKeyResult }): ApiKeysState => {
+      // Update the old key to ROTATING status and add the new key
+      const updatedApiKeys = state.apiKeys.map((k) =>
+        k.applicationApiKeyId === oldKey.applicationApiKeyId ? oldKey : k
+      );
+      // Add the new key
+      updatedApiKeys.push(newKey);
+
+      // Create rows for both keys
+      const oldKeyRow: ApiKeyTableRow = {
+        apiKey: oldKey,
+        applicationId: oldKey.applicationId,
+        environmentLabel: getEnvironmentLabel(oldKey.environment),
+        statusLabel: getStatusLabel(oldKey.status),
+        lastActivity: formatLastActivity(oldKey.updatedAt),
+        isRotating: true,
+      };
+
+      const newKeyRow: ApiKeyTableRow = {
+        apiKey: newKey,
+        applicationId: newKey.applicationId,
+        environmentLabel: getEnvironmentLabel(newKey.environment),
+        statusLabel: getStatusLabel(newKey.status),
+        lastActivity: formatLastActivity(newKey.updatedAt),
+        isRotating: false,
+      };
+
+      // Update rows: replace old key row and add new key row
+      const updatedRows = state.apiKeyRows
+        .map((row) =>
+          row.apiKey.applicationApiKeyId === oldKey.applicationApiKeyId
+            ? oldKeyRow
+            : row
+        )
+        .concat([newKeyRow]);
+
+      return {
+        ...state,
+        isRegenerating: false,
+        apiKeys: updatedApiKeys,
+        apiKeyRows: updatedRows,
+        filteredApiKeyRows: updatedRows.filter((row) =>
+          applyFilters(row, state.searchTerm, state.statusFilter, state.environmentFilter)
+        ),
+        regeneratedKeyResult: regeneratedKeyResult,
+        generatedKey: {
+          apiKeyId: newKey.applicationApiKeyId,
+          fullKey: regeneratedKeyResult.newKeyFullValue,
+          environment: newKey.environment,
+          keyPrefix: newKey.keyPrefix,
+        },
+        regenerateError: null,
+      };
+    }
+  ),
+
+  on(
+    ApiKeysActions.regenerateApiKeyFailure,
+    (state, { error }): ApiKeysState => ({
+      ...state,
+      isRegenerating: false,
+      regenerateError: error,
+    })
+  ),
+
+  // Clear Regenerated Key Result
+  on(
+    ApiKeysActions.clearRegeneratedKeyResult,
+    (state): ApiKeysState => ({
+      ...state,
+      regeneratedKeyResult: null,
+    })
+  ),
+
   // Revoke API Key
   on(
     ApiKeysActions.revokeApiKey,
@@ -182,19 +269,17 @@ export const apiKeysReducer = createReducer(
 
   on(
     ApiKeysActions.revokeApiKeySuccess,
-    (state, { apiKeyId }): ApiKeysState => {
-      // Update the key status to REVOKED instead of removing it
+    (state, { apiKeyId, revokedKey }): ApiKeysState => {
+      // Update the key with the revoked data (includes revokedAt and expiresAt)
       const updatedApiKeys = state.apiKeys.map((k) =>
-        k.applicationApiKeyId === apiKeyId
-          ? { ...k, status: ApplicationApiKeyStatus.Revoked }
-          : k
+        k.applicationApiKeyId === apiKeyId ? revokedKey : k
       );
 
       const updatedRows = state.apiKeyRows.map((row) =>
         row.apiKey.applicationApiKeyId === apiKeyId
           ? {
               ...row,
-              apiKey: { ...row.apiKey, status: ApplicationApiKeyStatus.Revoked },
+              apiKey: revokedKey,
               statusLabel: getStatusLabel(ApplicationApiKeyStatus.Revoked),
               isRotating: false,
             }
@@ -314,6 +399,7 @@ export const apiKeysReducer = createReducer(
       ...state,
       error: null,
       generateError: null,
+      regenerateError: null,
       rotateError: null,
       revokeError: null,
     })

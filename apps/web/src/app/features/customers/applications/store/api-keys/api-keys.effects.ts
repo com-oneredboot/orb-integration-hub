@@ -117,6 +117,46 @@ export class ApiKeysEffects {
   );
 
   /**
+   * Regenerate API Key Effect
+   * Creates a new ACTIVE key and marks the old one as ROTATING with 7-day grace period.
+   */
+  regenerateApiKey$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ApiKeysActions.regenerateApiKey),
+      switchMap((action) =>
+        this.apiKeyService
+          .regenerateApiKey(
+            action.apiKeyId,
+            action.applicationId,
+            action.organizationId,
+            action.environment
+          )
+          .pipe(
+            map((result) =>
+              ApiKeysActions.regenerateApiKeySuccess({
+                oldKey: result.oldKey,
+                newKey: result.newKey,
+                regeneratedKeyResult: {
+                  oldKey: result.oldKey,
+                  newKey: result.newKey,
+                  newKeyFullValue: result.newKeyFullValue,
+                  environment: result.newKey.environment,
+                },
+              })
+            ),
+            catchError((error) =>
+              of(
+                ApiKeysActions.regenerateApiKeyFailure({
+                  error: error.message || 'Failed to regenerate API key',
+                })
+              )
+            )
+          )
+      )
+    )
+  );
+
+  /**
    * Revoke API Key Effect
    */
   revokeApiKey$ = createEffect(() =>
@@ -124,9 +164,10 @@ export class ApiKeysEffects {
       ofType(ApiKeysActions.revokeApiKey),
       switchMap((action) =>
         this.apiKeyService.revokeApiKey(action.apiKeyId).pipe(
-          map(() =>
+          map((revokedKey) =>
             ApiKeysActions.revokeApiKeySuccess({
               apiKeyId: action.apiKeyId,
+              revokedKey: revokedKey,
             })
           ),
           catchError((error) =>
@@ -149,6 +190,7 @@ export class ApiKeysEffects {
       ofType(
         ApiKeysActions.generateApiKeySuccess,
         ApiKeysActions.rotateApiKeySuccess,
+        ApiKeysActions.regenerateApiKeySuccess,
         ApiKeysActions.revokeApiKeySuccess
       ),
       withLatestFrom(this.store.select(selectCurrentApplicationId)),

@@ -203,7 +203,13 @@ describe('ApiKeys Reducer', () => {
         filteredApiKeyRows: [createMockApiKeyRow(existingKey)],
       };
 
-      const action = ApiKeysActions.revokeApiKeySuccess({ apiKeyId: 'key-1' });
+      const revokedKey = {
+        ...existingKey,
+        status: ApplicationApiKeyStatus.Revoked,
+        revokedAt: new Date(),
+        expiresAt: new Date(),
+      };
+      const action = ApiKeysActions.revokeApiKeySuccess({ apiKeyId: 'key-1', revokedKey });
       const state = apiKeysReducer(initialState, action);
 
       expect(state.isRevoking).toBe(false);
@@ -223,7 +229,13 @@ describe('ApiKeys Reducer', () => {
         selectedApiKey: existingKey,
       };
 
-      const action = ApiKeysActions.revokeApiKeySuccess({ apiKeyId: 'key-1' });
+      const revokedKey = {
+        ...existingKey,
+        status: ApplicationApiKeyStatus.Revoked,
+        revokedAt: new Date(),
+        expiresAt: new Date(),
+      };
+      const action = ApiKeysActions.revokeApiKeySuccess({ apiKeyId: 'key-1', revokedKey });
       const state = apiKeysReducer(initialState, action);
 
       expect(state.selectedApiKey).toBeNull();

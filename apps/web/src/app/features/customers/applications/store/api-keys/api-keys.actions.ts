@@ -11,7 +11,7 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { IApplicationApiKeys } from '../../../../../core/models/ApplicationApiKeysModel';
 import { Environment } from '../../../../../core/enums/EnvironmentEnum';
-import { ApiKeyTableRow, GeneratedKeyResult } from './api-keys.state';
+import { ApiKeyTableRow, GeneratedKeyResult, RegeneratedKeyResult } from './api-keys.state';
 
 export const ApiKeysActions = createActionGroup({
   source: 'ApiKeys',
@@ -36,6 +36,23 @@ export const ApiKeysActions = createActionGroup({
     }>(),
     'Generate Api Key Failure': props<{ error: string }>(),
 
+    // Regenerate API Key (creates new ACTIVE key, marks old as ROTATING with 7-day grace)
+    'Regenerate Api Key': props<{
+      apiKeyId: string;
+      applicationId: string;
+      organizationId: string;
+      environment: Environment;
+    }>(),
+    'Regenerate Api Key Success': props<{
+      oldKey: IApplicationApiKeys;
+      newKey: IApplicationApiKeys;
+      regeneratedKeyResult: RegeneratedKeyResult;
+    }>(),
+    'Regenerate Api Key Failure': props<{ error: string }>(),
+
+    // Clear Regenerated Key Result
+    'Clear Regenerated Key Result': emptyProps(),
+
     // Rotate API Key
     'Rotate Api Key': props<{
       apiKeyId: string;
@@ -54,7 +71,7 @@ export const ApiKeysActions = createActionGroup({
       applicationId: string;
       environment: Environment;
     }>(),
-    'Revoke Api Key Success': props<{ apiKeyId: string }>(),
+    'Revoke Api Key Success': props<{ apiKeyId: string; revokedKey: IApplicationApiKeys }>(),
     'Revoke Api Key Failure': props<{ error: string }>(),
 
     // Selection Management

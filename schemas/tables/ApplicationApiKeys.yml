@@ -79,10 +79,18 @@ model:
       type: string
       required: false
       description: Hash of the next key during rotation (both keys valid)
+    activatesAt:
+      type: timestamp
+      required: false
+      description: Future activation timestamp (null = immediate activation)
     expiresAt:
       type: timestamp
       required: false
-      description: Optional expiration timestamp for the key
+      description: Expiration timestamp for ROTATING keys (7 days after regeneration) or REVOKED keys (set to revokedAt)
+    revokedAt:
+      type: timestamp
+      required: false
+      description: When the key was revoked (null if not revoked)
     lastUsedAt:
       type: timestamp
       required: false
@@ -95,3 +103,7 @@ model:
       type: timestamp
       required: true
       description: When the key was last updated
+    ttl:
+      type: number
+      required: false
+      description: DynamoDB TTL attribute (Unix timestamp for auto-deletion 30 days after expiresAt)

@@ -566,3 +566,101 @@
   gap: v.$spacing-sm;
   justify-content: flex-end;
 }
+
+// Security Key Info Display
+// _Requirements: 7.1, 8.4_
+.security-key-info {
+  display: flex;
+  flex-direction: column;
+  gap: v.$spacing-xs;
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-sm;
+  }
+
+  &__prefix {
+    font-family: v.$font-family-monospace;
+    font-size: v.$font-size-sm;
+    color: v.$text-primary;
+    background: v.$gray-100;
+    padding: v.$spacing-xs v.$spacing-sm;
+    border-radius: v.$border-radius-sm;
+  }
+
+  &__activity {
+    font-size: v.$font-size-xs;
+    color: v.$text-secondary;
+  }
+
+  &__empty-icon {
+    color: v.$gray-400;
+    margin-right: v.$spacing-xs;
+  }
+
+  // Muted styling for REVOKED and EXPIRED keys
+  // _Requirements: 8.4_
+  &--muted {
+    opacity: 0.6;
+
+    .security-key-info__prefix {
+      background: v.$gray-200;
+      color: v.$text-secondary;
+    }
+  }
+
+  // Empty state styling
+  &--empty {
+    flex-direction: row;
+    align-items: center;
+    color: v.$text-secondary;
+    font-size: v.$font-size-sm;
+  }
+}
+
+// Status Badge Colors
+// _Requirements: 7.1_
+.security-key-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: v.$spacing-xs;
+  padding: v.$spacing-xs v.$spacing-sm;
+  border-radius: v.$border-radius-sm;
+  font-size: v.$font-size-xs;
+  font-weight: v.$font-weight-medium;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &__icon {
+    font-size: 0.75rem;
+  }
+
+  // ACTIVE: Green
+  &--active {
+    background: rgba(v.$success-color, 0.1);
+    color: color.adjust(v.$success-color, $lightness: -10%);
+    border: 1px solid rgba(v.$success-color, 0.3);
+  }
+
+  // ROTATING: Orange (Expiring)
+  &--rotating {
+    background: rgba(v.$warning-color, 0.1);
+    color: color.adjust(v.$warning-color, $lightness: -15%);
+    border: 1px solid rgba(v.$warning-color, 0.3);
+  }
+
+  // REVOKED: Red
+  &--revoked {
+    background: rgba(v.$danger-color, 0.1);
+    color: color.adjust(v.$danger-color, $lightness: -5%);
+    border: 1px solid rgba(v.$danger-color, 0.3);
+  }
+
+  // EXPIRED: Gray
+  &--expired {
+    background: v.$gray-100;
+    color: v.$text-secondary;
+    border: 1px solid v.$gray-300;
+  }
+}
