@@ -157,25 +157,35 @@ describe('ApiKeyGenerateDialogComponent', () => {
   });
 
   describe('Copy to Clipboard', () => {
+    let clipboardSpy: jasmine.Spy;
+
     beforeEach(() => {
-      spyOn(navigator.clipboard, 'writeText').and.returnValue(Promise.resolve());
+      // Reset the spy if it already exists
+      if (navigator.clipboard.writeText && (navigator.clipboard.writeText as jasmine.Spy).and) {
+        clipboardSpy = navigator.clipboard.writeText as jasmine.Spy;
+        clipboardSpy.and.returnValue(Promise.resolve());
+      } else {
+        clipboardSpy = spyOn(navigator.clipboard, 'writeText').and.returnValue(Promise.resolve());
+      }
     });
 
-    it('should copy key to clipboard', async () => {
-      await component.copyKeyToClipboard('test-key-123');
+    it('should copy key to clipboard', fakeAsync(() => {
+      component.copyKeyToClipboard('test-key-123');
+      tick(0); // Resolve the Promise
 
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith('test-key-123');
-    });
+      expect(clipboardSpy).toHaveBeenCalledWith('test-key-123');
+    }));
 
-    it('should set keyCopied to true after copying', async () => {
-      await component.copyKeyToClipboard('test-key-123');
+    it('should set keyCopied to true after copying', fakeAsync(() => {
+      component.copyKeyToClipboard('test-key-123');
+      tick(0); // Resolve the Promise
 
       expect(component.keyCopied).toBe(true);
-    });
+    }));
 
     it('should reset keyCopied after 3 seconds', fakeAsync(() => {
       component.copyKeyToClipboard('test-key-123');
-      tick(0);
+      tick(0); // Resolve the Promise
 
       expect(component.keyCopied).toBe(true);
 
@@ -184,14 +194,15 @@ describe('ApiKeyGenerateDialogComponent', () => {
       expect(component.keyCopied).toBe(false);
     }));
 
-    it('should handle clipboard error gracefully', async () => {
+    it('should handle clipboard error gracefully', fakeAsync(() => {
       const consoleSpy = spyOn(console, 'error');
-      (navigator.clipboard.writeText as jasmine.Spy).and.returnValue(Promise.reject(new Error('Clipboard error')));
+      clipboardSpy.and.returnValue(Promise.reject(new Error('Clipboard error')));
 
-      await component.copyKeyToClipboard('test-key-123');
+      component.copyKeyToClipboard('test-key-123');
+      tick(0); // Resolve the Promise
 
       expect(consoleSpy).toHaveBeenCalledWith('Failed to copy key:', jasmine.any(Error));
-    });
+    }));
   });
 
   describe('Dialog Close Behavior', () => {

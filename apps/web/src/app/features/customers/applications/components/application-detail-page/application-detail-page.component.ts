@@ -63,6 +63,86 @@ import { GeneratedKeyResult } from '../../store/api-keys/api-keys.state';
 import { ApplicationApiKeyStatus } from '../../../../../core/enums/ApplicationApiKeyStatusEnum';
 
 /**
+ * Get activity text for an API key based on its status and timestamps.
+ *
+ * @param apiKey - The API key to get activity text for (null if no key)
+ * @returns Human-readable activity text
+ *
+ * @see .kiro/specs/api-key-lifecycle-management/design.md
+ * _Requirements: 2.7, 4.5, 5.4_
+ */
+export function getActivityText(apiKey: IApplicationApiKeys | null): string {
+  if (!apiKey) {
+    return 'No API key configured';
+  }
+
+  switch (apiKey.status) {
+    case ApplicationApiKeyStatus.Revoked:
+      if (apiKey.revokedAt) {
+        const revokedDate = apiKey.revokedAt instanceof Date
+          ? apiKey.revokedAt
+          : new Date(typeof apiKey.revokedAt === 'number' ? apiKey.revokedAt * 1000 : apiKey.revokedAt);
+        return `Revoked on ${revokedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+      }
+      return 'Revoked';
+
+    case ApplicationApiKeyStatus.Expired:
+      if (apiKey.expiresAt) {
+        const expiredDate = apiKey.expiresAt instanceof Date
+          ? apiKey.expiresAt
+          : new Date(typeof apiKey.expiresAt === 'number' ? apiKey.expiresAt * 1000 : apiKey.expiresAt);
+        return `Expired on ${expiredDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+      }
+      return 'Expired';
+
+    case ApplicationApiKeyStatus.Rotating:
+      if (apiKey.expiresAt) {
+        const expiresAt = apiKey.expiresAt instanceof Date
+          ? apiKey.expiresAt
+          : new Date(typeof apiKey.expiresAt === 'number' ? apiKey.expiresAt * 1000 : apiKey.expiresAt);
+        const now = new Date();
+        const diffMs = expiresAt.getTime() - now.getTime();
+        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+        if (diffDays <= 0) {
+          return 'Expires today';
+        } else if (diffDays === 1) {
+          return 'Expires in 1 day';
+        } else {
+          return `Expires in ${diffDays} days`;
+        }
+      }
+      return 'Rotating';
+
+    case ApplicationApiKeyStatus.Active:
+    default:
+      if (apiKey.lastUsedAt) {
+        const lastUsed = apiKey.lastUsedAt instanceof Date
+          ? apiKey.lastUsedAt
+          : new Date(typeof apiKey.lastUsedAt === 'number' ? apiKey.lastUsedAt * 1000 : apiKey.lastUsedAt);
+        const now = new Date();
+        const diffMs = now.getTime() - lastUsed.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) {
+          return 'Last used just now';
+        } else if (diffMins < 60) {
+          return `Last used ${diffMins} min ago`;
+        } else if (diffHours < 24) {
+          return `Last used ${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+        } else if (diffDays < 7) {
+          return `Last used ${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+        } else {
+          return `Last used ${lastUsed.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+        }
+      }
+      return 'Never used';
+  }
+}
+
+/**
  * Interface for environment-based API key row display
  */
 export interface EnvironmentKeyRow {
@@ -583,6 +663,8 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
     if (tab !== ApplicationDetailTab.Security) {
       this.generatedKeyDisplay = null;
       this.copySuccess = false;
+      // Dispatch action to clear generated key in store
+      this.store.dispatch(ApiKeysActions.clearGeneratedKey());
     }
     // Load API keys when entering Security tab
     if (tab === ApplicationDetailTab.Security && this.application) {

@@ -263,8 +263,8 @@
 **Requirements:** 5.1, 5.2
 
 ### Task 5.3: Unit Tests for Profile Component
-- [ ] Update tests to use MockStore
-- [ ] Verify correct actions dispatched
+- [x] Update tests to use MockStore
+- [x] Verify correct actions dispatched
 
 **File:** `apps/web/src/app/features/user/components/profile/profile.component.spec.ts`
 

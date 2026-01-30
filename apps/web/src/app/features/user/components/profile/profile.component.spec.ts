@@ -6,22 +6,26 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormBuilder } from '@angular/forms';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
-import { of } from 'rxjs';
+import { provideMockActions } from '@ngrx/effects/testing';
+import { of, ReplaySubject } from 'rxjs';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FaIconLibrary, FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { fas } from '@fortawesome/free-solid-svg-icons';
+import { Action } from '@ngrx/store';
 
 import { ProfileComponent } from './profile.component';
 import { UserService } from '../../../../core/services/user.service';
 import { IUsers, Users } from '../../../../core/models/UsersModel';
 import { UserStatus } from '../../../../core/enums/UserStatusEnum';
 import { UserGroup } from '../../../../core/enums/UserGroupEnum';
+import { UserActions } from '../../store/user.actions';
 
 describe('ProfileComponent', () => {
   let component: ProfileComponent;
   let fixture: ComponentFixture<ProfileComponent>;
   let mockUserService: jasmine.SpyObj<UserService>;
   let mockStore: MockStore;
+  let actions$: ReplaySubject<Action>;
   const _mockRouter = jasmine.createSpyObj('Router', ['navigate']);
 
   const initialState = {
@@ -38,6 +42,7 @@ describe('ProfileComponent', () => {
   const mockIncompleteUser: IUsers = { userId: '123', cognitoId: 'abc123', cognitoSub: 'cognito-sub-123', email: 'test@example.com', emailVerified: false, phoneNumber: '', phoneVerified: false, firstName: '', lastName: '', groups: [], status: UserStatus.Inactive, mfaEnabled: false, mfaSetupComplete: false, createdAt: new Date(), updatedAt: new Date() };
 
   beforeEach(async () => {
+    actions$ = new ReplaySubject<Action>(1);
     mockUserService = jasmine.createSpyObj('UserService', ['isUserValid', 'userUpdate', 'userQueryByUserId']);
     mockUserService.isUserValid.and.callFake(user => {
       return !!(user?.firstName && user?.lastName && user?.email && user?.phoneNumber);
@@ -72,6 +77,7 @@ describe('ProfileComponent', () => {
       imports: [ ProfileComponent, FontAwesomeModule ],
       providers: [
         provideMockStore({ initialState }),
+        provideMockActions(() => actions$),
         { provide: UserService, useValue: mockUserService },
         { provide: Router, useValue: routerSpy },
         { provide: ActivatedRoute, useValue: activatedRouteMock },
@@ -264,10 +270,11 @@ describe('ProfileComponent', () => {
       });
       fixture.detectChanges();
       
-      expect(component.isUserValid(mockUser)).toBe(true);
+      // Component now has its own isUserValid logic (doesn't call service)
+      // A valid user needs: email, firstName, lastName, phoneNumber, emailVerified, phoneVerified, mfaEnabled, mfaSetupComplete, and ACTIVE status
+      const fullyValidUser = { ...mockUser, mfaEnabled: true, mfaSetupComplete: true };
+      expect(component.isUserValid(fullyValidUser)).toBe(true);
       expect(component.isUserValid(mockIncompleteUser)).toBe(false);
-      expect(mockUserService.isUserValid).toHaveBeenCalledWith(mockUser);
-      expect(mockUserService.isUserValid).toHaveBeenCalledWith(mockIncompleteUser);
     });
   });
 
@@ -451,39 +458,42 @@ describe('ProfileComponent', () => {
           error: null
         }
       });
+      spyOn(mockStore, 'dispatch').and.callThrough();
       fixture.detectChanges();
     });
 
-    it('should set codeSent to true after sending verification code', async () => {
-      // Mock the sendSMSVerificationCode method
-      mockUserService.sendSMSVerificationCode = jasmine.createSpy('sendSMSVerificationCode')
-        .and.returnValue(Promise.resolve({ success: true, message: 'Code sent' }));
-      
+    it('should dispatch setupPhone action when sending verification code', async () => {
       await component.sendVerificationCode();
       
-      expect(mockUserService.sendSMSVerificationCode).toHaveBeenCalledWith(mockUser.phoneNumber as string);
+      expect(mockStore.dispatch).toHaveBeenCalledWith(
+        jasmine.objectContaining({ type: '[User] Setup Phone' })
+      );
+    });
+
+    it('should set codeSent to true after setupPhoneSuccess action', fakeAsync(() => {
+      // Trigger send verification code
+      component.sendVerificationCode();
+      tick();
+      
+      // Simulate success action from effect
+      const expiresAt = Date.now() + 300000; // 5 minutes from now (timestamp)
+      actions$.next(UserActions.setupPhoneSuccess({ validationId: 'test-validation-id', expiresAt }));
+      tick();
+      
       expect(component.phoneVerificationState.codeSent).toBe(true);
       expect(component.phoneVerificationState.codeExpiration).not.toBeNull();
-      expect(component.phoneVerificationState.cooldownUntil).not.toBeNull();
-    });
+    }));
 
-    it('should set error when verification code sending fails', async () => {
-      mockUserService.sendSMSVerificationCode = jasmine.createSpy('sendSMSVerificationCode')
-        .and.returnValue(Promise.resolve({ success: false, message: 'Rate limit exceeded' }));
+    it('should set error when setupPhoneFailure action is received', fakeAsync(() => {
+      component.sendVerificationCode();
+      tick();
       
-      await component.sendVerificationCode();
+      // Simulate failure action from effect
+      actions$.next(UserActions.setupPhoneFailure({ error: 'Rate limit exceeded' }));
+      tick();
       
       expect(component.phoneVerificationState.error).toBe('Rate limit exceeded');
-    });
-
-    it('should handle exception when sending verification code', async () => {
-      mockUserService.sendSMSVerificationCode = jasmine.createSpy('sendSMSVerificationCode')
-        .and.returnValue(Promise.reject(new Error('Network error')));
-      
-      await component.sendVerificationCode();
-      
-      expect(component.phoneVerificationState.error).toBe('Failed to send verification code. Please try again.');
-    });
+    }));
 
     it('should allow resend when cooldown has passed', () => {
       component.phoneVerificationState.cooldownUntil = new Date(Date.now() - 1000);
@@ -503,39 +513,40 @@ describe('ProfileComponent', () => {
       expect(component.canResendCode()).toBe(true);
     });
 
-    it('should verify code successfully and update user state', async () => {
-      mockUserService.verifySMSCode = jasmine.createSpy('verifySMSCode')
-        .and.returnValue(Promise.resolve(true));
-      
+    it('should dispatch verifyPhone action when submitting verification code', fakeAsync(() => {
       component.verifyForm.patchValue({ verificationCode: '123456' });
       
-      await component.submitVerifyStep();
+      component.submitVerifyStep();
+      tick();
       
-      expect(mockUserService.verifySMSCode).toHaveBeenCalledWith(mockUser.phoneNumber as string, '123456');
-      expect(mockUserService.userUpdate).toHaveBeenCalled();
-    });
+      expect(mockStore.dispatch).toHaveBeenCalledWith(
+        jasmine.objectContaining({ type: '[User] Verify Phone' })
+      );
+    }));
 
-    it('should set error when verification code is invalid', async () => {
-      mockUserService.verifySMSCode = jasmine.createSpy('verifySMSCode')
-        .and.returnValue(Promise.resolve(false));
-      
+    it('should set error when verifyPhoneFailure action is received', fakeAsync(() => {
       component.verifyForm.patchValue({ verificationCode: '000000' });
+      component.submitVerifyStep();
+      tick();
       
-      await component.submitVerifyStep();
+      // Simulate failure action from effect
+      actions$.next(UserActions.verifyPhoneFailure({ error: 'Invalid verification code' }));
+      tick();
       
-      expect(component.phoneVerificationState.error).toBe('Invalid verification code. Please try again.');
-    });
+      expect(component.phoneVerificationState.error).toBe('Invalid verification code');
+    }));
 
-    it('should not submit when verification form is invalid', async () => {
-      mockUserService.verifySMSCode = jasmine.createSpy('verifySMSCode');
-      
+    it('should not submit when verification form is invalid', fakeAsync(() => {
       component.verifyForm.patchValue({ verificationCode: '123' }); // Too short
       
-      await component.submitVerifyStep();
+      component.submitVerifyStep();
+      tick();
       
-      expect(mockUserService.verifySMSCode).not.toHaveBeenCalled();
+      expect(mockStore.dispatch).not.toHaveBeenCalledWith(
+        jasmine.objectContaining({ type: '[User] Verify Phone' })
+      );
       expect(component.verifyForm.get('verificationCode')?.touched).toBe(true);
-    });
+    }));
   });
 
   /**

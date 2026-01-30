@@ -72,7 +72,7 @@ This implementation enhances the API key management system with full lifecycle s
     - **Property 7: Activity Text Matches Key Status**
     - **Validates: Requirements 2.7, 5.4**
 
-- [ ] 6. Checkpoint - Verify row computation
+- [x] 6. Checkpoint - Verify row computation
   - Test that rows are sorted correctly
   - Test that activity text displays correctly
   - Ask user if questions arise
@@ -112,7 +112,7 @@ This implementation enhances the API key management system with full lifecycle s
     - **Property 10: Regeneration Creates ACTIVE and ROTATING Pair**
     - **Validates: Requirements 4.1**
 
-- [ ] 9. Checkpoint - Verify regeneration flow
+- [x] 9. Checkpoint - Verify regeneration flow
   - Test regeneration creates two keys
   - Test both keys displayed correctly
   - Test expiration countdown shows
@@ -145,7 +145,7 @@ This implementation enhances the API key management system with full lifecycle s
     - **Property 13: Revoked Key Has ExpiresAt Equal to RevokedAt**
     - **Validates: Requirements 8.1**
 
-- [ ] 12. Checkpoint - Verify revocation and auto-revoke
+- [x] 12. Checkpoint - Verify revocation and auto-revoke
   - Test manual revocation sets correct timestamps
   - Test environment deselection shows confirmation
   - Test auto-revoke works on confirmation
@@ -190,21 +190,21 @@ This implementation enhances the API key management system with full lifecycle s
     - **Property 17: Multiple Keys Have Distinguishable Prefixes**
     - **Validates: Requirements 9.3**
 
-- [ ] 15. Write unit tests
-  - [ ] 15.1 Write unit tests for lazy loading
+- [x] 15. Write unit tests
+  - [x] 15.1 Write unit tests for lazy loading
     - Test API keys not fetched on page load
     - Test API keys fetched on Security tab click
     - _Requirements: 1.1, 1.2_
-  - [ ] 15.2 Write unit tests for confirmation dialogs
+  - [x] 15.2 Write unit tests for confirmation dialogs
     - Test revoke confirmation appears
     - Test environment deselection confirmation appears
     - _Requirements: 5.1, 6.2_
-  - [ ] 15.3 Write unit tests for copy functionality
+  - [x] 15.3 Write unit tests for copy functionality
     - Test copy button copies full key
     - Test success feedback shown
     - _Requirements: 3.2_
 
-- [ ] 16. Final checkpoint
+- [x] 16. Final checkpoint
   - Ensure all tests pass
   - Verify complete lifecycle flow works
   - Test all user scenarios

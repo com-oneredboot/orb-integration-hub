@@ -5,11 +5,13 @@
 
 import { TestBed } from '@angular/core/testing';
 import { provideMockStore } from '@ngrx/store/testing';
+import { provideMockActions } from '@ngrx/effects/testing';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder } from '@angular/forms';
 import { FaIconLibrary, FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { fas } from '@fortawesome/free-solid-svg-icons';
-import { of } from 'rxjs';
+import { of, ReplaySubject } from 'rxjs';
+import { Action } from '@ngrx/store';
 import { ProfileComponent, ProfileSetupStep } from '../features/user/components/profile/profile.component';
 import { UserService } from '../core/services/user.service';
 import { IUsers } from '../core/models/UsersModel';
@@ -30,6 +32,7 @@ import { UserGroup } from '../core/enums/UserGroupEnum';
 describe('Property: User Status Calculation', () => {
   let component: ProfileComponent;
   let mockUserService: jasmine.SpyObj<UserService>;
+  let actions$: ReplaySubject<Action>;
 
   const createMockUser = (overrides: Partial<IUsers> = {}): IUsers => ({
     userId: '123',
@@ -51,6 +54,7 @@ describe('Property: User Status Calculation', () => {
   });
 
   beforeEach(async () => {
+    actions$ = new ReplaySubject<Action>(1);
     mockUserService = jasmine.createSpyObj('UserService', ['isUserValid', 'userUpdate', 'userQueryByUserId']);
     mockUserService.isUserValid.and.callFake(user => {
       return !!(user?.firstName && user?.lastName && user?.email && user?.phoneNumber);
@@ -63,6 +67,7 @@ describe('Property: User Status Calculation', () => {
       imports: [ProfileComponent, FontAwesomeModule],
       providers: [
         provideMockStore({ initialState: { user: { currentUser: createMockUser(), debugMode: false, isLoading: false, error: null } } }),
+        provideMockActions(() => actions$),
         { provide: UserService, useValue: mockUserService },
         { provide: Router, useValue: routerSpy },
         { provide: ActivatedRoute, useValue: activatedRouteMock },

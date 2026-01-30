@@ -12,7 +12,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { BehaviorSubject } from 'rxjs';
 import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
-import { faRocket, faPlus, faSearch, faServer, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faRocket, faPlus, faSearch, faServer, faSpinner, faUsers, faUser, faBuilding, faKey, faClock, faCheckCircle, faExclamationTriangle, faTimesCircle, faPauseCircle, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 
 import { ApplicationsListComponent } from './applications-list.component';
 import { IApplications } from '../../../../../core/models/ApplicationsModel';
@@ -113,7 +113,7 @@ describe('ApplicationsListComponent', () => {
 
     // Register FontAwesome icons
     const library = TestBed.inject(FaIconLibrary);
-    library.addIcons(faRocket, faPlus, faSearch, faServer, faSpinner);
+    library.addIcons(faRocket, faPlus, faSearch, faServer, faSpinner, faUsers, faUser, faBuilding, faKey, faClock, faCheckCircle, faExclamationTriangle, faTimesCircle, faPauseCircle, faEllipsisV);
 
     store = TestBed.inject(MockStore);
     spyOn(store, 'dispatch').and.callThrough();

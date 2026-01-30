@@ -6,6 +6,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { RouterTestingModule } from '@angular/router/testing';
+import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
+import { faBuilding, faRocket, faUsers, faUser } from '@fortawesome/free-solid-svg-icons';
 import { UserLayoutComponent } from './user-layout.component';
 import { CognitoService } from '../../core/services/cognito.service';
 import { UserGroup } from '../../core/enums/UserGroupEnum';
@@ -56,6 +58,10 @@ describe('UserLayoutComponent', () => {
         { provide: CognitoService, useValue: mockCognitoService }
       ]
     }).compileComponents();
+
+    // Register FontAwesome icons
+    const library = TestBed.inject(FaIconLibrary);
+    library.addIcons(faBuilding, faRocket, faUsers, faUser);
 
     mockStore = TestBed.inject(MockStore);
   });
@@ -111,68 +117,28 @@ describe('UserLayoutComponent', () => {
   });
 
   describe('CUSTOMER-specific navigation items', () => {
-    it('should show Organizations link for CUSTOMER users', () => {
+    it('should show side nav for CUSTOMER users', () => {
       mockStore.setState(createInitialState(createMockUser([UserGroup.Customer]), true));
       fixture.detectChanges();
 
-      const orgsLink = fixture.nativeElement.querySelector('a[routerLink="customers/organizations"]');
-      expect(orgsLink).toBeTruthy();
+      const sideNav = fixture.nativeElement.querySelector('app-dashboard-side-nav');
+      expect(sideNav).toBeTruthy();
     });
 
-    it('should show Applications link for CUSTOMER users', () => {
-      mockStore.setState(createInitialState(createMockUser([UserGroup.Customer]), true));
-      fixture.detectChanges();
-
-      const appsLink = fixture.nativeElement.querySelector('a[routerLink="customers/applications"]');
-      expect(appsLink).toBeTruthy();
-    });
-
-    it('should show Groups link for CUSTOMER users', () => {
-      mockStore.setState(createInitialState(createMockUser([UserGroup.Customer]), true));
-      fixture.detectChanges();
-
-      const groupsLink = fixture.nativeElement.querySelector('a[routerLink="customers/groups"]');
-      expect(groupsLink).toBeTruthy();
-    });
-
-    it('should show Users link for CUSTOMER users', () => {
-      mockStore.setState(createInitialState(createMockUser([UserGroup.Customer]), true));
-      fixture.detectChanges();
-
-      const usersLink = fixture.nativeElement.querySelector('a[routerLink="customers/users"]');
-      expect(usersLink).toBeTruthy();
-    });
-
-    it('should NOT show Organizations link for non-CUSTOMER users', () => {
+    it('should NOT show side nav for non-CUSTOMER users', () => {
       mockStore.setState(createInitialState(createMockUser([UserGroup.User]), true));
       fixture.detectChanges();
 
-      const orgsLink = fixture.nativeElement.querySelector('a[routerLink="customers/organizations"]');
-      expect(orgsLink).toBeFalsy();
+      const sideNav = fixture.nativeElement.querySelector('app-dashboard-side-nav');
+      expect(sideNav).toBeFalsy();
     });
 
-    it('should NOT show Applications link for non-CUSTOMER users', () => {
-      mockStore.setState(createInitialState(createMockUser([UserGroup.User]), true));
+    it('should NOT show side nav for unauthenticated users', () => {
+      mockStore.setState(createInitialState(null, false));
       fixture.detectChanges();
 
-      const appsLink = fixture.nativeElement.querySelector('a[routerLink="customers/applications"]');
-      expect(appsLink).toBeFalsy();
-    });
-
-    it('should NOT show Groups link for non-CUSTOMER users', () => {
-      mockStore.setState(createInitialState(createMockUser([UserGroup.User]), true));
-      fixture.detectChanges();
-
-      const groupsLink = fixture.nativeElement.querySelector('a[routerLink="customers/groups"]');
-      expect(groupsLink).toBeFalsy();
-    });
-
-    it('should NOT show Users link for non-CUSTOMER users', () => {
-      mockStore.setState(createInitialState(createMockUser([UserGroup.User]), true));
-      fixture.detectChanges();
-
-      const usersLink = fixture.nativeElement.querySelector('a[routerLink="customers/users"]');
-      expect(usersLink).toBeFalsy();
+      const sideNav = fixture.nativeElement.querySelector('app-dashboard-side-nav');
+      expect(sideNav).toBeFalsy();
     });
   });
 

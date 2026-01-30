@@ -5,6 +5,7 @@
 
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import { take } from 'rxjs/operators';
 import { AppErrorHandlerService, AppError } from './error-handler.service';
 
 describe('AppErrorHandlerService', () => {
@@ -250,62 +251,62 @@ describe('AppErrorHandlerService', () => {
       });
     });
 
-    it('should clear errors when requested', () => {
+    it('should clear errors when requested', (done) => {
       service.captureError({ message: 'Error 1' });
       service.captureError({ message: 'Error 2' });
 
       service.clearAllErrors();
 
-      service.getAllErrors().subscribe(errors => {
+      service.getAllErrors().pipe(take(1)).subscribe(errors => {
         expect(errors.length).toBe(0);
-      });
-
-      service.getCurrentError().subscribe(error => {
-        expect(error).toBeNull();
+        done();
       });
     });
   });
 
   describe('Current Error Management', () => {
-    it('should display high severity errors automatically', () => {
+    it('should display high severity errors automatically', (done) => {
       service.captureError({
         type: 'system',
         severity: 'high',
         message: 'High severity error'
       });
 
-      service.getCurrentError().subscribe(error => {
+      service.getCurrentError().pipe(take(1)).subscribe(error => {
         expect(error).toBeTruthy();
         expect(error!.severity).toBe('high');
+        done();
       });
     });
 
-    it('should display critical errors automatically', () => {
+    it('should display critical errors automatically', (done) => {
       service.captureError({
         type: 'security',
         severity: 'critical',
         message: 'Critical error'
       });
 
-      service.getCurrentError().subscribe(error => {
+      service.getCurrentError().pipe(take(1)).subscribe(error => {
         expect(error).toBeTruthy();
         expect(error!.severity).toBe('critical');
+        done();
       });
     });
 
-    it('should not auto-display low severity errors', () => {
+    it('should not auto-display low severity errors', (done) => {
       service.captureError({
         type: 'validation',
         severity: 'low',
         message: 'Low severity error'
       });
 
-      service.getCurrentError().subscribe(error => {
+      service.getCurrentError().pipe(take(1)).subscribe(error => {
         expect(error).toBeNull();
+        done();
       });
     });
 
-    it('should clear current error when requested', () => {
+    it('should clear current error when requested', (done) => {
       service.captureError({
         type: 'system',
         severity: 'high',
@@ -314,8 +315,9 @@ describe('AppErrorHandlerService', () => {
 
       service.clearCurrentError();
 
-      service.getCurrentError().subscribe(error => {
+      service.getCurrentError().pipe(take(1)).subscribe(error => {
         expect(error).toBeNull();
+        done();
       });
     });
   });

@@ -238,11 +238,6 @@ describe('DashboardComponent', () => {
       expect(header).toBeTruthy();
     });
 
-    it('should render the side navigation', () => {
-      const sideNav = fixture.nativeElement.querySelector('app-dashboard-side-nav');
-      expect(sideNav).toBeTruthy();
-    });
-
     it('should render CTA cards', () => {
       const ctaCards = fixture.nativeElement.querySelectorAll('app-cta-card');
       expect(ctaCards.length).toBe(mockCtaCards.length);

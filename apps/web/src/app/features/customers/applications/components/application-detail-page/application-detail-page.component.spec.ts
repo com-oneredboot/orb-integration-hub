@@ -27,6 +27,7 @@ import { OrganizationStatus } from '../../../../../core/enums/OrganizationStatus
 import { ApplicationApiKeyStatus } from '../../../../../core/enums/ApplicationApiKeyStatusEnum';
 import { Environment } from '../../../../../core/enums/EnvironmentEnum';
 import { ApplicationsActions } from '../../store/applications.actions';
+import { ApiKeysActions } from '../../store/api-keys/api-keys.actions';
 import { OrganizationsActions } from '../../../organizations/store/organizations.actions';
 import * as fromApplications from '../../store/applications.selectors';
 import * as fromOrganizations from '../../../organizations/store/organizations.selectors';
@@ -975,6 +976,258 @@ describe('ApplicationDetailPageComponent', () => {
         expect(store.dispatch).toHaveBeenCalledWith(
           jasmine.objectContaining({ type: '[Applications] Update Application' })
         );
+      }));
+    });
+  });
+
+  /**
+   * API Key Lifecycle Management Tests
+   *
+   * Tests for API key loading, confirmation dialogs, and copy functionality.
+   *
+   * @see .kiro/specs/api-key-lifecycle-management/design.md
+   * _Requirements: 1.1, 1.2, 5.1, 6.2, 3.2_
+   */
+  describe('API Key Lifecycle Management', () => {
+    describe('API Key Loading', () => {
+      beforeEach(fakeAsync(() => {
+        store.overrideSelector(fromApplications.selectSelectedApplication, mockApplication);
+        store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+      }));
+
+      it('should dispatch loadApiKeys when application is loaded', fakeAsync(() => {
+        // Note: Current implementation loads API keys eagerly for activation validation
+        // This differs from Requirement 1.1 but is needed for api-key-configuration-flow
+        expect(store.dispatch).toHaveBeenCalledWith(
+          ApiKeysActions.loadApiKeys({ applicationId: 'app-789' })
+        );
+      }));
+
+      it('should dispatch loadApiKeys when Security tab is clicked', fakeAsync(() => {
+        // Validates: Requirements 1.2
+        (store.dispatch as jasmine.Spy).calls.reset();
+
+        component.setActiveTab(ApplicationDetailTab.Security);
+        tick();
+
+        expect(store.dispatch).toHaveBeenCalledWith(
+          ApiKeysActions.loadApiKeys({ applicationId: 'app-789' })
+        );
+      }));
+
+      it('should dispatch setApplicationContext when application is loaded', fakeAsync(() => {
+        expect(store.dispatch).toHaveBeenCalledWith(
+          ApiKeysActions.setApplicationContext({
+            applicationId: 'app-789',
+            organizationId: 'org-456'
+          })
+        );
+      }));
+    });
+
+    describe('Revoke Confirmation Dialog', () => {
+      // Helper to create a mock EnvironmentKeyRow
+      const createMockRow = (environment: string, apiKeyId: string): import('./application-detail-page.component').EnvironmentKeyRow => ({
+        environment,
+        environmentLabel: environment.charAt(0) + environment.slice(1).toLowerCase(),
+        apiKey: {
+          applicationApiKeyId: apiKeyId,
+          applicationId: 'app-789',
+          organizationId: 'org-456',
+          environment: environment as Environment,
+          status: ApplicationApiKeyStatus.Active,
+          keyPrefix: `orb_${environment.toLowerCase().substring(0, 2)}_`,
+          keyHash: 'mock-hash',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        } as IApplicationApiKeys,
+        hasKey: true,
+        isRevoked: false,
+        isExpired: false,
+        canRevoke: true,
+        canGenerate: false,
+        canRotate: true
+      });
+
+      beforeEach(fakeAsync(() => {
+        store.overrideSelector(fromApplications.selectSelectedApplication, mockApplication);
+        store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+      }));
+
+      it('should prompt for confirmation before revoking a key', fakeAsync(() => {
+        // Validates: Requirements 5.1
+        spyOn(window, 'confirm').and.returnValue(false);
+
+        const mockRow = createMockRow('PRODUCTION', 'key-123');
+        component.onRevokeKeyForRow(mockRow);
+        tick();
+
+        expect(window.confirm).toHaveBeenCalled();
+      }));
+
+      it('should not dispatch revokeApiKey when confirmation is cancelled', fakeAsync(() => {
+        // Validates: Requirements 5.1
+        spyOn(window, 'confirm').and.returnValue(false);
+        (store.dispatch as jasmine.Spy).calls.reset();
+
+        const mockRow = createMockRow('PRODUCTION', 'key-123');
+        component.onRevokeKeyForRow(mockRow);
+        tick();
+
+        expect(store.dispatch).not.toHaveBeenCalledWith(
+          jasmine.objectContaining({ type: '[ApiKeys] Revoke Api Key' })
+        );
+      }));
+
+      it('should dispatch revokeApiKey when confirmation is accepted', fakeAsync(() => {
+        // Validates: Requirements 5.1
+        spyOn(window, 'confirm').and.returnValue(true);
+        (store.dispatch as jasmine.Spy).calls.reset();
+
+        const mockRow = createMockRow('PRODUCTION', 'key-123');
+        component.onRevokeKeyForRow(mockRow);
+        tick();
+
+        expect(store.dispatch).toHaveBeenCalledWith(
+          ApiKeysActions.revokeApiKey({
+            apiKeyId: 'key-123',
+            applicationId: 'app-789',
+            environment: 'PRODUCTION' as Environment
+          })
+        );
+      }));
+    });
+
+    describe('Copy to Clipboard', () => {
+      beforeEach(fakeAsync(() => {
+        store.overrideSelector(fromApplications.selectSelectedApplication, mockApplication);
+        store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+      }));
+
+      it('should have copyGeneratedKey method', () => {
+        // Validates: Requirements 3.2
+        expect(component.copyGeneratedKey).toBeDefined();
+        expect(typeof component.copyGeneratedKey).toBe('function');
+      });
+
+      it('should copy generated key to clipboard when called', fakeAsync(async () => {
+        // Validates: Requirements 3.2
+        // Mock the clipboard API
+        const mockClipboard = {
+          writeText: jasmine.createSpy('writeText').and.returnValue(Promise.resolve())
+        };
+        Object.defineProperty(navigator, 'clipboard', {
+          value: mockClipboard,
+          writable: true,
+          configurable: true
+        });
+
+        // Set up a generated key to copy
+        component.generatedKeyDisplay = {
+          apiKeyId: 'key-123',
+          environment: 'PRODUCTION' as Environment,
+          fullKey: 'orb_api_prod_test123',
+          keyPrefix: 'orb_api_test****'
+        };
+
+        await component.copyGeneratedKey();
+        tick();
+
+        expect(mockClipboard.writeText).toHaveBeenCalledWith('orb_api_prod_test123');
+      }));
+
+      it('should set copySuccess to true after successful copy', fakeAsync(async () => {
+        // Validates: Requirements 3.2
+        const mockClipboard = {
+          writeText: jasmine.createSpy('writeText').and.returnValue(Promise.resolve())
+        };
+        Object.defineProperty(navigator, 'clipboard', {
+          value: mockClipboard,
+          writable: true,
+          configurable: true
+        });
+
+        component.generatedKeyDisplay = {
+          apiKeyId: 'key-123',
+          environment: 'PRODUCTION' as Environment,
+          fullKey: 'orb_api_prod_test123',
+          keyPrefix: 'orb_api_test****'
+        };
+
+        await component.copyGeneratedKey();
+        tick();
+
+        expect(component.copySuccess).toBe(true);
+      }));
+
+      it('should not copy if no generated key is displayed', fakeAsync(async () => {
+        // Validates: Requirements 3.2
+        const mockClipboard = {
+          writeText: jasmine.createSpy('writeText').and.returnValue(Promise.resolve())
+        };
+        Object.defineProperty(navigator, 'clipboard', {
+          value: mockClipboard,
+          writable: true,
+          configurable: true
+        });
+
+        component.generatedKeyDisplay = null;
+
+        await component.copyGeneratedKey();
+        tick();
+
+        expect(mockClipboard.writeText).not.toHaveBeenCalled();
+      }));
+    });
+
+    describe('Generated Key Display', () => {
+      beforeEach(fakeAsync(() => {
+        store.overrideSelector(fromApplications.selectSelectedApplication, mockApplication);
+        store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+      }));
+
+      it('should clear generated key when switching away from Security tab', fakeAsync(() => {
+        // Validates: Requirements 3.4
+        component.setActiveTab(ApplicationDetailTab.Security);
+        tick();
+
+        // Set a generated key display
+        component.generatedKeyDisplay = {
+          apiKeyId: 'key-123',
+          environment: 'PRODUCTION' as Environment,
+          fullKey: 'orb_api_prod_test123',
+          keyPrefix: 'orb_api_test****'
+        };
+
+        // Switch to another tab
+        component.setActiveTab(ApplicationDetailTab.Overview);
+        tick();
+
+        expect(component.generatedKeyDisplay).toBeNull();
+      }));
+
+      it('should dispatch clearGeneratedKey when switching away from Security tab', fakeAsync(() => {
+        // Validates: Requirements 3.4
+        component.setActiveTab(ApplicationDetailTab.Security);
+        tick();
+        (store.dispatch as jasmine.Spy).calls.reset();
+
+        component.setActiveTab(ApplicationDetailTab.Overview);
+        tick();
+
+        expect(store.dispatch).toHaveBeenCalledWith(ApiKeysActions.clearGeneratedKey());
       }));
     });
   });

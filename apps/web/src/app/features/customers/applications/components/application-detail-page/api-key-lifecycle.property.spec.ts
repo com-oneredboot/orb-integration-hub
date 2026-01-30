@@ -14,32 +14,8 @@ import { Environment } from '../../../../../core/enums/EnvironmentEnum';
 import { IApplicationApiKeys } from '../../../../../core/models/ApplicationApiKeysModel';
 import {
   EnvironmentKeyRow,
-  // getActivityText, // TODO: This function needs to be implemented or removed from tests
+  getActivityText,
 } from './application-detail-page.component';
-
-// Temporary stub for getActivityText until it's implemented
-function getActivityText(_apiKey: IApplicationApiKeys | null): string {
-  if (!_apiKey) return 'No API key configured';
-  if (_apiKey.status === ApplicationApiKeyStatus.Revoked) {
-    return `Revoked on ${_apiKey.updatedAt?.toLocaleDateString() || 'unknown date'}`;
-  }
-  if (_apiKey.status === ApplicationApiKeyStatus.Expired) {
-    return `Expired on ${_apiKey.updatedAt?.toLocaleDateString() || 'unknown date'}`;
-  }
-  // Check for expiration
-  if (_apiKey.expiresAt) {
-    const expiresAt = _apiKey.expiresAt instanceof Date ? _apiKey.expiresAt : new Date(_apiKey.expiresAt);
-    const now = new Date();
-    const diffDays = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    if (diffDays <= 0) return 'Expires today';
-    return `Expires in ${diffDays} day${diffDays > 1 ? 's' : ''}`;
-  }
-  // Check for last used
-  if (_apiKey.lastUsedAt) {
-    return `Last used ${_apiKey.lastUsedAt instanceof Date ? _apiKey.lastUsedAt.toLocaleDateString() : new Date(_apiKey.lastUsedAt).toLocaleDateString()}`;
-  }
-  return 'Never used';
-}
 
 // ============================================================================
 // Test Data Generators (Arbitraries)
@@ -289,10 +265,12 @@ describe('API Key Lifecycle Management Property Tests', () => {
       fc.assert(
         fc.property(
           apiKeyArb(ApplicationApiKeyStatus.Rotating),
-          fc.date({ min: new Date(), max: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) }),
-          (apiKey, expiresAt) => {
+          fc.integer({ min: Date.now(), max: Date.now() + 30 * 24 * 60 * 60 * 1000 }),
+          (apiKey, expiresAtMs) => {
+            const expiresAt = new Date(expiresAtMs);
             const keyWithExpiration = { ...apiKey, expiresAt };
             const activityText = getActivityText(keyWithExpiration);
+            // Match "Expires today", "Expires in 1 day", or "Expires in X days"
             expect(activityText).toMatch(/^Expires (in \d+ days?|today)$/);
           }
         ),
@@ -491,8 +469,9 @@ describe('Property 11: Rotating Key Expires in 7 Days', () => {
   it('should have expiresAt approximately 7 days after updatedAt for ROTATING keys', () => {
     fc.assert(
       fc.property(
-        fc.date({ min: new Date('2020-01-01'), max: new Date() }),
-        (updatedAt) => {
+        fc.integer({ min: new Date('2020-01-01').getTime(), max: Date.now() }),
+        (updatedAtMs) => {
+          const updatedAt = new Date(updatedAtMs);
           // Calculate expected expiresAt (7 days from updatedAt)
           const expectedExpiresAt = new Date(updatedAt.getTime() + 7 * 24 * 60 * 60 * 1000);
           

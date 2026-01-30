@@ -4,23 +4,29 @@
 // description: Unit tests for DashboardSideNavComponent
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { DashboardSideNavComponent } from './dashboard-side-nav.component';
 import { FontAwesomeModule, FaIconLibrary } from '@fortawesome/angular-fontawesome';
+import { Subject } from 'rxjs';
 import { 
-  faUser, 
-  faShieldAlt, 
-  faCreditCard, 
-  faPlug 
+  faBuilding,
+  faRocket,
+  faUsers,
+  faUser
 } from '@fortawesome/free-solid-svg-icons';
 
 describe('DashboardSideNavComponent', () => {
   let component: DashboardSideNavComponent;
   let fixture: ComponentFixture<DashboardSideNavComponent>;
   let router: jasmine.SpyObj<Router>;
+  let routerEvents$: Subject<NavigationEnd>;
 
   beforeEach(async () => {
-    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    routerEvents$ = new Subject<NavigationEnd>();
+    const routerSpy = jasmine.createSpyObj('Router', ['navigate'], {
+      events: routerEvents$.asObservable(),
+      url: '/customers/organizations'
+    });
 
     await TestBed.configureTestingModule({
       imports: [DashboardSideNavComponent, FontAwesomeModule],
@@ -31,7 +37,7 @@ describe('DashboardSideNavComponent', () => {
 
     // Add icons to library
     const library = TestBed.inject(FaIconLibrary);
-    library.addIcons(faUser, faShieldAlt, faCreditCard, faPlug);
+    library.addIcons(faBuilding, faRocket, faUsers, faUser);
 
     router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
     fixture = TestBed.createComponent(DashboardSideNavComponent);
@@ -49,54 +55,49 @@ describe('DashboardSideNavComponent', () => {
       expect(buttons.length).toBe(4);
     });
 
-    it('should display profile icon', () => {
-      const profileItem = component.navItems.find(item => item.id === 'profile');
-      expect(profileItem).toBeTruthy();
-      expect(profileItem?.icon).toBe('user');
+    it('should display organizations icon', () => {
+      const orgItem = component.navItems.find(item => item.id === 'organizations');
+      expect(orgItem).toBeTruthy();
+      expect(orgItem?.icon).toBe('building');
     });
 
-    it('should display security icon', () => {
-      const securityItem = component.navItems.find(item => item.id === 'security');
-      expect(securityItem).toBeTruthy();
-      expect(securityItem?.icon).toBe('shield-alt');
+    it('should display applications icon', () => {
+      const appItem = component.navItems.find(item => item.id === 'applications');
+      expect(appItem).toBeTruthy();
+      expect(appItem?.icon).toBe('rocket');
     });
 
-    it('should display payment icon', () => {
-      const paymentItem = component.navItems.find(item => item.id === 'payment');
-      expect(paymentItem).toBeTruthy();
-      expect(paymentItem?.icon).toBe('credit-card');
+    it('should display groups icon', () => {
+      const groupsItem = component.navItems.find(item => item.id === 'groups');
+      expect(groupsItem).toBeTruthy();
+      expect(groupsItem?.icon).toBe('users');
     });
 
-    it('should display integrations icon', () => {
-      const integrationsItem = component.navItems.find(item => item.id === 'integrations');
-      expect(integrationsItem).toBeTruthy();
-      expect(integrationsItem?.icon).toBe('plug');
-    });
-
-    it('should mark disabled items with disabled class', () => {
-      const disabledButtons = fixture.nativeElement.querySelectorAll('.orb-side-nav__button--disabled');
-      expect(disabledButtons.length).toBe(2); // payment and integrations
+    it('should display users icon', () => {
+      const usersItem = component.navItems.find(item => item.id === 'users');
+      expect(usersItem).toBeTruthy();
+      expect(usersItem?.icon).toBe('user');
     });
   });
 
   describe('navigation', () => {
-    it('should navigate to profile on profile button click', () => {
-      const profileButton = fixture.nativeElement.querySelector('.orb-side-nav__button');
-      profileButton.click();
+    it('should navigate to organizations on organizations button click', () => {
+      const orgItem = component.navItems.find(item => item.id === 'organizations');
+      component.onItemClick(orgItem!);
       
-      expect(router.navigate).toHaveBeenCalledWith(['/profile']);
+      expect(router.navigate).toHaveBeenCalledWith(['/customers/organizations']);
     });
 
-    it('should navigate to security on security button click', () => {
-      const buttons = fixture.nativeElement.querySelectorAll('.orb-side-nav__button');
-      buttons[1].click(); // Security is second
+    it('should navigate to applications on applications button click', () => {
+      const appItem = component.navItems.find(item => item.id === 'applications');
+      component.onItemClick(appItem!);
       
-      expect(router.navigate).toHaveBeenCalledWith(['/authenticate']);
+      expect(router.navigate).toHaveBeenCalledWith(['/customers/applications']);
     });
 
     it('should not navigate when disabled item is clicked', () => {
-      const paymentItem = component.navItems.find(item => item.id === 'payment');
-      component.onItemClick(paymentItem!);
+      const disabledItem = { ...component.navItems[0], disabled: true };
+      component.onItemClick(disabledItem);
       
       expect(router.navigate).not.toHaveBeenCalled();
     });
@@ -104,66 +105,66 @@ describe('DashboardSideNavComponent', () => {
 
   describe('tooltips', () => {
     it('should show tooltip on mouse enter', () => {
-      const profileItem = component.navItems[0];
-      component.onMouseEnter(profileItem);
+      const orgItem = component.navItems[0];
+      component.onMouseEnter(orgItem);
       
-      expect(component.hoveredItemId).toBe(profileItem.id);
-      expect(component.isTooltipVisible(profileItem)).toBe(true);
+      expect(component.hoveredItemId).toBe(orgItem.id);
+      expect(component.isTooltipVisible(orgItem)).toBe(true);
     });
 
     it('should hide tooltip on mouse leave', () => {
-      const profileItem = component.navItems[0];
-      component.onMouseEnter(profileItem);
+      const orgItem = component.navItems[0];
+      component.onMouseEnter(orgItem);
       component.onMouseLeave();
       
       expect(component.hoveredItemId).toBeNull();
-      expect(component.isTooltipVisible(profileItem)).toBe(false);
+      expect(component.isTooltipVisible(orgItem)).toBe(false);
     });
 
     it('should display correct tooltip text', () => {
-      const profileItem = component.navItems.find(item => item.id === 'profile');
-      expect(profileItem?.tooltip).toBe('Edit Profile');
+      const orgItem = component.navItems.find(item => item.id === 'organizations');
+      expect(orgItem?.tooltip).toBe('Organizations');
     });
 
     it('should only show tooltip for hovered item', () => {
-      const profileItem = component.navItems[0];
-      const securityItem = component.navItems[1];
+      const orgItem = component.navItems[0];
+      const appItem = component.navItems[1];
       
-      component.onMouseEnter(profileItem);
+      component.onMouseEnter(orgItem);
       
-      expect(component.isTooltipVisible(profileItem)).toBe(true);
-      expect(component.isTooltipVisible(securityItem)).toBe(false);
+      expect(component.isTooltipVisible(orgItem)).toBe(true);
+      expect(component.isTooltipVisible(appItem)).toBe(false);
     });
   });
 
   describe('keyboard accessibility', () => {
     it('should trigger navigation on Enter key', () => {
-      const profileItem = component.navItems[0];
+      const orgItem = component.navItems[0];
       const event = new KeyboardEvent('keydown', { key: 'Enter' });
       spyOn(event, 'preventDefault');
       
-      component.onKeydown(event, profileItem);
+      component.onKeydown(event, orgItem);
       
       expect(event.preventDefault).toHaveBeenCalled();
-      expect(router.navigate).toHaveBeenCalledWith(['/profile']);
+      expect(router.navigate).toHaveBeenCalledWith(['/customers/organizations']);
     });
 
     it('should trigger navigation on Space key', () => {
-      const profileItem = component.navItems[0];
+      const orgItem = component.navItems[0];
       const event = new KeyboardEvent('keydown', { key: ' ' });
       spyOn(event, 'preventDefault');
       
-      component.onKeydown(event, profileItem);
+      component.onKeydown(event, orgItem);
       
       expect(event.preventDefault).toHaveBeenCalled();
       expect(router.navigate).toHaveBeenCalled();
     });
 
     it('should not trigger navigation on other keys', () => {
-      const profileItem = component.navItems[0];
+      const orgItem = component.navItems[0];
       const event = new KeyboardEvent('keydown', { key: 'Tab' });
       
-      component.onKeydown(event, profileItem);
+      component.onKeydown(event, orgItem);
       
       expect(router.navigate).not.toHaveBeenCalled();
     });
@@ -182,14 +183,7 @@ describe('DashboardSideNavComponent', () => {
 
     it('should have aria-label on buttons', () => {
       const buttons = fixture.nativeElement.querySelectorAll('.orb-side-nav__button');
-      expect(buttons[0].getAttribute('aria-label')).toBe('Edit Profile');
-    });
-
-    it('should have aria-disabled on disabled buttons', () => {
-      const buttons = fixture.nativeElement.querySelectorAll('.orb-side-nav__button');
-      // Payment (index 2) and Integrations (index 3) are disabled
-      expect(buttons[2].getAttribute('aria-disabled')).toBe('true');
-      expect(buttons[3].getAttribute('aria-disabled')).toBe('true');
+      expect(buttons[0].getAttribute('aria-label')).toBe('Organizations');
     });
 
     it('should hide icons from screen readers', () => {
@@ -203,18 +197,18 @@ describe('DashboardSideNavComponent', () => {
   describe('events', () => {
     it('should emit itemClicked event on button click', () => {
       spyOn(component.itemClicked, 'emit');
-      const profileItem = component.navItems[0];
+      const orgItem = component.navItems[0];
       
-      component.onItemClick(profileItem);
+      component.onItemClick(orgItem);
       
-      expect(component.itemClicked.emit).toHaveBeenCalledWith(profileItem);
+      expect(component.itemClicked.emit).toHaveBeenCalledWith(orgItem);
     });
 
     it('should not emit itemClicked for disabled items', () => {
       spyOn(component.itemClicked, 'emit');
-      const paymentItem = component.navItems.find(item => item.id === 'payment');
+      const disabledItem = { ...component.navItems[0], disabled: true };
       
-      component.onItemClick(paymentItem!);
+      component.onItemClick(disabledItem);
       
       expect(component.itemClicked.emit).not.toHaveBeenCalled();
     });
@@ -245,6 +239,16 @@ describe('DashboardSideNavComponent', () => {
     it('should return item id', () => {
       const item = component.navItems[0];
       expect(component.trackByItemId(0, item)).toBe(item.id);
+    });
+  });
+
+  describe('active state', () => {
+    it('should mark current route as active', () => {
+      expect(component.isActive(component.navItems[0])).toBe(true); // organizations is active
+    });
+
+    it('should not mark other routes as active', () => {
+      expect(component.isActive(component.navItems[1])).toBe(false); // applications is not active
     });
   });
 });

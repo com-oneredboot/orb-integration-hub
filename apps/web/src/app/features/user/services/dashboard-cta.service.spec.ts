@@ -279,18 +279,20 @@ describe('DashboardCtaService', () => {
       expect(createOrgCard?.title).toBe('Create Your First Organization');
     });
 
-    it('should include manage organizations card', () => {
+    it('should include manage organizations card when user has orgs', () => {
       const user = createTestUser({ groups: ['USER', 'CUSTOMER'] });
-      const cards = service.getCustomerActionCards(user);
+      // Pass orgCount > 0 to get manage orgs card instead of create org card
+      const cards = service.getCustomerActionCards(user, 1, 0);
       
       const manageOrgCard = cards.find(c => c.id === 'action-manage-orgs');
       expect(manageOrgCard).toBeTruthy();
       expect(manageOrgCard?.title).toBe('Manage Organizations');
     });
 
-    it('should include add application card', () => {
+    it('should include add application card when user has orgs but no apps', () => {
       const user = createTestUser({ groups: ['USER', 'CUSTOMER'] });
-      const cards = service.getCustomerActionCards(user);
+      // Pass orgCount > 0 and appCount === 0 to get add app card
+      const cards = service.getCustomerActionCards(user, 1, 0);
       
       const addAppCard = cards.find(c => c.id === 'action-add-app');
       expect(addAppCard).toBeTruthy();
