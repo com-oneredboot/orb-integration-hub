@@ -37,7 +37,7 @@ def test_config() -> Config:
 @pytest.fixture
 def template(test_config: Config) -> Template:
     """Create CDK template from LambdaStack with dependencies.
-    
+
     Note: Lambda layers are deployed separately. The lambda stack reads
     layer ARNs from SSM parameters. For testing, we create a mock SSM
     parameter in the same app.
@@ -55,7 +55,7 @@ def template(test_config: Config) -> Template:
         "TestDynamoDBStack",
         config=test_config,
     )
-    
+
     # Create mock SSM parameter for layer ARN (normally created by lambda-layers stack)
     # This simulates the SSM parameter that would exist after lambda-layers deployment
     # Uses path-based naming: /customer/project/env/lambda-layers/layer-name/arn
@@ -95,13 +95,17 @@ class TestLambdaStackIAMRole:
             {
                 "RoleName": "test-project-dev-lambda-execution-role",
                 "AssumeRolePolicyDocument": {
-                    "Statement": Match.array_with([
-                        Match.object_like({
-                            "Action": "sts:AssumeRole",
-                            "Effect": "Allow",
-                            "Principal": {"Service": "lambda.amazonaws.com"},
-                        })
-                    ]),
+                    "Statement": Match.array_with(
+                        [
+                            Match.object_like(
+                                {
+                                    "Action": "sts:AssumeRole",
+                                    "Effect": "Allow",
+                                    "Principal": {"Service": "lambda.amazonaws.com"},
+                                }
+                            )
+                        ]
+                    ),
                 },
             },
         )
@@ -134,17 +138,19 @@ class TestLambdaStackSmsVerificationLambda:
         )
 
     def test_sms_verification_has_environment_variables(self, template: Template) -> None:
-        """Verify SMS Verification Lambda has required environment variables."""
+        """Verify SMS Verification Lambda has required environment variables with slash-based secret name."""
         template.has_resource_properties(
             "AWS::Lambda::Function",
             {
                 "FunctionName": "test-project-dev-sms-verification",
                 "Environment": {
-                    "Variables": Match.object_like({
-                        "SMS_ORIGINATION_NUMBER": "+15551234567",
-                        "SMS_VERIFICATION_SECRET_NAME": "test-project-dev-sms-verification-secret",
-                        "LOGGING_LEVEL": "INFO",
-                    }),
+                    "Variables": Match.object_like(
+                        {
+                            "SMS_ORIGINATION_NUMBER": "+15551234567",
+                            "SMS_VERIFICATION_SECRET_NAME": "test/project/dev/secrets/sms/verification",
+                            "LOGGING_LEVEL": "INFO",
+                        }
+                    ),
                 },
             },
         )
@@ -241,10 +247,12 @@ class TestLambdaStackCheckEmailExistsLambda:
             {
                 "FunctionName": "test-project-dev-check-email-exists",
                 "Environment": {
-                    "Variables": Match.object_like({
-                        "LOGGING_LEVEL": "INFO",
-                        "USER_POOL_ID": Match.any_value(),
-                    }),
+                    "Variables": Match.object_like(
+                        {
+                            "LOGGING_LEVEL": "INFO",
+                            "USER_POOL_ID": Match.any_value(),
+                        }
+                    ),
                 },
             },
         )
@@ -274,10 +282,12 @@ class TestLambdaStackCreateUserFromCognitoLambda:
             {
                 "FunctionName": "test-project-dev-create-user-from-cognito",
                 "Environment": {
-                    "Variables": Match.object_like({
-                        "LOGGING_LEVEL": "INFO",
-                        "USER_POOL_ID": Match.any_value(),
-                    }),
+                    "Variables": Match.object_like(
+                        {
+                            "LOGGING_LEVEL": "INFO",
+                            "USER_POOL_ID": Match.any_value(),
+                        }
+                    ),
                 },
             },
         )
@@ -307,10 +317,12 @@ class TestLambdaStackGetCurrentUserLambda:
             {
                 "FunctionName": "test-project-dev-get-current-user",
                 "Environment": {
-                    "Variables": Match.object_like({
-                        "LOGGING_LEVEL": "INFO",
-                        "USERS_TABLE_NAME": Match.any_value(),
-                    }),
+                    "Variables": Match.object_like(
+                        {
+                            "LOGGING_LEVEL": "INFO",
+                            "USERS_TABLE_NAME": Match.any_value(),
+                        }
+                    ),
                 },
             },
         )
@@ -409,11 +421,13 @@ class TestLambdaStackTags:
         template.has_resource_properties(
             "AWS::Lambda::Function",
             {
-                "Tags": Match.array_with([
-                    Match.object_like({"Key": "Billable", "Value": "true"}),
-                    Match.object_like({"Key": "CustomerId", "Value": "test"}),
-                    Match.object_like({"Key": "Environment", "Value": "dev"}),
-                    Match.object_like({"Key": "ProjectId", "Value": "project"}),
-                ]),
+                "Tags": Match.array_with(
+                    [
+                        Match.object_like({"Key": "Billable", "Value": "true"}),
+                        Match.object_like({"Key": "CustomerId", "Value": "test"}),
+                        Match.object_like({"Key": "Environment", "Value": "dev"}),
+                        Match.object_like({"Key": "ProjectId", "Value": "project"}),
+                    ]
+                ),
             },
         )

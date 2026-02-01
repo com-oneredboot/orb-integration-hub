@@ -60,9 +60,7 @@ def template(test_config: Config) -> Template:
     ssm.StringParameter(
         cognito_stack,
         "MockOrganizationsSecurityLayerArn",
-        parameter_name=test_config.ssm_parameter_name(
-            "lambda-layers/organizations-security/arn"
-        ),
+        parameter_name=test_config.ssm_parameter_name("lambda-layers/organizations-security/arn"),
         string_value="arn:aws:lambda:us-east-1:123456789012:layer:test-project-dev-organizations-security-layer:1",
     )
 
@@ -88,7 +86,7 @@ def template(test_config: Config) -> Template:
 
 class TestAppSyncStackGraphQLApi:
     """Tests for GraphQL API.
-    
+
     Note: The generated construct from orb-schema-generator v0.18.3+ uses Cognito
     User Pool as default auth type and configurable API name from schema-generator.yml.
     """
@@ -149,14 +147,12 @@ class TestAppSyncStackIAMRoles:
 
 class TestAppSyncStackDataSources:
     """Tests for data sources.
-    
+
     Note: The generated construct only creates Lambda data sources, not DynamoDB
     data sources. DynamoDB operations are handled via VTL resolvers in the schema.
     """
 
-    def test_creates_sms_verification_lambda_data_source(
-        self, template: Template
-    ) -> None:
+    def test_creates_sms_verification_lambda_data_source(self, template: Template) -> None:
         """Verify Lambda data source is created for SMS verification."""
         template.has_resource_properties(
             "AWS::AppSync::DataSource",
@@ -166,9 +162,7 @@ class TestAppSyncStackDataSources:
             },
         )
 
-    def test_creates_check_email_exists_lambda_data_source(
-        self, template: Template
-    ) -> None:
+    def test_creates_check_email_exists_lambda_data_source(self, template: Template) -> None:
         """Verify Lambda data source is created for CheckEmailExists."""
         template.has_resource_properties(
             "AWS::AppSync::DataSource",
@@ -178,9 +172,7 @@ class TestAppSyncStackDataSources:
             },
         )
 
-    def test_creates_create_user_from_cognito_lambda_data_source(
-        self, template: Template
-    ) -> None:
+    def test_creates_create_user_from_cognito_lambda_data_source(self, template: Template) -> None:
         """Verify Lambda data source is created for CreateUserFromCognito."""
         template.has_resource_properties(
             "AWS::AppSync::DataSource",
@@ -193,7 +185,7 @@ class TestAppSyncStackDataSources:
 
 class TestAppSyncStackResolvers:
     """Tests for GraphQL resolvers.
-    
+
     Note: The generated construct creates resolvers for Lambda-backed operations.
     DynamoDB-backed operations (like UsersCreate) are not included in the generated
     construct - they would need to be added separately or via schema-generator config.
@@ -260,28 +252,28 @@ class TestAppSyncStackSSMParameters:
             },
         )
 
+
+class TestAppSyncStackSecrets:
+    """Tests for secrets with slash-based naming convention."""
+
+    def test_creates_api_key_secret(self, template: Template) -> None:
+        """Verify API key is stored in Secrets Manager with slash-based naming."""
+        template.has_resource_properties(
+            "AWS::SecretsManager::Secret",
+            {
+                "Name": "test/project/dev/secrets/appsync/api-key",
+                "Description": "GraphQL API Key for frontend authentication",
+            },
+        )
+
     def test_exports_api_key_secret_name(self, template: Template) -> None:
-        """Verify API key secret name is exported to SSM with path-based naming."""
-        # This is created by our wrapper stack, uses test config
+        """Verify SSM parameter contains the new slash-based secret name."""
         template.has_resource_properties(
             "AWS::SSM::Parameter",
             {
                 "Name": "/test/project/dev/appsync/api-key-secret-name",
+                "Value": "test/project/dev/secrets/appsync/api-key",
                 "Type": "String",
-            },
-        )
-
-
-class TestAppSyncStackSecrets:
-    """Tests for secrets."""
-
-    def test_creates_api_key_secret(self, template: Template) -> None:
-        """Verify API key is stored in Secrets Manager."""
-        template.has_resource_properties(
-            "AWS::SecretsManager::Secret",
-            {
-                "Name": "test-project-dev-graphql-api-key",
-                "Description": "GraphQL API Key for frontend authentication",
             },
         )
 

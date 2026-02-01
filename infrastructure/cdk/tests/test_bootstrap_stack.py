@@ -154,20 +154,39 @@ class TestBootstrapStackIAM:
 
 
 class TestBootstrapStackSecrets:
-    """Tests for Secrets Manager resources."""
+    """Tests for Secrets Manager resources with slash-based naming convention."""
 
     def test_creates_sms_verification_secret(self, template: Template) -> None:
-        """Verify SMS verification secret is created."""
+        """Verify SMS verification secret uses slash-based naming convention."""
         template.has_resource_properties(
             "AWS::SecretsManager::Secret",
             {
-                "Name": "test-project-dev-sms-verification-secret",
+                "Name": "test/project/dev/secrets/sms/verification",
                 "GenerateSecretString": Match.object_like(
                     {
                         "GenerateStringKey": "secret_key",
                         "PasswordLength": 32,
                     }
                 ),
+            },
+        )
+
+    def test_creates_github_actions_secret(self, template: Template) -> None:
+        """Verify GitHub Actions secret uses slash-based naming convention."""
+        template.has_resource_properties(
+            "AWS::SecretsManager::Secret",
+            {
+                "Name": "test/project/dev/secrets/github/access-key",
+            },
+        )
+
+    def test_exports_sms_verification_secret_name(self, template: Template) -> None:
+        """Verify SMS verification secret name is exported to SSM."""
+        template.has_resource_properties(
+            "AWS::SSM::Parameter",
+            {
+                "Name": "/test/project/dev/secrets/sms-verification/name",
+                "Type": "String",
             },
         )
 

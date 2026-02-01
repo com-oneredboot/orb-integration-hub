@@ -61,21 +61,21 @@ repos:
 
       - id: black-infra
         name: Format infrastructure Python with black
-        entry: bash -c 'cd infrastructure && pipenv run black --line-length=100 "$@"' --
+        entry: bash -c 'cd infrastructure && pipenv run black --line-length=100 "${@#infrastructure/}"' --
         language: system
         types: [python]
         files: ^infrastructure/.*\.py$
 
       - id: ruff-infra
         name: Lint infrastructure Python with ruff
-        entry: bash -c 'cd infrastructure && pipenv run ruff check "$@"' --
+        entry: bash -c 'cd infrastructure && pipenv run ruff check --ignore E402 "${@#infrastructure/}"' --
         language: system
         types: [python]
         files: ^infrastructure/.*\.py$
 
       - id: mypy-infra
         name: Type check infrastructure with mypy
-        entry: bash -c 'cd infrastructure && pipenv run mypy --ignore-missing-imports "$@"' --
+        entry: bash -c 'cd infrastructure && pipenv run mypy --ignore-missing-imports "${@#infrastructure/}"' --
         language: system
         types: [python]
         files: ^infrastructure/.*\.py$

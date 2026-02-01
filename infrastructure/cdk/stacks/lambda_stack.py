@@ -61,14 +61,10 @@ class LambdaStack(Stack):
         # Create Lambda functions
         self.sms_verification_lambda = self._create_sms_verification_lambda()
         self.cognito_group_manager_lambda = self._create_cognito_group_manager_lambda()
-        self.user_status_calculator_lambda = (
-            self._create_user_status_calculator_lambda()
-        )
+        self.user_status_calculator_lambda = self._create_user_status_calculator_lambda()
         self.organizations_lambda = self._create_organizations_lambda()
         self.check_email_exists_lambda = self._create_check_email_exists_lambda()
-        self.create_user_from_cognito_lambda = (
-            self._create_create_user_from_cognito_lambda()
-        )
+        self.create_user_from_cognito_lambda = self._create_create_user_from_cognito_lambda()
         self.get_current_user_lambda = self._create_get_current_user_lambda()
 
     def _apply_tags(self) -> None:
@@ -129,14 +125,14 @@ class LambdaStack(Stack):
             )
         )
 
-        # Secrets Manager Access
+        # Secrets Manager Access - uses slash-based naming convention
         role.add_to_policy(
             iam.PolicyStatement(
                 sid="SecretsManagerAccess",
                 effect=iam.Effect.ALLOW,
                 actions=["secretsmanager:GetSecretValue"],
                 resources=[
-                    f"arn:aws:secretsmanager:{self.region}:{self.account}:secret:{self.config.prefix}-*",
+                    f"arn:aws:secretsmanager:{self.region}:{self.account}:secret:{self.config.customer_id}/{self.config.project_id}/{self.config.environment}/secrets/*",
                 ],
             )
         )
@@ -297,9 +293,7 @@ class LambdaStack(Stack):
                 "LOGGING_LEVEL": "INFO",
                 "VERSION": "1",
                 "SMS_ORIGINATION_NUMBER": self.config.sms_origination_number,
-                "SMS_VERIFICATION_SECRET_NAME": self.config.resource_name(
-                    "sms-verification-secret"
-                ),
+                "SMS_VERIFICATION_SECRET_NAME": self.config.secret_name("sms", "verification"),
                 "SMS_RATE_LIMIT_TABLE_NAME": self.dynamodb_stack.tables[
                     "sms-rate-limit"
                 ].table_name,
@@ -382,13 +376,9 @@ class LambdaStack(Stack):
         """
         # Read layer ARN from SSM parameter (set by lambda-layers stack)
         # Uses path-based naming: /customer/project/env/lambda-layers/layer-name/arn
-        organizations_security_layer_arn = (
-            ssm.StringParameter.value_for_string_parameter(
-                self,
-                self.config.ssm_parameter_name(
-                    "lambda-layers/organizations-security/arn"
-                ),
-            )
+        organizations_security_layer_arn = ssm.StringParameter.value_for_string_parameter(
+            self,
+            self.config.ssm_parameter_name("lambda-layers/organizations-security/arn"),
         )
 
         # Create layer reference from ARN
@@ -414,9 +404,7 @@ class LambdaStack(Stack):
                 "ALERTS_QUEUE": f"arn:aws:sqs:{self.region}:{self.account}:{self.config.prefix}-alerts-queue",
                 "LOGGING_LEVEL": "INFO",
                 "VERSION": "1",
-                "ORGANIZATIONS_TABLE_NAME": self.dynamodb_stack.tables[
-                    "organizations"
-                ].table_name,
+                "ORGANIZATIONS_TABLE_NAME": self.dynamodb_stack.tables["organizations"].table_name,
                 "USER_POOL_ID": self.cognito_stack.user_pool.user_pool_id,
             },
             dead_letter_queue_enabled=True,
@@ -490,9 +478,7 @@ class LambdaStack(Stack):
             description="Lambda function to create user records from Cognito data (public endpoint)",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="index.lambda_handler",
-            code=lambda_.Code.from_asset(
-                "../apps/api/lambdas/create_user_from_cognito"
-            ),
+            code=lambda_.Code.from_asset("../apps/api/lambdas/create_user_from_cognito"),
             timeout=Duration.seconds(10),
             memory_size=128,
             role=self.lambda_execution_role,

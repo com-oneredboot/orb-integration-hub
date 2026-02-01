@@ -44,6 +44,10 @@ const ssmClient = new SSMClient(clientConfig);
 const ssmParameterName = (resourcePath) => 
   `/${CONFIG.customerId}/${CONFIG.projectId}/${CONFIG.environment}/${resourcePath}`;
 
+// Helper to generate path-based secret names (mirrors Config.secret_name in CDK)
+const secretName = (service, resource) =>
+  `${CONFIG.customerId}/${CONFIG.projectId}/${CONFIG.environment}/secrets/${service}/${resource}`;
+
 const FRONTEND_SECRETS_MAP = {
   'COGNITO_USER_POOL_ID': {
     type: 'parameter',
@@ -67,7 +71,7 @@ const FRONTEND_SECRETS_MAP = {
   },
   'GRAPHQL_API_KEY': {
     type: 'secret',
-    name: `${CONFIG.customerId}-${CONFIG.projectId}-${CONFIG.environment}-graphql-api-key`
+    name: secretName('appsync', 'api-key')
   }
 };
 

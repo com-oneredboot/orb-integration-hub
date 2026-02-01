@@ -262,7 +262,9 @@ class BootstrapStack(Stack):
                 iam.PolicyStatement(
                     effect=iam.Effect.ALLOW,
                     actions=["lambda:GetEventSourceMapping"],
-                    resources=[f"arn:aws:lambda:{self.region}:{self.account}:event-source-mapping:*"],
+                    resources=[
+                        f"arn:aws:lambda:{self.region}:{self.account}:event-source-mapping:*"
+                    ],
                 ),
             ],
         )
@@ -307,7 +309,7 @@ class BootstrapStack(Stack):
         secretsmanager.Secret(
             self,
             "GitHubActionsSecretAccessKey",
-            secret_name=self.config.resource_name("github-actions-secret-access-key"),
+            secret_name=self.config.secret_name("github", "access-key"),
             secret_string_value=access_key.secret_access_key,
         )
 
@@ -559,7 +561,7 @@ class BootstrapStack(Stack):
         secret = secretsmanager.Secret(
             self,
             "SmsVerificationSecret",
-            secret_name=self.config.resource_name("sms-verification-secret"),
+            secret_name=self.config.secret_name("sms", "verification"),
             description="Secret key for SMS verification code generation",
             generate_secret_string=secretsmanager.SecretStringGenerator(
                 secret_string_template="{}",

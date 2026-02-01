@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Migrated AWS Secrets Manager naming from dash-based to slash-based convention (#32)
+  - Old: `orb-integration-hub-dev-graphql-api-key`
+  - New: `orb/integration-hub/dev/secrets/appsync/api-key`
+  - Added `Config.secret_name()` method for consistent secret naming
+  - Updated Bootstrap Stack (GitHub Actions, SMS verification secrets)
+  - Updated AppSync Stack (GraphQL API key secret)
+  - Updated Lambda Stack (SMS verification secret environment variable)
+  - Updated Lambda IAM policy to allow new secret path pattern
+  - Updated frontend scripts with `secretName()` helper function
+  - Property tests validate naming format consistency
+  - Spec: `.kiro/specs/secrets-naming-convention/`
+
 ### Added
 - Organizations-Applications Integration feature
   - Application count display on Organizations list with clickable navigation

@@ -58,6 +58,10 @@ const ssmClient = new SSMClient(clientConfig);
 const ssmParameterName = (resourcePath) => 
   `/${CONFIG.customerId}/${CONFIG.projectId}/${CONFIG.environment}/${resourcePath}`;
 
+// Helper to generate path-based secret names (mirrors Config.secret_name in CDK)
+const secretName = (service, resource) =>
+  `${CONFIG.customerId}/${CONFIG.projectId}/${CONFIG.environment}/secrets/${service}/${resource}`;
+
 /**
  * Frontend secrets mapping - defines which secrets/parameters are needed
  * for the frontend environment configuration
@@ -87,10 +91,10 @@ const FRONTEND_SECRETS_MAP = {
     value: CONFIG.region
   },
   
-  // GraphQL API Key - this should be a secret
+  // GraphQL API Key - uses slash-based secret naming convention
   'GRAPHQL_API_KEY': {
     type: 'secret',
-    name: `${CONFIG.customerId}-${CONFIG.projectId}-${CONFIG.environment}-graphql-api-key`
+    name: secretName('appsync', 'api-key')
   }
 };
 

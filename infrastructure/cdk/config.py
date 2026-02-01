@@ -61,6 +61,25 @@ class Config:
         """
         return f"/{self.customer_id}/{self.project_id}/{self.environment}/{resource_path}"
 
+    def secret_name(self, service: str, resource: str) -> str:
+        """Generate path-based secret name for Secrets Manager.
+
+        Follows the same slash-based convention as SSM Parameter Store for consistency.
+
+        Pattern: {customer_id}/{project_id}/{environment}/secrets/{service}/{resource}
+        Example: orb/integration-hub/dev/secrets/github/access-key
+
+        Args:
+            service: Service category (e.g., "github", "appsync", "sms")
+            resource: Resource identifier (e.g., "access-key", "api-key", "verification")
+
+        Returns:
+            Full secret name path (without leading slash for Secrets Manager)
+        """
+        return (
+            f"{self.customer_id}/{self.project_id}/{self.environment}/secrets/{service}/{resource}"
+        )
+
     @property
     def standard_tags(self) -> dict:
         """Standard tags applied to all resources."""

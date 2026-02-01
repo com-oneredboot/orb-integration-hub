@@ -120,11 +120,11 @@ class AppSyncStack(Stack):
             expires=Expiration.after(Duration.days(90)).to_epoch(),
         )
 
-        # Store API key in Secrets Manager
+        # Store API key in Secrets Manager with slash-based naming
         secretsmanager.Secret(
             self,
             "ApiKeySecret",
-            secret_name=self.config.resource_name("graphql-api-key"),
+            secret_name=self.config.secret_name("appsync", "api-key"),
             description="GraphQL API Key for frontend authentication",
             secret_string_value=SecretValue.unsafe_plain_text(api_key.attr_api_key),
         )
@@ -137,13 +137,13 @@ class AppSyncStack(Stack):
             self,
             "ApiKeySecretNameParameter",
             parameter_name=self.config.ssm_parameter_name("appsync/api-key-secret-name"),
-            string_value=self.config.resource_name("graphql-api-key"),
+            string_value=self.config.secret_name("appsync", "api-key"),
             description="Name of the secret containing the GraphQL API key",
         )
 
     def _create_waf_web_acl(self) -> wafv2.CfnWebACL:
         """Create WAF WebACL with managed rules and rate limiting.
-        
+
         Includes:
         - AWSManagedRulesCommonRuleSet: Protection against common web exploits
         - AWSManagedRulesKnownBadInputsRuleSet: Protection against known bad inputs
