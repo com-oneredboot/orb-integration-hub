@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "orb-templates": {
-      "command": "uvx",
-      "args": ["--index-url", "https://aws:@orb-infrastructure-shared-codeartifact-domain-432045270100.d.codeartifact.us-east-1.amazonaws.com/pypi/orb-infrastructure-shared-pypi-repo/simple/", "orb-templates-mcp"],
+      "command": "pipenv",
+      "args": ["run", "uvx", "--index-url", "https://aws:@orb-infrastructure-shared-codeartifact-domain-432045270100.d.codeartifact.us-east-1.amazonaws.com/pypi/orb-infrastructure-shared-pypi-repo/simple/", "orb-templates-mcp"],
       "disabled": false,
       "autoApprove": ["search_standards_tool", "validate_naming_tool", "get_workflow_template_tool"]
     }

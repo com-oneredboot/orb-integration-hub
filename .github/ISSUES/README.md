@@ -15,6 +15,7 @@
 | #64 | orb-schema-generator | Enhancement: Generate SSM parameters for DynamoDB table ARNs and names | Open | Low |
 | #65 | orb-schema-generator | Enhancement: Support PITR configuration in DynamoDB table schemas | Open | Low |
 | #66 | orb-schema-generator | Documentation: Add schema type generation matrix and construct extension examples | Open | Low |
+| #40 | orb-templates | orb-templates-mcp: uvx cannot authenticate with CodeArtifact | Open | High |
 | #39 | orb-templates | Add AWS Resource Naming Conventions for Secrets Manager and CloudWatch Logs | Open | Medium |
 | #37 | orb-templates | Add Guidance: Use pipenv sync for CI with CodeArtifact Dependencies | Open | Medium |
 | #36 | orb-templates | Add 'No CloudFormation Outputs' Rule to Infrastructure Standards | Open | Medium |
