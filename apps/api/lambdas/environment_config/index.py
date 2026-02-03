@@ -144,9 +144,7 @@ class EnvironmentConfigService:
                 "environment": environment,
                 "organizationId": organization_id,
                 "allowedOrigins": args.get("allowedOrigins", []),
-                "rateLimitPerMinute": args.get(
-                    "rateLimitPerMinute", DEFAULT_RATE_LIMIT_PER_MINUTE
-                ),
+                "rateLimitPerMinute": args.get("rateLimitPerMinute", DEFAULT_RATE_LIMIT_PER_MINUTE),
                 "rateLimitPerDay": args.get("rateLimitPerDay", DEFAULT_RATE_LIMIT_PER_DAY),
                 "webhookEnabled": False,
                 "featureFlags": args.get("featureFlags", {}),
@@ -255,7 +253,6 @@ class EnvironmentConfigService:
         except Exception as e:
             logger.error(f"Error updating config: {e}")
             return self._error_response("ENV999", f"Internal error: {e}")
-
 
     def add_allowed_origin(self, event: dict[str, Any]) -> dict[str, Any]:
         """Add an allowed origin to the configuration."""
@@ -415,9 +412,7 @@ class EnvironmentConfigService:
                     # Validate webhook URL
                     if arg_name == "webhookUrl" and value:
                         if not value.startswith("https://"):
-                            return self._error_response(
-                                "ENV009", "Webhook URL must use HTTPS"
-                            )
+                            return self._error_response("ENV009", "Webhook URL must use HTTPS")
                     update_parts.append(f"{db_name} = :{arg_name}")
                     expr_values[f":{arg_name}"] = value
 
@@ -512,7 +507,6 @@ class EnvironmentConfigService:
         except Exception as e:
             logger.error(f"Error regenerating webhook secret: {e}")
             return self._error_response("ENV999", f"Internal error: {e}")
-
 
     def set_feature_flag(self, event: dict[str, Any]) -> dict[str, Any]:
         """Set a feature flag value."""

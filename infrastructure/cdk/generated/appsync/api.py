@@ -44,13 +44,12 @@ class AppSyncApi(Construct):
         user_pool_id = ssm.StringParameter.value_for_string_parameter(
             self, "/orb/integration-hub/dev/cognito/user-pool-id"
         )
-        user_pool = cognito.UserPool.from_user_pool_id(
-            self, "UserPool", user_pool_id
-        )
+        user_pool = cognito.UserPool.from_user_pool_id(self, "UserPool", user_pool_id)
 
         # Create CloudWatch Logs role for AppSync
         logging_role = iam.Role(
-            self, "AppSyncLoggingRole",
+            self,
+            "AppSyncLoggingRole",
             assumed_by=iam.ServicePrincipal("appsync.amazonaws.com"),
             managed_policies=[
                 iam.ManagedPolicy.from_aws_managed_policy_name(
@@ -70,7 +69,8 @@ class AppSyncApi(Construct):
 
         # Create GraphQL API
         self.api = appsync.GraphqlApi(
-            self, "Api",
+            self,
+            "Api",
             name="orb-integration-hub-dev-appsync-api",
             definition=appsync.Definition.from_file(str(schema_path)),
             authorization_config=appsync.AuthorizationConfig(
@@ -80,7 +80,9 @@ class AppSyncApi(Construct):
                         user_pool=user_pool,
                     ),
                 ),
-                additional_authorization_modes=additional_auth_modes if additional_auth_modes else None,
+                additional_authorization_modes=(
+                    additional_auth_modes if additional_auth_modes else None
+                ),
             ),
             log_config=appsync.LogConfig(
                 field_log_level=appsync.FieldLogLevel.ALL,
@@ -92,13 +94,15 @@ class AppSyncApi(Construct):
 
         # SSM Parameters for API discovery
         ssm.StringParameter(
-            self, "ApiIdParameter",
+            self,
+            "ApiIdParameter",
             parameter_name="/orb/integration-hub/dev/appsync/api-id",
             string_value=self.api.api_id,
         )
 
         ssm.StringParameter(
-            self, "GraphqlUrlParameter",
+            self,
+            "GraphqlUrlParameter",
             parameter_name="/orb/integration-hub/dev/appsync/graphql-url",
             string_value=self.api.graphql_url,
         )
@@ -116,10 +120,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="OwnershipTransferRequestsCreate",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.OwnershipTransferRequestsCreate.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.OwnershipTransferRequestsCreate.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.OwnershipTransferRequestsCreate.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.OwnershipTransferRequestsCreate.response.vtl"
+                )
             ),
         )
 
@@ -128,10 +138,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="OwnershipTransferRequestsUpdate",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.OwnershipTransferRequestsUpdate.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.OwnershipTransferRequestsUpdate.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.OwnershipTransferRequestsUpdate.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.OwnershipTransferRequestsUpdate.response.vtl"
+                )
             ),
         )
 
@@ -140,10 +156,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="OwnershipTransferRequestsDelete",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.OwnershipTransferRequestsDelete.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.OwnershipTransferRequestsDelete.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.OwnershipTransferRequestsDelete.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.OwnershipTransferRequestsDelete.response.vtl"
+                )
             ),
         )
 
@@ -152,10 +174,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="OwnershipTransferRequestsDisable",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.OwnershipTransferRequestsDisable.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.OwnershipTransferRequestsDisable.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.OwnershipTransferRequestsDisable.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.OwnershipTransferRequestsDisable.response.vtl"
+                )
             ),
         )
 
@@ -164,10 +192,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="OwnershipTransferRequestsGet",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OwnershipTransferRequestsGet.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OwnershipTransferRequestsGet.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OwnershipTransferRequestsGet.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OwnershipTransferRequestsGet.response.vtl"
+                )
             ),
         )
 
@@ -176,10 +210,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="OwnershipTransferRequestsListByTransferId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OwnershipTransferRequestsListByTransferId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OwnershipTransferRequestsListByTransferId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OwnershipTransferRequestsListByTransferId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OwnershipTransferRequestsListByTransferId.response.vtl"
+                )
             ),
         )
 
@@ -188,10 +228,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="OwnershipTransferRequestsListByCurrentOwnerId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OwnershipTransferRequestsListByCurrentOwnerId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OwnershipTransferRequestsListByCurrentOwnerId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OwnershipTransferRequestsListByCurrentOwnerId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OwnershipTransferRequestsListByCurrentOwnerId.response.vtl"
+                )
             ),
         )
 
@@ -200,10 +246,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="OwnershipTransferRequestsListByCurrentOwnerIdAndCreatedAt",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OwnershipTransferRequestsListByCurrentOwnerIdAndCreatedAt.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OwnershipTransferRequestsListByCurrentOwnerIdAndCreatedAt.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OwnershipTransferRequestsListByCurrentOwnerIdAndCreatedAt.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OwnershipTransferRequestsListByCurrentOwnerIdAndCreatedAt.response.vtl"
+                )
             ),
         )
 
@@ -212,10 +264,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="OwnershipTransferRequestsListByNewOwnerId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OwnershipTransferRequestsListByNewOwnerId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OwnershipTransferRequestsListByNewOwnerId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OwnershipTransferRequestsListByNewOwnerId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OwnershipTransferRequestsListByNewOwnerId.response.vtl"
+                )
             ),
         )
 
@@ -224,10 +282,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="OwnershipTransferRequestsListByNewOwnerIdAndCreatedAt",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OwnershipTransferRequestsListByNewOwnerIdAndCreatedAt.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OwnershipTransferRequestsListByNewOwnerIdAndCreatedAt.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OwnershipTransferRequestsListByNewOwnerIdAndCreatedAt.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OwnershipTransferRequestsListByNewOwnerIdAndCreatedAt.response.vtl"
+                )
             ),
         )
 
@@ -236,10 +300,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="OwnershipTransferRequestsListByStatus",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OwnershipTransferRequestsListByStatus.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OwnershipTransferRequestsListByStatus.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OwnershipTransferRequestsListByStatus.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OwnershipTransferRequestsListByStatus.response.vtl"
+                )
             ),
         )
 
@@ -248,10 +318,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="OwnershipTransferRequestsListByStatusAndCreatedAt",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OwnershipTransferRequestsListByStatusAndCreatedAt.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OwnershipTransferRequestsListByStatusAndCreatedAt.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OwnershipTransferRequestsListByStatusAndCreatedAt.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OwnershipTransferRequestsListByStatusAndCreatedAt.response.vtl"
+                )
             ),
         )
 
@@ -260,13 +336,18 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="OwnershipTransferRequestsListByStatusAndExpiresAt",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OwnershipTransferRequestsListByStatusAndExpiresAt.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OwnershipTransferRequestsListByStatusAndExpiresAt.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OwnershipTransferRequestsListByStatusAndExpiresAt.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OwnershipTransferRequestsListByStatusAndExpiresAt.response.vtl"
+                )
             ),
         )
-
 
         # Organizations data source and resolvers
         organizations_data_source = self.api.add_dynamo_db_data_source(
@@ -339,10 +420,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="OrganizationsListByOrganizationId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OrganizationsListByOrganizationId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OrganizationsListByOrganizationId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OrganizationsListByOrganizationId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OrganizationsListByOrganizationId.response.vtl"
+                )
             ),
         )
 
@@ -351,10 +438,15 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="OrganizationsListByOwnerId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OrganizationsListByOwnerId.request.vtl")
+                str(
+                    Path(__file__).parent / "resolvers/Query.OrganizationsListByOwnerId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OrganizationsListByOwnerId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OrganizationsListByOwnerId.response.vtl"
+                )
             ),
         )
 
@@ -363,10 +455,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="OrganizationsListByOwnerIdAndCreatedAt",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OrganizationsListByOwnerIdAndCreatedAt.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OrganizationsListByOwnerIdAndCreatedAt.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OrganizationsListByOwnerIdAndCreatedAt.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OrganizationsListByOwnerIdAndCreatedAt.response.vtl"
+                )
             ),
         )
 
@@ -378,7 +476,9 @@ class AppSyncApi(Construct):
                 str(Path(__file__).parent / "resolvers/Query.OrganizationsListByStatus.request.vtl")
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OrganizationsListByStatus.response.vtl")
+                str(
+                    Path(__file__).parent / "resolvers/Query.OrganizationsListByStatus.response.vtl"
+                )
             ),
         )
 
@@ -387,13 +487,18 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="OrganizationsListByStatusAndCreatedAt",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OrganizationsListByStatusAndCreatedAt.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OrganizationsListByStatusAndCreatedAt.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OrganizationsListByStatusAndCreatedAt.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OrganizationsListByStatusAndCreatedAt.response.vtl"
+                )
             ),
         )
-
 
         # ApplicationEnvironmentConfig data source and resolvers
         application_environment_config_data_source = self.api.add_dynamo_db_data_source(
@@ -406,10 +511,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationEnvironmentConfigCreate",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationEnvironmentConfigCreate.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationEnvironmentConfigCreate.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationEnvironmentConfigCreate.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationEnvironmentConfigCreate.response.vtl"
+                )
             ),
         )
 
@@ -418,10 +529,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationEnvironmentConfigUpdate",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationEnvironmentConfigUpdate.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationEnvironmentConfigUpdate.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationEnvironmentConfigUpdate.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationEnvironmentConfigUpdate.response.vtl"
+                )
             ),
         )
 
@@ -430,10 +547,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationEnvironmentConfigDelete",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationEnvironmentConfigDelete.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationEnvironmentConfigDelete.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationEnvironmentConfigDelete.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationEnvironmentConfigDelete.response.vtl"
+                )
             ),
         )
 
@@ -442,10 +565,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationEnvironmentConfigDisable",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationEnvironmentConfigDisable.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationEnvironmentConfigDisable.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationEnvironmentConfigDisable.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationEnvironmentConfigDisable.response.vtl"
+                )
             ),
         )
 
@@ -454,10 +583,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationEnvironmentConfigGet",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationEnvironmentConfigGet.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationEnvironmentConfigGet.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationEnvironmentConfigGet.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationEnvironmentConfigGet.response.vtl"
+                )
             ),
         )
 
@@ -466,10 +601,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationEnvironmentConfigListByApplicationId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationEnvironmentConfigListByApplicationId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationEnvironmentConfigListByApplicationId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationEnvironmentConfigListByApplicationId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationEnvironmentConfigListByApplicationId.response.vtl"
+                )
             ),
         )
 
@@ -478,10 +619,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationEnvironmentConfigListByEnvironment",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationEnvironmentConfigListByEnvironment.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationEnvironmentConfigListByEnvironment.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationEnvironmentConfigListByEnvironment.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationEnvironmentConfigListByEnvironment.response.vtl"
+                )
             ),
         )
 
@@ -490,10 +637,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationEnvironmentConfigListByApplicationIdAndEnvironment",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationEnvironmentConfigListByApplicationIdAndEnvironment.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationEnvironmentConfigListByApplicationIdAndEnvironment.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationEnvironmentConfigListByApplicationIdAndEnvironment.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationEnvironmentConfigListByApplicationIdAndEnvironment.response.vtl"
+                )
             ),
         )
 
@@ -502,10 +655,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationEnvironmentConfigListByOrganizationId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationEnvironmentConfigListByOrganizationId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationEnvironmentConfigListByOrganizationId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationEnvironmentConfigListByOrganizationId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationEnvironmentConfigListByOrganizationId.response.vtl"
+                )
             ),
         )
 
@@ -514,13 +673,18 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationEnvironmentConfigListByOrganizationIdAndEnvironment",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationEnvironmentConfigListByOrganizationIdAndEnvironment.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationEnvironmentConfigListByOrganizationIdAndEnvironment.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationEnvironmentConfigListByOrganizationIdAndEnvironment.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationEnvironmentConfigListByOrganizationIdAndEnvironment.response.vtl"
+                )
             ),
         )
-
 
         # Notifications data source and resolvers
         notifications_data_source = self.api.add_dynamo_db_data_source(
@@ -593,10 +757,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="NotificationsListByNotificationId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.NotificationsListByNotificationId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.NotificationsListByNotificationId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.NotificationsListByNotificationId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.NotificationsListByNotificationId.response.vtl"
+                )
             ),
         )
 
@@ -605,10 +775,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="NotificationsListByRecipientUserId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.NotificationsListByRecipientUserId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.NotificationsListByRecipientUserId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.NotificationsListByRecipientUserId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.NotificationsListByRecipientUserId.response.vtl"
+                )
             ),
         )
 
@@ -617,10 +793,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="NotificationsListByRecipientUserIdAndCreatedAt",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.NotificationsListByRecipientUserIdAndCreatedAt.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.NotificationsListByRecipientUserIdAndCreatedAt.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.NotificationsListByRecipientUserIdAndCreatedAt.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.NotificationsListByRecipientUserIdAndCreatedAt.response.vtl"
+                )
             ),
         )
 
@@ -641,13 +823,18 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="NotificationsListByTypeAndStatus",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.NotificationsListByTypeAndStatus.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.NotificationsListByTypeAndStatus.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.NotificationsListByTypeAndStatus.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.NotificationsListByTypeAndStatus.response.vtl"
+                )
             ),
         )
-
 
         # PrivacyRequests data source and resolvers
         privacy_requests_data_source = self.api.add_dynamo_db_data_source(
@@ -699,7 +886,9 @@ class AppSyncApi(Construct):
                 str(Path(__file__).parent / "resolvers/Mutation.PrivacyRequestsDisable.request.vtl")
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.PrivacyRequestsDisable.response.vtl")
+                str(
+                    Path(__file__).parent / "resolvers/Mutation.PrivacyRequestsDisable.response.vtl"
+                )
             ),
         )
 
@@ -720,10 +909,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="PrivacyRequestsListByRequestId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.PrivacyRequestsListByRequestId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.PrivacyRequestsListByRequestId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.PrivacyRequestsListByRequestId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.PrivacyRequestsListByRequestId.response.vtl"
+                )
             ),
         )
 
@@ -732,10 +927,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="PrivacyRequestsListByRequestType",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.PrivacyRequestsListByRequestType.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.PrivacyRequestsListByRequestType.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.PrivacyRequestsListByRequestType.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.PrivacyRequestsListByRequestType.response.vtl"
+                )
             ),
         )
 
@@ -744,10 +945,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="PrivacyRequestsListByRequestTypeAndReceivedAt",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.PrivacyRequestsListByRequestTypeAndReceivedAt.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.PrivacyRequestsListByRequestTypeAndReceivedAt.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.PrivacyRequestsListByRequestTypeAndReceivedAt.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.PrivacyRequestsListByRequestTypeAndReceivedAt.response.vtl"
+                )
             ),
         )
 
@@ -756,10 +963,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="PrivacyRequestsListByDataSubjectEmail",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.PrivacyRequestsListByDataSubjectEmail.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.PrivacyRequestsListByDataSubjectEmail.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.PrivacyRequestsListByDataSubjectEmail.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.PrivacyRequestsListByDataSubjectEmail.response.vtl"
+                )
             ),
         )
 
@@ -768,10 +981,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="PrivacyRequestsListByDataSubjectEmailAndReceivedAt",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.PrivacyRequestsListByDataSubjectEmailAndReceivedAt.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.PrivacyRequestsListByDataSubjectEmailAndReceivedAt.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.PrivacyRequestsListByDataSubjectEmailAndReceivedAt.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.PrivacyRequestsListByDataSubjectEmailAndReceivedAt.response.vtl"
+                )
             ),
         )
 
@@ -780,10 +999,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="PrivacyRequestsListByOrganizationId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.PrivacyRequestsListByOrganizationId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.PrivacyRequestsListByOrganizationId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.PrivacyRequestsListByOrganizationId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.PrivacyRequestsListByOrganizationId.response.vtl"
+                )
             ),
         )
 
@@ -792,10 +1017,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="PrivacyRequestsListByOrganizationIdAndReceivedAt",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.PrivacyRequestsListByOrganizationIdAndReceivedAt.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.PrivacyRequestsListByOrganizationIdAndReceivedAt.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.PrivacyRequestsListByOrganizationIdAndReceivedAt.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.PrivacyRequestsListByOrganizationIdAndReceivedAt.response.vtl"
+                )
             ),
         )
 
@@ -804,10 +1035,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="PrivacyRequestsListByStatus",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.PrivacyRequestsListByStatus.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.PrivacyRequestsListByStatus.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.PrivacyRequestsListByStatus.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.PrivacyRequestsListByStatus.response.vtl"
+                )
             ),
         )
 
@@ -816,13 +1053,18 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="PrivacyRequestsListByStatusAndDeadline",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.PrivacyRequestsListByStatusAndDeadline.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.PrivacyRequestsListByStatusAndDeadline.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.PrivacyRequestsListByStatusAndDeadline.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.PrivacyRequestsListByStatusAndDeadline.response.vtl"
+                )
             ),
         )
-
 
         # ApplicationGroups data source and resolvers
         application_groups_data_source = self.api.add_dynamo_db_data_source(
@@ -835,10 +1077,15 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationGroupsCreate",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupsCreate.request.vtl")
+                str(
+                    Path(__file__).parent / "resolvers/Mutation.ApplicationGroupsCreate.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupsCreate.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationGroupsCreate.response.vtl"
+                )
             ),
         )
 
@@ -847,10 +1094,15 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationGroupsUpdate",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupsUpdate.request.vtl")
+                str(
+                    Path(__file__).parent / "resolvers/Mutation.ApplicationGroupsUpdate.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupsUpdate.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationGroupsUpdate.response.vtl"
+                )
             ),
         )
 
@@ -859,10 +1111,15 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationGroupsDelete",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupsDelete.request.vtl")
+                str(
+                    Path(__file__).parent / "resolvers/Mutation.ApplicationGroupsDelete.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupsDelete.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationGroupsDelete.response.vtl"
+                )
             ),
         )
 
@@ -871,10 +1128,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationGroupsDisable",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupsDisable.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationGroupsDisable.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupsDisable.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationGroupsDisable.response.vtl"
+                )
             ),
         )
 
@@ -895,10 +1158,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationGroupsListByApplicationGroupId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupsListByApplicationGroupId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupsListByApplicationGroupId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupsListByApplicationGroupId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupsListByApplicationGroupId.response.vtl"
+                )
             ),
         )
 
@@ -907,10 +1176,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationGroupsListByApplicationId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupsListByApplicationId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupsListByApplicationId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupsListByApplicationId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupsListByApplicationId.response.vtl"
+                )
             ),
         )
 
@@ -919,10 +1194,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationGroupsListByApplicationIdAndName",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupsListByApplicationIdAndName.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupsListByApplicationIdAndName.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupsListByApplicationIdAndName.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupsListByApplicationIdAndName.response.vtl"
+                )
             ),
         )
 
@@ -931,13 +1212,18 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationGroupsListByApplicationIdAndStatus",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupsListByApplicationIdAndStatus.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupsListByApplicationIdAndStatus.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupsListByApplicationIdAndStatus.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupsListByApplicationIdAndStatus.response.vtl"
+                )
             ),
         )
-
 
         # ApplicationApiKeys data source and resolvers
         application_api_keys_data_source = self.api.add_dynamo_db_data_source(
@@ -950,10 +1236,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationApiKeysCreate",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationApiKeysCreate.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationApiKeysCreate.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationApiKeysCreate.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationApiKeysCreate.response.vtl"
+                )
             ),
         )
 
@@ -962,10 +1254,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationApiKeysUpdate",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationApiKeysUpdate.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationApiKeysUpdate.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationApiKeysUpdate.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationApiKeysUpdate.response.vtl"
+                )
             ),
         )
 
@@ -974,10 +1272,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationApiKeysDelete",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationApiKeysDelete.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationApiKeysDelete.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationApiKeysDelete.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationApiKeysDelete.response.vtl"
+                )
             ),
         )
 
@@ -986,10 +1290,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationApiKeysDisable",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationApiKeysDisable.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationApiKeysDisable.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationApiKeysDisable.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationApiKeysDisable.response.vtl"
+                )
             ),
         )
 
@@ -1010,10 +1320,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationApiKeysListByApplicationApiKeyId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationApiKeysListByApplicationApiKeyId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationApiKeysListByApplicationApiKeyId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationApiKeysListByApplicationApiKeyId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationApiKeysListByApplicationApiKeyId.response.vtl"
+                )
             ),
         )
 
@@ -1022,10 +1338,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationApiKeysListByApplicationId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationApiKeysListByApplicationId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationApiKeysListByApplicationId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationApiKeysListByApplicationId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationApiKeysListByApplicationId.response.vtl"
+                )
             ),
         )
 
@@ -1034,10 +1356,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationApiKeysListByApplicationIdAndEnvironment",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationApiKeysListByApplicationIdAndEnvironment.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationApiKeysListByApplicationIdAndEnvironment.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationApiKeysListByApplicationIdAndEnvironment.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationApiKeysListByApplicationIdAndEnvironment.response.vtl"
+                )
             ),
         )
 
@@ -1046,13 +1374,18 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationApiKeysListByKeyHash",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationApiKeysListByKeyHash.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationApiKeysListByKeyHash.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationApiKeysListByKeyHash.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationApiKeysListByKeyHash.response.vtl"
+                )
             ),
         )
-
 
         # ApplicationUsers data source and resolvers
         application_users_data_source = self.api.add_dynamo_db_data_source(
@@ -1068,7 +1401,9 @@ class AppSyncApi(Construct):
                 str(Path(__file__).parent / "resolvers/Mutation.ApplicationUsersCreate.request.vtl")
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationUsersCreate.response.vtl")
+                str(
+                    Path(__file__).parent / "resolvers/Mutation.ApplicationUsersCreate.response.vtl"
+                )
             ),
         )
 
@@ -1080,7 +1415,9 @@ class AppSyncApi(Construct):
                 str(Path(__file__).parent / "resolvers/Mutation.ApplicationUsersUpdate.request.vtl")
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationUsersUpdate.response.vtl")
+                str(
+                    Path(__file__).parent / "resolvers/Mutation.ApplicationUsersUpdate.response.vtl"
+                )
             ),
         )
 
@@ -1092,7 +1429,9 @@ class AppSyncApi(Construct):
                 str(Path(__file__).parent / "resolvers/Mutation.ApplicationUsersDelete.request.vtl")
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationUsersDelete.response.vtl")
+                str(
+                    Path(__file__).parent / "resolvers/Mutation.ApplicationUsersDelete.response.vtl"
+                )
             ),
         )
 
@@ -1101,10 +1440,15 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationUsersDisable",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationUsersDisable.request.vtl")
+                str(
+                    Path(__file__).parent / "resolvers/Mutation.ApplicationUsersDisable.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationUsersDisable.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationUsersDisable.response.vtl"
+                )
             ),
         )
 
@@ -1125,10 +1469,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationUsersListByApplicationUserId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUsersListByApplicationUserId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUsersListByApplicationUserId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUsersListByApplicationUserId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUsersListByApplicationUserId.response.vtl"
+                )
             ),
         )
 
@@ -1137,10 +1487,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationUsersListByUserId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUsersListByUserId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUsersListByUserId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUsersListByUserId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUsersListByUserId.response.vtl"
+                )
             ),
         )
 
@@ -1149,10 +1505,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationUsersListByUserIdAndApplicationId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUsersListByUserIdAndApplicationId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUsersListByUserIdAndApplicationId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUsersListByUserIdAndApplicationId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUsersListByUserIdAndApplicationId.response.vtl"
+                )
             ),
         )
 
@@ -1161,10 +1523,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationUsersListByApplicationId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUsersListByApplicationId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUsersListByApplicationId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUsersListByApplicationId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUsersListByApplicationId.response.vtl"
+                )
             ),
         )
 
@@ -1173,13 +1541,18 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationUsersListByApplicationIdAndUserId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUsersListByApplicationIdAndUserId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUsersListByApplicationIdAndUserId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUsersListByApplicationIdAndUserId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUsersListByApplicationIdAndUserId.response.vtl"
+                )
             ),
         )
-
 
         # SmsRateLimit data source and resolvers
         sms_rate_limit_data_source = self.api.add_dynamo_db_data_source(
@@ -1252,13 +1625,18 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="SmsRateLimitListByPhoneNumber",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.SmsRateLimitListByPhoneNumber.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.SmsRateLimitListByPhoneNumber.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.SmsRateLimitListByPhoneNumber.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.SmsRateLimitListByPhoneNumber.response.vtl"
+                )
             ),
         )
-
 
         # ApplicationGroupRoles data source and resolvers
         application_group_roles_data_source = self.api.add_dynamo_db_data_source(
@@ -1271,10 +1649,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationGroupRolesCreate",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupRolesCreate.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationGroupRolesCreate.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupRolesCreate.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationGroupRolesCreate.response.vtl"
+                )
             ),
         )
 
@@ -1283,10 +1667,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationGroupRolesUpdate",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupRolesUpdate.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationGroupRolesUpdate.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupRolesUpdate.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationGroupRolesUpdate.response.vtl"
+                )
             ),
         )
 
@@ -1295,10 +1685,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationGroupRolesDelete",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupRolesDelete.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationGroupRolesDelete.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupRolesDelete.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationGroupRolesDelete.response.vtl"
+                )
             ),
         )
 
@@ -1307,10 +1703,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationGroupRolesDisable",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupRolesDisable.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationGroupRolesDisable.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupRolesDisable.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationGroupRolesDisable.response.vtl"
+                )
             ),
         )
 
@@ -1331,10 +1733,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationGroupRolesListByApplicationGroupRoleId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupRoleId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupRoleId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupRoleId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupRoleId.response.vtl"
+                )
             ),
         )
 
@@ -1343,10 +1751,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationGroupRolesListByApplicationGroupId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupId.response.vtl"
+                )
             ),
         )
 
@@ -1355,10 +1769,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationGroupRolesListByApplicationGroupIdAndEnvironment",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupIdAndEnvironment.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupIdAndEnvironment.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupIdAndEnvironment.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupIdAndEnvironment.response.vtl"
+                )
             ),
         )
 
@@ -1367,10 +1787,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationGroupRolesListByApplicationId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupRolesListByApplicationId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupRolesListByApplicationId.response.vtl"
+                )
             ),
         )
 
@@ -1379,10 +1805,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationGroupRolesListByApplicationIdAndEnvironment",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationIdAndEnvironment.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupRolesListByApplicationIdAndEnvironment.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationIdAndEnvironment.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupRolesListByApplicationIdAndEnvironment.response.vtl"
+                )
             ),
         )
 
@@ -1391,13 +1823,18 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationGroupRolesListByApplicationGroupIdAndStatus",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupIdAndStatus.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupIdAndStatus.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupIdAndStatus.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupRolesListByApplicationGroupIdAndStatus.response.vtl"
+                )
             ),
         )
-
 
         # OrganizationUsers data source and resolvers
         organization_users_data_source = self.api.add_dynamo_db_data_source(
@@ -1410,10 +1847,15 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="OrganizationUsersCreate",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.OrganizationUsersCreate.request.vtl")
+                str(
+                    Path(__file__).parent / "resolvers/Mutation.OrganizationUsersCreate.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.OrganizationUsersCreate.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.OrganizationUsersCreate.response.vtl"
+                )
             ),
         )
 
@@ -1422,10 +1864,15 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="OrganizationUsersUpdate",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.OrganizationUsersUpdate.request.vtl")
+                str(
+                    Path(__file__).parent / "resolvers/Mutation.OrganizationUsersUpdate.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.OrganizationUsersUpdate.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.OrganizationUsersUpdate.response.vtl"
+                )
             ),
         )
 
@@ -1434,10 +1881,15 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="OrganizationUsersDelete",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.OrganizationUsersDelete.request.vtl")
+                str(
+                    Path(__file__).parent / "resolvers/Mutation.OrganizationUsersDelete.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.OrganizationUsersDelete.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.OrganizationUsersDelete.response.vtl"
+                )
             ),
         )
 
@@ -1446,10 +1898,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="OrganizationUsersDisable",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.OrganizationUsersDisable.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.OrganizationUsersDisable.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.OrganizationUsersDisable.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.OrganizationUsersDisable.response.vtl"
+                )
             ),
         )
 
@@ -1470,10 +1928,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="OrganizationUsersListByUserId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OrganizationUsersListByUserId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OrganizationUsersListByUserId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OrganizationUsersListByUserId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OrganizationUsersListByUserId.response.vtl"
+                )
             ),
         )
 
@@ -1482,10 +1946,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="OrganizationUsersListByOrganizationId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OrganizationUsersListByOrganizationId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OrganizationUsersListByOrganizationId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OrganizationUsersListByOrganizationId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OrganizationUsersListByOrganizationId.response.vtl"
+                )
             ),
         )
 
@@ -1494,10 +1964,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="OrganizationUsersListByUserIdAndOrganizationId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OrganizationUsersListByUserIdAndOrganizationId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OrganizationUsersListByUserIdAndOrganizationId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OrganizationUsersListByUserIdAndOrganizationId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OrganizationUsersListByUserIdAndOrganizationId.response.vtl"
+                )
             ),
         )
 
@@ -1506,10 +1982,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="OrganizationUsersListByOrganizationIdAndRole",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OrganizationUsersListByOrganizationIdAndRole.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OrganizationUsersListByOrganizationIdAndRole.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OrganizationUsersListByOrganizationIdAndRole.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OrganizationUsersListByOrganizationIdAndRole.response.vtl"
+                )
             ),
         )
 
@@ -1518,13 +2000,18 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="OrganizationUsersListByUserIdAndRole",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OrganizationUsersListByUserIdAndRole.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OrganizationUsersListByUserIdAndRole.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.OrganizationUsersListByUserIdAndRole.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.OrganizationUsersListByUserIdAndRole.response.vtl"
+                )
             ),
         )
-
 
         # ApplicationUserRoles data source and resolvers
         application_user_roles_data_source = self.api.add_dynamo_db_data_source(
@@ -1537,10 +2024,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationUserRolesCreate",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationUserRolesCreate.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationUserRolesCreate.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationUserRolesCreate.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationUserRolesCreate.response.vtl"
+                )
             ),
         )
 
@@ -1549,10 +2042,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationUserRolesUpdate",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationUserRolesUpdate.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationUserRolesUpdate.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationUserRolesUpdate.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationUserRolesUpdate.response.vtl"
+                )
             ),
         )
 
@@ -1561,10 +2060,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationUserRolesDelete",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationUserRolesDelete.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationUserRolesDelete.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationUserRolesDelete.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationUserRolesDelete.response.vtl"
+                )
             ),
         )
 
@@ -1573,10 +2078,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationUserRolesDisable",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationUserRolesDisable.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationUserRolesDisable.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationUserRolesDisable.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationUserRolesDisable.response.vtl"
+                )
             ),
         )
 
@@ -1597,10 +2108,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationUserRolesListByApplicationUserRoleId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByApplicationUserRoleId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUserRolesListByApplicationUserRoleId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByApplicationUserRoleId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUserRolesListByApplicationUserRoleId.response.vtl"
+                )
             ),
         )
 
@@ -1609,10 +2126,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationUserRolesListByUserId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByUserId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUserRolesListByUserId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByUserId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUserRolesListByUserId.response.vtl"
+                )
             ),
         )
 
@@ -1621,10 +2144,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationUserRolesListByUserIdAndEnvironment",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByUserIdAndEnvironment.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUserRolesListByUserIdAndEnvironment.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByUserIdAndEnvironment.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUserRolesListByUserIdAndEnvironment.response.vtl"
+                )
             ),
         )
 
@@ -1633,10 +2162,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationUserRolesListByApplicationId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByApplicationId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUserRolesListByApplicationId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByApplicationId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUserRolesListByApplicationId.response.vtl"
+                )
             ),
         )
 
@@ -1645,10 +2180,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationUserRolesListByApplicationIdAndEnvironment",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByApplicationIdAndEnvironment.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUserRolesListByApplicationIdAndEnvironment.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByApplicationIdAndEnvironment.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUserRolesListByApplicationIdAndEnvironment.response.vtl"
+                )
             ),
         )
 
@@ -1657,10 +2198,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationUserRolesListByUserIdAndApplicationId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByUserIdAndApplicationId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUserRolesListByUserIdAndApplicationId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByUserIdAndApplicationId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUserRolesListByUserIdAndApplicationId.response.vtl"
+                )
             ),
         )
 
@@ -1669,13 +2216,18 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationUserRolesListByUserIdAndStatus",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByUserIdAndStatus.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUserRolesListByUserIdAndStatus.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationUserRolesListByUserIdAndStatus.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationUserRolesListByUserIdAndStatus.response.vtl"
+                )
             ),
         )
-
 
         # ApplicationRoles data source and resolvers
         application_roles_data_source = self.api.add_dynamo_db_data_source(
@@ -1691,7 +2243,9 @@ class AppSyncApi(Construct):
                 str(Path(__file__).parent / "resolvers/Mutation.ApplicationRolesCreate.request.vtl")
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationRolesCreate.response.vtl")
+                str(
+                    Path(__file__).parent / "resolvers/Mutation.ApplicationRolesCreate.response.vtl"
+                )
             ),
         )
 
@@ -1703,7 +2257,9 @@ class AppSyncApi(Construct):
                 str(Path(__file__).parent / "resolvers/Mutation.ApplicationRolesUpdate.request.vtl")
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationRolesUpdate.response.vtl")
+                str(
+                    Path(__file__).parent / "resolvers/Mutation.ApplicationRolesUpdate.response.vtl"
+                )
             ),
         )
 
@@ -1715,7 +2271,9 @@ class AppSyncApi(Construct):
                 str(Path(__file__).parent / "resolvers/Mutation.ApplicationRolesDelete.request.vtl")
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationRolesDelete.response.vtl")
+                str(
+                    Path(__file__).parent / "resolvers/Mutation.ApplicationRolesDelete.response.vtl"
+                )
             ),
         )
 
@@ -1724,10 +2282,15 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationRolesDisable",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationRolesDisable.request.vtl")
+                str(
+                    Path(__file__).parent / "resolvers/Mutation.ApplicationRolesDisable.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationRolesDisable.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationRolesDisable.response.vtl"
+                )
             ),
         )
 
@@ -1748,10 +2311,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationRolesListByApplicationRoleId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationRolesListByApplicationRoleId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationRolesListByApplicationRoleId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationRolesListByApplicationRoleId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationRolesListByApplicationRoleId.response.vtl"
+                )
             ),
         )
 
@@ -1760,10 +2329,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationRolesListByUserId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationRolesListByUserId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationRolesListByUserId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationRolesListByUserId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationRolesListByUserId.response.vtl"
+                )
             ),
         )
 
@@ -1772,10 +2347,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationRolesListByUserIdAndRoleId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationRolesListByUserIdAndRoleId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationRolesListByUserIdAndRoleId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationRolesListByUserIdAndRoleId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationRolesListByUserIdAndRoleId.response.vtl"
+                )
             ),
         )
 
@@ -1784,10 +2365,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationRolesListByApplicationId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationRolesListByApplicationId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationRolesListByApplicationId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationRolesListByApplicationId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationRolesListByApplicationId.response.vtl"
+                )
             ),
         )
 
@@ -1796,10 +2383,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationRolesListByApplicationIdAndRoleId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationRolesListByApplicationIdAndRoleId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationRolesListByApplicationIdAndRoleId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationRolesListByApplicationIdAndRoleId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationRolesListByApplicationIdAndRoleId.response.vtl"
+                )
             ),
         )
 
@@ -1808,10 +2401,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationRolesListByRoleId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationRolesListByRoleId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationRolesListByRoleId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationRolesListByRoleId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationRolesListByRoleId.response.vtl"
+                )
             ),
         )
 
@@ -1820,13 +2419,18 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationRolesListByRoleIdAndRoleType",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationRolesListByRoleIdAndRoleType.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationRolesListByRoleIdAndRoleType.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationRolesListByRoleIdAndRoleType.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationRolesListByRoleIdAndRoleType.response.vtl"
+                )
             ),
         )
-
 
         # ApplicationGroupUsers data source and resolvers
         application_group_users_data_source = self.api.add_dynamo_db_data_source(
@@ -1839,10 +2443,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationGroupUsersCreate",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupUsersCreate.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationGroupUsersCreate.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupUsersCreate.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationGroupUsersCreate.response.vtl"
+                )
             ),
         )
 
@@ -1851,10 +2461,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationGroupUsersUpdate",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupUsersUpdate.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationGroupUsersUpdate.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupUsersUpdate.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationGroupUsersUpdate.response.vtl"
+                )
             ),
         )
 
@@ -1863,10 +2479,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationGroupUsersDelete",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupUsersDelete.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationGroupUsersDelete.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupUsersDelete.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationGroupUsersDelete.response.vtl"
+                )
             ),
         )
 
@@ -1875,10 +2497,16 @@ class AppSyncApi(Construct):
             type_name="Mutation",
             field_name="ApplicationGroupUsersDisable",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupUsersDisable.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationGroupUsersDisable.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Mutation.ApplicationGroupUsersDisable.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Mutation.ApplicationGroupUsersDisable.response.vtl"
+                )
             ),
         )
 
@@ -1899,10 +2527,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationGroupUsersListByApplicationGroupUserId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupUserId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupUserId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupUserId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupUserId.response.vtl"
+                )
             ),
         )
 
@@ -1911,10 +2545,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationGroupUsersListByApplicationGroupId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupId.response.vtl"
+                )
             ),
         )
 
@@ -1923,10 +2563,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationGroupUsersListByApplicationGroupIdAndUserId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupIdAndUserId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupIdAndUserId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupIdAndUserId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupIdAndUserId.response.vtl"
+                )
             ),
         )
 
@@ -1935,10 +2581,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationGroupUsersListByUserId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByUserId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupUsersListByUserId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByUserId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupUsersListByUserId.response.vtl"
+                )
             ),
         )
 
@@ -1947,10 +2599,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationGroupUsersListByUserIdAndApplicationGroupId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByUserIdAndApplicationGroupId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupUsersListByUserIdAndApplicationGroupId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByUserIdAndApplicationGroupId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupUsersListByUserIdAndApplicationGroupId.response.vtl"
+                )
             ),
         )
 
@@ -1959,13 +2617,18 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationGroupUsersListByApplicationGroupIdAndStatus",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupIdAndStatus.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupIdAndStatus.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupIdAndStatus.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationGroupUsersListByApplicationGroupIdAndStatus.response.vtl"
+                )
             ),
         )
-
 
         # Roles data source and resolvers
         roles_data_source = self.api.add_dynamo_db_data_source(
@@ -2062,13 +2725,18 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="RolesListByUserIdAndRoleType",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.RolesListByUserIdAndRoleType.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.RolesListByUserIdAndRoleType.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.RolesListByUserIdAndRoleType.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.RolesListByUserIdAndRoleType.response.vtl"
+                )
             ),
         )
-
 
         # Applications data source and resolvers
         applications_data_source = self.api.add_dynamo_db_data_source(
@@ -2141,10 +2809,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationsListByApplicationId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationsListByApplicationId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationsListByApplicationId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationsListByApplicationId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationsListByApplicationId.response.vtl"
+                )
             ),
         )
 
@@ -2153,10 +2827,16 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationsListByOrganizationId",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationsListByOrganizationId.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationsListByOrganizationId.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationsListByOrganizationId.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationsListByOrganizationId.response.vtl"
+                )
             ),
         )
 
@@ -2165,13 +2845,18 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="ApplicationsListByOrganizationIdAndCreatedAt",
             request_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationsListByOrganizationIdAndCreatedAt.request.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationsListByOrganizationIdAndCreatedAt.request.vtl"
+                )
             ),
             response_mapping_template=appsync.MappingTemplate.from_file(
-                str(Path(__file__).parent / "resolvers/Query.ApplicationsListByOrganizationIdAndCreatedAt.response.vtl")
+                str(
+                    Path(__file__).parent
+                    / "resolvers/Query.ApplicationsListByOrganizationIdAndCreatedAt.response.vtl"
+                )
             ),
         )
-
 
         # Users data source and resolvers
         users_data_source = self.api.add_dynamo_db_data_source(
@@ -2287,7 +2972,6 @@ class AppSyncApi(Construct):
             ),
         )
 
-
         # Add Lambda data sources and resolvers
 
         # GetCurrentUser Lambda data source and resolvers
@@ -2311,7 +2995,6 @@ class AppSyncApi(Construct):
             field_name="GetCurrentUser",
         )
 
-
         # CreateUserFromCognito Lambda data source and resolvers
         create_user_from_cognito_lambda_arn = ssm.StringParameter.value_for_string_parameter(
             self, "/orb/integration-hub/dev/lambda/createuserfromcognito/arn"
@@ -2333,7 +3016,6 @@ class AppSyncApi(Construct):
             field_name="CreateUserFromCognito",
         )
 
-
         # CheckEmailExists Lambda data source and resolvers
         check_email_exists_lambda_arn = ssm.StringParameter.value_for_string_parameter(
             self, "/orb/integration-hub/dev/lambda/checkemailexists/arn"
@@ -2354,7 +3036,6 @@ class AppSyncApi(Construct):
             type_name="Query",
             field_name="CheckEmailExists",
         )
-
 
         # SmsVerification Lambda data source and resolvers
         sms_verification_lambda_arn = ssm.StringParameter.value_for_string_parameter(

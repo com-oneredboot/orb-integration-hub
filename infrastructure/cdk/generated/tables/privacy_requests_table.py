@@ -14,7 +14,8 @@ class PrivacyRequestsTable(Construct):
         super().__init__(scope, id)
 
         self.table = dynamodb.Table(
-            self, "PrivacyRequests",
+            self,
+            "PrivacyRequests",
             table_name="orb-integration-hub-dev-table-privacyrequests",
             partition_key=dynamodb.Attribute(
                 name="requestId",
@@ -77,13 +78,15 @@ class PrivacyRequestsTable(Construct):
 
         # SSM Parameters for table discovery
         ssm.StringParameter(
-            self, "PrivacyRequestsTableNameParam",
+            self,
+            "PrivacyRequestsTableNameParam",
             parameter_name="/orb/integration-hub/dev/dynamodb/privacyrequests/table-name",
             string_value=self.table.table_name,
         )
 
         ssm.StringParameter(
-            self, "PrivacyRequestsTableArnParam",
+            self,
+            "PrivacyRequestsTableArnParam",
             parameter_name="/orb/integration-hub/dev/dynamodb/privacyrequests/table-arn",
             string_value=self.table.table_arn,
         )

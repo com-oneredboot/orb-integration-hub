@@ -13,19 +13,33 @@ from datetime import datetime
 class SmsRateLimitCreateInput(BaseModel):
     """SmsRateLimit create input."""
 
-    phone_number: str = Field(..., description="Phone number used as the rate limit key (primary key)")
-    request_count: float = Field(..., description="Number of SMS requests made within the rate limit window")
-    first_request_time: datetime = Field(..., description="Timestamp of the first request in the current rate limit window")
+    phone_number: str = Field(
+        ..., description="Phone number used as the rate limit key (primary key)"
+    )
+    request_count: float = Field(
+        ..., description="Number of SMS requests made within the rate limit window"
+    )
+    first_request_time: datetime = Field(
+        ..., description="Timestamp of the first request in the current rate limit window"
+    )
     ttl: float = Field(..., description="Time-to-live timestamp for automatic record cleanup")
 
 
 class SmsRateLimitUpdateInput(BaseModel):
     """SmsRateLimit update input."""
 
-    phone_number: Optional[str] = Field(..., description="Phone number used as the rate limit key (primary key)")
-    request_count: Optional[float] = Field(..., description="Number of SMS requests made within the rate limit window")
-    first_request_time: Optional[datetime] = Field(..., description="Timestamp of the first request in the current rate limit window")
-    ttl: Optional[float] = Field(..., description="Time-to-live timestamp for automatic record cleanup")
+    phone_number: Optional[str] = Field(
+        ..., description="Phone number used as the rate limit key (primary key)"
+    )
+    request_count: Optional[float] = Field(
+        ..., description="Number of SMS requests made within the rate limit window"
+    )
+    first_request_time: Optional[datetime] = Field(
+        ..., description="Timestamp of the first request in the current rate limit window"
+    )
+    ttl: Optional[float] = Field(
+        ..., description="Time-to-live timestamp for automatic record cleanup"
+    )
 
 
 class SmsRateLimitDeleteInput(BaseModel):
@@ -41,7 +55,6 @@ class SmsRateLimitDisableInput(BaseModel):
     disabled: bool
 
 
-
 # Query Input Types
 class SmsRateLimitQueryByPhoneNumberInput(BaseModel):
     """SmsRateLimit query by phoneNumber."""
@@ -55,9 +68,15 @@ class SmsRateLimit(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    phone_number: str = Field(..., description="Phone number used as the rate limit key (primary key)")
-    request_count: float = Field(..., description="Number of SMS requests made within the rate limit window")
-    first_request_time: datetime = Field(..., description="Timestamp of the first request in the current rate limit window")
+    phone_number: str = Field(
+        ..., description="Phone number used as the rate limit key (primary key)"
+    )
+    request_count: float = Field(
+        ..., description="Number of SMS requests made within the rate limit window"
+    )
+    first_request_time: datetime = Field(
+        ..., description="Timestamp of the first request in the current rate limit window"
+    )
     ttl: float = Field(..., description="Time-to-live timestamp for automatic record cleanup")
 
     @field_validator("first_request_time", mode="before")

@@ -15,6 +15,7 @@ import {
 import { IApplications } from '../../../../core/models/ApplicationsModel';
 import { IApplicationApiKeys } from '../../../../core/models/ApplicationApiKeysModel';
 import { ApplicationApiKeyStatus } from '../../../../core/enums/ApplicationApiKeyStatusEnum';
+import { ApplicationApiKeyType } from '../../../../core/enums/ApplicationApiKeyTypeEnum';
 import { ApplicationStatus } from '../../../../core/enums/ApplicationStatusEnum';
 import { Environment } from '../../../../core/enums/EnvironmentEnum';
 
@@ -53,7 +54,8 @@ function createMockApiKey(environment: string, status: ApplicationApiKeyStatus):
     organizationId: 'org-123',
     environment: envEnum,
     status,
-    keyPrefix: `orb_${environment.toLowerCase().substring(0, 2)}_`,
+    keyPrefix: `pk_${environment.toLowerCase().substring(0, 2)}_`,
+    keyType: ApplicationApiKeyType.Publishable,
     keyHash: 'mock-hash-value',
     createdAt: new Date(),
     updatedAt: new Date()

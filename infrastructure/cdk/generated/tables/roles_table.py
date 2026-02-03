@@ -14,7 +14,8 @@ class RolesTable(Construct):
         super().__init__(scope, id)
 
         self.table = dynamodb.Table(
-            self, "Roles",
+            self,
+            "Roles",
             table_name="orb-integration-hub-dev-table-roles",
             partition_key=dynamodb.Attribute(
                 name="roleId",
@@ -38,13 +39,15 @@ class RolesTable(Construct):
 
         # SSM Parameters for table discovery
         ssm.StringParameter(
-            self, "RolesTableNameParam",
+            self,
+            "RolesTableNameParam",
             parameter_name="/orb/integration-hub/dev/dynamodb/roles/table-name",
             string_value=self.table.table_name,
         )
 
         ssm.StringParameter(
-            self, "RolesTableArnParam",
+            self,
+            "RolesTableArnParam",
             parameter_name="/orb/integration-hub/dev/dynamodb/roles/table-arn",
             string_value=self.table.table_arn,
         )

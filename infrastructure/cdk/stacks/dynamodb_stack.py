@@ -62,6 +62,10 @@ class DynamoDBStack(Stack):
         self._create_application_user_roles_table()
         self._create_application_api_keys_table()
 
+        # Application Environment Configuration tables
+        self._create_application_environment_config_table()
+        self._create_api_rate_limits_table()
+
     def _apply_tags(self) -> None:
         """Apply standard tags to all resources in this stack."""
         for key, value in self.config.standard_tags.items():
@@ -950,3 +954,63 @@ class DynamoDBStack(Stack):
 
         self.tables["ApplicationApiKeys"] = table
         self._export_table_params(table, "application-api-keys")
+
+    def _create_application_environment_config_table(self) -> None:
+        """Create ApplicationEnvironmentConfig table for per-environment settings."""
+        table = dynamodb.Table(
+            self,
+            "ApplicationEnvironmentConfigTable",
+            table_name=self._table_name("application-environment-config"),
+            partition_key=dynamodb.Attribute(
+                name="applicationId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            sort_key=dynamodb.Attribute(
+                name="environment",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
+            point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
+                point_in_time_recovery_enabled=True
+            ),
+            removal_policy=RemovalPolicy.RETAIN,
+        )
+
+        # GSI: OrgEnvIndex - query configs by organization and environment
+        table.add_global_secondary_index(
+            index_name="OrgEnvIndex",
+            partition_key=dynamodb.Attribute(
+                name="organizationId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            sort_key=dynamodb.Attribute(
+                name="environment",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            projection_type=dynamodb.ProjectionType.ALL,
+        )
+
+        self.tables["ApplicationEnvironmentConfig"] = table
+        self._export_table_params(table, "application-environment-config")
+
+    def _create_api_rate_limits_table(self) -> None:
+        """Create ApiRateLimits table for tracking API key rate limit counters."""
+        table = dynamodb.Table(
+            self,
+            "ApiRateLimitsTable",
+            table_name=self._table_name("api-rate-limits"),
+            partition_key=dynamodb.Attribute(
+                name="keyId",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            sort_key=dynamodb.Attribute(
+                name="windowKey",
+                type=dynamodb.AttributeType.STRING,
+            ),
+            billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
+            time_to_live_attribute="ttl",
+            removal_policy=RemovalPolicy.DESTROY,  # Rate limit data is ephemeral
+        )
+
+        self.tables["api-rate-limits"] = table
+        self._export_table_params(table, "api-rate-limits")

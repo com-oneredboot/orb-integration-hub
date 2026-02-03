@@ -10,6 +10,7 @@
 
 import * as fc from 'fast-check';
 import { ApplicationApiKeyStatus } from '../../../../../core/enums/ApplicationApiKeyStatusEnum';
+import { ApplicationApiKeyType } from '../../../../../core/enums/ApplicationApiKeyTypeEnum';
 import { Environment } from '../../../../../core/enums/EnvironmentEnum';
 import { IApplicationApiKeys } from '../../../../../core/models/ApplicationApiKeysModel';
 import {
@@ -55,7 +56,8 @@ const apiKeyArb = (
     organizationId: fc.uuid(),
     environment: environment ? fc.constant(environment) : environmentArb,
     keyHash: fc.stringMatching(/^[a-f0-9]{64}$/),
-    keyPrefix: fc.constant('orb_dev_a1b2****'),
+    keyPrefix: fc.constant('pk_dev_a1b2****'),
+    keyType: fc.constant(ApplicationApiKeyType.Publishable),
     status: status ? fc.constant(status) : statusArb,
     createdAt: fc.date({ min: new Date('2020-01-01'), max: new Date() }),
     updatedAt: fc.date({ min: new Date('2020-01-01'), max: new Date() }),
@@ -178,7 +180,8 @@ describe('API Key Lifecycle Management Property Tests', () => {
                 organizationId: 'org-1',
                 environment,
                 keyHash: 'hash',
-                keyPrefix: 'orb_dev_xxxx****',
+                keyPrefix: 'pk_dev_xxxx****',
+                keyType: ApplicationApiKeyType.Publishable,
                 status,
                 createdAt: new Date(),
                 updatedAt: new Date(),

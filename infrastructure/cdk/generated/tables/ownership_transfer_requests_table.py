@@ -14,7 +14,8 @@ class OwnershipTransferRequestsTable(Construct):
         super().__init__(scope, id)
 
         self.table = dynamodb.Table(
-            self, "OwnershipTransferRequests",
+            self,
+            "OwnershipTransferRequests",
             table_name="orb-integration-hub-dev-table-ownershiptransferrequests",
             partition_key=dynamodb.Attribute(
                 name="transferId",
@@ -77,13 +78,15 @@ class OwnershipTransferRequestsTable(Construct):
 
         # SSM Parameters for table discovery
         ssm.StringParameter(
-            self, "OwnershipTransferRequestsTableNameParam",
+            self,
+            "OwnershipTransferRequestsTableNameParam",
             parameter_name="/orb/integration-hub/dev/dynamodb/ownershiptransferrequests/table-name",
             string_value=self.table.table_name,
         )
 
         ssm.StringParameter(
-            self, "OwnershipTransferRequestsTableArnParam",
+            self,
+            "OwnershipTransferRequestsTableArnParam",
             parameter_name="/orb/integration-hub/dev/dynamodb/ownershiptransferrequests/table-arn",
             string_value=self.table.table_arn,
         )

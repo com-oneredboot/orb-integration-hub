@@ -11,6 +11,7 @@ import * as fromSelectors from './api-keys.selectors';
 import { ApiKeysState, ApiKeyTableRow, GeneratedKeyResult, initialApiKeysState } from './api-keys.state';
 import { IApplicationApiKeys } from '../../../../../core/models/ApplicationApiKeysModel';
 import { ApplicationApiKeyStatus } from '../../../../../core/enums/ApplicationApiKeyStatusEnum';
+import { ApplicationApiKeyType } from '../../../../../core/enums/ApplicationApiKeyTypeEnum';
 import { Environment } from '../../../../../core/enums/EnvironmentEnum';
 
 describe('ApiKeys Selectors', () => {
@@ -20,7 +21,8 @@ describe('ApiKeys Selectors', () => {
     organizationId: 'org-1',
     environment: Environment.Development,
     keyHash: 'hash123',
-    keyPrefix: 'orb_dev_',
+    keyPrefix: 'pk_dev_',
+    keyType: ApplicationApiKeyType.Publishable,
     status: ApplicationApiKeyStatus.Active,
     createdAt: new Date('2026-01-01'),
     updatedAt: new Date('2026-01-15'),

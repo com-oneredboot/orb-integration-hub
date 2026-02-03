@@ -45,19 +45,30 @@ def dynamodb_template(test_config: Config) -> Template:
 class TestDynamoDBPointInTimeRecovery:
     """Test that all DynamoDB tables have Point-in-Time Recovery enabled."""
 
+    # Tables that intentionally don't have PITR (ephemeral data)
+    PITR_EXEMPT_TABLES = ["api-rate-limits"]
+
     def test_all_tables_have_pitr_enabled(self, dynamodb_template: Template):
-        """Verify all DynamoDB tables have Point-in-Time Recovery enabled."""
+        """Verify all DynamoDB tables have Point-in-Time Recovery enabled.
+        
+        Note: Some tables with ephemeral data (like rate limits) are exempt.
+        """
         tables = dynamodb_template.find_resources("AWS::DynamoDB::Table")
         
         assert len(tables) > 0, "Expected at least one DynamoDB table"
         
         tables_without_pitr = []
         for table_id, table in tables.items():
+            table_name = table.get("Properties", {}).get("TableName", table_id)
+            
+            # Skip exempt tables
+            if any(exempt in table_name for exempt in self.PITR_EXEMPT_TABLES):
+                continue
+            
             pitr_spec = table.get("Properties", {}).get("PointInTimeRecoverySpecification", {})
             pitr_enabled = pitr_spec.get("PointInTimeRecoveryEnabled", False)
             
             if not pitr_enabled:
-                table_name = table.get("Properties", {}).get("TableName", table_id)
                 tables_without_pitr.append(table_name)
         
         assert len(tables_without_pitr) == 0, \

@@ -847,9 +847,7 @@ class ApiKeyService:
             current_day = now.strftime("%Y%m%d")
 
             # Calculate reset timestamps
-            minute_reset = int(
-                (now.replace(second=0, microsecond=0).timestamp()) + 60
-            )
+            minute_reset = int((now.replace(second=0, microsecond=0).timestamp()) + 60)
             day_reset = int(
                 (now.replace(hour=0, minute=0, second=0, microsecond=0).timestamp()) + 86400
             )

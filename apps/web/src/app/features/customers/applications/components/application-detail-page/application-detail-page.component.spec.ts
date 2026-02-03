@@ -25,6 +25,7 @@ import { IApplicationApiKeys } from '../../../../../core/models/ApplicationApiKe
 import { ApplicationStatus } from '../../../../../core/enums/ApplicationStatusEnum';
 import { OrganizationStatus } from '../../../../../core/enums/OrganizationStatusEnum';
 import { ApplicationApiKeyStatus } from '../../../../../core/enums/ApplicationApiKeyStatusEnum';
+import { ApplicationApiKeyType } from '../../../../../core/enums/ApplicationApiKeyTypeEnum';
 import { Environment } from '../../../../../core/enums/EnvironmentEnum';
 import { ApplicationsActions } from '../../store/applications.actions';
 import { ApiKeysActions } from '../../store/api-keys/api-keys.actions';
@@ -696,7 +697,8 @@ describe('ApplicationDetailPageComponent', () => {
       organizationId: 'org-456',
       environment: environment as Environment,
       status,
-      keyPrefix: `orb_${environment.toLowerCase().substring(0, 2)}_`,
+      keyPrefix: `pk_${environment.toLowerCase().substring(0, 2)}_`,
+      keyType: ApplicationApiKeyType.Publishable,
       keyHash: 'mock-hash',
       createdAt: new Date(),
       updatedAt: new Date()
@@ -1039,7 +1041,8 @@ describe('ApplicationDetailPageComponent', () => {
           organizationId: 'org-456',
           environment: environment as Environment,
           status: ApplicationApiKeyStatus.Active,
-          keyPrefix: `orb_${environment.toLowerCase().substring(0, 2)}_`,
+          keyPrefix: `pk_${environment.toLowerCase().substring(0, 2)}_`,
+          keyType: ApplicationApiKeyType.Publishable,
           keyHash: 'mock-hash',
           createdAt: new Date(),
           updatedAt: new Date()

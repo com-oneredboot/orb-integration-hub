@@ -15,33 +15,53 @@ from ..enums.organization_status_enum import OrganizationStatus
 class OrganizationsCreateInput(BaseModel):
     """Organizations create input."""
 
-    organization_id: str = Field(..., description="Unique identifier for the organization (primary key)")
+    organization_id: str = Field(
+        ..., description="Unique identifier for the organization (primary key)"
+    )
     name: str = Field(..., description="Name of the organization")
     description: Optional[str] = Field(None, description="Optional description of the organization")
-    owner_id: str = Field(..., description="ID of the CUSTOMER user who owns the organization (foreign key to Users)")
+    owner_id: str = Field(
+        ..., description="ID of the CUSTOMER user who owns the organization (foreign key to Users)"
+    )
     status: OrganizationStatus = Field(..., description="Current status of the organization")
     created_at: datetime = Field(..., description="When the organization was created")
     updated_at: datetime = Field(..., description="When the organization was last updated")
-    kms_key_id: Optional[str] = Field(None, description="Organization-specific KMS key ID for encryption")
+    kms_key_id: Optional[str] = Field(
+        None, description="Organization-specific KMS key ID for encryption"
+    )
     kms_key_arn: Optional[str] = Field(None, description="Organization-specific KMS key ARN")
     kms_alias: Optional[str] = Field(None, description="Organization-specific KMS key alias name")
-    application_count: Optional[int] = Field(0, description="Denormalized count of applications belonging to this organization")
+    application_count: Optional[int] = Field(
+        0, description="Denormalized count of applications belonging to this organization"
+    )
 
 
 class OrganizationsUpdateInput(BaseModel):
     """Organizations update input."""
 
-    organization_id: Optional[str] = Field(..., description="Unique identifier for the organization (primary key)")
+    organization_id: Optional[str] = Field(
+        ..., description="Unique identifier for the organization (primary key)"
+    )
     name: Optional[str] = Field(..., description="Name of the organization")
     description: Optional[str] = Field(None, description="Optional description of the organization")
-    owner_id: Optional[str] = Field(..., description="ID of the CUSTOMER user who owns the organization (foreign key to Users)")
-    status: Optional[OrganizationStatus] = Field(..., description="Current status of the organization")
+    owner_id: Optional[str] = Field(
+        ..., description="ID of the CUSTOMER user who owns the organization (foreign key to Users)"
+    )
+    status: Optional[OrganizationStatus] = Field(
+        ..., description="Current status of the organization"
+    )
     created_at: Optional[datetime] = Field(..., description="When the organization was created")
-    updated_at: Optional[datetime] = Field(..., description="When the organization was last updated")
-    kms_key_id: Optional[str] = Field(None, description="Organization-specific KMS key ID for encryption")
+    updated_at: Optional[datetime] = Field(
+        ..., description="When the organization was last updated"
+    )
+    kms_key_id: Optional[str] = Field(
+        None, description="Organization-specific KMS key ID for encryption"
+    )
     kms_key_arn: Optional[str] = Field(None, description="Organization-specific KMS key ARN")
     kms_alias: Optional[str] = Field(None, description="Organization-specific KMS key alias name")
-    application_count: Optional[int] = Field(0, description="Denormalized count of applications belonging to this organization")
+    application_count: Optional[int] = Field(
+        0, description="Denormalized count of applications belonging to this organization"
+    )
 
 
 class OrganizationsDeleteInput(BaseModel):
@@ -55,7 +75,6 @@ class OrganizationsDisableInput(BaseModel):
 
     organization_id: str
     disabled: bool
-
 
 
 # Query Input Types
@@ -83,17 +102,25 @@ class Organizations(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    organization_id: str = Field(..., description="Unique identifier for the organization (primary key)")
+    organization_id: str = Field(
+        ..., description="Unique identifier for the organization (primary key)"
+    )
     name: str = Field(..., description="Name of the organization")
     description: Optional[str] = Field(None, description="Optional description of the organization")
-    owner_id: str = Field(..., description="ID of the CUSTOMER user who owns the organization (foreign key to Users)")
+    owner_id: str = Field(
+        ..., description="ID of the CUSTOMER user who owns the organization (foreign key to Users)"
+    )
     status: OrganizationStatus = Field(..., description="Current status of the organization")
     created_at: datetime = Field(..., description="When the organization was created")
     updated_at: datetime = Field(..., description="When the organization was last updated")
-    kms_key_id: Optional[str] = Field(None, description="Organization-specific KMS key ID for encryption")
+    kms_key_id: Optional[str] = Field(
+        None, description="Organization-specific KMS key ID for encryption"
+    )
     kms_key_arn: Optional[str] = Field(None, description="Organization-specific KMS key ARN")
     kms_alias: Optional[str] = Field(None, description="Organization-specific KMS key alias name")
-    application_count: Optional[int] = Field(0, description="Denormalized count of applications belonging to this organization")
+    application_count: Optional[int] = Field(
+        0, description="Denormalized count of applications belonging to this organization"
+    )
 
     @field_validator("created_at", mode="before")
     @classmethod

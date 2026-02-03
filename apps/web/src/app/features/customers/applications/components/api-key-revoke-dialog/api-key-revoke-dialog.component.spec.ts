@@ -20,6 +20,7 @@ import { ApiKeyRevokeDialogComponent } from './api-key-revoke-dialog.component';
 import { IApplicationApiKeys } from '../../../../../core/models/ApplicationApiKeysModel';
 import { Environment } from '../../../../../core/enums/EnvironmentEnum';
 import { ApplicationApiKeyStatus } from '../../../../../core/enums/ApplicationApiKeyStatusEnum';
+import { ApplicationApiKeyType } from '../../../../../core/enums/ApplicationApiKeyTypeEnum';
 import { ApiKeysActions } from '../../store/api-keys/api-keys.actions';
 import {
   selectIsRevoking,
@@ -39,7 +40,8 @@ describe('ApiKeyRevokeDialogComponent', () => {
     organizationId: 'org-789',
     environment: Environment.Production,
     keyHash: 'hash123',
-    keyPrefix: 'prd_abc123',
+    keyPrefix: 'pk_prd_abc123',
+    keyType: ApplicationApiKeyType.Publishable,
     status: ApplicationApiKeyStatus.Active,
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-15'),

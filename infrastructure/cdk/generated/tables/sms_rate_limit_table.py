@@ -14,7 +14,8 @@ class SmsRateLimitTable(Construct):
         super().__init__(scope, id)
 
         self.table = dynamodb.Table(
-            self, "SmsRateLimit",
+            self,
+            "SmsRateLimit",
             table_name="orb-integration-hub-dev-table-smsratelimit",
             partition_key=dynamodb.Attribute(
                 name="phoneNumber",
@@ -25,13 +26,15 @@ class SmsRateLimitTable(Construct):
 
         # SSM Parameters for table discovery
         ssm.StringParameter(
-            self, "SmsRateLimitTableNameParam",
+            self,
+            "SmsRateLimitTableNameParam",
             parameter_name="/orb/integration-hub/dev/dynamodb/smsratelimit/table-name",
             string_value=self.table.table_name,
         )
 
         ssm.StringParameter(
-            self, "SmsRateLimitTableArnParam",
+            self,
+            "SmsRateLimitTableArnParam",
             parameter_name="/orb/integration-hub/dev/dynamodb/smsratelimit/table-arn",
             string_value=self.table.table_arn,
         )

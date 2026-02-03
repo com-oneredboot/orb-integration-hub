@@ -94,9 +94,9 @@ class TestDualKeySystemProperty:
         key = generate_typed_api_key(environment, key_type)
         expected_prefix = KEY_TYPE_PREFIXES[key_type]
 
-        assert key.startswith(f"{expected_prefix}_"), (
-            f"Key should start with '{expected_prefix}_': {key}"
-        )
+        assert key.startswith(
+            f"{expected_prefix}_"
+        ), f"Key should start with '{expected_prefix}_': {key}"
 
     @settings(max_examples=100)
     @given(
@@ -111,9 +111,9 @@ class TestDualKeySystemProperty:
         key = generate_typed_api_key(environment, key_type)
         detected_type = detect_key_type(key)
 
-        assert detected_type == key_type, (
-            f"Detected type '{detected_type}' should match '{key_type}' for key: {key}"
-        )
+        assert (
+            detected_type == key_type
+        ), f"Detected type '{detected_type}' should match '{key_type}' for key: {key}"
 
     @settings(max_examples=100)
     @given(
@@ -154,9 +154,7 @@ class TestDualKeySystemProperty:
         type1=st.sampled_from(list(VALID_KEY_TYPES)),
         type2=st.sampled_from(list(VALID_KEY_TYPES)),
     )
-    def test_all_keys_are_unique(
-        self, env1: str, env2: str, type1: str, type2: str
-    ) -> None:
+    def test_all_keys_are_unique(self, env1: str, env2: str, type1: str, type2: str) -> None:
         """Property: Any two generated keys are unique regardless of type/env."""
         key1 = generate_typed_api_key(env1, type1)
         key2 = generate_typed_api_key(env2, type2)

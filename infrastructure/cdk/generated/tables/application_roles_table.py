@@ -14,7 +14,8 @@ class ApplicationRolesTable(Construct):
         super().__init__(scope, id)
 
         self.table = dynamodb.Table(
-            self, "ApplicationRoles",
+            self,
+            "ApplicationRoles",
             table_name="orb-integration-hub-dev-table-applicationroles",
             partition_key=dynamodb.Attribute(
                 name="applicationRoleId",
@@ -64,13 +65,15 @@ class ApplicationRolesTable(Construct):
 
         # SSM Parameters for table discovery
         ssm.StringParameter(
-            self, "ApplicationRolesTableNameParam",
+            self,
+            "ApplicationRolesTableNameParam",
             parameter_name="/orb/integration-hub/dev/dynamodb/applicationroles/table-name",
             string_value=self.table.table_name,
         )
 
         ssm.StringParameter(
-            self, "ApplicationRolesTableArnParam",
+            self,
+            "ApplicationRolesTableArnParam",
             parameter_name="/orb/integration-hub/dev/dynamodb/applicationroles/table-arn",
             string_value=self.table.table_arn,
         )

@@ -31,4 +31,31 @@ from .user_group_enum import UserGroup
 from .user_status_enum import UserStatus
 from .webhook_event_type_enum import WebhookEventType
 
-__all__ = ['ApplicationApiKeyStatus', 'ApplicationApiKeyType', 'ApplicationGroupRoleStatus', 'ApplicationGroupStatus', 'ApplicationGroupUserStatus', 'ApplicationRoleStatus', 'ApplicationStatus', 'ApplicationUserRoleStatus', 'ApplicationUserStatus', 'Environment', 'ErrorRegistry', 'LegalBasis', 'NotificationStatus', 'NotificationType', 'OrganizationStatus', 'OrganizationUserRole', 'OrganizationUserStatus', 'OwnershipTransferStatus', 'PrivacyRequestStatus', 'PrivacyRequestType', 'RoleStatus', 'RoleType', 'SchemaType', 'UserGroup', 'UserStatus', 'WebhookEventType']
+__all__ = [
+    "ApplicationApiKeyStatus",
+    "ApplicationApiKeyType",
+    "ApplicationGroupRoleStatus",
+    "ApplicationGroupStatus",
+    "ApplicationGroupUserStatus",
+    "ApplicationRoleStatus",
+    "ApplicationStatus",
+    "ApplicationUserRoleStatus",
+    "ApplicationUserStatus",
+    "Environment",
+    "ErrorRegistry",
+    "LegalBasis",
+    "NotificationStatus",
+    "NotificationType",
+    "OrganizationStatus",
+    "OrganizationUserRole",
+    "OrganizationUserStatus",
+    "OwnershipTransferStatus",
+    "PrivacyRequestStatus",
+    "PrivacyRequestType",
+    "RoleStatus",
+    "RoleType",
+    "SchemaType",
+    "UserGroup",
+    "UserStatus",
+    "WebhookEventType",
+]

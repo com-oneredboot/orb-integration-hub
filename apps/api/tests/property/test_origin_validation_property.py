@@ -192,9 +192,9 @@ class TestOriginMatchingProperty:
         """
         allowed = f"https://*.{domain}"
         request = f"https://{subdomain}.{domain}"
-        assert origin_matches(request, allowed, environment), (
-            f"Wildcard {allowed} should match {request}"
-        )
+        assert origin_matches(
+            request, allowed, environment
+        ), f"Wildcard {allowed} should match {request}"
 
     @settings(max_examples=100)
     @given(
@@ -205,9 +205,9 @@ class TestOriginMatchingProperty:
         """Property: Wildcard patterns also match the base domain."""
         allowed = f"https://*.{domain}"
         request = f"https://{domain}"
-        assert origin_matches(request, allowed, environment), (
-            f"Wildcard {allowed} should match base domain {request}"
-        )
+        assert origin_matches(
+            request, allowed, environment
+        ), f"Wildcard {allowed} should match base domain {request}"
 
     @settings(max_examples=100)
     @given(
@@ -222,9 +222,9 @@ class TestOriginMatchingProperty:
         assume(domain1 != domain2)
         origin1 = f"https://{domain1}"
         origin2 = f"https://{domain2}"
-        assert not origin_matches(origin1, origin2, environment), (
-            f"{origin1} should not match {origin2}"
-        )
+        assert not origin_matches(
+            origin1, origin2, environment
+        ), f"{origin1} should not match {origin2}"
 
 
 class TestOriginValidationEdgeCases:

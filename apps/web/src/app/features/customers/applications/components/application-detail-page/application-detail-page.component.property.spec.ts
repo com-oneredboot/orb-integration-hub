@@ -26,6 +26,7 @@ import { IApplicationApiKeys } from '../../../../../core/models/ApplicationApiKe
 import { ApplicationStatus } from '../../../../../core/enums/ApplicationStatusEnum';
 import { OrganizationStatus } from '../../../../../core/enums/OrganizationStatusEnum';
 import { ApplicationApiKeyStatus } from '../../../../../core/enums/ApplicationApiKeyStatusEnum';
+import { ApplicationApiKeyType } from '../../../../../core/enums/ApplicationApiKeyTypeEnum';
 import { Environment } from '../../../../../core/enums/EnvironmentEnum';
 import * as fromApplications from '../../store/applications.selectors';
 import * as fromOrganizations from '../../../organizations/store/organizations.selectors';
@@ -532,7 +533,8 @@ describe('ApplicationDetailPageComponent Property Tests', () => {
     applicationId: 'app-789',
     organizationId: 'org-456',
     environment: environment as Environment,
-    keyPrefix: `orb_${environment.toLowerCase().substring(0, 2)}_abc`,
+    keyPrefix: `pk_${environment.toLowerCase().substring(0, 2)}_abc`,
+    keyType: ApplicationApiKeyType.Publishable,
     keyHash: 'mock-hash-value',
     status,
     createdAt: new Date(),

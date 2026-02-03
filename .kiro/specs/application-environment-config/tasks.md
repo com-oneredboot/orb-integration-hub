@@ -86,10 +86,10 @@ This task list implements the application environment configuration system with 
 
 ## Phase 4: Infrastructure (CDK)
 
-- [ ] 11. Deploy new DynamoDB table
-  - [ ] 11.1 Add ApplicationEnvironmentConfig table to DynamoDB stack
-  - [ ] 11.2 Configure GSI for OrgEnvIndex
-  - [ ] 11.3 Update IAM policies for Lambda access to new table
+- [x] 11. Deploy new DynamoDB table
+  - [x] 11.1 Add ApplicationEnvironmentConfig table to DynamoDB stack
+  - [x] 11.2 Configure GSI for OrgEnvIndex
+  - [x] 11.3 Update IAM policies for Lambda access to new table
 
 - [ ] 12. Deploy Lambda functions
   - [ ] 12.1 Add environment config Lambda functions to stack

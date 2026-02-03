@@ -25,11 +25,19 @@ class UsersCreateInput(BaseModel):
     created_at: datetime = Field(..., description="When the user was created")
     updated_at: datetime = Field(..., description="When the user was last updated")
     phone_number: Optional[str] = Field(None, description="User's phone number")
-    groups: Optional[List[str]] = Field(None, description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)")
+    groups: Optional[List[str]] = Field(
+        None, description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)"
+    )
     email_verified: Optional[bool] = Field(None, description="Whether the user's email is verified")
-    phone_verified: Optional[bool] = Field(None, description="Whether the user's phone number is verified")
-    mfa_enabled: Optional[bool] = Field(None, description="Whether multi-factor authentication is enabled for the user")
-    mfa_setup_complete: Optional[bool] = Field(None, description="Whether MFA setup has been completed successfully")
+    phone_verified: Optional[bool] = Field(
+        None, description="Whether the user's phone number is verified"
+    )
+    mfa_enabled: Optional[bool] = Field(
+        None, description="Whether multi-factor authentication is enabled for the user"
+    )
+    mfa_setup_complete: Optional[bool] = Field(
+        None, description="Whether MFA setup has been completed successfully"
+    )
 
 
 class UsersUpdateInput(BaseModel):
@@ -37,7 +45,9 @@ class UsersUpdateInput(BaseModel):
 
     user_id: Optional[str] = Field(..., description="Unique identifier for the user (primary key)")
     cognito_id: Optional[str] = Field(..., description="Cognito username (used for authentication)")
-    cognito_sub: Optional[str] = Field(..., description="Cognito user sub (unique identifier from tokens)")
+    cognito_sub: Optional[str] = Field(
+        ..., description="Cognito user sub (unique identifier from tokens)"
+    )
     email: Optional[str] = Field(..., description="User's email address")
     first_name: Optional[str] = Field(..., description="User's first name")
     last_name: Optional[str] = Field(..., description="User's last name")
@@ -45,11 +55,19 @@ class UsersUpdateInput(BaseModel):
     created_at: Optional[datetime] = Field(..., description="When the user was created")
     updated_at: Optional[datetime] = Field(..., description="When the user was last updated")
     phone_number: Optional[str] = Field(None, description="User's phone number")
-    groups: Optional[List[str]] = Field(None, description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)")
+    groups: Optional[List[str]] = Field(
+        None, description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)"
+    )
     email_verified: Optional[bool] = Field(None, description="Whether the user's email is verified")
-    phone_verified: Optional[bool] = Field(None, description="Whether the user's phone number is verified")
-    mfa_enabled: Optional[bool] = Field(None, description="Whether multi-factor authentication is enabled for the user")
-    mfa_setup_complete: Optional[bool] = Field(None, description="Whether MFA setup has been completed successfully")
+    phone_verified: Optional[bool] = Field(
+        None, description="Whether the user's phone number is verified"
+    )
+    mfa_enabled: Optional[bool] = Field(
+        None, description="Whether multi-factor authentication is enabled for the user"
+    )
+    mfa_setup_complete: Optional[bool] = Field(
+        None, description="Whether MFA setup has been completed successfully"
+    )
 
 
 class UsersDeleteInput(BaseModel):
@@ -63,7 +81,6 @@ class UsersDisableInput(BaseModel):
 
     user_id: str
     disabled: bool
-
 
 
 # Query Input Types
@@ -107,11 +124,19 @@ class Users(BaseModel):
     created_at: datetime = Field(..., description="When the user was created")
     updated_at: datetime = Field(..., description="When the user was last updated")
     phone_number: Optional[str] = Field(None, description="User's phone number")
-    groups: Optional[List[str]] = Field(None, description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)")
+    groups: Optional[List[str]] = Field(
+        None, description="List of Cognito groups the user belongs to (used for AppSync @aws_auth)"
+    )
     email_verified: Optional[bool] = Field(None, description="Whether the user's email is verified")
-    phone_verified: Optional[bool] = Field(None, description="Whether the user's phone number is verified")
-    mfa_enabled: Optional[bool] = Field(None, description="Whether multi-factor authentication is enabled for the user")
-    mfa_setup_complete: Optional[bool] = Field(None, description="Whether MFA setup has been completed successfully")
+    phone_verified: Optional[bool] = Field(
+        None, description="Whether the user's phone number is verified"
+    )
+    mfa_enabled: Optional[bool] = Field(
+        None, description="Whether multi-factor authentication is enabled for the user"
+    )
+    mfa_setup_complete: Optional[bool] = Field(
+        None, description="Whether MFA setup has been completed successfully"
+    )
 
     @field_validator("created_at", mode="before")
     @classmethod
