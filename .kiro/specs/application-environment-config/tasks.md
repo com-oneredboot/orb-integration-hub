@@ -117,12 +117,12 @@ This task list implements the application environment configuration system with 
   - [x] 15.4 Create environment-config.effects.ts
   - [x] 15.5 Create environment-config.selectors.ts
 
-- [ ] 16. Create environment configuration UI components
-  - [ ] 16.1 Create `EnvironmentConfigTabComponent` for main config view
-  - [ ] 16.2 Create `AllowedOriginsComponent` for CORS origin management
-  - [ ] 16.3 Create `RateLimitsComponent` for rate limit configuration
-  - [ ] 16.4 Create `WebhookConfigComponent` for webhook settings
-  - [ ] 16.5 Create `FeatureFlagsComponent` for feature flag management
+- [x] 16. Create environment configuration UI components
+  - [x] 16.1 Create `EnvironmentConfigTabComponent` for main config view
+  - [x] 16.2 Create `AllowedOriginsComponent` for CORS origin management
+  - [x] 16.3 Create `RateLimitsComponent` for rate limit configuration
+  - [x] 16.4 Create `WebhookConfigComponent` for webhook settings
+  - [x] 16.5 Create `FeatureFlagsComponent` for feature flag management
 
 - [ ] 17. Update Security tab for dual keys
   - [ ] 17.1 Update `SecurityTabComponent` to show publishable and secret key sections
