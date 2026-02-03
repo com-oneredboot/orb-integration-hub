@@ -11,8 +11,7 @@ This specification covers the upgrade from orb-schema-generator v0.18.x to v0.19
 4. Operation naming: `QueryBy*` → `ListBy*`
 5. New `Get` operation for single-item retrieval by primary key
 
-**Blockers:**
-- Issue #79: TypeScript GraphQL query generator not updated for v0.19.0 format (must be fixed first)
+**Status:** Unblocked - Issue #79 was fixed in orb-schema-generator v0.19.3
 
 ## Glossary
 

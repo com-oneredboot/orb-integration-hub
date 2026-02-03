@@ -1,5 +1,50 @@
 # Project Standards - orb-integration-hub
 
+## orb-templates MCP Server
+
+This project uses the orb-templates MCP server for accessing organization standards. The MCP tools are available and should be used proactively.
+
+### Available Tools
+
+| Tool | Purpose | When to Use |
+|------|---------|-------------|
+| `search_standards` | Search orb-templates documentation | Before implementing new patterns, when unsure about conventions |
+| `validate_naming` | Validate AWS resource names | When creating SSM parameters, secrets, log groups, physical resources |
+| `get_workflow_template` | Get GitHub Actions workflow templates | When creating or updating CI/CD pipelines |
+
+### Proactive Usage Guidelines
+
+**ALWAYS use these tools when:**
+- Creating new files or modules → Search for naming conventions
+- Adding AWS resources → Validate naming before implementation
+- Writing infrastructure code → Search for CDK standards
+- Setting up CI/CD → Get workflow templates
+- Implementing tests → Search for testing standards
+- Unsure about any convention → Search first, implement second
+
+### Documentation Categories Available
+
+The MCP server provides access to comprehensive documentation:
+
+| Category | Topics |
+|----------|--------|
+| **Coding Standards** | Python, TypeScript, Dart/Flutter, CDK conventions |
+| **Testing Standards** | Unit testing, integration testing, property-based testing |
+| **Project Structure** | Directory layout, file organization, Nx-style conventions |
+| **GitHub Standards** | Actions workflows, issue management, PR templates |
+| **Integration Guides** | CodeArtifact, OIDC, orb-infrastructure, schema-generator |
+| **Git Hooks** | Pre-commit, pre-push configurations |
+| **Kiro Steering** | AI assistant configuration templates |
+
+### Installation
+
+If the MCP server is not working, run:
+```bash
+./repositories/orb-templates/scripts/install-mcp.sh --profile sso-orb-dev
+```
+
+Then restart Kiro.
+
 ## Documentation References
 
 For complete coding standards and conventions, see:
@@ -298,6 +343,26 @@ pipenv run orb-schema generate
 ## Command Phrases
 
 When the user says these phrases, execute the corresponding actions:
+
+### "check standards for [topic]"
+Use the orb-templates MCP server to search for standards:
+1. Use `search_standards_tool` with the topic as query
+2. Summarize the relevant standards found
+3. Provide specific guidance based on the search results
+
+Example topics: python, typescript, testing, cdk, github actions, project structure, naming
+
+### "validate resource name [name]"
+Validate an AWS resource name against orb conventions:
+1. Determine the resource type (ssm-parameter, secret, log-group, physical-resource)
+2. Use `validate_naming_tool` with the resource type and name
+3. Report if valid or provide the correct format
+
+### "get workflow template [type]"
+Get a GitHub Actions workflow template:
+1. Use `get_workflow_template_tool` with the workflow type (ci, deploy-infrastructure, deploy-website)
+2. Display the template
+3. Explain any customization needed for this project
 
 ### "review all open issues"
 1. Run `gh issue list` to get all open issues

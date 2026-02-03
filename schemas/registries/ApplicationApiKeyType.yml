@@ -1,0 +1,17 @@
+type: registry
+version: '1.0'
+name: ApplicationApiKeyType
+targets:
+  - api
+description: "Type of API key (publishable for frontend, secret for backend)"
+
+items:
+  UNKNOWN:
+    value: "UNKNOWN"
+    description: "Unknown key type"
+  PUBLISHABLE:
+    value: "PUBLISHABLE"
+    description: "Frontend-safe key with pk_ prefix, validated against allowed origins"
+  SECRET:
+    value: "SECRET"
+    description: "Backend-only key with sk_ prefix, full permissions"

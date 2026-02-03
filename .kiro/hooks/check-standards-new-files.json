@@ -1,0 +1,13 @@
+{
+  "name": "Check Standards for New Files",
+  "version": "1.0.0",
+  "description": "Reminds to check orb-templates standards when new source files are created",
+  "when": {
+    "type": "fileCreated",
+    "patterns": ["apps/**/*.py", "apps/**/*.ts", "infrastructure/**/*.py"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A new source file was created. Use search_standards_tool to verify the file follows orb naming conventions and coding standards for this file type. Check: file naming, directory placement, and any boilerplate requirements."
+  }
+}

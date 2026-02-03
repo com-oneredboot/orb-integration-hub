@@ -1,0 +1,13 @@
+{
+  "name": "Validate AWS Naming",
+  "version": "1.0.0",
+  "description": "Validates AWS resource names against orb naming conventions when infrastructure code is edited",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["infrastructure/**/*.py", "**/*_stack.py", "**/*_construct.py"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Check if any new AWS resource names were added (SSM parameters, secrets, log groups, physical resources). If so, use the validate_naming_tool from orb-templates MCP to verify they follow orb naming conventions. Report any violations."
+  }
+}

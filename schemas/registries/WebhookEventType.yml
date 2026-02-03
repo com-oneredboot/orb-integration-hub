@@ -1,0 +1,35 @@
+type: registry
+version: '1.0'
+name: WebhookEventType
+targets:
+  - api
+description: "Types of events that can trigger webhooks"
+
+items:
+  UNKNOWN:
+    value: "UNKNOWN"
+    description: "Unknown event type"
+  USER_CREATED:
+    value: "USER_CREATED"
+    description: "A new user was created in the application"
+  USER_UPDATED:
+    value: "USER_UPDATED"
+    description: "A user's profile was updated"
+  USER_DELETED:
+    value: "USER_DELETED"
+    description: "A user was deleted from the application"
+  GROUP_CREATED:
+    value: "GROUP_CREATED"
+    description: "A new group was created"
+  GROUP_UPDATED:
+    value: "GROUP_UPDATED"
+    description: "A group was updated"
+  GROUP_DELETED:
+    value: "GROUP_DELETED"
+    description: "A group was deleted"
+  ROLE_ASSIGNED:
+    value: "ROLE_ASSIGNED"
+    description: "A role was assigned to a user or group"
+  ROLE_REVOKED:
+    value: "ROLE_REVOKED"
+    description: "A role was revoked from a user or group"

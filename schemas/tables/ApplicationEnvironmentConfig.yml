@@ -1,0 +1,105 @@
+# file: schemas/tables/ApplicationEnvironmentConfig.yml
+# author: orb-integration-hub
+# date: 2026-02-02
+# description: ApplicationEnvironmentConfig table for per-environment settings including CORS, rate limits, webhooks, and feature flags
+
+type: dynamodb
+pitr_enabled: false
+version: '1.0'
+name: ApplicationEnvironmentConfig
+targets:
+  - api
+model:
+  authConfig:
+    cognitoAuthentication:
+      groups:
+        OWNER:
+          - '*'
+        EMPLOYEE:
+          - '*'
+  keys:
+    primary:
+      partition: applicationId
+      sort: environment
+      description: Composite key for application environment configuration
+    secondary:
+      - name: OrgEnvIndex
+        type: GSI
+        partition: organizationId
+        sort: environment
+        projection_type: ALL
+        description: Index for querying configs by organization and environment
+  attributes:
+    applicationId:
+      type: string
+      required: true
+      description: ID of the application (partition key)
+    environment:
+      type: string
+      required: true
+      enum_type: Environment
+      enum_values:
+        - PRODUCTION
+        - STAGING
+        - DEVELOPMENT
+        - TEST
+        - PREVIEW
+      description: Environment this configuration applies to (sort key)
+    organizationId:
+      type: string
+      required: true
+      description: ID of the organization (denormalized for queries)
+    allowedOrigins:
+      type: array
+      items: string
+      required: false
+      description: List of allowed CORS origins for publishable keys (max 10)
+    rateLimitPerMinute:
+      type: number
+      required: true
+      description: Maximum API requests per minute (default 60)
+    rateLimitPerDay:
+      type: number
+      required: true
+      description: Maximum API requests per day (default 10000)
+    webhookUrl:
+      type: string
+      required: false
+      description: HTTPS URL for webhook delivery
+    webhookSecret:
+      type: string
+      required: false
+      description: HMAC secret for webhook signature (32 chars)
+    webhookEvents:
+      type: array
+      items: string
+      required: false
+      description: List of event types to deliver via webhook
+    webhookEnabled:
+      type: boolean
+      required: false
+      description: Whether webhook delivery is enabled
+    webhookMaxRetries:
+      type: number
+      required: false
+      description: Maximum retry attempts for failed webhook delivery (default 3)
+    webhookRetryDelaySeconds:
+      type: number
+      required: false
+      description: Delay between retry attempts in seconds (default 60)
+    featureFlags:
+      type: map
+      required: false
+      description: Map of feature flag keys to values (boolean, string, or number)
+    metadata:
+      type: map
+      required: false
+      description: Custom key-value pairs for environment-specific data
+    createdAt:
+      type: timestamp
+      required: true
+      description: When the configuration was created
+    updatedAt:
+      type: timestamp
+      required: true
+      description: When the configuration was last updated

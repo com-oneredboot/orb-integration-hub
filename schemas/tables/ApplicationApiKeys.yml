@@ -64,7 +64,20 @@ model:
     keyPrefix:
       type: string
       required: true
-      description: First 12 chars of key for display (e.g., orb_dev_xxxx)
+      description: First 12 chars of key for display (e.g., pk_dev_xxxx or sk_dev_xxxx)
+    keyType:
+      type: string
+      required: true
+      enum_type: ApplicationApiKeyType
+      enum_values:
+        - PUBLISHABLE
+        - SECRET
+      description: Type of API key (PUBLISHABLE for frontend, SECRET for backend)
+    permissions:
+      type: array
+      items: string
+      required: false
+      description: List of permission strings for this key (e.g., read:users, write:groups)
     status:
       type: string
       required: true

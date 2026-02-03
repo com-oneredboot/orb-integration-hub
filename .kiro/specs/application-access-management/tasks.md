@@ -1,8 +1,10 @@
 # Implementation Plan: Application Access Management
 
+## Status: Phases 1-4 COMPLETE ✅ | Phase 5 MOVED to orb-sdk
+
 ## Overview
 
-This implementation plan covers the Application Access Management system across 5 phases with checkpoints after each phase. Each phase builds on the previous and includes testing tasks.
+This implementation plan covers the Application Access Management system. Phases 1-4 (Groups, Roles, Permissions, API Keys, Frontend) are complete. Phase 5 (SDK) has been merged into the orb-sdk spec for comprehensive SDK development.
 
 ## Tasks
 
@@ -282,133 +284,21 @@ This implementation plan covers the Application Access Management system across 
 
 ### Phase 5: SDK Infrastructure & Package
 
-**BLOCKED**: Waiting on orb-schema-generator #83 (Multi-AppSync API Support with Lambda Authorizer)
+**MOVED**: Phase 5 tasks have been merged into the `orb-sdk` spec for comprehensive SDK development.
 
-- [ ] 22. Create SDK AppSync infrastructure (BLOCKED)
-  - [ ] 22.1 Update schema-generator.yml with dual-AppSync configuration
-    - Add `appsync.sdk` configuration with Lambda authorizer
-    - Configure table filtering (exclude ApplicationApiKeys)
-    - _Requirements: 7.1, 10.1_
-    - _Blocked by: orb-schema-generator #83_
-  - [ ] 22.2 Create API Key Authorizer Lambda
-    - Validate orb_{env}_{key} format
-    - Lookup key hash in ApplicationApiKeys table
-    - Return org/app/env context on success
-    - _Requirements: 7.1, 7.2, 7.3_
-  - [ ] 22.3 Generate SDK AppSync API and deploy
-    - Run orb-schema-generator with new config
-    - Create appsync_sdk_stack.py
-    - Deploy to dev environment
-    - _Requirements: 10.1_
-    - _Blocked by: orb-schema-generator #83_
-  - [ ] 22.4 Create SDK GraphQL schema subset
-    - Define sdk-schema.graphql with SDK-only operations
-    - Exclude API key management operations
-    - _Requirements: 10.2, 10.3, 10.4_
-
-- [ ] 23. Create TypeScript SDK package structure
-  - [ ] 23.1 Initialize npm package
-    - Create packages/sdk-typescript directory
-    - Set up package.json with proper metadata
-    - Configure TypeScript compilation
-    - _Requirements: 10.1, 10.5_
-  - [ ] 23.2 Create SDK client class
-    - OrbIntegrationClient with API key authentication
-    - GraphQL client pointing to SDK AppSync endpoint
-    - Base error handling
-    - _Requirements: 10.1_
-
-- [ ] 23. Implement SDK user management functions
-  - [ ] 23.1 Implement user functions
-    - assignUser, removeUser, getUsers
-    - Scoped to environment from API key context
-    - _Requirements: 10.2_
-  - [ ] 23.2 Write unit tests for user functions
-    - Test with mocked API responses
-    - _Requirements: 10.6_
-
-- [ ] 24. Implement SDK group management functions
-  - [ ] 24.1 Implement group functions
-    - createGroup, updateGroup, deleteGroup
-    - addMember, removeMember, getMembers
-    - _Requirements: 10.3_
-  - [ ] 24.2 Write unit tests for group functions
-    - Test with mocked API responses
-    - _Requirements: 10.6_
-
-- [ ] 25. Implement SDK role management functions
-  - [ ] 25.1 Implement role functions
-    - assignRole, removeRole, getUserPermissions
-    - _Requirements: 10.4_
-  - [ ] 25.2 Write unit tests for role functions
-    - Test with mocked API responses
-    - _Requirements: 10.6_
-
-- [ ] 26. Implement SDK API key management functions
-  - [ ] 26.1 Implement API key functions
-    - generateKey, rotateKey, revokeKey
-    - _Requirements: 10.5_
-  - [ ] 26.2 Write unit tests for API key functions
-    - Test with mocked API responses
-    - _Requirements: 10.6_
-
-- [ ] 27. Create SDK documentation
-  - [ ] 27.1 Write README with quick-start examples
-    - Installation, authentication, basic usage
-    - _Requirements: 11.2_
-  - [ ] 27.2 Add inline JSDoc documentation
-    - Document all public functions and types
-    - _Requirements: 11.1, 11.5_
-  - [ ] 27.3 Create CHANGELOG.md
-    - Document initial release
-    - _Requirements: 11.4_
-
-- [ ] 28. Create Python SDK package (optional)
-  - [ ] 28.1 Initialize PyPI package structure
-    - Create packages/sdk-python directory
-    - Set up pyproject.toml
-    - _Requirements: 10.6_
-  - [ ] 28.2 Implement Python SDK client
-    - Mirror TypeScript SDK functionality
-    - _Requirements: 10.1-10.5_
-  - [ ] 28.3 Write Python SDK tests
-    - Test with mocked API responses
-    - _Requirements: 10.6_
-
-- [ ] 29. Publish SDK packages
-  - [ ] 29.1 Publish TypeScript SDK to npm
-    - Version 1.0.0
-    - _Requirements: 10.6, 11.3_
-  - [ ] 29.2 Publish Python SDK to PyPI
-    - Version 1.0.0
-    - _Requirements: 10.6, 11.3_
-
-- [ ] 30. Final Checkpoint
-  - Ensure all tests pass (>80% coverage)
-  - Verify SDK works against deployed API
-  - Update project CHANGELOG.md
-  - Bump project version
-  - Ask user if questions arise
+See: `.kiro/specs/orb-sdk/` for the full SDK implementation plan.
 
 ## Notes
 
-- All tasks are required for comprehensive implementation
-- Each phase has a checkpoint to verify progress before continuing
-- Property tests validate universal correctness properties (12 properties total)
-- Unit tests validate specific examples and edge cases
-- Follow orb-templates guidance for documentation, versions, changelogs
-- Both TypeScript and Python SDKs will be published
+- Phases 1-4 complete - Groups, Roles, Permissions, API Keys, Frontend all implemented
+- Phase 5 (SDK) merged into `orb-sdk` spec for comprehensive SDK development
+- All property tests passing
+- Both TypeScript and Python SDKs will be developed in orb-sdk spec
 
 ## Blockers
 
-| Issue | Team | Description | Impact |
+None - all blockers resolved.
+
+| Issue | Team | Description | Status |
 |-------|------|-------------|--------|
-| #83 | orb-schema-generator | Multi-AppSync API Support with Lambda Authorizer | Blocks Phase 5 tasks 22.1, 22.3 |
-
-Phase 5 requires a second AppSync API with AWS_LAMBDA authorization for SDK access. This is blocked until orb-schema-generator supports:
-- Multiple AppSync APIs in configuration
-- AWS_LAMBDA authorization mode
-- Lambda authorizer configuration
-- Per-API table/operation filtering
-
-Once #83 is resolved, update orb-schema-generator and continue with Phase 5.
+| #83 | orb-schema-generator | Multi-AppSync API Support with Lambda Authorizer | ✅ Resolved in v1.0.0 |

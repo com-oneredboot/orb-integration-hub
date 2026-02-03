@@ -1,0 +1,13 @@
+{
+  "name": "Check Workflow Standards",
+  "version": "1.0.0",
+  "description": "Validates GitHub Actions workflows against orb standards",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [".github/workflows/*.yml", ".github/workflows/*.yaml"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A GitHub Actions workflow was modified. Use search_standards_tool to search for 'github actions' standards and verify the workflow follows orb conventions for: environment usage, OIDC configuration, CodeArtifact authentication, and job structure."
+  }
+}

@@ -35,10 +35,14 @@ Orb Integration Hub is a serverless application that provides a unified API for 
 git clone https://github.com/com-oneredboot/orb-integration-hub.git
 cd orb-integration-hub
 
-# Set up reference repositories (optional, for standards reference)
+# Set up reference repositories (required for standards and MCP server)
 mkdir -p repositories
 git clone https://github.com/com-oneredboot/orb-templates.git repositories/orb-templates
 git clone https://github.com/com-oneredboot/orb-infrastructure.git repositories/orb-infrastructure
+
+# Install orb-templates MCP server (REQUIRED for Kiro users)
+./repositories/orb-templates/scripts/install-mcp.sh --profile sso-orb-dev
+# Then restart Kiro
 
 # Install backend dependencies
 cd apps/api && pipenv install --dev
@@ -46,6 +50,16 @@ cd apps/api && pipenv install --dev
 # Install frontend dependencies
 cd ../web && npm install
 ```
+
+### orb-templates MCP Server
+
+This project uses the orb-templates MCP server to provide access to organization standards directly in Kiro. After running the install script above, you'll have access to:
+
+- `search_standards` - Search coding standards, testing guidelines, project structure docs
+- `validate_naming` - Validate AWS resource names against orb conventions
+- `get_workflow_template` - Get GitHub Actions workflow templates
+
+The MCP server is configured in `.kiro/settings/mcp.json` and hooks in `.kiro/hooks/` will automatically remind you to use these tools when relevant.
 
 ## Project Structure
 
