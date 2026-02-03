@@ -139,17 +139,17 @@ This task list implements the application environment configuration system with 
 
 ## Phase 6: Integration & Webhook Delivery
 
-- [ ] 19. Implement webhook delivery system
-  - [ ] 19.1 Create SQS queue for webhook events
-  - [ ] 19.2 Create `apps/api/lambdas/webhooks/deliver_webhook.py` Lambda
-  - [ ] 19.3 Implement HMAC-SHA256 signature generation
-  - [ ] 19.4 Implement retry logic with exponential backoff
-  - [ ] 19.5 Add CloudWatch metrics for webhook delivery
+- [x] 19. Implement webhook delivery system
+  - [x] 19.1 Create SQS queue for webhook events
+  - [x] 19.2 Create `apps/api/lambdas/webhooks/deliver_webhook.py` Lambda
+  - [x] 19.3 Implement HMAC-SHA256 signature generation
+  - [x] 19.4 Implement retry logic with exponential backoff
+  - [x] 19.5 Add CloudWatch metrics for webhook delivery
 
-- [ ] 20. Wire up event sources to webhook queue
-  - [ ] 20.1 Update user CRUD operations to publish webhook events
-  - [ ] 20.2 Update group CRUD operations to publish webhook events
-  - [ ] 20.3 Update role assignment operations to publish webhook events
+- [x] 20. Wire up event sources to webhook queue
+  - [x] 20.1 Update user CRUD operations to publish webhook events
+  - [x] 20.2 Update group CRUD operations to publish webhook events
+  - [x] 20.3 Update role assignment operations to publish webhook events
 
 ---
 
