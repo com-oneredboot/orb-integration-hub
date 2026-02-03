@@ -124,11 +124,11 @@ This task list implements the application environment configuration system with 
   - [x] 16.4 Create `WebhookConfigComponent` for webhook settings
   - [x] 16.5 Create `FeatureFlagsComponent` for feature flag management
 
-- [ ] 17. Update Security tab for dual keys
-  - [ ] 17.1 Update `SecurityTabComponent` to show publishable and secret key sections
-  - [ ] 17.2 Add key type selector to key generation dialog
-  - [ ] 17.3 Update key display to show type badges (pk/sk)
-  - [ ] 17.4 Add warning message for secret key exposure
+- [x] 17. Update Security tab for dual keys
+  - [x] 17.1 Update `SecurityTabComponent` to show publishable and secret key sections
+  - [x] 17.2 Add key type selector to key generation dialog
+  - [x] 17.3 Update key display to show type badges (pk/sk)
+  - [x] 17.4 Add warning message for secret key exposure
 
 - [ ] 18. Add frontend unit tests
   - [ ] 18.1 Add tests for environment-config NgRx store

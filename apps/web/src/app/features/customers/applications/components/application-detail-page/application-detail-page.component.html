@@ -404,6 +404,9 @@
 
             <!-- Active Key Info -->
             <div class="orb-info orb-info--inline" *ngIf="row.hasKey && !isNewlyGeneratedKey(row)">
+              <span class="orb-key-type-badge" [class.orb-key-type-badge--publishable]="row.apiKey?.keyType === 'PUBLISHABLE'" [class.orb-key-type-badge--secret]="row.apiKey?.keyType === 'SECRET'">
+                {{ row.apiKey?.keyType === 'SECRET' ? 'sk' : 'pk' }}
+              </span>
               <code class="orb-info__id">{{ row.apiKey?.keyPrefix }}...</code>
               <app-status-badge
                 [status]="row.apiKey?.status || ''"
@@ -420,6 +423,10 @@
                 [attr.aria-label]="'Copy key prefix'">
                 <fa-icon icon="copy"></fa-icon>
               </button>
+              <span class="orb-key-warning" *ngIf="row.apiKey?.keyType === 'SECRET'">
+                <fa-icon icon="exclamation-triangle"></fa-icon>
+                Secret key - do not expose in frontend code
+              </span>
             </div>
 
             <!-- Revoked Key State -->
