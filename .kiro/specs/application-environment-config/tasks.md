@@ -155,24 +155,24 @@ This task list implements the application environment configuration system with 
 
 ## Phase 7: Testing & Documentation
 
-- [ ] 21. Integration tests
-  - [ ] 21.1 Test environment config CRUD flow end-to-end
-  - [ ] 21.2 Test publishable key validation with origin checking
-  - [ ] 21.3 Test secret key validation without origin checking
-  - [ ] 21.4 Test rate limiting behavior
-  - [ ] 21.5 Test webhook delivery with signature verification
+- [x] 21. Integration tests
+  - [x] 21.1 Test environment config CRUD flow end-to-end
+  - [x] 21.2 Test publishable key validation with origin checking
+  - [x] 21.3 Test secret key validation without origin checking
+  - [x] 21.4 Test rate limiting behavior
+  - [x] 21.5 Test webhook delivery with signature verification
 
-- [ ] 22. Property-based tests
-  - [ ] 22.1 Property: Origin validation accepts valid URLs and rejects invalid
-  - [ ] 22.2 Property: Key prefix correctly identifies key type
-  - [ ] 22.3 Property: Webhook signature is deterministic for same payload+secret
-  - [ ] 22.4 Property: Rate limit headers are consistent with actual limits
+- [x] 22. Property-based tests
+  - [x] 22.1 Property: Origin validation accepts valid URLs and rejects invalid
+  - [x] 22.2 Property: Key prefix correctly identifies key type
+  - [x] 22.3 Property: Webhook signature is deterministic for same payload+secret
+  - [x] 22.4 Property: Rate limit headers are consistent with actual limits
 
-- [ ] 23. Documentation updates
-  - [ ] 23.1 Update API documentation with new GraphQL operations
-  - [ ] 23.2 Add webhook integration guide for consumers
-  - [ ] 23.3 Add dual key system documentation
-  - [ ] 23.4 Update CHANGELOG.md with new features
+- [x] 23. Documentation updates
+  - [x] 23.1 Update API documentation with new GraphQL operations
+  - [x] 23.2 Add webhook integration guide for consumers
+  - [x] 23.3 Add dual key system documentation
+  - [x] 23.4 Update CHANGELOG.md with new features
 
 ---
 

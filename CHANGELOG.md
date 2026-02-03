@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Application Environment Configuration feature
+  - Per-environment settings for CORS origins, rate limits, webhooks, and feature flags
+  - Dual API key system with publishable (pk_) and secret (sk_) key types
+  - Webhook delivery system with SQS queue and Lambda processor
+  - HMAC-SHA256 signature generation for webhook payloads
+  - CloudWatch metrics for webhook delivery monitoring
+  - NgRx state management for environment config
+  - Environment config UI components (origins, rate limits, webhooks, feature flags)
+  - Key type badges (pk/sk) in Security tab
+  - Property-based tests for origin validation and webhook signatures
+  - Integration tests for environment config CRUD operations
+  - Spec: `.kiro/specs/application-environment-config/`
+
 ### Changed
 - Migrated AWS Secrets Manager naming from dash-based to slash-based convention (#32)
   - Old: `orb-integration-hub-dev-graphql-api-key`

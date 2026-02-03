@@ -317,3 +317,293 @@ To regenerate after schema changes:
 ```bash
 pipenv run orb-schema generate
 ```
+
+## Environment Configuration API
+
+The Environment Configuration API allows managing per-environment settings for applications including CORS origins, rate limits, webhooks, and feature flags.
+
+### Types
+
+```graphql
+type ApplicationEnvironmentConfig {
+  applicationId: String!
+  environment: Environment!
+  organizationId: String!
+  allowedOrigins: [String!]
+  rateLimitPerMinute: Int!
+  rateLimitPerDay: Int!
+  webhookUrl: String
+  webhookSecret: String
+  webhookEvents: [String!]
+  webhookEnabled: Boolean!
+  webhookMaxRetries: Int
+  webhookRetryDelaySeconds: Int
+  featureFlags: AWSJSON
+  metadata: AWSJSON
+  createdAt: AWSTimestamp!
+  updatedAt: AWSTimestamp!
+}
+```
+
+### Queries
+
+**GetApplicationEnvironmentConfig** (Groups: CUSTOMER, EMPLOYEE, OWNER)
+
+Get environment configuration for an application.
+
+```graphql
+query {
+  GetApplicationEnvironmentConfig(
+    applicationId: "app-123"
+    environment: DEVELOPMENT
+  ) {
+    applicationId
+    environment
+    allowedOrigins
+    rateLimitPerMinute
+    rateLimitPerDay
+    webhookEnabled
+    featureFlags
+  }
+}
+```
+
+### Mutations
+
+**UpdateApplicationEnvironmentConfig** (Groups: CUSTOMER, EMPLOYEE, OWNER)
+
+Update environment configuration settings.
+
+```graphql
+mutation {
+  UpdateApplicationEnvironmentConfig(input: {
+    applicationId: "app-123"
+    environment: DEVELOPMENT
+    rateLimitPerMinute: 120
+    rateLimitPerDay: 20000
+  }) {
+    applicationId
+    environment
+    rateLimitPerMinute
+    rateLimitPerDay
+    updatedAt
+  }
+}
+```
+
+**AddAllowedOrigin** (Groups: CUSTOMER, EMPLOYEE, OWNER)
+
+Add a CORS origin to the allowed list.
+
+```graphql
+mutation {
+  AddAllowedOrigin(input: {
+    applicationId: "app-123"
+    environment: DEVELOPMENT
+    origin: "https://app.example.com"
+  }) {
+    applicationId
+    allowedOrigins
+  }
+}
+```
+
+**RemoveAllowedOrigin** (Groups: CUSTOMER, EMPLOYEE, OWNER)
+
+Remove a CORS origin from the allowed list.
+
+```graphql
+mutation {
+  RemoveAllowedOrigin(input: {
+    applicationId: "app-123"
+    environment: DEVELOPMENT
+    origin: "https://old-app.example.com"
+  }) {
+    applicationId
+    allowedOrigins
+  }
+}
+```
+
+**UpdateWebhookConfig** (Groups: CUSTOMER, EMPLOYEE, OWNER)
+
+Update webhook configuration.
+
+```graphql
+mutation {
+  UpdateWebhookConfig(input: {
+    applicationId: "app-123"
+    environment: PRODUCTION
+    webhookUrl: "https://webhook.example.com/events"
+    webhookEnabled: true
+    webhookEvents: ["USER_CREATED", "USER_UPDATED", "USER_DELETED"]
+    webhookMaxRetries: 5
+    webhookRetryDelaySeconds: 120
+  }) {
+    applicationId
+    webhookUrl
+    webhookEnabled
+    webhookEvents
+  }
+}
+```
+
+**RegenerateWebhookSecret** (Groups: CUSTOMER, EMPLOYEE, OWNER)
+
+Generate a new webhook secret. The old secret is immediately invalidated.
+
+```graphql
+mutation {
+  RegenerateWebhookSecret(input: {
+    applicationId: "app-123"
+    environment: PRODUCTION
+  }) {
+    webhookSecret
+  }
+}
+```
+
+**SetFeatureFlag** (Groups: CUSTOMER, EMPLOYEE, OWNER)
+
+Set a feature flag value.
+
+```graphql
+mutation {
+  SetFeatureFlag(input: {
+    applicationId: "app-123"
+    environment: DEVELOPMENT
+    key: "new_feature_enabled"
+    value: true
+  }) {
+    applicationId
+    featureFlags
+  }
+}
+```
+
+**DeleteFeatureFlag** (Groups: CUSTOMER, EMPLOYEE, OWNER)
+
+Delete a feature flag.
+
+```graphql
+mutation {
+  DeleteFeatureFlag(input: {
+    applicationId: "app-123"
+    environment: DEVELOPMENT
+    key: "deprecated_feature"
+  }) {
+    applicationId
+    featureFlags
+  }
+}
+```
+
+## Dual API Key System
+
+Applications support two types of API keys:
+
+| Key Type | Prefix | Use Case | Origin Validation |
+|----------|--------|----------|-------------------|
+| Publishable | `pk_` | Client-side (browser, mobile) | Required |
+| Secret | `sk_` | Server-side only | Not required |
+
+### Key Generation
+
+```graphql
+mutation {
+  GenerateApiKey(input: {
+    applicationId: "app-123"
+    organizationId: "org-456"
+    environment: PRODUCTION
+    keyType: PUBLISHABLE
+  }) {
+    applicationApiKeyId
+    fullKey
+    keyPrefix
+    keyType
+  }
+}
+```
+
+**Important**: The `fullKey` is only returned once during generation. Store it securely.
+
+### Key Validation
+
+Publishable keys (`pk_*`) are validated against the configured allowed origins. Requests from non-allowed origins are rejected.
+
+Secret keys (`sk_*`) bypass origin validation but should only be used in server-side code where the key cannot be exposed.
+
+## Webhook Integration
+
+### Event Types
+
+| Event | Description |
+|-------|-------------|
+| `USER_CREATED` | A new user was created |
+| `USER_UPDATED` | User data was modified |
+| `USER_DELETED` | A user was deleted |
+| `GROUP_CREATED` | A new group was created |
+| `GROUP_UPDATED` | Group data was modified |
+| `GROUP_DELETED` | A group was deleted |
+| `ROLE_ASSIGNED` | A role was assigned to a user |
+| `ROLE_REVOKED` | A role was revoked from a user |
+
+### Webhook Payload
+
+```json
+{
+  "eventId": "evt-550e8400-e29b-41d4-a716-446655440000",
+  "eventType": "USER_CREATED",
+  "timestamp": "2026-02-03T12:00:00Z",
+  "applicationId": "app-123",
+  "organizationId": "org-456",
+  "environment": "PRODUCTION",
+  "resource": {
+    "type": "user",
+    "id": "user-789"
+  },
+  "data": {
+    "email": "user@example.com",
+    "firstName": "John",
+    "lastName": "Doe"
+  },
+  "actor": {
+    "id": "admin-user-123"
+  }
+}
+```
+
+### Webhook Headers
+
+| Header | Description |
+|--------|-------------|
+| `X-Webhook-Signature` | HMAC-SHA256 signature: `sha256={signature}` |
+| `X-Webhook-Timestamp` | Unix timestamp of the request |
+| `X-Webhook-Event` | Event type (e.g., `USER_CREATED`) |
+| `Content-Type` | `application/json` |
+
+### Signature Verification
+
+Verify webhook signatures to ensure authenticity:
+
+```python
+import hmac
+import hashlib
+
+def verify_webhook(payload: str, secret: str, signature: str) -> bool:
+    expected = hmac.new(
+        secret.encode('utf-8'),
+        payload.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(f"sha256={expected}", signature)
+```
+
+### Retry Policy
+
+Failed webhook deliveries are retried with exponential backoff:
+- Default: 3 retries
+- Configurable via `webhookMaxRetries` (max 10)
+- Delay between retries configurable via `webhookRetryDelaySeconds`
+
+After all retries are exhausted, the event is moved to a dead letter queue for manual inspection.
