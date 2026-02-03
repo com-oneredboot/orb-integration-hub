@@ -178,14 +178,14 @@ This task list implements the application environment configuration system with 
 
 ## Phase 8: Finalization
 
-- [ ] 24. Final verification
-  - [ ] 24.1 Run all backend tests: `cd apps/api && pipenv run pytest`
-  - [ ] 24.2 Run all frontend tests: `cd apps/web && npm test`
-  - [ ] 24.3 Run CDK tests: `cd infrastructure && pipenv run pytest`
-  - [ ] 24.4 Run linters: `pipenv run ruff check .` and `npm run lint`
-  - [ ] 24.5 Deploy to dev environment and smoke test
+- [x] 24. Final verification
+  - [x] 24.1 Run all backend tests: `cd apps/api && pipenv run pytest`
+  - [x] 24.2 Run all frontend tests: `cd apps/web && npm test`
+  - [x] 24.3 Run CDK tests: `cd infrastructure && pipenv run pytest`
+  - [x] 24.4 Run linters: `pipenv run ruff check .` and `npm run lint`
+  - [x] 24.5 Deploy to dev environment and smoke test
 
-- [ ] 25. Git commit and issue updates
-  - [ ] 25.1 Commit with message referencing any related issues
-  - [ ] 25.2 Update any blocked issues with implementation status
-  - [ ] 25.3 Tag release if applicable
+- [x] 25. Git commit and issue updates
+  - [x] 25.1 Commit with message referencing any related issues
+  - [x] 25.2 Update any blocked issues with implementation status
+  - [x] 25.3 Tag release if applicable
