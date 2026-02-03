@@ -319,3 +319,61 @@ class TestDynamoDBStackTags:
                 ]),
             },
         )
+
+
+class TestDynamoDBStackApplicationEnvironmentConfigTable:
+    """Tests for ApplicationEnvironmentConfig table."""
+
+    def test_creates_application_environment_config_table(self, template: Template) -> None:
+        """Verify ApplicationEnvironmentConfig table is created with composite key."""
+        template.has_resource_properties(
+            "AWS::DynamoDB::Table",
+            {
+                "TableName": "test-project-dev-application-environment-config",
+                "BillingMode": "PAY_PER_REQUEST",
+                "KeySchema": [
+                    {"AttributeName": "applicationId", "KeyType": "HASH"},
+                    {"AttributeName": "environment", "KeyType": "RANGE"},
+                ],
+            },
+        )
+
+    def test_application_environment_config_has_org_env_gsi(self, template: Template) -> None:
+        """Verify ApplicationEnvironmentConfig table has OrgEnvIndex GSI."""
+        template.has_resource_properties(
+            "AWS::DynamoDB::Table",
+            {
+                "TableName": "test-project-dev-application-environment-config",
+                "GlobalSecondaryIndexes": Match.array_with([
+                    Match.object_like({
+                        "IndexName": "OrgEnvIndex",
+                        "KeySchema": [
+                            {"AttributeName": "organizationId", "KeyType": "HASH"},
+                            {"AttributeName": "environment", "KeyType": "RANGE"},
+                        ],
+                    }),
+                ]),
+            },
+        )
+
+
+class TestDynamoDBStackApiRateLimitsTable:
+    """Tests for ApiRateLimits table."""
+
+    def test_creates_api_rate_limits_table(self, template: Template) -> None:
+        """Verify ApiRateLimits table is created with composite key and TTL."""
+        template.has_resource_properties(
+            "AWS::DynamoDB::Table",
+            {
+                "TableName": "test-project-dev-api-rate-limits",
+                "BillingMode": "PAY_PER_REQUEST",
+                "KeySchema": [
+                    {"AttributeName": "keyId", "KeyType": "HASH"},
+                    {"AttributeName": "windowKey", "KeyType": "RANGE"},
+                ],
+                "TimeToLiveSpecification": {
+                    "AttributeName": "ttl",
+                    "Enabled": True,
+                },
+            },
+        )

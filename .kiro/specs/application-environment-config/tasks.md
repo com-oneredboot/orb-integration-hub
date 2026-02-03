@@ -96,10 +96,10 @@ This task list implements the application environment configuration system with 
   - [ ] 12.2 Configure environment variables for new Lambdas
   - [ ] 12.3 Update AppSync resolver mappings
 
-- [ ] 13. Run CDK tests
-  - [ ] 13.1 Add unit tests for new table construct
-  - [ ] 13.2 Add unit tests for new Lambda constructs
-  - [ ] 13.3 Run `pipenv run pytest infrastructure/cdk/tests/`
+- [x] 13. Run CDK tests
+  - [x] 13.1 Add unit tests for new table construct
+  - [x] 13.2 Add unit tests for new Lambda constructs
+  - [x] 13.3 Run `pipenv run pytest infrastructure/cdk/tests/`
 
 ---
 
