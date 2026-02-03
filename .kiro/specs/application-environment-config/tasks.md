@@ -130,10 +130,10 @@ This task list implements the application environment configuration system with 
   - [x] 17.3 Update key display to show type badges (pk/sk)
   - [x] 17.4 Add warning message for secret key exposure
 
-- [ ] 18. Add frontend unit tests
-  - [ ] 18.1 Add tests for environment-config NgRx store
-  - [ ] 18.2 Add tests for environment config components
-  - [ ] 18.3 Add tests for key type display logic
+- [x] 18. Add frontend unit tests
+  - [x] 18.1 Add tests for environment-config NgRx store
+  - [x] 18.2 Add tests for environment config components
+  - [x] 18.3 Add tests for key type display logic
 
 ---
 
