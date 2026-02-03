@@ -26,37 +26,37 @@ This task list implements the application environment configuration system with 
 
 ## Phase 2: Backend - Lambda Resolvers
 
-- [-] 3. Implement environment config CRUD operations
+- [x] 3. Implement environment config CRUD operations
   - [x] 3.1 Create `apps/api/lambdas/environment_config/get_config.py` resolver
   - [x] 3.2 Create `apps/api/lambdas/environment_config/update_config.py` resolver
   - [x] 3.3 Create `apps/api/lambdas/environment_config/create_default_configs.py` for new applications
-  - [-] 3.4 Add unit tests for environment config resolvers
+  - [x] 3.4 Add unit tests for environment config resolvers
 
-- [ ] 4. Implement allowed origins management
+- [x] 4. Implement allowed origins management
   - [x] 4.1 Create `apps/api/lambdas/environment_config/add_origin.py` resolver
   - [x] 4.2 Create `apps/api/lambdas/environment_config/remove_origin.py` resolver
   - [x] 4.3 Implement origin validation logic (URL format, wildcard support)
   - [x] 4.4 Add unit tests for origin validation
 
-- [ ] 5. Implement webhook configuration
+- [x] 5. Implement webhook configuration
   - [x] 5.1 Create `apps/api/lambdas/environment_config/update_webhook.py` resolver
   - [x] 5.2 Create `apps/api/lambdas/environment_config/regenerate_webhook_secret.py` resolver
   - [x] 5.3 Implement webhook secret generation (32-char random string)
-  - [ ] 5.4 Add unit tests for webhook configuration
+  - [x] 5.4 Add unit tests for webhook configuration
 
-- [ ] 6. Implement feature flags management
+- [x] 6. Implement feature flags management
   - [x] 6.1 Create `apps/api/lambdas/environment_config/set_feature_flag.py` resolver
   - [x] 6.2 Create `apps/api/lambdas/environment_config/delete_feature_flag.py` resolver
   - [x] 6.3 Implement feature flag key validation (snake_case, max 50)
-  - [ ] 6.4 Add unit tests for feature flags
+  - [x] 6.4 Add unit tests for feature flags
 
-- [-] 7. Implement dual key system
+- [x] 7. Implement dual key system
   - [x] 7.1 Update `apps/api/lambdas/api_keys/generate_key.py` to support keyType parameter
   - [x] 7.2 Implement publishable key prefix generation (`pk_{env}_{random}`)
   - [x] 7.3 Implement secret key prefix generation (`sk_{env}_{random}`)
   - [x] 7.4 Add unit tests for key generation with types
 
-- [-] 8. Implement enhanced key validation
+- [x] 8. Implement enhanced key validation
   - [x] 8.1 Update key validation to detect key type from prefix
   - [x] 8.2 Implement origin validation for publishable keys
   - [x] 8.3 Implement rate limit checking with Redis/DynamoDB counter
