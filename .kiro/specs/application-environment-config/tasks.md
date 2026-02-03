@@ -67,20 +67,20 @@ This task list implements the application environment configuration system with 
 
 ## Phase 3: GraphQL Schema
 
-- [ ] 9. Define GraphQL types and operations
-  - [ ] 9.1 Add `ApplicationEnvironmentConfig` type to schema
-  - [ ] 9.2 Add `WebhookConfig` type for nested webhook settings
-  - [ ] 9.3 Add `getApplicationEnvironmentConfig` query
-  - [ ] 9.4 Add `updateApplicationEnvironmentConfig` mutation
-  - [ ] 9.5 Add `addAllowedOrigin` and `removeAllowedOrigin` mutations
-  - [ ] 9.6 Add `updateWebhookConfig` and `regenerateWebhookSecret` mutations
-  - [ ] 9.7 Add `setFeatureFlag` and `deleteFeatureFlag` mutations
-  - [ ] 9.8 Update `generateApiKey` mutation to accept keyType parameter
+- [x] 9. Define GraphQL types and operations
+  - [x] 9.1 Add `ApplicationEnvironmentConfig` type to schema
+  - [x] 9.2 Add `WebhookConfig` type for nested webhook settings
+  - [x] 9.3 Add `getApplicationEnvironmentConfig` query
+  - [x] 9.4 Add `updateApplicationEnvironmentConfig` mutation
+  - [x] 9.5 Add `addAllowedOrigin` and `removeAllowedOrigin` mutations
+  - [x] 9.6 Add `updateWebhookConfig` and `regenerateWebhookSecret` mutations
+  - [x] 9.7 Add `setFeatureFlag` and `deleteFeatureFlag` mutations
+  - [x] 9.8 Update `generateApiKey` mutation to accept keyType parameter
 
-- [ ] 10. Create VTL resolvers for AppSync
-  - [ ] 10.1 Create request/response templates for environment config queries
-  - [ ] 10.2 Create request/response templates for environment config mutations
-  - [ ] 10.3 Wire resolvers to Lambda functions in CDK
+- [x] 10. Create VTL resolvers for AppSync
+  - [x] 10.1 Create request/response templates for environment config queries
+  - [x] 10.2 Create request/response templates for environment config mutations
+  - [x] 10.3 Wire resolvers to Lambda functions in CDK
 
 ---
 
@@ -91,10 +91,10 @@ This task list implements the application environment configuration system with 
   - [x] 11.2 Configure GSI for OrgEnvIndex
   - [x] 11.3 Update IAM policies for Lambda access to new table
 
-- [ ] 12. Deploy Lambda functions
-  - [ ] 12.1 Add environment config Lambda functions to stack
-  - [ ] 12.2 Configure environment variables for new Lambdas
-  - [ ] 12.3 Update AppSync resolver mappings
+- [x] 12. Deploy Lambda functions
+  - [x] 12.1 Add environment config Lambda functions to stack
+  - [x] 12.2 Configure environment variables for new Lambdas
+  - [x] 12.3 Update AppSync resolver mappings
 
 - [x] 13. Run CDK tests
   - [x] 13.1 Add unit tests for new table construct
