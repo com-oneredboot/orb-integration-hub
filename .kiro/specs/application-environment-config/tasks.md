@@ -105,17 +105,17 @@ This task list implements the application environment configuration system with 
 
 ## Phase 5: Frontend - Angular
 
-- [ ] 14. Create TypeScript GraphQL operations
-  - [ ] 14.1 Create `apps/web/src/app/core/graphql/environment-config.graphql.ts`
-  - [ ] 14.2 Add queries: getApplicationEnvironmentConfig
-  - [ ] 14.3 Add mutations: updateConfig, addOrigin, removeOrigin, updateWebhook, etc.
+- [x] 14. Create TypeScript GraphQL operations
+  - [x] 14.1 Create `apps/web/src/app/core/graphql/environment-config.graphql.ts`
+  - [x] 14.2 Add queries: getApplicationEnvironmentConfig
+  - [x] 14.3 Add mutations: updateConfig, addOrigin, removeOrigin, updateWebhook, etc.
 
-- [ ] 15. Create NgRx state management
-  - [ ] 15.1 Create `apps/web/src/app/features/applications/store/environment-config/` directory
-  - [ ] 15.2 Create environment-config.actions.ts
-  - [ ] 15.3 Create environment-config.reducer.ts
-  - [ ] 15.4 Create environment-config.effects.ts
-  - [ ] 15.5 Create environment-config.selectors.ts
+- [x] 15. Create NgRx state management
+  - [x] 15.1 Create `apps/web/src/app/features/applications/store/environment-config/` directory
+  - [x] 15.2 Create environment-config.actions.ts
+  - [x] 15.3 Create environment-config.reducer.ts
+  - [x] 15.4 Create environment-config.effects.ts
+  - [x] 15.5 Create environment-config.selectors.ts
 
 - [ ] 16. Create environment configuration UI components
   - [ ] 16.1 Create `EnvironmentConfigTabComponent` for main config view
