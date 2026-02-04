@@ -95,15 +95,24 @@ export class ApiKeyService extends ApiService {
 
   /**
    * Generate the display prefix for an API key
-   * Format: orb_api_{first_4}****
+   * Format: orb_api_{env}_****{last6}
+   * Shows the environment prefix and last 6 characters for identification
    * _Requirements: 9.1, 9.2_
    */
   private generateKeyPrefix(fullKey: string): string {
-    // Extract the first 4 characters after "orb_api_" prefix
-    const prefixStart = 'orb_api_';
-    const afterPrefix = fullKey.substring(prefixStart.length);
-    const first4 = afterPrefix.substring(0, 4);
-    return `${prefixStart}${first4}****`;
+    // Format: orb_api_{env}_{random32chars}
+    // We want to show: orb_api_{env}_****{last6}
+    const parts = fullKey.split('_');
+    if (parts.length >= 4) {
+      // parts = ['orb', 'api', 'env', 'random32chars']
+      const envPrefix = parts[2]; // 'dev', 'prod', etc.
+      const randomPart = parts.slice(3).join('_'); // The random part (in case there are underscores)
+      const last6 = randomPart.slice(-6);
+      return `orb_api_${envPrefix}_****${last6}`;
+    }
+    // Fallback for unexpected format
+    const last6 = fullKey.slice(-6);
+    return `****${last6}`;
   }
 
   /**

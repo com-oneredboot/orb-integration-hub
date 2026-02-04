@@ -295,4 +295,19 @@ export class EnvironmentsListComponent implements OnInit, OnDestroy {
   getWebhookClass(status: 'Enabled' | 'Disabled'): string {
     return status === 'Enabled' ? 'enabled' : 'disabled';
   }
+
+  /**
+   * Format API key prefix for display with masked middle section
+   * Input: "orb_api_dev_****abc123" 
+   * Output: "orb_api_dev_••••••abc123"
+   * 
+   * The keyPrefix from backend contains the env prefix and last 6 chars.
+   * We replace the **** with bullet dots for visual masking.
+   */
+  formatKeyDisplay(keyPrefix: string): string {
+    if (!keyPrefix || keyPrefix === '—') return '—';
+    
+    // Replace asterisks with bullet dots (8 dots to represent masked portion)
+    return keyPrefix.replace(/\*+/g, '••••••••');
+  }
 }

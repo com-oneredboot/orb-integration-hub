@@ -36,17 +36,21 @@ export class EnvironmentsEffects {
   loadEnvironments$ = createEffect(() =>
     this.actions$.pipe(
       ofType(EnvironmentsActions.loadEnvironments, EnvironmentsActions.refreshEnvironments),
-      switchMap((action) =>
-        forkJoin({
-          // Configs are optional - if they fail, return empty array
-          configs: this.environmentConfigService.getConfigsByApplication(action.applicationId).pipe(
-            catchError((error) => {
-              console.warn('[EnvironmentsEffects] Failed to load configs, continuing with empty:', error.message);
-              return of({ items: [] as IApplicationEnvironmentConfig[], nextToken: null });
-            })
-          ),
-          // API keys are required - if they fail, the whole load fails
-          apiKeys: this.apiKeyService.getApiKeysByApplication(action.applicationId),
+      switchMap((action) => {
+        // Load API keys first (primary data source)
+        const apiKeys$ = this.apiKeyService.getApiKeysByApplication(action.applicationId);
+        
+        // Configs are optional - use a short timeout and fallback to empty
+        const configs$ = this.environmentConfigService.getConfigsByApplication(action.applicationId).pipe(
+          catchError((error) => {
+            console.warn('[EnvironmentsEffects] Failed to load configs, continuing with empty:', error.message);
+            return of({ items: [] as IApplicationEnvironmentConfig[], nextToken: null });
+          })
+        );
+
+        return forkJoin({
+          configs: configs$,
+          apiKeys: apiKeys$,
         }).pipe(
           map(({ configs, apiKeys }) =>
             EnvironmentsActions.loadEnvironmentsSuccess({
@@ -61,8 +65,8 @@ export class EnvironmentsEffects {
               })
             )
           )
-        )
-      )
+        );
+      })
     )
   );
 }

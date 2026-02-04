@@ -74,7 +74,7 @@
 
 <!-- API Key Cell -->
 <ng-template #apiKeyCell let-row>
-  <code class="orb-key-prefix" *ngIf="row.keyPrefix !== '—'">{{ row.keyPrefix }}...</code>
+  <code class="orb-key-prefix" *ngIf="row.keyPrefix !== '—'">{{ formatKeyDisplay(row.keyPrefix) }}</code>
   <span class="orb-info__id" *ngIf="row.keyPrefix === '—'">—</span>
 </ng-template>
 
