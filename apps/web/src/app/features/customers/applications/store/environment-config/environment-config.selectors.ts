@@ -165,7 +165,7 @@ export const selectSelectedConfigWebhookConfig = createSelector(
 
 export const selectSelectedConfigFeatureFlags = createSelector(
   selectSelectedConfig,
-  (config) => (config?.featureFlags as Record<string, unknown>) ?? {}
+  (config) => config?.featureFlags ?? {}
 );
 
 export const selectSelectedConfigFeatureFlagsCount = createSelector(

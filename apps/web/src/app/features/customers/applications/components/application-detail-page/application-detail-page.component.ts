@@ -935,10 +935,26 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
 
   // Tab navigation
   setActiveTab(tab: ApplicationDetailTab): void {
+    const previousTab = this.activeTab;
     this.activeTab = tab;
+
     // Clear API key validation error when navigating away from Overview
     if (tab !== ApplicationDetailTab.Overview) {
       this.apiKeyValidationError = null;
+    }
+
+    // Clear generated key when switching away from Environments tab (Requirement 3.4)
+    if (previousTab === ApplicationDetailTab.Environments && tab !== ApplicationDetailTab.Environments) {
+      this.generatedKeyDisplay = null;
+      this.copySuccess = false;
+      this.store.dispatch(ApiKeysActions.clearGeneratedKey());
+    }
+
+    // Reload API keys when switching to Environments tab (Requirement 1.2)
+    if (tab === ApplicationDetailTab.Environments && this.application) {
+      this.store.dispatch(ApiKeysActions.loadApiKeys({
+        applicationId: this.application.applicationId
+      }));
     }
   }
 

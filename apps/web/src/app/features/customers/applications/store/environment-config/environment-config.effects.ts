@@ -19,7 +19,7 @@ import { EnvironmentConfigService } from '../../../../../core/services/environme
 import { EnvironmentConfigState } from './environment-config.state';
 
 // Inline selectors to avoid circular dependency issues
-const selectEnvironmentConfigState = (state: { environmentConfig: EnvironmentConfigState }) =>
+const _selectEnvironmentConfigState = (state: { environmentConfig: EnvironmentConfigState }) =>
   state.environmentConfig;
 
 const selectApplicationId = (state: { environmentConfig: EnvironmentConfigState }) =>

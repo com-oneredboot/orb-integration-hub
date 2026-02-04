@@ -33,7 +33,7 @@
   }
 
   <!-- Config Content -->
-  @if (selectedConfig && !(isLoading$ | async)) {
+  @if (selectedConfig && (isLoading$ | async) === false) {
     <div class="config-content">
       <!-- Save Error -->
       @if (saveError$ | async; as error) {
@@ -154,8 +154,8 @@
           </div>
 
           <div class="form-group">
-            <label>Webhook Events</label>
-            <div class="events-grid">
+            <span class="form-label" id="webhook-events-label">Webhook Events</span>
+            <div class="events-grid" role="group" aria-labelledby="webhook-events-label">
               @for (event of webhookEventTypes; track event.value) {
                 <label class="event-checkbox">
                   <input
@@ -195,8 +195,8 @@
           </div>
 
           <div class="webhook-secret">
-            <label>Webhook Secret</label>
-            <div class="secret-display">
+            <span class="form-label" id="webhook-secret-label">Webhook Secret</span>
+            <div class="secret-display" aria-labelledby="webhook-secret-label">
               <code>{{ selectedConfig.webhookSecret || 'Not generated' }}</code>
               <button
                 class="btn btn-secondary"

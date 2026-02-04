@@ -511,12 +511,12 @@ describe('ApplicationDetailPageComponent', () => {
         expect(ApplicationDetailTab.Overview).toBe('overview');
       });
 
-      it('should have Overview, Groups, Security, and Danger tabs', () => {
+      it('should have Overview, Environments, Groups, and Danger tabs', () => {
         // Validates: Requirements 1.3
         const tabValues = Object.values(ApplicationDetailTab) as string[];
         expect(tabValues).toContain('overview');
+        expect(tabValues).toContain('environments');
         expect(tabValues).toContain('groups');
-        expect(tabValues).toContain('security');
         expect(tabValues).toContain('danger');
         expect(tabValues.length).toBe(4);
       });
@@ -595,15 +595,15 @@ describe('ApplicationDetailPageComponent', () => {
         expect(component.environmentKeyRows.length).toBe(0);
 
         const compiled = fixture.nativeElement as HTMLElement;
-        // Data grid shows empty message when no data
-        const emptyState = compiled.querySelector('.data-grid__empty');
+        // Empty state uses orb-card with empty text
+        const emptyState = compiled.querySelector('.orb-card__empty-text');
         expect(emptyState).toBeTruthy();
         expect(emptyState?.textContent).toContain('No environments configured');
       }));
 
       it('should show link to Overview tab in empty state', fakeAsync(() => {
         // Validates: Requirements 5.2
-        // Note: The data-grid component shows the empty message which includes the hint
+        // Note: The empty state shows a hint to go to Overview tab
         const appWithNoEnvs: IApplications = {
           ...mockApplication,
           environments: [],
@@ -618,9 +618,9 @@ describe('ApplicationDetailPageComponent', () => {
         fixture.detectChanges();
 
         const compiled = fixture.nativeElement as HTMLElement;
-        const emptyState = compiled.querySelector('.data-grid__empty');
-        expect(emptyState).toBeTruthy();
-        expect(emptyState?.textContent).toContain('Configure environments in the Overview tab');
+        const emptyHint = compiled.querySelector('.orb-card__empty-hint');
+        expect(emptyHint).toBeTruthy();
+        expect(emptyHint?.textContent).toContain('Overview tab');
       }));
 
       it('should navigate to Overview tab when setActiveTab is called', fakeAsync(() => {
@@ -743,7 +743,7 @@ describe('ApplicationDetailPageComponent', () => {
         expect(component.apiKeyValidationError).toContain('Staging');
       }));
 
-      it('should include Environments tab reference in error message', fakeAsync(() => {
+      it('should include Security tab reference in error message', fakeAsync(() => {
         // Validates: Requirements 4.2
         component.editForm.name = 'Valid Name';
         component.editForm.organizationId = 'org-456';
@@ -752,7 +752,7 @@ describe('ApplicationDetailPageComponent', () => {
         component.onSave();
         tick();
 
-        expect(component.apiKeyValidationError).toContain('Environments tab');
+        expect(component.apiKeyValidationError).toContain('Security tab');
       }));
 
       it('should not dispatch updateApplication when validation fails', fakeAsync(() => {
