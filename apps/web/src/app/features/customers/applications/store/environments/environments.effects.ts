@@ -11,7 +11,7 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of, forkJoin } from 'rxjs';
-import { map, catchError, switchMap } from 'rxjs/operators';
+import { map, catchError, switchMap, timeout } from 'rxjs/operators';
 
 import { EnvironmentsActions } from './environments.actions';
 import { EnvironmentConfigService } from '../../../../../core/services/environment-config.service';
@@ -37,13 +37,14 @@ export class EnvironmentsEffects {
     this.actions$.pipe(
       ofType(EnvironmentsActions.loadEnvironments, EnvironmentsActions.refreshEnvironments),
       switchMap((action) => {
-        // Load API keys first (primary data source)
+        // Load API keys (primary data source) - must succeed
         const apiKeys$ = this.apiKeyService.getApiKeysByApplication(action.applicationId);
         
-        // Configs are optional - use a short timeout and fallback to empty
+        // Configs are optional - use a 3 second timeout and fallback to empty
         const configs$ = this.environmentConfigService.getConfigsByApplication(action.applicationId).pipe(
+          timeout(3000), // Fail fast if configs take too long
           catchError((error) => {
-            console.warn('[EnvironmentsEffects] Failed to load configs, continuing with empty:', error.message);
+            console.warn('[EnvironmentsEffects] Failed to load configs, continuing with empty:', error.message || error);
             return of({ items: [] as IApplicationEnvironmentConfig[], nextToken: null });
           })
         );
