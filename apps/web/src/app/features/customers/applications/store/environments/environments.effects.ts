@@ -10,62 +10,46 @@
 
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { of, forkJoin } from 'rxjs';
-import { map, catchError, switchMap, timeout } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { map, catchError, switchMap } from 'rxjs/operators';
 
 import { EnvironmentsActions } from './environments.actions';
-import { EnvironmentConfigService } from '../../../../../core/services/environment-config.service';
 import { ApiKeyService } from '../../../../../core/services/api-key.service';
-import { IApplicationEnvironmentConfig } from '../../../../../core/models/ApplicationEnvironmentConfigModel';
-import { IApplicationApiKeys } from '../../../../../core/models/ApplicationApiKeysModel';
 
 @Injectable()
 export class EnvironmentsEffects {
   constructor(
     private actions$: Actions,
-    private environmentConfigService: EnvironmentConfigService,
     private apiKeyService: ApiKeyService
   ) {}
 
   /**
    * Load Environments Effect
-   * Loads both environment configs and API keys for an application.
-   * API keys are the primary data source - configs are optional.
-   * If configs fail to load, we still show the list with API key data.
+   * Loads API keys for an application - this is the primary data source.
+   * Environment configs are not loaded here (they're optional and can be loaded separately).
    */
   loadEnvironments$ = createEffect(() =>
     this.actions$.pipe(
       ofType(EnvironmentsActions.loadEnvironments, EnvironmentsActions.refreshEnvironments),
       switchMap((action) => {
-        // Load API keys (primary data source) - must succeed
-        const apiKeys$ = this.apiKeyService.getApiKeysByApplication(action.applicationId);
+        console.debug('[EnvironmentsEffects] Loading environments for:', action.applicationId);
         
-        // Configs are optional - use a 3 second timeout and fallback to empty
-        const configs$ = this.environmentConfigService.getConfigsByApplication(action.applicationId).pipe(
-          timeout(3000), // Fail fast if configs take too long
+        return this.apiKeyService.getApiKeysByApplication(action.applicationId).pipe(
+          map((connection) => {
+            console.debug('[EnvironmentsEffects] API keys loaded:', connection.items.length);
+            return EnvironmentsActions.loadEnvironmentsSuccess({
+              configs: [], // Configs are optional, load separately if needed
+              apiKeys: connection.items,
+            });
+          }),
           catchError((error) => {
-            console.warn('[EnvironmentsEffects] Failed to load configs, continuing with empty:', error.message || error);
-            return of({ items: [] as IApplicationEnvironmentConfig[], nextToken: null });
-          })
-        );
-
-        return forkJoin({
-          configs: configs$,
-          apiKeys: apiKeys$,
-        }).pipe(
-          map(({ configs, apiKeys }) =>
-            EnvironmentsActions.loadEnvironmentsSuccess({
-              configs: configs.items,
-              apiKeys: apiKeys.items,
-            })
-          ),
-          catchError((error) =>
-            of(
+            console.error('[EnvironmentsEffects] Failed to load environments:', error);
+            return of(
               EnvironmentsActions.loadEnvironmentsFailure({
                 error: error.message || 'Failed to load environments',
               })
-            )
-          )
+            );
+          })
         );
       })
     )
