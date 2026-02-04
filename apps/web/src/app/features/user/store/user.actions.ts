@@ -10,7 +10,7 @@ import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { IUsers, UsersCreateInput } from '../../../core/models/UsersModel';
 import { MfaSetupDetails } from '../../../core/models/MfaSetupDetailsModel';
 import { SmartCheckResult } from '../../../core/models/RecoveryModel';
-import { AuthSteps } from './user.state';
+import { AuthStep } from '../../../core/enums/AuthStepEnum';
 
 /**
  * User Actions (includes Auth functionality)
@@ -19,7 +19,7 @@ export const UserActions = createActionGroup({
   source: 'User',
   events: {
     // Navigation and Flow Control
-    'Set Current Step': props<{ step: AuthSteps }>(),
+    'Set Current Step': props<{ step: AuthStep }>(),
     
     // Flow Control Actions (New - Explicit flow management)
     'Auth Flow Complete': props<{ user: IUsers }>(),
@@ -37,7 +37,7 @@ export const UserActions = createActionGroup({
     'Recover Orphaned User Failure': props<{ error: string }>(),
     
     'Resume From Storage': emptyProps(),
-    'Resume From Storage Success': props<{ email: string; step: AuthSteps }>(),
+    'Resume From Storage Success': props<{ email: string; step: AuthStep }>(),
     'Resume From Storage Not Found': emptyProps(),
     
     'Set Recovery Message': props<{ message: string }>(),

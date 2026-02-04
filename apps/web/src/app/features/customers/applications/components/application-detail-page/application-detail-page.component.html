@@ -1,8 +1,204 @@
 <!-- Application Detail Page Template -->
 <!-- Uses NgRx store as single source of truth (store-first pattern) -->
-<!-- Includes tabbed interface for Overview, Groups, Security, and Danger Zone -->
+<!-- Includes tabbed interface for Overview, Environments, Groups, and Danger Zone -->
 <!-- @see .kiro/specs/store-centric-refactoring/design.md -->
 <!-- @see .kiro/specs/application-access-management/design.md -->
+<!-- @see .kiro/specs/environment-detail-page/design.md -->
+
+<!-- Custom Cell Templates for API Keys Grid - MUST be outside *ngIf for ViewChild static: true -->
+
+<!-- Environment Cell -->
+<ng-template #environmentCell let-row>
+  <span
+    class="orb-role-badge orb-role-badge--{{ row.environment.toLowerCase() }}">
+    {{ row.environmentLabel }}
+  </span>
+</ng-template>
+
+<!-- Key Info Cell -->
+<ng-template #keyInfoCell let-row>
+  <!-- Newly Generated Key Display -->
+  <div class="security-key-generated" *ngIf="isNewlyGeneratedKey(row)">
+    <div class="security-key-generated__header">
+      <fa-icon icon="check-circle" class="security-key-generated__icon"></fa-icon>
+      <span>API Key Generated</span>
+    </div>
+    <div class="security-key-generated__key">
+      <code>{{ generatedKeyDisplay?.fullKey }}</code>
+      <button
+        type="button"
+        class="orb-btn orb-btn--secondary orb-btn--sm"
+        (click)="copyGeneratedKey(); $event.stopPropagation()"
+        [attr.aria-label]="copySuccess ? 'Copied!' : 'Copy API key'">
+        <fa-icon [icon]="copySuccess ? 'check' : 'copy'"></fa-icon>
+        {{ copySuccess ? 'Copied!' : 'Copy' }}
+      </button>
+    </div>
+    <div class="security-key-generated__warning">
+      <fa-icon icon="exclamation-triangle"></fa-icon>
+      <span>Copy this key now. It won't be shown again.</span>
+    </div>
+  </div>
+
+  <!-- Active Key Info -->
+  <div class="orb-info orb-info--inline" *ngIf="row.hasKey && !isNewlyGeneratedKey(row)">
+    <span class="orb-key-type-badge" [class.orb-key-type-badge--publishable]="row.apiKey?.keyType === 'PUBLISHABLE'" [class.orb-key-type-badge--secret]="row.apiKey?.keyType === 'SECRET'">
+      {{ row.apiKey?.keyType === 'SECRET' ? 'sk' : 'pk' }}
+    </span>
+    <code class="orb-info__id">{{ row.apiKey?.keyPrefix }}...</code>
+    <app-status-badge
+      [status]="row.apiKey?.status || ''"
+      type="apiKey"
+      [showIcon]="true"
+      [showLabel]="true"
+      size="small"
+      variant="chip">
+    </app-status-badge>
+    <button
+      type="button"
+      class="orb-btn orb-btn--secondary orb-btn--sm"
+      (click)="$event.stopPropagation()"
+      [attr.aria-label]="'Copy key prefix'">
+      <fa-icon icon="copy"></fa-icon>
+    </button>
+    <span class="orb-key-warning" *ngIf="row.apiKey?.keyType === 'SECRET'">
+      <fa-icon icon="exclamation-triangle"></fa-icon>
+      Secret key - do not expose in frontend code
+    </span>
+  </div>
+
+  <!-- Revoked Key State -->
+  <div class="orb-info orb-info--inline" *ngIf="row.isRevoked && !isNewlyGeneratedKey(row)">
+    <app-status-badge
+      status="REVOKED"
+      type="apiKey"
+      [showIcon]="true"
+      [showLabel]="true"
+      size="small"
+      variant="chip">
+    </app-status-badge>
+    <span class="orb-info__id">Key has been revoked</span>
+  </div>
+
+  <!-- Expired Key State -->
+  <div class="orb-info orb-info--inline" *ngIf="row.isExpired && !isNewlyGeneratedKey(row)">
+    <app-status-badge
+      status="EXPIRED"
+      type="apiKey"
+      [showIcon]="true"
+      [showLabel]="true"
+      size="small"
+      variant="chip">
+    </app-status-badge>
+    <span class="orb-info__id">Key has expired</span>
+  </div>
+
+  <!-- No Key State -->
+  <div class="orb-info orb-info--muted" *ngIf="row.canGenerate && !isNewlyGeneratedKey(row)">
+    <fa-icon icon="info-circle"></fa-icon>
+    <span class="orb-info__id">No API key configured</span>
+  </div>
+</ng-template>
+
+<!-- Actions Cell -->
+<ng-template #actionsCell let-row>
+  <div class="security-key-actions" *ngIf="!isNewlyGeneratedKey(row)">
+    <!-- Generate Key Button (no key exists or key is revoked/expired) -->
+    <button
+      *ngIf="row.canGenerate && !row.hasKey"
+      class="orb-btn orb-btn--primary orb-btn--sm"
+      (click)="onGenerateKeyForEnvironment(row.environment); $event.stopPropagation()"
+      [disabled]="(isGeneratingKey$ | async)">
+      <fa-icon icon="plus"></fa-icon>
+      Generate
+    </button>
+    <!-- Regenerate Button (key is revoked or expired) -->
+    <button
+      *ngIf="row.canGenerate && row.hasKey === false && (row.isRevoked || row.isExpired)"
+      class="orb-btn orb-btn--primary orb-btn--sm"
+      (click)="onGenerateKeyForEnvironment(row.environment); $event.stopPropagation()"
+      [disabled]="(isGeneratingKey$ | async)">
+      <fa-icon icon="redo"></fa-icon>
+      Regenerate
+    </button>
+    <!-- Rotate Button (active key) -->
+    <button
+      *ngIf="row.canRotate"
+      class="orb-btn orb-btn--secondary orb-btn--sm"
+      (click)="onRotateKeyForRow(row); $event.stopPropagation()"
+      [disabled]="(isGeneratingKey$ | async)">
+      <fa-icon icon="sync"></fa-icon>
+      Rotate
+    </button>
+    <!-- Revoke Button (active key) -->
+    <button
+      *ngIf="row.canRevoke"
+      class="orb-btn orb-btn--danger orb-btn--sm"
+      (click)="onRevokeKeyForRow(row); $event.stopPropagation()"
+      [disabled]="(isRevokingKey$ | async)">
+      <fa-icon icon="ban"></fa-icon>
+      Revoke
+    </button>
+  </div>
+  <!-- Dismiss button for newly generated key -->
+  <div class="security-key-actions" *ngIf="isNewlyGeneratedKey(row)">
+    <button
+      type="button"
+      class="orb-btn orb-btn--secondary orb-btn--sm"
+      (click)="dismissGeneratedKey(); $event.stopPropagation()"
+      aria-label="Dismiss">
+      <fa-icon icon="times"></fa-icon>
+      Dismiss
+    </button>
+  </div>
+</ng-template>
+
+<!-- Environments DataGrid Custom Cell Templates -->
+
+<!-- Environment Name Cell -->
+<ng-template #envNameCell let-row>
+  <span class="orb-role-badge orb-role-badge--{{ row.environment.toLowerCase() }}">
+    {{ row.environmentLabel }}
+  </span>
+</ng-template>
+
+<!-- Environment Status Cell -->
+<ng-template #envStatusCell let-row>
+  <app-status-badge
+    *ngIf="row.apiKeyStatus !== 'Not Configured'"
+    [status]="row.apiKeyStatus"
+    type="apiKey"
+    [showIcon]="true"
+    [showLabel]="true"
+    size="small"
+    variant="chip">
+  </app-status-badge>
+  <span class="orb-info__id orb-info__id--muted" *ngIf="row.apiKeyStatus === 'Not Configured'">—</span>
+</ng-template>
+
+<!-- Environment API Key Cell -->
+<ng-template #envApiKeyCell let-row>
+  <code class="orb-info__id" *ngIf="row.apiKeyStatus !== 'Not Configured'">{{ row.formattedKeyPrefix }}</code>
+  <span class="orb-info__id orb-info__id--muted" *ngIf="row.apiKeyStatus === 'Not Configured'">—</span>
+</ng-template>
+
+<!-- Environment Rate Limit Cell -->
+<ng-template #envRateLimitCell let-row>
+  <span class="orb-info__id" *ngIf="row.rateLimitDisplay !== 'Not configured'">{{ row.rateLimitDisplay }}</span>
+  <span class="orb-info__id orb-info__id--muted" *ngIf="row.rateLimitDisplay === 'Not configured'">—</span>
+</ng-template>
+
+<!-- Environment Webhook Cell -->
+<ng-template #envWebhookCell let-row>
+  <span class="orb-info__id" *ngIf="row.webhookStatus === 'Enabled'">Enabled</span>
+  <span class="orb-info__id" *ngIf="row.webhookStatus === 'Disabled'">Disabled</span>
+  <span class="orb-info__id orb-info__id--muted" *ngIf="row.webhookStatus === 'Not Configured'">—</span>
+</ng-template>
+
+<!-- Environment Last Updated Cell -->
+<ng-template #envLastUpdatedCell let-row>
+  <span class="orb-info__id">{{ row.lastUpdated }}</span>
+</ng-template>
 
 <ng-container *ngIf="{
   isLoading: isLoading$ | async,
@@ -74,7 +270,7 @@
 
       <!-- Content with Tabs -->
       <div class="app-detail-tabs-section" *ngIf="application && !data.isLoading && !loadError">
-        <!-- Tab Navigation (always shown - users need Security tab to generate keys before activation) -->
+        <!-- Tab Navigation (always shown - users need to configure environments before activation) -->
         <!-- Uses global orb-tabs classes from components.scss -->
         <nav class="orb-tabs" role="tablist" aria-label="Application sections">
           <button
@@ -90,6 +286,19 @@
           </button>
           <button
             class="orb-tabs__tab"
+            [class.orb-tabs__tab--active]="activeTab === ApplicationDetailTab.Environments"
+            (click)="setActiveTab(ApplicationDetailTab.Environments)"
+            role="tab"
+            [attr.aria-selected]="activeTab === ApplicationDetailTab.Environments"
+            [attr.aria-controls]="'panel-environments'"
+            id="tab-environments"
+            *ngIf="!isDraft">
+            <fa-icon icon="server" class="orb-tabs__icon"></fa-icon>
+            Environments
+            <span class="orb-tabs__badge" *ngIf="editForm.environments.length">{{ editForm.environments.length }}</span>
+          </button>
+          <button
+            class="orb-tabs__tab"
             [class.orb-tabs__tab--active]="activeTab === ApplicationDetailTab.Groups"
             (click)="setActiveTab(ApplicationDetailTab.Groups)"
             role="tab"
@@ -99,17 +308,6 @@
             <fa-icon icon="users" class="orb-tabs__icon"></fa-icon>
             Groups
             <span class="orb-tabs__badge" *ngIf="application.groupCount">{{ application.groupCount }}</span>
-          </button>
-          <button
-            class="orb-tabs__tab"
-            [class.orb-tabs__tab--active]="activeTab === ApplicationDetailTab.Security"
-            (click)="setActiveTab(ApplicationDetailTab.Security)"
-            role="tab"
-            [attr.aria-selected]="activeTab === ApplicationDetailTab.Security"
-            [attr.aria-controls]="'panel-security'"
-            id="tab-security">
-            <fa-icon icon="shield-alt" class="orb-tabs__icon"></fa-icon>
-            Security
           </button>
           <button
             class="orb-tabs__tab orb-tabs__tab--danger"
@@ -270,25 +468,6 @@
                   <fa-icon icon="exclamation-circle"></fa-icon>
                   {{ data.saveError }}
                 </div>
-
-                <!-- API Key Validation Error -->
-                <div class="app-detail-api-key-error" *ngIf="apiKeyValidationError">
-                  <div class="app-detail-api-key-error__content">
-                    <fa-icon icon="key" class="app-detail-api-key-error__icon"></fa-icon>
-                    <div class="app-detail-api-key-error__text">
-                      <p class="app-detail-api-key-error__message">{{ apiKeyValidationError }}</p>
-                      <button
-                        type="button"
-                        class="app-detail-api-key-error__link"
-                        (click)="setActiveTab(ApplicationDetailTab.Security)"
-                        (keydown.enter)="setActiveTab(ApplicationDetailTab.Security)"
-                        (keydown.space)="setActiveTab(ApplicationDetailTab.Security)">
-                        <fa-icon icon="arrow-right"></fa-icon>
-                        Go to Security Tab
-                      </button>
-                    </div>
-                  </div>
-                </div>
               </div>
 
               <!-- Actions Footer -->
@@ -313,6 +492,55 @@
             </div>
           </div>
 
+          <!-- Environments Tab Panel -->
+          <div
+            class="app-detail-tab-panel"
+            *ngIf="activeTab === ApplicationDetailTab.Environments && !isDraft"
+            role="tabpanel"
+            id="panel-environments"
+            [attr.aria-labelledby]="'tab-environments'">
+            <!-- Environments DataGrid Card -->
+            <div class="orb-card" *ngIf="editForm.environments.length > 0">
+              <div class="orb-card__header">
+                <h2 class="orb-card__title">
+                  <fa-icon icon="server" class="orb-card__icon"></fa-icon>
+                  Configured Environments
+                </h2>
+                <p class="orb-card__subtitle">Click an environment to configure API keys, webhooks, and other settings.</p>
+              </div>
+              <div class="orb-card__content">
+                <app-data-grid
+                  [columns]="environmentsColumns"
+                  [data]="environmentRows"
+                  [pageState]="environmentsPageState"
+                  [sortState]="environmentsSortState"
+                  [filterState]="environmentsFilterState"
+                  [loading]="(isLoading$ | async) || false"
+                  [showFilters]="false"
+                  [showPagination]="environmentRows.length > 10"
+                  [showReset]="false"
+                  [selectable]="false"
+                  trackByField="environment"
+                  emptyMessage="No environments configured. Go to Overview tab to select environments."
+                  (pageChange)="onEnvironmentsPageChange($event)"
+                  (sortChange)="onEnvironmentsSortChange($event)"
+                  (filterChange)="onEnvironmentsFilterChange($event)"
+                  (resetGrid)="onEnvironmentsResetGrid()"
+                  (rowClick)="onEnvironmentRowClick($event)">
+                </app-data-grid>
+              </div>
+            </div>
+
+            <!-- Empty state for environments (shown when no environments selected) -->
+            <div class="orb-card orb-card--muted" *ngIf="editForm.environments.length === 0">
+              <div class="orb-card__content orb-card__content--centered">
+                <fa-icon icon="server" size="2x" class="orb-card__empty-icon"></fa-icon>
+                <p class="orb-card__empty-text">No environments configured yet.</p>
+                <p class="orb-card__empty-hint">Go to the Overview tab to select environments for this application.</p>
+              </div>
+            </div>
+          </div>
+
           <!-- Groups Tab Panel -->
           <div
             class="app-detail-tab-panel"
@@ -326,194 +554,6 @@
               (createGroup)="onCreateGroup()">
             </app-groups-list>
           </div>
-
-          <!-- Security Tab Panel -->
-          <div
-            class="app-detail-tab-panel"
-            *ngIf="activeTab === ApplicationDetailTab.Security"
-            role="tabpanel"
-            id="panel-security"
-            [attr.aria-labelledby]="'tab-security'">
-            
-            <!-- API Keys Card -->
-            <div class="orb-card">
-              <div class="orb-card__header">
-                <h2 class="orb-card__title">
-                  <fa-icon icon="key" class="orb-card__icon"></fa-icon>
-                  API Keys
-                </h2>
-              </div>
-              <div class="orb-card__content">
-                <!-- Data Grid -->
-                <app-data-grid
-                  [columns]="apiKeysColumns"
-                  [data]="environmentKeyRows"
-                  [pageState]="apiKeysPageState"
-                  [sortState]="apiKeysSortState"
-                  [filterState]="apiKeysFilterState"
-                  [loading]="(isLoading$ | async) || false"
-                  [showFilters]="true"
-                  [showPagination]="true"
-                  [showReset]="true"
-                  [selectable]="false"
-                  trackByField="environment"
-                  emptyMessage="No environments configured. Configure environments in the Overview tab."
-                  (pageChange)="onApiKeysPageChange($event)"
-                  (sortChange)="onApiKeysSortChange($event)"
-                  (filterChange)="onApiKeysFilterChange($event)"
-                  (resetGrid)="onApiKeysResetGrid()">
-                </app-data-grid>
-              </div>
-            </div>
-          </div>
-
-          <!-- Custom Cell Templates for API Keys Grid -->
-
-          <!-- Environment Cell -->
-          <ng-template #environmentCell let-row>
-            <span
-              class="orb-role-badge orb-role-badge--{{ row.environment.toLowerCase() }}">
-              {{ row.environmentLabel }}
-            </span>
-          </ng-template>
-
-          <!-- Key Info Cell -->
-          <ng-template #keyInfoCell let-row>
-            <!-- Newly Generated Key Display -->
-            <div class="security-key-generated" *ngIf="isNewlyGeneratedKey(row)">
-              <div class="security-key-generated__header">
-                <fa-icon icon="check-circle" class="security-key-generated__icon"></fa-icon>
-                <span>API Key Generated</span>
-              </div>
-              <div class="security-key-generated__key">
-                <code>{{ generatedKeyDisplay?.fullKey }}</code>
-                <button
-                  type="button"
-                  class="orb-btn orb-btn--secondary orb-btn--sm"
-                  (click)="copyGeneratedKey(); $event.stopPropagation()"
-                  [attr.aria-label]="copySuccess ? 'Copied!' : 'Copy API key'">
-                  <fa-icon [icon]="copySuccess ? 'check' : 'copy'"></fa-icon>
-                  {{ copySuccess ? 'Copied!' : 'Copy' }}
-                </button>
-              </div>
-              <div class="security-key-generated__warning">
-                <fa-icon icon="exclamation-triangle"></fa-icon>
-                <span>Copy this key now. It won't be shown again.</span>
-              </div>
-            </div>
-
-            <!-- Active Key Info -->
-            <div class="orb-info orb-info--inline" *ngIf="row.hasKey && !isNewlyGeneratedKey(row)">
-              <span class="orb-key-type-badge" [class.orb-key-type-badge--publishable]="row.apiKey?.keyType === 'PUBLISHABLE'" [class.orb-key-type-badge--secret]="row.apiKey?.keyType === 'SECRET'">
-                {{ row.apiKey?.keyType === 'SECRET' ? 'sk' : 'pk' }}
-              </span>
-              <code class="orb-info__id">{{ row.apiKey?.keyPrefix }}...</code>
-              <app-status-badge
-                [status]="row.apiKey?.status || ''"
-                type="apiKey"
-                [showIcon]="true"
-                [showLabel]="true"
-                size="small"
-                variant="chip">
-              </app-status-badge>
-              <button
-                type="button"
-                class="orb-btn orb-btn--secondary orb-btn--sm"
-                (click)="$event.stopPropagation()"
-                [attr.aria-label]="'Copy key prefix'">
-                <fa-icon icon="copy"></fa-icon>
-              </button>
-              <span class="orb-key-warning" *ngIf="row.apiKey?.keyType === 'SECRET'">
-                <fa-icon icon="exclamation-triangle"></fa-icon>
-                Secret key - do not expose in frontend code
-              </span>
-            </div>
-
-            <!-- Revoked Key State -->
-            <div class="orb-info orb-info--inline" *ngIf="row.isRevoked && !isNewlyGeneratedKey(row)">
-              <app-status-badge
-                status="REVOKED"
-                type="apiKey"
-                [showIcon]="true"
-                [showLabel]="true"
-                size="small"
-                variant="chip">
-              </app-status-badge>
-              <span class="orb-info__id">Key has been revoked</span>
-            </div>
-
-            <!-- Expired Key State -->
-            <div class="orb-info orb-info--inline" *ngIf="row.isExpired && !isNewlyGeneratedKey(row)">
-              <app-status-badge
-                status="EXPIRED"
-                type="apiKey"
-                [showIcon]="true"
-                [showLabel]="true"
-                size="small"
-                variant="chip">
-              </app-status-badge>
-              <span class="orb-info__id">Key has expired</span>
-            </div>
-
-            <!-- No Key State -->
-            <div class="orb-info orb-info--muted" *ngIf="row.canGenerate && !isNewlyGeneratedKey(row)">
-              <fa-icon icon="info-circle"></fa-icon>
-              <span class="orb-info__id">No API key configured</span>
-            </div>
-          </ng-template>
-
-          <!-- Actions Cell -->
-          <ng-template #actionsCell let-row>
-            <div class="security-key-actions" *ngIf="!isNewlyGeneratedKey(row)">
-              <!-- Generate Key Button (no key exists or key is revoked/expired) -->
-              <button
-                *ngIf="row.canGenerate && !row.hasKey"
-                class="orb-btn orb-btn--primary orb-btn--sm"
-                (click)="onGenerateKeyForEnvironment(row.environment); $event.stopPropagation()"
-                [disabled]="(isGeneratingKey$ | async)">
-                <fa-icon icon="plus"></fa-icon>
-                Generate
-              </button>
-              <!-- Regenerate Button (key is revoked or expired) -->
-              <button
-                *ngIf="row.canGenerate && row.hasKey === false && (row.isRevoked || row.isExpired)"
-                class="orb-btn orb-btn--primary orb-btn--sm"
-                (click)="onGenerateKeyForEnvironment(row.environment); $event.stopPropagation()"
-                [disabled]="(isGeneratingKey$ | async)">
-                <fa-icon icon="redo"></fa-icon>
-                Regenerate
-              </button>
-              <!-- Rotate Button (active key) -->
-              <button
-                *ngIf="row.canRotate"
-                class="orb-btn orb-btn--secondary orb-btn--sm"
-                (click)="onRotateKeyForRow(row); $event.stopPropagation()"
-                [disabled]="(isGeneratingKey$ | async)">
-                <fa-icon icon="sync"></fa-icon>
-                Rotate
-              </button>
-              <!-- Revoke Button (active key) -->
-              <button
-                *ngIf="row.canRevoke"
-                class="orb-btn orb-btn--danger orb-btn--sm"
-                (click)="onRevokeKeyForRow(row); $event.stopPropagation()"
-                [disabled]="(isRevokingKey$ | async)">
-                <fa-icon icon="ban"></fa-icon>
-                Revoke
-              </button>
-            </div>
-            <!-- Dismiss button for newly generated key -->
-            <div class="security-key-actions" *ngIf="isNewlyGeneratedKey(row)">
-              <button
-                type="button"
-                class="orb-btn orb-btn--secondary orb-btn--sm"
-                (click)="dismissGeneratedKey(); $event.stopPropagation()"
-                aria-label="Dismiss">
-                <fa-icon icon="times"></fa-icon>
-                Dismiss
-              </button>
-            </div>
-          </ng-template>
 
           <!-- Danger Zone Tab Panel -->
           <div

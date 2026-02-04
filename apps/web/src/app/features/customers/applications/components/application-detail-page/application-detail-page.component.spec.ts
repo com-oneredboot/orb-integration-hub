@@ -498,13 +498,13 @@ describe('ApplicationDetailPageComponent', () => {
   });
 
   /**
-   * Security Tab Tests
+   * Environments Tab Tests
    *
-   * Tests for the Security tab (renamed from API Keys tab).
+   * Tests for the Environments tab (renamed from API Keys tab).
    * @see .kiro/specs/application-security-tab/design.md
    * _Requirements: 1.1, 5.1_
    */
-  describe('Security Tab', () => {
+  describe('Environments Tab', () => {
     describe('Tab Enum and Structure', () => {
       it('should have Overview enum value', () => {
         // Validates: Requirements 1.2
@@ -531,16 +531,16 @@ describe('ApplicationDetailPageComponent', () => {
         expect(component.activeTab).toBe(ApplicationDetailTab.Overview);
       }));
 
-      it('should switch to Security tab when setActiveTab is called', fakeAsync(() => {
+      it('should switch to Environments tab when setActiveTab is called', fakeAsync(() => {
         store.overrideSelector(fromApplications.selectSelectedApplication, mockApplication);
         store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
         store.refreshState();
         fixture.detectChanges();
         tick();
 
-        component.setActiveTab(ApplicationDetailTab.Security);
+        component.setActiveTab(ApplicationDetailTab.Environments);
 
-        expect(component.activeTab).toBe(ApplicationDetailTab.Security);
+        expect(component.activeTab).toBe(ApplicationDetailTab.Environments);
       }));
     });
 
@@ -553,25 +553,25 @@ describe('ApplicationDetailPageComponent', () => {
         tick();
       }));
 
-      it('should render Security tab button with shield-alt icon', () => {
+      it('should render Environments tab button with shield-alt icon', () => {
         // Validates: Requirements 1.1
         const compiled = fixture.nativeElement as HTMLElement;
-        const securityTab = compiled.querySelector('#tab-security');
+        const securityTab = compiled.querySelector('#tab-environments');
 
         expect(securityTab).toBeTruthy();
-        expect(securityTab?.textContent).toContain('Security');
+        expect(securityTab?.textContent).toContain('Environments');
 
         // Check for shield-alt icon (FontAwesome renders as SVG with data-icon attribute)
         const icon = securityTab?.querySelector('fa-icon');
         expect(icon).toBeTruthy();
       });
 
-      it('should render Security tab with correct aria attributes', () => {
+      it('should render Environments tab with correct aria attributes', () => {
         const compiled = fixture.nativeElement as HTMLElement;
-        const securityTab = compiled.querySelector('#tab-security');
+        const securityTab = compiled.querySelector('#tab-environments');
 
         expect(securityTab?.getAttribute('role')).toBe('tab');
-        expect(securityTab?.getAttribute('aria-controls')).toBe('panel-security');
+        expect(securityTab?.getAttribute('aria-controls')).toBe('panel-environments');
       });
     });
 
@@ -588,8 +588,8 @@ describe('ApplicationDetailPageComponent', () => {
         fixture.detectChanges();
         tick();
 
-        // Switch to Security tab
-        component.setActiveTab(ApplicationDetailTab.Security);
+        // Switch to Environments tab
+        component.setActiveTab(ApplicationDetailTab.Environments);
         fixture.detectChanges();
 
         expect(component.environmentKeyRows.length).toBe(0);
@@ -614,7 +614,7 @@ describe('ApplicationDetailPageComponent', () => {
         fixture.detectChanges();
         tick();
 
-        component.setActiveTab(ApplicationDetailTab.Security);
+        component.setActiveTab(ApplicationDetailTab.Environments);
         fixture.detectChanges();
 
         const compiled = fixture.nativeElement as HTMLElement;
@@ -636,11 +636,11 @@ describe('ApplicationDetailPageComponent', () => {
         fixture.detectChanges();
         tick();
 
-        component.setActiveTab(ApplicationDetailTab.Security);
+        component.setActiveTab(ApplicationDetailTab.Environments);
         fixture.detectChanges();
 
-        // Verify we're on Security tab
-        expect(component.activeTab).toBe(ApplicationDetailTab.Security);
+        // Verify we're on Environments tab
+        expect(component.activeTab).toBe(ApplicationDetailTab.Environments);
 
         // Navigate to Overview
         component.setActiveTab(ApplicationDetailTab.Overview);
@@ -659,7 +659,7 @@ describe('ApplicationDetailPageComponent', () => {
         fixture.detectChanges();
         tick();
 
-        component.setActiveTab(ApplicationDetailTab.Security);
+        component.setActiveTab(ApplicationDetailTab.Environments);
         fixture.detectChanges();
 
         // mockApplication has ['PRODUCTION', 'STAGING'] environments
@@ -743,7 +743,7 @@ describe('ApplicationDetailPageComponent', () => {
         expect(component.apiKeyValidationError).toContain('Staging');
       }));
 
-      it('should include Security tab reference in error message', fakeAsync(() => {
+      it('should include Environments tab reference in error message', fakeAsync(() => {
         // Validates: Requirements 4.2
         component.editForm.name = 'Valid Name';
         component.editForm.organizationId = 'org-456';
@@ -752,7 +752,7 @@ describe('ApplicationDetailPageComponent', () => {
         component.onSave();
         tick();
 
-        expect(component.apiKeyValidationError).toContain('Security tab');
+        expect(component.apiKeyValidationError).toContain('Environments tab');
       }));
 
       it('should not dispatch updateApplication when validation fails', fakeAsync(() => {
@@ -916,7 +916,7 @@ describe('ApplicationDetailPageComponent', () => {
         tick();
         expect(component.apiKeyValidationError).toBeTruthy();
 
-        component.setActiveTab(ApplicationDetailTab.Security);
+        component.setActiveTab(ApplicationDetailTab.Environments);
         tick();
 
         expect(component.apiKeyValidationError).toBeNull();
@@ -1008,11 +1008,11 @@ describe('ApplicationDetailPageComponent', () => {
         );
       }));
 
-      it('should dispatch loadApiKeys when Security tab is clicked', fakeAsync(() => {
+      it('should dispatch loadApiKeys when Environments tab is clicked', fakeAsync(() => {
         // Validates: Requirements 1.2
         (store.dispatch as jasmine.Spy).calls.reset();
 
-        component.setActiveTab(ApplicationDetailTab.Security);
+        component.setActiveTab(ApplicationDetailTab.Environments);
         tick();
 
         expect(store.dispatch).toHaveBeenCalledWith(
@@ -1201,9 +1201,9 @@ describe('ApplicationDetailPageComponent', () => {
         tick();
       }));
 
-      it('should clear generated key when switching away from Security tab', fakeAsync(() => {
+      it('should clear generated key when switching away from Environments tab', fakeAsync(() => {
         // Validates: Requirements 3.4
-        component.setActiveTab(ApplicationDetailTab.Security);
+        component.setActiveTab(ApplicationDetailTab.Environments);
         tick();
 
         // Set a generated key display
@@ -1221,9 +1221,9 @@ describe('ApplicationDetailPageComponent', () => {
         expect(component.generatedKeyDisplay).toBeNull();
       }));
 
-      it('should dispatch clearGeneratedKey when switching away from Security tab', fakeAsync(() => {
+      it('should dispatch clearGeneratedKey when switching away from Environments tab', fakeAsync(() => {
         // Validates: Requirements 3.4
-        component.setActiveTab(ApplicationDetailTab.Security);
+        component.setActiveTab(ApplicationDetailTab.Environments);
         tick();
         (store.dispatch as jasmine.Spy).calls.reset();
 

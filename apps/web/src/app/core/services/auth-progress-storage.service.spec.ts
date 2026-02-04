@@ -7,7 +7,7 @@ import { TestBed } from '@angular/core/testing';
 import * as fc from 'fast-check';
 
 import { AuthProgressStorageService, AuthProgress } from './auth-progress-storage.service';
-import { AuthSteps } from '../../features/user/store/user.state';
+import { AuthStep } from '../enums/AuthStepEnum';
 
 describe('AuthProgressStorageService', () => {
   let service: AuthProgressStorageService;
@@ -15,14 +15,14 @@ describe('AuthProgressStorageService', () => {
   // Arbitrary generators for property-based tests
   const emailArbitrary = fc.emailAddress();
   const authStepArbitrary = fc.constantFrom(
-    AuthSteps.EMAIL,
-    AuthSteps.EMAIL_ENTRY,
-    AuthSteps.PASSWORD,
-    AuthSteps.PASSWORD_SETUP,
-    AuthSteps.PASSWORD_VERIFY,
-    AuthSteps.EMAIL_VERIFY,
-    AuthSteps.MFA_SETUP,
-    AuthSteps.MFA_VERIFY
+    AuthStep.Email,
+    AuthStep.EmailEntry,
+    AuthStep.Password,
+    AuthStep.PasswordSetup,
+    AuthStep.PasswordVerify,
+    AuthStep.EmailVerify,
+    AuthStep.MfaSetup,
+    AuthStep.MfaVerify
   );
   const timestampArbitrary = fc.integer({ min: 0, max: Date.now() + 1000000000 });
 
@@ -153,7 +153,7 @@ describe('AuthProgressStorageService', () => {
       // Manually set expired progress in localStorage
       const expiredProgress: AuthProgress = {
         email: 'test@example.com',
-        step: AuthSteps.EMAIL_VERIFY,
+        step: AuthStep.EmailVerify,
         timestamp: Date.now() - 100000,
         expiresAt: Date.now() - 1000 // Expired
       };
@@ -173,7 +173,7 @@ describe('AuthProgressStorageService', () => {
     it('should return false for progress without email', () => {
       const progress = {
         email: '',
-        step: AuthSteps.EMAIL,
+        step: AuthStep.Email,
         timestamp: Date.now(),
         expiresAt: Date.now() + 10000
       } as AuthProgress;
@@ -183,7 +183,7 @@ describe('AuthProgressStorageService', () => {
     it('should return false for progress without step', () => {
       const progress = {
         email: 'test@example.com',
-        step: null as unknown as AuthSteps,
+        step: null as unknown as AuthStep,
         timestamp: Date.now(),
         expiresAt: Date.now() + 10000
       } as AuthProgress;
@@ -193,7 +193,7 @@ describe('AuthProgressStorageService', () => {
     it('should return false for progress without expiresAt', () => {
       const progress = {
         email: 'test@example.com',
-        step: AuthSteps.EMAIL,
+        step: AuthStep.Email,
         timestamp: Date.now(),
         expiresAt: 0
       } as AuthProgress;
@@ -245,7 +245,7 @@ describe('AuthProgressStorageService', () => {
     });
 
     it('should do nothing if no existing progress', () => {
-      service.updateStep(AuthSteps.MFA_SETUP);
+      service.updateStep(AuthStep.MfaSetup);
       expect(service.get()).toBeNull();
     });
   });
@@ -275,7 +275,7 @@ describe('AuthProgressStorageService', () => {
     it('should return false for non-matching email', () => {
       service.save({ 
         email: 'original@example.com', 
-        step: AuthSteps.EMAIL, 
+        step: AuthStep.Email, 
         timestamp: Date.now() 
       });
 
@@ -297,7 +297,7 @@ describe('AuthProgressStorageService', () => {
       expect(() => {
         service.save({ 
           email: 'test@example.com', 
-          step: AuthSteps.EMAIL, 
+          step: AuthStep.Email, 
           timestamp: Date.now() 
         });
       }).not.toThrow();

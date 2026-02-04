@@ -89,31 +89,31 @@ describe('Property: User Status Calculation', () => {
   describe('First incomplete step identification', () => {
     it('returns NAME when firstName is missing', () => {
       const user = createMockUser({ firstName: '' });
-      expect(component.getFirstIncompleteStep(user)).toBe(ProfileSetupStep.NAME);
+      expect(component.getFirstIncompleteStep(user)).toBe(ProfileSetupStep.Name);
     });
 
     it('returns NAME when lastName is missing', () => {
       const user = createMockUser({ lastName: '' });
-      expect(component.getFirstIncompleteStep(user)).toBe(ProfileSetupStep.NAME);
+      expect(component.getFirstIncompleteStep(user)).toBe(ProfileSetupStep.Name);
     });
 
     it('returns PHONE when phoneNumber is missing', () => {
       const user = createMockUser({ phoneNumber: '' });
-      expect(component.getFirstIncompleteStep(user)).toBe(ProfileSetupStep.PHONE);
+      expect(component.getFirstIncompleteStep(user)).toBe(ProfileSetupStep.Phone);
     });
 
     it('returns PHONE_VERIFY when phone is not verified', () => {
       const user = createMockUser({ phoneVerified: false });
-      expect(component.getFirstIncompleteStep(user)).toBe(ProfileSetupStep.PHONE_VERIFY);
+      expect(component.getFirstIncompleteStep(user)).toBe(ProfileSetupStep.PhoneVerify);
     });
 
     it('returns COMPLETE when all fields are complete', () => {
       const user = createMockUser();
-      expect(component.getFirstIncompleteStep(user)).toBe(ProfileSetupStep.COMPLETE);
+      expect(component.getFirstIncompleteStep(user)).toBe(ProfileSetupStep.Complete);
     });
 
     it('returns NAME when user is null', () => {
-      expect(component.getFirstIncompleteStep(null)).toBe(ProfileSetupStep.NAME);
+      expect(component.getFirstIncompleteStep(null)).toBe(ProfileSetupStep.Name);
     });
   });
 
@@ -125,26 +125,26 @@ describe('Property: User Status Calculation', () => {
     it('PHONE step complete implies NAME step complete', () => {
       const user = createMockUser({ phoneNumber: '+12345678901' });
       
-      if (component.isStepComplete(ProfileSetupStep.PHONE, user)) {
-        expect(component.isStepComplete(ProfileSetupStep.NAME, user)).toBe(true);
+      if (component.isStepComplete(ProfileSetupStep.Phone, user)) {
+        expect(component.isStepComplete(ProfileSetupStep.Name, user)).toBe(true);
       }
     });
 
     it('PHONE_VERIFY step complete implies PHONE step complete', () => {
       const user = createMockUser({ phoneVerified: true });
       
-      if (component.isStepComplete(ProfileSetupStep.PHONE_VERIFY, user)) {
-        expect(component.isStepComplete(ProfileSetupStep.PHONE, user)).toBe(true);
+      if (component.isStepComplete(ProfileSetupStep.PhoneVerify, user)) {
+        expect(component.isStepComplete(ProfileSetupStep.Phone, user)).toBe(true);
       }
     });
 
     it('COMPLETE step implies all prior steps complete', () => {
       const user = createMockUser();
       
-      if (component.isStepComplete(ProfileSetupStep.COMPLETE, user)) {
-        expect(component.isStepComplete(ProfileSetupStep.NAME, user)).toBe(true);
-        expect(component.isStepComplete(ProfileSetupStep.PHONE, user)).toBe(true);
-        expect(component.isStepComplete(ProfileSetupStep.PHONE_VERIFY, user)).toBe(true);
+      if (component.isStepComplete(ProfileSetupStep.Complete, user)) {
+        expect(component.isStepComplete(ProfileSetupStep.Name, user)).toBe(true);
+        expect(component.isStepComplete(ProfileSetupStep.Phone, user)).toBe(true);
+        expect(component.isStepComplete(ProfileSetupStep.PhoneVerify, user)).toBe(true);
       }
     });
   });
@@ -155,10 +155,10 @@ describe('Property: User Status Calculation', () => {
   describe('Progress percentage monotonicity', () => {
     it('progress increases as steps advance', () => {
       const steps = [
-        ProfileSetupStep.NAME,
-        ProfileSetupStep.PHONE,
-        ProfileSetupStep.PHONE_VERIFY,
-        ProfileSetupStep.COMPLETE
+        ProfileSetupStep.Name,
+        ProfileSetupStep.Phone,
+        ProfileSetupStep.PhoneVerify,
+        ProfileSetupStep.Complete
       ];
       
       let previousProgress = -1;
@@ -171,12 +171,12 @@ describe('Property: User Status Calculation', () => {
     });
 
     it('progress is 0 at NAME step', () => {
-      component.setupState.currentStep = ProfileSetupStep.NAME;
+      component.setupState.currentStep = ProfileSetupStep.Name;
       expect(component.getProgressPercentage()).toBe(0);
     });
 
     it('progress is 100 at COMPLETE step', () => {
-      component.setupState.currentStep = ProfileSetupStep.COMPLETE;
+      component.setupState.currentStep = ProfileSetupStep.Complete;
       expect(component.getProgressPercentage()).toBe(100);
     });
   });
@@ -187,10 +187,10 @@ describe('Property: User Status Calculation', () => {
   describe('Step number consistency', () => {
     it('step numbers are sequential starting from 1', () => {
       const steps = [
-        ProfileSetupStep.NAME,
-        ProfileSetupStep.PHONE,
-        ProfileSetupStep.PHONE_VERIFY,
-        ProfileSetupStep.COMPLETE
+        ProfileSetupStep.Name,
+        ProfileSetupStep.Phone,
+        ProfileSetupStep.PhoneVerify,
+        ProfileSetupStep.Complete
       ];
       
       for (let i = 0; i < steps.length; i++) {
@@ -213,7 +213,7 @@ describe('Property: User Status Calculation', () => {
     completeUserVariants.forEach((variant, index) => {
       it(`complete user variant ${index + 1} returns COMPLETE`, () => {
         const user = createMockUser(variant);
-        expect(component.getFirstIncompleteStep(user)).toBe(ProfileSetupStep.COMPLETE);
+        expect(component.getFirstIncompleteStep(user)).toBe(ProfileSetupStep.Complete);
       });
     });
   });
@@ -232,7 +232,7 @@ describe('Property: User Status Calculation', () => {
     incompleteUserVariants.forEach((variant, index) => {
       it(`incomplete user variant ${index + 1} does not return COMPLETE`, () => {
         const user = createMockUser(variant);
-        expect(component.getFirstIncompleteStep(user)).not.toBe(ProfileSetupStep.COMPLETE);
+        expect(component.getFirstIncompleteStep(user)).not.toBe(ProfileSetupStep.Complete);
       });
     });
   });

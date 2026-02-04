@@ -5,7 +5,8 @@
 
 import {createReducer, on} from '@ngrx/store';
 import {UserActions} from './user.actions';
-import {AuthSteps, initialState} from './user.state';
+import {initialState} from './user.state';
+import { AuthStep } from '../../../core/enums/AuthStepEnum';
 import { sanitizeEmail } from '../../../core/utils/log-sanitizer';
 
 export { UserState } from './user.state';
@@ -94,7 +95,7 @@ export const userReducer = createReducer(
   })),
   on(UserActions.createUserSuccess, (state) => ({
     ...state,
-    currentStep: AuthSteps.EMAIL_VERIFY,
+    currentStep: AuthStep.EmailVerify,
     isLoading: false
   })),
   on(UserActions.createUserFailure, (state, { error }) => ({
@@ -148,7 +149,7 @@ export const userReducer = createReducer(
   on(UserActions.verifyEmailSuccess, (state) => ({
     ...state,
     emailVerified: true,
-    currentStep: AuthSteps.SIGNIN,
+    currentStep: AuthStep.Signin,
     isLoading: false
   })),
   on(UserActions.verifyEmailFailure, (state, { error }) => ({
@@ -165,8 +166,8 @@ export const userReducer = createReducer(
   })),
   on(UserActions.verifyCognitoPasswordSuccess, (state, { message: _message, needsMFA, needsMFASetup, mfaSetupDetails }) => {
     // decide on next step.  NeedsMFASetup trumps all
-    let nextStep = (needsMFA)? AuthSteps.MFA_VERIFY: AuthSteps.SIGNIN;
-    nextStep = (needsMFASetup) ? AuthSteps.MFA_SETUP : nextStep;
+    let nextStep = (needsMFA)? AuthStep.MfaVerify: AuthStep.Signin;
+    nextStep = (needsMFASetup) ? AuthStep.MfaSetup : nextStep;
 
     return {
       ...state,
@@ -214,7 +215,7 @@ export const userReducer = createReducer(
   on(UserActions.registerSuccess, (state, { user }) => ({
     ...state,
     currentUser: user,
-    currentStep: AuthSteps.EMAIL_VERIFY,
+    currentStep: AuthStep.EmailVerify,
     isLoading: false
   })),
   on(UserActions.registerFailure, (state, { error }) => ({
@@ -252,7 +253,7 @@ export const userReducer = createReducer(
   })),
   on(UserActions.needsMFASetupSuccess, (state) => ({
     ...state,
-    currentStep: AuthSteps.MFA_VERIFY,
+    currentStep: AuthStep.MfaVerify,
     isLoading: false
   })),
   on(UserActions.needsMFASetupFailure, (state, { error }) => ({
@@ -272,7 +273,7 @@ export const userReducer = createReducer(
     currentUser: user,
     isAuthenticated: true,
     isLoading: false,
-    currentStep: AuthSteps.COMPLETE
+    currentStep: AuthStep.Complete
   })),
   
   // Phone verification actions
@@ -361,7 +362,7 @@ export const userReducer = createReducer(
     console.log('[AuthReducer] authFlowComplete - Authentication flow completed for user:', sanitizeEmail(user.email));
     return {
       ...state,
-      currentStep: AuthSteps.COMPLETE,
+      currentStep: AuthStep.Complete,
       currentUser: user,
       isAuthenticated: true,
       sessionActive: true,
@@ -399,7 +400,7 @@ export const userReducer = createReducer(
     currentUser: user,
     sessionActive: true,
     isAuthenticated: true,
-    currentStep: AuthSteps.COMPLETE
+    currentStep: AuthStep.Complete
   })),
   on(UserActions.updateUserAfterPhoneVerificationFailure, (state, { error }) => ({
     ...state,

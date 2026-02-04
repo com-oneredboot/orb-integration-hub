@@ -15,8 +15,10 @@ import { UserService } from '../../../core/services/user.service';
 import { CognitoService } from '../../../core/services/cognito.service';
 import { RecoveryService } from '../../../core/services/recovery.service';
 import { AuthProgressStorageService } from '../../../core/services/auth-progress-storage.service';
-import { RecoveryAction, CognitoUserStatus, AUTH_MESSAGES } from '../../../core/models/RecoveryModel';
-import { AuthSteps } from './user.state';
+import { AUTH_MESSAGES } from '../../../core/models/RecoveryModel';
+import { AuthStep } from '../../../core/enums/AuthStepEnum';
+import { RecoveryAction } from '../../../core/enums/RecoveryActionEnum';
+import { CognitoUserStatus } from '../../../core/enums/CognitoUserStatusEnum';
 import { UsersCreateInput, Users } from '../../../core/models/UsersModel';
 import { UserStatus } from '../../../core/enums/UserStatusEnum';
 
@@ -91,11 +93,11 @@ describe('UserEffects', () => {
     it('should dispatch smartCheckSuccess for orphaned Cognito user', (done) => {
       const email = 'orphaned@example.com';
       const mockResult = {
-        cognitoStatus: CognitoUserStatus.UNCONFIRMED,
+        cognitoStatus: CognitoUserStatus.Unconfirmed,
         cognitoSub: 'test-sub-123',
         dynamoExists: false,
-        recoveryAction: RecoveryAction.RESEND_VERIFICATION,
-        nextStep: AuthSteps.EMAIL_VERIFY,
+        recoveryAction: RecoveryAction.ResendVerification,
+        nextStep: AuthStep.EmailVerify,
         userMessage: AUTH_MESSAGES.NEW_CODE_SENT,
         debugInfo: {
           checkTimestamp: new Date(),
@@ -120,11 +122,11 @@ describe('UserEffects', () => {
     it('should dispatch smartCheckSuccess for complete user (login flow)', (done) => {
       const email = 'complete@example.com';
       const mockResult = {
-        cognitoStatus: CognitoUserStatus.CONFIRMED,
+        cognitoStatus: CognitoUserStatus.Confirmed,
         cognitoSub: 'test-sub-456',
         dynamoExists: true,
-        recoveryAction: RecoveryAction.LOGIN,
-        nextStep: AuthSteps.PASSWORD_VERIFY,
+        recoveryAction: RecoveryAction.Login,
+        nextStep: AuthStep.PasswordVerify,
         userMessage: AUTH_MESSAGES.LOGIN,
         debugInfo: {
           checkTimestamp: new Date(),
@@ -150,8 +152,8 @@ describe('UserEffects', () => {
         cognitoStatus: null,
         cognitoSub: null,
         dynamoExists: false,
-        recoveryAction: RecoveryAction.NEW_SIGNUP,
-        nextStep: AuthSteps.PASSWORD_SETUP,
+        recoveryAction: RecoveryAction.NewSignup,
+        nextStep: AuthStep.PasswordSetup,
         userMessage: AUTH_MESSAGES.NEW_SIGNUP,
         debugInfo: {
           checkTimestamp: new Date(),
@@ -189,7 +191,7 @@ describe('UserEffects', () => {
     it('should dispatch resumeFromStorageSuccess when valid progress exists', (done) => {
       const mockProgress = {
         email: 'saved@example.com',
-        step: AuthSteps.EMAIL_VERIFY,
+        step: AuthStep.EmailVerify,
         timestamp: Date.now(),
         expiresAt: Date.now() + 86400000
       };
@@ -222,7 +224,7 @@ describe('UserEffects', () => {
     it('should dispatch resumeFromStorageNotFound when progress is expired', (done) => {
       const expiredProgress = {
         email: 'expired@example.com',
-        step: AuthSteps.EMAIL_VERIFY,
+        step: AuthStep.EmailVerify,
         timestamp: Date.now() - 100000,
         expiresAt: Date.now() - 1000
       };

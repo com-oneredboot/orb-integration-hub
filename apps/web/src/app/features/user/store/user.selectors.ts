@@ -3,7 +3,8 @@
 // date: 2025-01-03
 // description: Contains all selectors for the User feature
 import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { UserState, AuthSteps } from './user.state';
+import { UserState } from './user.state';
+import { AuthStep } from '../../../core/enums/AuthStepEnum';
 
 export const selectUserState = createFeatureSelector<UserState>('user');
 
@@ -149,23 +150,23 @@ export const selectStepTitle = createSelector(
   selectUserExists,
   (step, userExists) => {
     switch (step) {
-      case AuthSteps.EMAIL:
+      case AuthStep.Email:
         return 'Sign In or Create Account';
-      case AuthSteps.PASSWORD:
+      case AuthStep.Password:
         return userExists ? 'Enter Password' : 'Create Account';
-      case AuthSteps.PASSWORD_SETUP:
+      case AuthStep.PasswordSetup:
         return 'Create a Password';
-      case AuthSteps.EMAIL_VERIFY:
+      case AuthStep.EmailVerify:
         return 'Verify Email';
-      case AuthSteps.MFA_SETUP:
+      case AuthStep.MfaSetup:
         return 'Set Up Two-Factor Authentication';
-      case AuthSteps.MFA_VERIFY:
+      case AuthStep.MfaVerify:
         return 'Enter Verification Code';
-      case AuthSteps.PASSWORD_RESET:
+      case AuthStep.PasswordReset:
         return 'Reset Password';
-      case AuthSteps.PASSWORD_RESET_VERIFY:
+      case AuthStep.PasswordResetVerify:
         return 'Enter Reset Code';
-      case AuthSteps.PASSWORD_RESET_CONFIRM:
+      case AuthStep.PasswordResetConfirm:
         return 'Create New Password';
       default:
         return 'Authentication';

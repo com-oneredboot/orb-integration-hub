@@ -4,14 +4,14 @@
 // description: Service for persisting auth progress to local storage
 
 import { Injectable } from '@angular/core';
-import { AuthSteps } from '../../features/user/store/user.state';
+import { AuthStep } from '../enums/AuthStepEnum';
 
 /**
  * Auth progress stored in local storage
  */
 export interface AuthProgress {
   email: string;
-  step: AuthSteps;
+  step: AuthStep;
   timestamp: number;
   cognitoSub?: string;
   expiresAt: number;
@@ -96,7 +96,7 @@ export class AuthProgressStorageService {
    * Update just the step in saved progress
    * @param step New auth step
    */
-  updateStep(step: AuthSteps): void {
+  updateStep(step: AuthStep): void {
     const current = this.get();
     if (current) {
       this.save({

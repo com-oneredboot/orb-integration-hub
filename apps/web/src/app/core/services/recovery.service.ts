@@ -10,12 +10,12 @@ import { UserService } from './user.service';
 import { DebugLogService } from './debug-log.service';
 import {
   SmartCheckResult,
-  CognitoUserStatus,
-  RecoveryAction,
   AUTH_MESSAGES,
   getNextStepForAction
 } from '../models/RecoveryModel';
-import { AuthSteps } from '../../features/user/store/user.state';
+import { AuthStep } from '../enums/AuthStepEnum';
+import { CognitoUserStatus } from '../enums/CognitoUserStatusEnum';
+import { RecoveryAction } from '../enums/RecoveryActionEnum';
 import { sanitizeCognitoSub } from '../utils/log-sanitizer';
 
 @Injectable({
@@ -117,8 +117,8 @@ export class RecoveryService {
         cognitoStatus: null,
         cognitoSub: null,
         dynamoExists: false,
-        recoveryAction: RecoveryAction.NEW_SIGNUP,
-        nextStep: AuthSteps.EMAIL_ENTRY,
+        recoveryAction: RecoveryAction.NewSignup,
+        nextStep: AuthStep.EmailEntry,
         userMessage: AUTH_MESSAGES.NETWORK_ERROR,
         debugInfo: {
           checkTimestamp: new Date(),
@@ -156,7 +156,7 @@ export class RecoveryService {
     // Case 1: Neither system has the user - new signup
     if (!cognitoStatus && !dynamoExists) {
       return {
-        action: RecoveryAction.NEW_SIGNUP,
+        action: RecoveryAction.NewSignup,
         message: AUTH_MESSAGES.NEW_SIGNUP
       };
     }
@@ -168,7 +168,7 @@ export class RecoveryService {
         dynamoExists
       });
       return {
-        action: RecoveryAction.CONTACT_SUPPORT,
+        action: RecoveryAction.ContactSupport,
         message: AUTH_MESSAGES.CONTACT_SUPPORT
       };
     }
@@ -176,25 +176,25 @@ export class RecoveryService {
     // Case 3: Cognito has user but DynamoDB doesn't - orphaned state
     if (cognitoStatus && !dynamoExists) {
       switch (cognitoStatus) {
-        case CognitoUserStatus.UNCONFIRMED:
+        case CognitoUserStatus.Unconfirmed:
           return {
-            action: RecoveryAction.RESEND_VERIFICATION,
+            action: RecoveryAction.ResendVerification,
             message: AUTH_MESSAGES.NEW_CODE_SENT
           };
-        case CognitoUserStatus.CONFIRMED:
+        case CognitoUserStatus.Confirmed:
           return {
-            action: RecoveryAction.CREATE_DYNAMO_RECORD,
+            action: RecoveryAction.CreateDynamoRecord,
             message: AUTH_MESSAGES.RESUMING
           };
-        case CognitoUserStatus.FORCE_CHANGE_PASSWORD:
-        case CognitoUserStatus.RESET_REQUIRED:
+        case CognitoUserStatus.ForceChangePassword:
+        case CognitoUserStatus.ResetRequired:
           return {
-            action: RecoveryAction.PASSWORD_RESET,
+            action: RecoveryAction.PasswordReset,
             message: AUTH_MESSAGES.PASSWORD_RESET
           };
         default:
           return {
-            action: RecoveryAction.RESEND_VERIFICATION,
+            action: RecoveryAction.ResendVerification,
             message: AUTH_MESSAGES.WELCOME_BACK
           };
       }
@@ -203,31 +203,31 @@ export class RecoveryService {
     // Case 4: Both systems have the user - login flow
     if (cognitoStatus && dynamoExists) {
       // Check if user needs password reset
-      if (cognitoStatus === CognitoUserStatus.FORCE_CHANGE_PASSWORD ||
-          cognitoStatus === CognitoUserStatus.RESET_REQUIRED) {
+      if (cognitoStatus === CognitoUserStatus.ForceChangePassword ||
+          cognitoStatus === CognitoUserStatus.ResetRequired) {
         return {
-          action: RecoveryAction.PASSWORD_RESET,
+          action: RecoveryAction.PasswordReset,
           message: AUTH_MESSAGES.PASSWORD_RESET
         };
       }
       
       // Check if user is unconfirmed (shouldn't happen if DynamoDB exists, but handle it)
-      if (cognitoStatus === CognitoUserStatus.UNCONFIRMED) {
+      if (cognitoStatus === CognitoUserStatus.Unconfirmed) {
         return {
-          action: RecoveryAction.RESEND_VERIFICATION,
+          action: RecoveryAction.ResendVerification,
           message: AUTH_MESSAGES.NEW_CODE_SENT
         };
       }
 
       return {
-        action: RecoveryAction.LOGIN,
+        action: RecoveryAction.Login,
         message: AUTH_MESSAGES.LOGIN
       };
     }
 
     // Fallback - should never reach here
     return {
-      action: RecoveryAction.NEW_SIGNUP,
+      action: RecoveryAction.NewSignup,
       message: AUTH_MESSAGES.NEW_SIGNUP
     };
   }
@@ -243,7 +243,7 @@ export class RecoveryService {
       return upperStatus as CognitoUserStatus;
     }
     
-    return CognitoUserStatus.UNKNOWN;
+    return CognitoUserStatus.Unknown;
   }
 
   /**

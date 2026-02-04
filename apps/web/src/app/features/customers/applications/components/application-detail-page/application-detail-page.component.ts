@@ -57,8 +57,11 @@ import * as fromApplications from '../../store/applications.selectors';
 import * as fromOrganizations from '../../../organizations/store/organizations.selectors';
 import * as fromUser from '../../../../user/store/user.selectors';
 import * as fromApiKeys from '../../store/api-keys/api-keys.selectors';
+import * as fromEnvironmentConfig from '../../store/environment-config/environment-config.selectors';
 import { OrganizationsActions } from '../../../organizations/store/organizations.actions';
 import { ApiKeysActions } from '../../store/api-keys/api-keys.actions';
+import { EnvironmentConfigActions } from '../../store/environment-config/environment-config.actions';
+import { IApplicationEnvironmentConfig } from '../../../../../core/models/ApplicationEnvironmentConfigModel';
 import { GeneratedKeyResult } from '../../store/api-keys/api-keys.state';
 import { ApplicationApiKeyStatus } from '../../../../../core/enums/ApplicationApiKeyStatusEnum';
 
@@ -158,13 +161,28 @@ export interface EnvironmentKeyRow {
 }
 
 /**
+ * Interface for environment row display in Environments tab DataGrid
+ */
+export interface EnvironmentRow {
+  environment: string;
+  environmentLabel: string;
+  apiKeyStatus: 'Active' | 'Rotating' | 'Revoked' | 'Expired' | 'Not Configured';
+  apiKeyPrefix: string | null;
+  apiKeyType: string | null;
+  formattedKeyPrefix: string;
+  rateLimitDisplay: string;
+  webhookStatus: 'Enabled' | 'Disabled' | 'Not Configured';
+  lastUpdated: string;
+}
+
+/**
  * Tab identifiers for the application detail page
  */
 export enum ApplicationDetailTab {
-  Overview = 'overview',  // Renamed from Details
+  Overview = 'overview',
+  Environments = 'environments',
   Groups = 'groups',
-  Security = 'security',
-  Danger = 'danger',  // New tab for delete action
+  Danger = 'danger',
 }
 
 @Component({
@@ -192,15 +210,31 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
   activeTab: ApplicationDetailTab = ApplicationDetailTab.Overview;
 
   // Template references for API keys grid custom cells
-  @ViewChild('environmentCell', { static: false }) environmentCell!: TemplateRef<unknown>;
-  @ViewChild('keyInfoCell', { static: false }) keyInfoCell!: TemplateRef<unknown>;
-  @ViewChild('actionsCell', { static: false }) actionsCell!: TemplateRef<unknown>;
+  // static: true because templates are now at root level (outside *ngIf)
+  @ViewChild('environmentCell', { static: true }) environmentCell!: TemplateRef<unknown>;
+  @ViewChild('keyInfoCell', { static: true }) keyInfoCell!: TemplateRef<unknown>;
+  @ViewChild('actionsCell', { static: true }) actionsCell!: TemplateRef<unknown>;
 
-  // API Keys grid configuration
+  // Template references for Environments DataGrid custom cells
+  @ViewChild('envNameCell', { static: true }) envNameCell!: TemplateRef<unknown>;
+  @ViewChild('envStatusCell', { static: true }) envStatusCell!: TemplateRef<unknown>;
+  @ViewChild('envApiKeyCell', { static: true }) envApiKeyCell!: TemplateRef<unknown>;
+  @ViewChild('envRateLimitCell', { static: true }) envRateLimitCell!: TemplateRef<unknown>;
+  @ViewChild('envWebhookCell', { static: true }) envWebhookCell!: TemplateRef<unknown>;
+  @ViewChild('envLastUpdatedCell', { static: true }) envLastUpdatedCell!: TemplateRef<unknown>;
+
+  // API Keys grid configuration (kept for Security tab if needed later)
   apiKeysColumns: ColumnDefinition<EnvironmentKeyRow>[] = [];
   apiKeysPageState: PageState = { ...DEFAULT_PAGE_STATE, pageSize: 10 };
   apiKeysSortState: SortState | null = null;
   apiKeysFilterState: FilterState = {};
+
+  // Environments DataGrid configuration (Overview tab)
+  environmentsColumns: ColumnDefinition<EnvironmentRow>[] = [];
+  environmentsPageState: PageState = { ...DEFAULT_PAGE_STATE, pageSize: 10 };
+  environmentsSortState: SortState | null = null;
+  environmentsFilterState: FilterState = {};
+  environmentRows: EnvironmentRow[] = [];
 
   // Store selectors - ALL data comes from store
   application$: Observable<IApplications | null>;
@@ -210,6 +244,7 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
   saveError$: Observable<string | null>;
   organizations$: Observable<IOrganizations[]>;
   apiKeys$: Observable<IApplicationApiKeys[]>;
+  environmentConfigs$: Observable<IApplicationEnvironmentConfig[]>;
   isGeneratingKey$: Observable<boolean>;
   isRevokingKey$: Observable<boolean>;
   generatedKey$: Observable<GeneratedKeyResult | null>;
@@ -220,6 +255,7 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
   applicationId: string | null = null;
   loadError: string | null = null;
   apiKeys: IApplicationApiKeys[] = [];
+  environmentConfigs: IApplicationEnvironmentConfig[] = [];
   environmentKeyRows: EnvironmentKeyRow[] = [];
 
   // Mode detection
@@ -308,6 +344,7 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
     this.saveError$ = this.store.select(fromApplications.selectSaveError);
     this.organizations$ = this.store.select(fromOrganizations.selectOrganizations);
     this.apiKeys$ = this.store.select(fromApiKeys.selectApiKeys);
+    this.environmentConfigs$ = this.store.select(fromEnvironmentConfig.selectConfigs);
     this.isGeneratingKey$ = this.store.select(fromApiKeys.selectIsGenerating);
     this.isRevokingKey$ = this.store.select(fromApiKeys.selectIsRevoking);
     this.generatedKey$ = this.store.select(fromApiKeys.selectGeneratedKey);
@@ -322,6 +359,7 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
         this.isDraft = app.status === ApplicationStatus.Pending;
         this.loadFormData();
         this.updateEnvironmentKeyRows();
+        this.updateEnvironmentRows();
         // Load API keys for all applications (including drafts for validation)
         this.loadApiKeys();
       }
@@ -333,6 +371,15 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
     ).subscribe(keys => {
       this.apiKeys = keys;
       this.updateEnvironmentKeyRows();
+      this.updateEnvironmentRows();
+    });
+
+    // Subscribe to environment configs changes
+    this.environmentConfigs$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(configs => {
+      this.environmentConfigs = configs;
+      this.updateEnvironmentRows();
     });
 
     // Subscribe to generated key changes (for inline display after generation)
@@ -401,6 +448,7 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
 
   ngAfterViewInit(): void {
     this.initializeApiKeysColumns();
+    this.initializeEnvironmentsColumns();
   }
 
   ngOnDestroy(): void {
@@ -420,15 +468,25 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
   }
 
   /**
-   * Load API keys for the current application
+   * Load API keys and environment configs for the current application
    */
   private loadApiKeys(): void {
     if (this.application) {
+      // Load API keys
       this.store.dispatch(ApiKeysActions.setApplicationContext({
         applicationId: this.application.applicationId,
         organizationId: this.application.organizationId
       }));
       this.store.dispatch(ApiKeysActions.loadApiKeys({
+        applicationId: this.application.applicationId
+      }));
+
+      // Load environment configs
+      this.store.dispatch(EnvironmentConfigActions.setApplicationContext({
+        applicationId: this.application.applicationId,
+        organizationId: this.application.organizationId
+      }));
+      this.store.dispatch(EnvironmentConfigActions.loadConfigs({
         applicationId: this.application.applicationId
       }));
     }
@@ -500,6 +558,229 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
         align: 'right',
       },
     ];
+  }
+
+  /**
+   * Initialize Environments DataGrid columns for Overview tab
+   */
+  private initializeEnvironmentsColumns(): void {
+    this.environmentsColumns = [
+      {
+        field: 'environmentLabel',
+        header: 'Environment',
+        sortable: true,
+        filterable: true,
+        filterType: 'select',
+        filterOptions: [
+          { value: 'Production', label: 'Production' },
+          { value: 'Staging', label: 'Staging' },
+          { value: 'Development', label: 'Development' },
+          { value: 'Test', label: 'Test' },
+          { value: 'Preview', label: 'Preview' },
+        ],
+        cellTemplate: this.envNameCell,
+        width: '15%',
+      },
+      {
+        field: 'apiKeyStatus',
+        header: 'Status',
+        sortable: true,
+        filterable: true,
+        filterType: 'select',
+        filterOptions: [
+          { value: 'Active', label: 'Active' },
+          { value: 'Rotating', label: 'Rotating' },
+          { value: 'Revoked', label: 'Revoked' },
+          { value: 'Expired', label: 'Expired' },
+          { value: 'Not Configured', label: 'Not Configured' },
+        ],
+        cellTemplate: this.envStatusCell,
+        width: '15%',
+      },
+      {
+        field: 'formattedKeyPrefix',
+        header: 'API Key',
+        sortable: false,
+        filterable: false,
+        cellTemplate: this.envApiKeyCell,
+        width: '25%',
+      },
+      {
+        field: 'rateLimitDisplay',
+        header: 'Rate Limits',
+        sortable: false,
+        filterable: false,
+        cellTemplate: this.envRateLimitCell,
+        width: '15%',
+      },
+      {
+        field: 'webhookStatus',
+        header: 'Webhook',
+        sortable: true,
+        filterable: true,
+        filterType: 'select',
+        filterOptions: [
+          { value: 'Enabled', label: 'Enabled' },
+          { value: 'Disabled', label: 'Disabled' },
+          { value: 'Not Configured', label: 'Not Configured' },
+        ],
+        cellTemplate: this.envWebhookCell,
+        width: '15%',
+      },
+      {
+        field: 'lastUpdated',
+        header: 'Last Updated',
+        sortable: true,
+        filterable: false,
+        cellTemplate: this.envLastUpdatedCell,
+        width: '15%',
+      },
+    ];
+  }
+
+  /**
+   * Compute environment rows for the Environments tab DataGrid
+   */
+  private computeEnvironmentRows(): EnvironmentRow[] {
+    const environments = this.application?.environments || [];
+    const apiKeys = this.apiKeys || [];
+    const configs = this.environmentConfigs || [];
+
+    return environments.map(env => {
+      const apiKey = apiKeys.find(k => k.environment === env) || null;
+      const config = configs.find(c => c.environment === env) || null;
+      
+      let apiKeyStatus: EnvironmentRow['apiKeyStatus'] = 'Not Configured';
+      if (apiKey) {
+        switch (apiKey.status) {
+          case ApplicationApiKeyStatus.Active:
+            apiKeyStatus = 'Active';
+            break;
+          case ApplicationApiKeyStatus.Rotating:
+            apiKeyStatus = 'Rotating';
+            break;
+          case ApplicationApiKeyStatus.Revoked:
+            apiKeyStatus = 'Revoked';
+            break;
+          case ApplicationApiKeyStatus.Expired:
+            apiKeyStatus = 'Expired';
+            break;
+          default:
+            apiKeyStatus = 'Not Configured';
+        }
+      }
+
+      // Get webhook status from environment config
+      let webhookStatus: EnvironmentRow['webhookStatus'] = 'Not Configured';
+      if (config) {
+        webhookStatus = config.webhookEnabled ? 'Enabled' : 'Disabled';
+      }
+
+      // Format rate limits display
+      let rateLimitDisplay = 'Not configured';
+      if (config) {
+        rateLimitDisplay = `${config.rateLimitPerMinute}/min`;
+      }
+
+      // Format the key prefix for display (e.g., orb_api_dev_...abc123)
+      const formattedKeyPrefix = this.formatKeyPrefixDisplay(apiKey?.keyPrefix || null);
+
+      // Determine last updated from the most recent of apiKey or config
+      const apiKeyUpdated = apiKey?.updatedAt ? new Date(typeof apiKey.updatedAt === 'number' ? apiKey.updatedAt * 1000 : apiKey.updatedAt) : null;
+      const configUpdated = config?.updatedAt ? new Date(typeof config.updatedAt === 'number' ? (config.updatedAt as number) * 1000 : config.updatedAt) : null;
+      
+      let lastUpdatedDate: Date | null = null;
+      if (apiKeyUpdated && configUpdated) {
+        lastUpdatedDate = apiKeyUpdated > configUpdated ? apiKeyUpdated : configUpdated;
+      } else {
+        lastUpdatedDate = apiKeyUpdated || configUpdated;
+      }
+
+      return {
+        environment: env,
+        environmentLabel: this.getEnvironmentLabel(env),
+        apiKeyStatus,
+        apiKeyPrefix: apiKey?.keyPrefix || null,
+        apiKeyType: apiKey?.keyType || null,
+        formattedKeyPrefix,
+        rateLimitDisplay,
+        webhookStatus,
+        lastUpdated: lastUpdatedDate ? this.formatRelativeTime(lastUpdatedDate) : 'Never',
+      };
+    });
+  }
+
+  /**
+   * Format the API key prefix for display
+   * Transforms stored prefix (e.g., orb_api_dev_****) to display format (e.g., orb_api_dev_...abc1)
+   */
+  private formatKeyPrefixDisplay(keyPrefix: string | null): string {
+    if (!keyPrefix) return '—';
+    
+    // The keyPrefix is stored as something like "orb_api_dev_abc1" (first 4 chars after prefix)
+    // We want to display it as "orb_api_dev_...abc1"
+    // Find the last underscore and insert dots before the suffix
+    const lastUnderscoreIndex = keyPrefix.lastIndexOf('_');
+    if (lastUnderscoreIndex === -1) return keyPrefix;
+    
+    const prefix = keyPrefix.substring(0, lastUnderscoreIndex + 1);
+    const suffix = keyPrefix.substring(lastUnderscoreIndex + 1);
+    
+    // Replace **** with ... and keep the suffix
+    if (suffix === '****' || suffix.includes('*')) {
+      return `${prefix}...`;
+    }
+    
+    return `${prefix}...${suffix}`;
+  }
+
+  /**
+   * Update environment rows for Overview tab DataGrid
+   */
+  private updateEnvironmentRows(): void {
+    this.environmentRows = this.computeEnvironmentRows();
+    this.environmentsPageState = {
+      ...this.environmentsPageState,
+      totalItems: this.environmentRows.length,
+      totalPages: Math.ceil(this.environmentRows.length / this.environmentsPageState.pageSize) || 1
+    };
+  }
+
+  /**
+   * Handle environment row click - navigate to Environment Detail Page
+   */
+  onEnvironmentRowClick(row: EnvironmentRow): void {
+    if (this.application) {
+      this.router.navigate(['/customers/applications', this.application.applicationId, 'environments', row.environment]);
+    }
+  }
+
+  // Environments DataGrid event handlers
+  onEnvironmentsPageChange(event: PageChangeEvent): void {
+    this.environmentsPageState = {
+      ...this.environmentsPageState,
+      currentPage: event.page,
+      pageSize: event.pageSize,
+      totalPages: Math.ceil(this.environmentsPageState.totalItems / event.pageSize),
+    };
+  }
+
+  onEnvironmentsSortChange(event: SortChangeEvent): void {
+    if (event.direction) {
+      this.environmentsSortState = { field: event.field, direction: event.direction };
+    } else {
+      this.environmentsSortState = null;
+    }
+  }
+
+  onEnvironmentsFilterChange(event: FilterChangeEvent): void {
+    this.environmentsFilterState = event.filters;
+  }
+
+  onEnvironmentsResetGrid(): void {
+    this.environmentsPageState = { ...DEFAULT_PAGE_STATE, pageSize: 10 };
+    this.environmentsSortState = null;
+    this.environmentsFilterState = {};
   }
 
   private loadFormData(): void {
@@ -659,20 +940,6 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
     if (tab !== ApplicationDetailTab.Overview) {
       this.apiKeyValidationError = null;
     }
-    // Clear generated key display when navigating away from Security tab
-    if (tab !== ApplicationDetailTab.Security) {
-      this.generatedKeyDisplay = null;
-      this.copySuccess = false;
-      // Dispatch action to clear generated key in store
-      this.store.dispatch(ApiKeysActions.clearGeneratedKey());
-    }
-    // Load API keys when entering Security tab
-    if (tab === ApplicationDetailTab.Security && this.application) {
-      this.store.dispatch(ApiKeysActions.loadApiKeys({
-        applicationId: this.application.applicationId
-      }));
-      this.updateEnvironmentKeyRows();
-    }
   }
 
   // Groups tab event handlers
@@ -686,7 +953,7 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
     console.log('Create group requested');
   }
 
-  // API Keys tab event handlers
+  // API Keys tab event handlers (kept for potential future use)
   onApiKeySelected(apiKey: IApplicationApiKeys): void {
     // Handle API key selection (future implementation)
     console.log('API key selected:', apiKey.applicationApiKeyId);

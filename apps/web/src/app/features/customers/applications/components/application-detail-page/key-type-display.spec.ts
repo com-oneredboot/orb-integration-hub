@@ -128,7 +128,7 @@ describe('Key Type Display Logic', () => {
   describe('Environment Key Row with Key Types', () => {
     const createEnvironmentKeyRow = (
       apiKey: IApplicationApiKeys | null,
-      environment: string = 'DEVELOPMENT'
+      environment = 'DEVELOPMENT'
     ): EnvironmentKeyRow => {
       const isRevoked = apiKey?.status === ApplicationApiKeyStatus.Revoked;
       const isExpired = apiKey?.status === ApplicationApiKeyStatus.Expired;

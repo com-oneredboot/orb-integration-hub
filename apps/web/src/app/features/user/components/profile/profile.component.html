@@ -198,9 +198,9 @@ description: HTML template file - Profile page with step-based setup flow
           <button 
             type="button" 
             class="profile-setup-flow__button profile-setup-flow__button--primary"
-            [disabled]="nameForm.invalid || isLoading"
+            [disabled]="nameForm.invalid || (isLoading$ | async)"
             (click)="submitNameStep()">
-            {{ isLoading ? 'Saving...' : 'Continue' }}
+            {{ (isLoading$ | async) ? 'Saving...' : 'Continue' }}
           </button>
         </div>
       </div>
@@ -246,9 +246,9 @@ description: HTML template file - Profile page with step-based setup flow
           <button 
             type="button" 
             class="profile-setup-flow__button profile-setup-flow__button--primary"
-            [disabled]="phoneForm.invalid || isLoading"
+            [disabled]="phoneForm.invalid || (isLoading$ | async)"
             (click)="submitPhoneStep()">
-            {{ isLoading ? 'Saving...' : 'Continue' }}
+            {{ (isLoading$ | async) ? 'Saving...' : 'Continue' }}
           </button>
         </div>
       </div>
@@ -267,7 +267,7 @@ description: HTML template file - Profile page with step-based setup flow
           inputId="phone-verification-code"
           [showResend]="true"
           [canResend]="canResendCode()"
-          [resendLoading]="isLoading"
+          [resendLoading]="(isLoading$ | async) || false"
           [externalError]="phoneVerificationState.error"
           [formControl]="verificationCodeControl"
           (resend)="sendVerificationCode()">
@@ -276,9 +276,9 @@ description: HTML template file - Profile page with step-based setup flow
         <button 
           type="button" 
           class="profile-setup-flow__button profile-setup-flow__button--primary"
-          [disabled]="verifyForm.invalid || isLoading"
+          [disabled]="verifyForm.invalid || (isLoading$ | async)"
           (click)="submitVerifyStep()">
-          {{ isLoading ? 'Verifying...' : 'Verify' }}
+          {{ (isLoading$ | async) ? 'Verifying...' : 'Verify' }}
         </button>
         
         <div class="profile-setup-flow__links">

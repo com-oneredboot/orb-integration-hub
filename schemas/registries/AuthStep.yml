@@ -1,0 +1,50 @@
+type: registry
+version: '1.0'
+name: AuthStep
+targets:
+  - api
+description: "Authentication flow step states"
+
+items:
+  UNKNOWN:
+    value: "UNKNOWN"
+    description: "Unknown step"
+  EMAIL_ENTRY:
+    value: "EMAIL_ENTRY"
+    description: "Initial email entry step"
+  EMAIL:
+    value: "EMAIL"
+    description: "Email step (alias for EMAIL_ENTRY)"
+  PASSWORD:
+    value: "PASSWORD"
+    description: "Password entry for existing users"
+  PASSWORD_VERIFY:
+    value: "PASSWORD_VERIFY"
+    description: "Password verification step"
+  PASSWORD_SETUP:
+    value: "PASSWORD_SETUP"
+    description: "Password setup for new users"
+  EMAIL_VERIFY:
+    value: "EMAIL_VERIFY"
+    description: "Email verification code entry"
+  SIGNIN:
+    value: "SIGNIN"
+    description: "Sign in step for verified users"
+  MFA_SETUP:
+    value: "MFA_SETUP"
+    description: "MFA setup for users without MFA"
+  MFA_VERIFY:
+    value: "MFA_VERIFY"
+    description: "MFA code verification"
+  PASSWORD_RESET:
+    value: "PASSWORD_RESET"
+    description: "Password reset initiation"
+  PASSWORD_RESET_VERIFY:
+    value: "PASSWORD_RESET_VERIFY"
+    description: "Password reset code verification"
+  PASSWORD_RESET_CONFIRM:
+    value: "PASSWORD_RESET_CONFIRM"
+    description: "New password confirmation"
+  COMPLETE:
+    value: "COMPLETE"
+    description: "Authentication flow complete"

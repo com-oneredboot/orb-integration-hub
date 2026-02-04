@@ -27,10 +27,10 @@ describe('Profile Component Property Tests', () => {
   describe('Property 1: Edit Mode State Consistency', () => {
     // All valid steps in order
     const allSteps = [
-      ProfileSetupStep.NAME,
-      ProfileSetupStep.PHONE,
-      ProfileSetupStep.PHONE_VERIFY,
-      ProfileSetupStep.COMPLETE
+      ProfileSetupStep.Name,
+      ProfileSetupStep.Phone,
+      ProfileSetupStep.PhoneVerify,
+      ProfileSetupStep.Complete
     ];
 
     // Generator for valid ProfileSetupStep
@@ -54,7 +54,7 @@ describe('Profile Component Property Tests', () => {
         fc.property(setupStateArbitrary, (state) => {
           // If currentStep is COMPLETE, isFlowMode should be false
           // This is the invariant: COMPLETE => !isFlowMode
-          if (state.currentStep === ProfileSetupStep.COMPLETE) {
+          if (state.currentStep === ProfileSetupStep.Complete) {
             // When in COMPLETE step, flow mode should be false (showing summary)
             // This property checks that valid states maintain this invariant
             return true; // We're testing the invariant, not enforcing it here
@@ -134,13 +134,13 @@ describe('Profile Component Property Tests', () => {
       
       // Simulate startFullFlow
       const startFullFlow = (): ProfileSetupState => ({
-        currentStep: ProfileSetupStep.NAME,
+        currentStep: ProfileSetupStep.Name,
         isFlowMode: true,
         startFromBeginning: true
       });
 
       const state = startFullFlow();
-      expect(state.currentStep).toBe(ProfileSetupStep.NAME);
+      expect(state.currentStep).toBe(ProfileSetupStep.Name);
       expect(state.isFlowMode).toBe(true);
       expect(state.startFromBeginning).toBe(true);
     });
@@ -154,13 +154,13 @@ describe('Profile Component Property Tests', () => {
       
       // Simulate showSummary
       const showSummary = (): ProfileSetupState => ({
-        currentStep: ProfileSetupStep.COMPLETE,
+        currentStep: ProfileSetupStep.Complete,
         isFlowMode: false,
         startFromBeginning: true
       });
 
       const state = showSummary();
-      expect(state.currentStep).toBe(ProfileSetupStep.COMPLETE);
+      expect(state.currentStep).toBe(ProfileSetupStep.Complete);
       expect(state.isFlowMode).toBe(false);
     });
 
@@ -225,10 +225,10 @@ describe('Profile Component Property Tests', () => {
 
       // Simulate getFirstIncompleteStep
       const getFirstIncompleteStep = (user: { hasName: boolean; hasPhone: boolean; phoneVerified: boolean }): ProfileSetupStep => {
-        if (!user.hasName) return ProfileSetupStep.NAME;
-        if (!user.hasPhone) return ProfileSetupStep.PHONE;
-        if (!user.phoneVerified) return ProfileSetupStep.PHONE_VERIFY;
-        return ProfileSetupStep.COMPLETE;
+        if (!user.hasName) return ProfileSetupStep.Name;
+        if (!user.hasPhone) return ProfileSetupStep.Phone;
+        if (!user.phoneVerified) return ProfileSetupStep.PhoneVerify;
+        return ProfileSetupStep.Complete;
       };
 
       fc.assert(
@@ -237,15 +237,15 @@ describe('Profile Component Property Tests', () => {
           
           // Verify the step is correct based on user state
           if (!user.hasName) {
-            return step === ProfileSetupStep.NAME;
+            return step === ProfileSetupStep.Name;
           }
           if (!user.hasPhone) {
-            return step === ProfileSetupStep.PHONE;
+            return step === ProfileSetupStep.Phone;
           }
           if (!user.phoneVerified) {
-            return step === ProfileSetupStep.PHONE_VERIFY;
+            return step === ProfileSetupStep.PhoneVerify;
           }
-          return step === ProfileSetupStep.COMPLETE;
+          return step === ProfileSetupStep.Complete;
         }),
         { numRuns: 100 }
       );

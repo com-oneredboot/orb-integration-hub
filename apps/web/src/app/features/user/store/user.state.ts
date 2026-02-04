@@ -7,31 +7,18 @@
 import { IUsers } from '../../../core/models/UsersModel';
 import { UserGroup } from "../../../core/enums/UserGroupEnum";
 import { environment } from "../../../../environments/environment";
-import { RecoveryAction } from '../../../core/models/RecoveryModel';
+import { RecoveryAction } from '../../../core/enums/RecoveryActionEnum';
+import { AuthStep } from '../../../core/enums/AuthStepEnum';
 
-export enum AuthSteps {
-  EMAIL_ENTRY = 'EMAIL_ENTRY',
-  EMAIL = 'EMAIL',
-  PASSWORD = 'PASSWORD',           // For existing users
-  PASSWORD_VERIFY = 'PASSWORD_VERIFY', // Alias for PASSWORD
-  PASSWORD_SETUP = 'PASSWORD_SETUP',     // For new users
-  EMAIL_VERIFY = 'EMAIL_VERIFY',       // Verifies the email code
-  SIGNIN = 'SIGNIN',             // For users who have verified their email
-  // NAME_SETUP, PHONE_SETUP, PHONE_VERIFY moved to profile page
-  MFA_SETUP = 'MFA_SETUP',          // for users without MFA
-  MFA_VERIFY = 'MFA_VERIFY',         // verifies the MFA code
-  PASSWORD_RESET = 'PASSWORD_RESET',     // initiates password reset
-  PASSWORD_RESET_VERIFY = 'PASSWORD_RESET_VERIFY', // verifies password reset code
-  PASSWORD_RESET_CONFIRM = 'PASSWORD_RESET_CONFIRM', // confirms new password
-  COMPLETE = 'COMPLETE'            // User setup is complete
-}
+// Re-export AuthStep for direct usage
+export { AuthStep } from '../../../core/enums/AuthStepEnum';
 
 export interface UserState {
   debugMode: boolean;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  currentStep: AuthSteps;
+  currentStep: AuthStep;
   currentUser: IUsers | null;
   userExists: boolean;
   currentEmail: string | null;
@@ -83,7 +70,7 @@ export const initialState: UserState = {
   isLoading: false,
   error: null,
   currentUser: null,
-  currentStep: AuthSteps.EMAIL,
+  currentStep: AuthStep.Email,
   userExists: false,
   currentEmail: null,
 

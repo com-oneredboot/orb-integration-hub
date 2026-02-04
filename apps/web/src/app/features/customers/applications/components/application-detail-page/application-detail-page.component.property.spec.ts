@@ -613,7 +613,7 @@ describe('ApplicationDetailPageComponent Property Tests', () => {
           tick();
 
           // Switch to Security tab
-          component.setActiveTab(ApplicationDetailTab.Security);
+          component.setActiveTab(ApplicationDetailTab.Environments);
           fixture.detectChanges();
 
           // Property: row count equals environment count
@@ -701,7 +701,7 @@ describe('ApplicationDetailPageComponent Property Tests', () => {
           fixture.detectChanges();
           tick();
 
-          component.setActiveTab(ApplicationDetailTab.Security);
+          component.setActiveTab(ApplicationDetailTab.Environments);
           fixture.detectChanges();
 
           const row = component.environmentKeyRows.find(r => r.environment === environment);
@@ -779,7 +779,7 @@ describe('ApplicationDetailPageComponent Property Tests', () => {
           fixture.detectChanges();
           tick();
 
-          component.setActiveTab(ApplicationDetailTab.Security);
+          component.setActiveTab(ApplicationDetailTab.Environments);
           fixture.detectChanges();
 
           const row = component.environmentKeyRows.find(r => r.environment === environment);
@@ -859,7 +859,7 @@ describe('ApplicationDetailPageComponent Property Tests', () => {
           fixture.detectChanges();
           tick();
 
-          component.setActiveTab(ApplicationDetailTab.Security);
+          component.setActiveTab(ApplicationDetailTab.Environments);
           fixture.detectChanges();
 
           const row = component.environmentKeyRows.find(r => r.environment === environment);
@@ -949,7 +949,7 @@ describe('ApplicationDetailPageComponent Property Tests', () => {
           fixture.detectChanges();
           tick();
 
-          component.setActiveTab(ApplicationDetailTab.Security);
+          component.setActiveTab(ApplicationDetailTab.Environments);
           fixture.detectChanges();
 
           const row = component.environmentKeyRows.find(r => r.environment === environment);
@@ -1050,7 +1050,7 @@ describe('ApplicationDetailPageComponent Property Tests', () => {
           fixture.detectChanges();
           tick();
 
-          component.setActiveTab(ApplicationDetailTab.Security);
+          component.setActiveTab(ApplicationDetailTab.Environments);
           fixture.detectChanges();
 
           // Property: all rows without keys should show Generate button

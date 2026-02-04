@@ -415,7 +415,7 @@ describe('ProfileComponent', () => {
 
     it('should navigate to previous step correctly', () => {
       component.startFullFlow();
-      component.skipToStep(component.ProfileSetupStep.PHONE_VERIFY);
+      component.skipToStep(component.ProfileSetupStep.PhoneVerify);
       
       component.previousStep();
       expect(component.setupState.currentStep).toBe('PHONE');
@@ -434,7 +434,7 @@ describe('ProfileComponent', () => {
 
     it('should exit flow mode when reaching COMPLETE step', () => {
       component.startFullFlow();
-      component.skipToStep(component.ProfileSetupStep.PHONE_VERIFY);
+      component.skipToStep(component.ProfileSetupStep.PhoneVerify);
       
       component.nextStep();
       
@@ -556,55 +556,55 @@ describe('ProfileComponent', () => {
    */
   describe('Step Completion Logic', () => {
     it('should correctly identify NAME step as complete', () => {
-      expect(component.isStepComplete(component.ProfileSetupStep.NAME, mockUser)).toBe(true);
-      expect(component.isStepComplete(component.ProfileSetupStep.NAME, { ...mockUser, firstName: '' })).toBe(false);
-      expect(component.isStepComplete(component.ProfileSetupStep.NAME, { ...mockUser, lastName: '' })).toBe(false);
+      expect(component.isStepComplete(component.ProfileSetupStep.Name, mockUser)).toBe(true);
+      expect(component.isStepComplete(component.ProfileSetupStep.Name, { ...mockUser, firstName: '' })).toBe(false);
+      expect(component.isStepComplete(component.ProfileSetupStep.Name, { ...mockUser, lastName: '' })).toBe(false);
     });
 
     it('should correctly identify PHONE step as complete', () => {
-      expect(component.isStepComplete(component.ProfileSetupStep.PHONE, mockUser)).toBe(true);
-      expect(component.isStepComplete(component.ProfileSetupStep.PHONE, { ...mockUser, phoneNumber: '' })).toBe(false);
+      expect(component.isStepComplete(component.ProfileSetupStep.Phone, mockUser)).toBe(true);
+      expect(component.isStepComplete(component.ProfileSetupStep.Phone, { ...mockUser, phoneNumber: '' })).toBe(false);
     });
 
     it('should correctly identify PHONE_VERIFY step as complete', () => {
-      expect(component.isStepComplete(component.ProfileSetupStep.PHONE_VERIFY, mockUser)).toBe(true);
-      expect(component.isStepComplete(component.ProfileSetupStep.PHONE_VERIFY, { ...mockUser, phoneVerified: false })).toBe(false);
+      expect(component.isStepComplete(component.ProfileSetupStep.PhoneVerify, mockUser)).toBe(true);
+      expect(component.isStepComplete(component.ProfileSetupStep.PhoneVerify, { ...mockUser, phoneVerified: false })).toBe(false);
     });
 
     it('should correctly identify COMPLETE step', () => {
-      expect(component.isStepComplete(component.ProfileSetupStep.COMPLETE, mockUser)).toBe(true);
-      expect(component.isStepComplete(component.ProfileSetupStep.COMPLETE, { ...mockUser, phoneVerified: false })).toBe(false);
+      expect(component.isStepComplete(component.ProfileSetupStep.Complete, mockUser)).toBe(true);
+      expect(component.isStepComplete(component.ProfileSetupStep.Complete, { ...mockUser, phoneVerified: false })).toBe(false);
     });
 
     it('should return false for all steps when user is null', () => {
-      expect(component.isStepComplete(component.ProfileSetupStep.NAME, null)).toBe(false);
-      expect(component.isStepComplete(component.ProfileSetupStep.PHONE, null)).toBe(false);
-      expect(component.isStepComplete(component.ProfileSetupStep.PHONE_VERIFY, null)).toBe(false);
-      expect(component.isStepComplete(component.ProfileSetupStep.COMPLETE, null)).toBe(false);
+      expect(component.isStepComplete(component.ProfileSetupStep.Name, null)).toBe(false);
+      expect(component.isStepComplete(component.ProfileSetupStep.Phone, null)).toBe(false);
+      expect(component.isStepComplete(component.ProfileSetupStep.PhoneVerify, null)).toBe(false);
+      expect(component.isStepComplete(component.ProfileSetupStep.Complete, null)).toBe(false);
     });
 
     it('should calculate progress percentage correctly', () => {
-      component.setupState.currentStep = component.ProfileSetupStep.NAME;
+      component.setupState.currentStep = component.ProfileSetupStep.Name;
       expect(component.getProgressPercentage()).toBe(0);
       
-      component.setupState.currentStep = component.ProfileSetupStep.PHONE;
+      component.setupState.currentStep = component.ProfileSetupStep.Phone;
       expect(component.getProgressPercentage()).toBe(33);
       
-      component.setupState.currentStep = component.ProfileSetupStep.PHONE_VERIFY;
+      component.setupState.currentStep = component.ProfileSetupStep.PhoneVerify;
       expect(component.getProgressPercentage()).toBe(67);
       
-      component.setupState.currentStep = component.ProfileSetupStep.COMPLETE;
+      component.setupState.currentStep = component.ProfileSetupStep.Complete;
       expect(component.getProgressPercentage()).toBe(100);
     });
 
     it('should return correct step number', () => {
-      component.setupState.currentStep = component.ProfileSetupStep.NAME;
+      component.setupState.currentStep = component.ProfileSetupStep.Name;
       expect(component.getStepNumber()).toBe(1);
       
-      component.setupState.currentStep = component.ProfileSetupStep.PHONE;
+      component.setupState.currentStep = component.ProfileSetupStep.Phone;
       expect(component.getStepNumber()).toBe(2);
       
-      component.setupState.currentStep = component.ProfileSetupStep.PHONE_VERIFY;
+      component.setupState.currentStep = component.ProfileSetupStep.PhoneVerify;
       expect(component.getStepNumber()).toBe(3);
     });
   });

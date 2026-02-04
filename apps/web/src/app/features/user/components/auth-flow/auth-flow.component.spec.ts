@@ -15,7 +15,7 @@ import { UserGroup } from '../../../../core/enums/UserGroupEnum';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
 import { selectCurrentStep, selectCurrentUser, selectError } from '../../store/user.selectors';
-import { AuthSteps } from '../../store/user.state';
+import { AuthStep } from '../../../../core/enums/AuthStepEnum';
 
 describe('AuthFlowComponent', () => {
   let component: AuthFlowComponent;
@@ -74,7 +74,7 @@ describe('AuthFlowComponent', () => {
     const storeSpy = jasmine.createSpyObj('Store', ['select', 'dispatch']);
     storeSpy.select.and.callFake((selector: unknown) => {
       if (selector === selectCurrentStep) {
-        return of(AuthSteps.PASSWORD_SETUP);
+        return of(AuthStep.PasswordSetup);
       }
       if (selector === selectCurrentUser) {
         return of(mockUser);
@@ -122,7 +122,7 @@ describe('AuthFlowComponent', () => {
   xit('should create user', async () => {
     store.select.and.callFake((selector: unknown) => {
       if (selector === selectCurrentStep) {
-        return of(AuthSteps.PASSWORD_SETUP);
+        return of(AuthStep.PasswordSetup);
       }
       if (selector === selectCurrentUser) {
         return of(mockUser);
@@ -170,7 +170,7 @@ describe('AuthFlowComponent', () => {
         return of('Unable to connect to the server. Please check your connection and try again.');
       }
       if (selector === selectCurrentStep) {
-        return of(AuthSteps.EMAIL);
+        return of(AuthStep.Email);
       }
       return of(null);
     });
@@ -190,7 +190,7 @@ describe('AuthFlowComponent', () => {
         return of('User not found or not authorized.');
       }
       if (selector === selectCurrentStep) {
-        return of(AuthSteps.EMAIL);
+        return of(AuthStep.Email);
       }
       return of(null);
     });
@@ -211,7 +211,7 @@ describe('AuthFlowComponent', () => {
   it('should advance to password setup step if user is not found', () => {
     store.select.and.callFake((selector: unknown) => {
       if (selector === selectCurrentStep) {
-        return of(AuthSteps.PASSWORD_SETUP);
+        return of(AuthStep.PasswordSetup);
       }
       if (selector === selectError) {
         return of(null);
@@ -230,7 +230,7 @@ describe('AuthFlowComponent', () => {
   it('should show error and not advance if smartCheckFailure is dispatched', () => {
     store.select.and.callFake((selector: unknown) => {
       if (selector === selectCurrentStep) {
-        return of(AuthSteps.EMAIL);
+        return of(AuthStep.Email);
       }
       if (selector === selectError) {
         return of('Some error occurred');
@@ -260,7 +260,7 @@ describe('AuthFlowComponent', () => {
 
     store.select.and.callFake((selector: unknown) => {
       if (selector === selectCurrentStep) {
-        return of(AuthSteps.PASSWORD_SETUP);
+        return of(AuthStep.PasswordSetup);
       }
       if (selector === selectCurrentUser) {
         return of(null);

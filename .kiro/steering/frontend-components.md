@@ -1154,3 +1154,95 @@ See `organizations-list.component.html` for the complete pattern:
 `apps/web/src/app/features/customers/organizations/components/organizations-list/organizations-list.component.html`
 
 When building any list page, copy the HTML structure and CSS classes from organizations-list exactly.
+
+
+## Enum Standards
+
+**CRITICAL**: All enums MUST be defined in schema registries and generated via orb-schema-generator. This follows the project principle: "Nothing is ever frontend only. EVER."
+
+### Rules
+
+1. **Never create TypeScript enums manually** - All enums must be defined in `schemas/registries/` as YAML files
+2. **Use generated enums** - Import from `core/enums/*Enum.ts`
+3. **Use PascalCase values** - Generated enums use PascalCase member names (e.g., `AuthStep.EmailEntry`)
+4. **String values are SCREAMING_CASE** - The enum member is PascalCase but the string value is SCREAMING_CASE (e.g., `AuthStep.EmailEntry = "EMAIL_ENTRY"`)
+
+### Correct Pattern
+
+```typescript
+// ✅ CORRECT - Import from generated enum file
+import { AuthStep } from '../../../core/enums/AuthStepEnum';
+import { UserStatus } from '../../../core/enums/UserStatusEnum';
+import { RecoveryAction } from '../../../core/enums/RecoveryActionEnum';
+
+// Use PascalCase enum values
+if (currentStep === AuthStep.EmailEntry) { ... }
+if (user.status === UserStatus.Active) { ... }
+if (action === RecoveryAction.ResendVerification) { ... }
+```
+
+### Incorrect Patterns
+
+```typescript
+// ❌ WRONG - Manual enum definition
+enum MyCustomEnum {
+  VALUE_ONE = 'VALUE_ONE',
+  VALUE_TWO = 'VALUE_TWO',
+}
+
+// ❌ WRONG - SCREAMING_CASE member names (old pattern)
+if (currentStep === AuthSteps.EMAIL_ENTRY) { ... }
+
+// ❌ WRONG - Importing from non-enum files
+import { AuthSteps } from '../../store/user.state';
+
+// ❌ WRONG - Creating backward-compatible aliases
+export const AuthSteps = {
+  EMAIL_ENTRY: AuthStep.EmailEntry,
+  PASSWORD: AuthStep.Password,
+} as const;
+```
+
+### Creating New Enums
+
+1. Create a YAML file in `schemas/registries/YourEnum.yml`:
+   ```yaml
+   name: YourEnum
+   description: Description of the enum
+   values:
+     - name: ValueOne
+       description: First value
+     - name: ValueTwo
+       description: Second value
+   ```
+2. Run `pipenv run orb-schema generate`
+3. Import from `core/enums/YourEnumEnum.ts`
+
+### UI-Only Enums Exception
+
+Component-local enums for UI-only state (e.g., tab selection) are acceptable when:
+- The enum is only used within a single component
+- The values are not persisted or sent to the backend
+- The enum represents purely presentational state
+
+Example: `EnvironmentDetailTab` in `environment-detail-page.component.ts`
+
+```typescript
+// ✅ ACCEPTABLE - UI-only, component-local enum
+enum EnvironmentDetailTab {
+  Overview = 'overview',
+  Settings = 'settings',
+  Logs = 'logs',
+}
+```
+
+### Generated Enum Reference
+
+| Enum | Import Path | Example Values |
+|------|-------------|----------------|
+| `AuthStep` | `core/enums/AuthStepEnum` | `EmailEntry`, `Password`, `MfaSetup`, `Complete` |
+| `CognitoUserStatus` | `core/enums/CognitoUserStatusEnum` | `Unknown`, `Unconfirmed`, `Confirmed` |
+| `RecoveryAction` | `core/enums/RecoveryActionEnum` | `NewSignup`, `ResendVerification`, `Login` |
+| `ProfileSetupStep` | `core/enums/ProfileSetupStepEnum` | `Name`, `Phone`, `PhoneVerify`, `Complete` |
+| `UserStatus` | `core/enums/UserStatusEnum` | `Active`, `Inactive`, `Pending` |
+| `OrganizationStatus` | `core/enums/OrganizationStatusEnum` | `Active`, `Inactive`, `Pending` |

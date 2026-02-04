@@ -1,0 +1,29 @@
+type: registry
+version: '1.0'
+name: RecoveryAction
+targets:
+  - api
+description: "Recovery actions determined by the smart check flow"
+
+items:
+  UNKNOWN:
+    value: "UNKNOWN"
+    description: "Unknown action"
+  NEW_SIGNUP:
+    value: "NEW_SIGNUP"
+    description: "User needs to complete new signup"
+  RESEND_VERIFICATION:
+    value: "RESEND_VERIFICATION"
+    description: "Resend email verification code"
+  CREATE_DYNAMO_RECORD:
+    value: "CREATE_DYNAMO_RECORD"
+    description: "Create DynamoDB record for existing Cognito user"
+  LOGIN:
+    value: "LOGIN"
+    description: "User can proceed to login"
+  PASSWORD_RESET:
+    value: "PASSWORD_RESET"
+    description: "User needs to reset password"
+  CONTACT_SUPPORT:
+    value: "CONTACT_SUPPORT"
+    description: "User needs to contact support"

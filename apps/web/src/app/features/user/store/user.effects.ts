@@ -15,13 +15,13 @@ import { Store } from '@ngrx/store';
 import { UserService } from "../../../core/services/user.service";
 import { UserActions } from "./user.actions";
 import * as fromUser from "./user.selectors";
-import { AuthSteps } from "./user.state";
+import { AuthStep } from "../../../core/enums/AuthStepEnum";
 import { CognitoService } from "../../../core/services/cognito.service";
 import { getError } from "../../../core/models/ErrorRegistryModel";
 import { Users } from "../../../core/models/UsersModel";
 import { RecoveryService } from "../../../core/services/recovery.service";
 import { AuthProgressStorageService } from "../../../core/services/auth-progress-storage.service";
-import { RecoveryAction } from "../../../core/models/RecoveryModel";
+import { RecoveryAction } from "../../../core/enums/RecoveryActionEnum";
 import { UserStatus } from "../../../core/enums/UserStatusEnum";
 import { sanitizeEmail, sanitizeCognitoSub } from "../../../core/utils/log-sanitizer";
 
@@ -43,7 +43,7 @@ export class UserEffects {
             });
 
             // If we need to resend verification code, do it
-            if (result.recoveryAction === RecoveryAction.RESEND_VERIFICATION) {
+            if (result.recoveryAction === RecoveryAction.ResendVerification) {
               return from(this.recoveryService.resendVerificationCode(email)).pipe(
                 map(() => UserActions.smartCheckSuccess({ result })),
                 catchError(() => {
@@ -1013,7 +1013,7 @@ export class UserEffects {
       filter(([, currentStep]) => {
         // Only run this logic if we're not in the middle of an auth flow
         // This prevents interference with active authentication steps
-        const initialSteps = [AuthSteps.EMAIL, AuthSteps.PASSWORD, AuthSteps.SIGNIN, AuthSteps.COMPLETE];
+        const initialSteps = [AuthStep.Email, AuthStep.Password, AuthStep.Signin, AuthStep.Complete];
         
         if (!initialSteps.includes(currentStep)) {
           return false;
@@ -1050,7 +1050,7 @@ export class UserEffects {
         if (isVerified) {
           return UserActions.updateUserAfterEmailVerification({ email });
         } else {
-          return UserActions.setCurrentStep({ step: AuthSteps.EMAIL_VERIFY });
+          return UserActions.setCurrentStep({ step: AuthStep.EmailVerify });
         }
       })
     )
@@ -1064,7 +1064,7 @@ export class UserEffects {
       switchMap(([{ mfaEnabled, mfaSetupComplete }, currentUser]) => {
         
         if (!currentUser) {
-          return of(UserActions.setCurrentStep({ step: AuthSteps.EMAIL }));
+          return of(UserActions.setCurrentStep({ step: AuthStep.Email }));
         }
         
         // Check if user record needs updating
@@ -1094,7 +1094,7 @@ export class UserEffects {
       map(([_action, user]) => {
         
         if (!user) {
-          return UserActions.setCurrentStep({ step: AuthSteps.EMAIL });
+          return UserActions.setCurrentStep({ step: AuthStep.Email });
         }
 
         // Profile setup (name, phone) is now handled on the profile page
@@ -1158,7 +1158,7 @@ export class UserEffects {
     this.actions$.pipe(
       ofType(UserActions.beginMFASetupFlow),
       map(() => {
-        return UserActions.setCurrentStep({ step: AuthSteps.MFA_SETUP });
+        return UserActions.setCurrentStep({ step: AuthStep.MfaSetup });
       })
     )
   );

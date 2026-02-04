@@ -18,8 +18,10 @@ import { UserService } from '../../../core/services/user.service';
 import { CognitoService } from '../../../core/services/cognito.service';
 import { RecoveryService } from '../../../core/services/recovery.service';
 import { AuthProgressStorageService } from '../../../core/services/auth-progress-storage.service';
-import { AuthSteps } from './user.state';
-import { RecoveryAction, SmartCheckResult, CognitoUserStatus } from '../../../core/models/RecoveryModel';
+import { AuthStep } from '../../../core/enums/AuthStepEnum';
+import { RecoveryAction } from '../../../core/enums/RecoveryActionEnum';
+import { CognitoUserStatus } from '../../../core/enums/CognitoUserStatusEnum';
+import { SmartCheckResult } from '../../../core/models/RecoveryModel';
 
 describe('UserEffects Property Tests', () => {
   let actions$: Observable<unknown>;
@@ -99,8 +101,8 @@ describe('UserEffects Property Tests', () => {
               cognitoStatus: null,
               cognitoSub: null,
               dynamoExists: false,
-              recoveryAction: RecoveryAction.NEW_SIGNUP,
-              nextStep: AuthSteps.PASSWORD_SETUP,
+              recoveryAction: RecoveryAction.NewSignup,
+              nextStep: AuthStep.PasswordSetup,
               userMessage: "Let's create your account",
               debugInfo: {
                 checkTimestamp: new Date(),
@@ -130,11 +132,11 @@ describe('UserEffects Property Tests', () => {
           async (email) => {
             // Setup: Recovery service returns existing user state
             const mockResult: SmartCheckResult = {
-              cognitoStatus: CognitoUserStatus.CONFIRMED,
+              cognitoStatus: CognitoUserStatus.Confirmed,
               cognitoSub: 'test-sub-123',
               dynamoExists: true,
-              recoveryAction: RecoveryAction.LOGIN,
-              nextStep: AuthSteps.PASSWORD_VERIFY,
+              recoveryAction: RecoveryAction.Login,
+              nextStep: AuthStep.PasswordVerify,
               userMessage: 'Welcome back!',
               debugInfo: {
                 checkTimestamp: new Date(),
@@ -164,11 +166,11 @@ describe('UserEffects Property Tests', () => {
           async (email) => {
             // Setup: Recovery service returns unconfirmed user state
             const mockResult: SmartCheckResult = {
-              cognitoStatus: CognitoUserStatus.UNCONFIRMED,
+              cognitoStatus: CognitoUserStatus.Unconfirmed,
               cognitoSub: 'test-sub-456',
               dynamoExists: false,
-              recoveryAction: RecoveryAction.RESEND_VERIFICATION,
-              nextStep: AuthSteps.EMAIL_VERIFY,
+              recoveryAction: RecoveryAction.ResendVerification,
+              nextStep: AuthStep.EmailVerify,
               userMessage: "We've sent a new verification code to your email.",
               debugInfo: {
                 checkTimestamp: new Date(),

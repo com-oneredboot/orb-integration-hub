@@ -3,30 +3,13 @@
 // date: 2026-01-17
 // description: Models for the Smart Recovery Auth Flow
 
-import { AuthSteps } from '../../features/user/store/user.state';
+import { AuthStep } from '../enums/AuthStepEnum';
+import { CognitoUserStatus } from '../enums/CognitoUserStatusEnum';
+import { RecoveryAction } from '../enums/RecoveryActionEnum';
 
-/**
- * Cognito user status values returned by adminGetUser
- */
-export enum CognitoUserStatus {
-  UNCONFIRMED = 'UNCONFIRMED',
-  CONFIRMED = 'CONFIRMED',
-  FORCE_CHANGE_PASSWORD = 'FORCE_CHANGE_PASSWORD',
-  RESET_REQUIRED = 'RESET_REQUIRED',
-  UNKNOWN = 'UNKNOWN'
-}
-
-/**
- * Recovery actions determined by the smart check
- */
-export enum RecoveryAction {
-  NEW_SIGNUP = 'NEW_SIGNUP',
-  RESEND_VERIFICATION = 'RESEND_VERIFICATION',
-  CREATE_DYNAMO_RECORD = 'CREATE_DYNAMO_RECORD',
-  LOGIN = 'LOGIN',
-  PASSWORD_RESET = 'PASSWORD_RESET',
-  CONTACT_SUPPORT = 'CONTACT_SUPPORT'
-}
+// Re-export the generated enums for external use
+export { CognitoUserStatus } from '../enums/CognitoUserStatusEnum';
+export { RecoveryAction } from '../enums/RecoveryActionEnum';
 
 /**
  * Result of the smart check operation
@@ -41,7 +24,7 @@ export interface SmartCheckResult {
   
   // Recovery decision
   recoveryAction: RecoveryAction;
-  nextStep: AuthSteps;
+  nextStep: AuthStep;
   
   // User-facing message (no jargon)
   userMessage: string;
@@ -87,24 +70,24 @@ export const AUTH_MESSAGES = {
 /**
  * Map recovery action to next auth step
  */
-export function getNextStepForAction(action: RecoveryAction): AuthSteps {
+export function getNextStepForAction(action: RecoveryAction): AuthStep {
   switch (action) {
-    case RecoveryAction.NEW_SIGNUP:
-      return AuthSteps.PASSWORD_SETUP;
-    case RecoveryAction.RESEND_VERIFICATION:
-      return AuthSteps.EMAIL_VERIFY;
-    case RecoveryAction.CREATE_DYNAMO_RECORD:
+    case RecoveryAction.NewSignup:
+      return AuthStep.PasswordSetup;
+    case RecoveryAction.ResendVerification:
+      return AuthStep.EmailVerify;
+    case RecoveryAction.CreateDynamoRecord:
       // User exists in Cognito but not DynamoDB - need to sign in first
       // After sign-in, the flow will create the DynamoDB record
-      return AuthSteps.SIGNIN;
-    case RecoveryAction.LOGIN:
-      return AuthSteps.PASSWORD_VERIFY;
-    case RecoveryAction.PASSWORD_RESET:
-      return AuthSteps.PASSWORD_SETUP;
-    case RecoveryAction.CONTACT_SUPPORT:
-      return AuthSteps.EMAIL_ENTRY;
+      return AuthStep.Signin;
+    case RecoveryAction.Login:
+      return AuthStep.PasswordVerify;
+    case RecoveryAction.PasswordReset:
+      return AuthStep.PasswordSetup;
+    case RecoveryAction.ContactSupport:
+      return AuthStep.EmailEntry;
     default:
-      return AuthSteps.EMAIL_ENTRY;
+      return AuthStep.EmailEntry;
   }
 }
 
@@ -113,17 +96,17 @@ export function getNextStepForAction(action: RecoveryAction): AuthSteps {
  */
 export function getMessageForAction(action: RecoveryAction): string {
   switch (action) {
-    case RecoveryAction.NEW_SIGNUP:
+    case RecoveryAction.NewSignup:
       return AUTH_MESSAGES.NEW_SIGNUP;
-    case RecoveryAction.RESEND_VERIFICATION:
+    case RecoveryAction.ResendVerification:
       return AUTH_MESSAGES.NEW_CODE_SENT;
-    case RecoveryAction.CREATE_DYNAMO_RECORD:
+    case RecoveryAction.CreateDynamoRecord:
       return AUTH_MESSAGES.RESUMING;
-    case RecoveryAction.LOGIN:
+    case RecoveryAction.Login:
       return AUTH_MESSAGES.LOGIN;
-    case RecoveryAction.PASSWORD_RESET:
+    case RecoveryAction.PasswordReset:
       return AUTH_MESSAGES.PASSWORD_RESET;
-    case RecoveryAction.CONTACT_SUPPORT:
+    case RecoveryAction.ContactSupport:
       return AUTH_MESSAGES.CONTACT_SUPPORT;
     default:
       return AUTH_MESSAGES.CHECKING;

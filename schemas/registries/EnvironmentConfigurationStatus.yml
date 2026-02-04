@@ -1,0 +1,23 @@
+type: registry
+version: '1.0'
+name: EnvironmentConfigurationStatus
+targets:
+  - api
+description: "Overall configuration status of an environment"
+
+items:
+  UNKNOWN:
+    value: "UNKNOWN"
+    description: "Unknown status"
+  CONFIGURED:
+    value: "CONFIGURED"
+    description: "All required configuration is complete and valid"
+  INCOMPLETE:
+    value: "INCOMPLETE"
+    description: "Some required configuration is missing or incomplete"
+  NEEDS_ATTENTION:
+    value: "NEEDS_ATTENTION"
+    description: "Configuration exists but has issues that need attention"
+  NOT_CONFIGURED:
+    value: "NOT_CONFIGURED"
+    description: "No configuration exists yet"

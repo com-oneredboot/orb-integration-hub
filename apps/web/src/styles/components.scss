@@ -1776,6 +1776,24 @@ $cta-orange-muted: #f5a66b; // Muted orange (was #f97316)
     font-size: 0.75rem;
     font-weight: v.$font-weight-semibold;
     border-radius: 10px;
+
+    &--warning {
+      background-color: v.$warning-color;
+      color: v.$white;
+    }
+  }
+
+  &__tab--warning {
+    color: v.$warning-color;
+
+    &:hover {
+      color: color.adjust(v.$warning-color, $lightness: -10%);
+    }
+
+    &.orb-tabs__tab--active {
+      color: v.$warning-color;
+      border-bottom-color: v.$warning-color;
+    }
   }
 }
 

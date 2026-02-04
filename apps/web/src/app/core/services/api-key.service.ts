@@ -25,6 +25,7 @@ import {
   IApplicationApiKeys,
 } from '../models/ApplicationApiKeysModel';
 import { ApplicationApiKeyStatus } from '../enums/ApplicationApiKeyStatusEnum';
+import { ApplicationApiKeyType } from '../enums/ApplicationApiKeyTypeEnum';
 import { Environment } from '../enums/EnvironmentEnum';
 import { toGraphQLInput } from '../../graphql-utils';
 import { Connection } from '../types/graphql.types';
@@ -196,6 +197,7 @@ export class ApiKeyService extends ApiService {
    * @param applicationId The application ID
    * @param organizationId The organization ID
    * @param environment The environment for the key
+   * @param keyType The key type (defaults to PUBLISHABLE)
    * @returns Observable<ApiKeyOperationResult> The created API key and full key value
    *
    * _Requirements: 9.1, 9.2_
@@ -203,11 +205,13 @@ export class ApiKeyService extends ApiService {
   public generateApiKey(
     applicationId: string,
     organizationId: string,
-    environment: Environment
+    environment: Environment,
+    keyType: ApplicationApiKeyType = ApplicationApiKeyType.Publishable
   ): Observable<ApiKeyOperationResult> {
     console.debug('[ApiKeyService] Generating API key:', {
       applicationId,
       environment,
+      keyType,
     });
 
     if (!applicationId) {
@@ -236,6 +240,7 @@ export class ApiKeyService extends ApiService {
           environment,
           keyHash,
           keyPrefix,
+          keyType: keyType,
           status: ApplicationApiKeyStatus.Active,
           createdAt: now,
           updatedAt: now,
@@ -365,6 +370,7 @@ export class ApiKeyService extends ApiService {
    * @param applicationId The application ID
    * @param organizationId The organization ID
    * @param environment The environment
+   * @param keyType The key type (defaults to PUBLISHABLE)
    * @returns Observable<ApiKeyRegenerationResult> Both the old and new keys
    *
    * _Requirements: 4.1, 4.2_
@@ -373,7 +379,8 @@ export class ApiKeyService extends ApiService {
     apiKeyId: string,
     applicationId: string,
     organizationId: string,
-    environment: Environment
+    environment: Environment,
+    keyType: ApplicationApiKeyType = ApplicationApiKeyType.Publishable
   ): Observable<ApiKeyRegenerationResult> {
     console.debug('[ApiKeyService] Regenerating API key:', apiKeyId);
 
@@ -430,6 +437,7 @@ export class ApiKeyService extends ApiService {
               environment,
               keyHash: newKeyHash,
               keyPrefix: newKeyPrefix,
+              keyType: keyType,
               status: ApplicationApiKeyStatus.Active,
               createdAt: now,
               updatedAt: now,

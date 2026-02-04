@@ -1,0 +1,23 @@
+type: registry
+version: '1.0'
+name: ProfileSetupStep
+targets:
+  - api
+description: "Profile setup flow steps"
+
+items:
+  UNKNOWN:
+    value: "UNKNOWN"
+    description: "Unknown step"
+  NAME:
+    value: "NAME"
+    description: "First name and last name entry"
+  PHONE:
+    value: "PHONE"
+    description: "Phone number entry"
+  PHONE_VERIFY:
+    value: "PHONE_VERIFY"
+    description: "SMS code verification"
+  COMPLETE:
+    value: "COMPLETE"
+    description: "Profile setup complete"

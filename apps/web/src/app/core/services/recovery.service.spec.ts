@@ -9,12 +9,10 @@ import * as fc from 'fast-check';
 import { RecoveryService } from './recovery.service';
 import { UserService } from './user.service';
 import { DebugLogService } from './debug-log.service';
-import {
-  CognitoUserStatus,
-  RecoveryAction,
-  AUTH_MESSAGES
-} from '../models/RecoveryModel';
-import { AuthSteps } from '../../features/user/store/user.state';
+import { AUTH_MESSAGES } from '../models/RecoveryModel';
+import { AuthStep } from '../enums/AuthStepEnum';
+import { CognitoUserStatus } from '../enums/CognitoUserStatusEnum';
+import { RecoveryAction } from '../enums/RecoveryActionEnum';
 import { Users } from '../models/UsersModel';
 import { UserStatus } from '../enums/UserStatusEnum';
 
@@ -26,11 +24,11 @@ describe('RecoveryService', () => {
   // Arbitrary generators for property-based tests
   const emailArbitrary = fc.emailAddress();
   const cognitoStatusArbitrary = fc.constantFrom(
-    CognitoUserStatus.UNCONFIRMED,
-    CognitoUserStatus.CONFIRMED,
-    CognitoUserStatus.FORCE_CHANGE_PASSWORD,
-    CognitoUserStatus.RESET_REQUIRED,
-    CognitoUserStatus.UNKNOWN,
+    CognitoUserStatus.Unconfirmed,
+    CognitoUserStatus.Confirmed,
+    CognitoUserStatus.ForceChangePassword,
+    CognitoUserStatus.ResetRequired,
+    CognitoUserStatus.Unknown,
     null
   );
   const dynamoExistsArbitrary = fc.boolean();
@@ -140,23 +138,23 @@ describe('RecoveryService', () => {
             // Note: cognitoStatus null means no Cognito user
             if (!cognitoStatus && !dynamoExists) {
               // Case 1: Neither system has the user - new signup
-              expect(result.recoveryAction).toBe(RecoveryAction.NEW_SIGNUP);
+              expect(result.recoveryAction).toBe(RecoveryAction.NewSignup);
             } else if (!cognitoStatus && dynamoExists) {
               // Case 2: DynamoDB has user but Cognito doesn't - data integrity issue
-              expect(result.recoveryAction).toBe(RecoveryAction.CONTACT_SUPPORT);
+              expect(result.recoveryAction).toBe(RecoveryAction.ContactSupport);
             } else if (cognitoStatus && !dynamoExists) {
               // Case 3: Cognito has user but DynamoDB doesn't - orphaned state
               expect([
-                RecoveryAction.RESEND_VERIFICATION,
-                RecoveryAction.CREATE_DYNAMO_RECORD,
-                RecoveryAction.PASSWORD_RESET
+                RecoveryAction.ResendVerification,
+                RecoveryAction.CreateDynamoRecord,
+                RecoveryAction.PasswordReset
               ]).toContain(result.recoveryAction);
             } else if (cognitoStatus && dynamoExists) {
               // Case 4: Both systems have the user - login flow
               expect([
-                RecoveryAction.LOGIN,
-                RecoveryAction.PASSWORD_RESET,
-                RecoveryAction.RESEND_VERIFICATION
+                RecoveryAction.Login,
+                RecoveryAction.PasswordReset,
+                RecoveryAction.ResendVerification
               ]).toContain(result.recoveryAction);
             }
           }
@@ -261,7 +259,7 @@ describe('RecoveryService', () => {
     });
 
     it('should always return a valid next step', async () => {
-      const validSteps = Object.values(AuthSteps);
+      const validSteps = Object.values(AuthStep);
 
       await fc.assert(
         fc.asyncProperty(
@@ -298,8 +296,8 @@ describe('RecoveryService', () => {
 
       const result = await service.smartCheck('test@example.com');
 
-      expect(result.recoveryAction).toBe(RecoveryAction.NEW_SIGNUP);
-      expect(result.nextStep).toBe(AuthSteps.EMAIL_ENTRY);
+      expect(result.recoveryAction).toBe(RecoveryAction.NewSignup);
+      expect(result.nextStep).toBe(AuthStep.EmailEntry);
       expect(result.userMessage).toBe(AUTH_MESSAGES.NETWORK_ERROR);
     });
   });

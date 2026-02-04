@@ -17,17 +17,10 @@ import { DebugLogService, DebugLogEntry } from '../../../../core/services/debug-
 import { ProgressStepsComponent, ProgressStep } from '../../../../shared/components/progress-steps/progress-steps.component';
 import { VerificationCodeInputComponent } from '../../../../shared/components/verification-code-input/verification-code-input.component';
 import { DebugPanelComponent, DebugContext } from '../../../../shared/components/debug/debug-panel.component';
+import { ProfileSetupStep } from '../../../../core/enums/ProfileSetupStepEnum';
 
-/**
- * Profile setup flow steps
- * Used for step-based profile completion flow
- */
-export enum ProfileSetupStep {
-  NAME = 'NAME',           // First name, last name
-  PHONE = 'PHONE',         // Phone number entry
-  PHONE_VERIFY = 'PHONE_VERIFY', // SMS code verification
-  COMPLETE = 'COMPLETE'    // All done, show summary
-}
+// Re-export the generated enum for external use
+export { ProfileSetupStep } from '../../../../core/enums/ProfileSetupStepEnum';
 
 /**
  * Profile setup state interface
@@ -81,7 +74,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   // Profile setup flow state
   setupState: ProfileSetupState = {
-    currentStep: ProfileSetupStep.NAME,
+    currentStep: ProfileSetupStep.Name,
     isFlowMode: false,
     startFromBeginning: true
   };
@@ -121,10 +114,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
    */
   getCurrentStepNumber(): number {
     switch (this.setupState.currentStep) {
-      case ProfileSetupStep.NAME: return 1;
-      case ProfileSetupStep.PHONE: return 2;
-      case ProfileSetupStep.PHONE_VERIFY: return 3;
-      case ProfileSetupStep.COMPLETE: return 3;
+      case ProfileSetupStep.Name: return 1;
+      case ProfileSetupStep.Phone: return 2;
+      case ProfileSetupStep.PhoneVerify: return 3;
+      case ProfileSetupStep.Complete: return 3;
       default: return 1;
     }
   }
@@ -163,7 +156,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe(() => {
       // If in flow mode, advance to next step
-      if (this.setupState.isFlowMode && this.setupState.currentStep !== ProfileSetupStep.COMPLETE) {
+      if (this.setupState.isFlowMode && this.setupState.currentStep !== ProfileSetupStep.Complete) {
         // Step advancement is handled in the submit methods
       }
     });
@@ -317,7 +310,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
    */
   startFullFlow(): void {
     this.setupState = {
-      currentStep: ProfileSetupStep.NAME,
+      currentStep: ProfileSetupStep.Name,
       isFlowMode: true,
       startFromBeginning: true
     };
@@ -361,7 +354,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
    */
   showSummary(): void {
     this.setupState = {
-      currentStep: ProfileSetupStep.COMPLETE,
+      currentStep: ProfileSetupStep.Complete,
       isFlowMode: false,
       startFromBeginning: true
     };
@@ -372,14 +365,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
    * Navigate to next step in the flow
    */
   nextStep(): void {
-    const steps = [ProfileSetupStep.NAME, ProfileSetupStep.PHONE, ProfileSetupStep.PHONE_VERIFY, ProfileSetupStep.COMPLETE];
+    const steps = [ProfileSetupStep.Name, ProfileSetupStep.Phone, ProfileSetupStep.PhoneVerify, ProfileSetupStep.Complete];
     const currentIndex = steps.indexOf(this.setupState.currentStep);
     
     if (currentIndex < steps.length - 1) {
       this.setupState.currentStep = steps[currentIndex + 1];
       
       // If we reached COMPLETE, exit flow mode
-      if (this.setupState.currentStep === ProfileSetupStep.COMPLETE) {
+      if (this.setupState.currentStep === ProfileSetupStep.Complete) {
         this.showSummary();
       }
     }
@@ -389,7 +382,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
    * Navigate to previous step in the flow
    */
   previousStep(): void {
-    const steps = [ProfileSetupStep.NAME, ProfileSetupStep.PHONE, ProfileSetupStep.PHONE_VERIFY, ProfileSetupStep.COMPLETE];
+    const steps = [ProfileSetupStep.Name, ProfileSetupStep.Phone, ProfileSetupStep.PhoneVerify, ProfileSetupStep.Complete];
     const currentIndex = steps.indexOf(this.setupState.currentStep);
     
     if (currentIndex > 0) {
@@ -409,26 +402,26 @@ export class ProfileComponent implements OnInit, OnDestroy {
    */
   getFirstIncompleteStep(user: IUsers | null): ProfileSetupStep {
     if (!user) {
-      return ProfileSetupStep.NAME;
+      return ProfileSetupStep.Name;
     }
     
     // Check name
     if (!user.firstName || !user.lastName) {
-      return ProfileSetupStep.NAME;
+      return ProfileSetupStep.Name;
     }
     
     // Check phone
     if (!user.phoneNumber) {
-      return ProfileSetupStep.PHONE;
+      return ProfileSetupStep.Phone;
     }
     
     // Check phone verification
     if (!user.phoneVerified) {
-      return ProfileSetupStep.PHONE_VERIFY;
+      return ProfileSetupStep.PhoneVerify;
     }
     
     // All complete
-    return ProfileSetupStep.COMPLETE;
+    return ProfileSetupStep.Complete;
   }
 
   /**
@@ -438,13 +431,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
     if (!user) return false;
     
     switch (step) {
-      case ProfileSetupStep.NAME:
+      case ProfileSetupStep.Name:
         return !!(user.firstName && user.lastName);
-      case ProfileSetupStep.PHONE:
+      case ProfileSetupStep.Phone:
         return !!user.phoneNumber;
-      case ProfileSetupStep.PHONE_VERIFY:
+      case ProfileSetupStep.PhoneVerify:
         return !!user.phoneVerified;
-      case ProfileSetupStep.COMPLETE:
+      case ProfileSetupStep.Complete:
         return !!(user.firstName && user.lastName && user.phoneNumber && user.phoneVerified);
       default:
         return false;
@@ -455,7 +448,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
    * Get progress percentage for the flow
    */
   getProgressPercentage(): number {
-    const steps = [ProfileSetupStep.NAME, ProfileSetupStep.PHONE, ProfileSetupStep.PHONE_VERIFY, ProfileSetupStep.COMPLETE];
+    const steps = [ProfileSetupStep.Name, ProfileSetupStep.Phone, ProfileSetupStep.PhoneVerify, ProfileSetupStep.Complete];
     const currentIndex = steps.indexOf(this.setupState.currentStep);
     return Math.round((currentIndex / (steps.length - 1)) * 100);
   }
@@ -464,7 +457,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
    * Get step number (1-based)
    */
   getStepNumber(): number {
-    const steps = [ProfileSetupStep.NAME, ProfileSetupStep.PHONE, ProfileSetupStep.PHONE_VERIFY, ProfileSetupStep.COMPLETE];
+    const steps = [ProfileSetupStep.Name, ProfileSetupStep.Phone, ProfileSetupStep.PhoneVerify, ProfileSetupStep.Complete];
     return steps.indexOf(this.setupState.currentStep) + 1;
   }
 

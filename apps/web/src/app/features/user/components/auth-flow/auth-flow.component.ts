@@ -20,7 +20,8 @@ import { RouterModule } from '@angular/router';
 
 // App Imports
 import {UserActions} from '../../store/user.actions';
-import {UserState, AuthSteps} from '../../store/user.state';
+import {UserState} from '../../store/user.state';
+import { AuthStep } from '../../../../core/enums/AuthStepEnum';
 import * as fromUser from '../../store/user.selectors';
 import {QRCodeToDataURLOptions} from "qrcode";
 import {UserService} from "../../../../core/services/user.service";
@@ -56,7 +57,7 @@ import { DebugPanelComponent, DebugContext } from "../../../../shared/components
 export class AuthFlowComponent implements OnInit, OnDestroy {
 
   // Store Selectors
-  currentStep$: Observable<AuthSteps> = this.store.select(fromUser.selectCurrentStep);
+  currentStep$: Observable<AuthStep> = this.store.select(fromUser.selectCurrentStep);
   currentUser$: Observable<IUsers | null> = this.store.select(fromUser.selectCurrentUser);
   currentEmail$: Observable<string> = this.store.select(fromUser.selectCurrentEmail);
   isLoading$ = this.store.select(fromUser.selectIsLoading);
@@ -145,7 +146,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   window = window;
 
   authForm!: FormGroup;
-  authSteps = AuthSteps;
+  authSteps = AuthStep;
   passwordVisible = false;
   qrCodeDataUrl: string | null = null;
 
@@ -163,7 +164,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   }
 
   // History management
-  public stepHistory: AuthSteps[] = [];
+  public stepHistory: AuthStep[] = [];
   private isNavigatingBack = false;
 
   private destroy$ = new Subject<void>();
@@ -309,7 +310,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       const currentStep = await this.currentStep$.pipe(take(1)).toPromise();
       
       // Initialize step history
-      this.stepHistory = [currentStep || AuthSteps.EMAIL];
+      this.stepHistory = [currentStep || AuthStep.Email];
       
       // Set up popstate listener for browser back/forward
       window.addEventListener('popstate', this.handleBrowserNavigation.bind(this));
@@ -327,7 +328,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       });
       
       // Fallback to basic navigation
-      this.stepHistory = [AuthSteps.EMAIL];
+      this.stepHistory = [AuthStep.Email];
       
       console.warn('[AuthFlowComponent] History management initialization failed:', errorId);
     }
@@ -391,19 +392,19 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
           
           // Determine appropriate step based on user state
           // Note: NAME_SETUP, PHONE_SETUP, PHONE_VERIFY are now handled on profile page
-          let nextStep = AuthSteps.COMPLETE;
+          let nextStep = AuthStep.Complete;
           
           if (!currentUser.emailVerified) {
-            nextStep = AuthSteps.EMAIL_VERIFY;
+            nextStep = AuthStep.EmailVerify;
           } else if (!currentUser.mfaEnabled) {
-            nextStep = AuthSteps.MFA_SETUP;
+            nextStep = AuthStep.MfaSetup;
           }
           
           this.store.dispatch(UserActions.setCurrentStep({ step: nextStep }));
         }
       } else {
         // No active session, start from email step
-        this.store.dispatch(UserActions.setCurrentStep({ step: AuthSteps.EMAIL }));
+        this.store.dispatch(UserActions.setCurrentStep({ step: AuthStep.Email }));
       }
       
       console.debug('[AuthFlowComponent] User session loaded and step determined successfully');
@@ -417,7 +418,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       );
       
       // Fallback to email step
-      this.store.dispatch(UserActions.setCurrentStep({ step: AuthSteps.EMAIL }));
+      this.store.dispatch(UserActions.setCurrentStep({ step: AuthStep.Email }));
       
       console.warn('[AuthFlowComponent] User session loading failed:', errorId);
     }
@@ -615,7 +616,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             try {
               if (!active) {
                 // User is not authenticated, start from email step
-                this.store.dispatch(UserActions.setCurrentStep({ step: AuthSteps.EMAIL }));
+                this.store.dispatch(UserActions.setCurrentStep({ step: AuthStep.Email }));
               }
             } catch (error) {
               this.errorHandler.captureAuthError('handleSessionActive', error, 'AuthFlowComponent');
@@ -785,27 +786,27 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         const email = formEmail || storeEmail;
         
         switch (step) {
-          case AuthSteps.EMAIL:
+          case AuthStep.Email:
             // Use smartCheck for intelligent routing based on Cognito + DynamoDB state
             this.store.dispatch(UserActions.smartCheck({ email }));
             break;
 
-          case AuthSteps.PASSWORD:
-          case AuthSteps.PASSWORD_VERIFY:
+          case AuthStep.Password:
+          case AuthStep.PasswordVerify:
             if (!password) {
               return;
             }
             this.store.dispatch(UserActions.verifyCognitoPassword({ email, password }));
             break;
 
-          case AuthSteps.PASSWORD_SETUP:
+          case AuthStep.PasswordSetup:
             if (!password) {
               return;
             }
             this.createUserWithCognito(password);
             break;
 
-          case AuthSteps.EMAIL_VERIFY:
+          case AuthStep.EmailVerify:
             if (!emailCode) {
               return;
             }
@@ -823,7 +824,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             }));
             break;
 
-          case AuthSteps.SIGNIN:
+          case AuthStep.Signin:
             if (!password) {
               return;
             }
@@ -836,7 +837,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             }));
             break;
 
-          case AuthSteps.MFA_SETUP:
+          case AuthStep.MfaSetup:
             // User has scanned QR code and entered TOTP code - verify it
             if(!mfaCode) {
               return;
@@ -845,7 +846,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
             this.store.dispatch(UserActions.needsMFA({ code: mfaCode, rememberDevice: false }));
             break;
 
-          case AuthSteps.MFA_VERIFY:
+          case AuthStep.MfaVerify:
             if(!mfaCode) {
               return;
             }
@@ -1030,10 +1031,10 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     return this.currentStep$.pipe(
       map(step => {
         switch (step) {
-          case AuthSteps.EMAIL:
+          case AuthStep.Email:
             return 'Next';
-          case AuthSteps.EMAIL_VERIFY:
-          case AuthSteps.MFA_VERIFY:
+          case AuthStep.EmailVerify:
+          case AuthStep.MfaVerify:
             return 'Verify';
           default:
             return 'Submit';
@@ -1046,17 +1047,17 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     return this.currentStep$.pipe(
       map(step => {
         switch (step) {
-          case AuthSteps.EMAIL:
+          case AuthStep.Email:
             return 'Sign In or Create Account';
-          case AuthSteps.PASSWORD:
+          case AuthStep.Password:
             return this.userExists$ ? 'Enter Password' : 'Create Account';
-          case AuthSteps.SIGNIN:
+          case AuthStep.Signin:
             return 'Sign In';
-          case AuthSteps.MFA_SETUP:
+          case AuthStep.MfaSetup:
             return 'Set Up Two-Factor Authentication';
-          case AuthSteps.EMAIL_VERIFY:
+          case AuthStep.EmailVerify:
             return 'Submit Email Verification Code';
-          case AuthSteps.MFA_VERIFY:
+          case AuthStep.MfaVerify:
             return 'Submit MFA Verification Code';
           default:
             return 'Welcome';
@@ -1107,7 +1108,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     }
   }
 
-  private updateValidators(step: AuthSteps): void {
+  private updateValidators(step: AuthStep): void {
     try {
       const emailControl = this.authForm.get('email');
       const passwordControl = this.authForm.get('password');
@@ -1138,7 +1139,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
 
     // Set validators based on current step with enhanced validation
     switch (step) {
-      case AuthSteps.EMAIL:
+      case AuthStep.Email:
         emailControl?.setValidators([
           Validators.required,
           CustomValidators.email(),
@@ -1147,15 +1148,15 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         ]);
         emailControl?.updateValueAndValidity({ emitEvent: false });
         break;
-      case AuthSteps.PASSWORD:
-      case AuthSteps.SIGNIN:
+      case AuthStep.Password:
+      case AuthStep.Signin:
         passwordControl?.setValidators([
           Validators.required,
           CustomValidators.noXSS(this.sanitizer)
         ]);
         passwordControl?.updateValueAndValidity({ emitEvent: false });
         break;
-      case AuthSteps.PASSWORD_SETUP:
+      case AuthStep.PasswordSetup:
         passwordControl?.setValidators([
           Validators.required,
           CustomValidators.password(),
@@ -1175,7 +1176,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         ]);
         lastNameControl?.updateValueAndValidity({ emitEvent: false });
         break;
-      case AuthSteps.EMAIL_VERIFY:
+      case AuthStep.EmailVerify:
         emailCodeControl?.setValidators([
           Validators.required,
           CustomValidators.verificationCode(),
@@ -1183,7 +1184,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         ]);
         emailCodeControl?.updateValueAndValidity({ emitEvent: false });
         break;
-      case AuthSteps.MFA_VERIFY:
+      case AuthStep.MfaVerify:
         mfaCodeControl?.setValidators([
           Validators.required,
           CustomValidators.verificationCode(),
@@ -1191,7 +1192,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         ]);
         mfaCodeControl?.updateValueAndValidity({ emitEvent: false });
         break;
-      case AuthSteps.MFA_SETUP:
+      case AuthStep.MfaSetup:
         // For MFA setup, no specific field validation needed initially
         // User just needs to click submit to initiate setup
         // Clear all validators so form is valid
@@ -1343,22 +1344,22 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
    */
   private async checkRateLimiting(
     identifier: string, 
-    step: AuthSteps
+    step: AuthStep
   ): Promise<{ allowed: boolean; delayMs: number; reason?: string }> {
     try {
     // Map auth steps to rate limiting attempt types
-    const attemptTypeMap: Partial<Record<AuthSteps, string | null>> = {
-      [AuthSteps.EMAIL]: 'email_check',
-      [AuthSteps.PASSWORD]: 'password_verify',
-      [AuthSteps.PASSWORD_SETUP]: null, // No rate limiting for setup
-      [AuthSteps.EMAIL_VERIFY]: null, // No rate limiting for email verification
-      [AuthSteps.MFA_SETUP]: null, // No rate limiting for MFA setup
-      [AuthSteps.MFA_VERIFY]: 'mfa_verify',
-      [AuthSteps.SIGNIN]: 'password_verify',
-      [AuthSteps.PASSWORD_RESET]: 'password_verify',
-      [AuthSteps.PASSWORD_RESET_VERIFY]: null,
-      [AuthSteps.PASSWORD_RESET_CONFIRM]: 'password_verify',
-      [AuthSteps.COMPLETE]: null
+    const attemptTypeMap: Partial<Record<AuthStep, string | null>> = {
+      [AuthStep.Email]: 'email_check',
+      [AuthStep.Password]: 'password_verify',
+      [AuthStep.PasswordSetup]: null, // No rate limiting for setup
+      [AuthStep.EmailVerify]: null, // No rate limiting for email verification
+      [AuthStep.MfaSetup]: null, // No rate limiting for MFA setup
+      [AuthStep.MfaVerify]: 'mfa_verify',
+      [AuthStep.Signin]: 'password_verify',
+      [AuthStep.PasswordReset]: 'password_verify',
+      [AuthStep.PasswordResetVerify]: null,
+      [AuthStep.PasswordResetConfirm]: 'password_verify',
+      [AuthStep.Complete]: null
     };
 
     const attemptType = attemptTypeMap[step];
@@ -1457,22 +1458,22 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
    */
   private recordAuthAttempt(
     identifier: string, 
-    step: AuthSteps, 
+    step: AuthStep, 
     success: boolean
   ): void {
     // Map auth steps to rate limiting attempt types
-    const attemptTypeMap: Partial<Record<AuthSteps, string | null>> = {
-      [AuthSteps.EMAIL]: 'email_check',
-      [AuthSteps.PASSWORD]: 'password_verify',
-      [AuthSteps.PASSWORD_SETUP]: null,
-      [AuthSteps.EMAIL_VERIFY]: null,
-      [AuthSteps.MFA_SETUP]: null,
-      [AuthSteps.MFA_VERIFY]: 'mfa_verify',
-      [AuthSteps.SIGNIN]: 'password_verify',
-      [AuthSteps.PASSWORD_RESET]: 'password_verify',
-      [AuthSteps.PASSWORD_RESET_VERIFY]: null,
-      [AuthSteps.PASSWORD_RESET_CONFIRM]: 'password_verify',
-      [AuthSteps.COMPLETE]: null
+    const attemptTypeMap: Partial<Record<AuthStep, string | null>> = {
+      [AuthStep.Email]: 'email_check',
+      [AuthStep.Password]: 'password_verify',
+      [AuthStep.PasswordSetup]: null,
+      [AuthStep.EmailVerify]: null,
+      [AuthStep.MfaSetup]: null,
+      [AuthStep.MfaVerify]: 'mfa_verify',
+      [AuthStep.Signin]: 'password_verify',
+      [AuthStep.PasswordReset]: 'password_verify',
+      [AuthStep.PasswordResetVerify]: null,
+      [AuthStep.PasswordResetConfirm]: 'password_verify',
+      [AuthStep.Complete]: null
     };
 
     const attemptType = attemptTypeMap[step];
@@ -1608,18 +1609,18 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   /**
    * Get required fields for current step
    */
-  private getRequiredFieldsForStep(step: AuthSteps): string[] {
+  private getRequiredFieldsForStep(step: AuthStep): string[] {
     switch (step) {
-      case AuthSteps.EMAIL:
+      case AuthStep.Email:
         return ['email'];
-      case AuthSteps.PASSWORD:
-      case AuthSteps.SIGNIN:
+      case AuthStep.Password:
+      case AuthStep.Signin:
         return ['password'];
-      case AuthSteps.PASSWORD_SETUP:
+      case AuthStep.PasswordSetup:
         return ['password', 'firstName', 'lastName'];
-      case AuthSteps.EMAIL_VERIFY:
+      case AuthStep.EmailVerify:
         return ['emailCode'];
-      case AuthSteps.MFA_VERIFY:
+      case AuthStep.MfaVerify:
         return ['mfaCode'];
       default:
         return [];
@@ -1666,21 +1667,21 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   /**
    * Get current step number for accessibility (4-step consolidated flow)
    */
-  getCurrentStepNumber(currentStep: AuthSteps | null): number {
+  getCurrentStepNumber(currentStep: AuthStep | null): number {
     if (!currentStep) return 1;
     
-    const step = currentStep as AuthSteps;
+    const step = currentStep as AuthStep;
     
-    if (step === AuthSteps.EMAIL || step === AuthSteps.EMAIL_VERIFY) {
+    if (step === AuthStep.Email || step === AuthStep.EmailVerify) {
       return 1; // "Email Verification"
     }
-    if (step === AuthSteps.PASSWORD || step === AuthSteps.PASSWORD_SETUP || step === AuthSteps.SIGNIN) {
+    if (step === AuthStep.Password || step === AuthStep.PasswordSetup || step === AuthStep.Signin) {
       return 2; // "Identity Setup"
     }
-    if (step === AuthSteps.MFA_SETUP || step === AuthSteps.MFA_VERIFY) {
+    if (step === AuthStep.MfaSetup || step === AuthStep.MfaVerify) {
       return 3; // "Security Verification"
     }
-    if (step === AuthSteps.COMPLETE) {
+    if (step === AuthStep.Complete) {
       return 4; // "Complete"
     }
     
@@ -1690,21 +1691,21 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   /**
    * Get step label for accessibility (4-step consolidated flow)
    */
-  getStepLabel(step: AuthSteps | null): string {
+  getStepLabel(step: AuthStep | null): string {
     if (!step) return 'Step';
     
-    const authStep = step as AuthSteps;
+    const authStep = step as AuthStep;
     
-    if (authStep === AuthSteps.EMAIL || authStep === AuthSteps.EMAIL_VERIFY) {
+    if (authStep === AuthStep.Email || authStep === AuthStep.EmailVerify) {
       return 'Email Verification';
     }
-    if (authStep === AuthSteps.PASSWORD || authStep === AuthSteps.PASSWORD_SETUP || authStep === AuthSteps.SIGNIN) {
+    if (authStep === AuthStep.Password || authStep === AuthStep.PasswordSetup || authStep === AuthStep.Signin) {
       return 'Identity Setup';
     }
-    if (authStep === AuthSteps.MFA_SETUP || authStep === AuthSteps.MFA_VERIFY) {
+    if (authStep === AuthStep.MfaSetup || authStep === AuthStep.MfaVerify) {
       return 'Security Verification';
     }
-    if (authStep === AuthSteps.COMPLETE) {
+    if (authStep === AuthStep.Complete) {
       return 'Complete';
     }
     
@@ -1728,7 +1729,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   /**
    * Check if consolidated step is completed for accessibility
    */
-  isStepCompleted(step: AuthSteps, currentStep: AuthSteps | null): boolean {
+  isStepCompleted(step: AuthStep, currentStep: AuthStep | null): boolean {
     if (!currentStep) return false;
     
     const stepNumber = this.getCurrentStepNumber(step);
@@ -1778,10 +1779,10 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
         return;
       }
       
-      this.store.dispatch(UserActions.setCurrentStep({ step: AuthSteps.EMAIL }));
+      this.store.dispatch(UserActions.setCurrentStep({ step: AuthStep.Email }));
     } catch (error) {
       // If there's an error checking the session, start with email step
-      this.store.dispatch(UserActions.setCurrentStep({ step: AuthSteps.EMAIL }));
+      this.store.dispatch(UserActions.setCurrentStep({ step: AuthStep.Email }));
     }
   }
 
@@ -1840,7 +1841,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   /**
    * Navigate to a specific step (for breadcrumb navigation)
    */
-  public navigateToStep(targetStep: AuthSteps): void {
+  public navigateToStep(targetStep: AuthStep): void {
     if (this.isStepNavigationSafe(targetStep)) {
       this.isNavigatingBack = true;
       
@@ -1868,11 +1869,11 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   /**
    * Check if navigation back to a step is safe (non-destructive)
    */
-  public isStepNavigationSafe(step: AuthSteps): boolean {
+  public isStepNavigationSafe(step: AuthStep): boolean {
     const destructiveSteps = [
-      AuthSteps.EMAIL_VERIFY,
-      AuthSteps.MFA_VERIFY,
-      AuthSteps.COMPLETE
+      AuthStep.EmailVerify,
+      AuthStep.MfaVerify,
+      AuthStep.Complete
     ];
     
     return !destructiveSteps.includes(step);
@@ -1906,17 +1907,17 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     
     // Clear auth state and start from beginning
     this.store.dispatch(UserActions.signout());
-    this.store.dispatch(UserActions.setCurrentStep({ step: AuthSteps.EMAIL }));
+    this.store.dispatch(UserActions.setCurrentStep({ step: AuthStep.Email }));
     
     // Update validators for the email step and ensure form is properly reset
     setTimeout(() => {
-      this.updateValidators(AuthSteps.EMAIL);
+      this.updateValidators(AuthStep.Email);
       this.authForm.updateValueAndValidity({ emitEvent: true });
     }, 50);
     
     // Update browser history
     const url = this.router.url.split('?')[0];
-    window.history.replaceState({ authStep: AuthSteps.EMAIL }, 'Sign In', url);
+    window.history.replaceState({ authStep: AuthStep.Email }, 'Sign In', url);
   }
 
 
@@ -2269,7 +2270,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   /**
    * Enhanced step navigation with loading states
    */
-  public navigateToStepWithLoading(step: AuthSteps, message?: string): void {
+  public navigateToStepWithLoading(step: AuthStep, message?: string): void {
     // Show loading state
     this.showStepTransition(message || this.getStepTransitionMessage(step));
     
@@ -2283,21 +2284,21 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   /**
    * Get appropriate loading message for step transition
    */
-  private getStepTransitionMessage(step: AuthSteps): string {
-    const messages: Partial<Record<AuthSteps, string>> = {
-      [AuthSteps.EMAIL_ENTRY]: 'Preparing email entry...',
-      [AuthSteps.EMAIL]: 'Preparing email verification...',
-      [AuthSteps.PASSWORD]: 'Loading password form...',
-      [AuthSteps.PASSWORD_VERIFY]: 'Verifying password...',
-      [AuthSteps.PASSWORD_SETUP]: 'Setting up password...',
-      [AuthSteps.EMAIL_VERIFY]: 'Setting up verification...',
-      [AuthSteps.SIGNIN]: 'Preparing sign in...',
-      [AuthSteps.MFA_SETUP]: 'Preparing security setup...',
-      [AuthSteps.MFA_VERIFY]: 'Loading verification...',
-      [AuthSteps.PASSWORD_RESET]: 'Preparing password reset...',
-      [AuthSteps.PASSWORD_RESET_VERIFY]: 'Verifying reset code...',
-      [AuthSteps.PASSWORD_RESET_CONFIRM]: 'Confirming new password...',
-      [AuthSteps.COMPLETE]: 'Completing setup...'
+  private getStepTransitionMessage(step: AuthStep): string {
+    const messages: Partial<Record<AuthStep, string>> = {
+      [AuthStep.EmailEntry]: 'Preparing email entry...',
+      [AuthStep.Email]: 'Preparing email verification...',
+      [AuthStep.Password]: 'Loading password form...',
+      [AuthStep.PasswordVerify]: 'Verifying password...',
+      [AuthStep.PasswordSetup]: 'Setting up password...',
+      [AuthStep.EmailVerify]: 'Setting up verification...',
+      [AuthStep.Signin]: 'Preparing sign in...',
+      [AuthStep.MfaSetup]: 'Preparing security setup...',
+      [AuthStep.MfaVerify]: 'Loading verification...',
+      [AuthStep.PasswordReset]: 'Preparing password reset...',
+      [AuthStep.PasswordResetVerify]: 'Verifying reset code...',
+      [AuthStep.PasswordResetConfirm]: 'Confirming new password...',
+      [AuthStep.Complete]: 'Completing setup...'
     };
     
     return messages[step] || 'Loading...';
@@ -2483,7 +2484,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   /**
    * Track step history for navigation
    */
-  private trackStepHistory(step: AuthSteps): void {
+  private trackStepHistory(step: AuthStep): void {
     try {
       if (!this.isNavigatingBack) {
         // Add to history if not navigating back
@@ -2511,7 +2512,7 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   /**
    * Update browser history for navigation
    */
-  private updateBrowserHistory(step: AuthSteps): void {
+  private updateBrowserHistory(step: AuthStep): void {
     try {
       // Update URL without navigation to reflect current step
       const stepUrl = this.getUrlForStep(step);
@@ -2533,21 +2534,21 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   /**
    * Get URL for auth step
    */
-  private getUrlForStep(step: AuthSteps): string {
-    const stepUrls: Partial<Record<AuthSteps, string>> = {
-      [AuthSteps.EMAIL_ENTRY]: '/authenticate',
-      [AuthSteps.EMAIL]: '/authenticate',
-      [AuthSteps.PASSWORD]: '/authenticate/password',
-      [AuthSteps.PASSWORD_VERIFY]: '/authenticate/password',
-      [AuthSteps.PASSWORD_SETUP]: '/authenticate/setup',
-      [AuthSteps.EMAIL_VERIFY]: '/authenticate/verify-email',
-      [AuthSteps.SIGNIN]: '/authenticate/signin',
-      [AuthSteps.MFA_SETUP]: '/authenticate/mfa-setup',
-      [AuthSteps.MFA_VERIFY]: '/authenticate/mfa-verify',
-      [AuthSteps.PASSWORD_RESET]: '/authenticate/reset',
-      [AuthSteps.PASSWORD_RESET_VERIFY]: '/authenticate/reset-verify',
-      [AuthSteps.PASSWORD_RESET_CONFIRM]: '/authenticate/reset-confirm',
-      [AuthSteps.COMPLETE]: '/authenticate/complete'
+  private getUrlForStep(step: AuthStep): string {
+    const stepUrls: Partial<Record<AuthStep, string>> = {
+      [AuthStep.EmailEntry]: '/authenticate',
+      [AuthStep.Email]: '/authenticate',
+      [AuthStep.Password]: '/authenticate/password',
+      [AuthStep.PasswordVerify]: '/authenticate/password',
+      [AuthStep.PasswordSetup]: '/authenticate/setup',
+      [AuthStep.EmailVerify]: '/authenticate/verify-email',
+      [AuthStep.Signin]: '/authenticate/signin',
+      [AuthStep.MfaSetup]: '/authenticate/mfa-setup',
+      [AuthStep.MfaVerify]: '/authenticate/mfa-verify',
+      [AuthStep.PasswordReset]: '/authenticate/reset',
+      [AuthStep.PasswordResetVerify]: '/authenticate/reset-verify',
+      [AuthStep.PasswordResetConfirm]: '/authenticate/reset-confirm',
+      [AuthStep.Complete]: '/authenticate/complete'
     };
     
     return stepUrls[step] || '/authenticate';
@@ -2556,23 +2557,23 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   /**
    * Focus current step input for accessibility
    */
-  private focusCurrentStepInput(step: AuthSteps): void {
+  private focusCurrentStepInput(step: AuthStep): void {
     try {
       setTimeout(() => {
-        const focusMap: Partial<Record<AuthSteps, string>> = {
-          [AuthSteps.EMAIL_ENTRY]: 'email',
-          [AuthSteps.EMAIL]: 'email',
-          [AuthSteps.PASSWORD]: 'password',
-          [AuthSteps.PASSWORD_VERIFY]: 'password',
-          [AuthSteps.PASSWORD_SETUP]: 'password',
-          [AuthSteps.EMAIL_VERIFY]: 'emailCode',
-          [AuthSteps.SIGNIN]: 'password',
-          [AuthSteps.MFA_SETUP]: 'submit',
-          [AuthSteps.MFA_VERIFY]: 'mfaCode',
-          [AuthSteps.PASSWORD_RESET]: 'email',
-          [AuthSteps.PASSWORD_RESET_VERIFY]: 'emailCode',
-          [AuthSteps.PASSWORD_RESET_CONFIRM]: 'password',
-          [AuthSteps.COMPLETE]: 'submit'
+        const focusMap: Partial<Record<AuthStep, string>> = {
+          [AuthStep.EmailEntry]: 'email',
+          [AuthStep.Email]: 'email',
+          [AuthStep.Password]: 'password',
+          [AuthStep.PasswordVerify]: 'password',
+          [AuthStep.PasswordSetup]: 'password',
+          [AuthStep.EmailVerify]: 'emailCode',
+          [AuthStep.Signin]: 'password',
+          [AuthStep.MfaSetup]: 'submit',
+          [AuthStep.MfaVerify]: 'mfaCode',
+          [AuthStep.PasswordReset]: 'email',
+          [AuthStep.PasswordResetVerify]: 'emailCode',
+          [AuthStep.PasswordResetConfirm]: 'password',
+          [AuthStep.Complete]: 'submit'
         };
         
         const fieldToFocus = focusMap[step];
@@ -2598,22 +2599,22 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   /**
    * Announce step change for screen readers
    */
-  private announceStepChange(step: AuthSteps): void {
+  private announceStepChange(step: AuthStep): void {
     try {
-      const announcements: Partial<Record<AuthSteps, string>> = {
-        [AuthSteps.EMAIL_ENTRY]: 'Email entry step loaded',
-        [AuthSteps.EMAIL]: 'Email step loaded',
-        [AuthSteps.PASSWORD]: 'Password step loaded',
-        [AuthSteps.PASSWORD_VERIFY]: 'Password verification step loaded',
-        [AuthSteps.PASSWORD_SETUP]: 'Password setup step loaded',
-        [AuthSteps.EMAIL_VERIFY]: 'Email verification step loaded',
-        [AuthSteps.SIGNIN]: 'Sign in step loaded',
-        [AuthSteps.MFA_SETUP]: 'MFA setup step loaded',
-        [AuthSteps.MFA_VERIFY]: 'MFA verification step loaded',
-        [AuthSteps.PASSWORD_RESET]: 'Password reset step loaded',
-        [AuthSteps.PASSWORD_RESET_VERIFY]: 'Password reset verification loaded',
-        [AuthSteps.PASSWORD_RESET_CONFIRM]: 'Password reset confirmation loaded',
-        [AuthSteps.COMPLETE]: 'Authentication complete'
+      const announcements: Partial<Record<AuthStep, string>> = {
+        [AuthStep.EmailEntry]: 'Email entry step loaded',
+        [AuthStep.Email]: 'Email step loaded',
+        [AuthStep.Password]: 'Password step loaded',
+        [AuthStep.PasswordVerify]: 'Password verification step loaded',
+        [AuthStep.PasswordSetup]: 'Password setup step loaded',
+        [AuthStep.EmailVerify]: 'Email verification step loaded',
+        [AuthStep.Signin]: 'Sign in step loaded',
+        [AuthStep.MfaSetup]: 'MFA setup step loaded',
+        [AuthStep.MfaVerify]: 'MFA verification step loaded',
+        [AuthStep.PasswordReset]: 'Password reset step loaded',
+        [AuthStep.PasswordResetVerify]: 'Password reset verification loaded',
+        [AuthStep.PasswordResetConfirm]: 'Password reset confirmation loaded',
+        [AuthStep.Complete]: 'Authentication complete'
       };
       
       const announcement = announcements[step];

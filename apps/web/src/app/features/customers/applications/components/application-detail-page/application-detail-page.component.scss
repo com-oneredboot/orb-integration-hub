@@ -707,3 +707,18 @@
     font-size: 0.625rem;
   }
 }
+
+// Key Prefix Display (for Environments DataGrid)
+.orb-key-prefix {
+  font-family: v.$font-family-monospace;
+  font-size: v.$font-size-sm;
+  color: v.$text-primary;
+  background: transparent;
+  padding: 0;
+}
+
+// Muted state for "Not configured" text
+.orb-info__id--muted {
+  color: v.$gray-400;
+  font-style: italic;
+}
