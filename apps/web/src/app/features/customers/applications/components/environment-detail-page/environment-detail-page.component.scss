@@ -202,6 +202,7 @@
 
 .env-detail-key-actions {
   display: flex;
+  justify-content: flex-end;
   gap: 12px;
   margin-top: 16px;
   padding-top: 16px;
@@ -237,6 +238,10 @@
   gap: 12px;
   align-items: center;
   flex-wrap: wrap;
+
+  .env-detail-input {
+    flex: 1;
+  }
 }
 
 .env-detail-input {
@@ -313,6 +318,16 @@
   .env-detail-form-group {
     max-width: 500px;
   }
+}
+
+// Form Actions (right-aligned buttons)
+.env-detail-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
 }
 
 .env-detail-events-grid {

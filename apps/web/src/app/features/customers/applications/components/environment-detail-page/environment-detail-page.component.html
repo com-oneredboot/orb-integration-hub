@@ -1,6 +1,7 @@
 <!-- Environment Detail Page Template -->
-<!-- Displays all configuration for a single environment -->
-<!-- @see .kiro/specs/environment-detail-page/design.md -->
+<!-- Displays all configuration for a single environment using tabbed interface -->
+<!-- @see .kiro/specs/environments-list-and-detail/design.md -->
+<!-- _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 6.1, 6.2_ -->
 
 <div class="env-detail-container">
   <!-- Page Header -->
@@ -83,7 +84,7 @@
       </ng-container>
     </div>
 
-    <!-- Main Content -->
+    <!-- Main Content with Tabs -->
     <div class="env-detail-sections" *ngIf="!validationError && (isLoading$ | async) === false && ((loadError$ | async) === null || selectedConfig)">
       <!-- Save Error -->
       <div class="env-detail-save-error" *ngIf="saveError$ | async as error">
@@ -92,347 +93,416 @@
         <button class="orb-btn orb-btn--secondary orb-btn--sm" (click)="clearErrors()">Dismiss</button>
       </div>
 
-      <!-- API Keys Section -->
-      <div class="orb-card">
-        <div class="orb-card__header">
-          <h2 class="orb-card__title">
-            <fa-icon icon="key" class="orb-card__icon"></fa-icon>
-            API Keys
-          </h2>
-        </div>
-        <div class="orb-card__content orb-card__content--padded">
-          <!-- Generated Key Display -->
-          <div class="env-detail-generated-key" *ngIf="generatedKeyDisplay">
-            <div class="env-detail-generated-key__header">
-              <fa-icon icon="check-circle" class="env-detail-generated-key__icon"></fa-icon>
-              <span>API Key Generated Successfully</span>
+      <!-- Tab Navigation -->
+      <!-- Uses global orb-tabs classes from components.scss -->
+      <nav class="orb-tabs" role="tablist" aria-label="Environment configuration sections">
+        <button
+          *ngFor="let tab of tabs"
+          class="orb-tabs__tab"
+          [class.orb-tabs__tab--active]="activeTab === tab.id"
+          [class.orb-tabs__tab--warning]="tabHasIssues(tab.id)"
+          (click)="setActiveTab(tab.id)"
+          (keydown)="onTabKeydown($event, tab.id)"
+          role="tab"
+          [id]="'tab-' + tab.id"
+          [attr.aria-selected]="activeTab === tab.id"
+          [attr.aria-controls]="'panel-' + tab.id"
+          [attr.tabindex]="activeTab === tab.id ? 0 : -1">
+          <fa-icon [icon]="tab.icon" class="orb-tabs__icon"></fa-icon>
+          {{ tab.label }}
+          <span 
+            *ngIf="getTabIssueCount(tab.id) > 0" 
+            class="orb-tabs__badge orb-tabs__badge--warning"
+            [attr.aria-label]="getTabIssueCount(tab.id) + ' issues'">
+            {{ getTabIssueCount(tab.id) }}
+          </span>
+        </button>
+      </nav>
+
+      <!-- Tab Panels -->
+      <div class="env-detail-tab-panels">
+
+        <!-- API Keys Tab Panel -->
+        <div
+          class="env-detail-tab-panel"
+          *ngIf="activeTab === EnvironmentDetailTab.ApiKeys"
+          role="tabpanel"
+          id="panel-api-keys"
+          [attr.aria-labelledby]="'tab-api-keys'">
+          <div class="orb-card">
+            <div class="orb-card__header">
+              <h2 class="orb-card__title">
+                <fa-icon icon="key" class="orb-card__icon"></fa-icon>
+                API Keys
+              </h2>
             </div>
-            <div class="env-detail-generated-key__content">
-              <code class="env-detail-generated-key__value">{{ generatedKeyDisplay.fullKey }}</code>
-              <button
-                class="orb-btn orb-btn--secondary orb-btn--sm"
-                (click)="copyGeneratedKey()"
-                [attr.aria-label]="copySuccess ? 'Copied!' : 'Copy API key'">
-                <fa-icon [icon]="copySuccess ? 'check' : 'copy'"></fa-icon>
-                {{ copySuccess ? 'Copied!' : 'Copy' }}
-              </button>
-            </div>
-            <div class="env-detail-generated-key__warning">
-              <fa-icon icon="exclamation-triangle"></fa-icon>
-              <span>Copy this key now. It won't be shown again.</span>
-            </div>
-            <button class="orb-btn orb-btn--secondary orb-btn--sm" (click)="dismissGeneratedKey()">
-              Dismiss
-            </button>
-          </div>
+            <div class="orb-card__content orb-card__content--padded">
+              <!-- Generated Key Display -->
+              <div class="env-detail-generated-key" *ngIf="generatedKeyDisplay">
+                <div class="env-detail-generated-key__header">
+                  <fa-icon icon="check-circle" class="env-detail-generated-key__icon"></fa-icon>
+                  <span>API Key Generated Successfully</span>
+                </div>
+                <div class="env-detail-generated-key__content">
+                  <code class="env-detail-generated-key__value">{{ generatedKeyDisplay.fullKey }}</code>
+                  <button
+                    class="orb-btn orb-btn--secondary orb-btn--sm"
+                    (click)="copyGeneratedKey()"
+                    [attr.aria-label]="copySuccess ? 'Copied!' : 'Copy API key'">
+                    <fa-icon [icon]="copySuccess ? 'check' : 'copy'"></fa-icon>
+                    {{ copySuccess ? 'Copied!' : 'Copy' }}
+                  </button>
+                </div>
+                <div class="env-detail-generated-key__warning">
+                  <fa-icon icon="exclamation-triangle"></fa-icon>
+                  <span>Copy this key now. It won't be shown again.</span>
+                </div>
+                <button class="orb-btn orb-btn--secondary orb-btn--sm" (click)="dismissGeneratedKey()">
+                  Dismiss
+                </button>
+              </div>
 
-          <!-- Current Key Status -->
-          <div class="env-detail-key-status" *ngIf="!generatedKeyDisplay">
-            <div class="env-detail-key-status__row">
-              <span class="env-detail-key-status__label">Status:</span>
-              <app-status-badge
-                [status]="getApiKeyStatus()"
-                type="apiKey"
-                [showIcon]="true"
-                [showLabel]="true"
-                size="medium"
-                variant="chip">
-              </app-status-badge>
-            </div>
+              <!-- Current Key Status -->
+              <div class="env-detail-key-status" *ngIf="!generatedKeyDisplay">
+                <div class="env-detail-key-status__row">
+                  <span class="env-detail-key-status__label">Status:</span>
+                  <app-status-badge
+                    [status]="getApiKeyStatus()"
+                    type="apiKey"
+                    [showIcon]="true"
+                    [showLabel]="true"
+                    size="medium"
+                    variant="chip">
+                  </app-status-badge>
+                </div>
 
-            <div class="env-detail-key-status__row" *ngIf="environmentApiKey">
-              <span class="env-detail-key-status__label">Key Prefix:</span>
-              <code class="env-detail-key-status__value">{{ getApiKeyPrefix() }}...</code>
-            </div>
+                <div class="env-detail-key-status__row" *ngIf="environmentApiKey">
+                  <span class="env-detail-key-status__label">Key Prefix:</span>
+                  <code class="env-detail-key-status__value">{{ getApiKeyPrefix() }}...</code>
+                </div>
 
-            <div class="env-detail-key-status__row" *ngIf="environmentApiKey">
-              <span class="env-detail-key-status__label">Key Type:</span>
-              <span class="orb-key-type-badge" 
-                    [class.orb-key-type-badge--publishable]="getApiKeyType() === 'PUBLISHABLE'"
-                    [class.orb-key-type-badge--secret]="getApiKeyType() === 'SECRET'">
-                {{ getApiKeyType() === 'SECRET' ? 'Secret (sk_*)' : 'Publishable (pk_*)' }}
-              </span>
-            </div>
+                <div class="env-detail-key-status__row" *ngIf="environmentApiKey">
+                  <span class="env-detail-key-status__label">Key Type:</span>
+                  <span class="orb-key-type-badge" 
+                        [class.orb-key-type-badge--publishable]="getApiKeyType() === 'PUBLISHABLE'"
+                        [class.orb-key-type-badge--secret]="getApiKeyType() === 'SECRET'">
+                    {{ getApiKeyType() === 'SECRET' ? 'Secret (sk_*)' : 'Publishable (pk_*)' }}
+                  </span>
+                </div>
 
-            <div class="env-detail-key-actions">
-              <button
-                *ngIf="canGenerateKey()"
-                class="orb-btn orb-btn--primary"
-                (click)="onGenerateKey()"
-                [disabled]="isGeneratingKey$ | async">
-                <fa-icon icon="plus" *ngIf="(isGeneratingKey$ | async) === false"></fa-icon>
-                <fa-icon icon="spinner" animation="spin" *ngIf="isGeneratingKey$ | async"></fa-icon>
-                Generate API Key
-              </button>
+                <div class="env-detail-key-actions">
+                  <button
+                    *ngIf="canGenerateKey()"
+                    class="orb-btn orb-btn--primary"
+                    (click)="onGenerateKey()"
+                    [disabled]="isGeneratingKey$ | async">
+                    <fa-icon icon="plus" *ngIf="(isGeneratingKey$ | async) === false"></fa-icon>
+                    <fa-icon icon="spinner" animation="spin" *ngIf="isGeneratingKey$ | async"></fa-icon>
+                    Generate API Key
+                  </button>
 
-              <button
-                *ngIf="isApiKeyActive()"
-                class="orb-btn orb-btn--secondary"
-                (click)="onRotateKey()"
-                [disabled]="isGeneratingKey$ | async">
-                <fa-icon icon="sync"></fa-icon>
-                Rotate Key
-              </button>
+                  <button
+                    *ngIf="isApiKeyActive()"
+                    class="orb-btn orb-btn--secondary"
+                    (click)="onRotateKey()"
+                    [disabled]="isGeneratingKey$ | async">
+                    <fa-icon icon="sync"></fa-icon>
+                    Rotate Key
+                  </button>
 
-              <button
-                *ngIf="isApiKeyActive()"
-                class="orb-btn orb-btn--danger"
-                (click)="onRevokeKey()"
-                [disabled]="isRevokingKey$ | async">
-                <fa-icon icon="ban"></fa-icon>
-                Revoke Key
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Allowed Origins Section -->
-      <div class="orb-card">
-        <div class="orb-card__header">
-          <h2 class="orb-card__title">
-            <fa-icon icon="globe" class="orb-card__icon"></fa-icon>
-            Allowed Origins (CORS)
-          </h2>
-        </div>
-        <div class="orb-card__content orb-card__content--padded">
-          <p class="env-detail-section-desc">
-            Configure which domains can make requests using publishable API keys.
-          </p>
-
-          <div class="env-detail-origins-list">
-            <div class="env-detail-origin-item" *ngFor="let origin of selectedConfig?.allowedOrigins || []">
-              <code class="env-detail-origin-item__url">{{ origin }}</code>
-              <button
-                class="orb-btn orb-btn--danger orb-btn--sm"
-                (click)="removeOrigin(origin)"
-                [disabled]="isSaving$ | async">
-                <fa-icon icon="trash"></fa-icon>
-                Remove
-              </button>
-            </div>
-            <p class="env-detail-empty" *ngIf="!selectedConfig?.allowedOrigins?.length">
-              No allowed origins configured.
-            </p>
-          </div>
-
-          <div class="env-detail-add-form">
-            <input
-              type="text"
-              [(ngModel)]="newOrigin"
-              placeholder="https://example.com or https://*.example.com"
-              class="env-detail-input">
-            <button
-              class="orb-btn orb-btn--primary"
-              (click)="addOrigin()"
-              [disabled]="!newOrigin.trim() || (isSaving$ | async)">
-              <fa-icon icon="plus"></fa-icon>
-              Add Origin
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Rate Limits Section -->
-      <div class="orb-card">
-        <div class="orb-card__header">
-          <h2 class="orb-card__title">
-            <fa-icon icon="tachometer-alt" class="orb-card__icon"></fa-icon>
-            Rate Limits
-          </h2>
-        </div>
-        <div class="orb-card__content orb-card__content--padded">
-          <p class="env-detail-section-desc">
-            Configure API request limits for this environment.
-          </p>
-
-          <div class="env-detail-rate-form">
-            <div class="env-detail-form-group">
-              <label for="rateLimitPerMinute">Requests per minute</label>
-              <input
-                type="number"
-                id="rateLimitPerMinute"
-                [(ngModel)]="rateLimitForm.perMinute"
-                min="1"
-                max="10000"
-                class="env-detail-input env-detail-input--number">
-            </div>
-            <div class="env-detail-form-group">
-              <label for="rateLimitPerDay">Requests per day</label>
-              <input
-                type="number"
-                id="rateLimitPerDay"
-                [(ngModel)]="rateLimitForm.perDay"
-                min="1"
-                max="1000000"
-                class="env-detail-input env-detail-input--number">
-            </div>
-            <button
-              class="orb-btn orb-btn--primary"
-              (click)="saveRateLimits()"
-              [disabled]="isSaving$ | async">
-              <fa-icon icon="save" *ngIf="(isSaving$ | async) === false"></fa-icon>
-              <fa-icon icon="spinner" animation="spin" *ngIf="isSaving$ | async"></fa-icon>
-              Save Rate Limits
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Webhooks Section -->
-      <div class="orb-card">
-        <div class="orb-card__header">
-          <h2 class="orb-card__title">
-            <fa-icon icon="bolt" class="orb-card__icon"></fa-icon>
-            Webhook Configuration
-          </h2>
-        </div>
-        <div class="orb-card__content orb-card__content--padded">
-          <p class="env-detail-section-desc">
-            Configure webhook delivery for real-time event notifications.
-          </p>
-
-          <div class="env-detail-webhook-form">
-            <div class="env-detail-form-group">
-              <label for="webhookUrl">Webhook URL</label>
-              <input
-                type="url"
-                id="webhookUrl"
-                [(ngModel)]="webhookForm.url"
-                placeholder="https://your-server.com/webhook"
-                class="env-detail-input">
-            </div>
-
-            <div class="env-detail-form-group env-detail-form-group--checkbox">
-              <label>
-                <input type="checkbox" [(ngModel)]="webhookForm.enabled">
-                Enable webhook delivery
-              </label>
-            </div>
-
-            <div class="env-detail-form-group">
-              <span class="env-detail-form-label" id="webhook-events-label">Webhook Events</span>
-              <div class="env-detail-events-grid" role="group" aria-labelledby="webhook-events-label">
-                <label class="env-detail-event-checkbox" *ngFor="let event of webhookEventTypes">
-                  <input
-                    type="checkbox"
-                    [checked]="isWebhookEventSelected(event.value)"
-                    (change)="toggleWebhookEvent(event.value)">
-                  {{ event.label }}
-                </label>
+                  <button
+                    *ngIf="isApiKeyActive()"
+                    class="orb-btn orb-btn--danger"
+                    (click)="onRevokeKey()"
+                    [disabled]="isRevokingKey$ | async">
+                    <fa-icon icon="ban"></fa-icon>
+                    Revoke Key
+                  </button>
+                </div>
               </div>
             </div>
+          </div>
+        </div>
 
-            <div class="env-detail-retry-settings">
-              <div class="env-detail-form-group">
-                <label for="maxRetries">Max Retries</label>
+        <!-- Origins Tab Panel -->
+        <div
+          class="env-detail-tab-panel"
+          *ngIf="activeTab === EnvironmentDetailTab.Origins"
+          role="tabpanel"
+          id="panel-origins"
+          [attr.aria-labelledby]="'tab-origins'">
+          <div class="orb-card">
+            <div class="orb-card__header">
+              <h2 class="orb-card__title">
+                <fa-icon icon="globe" class="orb-card__icon"></fa-icon>
+                Allowed Origins (CORS)
+              </h2>
+            </div>
+            <div class="orb-card__content orb-card__content--padded">
+              <p class="env-detail-section-desc">
+                Configure which domains can make requests using publishable API keys.
+              </p>
+
+              <div class="env-detail-origins-list">
+                <div class="env-detail-origin-item" *ngFor="let origin of selectedConfig?.allowedOrigins || []">
+                  <code class="env-detail-origin-item__url">{{ origin }}</code>
+                  <button
+                    class="orb-btn orb-btn--danger orb-btn--sm"
+                    (click)="removeOrigin(origin)"
+                    [disabled]="isSaving$ | async">
+                    <fa-icon icon="trash"></fa-icon>
+                    Remove
+                  </button>
+                </div>
+                <p class="env-detail-empty" *ngIf="!selectedConfig?.allowedOrigins?.length">
+                  No allowed origins configured.
+                </p>
+              </div>
+
+              <div class="env-detail-add-form">
                 <input
-                  type="number"
-                  id="maxRetries"
-                  [(ngModel)]="webhookForm.maxRetries"
-                  min="0"
-                  max="10"
-                  class="env-detail-input env-detail-input--number">
-              </div>
-              <div class="env-detail-form-group">
-                <label for="retryDelay">Retry Delay (seconds)</label>
-                <input
-                  type="number"
-                  id="retryDelay"
-                  [(ngModel)]="webhookForm.retryDelaySeconds"
-                  min="10"
-                  max="3600"
-                  class="env-detail-input env-detail-input--number">
-              </div>
-            </div>
-
-            <div class="env-detail-webhook-secret">
-              <span class="env-detail-form-label" id="webhook-secret-label">Webhook Secret</span>
-              <div class="env-detail-webhook-secret__display" aria-labelledby="webhook-secret-label">
-                <code>{{ selectedConfig?.webhookSecret || 'Not generated' }}</code>
+                  type="text"
+                  [(ngModel)]="newOrigin"
+                  placeholder="https://example.com or https://*.example.com"
+                  class="env-detail-input">
                 <button
-                  class="orb-btn orb-btn--secondary orb-btn--sm"
-                  (click)="regenerateWebhookSecret()"
-                  [disabled]="isSaving$ | async">
-                  <fa-icon icon="redo"></fa-icon>
-                  Regenerate Secret
+                  class="orb-btn orb-btn--primary"
+                  (click)="addOrigin()"
+                  [disabled]="!newOrigin.trim() || (isSaving$ | async)">
+                  <fa-icon icon="plus"></fa-icon>
+                  Add Origin
                 </button>
               </div>
             </div>
-
-            <button
-              class="orb-btn orb-btn--primary"
-              (click)="saveWebhookConfig()"
-              [disabled]="isSaving$ | async">
-              <fa-icon icon="save" *ngIf="(isSaving$ | async) === false"></fa-icon>
-              <fa-icon icon="spinner" animation="spin" *ngIf="isSaving$ | async"></fa-icon>
-              Save Webhook Configuration
-            </button>
           </div>
         </div>
-      </div>
 
-      <!-- Feature Flags Section -->
-      <div class="orb-card">
-        <div class="orb-card__header">
-          <h2 class="orb-card__title">
-            <fa-icon icon="flag" class="orb-card__icon"></fa-icon>
-            Feature Flags
-          </h2>
-        </div>
-        <div class="orb-card__content orb-card__content--padded">
-          <p class="env-detail-section-desc">
-            Configure feature flags for this environment.
-          </p>
-
-          <div class="env-detail-flags-list">
-            <div class="env-detail-flag-item" *ngFor="let flag of getFeatureFlagEntries()">
-              <div class="env-detail-flag-item__info">
-                <span class="env-detail-flag-item__key">{{ flag.key }}</span>
-                <span class="env-detail-flag-item__type">{{ getFeatureFlagType(flag.value) }}</span>
-              </div>
-              <div class="env-detail-flag-item__value">{{ formatFeatureFlagValue(flag.value) }}</div>
-              <button
-                class="orb-btn orb-btn--danger orb-btn--sm"
-                (click)="deleteFeatureFlag(flag.key)"
-                [disabled]="isSaving$ | async">
-                <fa-icon icon="trash"></fa-icon>
-                Delete
-              </button>
+        <!-- Rate Limits Tab Panel -->
+        <div
+          class="env-detail-tab-panel"
+          *ngIf="activeTab === EnvironmentDetailTab.RateLimits"
+          role="tabpanel"
+          id="panel-rate-limits"
+          [attr.aria-labelledby]="'tab-rate-limits'">
+          <div class="orb-card">
+            <div class="orb-card__header">
+              <h2 class="orb-card__title">
+                <fa-icon icon="tachometer-alt" class="orb-card__icon"></fa-icon>
+                Rate Limits
+              </h2>
             </div>
-            <p class="env-detail-empty" *ngIf="!getFeatureFlagEntries().length">
-              No feature flags configured.
-            </p>
-          </div>
+            <div class="orb-card__content orb-card__content--padded">
+              <p class="env-detail-section-desc">
+                Configure API request limits for this environment.
+              </p>
 
-          <div class="env-detail-add-flag-form">
-            <input
-              type="text"
-              [(ngModel)]="newFlagKey"
-              placeholder="flag_key (snake_case)"
-              class="env-detail-input">
-            <select [(ngModel)]="newFlagType" class="env-detail-select">
-              <option value="boolean">Boolean</option>
-              <option value="string">String</option>
-              <option value="number">Number</option>
-            </select>
-            <select *ngIf="newFlagType === 'boolean'" [(ngModel)]="newFlagValue" class="env-detail-select">
-              <option value="true">Enabled</option>
-              <option value="false">Disabled</option>
-            </select>
-            <input
-              *ngIf="newFlagType !== 'boolean'"
-              type="text"
-              [(ngModel)]="newFlagValue"
-              [placeholder]="newFlagType === 'number' ? '0' : 'value'"
-              class="env-detail-input">
-            <button
-              class="orb-btn orb-btn--primary"
-              (click)="addFeatureFlag()"
-              [disabled]="!newFlagKey.trim() || (isSaving$ | async)">
-              <fa-icon icon="plus"></fa-icon>
-              Add Flag
-            </button>
+              <div class="env-detail-rate-form">
+                <div class="env-detail-form-group">
+                  <label for="rateLimitPerMinute">Requests per minute</label>
+                  <input
+                    type="number"
+                    id="rateLimitPerMinute"
+                    [(ngModel)]="rateLimitForm.perMinute"
+                    min="1"
+                    max="10000"
+                    class="env-detail-input env-detail-input--number">
+                </div>
+                <div class="env-detail-form-group">
+                  <label for="rateLimitPerDay">Requests per day</label>
+                  <input
+                    type="number"
+                    id="rateLimitPerDay"
+                    [(ngModel)]="rateLimitForm.perDay"
+                    min="1"
+                    max="1000000"
+                    class="env-detail-input env-detail-input--number">
+                </div>
+              </div>
+              <div class="env-detail-form-actions">
+                <button
+                  class="orb-btn orb-btn--primary"
+                  (click)="saveRateLimits()"
+                  [disabled]="isSaving$ | async">
+                  <fa-icon icon="save" *ngIf="(isSaving$ | async) === false"></fa-icon>
+                  <fa-icon icon="spinner" animation="spin" *ngIf="isSaving$ | async"></fa-icon>
+                  Save Rate Limits
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Webhooks Tab Panel -->
+        <div
+          class="env-detail-tab-panel"
+          *ngIf="activeTab === EnvironmentDetailTab.Webhooks"
+          role="tabpanel"
+          id="panel-webhooks"
+          [attr.aria-labelledby]="'tab-webhooks'">
+          <div class="orb-card">
+            <div class="orb-card__header">
+              <h2 class="orb-card__title">
+                <fa-icon icon="bolt" class="orb-card__icon"></fa-icon>
+                Webhook Configuration
+              </h2>
+            </div>
+            <div class="orb-card__content orb-card__content--padded">
+              <p class="env-detail-section-desc">
+                Configure webhook delivery for real-time event notifications.
+              </p>
+
+              <div class="env-detail-webhook-form">
+                <div class="env-detail-form-group">
+                  <label for="webhookUrl">Webhook URL</label>
+                  <input
+                    type="url"
+                    id="webhookUrl"
+                    [(ngModel)]="webhookForm.url"
+                    placeholder="https://your-server.com/webhook"
+                    class="env-detail-input">
+                </div>
+
+                <div class="env-detail-form-group env-detail-form-group--checkbox">
+                  <label>
+                    <input type="checkbox" [(ngModel)]="webhookForm.enabled">
+                    Enable webhook delivery
+                  </label>
+                </div>
+
+                <div class="env-detail-form-group">
+                  <span class="env-detail-form-label" id="webhook-events-label">Webhook Events</span>
+                  <div class="env-detail-events-grid" role="group" aria-labelledby="webhook-events-label">
+                    <label class="env-detail-event-checkbox" *ngFor="let event of webhookEventTypes">
+                      <input
+                        type="checkbox"
+                        [checked]="isWebhookEventSelected(event.value)"
+                        (change)="toggleWebhookEvent(event.value)">
+                      {{ event.label }}
+                    </label>
+                  </div>
+                </div>
+
+                <div class="env-detail-retry-settings">
+                  <div class="env-detail-form-group">
+                    <label for="maxRetries">Max Retries</label>
+                    <input
+                      type="number"
+                      id="maxRetries"
+                      [(ngModel)]="webhookForm.maxRetries"
+                      min="0"
+                      max="10"
+                      class="env-detail-input env-detail-input--number">
+                  </div>
+                  <div class="env-detail-form-group">
+                    <label for="retryDelay">Retry Delay (seconds)</label>
+                    <input
+                      type="number"
+                      id="retryDelay"
+                      [(ngModel)]="webhookForm.retryDelaySeconds"
+                      min="10"
+                      max="3600"
+                      class="env-detail-input env-detail-input--number">
+                  </div>
+                </div>
+
+                <div class="env-detail-webhook-secret">
+                  <span class="env-detail-form-label" id="webhook-secret-label">Webhook Secret</span>
+                  <div class="env-detail-webhook-secret__display" aria-labelledby="webhook-secret-label">
+                    <code>{{ selectedConfig?.webhookSecret || 'Not generated' }}</code>
+                    <button
+                      class="orb-btn orb-btn--secondary orb-btn--sm"
+                      (click)="regenerateWebhookSecret()"
+                      [disabled]="isSaving$ | async">
+                      <fa-icon icon="redo"></fa-icon>
+                      Regenerate Secret
+                    </button>
+                  </div>
+                </div>
+
+                <div class="env-detail-form-actions">
+                  <button
+                    class="orb-btn orb-btn--primary"
+                    (click)="saveWebhookConfig()"
+                    [disabled]="isSaving$ | async">
+                    <fa-icon icon="save" *ngIf="(isSaving$ | async) === false"></fa-icon>
+                    <fa-icon icon="spinner" animation="spin" *ngIf="isSaving$ | async"></fa-icon>
+                    Save Webhook Configuration
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature Flags Tab Panel -->
+        <div
+          class="env-detail-tab-panel"
+          *ngIf="activeTab === EnvironmentDetailTab.FeatureFlags"
+          role="tabpanel"
+          id="panel-feature-flags"
+          [attr.aria-labelledby]="'tab-feature-flags'">
+          <div class="orb-card">
+            <div class="orb-card__header">
+              <h2 class="orb-card__title">
+                <fa-icon icon="flag" class="orb-card__icon"></fa-icon>
+                Feature Flags
+              </h2>
+            </div>
+            <div class="orb-card__content orb-card__content--padded">
+              <p class="env-detail-section-desc">
+                Configure feature flags for this environment.
+              </p>
+
+              <div class="env-detail-flags-list">
+                <div class="env-detail-flag-item" *ngFor="let flag of getFeatureFlagEntries()">
+                  <div class="env-detail-flag-item__info">
+                    <span class="env-detail-flag-item__key">{{ flag.key }}</span>
+                    <span class="env-detail-flag-item__type">{{ getFeatureFlagType(flag.value) }}</span>
+                  </div>
+                  <div class="env-detail-flag-item__value">{{ formatFeatureFlagValue(flag.value) }}</div>
+                  <button
+                    class="orb-btn orb-btn--danger orb-btn--sm"
+                    (click)="deleteFeatureFlag(flag.key)"
+                    [disabled]="isSaving$ | async">
+                    <fa-icon icon="trash"></fa-icon>
+                    Delete
+                  </button>
+                </div>
+                <p class="env-detail-empty" *ngIf="!getFeatureFlagEntries().length">
+                  No feature flags configured.
+                </p>
+              </div>
+
+              <div class="env-detail-add-flag-form">
+                <input
+                  type="text"
+                  [(ngModel)]="newFlagKey"
+                  placeholder="flag_key (snake_case)"
+                  class="env-detail-input">
+                <select [(ngModel)]="newFlagType" class="env-detail-select">
+                  <option value="boolean">Boolean</option>
+                  <option value="string">String</option>
+                  <option value="number">Number</option>
+                </select>
+                <select *ngIf="newFlagType === 'boolean'" [(ngModel)]="newFlagValue" class="env-detail-select">
+                  <option value="true">Enabled</option>
+                  <option value="false">Disabled</option>
+                </select>
+                <input
+                  *ngIf="newFlagType !== 'boolean'"
+                  type="text"
+                  [(ngModel)]="newFlagValue"
+                  [placeholder]="newFlagType === 'number' ? '0' : 'value'"
+                  class="env-detail-input">
+                <button
+                  class="orb-btn orb-btn--primary"
+                  (click)="addFeatureFlag()"
+                  [disabled]="!newFlagKey.trim() || (isSaving$ | async)">
+                  <fa-icon icon="plus"></fa-icon>
+                  Add Flag
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

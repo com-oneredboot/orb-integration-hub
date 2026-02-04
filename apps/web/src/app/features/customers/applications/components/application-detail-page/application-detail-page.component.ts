@@ -34,10 +34,10 @@ import { DebugLogEntry } from '../../../../../core/services/debug-log.service';
 // Child components
 import { GroupsListComponent } from '../groups-list/groups-list.component';
 import { DangerZoneCardComponent } from '../../../../../shared/components/danger-zone-card/danger-zone-card.component';
+import { EnvironmentsListComponent } from '../environments-list/environments-list.component';
 
-// Data Grid
+// Data Grid types (component uses EnvironmentsListComponent which wraps DataGrid)
 import {
-  DataGridComponent,
   ColumnDefinition,
   PageState,
   SortState,
@@ -171,6 +171,7 @@ export interface EnvironmentRow {
   apiKeyType: string | null;
   formattedKeyPrefix: string;
   rateLimitDisplay: string;
+  originsCount: number;
   webhookStatus: 'Enabled' | 'Disabled' | 'Not Configured';
   lastUpdated: string;
 }
@@ -197,7 +198,7 @@ export enum ApplicationDetailTab {
     DebugPanelComponent,
     GroupsListComponent,
     DangerZoneCardComponent,
-    DataGridComponent,
+    EnvironmentsListComponent,
   ],
   templateUrl: './application-detail-page.component.html',
   styleUrls: ['./application-detail-page.component.scss']
@@ -704,6 +705,7 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
         apiKeyType: apiKey?.keyType || null,
         formattedKeyPrefix,
         rateLimitDisplay,
+        originsCount: config?.allowedOrigins?.length || 0,
         webhookStatus,
         lastUpdated: lastUpdatedDate ? this.formatRelativeTime(lastUpdatedDate) : 'Never',
       };

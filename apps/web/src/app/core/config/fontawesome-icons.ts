@@ -42,6 +42,7 @@ import {
   faCode,
   faKey,
   faTools,
+  faGlobe,
   
   // Charts & Analytics
   faChartBar,
@@ -116,6 +117,7 @@ export function configureFontAwesome(library: FaIconLibrary): void {
     faCode,
     faKey,
     faTools,
+    faGlobe,
     
     // Charts & Analytics
     faChartBar,
@@ -189,6 +191,7 @@ export const registeredIcons = [
   'code',
   'key',
   'tools',
+  'globe',
   
   // Charts & Analytics
   'chart-bar',

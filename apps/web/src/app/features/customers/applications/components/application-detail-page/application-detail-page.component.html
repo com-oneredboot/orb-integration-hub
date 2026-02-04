@@ -499,46 +499,10 @@
             role="tabpanel"
             id="panel-environments"
             [attr.aria-labelledby]="'tab-environments'">
-            <!-- Environments DataGrid Card -->
-            <div class="orb-card" *ngIf="editForm.environments.length > 0">
-              <div class="orb-card__header">
-                <h2 class="orb-card__title">
-                  <fa-icon icon="server" class="orb-card__icon"></fa-icon>
-                  Configured Environments
-                </h2>
-                <p class="orb-card__subtitle">Click an environment to configure API keys, webhooks, and other settings.</p>
-              </div>
-              <div class="orb-card__content">
-                <app-data-grid
-                  [columns]="environmentsColumns"
-                  [data]="environmentRows"
-                  [pageState]="environmentsPageState"
-                  [sortState]="environmentsSortState"
-                  [filterState]="environmentsFilterState"
-                  [loading]="(isLoading$ | async) || false"
-                  [showFilters]="false"
-                  [showPagination]="environmentRows.length > 10"
-                  [showReset]="false"
-                  [selectable]="false"
-                  trackByField="environment"
-                  emptyMessage="No environments configured. Go to Overview tab to select environments."
-                  (pageChange)="onEnvironmentsPageChange($event)"
-                  (sortChange)="onEnvironmentsSortChange($event)"
-                  (filterChange)="onEnvironmentsFilterChange($event)"
-                  (resetGrid)="onEnvironmentsResetGrid()"
-                  (rowClick)="onEnvironmentRowClick($event)">
-                </app-data-grid>
-              </div>
-            </div>
-
-            <!-- Empty state for environments (shown when no environments selected) -->
-            <div class="orb-card orb-card--muted" *ngIf="editForm.environments.length === 0">
-              <div class="orb-card__content orb-card__content--centered">
-                <fa-icon icon="server" size="2x" class="orb-card__empty-icon"></fa-icon>
-                <p class="orb-card__empty-text">No environments configured yet.</p>
-                <p class="orb-card__empty-hint">Go to the Overview tab to select environments for this application.</p>
-              </div>
-            </div>
+            <app-environments-list
+              [applicationId]="application.applicationId"
+              [organizationId]="application.organizationId">
+            </app-environments-list>
           </div>
 
           <!-- Groups Tab Panel -->

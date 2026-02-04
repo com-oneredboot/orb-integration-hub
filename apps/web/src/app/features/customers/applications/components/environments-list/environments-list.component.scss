@@ -1,0 +1,114 @@
+/**
+ * Environments List Component Styles
+ *
+ * Component-specific styles for the environments list.
+ * Uses global orb-* classes from components.scss where possible.
+ *
+ * @see .kiro/specs/environments-list-and-detail/design.md
+ */
+
+// Environment icon colors
+.orb-info__icon {
+  margin-right: 0.5rem;
+  
+  &--production {
+    color: var(--orb-color-danger, #dc3545);
+  }
+  
+  &--staging {
+    color: var(--orb-color-warning, #ffc107);
+  }
+  
+  &--development {
+    color: var(--orb-color-info, #17a2b8);
+  }
+  
+  &--test {
+    color: var(--orb-color-secondary, #6c757d);
+  }
+  
+  &--preview {
+    color: var(--orb-color-primary, #007bff);
+  }
+}
+
+// Status badge styles
+.orb-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  
+  &--success {
+    background-color: var(--orb-color-success-bg, #d4edda);
+    color: var(--orb-color-success-text, #155724);
+  }
+  
+  &--warning {
+    background-color: var(--orb-color-warning-bg, #fff3cd);
+    color: var(--orb-color-warning-text, #856404);
+  }
+  
+  &--danger {
+    background-color: var(--orb-color-danger-bg, #f8d7da);
+    color: var(--orb-color-danger-text, #721c24);
+  }
+  
+  &--secondary {
+    background-color: var(--orb-color-secondary-bg, #e2e3e5);
+    color: var(--orb-color-secondary-text, #383d41);
+  }
+}
+
+// API key prefix display
+.orb-key-prefix {
+  font-family: var(--orb-font-mono, 'Fira Code', monospace);
+  font-size: 0.8rem;
+  background-color: var(--orb-color-code-bg, #f4f4f4);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  color: var(--orb-color-code-text, #333);
+}
+
+// Webhook badge styles
+.orb-webhook-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  
+  &__icon {
+    font-size: 0.625rem;
+  }
+  
+  &--enabled {
+    background-color: var(--orb-color-success-bg, #d4edda);
+    color: var(--orb-color-success-text, #155724);
+  }
+  
+  &--disabled {
+    background-color: var(--orb-color-secondary-bg, #e2e3e5);
+    color: var(--orb-color-secondary-text, #6c757d);
+  }
+}
+
+// Error state
+.orb-card__error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background-color: var(--orb-color-danger-bg, #f8d7da);
+  color: var(--orb-color-danger-text, #721c24);
+  border-top: 1px solid var(--orb-color-danger-border, #f5c6cb);
+  
+  &-icon {
+    color: var(--orb-color-danger, #dc3545);
+  }
+}

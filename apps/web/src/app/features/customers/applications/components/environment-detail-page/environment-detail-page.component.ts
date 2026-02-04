@@ -525,9 +525,58 @@ export class EnvironmentDetailPageComponent implements OnInit, OnDestroy {
     this.store.dispatch(EnvironmentConfigActions.clearErrors());
   }
 
+  // Tab configuration for rendering
+  readonly tabs: { id: EnvironmentDetailTab; label: string; icon: string }[] = [
+    { id: EnvironmentDetailTab.ApiKeys, label: 'API Keys', icon: 'key' },
+    { id: EnvironmentDetailTab.Origins, label: 'Origins', icon: 'globe' },
+    { id: EnvironmentDetailTab.RateLimits, label: 'Rate Limits', icon: 'tachometer-alt' },
+    { id: EnvironmentDetailTab.Webhooks, label: 'Webhooks', icon: 'bolt' },
+    { id: EnvironmentDetailTab.FeatureFlags, label: 'Feature Flags', icon: 'flag' },
+  ];
+
   // Tab Navigation
   setActiveTab(tab: EnvironmentDetailTab): void {
     this.activeTab = tab;
+  }
+
+  /**
+   * Handle keyboard navigation for tabs
+   * Supports arrow keys for navigation and Enter/Space for activation
+   * _Requirements: 6.1_
+   */
+  onTabKeydown(event: KeyboardEvent, currentTab: EnvironmentDetailTab): void {
+    const currentIndex = this.tabs.findIndex(t => t.id === currentTab);
+    let newIndex = currentIndex;
+
+    switch (event.key) {
+      case 'ArrowLeft':
+        event.preventDefault();
+        newIndex = currentIndex > 0 ? currentIndex - 1 : this.tabs.length - 1;
+        break;
+      case 'ArrowRight':
+        event.preventDefault();
+        newIndex = currentIndex < this.tabs.length - 1 ? currentIndex + 1 : 0;
+        break;
+      case 'Home':
+        event.preventDefault();
+        newIndex = 0;
+        break;
+      case 'End':
+        event.preventDefault();
+        newIndex = this.tabs.length - 1;
+        break;
+      default:
+        return;
+    }
+
+    if (newIndex !== currentIndex) {
+      this.setActiveTab(this.tabs[newIndex].id);
+      // Focus the new tab button
+      setTimeout(() => {
+        const tabButton = document.getElementById(`tab-${this.tabs[newIndex].id}`);
+        tabButton?.focus();
+      }, 0);
+    }
   }
 
   /**

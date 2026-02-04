@@ -170,12 +170,12 @@ description: HTML template file
       <!-- Email Step -->
       <div class="auth-flow__form-step"
            [ngClass]="{
-             'auth-flow__form-step--active': state.currentStep === authSteps.EMAIL,
-             'auth-flow__form-step--loading': skeletonStates.form && state.currentStep === authSteps.EMAIL
+             'auth-flow__form-step--active': state.currentStep === authSteps.Email,
+             'auth-flow__form-step--loading': skeletonStates.form && state.currentStep === authSteps.Email
            }">
         
         <!-- Skeleton Screen for Email Step -->
-        <div *ngIf="skeletonStates.form && state.currentStep === authSteps.EMAIL" 
+        <div *ngIf="skeletonStates.form && state.currentStep === authSteps.Email" 
              class="auth-flow__skeleton-overlay" 
              aria-hidden="true">
           <div class="auth-flow__skeleton auth-flow__skeleton--text medium"></div>
@@ -238,7 +238,7 @@ description: HTML template file
 
       <!-- Password Step -->
       <div class="auth-flow__form-step"
-           [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.PASSWORD || state.currentStep === authSteps.PASSWORD_VERIFY || state.currentStep === authSteps.SIGNIN}">
+           [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.Password || state.currentStep === authSteps.PasswordVerify || state.currentStep === authSteps.Signin}">
         <div class="auth-flow__verification-info" role="status" aria-live="polite">
           <p>Enter the password for your account to continue.</p>
         </div>
@@ -295,7 +295,7 @@ description: HTML template file
 
       <!-- Password Setup Step -->
       <div class="auth-flow__form-step"
-           [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.PASSWORD_SETUP}">
+           [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.PasswordSetup}">
         <div class="auth-flow__verification-info" role="status" aria-live="polite">
           <p>Create a strong password that meets all the requirements below.</p>
         </div>
@@ -401,7 +401,7 @@ description: HTML template file
 
       <!-- Email Confirm Step -->
       <div class="auth-flow__form-step"
-           [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.EMAIL_VERIFY}">
+           [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.EmailVerify}">
         <app-verification-code-input
           type="email"
           [destination]="(currentEmail$ | async) || ''"
@@ -418,7 +418,7 @@ description: HTML template file
 
       <!-- MFA Setup Step -->
       <div class="auth-flow__form-step"
-           [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.MFA_SETUP}">
+           [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.MfaSetup}">
         <div class="auth-flow__mfa-options" *ngIf="state.mfaSetupDetails" role="region" aria-labelledby="mfa-setup-title">
           <h2 id="mfa-setup-title" class="auth-flow__mfa-title">Set Up Two-Factor Authentication</h2>
           <div class="auth-flow__instructions" role="status" aria-live="polite">
@@ -487,7 +487,7 @@ description: HTML template file
 
       <!-- MFA Verification Step -->
       <div class="auth-flow__form-step"
-           [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.MFA_VERIFY}">
+           [ngClass]="{'auth-flow__form-step--active': state.currentStep === authSteps.MfaVerify}">
         <app-verification-code-input
           type="mfa"
           message="Please enter the 6-digit code from your authenticator app to complete sign in."

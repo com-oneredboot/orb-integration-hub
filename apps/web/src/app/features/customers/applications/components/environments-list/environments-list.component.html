@@ -1,0 +1,102 @@
+<!-- Environments List Component Template -->
+<!-- Displays environments for an application using DataGridComponent -->
+<!-- @see .kiro/specs/environments-list-and-detail/design.md -->
+<!-- _Requirements: 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7_ -->
+
+<div class="orb-card">
+  <!-- Header -->
+  <div class="orb-card__header">
+    <h2 class="orb-card__title">
+      <fa-icon icon="layer-group" class="orb-card__icon"></fa-icon>
+      Environments
+    </h2>
+    <div class="orb-card__header-actions">
+      <button class="orb-card-btn" (click)="onCreateEnvironment()">
+        <fa-icon icon="plus" class="orb-card-btn__icon"></fa-icon>
+        Create Environment
+      </button>
+    </div>
+  </div>
+
+  <!-- Data Grid -->
+  <div class="orb-card__content">
+    <app-data-grid
+      [columns]="columns"
+      [data]="(filteredEnvironmentRows$ | async) || []"
+      [pageState]="pageState"
+      [sortState]="sortState"
+      [filterState]="filterState"
+      [loading]="(isLoading$ | async) || false"
+      [showFilters]="true"
+      [showPagination]="true"
+      [showReset]="true"
+      [selectable]="false"
+      trackByField="config"
+      emptyMessage="No environments configured"
+      (pageChange)="onPageChange($event)"
+      (sortChange)="onSortChange($event)"
+      (filterChange)="onFilterChange($event)"
+      (resetGrid)="onResetGrid()"
+      (rowClick)="onRowClick($event)">
+    </app-data-grid>
+  </div>
+
+  <!-- Error State -->
+  <div class="orb-card__error" *ngIf="error$ | async as error">
+    <fa-icon icon="exclamation-triangle" class="orb-card__error-icon"></fa-icon>
+    <span>{{ error }}</span>
+  </div>
+</div>
+
+<!-- Custom Cell Templates -->
+
+<!-- Environment Cell -->
+<ng-template #environmentCell let-row>
+  <div class="orb-info">
+    <div class="orb-info__name">
+      <fa-icon 
+        [icon]="getEnvironmentIcon(row.environment)" 
+        class="orb-info__icon orb-info__icon--{{ getEnvironmentClass(row.environment) }}">
+      </fa-icon>
+      {{ row.environmentLabel }}
+    </div>
+  </div>
+</ng-template>
+
+<!-- Status Cell -->
+<ng-template #statusCell let-row>
+  <span 
+    class="orb-status-badge orb-status-badge--{{ getStatusBadgeType(row.status) }}"
+    [attr.aria-label]="'Status: ' + row.status">
+    {{ row.status }}
+  </span>
+</ng-template>
+
+<!-- API Key Cell -->
+<ng-template #apiKeyCell let-row>
+  <code class="orb-key-prefix" *ngIf="row.keyPrefix !== '—'">{{ row.keyPrefix }}...</code>
+  <span class="orb-info__id" *ngIf="row.keyPrefix === '—'">—</span>
+</ng-template>
+
+<!-- Origins Cell -->
+<ng-template #originsCell let-row>
+  <div class="orb-count">
+    <fa-icon icon="globe" class="orb-count__icon"></fa-icon>
+    {{ row.originsCount }}
+  </div>
+</ng-template>
+
+<!-- Webhook Cell -->
+<ng-template #webhookCell let-row>
+  <span 
+    class="orb-webhook-badge orb-webhook-badge--{{ getWebhookClass(row.webhookStatus) }}"
+    [attr.aria-label]="'Webhooks: ' + row.webhookStatus">
+    <fa-icon [icon]="row.webhookStatus === 'Enabled' ? 'check' : 'times'" class="orb-webhook-badge__icon"></fa-icon>
+    {{ row.webhookStatus }}
+  </span>
+</ng-template>
+
+<!-- Last Activity Cell -->
+<ng-template #lastActivityCell let-row>
+  <span class="orb-info__id">{{ row.lastActivity }}</span>
+</ng-template>
