@@ -2,7 +2,7 @@
  * Environments Effects
  *
  * Handles side effects for application environments list state management.
- * Loads both environment configs and API keys for the environments list.
+ * Loads API keys for the environments list.
  *
  * @see .kiro/specs/environments-list-and-detail/design.md
  * _Requirements: 2.2_
@@ -11,7 +11,7 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of } from 'rxjs';
-import { map, catchError, switchMap } from 'rxjs/operators';
+import { map, catchError, switchMap, tap } from 'rxjs/operators';
 
 import { EnvironmentsActions } from './environments.actions';
 import { ApiKeyService } from '../../../../../core/services/api-key.service';
@@ -31,19 +31,25 @@ export class EnvironmentsEffects {
   loadEnvironments$ = createEffect(() =>
     this.actions$.pipe(
       ofType(EnvironmentsActions.loadEnvironments, EnvironmentsActions.refreshEnvironments),
+      tap((action) => {
+        console.log('[EnvironmentsEffects] Action received:', action.type, 'applicationId:', action.applicationId);
+      }),
       switchMap((action) => {
-        console.debug('[EnvironmentsEffects] Loading environments for:', action.applicationId);
+        console.log('[EnvironmentsEffects] Calling apiKeyService.getApiKeysByApplication');
         
         return this.apiKeyService.getApiKeysByApplication(action.applicationId).pipe(
+          tap((connection) => {
+            console.log('[EnvironmentsEffects] API keys response:', connection);
+          }),
           map((connection) => {
-            console.debug('[EnvironmentsEffects] API keys loaded:', connection.items.length);
+            console.log('[EnvironmentsEffects] Dispatching loadEnvironmentsSuccess with', connection.items.length, 'items');
             return EnvironmentsActions.loadEnvironmentsSuccess({
               configs: [], // Configs are optional, load separately if needed
               apiKeys: connection.items,
             });
           }),
           catchError((error) => {
-            console.error('[EnvironmentsEffects] Failed to load environments:', error);
+            console.error('[EnvironmentsEffects] Error:', error);
             return of(
               EnvironmentsActions.loadEnvironmentsFailure({
                 error: error.message || 'Failed to load environments',

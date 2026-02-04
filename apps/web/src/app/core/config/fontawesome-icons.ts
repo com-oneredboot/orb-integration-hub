@@ -44,16 +44,24 @@ import {
   faTools,
   faGlobe,
   
+  // Environment Icons
+  faLayerGroup,
+  faLaptopCode,
+  faCodeBranch,
+  faFlask,
+  
   // Charts & Analytics
   faChartBar,
   
   // Status & Feedback
+  faCheck,
   faCheckCircle,
   faExclamationCircle,
   faExclamationTriangle,
   faInfoCircle,
   faSpinner,
   faQuestionCircle,
+  faTimes,
   
   // Navigation & Movement
   faChevronLeft,
@@ -72,7 +80,14 @@ import {
   
   // Communication
   faEnvelope,
-  faMobileAlt
+  faMobileAlt,
+  
+  // Data Grid
+  faInbox,
+  faFilter,
+  faRotateLeft,
+  faAnglesLeft,
+  faAnglesRight
 } from '@fortawesome/free-solid-svg-icons';
 
 /**
@@ -119,16 +134,24 @@ export function configureFontAwesome(library: FaIconLibrary): void {
     faTools,
     faGlobe,
     
+    // Environment Icons
+    faLayerGroup,
+    faLaptopCode,
+    faCodeBranch,
+    faFlask,
+    
     // Charts & Analytics
     faChartBar,
     
     // Status & Feedback
+    faCheck,
     faCheckCircle,
     faExclamationCircle,
     faExclamationTriangle,
     faInfoCircle,
     faSpinner,
     faQuestionCircle,
+    faTimes,
     
     // Navigation & Movement
     faChevronLeft,
@@ -147,7 +170,14 @@ export function configureFontAwesome(library: FaIconLibrary): void {
     
     // Communication
     faEnvelope,
-    faMobileAlt
+    faMobileAlt,
+    
+    // Data Grid
+    faInbox,
+    faFilter,
+    faRotateLeft,
+    faAnglesLeft,
+    faAnglesRight
   );
 }
 
