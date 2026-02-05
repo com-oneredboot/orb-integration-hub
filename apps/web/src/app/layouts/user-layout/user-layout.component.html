@@ -5,9 +5,9 @@ date: 2025-03-07
 description: HTML template file for user pages
 -->
 
-<div class="header-wrapper">
-  <header class="header">
-    <div class="header-content">
+<div class="user-layout-wrapper">
+  <div class="user-layout-container">
+    <header class="header">
       <nav class="nav-menu">
         <a routerLink="/platform" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">Platform</a>
         <ng-container *ngIf="isAuthenticated$ | async">
@@ -19,18 +19,16 @@ description: HTML template file for user pages
           <a routerLink="/authenticate" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">Sign In</a>
         </ng-container>
       </nav>
-    </div>
-  </header>
-</div>
+    </header>
 
-<div class="user-container">
-  <main class="main-content">
-    <router-outlet></router-outlet>
-  </main>
+    <main class="main-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
 
   <!-- Quick Actions Side Nav - Only for authenticated CUSTOMER users -->
   <app-dashboard-side-nav
     *ngIf="(isAuthenticated$ | async) && (isCustomerUser$ | async)"
     (itemClicked)="onSideNavItemClicked($event)">
   </app-dashboard-side-nav>
-</div> 
+</div>
