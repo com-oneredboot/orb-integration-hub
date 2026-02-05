@@ -1,0 +1,110 @@
+/**
+ * Hero Split Component Styles
+ * 
+ * Exact dimensions and styling from platform page hero section.
+ * Uses global CSS custom properties for consistency.
+ */
+
+.orb-hero-split {
+  background: var(--color-background);
+  padding: var(--spacing-2xl) 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.orb-hero-split__container {
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+}
+
+.orb-hero-split__flex {
+  display: flex;
+  align-items: center;
+  gap: 50px;
+  justify-content: center;
+
+  @media (max-width: 1024px) {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+.orb-hero-split__logo {
+  flex: 0 0 auto;
+  width: 500px;
+  max-width: 500px;
+  display: flex;
+  justify-content: flex-end;
+  
+  img {
+    width: 400px;
+    height: 400px;
+    object-fit: contain;
+  }
+}
+
+.orb-hero-split__content {
+  flex: 0 0 auto;
+  width: 500px;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  align-items: flex-start;
+
+  @media (max-width: 1024px) {
+    align-items: center;
+    text-align: center;
+  }
+}
+
+.orb-hero-split__title {
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-neutral-800);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.orb-hero-split__subtitle {
+  font-size: var(--font-size-lg);
+  color: var(--color-neutral-600);
+  margin: 0;
+  line-height: var(--line-height-relaxed);
+  text-align: left;
+
+  @media (max-width: 1024px) {
+    text-align: center;
+  }
+}
+
+.orb-hero-split__custom-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  width: 100%;
+
+  // Only show if content exists
+  &:empty {
+    display: none;
+  }
+}
+
+.orb-hero-split__actions {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+  margin-top: var(--spacing-sm);
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  // Only show if content exists
+  &:empty {
+    display: none;
+  }
+}

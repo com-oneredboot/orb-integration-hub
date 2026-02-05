@@ -16,19 +16,26 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Store } from '@ngrx/store';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, combineLatest } from 'rxjs';
 import { takeUntil, filter, take } from 'rxjs/operators';
 
 import { IApplications } from '../../../../../core/models/ApplicationsModel';
+import { IOrganizations } from '../../../../../core/models/OrganizationsModel';
 import { IApplicationEnvironmentConfig } from '../../../../../core/models/ApplicationEnvironmentConfigModel';
 import { IApplicationApiKeys } from '../../../../../core/models/ApplicationApiKeysModel';
 import { Environment } from '../../../../../core/enums/EnvironmentEnum';
 import { ApplicationApiKeyStatus } from '../../../../../core/enums/ApplicationApiKeyStatusEnum';
 import { StatusBadgeComponent } from '../../../../../shared/components/ui/status-badge.component';
+import { BreadcrumbComponent, BreadcrumbItem } from '../../../../../shared/components';
+import { TabNavigationComponent } from '../../../../../shared/components/tab-navigation/tab-navigation.component';
+import { TabConfig } from '../../../../../shared/models/tab-config.model';
+import { HeroSplitComponent } from '../../../../../shared/components/hero-split/hero-split.component';
 
 // Store imports
 import { ApplicationsActions } from '../../store/applications.actions';
 import * as fromApplications from '../../store/applications.selectors';
+import * as fromOrganizations from '../../../organizations/store/organizations.selectors';
+import { OrganizationsActions } from '../../../organizations/store/organizations.actions';
 import { EnvironmentConfigActions } from '../../store/environment-config/environment-config.actions';
 import {
   selectSelectedConfig,
@@ -61,6 +68,9 @@ export enum EnvironmentDetailTab {
     FormsModule,
     FontAwesomeModule,
     StatusBadgeComponent,
+    BreadcrumbComponent,
+    TabNavigationComponent,
+    HeroSplitComponent,
   ],
   templateUrl: './environment-detail-page.component.html',
   styleUrls: ['./environment-detail-page.component.scss'],
@@ -68,9 +78,15 @@ export enum EnvironmentDetailTab {
 export class EnvironmentDetailPageComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
-  // Tab state
+  // Tab configuration for page-layout-standardization
+  tabs: TabConfig[] = [
+    { id: 'overview', label: 'Overview', icon: 'fas fa-info-circle' }
+  ];
+  activeTab = 'overview';
+
+  // Tab state (legacy - for existing tab implementation)
   readonly EnvironmentDetailTab = EnvironmentDetailTab;
-  activeTab: EnvironmentDetailTab = EnvironmentDetailTab.ApiKeys;
+  activeTabLegacy: EnvironmentDetailTab = EnvironmentDetailTab.ApiKeys;
 
   // Route parameters
   applicationId: string | null = null;
@@ -90,6 +106,9 @@ export class EnvironmentDetailPageComponent implements OnInit, OnDestroy {
   isRevokingKey$: Observable<boolean>;
   generatedKey$: Observable<GeneratedKeyResult | null>;
 
+  // Organizations selector for breadcrumb
+  organizations$: Observable<IOrganizations[]>;
+
   // Local state
   application: IApplications | null = null;
   selectedConfig: IApplicationEnvironmentConfig | null = null;
@@ -98,6 +117,9 @@ export class EnvironmentDetailPageComponent implements OnInit, OnDestroy {
   generatedKeyDisplay: GeneratedKeyResult | null = null;
   copySuccess = false;
   isAutoCreating = false;
+
+  // Organization for breadcrumb context
+  private organization: IOrganizations | null = null;
 
   // Form state
   newOrigin = '';
@@ -137,6 +159,28 @@ export class EnvironmentDetailPageComponent implements OnInit, OnDestroy {
     PREVIEW: 'Preview',
   };
 
+  /**
+   * Breadcrumb items for navigation
+   * Shows: Organizations > "Organization Name" > Applications > "Application Name" > Environments > "Environment Name"
+   * _Requirements: 5.1_
+   */
+  get breadcrumbItems(): BreadcrumbItem[] {
+    return [
+      { label: 'Organizations', route: '/customers/organizations' },
+      {
+        label: this.organization?.name || 'Loading...',
+        route: this.organization ? `/customers/organizations/${this.organization.organizationId}` : null
+      },
+      { label: 'Applications', route: '/customers/applications' },
+      {
+        label: this.application?.name || 'Loading...',
+        route: this.application ? `/customers/applications/${this.application.applicationId}` : null
+      },
+      { label: 'Environments', route: null },
+      { label: this.environment ? this.getEnvironmentLabel(this.environment) : 'Loading...', route: null }
+    ];
+  }
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -153,9 +197,13 @@ export class EnvironmentDetailPageComponent implements OnInit, OnDestroy {
     this.isGeneratingKey$ = this.store.select(fromEnvironments.selectIsGenerating);
     this.isRevokingKey$ = this.store.select(fromEnvironments.selectIsRevoking);
     this.generatedKey$ = this.store.select(fromEnvironments.selectGeneratedKey);
+    this.organizations$ = this.store.select(fromOrganizations.selectOrganizations);
   }
 
   ngOnInit(): void {
+    // Ensure organizations are loaded for breadcrumb
+    this.store.dispatch(OrganizationsActions.loadOrganizations());
+
     // Extract route parameters
     this.route.paramMap.pipe(
       takeUntil(this.destroy$)
@@ -176,6 +224,15 @@ export class EnvironmentDetailPageComponent implements OnInit, OnDestroy {
       this.application = app;
       if (app) {
         this.validateEnvironment();
+      }
+    });
+
+    // Subscribe to application and organizations to update organization for breadcrumb
+    combineLatest([this.application$, this.organizations$]).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(([app, organizations]) => {
+      if (app && organizations.length > 0) {
+        this.organization = organizations.find(org => org.organizationId === app.organizationId) || null;
       }
     });
 
@@ -526,7 +583,7 @@ export class EnvironmentDetailPageComponent implements OnInit, OnDestroy {
   }
 
   // Tab configuration for rendering
-  readonly tabs: { id: EnvironmentDetailTab; label: string; icon: string }[] = [
+  readonly legacyTabs: { id: EnvironmentDetailTab; label: string; icon: string }[] = [
     { id: EnvironmentDetailTab.ApiKeys, label: 'API Keys', icon: 'key' },
     { id: EnvironmentDetailTab.Origins, label: 'Origins', icon: 'globe' },
     { id: EnvironmentDetailTab.RateLimits, label: 'Rate Limits', icon: 'tachometer-alt' },
@@ -536,7 +593,15 @@ export class EnvironmentDetailPageComponent implements OnInit, OnDestroy {
 
   // Tab Navigation
   setActiveTab(tab: EnvironmentDetailTab): void {
-    this.activeTab = tab;
+    this.activeTabLegacy = tab;
+  }
+
+  /**
+   * Handle tab change from TabNavigationComponent
+   * Empty for single-tab page (Overview only)
+   */
+  onTabChange(tabId: string): void {
+    this.activeTab = tabId;
   }
 
   /**
@@ -545,17 +610,17 @@ export class EnvironmentDetailPageComponent implements OnInit, OnDestroy {
    * _Requirements: 6.1_
    */
   onTabKeydown(event: KeyboardEvent, currentTab: EnvironmentDetailTab): void {
-    const currentIndex = this.tabs.findIndex(t => t.id === currentTab);
+    const currentIndex = this.legacyTabs.findIndex(t => t.id === currentTab);
     let newIndex = currentIndex;
 
     switch (event.key) {
       case 'ArrowLeft':
         event.preventDefault();
-        newIndex = currentIndex > 0 ? currentIndex - 1 : this.tabs.length - 1;
+        newIndex = currentIndex > 0 ? currentIndex - 1 : this.legacyTabs.length - 1;
         break;
       case 'ArrowRight':
         event.preventDefault();
-        newIndex = currentIndex < this.tabs.length - 1 ? currentIndex + 1 : 0;
+        newIndex = currentIndex < this.legacyTabs.length - 1 ? currentIndex + 1 : 0;
         break;
       case 'Home':
         event.preventDefault();
@@ -563,17 +628,17 @@ export class EnvironmentDetailPageComponent implements OnInit, OnDestroy {
         break;
       case 'End':
         event.preventDefault();
-        newIndex = this.tabs.length - 1;
+        newIndex = this.legacyTabs.length - 1;
         break;
       default:
         return;
     }
 
     if (newIndex !== currentIndex) {
-      this.setActiveTab(this.tabs[newIndex].id);
+      this.setActiveTab(this.legacyTabs[newIndex].id);
       // Focus the new tab button
       setTimeout(() => {
-        const tabButton = document.getElementById(`tab-${this.tabs[newIndex].id}`);
+        const tabButton = document.getElementById(`tab-${this.legacyTabs[newIndex].id}`);
         tabButton?.focus();
       }, 0);
     }

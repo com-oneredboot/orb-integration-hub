@@ -6,35 +6,26 @@ description: HTML template file for applications management
 -->
 
 <div class="applications-container">
-  <div class="orb-page-header">
-    <div class="orb-page-header__content">
-      <div class="orb-page-header__flex-container">
-        <div class="orb-page-header__logo-section">
-          <img src="assets/orb-logo.jpg" alt="Orb Integration Hub Logo" class="orb-page-header__logo">
-        </div>
-        <div class="orb-page-header__text-section">
-          <div class="orb-page-header__greeting">
-            <div class="orb-page-header__icon-title">
-              <img src="../../../../../assets/hardhat.jpg" alt="Engineering" class="orb-page-header__icon">
-              <h1 class="orb-page-header__title">Applications Management</h1>
-            </div>
-            <p class="orb-page-header__subtitle">
-              Applications are the core of your integration platform. Each application has its own API keys, environments, and configuration.
-            </p>
-            <p class="orb-page-header__hint">
-              Create applications to connect your services. Configure environments for development, staging, and production workflows.
-            </p>
-            <div class="orb-page-header__status">
-              <span class="orb-header-badge orb-header-badge--active">
-                <fa-icon icon="rocket" class="orb-header-badge__icon"></fa-icon>
-                Applications Active
-              </span>
-            </div>
-          </div>
-        </div>
+  <!-- Page Header using HeroSplitComponent -->
+  <app-hero-split
+    [logoSrc]="'assets/orb-logo.jpg'"
+    [logoAlt]="'Orb Integration Hub Logo'"
+    [title]="'Applications Management'"
+    [subtitle]="'Applications are the core of your integration platform. Each application has its own API keys, environments, and configuration.'">
+    
+    <!-- Custom content -->
+    <div class="applications-header-content">
+      <p class="applications-header-hint">
+        Create applications to connect your services. Configure environments for development, staging, and production workflows.
+      </p>
+      <div class="applications-header-status">
+        <span class="orb-header-badge orb-header-badge--active">
+          <fa-icon icon="rocket" class="orb-header-badge__icon"></fa-icon>
+          Applications Active
+        </span>
       </div>
     </div>
-  </div>
+  </app-hero-split>
 
   <!-- Applications Content -->
   <div class="applications-content">

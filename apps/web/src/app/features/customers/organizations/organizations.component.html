@@ -6,39 +6,42 @@ description: HTML template file for organizations management
 -->
 
 <div class="organizations-container">
-  <div class="orb-page-header">
-    <div class="orb-page-header__content">
-      <div class="orb-page-header__flex-container">
-        <div class="orb-page-header__logo-section">
-          <img src="assets/orb-logo.jpg" alt="Orb Integration Hub Logo" class="orb-page-header__logo">
-        </div>
-        <div class="orb-page-header__text-section">
-          <div class="orb-page-header__greeting">
-            <div class="orb-page-header__icon-title">
-              <img src="../../../../../assets/hardhat.jpg" alt="Engineering" class="orb-page-header__icon">
-              <h1 class="orb-page-header__title">Organizations Management</h1>
-            </div>
-            <p class="orb-page-header__subtitle">
-              Organizations let you manage teams, control access with roles, and organize your applications in one place.
-            </p>
-            <p class="orb-page-header__hint">
-              Create organizations to collaborate with team members. Assign Owner, Administrator, or Viewer roles to control what each member can do.
-            </p>
-            <div class="orb-page-header__status">
-              <span class="orb-header-badge orb-header-badge--active">
-                <fa-icon icon="building" class="orb-header-badge__icon"></fa-icon>
-                Organizations Active
-              </span>
-            </div>
-          </div>
-        </div>
+  <!-- Page Header using HeroSplitComponent -->
+  <app-hero-split
+    [logoSrc]="'assets/orb-logo.jpg'"
+    [logoAlt]="'Orb Integration Hub Logo'"
+    [title]="'Organizations Management'"
+    [subtitle]="'Organizations let you manage teams, control access with roles, and organize your applications in one place.'">
+    
+    <!-- Custom content -->
+    <div class="organizations-header-content">
+      <p class="organizations-header-hint">
+        Create organizations to collaborate with team members. Assign Owner, Administrator, or Viewer roles to control what each member can do.
+      </p>
+      <div class="organizations-header-status">
+        <span class="orb-header-badge orb-header-badge--active">
+          <fa-icon icon="building" class="orb-header-badge__icon"></fa-icon>
+          Organizations Active
+        </span>
       </div>
     </div>
-  </div>
+  </app-hero-split>
 
   <!-- Organizations Content -->
   <div class="organizations-content">
     <div class="organizations-page">
+      <!-- Breadcrumb Navigation (moved from organizations-list) -->
+      <div class="orb-breadcrumb-container">
+        <app-breadcrumb [items]="breadcrumbItems"></app-breadcrumb>
+      </div>
+
+      <!-- Tab Navigation -->
+      <app-tab-navigation
+        [tabs]="tabs"
+        [activeTabId]="activeTab"
+        (tabChange)="onTabChange($event)">
+      </app-tab-navigation>
+
       <!-- Main Content -->
       <div class="organizations-page__content">
         <!-- Organizations List (full width - detail is now a separate route) -->

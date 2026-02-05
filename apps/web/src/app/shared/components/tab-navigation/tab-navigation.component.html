@@ -1,0 +1,24 @@
+<!-- file: apps/web/src/app/shared/components/tab-navigation/tab-navigation.component.html -->
+<!-- author: Kiro AI Assistant -->
+<!-- date: 2025-01-27 -->
+<!-- description: Template for tab navigation component -->
+
+<nav class="orb-tabs">
+  <div class="orb-tabs-container">
+    @for (tab of tabs; track tab.id) {
+      <button
+        class="orb-tab"
+        [class.orb-tab-active]="isActive(tab.id)"
+        (click)="selectTab(tab.id)"
+        type="button">
+        @if (tab.icon) {
+          <i [class]="tab.icon" class="orb-tab-icon"></i>
+        }
+        <span class="orb-tab-label">{{ tab.label }}</span>
+        @if (tab.badge !== undefined && tab.badge !== null) {
+          <span class="orb-tab-badge">{{ tab.badge }}</span>
+        }
+      </button>
+    }
+  </div>
+</nav>

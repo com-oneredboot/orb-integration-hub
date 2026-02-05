@@ -15,6 +15,7 @@ import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil, map, take } from 'rxjs/operators';
 import { StatusBadgeComponent } from '../../../../../shared/components/ui/status-badge.component';
+import { BreadcrumbItem } from '../../../../../shared/components';
 import {
   DataGridComponent,
   ColumnDefinition,
@@ -85,6 +86,16 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
   
   // Create state
   isCreatingDraft = false;
+  
+  /**
+   * Breadcrumb items for navigation
+   * Shows: Organizations (current page)
+   */
+  get breadcrumbItems(): BreadcrumbItem[] {
+    return [
+      { label: 'Organizations', route: null }
+    ];
+  }
   
   private destroy$ = new Subject<void>();
 

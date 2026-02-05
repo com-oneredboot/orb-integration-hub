@@ -18,6 +18,7 @@ import { ProgressStepsComponent, ProgressStep } from '../../../../shared/compone
 import { VerificationCodeInputComponent } from '../../../../shared/components/verification-code-input/verification-code-input.component';
 import { DebugPanelComponent, DebugContext } from '../../../../shared/components/debug/debug-panel.component';
 import { ProfileSetupStep } from '../../../../core/enums/ProfileSetupStepEnum';
+import { HeroSplitComponent } from '../../../../shared/components/hero-split/hero-split.component';
 
 // Re-export the generated enum for external use
 export { ProfileSetupStep } from '../../../../core/enums/ProfileSetupStepEnum';
@@ -54,7 +55,8 @@ export interface PhoneVerificationState {
     StatusBadgeComponent,
     ProgressStepsComponent,
     VerificationCodeInputComponent,
-    DebugPanelComponent
+    DebugPanelComponent,
+    HeroSplitComponent,
   ]
 })
 export class ProfileComponent implements OnInit, OnDestroy {
@@ -842,6 +844,24 @@ export class ProfileComponent implements OnInit, OnDestroy {
    */
   onFormSuccess(): void {
     this.isEditMode = false;
+  }
+
+  /**
+   * Get the profile subtitle based on current state
+   */
+  getProfileSubtitle(): string {
+    if (this.setupState.isFlowMode) {
+      return 'Complete the steps below to finish your profile';
+    }
+    
+    // Get current user synchronously from the snapshot
+    const user = this.currentUserSnapshot;
+    
+    if (user && this.isAccountComplete(user)) {
+      return 'Your profile is complete and ready for engineering work';
+    }
+    
+    return 'Complete your profile setup to activate your account';
   }
 
   /**

@@ -6,43 +6,24 @@ description: HTML template file - Profile page with step-based setup flow
 -->
 
 <div class="profile-container">
-  <div class="orb-page-header">
-    <div class="orb-page-header__content">
-      <div class="orb-page-header__flex-container">
-        <div class="orb-page-header__logo-section">
-          <img src="assets/orb-logo.jpg" alt="Orb Integration Hub Logo" class="orb-page-header__logo">
-        </div>
-        <div class="orb-page-header__text-section" *ngIf="currentUser$ | async as user">
-          <div class="orb-page-header__greeting">
-            <div class="orb-page-header__icon-title">
-              <img src="../../../../../assets/hardhat.jpg" alt="Engineering" class="orb-page-header__icon">
-              <h1 class="orb-page-header__title">
-                {{ setupState.isFlowMode ? 'Profile Setup' : 'Profile Settings' }}
-              </h1>
-            </div>
-            <p class="orb-page-header__subtitle" *ngIf="isAccountComplete(user) && !setupState.isFlowMode; else pendingMessage">
-              Your profile is complete and ready for engineering work
-            </p>
-            <ng-template #pendingMessage>
-              <p class="orb-page-header__subtitle orb-page-header__subtitle--warning">
-                {{ setupState.isFlowMode ? 'Complete the steps below to finish your profile' : 'Complete your profile setup to activate your account' }}
-              </p>
-            </ng-template>
-            <p class="orb-page-header__hint" *ngIf="!setupState.isFlowMode">
-              Review your personal information below and click the edit button to make changes. Ensure all verification steps are completed for full account access.
-            </p>
-            <div class="orb-page-header__status" *ngIf="!setupState.isFlowMode">
-              <span class="orb-header-badge" 
-                    [ngClass]="'orb-header-badge--' + getStatusClass(user.status)">
-                <fa-icon [icon]="isAccountComplete(user) ? 'check-circle' : 'exclamation-triangle'" class="orb-header-badge__icon"></fa-icon>
-                {{ isAccountComplete(user) ? 'Account Complete' : 'Profile Incomplete' }}
-              </span>
-            </div>
-          </div>
-        </div>
+  <!-- Page Header using HeroSplitComponent -->
+  <app-hero-split
+    [logoSrc]="'assets/orb-logo.jpg'"
+    [logoAlt]="'Orb Integration Hub Logo'"
+    [title]="setupState.isFlowMode ? 'Profile Setup' : 'Profile Settings'"
+    [subtitle]="getProfileSubtitle()">
+    
+    <!-- Custom content -->
+    <div class="profile-header-content" *ngIf="(currentUser$ | async) as user">
+      <div class="orb-page-header__status" *ngIf="!setupState.isFlowMode">
+        <span class="orb-header-badge" 
+              [ngClass]="'orb-header-badge--' + getStatusClass(user.status)">
+          <fa-icon [icon]="isAccountComplete(user) ? 'check-circle' : 'exclamation-triangle'" class="orb-header-badge__icon"></fa-icon>
+          {{ isAccountComplete(user) ? 'Account Complete' : 'Profile Incomplete' }}
+        </span>
       </div>
     </div>
-  </div>
+  </app-hero-split>
 
   <!-- Profile Overview Card - Only show when NOT in flow mode -->
   <div class="profile-overview-section" *ngIf="!setupState.isFlowMode && (currentUser$ | async) as user">

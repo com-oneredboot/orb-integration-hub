@@ -18,6 +18,10 @@ import { OrganizationsListComponent } from './components/organizations-list/orga
 import * as fromUser from '../../user/store/user.selectors';
 import { DebugPanelComponent, DebugContext } from '../../../shared/components/debug/debug-panel.component';
 import { DebugLogEntry } from '../../../core/services/debug-log.service';
+import { TabNavigationComponent } from '../../../shared/components/tab-navigation/tab-navigation.component';
+import { TabConfig } from '../../../shared/models/tab-config.model';
+import { BreadcrumbComponent, BreadcrumbItem } from '../../../shared/components';
+import { HeroSplitComponent } from '../../../shared/components/hero-split/hero-split.component';
 
 @Component({
   selector: 'app-organizations',
@@ -27,7 +31,10 @@ import { DebugLogEntry } from '../../../core/services/debug-log.service';
     RouterModule,
     FontAwesomeModule,
     OrganizationsListComponent,
-    DebugPanelComponent
+    DebugPanelComponent,
+    TabNavigationComponent,
+    BreadcrumbComponent,
+    HeroSplitComponent
   ],
   templateUrl: './organizations.component.html',
   styleUrls: ['./organizations.component.scss']
@@ -38,6 +45,21 @@ export class OrganizationsComponent implements OnInit {
   
   // Empty logs observable for debug panel
   debugLogs$: Observable<DebugLogEntry[]> = of([]);
+
+  // Tab configuration
+  tabs: TabConfig[] = [
+    { id: 'overview', label: 'Overview', icon: 'fas fa-list' }
+  ];
+
+  // Active tab state
+  activeTab = 'overview';
+
+  // Breadcrumb items
+  get breadcrumbItems(): BreadcrumbItem[] {
+    return [
+      { label: 'Organizations', route: null }
+    ];
+  }
 
   // Debug context getter for shared DebugPanelComponent
   get debugContext(): DebugContext {
@@ -66,5 +88,10 @@ export class OrganizationsComponent implements OnInit {
 
   onOrganizationSelected(organization: Organizations): void {
     this.selectedOrganization = organization;
+  }
+
+  // Tab change handler (empty for single tab)
+  onTabChange(tabId: string): void {
+    this.activeTab = tabId;
   }
 }

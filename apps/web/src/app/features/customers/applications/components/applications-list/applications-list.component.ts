@@ -18,6 +18,9 @@ import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { StatusBadgeComponent } from '../../../../../shared/components/ui/status-badge.component';
+import { BreadcrumbComponent, BreadcrumbItem } from '../../../../../shared/components';
+import { TabNavigationComponent } from '../../../../../shared/components/tab-navigation/tab-navigation.component';
+import { TabConfig } from '../../../../../shared/models/tab-config.model';
 
 import { IApplications } from '../../../../../core/models/ApplicationsModel';
 import { IOrganizations } from '../../../../../core/models/OrganizationsModel';
@@ -33,7 +36,9 @@ import { ApplicationTableRow } from '../../store/applications.state';
     CommonModule,
     FormsModule,
     FontAwesomeModule,
-    StatusBadgeComponent
+    StatusBadgeComponent,
+    BreadcrumbComponent,
+    TabNavigationComponent
   ],
   templateUrl: './applications-list.component.html',
   styleUrls: ['./applications-list.component.scss']
@@ -41,6 +46,12 @@ import { ApplicationTableRow } from '../../store/applications.state';
 export class ApplicationsListComponent implements OnInit, OnDestroy {
   @Output() applicationSelected = new EventEmitter<IApplications>();
   @Input() selectedApplication: IApplications | null = null;
+
+  // Tab configuration for page-layout-standardization
+  tabs: TabConfig[] = [
+    { id: 'overview', label: 'Overview', icon: 'fas fa-list' }
+  ];
+  activeTab = 'overview';
 
   // Store selectors - ALL data comes from store
   applicationRows$: Observable<ApplicationTableRow[]>;
@@ -56,6 +67,16 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
   searchTerm = '';
   organizationFilter = '';
   statusFilter = '';
+
+  /**
+   * Breadcrumb items for navigation
+   * Shows: Applications (current page)
+   */
+  get breadcrumbItems(): BreadcrumbItem[] {
+    return [
+      { label: 'Applications', route: null }
+    ];
+  }
 
   private destroy$ = new Subject<void>();
 
@@ -139,5 +160,13 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
     // The detail page will handle creating the draft
     const tempId = 'new-' + Date.now();
     this.router.navigate(['/customers/applications', tempId]);
+  }
+
+  /**
+   * Handle tab change from TabNavigationComponent
+   * Empty for single-tab page (Overview only)
+   */
+  onTabChange(tabId: string): void {
+    this.activeTab = tabId;
   }
 }

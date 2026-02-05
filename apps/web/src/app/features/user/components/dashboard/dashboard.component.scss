@@ -8,13 +8,34 @@
 @use 'sass:color';
 
 .dashboard-container {
-  max-width: v.$page-max-width;
+  width: 100%;
   margin: 0 auto;
   padding: 0;
 
+  // Custom content within HeroSplitComponent
+  .dashboard-header-content {
+    display: flex;
+    flex-direction: column;
+    gap: v.$spacing-md;
+    width: 100%;
+  }
+
+  .dashboard-header-hint {
+    font-size: v.$font-size-base;
+    color: v.$text-secondary;
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .dashboard-header-status {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-sm;
+  }
+
   .dashboard-content {
     width: 100%;
-    max-width: v.$page-max-width;
+    max-width: var(--page-max-width);
     margin: 0 auto;
     padding: 0 v.$spacing-lg;
   }

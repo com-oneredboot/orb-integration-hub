@@ -189,6 +189,100 @@ export class MyComponent {
 | storeState | object | No | Current store/state values |
 | additionalSections | DebugSection[] | No | Custom debug sections |
 
+### Hero Split Component
+
+Use `HeroSplitComponent` for displaying a split hero section with logo on the left and content on the right. Located at `apps/web/src/app/shared/components/hero-split/hero-split.component.ts`.
+
+**Gold Standard Dimensions** (from platform page - used on ALL pages):
+- Container: `max-width: 1400px`, centered with auto margins
+- Left (Logo): `flex: 1`, `max-width: 600px`
+- Right (Content): `flex: 1`, `max-width: 600px`
+- Gap: `var(--spacing-24)` = `96px` between logo and content
+- Padding: `var(--spacing-2xl)` = `48px` top and bottom
+- Title: `var(--font-size-4xl)` = `36px`
+
+**When to use:**
+- Landing pages with logo + content layout
+- Marketing pages
+- Feature introduction pages
+- Dashboard pages
+- Any page needing a hero section
+
+**Basic Usage:**
+
+```typescript
+import { HeroSplitComponent } from '../../shared/components';
+
+@Component({
+  imports: [HeroSplitComponent],
+  // ...
+})
+export class MyPageComponent {
+  // Component logic
+}
+```
+
+**Template:**
+
+```html
+<app-hero-split
+  [logoSrc]="'assets/orb-logo.jpg'"
+  [logoAlt]="'Orb Integration Hub Logo'"
+  [title]="'Orb Integration Hub'"
+  [subtitle]="'A comprehensive solution for payment processing...'">
+</app-hero-split>
+```
+
+**With Custom Buttons:**
+
+```html
+<app-hero-split
+  [logoSrc]="'assets/orb-logo.jpg'"
+  [logoAlt]="'Orb Integration Hub Logo'"
+  [title]="'Orb Integration Hub'"
+  [subtitle]="'A comprehensive solution...'"
+  [showButtons]="true">
+  <!-- Custom button content via ng-content -->
+  <div class="cta-buttons">
+    <button class="primary-button" (click)="onAction()">
+      <fa-icon [icon]="faRocket"></fa-icon>
+      Get Started
+    </button>
+    <button class="secondary-button">
+      <fa-icon [icon]="faBook"></fa-icon>
+      Documentation
+    </button>
+  </div>
+</app-hero-split>
+```
+
+**Inputs:**
+
+| Input | Type | Default | Description |
+|-------|------|---------|-------------|
+| `logoSrc` | string | `'assets/orb-logo.jpg'` | Path to the logo image |
+| `logoAlt` | string | `'Orb Integration Hub Logo'` | Alt text for the logo image |
+| `title` | string | `'Orb Integration Hub'` | Main title text |
+| `subtitle` | string | `''` | Subtitle/description text |
+| `showButtons` | boolean | `false` | Whether to show the ng-content slot for custom buttons |
+
+**Responsive Behavior:**
+- Desktop (> 1024px): Logo and content side-by-side
+- Tablet/Mobile (≤ 1024px): Stacks vertically, centered text
+- Mobile (≤ 768px): Buttons stack vertically, full width
+
+**CSS Classes:**
+- `.orb-hero-split` - Main container
+- `.orb-hero-split__container` - Inner container with max-width
+- `.orb-hero-split__flex` - Flex container for logo and content
+- `.orb-hero-split__logo` - Logo section
+- `.orb-hero-split__content` - Content section
+- `.orb-hero-split__title` - Title text
+- `.orb-hero-split__subtitle` - Subtitle text
+- `.orb-hero-split__actions` - Actions/buttons slot
+
+**Important:** All pages use the same gold standard dimensions. Do not create size variants or custom dimensions.
+
 ## Component Patterns
 
 ### Create-on-Click Pattern (Draft Records)

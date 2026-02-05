@@ -531,16 +531,16 @@ describe('ApplicationDetailPageComponent', () => {
         expect(component.activeTab).toBe(ApplicationDetailTab.Overview);
       }));
 
-      it('should switch to Environments tab when setActiveTab is called', fakeAsync(() => {
+      it('should switch to Environments tab when onTabChange is called', fakeAsync(() => {
         store.overrideSelector(fromApplications.selectSelectedApplication, mockApplication);
         store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
         store.refreshState();
         fixture.detectChanges();
         tick();
 
-        component.setActiveTab(ApplicationDetailTab.Environments);
+        component.onTabChange('environments');
 
-        expect(component.activeTab).toBe(ApplicationDetailTab.Environments);
+        expect(component.activeTab).toBe('environments');
       }));
     });
 
@@ -589,7 +589,7 @@ describe('ApplicationDetailPageComponent', () => {
         tick();
 
         // Switch to Environments tab
-        component.setActiveTab(ApplicationDetailTab.Environments);
+        component.onTabChange('environments');
         fixture.detectChanges();
 
         expect(component.environmentKeyRows.length).toBe(0);
@@ -614,7 +614,7 @@ describe('ApplicationDetailPageComponent', () => {
         fixture.detectChanges();
         tick();
 
-        component.setActiveTab(ApplicationDetailTab.Environments);
+        component.onTabChange('environments');
         fixture.detectChanges();
 
         const compiled = fixture.nativeElement as HTMLElement;
@@ -640,14 +640,14 @@ describe('ApplicationDetailPageComponent', () => {
         fixture.detectChanges();
         tick();
 
-        component.setActiveTab(ApplicationDetailTab.Environments);
+        component.onTabChange('environments');
         fixture.detectChanges();
 
         // Verify we're on Environments tab
         expect(component.activeTab).toBe(ApplicationDetailTab.Environments);
 
         // Navigate to Overview
-        component.setActiveTab(ApplicationDetailTab.Overview);
+        component.onTabChange('overview');
         fixture.detectChanges();
 
         expect(component.activeTab).toBe(ApplicationDetailTab.Overview);
@@ -663,7 +663,7 @@ describe('ApplicationDetailPageComponent', () => {
         fixture.detectChanges();
         tick();
 
-        component.setActiveTab(ApplicationDetailTab.Environments);
+        component.onTabChange('environments');
         fixture.detectChanges();
 
         // mockApplication has ['PRODUCTION', 'STAGING'] environments
@@ -920,7 +920,7 @@ describe('ApplicationDetailPageComponent', () => {
         tick();
         expect(component.apiKeyValidationError).toBeTruthy();
 
-        component.setActiveTab(ApplicationDetailTab.Environments);
+        component.onTabChange('environments');
         tick();
 
         expect(component.apiKeyValidationError).toBeNull();
@@ -1016,7 +1016,7 @@ describe('ApplicationDetailPageComponent', () => {
         // Validates: Requirements 1.2
         (store.dispatch as jasmine.Spy).calls.reset();
 
-        component.setActiveTab(ApplicationDetailTab.Environments);
+        component.onTabChange('environments');
         tick();
 
         expect(store.dispatch).toHaveBeenCalledWith(
@@ -1207,7 +1207,7 @@ describe('ApplicationDetailPageComponent', () => {
 
       it('should clear generated key when switching away from Environments tab', fakeAsync(() => {
         // Validates: Requirements 3.4
-        component.setActiveTab(ApplicationDetailTab.Environments);
+        component.onTabChange('environments');
         tick();
 
         // Set a generated key display
@@ -1219,7 +1219,7 @@ describe('ApplicationDetailPageComponent', () => {
         };
 
         // Switch to another tab
-        component.setActiveTab(ApplicationDetailTab.Overview);
+        component.onTabChange('overview');
         tick();
 
         expect(component.generatedKeyDisplay).toBeNull();
@@ -1227,11 +1227,11 @@ describe('ApplicationDetailPageComponent', () => {
 
       it('should dispatch clearGeneratedKey when switching away from Environments tab', fakeAsync(() => {
         // Validates: Requirements 3.4
-        component.setActiveTab(ApplicationDetailTab.Environments);
+        component.onTabChange('environments');
         tick();
         (store.dispatch as jasmine.Spy).calls.reset();
 
-        component.setActiveTab(ApplicationDetailTab.Overview);
+        component.onTabChange('overview');
         tick();
 
         expect(store.dispatch).toHaveBeenCalledWith(EnvironmentsActions.clearGeneratedKey());

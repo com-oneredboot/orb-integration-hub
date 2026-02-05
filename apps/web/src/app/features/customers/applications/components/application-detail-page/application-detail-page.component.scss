@@ -11,7 +11,6 @@
 }
 
 .app-detail-content {
-  max-width: v.$page-max-width;
   margin: 0 auto;
   padding: 0 v.$spacing-lg v.$spacing-lg;
 }
@@ -36,7 +35,7 @@
 }
 
 // Tab navigation - uses global orb-tabs classes from components.scss
-// Only component-specific tab panel styles defined here
+// TabNavigationComponent handles all tab styling
 
 .app-detail-tabs-section {
   // Container for tabs and panels

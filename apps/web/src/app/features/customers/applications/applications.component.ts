@@ -18,6 +18,7 @@ import { ApplicationsListComponent } from './components/applications-list/applic
 import * as fromUser from '../../user/store/user.selectors';
 import { DebugPanelComponent, DebugContext } from '../../../shared/components/debug/debug-panel.component';
 import { DebugLogEntry } from '../../../core/services/debug-log.service';
+import { HeroSplitComponent } from '../../../shared/components/hero-split/hero-split.component';
 
 @Component({
   selector: 'app-applications',
@@ -27,7 +28,8 @@ import { DebugLogEntry } from '../../../core/services/debug-log.service';
     RouterModule,
     FontAwesomeModule,
     ApplicationsListComponent,
-    DebugPanelComponent
+    DebugPanelComponent,
+    HeroSplitComponent
   ],
   templateUrl: './applications.component.html',
   styleUrls: ['./applications.component.scss']

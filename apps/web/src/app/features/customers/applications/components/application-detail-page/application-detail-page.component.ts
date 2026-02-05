@@ -18,7 +18,7 @@ import { FormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Store } from '@ngrx/store';
 import { Actions, ofType } from '@ngrx/effects';
-import { Observable, Subject, of } from 'rxjs';
+import { Observable, Subject, of, combineLatest } from 'rxjs';
 import { takeUntil, map, filter, take } from 'rxjs/operators';
 
 import { IApplications } from '../../../../../core/models/ApplicationsModel';
@@ -30,6 +30,10 @@ import { Environment } from '../../../../../core/enums/EnvironmentEnum';
 import { StatusBadgeComponent } from '../../../../../shared/components/ui/status-badge.component';
 import { DebugPanelComponent, DebugContext } from '../../../../../shared/components/debug/debug-panel.component';
 import { DebugLogEntry } from '../../../../../core/services/debug-log.service';
+import { BreadcrumbComponent, BreadcrumbItem } from '../../../../../shared/components';
+import { TabNavigationComponent } from '../../../../../shared/components/tab-navigation/tab-navigation.component';
+import { TabConfig } from '../../../../../shared/models/tab-config.model';
+import { HeroSplitComponent } from '../../../../../shared/components/hero-split/hero-split.component';
 
 // Child components
 import { GroupsListComponent } from '../groups-list/groups-list.component';
@@ -199,6 +203,9 @@ export enum ApplicationDetailTab {
     GroupsListComponent,
     DangerZoneCardComponent,
     EnvironmentsListComponent,
+    BreadcrumbComponent,
+    TabNavigationComponent,
+    HeroSplitComponent,
   ],
   templateUrl: './application-detail-page.component.html',
   styleUrls: ['./application-detail-page.component.scss']
@@ -206,9 +213,12 @@ export enum ApplicationDetailTab {
 export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterViewInit {
   private destroy$ = new Subject<void>();
 
-  // Tab state
+  // Tab configuration for TabNavigationComponent
+  tabs: TabConfig[] = [];
+  activeTab = 'overview';
+
+  // Legacy tab enum (kept for internal logic)
   readonly ApplicationDetailTab = ApplicationDetailTab;
-  activeTab: ApplicationDetailTab = ApplicationDetailTab.Overview;
 
   // Template references for API keys grid custom cells
   // static: true because templates are now at root level (outside *ngIf)
@@ -258,6 +268,9 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
   apiKeys: IApplicationApiKeys[] = [];
   environmentConfigs: IApplicationEnvironmentConfig[] = [];
   environmentKeyRows: EnvironmentKeyRow[] = [];
+
+  // Organization for breadcrumb context
+  private organization: IOrganizations | null = null;
 
   // Mode detection
   isDraft = false;
@@ -331,6 +344,36 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
     };
   }
 
+  /**
+   * Breadcrumb items for navigation
+   * Shows: Organizations > "Organization Name" > Applications > "Application Name" [> "Environments"]
+   * Adds "Environments" when on the Environments tab
+   * _Requirements: 4.1_
+   */
+  get breadcrumbItems(): BreadcrumbItem[] {
+    const items: BreadcrumbItem[] = [
+      { label: 'Organizations', route: '/customers/organizations' },
+      {
+        label: this.organization?.name || 'Loading...',
+        route: this.organization ? `/customers/organizations/${this.organization.organizationId}` : null
+      },
+      { label: 'Applications', route: '/customers/applications' },
+      { 
+        label: this.application?.name || 'Loading...', 
+        route: this.activeTab === 'environments' && this.application 
+          ? `/customers/applications/${this.application.applicationId}` 
+          : null 
+      }
+    ];
+
+    // Add "Environments" breadcrumb when on Environments tab
+    if (this.activeTab === 'environments') {
+      items.push({ label: 'Environments', route: null });
+    }
+
+    return items;
+  }
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -351,18 +394,31 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
     this.generatedKey$ = this.store.select(fromEnvironments.selectGeneratedKey);
     this.debugMode$ = this.store.select(fromUser.selectDebugMode);
 
-    // Subscribe to application changes to sync local state
+    // Initialize tabs configuration
+    this.initializeTabs();
+
+    // Subscribe to application changes to sync local state and update tabs
     this.application$.pipe(
       takeUntil(this.destroy$)
     ).subscribe(app => {
       if (app) {
         this.application = app;
         this.isDraft = app.status === ApplicationStatus.Pending;
+        this.updateTabs(); // Update tabs based on draft status
         this.loadFormData();
         this.updateEnvironmentKeyRows();
         this.updateEnvironmentRows();
         // Load API keys for all applications (including drafts for validation)
         this.loadApiKeys();
+      }
+    });
+
+    // Subscribe to application and organizations to update organization for breadcrumb
+    combineLatest([this.application$, this.organizations$]).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(([app, organizations]) => {
+      if (app && organizations.length > 0) {
+        this.organization = organizations.find(org => org.organizationId === app.organizationId) || null;
       }
     });
 
@@ -425,6 +481,9 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
   }
 
   ngOnInit(): void {
+    // Initialize tabs configuration
+    this.initializeTabs();
+
     // Get current user ID for draft creation
     this.store.select(fromUser.selectCurrentUser).pipe(
       take(1),
@@ -455,6 +514,80 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  /**
+   * Initialize tabs configuration based on application state
+   */
+  private initializeTabs(): void {
+    // Subscribe to application changes to update tabs dynamically
+    this.application$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(app => {
+      if (app) {
+        this.tabs = [
+          { id: 'overview', label: 'Overview', icon: 'info-circle' },
+          { id: 'environments', label: 'Environments', icon: 'server', badge: app.environments?.length || 0 },
+          { id: 'groups', label: 'Groups', icon: 'users', badge: app.groupCount || undefined },
+          { id: 'danger', label: 'Danger Zone', icon: 'exclamation-triangle' }
+        ];
+      } else {
+        // Default tabs for draft/loading state
+        this.tabs = [
+          { id: 'overview', label: 'Overview', icon: 'info-circle' },
+          { id: 'environments', label: 'Environments', icon: 'server' },
+          { id: 'groups', label: 'Groups', icon: 'users' },
+          { id: 'danger', label: 'Danger Zone', icon: 'exclamation-triangle' }
+        ];
+      }
+    });
+  }
+
+  /**
+   * Update tabs configuration dynamically based on application state
+   * Called when application data changes
+   */
+  private updateTabs(): void {
+    if (!this.application) return;
+
+    this.tabs = [
+      { id: 'overview', label: 'Overview', icon: 'info-circle' },
+      { id: 'environments', label: 'Environments', icon: 'server', badge: this.application.environments?.length || 0 },
+      { id: 'groups', label: 'Groups', icon: 'users', badge: this.application.groupCount || undefined },
+      { id: 'danger', label: 'Danger Zone', icon: 'exclamation-triangle' }
+    ];
+
+    // Hide Environments tab for draft applications
+    if (this.isDraft) {
+      this.tabs = this.tabs.filter(tab => tab.id !== 'environments');
+    }
+  }
+
+  /**
+   * Handle tab change from TabNavigationComponent
+   * @param tabId - The identifier of the selected tab
+   */
+  onTabChange(tabId: string): void {
+    this.activeTab = tabId;
+
+    // Clear API key validation error when navigating away from Overview
+    if (tabId !== 'overview') {
+      this.apiKeyValidationError = null;
+    }
+
+    // Clear generated key when switching away from Environments tab
+    if (this.activeTab !== 'environments') {
+      this.generatedKeyDisplay = null;
+      this.copySuccess = false;
+      this.store.dispatch(EnvironmentsActions.clearGeneratedKey());
+    }
+
+    // Reload API keys when switching to Environments tab
+    if (tabId === 'environments' && this.application) {
+      this.store.dispatch(EnvironmentsActions.loadEnvironments({
+        applicationId: this.application.applicationId
+      }));
+    }
   }
 
   private loadApplication(id: string): void {
@@ -933,31 +1066,6 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
       hour: '2-digit',
       minute: '2-digit'
     });
-  }
-
-  // Tab navigation
-  setActiveTab(tab: ApplicationDetailTab): void {
-    const previousTab = this.activeTab;
-    this.activeTab = tab;
-
-    // Clear API key validation error when navigating away from Overview
-    if (tab !== ApplicationDetailTab.Overview) {
-      this.apiKeyValidationError = null;
-    }
-
-    // Clear generated key when switching away from Environments tab (Requirement 3.4)
-    if (previousTab === ApplicationDetailTab.Environments && tab !== ApplicationDetailTab.Environments) {
-      this.generatedKeyDisplay = null;
-      this.copySuccess = false;
-      this.store.dispatch(EnvironmentsActions.clearGeneratedKey());
-    }
-
-    // Reload API keys when switching to Environments tab (Requirement 1.2)
-    if (tab === ApplicationDetailTab.Environments && this.application) {
-      this.store.dispatch(EnvironmentsActions.loadEnvironments({
-        applicationId: this.application.applicationId
-      }));
-    }
   }
 
   // Groups tab event handlers

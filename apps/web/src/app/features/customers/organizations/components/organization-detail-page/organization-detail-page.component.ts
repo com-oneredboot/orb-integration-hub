@@ -26,6 +26,8 @@ import { StatusBadgeComponent } from '../../../../../shared/components/ui/status
 import { DebugPanelComponent, DebugContext } from '../../../../../shared/components/debug/debug-panel.component';
 import { DebugLogEntry } from '../../../../../core/services/debug-log.service';
 import { DangerZoneCardComponent } from '../../../../../shared/components/danger-zone-card/danger-zone-card.component';
+import { BreadcrumbComponent, BreadcrumbItem } from '../../../../../shared/components';
+import { HeroSplitComponent } from '../../../../../shared/components/hero-split/hero-split.component';
 
 // Store imports
 import { OrganizationsActions } from '../../store/organizations.actions';
@@ -42,7 +44,9 @@ import * as fromUser from '../../../../user/store/user.selectors';
     FontAwesomeModule,
     StatusBadgeComponent,
     DebugPanelComponent,
-    DangerZoneCardComponent
+    DangerZoneCardComponent,
+    BreadcrumbComponent,
+    HeroSplitComponent
   ],
   templateUrl: './organization-detail-page.component.html',
   styleUrls: ['./organization-detail-page.component.scss']
@@ -113,6 +117,18 @@ export class OrganizationDetailPageComponent implements OnInit, OnDestroy {
         }
       ]
     };
+  }
+
+  /**
+   * Breadcrumb items for navigation
+   * Shows: Organizations > "Organization Name"
+   * _Requirements: 2.1_
+   */
+  get breadcrumbItems(): BreadcrumbItem[] {
+    return [
+      { label: 'Organizations', route: '/customers/organizations' },
+      { label: this.organization?.name || 'Loading...', route: null }
+    ];
   }
 
   constructor(

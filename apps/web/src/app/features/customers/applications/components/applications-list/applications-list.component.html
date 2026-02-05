@@ -2,6 +2,20 @@
 <!-- Uses NgRx store as single source of truth (store-first pattern) -->
 <!-- @see .kiro/specs/store-centric-refactoring/design.md -->
 
+<!-- Breadcrumb Navigation -->
+<div class="orb-breadcrumb-container">
+  <app-breadcrumb [items]="breadcrumbItems"></app-breadcrumb>
+</div>
+
+<!-- Tab Navigation -->
+<app-tab-navigation
+  [tabs]="tabs"
+  [activeTabId]="activeTab"
+  (tabChange)="onTabChange($event)">
+</app-tab-navigation>
+
+<!-- Page Content -->
+<div class="page-content">
 <div class="orb-card">
 
   <!-- Header -->
@@ -182,4 +196,5 @@
     </div>
     </div>
   </ng-container>
+</div>
 </div>

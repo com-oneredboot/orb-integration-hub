@@ -2,18 +2,37 @@
 @use '../../../../styles/mixins' as m;
 
 .applications-container {
-  max-width: v.$page-max-width;
+  width: 100%;
   margin: 0 auto;
-  padding: 0; // No padding - header handles all spacing
+  padding: 0;
   
   & {
     font-family: v.$font-family-base;
   }
   
-  // Applications header now uses global .orb-page-header class
+  // Custom content within HeroSplitComponent
+  .applications-header-content {
+    display: flex;
+    flex-direction: column;
+    gap: v.$spacing-md;
+    width: 100%;
+  }
+
+  .applications-header-hint {
+    font-size: v.$font-size-base;
+    color: v.$text-secondary;
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .applications-header-status {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-sm;
+  }
 
   .applications-content {
-    padding: 0 v.$spacing-lg; // Only horizontal padding
+    padding: 0 v.$spacing-lg;
   }
 
   .applications__debug {
@@ -28,7 +47,6 @@
 .applications-page {
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 60px); // Account for user-layout header
   background-color: v.$orb-white !important;
 
   // Content

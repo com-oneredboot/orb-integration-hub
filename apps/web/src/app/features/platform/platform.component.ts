@@ -8,6 +8,7 @@ import { Router } from '@angular/router';
 import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { CommonModule } from '@angular/common';
+import { HeroSplitComponent } from '../../shared/components';
 import { 
   faRocket, 
   faBook, 
@@ -29,7 +30,7 @@ import {
     templateUrl: './platform.component.html',
     styleUrls: ['./platform.component.scss'],
     standalone: true,
-    imports: [FontAwesomeModule, CommonModule]
+    imports: [FontAwesomeModule, CommonModule, HeroSplitComponent]
 })
 export class PlatformComponent {
   // Expose icons to the template

@@ -1,29 +1,23 @@
 <div class="home-container">
-  <div class="hero-section">
-    <div class="hero-content">
-      <div class="hero-flex-container">
-        <div class="logo-section">
-          <img src="assets/orb-logo.jpg" alt="Orb Integration Hub Logo">
-        </div>
-        <div class="content-section">
-          <div class="logo-container">
-            <h1>Orb Integration Hub</h1>
-          </div>
-          <p class="hero-subtitle">A comprehensive solution for payment processing, event management, and user authentication</p>
-          <div class="cta-buttons">
-            <button class="primary-button" (click)="navigateToSignup()">
-              <fa-icon [icon]="faRocket"></fa-icon>
-              Get Started
-            </button>
-            <button class="secondary-button">
-              <fa-icon [icon]="faBook"></fa-icon>
-              Documentation
-            </button>
-          </div>
-        </div>
-      </div>
+  <!-- Hero Section using HeroSplitComponent -->
+  <app-hero-split
+    [logoSrc]="'assets/orb-logo.jpg'"
+    [logoAlt]="'Orb Integration Hub Logo'"
+    [title]="'Orb Integration Hub'"
+    [subtitle]="'A comprehensive solution for payment processing, event management, and user authentication'">
+    
+    <!-- Call-to-action buttons -->
+    <div buttons class="cta-buttons">
+      <button class="primary-button" (click)="navigateToSignup()">
+        <fa-icon [icon]="faRocket"></fa-icon>
+        Get Started
+      </button>
+      <button class="secondary-button">
+        <fa-icon [icon]="faBook"></fa-icon>
+        Documentation
+      </button>
     </div>
-  </div>
+  </app-hero-split>
 
   <section id="features" class="features-section" aria-labelledby="features-heading">
     <div class="section-header">

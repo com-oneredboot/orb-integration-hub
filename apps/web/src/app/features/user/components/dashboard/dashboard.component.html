@@ -20,44 +20,31 @@ description: Dashboard CTA Hub - Single column layout with role-based CTA cards
     <div class="orb-loading-mask"></div>
   </div>
 
-  <!-- Page Header -->
-  <div class="orb-page-header">
-    <div class="orb-page-header__content">
-      <div class="orb-page-header__flex-container">
-        <div class="orb-page-header__logo-section">
-          <img src="assets/orb-logo.jpg" alt="Orb Integration Hub Logo" class="orb-page-header__logo">
-        </div>
-        <div class="orb-page-header__text-section" *ngIf="currentUser$ | async as user">
-          <div class="orb-page-header__greeting">
-            <div class="orb-page-header__icon-title">
-              <img src="../../../../../assets/hardhat.jpg" alt="Engineering" class="orb-page-header__icon">
-              <h1 class="orb-page-header__title">
-                Integration Hub
-              </h1>
-            </div>
-            <p class="orb-page-header__subtitle" *ngIf="user.status === 'ACTIVE'; else pendingDashboardMessage">
-              Your integration hub is ready for action
-            </p>
-            <ng-template #pendingDashboardMessage>
-              <p class="orb-page-header__subtitle orb-page-header__subtitle--warning">
-                Complete your profile setup to activate your account
-              </p>
-            </ng-template>
-            <p class="orb-page-header__hint">
-              Complete the actions below to get started. Use the quick access menu on the left for common tasks.
-            </p>
-            <div class="orb-page-header__status">
-              <span class="orb-header-badge" 
-                    [ngClass]="'orb-header-badge--' + getStatusClass(user.status)">
-                <fa-icon [icon]="getStatusIcon(user.status)" class="orb-header-badge__icon"></fa-icon>
-                {{ getStatusLabel(user.status) }}
-              </span>
-            </div>
-          </div>
+  <!-- Page Header using HeroSplitComponent -->
+  <ng-container *ngIf="currentUser$ | async as user">
+    <app-hero-split
+      [logoSrc]="'assets/orb-logo.jpg'"
+      [logoAlt]="'Orb Integration Hub Logo'"
+      [title]="'Integration Hub'"
+      [subtitle]="user.status === 'ACTIVE' 
+        ? 'Your integration hub is ready for action' 
+        : 'Complete your profile setup to activate your account'">
+      
+      <!-- Status Badge and Hint -->
+      <div class="dashboard-header-content">
+        <p class="dashboard-header-hint">
+          Complete the actions below to get started. Use the quick access menu on the left for common tasks.
+        </p>
+        <div class="dashboard-header-status">
+          <span class="orb-header-badge" 
+                [ngClass]="'orb-header-badge--' + getStatusClass(user.status)">
+            <fa-icon [icon]="getStatusIcon(user.status)" class="orb-header-badge__icon"></fa-icon>
+            {{ getStatusLabel(user.status) }}
+          </span>
         </div>
       </div>
-    </div>
-  </div>
+    </app-hero-split>
+  </ng-container>
 
   <!-- Main Dashboard Content -->
   <div class="dashboard-content" *ngIf="currentUser$ | async as user; else loadingUser">

@@ -13,50 +13,32 @@
   applicationCount: applicationCount$ | async
 } as data">
   <div class="org-detail-page">
-    <!-- Page Header -->
-    <div class="orb-page-header">
-      <div class="orb-page-header__content">
-        <div class="orb-page-header__flex-container">
-          <div class="orb-page-header__logo-section">
-            <img src="assets/orb-logo.jpg" alt="Orb Integration Hub Logo" class="orb-page-header__logo">
-          </div>
-          <div class="orb-page-header__text-section">
-            <div class="orb-page-header__greeting">
-              <div class="orb-page-header__icon-title">
-                <fa-icon icon="building" class="orb-page-header__icon-fa"></fa-icon>
-                <h1 class="orb-page-header__title">
-                  {{ isDraft ? 'Complete Organization Setup' : (organization?.name || 'Organization Details') }}
-                </h1>
-              </div>
-              <p class="orb-page-header__subtitle" *ngIf="isDraft" class="orb-page-header__subtitle--warning">
-                Your organization was created but needs to be completed. Fill in the details below and click "Activate Organization" to finish setup.
-              </p>
-              <p class="orb-page-header__subtitle" *ngIf="!isDraft && !data.isLoading && !loadError">
-                Manage your organization's information and applications.
-              </p>
-              <div class="orb-page-header__status" *ngIf="organization && !isDraft">
-                <app-status-badge
-                  [status]="organization.status"
-                  type="organization"
-                  [showIcon]="true"
-                  [showLabel]="true"
-                  size="medium"
-                  variant="chip">
-                </app-status-badge>
-              </div>
-            </div>
-          </div>
-        </div>
+    <!-- Page Header using HeroSplitComponent -->
+    <app-hero-split
+      [logoSrc]="'assets/orb-logo.jpg'"
+      [logoAlt]="'Orb Integration Hub Logo'"
+      [title]="isDraft ? 'Complete Organization Setup' : (organization?.name || 'Organization Details')"
+      [subtitle]="isDraft 
+        ? 'Your organization was created but needs to be completed. Fill in the details below and click Activate Organization to finish setup.' 
+        : 'Manage your organization information and applications.'">
+      
+      <!-- Custom content -->
+      <div class="org-detail-header-content" *ngIf="organization && !isDraft">
+        <app-status-badge
+          [status]="organization.status"
+          type="organization"
+          [showIcon]="true"
+          [showLabel]="true"
+          size="medium"
+          variant="chip">
+        </app-status-badge>
       </div>
-    </div>
+    </app-hero-split>
 
-    <!-- Back Link -->
+    <!-- Breadcrumb Navigation -->
     <div class="org-detail-page__content">
-      <div class="org-detail-page__breadcrumb">
-        <a routerLink="/customers/organizations" class="org-detail-page__back-link">
-          <fa-icon icon="arrow-left"></fa-icon>
-          Back to Organizations
-        </a>
+      <div class="orb-breadcrumb-container">
+        <app-breadcrumb [items]="breadcrumbItems"></app-breadcrumb>
       </div>
 
       <!-- Loading State -->

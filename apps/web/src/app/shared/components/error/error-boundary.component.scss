@@ -3,8 +3,8 @@
 // date: 2025-06-23
 // description: Styles for reusable error boundary component
 
-@use '../../../styles/variables' as v;
-@use '../../../styles/mixins' as m;
+@use '../../../../styles/variables' as v;
+@use '../../../../styles/mixins' as m;
 @use 'sass:color';
 
 .error-boundary {

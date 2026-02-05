@@ -1,0 +1,29 @@
+<div class="orb-hero-split">
+  <div class="orb-hero-split__container">
+    <div class="orb-hero-split__flex">
+      <!-- Left: Logo Section -->
+      <div class="orb-hero-split__logo">
+        <img [src]="logoSrc" [alt]="logoAlt">
+      </div>
+
+      <!-- Right: Content Section -->
+      <div class="orb-hero-split__content">
+        <!-- Title -->
+        <h1 class="orb-hero-split__title">{{ title }}</h1>
+        
+        <!-- Subtitle -->
+        <p class="orb-hero-split__subtitle" *ngIf="subtitle">{{ subtitle }}</p>
+        
+        <!-- Custom content slot (badges, status, additional info) -->
+        <div class="orb-hero-split__custom-content">
+          <ng-content></ng-content>
+        </div>
+        
+        <!-- Call-to-action buttons slot -->
+        <div class="orb-hero-split__actions">
+          <ng-content select="[buttons]"></ng-content>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

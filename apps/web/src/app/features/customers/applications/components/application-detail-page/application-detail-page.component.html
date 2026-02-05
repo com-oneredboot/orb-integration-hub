@@ -207,50 +207,34 @@
   organizations: organizations$ | async
 } as data">
   <div class="app-detail-container">
-    <!-- Page Header -->
-    <div class="orb-page-header">
-      <div class="orb-page-header__content">
-        <div class="orb-page-header__flex-container">
-          <div class="orb-page-header__logo-section">
-            <img src="assets/orb-logo.jpg" alt="Orb Integration Hub Logo" class="orb-page-header__logo">
-          </div>
-          <div class="orb-page-header__text-section">
-            <div class="orb-page-header__greeting">
-              <div class="orb-page-header__icon-title">
-                <fa-icon icon="rocket" class="orb-page-header__icon-fa"></fa-icon>
-                <h1 class="orb-page-header__title">
-                  {{ isDraft ? 'Complete Application Setup' : (application?.name || 'Application Details') }}
-                </h1>
-              </div>
-              <p class="orb-page-header__subtitle" *ngIf="isDraft">
-                Your application was created but needs to be completed. Fill in the details below and click "Activate Application" to finish setup.
-              </p>
-              <p class="orb-page-header__subtitle" *ngIf="!isDraft && !data.isLoading && !loadError">
-                Manage your application's settings, groups, and API keys.
-              </p>
-              <div class="orb-page-header__status" *ngIf="application && !isDraft">
-                <app-status-badge
-                  [status]="application.status"
-                  type="application"
-                  [showIcon]="true"
-                  [showLabel]="true"
-                  size="medium"
-                  variant="chip">
-                </app-status-badge>
-              </div>
-            </div>
-          </div>
-        </div>
+    <!-- Page Header using HeroSplitComponent -->
+    <app-hero-split
+      [logoSrc]="'assets/orb-logo.jpg'"
+      [logoAlt]="'Orb Integration Hub Logo'"
+      [title]="isDraft ? 'Complete Application Setup' : (application?.name || 'Application Details')"
+      [subtitle]="isDraft 
+        ? 'Your application was created but needs to be completed. Fill in the details below and click Activate Application to finish setup.' 
+        : 'Manage your application settings, groups, and API keys.'">
+      
+      <!-- Custom content -->
+      <div class="app-detail-header-content" *ngIf="application && !isDraft">
+        <app-status-badge
+          [status]="application.status"
+          type="application"
+          [showIcon]="true"
+          [showLabel]="true"
+          size="medium"
+          variant="chip">
+        </app-status-badge>
       </div>
-    </div>
+    </app-hero-split>
 
-    <!-- Back Link -->
+    <!-- Breadcrumb Navigation -->
+    <!-- @see .kiro/specs/breadcrumb-navigation/design.md -->
+    <!-- _Requirements: 4.1, 4.2, 4.3_ -->
     <div class="app-detail-content">
-      <div class="app-detail-breadcrumb">
-        <a routerLink="/customers/applications" class="app-detail-back-link">
-          <fa-icon icon="arrow-left"></fa-icon>
-          Back to Applications
-        </a>
+      <div class="orb-breadcrumb-container">
+        <app-breadcrumb [items]="breadcrumbItems"></app-breadcrumb>
       </div>
 
       <!-- Loading State -->
@@ -270,64 +254,19 @@
 
       <!-- Content with Tabs -->
       <div class="app-detail-tabs-section" *ngIf="application && !data.isLoading && !loadError">
-        <!-- Tab Navigation (always shown - users need to configure environments before activation) -->
-        <!-- Uses global orb-tabs classes from components.scss -->
-        <nav class="orb-tabs" role="tablist" aria-label="Application sections">
-          <button
-            class="orb-tabs__tab"
-            [class.orb-tabs__tab--active]="activeTab === ApplicationDetailTab.Overview"
-            (click)="setActiveTab(ApplicationDetailTab.Overview)"
-            role="tab"
-            [attr.aria-selected]="activeTab === ApplicationDetailTab.Overview"
-            [attr.aria-controls]="'panel-overview'"
-            id="tab-overview">
-            <fa-icon icon="info-circle" class="orb-tabs__icon"></fa-icon>
-            Overview
-          </button>
-          <button
-            class="orb-tabs__tab"
-            [class.orb-tabs__tab--active]="activeTab === ApplicationDetailTab.Environments"
-            (click)="setActiveTab(ApplicationDetailTab.Environments)"
-            role="tab"
-            [attr.aria-selected]="activeTab === ApplicationDetailTab.Environments"
-            [attr.aria-controls]="'panel-environments'"
-            id="tab-environments"
-            *ngIf="!isDraft">
-            <fa-icon icon="server" class="orb-tabs__icon"></fa-icon>
-            Environments
-            <span class="orb-tabs__badge" *ngIf="editForm.environments.length">{{ editForm.environments.length }}</span>
-          </button>
-          <button
-            class="orb-tabs__tab"
-            [class.orb-tabs__tab--active]="activeTab === ApplicationDetailTab.Groups"
-            (click)="setActiveTab(ApplicationDetailTab.Groups)"
-            role="tab"
-            [attr.aria-selected]="activeTab === ApplicationDetailTab.Groups"
-            [attr.aria-controls]="'panel-groups'"
-            id="tab-groups">
-            <fa-icon icon="users" class="orb-tabs__icon"></fa-icon>
-            Groups
-            <span class="orb-tabs__badge" *ngIf="application.groupCount">{{ application.groupCount }}</span>
-          </button>
-          <button
-            class="orb-tabs__tab orb-tabs__tab--danger"
-            [class.orb-tabs__tab--active]="activeTab === ApplicationDetailTab.Danger"
-            (click)="setActiveTab(ApplicationDetailTab.Danger)"
-            role="tab"
-            [attr.aria-selected]="activeTab === ApplicationDetailTab.Danger"
-            [attr.aria-controls]="'panel-danger'"
-            id="tab-danger">
-            <fa-icon icon="exclamation-triangle" class="orb-tabs__icon"></fa-icon>
-            Danger Zone
-          </button>
-        </nav>
+        <!-- Tab Navigation using TabNavigationComponent -->
+        <app-tab-navigation
+          [tabs]="tabs"
+          [activeTabId]="activeTab"
+          (tabChange)="onTabChange($event)">
+        </app-tab-navigation>
 
         <!-- Tab Panels -->
         <div class="app-detail-tab-panels">
           <!-- Overview Tab Panel -->
           <div
             class="app-detail-tab-panel"
-            *ngIf="activeTab === ApplicationDetailTab.Overview || isDraft"
+            *ngIf="activeTab === 'overview' || isDraft"
             role="tabpanel"
             id="panel-overview"
             [attr.aria-labelledby]="'tab-overview'">
@@ -495,7 +434,7 @@
           <!-- Environments Tab Panel -->
           <div
             class="app-detail-tab-panel"
-            *ngIf="activeTab === ApplicationDetailTab.Environments && !isDraft"
+            *ngIf="activeTab === 'environments' && !isDraft"
             role="tabpanel"
             id="panel-environments"
             [attr.aria-labelledby]="'tab-environments'">
@@ -508,7 +447,7 @@
           <!-- Groups Tab Panel -->
           <div
             class="app-detail-tab-panel"
-            *ngIf="activeTab === ApplicationDetailTab.Groups && !isDraft"
+            *ngIf="activeTab === 'groups' && !isDraft"
             role="tabpanel"
             id="panel-groups"
             [attr.aria-labelledby]="'tab-groups'">
@@ -522,7 +461,7 @@
           <!-- Danger Zone Tab Panel -->
           <div
             class="app-detail-tab-panel"
-            *ngIf="activeTab === ApplicationDetailTab.Danger"
+            *ngIf="activeTab === 'danger'"
             role="tabpanel"
             id="panel-danger"
             [attr.aria-labelledby]="'tab-danger'">

@@ -1,0 +1,100 @@
+// file: apps/web/src/app/shared/components/breadcrumb/breadcrumb.component.scss
+// author: Kiro AI Assistant
+// date: 2025-01-27
+// description: BEM styles for breadcrumb navigation component
+
+@use '../../../../styles/variables' as v;
+
+.breadcrumb {
+  margin-bottom: v.$spacing-md;
+
+  &__list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: v.$spacing-xs;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-xs;
+
+    &--icon {
+      gap: 0;
+    }
+  }
+
+  &__icon {
+    color: v.$primary-color;
+    font-size: v.$font-size-sm;
+    margin-right: v.$spacing-xs;
+  }
+
+  &__link {
+    color: v.$primary-color;
+    text-decoration: none;
+    font-size: v.$font-size-sm;
+    font-weight: v.$font-weight-medium;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: v.$logo-dark-red;
+      text-decoration: underline;
+    }
+
+    &:focus {
+      outline: 2px solid v.$primary-color;
+      outline-offset: 2px;
+      border-radius: v.$border-radius-sm;
+    }
+
+    &:focus-visible {
+      outline: 2px solid v.$primary-color;
+      outline-offset: 2px;
+      border-radius: v.$border-radius-sm;
+    }
+  }
+
+  &__current {
+    color: v.$text-secondary;
+    font-size: v.$font-size-sm;
+    font-weight: v.$font-weight-normal;
+  }
+
+  &__separator {
+    color: v.$gray-400;
+    font-size: v.$font-size-xs;
+    margin: 0 v.$spacing-xs;
+  }
+}
+
+// Accessibility: Reduced motion preference
+@media (prefers-reduced-motion: reduce) {
+  .breadcrumb {
+    &__link {
+      transition: none;
+    }
+  }
+}
+
+// Responsive styles
+@media (max-width: 768px) {
+  .breadcrumb {
+    &__list {
+      gap: v.$spacing-xs;
+    }
+
+    &__link,
+    &__current {
+      font-size: v.$font-size-xs;
+    }
+
+    &__separator {
+      margin: 0 2px;
+    }
+  }
+}

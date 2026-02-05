@@ -15,6 +15,12 @@ export * from './ui';
 // Data Grid Component
 export * from './data-grid';
 
+// Breadcrumb Component
+export * from './breadcrumb';
+
+// Hero Split Component
+export * from './hero-split/hero-split.component';
+
 // Note: Add other component categories here as they are created
 // Example:
 // export * from './layout';

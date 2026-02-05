@@ -16,105 +16,19 @@
   color: var(--color-text-primary);
 }
 
-.hero-section {
-  background: var(--color-background);
-  padding: var(--spacing-2xl) 0;
-  position: relative;
-  overflow: hidden;
+// Button styles for hero section (used within HeroSplitComponent)
+.cta-buttons {
+  display: flex;
+  gap: var(--spacing-lg);
+  justify-content: center;
 
-  .hero-content {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 var(--spacing-lg);
-  }
-
-  .hero-flex-container {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-24);
-    justify-content: center;
-
-    @media (max-width: 1024px) {
-      flex-direction: column;
-      text-align: center;
-    }
-  }
-
-  .logo-section {
-    flex: 1;
-    max-width: 600px;
-    
-    img {
-      width: 100%;
-      height: auto;
-      object-fit: contain;
-    }
-  }
-
-  .content-section {
-    flex: 1;
-    max-width: 600px;
-    display: flex;
+  @media (max-width: 768px) {
     flex-direction: column;
-    gap: var(--spacing-xl);
-    align-items: flex-start;
-
-    @media (max-width: 1024px) {
-      align-items: center;
-      text-align: center;
-    }
-
-    .logo-container {
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-md);
-      margin-bottom: var(--spacing-md);
-
-      img {
-        width: 48px;
-        height: 48px;
-        object-fit: contain;
-      }
-
-      h1 {
-        font-family: var(--font-family-heading);
-        font-size: var(--font-size-4xl);
-        font-weight: var(--font-weight-bold);
-        color: var(--color-neutral-800);
-        margin: 0;
-      }
-
-      @media (max-width: 1024px) {
-        justify-content: center;
-      }
-    }
-
-    .hero-subtitle {
-      font-size: var(--font-size-lg);
-      color: var(--color-neutral-800);
-      margin: 0;
-      line-height: var(--line-height-relaxed);
-      text-align: left;
-
-      @media (max-width: 1024px) {
-        text-align: center;
-      }
-    }
-  }
-
-  .cta-buttons {
-    display: flex;
-    gap: var(--spacing-lg);
-    justify-content: center;
-
-    @media (max-width: 768px) {
-      flex-direction: column;
+    width: 100%;
+    
+    button {
       width: 100%;
-      
-      button {
-        width: 100%;
-        justify-content: center;
-      }
+      justify-content: center;
     }
   }
 }

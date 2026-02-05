@@ -19,6 +19,7 @@ import { DebugLogService, DebugLogEntry } from '../../../../core/services/debug-
 import { CtaCard } from './dashboard.types';
 import { DashboardCtaService } from '../../services/dashboard-cta.service';
 import { CtaCardComponent } from './cta-card/cta-card.component';
+import { HeroSplitComponent } from '../../../../shared/components';
 
 @Component({
   selector: 'app-dashboard',
@@ -30,7 +31,8 @@ import { CtaCardComponent } from './cta-card/cta-card.component';
     FontAwesomeModule,
     RouterModule,
     DebugPanelComponent,
-    CtaCardComponent
+    CtaCardComponent,
+    HeroSplitComponent
   ]
 })
 export class DashboardComponent implements OnInit {

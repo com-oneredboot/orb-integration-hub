@@ -2,18 +2,37 @@
 @use '../../../../styles/mixins' as m;
 
 .organizations-container {
-  max-width: v.$page-max-width;
+  width: 100%;
   margin: 0 auto;
-  padding: 0; // No padding - header handles all spacing
+  padding: 0;
   
   & {
     font-family: v.$font-family-base;
   }
   
-  // Organizations header now uses global .orb-page-header class
+  // Custom content within HeroSplitComponent
+  .organizations-header-content {
+    display: flex;
+    flex-direction: column;
+    gap: v.$spacing-md;
+    width: 100%;
+  }
+
+  .organizations-header-hint {
+    font-size: v.$font-size-base;
+    color: v.$text-secondary;
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .organizations-header-status {
+    display: flex;
+    align-items: center;
+    gap: v.$spacing-sm;
+  }
 
   .organizations-content {
-    padding: 0 v.$spacing-lg; // Only horizontal padding
+    padding: 0 v.$spacing-lg;
   }
 
   .organizations__debug {
@@ -28,7 +47,6 @@
 .organizations-page {
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 60px); // Account for user-layout header
   background-color: v.$orb-white !important;
 
   // Content
