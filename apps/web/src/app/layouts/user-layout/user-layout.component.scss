@@ -8,19 +8,11 @@
 // Note: CSS custom properties (--orb-*) are defined globally in _tokens.scss
 // No need to redeclare them here
 
-.user-layout-wrapper {
-  min-height: 100vh;
-  width: 100%;
-  background-color: v.$orb-white;
-  display: flex;
-  justify-content: center;
-}
-
-.user-layout-container {
+.app-container {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  max-width: var(--page-max-width);
+  max-width: 1000px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
@@ -32,8 +24,9 @@
   align-items: center;
   justify-content: flex-end;
   padding: 1rem 2rem;
-  background-color: v.$orb-white;
+  background-color: transparent;
   width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
 
   .nav-menu {
@@ -102,13 +95,19 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 0;
+  align-items: center;
+  padding: 2rem;
+  padding-right: 100px; // Reserve space for quick actions tab
   overflow-y: auto;
   background-color: transparent;
-  width: 100%;
 }
 
 @media (max-width: 768px) {
+  .main-content {
+    padding-right: 2rem; // Normal padding on mobile
+    padding-bottom: 80px; // Reserve space for bottom quick actions bar
+  }
+  
   .header {
     padding: 1rem;
 
@@ -116,4 +115,13 @@
       gap: 1rem;
     }
   }
+}
+
+.user-bg {
+  min-height: 100vh;
+  width: 100vw;
+  background-color: v.$orb-white;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
 }
