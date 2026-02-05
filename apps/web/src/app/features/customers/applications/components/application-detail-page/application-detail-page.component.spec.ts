@@ -28,12 +28,12 @@ import { ApplicationApiKeyStatus } from '../../../../../core/enums/ApplicationAp
 import { ApplicationApiKeyType } from '../../../../../core/enums/ApplicationApiKeyTypeEnum';
 import { Environment } from '../../../../../core/enums/EnvironmentEnum';
 import { ApplicationsActions } from '../../store/applications.actions';
-import { ApiKeysActions } from '../../store/api-keys/api-keys.actions';
+import { EnvironmentsActions } from '../../store/environments/environments.actions';
 import { OrganizationsActions } from '../../../organizations/store/organizations.actions';
 import * as fromApplications from '../../store/applications.selectors';
 import * as fromOrganizations from '../../../organizations/store/organizations.selectors';
 import * as fromUser from '../../../../user/store/user.selectors';
-import * as fromApiKeys from '../../store/api-keys/api-keys.selectors';
+import * as fromEnvironments from '../../store/environments/environments.selectors';
 
 describe('ApplicationDetailPageComponent', () => {
   let component: ApplicationDetailPageComponent;
@@ -114,12 +114,12 @@ describe('ApplicationDetailPageComponent', () => {
             { selector: fromOrganizations.selectOrganizations, value: [] },
             { selector: fromUser.selectCurrentUser, value: mockUser },
             { selector: fromUser.selectDebugMode, value: false },
-            // API Keys selectors
-            { selector: fromApiKeys.selectApiKeys, value: [] },
-            { selector: fromApiKeys.selectIsGenerating, value: false },
-            { selector: fromApiKeys.selectIsRotating, value: false },
-            { selector: fromApiKeys.selectIsRevoking, value: false },
-            { selector: fromApiKeys.selectGeneratedKey, value: null },
+            // API Keys selectors (from environments store)
+            { selector: fromEnvironments.selectApiKeys, value: [] },
+            { selector: fromEnvironments.selectIsGenerating, value: false },
+            { selector: fromEnvironments.selectIsRotating, value: false },
+            { selector: fromEnvironments.selectIsRevoking, value: false },
+            { selector: fromEnvironments.selectGeneratedKey, value: null },
           ],
         }),
         provideMockActions(() => actions$),
@@ -595,15 +595,15 @@ describe('ApplicationDetailPageComponent', () => {
         expect(component.environmentKeyRows.length).toBe(0);
 
         const compiled = fixture.nativeElement as HTMLElement;
-        // Empty state uses orb-card with empty text
-        const emptyState = compiled.querySelector('.orb-card__empty-text');
+        // Empty state uses DataGrid's built-in empty message
+        const emptyState = compiled.querySelector('.data-grid__empty-text');
         expect(emptyState).toBeTruthy();
         expect(emptyState?.textContent).toContain('No environments configured');
       }));
 
       it('should show link to Overview tab in empty state', fakeAsync(() => {
         // Validates: Requirements 5.2
-        // Note: The empty state shows a hint to go to Overview tab
+        // Note: The DataGrid shows an empty message; navigation to Overview is tested separately
         const appWithNoEnvs: IApplications = {
           ...mockApplication,
           environments: [],
@@ -618,9 +618,13 @@ describe('ApplicationDetailPageComponent', () => {
         fixture.detectChanges();
 
         const compiled = fixture.nativeElement as HTMLElement;
-        const emptyHint = compiled.querySelector('.orb-card__empty-hint');
-        expect(emptyHint).toBeTruthy();
-        expect(emptyHint?.textContent).toContain('Overview tab');
+        // DataGrid shows empty state with message - verify the empty state is displayed
+        const emptyState = compiled.querySelector('.data-grid__empty');
+        expect(emptyState).toBeTruthy();
+        // Verify the "Create Environment" button is available as the action hint
+        const createButton = compiled.querySelector('.orb-card-btn');
+        expect(createButton).toBeTruthy();
+        expect(createButton?.textContent).toContain('Create Environment');
       }));
 
       it('should navigate to Overview tab when setActiveTab is called', fakeAsync(() => {
@@ -710,7 +714,7 @@ describe('ApplicationDetailPageComponent', () => {
         store.overrideSelector(fromApplications.selectSelectedApplication, mockPendingApplication);
         store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
         // No API keys configured
-        store.overrideSelector(fromApiKeys.selectApiKeys, []);
+        store.overrideSelector(fromEnvironments.selectApiKeys, []);
         store.refreshState();
         fixture.detectChanges();
         tick();
@@ -777,7 +781,7 @@ describe('ApplicationDetailPageComponent', () => {
         store.overrideSelector(fromApplications.selectSelectedApplication, mockPendingApplication);
         store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
         // All environments have active API keys
-        store.overrideSelector(fromApiKeys.selectApiKeys, [
+        store.overrideSelector(fromEnvironments.selectApiKeys, [
           createMockApiKey('PRODUCTION', ApplicationApiKeyStatus.Active),
           createMockApiKey('STAGING', ApplicationApiKeyStatus.Active)
         ]);
@@ -803,7 +807,7 @@ describe('ApplicationDetailPageComponent', () => {
 
       it('should allow activation with ROTATING status keys', fakeAsync(() => {
         // Validates: Requirements 1.2
-        store.overrideSelector(fromApiKeys.selectApiKeys, [
+        store.overrideSelector(fromEnvironments.selectApiKeys, [
           createMockApiKey('PRODUCTION', ApplicationApiKeyStatus.Rotating),
           createMockApiKey('STAGING', ApplicationApiKeyStatus.Active)
         ]);
@@ -827,7 +831,7 @@ describe('ApplicationDetailPageComponent', () => {
         store.overrideSelector(fromApplications.selectSelectedApplication, mockPendingApplication);
         store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
         // Only PRODUCTION has an active key
-        store.overrideSelector(fromApiKeys.selectApiKeys, [
+        store.overrideSelector(fromEnvironments.selectApiKeys, [
           createMockApiKey('PRODUCTION', ApplicationApiKeyStatus.Active)
         ]);
         store.refreshState();
@@ -857,7 +861,7 @@ describe('ApplicationDetailPageComponent', () => {
 
       it('should not count REVOKED keys as valid', fakeAsync(() => {
         // Validates: Requirements 1.2
-        store.overrideSelector(fromApiKeys.selectApiKeys, [
+        store.overrideSelector(fromEnvironments.selectApiKeys, [
           createMockApiKey('PRODUCTION', ApplicationApiKeyStatus.Revoked),
           createMockApiKey('STAGING', ApplicationApiKeyStatus.Active)
         ]);
@@ -877,7 +881,7 @@ describe('ApplicationDetailPageComponent', () => {
 
       it('should not count EXPIRED keys as valid', fakeAsync(() => {
         // Validates: Requirements 1.2
-        store.overrideSelector(fromApiKeys.selectApiKeys, [
+        store.overrideSelector(fromEnvironments.selectApiKeys, [
           createMockApiKey('PRODUCTION', ApplicationApiKeyStatus.Expired),
           createMockApiKey('STAGING', ApplicationApiKeyStatus.Active)
         ]);
@@ -900,7 +904,7 @@ describe('ApplicationDetailPageComponent', () => {
       beforeEach(fakeAsync(() => {
         store.overrideSelector(fromApplications.selectSelectedApplication, mockPendingApplication);
         store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
-        store.overrideSelector(fromApiKeys.selectApiKeys, []);
+        store.overrideSelector(fromEnvironments.selectApiKeys, []);
         store.refreshState();
         fixture.detectChanges();
         tick();
@@ -938,7 +942,7 @@ describe('ApplicationDetailPageComponent', () => {
           createMockApiKey('PRODUCTION', ApplicationApiKeyStatus.Active),
           createMockApiKey('STAGING', ApplicationApiKeyStatus.Active)
         ];
-        store.overrideSelector(fromApiKeys.selectApiKeys, newApiKeys);
+        store.overrideSelector(fromEnvironments.selectApiKeys, newApiKeys);
         store.refreshState();
         fixture.detectChanges();
         tick();
@@ -958,7 +962,7 @@ describe('ApplicationDetailPageComponent', () => {
         // Active application (not draft)
         store.overrideSelector(fromApplications.selectSelectedApplication, mockApplication);
         store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
-        store.overrideSelector(fromApiKeys.selectApiKeys, []);
+        store.overrideSelector(fromEnvironments.selectApiKeys, []);
         store.refreshState();
         fixture.detectChanges();
         tick();
@@ -1000,15 +1004,15 @@ describe('ApplicationDetailPageComponent', () => {
         tick();
       }));
 
-      it('should dispatch loadApiKeys when application is loaded', fakeAsync(() => {
-        // Note: Current implementation loads API keys eagerly for activation validation
+      it('should dispatch loadEnvironments when application is loaded', fakeAsync(() => {
+        // Note: Current implementation loads environments eagerly for activation validation
         // This differs from Requirement 1.1 but is needed for api-key-configuration-flow
         expect(store.dispatch).toHaveBeenCalledWith(
-          ApiKeysActions.loadApiKeys({ applicationId: 'app-789' })
+          EnvironmentsActions.loadEnvironments({ applicationId: 'app-789' })
         );
       }));
 
-      it('should dispatch loadApiKeys when Environments tab is clicked', fakeAsync(() => {
+      it('should dispatch loadEnvironments when Environments tab is clicked', fakeAsync(() => {
         // Validates: Requirements 1.2
         (store.dispatch as jasmine.Spy).calls.reset();
 
@@ -1016,13 +1020,13 @@ describe('ApplicationDetailPageComponent', () => {
         tick();
 
         expect(store.dispatch).toHaveBeenCalledWith(
-          ApiKeysActions.loadApiKeys({ applicationId: 'app-789' })
+          EnvironmentsActions.loadEnvironments({ applicationId: 'app-789' })
         );
       }));
 
       it('should dispatch setApplicationContext when application is loaded', fakeAsync(() => {
         expect(store.dispatch).toHaveBeenCalledWith(
-          ApiKeysActions.setApplicationContext({
+          EnvironmentsActions.setApplicationContext({
             applicationId: 'app-789',
             organizationId: 'org-456'
           })
@@ -1084,7 +1088,7 @@ describe('ApplicationDetailPageComponent', () => {
         tick();
 
         expect(store.dispatch).not.toHaveBeenCalledWith(
-          jasmine.objectContaining({ type: '[ApiKeys] Revoke Api Key' })
+          jasmine.objectContaining({ type: '[Environments] Revoke Api Key' })
         );
       }));
 
@@ -1098,7 +1102,7 @@ describe('ApplicationDetailPageComponent', () => {
         tick();
 
         expect(store.dispatch).toHaveBeenCalledWith(
-          ApiKeysActions.revokeApiKey({
+          EnvironmentsActions.revokeApiKey({
             apiKeyId: 'key-123',
             applicationId: 'app-789',
             environment: 'PRODUCTION' as Environment
@@ -1230,7 +1234,7 @@ describe('ApplicationDetailPageComponent', () => {
         component.setActiveTab(ApplicationDetailTab.Overview);
         tick();
 
-        expect(store.dispatch).toHaveBeenCalledWith(ApiKeysActions.clearGeneratedKey());
+        expect(store.dispatch).toHaveBeenCalledWith(EnvironmentsActions.clearGeneratedKey());
       }));
     });
   });

@@ -184,7 +184,7 @@ describe('Environments Reducer Property Tests', () => {
      * **Validates: Requirements 1.1, 1.2, 1.6, 1.7, 1.8, 1.9**
      *
      * For any application with environments, the environments list SHALL display
-     * exactly one row per environment, and each row SHALL contain the correct
+     * exactly one row per unique environment, and each row SHALL contain the correct
      * environment name, rate limit display, origins count, and webhook status.
      */
     it('should create exactly one row per config (100 iterations)', () => {
@@ -193,7 +193,9 @@ describe('Environments Reducer Property Tests', () => {
           fc.array(environmentConfigArbitrary, { minLength: 0, maxLength: 5 }),
           (configs) => {
             const rows = buildEnvironmentRows(configs, []);
-            return rows.length === configs.length;
+            // buildEnvironmentRows creates one row per unique environment
+            const uniqueEnvironments = new Set(configs.map((c) => c.environment));
+            return rows.length === uniqueEnvironments.size;
           }
         ),
         { numRuns: 100 }

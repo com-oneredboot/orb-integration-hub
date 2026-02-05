@@ -56,13 +56,13 @@ import { ApplicationsActions } from '../../store/applications.actions';
 import * as fromApplications from '../../store/applications.selectors';
 import * as fromOrganizations from '../../../organizations/store/organizations.selectors';
 import * as fromUser from '../../../../user/store/user.selectors';
-import * as fromApiKeys from '../../store/api-keys/api-keys.selectors';
+import * as fromEnvironments from '../../store/environments/environments.selectors';
 import * as fromEnvironmentConfig from '../../store/environment-config/environment-config.selectors';
 import { OrganizationsActions } from '../../../organizations/store/organizations.actions';
-import { ApiKeysActions } from '../../store/api-keys/api-keys.actions';
+import { EnvironmentsActions } from '../../store/environments/environments.actions';
 import { EnvironmentConfigActions } from '../../store/environment-config/environment-config.actions';
 import { IApplicationEnvironmentConfig } from '../../../../../core/models/ApplicationEnvironmentConfigModel';
-import { GeneratedKeyResult } from '../../store/api-keys/api-keys.state';
+import { GeneratedKeyResult } from '../../store/environments/environments.state';
 import { ApplicationApiKeyStatus } from '../../../../../core/enums/ApplicationApiKeyStatusEnum';
 
 /**
@@ -344,11 +344,11 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
     this.error$ = this.store.select(fromApplications.selectError);
     this.saveError$ = this.store.select(fromApplications.selectSaveError);
     this.organizations$ = this.store.select(fromOrganizations.selectOrganizations);
-    this.apiKeys$ = this.store.select(fromApiKeys.selectApiKeys);
+    this.apiKeys$ = this.store.select(fromEnvironments.selectApiKeys);
     this.environmentConfigs$ = this.store.select(fromEnvironmentConfig.selectConfigs);
-    this.isGeneratingKey$ = this.store.select(fromApiKeys.selectIsGenerating);
-    this.isRevokingKey$ = this.store.select(fromApiKeys.selectIsRevoking);
-    this.generatedKey$ = this.store.select(fromApiKeys.selectGeneratedKey);
+    this.isGeneratingKey$ = this.store.select(fromEnvironments.selectIsGenerating);
+    this.isRevokingKey$ = this.store.select(fromEnvironments.selectIsRevoking);
+    this.generatedKey$ = this.store.select(fromEnvironments.selectGeneratedKey);
     this.debugMode$ = this.store.select(fromUser.selectDebugMode);
 
     // Subscribe to application changes to sync local state
@@ -474,11 +474,11 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
   private loadApiKeys(): void {
     if (this.application) {
       // Load API keys
-      this.store.dispatch(ApiKeysActions.setApplicationContext({
+      this.store.dispatch(EnvironmentsActions.setApplicationContext({
         applicationId: this.application.applicationId,
         organizationId: this.application.organizationId
       }));
-      this.store.dispatch(ApiKeysActions.loadApiKeys({
+      this.store.dispatch(EnvironmentsActions.loadEnvironments({
         applicationId: this.application.applicationId
       }));
 
@@ -949,12 +949,12 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
     if (previousTab === ApplicationDetailTab.Environments && tab !== ApplicationDetailTab.Environments) {
       this.generatedKeyDisplay = null;
       this.copySuccess = false;
-      this.store.dispatch(ApiKeysActions.clearGeneratedKey());
+      this.store.dispatch(EnvironmentsActions.clearGeneratedKey());
     }
 
     // Reload API keys when switching to Environments tab (Requirement 1.2)
     if (tab === ApplicationDetailTab.Environments && this.application) {
-      this.store.dispatch(ApiKeysActions.loadApiKeys({
+      this.store.dispatch(EnvironmentsActions.loadEnvironments({
         applicationId: this.application.applicationId
       }));
     }
@@ -996,7 +996,7 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
   onGenerateKeyForEnvironment(environment: string): void {
     if (!this.application) return;
 
-    this.store.dispatch(ApiKeysActions.generateApiKey({
+    this.store.dispatch(EnvironmentsActions.generateApiKey({
       applicationId: this.application.applicationId,
       organizationId: this.application.organizationId,
       environment: environment as Environment
@@ -1010,7 +1010,7 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
       return;
     }
 
-    this.store.dispatch(ApiKeysActions.revokeApiKey({
+    this.store.dispatch(EnvironmentsActions.revokeApiKey({
       apiKeyId: row.apiKey.applicationApiKeyId,
       applicationId: this.application.applicationId,
       environment: row.environment as Environment
@@ -1025,7 +1025,7 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
   onRotateKeyForRow(row: EnvironmentKeyRow): void {
     if (!this.application || !row.apiKey) return;
 
-    this.store.dispatch(ApiKeysActions.rotateApiKey({
+    this.store.dispatch(EnvironmentsActions.rotateApiKey({
       apiKeyId: row.apiKey.applicationApiKeyId,
       applicationId: this.application.applicationId,
       environment: row.environment as Environment

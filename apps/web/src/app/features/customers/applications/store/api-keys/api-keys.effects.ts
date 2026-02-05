@@ -1,10 +1,15 @@
 /**
+ * @deprecated This file is deprecated. Use the environments store instead.
+ * The API keys functionality has been consolidated into the environments store.
+ * Import from '../../store/environments/environments.effects' instead.
+ *
  * API Keys Effects
  *
  * Handles side effects for application API key state management.
  * Follows the same patterns as GroupsEffects.
  *
  * @see .kiro/specs/application-access-management/design.md
+ * @see .kiro/specs/store-consolidation/requirements.md - Requirements 5.1, 5.2
  * _Requirements: 9.1_
  */
 

@@ -28,7 +28,7 @@ describe('Environment Detail Page Property Tests', () => {
     EnvironmentDetailTab.FeatureFlags
   );
 
-  const apiKeyStatusArbitrary = fc.constantFrom(
+  const _apiKeyStatusArbitrary = fc.constantFrom(
     ApplicationApiKeyStatus.Active,
     ApplicationApiKeyStatus.Rotating,
     ApplicationApiKeyStatus.Revoked,

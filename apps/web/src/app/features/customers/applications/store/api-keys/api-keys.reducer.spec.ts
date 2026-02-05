@@ -1,9 +1,14 @@
 /**
+ * @deprecated This file is deprecated. Use the environments store instead.
+ * The API keys functionality has been consolidated into the environments store.
+ * Tests should be updated to use environments store reducer.
+ *
  * API Keys Reducer Unit Tests
  *
  * Tests for the api-keys NgRx reducer.
  *
  * @see .kiro/specs/application-access-management/design.md
+ * @see .kiro/specs/store-consolidation/requirements.md - Requirements 5.1, 5.2
  * _Requirements: 9.5_
  */
 

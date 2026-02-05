@@ -37,9 +37,9 @@ import {
   selectLoadError,
   selectSaveError,
 } from '../../store/environment-config/environment-config.selectors';
-import { ApiKeysActions } from '../../store/api-keys/api-keys.actions';
-import * as fromApiKeys from '../../store/api-keys/api-keys.selectors';
-import { GeneratedKeyResult } from '../../store/api-keys/api-keys.state';
+import { EnvironmentsActions } from '../../store/environments/environments.actions';
+import * as fromEnvironments from '../../store/environments/environments.selectors';
+import { GeneratedKeyResult } from '../../store/environments/environments.state';
 
 /**
  * Tab identifiers for the environment detail page
@@ -149,10 +149,10 @@ export class EnvironmentDetailPageComponent implements OnInit, OnDestroy {
     this.isSaving$ = this.store.select(selectIsSaving);
     this.loadError$ = this.store.select(selectLoadError);
     this.saveError$ = this.store.select(selectSaveError);
-    this.apiKeys$ = this.store.select(fromApiKeys.selectApiKeys);
-    this.isGeneratingKey$ = this.store.select(fromApiKeys.selectIsGenerating);
-    this.isRevokingKey$ = this.store.select(fromApiKeys.selectIsRevoking);
-    this.generatedKey$ = this.store.select(fromApiKeys.selectGeneratedKey);
+    this.apiKeys$ = this.store.select(fromEnvironments.selectApiKeys);
+    this.isGeneratingKey$ = this.store.select(fromEnvironments.selectIsGenerating);
+    this.isRevokingKey$ = this.store.select(fromEnvironments.selectIsRevoking);
+    this.generatedKey$ = this.store.select(fromEnvironments.selectGeneratedKey);
   }
 
   ngOnInit(): void {
@@ -235,12 +235,12 @@ export class EnvironmentDetailPageComponent implements OnInit, OnDestroy {
           environment: this.environment!,
         }));
 
-        // Load API keys
-        this.store.dispatch(ApiKeysActions.setApplicationContext({
+        // Load API keys via environments store
+        this.store.dispatch(EnvironmentsActions.setApplicationContext({
           applicationId: app.applicationId,
           organizationId: app.organizationId,
         }));
-        this.store.dispatch(ApiKeysActions.loadApiKeys({
+        this.store.dispatch(EnvironmentsActions.loadEnvironments({
           applicationId: app.applicationId,
         }));
 
@@ -339,7 +339,7 @@ export class EnvironmentDetailPageComponent implements OnInit, OnDestroy {
   onGenerateKey(): void {
     if (!this.application || !this.environment) return;
 
-    this.store.dispatch(ApiKeysActions.generateApiKey({
+    this.store.dispatch(EnvironmentsActions.generateApiKey({
       applicationId: this.application.applicationId,
       organizationId: this.application.organizationId,
       environment: this.environment,
@@ -349,7 +349,7 @@ export class EnvironmentDetailPageComponent implements OnInit, OnDestroy {
   onRotateKey(): void {
     if (!this.application || !this.environmentApiKey) return;
 
-    this.store.dispatch(ApiKeysActions.rotateApiKey({
+    this.store.dispatch(EnvironmentsActions.rotateApiKey({
       apiKeyId: this.environmentApiKey.applicationApiKeyId,
       applicationId: this.application.applicationId,
       environment: this.environment!,
@@ -363,7 +363,7 @@ export class EnvironmentDetailPageComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.store.dispatch(ApiKeysActions.revokeApiKey({
+    this.store.dispatch(EnvironmentsActions.revokeApiKey({
       apiKeyId: this.environmentApiKey.applicationApiKeyId,
       applicationId: this.application.applicationId,
       environment: this.environment!,
@@ -387,7 +387,7 @@ export class EnvironmentDetailPageComponent implements OnInit, OnDestroy {
   dismissGeneratedKey(): void {
     this.generatedKeyDisplay = null;
     this.copySuccess = false;
-    this.store.dispatch(ApiKeysActions.clearGeneratedKey());
+    this.store.dispatch(EnvironmentsActions.clearGeneratedKey());
   }
 
   // Allowed Origins Management

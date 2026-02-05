@@ -1,7 +1,8 @@
 /**
  * Environments Reducer
  *
- * Handles state changes for application environments list management.
+ * Handles state changes for application environments management.
+ * This is the single source of truth for both environment configs AND API keys.
  * Follows the Organizations store pattern as the canonical reference.
  *
  * @see .kiro/specs/environments-list-and-detail/design.md
@@ -47,7 +48,6 @@ export const environmentsReducer = createReducer(
   on(
     EnvironmentsActions.loadEnvironmentsSuccess,
     (state, { configs, apiKeys }): EnvironmentsState => {
-      // Build environment rows from configs and API keys
       const environmentRows = buildEnvironmentRows(configs, apiKeys);
 
       return {
@@ -56,7 +56,7 @@ export const environmentsReducer = createReducer(
         configs,
         apiKeys,
         environmentRows,
-        filteredEnvironmentRows: environmentRows,
+        filteredEnvironmentRows: applyAllFilters(environmentRows, state.searchTerm, state.statusFilter, state.environmentFilter),
         error: null,
       };
     }
@@ -71,13 +71,206 @@ export const environmentsReducer = createReducer(
     })
   ),
 
+  // Generate API Key
+  on(
+    EnvironmentsActions.generateApiKey,
+    (state): EnvironmentsState => ({
+      ...state,
+      isGenerating: true,
+      generateError: null,
+      generatedKey: null,
+    })
+  ),
+
+  on(
+    EnvironmentsActions.generateApiKeySuccess,
+    (state, { apiKey, generatedKey }): EnvironmentsState => {
+      const updatedApiKeys = [...state.apiKeys, apiKey];
+      const environmentRows = buildEnvironmentRows(state.configs, updatedApiKeys);
+
+      return {
+        ...state,
+        isGenerating: false,
+        apiKeys: updatedApiKeys,
+        environmentRows,
+        filteredEnvironmentRows: applyAllFilters(environmentRows, state.searchTerm, state.statusFilter, state.environmentFilter),
+        generatedKey: generatedKey,
+        generateError: null,
+      };
+    }
+  ),
+
+  on(
+    EnvironmentsActions.generateApiKeyFailure,
+    (state, { error }): EnvironmentsState => ({
+      ...state,
+      isGenerating: false,
+      generateError: error,
+    })
+  ),
+
+  // Rotate API Key
+  on(
+    EnvironmentsActions.rotateApiKey,
+    (state): EnvironmentsState => ({
+      ...state,
+      isRotating: true,
+      rotateError: null,
+      generatedKey: null,
+    })
+  ),
+
+  on(
+    EnvironmentsActions.rotateApiKeySuccess,
+    (state, { apiKey, newKey }): EnvironmentsState => {
+      const updatedApiKeys = state.apiKeys.map((k) =>
+        k.applicationApiKeyId === apiKey.applicationApiKeyId ? apiKey : k
+      );
+      const environmentRows = buildEnvironmentRows(state.configs, updatedApiKeys);
+
+      return {
+        ...state,
+        isRotating: false,
+        apiKeys: updatedApiKeys,
+        environmentRows,
+        filteredEnvironmentRows: applyAllFilters(environmentRows, state.searchTerm, state.statusFilter, state.environmentFilter),
+        generatedKey: newKey,
+        rotateError: null,
+      };
+    }
+  ),
+
+  on(
+    EnvironmentsActions.rotateApiKeyFailure,
+    (state, { error }): EnvironmentsState => ({
+      ...state,
+      isRotating: false,
+      rotateError: error,
+    })
+  ),
+
+  // Regenerate API Key
+  on(
+    EnvironmentsActions.regenerateApiKey,
+    (state): EnvironmentsState => ({
+      ...state,
+      isRegenerating: true,
+      regenerateError: null,
+      regeneratedKeyResult: null,
+    })
+  ),
+
+  on(
+    EnvironmentsActions.regenerateApiKeySuccess,
+    (state, { oldKey, newKey, regeneratedKeyResult }): EnvironmentsState => {
+      // Update the old key to ROTATING status and add the new key
+      let updatedApiKeys = state.apiKeys.map((k) =>
+        k.applicationApiKeyId === oldKey.applicationApiKeyId ? oldKey : k
+      );
+      updatedApiKeys = [...updatedApiKeys, newKey];
+      const environmentRows = buildEnvironmentRows(state.configs, updatedApiKeys);
+
+      return {
+        ...state,
+        isRegenerating: false,
+        apiKeys: updatedApiKeys,
+        environmentRows,
+        filteredEnvironmentRows: applyAllFilters(environmentRows, state.searchTerm, state.statusFilter, state.environmentFilter),
+        regeneratedKeyResult: regeneratedKeyResult,
+        generatedKey: {
+          apiKeyId: newKey.applicationApiKeyId,
+          fullKey: regeneratedKeyResult.newKeyFullValue,
+          environment: newKey.environment,
+          keyPrefix: newKey.keyPrefix,
+        },
+        regenerateError: null,
+      };
+    }
+  ),
+
+  on(
+    EnvironmentsActions.regenerateApiKeyFailure,
+    (state, { error }): EnvironmentsState => ({
+      ...state,
+      isRegenerating: false,
+      regenerateError: error,
+    })
+  ),
+
+  // Clear Regenerated Key Result
+  on(
+    EnvironmentsActions.clearRegeneratedKeyResult,
+    (state): EnvironmentsState => ({
+      ...state,
+      regeneratedKeyResult: null,
+    })
+  ),
+
+  // Revoke API Key
+  on(
+    EnvironmentsActions.revokeApiKey,
+    (state): EnvironmentsState => ({
+      ...state,
+      isRevoking: true,
+      revokeError: null,
+    })
+  ),
+
+  on(
+    EnvironmentsActions.revokeApiKeySuccess,
+    (state, { apiKeyId, revokedKey }): EnvironmentsState => {
+      const updatedApiKeys = state.apiKeys.map((k) =>
+        k.applicationApiKeyId === apiKeyId ? revokedKey : k
+      );
+      const environmentRows = buildEnvironmentRows(state.configs, updatedApiKeys);
+
+      return {
+        ...state,
+        isRevoking: false,
+        apiKeys: updatedApiKeys,
+        environmentRows,
+        filteredEnvironmentRows: applyAllFilters(environmentRows, state.searchTerm, state.statusFilter, state.environmentFilter),
+        selectedApiKey:
+          state.selectedApiKey?.applicationApiKeyId === apiKeyId
+            ? null
+            : state.selectedApiKey,
+        revokeError: null,
+      };
+    }
+  ),
+
+  on(
+    EnvironmentsActions.revokeApiKeyFailure,
+    (state, { error }): EnvironmentsState => ({
+      ...state,
+      isRevoking: false,
+      revokeError: error,
+    })
+  ),
+
+  // Selection Management
+  on(
+    EnvironmentsActions.selectApiKey,
+    (state, { apiKey }): EnvironmentsState => ({
+      ...state,
+      selectedApiKey: apiKey,
+    })
+  ),
+
+  // Clear Generated Key
+  on(
+    EnvironmentsActions.clearGeneratedKey,
+    (state): EnvironmentsState => ({
+      ...state,
+      generatedKey: null,
+    })
+  ),
+
   // Filter Management
   on(
     EnvironmentsActions.setSearchTerm,
     (state, { searchTerm }): EnvironmentsState => {
-      const filteredRows = state.environmentRows.filter((row) =>
-        applyFilters(row, searchTerm, state.statusFilter)
-      );
+      const filteredRows = applyAllFilters(state.environmentRows, searchTerm, state.statusFilter, state.environmentFilter);
 
       return {
         ...state,
@@ -90,9 +283,7 @@ export const environmentsReducer = createReducer(
   on(
     EnvironmentsActions.setStatusFilter,
     (state, { statusFilter }): EnvironmentsState => {
-      const filteredRows = state.environmentRows.filter((row) =>
-        applyFilters(row, state.searchTerm, statusFilter)
-      );
+      const filteredRows = applyAllFilters(state.environmentRows, state.searchTerm, statusFilter, state.environmentFilter);
 
       return {
         ...state,
@@ -102,10 +293,21 @@ export const environmentsReducer = createReducer(
     }
   ),
 
+  on(
+    EnvironmentsActions.setEnvironmentFilter,
+    (state, { environmentFilter }): EnvironmentsState => {
+      const filteredRows = applyAllFilters(state.environmentRows, state.searchTerm, state.statusFilter, environmentFilter);
+
+      return {
+        ...state,
+        environmentFilter,
+        filteredEnvironmentRows: filteredRows,
+      };
+    }
+  ),
+
   on(EnvironmentsActions.applyFilters, (state): EnvironmentsState => {
-    const filteredRows = state.environmentRows.filter((row) =>
-      applyFilters(row, state.searchTerm, state.statusFilter)
-    );
+    const filteredRows = applyAllFilters(state.environmentRows, state.searchTerm, state.statusFilter, state.environmentFilter);
 
     return {
       ...state,
@@ -119,6 +321,34 @@ export const environmentsReducer = createReducer(
     (state): EnvironmentsState => ({
       ...state,
       error: null,
+      generateError: null,
+      regenerateError: null,
+      rotateError: null,
+      revokeError: null,
+    })
+  ),
+
+  on(
+    EnvironmentsActions.clearGenerateError,
+    (state): EnvironmentsState => ({
+      ...state,
+      generateError: null,
+    })
+  ),
+
+  on(
+    EnvironmentsActions.clearRotateError,
+    (state): EnvironmentsState => ({
+      ...state,
+      rotateError: null,
+    })
+  ),
+
+  on(
+    EnvironmentsActions.clearRevokeError,
+    (state): EnvironmentsState => ({
+      ...state,
+      revokeError: null,
     })
   ),
 
@@ -128,6 +358,30 @@ export const environmentsReducer = createReducer(
     (state, { isLoading }): EnvironmentsState => ({
       ...state,
       isLoading,
+    })
+  ),
+
+  on(
+    EnvironmentsActions.setGenerating,
+    (state, { isGenerating }): EnvironmentsState => ({
+      ...state,
+      isGenerating,
+    })
+  ),
+
+  on(
+    EnvironmentsActions.setRotating,
+    (state, { isRotating }): EnvironmentsState => ({
+      ...state,
+      isRotating,
+    })
+  ),
+
+  on(
+    EnvironmentsActions.setRevoking,
+    (state, { isRevoking }): EnvironmentsState => ({
+      ...state,
+      isRevoking,
     })
   ),
 
@@ -247,22 +501,29 @@ export function buildEnvironmentRows(
 }
 
 /**
- * Apply filters to environment rows
+ * Apply all filters to environment rows
  * _Requirements: 2.4, 2.5_
  */
-function applyFilters(
-  row: EnvironmentTableRow,
+function applyAllFilters(
+  rows: EnvironmentTableRow[],
   searchTerm: string,
-  statusFilter: string
-): boolean {
-  const matchesSearch =
-    !searchTerm ||
-    row.environmentLabel.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    row.config.environment.toLowerCase().includes(searchTerm.toLowerCase());
+  statusFilter: string,
+  environmentFilter: string
+): EnvironmentTableRow[] {
+  return rows.filter((row) => {
+    const matchesSearch =
+      !searchTerm ||
+      row.environmentLabel.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      row.config.environment.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      row.keyPrefix.toLowerCase().includes(searchTerm.toLowerCase());
 
-  const matchesStatus = !statusFilter || row.status === statusFilter;
+    const matchesStatus = !statusFilter || row.status === statusFilter;
 
-  return matchesSearch && matchesStatus;
+    const matchesEnvironment =
+      !environmentFilter || row.config.environment === environmentFilter;
+
+    return matchesSearch && matchesStatus && matchesEnvironment;
+  });
 }
 
 /**

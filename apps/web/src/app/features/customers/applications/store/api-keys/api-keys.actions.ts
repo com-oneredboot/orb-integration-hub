@@ -1,10 +1,15 @@
 /**
+ * @deprecated This file is deprecated. Use the environments store instead.
+ * The API keys functionality has been consolidated into the environments store.
+ * Import from '../../store/environments/environments.actions' instead.
+ *
  * API Keys Actions
  *
  * Defines all actions for application API key state management.
  * Follows the same patterns as GroupsActions.
  *
  * @see .kiro/specs/application-access-management/design.md
+ * @see .kiro/specs/store-consolidation/requirements.md - Requirements 5.1, 5.2
  * _Requirements: 9.1_
  */
 

@@ -69,8 +69,9 @@ describe('CustomValidators XSS Protection Property Tests', () => {
     // Generator for safe inputs (should pass validation)
     // Note: We use simple alphanumeric strings to avoid characters that the sanitizer might encode
     // even though they're not XSS attacks, to focus on testing actual XSS protection
+    // Also exclude % to avoid false positives from URL-decoding logic
     const safeInputArbitrary = fc.oneof(
-      fc.string().filter(s => !/[<>&"']/.test(s) && s.length > 0),
+      fc.string().filter(s => !/[<>&"'%]/.test(s) && s.length > 0),
       fc.constant('John Doe'),
       fc.constant('test@example.com'),
       fc.constant('+1234567890'),
