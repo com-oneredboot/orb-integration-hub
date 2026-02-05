@@ -124,14 +124,4 @@
   display: flex;
   justify-content: center;
   align-items: flex-start;
-
-  // Style the hero component when it appears in user pages
-  ::ng-deep app-hero-split .orb-hero-split {
-    background-color: v.$orb-dark-gray;
-    background-image: 
-      radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.07) 1px, transparent 0),
-      radial-gradient(circle at 1px 1px, rgba(v.$orb-red, 0.06) 1px, transparent 0);
-    background-size: 20px 20px, 15px 15px;
-    background-position: 0 0, 10px 10px;
-  }
 }
