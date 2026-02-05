@@ -9,8 +9,9 @@
 
 .dashboard-container {
   width: 100%;
-  margin: 0 auto;
+  margin: 0;
   padding: 0;
+  padding-right: 100px; // Reserve space for quick actions tab
 
   // Custom content within HeroSplitComponent
   .dashboard-header-content {
@@ -35,8 +36,8 @@
 
   .dashboard-content {
     width: 100%;
-    margin: 0 auto;
-    padding: 0 v.$spacing-lg;
+    margin: 0;
+    padding: 2rem v.$spacing-lg;
   }
   
   // CTA Hub Layout: Cards on left/center, Quick Actions on extreme right
