@@ -15,6 +15,7 @@
 | #64 | orb-schema-generator | Enhancement: Generate SSM parameters for DynamoDB table ARNs and names | Open | Low |
 | #65 | orb-schema-generator | Enhancement: Support PITR configuration in DynamoDB table schemas | Open | Low |
 | #66 | orb-schema-generator | Documentation: Add schema type generation matrix and construct extension examples | Open | Low |
+| #51 | orb-templates | Add Kiro Hooks Guidance and Recommended Hooks Library | Open | High |
 | #50 | orb-templates | Update CodeArtifact Integration Guide for pipenv Package Source Specification | Open | High |
 | #43 | orb-templates | Add Guidance: pipenv + CodeArtifact Package Installation Workaround | Open | High |
 | #40 | orb-templates | orb-templates-mcp: uvx cannot authenticate with CodeArtifact | Open | High |
