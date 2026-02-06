@@ -53,8 +53,8 @@ type ApplicationEnvironmentConfig {
   webhookEnabled: Boolean
   webhookMaxRetries: Float
   webhookRetryDelaySeconds: Float
-  featureFlags: map
-  metadata: map
+  featureFlags: AWSJSON
+  metadata: AWSJSON
   createdAt: AWSTimestamp!
   updatedAt: AWSTimestamp!
 }
@@ -1277,8 +1277,8 @@ input ApplicationEnvironmentConfigCreateInput {
   webhookEnabled: Boolean
   webhookMaxRetries: Float
   webhookRetryDelaySeconds: Float
-  featureFlags: map
-  metadata: map
+  featureFlags: AWSJSON
+  metadata: AWSJSON
   createdAt: AWSTimestamp!
   updatedAt: AWSTimestamp!
 }
@@ -1296,8 +1296,8 @@ input ApplicationEnvironmentConfigUpdateInput {
   webhookEnabled: Boolean
   webhookMaxRetries: Float
   webhookRetryDelaySeconds: Float
-  featureFlags: map
-  metadata: map
+  featureFlags: AWSJSON
+  metadata: AWSJSON
   createdAt: AWSTimestamp
   updatedAt: AWSTimestamp
 }

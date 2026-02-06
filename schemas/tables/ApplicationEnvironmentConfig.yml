@@ -88,11 +88,11 @@ model:
       required: false
       description: Delay between retry attempts in seconds (default 60)
     featureFlags:
-      type: map
+      type: json
       required: false
       description: Map of feature flag keys to values (boolean, string, or number)
     metadata:
-      type: map
+      type: json
       required: false
       description: Custom key-value pairs for environment-specific data
     createdAt:
