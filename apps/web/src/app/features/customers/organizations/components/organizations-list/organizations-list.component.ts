@@ -12,10 +12,9 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Store } from '@ngrx/store';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, of } from 'rxjs';
 import { takeUntil, map, take } from 'rxjs/operators';
 import { StatusBadgeComponent } from '../../../../../shared/components/ui/status-badge.component';
-import { BreadcrumbItem } from '../../../../../shared/components';
 import {
   DataGridComponent,
   ColumnDefinition,
@@ -37,6 +36,11 @@ import * as fromUser from '../../../../user/store/user.selectors';
 import { OrganizationsActions } from '../../store/organizations.actions';
 import * as fromOrganizations from '../../store/organizations.selectors';
 import { OrganizationTableRow } from '../../store/organizations.state';
+import { UserPageComponent } from '../../../../../layouts/pages/user-page/user-page.component';
+import { BreadcrumbItem } from '../../../../../shared/components';
+import { TabConfig } from '../../../../../shared/models/tab-config.model';
+import { DebugPanelComponent, DebugContext } from '../../../../../shared/components/debug/debug-panel.component';
+import { DebugLogEntry } from '../../../../../core/services/debug-log.service';
 
 @Component({
   selector: 'app-organizations-list',
@@ -46,7 +50,9 @@ import { OrganizationTableRow } from '../../store/organizations.state';
     FormsModule,
     FontAwesomeModule,
     StatusBadgeComponent,
-    DataGridComponent
+    DataGridComponent,
+    UserPageComponent,
+    DebugPanelComponent
   ],
   templateUrl: './organizations-list.component.html',
   styleUrls: ['./organizations-list.component.scss']
@@ -54,6 +60,36 @@ import { OrganizationTableRow } from '../../store/organizations.state';
 export class OrganizationsListComponent implements OnInit, OnDestroy {
   @Output() organizationSelected = new EventEmitter<Organizations>();
   @Input() selectedOrganization: Organizations | null = null;
+
+  // UserPageComponent configuration
+  breadcrumbItems: BreadcrumbItem[] = [
+    { label: 'Organizations', route: null }
+  ];
+
+  tabs: TabConfig[] = [
+    { id: 'overview', label: 'Overview', icon: 'fas fa-list' }
+  ];
+
+  activeTab = 'overview';
+
+  // Debug panel
+  debugMode$: Observable<boolean>;
+  debugLogs$: Observable<DebugLogEntry[]> = of([]);
+
+  get debugContext(): DebugContext {
+    return {
+      page: 'Organizations',
+      additionalSections: [
+        {
+          title: 'Component State',
+          data: {
+            selectedOrganizationId: this.selectedOrganization?.organizationId || 'None',
+            componentInitialized: true
+          }
+        }
+      ]
+    };
+  }
 
   // Template references for custom cells
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -87,16 +123,6 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
   // Create state
   isCreatingDraft = false;
   
-  /**
-   * Breadcrumb items for navigation
-   * Shows: Organizations (current page)
-   */
-  get breadcrumbItems(): BreadcrumbItem[] {
-    return [
-      { label: 'Organizations', route: null }
-    ];
-  }
-  
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -107,6 +133,7 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
   ) {
     // User selectors
     this.currentUser$ = this.store.select(fromUser.selectCurrentUser);
+    this.debugMode$ = this.store.select(fromUser.selectDebugMode);
     
     // Organization selectors
     this.organizationRows$ = this.store.select(fromOrganizations.selectOrganizationRows);
@@ -335,5 +362,12 @@ export class OrganizationsListComponent implements OnInit, OnDestroy {
     this.router.navigate(['/customers/applications'], {
       queryParams: { organizationId: row.organization.organizationId }
     });
+  }
+
+  /**
+   * Handle tab change from UserPageComponent
+   */
+  onTabChange(tabId: string): void {
+    this.activeTab = tabId;
   }
 }

@@ -7,6 +7,222 @@ fileMatchPattern: "apps/web/**/*.ts"
 
 Guidelines for creating Angular components in orb-integration-hub.
 
+## User Layout and Page Structure
+
+### Terminology
+
+| Term | What It Is | Example |
+|------|------------|---------|
+| **Layout** or **Shell Layout** | Root-level wrapper with `<router-outlet>` | `user-layout`, `platform-layout` |
+| **Page Wrapper** | Reusable component that enforces page structure | `UserPageComponent` |
+| **Page Component** | Feature page that renders in outlet | `OrganizationsListComponent` |
+
+### User Layout Component (Shell)
+
+The `UserLayoutComponent` is the main authenticated shell that wraps all user-facing pages (dashboard, profile, customer features). It provides consistent navigation, header, and footer across the application.
+
+**Location:** `apps/web/src/app/layouts/user-layout/user-layout.component.ts`
+
+**Structure:**
+```html
+<div class="app-container">
+  <header class="header">
+    <nav class="nav-menu">
+      <!-- Navigation links -->
+    </nav>
+  </header>
+
+  <main class="main-content">
+    <router-outlet></router-outlet>  <!-- Page components render here -->
+  </main>
+</div>
+
+<!-- Quick Actions Nav (for CUSTOMER users only) -->
+<app-quick-actions-nav></app-quick-actions-nav>
+```
+
+**Key Points:**
+- The `<router-outlet>` is where Angular injects page components based on the current URL
+- When navigating to `/customers/organizations`, the `OrganizationsListComponent` renders inside the outlet
+- The layout provides the shell; page components provide their content
+- Quick actions nav appears only for authenticated CUSTOMER users
+
+### UserPageComponent (Page Wrapper)
+
+**REQUIRED:** ALL pages rendered within user-layout MUST use the `UserPageComponent` wrapper to ensure consistent structure and eliminate layout shifts.
+
+**Location:** `apps/web/src/app/layouts/pages/user-page/user-page.component.ts`
+
+**Why use a page wrapper?**
+- Enforces consistent dimensions (max-width: 1400px)
+- Ensures correct element ordering (hero → breadcrumbs → tabs → content)
+- Eliminates layout shifts when navigating between pages
+- Centralizes responsive behavior
+- Reduces code duplication
+
+**Usage:**
+
+```typescript
+import { UserPageComponent } from '../../../layouts/pages/user-page/user-page.component';
+
+@Component({
+  selector: 'app-organizations-list',
+  standalone: true,
+  imports: [UserPageComponent, DataGridComponent],
+  template: `
+    <app-user-page
+      [heroTitle]="'Organizations'"
+      [heroSubtitle]="'Manage your business entities'"
+      [breadcrumbItems]="breadcrumbItems"
+      [tabs]="tabs"
+      [activeTab]="activeTab"
+      (tabChange)="onTabChange($event)">
+      
+      <!-- Your page content here -->
+      <div class="orb-card">
+        <app-data-grid ...></app-data-grid>
+      </div>
+      
+    </app-user-page>
+  `
+})
+export class OrganizationsListComponent {
+  breadcrumbItems = [{ label: 'Organizations', route: null }];
+  tabs = [{ id: 'overview', label: 'Overview', icon: 'list' }];
+  activeTab = 'overview';
+  
+  onTabChange(tabId: string): void {
+    this.activeTab = tabId;
+  }
+}
+```
+
+**Inputs:**
+
+| Input | Type | Default | Description |
+|-------|------|---------|-------------|
+| `showHero` | boolean | `true` | Whether to show hero section |
+| `heroLogo` | string | `'assets/orb-logo.jpg'` | Logo image source |
+| `heroLogoAlt` | string | `'Orb Integration Hub Logo'` | Logo alt text |
+| `heroTitle` | string | `''` | Main title (required if showHero) |
+| `heroSubtitle` | string | `''` | Subtitle/description |
+| `showHeroButtons` | boolean | `false` | Show custom buttons slot |
+| `breadcrumbItems` | BreadcrumbItem[] | `[]` | Breadcrumb navigation items |
+| `tabs` | TabConfig[] | `[]` | Tab configuration |
+| `activeTab` | string | `''` | Active tab ID |
+
+**Outputs:**
+
+| Output | Type | Description |
+|--------|------|-------------|
+| `tabChange` | EventEmitter<string> | Emits when tab is changed |
+
+**Structure Enforced by UserPageComponent:**
+
+```
+UserPageComponent
+├── Hero Split (optional) - outside content section
+└── Content Section (required) - max-width: 1400px, centered
+    ├── Breadcrumbs (required) - first element
+    ├── Tab Navigation (optional) - after breadcrumbs
+    └── Main Content (projected) - your page content
+```
+
+**Critical Rules:**
+1. **Always use UserPageComponent** - Never create custom page wrappers
+2. **Hero sits outside content section** - Handled by wrapper
+3. **Breadcrumbs sit inside content section** - Handled by wrapper
+4. **Content section has standard dimensions** - Handled by wrapper
+5. **Project your content** - Use `<ng-content>` slot for page-specific content
+
+### Layout Hierarchy
+
+```
+UserLayoutComponent (shell)
+├── Header (navigation)
+├── <router-outlet>
+│   └── YourPageComponent
+│       └── UserPageComponent (wrapper)
+│           ├── Hero Split (outside content section)
+│           └── Content Section (max-width: 1400px)
+│               ├── Breadcrumbs (orb-breadcrumb-container)
+│               ├── Tab Navigation (if applicable)
+│               └── Main Content (projected from YourPageComponent)
+└── Quick Actions Nav (CUSTOMER only)
+```
+
+### Canonical Reference Implementations
+
+**For List Pages:** `apps/web/src/app/features/customers/organizations/components/organizations-list/`
+- Demonstrates proper UserPageComponent usage
+- Shows correct breadcrumb and tab configuration
+- Uses global CSS classes
+
+**For Detail Pages:** `apps/web/src/app/features/customers/organizations/components/organization-detail-page/`
+- Demonstrates hero split configuration
+- Shows tab navigation with badges
+- Demonstrates content projection
+
+### Common Mistakes to Avoid
+
+❌ **WRONG - Not using UserPageComponent:**
+```html
+<div class="my-page">
+  <app-hero-split></app-hero-split>
+  <div class="my-page__content">
+    <app-breadcrumb></app-breadcrumb>
+    <!-- content -->
+  </div>
+</div>
+```
+
+❌ **WRONG - Custom page wrappers:**
+```html
+<div class="page-content">  <!-- Unnecessary wrapper -->
+  <div class="content-wrapper">  <!-- Another unnecessary wrapper -->
+    <app-breadcrumb></app-breadcrumb>
+  </div>
+</div>
+```
+
+❌ **WRONG - Custom dimensions:**
+```scss
+.my-page__content {
+  max-width: 1200px;  // Should use UserPageComponent
+}
+```
+
+✅ **CORRECT - Use UserPageComponent:**
+```html
+<app-user-page
+  [heroTitle]="'My Page'"
+  [breadcrumbItems]="breadcrumbItems">
+  
+  <!-- Your content here -->
+  <div class="orb-card">
+    <!-- Feature-specific content -->
+  </div>
+  
+</app-user-page>
+```
+
+### Page Creation Checklist
+
+When creating a new page within user-layout:
+
+- [ ] Import `UserPageComponent` from `layouts/pages/user-page/`
+- [ ] Wrap all page content in `<app-user-page>`
+- [ ] Configure hero section (title, subtitle)
+- [ ] Provide breadcrumb items array
+- [ ] Configure tabs (if applicable)
+- [ ] Handle tabChange event (if tabs present)
+- [ ] Project main content into default slot
+- [ ] Use global `orb-*` CSS classes (no custom wrappers)
+- [ ] Test responsive behavior
+- [ ] Verify no layout shifts when navigating
+
+**Reference:** See `layouts/pages/README.md` for complete UserPageComponent documentation.
+
 ## CTA Card System
 
 The dashboard uses a role-based CTA card system. See the full card matrix in:

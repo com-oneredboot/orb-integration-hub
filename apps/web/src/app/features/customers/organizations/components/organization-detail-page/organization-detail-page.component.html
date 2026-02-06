@@ -12,95 +12,50 @@
   applicationsError: applicationsError$ | async,
   applicationCount: applicationCount$ | async
 } as data">
-  <div class="org-detail-page">
-    <!-- Page Header using HeroSplitComponent -->
-    <app-hero-split
-      [logoSrc]="'assets/orb-logo.jpg'"
-      [logoAlt]="'Orb Integration Hub Logo'"
-      [title]="isDraft ? 'Complete Organization Setup' : (organization?.name || 'Organization Details')"
-      [subtitle]="isDraft 
-        ? 'Your organization was created but needs to be completed. Fill in the details below and click Activate Organization to finish setup.' 
-        : 'Manage your organization information and applications.'">
-      
-      <!-- Custom content -->
-      <div class="org-detail-header-content" *ngIf="organization && !isDraft">
-        <app-status-badge
-          [status]="organization.status"
-          type="organization"
-          [showIcon]="true"
-          [showLabel]="true"
-          size="medium"
-          variant="chip">
-        </app-status-badge>
-      </div>
-    </app-hero-split>
+  <!-- Loading State -->
+  <div class="org-detail-page__loading" *ngIf="data.isLoading">
+    <fa-icon icon="spinner" animation="spin" size="2x"></fa-icon>
+    <p>Loading organization...</p>
+  </div>
 
-    <!-- Breadcrumb Navigation -->
-    <div class="org-detail-page__content">
-      <div class="orb-breadcrumb-container">
-        <app-breadcrumb [items]="breadcrumbItems"></app-breadcrumb>
-      </div>
+  <!-- Error State -->
+  <div class="org-detail-page__error" *ngIf="loadError && !data.isLoading">
+    <fa-icon icon="exclamation-triangle" size="2x"></fa-icon>
+    <p>{{ loadError }}</p>
+    <button class="orb-btn orb-btn--secondary" routerLink="/customers/organizations">
+      Back to Organizations
+    </button>
+  </div>
 
-      <!-- Loading State -->
-      <div class="org-detail-page__loading" *ngIf="data.isLoading">
-        <fa-icon icon="spinner" animation="spin" size="2x"></fa-icon>
-        <p>Loading organization...</p>
-      </div>
-
-      <!-- Error State -->
-      <div class="org-detail-page__error" *ngIf="loadError && !data.isLoading">
-        <fa-icon icon="exclamation-triangle" size="2x"></fa-icon>
-        <p>{{ loadError }}</p>
-        <button class="orb-btn orb-btn--secondary" routerLink="/customers/organizations">
-          Back to Organizations
-        </button>
-      </div>
-
-      <!-- Main Content with Tabs -->
-      <div class="org-detail-page__main" *ngIf="organization && !data.isLoading && !loadError">
-        
-        <!-- Tabs Navigation -->
-        <div class="org-detail-page__tabs">
-          <button class="org-detail-page__tab"
-                  [class.org-detail-page__tab--active]="activeTab === 'overview'"
-                  (click)="setActiveTab('overview')">
-            <fa-icon icon="info-circle" class="org-detail-page__tab-icon"></fa-icon>
-            Overview
-          </button>
-          <button class="org-detail-page__tab"
-                  [class.org-detail-page__tab--active]="activeTab === 'security'"
-                  (click)="setActiveTab('security')">
-            <fa-icon icon="shield-alt" class="org-detail-page__tab-icon"></fa-icon>
-            Security
-          </button>
-          <button class="org-detail-page__tab"
-                  [class.org-detail-page__tab--active]="activeTab === 'stats'"
-                  (click)="setActiveTab('stats')">
-            <fa-icon icon="chart-bar" class="org-detail-page__tab-icon"></fa-icon>
-            Stats
-          </button>
-          <button class="org-detail-page__tab"
-                  [class.org-detail-page__tab--active]="activeTab === 'applications'"
-                  (click)="setActiveTab('applications')">
-            <fa-icon icon="rocket" class="org-detail-page__tab-icon"></fa-icon>
-            Applications
-            <span class="org-detail-page__tab-badge" *ngIf="data.applicationCount">
-              {{ data.applicationCount }}
-            </span>
-          </button>
-          <button class="org-detail-page__tab org-detail-page__tab--danger"
-                  [class.org-detail-page__tab--active]="activeTab === 'danger'"
-                  (click)="setActiveTab('danger')">
-            <fa-icon icon="exclamation-triangle" class="org-detail-page__tab-icon"></fa-icon>
-            Danger Zone
-          </button>
-        </div>
-
-        <!-- Tab Content -->
-        <div class="org-detail-page__tab-content">
-          
-          <!-- Overview Tab -->
-          <div class="org-detail-page__tab-panel" *ngIf="activeTab === 'overview'">
+  <!-- Main Content with UserPageComponent -->
+  <app-user-page
+    *ngIf="organization && !data.isLoading && !loadError"
+    [showHero]="true"
+    [heroTitle]="isDraft ? 'Complete Organization Setup' : (organization.name || 'Organization Details')"
+    [heroSubtitle]="isDraft 
+      ? 'Your organization was created but needs to be completed. Fill in the details below and click Activate Organization to finish setup.' 
+      : 'Manage your organization information and applications.'"
+    [breadcrumbItems]="breadcrumbItems"
+    [tabs]="tabs"
+    [activeTabId]="activeTab"
+    (tabChange)="onTabChange($event)">
+    
+    <!-- Hero buttons slot for status badge -->
+    <div heroButtons *ngIf="organization && !isDraft">
+      <app-status-badge
+        [status]="organization.status"
+        type="organization"
+        [showIcon]="true"
+        [showLabel]="true"
+        size="medium"
+        variant="chip">
+      </app-status-badge>
+    </div>
+    
+    <!-- Tab Content using @switch -->
+    @switch (activeTab) {
+      @case ('overview') {
+        <!-- Overview Tab -->
             <div class="orb-card">
               <div class="orb-card__header">
                 <h2 class="orb-card__title">
@@ -199,10 +154,10 @@
                 </div>
               </div>
             </div>
-          </div>
+        }
 
+        @case ('security') {
           <!-- Security Tab -->
-          <div class="org-detail-page__tab-panel" *ngIf="activeTab === 'security'">
             <div class="orb-card">
               <div class="orb-card__header">
                 <h2 class="orb-card__title">
@@ -227,10 +182,10 @@
                 </div>
               </div>
             </div>
-          </div>
+        }
 
+        @case ('stats') {
           <!-- Stats Tab -->
-          <div class="org-detail-page__tab-panel" *ngIf="activeTab === 'stats'">
             <div class="orb-card">
               <div class="orb-card__header">
                 <h2 class="orb-card__title">
@@ -261,10 +216,10 @@
                 </div>
               </div>
             </div>
-          </div>
+        }
 
+        @case ('applications') {
           <!-- Applications Tab -->
-          <div class="org-detail-page__tab-panel" *ngIf="activeTab === 'applications'">
             <div class="orb-card">
               <div class="orb-card__header">
                 <h2 class="orb-card__title">
@@ -335,10 +290,10 @@
                 </div>
               </div>
             </div>
-          </div>
+        }
 
+        @case ('danger') {
           <!-- Danger Zone Tab -->
-          <div class="org-detail-page__tab-panel" *ngIf="activeTab === 'danger'">
             <app-danger-zone-card
               title="Delete Organization"
               description="Permanently delete this organization and all associated data. This action cannot be undone."
@@ -347,18 +302,16 @@
               [disabled]="data.isSaving"
               (action)="onDelete()">
             </app-danger-zone-card>
-          </div>
+        }
+    }
+      
+  </app-user-page>
 
-        </div>
-      </div>
-    </div>
-
-    <!-- Debug Panel -->
-    <app-debug-panel
-      [visible]="(debugMode$ | async) || false"
-      [title]="'Organization Detail Debug'"
-      [logs$]="debugLogs$"
-      [context]="debugContext">
-    </app-debug-panel>
-  </div>
+  <!-- Debug Panel -->
+  <app-debug-panel
+    [visible]="(debugMode$ | async) || false"
+    [title]="'Organization Detail Debug'"
+    [logs$]="debugLogs$"
+    [context]="debugContext">
+  </app-debug-panel>
 </ng-container>

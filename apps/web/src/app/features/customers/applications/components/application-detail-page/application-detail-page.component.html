@@ -6,7 +6,6 @@
 <!-- @see .kiro/specs/environment-detail-page/design.md -->
 
 <!-- Custom Cell Templates for API Keys Grid - MUST be outside *ngIf for ViewChild static: true -->
-
 <!-- Environment Cell -->
 <ng-template #environmentCell let-row>
   <span
@@ -206,63 +205,31 @@
   saveError: saveError$ | async,
   organizations: organizations$ | async
 } as data">
-  <div class="app-detail-container">
-    <!-- Page Header using HeroSplitComponent -->
-    <app-hero-split
-      [logoSrc]="'assets/orb-logo.jpg'"
-      [logoAlt]="'Orb Integration Hub Logo'"
-      [title]="isDraft ? 'Complete Application Setup' : (application?.name || 'Application Details')"
-      [subtitle]="isDraft 
-        ? 'Your application was created but needs to be completed. Fill in the details below and click Activate Application to finish setup.' 
-        : 'Manage your application settings, groups, and API keys.'">
-      
-      <!-- Custom content -->
-      <div class="app-detail-header-content" *ngIf="application && !isDraft">
-        <app-status-badge
-          [status]="application.status"
-          type="application"
-          [showIcon]="true"
-          [showLabel]="true"
-          size="medium"
-          variant="chip">
-        </app-status-badge>
-      </div>
-    </app-hero-split>
+  <app-user-page
+    [heroTitle]="heroTitle"
+    [heroSubtitle]="heroSubtitle"
+    [breadcrumbItems]="breadcrumbItems"
+    [tabs]="tabs"
+    [activeTabId]="activeTab"
+    (tabChange)="onTabChange($event)">
 
-    <!-- Breadcrumb Navigation -->
-    <!-- @see .kiro/specs/breadcrumb-navigation/design.md -->
-    <!-- _Requirements: 4.1, 4.2, 4.3_ -->
-    <div class="app-detail-content">
-      <div class="orb-breadcrumb-container">
-        <app-breadcrumb [items]="breadcrumbItems"></app-breadcrumb>
-      </div>
+    <!-- Loading State -->
+    <div class="app-detail-loading" *ngIf="data.isLoading">
+      <fa-icon icon="spinner" animation="spin" size="2x"></fa-icon>
+      <p>Loading application...</p>
+    </div>
 
-      <!-- Loading State -->
-      <div class="app-detail-loading" *ngIf="data.isLoading">
-        <fa-icon icon="spinner" animation="spin" size="2x"></fa-icon>
-        <p>Loading application...</p>
-      </div>
+    <!-- Error State -->
+    <div class="app-detail-error" *ngIf="loadError && !data.isLoading">
+      <fa-icon icon="exclamation-triangle" size="2x"></fa-icon>
+      <p>{{ loadError }}</p>
+      <button class="orb-btn orb-btn--secondary" routerLink="/customers/applications">
+        Back to Applications
+      </button>
+    </div>
 
-      <!-- Error State -->
-      <div class="app-detail-error" *ngIf="loadError && !data.isLoading">
-        <fa-icon icon="exclamation-triangle" size="2x"></fa-icon>
-        <p>{{ loadError }}</p>
-        <button class="orb-btn orb-btn--secondary" routerLink="/customers/applications">
-          Back to Applications
-        </button>
-      </div>
-
-      <!-- Content with Tabs -->
-      <div class="app-detail-tabs-section" *ngIf="application && !data.isLoading && !loadError">
-        <!-- Tab Navigation using TabNavigationComponent -->
-        <app-tab-navigation
-          [tabs]="tabs"
-          [activeTabId]="activeTab"
-          (tabChange)="onTabChange($event)">
-        </app-tab-navigation>
-
-        <!-- Tab Panels -->
-        <div class="app-detail-tab-panels">
+    <!-- Tab Panels -->
+    <div class="app-detail-tab-panels" *ngIf="application && !data.isLoading && !loadError">
           <!-- Overview Tab Panel -->
           <div
             class="app-detail-tab-panel"
@@ -474,8 +441,6 @@
             </app-danger-zone-card>
           </div>
         </div>
-      </div>
-    </div>
 
     <!-- Debug Panel -->
     <app-debug-panel
@@ -484,5 +449,6 @@
       [logs$]="debugLogs$"
       [context]="debugContext">
     </app-debug-panel>
-  </div>
+
+  </app-user-page>
 </ng-container>

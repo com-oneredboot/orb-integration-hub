@@ -1,4 +1,4 @@
-// file: apps/web/src/app/features/user/components/dashboard/dashboard-side-nav/dashboard-side-nav.component.ts
+// file: apps/web/src/app/features/user/components/dashboard/quick-actions-nav/quick-actions-nav.component.ts
 // author: Kiro
 // date: 2026-01-23
 // description: Icon-only side navigation component for quick actions (Organizations, Applications, Groups, Users)
@@ -12,18 +12,18 @@ import { filter, takeUntil } from 'rxjs/operators';
 import { SideNavItem } from '../dashboard.types';
 
 /**
- * Side navigation component displays a vertical bar of icon buttons
+ * Quick actions navigation component displays a vertical bar of icon buttons
  * for quick access to Organizations, Applications, Groups, and Users.
  * Shows active state when on the corresponding page.
  */
 @Component({
-  selector: 'app-dashboard-side-nav',
+  selector: 'app-quick-actions-nav',
   standalone: true,
   imports: [CommonModule, FontAwesomeModule],
-  templateUrl: './dashboard-side-nav.component.html',
-  styleUrls: ['./dashboard-side-nav.component.scss']
+  templateUrl: './quick-actions-nav.component.html',
+  styleUrls: ['./quick-actions-nav.component.scss']
 })
-export class DashboardSideNavComponent implements OnInit, OnDestroy {
+export class QuickActionsNavComponent implements OnInit, OnDestroy {
   /** Emitted when a navigation item is clicked */
   @Output() itemClicked = new EventEmitter<SideNavItem>();
 

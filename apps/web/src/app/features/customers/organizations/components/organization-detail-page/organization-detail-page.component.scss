@@ -9,31 +9,6 @@
   width: 100%;
   font-family: v.$font-family-base;
 
-  &__content {
-    max-width: v.$page-max-width;
-    margin: 0 auto;
-    padding: 0 v.$spacing-lg v.$spacing-lg;
-  }
-
-  &__breadcrumb {
-    margin-bottom: v.$spacing-lg;
-  }
-
-  &__back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: v.$spacing-xs;
-    color: v.$primary-color;
-    text-decoration: none;
-    font-size: v.$font-size-sm;
-    transition: color 0.2s ease;
-
-    &:hover {
-      color: color.adjust(v.$primary-color, $lightness: -10%);
-      text-decoration: underline;
-    }
-  }
-
   &__loading,
   &__error {
     display: flex;
@@ -58,99 +33,6 @@
     fa-icon {
       color: v.$danger-color;
     }
-  }
-
-  // Main content area
-  &__main {
-    background: v.$white;
-    border-radius: v.$border-radius-lg;
-    box-shadow: v.$shadow-md;
-    border: 1px solid v.$border-color;
-    overflow: hidden;
-  }
-
-  // Tabs Navigation
-  &__tabs {
-    display: flex;
-    border-bottom: 1px solid v.$border-color;
-    background: v.$gray-50;
-    overflow-x: auto;
-  }
-
-  &__tab {
-    display: flex;
-    align-items: center;
-    gap: v.$spacing-xs;
-    padding: v.$spacing-md v.$spacing-lg;
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    color: v.$text-secondary;
-    font-size: v.$font-size-sm;
-    font-weight: v.$font-weight-medium;
-    cursor: pointer;
-    transition: color 0.2s ease, border-color 0.2s ease;
-    white-space: nowrap;
-
-    &:hover {
-      color: v.$text-primary;
-    }
-
-    // Clean focus state - no red background/outline
-    &:focus {
-      outline: none;
-    }
-
-    &:focus-visible {
-      outline: 2px solid v.$primary-color;
-      outline-offset: -2px;
-    }
-
-    &--active {
-      background: v.$white;
-      color: v.$primary-color;
-      border-bottom-color: v.$primary-color;
-      font-weight: v.$font-weight-semibold;
-    }
-
-    &--danger {
-      &:hover {
-        color: v.$danger-color;
-      }
-
-      &.org-detail-page__tab--active {
-        color: v.$danger-color;
-        border-bottom-color: v.$danger-color;
-      }
-    }
-  }
-
-  &__tab-icon {
-    font-size: v.$font-size-sm;
-  }
-
-  &__tab-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 1.25rem;
-    height: 1.25rem;
-    padding: 0 0.375rem;
-    margin-left: v.$spacing-xs;
-    background-color: v.$primary-color;
-    color: v.$white;
-    font-size: 0.75rem;
-    font-weight: v.$font-weight-semibold;
-    border-radius: 10px;
-  }
-
-  // Tab Content
-  &__tab-content {
-    min-height: 400px;
-  }
-
-  &__tab-panel {
-    padding: v.$spacing-lg;
   }
 
   // Form field styles
@@ -570,24 +452,6 @@
 // Responsive
 @media (max-width: 768px) {
   .org-detail-page {
-    &__content {
-      padding: v.$spacing-md;
-    }
-
-    &__tabs {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    &__tab {
-      padding: v.$spacing-sm v.$spacing-md;
-      font-size: v.$font-size-xs;
-    }
-
-    &__tab-panel {
-      padding: v.$spacing-md;
-    }
-
     &__actions {
       flex-direction: column;
       gap: v.$spacing-md;
@@ -652,7 +516,6 @@
     &__field-input,
     &__field-textarea,
     &__field-error,
-    &__tab,
     &__app-arrow {
       transition: none;
       animation: none;

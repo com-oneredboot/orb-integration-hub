@@ -121,7 +121,7 @@ describe('UserLayoutComponent', () => {
       mockStore.setState(createInitialState(createMockUser([UserGroup.Customer]), true));
       fixture.detectChanges();
 
-      const sideNav = fixture.nativeElement.querySelector('app-dashboard-side-nav');
+      const sideNav = fixture.nativeElement.querySelector('app-quick-actions-nav');
       expect(sideNav).toBeTruthy();
     });
 
@@ -129,7 +129,7 @@ describe('UserLayoutComponent', () => {
       mockStore.setState(createInitialState(createMockUser([UserGroup.User]), true));
       fixture.detectChanges();
 
-      const sideNav = fixture.nativeElement.querySelector('app-dashboard-side-nav');
+      const sideNav = fixture.nativeElement.querySelector('app-quick-actions-nav');
       expect(sideNav).toBeFalsy();
     });
 
@@ -137,7 +137,7 @@ describe('UserLayoutComponent', () => {
       mockStore.setState(createInitialState(null, false));
       fixture.detectChanges();
 
-      const sideNav = fixture.nativeElement.querySelector('app-dashboard-side-nav');
+      const sideNav = fixture.nativeElement.querySelector('app-quick-actions-nav');
       expect(sideNav).toBeFalsy();
     });
   });

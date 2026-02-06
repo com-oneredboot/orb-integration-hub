@@ -1,0 +1,48 @@
+<!-- 
+  User Page Component Template
+  
+  Standard structure for all pages within user-layout:
+  1. Hero Split (optional) - outside content section
+  2. Content Section (required) - max-width: 1400px, centered
+     a. Breadcrumbs (required) - first element in content section
+     b. Tab Navigation (optional) - after breadcrumbs
+     c. Main Content (projected) - page-specific content
+-->
+
+<div class="user-page">
+  
+  <!-- Hero Section (optional) -->
+  <app-hero-split
+    *ngIf="showHero"
+    [logoSrc]="heroLogo"
+    [logoAlt]="heroLogoAlt"
+    [title]="heroTitle"
+    [subtitle]="heroSubtitle">
+    <!-- Hero buttons slot -->
+    <ng-content select="[heroButtons]"></ng-content>
+  </app-hero-split>
+
+  <!-- Content Section (required) -->
+  <div class="user-page__content">
+    
+    <!-- Breadcrumbs (required) -->
+    <div class="orb-breadcrumb-container" *ngIf="breadcrumbItems?.length">
+      <app-breadcrumb [items]="breadcrumbItems"></app-breadcrumb>
+    </div>
+
+    <!-- Tab Navigation (optional) -->
+    <app-tab-navigation
+      *ngIf="tabs?.length"
+      [tabs]="tabs"
+      [activeTabId]="activeTabId"
+      (tabChange)="onTabChange($event)">
+    </app-tab-navigation>
+
+    <!-- Main Content (projected from parent) -->
+    <div class="user-page__main">
+      <ng-content></ng-content>
+    </div>
+
+  </div>
+
+</div>

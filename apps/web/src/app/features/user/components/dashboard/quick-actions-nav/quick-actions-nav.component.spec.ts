@@ -1,11 +1,11 @@
-// file: apps/web/src/app/features/user/components/dashboard/dashboard-side-nav/dashboard-side-nav.component.spec.ts
+// file: apps/web/src/app/features/user/components/dashboard/quick-actions-nav/quick-actions-nav.component.spec.ts
 // author: Kiro
 // date: 2026-01-23
-// description: Unit tests for DashboardSideNavComponent
+// description: Unit tests for QuickActionsNavComponent
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, NavigationEnd } from '@angular/router';
-import { DashboardSideNavComponent } from './dashboard-side-nav.component';
+import { QuickActionsNavComponent } from './quick-actions-nav.component';
 import { FontAwesomeModule, FaIconLibrary } from '@fortawesome/angular-fontawesome';
 import { Subject } from 'rxjs';
 import { 
@@ -15,9 +15,9 @@ import {
   faUser
 } from '@fortawesome/free-solid-svg-icons';
 
-describe('DashboardSideNavComponent', () => {
-  let component: DashboardSideNavComponent;
-  let fixture: ComponentFixture<DashboardSideNavComponent>;
+describe('QuickActionsNavComponent', () => {
+  let component: QuickActionsNavComponent;
+  let fixture: ComponentFixture<QuickActionsNavComponent>;
   let router: jasmine.SpyObj<Router>;
   let routerEvents$: Subject<NavigationEnd>;
 
@@ -29,7 +29,7 @@ describe('DashboardSideNavComponent', () => {
     });
 
     await TestBed.configureTestingModule({
-      imports: [DashboardSideNavComponent, FontAwesomeModule],
+      imports: [QuickActionsNavComponent, FontAwesomeModule],
       providers: [
         { provide: Router, useValue: routerSpy }
       ]
@@ -40,7 +40,7 @@ describe('DashboardSideNavComponent', () => {
     library.addIcons(faBuilding, faRocket, faUsers, faUser);
 
     router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
-    fixture = TestBed.createComponent(DashboardSideNavComponent);
+    fixture = TestBed.createComponent(QuickActionsNavComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

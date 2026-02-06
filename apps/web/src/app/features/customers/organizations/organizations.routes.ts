@@ -1,11 +1,11 @@
 import { Routes } from '@angular/router';
-import { OrganizationsComponent } from './organizations.component';
+import { OrganizationsListComponent } from './components/organizations-list/organizations-list.component';
 import { OrganizationDetailPageComponent } from './components/organization-detail-page/organization-detail-page.component';
 
 export const organizationsRoutes: Routes = [
   {
     path: '',
-    component: OrganizationsComponent,
+    component: OrganizationsListComponent,
     data: { 
       title: 'Organizations',
       description: 'Manage your organizations and team access'

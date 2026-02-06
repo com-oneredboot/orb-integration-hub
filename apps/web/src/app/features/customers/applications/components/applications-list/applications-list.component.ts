@@ -15,18 +15,21 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Store } from '@ngrx/store';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, of } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { StatusBadgeComponent } from '../../../../../shared/components/ui/status-badge.component';
-import { BreadcrumbComponent, BreadcrumbItem } from '../../../../../shared/components';
-import { TabNavigationComponent } from '../../../../../shared/components/tab-navigation/tab-navigation.component';
+import { BreadcrumbItem } from '../../../../../shared/components';
 import { TabConfig } from '../../../../../shared/models/tab-config.model';
+import { UserPageComponent } from '../../../../../layouts/pages/user-page/user-page.component';
+import { DebugPanelComponent, DebugContext } from '../../../../../shared/components/debug/debug-panel.component';
+import { DebugLogEntry } from '../../../../../core/services/debug-log.service';
 
 import { IApplications } from '../../../../../core/models/ApplicationsModel';
 import { IOrganizations } from '../../../../../core/models/OrganizationsModel';
 import { ApplicationsActions } from '../../store/applications.actions';
 import * as fromApplications from '../../store/applications.selectors';
 import * as fromOrganizations from '../../../organizations/store/organizations.selectors';
+import * as fromUser from '../../../../user/store/user.selectors';
 import { ApplicationTableRow } from '../../store/applications.state';
 
 @Component({
@@ -37,8 +40,8 @@ import { ApplicationTableRow } from '../../store/applications.state';
     FormsModule,
     FontAwesomeModule,
     StatusBadgeComponent,
-    BreadcrumbComponent,
-    TabNavigationComponent
+    UserPageComponent,
+    DebugPanelComponent
   ],
   templateUrl: './applications-list.component.html',
   styleUrls: ['./applications-list.component.scss']
@@ -47,11 +50,35 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
   @Output() applicationSelected = new EventEmitter<IApplications>();
   @Input() selectedApplication: IApplications | null = null;
 
+  // Hero configuration
+  heroTitle = 'Applications Management';
+  heroSubtitle = 'Applications are the core of your integration platform. Each application has its own API keys, environments, and configuration.';
+
   // Tab configuration for page-layout-standardization
   tabs: TabConfig[] = [
     { id: 'overview', label: 'Overview', icon: 'fas fa-list' }
   ];
   activeTab = 'overview';
+
+  // Debug
+  debugMode$: Observable<boolean>;
+  debugLogs$: Observable<DebugLogEntry[]> = of([]);
+
+  get debugContext(): DebugContext {
+    return {
+      page: 'ApplicationsList',
+      additionalSections: [
+        {
+          title: 'Filters',
+          data: {
+            searchTerm: this.searchTerm,
+            organizationFilter: this.organizationFilter,
+            statusFilter: this.statusFilter
+          }
+        }
+      ]
+    };
+  }
 
   // Store selectors - ALL data comes from store
   applicationRows$: Observable<ApplicationTableRow[]>;
@@ -94,6 +121,7 @@ export class ApplicationsListComponent implements OnInit, OnDestroy {
     this.searchTerm$ = this.store.select(fromApplications.selectSearchTerm);
     this.organizationFilter$ = this.store.select(fromApplications.selectOrganizationFilter);
     this.statusFilter$ = this.store.select(fromApplications.selectStatusFilter);
+    this.debugMode$ = this.store.select(fromUser.selectDebugMode);
 
     // Sync local form state with store
     this.searchTerm$.pipe(takeUntil(this.destroy$)).subscribe(term => this.searchTerm = term);

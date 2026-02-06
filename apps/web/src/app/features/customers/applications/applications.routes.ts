@@ -1,12 +1,12 @@
 import { Routes } from '@angular/router';
-import { ApplicationsComponent } from './applications.component';
+import { ApplicationsListComponent } from './components/applications-list/applications-list.component';
 import { ApplicationDetailPageComponent } from './components/application-detail-page/application-detail-page.component';
 import { EnvironmentDetailPageComponent } from './components/environment-detail-page/environment-detail-page.component';
 
 export const applicationsRoutes: Routes = [
   {
     path: '',
-    component: ApplicationsComponent,
+    component: ApplicationsListComponent,
     data: { 
       title: 'Applications',
       description: 'Manage your applications and environments'

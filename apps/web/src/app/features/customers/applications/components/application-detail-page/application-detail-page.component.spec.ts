@@ -1238,4 +1238,131 @@ describe('ApplicationDetailPageComponent', () => {
       }));
     });
   });
+
+  /**
+   * Page Layout Integration Tests
+   *
+   * Tests for page layout standardization with TabNavigationComponent.
+   * @see .kiro/specs/page-layout-standardization/design.md
+   * _Requirements: 2.1, 2.2, 2.3, 2.5, 5.2, 5.3, 5.4, 8.1, 8.3_
+   */
+  describe('Page Layout Integration', () => {
+    beforeEach(fakeAsync(() => {
+      store.overrideSelector(fromApplications.selectSelectedApplication, mockApplication);
+      store.overrideSelector(fromOrganizations.selectOrganizations, [mockOrganization]);
+      store.refreshState();
+      fixture.detectChanges();
+      tick();
+    }));
+
+    it('should use TabNavigationComponent', () => {
+      // Validates: Requirements 2.1
+      const compiled = fixture.nativeElement as HTMLElement;
+      const tabNavigation = compiled.querySelector('app-tab-navigation');
+      expect(tabNavigation).toBeTruthy();
+    });
+
+    it('should have Overview and Environments tabs', () => {
+      // Validates: Requirements 5.2, 5.3
+      expect(component.tabs.length).toBeGreaterThanOrEqual(2);
+      
+      const overviewTab = component.tabs.find(tab => tab.id === 'overview');
+      const environmentsTab = component.tabs.find(tab => tab.id === 'environments');
+      
+      expect(overviewTab).toBeTruthy();
+      expect(overviewTab?.label).toBe('Overview');
+      
+      expect(environmentsTab).toBeTruthy();
+      expect(environmentsTab?.label).toBe('Environments');
+    });
+
+    it('should have Overview as the first tab', () => {
+      // Validates: Requirements 2.2
+      expect(component.tabs[0].id).toBe('overview');
+      expect(component.tabs[0].label).toBe('Overview');
+    });
+
+    it('should update displayed content when tab is switched', fakeAsync(() => {
+      // Validates: Requirements 2.3, 5.4
+      const compiled = fixture.nativeElement as HTMLElement;
+      
+      // Start on Overview tab
+      expect(component.activeTab).toBe('overview');
+      
+      // Switch to Environments tab
+      component.onTabChange('environments');
+      fixture.detectChanges();
+      tick();
+      
+      expect(component.activeTab).toBe('environments');
+      
+      // Verify content area updates (check for environments-specific content)
+      const environmentsContent = compiled.querySelector('#panel-environments');
+      expect(environmentsContent).toBeTruthy();
+    }));
+
+    it('should render with full-width layout', () => {
+      // Validates: Requirements 8.1, 8.3
+      const compiled = fixture.nativeElement as HTMLElement;
+      const pageContainer = compiled.querySelector('.application-detail-page');
+      
+      expect(pageContainer).toBeTruthy();
+      
+      // Verify no max-width constraint is applied
+      const computedStyle = window.getComputedStyle(pageContainer as Element);
+      const maxWidth = computedStyle.getPropertyValue('max-width');
+      
+      // Should be 'none' or not set (empty string)
+      expect(maxWidth === 'none' || maxWidth === '').toBe(true);
+    });
+
+    it('should follow layout order: breadcrumb → tabs → content', () => {
+      // Validates: Requirements 2.5
+      const compiled = fixture.nativeElement as HTMLElement;
+      
+      // Get all direct children of the page container
+      const pageContainer = compiled.querySelector('.application-detail-page');
+      expect(pageContainer).toBeTruthy();
+      
+      const children = Array.from(pageContainer?.children || []);
+      
+      // Find indices of key elements
+      const breadcrumbIndex = children.findIndex(el => el.tagName.toLowerCase() === 'app-breadcrumb');
+      const tabsIndex = children.findIndex(el => el.tagName.toLowerCase() === 'app-tab-navigation');
+      const contentIndex = children.findIndex(el => el.classList.contains('application-detail-page__content'));
+      
+      // Verify order: breadcrumb comes before tabs, tabs come before content
+      expect(breadcrumbIndex).toBeGreaterThanOrEqual(0);
+      expect(tabsIndex).toBeGreaterThan(breadcrumbIndex);
+      expect(contentIndex).toBeGreaterThan(tabsIndex);
+    });
+
+    it('should have tabs with icons', () => {
+      // Validates: Requirements 5.2, 5.3
+      const overviewTab = component.tabs.find(tab => tab.id === 'overview');
+      const environmentsTab = component.tabs.find(tab => tab.id === 'environments');
+      
+      expect(overviewTab?.icon).toBeTruthy();
+      expect(environmentsTab?.icon).toBeTruthy();
+    });
+
+    it('should display environment count badge on Environments tab', () => {
+      // Validates: Requirements 5.3
+      const environmentsTab = component.tabs.find(tab => tab.id === 'environments');
+      
+      expect(environmentsTab?.badge).toBeDefined();
+      expect(environmentsTab?.badge).toBe(mockApplication.environments?.length || 0);
+    });
+
+    it('should hide Environments tab for draft applications', fakeAsync(() => {
+      // Validates: Requirements 5.4
+      store.overrideSelector(fromApplications.selectSelectedApplication, mockPendingApplication);
+      store.refreshState();
+      fixture.detectChanges();
+      tick();
+      
+      const environmentsTab = component.tabs.find(tab => tab.id === 'environments');
+      expect(environmentsTab).toBeFalsy();
+    }));
+  });
 });

@@ -26,8 +26,9 @@ import { StatusBadgeComponent } from '../../../../../shared/components/ui/status
 import { DebugPanelComponent, DebugContext } from '../../../../../shared/components/debug/debug-panel.component';
 import { DebugLogEntry } from '../../../../../core/services/debug-log.service';
 import { DangerZoneCardComponent } from '../../../../../shared/components/danger-zone-card/danger-zone-card.component';
-import { BreadcrumbComponent, BreadcrumbItem } from '../../../../../shared/components';
-import { HeroSplitComponent } from '../../../../../shared/components/hero-split/hero-split.component';
+import { BreadcrumbItem } from '../../../../../shared/components';
+import { TabConfig } from '../../../../../shared/models/tab-config.model';
+import { UserPageComponent } from '../../../../../layouts/pages/user-page/user-page.component';
 
 // Store imports
 import { OrganizationsActions } from '../../store/organizations.actions';
@@ -45,8 +46,7 @@ import * as fromUser from '../../../../user/store/user.selectors';
     StatusBadgeComponent,
     DebugPanelComponent,
     DangerZoneCardComponent,
-    BreadcrumbComponent,
-    HeroSplitComponent
+    UserPageComponent
   ],
   templateUrl: './organization-detail-page.component.html',
   styleUrls: ['./organization-detail-page.component.scss']
@@ -75,8 +75,9 @@ export class OrganizationDetailPageComponent implements OnInit, OnDestroy {
   // Mode detection
   isDraft = false;
 
-  // Tab management
-  activeTab: 'overview' | 'security' | 'stats' | 'members' | 'applications' | 'danger' = 'overview';
+  // Tab management using TabConfig
+  tabs: TabConfig[] = [];
+  activeTab = 'overview';
   private applicationsLoaded = false;
 
   // Form data (local UI state - allowed)
@@ -162,6 +163,8 @@ export class OrganizationDetailPageComponent implements OnInit, OnDestroy {
         this.loadFormData();
         // Initialize applications observables for this organization
         this.initializeApplicationsObservables(organization.organizationId);
+        // Initialize tabs with application count badge
+        this.initializeTabs();
       }
     });
 
@@ -189,6 +192,24 @@ export class OrganizationDetailPageComponent implements OnInit, OnDestroy {
     this.isLoadingApplications$ = this.store.select(fromOrganizations.selectIsLoadingOrganizationApplications(organizationId));
     this.applicationsError$ = this.store.select(fromOrganizations.selectOrganizationApplicationsError(organizationId));
     this.applicationCount$ = this.store.select(fromOrganizations.selectOrganizationApplicationCount(organizationId));
+  }
+
+  /**
+   * Initialize tabs with dynamic badges
+   * Applications tab shows count badge
+   */
+  private initializeTabs(): void {
+    this.applicationCount$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(count => {
+      this.tabs = [
+        { id: 'overview', label: 'Overview', icon: 'info-circle' },
+        { id: 'security', label: 'Security', icon: 'shield-alt' },
+        { id: 'stats', label: 'Stats', icon: 'chart-bar' },
+        { id: 'applications', label: 'Applications', icon: 'rocket', badge: count || undefined },
+        { id: 'danger', label: 'Danger Zone', icon: 'exclamation-triangle' }
+      ];
+    });
   }
 
   ngOnInit(): void {
@@ -364,13 +385,13 @@ export class OrganizationDetailPageComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Set active tab and lazy load applications when needed
+   * Handle tab change event from TabNavigationComponent
    */
-  setActiveTab(tab: 'overview' | 'security' | 'stats' | 'members' | 'applications' | 'danger'): void {
-    this.activeTab = tab;
+  onTabChange(tabId: string): void {
+    this.activeTab = tabId;
 
     // Lazy load applications when tab is first selected
-    if (tab === 'applications' && !this.applicationsLoaded && this.organizationId) {
+    if (tabId === 'applications' && !this.applicationsLoaded && this.organizationId) {
       this.loadApplications();
     }
   }

@@ -25,15 +25,16 @@ import { IApplications } from '../../../../../core/models/ApplicationsModel';
 import { IOrganizations } from '../../../../../core/models/OrganizationsModel';
 import { IApplicationGroups } from '../../../../../core/models/ApplicationGroupsModel';
 import { IApplicationApiKeys } from '../../../../../core/models/ApplicationApiKeysModel';
+import { IApplicationEnvironmentConfig } from '../../../../../core/models/ApplicationEnvironmentConfigModel';
 import { ApplicationStatus } from '../../../../../core/enums/ApplicationStatusEnum';
+import { ApplicationApiKeyStatus } from '../../../../../core/enums/ApplicationApiKeyStatusEnum';
 import { Environment } from '../../../../../core/enums/EnvironmentEnum';
 import { StatusBadgeComponent } from '../../../../../shared/components/ui/status-badge.component';
 import { DebugPanelComponent, DebugContext } from '../../../../../shared/components/debug/debug-panel.component';
 import { DebugLogEntry } from '../../../../../core/services/debug-log.service';
-import { BreadcrumbComponent, BreadcrumbItem } from '../../../../../shared/components';
-import { TabNavigationComponent } from '../../../../../shared/components/tab-navigation/tab-navigation.component';
+import { BreadcrumbItem } from '../../../../../shared/components';
 import { TabConfig } from '../../../../../shared/models/tab-config.model';
-import { HeroSplitComponent } from '../../../../../shared/components/hero-split/hero-split.component';
+import { UserPageComponent } from '../../../../../layouts/pages/user-page/user-page.component';
 
 // Child components
 import { GroupsListComponent } from '../groups-list/groups-list.component';
@@ -65,9 +66,7 @@ import * as fromEnvironmentConfig from '../../store/environment-config/environme
 import { OrganizationsActions } from '../../../organizations/store/organizations.actions';
 import { EnvironmentsActions } from '../../store/environments/environments.actions';
 import { EnvironmentConfigActions } from '../../store/environment-config/environment-config.actions';
-import { IApplicationEnvironmentConfig } from '../../../../../core/models/ApplicationEnvironmentConfigModel';
 import { GeneratedKeyResult } from '../../store/environments/environments.state';
-import { ApplicationApiKeyStatus } from '../../../../../core/enums/ApplicationApiKeyStatusEnum';
 
 /**
  * Get activity text for an API key based on its status and timestamps.
@@ -203,15 +202,24 @@ export enum ApplicationDetailTab {
     GroupsListComponent,
     DangerZoneCardComponent,
     EnvironmentsListComponent,
-    BreadcrumbComponent,
-    TabNavigationComponent,
-    HeroSplitComponent,
+    UserPageComponent
   ],
   templateUrl: './application-detail-page.component.html',
   styleUrls: ['./application-detail-page.component.scss']
 })
 export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterViewInit {
   private destroy$ = new Subject<void>();
+
+  // Hero configuration (dynamic based on draft status)
+  get heroTitle(): string {
+    return this.isDraft ? 'Complete Application Setup' : (this.application?.name || 'Application Details');
+  }
+
+  get heroSubtitle(): string {
+    return this.isDraft 
+      ? 'Your application was created but needs to be completed. Fill in the details below and click Activate Application to finish setup.' 
+      : 'Manage your application settings, groups, and API keys.';
+  }
 
   // Tab configuration for TabNavigationComponent
   tabs: TabConfig[] = [];

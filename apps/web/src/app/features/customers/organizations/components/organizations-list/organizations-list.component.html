@@ -1,46 +1,65 @@
 <!-- Organizations List Component Template -->
 
-<div class="orb-card">
-  <!-- Header -->
-  <div class="orb-card__header">
-    <h2 class="orb-card__title">
-      <fa-icon icon="building" class="orb-card__icon"></fa-icon>
-      Organizations
-    </h2>
-    <div class="orb-card__header-actions">
-      <button class="orb-card-btn"
-              [class.orb-card-btn--disabled]="!(currentUser$ | async)?.groups?.includes('CUSTOMER')"
-              [title]="!(currentUser$ | async)?.groups?.includes('CUSTOMER') ? 'Only paying customers can create organizations (DEBUG: Click anyway)' : ''"
-              (click)="onCreateOrganization()">
-        <fa-icon icon="plus" class="orb-card-btn__icon"></fa-icon>
-        Create Organization {{ !(currentUser$ | async)?.groups?.includes('CUSTOMER') ? '(DEBUG)' : '' }}
-      </button>
+<app-user-page
+  [heroTitle]="'Organizations Management'"
+  [heroSubtitle]="'Organizations let you manage teams, control access with roles, and organize your applications in one place.'"
+  [breadcrumbItems]="breadcrumbItems"
+  [tabs]="tabs"
+  [activeTabId]="activeTab"
+  (tabChange)="onTabChange($event)">
+
+  <!-- Page Content -->
+  <div class="orb-card">
+    <!-- Header -->
+    <div class="orb-card__header">
+      <h2 class="orb-card__title">
+        <fa-icon icon="building" class="orb-card__icon"></fa-icon>
+        Organizations
+      </h2>
+      <div class="orb-card__header-actions">
+        <button class="orb-card-btn"
+                [class.orb-card-btn--disabled]="!(currentUser$ | async)?.groups?.includes('CUSTOMER')"
+                [title]="!(currentUser$ | async)?.groups?.includes('CUSTOMER') ? 'Only paying customers can create organizations (DEBUG: Click anyway)' : ''"
+                (click)="onCreateOrganization()">
+          <fa-icon icon="plus" class="orb-card-btn__icon"></fa-icon>
+          Create Organization {{ !(currentUser$ | async)?.groups?.includes('CUSTOMER') ? '(DEBUG)' : '' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Data Grid -->
+    <div class="orb-card__content">
+      <app-data-grid
+        [columns]="columns"
+        [data]="(filteredOrganizationRows$ | async) || []"
+        [pageState]="pageState"
+        [sortState]="sortState"
+        [filterState]="filterState"
+        [loading]="(isLoading$ | async) || false"
+        [showFilters]="true"
+        [showPagination]="true"
+        [showReset]="true"
+        [selectable]="false"
+        trackByField="organization"
+        emptyMessage="No organizations found"
+        (pageChange)="onPageChange($event)"
+        (sortChange)="onSortChange($event)"
+        (filterChange)="onFilterChange($event)"
+        (resetGrid)="onResetGrid()"
+        (rowClick)="onRowClick($event)">
+      </app-data-grid>
     </div>
   </div>
 
-  <!-- Data Grid -->
-  <div class="orb-card__content">
-    <app-data-grid
-      [columns]="columns"
-      [data]="(filteredOrganizationRows$ | async) || []"
-      [pageState]="pageState"
-      [sortState]="sortState"
-      [filterState]="filterState"
-      [loading]="(isLoading$ | async) || false"
-      [showFilters]="true"
-      [showPagination]="true"
-      [showReset]="true"
-      [selectable]="false"
-      trackByField="organization"
-      emptyMessage="No organizations found"
-      (pageChange)="onPageChange($event)"
-      (sortChange)="onSortChange($event)"
-      (filterChange)="onFilterChange($event)"
-      (resetGrid)="onResetGrid()"
-      (rowClick)="onRowClick($event)">
-    </app-data-grid>
-  </div>
-</div>
+  <!-- Debug Panel -->
+  <app-debug-panel
+    [visible]="(debugMode$ | async) || false"
+    [title]="'Organizations Debug'"
+    [logs$]="debugLogs$"
+    [context]="debugContext">
+  </app-debug-panel>
+
+</app-user-page>
 
 <!-- Custom Cell Templates -->
 

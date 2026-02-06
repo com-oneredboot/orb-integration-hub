@@ -11,7 +11,7 @@ import { CognitoService } from '../../core/services/cognito.service';
 import { UserActions } from '../../features/user/store/user.actions';
 import { selectIsAuthenticated, selectCurrentUser } from '../../features/user/store/user.selectors';
 import { map } from 'rxjs/operators';
-import { DashboardSideNavComponent } from '../../features/user/components/dashboard/dashboard-side-nav/dashboard-side-nav.component';
+import { QuickActionsNavComponent } from '../../features/user/components/dashboard/quick-actions-nav/quick-actions-nav.component';
 import { SideNavItem } from '../../features/user/components/dashboard/dashboard.types';
 
 @Component({
@@ -19,7 +19,7 @@ import { SideNavItem } from '../../features/user/components/dashboard/dashboard.
   templateUrl: './user-layout.component.html',
   styleUrls: ['./user-layout.component.scss'],
   standalone: true,
-  imports: [RouterModule, CommonModule, DashboardSideNavComponent]
+  imports: [RouterModule, CommonModule, QuickActionsNavComponent]
 })
 export class UserLayoutComponent implements OnInit {
   isAuthenticated$ = this.store.select(selectIsAuthenticated);

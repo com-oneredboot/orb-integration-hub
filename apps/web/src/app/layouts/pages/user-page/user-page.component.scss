@@ -1,0 +1,33 @@
+/**
+ * User Page Component Styles
+ *
+ * Enforces standard page structure and dimensions for all pages within user-layout.
+ * 
+ * Key Standards:
+ * - Content max-width: 1400px (centered)
+ * - Content padding: 0 48px 48px (no top padding - hero handles spacing)
+ * - Responsive padding: 0 24px 24px on mobile
+ * - Hero sits outside content section (handles own spacing)
+ * - Breadcrumbs sit inside content section (first element)
+ */
+
+.user-page {
+  // Page container - no styling needed, just structural wrapper
+  
+  &__content {
+    // Standard content section dimensions
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-lg) var(--spacing-lg);
+    
+    // Responsive padding for mobile
+    @media (max-width: 768px) {
+      padding: 0 var(--spacing-md) var(--spacing-md);
+    }
+  }
+  
+  &__main {
+    // Main content area - no additional styling
+    // Content is projected from parent component
+  }
+}

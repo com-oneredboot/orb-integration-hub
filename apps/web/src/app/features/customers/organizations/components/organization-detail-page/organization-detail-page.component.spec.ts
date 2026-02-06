@@ -211,7 +211,7 @@ describe('OrganizationDetailPageComponent', () => {
       // Clear previous dispatch calls
       (store.dispatch as jasmine.Spy).calls.reset();
 
-      component.setActiveTab('applications');
+      component.onTabChange('applications');
 
       expect(store.dispatch).toHaveBeenCalledWith(
         OrganizationsActions.loadOrganizationApplications({ organizationId: 'org-123' })
@@ -262,31 +262,31 @@ describe('OrganizationDetailPageComponent', () => {
     });
 
     it('should switch to security tab', () => {
-      component.setActiveTab('security');
+      component.onTabChange('security');
       expect(component.activeTab).toBe('security');
     });
 
     it('should switch to stats tab', () => {
-      component.setActiveTab('stats');
+      component.onTabChange('stats');
       expect(component.activeTab).toBe('stats');
     });
 
     it('should switch to applications tab', () => {
-      component.setActiveTab('applications');
+      component.onTabChange('applications');
       expect(component.activeTab).toBe('applications');
     });
 
     it('should switch to danger tab', () => {
-      component.setActiveTab('danger');
+      component.onTabChange('danger');
       expect(component.activeTab).toBe('danger');
     });
 
     it('should only load applications once when tab is selected multiple times', fakeAsync(() => {
       (store.dispatch as jasmine.Spy).calls.reset();
 
-      component.setActiveTab('applications');
-      component.setActiveTab('overview');
-      component.setActiveTab('applications');
+      component.onTabChange('applications');
+      component.onTabChange('overview');
+      component.onTabChange('applications');
 
       const loadAppsCalls = (store.dispatch as jasmine.Spy).calls.allArgs()
         .filter((args: unknown[]) => (args[0] as Action).type === '[Organizations] Load Organization Applications');
@@ -425,5 +425,63 @@ describe('OrganizationDetailPageComponent', () => {
 
       expect(router.navigate).toHaveBeenCalledWith(['/customers/organizations']);
     }));
+  });
+
+  describe('Page Layout Integration', () => {
+    beforeEach(fakeAsync(() => {
+      store.overrideSelector(fromOrganizations.selectSelectedOrganization, mockOrganization);
+      store.refreshState();
+      fixture.detectChanges();
+      tick();
+    }));
+
+    it('should use UserPageComponent', () => {
+      const userPageElement = fixture.nativeElement.querySelector('app-user-page');
+      expect(userPageElement).toBeTruthy();
+    });
+
+    it('should have Overview, Security, Stats, Applications, and Danger Zone tabs', () => {
+      expect(component.tabs.length).toBe(5);
+      expect(component.tabs[0].id).toBe('overview');
+      expect(component.tabs[0].label).toBe('Overview');
+      expect(component.tabs[1].id).toBe('security');
+      expect(component.tabs[1].label).toBe('Security');
+      expect(component.tabs[2].id).toBe('stats');
+      expect(component.tabs[2].label).toBe('Stats');
+      expect(component.tabs[3].id).toBe('applications');
+      expect(component.tabs[3].label).toBe('Applications');
+      expect(component.tabs[4].id).toBe('danger');
+      expect(component.tabs[4].label).toBe('Danger Zone');
+    });
+
+    it('should have Overview as first tab', () => {
+      expect(component.tabs[0].id).toBe('overview');
+    });
+
+    it('should have Applications tab with badge support', () => {
+      const applicationsTab = component.tabs.find(tab => tab.id === 'applications');
+      
+      // Tab should exist
+      expect(applicationsTab).toBeTruthy();
+      expect(applicationsTab?.id).toBe('applications');
+      expect(applicationsTab?.label).toBe('Applications');
+    });
+
+    it('should handle tab switching via onTabChange', () => {
+      component.onTabChange('security');
+      expect(component.activeTab).toBe('security');
+
+      component.onTabChange('applications');
+      expect(component.activeTab).toBe('applications');
+    });
+
+    it('should render with full-width layout (no max-width constraint)', () => {
+      // UserPageComponent handles layout, so no component-specific max-width
+      const compiled = fixture.nativeElement;
+      const contentElement = compiled.querySelector('.org-detail-page__content');
+      
+      // Component should not have max-width styles
+      expect(contentElement).toBeFalsy();
+    });
   });
 });

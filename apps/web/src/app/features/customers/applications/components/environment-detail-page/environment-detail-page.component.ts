@@ -26,10 +26,9 @@ import { IApplicationApiKeys } from '../../../../../core/models/ApplicationApiKe
 import { Environment } from '../../../../../core/enums/EnvironmentEnum';
 import { ApplicationApiKeyStatus } from '../../../../../core/enums/ApplicationApiKeyStatusEnum';
 import { StatusBadgeComponent } from '../../../../../shared/components/ui/status-badge.component';
-import { BreadcrumbComponent, BreadcrumbItem } from '../../../../../shared/components';
-import { TabNavigationComponent } from '../../../../../shared/components/tab-navigation/tab-navigation.component';
+import { BreadcrumbItem } from '../../../../../shared/components';
 import { TabConfig } from '../../../../../shared/models/tab-config.model';
-import { HeroSplitComponent } from '../../../../../shared/components/hero-split/hero-split.component';
+import { UserPageComponent } from '../../../../../layouts/pages/user-page/user-page.component';
 
 // Store imports
 import { ApplicationsActions } from '../../store/applications.actions';
@@ -68,15 +67,20 @@ export enum EnvironmentDetailTab {
     FormsModule,
     FontAwesomeModule,
     StatusBadgeComponent,
-    BreadcrumbComponent,
-    TabNavigationComponent,
-    HeroSplitComponent,
+    UserPageComponent
   ],
   templateUrl: './environment-detail-page.component.html',
   styleUrls: ['./environment-detail-page.component.scss'],
 })
 export class EnvironmentDetailPageComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+
+  // Hero configuration (dynamic based on environment)
+  get heroTitle(): string {
+    return this.getEnvironmentLabel(this.environment || '') + ' Configuration';
+  }
+
+  readonly heroSubtitle = 'Configure API keys, CORS origins, rate limits, webhooks, and feature flags for this environment.';
 
   // Tab configuration for page-layout-standardization
   tabs: TabConfig[] = [
@@ -85,7 +89,9 @@ export class EnvironmentDetailPageComponent implements OnInit, OnDestroy {
   activeTab = 'overview';
 
   // Tab state (legacy - for existing tab implementation)
-  readonly EnvironmentDetailTab = EnvironmentDetailTab;
+  get EnvironmentDetailTab() {
+    return EnvironmentDetailTab;
+  }
   activeTabLegacy: EnvironmentDetailTab = EnvironmentDetailTab.ApiKeys;
 
   // Route parameters

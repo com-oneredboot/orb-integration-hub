@@ -25,8 +25,8 @@ description: HTML template file for user pages
   </main>
 </div>
 
-<!-- Quick Actions Side Nav - Only for authenticated CUSTOMER users -->
-<app-dashboard-side-nav
+<!-- Quick Actions Nav - Only for authenticated CUSTOMER users -->
+<app-quick-actions-nav
   *ngIf="(isAuthenticated$ | async) && (isCustomerUser$ | async)"
   (itemClicked)="onSideNavItemClicked($event)">
-</app-dashboard-side-nav>
+</app-quick-actions-nav>
