@@ -175,7 +175,7 @@ This plan eliminates unnecessary wrapper components and migrates all pages to us
 
 ### Phase 6: Documentation
 
-- [ ] 6. Update documentation
+- [x] 6. Update documentation
   - Update `apps/web/src/app/layouts/pages/README.md` with migration examples
   - Update `.kiro/steering/frontend-components.md` to reflect new patterns
   - Add canonical reference links to migrated components
