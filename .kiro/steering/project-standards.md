@@ -52,6 +52,65 @@ For complete coding standards and conventions, see:
 - #[[file:repositories/orb-templates/docs/testing-standards/README.md]]
 - #[[file:repositories/orb-templates/docs/project-structure/README.md]]
 
+## Spec Creation Process
+
+**CRITICAL**: When creating ANY spec, you MUST follow this process to ensure completeness and compliance with orb-templates standards.
+
+### Step 1: Consult orb-templates MCP Server
+
+Before creating requirements, ALWAYS search for spec standards:
+
+```typescript
+// Use the MCP search tool
+mcp_orb_templates_search_standards_tool("spec standards requirements")
+```
+
+### Step 2: Include Standard Requirements
+
+EVERY spec MUST include these 4 standard requirements in addition to feature-specific requirements:
+
+1. **Documentation Updates**
+   - Update relevant documentation files
+   - Add feature to architecture docs
+   - Document new patterns for future reference
+   - Ensure no duplication across docs
+   - Use consistent terminology
+
+2. **Version and Changelog Management**
+   - Bump version following semantic versioning
+   - Update CHANGELOG.md with feature description
+   - Include issue numbers in changelog
+   - Follow format: `- Feature description (#issue)`
+
+3. **Git Commit Standards**
+   - Reference issue numbers in commits
+   - Follow conventional commits: `feat: description #issue`
+   - Reference all issues if multiple addressed
+   - Use descriptive commit messages
+
+4. **Final Verification**
+   - All tests pass (unit + property tests)
+   - No linting errors
+   - No compilation errors
+   - Documentation renders correctly
+   - CHANGELOG.md updated
+   - Version bumped appropriately
+   - Commits reference issues
+
+### Step 3: Validate Completeness
+
+Before proceeding to design phase, verify:
+- [ ] Feature-specific requirements defined
+- [ ] All 4 standard requirements included
+- [ ] Glossary defines key terms
+- [ ] Acceptance criteria use WHEN/THE/SHALL format
+- [ ] Requirements reference orb-templates spec standards
+
+### Reference
+
+See the complete spec standards at:
+- #[[file:repositories/orb-templates/docs/kiro-steering/templates/spec-standards.md]]
+
 ## AWS Configuration
 
 - Always use `--profile sso-orb-dev` for all AWS CLI commands

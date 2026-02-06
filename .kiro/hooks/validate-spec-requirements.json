@@ -1,0 +1,13 @@
+{
+  "name": "Validate Spec Requirements",
+  "version": "1.0.0",
+  "description": "Validates that requirements.md files include all 4 standard requirements from orb-templates spec standards",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [".kiro/specs/*/requirements.md"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A spec requirements.md file was edited. Validate it includes ALL 4 standard requirements from orb-templates spec standards:\n\n1. Documentation Updates requirement\n2. Version and Changelog Management requirement\n3. Git Commit Standards requirement\n4. Final Verification requirement\n\nIf any are missing, add them immediately. Use search_standards_tool('spec standards') to get the exact format if needed."
+  }
+}
