@@ -8,7 +8,7 @@
  * - Content padding: 0 48px 48px (no top padding - hero handles spacing)
  * - Responsive padding: 0 24px 24px on mobile
  * - Hero sits outside content section (handles own spacing)
- * - Breadcrumbs sit inside content section (first element)
+ * - Breadcrumbs and tabs in horizontal header on desktop, vertical on mobile
  */
 
 .user-page {
@@ -25,9 +25,25 @@
       padding: 0 var(--spacing-md) var(--spacing-md);
     }
   }
+
+  &__header {
+    // Header container for breadcrumbs + tabs
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+
+    // Desktop: horizontal layout (breadcrumbs left, tabs right)
+    @media (min-width: 1024px) {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+    }
+  }
   
   &__main {
     // Main content area - no additional styling
     // Content is projected from parent component
   }
 }
+

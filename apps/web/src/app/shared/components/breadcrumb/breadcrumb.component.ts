@@ -17,6 +17,8 @@ export interface BreadcrumbItem {
   label: string;
   /** Route to navigate to when clicked (null for current page) */
   route: string | null;
+  /** Flag indicating this is an ellipsis placeholder (non-interactive) */
+  isEllipsis?: boolean;
 }
 
 @Component({
@@ -30,6 +32,39 @@ export class BreadcrumbComponent {
   /** Array of breadcrumb items to display */
   @Input() items: BreadcrumbItem[] = [];
 
+  /** Threshold for truncation (default: 4) */
+  @Input() truncationThreshold = 4;
+
   /** FontAwesome icon for separator */
   protected readonly faChevronRight = faChevronRight;
+
+  /**
+   * Computed property that returns truncated breadcrumb items if needed
+   */
+  get displayItems(): BreadcrumbItem[] {
+    return this.truncateBreadcrumbs(this.items);
+  }
+
+  /**
+   * Truncates breadcrumb items when count exceeds threshold
+   * Pattern: [first, ellipsis, ...lastTwo]
+   * 
+   * @param items - Original breadcrumb items
+   * @returns Truncated or original items based on threshold
+   */
+  private truncateBreadcrumbs(items: BreadcrumbItem[]): BreadcrumbItem[] {
+    if (!items || items.length < this.truncationThreshold) {
+      return items || [];
+    }
+
+    const first = items[0];
+    const lastTwo = items.slice(-2);
+    const ellipsis: BreadcrumbItem = {
+      label: '...',
+      route: null,
+      isEllipsis: true
+    };
+
+    return [first, ellipsis, ...lastTwo];
+  }
 }

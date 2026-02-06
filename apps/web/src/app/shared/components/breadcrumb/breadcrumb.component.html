@@ -3,14 +3,15 @@
     <li class="breadcrumb__item breadcrumb__item--icon">
       <fa-icon icon="map" class="breadcrumb__icon" aria-hidden="true"></fa-icon>
     </li>
-    <li *ngFor="let item of items; let last = last" class="breadcrumb__item">
-      <a *ngIf="item.route && !last" 
+    <li *ngFor="let item of displayItems; let last = last" class="breadcrumb__item">
+      <a *ngIf="item.route && !item.isEllipsis && !last" 
          [routerLink]="item.route" 
          class="breadcrumb__link">
         {{ item.label }}
       </a>
-      <span *ngIf="!item.route || last" 
+      <span *ngIf="!item.route || item.isEllipsis || last" 
             class="breadcrumb__current"
+            [class.ellipsis]="item.isEllipsis"
             [attr.aria-current]="last ? 'page' : null">
         {{ item.label }}
       </span>

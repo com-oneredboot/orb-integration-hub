@@ -25,18 +25,21 @@
   <!-- Content Section (required) -->
   <div class="user-page__content">
     
-    <!-- Breadcrumbs (required) -->
-    <div class="orb-breadcrumb-container" *ngIf="breadcrumbItems?.length">
-      <app-breadcrumb [items]="breadcrumbItems"></app-breadcrumb>
-    </div>
+    <!-- Header: Breadcrumbs + Tabs (horizontal on desktop, vertical on mobile) -->
+    <div class="user-page__header">
+      <!-- Breadcrumbs (required) -->
+      <div class="orb-breadcrumb-container" *ngIf="breadcrumbItems?.length">
+        <app-breadcrumb [items]="breadcrumbItems"></app-breadcrumb>
+      </div>
 
-    <!-- Tab Navigation (optional) -->
-    <app-tab-navigation
-      *ngIf="tabs?.length"
-      [tabs]="tabs"
-      [activeTabId]="activeTabId"
-      (tabChange)="onTabChange($event)">
-    </app-tab-navigation>
+      <!-- Tab Navigation (optional) -->
+      <app-tab-navigation
+        *ngIf="tabs?.length"
+        [tabs]="tabs"
+        [activeTabId]="activeTabId"
+        (tabChange)="onTabChange($event)">
+      </app-tab-navigation>
+    </div>
 
     <!-- Main Content (projected from parent) -->
     <div class="user-page__main">

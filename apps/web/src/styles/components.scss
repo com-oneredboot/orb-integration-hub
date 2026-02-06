@@ -1705,6 +1705,7 @@ $cta-orange-muted: #f5a66b; // Muted orange (was #f97316)
 .orb-tabs {
   margin-bottom: v.$spacing-lg;
   border-bottom: 2px solid v.$gray-200;
+  flex-shrink: 0; // Prevent tabs from shrinking in flex layout
 }
 
 .orb-tabs-container {
@@ -1719,7 +1720,7 @@ $cta-orange-muted: #f5a66b; // Muted orange (was #f97316)
   gap: v.$spacing-xs;
   padding: v.$spacing-sm v.$spacing-md;
   font-family: v.$font-family-base;
-  font-size: v.$font-size-base;
+  font-size: 1rem; // Match breadcrumb font size
   font-weight: v.$font-weight-medium;
   color: v.$text-secondary;
   background: transparent;

@@ -7,6 +7,8 @@
 
 .breadcrumb {
   margin-bottom: v.$spacing-md;
+  flex-shrink: 1;
+  min-width: 0; // Allow flexbox truncation
 
   &__list {
     display: flex;
@@ -30,14 +32,14 @@
 
   &__icon {
     color: v.$primary-color;
-    font-size: v.$font-size-sm;
+    font-size: 1rem; // Match tab navigation font size
     margin-right: v.$spacing-xs;
   }
 
   &__link {
     color: v.$primary-color;
     text-decoration: none;
-    font-size: v.$font-size-sm;
+    font-size: 1rem; // Match tab navigation font size
     font-weight: v.$font-weight-medium;
     transition: color 0.2s ease;
 
@@ -61,8 +63,14 @@
 
   &__current {
     color: v.$text-secondary;
-    font-size: v.$font-size-sm;
+    font-size: 1rem; // Match tab navigation font size
     font-weight: v.$font-weight-normal;
+
+    &.ellipsis {
+      color: v.$text-secondary;
+      user-select: none;
+      cursor: default;
+    }
   }
 
   &__separator {
