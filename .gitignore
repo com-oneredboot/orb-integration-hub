@@ -128,12 +128,6 @@ schema_generator.log
 # -----------------------------------------------------------------------------
 # Project-Specific
 # -----------------------------------------------------------------------------
-# Angular environment files (generated)
+# Angular environment files (generated at runtime)
 apps/web/src/environments/environment.ts
 apps/web/src/environments/environment.prod.ts
-
-# Generated code (except infrastructure CDK which must be committed)
-apps/api/models/
-apps/api/enums/
-apps/web/src/app/core/models/
-apps/web/src/app/core/enums/

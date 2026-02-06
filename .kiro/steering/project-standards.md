@@ -102,14 +102,35 @@ pipenv sync --dev
 When you need to update a package from CodeArtifact (like `orb-schema-generator`):
 
 ```bash
-# Option 1: Direct pip install (most reliable)
-pipenv run pip install --upgrade orb-schema-generator
+# Step 1: Update Pipfile to specify the package source and version
+# Edit Pipfile and change:
+# orb-schema-generator = "==1.0.1"
+# to:
+# orb-schema-generator = {version = "==1.1.0", index = "codeartifact"}
 
-# Option 2: If pipenv lock works (may fail with CodeArtifact)
-pipenv update orb-schema-generator
+# Step 2: Export fresh CodeArtifact token
+export CODEARTIFACT_AUTH_TOKEN=$(aws --profile sso-orb-dev codeartifact get-authorization-token --domain orb-infrastructure-shared-codeartifact-domain --query authorizationToken --output text)
+
+# Step 3: Run pipenv lock to update Pipfile.lock
+pipenv lock
+
+# Step 4: Verify installation
+pipenv run pip show orb-schema-generator
 ```
 
-After updating, commit the updated `Pipfile.lock`.
+**CRITICAL**: Packages from CodeArtifact MUST specify `index = "codeartifact"` in the Pipfile:
+```toml
+[packages]
+orb-schema-generator = {version = "==1.1.0", index = "codeartifact"}
+```
+
+Without the explicit index, pipenv will only search PyPI and fail to find the package.
+
+**Why this works:**
+- Pipenv expands `${CODEARTIFACT_AUTH_TOKEN}` at runtime when resolving dependencies
+- The `index = "codeartifact"` tells pipenv to use the CodeArtifact source for this package
+- The token is never stored in Pipfile.lock (only hashes are stored)
+- `pipenv lock` works reliably when the token is exported before running the command
 
 ## Package Management
 
@@ -339,6 +360,40 @@ pipenv run orb-schema generate
 - `repositories/orb-schema-generator/README.md` - Main documentation
 - `repositories/orb-schema-generator/docs/generation/graphql.md` - GraphQL generation details
 - `repositories/orb-schema-generator/docs/generation/schema-attributes.md` - Schema attribute reference
+
+### Generated Files MUST Be Committed
+
+**CRITICAL**: All generated files MUST be committed to git. DO NOT add them to .gitignore.
+
+**Why:**
+- Deployment workflows do NOT run schema generation
+- CI builds directly from committed files
+- Generated code is part of the deployable artifact
+
+**What to commit:**
+- ✅ `apps/api/models/` - Python models
+- ✅ `apps/api/enums/` - Python enums
+- ✅ `apps/web/src/app/core/models/` - TypeScript models
+- ✅ `apps/web/src/app/core/enums/` - TypeScript enums
+- ✅ `infrastructure/cdk/generated/` - CDK constructs
+- ✅ `apps/api/graphql/schema.graphql` - GraphQL schema
+- ✅ `apps/api/graphql/resolvers/` - VTL resolvers
+
+**What NOT to commit:**
+- ❌ `__pycache__/` - Python bytecode
+- ❌ `*.pyc` - Compiled Python files
+- ❌ `schema_generator.log` - Generator log file
+
+**Workflow:**
+1. Modify schema YAML file in `schemas/`
+2. Run `pipenv run orb-schema generate`
+3. Review generated changes with `git diff`
+4. Commit both schema and generated files together
+5. CI verifies consistency (optional check)
+
+**Never manually edit generated files** - they have `AUTO-GENERATED` headers and will be overwritten on next generation.
+
+**Reference:** See `repositories/orb-templates/docs/integration-guides/schema-generator.md` for complete documentation.
 
 ## Command Phrases
 
