@@ -9,9 +9,11 @@ import { ActionReducerMap } from '@ngrx/store';
 // Application Imports
 import {AppState} from "./app.state";
 import { userReducer } from "../features/user/store/user.reducer";
+import { usersReducer } from "../features/customers/users/store/users.reducer";
 
 export { AppState } from "./app.state";
 
 export const reducers: ActionReducerMap<AppState> = {
-    user: userReducer
+    user: userReducer,
+    users: usersReducer
 };

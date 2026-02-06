@@ -5,11 +5,14 @@
 
 // Application Imports
 import { UserState, initialState as userInitialState} from "../features/user/store/user.state";
+import { UsersState, initialUsersState } from "../features/customers/users/store/users.state";
 
 export interface AppState {
-  user: UserState
+  user: UserState;
+  users: UsersState;
 }
 
 export const initialState: AppState = {
-  user: userInitialState
+  user: userInitialState,
+  users: initialUsersState
 }

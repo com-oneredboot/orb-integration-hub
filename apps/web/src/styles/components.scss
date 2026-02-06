@@ -6,9 +6,10 @@
 // GLOBAL BREADCRUMB CONTAINER
 // =============================================================================
 // Standard breadcrumb container for consistent placement across all pages
+// Note: No margin when inside flex containers (user-page__header handles spacing)
 
 .orb-breadcrumb-container {
-  margin-bottom: v.$spacing-lg;
+  // No margin - parent containers handle spacing
 }
 
 // =============================================================================
