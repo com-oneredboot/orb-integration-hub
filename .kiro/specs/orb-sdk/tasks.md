@@ -1,5 +1,7 @@
 # Implementation Plan: Orb SDK - Iteration 1
 
+**STATUS: IN PLANNING** - This spec is planned for future implementation and has not been started.
+
 ## Overview
 
 Iteration 1 focuses on Authentication, Authorization, and SDK Infrastructure. This includes the SDK AppSync API with Lambda authorizer (merged from application-access-management Phase 5).

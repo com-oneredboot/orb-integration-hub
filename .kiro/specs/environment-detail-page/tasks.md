@@ -128,46 +128,46 @@ All backend infrastructure is already complete - this is FRONTEND-ONLY work.
 - [x] 6. Checkpoint - All changes complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Write property tests
-  - [ ] 7.1 Write property test for Environment DataGrid row count
+- [x] 7. Write property tests
+  - [x] 7.1 Write property test for Environment DataGrid row count
     - **Property 1: Environment DataGrid Row Count Matches Configuration**
     - Generate random applications with 0-5 environments
     - Verify DataGrid row count equals environments array length
     - **Validates: Requirements 1.4**
 
-  - [ ] 7.2 Write property test for save operations
+  - [x] 7.2 Write property test for save operations
     - **Property 2: Save Operations Dispatch Actions and Show Loading States**
     - Generate random configuration changes
     - Verify action dispatch and loading state behavior
     - **Validates: Requirements 4.7**
 
-  - [ ] 7.3 Write property test for API key status display
+  - [x] 7.3 Write property test for API key status display
     - **Property 3: API Key Status Display Consistency**
     - Generate API keys with all possible statuses
     - Verify displayed status matches key status
     - **Validates: Requirements 6.1**
 
-- [ ] 8. Write unit tests
-  - [ ] 8.1 Write unit tests for EnvironmentDetailPageComponent
+- [x] 8. Write unit tests
+  - [x] 8.1 Write unit tests for EnvironmentDetailPageComponent
     - Test component renders correct sections when config is loaded
     - Test error state when environment is invalid
     - Test correct actions dispatched on page load
     - Test API key actions (generate, revoke, rotate)
     - _Requirements: 3.3, 4.1-4.6, 5.3, 5.4, 6.1-6.5_
 
-  - [ ] 8.2 Write unit tests for ApplicationDetailPageComponent changes
+  - [x] 8.2 Write unit tests for ApplicationDetailPageComponent changes
     - Test Environments DataGrid renders on Overview tab
     - Test Security tab is NOT rendered
     - Test navigation to Environment Detail Page on row click
     - Test empty state when no environments configured
     - _Requirements: 1.1-1.5, 2.1-2.3_
 
-  - [ ] 8.3 Write unit tests for route configuration
+  - [x] 8.3 Write unit tests for route configuration
     - Test route `/customers/applications/:id/environments/:env` loads correct component
     - Test route parameters are correctly extracted
     - _Requirements: 3.1, 3.2_
 
-- [ ] 9. Final checkpoint
+- [x] 9. Final checkpoint
   - Ensure all tests pass, ask the user if questions arise.
   - Verify no linting errors
   - Verify no TypeScript errors
