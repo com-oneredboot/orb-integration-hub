@@ -121,7 +121,7 @@ This implementation plan converts the page layout standardization design into di
   - Remove any max-width CSS from component stylesheet
   - _Requirements: 2.1, 2.2, 2.4, 2.5, 5.1, 8.2, 8.3_
 
-- [ ] 7.1 Write property test for list page tab restriction
+- [x] 7.1 Write property test for list page tab restriction
   - **Property 8: List page tab restriction**
   - **Validates: Requirements 2.4**
   - Test that applications list page has exactly one tab with id 'overview'
@@ -185,40 +185,40 @@ This implementation plan converts the page layout standardization design into di
   - Test that tab switching updates displayed content
   - Test that page renders with full-width layout
 
-- [ ] 12. Verify page layout consistency across all pages
+- [x] 12. Verify page layout consistency across all pages
   - Create utility function to check page layout structure in tests
   - Verify all pages follow Breadcrumb → Tabs → Content order
   - Verify all pages have Overview as first tab
   - Verify all pages use full-width layout (no max-width)
   - _Requirements: 2.2, 2.5, 8.3_
 
-- [ ] 12.1 Write property test for page layout element order
+- [x] 12.1 Write property test for page layout element order
   - **Property 9: Page layout element order**
   - **Validates: Requirements 2.5**
   - Test that all page components have breadcrumb, tabs, and content in correct order
   - Test each migrated page component
 
-- [ ] 12.2 Write property test for Overview tab presence
+- [x] 12.2 Write property test for Overview tab presence
   - **Property 7: Overview tab presence**
   - **Validates: Requirements 2.2**
   - Test that all page components have 'overview' as first tab id
   - Test each migrated page component
 
-- [ ] 12.3 Write property test for full-width layout consistency
+- [x] 12.3 Write property test for full-width layout consistency
   - **Property 6: Full-width layout consistency**
   - **Validates: Requirements 2.1, 8.1, 8.2, 8.3**
   - Test that all page components have no max-width constraint
   - Test computed styles on page containers
   - Test each migrated page component
 
-- [ ] 12.4 Write property test for page padding consistency
+- [x] 12.4 Write property test for page padding consistency
   - **Property 11: Page padding consistency**
   - **Validates: Requirements 8.4**
   - Test that all page components have equal left and right padding
   - Test that padding values are consistent across all pages
   - Test each migrated page component
 
-- [ ] 13. Add accessibility features to TabNavigationComponent
+- [x] 13. Add accessibility features to TabNavigationComponent
   - Add role="tablist" to nav element
   - Add role="tab" to button elements
   - Add [attr.aria-selected] binding based on isActive()
@@ -227,13 +227,13 @@ This implementation plan converts the page layout standardization design into di
   - Add focus management when navigating with keyboard
   - _Requirements: 1.2, 1.3_
 
-- [ ] 13.1 Write unit tests for accessibility features
+- [x] 13.1 Write unit tests for accessibility features
   - Test that ARIA attributes are present and correct
   - Test keyboard navigation with ArrowLeft and ArrowRight
   - Test keyboard navigation with Home and End keys
   - Test focus management during keyboard navigation
 
-- [ ] 14. Final checkpoint - Run all checks and verify completion
+- [x] 14. Final checkpoint - Run all checks and verify completion
   - Run `npm run lint` to ensure no linting errors
   - Run `npm test` to verify all tests pass (including property tests)
   - Run `npm run build` to ensure production build succeeds

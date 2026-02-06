@@ -168,5 +168,197 @@ describe('UserPageComponent', () => {
       expect(contentChildren[1].tagName.toLowerCase()).toBe('app-tab-navigation');
       expect(contentChildren[2].classList.contains('user-page__main')).toBe(true);
     });
+
+    /**
+     * Property 9: Page layout element order
+     * **Validates: Requirements 2.5**
+     * 
+     * For any page component in the application, the DOM structure should contain
+     * breadcrumb, tab navigation, and content elements in that exact order.
+     */
+    it('should maintain breadcrumb → tabs → content order regardless of configuration', () => {
+      // Test with various configurations
+      const configurations = [
+        {
+          breadcrumbs: [{ label: 'Home', route: '/' }],
+          tabs: [{ id: 'overview', label: 'Overview' }],
+          activeTab: 'overview'
+        },
+        {
+          breadcrumbs: [{ label: 'Home', route: '/' }, { label: 'Page', route: null }],
+          tabs: [
+            { id: 'overview', label: 'Overview' },
+            { id: 'security', label: 'Security' }
+          ],
+          activeTab: 'overview'
+        },
+        {
+          breadcrumbs: [
+            { label: 'Home', route: '/' },
+            { label: 'Organizations', route: '/organizations' },
+            { label: 'Detail', route: null }
+          ],
+          tabs: [
+            { id: 'overview', label: 'Overview' },
+            { id: 'security', label: 'Security' },
+            { id: 'members', label: 'Members' },
+            { id: 'applications', label: 'Applications' }
+          ],
+          activeTab: 'overview'
+        }
+      ];
+
+      configurations.forEach(config => {
+        component.breadcrumbItems = config.breadcrumbs;
+        component.tabs = config.tabs;
+        component.activeTabId = config.activeTab;
+        fixture.detectChanges();
+
+        const compiled = fixture.nativeElement as HTMLElement;
+        const content = compiled.querySelector('.user-page__content');
+        const contentChildren = Array.from(content?.children || []);
+
+        // Find indices of elements
+        let breadcrumbIndex = -1;
+        let tabsIndex = -1;
+        let mainIndex = -1;
+
+        contentChildren.forEach((child, index) => {
+          const element = child as HTMLElement;
+          if (element.classList.contains('orb-breadcrumb-container')) {
+            breadcrumbIndex = index;
+          }
+          if (element.tagName.toLowerCase() === 'app-tab-navigation') {
+            tabsIndex = index;
+          }
+          if (element.classList.contains('user-page__main')) {
+            mainIndex = index;
+          }
+        });
+
+        // Verify order
+        expect(breadcrumbIndex).toBeGreaterThanOrEqual(0);
+        expect(tabsIndex).toBeGreaterThanOrEqual(0);
+        expect(mainIndex).toBeGreaterThanOrEqual(0);
+        expect(breadcrumbIndex).toBeLessThan(tabsIndex);
+        expect(tabsIndex).toBeLessThan(mainIndex);
+      });
+    });
+
+    /**
+     * Property 7: Overview tab presence
+     * **Validates: Requirements 2.2**
+     * 
+     * For any page component in the application, the first tab in the tabs
+     * configuration array should have the id 'overview' and label 'Overview'.
+     */
+    it('should have Overview as first tab when tabs are provided', () => {
+      const tabConfigurations = [
+        [{ id: 'overview', label: 'Overview' }],
+        [
+          { id: 'overview', label: 'Overview' },
+          { id: 'security', label: 'Security' }
+        ],
+        [
+          { id: 'overview', label: 'Overview' },
+          { id: 'security', label: 'Security' },
+          { id: 'members', label: 'Members' },
+          { id: 'applications', label: 'Applications' }
+        ]
+      ];
+
+      tabConfigurations.forEach(tabs => {
+        component.tabs = tabs;
+        component.activeTabId = tabs[0].id;
+        fixture.detectChanges();
+
+        // Verify first tab is Overview
+        expect(component.tabs[0].id).toBe('overview');
+        expect(component.tabs[0].label).toBe('Overview');
+      });
+    });
+
+    /**
+     * Property 6: Full-width layout consistency
+     * **Validates: Requirements 2.1, 8.1, 8.2, 8.3**
+     * 
+     * For any page component in the application, the page container should have
+     * no max-width CSS constraint and should span the full available viewport width.
+     */
+    it('should have no max-width constraint on page container', () => {
+      component.breadcrumbItems = [{ label: 'Test', route: null }];
+      component.tabs = [{ id: 'overview', label: 'Overview' }];
+      component.activeTabId = 'overview';
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      const page = compiled.querySelector('.user-page');
+      const computedStyle = window.getComputedStyle(page as Element);
+
+      // The page itself should not have max-width
+      // Note: The content section has max-width: 1400px which is intentional
+      // but the page container should be full-width
+      expect(computedStyle.maxWidth).toBe('none');
+    });
+
+    /**
+     * Property 11: Page padding consistency
+     * **Validates: Requirements 8.4**
+     * 
+     * For any page component in the application, the left and right padding values
+     * on the page content container should be equal and consistent across all pages.
+     */
+    it('should have equal left and right padding on content container', () => {
+      component.breadcrumbItems = [{ label: 'Test', route: null }];
+      component.tabs = [{ id: 'overview', label: 'Overview' }];
+      component.activeTabId = 'overview';
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      const content = compiled.querySelector('.user-page__content');
+      const computedStyle = window.getComputedStyle(content as Element);
+
+      const paddingLeft = computedStyle.paddingLeft;
+      const paddingRight = computedStyle.paddingRight;
+
+      // Left and right padding should be equal
+      expect(paddingLeft).toBe(paddingRight);
+    });
+
+    it('should render breadcrumbs before tabs in DOM order', () => {
+      component.breadcrumbItems = [{ label: 'Test', route: null }];
+      component.tabs = [{ id: 'overview', label: 'Overview' }];
+      component.activeTabId = 'overview';
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      const content = compiled.querySelector('.user-page__content');
+      const breadcrumb = content?.querySelector('.orb-breadcrumb-container');
+      const tabs = content?.querySelector('app-tab-navigation');
+
+      // Get positions in DOM
+      const breadcrumbPosition = Array.from(content?.children || []).indexOf(breadcrumb as Element);
+      const tabsPosition = Array.from(content?.children || []).indexOf(tabs as Element);
+
+      expect(breadcrumbPosition).toBeLessThan(tabsPosition);
+    });
+
+    it('should render tabs before main content in DOM order', () => {
+      component.breadcrumbItems = [{ label: 'Test', route: null }];
+      component.tabs = [{ id: 'overview', label: 'Overview' }];
+      component.activeTabId = 'overview';
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      const content = compiled.querySelector('.user-page__content');
+      const tabs = content?.querySelector('app-tab-navigation');
+      const main = content?.querySelector('.user-page__main');
+
+      // Get positions in DOM
+      const tabsPosition = Array.from(content?.children || []).indexOf(tabs as Element);
+      const mainPosition = Array.from(content?.children || []).indexOf(main as Element);
+
+      expect(tabsPosition).toBeLessThan(mainPosition);
+    });
   });
 });

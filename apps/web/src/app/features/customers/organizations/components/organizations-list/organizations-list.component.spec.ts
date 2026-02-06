@@ -237,4 +237,37 @@ describe('OrganizationsListComponent', () => {
       expect(component.getStatusClass(OrganizationStatus.Pending)).toBe('pending');
     });
   });
+
+  describe('Page Layout Standardization', () => {
+    /**
+     * Property 8: List page tab restriction
+     * **Validates: Requirements 2.4**
+     * 
+     * For any list page component (applications list, organizations list), the tabs
+     * configuration array should contain exactly one tab with id 'overview'.
+     */
+    it('should have exactly one tab with id overview', () => {
+      fixture.detectChanges();
+
+      // Verify tabs array has exactly one tab
+      expect(component.tabs.length).toBe(1);
+
+      // Verify the single tab has id 'overview'
+      expect(component.tabs[0].id).toBe('overview');
+      expect(component.tabs[0].label).toBe('Overview');
+    });
+
+    it('should have activeTab set to overview by default', () => {
+      fixture.detectChanges();
+
+      expect(component.activeTab).toBe('overview');
+    });
+
+    it('should have breadcrumb items configured', () => {
+      fixture.detectChanges();
+
+      expect(component.breadcrumbItems).toBeDefined();
+      expect(component.breadcrumbItems.length).toBeGreaterThan(0);
+    });
+  });
 });

@@ -3,7 +3,7 @@
 // date: 2025-01-27
 // description: Reusable tab navigation component for consistent tab-based navigation
 
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TabConfig } from '../../models/tab-config.model';
 
@@ -41,6 +41,36 @@ export class TabNavigationComponent implements OnInit, OnChanges {
     }
     if (changes['activeTabId']) {
       this.validateActiveTabId();
+    }
+  }
+
+  /**
+   * Handle keyboard navigation for accessibility
+   * Supports Arrow keys, Home, and End keys
+   */
+  @HostListener('keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent): void {
+    const currentIndex = this.tabs.findIndex(tab => tab.id === this.activeTabId);
+    
+    switch (event.key) {
+      case 'ArrowLeft':
+        event.preventDefault();
+        this.selectPreviousTab(currentIndex);
+        break;
+      case 'ArrowRight':
+        event.preventDefault();
+        this.selectNextTab(currentIndex);
+        break;
+      case 'Home':
+        event.preventDefault();
+        this.selectTab(this.tabs[0].id);
+        this.focusTab(0);
+        break;
+      case 'End':
+        event.preventDefault();
+        this.selectTab(this.tabs[this.tabs.length - 1].id);
+        this.focusTab(this.tabs.length - 1);
+        break;
     }
   }
 
@@ -98,5 +128,49 @@ export class TabNavigationComponent implements OnInit, OnChanges {
    */
   isActive(tabId: string): boolean {
     return this.activeTabId === tabId;
+  }
+
+  /**
+   * Select the previous tab in the list
+   * Wraps around to the last tab if at the beginning
+   * @param currentIndex - The index of the currently active tab
+   */
+  private selectPreviousTab(currentIndex: number): void {
+    if (this.tabs.length === 0) {
+      return;
+    }
+
+    const previousIndex = currentIndex <= 0 ? this.tabs.length - 1 : currentIndex - 1;
+    this.selectTab(this.tabs[previousIndex].id);
+    this.focusTab(previousIndex);
+  }
+
+  /**
+   * Select the next tab in the list
+   * Wraps around to the first tab if at the end
+   * @param currentIndex - The index of the currently active tab
+   */
+  private selectNextTab(currentIndex: number): void {
+    if (this.tabs.length === 0) {
+      return;
+    }
+
+    const nextIndex = currentIndex >= this.tabs.length - 1 ? 0 : currentIndex + 1;
+    this.selectTab(this.tabs[nextIndex].id);
+    this.focusTab(nextIndex);
+  }
+
+  /**
+   * Focus a tab button by index
+   * @param index - The index of the tab to focus
+   */
+  private focusTab(index: number): void {
+    // Use setTimeout to ensure DOM has updated
+    setTimeout(() => {
+      const buttons = document.querySelectorAll('.orb-tab');
+      if (buttons[index]) {
+        (buttons[index] as HTMLElement).focus();
+      }
+    }, 0);
   }
 }

@@ -705,4 +705,198 @@ describe('TabNavigationComponent', () => {
       );
     });
   });
+
+  // Accessibility Tests
+  describe('Accessibility Features', () => {
+    it('should have role="tablist" on nav element', () => {
+      component.tabs = [
+        { id: 'overview', label: 'Overview' },
+        { id: 'security', label: 'Security' }
+      ];
+      fixture.detectChanges();
+
+      const nav = fixture.nativeElement.querySelector('nav');
+      expect(nav.getAttribute('role')).toBe('tablist');
+    });
+
+    it('should have role="tab" on button elements', () => {
+      component.tabs = [
+        { id: 'overview', label: 'Overview' },
+        { id: 'security', label: 'Security' }
+      ];
+      fixture.detectChanges();
+
+      const buttons = fixture.nativeElement.querySelectorAll('.orb-tab');
+      buttons.forEach((button: HTMLElement) => {
+        expect(button.getAttribute('role')).toBe('tab');
+      });
+    });
+
+    it('should have aria-selected="true" on active tab', () => {
+      component.tabs = [
+        { id: 'overview', label: 'Overview' },
+        { id: 'security', label: 'Security' }
+      ];
+      component.activeTabId = 'security';
+      fixture.detectChanges();
+
+      const buttons = fixture.nativeElement.querySelectorAll('.orb-tab');
+      expect(buttons[0].getAttribute('aria-selected')).toBe('false');
+      expect(buttons[1].getAttribute('aria-selected')).toBe('true');
+    });
+
+    it('should have aria-selected="false" on inactive tabs', () => {
+      component.tabs = [
+        { id: 'overview', label: 'Overview' },
+        { id: 'security', label: 'Security' },
+        { id: 'settings', label: 'Settings' }
+      ];
+      component.activeTabId = 'security';
+      fixture.detectChanges();
+
+      const buttons = fixture.nativeElement.querySelectorAll('.orb-tab');
+      expect(buttons[0].getAttribute('aria-selected')).toBe('false');
+      expect(buttons[1].getAttribute('aria-selected')).toBe('true');
+      expect(buttons[2].getAttribute('aria-selected')).toBe('false');
+    });
+
+    it('should have aria-controls attribute on tab buttons', () => {
+      component.tabs = [
+        { id: 'overview', label: 'Overview' },
+        { id: 'security', label: 'Security' }
+      ];
+      fixture.detectChanges();
+
+      const buttons = fixture.nativeElement.querySelectorAll('.orb-tab');
+      expect(buttons[0].getAttribute('aria-controls')).toBe('overview-panel');
+      expect(buttons[1].getAttribute('aria-controls')).toBe('security-panel');
+    });
+
+    it('should have id attribute on tab buttons', () => {
+      component.tabs = [
+        { id: 'overview', label: 'Overview' },
+        { id: 'security', label: 'Security' }
+      ];
+      fixture.detectChanges();
+
+      const buttons = fixture.nativeElement.querySelectorAll('.orb-tab');
+      expect(buttons[0].getAttribute('id')).toBe('overview-tab');
+      expect(buttons[1].getAttribute('id')).toBe('security-tab');
+    });
+
+    it('should have aria-hidden="true" on icon elements', () => {
+      component.tabs = [
+        { id: 'overview', label: 'Overview', icon: 'fas fa-home' }
+      ];
+      fixture.detectChanges();
+
+      const icon = fixture.nativeElement.querySelector('.orb-tab-icon');
+      expect(icon.getAttribute('aria-hidden')).toBe('true');
+    });
+
+    describe('Keyboard Navigation', () => {
+      beforeEach(() => {
+        component.tabs = [
+          { id: 'tab1', label: 'Tab 1' },
+          { id: 'tab2', label: 'Tab 2' },
+          { id: 'tab3', label: 'Tab 3' }
+        ];
+        component.activeTabId = 'tab2';
+        fixture.detectChanges();
+      });
+
+      it('should navigate to previous tab on ArrowLeft', () => {
+        spyOn(component.tabChange, 'emit');
+
+        const event = new KeyboardEvent('keydown', { key: 'ArrowLeft' });
+        spyOn(event, 'preventDefault');
+        component.handleKeyDown(event);
+
+        expect(event.preventDefault).toHaveBeenCalled();
+        expect(component.tabChange.emit).toHaveBeenCalledWith('tab1');
+      });
+
+      it('should wrap to last tab on ArrowLeft from first tab', () => {
+        component.activeTabId = 'tab1';
+        fixture.detectChanges();
+
+        spyOn(component.tabChange, 'emit');
+
+        const event = new KeyboardEvent('keydown', { key: 'ArrowLeft' });
+        component.handleKeyDown(event);
+
+        expect(component.tabChange.emit).toHaveBeenCalledWith('tab3');
+      });
+
+      it('should navigate to next tab on ArrowRight', () => {
+        spyOn(component.tabChange, 'emit');
+
+        const event = new KeyboardEvent('keydown', { key: 'ArrowRight' });
+        spyOn(event, 'preventDefault');
+        component.handleKeyDown(event);
+
+        expect(event.preventDefault).toHaveBeenCalled();
+        expect(component.tabChange.emit).toHaveBeenCalledWith('tab3');
+      });
+
+      it('should wrap to first tab on ArrowRight from last tab', () => {
+        component.activeTabId = 'tab3';
+        fixture.detectChanges();
+
+        spyOn(component.tabChange, 'emit');
+
+        const event = new KeyboardEvent('keydown', { key: 'ArrowRight' });
+        component.handleKeyDown(event);
+
+        expect(component.tabChange.emit).toHaveBeenCalledWith('tab1');
+      });
+
+      it('should navigate to first tab on Home key', () => {
+        spyOn(component.tabChange, 'emit');
+
+        const event = new KeyboardEvent('keydown', { key: 'Home' });
+        spyOn(event, 'preventDefault');
+        component.handleKeyDown(event);
+
+        expect(event.preventDefault).toHaveBeenCalled();
+        expect(component.tabChange.emit).toHaveBeenCalledWith('tab1');
+      });
+
+      it('should navigate to last tab on End key', () => {
+        spyOn(component.tabChange, 'emit');
+
+        const event = new KeyboardEvent('keydown', { key: 'End' });
+        spyOn(event, 'preventDefault');
+        component.handleKeyDown(event);
+
+        expect(event.preventDefault).toHaveBeenCalled();
+        expect(component.tabChange.emit).toHaveBeenCalledWith('tab3');
+      });
+
+      it('should not handle other keys', () => {
+        spyOn(component.tabChange, 'emit');
+
+        const event = new KeyboardEvent('keydown', { key: 'Enter' });
+        spyOn(event, 'preventDefault');
+        component.handleKeyDown(event);
+
+        expect(event.preventDefault).not.toHaveBeenCalled();
+        expect(component.tabChange.emit).not.toHaveBeenCalled();
+      });
+
+      it('should focus the tab button after keyboard navigation', (done) => {
+        const buttons = fixture.nativeElement.querySelectorAll('.orb-tab');
+        spyOn(buttons[0] as HTMLElement, 'focus');
+
+        const event = new KeyboardEvent('keydown', { key: 'ArrowLeft' });
+        component.handleKeyDown(event);
+
+        // Focus happens in setTimeout, so we need to wait
+        setTimeout(() => {
+          expect((buttons[0] as HTMLElement).focus).toHaveBeenCalled();
+          done();
+        }, 10);
+      });
+    });
+  });
 });

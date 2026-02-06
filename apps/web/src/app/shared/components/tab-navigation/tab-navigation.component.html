@@ -3,16 +3,20 @@
 <!-- date: 2025-01-27 -->
 <!-- description: Template for tab navigation component -->
 
-<nav class="orb-tabs">
+<nav class="orb-tabs" role="tablist">
   <div class="orb-tabs-container">
     @for (tab of tabs; track tab.id) {
       <button
         class="orb-tab"
         [class.orb-tab-active]="isActive(tab.id)"
         (click)="selectTab(tab.id)"
-        type="button">
+        type="button"
+        role="tab"
+        [attr.aria-selected]="isActive(tab.id)"
+        [attr.aria-controls]="tab.id + '-panel'"
+        [id]="tab.id + '-tab'">
         @if (tab.icon) {
-          <i [class]="tab.icon" class="orb-tab-icon"></i>
+          <i [class]="tab.icon" class="orb-tab-icon" aria-hidden="true"></i>
         }
         <span class="orb-tab-label">{{ tab.label }}</span>
         @if (tab.badge !== undefined && tab.badge !== null) {
