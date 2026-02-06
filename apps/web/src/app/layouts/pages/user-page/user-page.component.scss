@@ -18,11 +18,11 @@
     // Standard content section dimensions
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0 var(--spacing-lg) var(--spacing-lg);
+    padding: 0 var(--spacing-lg);
     
     // Responsive padding for mobile
     @media (max-width: 768px) {
-      padding: 0 var(--spacing-md) var(--spacing-md);
+      padding: 0 var(--spacing-md);
     }
   }
 
