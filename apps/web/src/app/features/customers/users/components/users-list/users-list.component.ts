@@ -231,6 +231,10 @@ export class UsersListComponent implements OnInit, OnDestroy {
     this.store.dispatch(UsersActions.refreshUsers());
   }
 
+  onRetry(): void {
+    this.store.dispatch(UsersActions.loadUsers());
+  }
+
   getStatusClass(status: UserStatus): string {
     switch (status) {
       case UserStatus.Active:

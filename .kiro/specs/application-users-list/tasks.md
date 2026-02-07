@@ -99,7 +99,7 @@ This implementation plan breaks down the Application Users List feature into dis
     - Test error handling for failed queries
     - _Requirements: 2.1_
 
-- [-] 7. Create GraphQL query definitions
+- [x] 7. Create GraphQL query definitions
   - [x] 7.1 Create or update `core/graphql/users.graphql.ts`
     - Define `GetApplicationUsers` query
     - Include Users fields: userId, firstName, lastName, status, createdAt, updatedAt
@@ -141,226 +141,226 @@ This implementation plan breaks down the Application Users List feature into dis
     - Dispatch `UsersActions.loadUsers()` on component init
     - _Requirements: 2.1_
 
-- [ ] 10. Implement DataGrid configuration
-  - [ ] 10.1 Define column definitions for DataGrid
+- [x] 10. Implement DataGrid configuration
+  - [x] 10.1 Define column definitions for DataGrid
     - Create columns array with User, Status, Applications, Last Updated columns
     - Configure sortable, filterable, width, align properties
     - Set up filter options for status dropdown (ACTIVE, INACTIVE, PENDING)
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 5.1, 5.2, 5.3, 5.4, 6.2_
   
-  - [ ] 10.2 Create cell templates with ViewChild references
+  - [x] 10.2 Create cell templates with ViewChild references
     - Create userInfoCell template (orb-info with name and userId)
     - Create statusCell template (status-badge with icon)
     - Create applicationCountCell template (orb-count with clickable styling)
     - Wire templates to column definitions in ngAfterViewInit
     - _Requirements: 3.1, 3.2, 3.3, 3.6_
   
-  - [ ] 10.3 Write property test for display fields
+  - [x] 10.3 Write property test for display fields
     - **Property 3: Required Display Fields**
     - **Validates: Requirements 3.1, 3.2, 3.3, 3.4**
   
-  - [ ] 10.4 Write property test for PII exclusion
+  - [x] 10.4 Write property test for PII exclusion
     - **Property 4: PII Field Exclusion**
     - **Validates: Requirements 3.5**
   
-  - [ ] 10.5 Write property test for name formatting
+  - [x] 10.5 Write property test for name formatting
     - **Property 5: Full Name Formatting**
     - **Validates: Requirements 3.6**
 
-- [ ] 11. Implement pagination, sorting, and filtering handlers
-  - [ ] 11.1 Initialize pageState, sortState, filterState
+- [x] 11. Implement pagination, sorting, and filtering handlers
+  - [x] 11.1 Initialize pageState, sortState, filterState
     - Set default pageState (currentPage: 1, pageSize: 25)
     - Set default sortState (field: 'user', direction: 'asc')
     - Initialize empty filterState
     - _Requirements: 5.6, 9.1_
   
-  - [ ] 11.2 Implement onPageChange handler
+  - [x] 11.2 Implement onPageChange handler
     - Update pageState with new page number
     - Slice filteredUserRows based on page and pageSize
     - _Requirements: 9.3_
   
-  - [ ] 11.3 Implement onSortChange handler
+  - [x] 11.3 Implement onSortChange handler
     - Update sortState with new field and direction
     - Dispatch sort action (or handle locally if client-side)
     - _Requirements: 5.1, 5.2, 5.3, 5.4_
   
-  - [ ] 11.4 Implement onFilterChange handler
+  - [x] 11.4 Implement onFilterChange handler
     - Extract search term and status filter from event
     - Dispatch `setSearchTerm` and `setStatusFilter` actions
     - _Requirements: 6.1, 6.3, 6.4_
   
-  - [ ] 11.5 Implement onResetGrid handler
+  - [x] 11.5 Implement onResetGrid handler
     - Dispatch actions to clear search term and status filter
     - Reset sortState to default
     - Reset pageState to page 1
     - _Requirements: 6.5_
   
-  - [ ] 11.6 Write property test for sorting
+  - [x] 11.6 Write property test for sorting
     - **Property 6: Sorting Consistency**
     - **Validates: Requirements 5.1, 5.2, 5.3, 5.4**
   
-  - [ ] 11.7 Write property test for pagination
+  - [x] 11.7 Write property test for pagination
     - **Property 10: Pagination Data Slicing**
     - **Property 11: Pagination Metadata Calculation**
     - **Validates: Requirements 9.3, 9.4**
   
-  - [ ] 11.8 Write unit tests for pagination edge cases
+  - [x] 11.8 Write unit tests for pagination edge cases
     - Test previous button disabled on first page
     - Test next button disabled on last page
     - Test default page size is 25
     - _Requirements: 9.1, 9.5, 9.6_
 
-- [ ] 12. Implement row interaction handlers
-  - [ ] 12.1 Implement onRowClick handler
+- [x] 12. Implement row interaction handlers
+  - [x] 12.1 Implement onRowClick handler
     - Dispatch `selectUser` action with clicked user
     - Dispatch `setSelectedUserId` action with userId
     - Display toast message: "User detail view not yet implemented"
     - _Requirements: 7.2, 7.3_
   
-  - [ ] 12.2 Implement onApplicationCountClick handler
+  - [x] 12.2 Implement onApplicationCountClick handler
     - Stop event propagation to prevent row click
     - Extract applicationIds from row
     - Navigate to `/customers/applications` with query params
     - Pass `filterByUser: userId` and `applicationIds: ids.join(',')` as query params
     - _Requirements: 8.1, 8.2, 8.3, 8.6_
   
-  - [ ] 12.3 Write property test for row selection
+  - [x] 12.3 Write property test for row selection
     - **Property 8: Row Selection State**
     - **Validates: Requirements 7.2**
   
-  - [ ] 12.4 Write property test for navigation parameters
+  - [x] 12.4 Write property test for navigation parameters
     - **Property 9: Application Count Navigation Parameters**
     - **Validates: Requirements 8.3**
   
-  - [ ] 12.5 Write unit tests for interaction handlers
+  - [x] 12.5 Write unit tests for interaction handlers
     - Test row click stores userId
     - Test row click displays message
     - Test application count click stops propagation
     - Test application count click navigates with correct params
     - _Requirements: 7.2, 7.3, 8.1, 8.2, 8.6_
 
-- [ ] 13. Implement refresh functionality
-  - [ ] 13.1 Add refresh button to card header
+- [x] 13. Implement refresh functionality
+  - [x] 13.1 Add refresh button to card header
     - Add orb-card-btn with refresh icon
     - Wire to onRefresh handler
     - _Requirements: 10.1_
   
-  - [ ] 13.2 Implement onRefresh handler
+  - [x] 13.2 Implement onRefresh handler
     - Dispatch `refreshUsers` action
     - Maintain current filter and sort state
     - _Requirements: 10.2, 10.4_
   
-  - [ ] 13.3 Write property test for refresh state preservation
+  - [x] 13.3 Write property test for refresh state preservation
     - **Property 12: Refresh State Preservation**
     - **Validates: Requirements 10.4**
   
-  - [ ] 13.4 Write unit tests for refresh
+  - [x] 13.4 Write unit tests for refresh
     - Test refresh button exists
     - Test refresh dispatches action
     - Test loading indicator shows during refresh
     - _Requirements: 10.1, 10.2, 10.3_
 
-- [ ] 14. Checkpoint - Ensure component tests pass
+- [x] 14. Checkpoint - Ensure component tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 15. Create component template with UserPageComponent wrapper
-  - [ ] 15.1 Implement template structure
+- [x] 15. Create component template with UserPageComponent wrapper
+  - [x] 15.1 Implement template structure
     - Wrap content in `<app-user-page>` with hero, breadcrumbs, tabs
     - Set heroTitle="Users", heroSubtitle="View users assigned to applications"
     - Configure breadcrumbItems array
     - _Requirements: 4.1_
   
-  - [ ] 15.2 Add orb-card with header and DataGrid
+  - [x] 15.2 Add orb-card with header and DataGrid
     - Use orb-card, orb-card__header, orb-card__title classes
     - Add Users icon and title in header
     - Add refresh button in header actions
     - Place DataGrid in orb-card__content
     - _Requirements: 4.1, 10.1_
   
-  - [ ] 15.3 Configure DataGrid inputs and outputs
+  - [x] 15.3 Configure DataGrid inputs and outputs
     - Bind columns, data, pageState, sortState, filterState
     - Bind loading, showFilters, showPagination, showReset
     - Wire up event handlers (pageChange, sortChange, filterChange, resetGrid, rowClick)
     - Set trackByField="user", emptyMessage="No users found"
     - _Requirements: 4.3, 4.4, 6.5_
   
-  - [ ] 15.4 Add cell template definitions
+  - [x] 15.4 Add cell template definitions
     - Define ng-template for userInfoCell
     - Define ng-template for statusCell
     - Define ng-template for applicationCountCell
     - _Requirements: 3.1, 3.2, 3.3_
 
-- [ ] 16. Add routing configuration
-  - [ ] 16.1 Update `features/customers/customers.routes.ts`
+- [x] 16. Add routing configuration
+  - [x] 16.1 Update `features/customers/customers.routes.ts`
     - Add route for 'users' path
     - Set component to UsersListComponent
     - Add canActivate guards: [AuthGuard, RoleGuard]
     - Set data: { roles: ['CUSTOMER', 'EMPLOYEE', 'OWNER'], title: 'Users' }
     - _Requirements: 1.1, 1.2, 1.3_
   
-  - [ ] 16.2 Write property test for authorization
+  - [x] 16.2 Write property test for authorization
     - **Property 2: Authorization Access Control**
     - **Validates: Requirements 1.3**
   
-  - [ ] 16.3 Write unit tests for routing
+  - [x] 16.3 Write unit tests for routing
     - Test navigation to /customers/users works
     - Test route guard allows CUSTOMER, EMPLOYEE, OWNER roles
     - Test route guard denies other roles
     - Test Users icon is highlighted when on page
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
-- [ ] 17. Implement error handling and empty states
-  - [ ] 17.1 Add error display in template
+- [x] 17. Implement error handling and empty states
+  - [x] 17.1 Add error display in template
     - Show error message when error$ emits
     - Add "Retry" button that dispatches loadUsers
     - Use orb-error-message class for styling
     - _Requirements: 4.4_
   
-  - [ ] 17.2 Add empty state handling
+  - [x] 17.2 Add empty state handling
     - Show "No users found" when filteredUserRows is empty
     - Show "No users match your filters" when filters are active and list is empty
     - Add "Clear Filters" button for filtered empty state
     - _Requirements: 6.5_
   
-  - [ ] 17.3 Write unit tests for error and empty states
+  - [x] 17.3 Write unit tests for error and empty states
     - Test error message displays when error exists
     - Test retry button dispatches loadUsers
     - Test empty state message displays
     - Test filtered empty state shows clear filters button
     - _Requirements: 4.4, 6.5_
 
-- [ ] 18. Add responsive styling (minimal, use global classes)
-  - [ ] 18.1 Configure DataGrid responsive behavior
+- [x] 18. Add responsive styling (minimal, use global classes)
+  - [x] 18.1 Configure DataGrid responsive behavior
     - Set hideOnMobile: true for appropriate columns
     - DataGrid handles responsive layout automatically
     - _Requirements: 11.1, 11.2, 11.3_
   
-  - [ ] 18.2 Test responsive behavior
+  - [x] 18.2 Test responsive behavior
     - Verify desktop layout shows all columns
     - Verify tablet layout adjusts appropriately
     - Verify mobile layout uses card view
     - _Requirements: 11.1, 11.2, 11.3, 11.4_
 
-- [ ] 19. Integration testing
-  - [ ] 19.1 Write integration tests for full user journey
+- [x] 19. Integration testing
+  - [x] 19.1 Write integration tests for full user journey
     - Test: Load page → Filter by name → Sort by status → Navigate to applications
     - Test: Apply filters → Refresh → Verify filters maintained
     - Test: Paginate → Filter → Verify correct data displayed
     - Test: Error state → Retry → Verify success
     - _Requirements: Multiple_
   
-  - [ ] 19.2 Write accessibility tests
+  - [x] 19.2 Write accessibility tests
     - Test keyboard navigation works for all actions
     - Test ARIA labels are present on interactive elements
     - Test screen reader announcements for filter changes
     - Test color contrast meets WCAG 2.1 AA
     - _Requirements: 11.4_
 
-- [ ] 20. Final checkpoint - Ensure all tests pass
+- [x] 20. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 21. Update documentation
-  - [ ] 21.1 Update frontend architecture documentation
+- [x] 21. Update documentation
+  - [x] 21.1 Update frontend architecture documentation
     - Add Users List page to architecture docs
     - Document ApplicationUsers query pattern
     - Document UserTableRow interface
@@ -368,32 +368,32 @@ This implementation plan breaks down the Application Users List feature into dis
     - Use consistent terminology
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5_
 
-- [ ] 22. Update version and changelog
-  - [ ] 22.1 Bump version in package.json
+- [x] 22. Update version and changelog
+  - [x] 22.1 Bump version in package.json
     - Increment MINOR version (new feature, backward compatible)
     - _Requirements: 13.1, 13.5_
   
-  - [ ] 22.2 Update CHANGELOG.md
+  - [x] 22.2 Update CHANGELOG.md
     - Add entry under "Added" section
     - Format: "- Users List page with filtering, sorting, and pagination (#issue)"
     - Include issue numbers if applicable
     - _Requirements: 13.2, 13.3, 13.4_
 
-- [ ] 23. Final verification
-  - [ ] 23.1 Run all checks
+- [x] 23. Final verification
+  - [x] 23.1 Run all checks
     - Run linter: `npm run lint` (must pass with 0 warnings)
     - Run type checker: `npm run typecheck` (must pass)
     - Run all tests: `npm test` (must pass)
     - Run build: `npm run build` (must succeed)
     - _Requirements: 15.1, 15.2, 15.3_
   
-  - [ ] 23.2 Verify documentation
+  - [x] 23.2 Verify documentation
     - Verify documentation renders correctly
     - Verify CHANGELOG.md is updated
     - Verify version is bumped
     - _Requirements: 15.4, 15.5, 15.6_
   
-  - [ ] 23.3 Verify commit messages
+  - [x] 23.3 Verify commit messages
     - Ensure commits follow conventional commits format
     - Ensure commits reference issue numbers (if applicable)
     - Format: `feat: add users list page #issue`

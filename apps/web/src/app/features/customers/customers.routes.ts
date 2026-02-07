@@ -25,6 +25,14 @@ export const CUSTOMER_ROUTES: Routes = [
     }
   },
   {
+    path: 'users',
+    loadChildren: () => import('./users/users.routes').then(m => m.usersRoutes),
+    data: { 
+      title: 'Users',
+      description: 'View users assigned to applications'
+    }
+  },
+  {
     path: '',
     redirectTo: 'organizations',
     pathMatch: 'full'

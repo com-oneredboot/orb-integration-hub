@@ -24,8 +24,23 @@
       </div>
     </div>
 
+    <!-- Error Display -->
+    <div class="orb-card__content" *ngIf="error$ | async as error">
+      <div class="orb-error-message">
+        <fa-icon icon="exclamation-triangle" class="orb-error-message__icon"></fa-icon>
+        <div class="orb-error-message__content">
+          <h3 class="orb-error-message__title">Unable to load users</h3>
+          <p class="orb-error-message__text">{{ error }}</p>
+          <button class="orb-btn orb-btn--primary" (click)="onRetry()">
+            <fa-icon icon="refresh" class="orb-btn__icon"></fa-icon>
+            Retry
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Data Grid -->
-    <div class="orb-card__content">
+    <div class="orb-card__content" *ngIf="!(error$ | async)">
       <app-data-grid
         [columns]="columns"
         [data]="(filteredUserRows$ | async) || []"

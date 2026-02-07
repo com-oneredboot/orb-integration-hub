@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Users List page with filtering, sorting, and pagination
+  - View users assigned to applications with name, status, application count, and last activity
+  - Filter by name and user status
+  - Sort by name, status, application count, or last updated date
+  - Navigate to Applications list filtered by user's applications
+  - Pagination support (25 items per page)
+  - Responsive design for desktop, tablet, and mobile
+  - NgRx store management following Organizations pattern
+  - Property-based tests for all 13 correctness properties (100+ iterations each)
+  - Comprehensive unit tests for component, edge cases, and pagination
+  - Spec: `.kiro/specs/application-users-list/`
 - Application Environment Configuration feature
   - Per-environment settings for CORS origins, rate limits, webhooks, and feature flags
   - Dual API key system with publishable (pk_) and secret (sk_) key types
