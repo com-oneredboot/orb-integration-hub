@@ -16,23 +16,14 @@ from ..enums.environment_enum import Environment
 class ApplicationUserRolesCreateInput(BaseModel):
     """ApplicationUserRoles create input."""
 
-    application_user_role_id: str = Field(
-        ..., description="Unique identifier for the user-role assignment (primary key)"
-    )
+    application_user_role_id: str = Field(..., description="Unique identifier for the user-role assignment (primary key)")
     user_id: str = Field(..., description="ID of the user (foreign key to Users)")
-    application_id: str = Field(
-        ..., description="ID of the application (foreign key to Applications)"
-    )
+    application_id: str = Field(..., description="ID of the application (foreign key to Applications)")
     environment: Environment = Field(..., description="Environment this role assignment applies to")
     role_id: str = Field(..., description="ID of the role (foreign key to Roles)")
     role_name: str = Field(..., description="Name of the role (denormalized for display)")
-    permissions: List[str] = Field(
-        ...,
-        description="List of permissions granted by this role (denormalized for fast resolution)",
-    )
-    status: ApplicationUserRoleStatus = Field(
-        ..., description="Current status of the role assignment"
-    )
+    permissions: List[str] = Field(..., description="List of permissions granted by this role (denormalized for fast resolution)")
+    status: ApplicationUserRoleStatus = Field(..., description="Current status of the role assignment")
     created_at: datetime = Field(..., description="When the role was assigned to the user")
     updated_at: datetime = Field(..., description="When the assignment was last updated")
 
@@ -40,28 +31,15 @@ class ApplicationUserRolesCreateInput(BaseModel):
 class ApplicationUserRolesUpdateInput(BaseModel):
     """ApplicationUserRoles update input."""
 
-    application_user_role_id: Optional[str] = Field(
-        ..., description="Unique identifier for the user-role assignment (primary key)"
-    )
+    application_user_role_id: Optional[str] = Field(..., description="Unique identifier for the user-role assignment (primary key)")
     user_id: Optional[str] = Field(..., description="ID of the user (foreign key to Users)")
-    application_id: Optional[str] = Field(
-        ..., description="ID of the application (foreign key to Applications)"
-    )
-    environment: Optional[Environment] = Field(
-        ..., description="Environment this role assignment applies to"
-    )
+    application_id: Optional[str] = Field(..., description="ID of the application (foreign key to Applications)")
+    environment: Optional[Environment] = Field(..., description="Environment this role assignment applies to")
     role_id: Optional[str] = Field(..., description="ID of the role (foreign key to Roles)")
     role_name: Optional[str] = Field(..., description="Name of the role (denormalized for display)")
-    permissions: Optional[List[str]] = Field(
-        ...,
-        description="List of permissions granted by this role (denormalized for fast resolution)",
-    )
-    status: Optional[ApplicationUserRoleStatus] = Field(
-        ..., description="Current status of the role assignment"
-    )
-    created_at: Optional[datetime] = Field(
-        ..., description="When the role was assigned to the user"
-    )
+    permissions: Optional[List[str]] = Field(..., description="List of permissions granted by this role (denormalized for fast resolution)")
+    status: Optional[ApplicationUserRoleStatus] = Field(..., description="Current status of the role assignment")
+    created_at: Optional[datetime] = Field(..., description="When the role was assigned to the user")
     updated_at: Optional[datetime] = Field(..., description="When the assignment was last updated")
 
 
@@ -76,6 +54,7 @@ class ApplicationUserRolesDisableInput(BaseModel):
 
     application_user_role_id: str
     disabled: bool
+
 
 
 # Query Input Types
@@ -103,23 +82,14 @@ class ApplicationUserRoles(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    application_user_role_id: str = Field(
-        ..., description="Unique identifier for the user-role assignment (primary key)"
-    )
+    application_user_role_id: str = Field(..., description="Unique identifier for the user-role assignment (primary key)")
     user_id: str = Field(..., description="ID of the user (foreign key to Users)")
-    application_id: str = Field(
-        ..., description="ID of the application (foreign key to Applications)"
-    )
+    application_id: str = Field(..., description="ID of the application (foreign key to Applications)")
     environment: Environment = Field(..., description="Environment this role assignment applies to")
     role_id: str = Field(..., description="ID of the role (foreign key to Roles)")
     role_name: str = Field(..., description="Name of the role (denormalized for display)")
-    permissions: List[str] = Field(
-        ...,
-        description="List of permissions granted by this role (denormalized for fast resolution)",
-    )
-    status: ApplicationUserRoleStatus = Field(
-        ..., description="Current status of the role assignment"
-    )
+    permissions: List[str] = Field(..., description="List of permissions granted by this role (denormalized for fast resolution)")
+    status: ApplicationUserRoleStatus = Field(..., description="Current status of the role assignment")
     created_at: datetime = Field(..., description="When the role was assigned to the user")
     updated_at: datetime = Field(..., description="When the assignment was last updated")
 

@@ -14,8 +14,7 @@ class ApplicationUsersTable(Construct):
         super().__init__(scope, id)
 
         self.table = dynamodb.Table(
-            self,
-            "ApplicationUsers",
+            self, "ApplicationUsers",
             table_name="orb-integration-hub-dev-table-applicationusers",
             partition_key=dynamodb.Attribute(
                 name="applicationUserId",
@@ -52,15 +51,13 @@ class ApplicationUsersTable(Construct):
 
         # SSM Parameters for table discovery
         ssm.StringParameter(
-            self,
-            "ApplicationUsersTableNameParam",
+            self, "ApplicationUsersTableNameParam",
             parameter_name="/orb/integration-hub/dev/dynamodb/applicationusers/table-name",
             string_value=self.table.table_name,
         )
 
         ssm.StringParameter(
-            self,
-            "ApplicationUsersTableArnParam",
+            self, "ApplicationUsersTableArnParam",
             parameter_name="/orb/integration-hub/dev/dynamodb/applicationusers/table-arn",
             string_value=self.table.table_arn,
         )

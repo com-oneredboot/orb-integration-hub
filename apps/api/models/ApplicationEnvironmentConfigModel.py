@@ -16,41 +16,19 @@ class ApplicationEnvironmentConfigCreateInput(BaseModel):
     """ApplicationEnvironmentConfig create input."""
 
     application_id: str = Field(..., description="ID of the application (partition key)")
-    environment: Environment = Field(
-        ..., description="Environment this configuration applies to (sort key)"
-    )
-    organization_id: str = Field(
-        ..., description="ID of the organization (denormalized for queries)"
-    )
-    allowed_origins: Optional[List[str]] = Field(
-        None, description="List of allowed CORS origins for publishable keys (max 10)"
-    )
-    rate_limit_per_minute: float = Field(
-        ..., description="Maximum API requests per minute (default 60)"
-    )
-    rate_limit_per_day: float = Field(
-        ..., description="Maximum API requests per day (default 10000)"
-    )
+    environment: Environment = Field(..., description="Environment this configuration applies to (sort key)")
+    organization_id: str = Field(..., description="ID of the organization (denormalized for queries)")
+    allowed_origins: Optional[List[str]] = Field(None, description="List of allowed CORS origins for publishable keys (max 10)")
+    rate_limit_per_minute: float = Field(..., description="Maximum API requests per minute (default 60)")
+    rate_limit_per_day: float = Field(..., description="Maximum API requests per day (default 10000)")
     webhook_url: Optional[str] = Field(None, description="HTTPS URL for webhook delivery")
-    webhook_secret: Optional[str] = Field(
-        None, description="HMAC secret for webhook signature (32 chars)"
-    )
-    webhook_events: Optional[List[str]] = Field(
-        None, description="List of event types to deliver via webhook"
-    )
+    webhook_secret: Optional[str] = Field(None, description="HMAC secret for webhook signature (32 chars)")
+    webhook_events: Optional[List[str]] = Field(None, description="List of event types to deliver via webhook")
     webhook_enabled: Optional[bool] = Field(None, description="Whether webhook delivery is enabled")
-    webhook_max_retries: Optional[float] = Field(
-        None, description="Maximum retry attempts for failed webhook delivery (default 3)"
-    )
-    webhook_retry_delay_seconds: Optional[float] = Field(
-        None, description="Delay between retry attempts in seconds (default 60)"
-    )
-    feature_flags: Optional[Dict[str, Any]] = Field(
-        None, description="Map of feature flag keys to values (boolean, string, or number)"
-    )
-    metadata: Optional[Dict[str, Any]] = Field(
-        None, description="Custom key-value pairs for environment-specific data"
-    )
+    webhook_max_retries: Optional[float] = Field(None, description="Maximum retry attempts for failed webhook delivery (default 3)")
+    webhook_retry_delay_seconds: Optional[float] = Field(None, description="Delay between retry attempts in seconds (default 60)")
+    feature_flags: Optional[Dict[str, Any]] = Field(None, description="Map of feature flag keys to values (boolean, string, or number)")
+    metadata: Optional[Dict[str, Any]] = Field(None, description="Custom key-value pairs for environment-specific data")
     created_at: datetime = Field(..., description="When the configuration was created")
     updated_at: datetime = Field(..., description="When the configuration was last updated")
 
@@ -59,45 +37,21 @@ class ApplicationEnvironmentConfigUpdateInput(BaseModel):
     """ApplicationEnvironmentConfig update input."""
 
     application_id: Optional[str] = Field(..., description="ID of the application (partition key)")
-    environment: Optional[Environment] = Field(
-        ..., description="Environment this configuration applies to (sort key)"
-    )
-    organization_id: Optional[str] = Field(
-        ..., description="ID of the organization (denormalized for queries)"
-    )
-    allowed_origins: Optional[List[str]] = Field(
-        None, description="List of allowed CORS origins for publishable keys (max 10)"
-    )
-    rate_limit_per_minute: Optional[float] = Field(
-        ..., description="Maximum API requests per minute (default 60)"
-    )
-    rate_limit_per_day: Optional[float] = Field(
-        ..., description="Maximum API requests per day (default 10000)"
-    )
+    environment: Optional[Environment] = Field(..., description="Environment this configuration applies to (sort key)")
+    organization_id: Optional[str] = Field(..., description="ID of the organization (denormalized for queries)")
+    allowed_origins: Optional[List[str]] = Field(None, description="List of allowed CORS origins for publishable keys (max 10)")
+    rate_limit_per_minute: Optional[float] = Field(..., description="Maximum API requests per minute (default 60)")
+    rate_limit_per_day: Optional[float] = Field(..., description="Maximum API requests per day (default 10000)")
     webhook_url: Optional[str] = Field(None, description="HTTPS URL for webhook delivery")
-    webhook_secret: Optional[str] = Field(
-        None, description="HMAC secret for webhook signature (32 chars)"
-    )
-    webhook_events: Optional[List[str]] = Field(
-        None, description="List of event types to deliver via webhook"
-    )
+    webhook_secret: Optional[str] = Field(None, description="HMAC secret for webhook signature (32 chars)")
+    webhook_events: Optional[List[str]] = Field(None, description="List of event types to deliver via webhook")
     webhook_enabled: Optional[bool] = Field(None, description="Whether webhook delivery is enabled")
-    webhook_max_retries: Optional[float] = Field(
-        None, description="Maximum retry attempts for failed webhook delivery (default 3)"
-    )
-    webhook_retry_delay_seconds: Optional[float] = Field(
-        None, description="Delay between retry attempts in seconds (default 60)"
-    )
-    feature_flags: Optional[Dict[str, Any]] = Field(
-        None, description="Map of feature flag keys to values (boolean, string, or number)"
-    )
-    metadata: Optional[Dict[str, Any]] = Field(
-        None, description="Custom key-value pairs for environment-specific data"
-    )
+    webhook_max_retries: Optional[float] = Field(None, description="Maximum retry attempts for failed webhook delivery (default 3)")
+    webhook_retry_delay_seconds: Optional[float] = Field(None, description="Delay between retry attempts in seconds (default 60)")
+    feature_flags: Optional[Dict[str, Any]] = Field(None, description="Map of feature flag keys to values (boolean, string, or number)")
+    metadata: Optional[Dict[str, Any]] = Field(None, description="Custom key-value pairs for environment-specific data")
     created_at: Optional[datetime] = Field(..., description="When the configuration was created")
-    updated_at: Optional[datetime] = Field(
-        ..., description="When the configuration was last updated"
-    )
+    updated_at: Optional[datetime] = Field(..., description="When the configuration was last updated")
 
 
 class ApplicationEnvironmentConfigDeleteInput(BaseModel):
@@ -113,6 +67,7 @@ class ApplicationEnvironmentConfigDisableInput(BaseModel):
     application_id: str
     environment: str
     disabled: bool
+
 
 
 # Query Input Types
@@ -148,41 +103,19 @@ class ApplicationEnvironmentConfig(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     application_id: str = Field(..., description="ID of the application (partition key)")
-    environment: Environment = Field(
-        ..., description="Environment this configuration applies to (sort key)"
-    )
-    organization_id: str = Field(
-        ..., description="ID of the organization (denormalized for queries)"
-    )
-    allowed_origins: Optional[List[str]] = Field(
-        None, description="List of allowed CORS origins for publishable keys (max 10)"
-    )
-    rate_limit_per_minute: float = Field(
-        ..., description="Maximum API requests per minute (default 60)"
-    )
-    rate_limit_per_day: float = Field(
-        ..., description="Maximum API requests per day (default 10000)"
-    )
+    environment: Environment = Field(..., description="Environment this configuration applies to (sort key)")
+    organization_id: str = Field(..., description="ID of the organization (denormalized for queries)")
+    allowed_origins: Optional[List[str]] = Field(None, description="List of allowed CORS origins for publishable keys (max 10)")
+    rate_limit_per_minute: float = Field(..., description="Maximum API requests per minute (default 60)")
+    rate_limit_per_day: float = Field(..., description="Maximum API requests per day (default 10000)")
     webhook_url: Optional[str] = Field(None, description="HTTPS URL for webhook delivery")
-    webhook_secret: Optional[str] = Field(
-        None, description="HMAC secret for webhook signature (32 chars)"
-    )
-    webhook_events: Optional[List[str]] = Field(
-        None, description="List of event types to deliver via webhook"
-    )
+    webhook_secret: Optional[str] = Field(None, description="HMAC secret for webhook signature (32 chars)")
+    webhook_events: Optional[List[str]] = Field(None, description="List of event types to deliver via webhook")
     webhook_enabled: Optional[bool] = Field(None, description="Whether webhook delivery is enabled")
-    webhook_max_retries: Optional[float] = Field(
-        None, description="Maximum retry attempts for failed webhook delivery (default 3)"
-    )
-    webhook_retry_delay_seconds: Optional[float] = Field(
-        None, description="Delay between retry attempts in seconds (default 60)"
-    )
-    feature_flags: Optional[Dict[str, Any]] = Field(
-        None, description="Map of feature flag keys to values (boolean, string, or number)"
-    )
-    metadata: Optional[Dict[str, Any]] = Field(
-        None, description="Custom key-value pairs for environment-specific data"
-    )
+    webhook_max_retries: Optional[float] = Field(None, description="Maximum retry attempts for failed webhook delivery (default 3)")
+    webhook_retry_delay_seconds: Optional[float] = Field(None, description="Delay between retry attempts in seconds (default 60)")
+    feature_flags: Optional[Dict[str, Any]] = Field(None, description="Map of feature flag keys to values (boolean, string, or number)")
+    metadata: Optional[Dict[str, Any]] = Field(None, description="Custom key-value pairs for environment-specific data")
     created_at: datetime = Field(..., description="When the configuration was created")
     updated_at: datetime = Field(..., description="When the configuration was last updated")
 

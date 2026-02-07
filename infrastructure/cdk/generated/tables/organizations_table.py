@@ -14,8 +14,7 @@ class OrganizationsTable(Construct):
         super().__init__(scope, id)
 
         self.table = dynamodb.Table(
-            self,
-            "Organizations",
+            self, "Organizations",
             table_name="orb-integration-hub-dev-table-organizations",
             partition_key=dynamodb.Attribute(
                 name="organizationId",
@@ -52,15 +51,13 @@ class OrganizationsTable(Construct):
 
         # SSM Parameters for table discovery
         ssm.StringParameter(
-            self,
-            "OrganizationsTableNameParam",
+            self, "OrganizationsTableNameParam",
             parameter_name="/orb/integration-hub/dev/dynamodb/organizations/table-name",
             string_value=self.table.table_name,
         )
 
         ssm.StringParameter(
-            self,
-            "OrganizationsTableArnParam",
+            self, "OrganizationsTableArnParam",
             parameter_name="/orb/integration-hub/dev/dynamodb/organizations/table-arn",
             string_value=self.table.table_arn,
         )

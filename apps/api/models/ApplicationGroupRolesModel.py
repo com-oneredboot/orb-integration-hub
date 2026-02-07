@@ -16,23 +16,14 @@ from ..enums.environment_enum import Environment
 class ApplicationGroupRolesCreateInput(BaseModel):
     """ApplicationGroupRoles create input."""
 
-    application_group_role_id: str = Field(
-        ..., description="Unique identifier for the group-role assignment (primary key)"
-    )
-    application_group_id: str = Field(
-        ..., description="ID of the group (foreign key to ApplicationGroups)"
-    )
+    application_group_role_id: str = Field(..., description="Unique identifier for the group-role assignment (primary key)")
+    application_group_id: str = Field(..., description="ID of the group (foreign key to ApplicationGroups)")
     application_id: str = Field(..., description="ID of the application (denormalized for queries)")
     environment: Environment = Field(..., description="Environment this role assignment applies to")
     role_id: str = Field(..., description="ID of the role (foreign key to Roles)")
     role_name: str = Field(..., description="Name of the role (denormalized for display)")
-    permissions: List[str] = Field(
-        ...,
-        description="List of permissions granted by this role (denormalized for fast resolution)",
-    )
-    status: ApplicationGroupRoleStatus = Field(
-        ..., description="Current status of the role assignment"
-    )
+    permissions: List[str] = Field(..., description="List of permissions granted by this role (denormalized for fast resolution)")
+    status: ApplicationGroupRoleStatus = Field(..., description="Current status of the role assignment")
     created_at: datetime = Field(..., description="When the role was assigned to the group")
     updated_at: datetime = Field(..., description="When the assignment was last updated")
 
@@ -40,30 +31,15 @@ class ApplicationGroupRolesCreateInput(BaseModel):
 class ApplicationGroupRolesUpdateInput(BaseModel):
     """ApplicationGroupRoles update input."""
 
-    application_group_role_id: Optional[str] = Field(
-        ..., description="Unique identifier for the group-role assignment (primary key)"
-    )
-    application_group_id: Optional[str] = Field(
-        ..., description="ID of the group (foreign key to ApplicationGroups)"
-    )
-    application_id: Optional[str] = Field(
-        ..., description="ID of the application (denormalized for queries)"
-    )
-    environment: Optional[Environment] = Field(
-        ..., description="Environment this role assignment applies to"
-    )
+    application_group_role_id: Optional[str] = Field(..., description="Unique identifier for the group-role assignment (primary key)")
+    application_group_id: Optional[str] = Field(..., description="ID of the group (foreign key to ApplicationGroups)")
+    application_id: Optional[str] = Field(..., description="ID of the application (denormalized for queries)")
+    environment: Optional[Environment] = Field(..., description="Environment this role assignment applies to")
     role_id: Optional[str] = Field(..., description="ID of the role (foreign key to Roles)")
     role_name: Optional[str] = Field(..., description="Name of the role (denormalized for display)")
-    permissions: Optional[List[str]] = Field(
-        ...,
-        description="List of permissions granted by this role (denormalized for fast resolution)",
-    )
-    status: Optional[ApplicationGroupRoleStatus] = Field(
-        ..., description="Current status of the role assignment"
-    )
-    created_at: Optional[datetime] = Field(
-        ..., description="When the role was assigned to the group"
-    )
+    permissions: Optional[List[str]] = Field(..., description="List of permissions granted by this role (denormalized for fast resolution)")
+    status: Optional[ApplicationGroupRoleStatus] = Field(..., description="Current status of the role assignment")
+    created_at: Optional[datetime] = Field(..., description="When the role was assigned to the group")
     updated_at: Optional[datetime] = Field(..., description="When the assignment was last updated")
 
 
@@ -78,6 +54,7 @@ class ApplicationGroupRolesDisableInput(BaseModel):
 
     application_group_role_id: str
     disabled: bool
+
 
 
 # Query Input Types
@@ -105,23 +82,14 @@ class ApplicationGroupRoles(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    application_group_role_id: str = Field(
-        ..., description="Unique identifier for the group-role assignment (primary key)"
-    )
-    application_group_id: str = Field(
-        ..., description="ID of the group (foreign key to ApplicationGroups)"
-    )
+    application_group_role_id: str = Field(..., description="Unique identifier for the group-role assignment (primary key)")
+    application_group_id: str = Field(..., description="ID of the group (foreign key to ApplicationGroups)")
     application_id: str = Field(..., description="ID of the application (denormalized for queries)")
     environment: Environment = Field(..., description="Environment this role assignment applies to")
     role_id: str = Field(..., description="ID of the role (foreign key to Roles)")
     role_name: str = Field(..., description="Name of the role (denormalized for display)")
-    permissions: List[str] = Field(
-        ...,
-        description="List of permissions granted by this role (denormalized for fast resolution)",
-    )
-    status: ApplicationGroupRoleStatus = Field(
-        ..., description="Current status of the role assignment"
-    )
+    permissions: List[str] = Field(..., description="List of permissions granted by this role (denormalized for fast resolution)")
+    status: ApplicationGroupRoleStatus = Field(..., description="Current status of the role assignment")
     created_at: datetime = Field(..., description="When the role was assigned to the group")
     updated_at: datetime = Field(..., description="When the assignment was last updated")
 

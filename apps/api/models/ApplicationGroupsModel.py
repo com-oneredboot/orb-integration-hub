@@ -15,18 +15,12 @@ from ..enums.application_group_status_enum import ApplicationGroupStatus
 class ApplicationGroupsCreateInput(BaseModel):
     """ApplicationGroups create input."""
 
-    application_group_id: str = Field(
-        ..., description="Unique identifier for the application group (primary key)"
-    )
-    application_id: str = Field(
-        ..., description="ID of the application this group belongs to (foreign key to Applications)"
-    )
+    application_group_id: str = Field(..., description="Unique identifier for the application group (primary key)")
+    application_id: str = Field(..., description="ID of the application this group belongs to (foreign key to Applications)")
     name: str = Field(..., description="Name of the group (unique within application)")
     description: Optional[str] = Field(None, description="Optional description of the group")
     status: ApplicationGroupStatus = Field(..., description="Current status of the group")
-    member_count: Optional[int] = Field(
-        0, description="Denormalized count of active members in this group"
-    )
+    member_count: Optional[int] = Field(0, description="Denormalized count of active members in this group")
     created_at: datetime = Field(..., description="When the group was created")
     updated_at: datetime = Field(..., description="When the group was last updated")
 
@@ -34,18 +28,12 @@ class ApplicationGroupsCreateInput(BaseModel):
 class ApplicationGroupsUpdateInput(BaseModel):
     """ApplicationGroups update input."""
 
-    application_group_id: Optional[str] = Field(
-        ..., description="Unique identifier for the application group (primary key)"
-    )
-    application_id: Optional[str] = Field(
-        ..., description="ID of the application this group belongs to (foreign key to Applications)"
-    )
+    application_group_id: Optional[str] = Field(..., description="Unique identifier for the application group (primary key)")
+    application_id: Optional[str] = Field(..., description="ID of the application this group belongs to (foreign key to Applications)")
     name: Optional[str] = Field(..., description="Name of the group (unique within application)")
     description: Optional[str] = Field(None, description="Optional description of the group")
     status: Optional[ApplicationGroupStatus] = Field(..., description="Current status of the group")
-    member_count: Optional[int] = Field(
-        0, description="Denormalized count of active members in this group"
-    )
+    member_count: Optional[int] = Field(0, description="Denormalized count of active members in this group")
     created_at: Optional[datetime] = Field(..., description="When the group was created")
     updated_at: Optional[datetime] = Field(..., description="When the group was last updated")
 
@@ -61,6 +49,7 @@ class ApplicationGroupsDisableInput(BaseModel):
 
     application_group_id: str
     disabled: bool
+
 
 
 # Query Input Types
@@ -82,18 +71,12 @@ class ApplicationGroups(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    application_group_id: str = Field(
-        ..., description="Unique identifier for the application group (primary key)"
-    )
-    application_id: str = Field(
-        ..., description="ID of the application this group belongs to (foreign key to Applications)"
-    )
+    application_group_id: str = Field(..., description="Unique identifier for the application group (primary key)")
+    application_id: str = Field(..., description="ID of the application this group belongs to (foreign key to Applications)")
     name: str = Field(..., description="Name of the group (unique within application)")
     description: Optional[str] = Field(None, description="Optional description of the group")
     status: ApplicationGroupStatus = Field(..., description="Current status of the group")
-    member_count: Optional[int] = Field(
-        0, description="Denormalized count of active members in this group"
-    )
+    member_count: Optional[int] = Field(0, description="Denormalized count of active members in this group")
     created_at: datetime = Field(..., description="When the group was created")
     updated_at: datetime = Field(..., description="When the group was last updated")
 

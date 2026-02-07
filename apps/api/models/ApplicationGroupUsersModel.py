@@ -15,12 +15,8 @@ from ..enums.application_group_user_status_enum import ApplicationGroupUserStatu
 class ApplicationGroupUsersCreateInput(BaseModel):
     """ApplicationGroupUsers create input."""
 
-    application_group_user_id: str = Field(
-        ..., description="Unique identifier for the group membership (primary key)"
-    )
-    application_group_id: str = Field(
-        ..., description="ID of the group (foreign key to ApplicationGroups)"
-    )
+    application_group_user_id: str = Field(..., description="Unique identifier for the group membership (primary key)")
+    application_group_id: str = Field(..., description="ID of the group (foreign key to ApplicationGroups)")
     user_id: str = Field(..., description="ID of the user (foreign key to Users)")
     application_id: str = Field(..., description="ID of the application (denormalized for queries)")
     status: ApplicationGroupUserStatus = Field(..., description="Current status of the membership")
@@ -31,19 +27,11 @@ class ApplicationGroupUsersCreateInput(BaseModel):
 class ApplicationGroupUsersUpdateInput(BaseModel):
     """ApplicationGroupUsers update input."""
 
-    application_group_user_id: Optional[str] = Field(
-        ..., description="Unique identifier for the group membership (primary key)"
-    )
-    application_group_id: Optional[str] = Field(
-        ..., description="ID of the group (foreign key to ApplicationGroups)"
-    )
+    application_group_user_id: Optional[str] = Field(..., description="Unique identifier for the group membership (primary key)")
+    application_group_id: Optional[str] = Field(..., description="ID of the group (foreign key to ApplicationGroups)")
     user_id: Optional[str] = Field(..., description="ID of the user (foreign key to Users)")
-    application_id: Optional[str] = Field(
-        ..., description="ID of the application (denormalized for queries)"
-    )
-    status: Optional[ApplicationGroupUserStatus] = Field(
-        ..., description="Current status of the membership"
-    )
+    application_id: Optional[str] = Field(..., description="ID of the application (denormalized for queries)")
+    status: Optional[ApplicationGroupUserStatus] = Field(..., description="Current status of the membership")
     created_at: Optional[datetime] = Field(..., description="When the user was added to the group")
     updated_at: Optional[datetime] = Field(..., description="When the membership was last updated")
 
@@ -59,6 +47,7 @@ class ApplicationGroupUsersDisableInput(BaseModel):
 
     application_group_user_id: str
     disabled: bool
+
 
 
 # Query Input Types
@@ -86,12 +75,8 @@ class ApplicationGroupUsers(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    application_group_user_id: str = Field(
-        ..., description="Unique identifier for the group membership (primary key)"
-    )
-    application_group_id: str = Field(
-        ..., description="ID of the group (foreign key to ApplicationGroups)"
-    )
+    application_group_user_id: str = Field(..., description="Unique identifier for the group membership (primary key)")
+    application_group_id: str = Field(..., description="ID of the group (foreign key to ApplicationGroups)")
     user_id: str = Field(..., description="ID of the user (foreign key to Users)")
     application_id: str = Field(..., description="ID of the application (denormalized for queries)")
     status: ApplicationGroupUserStatus = Field(..., description="Current status of the membership")

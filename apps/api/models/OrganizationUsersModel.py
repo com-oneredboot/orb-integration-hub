@@ -17,9 +17,7 @@ class OrganizationUsersCreateInput(BaseModel):
     """OrganizationUsers create input."""
 
     user_id: str = Field(..., description="ID of the user (foreign key to Users table)")
-    organization_id: str = Field(
-        ..., description="ID of the organization (foreign key to Organizations table)"
-    )
+    organization_id: str = Field(..., description="ID of the organization (foreign key to Organizations table)")
     role: OrganizationUserRole = Field(..., description="Role of the user within the organization")
     status: OrganizationUserStatus = Field(..., description="Status of the user's membership")
     invited_by: Optional[str] = Field(None, description="ID of the user who invited this member")
@@ -33,24 +31,14 @@ class OrganizationUsersUpdateInput(BaseModel):
     """OrganizationUsers update input."""
 
     user_id: Optional[str] = Field(..., description="ID of the user (foreign key to Users table)")
-    organization_id: Optional[str] = Field(
-        ..., description="ID of the organization (foreign key to Organizations table)"
-    )
-    role: Optional[OrganizationUserRole] = Field(
-        ..., description="Role of the user within the organization"
-    )
-    status: Optional[OrganizationUserStatus] = Field(
-        ..., description="Status of the user's membership"
-    )
+    organization_id: Optional[str] = Field(..., description="ID of the organization (foreign key to Organizations table)")
+    role: Optional[OrganizationUserRole] = Field(..., description="Role of the user within the organization")
+    status: Optional[OrganizationUserStatus] = Field(..., description="Status of the user's membership")
     invited_by: Optional[str] = Field(None, description="ID of the user who invited this member")
     invited_at: Optional[datetime] = Field(None, description="When the invitation was sent")
     joined_at: Optional[datetime] = Field(None, description="When the user accepted and joined")
-    created_at: Optional[datetime] = Field(
-        ..., description="When the membership record was created"
-    )
-    updated_at: Optional[datetime] = Field(
-        ..., description="When the membership record was last updated"
-    )
+    created_at: Optional[datetime] = Field(..., description="When the membership record was created")
+    updated_at: Optional[datetime] = Field(..., description="When the membership record was last updated")
 
 
 class OrganizationUsersDeleteInput(BaseModel):
@@ -66,6 +54,7 @@ class OrganizationUsersDisableInput(BaseModel):
     user_id: str
     organization_id: str
     disabled: bool
+
 
 
 # Query Input Types
@@ -95,9 +84,7 @@ class OrganizationUsers(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     user_id: str = Field(..., description="ID of the user (foreign key to Users table)")
-    organization_id: str = Field(
-        ..., description="ID of the organization (foreign key to Organizations table)"
-    )
+    organization_id: str = Field(..., description="ID of the organization (foreign key to Organizations table)")
     role: OrganizationUserRole = Field(..., description="Role of the user within the organization")
     status: OrganizationUserStatus = Field(..., description="Status of the user's membership")
     invited_by: Optional[str] = Field(None, description="ID of the user who invited this member")

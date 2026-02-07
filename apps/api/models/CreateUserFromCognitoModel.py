@@ -15,29 +15,17 @@ class CreateUserFromCognito(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    cognito_sub: str = Field(
-        ..., description="Cognito user ID (sub) to create record for - must be valid UUID"
-    )
+    cognito_sub: str = Field(..., description="Cognito user ID (sub) to create record for - must be valid UUID")
     user_id: Optional[str] = Field(None, description="Created user ID (same as cognitoSub)")
     email: Optional[str] = Field(None, description="Email address from Cognito")
     first_name: Optional[str] = Field(None, description="First name (given_name) from Cognito")
     last_name: Optional[str] = Field(None, description="Last name (family_name) from Cognito")
     status: Optional[str] = Field(None, description="User status (always PENDING for new users)")
-    email_verified: Optional[bool] = Field(
-        None, description="Email verification status from Cognito"
-    )
-    phone_verified: Optional[bool] = Field(
-        None, description="Phone verification status (always false for new users)"
-    )
-    mfa_enabled: Optional[bool] = Field(
-        None, description="MFA enabled status (true if user completed MFA)"
-    )
-    mfa_setup_complete: Optional[bool] = Field(
-        None, description="MFA setup complete status (true if user completed MFA)"
-    )
-    groups: Optional[List[str]] = Field(
-        None, description="User groups (always ['USER'] for new users)"
-    )
+    email_verified: Optional[bool] = Field(None, description="Email verification status from Cognito")
+    phone_verified: Optional[bool] = Field(None, description="Phone verification status (always false for new users)")
+    mfa_enabled: Optional[bool] = Field(None, description="MFA enabled status (true if user completed MFA)")
+    mfa_setup_complete: Optional[bool] = Field(None, description="MFA setup complete status (true if user completed MFA)")
+    groups: Optional[List[str]] = Field(None, description="User groups (always ['USER'] for new users)")
     created_at: Optional[datetime] = Field(None, description="Record creation timestamp")
     updated_at: Optional[datetime] = Field(None, description="Record update timestamp")
 

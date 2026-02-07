@@ -14,8 +14,7 @@ class ApplicationEnvironmentConfigTable(Construct):
         super().__init__(scope, id)
 
         self.table = dynamodb.Table(
-            self,
-            "ApplicationEnvironmentConfig",
+            self, "ApplicationEnvironmentConfig",
             table_name="orb-integration-hub-dev-table-applicationenvironmentconfig",
             partition_key=dynamodb.Attribute(
                 name="applicationId",
@@ -43,15 +42,13 @@ class ApplicationEnvironmentConfigTable(Construct):
 
         # SSM Parameters for table discovery
         ssm.StringParameter(
-            self,
-            "ApplicationEnvironmentConfigTableNameParam",
+            self, "ApplicationEnvironmentConfigTableNameParam",
             parameter_name="/orb/integration-hub/dev/dynamodb/applicationenvironmentconfig/table-name",
             string_value=self.table.table_name,
         )
 
         ssm.StringParameter(
-            self,
-            "ApplicationEnvironmentConfigTableArnParam",
+            self, "ApplicationEnvironmentConfigTableArnParam",
             parameter_name="/orb/integration-hub/dev/dynamodb/applicationenvironmentconfig/table-arn",
             string_value=self.table.table_arn,
         )

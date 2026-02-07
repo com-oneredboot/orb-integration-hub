@@ -17,97 +17,45 @@ from ..enums.environment_enum import Environment
 class ApplicationApiKeysCreateInput(BaseModel):
     """ApplicationApiKeys create input."""
 
-    application_api_key_id: str = Field(
-        ..., description="Unique identifier for the API key record (primary key)"
-    )
-    application_id: str = Field(
-        ..., description="ID of the application this key belongs to (foreign key to Applications)"
-    )
-    organization_id: str = Field(
-        ..., description="ID of the organization (denormalized for context)"
-    )
+    application_api_key_id: str = Field(..., description="Unique identifier for the API key record (primary key)")
+    application_id: str = Field(..., description="ID of the application this key belongs to (foreign key to Applications)")
+    organization_id: str = Field(..., description="ID of the organization (denormalized for context)")
     environment: Environment = Field(..., description="Environment this key is valid for")
     key_hash: str = Field(..., description="SHA-256 hash of the API key (for secure lookup)")
-    key_prefix: str = Field(
-        ..., description="First 12 chars of key for display (e.g., pk_dev_xxxx or sk_dev_xxxx)"
-    )
-    key_type: ApplicationApiKeyType = Field(
-        ..., description="Type of API key (PUBLISHABLE for frontend, SECRET for backend)"
-    )
-    permissions: Optional[List[str]] = Field(
-        None, description="List of permission strings for this key (e.g., read:users, write:groups)"
-    )
+    key_prefix: str = Field(..., description="First 12 chars of key for display (e.g., pk_dev_xxxx or sk_dev_xxxx)")
+    key_type: ApplicationApiKeyType = Field(..., description="Type of API key (PUBLISHABLE for frontend, SECRET for backend)")
+    permissions: Optional[List[str]] = Field(None, description="List of permission strings for this key (e.g., read:users, write:groups)")
     status: ApplicationApiKeyStatus = Field(..., description="Current status of the API key")
-    next_key_hash: Optional[str] = Field(
-        None, description="Hash of the next key during rotation (both keys valid)"
-    )
-    activates_at: Optional[datetime] = Field(
-        None, description="Future activation timestamp (null = immediate activation)"
-    )
-    expires_at: Optional[datetime] = Field(
-        None,
-        description="Expiration timestamp for ROTATING keys (7 days after regeneration) or REVOKED keys (set to revokedAt)",
-    )
-    revoked_at: Optional[datetime] = Field(
-        None, description="When the key was revoked (null if not revoked)"
-    )
+    next_key_hash: Optional[str] = Field(None, description="Hash of the next key during rotation (both keys valid)")
+    activates_at: Optional[datetime] = Field(None, description="Future activation timestamp (null = immediate activation)")
+    expires_at: Optional[datetime] = Field(None, description="Expiration timestamp for ROTATING keys (7 days after regeneration) or REVOKED keys (set to revokedAt)")
+    revoked_at: Optional[datetime] = Field(None, description="When the key was revoked (null if not revoked)")
     last_used_at: Optional[datetime] = Field(None, description="Timestamp of last key usage")
     created_at: datetime = Field(..., description="When the key was created")
     updated_at: datetime = Field(..., description="When the key was last updated")
-    ttl: Optional[float] = Field(
-        None,
-        description="DynamoDB TTL attribute (Unix timestamp for auto-deletion 30 days after expiresAt)",
-    )
+    ttl: Optional[float] = Field(None, description="DynamoDB TTL attribute (Unix timestamp for auto-deletion 30 days after expiresAt)")
 
 
 class ApplicationApiKeysUpdateInput(BaseModel):
     """ApplicationApiKeys update input."""
 
-    application_api_key_id: Optional[str] = Field(
-        ..., description="Unique identifier for the API key record (primary key)"
-    )
-    application_id: Optional[str] = Field(
-        ..., description="ID of the application this key belongs to (foreign key to Applications)"
-    )
-    organization_id: Optional[str] = Field(
-        ..., description="ID of the organization (denormalized for context)"
-    )
+    application_api_key_id: Optional[str] = Field(..., description="Unique identifier for the API key record (primary key)")
+    application_id: Optional[str] = Field(..., description="ID of the application this key belongs to (foreign key to Applications)")
+    organization_id: Optional[str] = Field(..., description="ID of the organization (denormalized for context)")
     environment: Optional[Environment] = Field(..., description="Environment this key is valid for")
-    key_hash: Optional[str] = Field(
-        ..., description="SHA-256 hash of the API key (for secure lookup)"
-    )
-    key_prefix: Optional[str] = Field(
-        ..., description="First 12 chars of key for display (e.g., pk_dev_xxxx or sk_dev_xxxx)"
-    )
-    key_type: Optional[ApplicationApiKeyType] = Field(
-        ..., description="Type of API key (PUBLISHABLE for frontend, SECRET for backend)"
-    )
-    permissions: Optional[List[str]] = Field(
-        None, description="List of permission strings for this key (e.g., read:users, write:groups)"
-    )
-    status: Optional[ApplicationApiKeyStatus] = Field(
-        ..., description="Current status of the API key"
-    )
-    next_key_hash: Optional[str] = Field(
-        None, description="Hash of the next key during rotation (both keys valid)"
-    )
-    activates_at: Optional[datetime] = Field(
-        None, description="Future activation timestamp (null = immediate activation)"
-    )
-    expires_at: Optional[datetime] = Field(
-        None,
-        description="Expiration timestamp for ROTATING keys (7 days after regeneration) or REVOKED keys (set to revokedAt)",
-    )
-    revoked_at: Optional[datetime] = Field(
-        None, description="When the key was revoked (null if not revoked)"
-    )
+    key_hash: Optional[str] = Field(..., description="SHA-256 hash of the API key (for secure lookup)")
+    key_prefix: Optional[str] = Field(..., description="First 12 chars of key for display (e.g., pk_dev_xxxx or sk_dev_xxxx)")
+    key_type: Optional[ApplicationApiKeyType] = Field(..., description="Type of API key (PUBLISHABLE for frontend, SECRET for backend)")
+    permissions: Optional[List[str]] = Field(None, description="List of permission strings for this key (e.g., read:users, write:groups)")
+    status: Optional[ApplicationApiKeyStatus] = Field(..., description="Current status of the API key")
+    next_key_hash: Optional[str] = Field(None, description="Hash of the next key during rotation (both keys valid)")
+    activates_at: Optional[datetime] = Field(None, description="Future activation timestamp (null = immediate activation)")
+    expires_at: Optional[datetime] = Field(None, description="Expiration timestamp for ROTATING keys (7 days after regeneration) or REVOKED keys (set to revokedAt)")
+    revoked_at: Optional[datetime] = Field(None, description="When the key was revoked (null if not revoked)")
     last_used_at: Optional[datetime] = Field(None, description="Timestamp of last key usage")
     created_at: Optional[datetime] = Field(..., description="When the key was created")
     updated_at: Optional[datetime] = Field(..., description="When the key was last updated")
-    ttl: Optional[float] = Field(
-        None,
-        description="DynamoDB TTL attribute (Unix timestamp for auto-deletion 30 days after expiresAt)",
-    )
+    ttl: Optional[float] = Field(None, description="DynamoDB TTL attribute (Unix timestamp for auto-deletion 30 days after expiresAt)")
 
 
 class ApplicationApiKeysDeleteInput(BaseModel):
@@ -121,6 +69,7 @@ class ApplicationApiKeysDisableInput(BaseModel):
 
     application_api_key_id: str
     disabled: bool
+
 
 
 # Query Input Types
@@ -148,47 +97,23 @@ class ApplicationApiKeys(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    application_api_key_id: str = Field(
-        ..., description="Unique identifier for the API key record (primary key)"
-    )
-    application_id: str = Field(
-        ..., description="ID of the application this key belongs to (foreign key to Applications)"
-    )
-    organization_id: str = Field(
-        ..., description="ID of the organization (denormalized for context)"
-    )
+    application_api_key_id: str = Field(..., description="Unique identifier for the API key record (primary key)")
+    application_id: str = Field(..., description="ID of the application this key belongs to (foreign key to Applications)")
+    organization_id: str = Field(..., description="ID of the organization (denormalized for context)")
     environment: Environment = Field(..., description="Environment this key is valid for")
     key_hash: str = Field(..., description="SHA-256 hash of the API key (for secure lookup)")
-    key_prefix: str = Field(
-        ..., description="First 12 chars of key for display (e.g., pk_dev_xxxx or sk_dev_xxxx)"
-    )
-    key_type: ApplicationApiKeyType = Field(
-        ..., description="Type of API key (PUBLISHABLE for frontend, SECRET for backend)"
-    )
-    permissions: Optional[List[str]] = Field(
-        None, description="List of permission strings for this key (e.g., read:users, write:groups)"
-    )
+    key_prefix: str = Field(..., description="First 12 chars of key for display (e.g., pk_dev_xxxx or sk_dev_xxxx)")
+    key_type: ApplicationApiKeyType = Field(..., description="Type of API key (PUBLISHABLE for frontend, SECRET for backend)")
+    permissions: Optional[List[str]] = Field(None, description="List of permission strings for this key (e.g., read:users, write:groups)")
     status: ApplicationApiKeyStatus = Field(..., description="Current status of the API key")
-    next_key_hash: Optional[str] = Field(
-        None, description="Hash of the next key during rotation (both keys valid)"
-    )
-    activates_at: Optional[datetime] = Field(
-        None, description="Future activation timestamp (null = immediate activation)"
-    )
-    expires_at: Optional[datetime] = Field(
-        None,
-        description="Expiration timestamp for ROTATING keys (7 days after regeneration) or REVOKED keys (set to revokedAt)",
-    )
-    revoked_at: Optional[datetime] = Field(
-        None, description="When the key was revoked (null if not revoked)"
-    )
+    next_key_hash: Optional[str] = Field(None, description="Hash of the next key during rotation (both keys valid)")
+    activates_at: Optional[datetime] = Field(None, description="Future activation timestamp (null = immediate activation)")
+    expires_at: Optional[datetime] = Field(None, description="Expiration timestamp for ROTATING keys (7 days after regeneration) or REVOKED keys (set to revokedAt)")
+    revoked_at: Optional[datetime] = Field(None, description="When the key was revoked (null if not revoked)")
     last_used_at: Optional[datetime] = Field(None, description="Timestamp of last key usage")
     created_at: datetime = Field(..., description="When the key was created")
     updated_at: datetime = Field(..., description="When the key was last updated")
-    ttl: Optional[float] = Field(
-        None,
-        description="DynamoDB TTL attribute (Unix timestamp for auto-deletion 30 days after expiresAt)",
-    )
+    ttl: Optional[float] = Field(None, description="DynamoDB TTL attribute (Unix timestamp for auto-deletion 30 days after expiresAt)")
 
     @field_validator("activates_at", mode="before")
     @classmethod

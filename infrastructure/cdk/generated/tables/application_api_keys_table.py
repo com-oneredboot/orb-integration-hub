@@ -14,8 +14,7 @@ class ApplicationApiKeysTable(Construct):
         super().__init__(scope, id)
 
         self.table = dynamodb.Table(
-            self,
-            "ApplicationApiKeys",
+            self, "ApplicationApiKeys",
             table_name="orb-integration-hub-dev-table-applicationapikeys",
             partition_key=dynamodb.Attribute(
                 name="applicationApiKeyId",
@@ -48,15 +47,13 @@ class ApplicationApiKeysTable(Construct):
 
         # SSM Parameters for table discovery
         ssm.StringParameter(
-            self,
-            "ApplicationApiKeysTableNameParam",
+            self, "ApplicationApiKeysTableNameParam",
             parameter_name="/orb/integration-hub/dev/dynamodb/applicationapikeys/table-name",
             string_value=self.table.table_name,
         )
 
         ssm.StringParameter(
-            self,
-            "ApplicationApiKeysTableArnParam",
+            self, "ApplicationApiKeysTableArnParam",
             parameter_name="/orb/integration-hub/dev/dynamodb/applicationapikeys/table-arn",
             string_value=self.table.table_arn,
         )

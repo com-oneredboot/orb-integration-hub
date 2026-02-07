@@ -14,8 +14,7 @@ class NotificationsTable(Construct):
         super().__init__(scope, id)
 
         self.table = dynamodb.Table(
-            self,
-            "Notifications",
+            self, "Notifications",
             table_name="orb-integration-hub-dev-table-notifications",
             partition_key=dynamodb.Attribute(
                 name="notificationId",
@@ -52,15 +51,13 @@ class NotificationsTable(Construct):
 
         # SSM Parameters for table discovery
         ssm.StringParameter(
-            self,
-            "NotificationsTableNameParam",
+            self, "NotificationsTableNameParam",
             parameter_name="/orb/integration-hub/dev/dynamodb/notifications/table-name",
             string_value=self.table.table_name,
         )
 
         ssm.StringParameter(
-            self,
-            "NotificationsTableArnParam",
+            self, "NotificationsTableArnParam",
             parameter_name="/orb/integration-hub/dev/dynamodb/notifications/table-arn",
             string_value=self.table.table_arn,
         )
