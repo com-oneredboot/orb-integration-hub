@@ -6,7 +6,6 @@
 @use '../../../../styles/variables' as v;
 
 .breadcrumb {
-  margin-bottom: v.$spacing-md;
   flex-shrink: 1;
   min-width: 0; // Allow flexbox truncation
 

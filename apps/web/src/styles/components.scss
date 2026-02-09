@@ -1704,7 +1704,7 @@ $cta-orange-muted: #f5a66b; // Muted orange (was #f97316)
 // =============================================================================
 
 .orb-tabs {
-  margin-bottom: v.$spacing-lg;
+  margin-bottom: v.$spacing-sm;
   border-bottom: 2px solid v.$gray-200;
   flex-shrink: 0; // Prevent tabs from shrinking in flex layout
 }

@@ -389,7 +389,6 @@ describe('UsersListComponent Property Tests', () => {
       expect(passed).toBe(true);
     });
   });
-});
 
   describe('Property 6: Sorting Consistency', () => {
     /**
@@ -721,7 +720,6 @@ describe('UsersListComponent Property Tests', () => {
       expect(passed).toBe(true);
     });
   });
-});
 
   describe('Property 8: Row Selection State', () => {
     /**
@@ -937,7 +935,6 @@ describe('UsersListComponent Property Tests', () => {
       expect(passed).toBe(true);
     });
   });
-});
 
   describe('Property 12: Refresh State Preservation', () => {
     /**
@@ -1081,7 +1078,6 @@ describe('UsersListComponent Property Tests', () => {
       expect(passed).toBe(true);
     });
   });
-});
 
   describe('Property 2: Authorization Access Control', () => {
     /**
