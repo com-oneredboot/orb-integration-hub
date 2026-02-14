@@ -12,14 +12,9 @@ import { UsersState, initialUsersState } from './users.state';
 export const selectUsersState = createFeatureSelector<UsersState>('users');
 
 // Core data selectors
-export const selectUsers = createSelector(
+export const selectUsersWithRoles = createSelector(
   selectUsersState,
-  (state: UsersState) => state?.users ?? initialUsersState.users
-);
-
-export const selectApplicationUserRecords = createSelector(
-  selectUsersState,
-  (state: UsersState) => state?.applicationUserRecords ?? initialUsersState.applicationUserRecords
+  (state: UsersState) => state?.usersWithRoles ?? initialUsersState.usersWithRoles
 );
 
 export const selectUserRows = createSelector(
@@ -42,7 +37,7 @@ export const selectSelectedUserId = createSelector(
   (state: UsersState) => state?.selectedUserId ?? initialUsersState.selectedUserId
 );
 
-// Filter selectors
+// Filter selectors - client-side
 export const selectSearchTerm = createSelector(
   selectUsersState,
   (state: UsersState) => state?.searchTerm ?? initialUsersState.searchTerm
@@ -51,6 +46,33 @@ export const selectSearchTerm = createSelector(
 export const selectStatusFilter = createSelector(
   selectUsersState,
   (state: UsersState) => state?.statusFilter ?? initialUsersState.statusFilter
+);
+
+// Filter selectors - server-side
+export const selectOrganizationIds = createSelector(
+  selectUsersState,
+  (state: UsersState) => state?.organizationIds ?? initialUsersState.organizationIds
+);
+
+export const selectApplicationIds = createSelector(
+  selectUsersState,
+  (state: UsersState) => state?.applicationIds ?? initialUsersState.applicationIds
+);
+
+export const selectEnvironment = createSelector(
+  selectUsersState,
+  (state: UsersState) => state?.environment ?? initialUsersState.environment
+);
+
+// Pagination selectors
+export const selectNextToken = createSelector(
+  selectUsersState,
+  (state: UsersState) => state?.nextToken ?? initialUsersState.nextToken
+);
+
+export const selectHasMore = createSelector(
+  selectUsersState,
+  (state: UsersState) => state?.hasMore ?? initialUsersState.hasMore
 );
 
 // Loading state selectors
@@ -73,13 +95,13 @@ export const selectLastLoadedTimestamp = createSelector(
 
 // Computed selectors
 export const selectHasUsers = createSelector(
-  selectUsers,
-  (users) => users.length > 0
+  selectUsersWithRoles,
+  (usersWithRoles) => usersWithRoles.length > 0
 );
 
 export const selectUserCount = createSelector(
-  selectUsers,
-  (users) => users.length
+  selectUsersWithRoles,
+  (usersWithRoles) => usersWithRoles.length
 );
 
 export const selectFilteredUserCount = createSelector(
@@ -90,14 +112,17 @@ export const selectFilteredUserCount = createSelector(
 export const selectHasFiltersApplied = createSelector(
   selectSearchTerm,
   selectStatusFilter,
-  (searchTerm, statusFilter) => 
-    !!searchTerm || !!statusFilter
+  selectOrganizationIds,
+  selectApplicationIds,
+  selectEnvironment,
+  (searchTerm, statusFilter, organizationIds, applicationIds, environment) => 
+    !!searchTerm || !!statusFilter || organizationIds.length > 0 || applicationIds.length > 0 || !!environment
 );
 
 // User by ID selector (memoized)
 export const selectUserById = (userId: string) => createSelector(
-  selectUsers,
-  (users) => users.find(user => user.userId === userId)
+  selectUsersWithRoles,
+  (usersWithRoles) => usersWithRoles.find(uwr => uwr.userId === userId)
 );
 
 // User row by ID selector (memoized)

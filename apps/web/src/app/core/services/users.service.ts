@@ -14,6 +14,7 @@ import { map, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { UsersListByUserId } from '../graphql/Users.graphql';
 import { ApplicationUsersListByUserId } from '../graphql/ApplicationUsers.graphql';
+import { GetApplicationUsers, GetApplicationUsersInput, GetApplicationUsersOutput } from '../graphql/GetApplicationUsers.graphql';
 import { IUsers, Users } from '../models/UsersModel';
 import { IApplicationUsers, ApplicationUsers } from '../models/ApplicationUsersModel';
 import { Connection } from '../types/graphql.types';
@@ -25,6 +26,45 @@ import { isAuthenticationError } from '../errors/api-errors';
 export class UsersService extends ApiService {
   constructor() {
     super();
+  }
+
+  /**
+   * Get application users using GetApplicationUsers Lambda query
+   * 
+   * This method calls the GetApplicationUsers Lambda-backed query which:
+   * 1. Queries ApplicationUserRoles with filters
+   * 2. Deduplicates and groups by userId
+   * 3. Enriches with user details from Users table
+   * 4. Returns users with their role assignments
+   * 
+   * @param input Query input with optional filters
+   * @returns Observable with GetApplicationUsersOutput
+   *
+   * _Requirements: 2.1, 2.2_
+   */
+  public getApplicationUsersWithRoles(input: GetApplicationUsersInput): Observable<GetApplicationUsersOutput> {
+    console.debug('[UsersService] Getting application users with filters:', input);
+
+    return from(
+      this.query<{ GetApplicationUsers: GetApplicationUsersOutput }>(
+        GetApplicationUsers,
+        { input },
+        'userPool'
+      )
+    ).pipe(
+      map((response) => {
+        const data = response.data.GetApplicationUsers;
+        console.debug('[UsersService] Application users retrieved:', data.users.length);
+        return data;
+      }),
+      catchError((error) => {
+        console.error('[UsersService] Error getting application users:', error);
+        if (isAuthenticationError(error)) {
+          throw new Error('You are not authorized to view users.');
+        }
+        throw new Error('Failed to retrieve users. Please try again later.');
+      })
+    );
   }
 
   /**
@@ -43,6 +83,7 @@ export class UsersService extends ApiService {
    * @returns Observable with users array and applicationUserRecords array
    *
    * _Requirements: 2.1, 2.2_
+   * @deprecated Use getApplicationUsersWithRoles instead
    */
   public getApplicationUsers(organizationId: string): Observable<{
     users: IUsers[];

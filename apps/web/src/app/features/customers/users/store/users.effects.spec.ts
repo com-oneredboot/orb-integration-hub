@@ -11,89 +11,60 @@ import { Observable, of, throwError } from 'rxjs';
 
 import { UsersEffects } from './users.effects';
 import { UsersActions } from './users.actions';
-import { selectCurrentUser } from '../../../user/store/user.selectors';
-import { IUsers } from '../../../../core/models/UsersModel';
-import { IApplicationUsers } from '../../../../core/models/ApplicationUsersModel';
-import { UserStatus } from '../../../../core/enums/UserStatusEnum';
-import { ApplicationUserStatus } from '../../../../core/enums/ApplicationUserStatusEnum';
-
-// TODO: Import UsersService when implemented in task 6
-// import { UsersService } from '../../../../core/services/users.service';
+import { UsersService } from '../../../../core/services/users.service';
+import { 
+  selectOrganizationIds, 
+  selectApplicationIds, 
+  selectEnvironment,
+  selectNextToken 
+} from './users.selectors';
+import { UserWithRoles, RoleAssignment, GetApplicationUsersOutput } from '../../../../core/graphql/GetApplicationUsers.graphql';
 
 describe('UsersEffects', () => {
   let actions$: Observable<unknown>;
   let effects: UsersEffects;
-  // TODO: Add UsersService spy when implemented in task 6
-  // let usersServiceSpy: jasmine.SpyObj<UsersService>;
+  let usersServiceSpy: jasmine.SpyObj<UsersService>;
   let store: MockStore;
 
-  const mockCurrentUser: IUsers = {
-    userId: 'user-123',
-    cognitoId: 'cognito-123',
-    cognitoSub: 'sub-123',
-    email: 'test@example.com',
-    firstName: 'Test',
-    lastName: 'User',
-    status: UserStatus.Active,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+  const mockRoleAssignment: RoleAssignment = {
+    applicationUserRoleId: 'role-1',
+    applicationId: 'app-1',
+    applicationName: 'App One',
+    organizationId: 'org-1',
+    organizationName: 'Org One',
+    environment: 'production',
+    roleId: 'role-id-1',
+    roleName: 'Admin',
+    permissions: ['read', 'write'],
+    status: 'ACTIVE',
+    createdAt: 1704067200,
+    updatedAt: 1705276800,
   };
 
-  const mockUsers: IUsers[] = [
+  const mockUsersWithRoles: UserWithRoles[] = [
     {
       userId: 'user-1',
-      cognitoId: 'cognito-1',
-      cognitoSub: 'sub-1',
-      email: 'user1@example.com',
       firstName: 'John',
       lastName: 'Doe',
-      status: UserStatus.Active,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      status: 'ACTIVE',
+      roleAssignments: [mockRoleAssignment],
     },
     {
       userId: 'user-2',
-      cognitoId: 'cognito-2',
-      cognitoSub: 'sub-2',
-      email: 'user2@example.com',
       firstName: 'Jane',
       lastName: 'Smith',
-      status: UserStatus.Active,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      status: 'ACTIVE',
+      roleAssignments: [],
     },
   ];
 
-  const mockApplicationUserRecords: IApplicationUsers[] = [
-    {
-      applicationUserId: 'app-user-1',
-      userId: 'user-1',
-      applicationId: 'app-1',
-      status: ApplicationUserStatus.Active,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      applicationUserId: 'app-user-2',
-      userId: 'user-1',
-      applicationId: 'app-2',
-      status: ApplicationUserStatus.Active,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      applicationUserId: 'app-user-3',
-      userId: 'user-2',
-      applicationId: 'app-1',
-      status: ApplicationUserStatus.Pending,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-  ];
+  const mockOutput: GetApplicationUsersOutput = {
+    users: mockUsersWithRoles,
+    nextToken: 'next-token-123',
+  };
 
   beforeEach(() => {
-    // TODO: Create UsersService spy when implemented in task 6
-    // usersServiceSpy = jasmine.createSpyObj('UsersService', ['getApplicationUsers']);
+    usersServiceSpy = jasmine.createSpyObj('UsersService', ['getApplicationUsersWithRoles']);
 
     TestBed.configureTestingModule({
       providers: [
@@ -101,11 +72,13 @@ describe('UsersEffects', () => {
         provideMockActions(() => actions$),
         provideMockStore({
           selectors: [
-            { selector: selectCurrentUser, value: mockCurrentUser }
+            { selector: selectOrganizationIds, value: [] },
+            { selector: selectApplicationIds, value: [] },
+            { selector: selectEnvironment, value: null },
+            { selector: selectNextToken, value: null }
           ]
         }),
-        // TODO: Provide UsersService spy when implemented in task 6
-        // { provide: UsersService, useValue: usersServiceSpy }
+        { provide: UsersService, useValue: usersServiceSpy }
       ]
     });
 
@@ -118,89 +91,197 @@ describe('UsersEffects', () => {
   });
 
   describe('loadUsers$', () => {
-    it('should dispatch loadUsersSuccess with users and applicationUserRecords on successful load', (done) => {
-      // TODO: Mock service call when UsersService is implemented in task 6
-      // usersServiceSpy.getApplicationUsers.and.returnValue(
-      //   of({ users: mockUsers, applicationUserRecords: mockApplicationUserRecords })
-      // );
+    it('should dispatch loadUsersSuccess with usersWithRoles on successful load', (done) => {
+      usersServiceSpy.getApplicationUsersWithRoles.and.returnValue(of(mockOutput));
 
       actions$ = of(UsersActions.loadUsers());
 
       effects.loadUsers$.subscribe(action => {
         expect(action.type).toBe('[Users] Load Users Success');
-        // TODO: Verify service was called when implemented
-        // expect(usersServiceSpy.getApplicationUsers).toHaveBeenCalledWith(mockCurrentUser.userId);
+        expect(usersServiceSpy.getApplicationUsersWithRoles).toHaveBeenCalledWith({
+          organizationIds: undefined,
+          applicationIds: undefined,
+          environment: undefined,
+          limit: 50
+        });
         
-        // For now, verify it returns empty data (placeholder implementation)
         const successAction = action as ReturnType<typeof UsersActions.loadUsersSuccess>;
-        expect(successAction.users).toEqual([]);
-        expect(successAction.applicationUserRecords).toEqual([]);
+        expect(successAction.usersWithRoles).toEqual(mockUsersWithRoles);
+        expect(successAction.nextToken).toBe('next-token-123');
         done();
       });
     });
 
     it('should dispatch loadUsersFailure on error', (done) => {
-      // TODO: Mock service error when UsersService is implemented in task 6
-      // usersServiceSpy.getApplicationUsers.and.returnValue(
-      //   throwError(() => new Error('Failed to load users'))
-      // );
+      usersServiceSpy.getApplicationUsersWithRoles.and.returnValue(
+        throwError(() => new Error('Failed to load users'))
+      );
 
       actions$ = of(UsersActions.loadUsers());
 
       effects.loadUsers$.subscribe(action => {
-        // For now, it will succeed with empty data (placeholder)
-        // TODO: Update this test when service is implemented
-        expect(action.type).toBe('[Users] Load Users Success');
+        expect(action.type).toBe('[Users] Load Users Failure');
+        const failureAction = action as ReturnType<typeof UsersActions.loadUsersFailure>;
+        expect(failureAction.error).toBe('Failed to load users');
         done();
       });
     });
 
-    it('should not call service if currentUser is null', (done) => {
-      store.overrideSelector(selectCurrentUser, null);
+    it('should include organizationIds filter when set', (done) => {
+      store.overrideSelector(selectOrganizationIds, ['org-1', 'org-2']);
       store.refreshState();
 
-      // TODO: Mock service when implemented
-      // usersServiceSpy.getApplicationUsers.and.returnValue(
-      //   of({ users: mockUsers, applicationUserRecords: mockApplicationUserRecords })
-      // );
+      usersServiceSpy.getApplicationUsersWithRoles.and.returnValue(of(mockOutput));
 
       actions$ = of(UsersActions.loadUsers());
 
-      // Effect should not emit anything when currentUser is null
-      let emitted = false;
       effects.loadUsers$.subscribe(() => {
-        emitted = true;
-      });
-
-      setTimeout(() => {
-        expect(emitted).toBe(false);
-        // TODO: Verify service was not called when implemented
-        // expect(usersServiceSpy.getApplicationUsers).not.toHaveBeenCalled();
+        expect(usersServiceSpy.getApplicationUsersWithRoles).toHaveBeenCalledWith({
+          organizationIds: ['org-1', 'org-2'],
+          applicationIds: undefined,
+          environment: undefined,
+          limit: 50
+        });
         done();
-      }, 100);
+      });
+    });
+
+    it('should include applicationIds filter when set', (done) => {
+      store.overrideSelector(selectApplicationIds, ['app-1']);
+      store.refreshState();
+
+      usersServiceSpy.getApplicationUsersWithRoles.and.returnValue(of(mockOutput));
+
+      actions$ = of(UsersActions.loadUsers());
+
+      effects.loadUsers$.subscribe(() => {
+        expect(usersServiceSpy.getApplicationUsersWithRoles).toHaveBeenCalledWith({
+          organizationIds: undefined,
+          applicationIds: ['app-1'],
+          environment: undefined,
+          limit: 50
+        });
+        done();
+      });
+    });
+
+    it('should include environment filter when set', (done) => {
+      store.overrideSelector(selectEnvironment, 'production');
+      store.refreshState();
+
+      usersServiceSpy.getApplicationUsersWithRoles.and.returnValue(of(mockOutput));
+
+      actions$ = of(UsersActions.loadUsers());
+
+      effects.loadUsers$.subscribe(() => {
+        expect(usersServiceSpy.getApplicationUsersWithRoles).toHaveBeenCalledWith({
+          organizationIds: undefined,
+          applicationIds: undefined,
+          environment: 'production',
+          limit: 50
+        });
+        done();
+      });
     });
 
     it('should handle refreshUsers action the same as loadUsers', (done) => {
-      // TODO: Mock service call when UsersService is implemented in task 6
-      // usersServiceSpy.getApplicationUsers.and.returnValue(
-      //   of({ users: mockUsers, applicationUserRecords: mockApplicationUserRecords })
-      // );
+      usersServiceSpy.getApplicationUsersWithRoles.and.returnValue(of(mockOutput));
 
       actions$ = of(UsersActions.refreshUsers());
 
       effects.loadUsers$.subscribe(action => {
         expect(action.type).toBe('[Users] Load Users Success');
-        // TODO: Verify service was called when implemented
-        // expect(usersServiceSpy.getApplicationUsers).toHaveBeenCalledWith(mockCurrentUser.userId);
+        expect(usersServiceSpy.getApplicationUsersWithRoles).toHaveBeenCalled();
         done();
       });
     });
   });
 
-  // TODO: Add more effect tests when additional effects are implemented
-  // For example:
-  // - loadUser$ (single user detail)
-  // - createUser$
-  // - updateUser$
-  // - deleteUser$
+  describe('loadMoreUsers$', () => {
+    it('should dispatch loadMoreUsersSuccess with additional users', (done) => {
+      store.overrideSelector(selectNextToken, 'next-token-123');
+      store.refreshState();
+
+      usersServiceSpy.getApplicationUsersWithRoles.and.returnValue(of(mockOutput));
+
+      actions$ = of(UsersActions.loadMoreUsers());
+
+      effects.loadMoreUsers$.subscribe(action => {
+        expect(action.type).toBe('[Users] Load More Users Success');
+        expect(usersServiceSpy.getApplicationUsersWithRoles).toHaveBeenCalledWith({
+          organizationIds: undefined,
+          applicationIds: undefined,
+          environment: undefined,
+          limit: 50,
+          nextToken: 'next-token-123'
+        });
+        
+        const successAction = action as ReturnType<typeof UsersActions.loadMoreUsersSuccess>;
+        expect(successAction.usersWithRoles).toEqual(mockUsersWithRoles);
+        done();
+      });
+    });
+
+    it('should dispatch loadUsersFailure when nextToken is null', (done) => {
+      store.overrideSelector(selectNextToken, null);
+      store.refreshState();
+
+      actions$ = of(UsersActions.loadMoreUsers());
+
+      effects.loadMoreUsers$.subscribe(action => {
+        expect(action.type).toBe('[Users] Load Users Failure');
+        const failureAction = action as ReturnType<typeof UsersActions.loadUsersFailure>;
+        expect(failureAction.error).toBe('No more users to load');
+        expect(usersServiceSpy.getApplicationUsersWithRoles).not.toHaveBeenCalled();
+        done();
+      });
+    });
+
+    it('should dispatch loadUsersFailure on error', (done) => {
+      store.overrideSelector(selectNextToken, 'next-token-123');
+      store.refreshState();
+
+      usersServiceSpy.getApplicationUsersWithRoles.and.returnValue(
+        throwError(() => new Error('Failed to load more users'))
+      );
+
+      actions$ = of(UsersActions.loadMoreUsers());
+
+      effects.loadMoreUsers$.subscribe(action => {
+        expect(action.type).toBe('[Users] Load Users Failure');
+        const failureAction = action as ReturnType<typeof UsersActions.loadUsersFailure>;
+        expect(failureAction.error).toBe('Failed to load more users');
+        done();
+      });
+    });
+  });
+
+  describe('filterChange$', () => {
+    it('should dispatch loadUsers when organization filter changes', (done) => {
+      actions$ = of(UsersActions.setOrganizationFilter({ organizationIds: ['org-1'] }));
+
+      effects.filterChange$.subscribe(action => {
+        expect(action.type).toBe('[Users] Load Users');
+        done();
+      });
+    });
+
+    it('should dispatch loadUsers when application filter changes', (done) => {
+      actions$ = of(UsersActions.setApplicationFilter({ applicationIds: ['app-1'] }));
+
+      effects.filterChange$.subscribe(action => {
+        expect(action.type).toBe('[Users] Load Users');
+        done();
+      });
+    });
+
+    it('should dispatch loadUsers when environment filter changes', (done) => {
+      actions$ = of(UsersActions.setEnvironmentFilter({ environment: 'production' }));
+
+      effects.filterChange$.subscribe(action => {
+        expect(action.type).toBe('[Users] Load Users');
+        done();
+      });
+    });
+  });
 });

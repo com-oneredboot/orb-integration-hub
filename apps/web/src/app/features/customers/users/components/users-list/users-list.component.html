@@ -60,6 +60,17 @@
         (resetGrid)="onResetGrid()"
         (rowClick)="onRowClick($event)">
       </app-data-grid>
+
+      <!-- Load More Button -->
+      <div class="orb-card__footer" *ngIf="hasMore$ | async">
+        <button 
+          class="orb-btn orb-btn--secondary orb-btn--block"
+          (click)="onLoadMore()"
+          [disabled]="(isLoading$ | async) || false">
+          <fa-icon icon="arrow-down" class="orb-btn__icon"></fa-icon>
+          Load More Users
+        </button>
+      </div>
     </div>
   </div>
 
@@ -87,18 +98,83 @@
   </app-status-badge>
 </ng-template>
 
-<!-- Application Count Cell -->
-<ng-template #applicationCountCell let-row>
-  <button 
-    class="orb-count orb-count--clickable"
-    (click)="onApplicationCountClick($event, row)"
-    [attr.aria-label]="'View ' + row.applicationCount + ' applications for ' + row.user.firstName + ' ' + row.user.lastName">
-    <fa-icon icon="layer-group" class="orb-count__icon"></fa-icon>
-    {{ row.applicationCount }}
-  </button>
+<!-- Role Count Cell -->
+<ng-template #roleCountCell let-row>
+  <div class="orb-count">
+    <fa-icon icon="user-shield" class="orb-count__icon"></fa-icon>
+    {{ row.roleCount }}
+  </div>
+</ng-template>
+
+<!-- Environments Cell -->
+<ng-template #environmentsCell let-row>
+  <div class="orb-tags">
+    <span class="orb-tag orb-tag--small" *ngFor="let env of row.environments">
+      {{ env }}
+    </span>
+  </div>
+</ng-template>
+
+<!-- Organizations Cell -->
+<ng-template #organizationsCell let-row>
+  <div class="orb-info">
+    <div class="orb-info__name" *ngIf="row.organizationNames.length === 1">
+      {{ row.organizationNames[0] }}
+    </div>
+    <div class="orb-info__name" *ngIf="row.organizationNames.length > 1">
+      {{ row.organizationNames[0] }} +{{ row.organizationNames.length - 1 }}
+    </div>
+  </div>
+</ng-template>
+
+<!-- Applications Cell -->
+<ng-template #applicationsCell let-row>
+  <div class="orb-info">
+    <div class="orb-info__name" *ngIf="row.applicationNames.length === 1">
+      {{ row.applicationNames[0] }}
+    </div>
+    <div class="orb-info__name" *ngIf="row.applicationNames.length > 1">
+      {{ row.applicationNames[0] }} +{{ row.applicationNames.length - 1 }}
+    </div>
+  </div>
 </ng-template>
 
 <!-- Last Activity Cell -->
 <ng-template #lastActivityCell let-row>
   <span class="orb-info__id">{{ row.lastActivity }}</span>
+</ng-template>
+
+<!-- Expanded Row Cell - Shows role assignments -->
+<ng-template #expandedRowCell let-row>
+  <div class="orb-expanded-row" *ngIf="isRowExpanded(row.user.userId)">
+    <h4 class="orb-expanded-row__title">Role Assignments</h4>
+    <div class="orb-expanded-row__content">
+      <table class="orb-table orb-table--compact">
+        <thead>
+          <tr>
+            <th>Organization</th>
+            <th>Application</th>
+            <th>Environment</th>
+            <th>Role</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let role of row.roleAssignments">
+            <td>{{ role.organizationName }}</td>
+            <td>{{ role.applicationName }}</td>
+            <td>
+              <span class="orb-tag orb-tag--small">{{ role.environment }}</span>
+            </td>
+            <td>{{ role.roleName }}</td>
+            <td>
+              <span class="orb-tag orb-tag--small orb-tag--{{ role.status.toLowerCase() }}">
+                {{ role.status }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </ng-template>

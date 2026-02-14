@@ -7,14 +7,14 @@
  */
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
+import { of } from 'rxjs';
 import { UsersListComponent } from './users-list.component';
 import { UsersActions } from '../../store/users.actions';
 import * as fromUsers from '../../store/users.selectors';
 import { UserTableRow } from '../../store/users.state';
-import { UserStatus } from '../../../../../core/enums/UserStatusEnum';
-import { IUsers } from '../../../../../core/models/UsersModel';
+import { UserWithRoles, RoleAssignment } from '../../../../../core/graphql/GetApplicationUsers.graphql';
 import { DEFAULT_PAGE_STATE } from '../../../../../shared/components/data-grid';
 
 describe('UsersListComponent', () => {
@@ -23,36 +23,54 @@ describe('UsersListComponent', () => {
   let store: MockStore;
   let router: Router;
 
-  const mockUser: IUsers = {
+  const mockRoleAssignment: RoleAssignment = {
+    applicationUserRoleId: 'role-1',
+    applicationId: 'app-1',
+    applicationName: 'App One',
+    organizationId: 'org-1',
+    organizationName: 'Org One',
+    environment: 'production',
+    roleId: 'role-id-1',
+    roleName: 'Admin',
+    permissions: ['read', 'write'],
+    status: 'ACTIVE',
+    createdAt: 1704067200,
+    updatedAt: 1705276800,
+  };
+
+  const mockUser: UserWithRoles = {
     userId: 'user-123',
-    cognitoId: 'cognito-123',
-    cognitoSub: 'sub-123',
-    email: 'test@example.com',
     firstName: 'John',
     lastName: 'Doe',
-    status: UserStatus.Active,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    status: 'ACTIVE',
+    roleAssignments: [mockRoleAssignment],
   };
 
   const mockUserRow: UserTableRow = {
     user: mockUser,
-    userStatus: UserStatus.Active,
-    applicationCount: 3,
-    applicationIds: ['app-1', 'app-2', 'app-3'],
+    userStatus: 'ACTIVE',
+    roleCount: 1,
+    environments: ['production'],
+    organizationNames: ['Org One'],
+    applicationNames: ['App One'],
     lastActivity: 'Just now',
+    roleAssignments: [mockRoleAssignment],
   };
 
   const initialState = {
     users: {
-      users: [mockUser],
-      applicationUserRecords: [],
+      usersWithRoles: [mockUser],
       userRows: [mockUserRow],
       filteredUserRows: [mockUserRow],
       selectedUser: null,
       selectedUserId: null,
+      organizationIds: [],
+      applicationIds: [],
+      environment: null,
       searchTerm: '',
       statusFilter: '',
+      nextToken: null,
+      hasMore: false,
       isLoading: false,
       error: null,
       lastLoadedTimestamp: null,
@@ -68,6 +86,13 @@ describe('UsersListComponent', () => {
           provide: Router,
           useValue: {
             navigate: jasmine.createSpy('navigate'),
+          },
+        },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            queryParams: of({}),
+            snapshot: { queryParams: {} }
           },
         },
       ],
@@ -331,19 +356,19 @@ describe('UsersListComponent', () => {
 
   describe('Status Class Helper', () => {
     it('should return correct class for ACTIVE status', () => {
-      expect(component.getStatusClass(UserStatus.Active)).toBe('active');
+      expect(component.getStatusClass('ACTIVE' as unknown as any)).toBe('active');
     });
 
     it('should return correct class for INACTIVE status', () => {
-      expect(component.getStatusClass(UserStatus.Inactive)).toBe('inactive');
+      expect(component.getStatusClass('INACTIVE' as unknown as any)).toBe('inactive');
     });
 
     it('should return correct class for PENDING status', () => {
-      expect(component.getStatusClass(UserStatus.Pending)).toBe('pending');
+      expect(component.getStatusClass('PENDING' as unknown as any)).toBe('pending');
     });
 
     it('should return default class for unknown status', () => {
-      expect(component.getStatusClass('UNKNOWN' as UserStatus)).toBe('inactive');
+      expect(component.getStatusClass('UNKNOWN' as unknown as any)).toBe('inactive');
     });
   });
 

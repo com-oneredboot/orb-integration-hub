@@ -8,7 +8,7 @@
 
 import { Component, OnInit, OnDestroy, TemplateRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
@@ -66,15 +66,27 @@ export class UsersListComponent implements OnInit, OnDestroy {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   @ViewChild('statusCell', { static: true }) statusCell!: TemplateRef<any>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  @ViewChild('applicationCountCell', { static: true }) applicationCountCell!: TemplateRef<any>;
+  @ViewChild('roleCountCell', { static: true }) roleCountCell!: TemplateRef<any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  @ViewChild('environmentsCell', { static: true }) environmentsCell!: TemplateRef<any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  @ViewChild('organizationsCell', { static: true }) organizationsCell!: TemplateRef<any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  @ViewChild('applicationsCell', { static: true }) applicationsCell!: TemplateRef<any>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   @ViewChild('lastActivityCell', { static: true }) lastActivityCell!: TemplateRef<any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  @ViewChild('expandedRowCell', { static: true }) expandedRowCell!: TemplateRef<any>;
 
   // User data from store
   userRows$: Observable<UserTableRow[]>;
   filteredUserRows$: Observable<UserTableRow[]>;
   isLoading$: Observable<boolean>;
   error$: Observable<string | null>;
+  hasMore$: Observable<boolean>;
+
+  // Expanded rows tracking
+  expandedUserIds = new Set<string>();
 
   // Grid configuration
   columns: ColumnDefinition<UserTableRow>[] = [];
@@ -86,6 +98,7 @@ export class UsersListComponent implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private store: Store
   ) {
     // User selectors
@@ -93,6 +106,7 @@ export class UsersListComponent implements OnInit, OnDestroy {
     this.filteredUserRows$ = this.store.select(fromUsers.selectFilteredUserRows);
     this.isLoading$ = this.store.select(fromUsers.selectIsLoading);
     this.error$ = this.store.select(fromUsers.selectError);
+    this.hasMore$ = this.store.select(fromUsers.selectHasMore);
 
     // Update page state when data changes
     this.filteredUserRows$.pipe(
@@ -111,6 +125,28 @@ export class UsersListComponent implements OnInit, OnDestroy {
     // Initialize columns with templates
     this.initializeColumns();
 
+    // Initialize filters from route parameters (Task 7.2)
+    this.route.queryParams.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(params => {
+      // Extract organizationIds from query params
+      if (params['organizationIds']) {
+        const orgIds = params['organizationIds'].split(',');
+        this.store.dispatch(UsersActions.setOrganizationFilter({ organizationIds: orgIds }));
+      }
+
+      // Extract applicationIds from query params
+      if (params['applicationIds']) {
+        const appIds = params['applicationIds'].split(',');
+        this.store.dispatch(UsersActions.setApplicationFilter({ applicationIds: appIds }));
+      }
+
+      // Extract environment from query params
+      if (params['environment']) {
+        this.store.dispatch(UsersActions.setEnvironmentFilter({ environment: params['environment'] }));
+      }
+    });
+
     // Load users from the store
     this.store.dispatch(UsersActions.loadUsers());
   }
@@ -128,7 +164,7 @@ export class UsersListComponent implements OnInit, OnDestroy {
         sortable: true,
         filterable: true,
         cellTemplate: this.userInfoCell,
-        width: '30%'
+        width: '20%'
       },
       {
         field: 'userStatus',
@@ -143,22 +179,43 @@ export class UsersListComponent implements OnInit, OnDestroy {
           { value: 'PENDING', label: 'Pending' }
         ],
         cellTemplate: this.statusCell,
+        width: '10%'
+      },
+      {
+        field: 'roleCount',
+        header: 'Roles',
+        sortable: true,
+        cellTemplate: this.roleCountCell,
+        width: '10%',
+        align: 'center'
+      },
+      {
+        field: 'environments',
+        header: 'Environments',
+        sortable: false,
+        cellTemplate: this.environmentsCell,
         width: '15%'
       },
       {
-        field: 'applicationCount',
+        field: 'organizationNames',
+        header: 'Organizations',
+        sortable: false,
+        cellTemplate: this.organizationsCell,
+        width: '15%'
+      },
+      {
+        field: 'applicationNames',
         header: 'Applications',
-        sortable: true,
-        cellTemplate: this.applicationCountCell,
-        width: '15%',
-        align: 'center'
+        sortable: false,
+        cellTemplate: this.applicationsCell,
+        width: '15%'
       },
       {
         field: 'lastActivity',
         header: 'Last Updated',
         sortable: true,
         cellTemplate: this.lastActivityCell,
-        width: '20%'
+        width: '15%'
       }
     ];
   }
@@ -204,25 +261,36 @@ export class UsersListComponent implements OnInit, OnDestroy {
   }
 
   onRowClick(row: UserTableRow): void {
-    // Store selected user for future navigation
-    this.store.dispatch(UsersActions.selectUser({ user: row.user }));
-    this.store.dispatch(UsersActions.setSelectedUserId({ userId: row.user.userId }));
-    
-    // Display message that detail view is not yet implemented
-    console.log('User detail view not yet implemented for:', row.user.userId);
-    // TODO: Navigate to user detail page when implemented
-    // this.router.navigate(['/customers/users', row.user.userId]);
+    // Toggle expanded state for this user
+    if (this.expandedUserIds.has(row.user.userId)) {
+      this.expandedUserIds.delete(row.user.userId);
+    } else {
+      this.expandedUserIds.add(row.user.userId);
+    }
+  }
+
+  isRowExpanded(userId: string): boolean {
+    return this.expandedUserIds.has(userId);
+  }
+
+  onLoadMore(): void {
+    this.store.dispatch(UsersActions.loadMoreUsers());
   }
 
   onApplicationCountClick(event: Event, row: UserTableRow): void {
     // Stop event propagation to prevent row click
     event.stopPropagation();
 
+    // Extract unique application IDs from role assignments
+    const applicationIds = Array.from(new Set(
+      row.roleAssignments.map((role: { applicationId: string }) => role.applicationId)
+    ));
+
     // Navigate to applications list filtered by this user's applications
     this.router.navigate(['/customers/applications'], {
       queryParams: {
         filterByUser: row.user.userId,
-        applicationIds: row.applicationIds.join(',')
+        applicationIds: applicationIds.join(',')
       }
     });
   }

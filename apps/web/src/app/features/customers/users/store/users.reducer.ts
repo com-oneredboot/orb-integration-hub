@@ -7,7 +7,6 @@
 import { createReducer, on } from '@ngrx/store';
 import { UsersActions } from './users.actions';
 import { UsersState, initialUsersState, UserTableRow } from './users.state';
-import { ApplicationUserStatus } from '../../../../core/enums/ApplicationUserStatusEnum';
 
 export const usersReducer = createReducer(
   initialUsersState,
@@ -19,59 +18,47 @@ export const usersReducer = createReducer(
     error: null
   })),
 
-  on(UsersActions.loadUsersSuccess, (state, { users, applicationUserRecords }): UsersState => {
-    // Build user rows from raw data
-    // Group ApplicationUsers by userId to calculate counts and filter
-    const userApplicationsMap = new Map<string, { applicationIds: string[]; lastUpdated: Date }>();
-    
-    applicationUserRecords.forEach(appUser => {
-      // Only include ACTIVE, INACTIVE, or PENDING status (exclude DELETED, REJECTED, UNKNOWN)
-      if (
-        appUser.status === ApplicationUserStatus.Active ||
-        appUser.status === ApplicationUserStatus.Inactive ||
-        appUser.status === ApplicationUserStatus.Pending
-      ) {
-        const existing = userApplicationsMap.get(appUser.userId);
-        const updatedAt = appUser.updatedAt instanceof Date 
-          ? appUser.updatedAt 
-          : new Date(appUser.updatedAt);
-        
-        if (existing) {
-          existing.applicationIds.push(appUser.applicationId);
-          // Keep the most recent updatedAt
-          if (updatedAt > existing.lastUpdated) {
-            existing.lastUpdated = updatedAt;
-          }
-        } else {
-          userApplicationsMap.set(appUser.userId, {
-            applicationIds: [appUser.applicationId],
-            lastUpdated: updatedAt
-          });
-        }
-      }
-    });
+  on(UsersActions.loadUsersSuccess, (state, { usersWithRoles, nextToken }): UsersState => {
+    // Build user rows from GetApplicationUsers response
+    const userRows: UserTableRow[] = usersWithRoles.map(userWithRoles => {
+      // Extract unique environments, organizations, and applications from role assignments
+      const environments = new Set<string>();
+      const organizationNames = new Set<string>();
+      const applicationNames = new Set<string>();
+      let lastUpdated: Date | null = null;
 
-    // Build table rows, filtering out users with no valid ApplicationUsers
-    const userRows: UserTableRow[] = users
-      .filter(user => userApplicationsMap.has(user.userId))
-      .map(user => {
-        const appData = userApplicationsMap.get(user.userId)!;
-        return {
-          user,
-          userStatus: user.status,
-          applicationCount: appData.applicationIds.length,
-          applicationIds: appData.applicationIds,
-          lastActivity: formatLastActivity(appData.lastUpdated)
-        };
+      userWithRoles.roleAssignments.forEach(role => {
+        environments.add(role.environment);
+        organizationNames.add(role.organizationName);
+        applicationNames.add(role.applicationName);
+
+        // Track most recent updatedAt (Unix timestamp in seconds)
+        const roleUpdatedAt = new Date(role.updatedAt * 1000);
+        if (!lastUpdated || roleUpdatedAt > lastUpdated) {
+          lastUpdated = roleUpdatedAt;
+        }
       });
+
+      return {
+        user: userWithRoles,
+        userStatus: userWithRoles.status,
+        roleCount: userWithRoles.roleAssignments.length,
+        environments: Array.from(environments).sort(),
+        organizationNames: Array.from(organizationNames).sort(),
+        applicationNames: Array.from(applicationNames).sort(),
+        lastActivity: formatLastActivity(lastUpdated),
+        roleAssignments: userWithRoles.roleAssignments
+      };
+    });
 
     return {
       ...state,
       isLoading: false,
-      users,
-      applicationUserRecords,
+      usersWithRoles,
       userRows,
       filteredUserRows: userRows,
+      nextToken: nextToken || null,
+      hasMore: !!nextToken,
       error: null,
       lastLoadedTimestamp: Date.now()
     };
@@ -94,7 +81,7 @@ export const usersReducer = createReducer(
     selectedUserId: userId
   })),
 
-  // Filter Management
+  // Filter Management (client-side filters)
   on(UsersActions.setSearchTerm, (state, { searchTerm }): UsersState => {
     const filteredRows = state.userRows.filter(row => 
       applyFilters(row, searchTerm, state.statusFilter)
@@ -118,6 +105,28 @@ export const usersReducer = createReducer(
       filteredUserRows: filteredRows
     };
   }),
+
+  // Server-side filters (trigger reload)
+  on(UsersActions.setOrganizationFilter, (state, { organizationIds }): UsersState => ({
+    ...state,
+    organizationIds,
+    nextToken: null,
+    hasMore: false
+  })),
+
+  on(UsersActions.setApplicationFilter, (state, { applicationIds }): UsersState => ({
+    ...state,
+    applicationIds,
+    nextToken: null,
+    hasMore: false
+  })),
+
+  on(UsersActions.setEnvironmentFilter, (state, { environment }): UsersState => ({
+    ...state,
+    environment,
+    nextToken: null,
+    hasMore: false
+  })),
 
   on(UsersActions.applyFilters, (state): UsersState => {
     const filteredRows = state.userRows.filter(row => 
@@ -154,6 +163,61 @@ export const usersReducer = createReducer(
     error: null
   })),
 
+  // Pagination
+  on(UsersActions.loadMoreUsers, (state): UsersState => ({
+    ...state,
+    isLoading: true,
+    error: null
+  })),
+
+  on(UsersActions.loadMoreUsersSuccess, (state, { usersWithRoles, nextToken }): UsersState => {
+    // Append new users to existing data
+    const allUsersWithRoles = [...state.usersWithRoles, ...usersWithRoles];
+
+    // Build new user rows
+    const newUserRows: UserTableRow[] = usersWithRoles.map(userWithRoles => {
+      const environments = new Set<string>();
+      const organizationNames = new Set<string>();
+      const applicationNames = new Set<string>();
+      let lastUpdated: Date | null = null;
+
+      userWithRoles.roleAssignments.forEach(role => {
+        environments.add(role.environment);
+        organizationNames.add(role.organizationName);
+        applicationNames.add(role.applicationName);
+
+        const roleUpdatedAt = new Date(role.updatedAt * 1000);
+        if (!lastUpdated || roleUpdatedAt > lastUpdated) {
+          lastUpdated = roleUpdatedAt;
+        }
+      });
+
+      return {
+        user: userWithRoles,
+        userStatus: userWithRoles.status,
+        roleCount: userWithRoles.roleAssignments.length,
+        environments: Array.from(environments).sort(),
+        organizationNames: Array.from(organizationNames).sort(),
+        applicationNames: Array.from(applicationNames).sort(),
+        lastActivity: formatLastActivity(lastUpdated),
+        roleAssignments: userWithRoles.roleAssignments
+      };
+    });
+
+    const allUserRows = [...state.userRows, ...newUserRows];
+
+    return {
+      ...state,
+      isLoading: false,
+      usersWithRoles: allUsersWithRoles,
+      userRows: allUserRows,
+      filteredUserRows: allUserRows,
+      nextToken: nextToken || null,
+      hasMore: !!nextToken,
+      error: null
+    };
+  }),
+
   // Utility Actions
   on(UsersActions.resetState, (): UsersState => ({
     ...initialUsersState
@@ -162,7 +226,9 @@ export const usersReducer = createReducer(
   on(UsersActions.refreshUsers, (state): UsersState => ({
     ...state,
     isLoading: true,
-    error: null
+    error: null,
+    nextToken: null,
+    hasMore: false
   }))
 );
 
@@ -184,7 +250,7 @@ function applyFilters(
 }
 
 // Helper function to format last activity as relative time
-function formatLastActivity(dateValue: string | Date | number | undefined): string {
+function formatLastActivity(dateValue: string | Date | number | null | undefined): string {
   if (!dateValue) return 'Never';
   const date = typeof dateValue === 'number' ? new Date(dateValue * 1000)
     : dateValue instanceof Date ? dateValue : new Date(dateValue);

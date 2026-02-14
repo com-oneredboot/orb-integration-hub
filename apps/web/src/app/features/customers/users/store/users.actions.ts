@@ -1,30 +1,42 @@
 /**
  * Users Actions
  * 
- * Defines all actions for users state management
+ * Defines all actions for application users state management.
+ * Uses GetApplicationUsers Lambda query.
  */
 
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
-import { IUsers } from '../../../../core/models/UsersModel';
-import { IApplicationUsers } from '../../../../core/models/ApplicationUsersModel';
+import { UserWithRoles } from '../../../../core/graphql/GetApplicationUsers.graphql';
 import { UserTableRow } from './users.state';
 
 export const UsersActions = createActionGroup({
   source: 'Users',
   events: {
-    // Load Users
+    // Load Application Users
     'Load Users': emptyProps(),
     'Load Users Success': props<{ 
-      users: IUsers[];
-      applicationUserRecords: IApplicationUsers[];
+      usersWithRoles: UserWithRoles[];
+      nextToken?: string;
     }>(),
     'Load Users Failure': props<{ error: string }>(),
 
-    // Selection Management
-    'Select User': props<{ user: IUsers | null }>(),
-    'Set Selected User Id': props<{ userId: string | null }>(),
+    // Load More (Pagination)
+    'Load More Users': emptyProps(),
+    'Load More Users Success': props<{ 
+      usersWithRoles: UserWithRoles[];
+      nextToken?: string;
+    }>(),
 
-    // Filter Management
+    // Selection Management
+    'Select User': props<{ user: UserWithRoles }>(),
+    'Set Selected User Id': props<{ userId: string }>(),
+
+    // Filter Management - Server-side (trigger reload)
+    'Set Organization Filter': props<{ organizationIds: string[] }>(),
+    'Set Application Filter': props<{ applicationIds: string[] }>(),
+    'Set Environment Filter': props<{ environment: string | null }>(),
+    
+    // Filter Management - Client-side (no reload)
     'Set Search Term': props<{ searchTerm: string }>(),
     'Set Status Filter': props<{ statusFilter: string }>(),
     'Apply Filters': emptyProps(),
@@ -41,3 +53,4 @@ export const UsersActions = createActionGroup({
     'Refresh Users': emptyProps(),
   }
 });
+

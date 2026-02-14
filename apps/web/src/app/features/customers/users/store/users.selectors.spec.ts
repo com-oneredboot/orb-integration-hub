@@ -9,8 +9,7 @@
 
 import {
   selectUsersState,
-  selectUsers,
-  selectApplicationUserRecords,
+  selectUsersWithRoles,
   selectUserRows,
   selectFilteredUserRows,
   selectSelectedUser,
@@ -28,80 +27,91 @@ import {
   selectUserRowById,
 } from './users.selectors';
 import { UsersState, initialUsersState, UserTableRow } from './users.state';
-import { IUsers } from '../../../../core/models/UsersModel';
-import { IApplicationUsers } from '../../../../core/models/ApplicationUsersModel';
-import { UserStatus } from '../../../../core/enums/UserStatusEnum';
-import { ApplicationUserStatus } from '../../../../core/enums/ApplicationUserStatusEnum';
+import { UserWithRoles, RoleAssignment } from '../../../../core/graphql/GetApplicationUsers.graphql';
 
 describe('Users Selectors', () => {
   // Mock data
-  const mockUser1: IUsers = {
+  const mockRoleAssignment1: RoleAssignment = {
+    applicationUserRoleId: 'role-1',
+    applicationId: 'app-1',
+    applicationName: 'App One',
+    organizationId: 'org-1',
+    organizationName: 'Org One',
+    environment: 'production',
+    roleId: 'role-id-1',
+    roleName: 'Admin',
+    permissions: ['read', 'write'],
+    status: 'ACTIVE',
+    createdAt: 1704067200000,
+    updatedAt: 1705276800000,
+  };
+
+  const mockRoleAssignment2: RoleAssignment = {
+    applicationUserRoleId: 'role-2',
+    applicationId: 'app-2',
+    applicationName: 'App Two',
+    organizationId: 'org-1',
+    organizationName: 'Org One',
+    environment: 'development',
+    roleId: 'role-id-2',
+    roleName: 'User',
+    permissions: ['read'],
+    status: 'ACTIVE',
+    createdAt: 1704153600000,
+    updatedAt: 1705363200000,
+  };
+
+  const mockUser1: UserWithRoles = {
     userId: 'user-1',
-    cognitoId: 'cognito-1',
-    cognitoSub: 'sub-1',
-    email: 'john@example.com',
     firstName: 'John',
     lastName: 'Doe',
-    status: UserStatus.Active,
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-15'),
+    status: 'ACTIVE',
+    roleAssignments: [mockRoleAssignment1, mockRoleAssignment2],
   };
 
-  const mockUser2: IUsers = {
+  const mockUser2: UserWithRoles = {
     userId: 'user-2',
-    cognitoId: 'cognito-2',
-    cognitoSub: 'sub-2',
-    email: 'jane@example.com',
     firstName: 'Jane',
     lastName: 'Smith',
-    status: UserStatus.Inactive,
-    createdAt: new Date('2024-01-02'),
-    updatedAt: new Date('2024-01-16'),
-  };
-
-  const mockApplicationUserRecord1: IApplicationUsers = {
-    applicationUserId: 'app-user-1',
-    userId: 'user-1',
-    applicationId: 'app-1',
-    status: ApplicationUserStatus.Active,
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-15'),
-  };
-
-  const mockApplicationUserRecord2: IApplicationUsers = {
-    applicationUserId: 'app-user-2',
-    userId: 'user-1',
-    applicationId: 'app-2',
-    status: ApplicationUserStatus.Active,
-    createdAt: new Date('2024-01-02'),
-    updatedAt: new Date('2024-01-16'),
+    status: 'INACTIVE',
+    roleAssignments: [],
   };
 
   const mockUserRow1: UserTableRow = {
     user: mockUser1,
-    userStatus: UserStatus.Active,
-    applicationCount: 2,
-    applicationIds: ['app-1', 'app-2'],
+    userStatus: 'ACTIVE',
+    roleCount: 2,
+    environments: ['production', 'development'],
+    organizationNames: ['Org One'],
+    applicationNames: ['App One', 'App Two'],
     lastActivity: '1 day ago',
+    roleAssignments: [mockRoleAssignment1, mockRoleAssignment2],
   };
 
   const mockUserRow2: UserTableRow = {
     user: mockUser2,
-    userStatus: UserStatus.Inactive,
-    applicationCount: 0,
-    applicationIds: [],
+    userStatus: 'INACTIVE',
+    roleCount: 0,
+    environments: [],
+    organizationNames: [],
+    applicationNames: [],
     lastActivity: '2 days ago',
+    roleAssignments: [],
   };
 
   const mockState: UsersState = {
-    users: [mockUser1, mockUser2],
-    applicationUserRecords: [mockApplicationUserRecord1, mockApplicationUserRecord2],
+    usersWithRoles: [mockUser1, mockUser2],
     userRows: [mockUserRow1, mockUserRow2],
     filteredUserRows: [mockUserRow1],
     selectedUser: mockUser1,
     selectedUserId: 'user-1',
+    organizationIds: [],
+    applicationIds: [],
+    environment: null,
     searchTerm: 'john',
     statusFilter: 'ACTIVE',
+    nextToken: null,
+    hasMore: false,
     isLoading: false,
     error: null,
     lastLoadedTimestamp: 1234567890,
@@ -119,25 +129,14 @@ describe('Users Selectors', () => {
   });
 
   describe('Core Data Selectors', () => {
-    it('should select users', () => {
-      const result = selectUsers(mockAppState);
+    it('should select usersWithRoles', () => {
+      const result = selectUsersWithRoles(mockAppState);
       expect(result).toEqual([mockUser1, mockUser2]);
     });
 
-    it('should return empty array when users is undefined', () => {
+    it('should return empty array when usersWithRoles is undefined', () => {
       const emptyAppState = { users: undefined };
-      const result = selectUsers(emptyAppState);
-      expect(result).toEqual([]);
-    });
-
-    it('should select applicationUserRecords', () => {
-      const result = selectApplicationUserRecords(mockAppState);
-      expect(result).toEqual([mockApplicationUserRecord1, mockApplicationUserRecord2]);
-    });
-
-    it('should return empty array when applicationUserRecords is undefined', () => {
-      const emptyAppState = { users: undefined };
-      const result = selectApplicationUserRecords(emptyAppState);
+      const result = selectUsersWithRoles(emptyAppState);
       expect(result).toEqual([]);
     });
 
@@ -269,7 +268,7 @@ describe('Users Selectors', () => {
 
       it('should return false when users array is empty', () => {
         const emptyAppState = {
-          users: { ...mockState, users: [] },
+          users: { ...mockState, usersWithRoles: [] },
         };
         const result = selectHasUsers(emptyAppState);
         expect(result).toBe(false);
@@ -284,7 +283,7 @@ describe('Users Selectors', () => {
 
       it('should return 0 when users array is empty', () => {
         const emptyAppState = {
-          users: { ...mockState, users: [] },
+          users: { ...mockState, usersWithRoles: [] },
         };
         const result = selectUserCount(emptyAppState);
         expect(result).toBe(0);
@@ -320,9 +319,17 @@ describe('Users Selectors', () => {
         expect(result).toBe(true);
       });
 
+      it('should return true when organizationIds is set', () => {
+        const appStateWithOrgFilter = {
+          users: { ...mockState, searchTerm: '', statusFilter: '', organizationIds: ['org-1'] },
+        };
+        const result = selectHasFiltersApplied(appStateWithOrgFilter);
+        expect(result).toBe(true);
+      });
+
       it('should return false when no filters are set', () => {
         const appStateWithNoFilters = {
-          users: { ...mockState, searchTerm: '', statusFilter: '' },
+          users: { ...mockState, searchTerm: '', statusFilter: '', organizationIds: [], applicationIds: [], environment: null },
         };
         const result = selectHasFiltersApplied(appStateWithNoFilters);
         expect(result).toBe(false);
@@ -346,7 +353,7 @@ describe('Users Selectors', () => {
 
       it('should return undefined when users array is empty', () => {
         const emptyAppState = {
-          users: { ...mockState, users: [] },
+          users: { ...mockState, usersWithRoles: [] },
         };
         const selector = selectUserById('user-1');
         const result = selector(emptyAppState);
@@ -380,17 +387,17 @@ describe('Users Selectors', () => {
 
   describe('Selector Memoization', () => {
     it('should return the same reference when state has not changed', () => {
-      const result1 = selectUsers(mockAppState);
-      const result2 = selectUsers(mockAppState);
+      const result1 = selectUsersWithRoles(mockAppState);
+      const result2 = selectUsersWithRoles(mockAppState);
       expect(result1).toBe(result2);
     });
 
     it('should return a new reference when state has changed', () => {
-      const result1 = selectUsers(mockAppState);
+      const result1 = selectUsersWithRoles(mockAppState);
       const newAppState = {
-        users: { ...mockState, users: [mockUser2] },
+        users: { ...mockState, usersWithRoles: [mockUser2] },
       };
-      const result2 = selectUsers(newAppState);
+      const result2 = selectUsersWithRoles(newAppState);
       expect(result1).not.toBe(result2);
     });
   });
@@ -399,7 +406,7 @@ describe('Users Selectors', () => {
     it('should handle completely undefined state', () => {
       const undefinedAppState = { users: undefined };
 
-      expect(selectUsers(undefinedAppState)).toEqual([]);
+      expect(selectUsersWithRoles(undefinedAppState)).toEqual([]);
       expect(selectUserRows(undefinedAppState)).toEqual([]);
       expect(selectFilteredUserRows(undefinedAppState)).toEqual([]);
       expect(selectSelectedUser(undefinedAppState)).toBeNull();
@@ -414,7 +421,7 @@ describe('Users Selectors', () => {
     it('should handle null state', () => {
       const nullAppState = { users: null as unknown as UsersState };
 
-      expect(selectUsers(nullAppState)).toEqual([]);
+      expect(selectUsersWithRoles(nullAppState)).toEqual([]);
       expect(selectUserRows(nullAppState)).toEqual([]);
       expect(selectFilteredUserRows(nullAppState)).toEqual([]);
       expect(selectSelectedUser(nullAppState)).toBeNull();
