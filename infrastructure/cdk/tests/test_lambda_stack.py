@@ -80,9 +80,20 @@ def template(test_config: Config) -> Template:
 class TestLambdaStackFunctionCount:
     """Tests for Lambda function count."""
 
-    def test_creates_seven_lambda_functions(self, template: Template) -> None:
-        """Verify exactly 7 Lambda functions are created."""
-        template.resource_count_is("AWS::Lambda::Function", 7)
+    def test_creates_eight_lambda_functions(self, template: Template) -> None:
+        """Verify exactly 8 Lambda functions are created.
+        
+        Functions:
+        1. sms-verification
+        2. cognito-group-manager
+        3. user-status-calculator
+        4. organizations
+        5. check-email-exists
+        6. create-user-from-cognito
+        7. get-current-user
+        8. api-key-authorizer (for SDK AppSync API)
+        """
+        template.resource_count_is("AWS::Lambda::Function", 8)
 
 
 class TestLambdaStackIAMRole:

@@ -1,5 +1,6 @@
 # CDK Stack definitions for orb-integration-hub
 
+from .appsync_sdk_stack import AppSyncSdkStack
 from .appsync_stack import AppSyncStack
 from .bootstrap_stack import BootstrapStack
 from .cognito_stack import CognitoStack
@@ -10,6 +11,7 @@ from .lambda_stack import LambdaStack
 from .monitoring_stack import MonitoringStack
 
 __all__ = [
+    "AppSyncSdkStack",
     "AppSyncStack",
     "BootstrapStack",
     "CognitoStack",

@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-02-14
+
+### Added
+- Application Users Management feature
+  - GetApplicationUsers Lambda-backed GraphQL query with filtering by organization, application, and environment
+  - Authorization filtering: CUSTOMER users see only owned organizations, EMPLOYEE/OWNER see all
+  - User deduplication and grouping by userId with all role assignments
+  - User enrichment from Users table (firstName, lastName, status)
+  - Result sorting by lastName then firstName
+  - Pagination support with configurable limit (1-100)
+  - PII protection: email addresses excluded from output
+  - Users List page with DataGrid component following Organizations pattern
+  - Route-based filter initialization from URL query parameters
+  - Expandable rows showing role assignment details
+  - Navigation to Applications list filtered by user's applications
+  - NgRx store management with actions, reducer, effects, and selectors
+  - Property-based tests for all 14 correctness properties
+  - Comprehensive unit tests for Lambda and frontend components
+  - Spec: `.kiro/specs/application-users-management/`
+
+### Changed
+- ApplicationUserRoles schema updated to `lambda-dynamodb` type
+- Added denormalized fields: organizationId, organizationName, applicationName
+- Removed ApplicationUsers table (redundant with ApplicationUserRoles)
+- Updated schema.md and api.md documentation
+
 ### Added
 - Users List page with filtering, sorting, and pagination
   - View users assigned to applications with name, status, application count, and last activity

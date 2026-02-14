@@ -84,7 +84,7 @@ The generator creates:
 2. TypeScript Models:
    - `Applications.ts`
    - `ApplicationRoles.ts`
-   - `ApplicationUsers.ts`
+   - `ApplicationUserRoles.ts`
    - `Roles.ts`
    - `Users.ts`
 
@@ -136,7 +136,7 @@ The Users table is the single source of truth for ALL user identities.
 | **Platform Owner** | OWNER (+ USER, CUSTOMER optional) | User with full administrative access to platform | Users table | Can optionally have organization/application relationships |
 | **Platform Employee** | EMPLOYEE (+ USER, CUSTOMER optional) | User who is internal team member | Users table | Can optionally have organization/application relationships |
 | **Customer** | USER + CUSTOMER | User who is paying for platform subscription - can create organizations | Users table | OrganizationUsers → OWNER role in their organization(s)<br>Can also be EMPLOYEE in other organizations |
-| **End User** | USER only | User with basic authenticated access - not paying for platform | Users table | OrganizationUsers → EMPLOYEE role in organizations<br>ApplicationUsers → membership in applications<br>ApplicationUserRoles → permissions per environment |
+| **End User** | USER only | User with basic authenticated access - not paying for platform | Users table | OrganizationUsers → EMPLOYEE role in organizations<br>ApplicationUserRoles → permissions per environment |
 
 **Key Points:** 
 - Everyone is a **User** (stored in Users table)
@@ -164,15 +164,13 @@ When users are members of organizations (via OrganizationUsers table), they have
 | Organizations     | organizationId        | Customer organizations                  | ownerId (Users)                    |
 | OrganizationUsers | userId + organizationId | User membership in organizations      | userId, organizationId             |
 | Applications      | applicationId         | Customer applications                   | organizationId                     |
-| ApplicationUsers  | applicationUserId     | User membership in applications         | userId, applicationId              |
 | ApplicationUserRoles | applicationUserRoleId | Environment-specific role assignments | userId, applicationId, roleId      |
 | Roles             | roleId                | Canonical role definitions              | —                                  |
 
 ### Join Tables
 
 - **OrganizationUsers**: Maps users to organizations with organizational roles (OWNER, EMPLOYEE). References `userId` (Users) and `organizationId` (Organizations). The role field indicates whether the user owns the organization or is an employee/member.
-- **ApplicationUsers**: Maps users to applications (membership). References `userId` (Users) and `applicationId` (Applications). This table indicates the user is a member of the application.
-- **ApplicationUserRoles**: Maps users to roles within specific application environments (permissions). References `userId` (Users), `applicationId` (Applications), and `roleId` (Roles). This table defines what permissions the user has in each environment (PRODUCTION, STAGING, etc.).
+- **ApplicationUserRoles**: Maps users to roles within specific application environments (permissions). References `userId` (Users), `applicationId` (Applications), and `roleId` (Roles). This table defines what permissions the user has in each environment (PRODUCTION, STAGING, etc.). Also stores denormalized `organizationId`, `organizationName`, and `applicationName` for efficient querying.
 
 ### Diagram
 
@@ -182,23 +180,18 @@ Users (userId) - ALL user identities
  │                                                 |
  │   Organizations (organizationId) <─────────────┘
  │
- ├─< ApplicationUsers (applicationUserId, userId, applicationId) >─┐
- │                                                                  |
- │   Applications (applicationId) <─────────────────────────────────┘
- │
  └─< ApplicationUserRoles (applicationUserRoleId, userId, applicationId, roleId, environment) >─┐
                                                                                                 |
      Applications (applicationId) <─┬─> Roles (roleId)
 ```
 
 ## Notes
-- All primary keys are now explicit and descriptive (e.g., `userId`, `applicationId`, `roleId`, `applicationUserRoleId`, `applicationUserId`).
+- All primary keys are now explicit and descriptive (e.g., `userId`, `applicationId`, `roleId`, `applicationUserRoleId`).
 - **Every user has at least the USER Cognito group** - it's the baseline for all authenticated users.
 - **Cognito groups are additive** - users can have multiple groups in their `groups` array field.
 - **CUSTOMER Cognito group** is tied to payment/subscription status - added when user pays, removed when cancelled.
 - **OrganizationUsers roles** (OWNER, EMPLOYEE) are separate from Cognito groups - they indicate organizational membership roles.
 - Roles are not stored directly on the user; use ApplicationUserRoles for all application-level role assignments.
-- ApplicationUsers indicates membership in an application (join table).
 - ApplicationUserRoles defines permissions within an application per environment.
 - OrganizationUsers indicates membership in an organization with an organizational role.
 - This structure supports multi-tenancy, custom roles per application, and scalable authorization. 

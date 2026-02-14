@@ -10,42 +10,42 @@ Iteration 1 focuses on Authentication, Authorization, and SDK Infrastructure. Th
 
 ### Phase 1: SDK Infrastructure
 
-- [ ] 1. Create SDK AppSync API infrastructure
-  - [ ] 1.1 Update schema-generator.yml with SDK AppSync configuration
+- [x] 1. Create SDK AppSync API infrastructure
+  - [x] 1.1 Update schema-generator.yml with SDK AppSync configuration
     - Add `appsync.sdk` section with AWS_LAMBDA auth
     - Configure table filtering (exclude ApplicationApiKeys)
     - Set operation filtering
     - _Requirements: 1.1_
-  - [ ] 1.2 Create API Key Authorizer Lambda
+  - [x] 1.2 Create API Key Authorizer Lambda
     - Create `apps/api/lambdas/api_key_authorizer/handler.py`
     - Validate `orb_{env}_{key}` format
     - Hash and lookup key in ApplicationApiKeys table
     - Return org/app/env context on success
     - _Requirements: 1.1_
-  - [ ] 1.3 Create appsync_sdk_stack.py
+  - [x] 1.3 Create appsync_sdk_stack.py
     - Generate SDK AppSync API with Lambda authorizer
     - Wire up Lambda authorizer
     - Create SSM parameters for SDK endpoint
     - _Requirements: 1.1_
-  - [ ] 1.4 Deploy SDK infrastructure to dev
+  - [x] 1.4 Deploy SDK infrastructure to dev
     - Run `cdk deploy` for SDK stack
     - Verify SDK AppSync API is accessible
     - Test Lambda authorizer with valid/invalid keys
     - _Requirements: 1.1_
 
-- [ ] 2. Initialize TypeScript SDK package
-  - [ ] 2.1 Create package structure
+- [x] 2. Initialize TypeScript SDK package
+  - [x] 2.1 Create package structure
     - Create `packages/orb-sdk-core/` directory
     - Set up `package.json` with @orb/sdk-core name
     - Configure TypeScript with `tsconfig.json`
     - Set up build scripts
     - _Requirements: 26.1_
-  - [ ] 2.2 Set up testing infrastructure
+  - [x] 2.2 Set up testing infrastructure
     - Configure Jest for unit tests
     - Configure fast-check for property tests
     - Add test scripts to package.json
     - _Requirements: 13.1_
-  - [ ] 2.3 Create error types
+  - [x] 2.3 Create error types
     - Create `src/errors/` with OrbError base class
     - Add AuthenticationError, AuthorizationError, ValidationError
     - Add NetworkError, ServiceUnavailableError

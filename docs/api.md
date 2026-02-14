@@ -15,7 +15,7 @@ All API operations require Cognito User Pool authentication with group-based aut
 **CRITICAL CONCEPT**: ALL users in the system are stored in the **Users** table. Everyone is a **User**. The distinction between different user types comes from:
 
 1. **Cognito Groups** - Which group(s) a user belongs to (stored in the `groups` array field)
-2. **Relationships** - Which organizations/applications they're associated with (via OrganizationUsers and ApplicationUsers tables)
+2. **Relationships** - Which organizations/applications they're associated with (via OrganizationUsers and ApplicationUserRoles tables)
 
 The Users table is the single source of truth for ALL user identities, regardless of their role in the system.
 
@@ -41,7 +41,7 @@ The Users table is the single source of truth for ALL user identities, regardles
 | **Platform Owner** | OWNER (+ USER, CUSTOMER optional) | User with full administrative access to platform | Users table | Can optionally have organization/application relationships |
 | **Platform Employee** | EMPLOYEE (+ USER, CUSTOMER optional) | User who is internal team member | Users table | Can optionally have organization/application relationships |
 | **Customer** | USER + CUSTOMER | User who is paying for platform subscription - can create organizations | Users table | OrganizationUsers → OWNER role in their organization(s)<br>Can also be EMPLOYEE in other organizations |
-| **End User** | USER only | User with basic authenticated access - not paying for platform | Users table | OrganizationUsers → EMPLOYEE role in organizations<br>ApplicationUsers → membership in applications<br>ApplicationUserRoles → permissions per environment |
+| **End User** | USER only | User with basic authenticated access - not paying for platform | Users table | OrganizationUsers → EMPLOYEE role in organizations<br>ApplicationUserRoles → permissions per environment |
 
 **Key Points:** 
 - Everyone is a **User** (stored in Users table)
@@ -313,10 +313,126 @@ The schema contains 99 operations across 11 entities. Operations follow a consis
 - `OwnershipTransferRequestsDelete(input: OwnershipTransferRequestsDeleteInput!): OwnershipTransferRequestsResponse`
 - `OwnershipTransferRequestsDisable(input: OwnershipTransferRequestsDisableInput!): OwnershipTransferRequestsResponse`
 
+### Application Users
+
+**GetApplicationUsers** (Groups: CUSTOMER, EMPLOYEE, OWNER)
+
+Query application users with filtering, authorization, and enrichment. This is a Lambda-backed query that provides complex filtering logic and user deduplication.
+
+**Input**:
+```graphql
+input GetApplicationUsersInput {
+  organizationIds: [String!]  # Optional: filter by organizations
+  applicationIds: [String!]   # Optional: filter by applications
+  environment: Environment    # Optional: filter by environment (requires org or app filter)
+  limit: Int                  # Optional: pagination limit (default: 50, max: 100)
+  nextToken: String           # Optional: pagination token
+}
+```
+
+**Output**:
+```graphql
+type GetApplicationUsersOutput {
+  users: [UserWithRoles!]!
+  nextToken: String
+}
+
+type UserWithRoles {
+  userId: String!
+  firstName: String!
+  lastName: String!
+  status: UserStatus!
+  roleAssignments: [RoleAssignment!]!
+}
+
+type RoleAssignment {
+  applicationUserRoleId: String!
+  applicationId: String!
+  applicationName: String!
+  organizationId: String!
+  organizationName: String!
+  environment: Environment!
+  roleId: String!
+  roleName: String!
+  permissions: [String!]!
+  status: ApplicationUserRoleStatus!
+  createdAt: AWSTimestamp!
+  updatedAt: AWSTimestamp!
+}
+```
+
+**Example - Query all users**:
+```graphql
+query {
+  GetApplicationUsers(input: { limit: 50 }) {
+    users {
+      userId
+      firstName
+      lastName
+      status
+      roleAssignments {
+        applicationName
+        environment
+        roleName
+        permissions
+      }
+    }
+    nextToken
+  }
+}
+```
+
+**Example - Filter by application and environment**:
+```graphql
+query {
+  GetApplicationUsers(input: {
+    applicationIds: ["app-123"]
+    environment: PRODUCTION
+    limit: 25
+  }) {
+    users {
+      userId
+      firstName
+      lastName
+      roleAssignments {
+        roleName
+        permissions
+      }
+    }
+  }
+}
+```
+
+**Error Responses**:
+
+| Error Code | Message | Description |
+|------------|---------|-------------|
+| ORB-VAL-001 | Environment filter requires organizationIds or applicationIds | Environment filter provided without org/app filter |
+| ORB-VAL-002 | Limit must be between 1 and 100 | Invalid limit value |
+| ORB-VAL-003 | Invalid environment value | Environment not in allowed enum values |
+| ORB-AUTH-001 | Authentication required | No authentication token provided |
+| ORB-AUTH-002 | Invalid authentication token | Token validation failed |
+| ORB-AUTH-003 | Insufficient permissions | User lacks required group membership |
+| ORB-DB-001 | Database query failed | DynamoDB query error |
+| ORB-DB-002 | Failed to retrieve user details | User enrichment batch get failed |
+
+**Authorization Behavior**:
+- CUSTOMER users: Only see users in organizations they own
+- EMPLOYEE/OWNER users: See users across all organizations
+
+**Query Strategy**:
+- With `applicationIds`: Uses AppEnvUserIndex GSI (most efficient)
+- With `organizationIds` only: Resolves to applications, then queries
+- No filters: Returns all accessible users based on authorization
+
+**Notes**:
+- Users are deduplicated by userId with all role assignments grouped
+- Results are sorted by lastName, then firstName
+- Email addresses are excluded from output (PII protection)
+
 ### Additional Entities
 
 See `apps/api/graphql/schema.graphql` for complete operations on:
-- ApplicationUsers (OWNER only)
 - ApplicationRoles (OWNER only)
 - Roles (OWNER only)
 - SmsRateLimit (OWNER, USER)

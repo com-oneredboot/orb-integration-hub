@@ -26,6 +26,7 @@ import aws_cdk as cdk
 
 from config import Config
 from stacks import (
+    AppSyncSdkStack,
     AppSyncStack,
     BootstrapStack,
     CognitoStack,
@@ -119,6 +120,17 @@ def main() -> None:
         description="AppSync GraphQL API",
     )
 
+    # SDK AppSync Stack - GraphQL API for external SDK access (depends on DynamoDB, Lambda)
+    appsync_sdk_stack = AppSyncSdkStack(
+        app,
+        f"{stack_prefix}-appsync-sdk",
+        config=config,
+        dynamodb_stack=dynamodb_stack,
+        lambda_stack=lambda_stack,
+        env=env,
+        description="SDK AppSync GraphQL API with Lambda authorizer",
+    )
+
     # Monitoring Stack - CloudWatch dashboards and alarms
     # Reads AppSync API ID from SSM parameter (no cross-stack reference)
     monitoring_stack = MonitoringStack(
@@ -136,6 +148,9 @@ def main() -> None:
     appsync_stack.add_dependency(cognito_stack)
     appsync_stack.add_dependency(dynamodb_stack)
     appsync_stack.add_dependency(lambda_stack)
+
+    appsync_sdk_stack.add_dependency(dynamodb_stack)
+    appsync_sdk_stack.add_dependency(lambda_stack)
 
     # Monitoring depends on AppSync SSM parameter existing
     monitoring_stack.add_dependency(appsync_stack)

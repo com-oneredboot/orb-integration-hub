@@ -8,7 +8,7 @@
  */
 
 import { Injectable } from '@angular/core';
-import { Observable, from, forkJoin } from 'rxjs';
+import { Observable, from } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
 import { ApiService } from './api.service';

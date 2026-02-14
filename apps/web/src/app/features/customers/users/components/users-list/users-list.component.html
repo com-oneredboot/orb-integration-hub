@@ -40,7 +40,7 @@
     </div>
 
     <!-- Data Grid -->
-    <div class="orb-card__content" *ngIf="!(error$ | async)">
+    <div class="orb-card__content" *ngIf="(error$ | async) === null">
       <app-data-grid
         [columns]="columns"
         [data]="(filteredUserRows$ | async) || []"

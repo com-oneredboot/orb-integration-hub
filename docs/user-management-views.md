@@ -44,7 +44,7 @@ GetApplicationUsers(
 - Show permissions for each role
 - Bulk operations (invite, remove, change roles)
 
-**Implementation Status:** 🔴 Not implemented - Priority for current work
+**Implementation Status:** ✅ Implemented
 
 ---
 
@@ -129,13 +129,13 @@ interface GetApplicationUsersInput {
 ```typescript
 interface UserWithRoles {
   userId: string;
-  email: string;
   firstName: string;
   lastName: string;
-  roles: ApplicationUserRole[];  // Array of role assignments
+  status: UserStatus;
+  roleAssignments: RoleAssignment[];  // Array of role assignments
 }
 
-interface ApplicationUserRole {
+interface RoleAssignment {
   applicationUserRoleId: string;
   applicationId: string;
   applicationName: string;
@@ -151,15 +151,22 @@ interface ApplicationUserRole {
 }
 ```
 
+**Note:** Email addresses are intentionally excluded from the list view response to protect PII. User details are limited to firstName, lastName, and userId.
+
 **Query Logic:**
-1. Determine scope based on input filters
-2. Query ApplicationUserRoles using appropriate GSI:
+1. Validate input filters (environment requires organizationIds or applicationIds)
+2. Apply authorization (CUSTOMER sees only owned organizations)
+3. Select query strategy based on filters:
    - If applicationIds provided: Use AppEnvUserIndex GSI
-   - If environment provided: Filter results by environment
-   - If organizationIds provided: Join with Applications table to filter
-3. Deduplicate users (group by userId)
-4. Join with Users table to get user details
-5. Return enriched user data with all their role assignments
+   - If only organizationIds provided: Get applications for orgs, then query
+   - If no filters: Scan with authorization filtering
+4. Query ApplicationUserRoles using selected strategy
+5. Apply environment filter if provided
+6. Deduplicate users (group by userId)
+7. Batch get from Users table for enrichment (firstName, lastName)
+8. Sort by lastName, firstName
+9. Apply pagination (limit, nextToken)
+10. Return enriched user data with all role assignments
 
 **Frontend Filtering:**
 - Global route (`/customers/users`): Pass all accessible organizationIds
@@ -171,6 +178,8 @@ interface ApplicationUserRole {
 ## Data Model Changes
 
 ### Removed: ApplicationUsers Table
+
+**Status:** ✅ Removed
 
 **Reason:** Redundant with ApplicationUserRoles table
 

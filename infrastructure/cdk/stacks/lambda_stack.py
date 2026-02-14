@@ -66,6 +66,7 @@ class LambdaStack(Stack):
         self.check_email_exists_lambda = self._create_check_email_exists_lambda()
         self.create_user_from_cognito_lambda = self._create_create_user_from_cognito_lambda()
         self.get_current_user_lambda = self._create_get_current_user_lambda()
+        self.api_key_authorizer_lambda = self._create_api_key_authorizer_lambda()
 
     def _apply_tags(self) -> None:
         """Apply standard tags to all resources in this stack."""
@@ -565,4 +566,91 @@ class LambdaStack(Stack):
         self.functions["get-current-user"] = function
         # Export with lowercase name to match orb-schema-generator convention
         self._export_lambda_arn_custom(function, "getcurrentuser")
+        return function
+
+    def _create_api_key_authorizer_lambda(self) -> lambda_.Function:
+        """Create API Key Authorizer Lambda for SDK AppSync API.
+
+        This Lambda is used as a Lambda authorizer for the SDK AppSync API.
+        It validates API keys in the format orb_{env}_{key} and returns
+        application/organization context on success.
+
+        Features:
+        - Validates API key by hash lookup in ApplicationApiKeys table
+        - Returns application/organization/environment context
+        - Handles invalid/expired/revoked keys with 401
+        - Supports rate limiting
+        - Audit logging for key usage
+        """
+        # Create a dedicated role for the authorizer with minimal permissions
+        authorizer_role = iam.Role(
+            self,
+            "ApiKeyAuthorizerRole",
+            role_name=self.config.resource_name("api-key-authorizer-role"),
+            assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"),
+            managed_policies=[
+                iam.ManagedPolicy.from_aws_managed_policy_name(
+                    "service-role/AWSLambdaBasicExecutionRole"
+                ),
+            ],
+        )
+
+        # DynamoDB access for ApplicationApiKeys table
+        authorizer_role.add_to_policy(
+            iam.PolicyStatement(
+                sid="DynamoDBApiKeysAccess",
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "dynamodb:GetItem",
+                    "dynamodb:Query",
+                    "dynamodb:Scan",
+                    "dynamodb:UpdateItem",
+                ],
+                resources=[
+                    self.dynamodb_stack.tables["ApplicationApiKeys"].table_arn,
+                    f"{self.dynamodb_stack.tables['ApplicationApiKeys'].table_arn}/index/*",
+                ],
+            )
+        )
+
+        # CloudWatch Logging
+        authorizer_role.add_to_policy(
+            iam.PolicyStatement(
+                sid="CloudWatchLogging",
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents",
+                ],
+                resources=[
+                    f"arn:aws:logs:{self.region}:{self.account}:log-group:/aws/lambda/{self.config.prefix}-api-key-authorizer*",
+                ],
+            )
+        )
+
+        function = lambda_.Function(
+            self,
+            "ApiKeyAuthorizerLambda",
+            function_name=self.config.resource_name("api-key-authorizer"),
+            description="Lambda authorizer for SDK AppSync API - validates API keys",
+            runtime=lambda_.Runtime.PYTHON_3_12,
+            handler="index.lambda_handler",
+            code=lambda_.Code.from_asset("../apps/api/lambdas/api_key_authorizer"),
+            timeout=Duration.seconds(10),
+            memory_size=128,
+            role=authorizer_role,
+            environment={
+                "APPLICATION_API_KEYS_TABLE": self.dynamodb_stack.tables[
+                    "ApplicationApiKeys"
+                ].table_name,
+                "LOGGING_LEVEL": "INFO",
+                "VERSION": "1",
+                "RATE_LIMIT_MAX_REQUESTS": "100",
+            },
+            dead_letter_queue_enabled=True,
+        )
+
+        self.functions["api-key-authorizer"] = function
+        self._export_lambda_arn_custom(function, "apikeyauthorizer")
         return function

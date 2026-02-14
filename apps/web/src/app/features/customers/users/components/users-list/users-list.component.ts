@@ -26,7 +26,6 @@ import {
   DEFAULT_PAGE_STATE
 } from '../../../../../shared/components/data-grid';
 
-import { IUsers } from '../../../../../core/models/UsersModel';
 import { UserStatus } from '../../../../../core/enums/UserStatusEnum';
 import { UsersActions } from '../../store/users.actions';
 import * as fromUsers from '../../store/users.selectors';
@@ -125,23 +124,33 @@ export class UsersListComponent implements OnInit, OnDestroy {
     // Initialize columns with templates
     this.initializeColumns();
 
-    // Initialize filters from route parameters (Task 7.2)
+    /**
+     * Route-Based Filter Initialization (Property 11)
+     * 
+     * Automatically applies filters from URL query parameters to the store.
+     * This enables deep-linking to filtered views:
+     * - /customers/users?organizationIds=org1,org2 → filter by organizations
+     * - /customers/users?applicationIds=app1 → filter by applications
+     * - /customers/users?environment=PRODUCTION → filter by environment
+     * 
+     * The store dispatches trigger the Lambda query with these filters applied.
+     */
     this.route.queryParams.pipe(
       takeUntil(this.destroy$)
     ).subscribe(params => {
-      // Extract organizationIds from query params
+      // Extract organizationIds from query params (comma-separated)
       if (params['organizationIds']) {
         const orgIds = params['organizationIds'].split(',');
         this.store.dispatch(UsersActions.setOrganizationFilter({ organizationIds: orgIds }));
       }
 
-      // Extract applicationIds from query params
+      // Extract applicationIds from query params (comma-separated)
       if (params['applicationIds']) {
         const appIds = params['applicationIds'].split(',');
         this.store.dispatch(UsersActions.setApplicationFilter({ applicationIds: appIds }));
       }
 
-      // Extract environment from query params
+      // Extract environment from query params (single value)
       if (params['environment']) {
         this.store.dispatch(UsersActions.setEnvironmentFilter({ environment: params['environment'] }));
       }
@@ -260,6 +269,13 @@ export class UsersListComponent implements OnInit, OnDestroy {
     this.store.dispatch(UsersActions.setStatusFilter({ statusFilter: '' }));
   }
 
+  /**
+   * User Expansion Toggle (Property 10: PII Exclusion)
+   * 
+   * Toggles the expanded state for a user row. When expanded, shows role
+   * assignment details. The expanded view intentionally excludes email
+   * addresses and other PII - only showing userId, name, and role information.
+   */
   onRowClick(row: UserTableRow): void {
     // Toggle expanded state for this user
     if (this.expandedUserIds.has(row.user.userId)) {
@@ -277,8 +293,15 @@ export class UsersListComponent implements OnInit, OnDestroy {
     this.store.dispatch(UsersActions.loadMoreUsers());
   }
 
+  /**
+   * Navigate to Applications List Filtered by User
+   * 
+   * Extracts unique application IDs from the user's role assignments
+   * and navigates to the applications list with those IDs as a filter.
+   * This enables the "click on application count" interaction pattern.
+   */
   onApplicationCountClick(event: Event, row: UserTableRow): void {
-    // Stop event propagation to prevent row click
+    // Stop event propagation to prevent row click (expansion toggle)
     event.stopPropagation();
 
     // Extract unique application IDs from role assignments

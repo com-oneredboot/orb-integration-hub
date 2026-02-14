@@ -26,7 +26,7 @@ import {
   selectUserById,
   selectUserRowById,
 } from './users.selectors';
-import { UsersState, initialUsersState, UserTableRow } from './users.state';
+import { UsersState, UserTableRow } from './users.state';
 import { UserWithRoles, RoleAssignment } from '../../../../core/graphql/GetApplicationUsers.graphql';
 
 describe('Users Selectors', () => {
