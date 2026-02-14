@@ -4,6 +4,7 @@
 
 | Issue | Team | Title | Status | Impact |
 |-------|------|-------|--------|--------|
+| #91 | orb-schema-generator | Feature Request: Custom Lambda Operations for lambda-dynamodb Tables | Open | High |
 | #84 | orb-schema-generator | Bug: TypeScript Generator Creates Duplicate Query Input Types for GSIs with Same Partition Key | Open | High |
 | #83 | orb-schema-generator | Enhancement: Multi-AppSync API Support with Lambda Authorizer | Open | High |
 | #78 | orb-schema-generator | Bug: Mutation VTL Response Doesn't Match GraphQL Schema (items wrapper mismatch) | Open | High |

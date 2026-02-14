@@ -3,18 +3,18 @@ version: '1.0'
 name: UserGroup
 targets:
   - api
-description: "User group types for Cognito authentication"
+description: "User group types for Cognito authentication. Groups are additive - users can have multiple groups. Every user has at least USER group (baseline). CUSTOMER group is added when user pays for subscription."
 
 items:
   USER:
     value: "USER"
-    description: "Standard user"
+    description: "Baseline group for all authenticated users"
   CUSTOMER:
     value: "CUSTOMER"
-    description: "Customer user"
+    description: "User paying for platform subscription - can create organizations"
   EMPLOYEE:
     value: "EMPLOYEE"
-    description: "Employee user"
+    description: "Internal platform team member"
   OWNER:
     value: "OWNER"
-    description: "Owner user"
+    description: "Platform owner with full administrative access"

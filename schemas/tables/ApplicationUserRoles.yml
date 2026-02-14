@@ -3,9 +3,9 @@
 # date: 2026-01-27
 # description: ApplicationUserRoles table schema for direct role assignments to users per environment
 
-type: dynamodb
+type: lambda-dynamodb
 pitr_enabled: false
-version: '1.0'
+version: '1.1'
 name: ApplicationUserRoles
 targets:
   - api
@@ -61,6 +61,18 @@ model:
       type: string
       required: true
       description: ID of the application (foreign key to Applications)
+    organizationId:
+      type: string
+      required: true
+      description: Organization ID (denormalized for filtering)
+    organizationName:
+      type: string
+      required: true
+      description: Organization name (denormalized for display)
+    applicationName:
+      type: string
+      required: true
+      description: Application name (denormalized for display)
     environment:
       type: string
       required: true

@@ -1,0 +1,32 @@
+# file: schemas/models/UserWithRoles.yml
+# author: orb-integration-hub
+# date: 2026-02-09
+# description: User with all their role assignments across applications
+
+type: model
+name: UserWithRoles
+targets:
+  - api
+model:
+  attributes:
+    userId:
+      type: string
+      required: true
+      description: User ID
+    firstName:
+      type: string
+      required: true
+      description: User first name
+    lastName:
+      type: string
+      required: true
+      description: User last name
+    status:
+      type: string
+      required: true
+      description: User status
+    roleAssignments:
+      type: array
+      items_ref: RoleAssignment
+      required: true
+      description: List of role assignments for this user

@@ -1,0 +1,50 @@
+# file: schemas/lambdas/GetApplicationUsers.yml
+# author: orb-integration-hub
+# date: 2026-02-09
+# description: Lambda query for retrieving application users with role assignments
+
+type: lambda
+name: GetApplicationUsers
+targets:
+  - api
+model:
+  operation: query
+  authConfig:
+    cognitoAuthentication:
+      groups:
+        OWNER:
+          - '*'
+        EMPLOYEE:
+          - '*'
+        CUSTOMER:
+          - '*'
+  attributes:
+    organizationIds:
+      type: array
+      items:
+        type: string
+      required: false
+      description: Filter by organization IDs
+    applicationIds:
+      type: array
+      items:
+        type: string
+      required: false
+      description: Filter by application IDs
+    environment:
+      type: string
+      required: false
+      description: Filter by environment
+    limit:
+      type: integer
+      required: false
+      description: Maximum number of users to return (1-100)
+    nextToken:
+      type: string
+      required: false
+      description: Pagination token for next page
+    users:
+      type: array
+      items_ref: UserWithRoles
+      required: true
+      description: List of users with their role assignments
