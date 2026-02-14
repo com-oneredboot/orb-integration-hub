@@ -105,39 +105,102 @@ The generator creates:
 5. Keep naming conventions consistent across all layers
 6. Update documentation when making schema changes 
 
+## User Identity Model
+
+**CRITICAL CONCEPT**: ALL users in the system are stored in the **Users** table. Everyone is a **User**. The distinction between different user types comes from:
+
+1. **Cognito Groups** - Which group(s) a user belongs to (stored in the `groups` array field on Users table)
+2. **Relationships** - Which organizations/applications they're associated with (via join tables)
+
+The Users table is the single source of truth for ALL user identities.
+
+### Cognito Groups Model
+
+**Every user has AT LEAST the USER group** - it's the baseline for all authenticated users.
+
+**Groups are additive and stored in an array** - a user can have multiple groups simultaneously:
+- Platform Owner: `["USER", "OWNER"]` or `["USER", "CUSTOMER", "OWNER"]`
+- Platform Employee: `["USER", "EMPLOYEE"]` or `["USER", "CUSTOMER", "EMPLOYEE"]`
+- Customer (paying): `["USER", "CUSTOMER"]`
+- End User (non-paying): `["USER"]`
+
+**CUSTOMER group is tied to payment status**:
+- Added when user subscribes/pays for platform
+- Removed when subscription is cancelled
+- Enables creating and owning organizations
+
+### User Types Summary
+
+| User Type | Cognito Group(s) | Description | Stored In | Relationships |
+|-----------|------------------|-------------|-----------|---------------|
+| **Platform Owner** | OWNER (+ USER, CUSTOMER optional) | User with full administrative access to platform | Users table | Can optionally have organization/application relationships |
+| **Platform Employee** | EMPLOYEE (+ USER, CUSTOMER optional) | User who is internal team member | Users table | Can optionally have organization/application relationships |
+| **Customer** | USER + CUSTOMER | User who is paying for platform subscription - can create organizations | Users table | OrganizationUsers → OWNER role in their organization(s)<br>Can also be EMPLOYEE in other organizations |
+| **End User** | USER only | User with basic authenticated access - not paying for platform | Users table | OrganizationUsers → EMPLOYEE role in organizations<br>ApplicationUsers → membership in applications<br>ApplicationUserRoles → permissions per environment |
+
+**Key Points:** 
+- Everyone is a **User** (stored in Users table)
+- **Every user has at LEAST the USER group** - it's the baseline
+- Cognito Groups are stored in the `groups` array field - **a user can have multiple groups**
+- Groups are additive: USER is baseline, then CUSTOMER/EMPLOYEE/OWNER can be added
+- CUSTOMER group is added when user pays for subscription, removed when they cancel
+
+### OrganizationUsers Roles
+
+When users are members of organizations (via OrganizationUsers table), they have organizational roles:
+
+| Role | Description | How It's Assigned |
+|------|-------------|-------------------|
+| OWNER | Owner of the organization | Automatically assigned when CUSTOMER creates an organization |
+| EMPLOYEE | Employee/member of the organization | Assigned when organization OWNER invites them |
+
+**Note**: OrganizationUsers roles are separate from Cognito groups. A user with only USER Cognito group can be an EMPLOYEE in an organization.
+
 ## Key Tables and Relationships
 
 | Table             | Primary Key            | Purpose                                 | References                        |
 |-------------------|-----------------------|-----------------------------------------|------------------------------------|
-| Users             | userId                | Identity, Cognito mapping, groups       | —                                  |
-| Applications      | applicationId         | Customer applications                   | ownerId (Users)                    |
+| Users             | userId                | **ALL user identities** - Cognito mapping, groups, profile | —                                  |
+| Organizations     | organizationId        | Customer organizations                  | ownerId (Users)                    |
+| OrganizationUsers | userId + organizationId | User membership in organizations      | userId, organizationId             |
+| Applications      | applicationId         | Customer applications                   | organizationId                     |
+| ApplicationUsers  | applicationUserId     | User membership in applications         | userId, applicationId              |
+| ApplicationUserRoles | applicationUserRoleId | Environment-specific role assignments | userId, applicationId, roleId      |
 | Roles             | roleId                | Canonical role definitions              | —                                  |
-| ApplicationRoles  | applicationRoleId     | User's role(s) in a specific app        | userId, applicationId, roleId      |
-| ApplicationUsers  | applicationUserId     | User's membership in an application     | userId, applicationId              |
 
 ### Join Tables
 
-- **ApplicationRoles**: Maps a user to a role within a specific application. References `userId` (Users), `applicationId` (Applications), and `roleId` (Roles).
-- **ApplicationUsers**: Maps a user to an application. References `userId` (Users) and `applicationId` (Applications).
+- **OrganizationUsers**: Maps users to organizations with organizational roles (OWNER, EMPLOYEE). References `userId` (Users) and `organizationId` (Organizations). The role field indicates whether the user owns the organization or is an employee/member.
+- **ApplicationUsers**: Maps users to applications (membership). References `userId` (Users) and `applicationId` (Applications). This table indicates the user is a member of the application.
+- **ApplicationUserRoles**: Maps users to roles within specific application environments (permissions). References `userId` (Users), `applicationId` (Applications), and `roleId` (Roles). This table defines what permissions the user has in each environment (PRODUCTION, STAGING, etc.).
 
 ### Diagram
 
 ```
-Users (userId)
- └─< ApplicationUsers (applicationUserId, userId, applicationId) >─┐
-                                                                   |
-Applications (applicationId) <─┘
-
-Users (userId)
- └─< ApplicationRoles (applicationRoleId, userId, applicationId, roleId) >─┐
-                                                                           |
-Applications (applicationId) <─┬─> Roles (roleId)
+Users (userId) - ALL user identities
+ ├─< OrganizationUsers (userId, organizationId) >─┐
+ │                                                 |
+ │   Organizations (organizationId) <─────────────┘
+ │
+ ├─< ApplicationUsers (applicationUserId, userId, applicationId) >─┐
+ │                                                                  |
+ │   Applications (applicationId) <─────────────────────────────────┘
+ │
+ └─< ApplicationUserRoles (applicationUserRoleId, userId, applicationId, roleId, environment) >─┐
+                                                                                                |
+     Applications (applicationId) <─┬─> Roles (roleId)
 ```
 
 ## Notes
-- All primary keys are now explicit and descriptive (e.g., `userId`, `applicationId`, `roleId`, `applicationRoleId`, `applicationUserId`).
-- Roles are not stored directly on the user; use ApplicationRoles for all role assignments.
-- ApplicationUsers is used for managing user membership in applications.
+- All primary keys are now explicit and descriptive (e.g., `userId`, `applicationId`, `roleId`, `applicationUserRoleId`, `applicationUserId`).
+- **Every user has at least the USER Cognito group** - it's the baseline for all authenticated users.
+- **Cognito groups are additive** - users can have multiple groups in their `groups` array field.
+- **CUSTOMER Cognito group** is tied to payment/subscription status - added when user pays, removed when cancelled.
+- **OrganizationUsers roles** (OWNER, EMPLOYEE) are separate from Cognito groups - they indicate organizational membership roles.
+- Roles are not stored directly on the user; use ApplicationUserRoles for all application-level role assignments.
+- ApplicationUsers indicates membership in an application (join table).
+- ApplicationUserRoles defines permissions within an application per environment.
+- OrganizationUsers indicates membership in an organization with an organizational role.
 - This structure supports multi-tenancy, custom roles per application, and scalable authorization. 
 
 ## Code Generation & GraphQL Auth Guarantees
