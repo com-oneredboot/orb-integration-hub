@@ -41,7 +41,6 @@ GetApplicationUsers(
 **Key Features:**
 - Filter by organization, application, or environment
 - Display roles per environment (most users only have PRODUCTION)
-- Show permissions for each role
 - Bulk operations (invite, remove, change roles)
 
 **Implementation Status:** ✅ Implemented
@@ -144,7 +143,6 @@ interface RoleAssignment {
   environment: Environment;
   roleId: string;
   roleName: string;
-  permissions: string[];
   status: ApplicationUserRoleStatus;
   createdAt: number;
   updatedAt: number;

@@ -8,12 +8,10 @@ Uses moto for AWS service mocking.
 **Validates: Requirements 1.1, 2.1, 3.1, 4.1**
 """
 
-import json
 import os
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
-from unittest.mock import patch
 
 import boto3
 import pytest

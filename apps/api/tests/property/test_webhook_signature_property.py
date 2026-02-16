@@ -15,7 +15,6 @@ import hmac
 import json
 from typing import Any
 
-import pytest
 from hypothesis import given, settings, assume
 from hypothesis import strategies as st
 

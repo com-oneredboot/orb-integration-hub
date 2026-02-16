@@ -28,10 +28,10 @@ def test_schema_type_is_lambda_dynamodb(schema_data):
         "Schema type must be 'lambda-dynamodb' to support Lambda-backed queries"
 
 
-def test_schema_version_is_1_1(schema_data):
-    """Verify schema version is 1.1."""
-    assert schema_data['version'] == '1.1', \
-        "Schema version must be '1.1' after adding denormalized fields"
+def test_schema_version_is_1_2(schema_data):
+    """Verify schema version is 1.2."""
+    assert schema_data['version'] == '1.2', \
+        "Schema version must be '1.2' after removing permissions array"
 
 
 def test_required_attributes_present(schema_data):
@@ -48,7 +48,6 @@ def test_required_attributes_present(schema_data):
         'environment',
         'roleId',
         'roleName',
-        'permissions',
         'status',
         'createdAt',
         'updatedAt'

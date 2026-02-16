@@ -42,17 +42,19 @@ def template(test_config: Config) -> Template:
 class TestDynamoDBStackTableCount:
     """Tests for table count."""
 
-    def test_creates_eighteen_tables(self, template: Template) -> None:
-        """Verify exactly 18 DynamoDB tables are created.
+    def test_creates_fifteen_tables(self, template: Template) -> None:
+        """Verify exactly 15 DynamoDB tables are created.
         
         Tables: Users, Organizations, OrganizationUsers, Applications,
         ApplicationUsers, ApplicationRoles, Roles, Notifications,
         PrivacyRequests, OwnershipTransferRequests, SmsRateLimit,
-        ApplicationGroups, ApplicationGroupUsers, ApplicationGroupRoles,
         ApplicationUserRoles, ApplicationApiKeys, ApplicationEnvironmentConfig,
         ApiRateLimits
+        
+        NOTE: Group tables (ApplicationGroups, ApplicationGroupUsers, ApplicationGroupRoles)
+        removed in v0.4.0 - see .kiro/specs/simplify-roles-remove-groups/
         """
-        template.resource_count_is("AWS::DynamoDB::Table", 18)
+        template.resource_count_is("AWS::DynamoDB::Table", 15)
 
 
 class TestDynamoDBStackUsersTable:
@@ -189,18 +191,8 @@ class TestDynamoDBStackApplicationRolesTable:
         )
 
 
-class TestDynamoDBStackRolesTable:
-    """Tests for Roles table."""
-
-    def test_creates_roles_table(self, template: Template) -> None:
-        """Verify Roles table is created."""
-        template.has_resource_properties(
-            "AWS::DynamoDB::Table",
-            {
-                "TableName": "test-project-dev-roles",
-                "BillingMode": "PAY_PER_REQUEST",
-            },
-        )
+# NOTE: TestDynamoDBStackRolesTable removed in v0.5.0
+# See .kiro/specs/application-roles-management/ for details
 
 
 class TestDynamoDBStackNotificationsTable:

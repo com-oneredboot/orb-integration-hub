@@ -68,15 +68,12 @@ class AppSyncStack(Stack):
             "Applications": dynamodb_stack.tables["applications"],
             "ApplicationUsers": dynamodb_stack.tables["application-users"],
             "ApplicationRoles": dynamodb_stack.tables["application-roles"],
-            "Roles": dynamodb_stack.tables["roles"],
             "Notifications": dynamodb_stack.tables["notifications"],
             "PrivacyRequests": dynamodb_stack.tables["privacy-requests"],
             "OwnershipTransferRequests": dynamodb_stack.tables["ownership-transfer-requests"],
             "SmsRateLimit": dynamodb_stack.tables["sms-rate-limit"],
             # Application Access Management tables
-            "ApplicationGroups": dynamodb_stack.tables["application-groups"],
-            "ApplicationGroupUsers": dynamodb_stack.tables["application-group-users"],
-            "ApplicationGroupRoles": dynamodb_stack.tables["application-group-roles"],
+            # NOTE: Group tables removed in v0.4.0 - see .kiro/specs/simplify-roles-remove-groups/
             "ApplicationUserRoles": dynamodb_stack.tables["application-user-roles"],
             "ApplicationApiKeys": dynamodb_stack.tables["ApplicationApiKeys"],
             # Application Environment Configuration tables

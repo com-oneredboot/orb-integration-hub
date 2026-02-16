@@ -35,7 +35,6 @@ describe('UsersEffects', () => {
     environment: 'production',
     roleId: 'role-id-1',
     roleName: 'Admin',
-    permissions: ['read', 'write'],
     status: 'ACTIVE',
     createdAt: 1704067200,
     updatedAt: 1705276800,

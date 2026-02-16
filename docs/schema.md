@@ -10,9 +10,8 @@ The Orb Integration Hub uses a schema-driven development approach. All data mode
 Located in `schemas/entities/`:
 
 - `applications.yml` - Application entity schema
-- `application_roles.yml` - Application roles schema
-- `application_users.yml` - Application users schema
-- `roles.yml` - Roles schema
+- `application_roles.yml` - Application roles schema (role definitions per application)
+- `application_user_roles.yml` - Application user roles schema (user-role assignments per environment)
 - `users.yml` - Users schema
 
 ### Code Generation Templates
@@ -77,15 +76,13 @@ The generator creates:
 1. Python Models:
    - `applications.py`
    - `application_roles.py`
-   - `application_users.py`
-   - `roles.py`
+   - `application_user_roles.py`
    - `users.py`
 
 2. TypeScript Models:
    - `Applications.ts`
    - `ApplicationRoles.ts`
    - `ApplicationUserRoles.ts`
-   - `Roles.ts`
    - `Users.ts`
 
 3. GraphQL Schema:
@@ -164,13 +161,14 @@ When users are members of organizations (via OrganizationUsers table), they have
 | Organizations     | organizationId        | Customer organizations                  | ownerId (Users)                    |
 | OrganizationUsers | userId + organizationId | User membership in organizations      | userId, organizationId             |
 | Applications      | applicationId         | Customer applications                   | organizationId                     |
-| ApplicationUserRoles | applicationUserRoleId | Environment-specific role assignments | userId, applicationId, roleId      |
-| Roles             | roleId                | Canonical role definitions              | —                                  |
+| ApplicationRoles  | applicationRoleId     | Role definitions per application        | applicationId                      |
+| ApplicationUserRoles | applicationUserRoleId | Environment-specific role assignments | userId, applicationId, applicationRoleId |
 
 ### Join Tables
 
 - **OrganizationUsers**: Maps users to organizations with organizational roles (OWNER, EMPLOYEE). References `userId` (Users) and `organizationId` (Organizations). The role field indicates whether the user owns the organization or is an employee/member.
-- **ApplicationUserRoles**: Maps users to roles within specific application environments (permissions). References `userId` (Users), `applicationId` (Applications), and `roleId` (Roles). This table defines what permissions the user has in each environment (PRODUCTION, STAGING, etc.). Also stores denormalized `organizationId`, `organizationName`, and `applicationName` for efficient querying.
+- **ApplicationRoles**: Defines role types available within an application (e.g., Owner, Administrator, User, Guest). Each application can have custom roles with types like ADMIN, USER, GUEST, or CUSTOM. Default roles are created when an application is activated.
+- **ApplicationUserRoles**: Maps users to roles within specific application environments (permissions). References `userId` (Users), `applicationId` (Applications), and `applicationRoleId` (ApplicationRoles). This table defines what role the user has in each environment (PRODUCTION, STAGING, etc.). Also stores denormalized `organizationId`, `organizationName`, and `applicationName` for efficient querying.
 
 ### Diagram
 
@@ -180,20 +178,20 @@ Users (userId) - ALL user identities
  │                                                 |
  │   Organizations (organizationId) <─────────────┘
  │
- └─< ApplicationUserRoles (applicationUserRoleId, userId, applicationId, roleId, environment) >─┐
-                                                                                                |
-     Applications (applicationId) <─┬─> Roles (roleId)
+ └─< ApplicationUserRoles (applicationUserRoleId, userId, applicationId, applicationRoleId, environment) >─┐
+                                                                                                           |
+     Applications (applicationId) <─┬─> ApplicationRoles (applicationRoleId)
 ```
 
 ## Notes
-- All primary keys are now explicit and descriptive (e.g., `userId`, `applicationId`, `roleId`, `applicationUserRoleId`).
+- All primary keys are now explicit and descriptive (e.g., `userId`, `applicationId`, `applicationRoleId`, `applicationUserRoleId`).
 - **Every user has at least the USER Cognito group** - it's the baseline for all authenticated users.
 - **Cognito groups are additive** - users can have multiple groups in their `groups` array field.
 - **CUSTOMER Cognito group** is tied to payment/subscription status - added when user pays, removed when cancelled.
 - **OrganizationUsers roles** (OWNER, EMPLOYEE) are separate from Cognito groups - they indicate organizational membership roles.
-- Roles are not stored directly on the user; use ApplicationUserRoles for all application-level role assignments.
-- ApplicationUserRoles defines permissions within an application per environment.
-- OrganizationUsers indicates membership in an organization with an organizational role.
+- **ApplicationRoles** defines role types available within an application (Owner, Administrator, User, Guest, or custom roles).
+- **ApplicationUserRoles** assigns users to specific roles within application environments.
+- Default roles (Owner, Administrator, User, Guest) are automatically created when an application is activated.
 - This structure supports multi-tenancy, custom roles per application, and scalable authorization. 
 
 ## Code Generation & GraphQL Auth Guarantees

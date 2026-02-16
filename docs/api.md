@@ -354,7 +354,6 @@ type RoleAssignment {
   environment: Environment!
   roleId: String!
   roleName: String!
-  permissions: [String!]!
   status: ApplicationUserRoleStatus!
   createdAt: AWSTimestamp!
   updatedAt: AWSTimestamp!
@@ -374,7 +373,6 @@ query {
         applicationName
         environment
         roleName
-        permissions
       }
     }
     nextToken
@@ -396,7 +394,6 @@ query {
       lastName
       roleAssignments {
         roleName
-        permissions
       }
     }
   }

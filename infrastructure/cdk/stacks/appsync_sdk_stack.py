@@ -147,21 +147,19 @@ class AppSyncSdkStack(Stack):
         SDK API has access to a subset of tables:
         - Users (read-only for application users)
         - Organizations (read-only)
-        - ApplicationGroups, ApplicationGroupUsers, ApplicationGroupRoles
         - ApplicationUserRoles
         
         Excludes:
         - ApplicationApiKeys (SDK can't manage its own keys)
         - PrivacyRequests, OwnershipTransferRequests (admin only)
+        
+        NOTE: Group tables removed in v0.4.0 - see .kiro/specs/simplify-roles-remove-groups/
         """
         # Tables accessible via SDK
         sdk_tables = {
             "Users": dynamodb_stack.tables["users"],
             "Organizations": dynamodb_stack.tables["organizations"],
             "Applications": dynamodb_stack.tables["applications"],
-            "ApplicationGroups": dynamodb_stack.tables["application-groups"],
-            "ApplicationGroupUsers": dynamodb_stack.tables["application-group-users"],
-            "ApplicationGroupRoles": dynamodb_stack.tables["application-group-roles"],
             "ApplicationUserRoles": dynamodb_stack.tables["application-user-roles"],
         }
 

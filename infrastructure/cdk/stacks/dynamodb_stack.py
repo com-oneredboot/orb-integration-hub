@@ -49,16 +49,18 @@ class DynamoDBStack(Stack):
         self._create_applications_table()
         self._create_application_users_table()
         self._create_application_roles_table()
-        self._create_roles_table()
+        # NOTE: Legacy Roles table removed in v0.5.0 - see .kiro/specs/application-roles-management/
+        # self._create_roles_table()
         self._create_notifications_table()
         self._create_privacy_requests_table()
         self._create_ownership_transfer_requests_table()
         self._create_sms_rate_limit_table()
 
         # Application Access Management tables
-        self._create_application_groups_table()
-        self._create_application_group_users_table()
-        self._create_application_group_roles_table()
+        # NOTE: Group tables removed in v0.4.0 - see .kiro/specs/simplify-roles-remove-groups/
+        # self._create_application_groups_table()
+        # self._create_application_group_users_table()
+        # self._create_application_group_roles_table()
         self._create_application_user_roles_table()
         self._create_application_api_keys_table()
 
@@ -394,39 +396,8 @@ class DynamoDBStack(Stack):
         self.tables["application-roles"] = table
         self._export_table_params(table, "application-roles")
 
-    def _create_roles_table(self) -> None:
-        """Create Roles table."""
-        table = dynamodb.Table(
-            self,
-            "RolesTable",
-            table_name=self._table_name("roles"),
-            partition_key=dynamodb.Attribute(
-                name="roleId",
-                type=dynamodb.AttributeType.STRING,
-            ),
-            billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
-            point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
-                point_in_time_recovery_enabled=True
-            ),
-            removal_policy=RemovalPolicy.RETAIN,
-        )
-
-        # GSI: UserRoleIndex
-        table.add_global_secondary_index(
-            index_name="UserRoleIndex",
-            partition_key=dynamodb.Attribute(
-                name="userId",
-                type=dynamodb.AttributeType.STRING,
-            ),
-            sort_key=dynamodb.Attribute(
-                name="roleType",
-                type=dynamodb.AttributeType.STRING,
-            ),
-            projection_type=dynamodb.ProjectionType.ALL,
-        )
-
-        self.tables["roles"] = table
-        self._export_table_params(table, "roles")
+    # NOTE: Legacy _create_roles_table method removed in v0.5.0
+    # See .kiro/specs/application-roles-management/ for details
 
     def _create_notifications_table(self) -> None:
         """Create Notifications table."""
