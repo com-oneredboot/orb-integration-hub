@@ -19,6 +19,10 @@ import { applicationsReducer } from './app/features/customers/applications/store
 import { ApplicationsEffects } from './app/features/customers/applications/store/applications.effects';
 import { environmentsReducer } from './app/features/customers/applications/store/environments/environments.reducer';
 import { EnvironmentsEffects } from './app/features/customers/applications/store/environments/environments.effects';
+import { applicationRolesReducer } from './app/features/customers/applications/store/application-roles/application-roles.reducer';
+import { ApplicationRolesEffects } from './app/features/customers/applications/store/application-roles/application-roles.effects';
+import { applicationUsersReducer } from './app/features/customers/applications/store/application-users/application-users.reducer';
+import { ApplicationUsersEffects } from './app/features/customers/applications/store/application-users/application-users.effects';
 import { usersReducer } from './app/features/customers/users/store/users.reducer';
 import { UsersEffects } from './app/features/customers/users/store/users.effects';
 import { BrowserModule } from '@angular/platform-browser';
@@ -94,9 +98,11 @@ bootstrapApplication(AppComponent, {
       organizations: organizationsReducer,
       applications: applicationsReducer,
       environments: environmentsReducer,
+      applicationRoles: applicationRolesReducer,
+      applicationUsers: applicationUsersReducer,
       users: usersReducer
     }),
-    provideEffects([UserEffects, OrganizationsEffects, ApplicationsEffects, EnvironmentsEffects, UsersEffects]),
+    provideEffects([UserEffects, OrganizationsEffects, ApplicationsEffects, EnvironmentsEffects, ApplicationRolesEffects, ApplicationUsersEffects, UsersEffects]),
     provideHttpClient(withInterceptorsFromDi()),
     importProvidersFrom(BrowserModule, ReactiveFormsModule, FontAwesomeModule, NgOptimizedImage),
     // Provide the configured icon library

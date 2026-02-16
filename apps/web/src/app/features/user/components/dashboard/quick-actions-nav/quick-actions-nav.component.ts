@@ -1,7 +1,7 @@
 // file: apps/web/src/app/features/user/components/dashboard/quick-actions-nav/quick-actions-nav.component.ts
 // author: Kiro
 // date: 2026-01-23
-// description: Icon-only side navigation component for quick actions (Organizations, Applications, Groups, Users)
+// description: Icon-only side navigation component for quick actions (Organizations, Applications, Users)
 
 import { Component, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -13,7 +13,7 @@ import { SideNavItem } from '../dashboard.types';
 
 /**
  * Quick actions navigation component displays a vertical bar of icon buttons
- * for quick access to Organizations, Applications, Groups, and Users.
+ * for quick access to Organizations, Applications, and Users.
  * Shows active state when on the corresponding page.
  */
 @Component({
@@ -40,12 +40,6 @@ export class QuickActionsNavComponent implements OnInit, OnDestroy {
       icon: 'rocket',
       tooltip: 'Applications',
       route: '/customers/applications'
-    },
-    {
-      id: 'groups',
-      icon: 'users',
-      tooltip: 'Groups',
-      route: '/customers/groups'
     },
     {
       id: 'users',
