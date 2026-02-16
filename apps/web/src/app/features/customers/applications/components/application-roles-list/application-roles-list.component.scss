@@ -1,0 +1,64 @@
+/**
+ * Application Roles List Component Styles
+ *
+ * Uses global orb-* classes from styles/components.scss.
+ * Only component-specific styles are defined here.
+ *
+ * @see .kiro/specs/application-roles-management/design.md
+ */
+
+// Role type badge colors
+.orb-role-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+
+  &__icon {
+    font-size: 11px;
+  }
+
+  &--admin {
+    background-color: rgba(139, 92, 246, 0.1);
+    color: #7c3aed;
+  }
+
+  &--user {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+  }
+
+  &--guest {
+    background-color: rgba(107, 114, 128, 0.1);
+    color: #4b5563;
+  }
+
+  &--custom {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #059669;
+  }
+
+  &--unknown {
+    background-color: rgba(156, 163, 175, 0.1);
+    color: #6b7280;
+  }
+}
+
+// Description styling
+.orb-description {
+  color: var(--color-text-secondary, #6b7280);
+  font-size: 13px;
+  line-height: 1.4;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &--empty {
+    color: var(--color-text-muted, #9ca3af);
+    font-style: italic;
+  }
+}

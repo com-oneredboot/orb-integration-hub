@@ -1,0 +1,105 @@
+<!-- Create Role Dialog Template -->
+<div *ngIf="isOpen"
+  class="dialog-overlay"
+  (click)="onClose()"
+  (keyup.escape)="onClose()"
+  tabindex="-1"
+  role="presentation">
+  <div class="dialog" (click)="$event.stopPropagation()" (keyup)="$event.stopPropagation()" role="dialog" aria-labelledby="dialog-title" aria-modal="true">
+    <div class="dialog__header">
+      <h3 id="dialog-title" class="dialog__title">
+        <fa-icon icon="user-plus" class="dialog__title-icon"></fa-icon>
+        Create Role
+      </h3>
+      <button
+        class="dialog__close"
+        (click)="onClose()"
+        aria-label="Close dialog">
+        <fa-icon icon="times"></fa-icon>
+      </button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="dialog__body">
+        <!-- Error Message -->
+        <div *ngIf="createError$ | async as error" class="dialog__error" role="alert">
+          <fa-icon icon="exclamation-triangle"></fa-icon>
+          {{ error }}
+        </div>
+
+        <!-- Role Name -->
+        <div class="dialog__form-group">
+          <label for="role-name" class="dialog__label">Role Name *</label>
+          <input
+            id="role-name"
+            type="text"
+            class="dialog__input"
+            [class.dialog__input--error]="roleNameError"
+            formControlName="roleName"
+            placeholder="e.g., Editor, Moderator, Analyst"
+            maxlength="100">
+          <div *ngIf="roleNameError" class="dialog__field-error">
+            {{ roleNameError }}
+          </div>
+        </div>
+
+        <!-- Role Type -->
+        <div class="dialog__form-group">
+          <span id="role-type-label" class="dialog__label">Role Type *</span>
+          <div class="dialog__role-types" role="radiogroup" aria-labelledby="role-type-label">
+            <label
+              *ngFor="let type of roleTypes"
+              class="dialog__role-type"
+              [class.dialog__role-type--selected]="form.get('roleType')?.value === type.value"
+              [attr.for]="'role-type-' + type.value">
+              <input
+                [id]="'role-type-' + type.value"
+                type="radio"
+                formControlName="roleType"
+                [value]="type.value"
+                class="dialog__role-type-input">
+              <fa-icon [icon]="type.icon" class="dialog__role-type-icon"></fa-icon>
+              <span class="dialog__role-type-label">{{ type.label }}</span>
+            </label>
+          </div>
+          <p class="dialog__help-text">
+            Role type determines the default permissions level.
+          </p>
+        </div>
+
+        <!-- Description -->
+        <div class="dialog__form-group">
+          <label for="role-description" class="dialog__label">Description</label>
+          <textarea
+            id="role-description"
+            class="dialog__textarea"
+            [class.dialog__textarea--error]="descriptionError"
+            formControlName="description"
+            placeholder="Describe what this role can do..."
+            rows="3"
+            maxlength="500"></textarea>
+          <div class="dialog__char-count">
+            {{ form.get('description')?.value?.length || 0 }}/500
+          </div>
+          <div *ngIf="descriptionError" class="dialog__field-error">
+            {{ descriptionError }}
+          </div>
+        </div>
+      </div>
+
+      <div class="dialog__footer">
+        <button type="button" class="dialog__btn dialog__btn--secondary" (click)="onClose()">
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="dialog__btn dialog__btn--primary"
+          [disabled]="(isCreating$ | async) || form.invalid">
+          <fa-icon *ngIf="isCreating$ | async" icon="spinner" animation="spin"></fa-icon>
+          <span *ngIf="(isCreating$ | async) === false">Create Role</span>
+          <span *ngIf="isCreating$ | async">Creating...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
