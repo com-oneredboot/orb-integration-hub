@@ -42,19 +42,21 @@ def template(test_config: Config) -> Template:
 class TestDynamoDBStackTableCount:
     """Tests for table count."""
 
-    def test_creates_fifteen_tables(self, template: Template) -> None:
-        """Verify exactly 15 DynamoDB tables are created.
+    def test_creates_fourteen_tables(self, template: Template) -> None:
+        """Verify exactly 14 DynamoDB tables are created.
         
         Tables: Users, Organizations, OrganizationUsers, Applications,
-        ApplicationUsers, ApplicationRoles, Roles, Notifications,
+        ApplicationUsers, ApplicationRoles, Notifications,
         PrivacyRequests, OwnershipTransferRequests, SmsRateLimit,
         ApplicationUserRoles, ApplicationApiKeys, ApplicationEnvironmentConfig,
         ApiRateLimits
         
-        NOTE: Group tables (ApplicationGroups, ApplicationGroupUsers, ApplicationGroupRoles)
-        removed in v0.4.0 - see .kiro/specs/simplify-roles-remove-groups/
+        NOTE: Removed tables in v0.4.0:
+        - ApplicationGroups, ApplicationGroupUsers, ApplicationGroupRoles (groups feature)
+        - Roles (consolidated into ApplicationRoles)
+        See .kiro/specs/simplify-roles-remove-groups/
         """
-        template.resource_count_is("AWS::DynamoDB::Table", 15)
+        template.resource_count_is("AWS::DynamoDB::Table", 14)
 
 
 class TestDynamoDBStackUsersTable:
