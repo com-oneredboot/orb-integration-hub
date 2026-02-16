@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "orb-templates": {
-      "command": "/home/fishbeak/.orb-mcp-venv/bin/python",
+      "command": "C:\\Users\\corey\\.orb-mcp-venv\\Scripts\\python.exe",
       "args": [
         "-m",
         "orb_templates_mcp.server"

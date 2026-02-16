@@ -19,6 +19,7 @@
 | #51 | orb-templates | Add Kiro Hooks Guidance and Recommended Hooks Library | Open | High |
 | #50 | orb-templates | Update CodeArtifact Integration Guide for pipenv Package Source Specification | Open | High |
 | #43 | orb-templates | Add Guidance: pipenv + CodeArtifact Package Installation Workaround | Open | High |
+| #53 | orb-templates | Add Windows Support for MCP Installation Script | Open | Medium |
 | #40 | orb-templates | orb-templates-mcp: uvx cannot authenticate with CodeArtifact | Open | High |
 | #39 | orb-templates | Add AWS Resource Naming Conventions for Secrets Manager and CloudWatch Logs | Open | Medium |
 | #37 | orb-templates | Add Guidance: Use pipenv sync for CI with CodeArtifact Dependencies | Open | Medium |

@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Application Roles Management feature
+  - Roles tab on Application Detail page for managing ApplicationRoles
+  - NgRx store for ApplicationRoles (state, actions, reducer, selectors, effects)
+  - ApplicationRolesListComponent with DataGrid for role display
+  - CreateRoleDialogComponent for creating new roles
+  - EditRoleDialogComponent for editing, deactivating, and deleting roles
+  - Default roles (Owner, Administrator, User, Guest) created on application activation
+  - Spec: `.kiro/specs/application-roles-management/`
+
+### Removed
+- Legacy Roles table schema (`schemas/tables/Roles.yml`)
+- Legacy RoleType enum (`schemas/registries/RoleType.yml`)
+- Legacy RoleStatus enum (`schemas/registries/RoleStatus.yml`)
+- Generated Roles model files (Python, TypeScript, CDK)
+- Roles table CDK infrastructure and tests
+
+### Changed
+- ApplicationRoles schema now uses ApplicationRoleType and ApplicationRoleStatus enums
+- Updated docs/schema.md to reflect ApplicationRoles as the only roles table
+- ApplicationUserRoles now references applicationRoleId instead of roleId
+
+## [0.4.0] - 2026-02-15
+
+### Removed
+- Application Groups functionality completely removed
+  - Deleted ApplicationGroups, ApplicationGroupUsers, ApplicationGroupRoles tables and schemas
+  - Deleted group-related Lambda functions (application_groups, application_group_users, application_group_roles)
+  - Deleted GroupService and group-related GraphQL operations from frontend
+  - Deleted Groups tab from Application Detail page
+  - Deleted group-related property tests and unit tests
+  - Spec: `.kiro/specs/simplify-roles-remove-groups/`
+
+### Changed
+- Simplified ApplicationRoles schema
+  - Removed userId attribute (roles are now application-level definitions, not user-specific)
+  - Removed permissions array (roles are labels returned in JWT, customer apps interpret meaning)
+  - Added optional description attribute
+  - Removed UserRoleIndex GSI
+- Simplified ApplicationUserRoles schema
+  - Removed permissions array
+  - Roles are now simple labels assigned to users per environment
+- Updated GetApplicationUsers Lambda to remove permissions from response
+- Updated frontend RoleAssignment interface to remove permissions
+- Updated API documentation to reflect simplified role model
+
 ## [0.3.0] - 2026-02-14
 
 ### Added
