@@ -20,7 +20,6 @@ export const ApplicationUserRolesCreate = /* GraphQL */ `
         environment
         roleId
         roleName
-        permissions
         status
         createdAt
         updatedAt
@@ -45,7 +44,6 @@ export const ApplicationUserRolesUpdate = /* GraphQL */ `
         environment
         roleId
         roleName
-        permissions
         status
         createdAt
         updatedAt
@@ -70,7 +68,6 @@ export const ApplicationUserRolesDelete = /* GraphQL */ `
         environment
         roleId
         roleName
-        permissions
         status
         createdAt
         updatedAt
@@ -95,7 +92,6 @@ export const ApplicationUserRolesDisable = /* GraphQL */ `
         environment
         roleId
         roleName
-        permissions
         status
         createdAt
         updatedAt
@@ -120,7 +116,6 @@ export const ApplicationUserRolesGet = /* GraphQL */ `
         environment
         roleId
         roleName
-        permissions
         status
         createdAt
         updatedAt
@@ -145,7 +140,6 @@ export const ApplicationUserRolesListByApplicationUserRoleId = /* GraphQL */ `
         environment
         roleId
         roleName
-        permissions
         status
         createdAt
         updatedAt
@@ -171,7 +165,6 @@ export const ApplicationUserRolesListByUserId = /* GraphQL */ `
         environment
         roleId
         roleName
-        permissions
         status
         createdAt
         updatedAt
@@ -197,7 +190,6 @@ export const ApplicationUserRolesListByUserIdAndEnvironment = /* GraphQL */ `
         environment
         roleId
         roleName
-        permissions
         status
         createdAt
         updatedAt
@@ -223,7 +215,6 @@ export const ApplicationUserRolesListByApplicationId = /* GraphQL */ `
         environment
         roleId
         roleName
-        permissions
         status
         createdAt
         updatedAt
@@ -249,7 +240,6 @@ export const ApplicationUserRolesListByApplicationIdAndEnvironment = /* GraphQL 
         environment
         roleId
         roleName
-        permissions
         status
         createdAt
         updatedAt
@@ -275,7 +265,6 @@ export const ApplicationUserRolesListByUserIdAndApplicationId = /* GraphQL */ `
         environment
         roleId
         roleName
-        permissions
         status
         createdAt
         updatedAt
@@ -301,7 +290,6 @@ export const ApplicationUserRolesListByUserIdAndStatus = /* GraphQL */ `
         environment
         roleId
         roleName
-        permissions
         status
         createdAt
         updatedAt

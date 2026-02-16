@@ -5,7 +5,7 @@
 
 type: lambda-dynamodb
 pitr_enabled: false
-version: '1.1'
+version: '1.2'
 name: ApplicationUserRoles
 targets:
   - api
@@ -91,13 +91,7 @@ model:
     roleName:
       type: string
       required: true
-      description: Name of the role (denormalized for display)
-    permissions:
-      type: array
-      items:
-        type: string
-      required: true
-      description: List of permissions granted by this role (denormalized for fast resolution)
+      description: Name of the role (denormalized for display and JWT)
     status:
       type: string
       required: true

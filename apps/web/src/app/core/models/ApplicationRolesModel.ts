@@ -4,42 +4,36 @@
  * Generated TypeScript models for ApplicationRoles
  */
 
-import { RoleStatus } from '../../core/enums/RoleStatusEnum';
-import { RoleType } from '../../core/enums/RoleTypeEnum';
+import { ApplicationRoleStatus } from '../../core/enums/ApplicationRoleStatusEnum';
+import { ApplicationRoleType } from '../../core/enums/ApplicationRoleTypeEnum';
 
 // Input Types
 export type ApplicationRolesCreateInput = {
   applicationRoleId: string;
-  userId: string;
   applicationId: string;
   roleId: string;
   roleName: string;
-  roleType: RoleType;
-  permissions: string[];
-  status: RoleStatus;
+  roleType: ApplicationRoleType;
+  description?: string;
+  status: ApplicationRoleStatus;
   createdAt: Date;
   updatedAt: Date;
 };
 
 export type ApplicationRolesUpdateInput = {
   applicationRoleId?: string;
-  userId?: string;
   applicationId?: string;
   roleId?: string;
   roleName?: string;
-  roleType?: RoleType;
-  permissions?: string[];
-  status?: RoleStatus;
+  roleType?: ApplicationRoleType;
+  description?: string;
+  status?: ApplicationRoleStatus;
   createdAt?: Date;
   updatedAt?: Date;
 };
 
 export type ApplicationRolesQueryByApplicationRoleIdInput = {
   applicationRoleId: string;
-};
-
-export type ApplicationRolesQueryByUserIdInput = {
-  userId: string;
 };
 
 export type ApplicationRolesQueryByApplicationIdInput = {
@@ -121,10 +115,6 @@ export type ApplicationRolesListByApplicationRoleIdResponse = {
   ApplicationRolesListByApplicationRoleId: ApplicationRolesListResponse;
 };
 
-export type ApplicationRolesListByUserIdResponse = {
-  ApplicationRolesListByUserId: ApplicationRolesListResponse;
-};
-
 export type ApplicationRolesListByApplicationIdResponse = {
   ApplicationRolesListByApplicationId: ApplicationRolesListResponse;
 };
@@ -136,38 +126,35 @@ export type ApplicationRolesListByRoleIdResponse = {
 
 export interface IApplicationRoles {
   applicationRoleId: string;
-  userId: string;
   applicationId: string;
   roleId: string;
   roleName: string;
-  roleType: RoleType;
-  permissions: string[];
-  status: RoleStatus;
+  roleType: ApplicationRoleType;
+  description?: string;
+  status: ApplicationRoleStatus;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export class ApplicationRoles implements IApplicationRoles {
   applicationRoleId: string;
-  userId: string;
   applicationId: string;
   roleId: string;
   roleName: string;
-  roleType: RoleType;
-  permissions: string[];
-  status: RoleStatus;
+  roleType: ApplicationRoleType;
+  description?: string;
+  status: ApplicationRoleStatus;
   createdAt: Date;
   updatedAt: Date;
 
   constructor(data: Partial<IApplicationRoles> = {}) {
     this.applicationRoleId = data.applicationRoleId ?? '';
-    this.userId = data.userId ?? '';
     this.applicationId = data.applicationId ?? '';
     this.roleId = data.roleId ?? '';
     this.roleName = data.roleName ?? '';
-    this.roleType = data.roleType ?? RoleType.Admin;
-    this.permissions = data.permissions ?? [];
-    this.status = data.status ?? RoleStatus.Active;
+    this.roleType = data.roleType ?? ApplicationRoleType.Admin;
+    this.description = data.description;
+    this.status = data.status ?? ApplicationRoleStatus.Active;
     this.createdAt = data.createdAt ?? new Date();
     this.updatedAt = data.updatedAt ?? new Date();
   }

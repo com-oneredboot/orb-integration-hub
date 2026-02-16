@@ -7,9 +7,6 @@
 
 export * from './ApplicationApiKeys.graphql';
 export * from './ApplicationEnvironmentConfig.graphql';
-export * from './ApplicationGroupRoles.graphql';
-export * from './ApplicationGroupUsers.graphql';
-export * from './ApplicationGroups.graphql';
 export * from './ApplicationRoles.graphql';
 export * from './ApplicationUserRoles.graphql';
 export * from './Applications.graphql';
@@ -22,7 +19,6 @@ export * from './OrganizationUsers.graphql';
 export * from './Organizations.graphql';
 export * from './OwnershipTransferRequests.graphql';
 export * from './PrivacyRequests.graphql';
-export * from './Roles.graphql';
 export * from './SmsRateLimit.graphql';
 export * from './SmsVerification.graphql';
 export * from './Users.graphql';

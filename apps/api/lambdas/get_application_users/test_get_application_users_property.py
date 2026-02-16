@@ -4,7 +4,7 @@
 # description: Property-based tests for GetApplicationUsers Lambda function
 
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from hypothesis import given, strategies as st, settings, assume
 from lambdas.get_application_users.index import (
     validate_input,
@@ -13,7 +13,6 @@ from lambdas.get_application_users.index import (
     sort_users_by_name,
     GetApplicationUsersInput,
     UserWithRoles,
-    RoleAssignment,
     ValidationError,
     AuthorizationError,
     ErrorCode,

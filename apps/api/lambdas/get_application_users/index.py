@@ -7,7 +7,7 @@
 
 import os
 import logging
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
 from enum import Enum
 
@@ -86,7 +86,6 @@ class RoleAssignment:
     environment: str
     roleId: str
     roleName: str
-    permissions: List[str]
     status: str
     createdAt: int
     updatedAt: int
@@ -221,15 +220,19 @@ def get_owned_organization_ids(user_id: str) -> List[str]:
         # Query OrganizationUsers table using UserOrgIndex GSI
         # Note: This assumes OrganizationUsers has a GSI on userId
         # We'll need to filter for OWNER role
+        # role is a reserved keyword, so we use ExpressionAttributeNames
         org_users_table = get_dynamodb_resource().Table("orb-integration-hub-dev-organization-users")
         
         response = org_users_table.query(
             IndexName="UserOrgIndex",
             KeyConditionExpression="userId = :userId",
-            FilterExpression="role = :role",
+            FilterExpression="#role = :role",
             ExpressionAttributeValues={
                 ":userId": user_id,
                 ":role": "OWNER"
+            },
+            ExpressionAttributeNames={
+                "#role": "role"
             }
         )
         
@@ -423,15 +426,17 @@ def query_application_user_roles(
                     key_condition += " AND environment = :env"
                     expr_attr_values[":env"] = query_input.environment
                 
-                # Add status filter
+                # Add status filter (status is a reserved keyword)
                 expr_attr_values[":status"] = "ACTIVE"
+                expr_attr_names = {"#status": "status"}
                 
                 # Query the GSI
                 response = table.query(
                     IndexName="AppEnvUserIndex",
                     KeyConditionExpression=key_condition,
                     ExpressionAttributeValues=expr_attr_values,
-                    FilterExpression="status = :status"
+                    ExpressionAttributeNames=expr_attr_names,
+                    FilterExpression="#status = :status"
                 )
                 
                 all_items.extend(response.get("Items", []))
@@ -442,7 +447,8 @@ def query_application_user_roles(
                         IndexName="AppEnvUserIndex",
                         KeyConditionExpression=key_condition,
                         ExpressionAttributeValues=expr_attr_values,
-                        FilterExpression="status = :status",
+                        ExpressionAttributeNames=expr_attr_names,
+                        FilterExpression="#status = :status",
                         ExclusiveStartKey=response["LastEvaluatedKey"]
                     )
                     all_items.extend(response.get("Items", []))
@@ -464,14 +470,16 @@ def query_application_user_roles(
                     key_condition += " AND environment = :env"
                     expr_attr_values[":env"] = query_input.environment
                 
-                # Add status filter
+                # Add status filter (status is a reserved keyword)
                 expr_attr_values[":status"] = "ACTIVE"
+                expr_attr_names = {"#status": "status"}
                 
                 response = table.query(
                     IndexName="AppEnvUserIndex",
                     KeyConditionExpression=key_condition,
                     ExpressionAttributeValues=expr_attr_values,
-                    FilterExpression="status = :status"
+                    ExpressionAttributeNames=expr_attr_names,
+                    FilterExpression="#status = :status"
                 )
                 
                 all_items.extend(response.get("Items", []))
@@ -482,7 +490,8 @@ def query_application_user_roles(
                         IndexName="AppEnvUserIndex",
                         KeyConditionExpression=key_condition,
                         ExpressionAttributeValues=expr_attr_values,
-                        FilterExpression="status = :status",
+                        ExpressionAttributeNames=expr_attr_names,
+                        FilterExpression="#status = :status",
                         ExclusiveStartKey=response["LastEvaluatedKey"]
                     )
                     all_items.extend(response.get("Items", []))
@@ -490,9 +499,11 @@ def query_application_user_roles(
         elif strategy == QueryStrategy.SCAN_WITH_AUTH:
             # Scan the table with status filter
             # Note: This is the least efficient strategy
+            # status is a reserved keyword, so we use ExpressionAttributeNames
             scan_kwargs = {
-                "FilterExpression": "status = :status",
-                "ExpressionAttributeValues": {":status": "ACTIVE"}
+                "FilterExpression": "#status = :status",
+                "ExpressionAttributeValues": {":status": "ACTIVE"},
+                "ExpressionAttributeNames": {"#status": "status"}
             }
             
             if query_input.environment:
@@ -658,7 +669,6 @@ def build_users_with_roles(
                 environment=assignment.get("environment", ""),
                 roleId=assignment.get("roleId", ""),
                 roleName=assignment.get("roleName", ""),
-                permissions=assignment.get("permissions", []),
                 status=assignment.get("status", ""),
                 createdAt=int(assignment.get("createdAt", 0)),
                 updatedAt=int(assignment.get("updatedAt", 0))
@@ -793,7 +803,6 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                             "environment": ra.environment,
                             "roleId": ra.roleId,
                             "roleName": ra.roleName,
-                            "permissions": ra.permissions,
                             "status": ra.status,
                             "createdAt": ra.createdAt,
                             "updatedAt": ra.updatedAt

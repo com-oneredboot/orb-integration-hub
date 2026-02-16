@@ -3,13 +3,10 @@
 # created: 2026-02-09
 # description: Unit tests for GetApplicationUsers Lambda function
 
-import pytest
-from unittest.mock import patch, MagicMock
 from lambdas.get_application_users.index import (
     deduplicate_and_group_by_user,
     sort_users_by_name,
     UserWithRoles,
-    RoleAssignment,
     select_query_strategy,
     QueryStrategy,
     GetApplicationUsersInput

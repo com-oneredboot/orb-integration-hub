@@ -18,7 +18,6 @@ export type ApplicationUserRolesCreateInput = {
   environment: Environment;
   roleId: string;
   roleName: string;
-  permissions: string[];
   status: ApplicationUserRoleStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -34,7 +33,6 @@ export type ApplicationUserRolesUpdateInput = {
   environment?: Environment;
   roleId?: string;
   roleName?: string;
-  permissions?: string[];
   status?: ApplicationUserRoleStatus;
   createdAt?: Date;
   updatedAt?: Date;
@@ -142,7 +140,6 @@ export interface IApplicationUserRoles {
   environment: Environment;
   roleId: string;
   roleName: string;
-  permissions: string[];
   status: ApplicationUserRoleStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -158,7 +155,6 @@ export class ApplicationUserRoles implements IApplicationUserRoles {
   environment: Environment;
   roleId: string;
   roleName: string;
-  permissions: string[];
   status: ApplicationUserRoleStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -173,7 +169,6 @@ export class ApplicationUserRoles implements IApplicationUserRoles {
     this.environment = data.environment ?? Environment.Production;
     this.roleId = data.roleId ?? '';
     this.roleName = data.roleName ?? '';
-    this.permissions = data.permissions ?? [];
     this.status = data.status ?? ApplicationUserRoleStatus.Active;
     this.createdAt = data.createdAt ?? new Date();
     this.updatedAt = data.updatedAt ?? new Date();

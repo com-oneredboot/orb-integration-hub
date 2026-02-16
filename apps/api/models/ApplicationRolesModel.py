@@ -8,39 +8,37 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing import List, Optional
 from datetime import datetime
 
-from ..enums.role_status_enum import RoleStatus
-from ..enums.role_type_enum import RoleType
+from ..enums.application_role_status_enum import ApplicationRoleStatus
+from ..enums.application_role_type_enum import ApplicationRoleType
 
 
 # CRUD Input Types
 class ApplicationRolesCreateInput(BaseModel):
     """ApplicationRoles create input."""
 
-    application_role_id: str = Field(..., description="Unique identifier for the application role assignment (primary key)")
-    user_id: str = Field(..., description="ID of the user this role assignment belongs to (foreign key to Users)")
-    application_id: str = Field(..., description="ID of the application this role assignment belongs to (foreign key to Applications)")
-    role_id: str = Field(..., description="ID of the role (foreign key to Roles)")
-    role_name: str = Field(..., description="Name of the role")
-    role_type: RoleType = Field(..., description="Type of the role")
-    permissions: List[str] = Field(..., description="List of permissions granted to this role")
-    status: RoleStatus = Field(..., description="Current status of the role assignment")
-    created_at: datetime = Field(..., description="When the role assignment was created")
-    updated_at: datetime = Field(..., description="When the role assignment was last updated")
+    application_role_id: str = Field(..., description="Unique identifier for the application role definition (primary key)")
+    application_id: str = Field(..., description="ID of the application this role belongs to (foreign key to Applications)")
+    role_id: str = Field(..., description="Unique role identifier within the application")
+    role_name: str = Field(..., description="Display name of the role (e.g., "Admin", "Editor", "Viewer")")
+    role_type: ApplicationRoleType = Field(..., description="Type of the role")
+    description: Optional[str] = Field(None, description="Optional description of what this role is for")
+    status: ApplicationRoleStatus = Field(..., description="Current status of the role definition")
+    created_at: datetime = Field(..., description="When the role was created")
+    updated_at: datetime = Field(..., description="When the role was last updated")
 
 
 class ApplicationRolesUpdateInput(BaseModel):
     """ApplicationRoles update input."""
 
-    application_role_id: Optional[str] = Field(..., description="Unique identifier for the application role assignment (primary key)")
-    user_id: Optional[str] = Field(..., description="ID of the user this role assignment belongs to (foreign key to Users)")
-    application_id: Optional[str] = Field(..., description="ID of the application this role assignment belongs to (foreign key to Applications)")
-    role_id: Optional[str] = Field(..., description="ID of the role (foreign key to Roles)")
-    role_name: Optional[str] = Field(..., description="Name of the role")
-    role_type: Optional[RoleType] = Field(..., description="Type of the role")
-    permissions: Optional[List[str]] = Field(..., description="List of permissions granted to this role")
-    status: Optional[RoleStatus] = Field(..., description="Current status of the role assignment")
-    created_at: Optional[datetime] = Field(..., description="When the role assignment was created")
-    updated_at: Optional[datetime] = Field(..., description="When the role assignment was last updated")
+    application_role_id: Optional[str] = Field(..., description="Unique identifier for the application role definition (primary key)")
+    application_id: Optional[str] = Field(..., description="ID of the application this role belongs to (foreign key to Applications)")
+    role_id: Optional[str] = Field(..., description="Unique role identifier within the application")
+    role_name: Optional[str] = Field(..., description="Display name of the role (e.g., "Admin", "Editor", "Viewer")")
+    role_type: Optional[ApplicationRoleType] = Field(..., description="Type of the role")
+    description: Optional[str] = Field(None, description="Optional description of what this role is for")
+    status: Optional[ApplicationRoleStatus] = Field(..., description="Current status of the role definition")
+    created_at: Optional[datetime] = Field(..., description="When the role was created")
+    updated_at: Optional[datetime] = Field(..., description="When the role was last updated")
 
 
 class ApplicationRolesDeleteInput(BaseModel):
@@ -64,12 +62,6 @@ class ApplicationRolesQueryByApplicationRoleIdInput(BaseModel):
     application_role_id: str
 
 
-class ApplicationRolesQueryByUserIdInput(BaseModel):
-    """ApplicationRoles query by userId."""
-
-    user_id: str
-
-
 class ApplicationRolesQueryByApplicationIdInput(BaseModel):
     """ApplicationRoles query by applicationId."""
 
@@ -88,16 +80,15 @@ class ApplicationRoles(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    application_role_id: str = Field(..., description="Unique identifier for the application role assignment (primary key)")
-    user_id: str = Field(..., description="ID of the user this role assignment belongs to (foreign key to Users)")
-    application_id: str = Field(..., description="ID of the application this role assignment belongs to (foreign key to Applications)")
-    role_id: str = Field(..., description="ID of the role (foreign key to Roles)")
-    role_name: str = Field(..., description="Name of the role")
-    role_type: RoleType = Field(..., description="Type of the role")
-    permissions: List[str] = Field(..., description="List of permissions granted to this role")
-    status: RoleStatus = Field(..., description="Current status of the role assignment")
-    created_at: datetime = Field(..., description="When the role assignment was created")
-    updated_at: datetime = Field(..., description="When the role assignment was last updated")
+    application_role_id: str = Field(..., description="Unique identifier for the application role definition (primary key)")
+    application_id: str = Field(..., description="ID of the application this role belongs to (foreign key to Applications)")
+    role_id: str = Field(..., description="Unique role identifier within the application")
+    role_name: str = Field(..., description="Display name of the role (e.g., "Admin", "Editor", "Viewer")")
+    role_type: ApplicationRoleType = Field(..., description="Type of the role")
+    description: Optional[str] = Field(None, description="Optional description of what this role is for")
+    status: ApplicationRoleStatus = Field(..., description="Current status of the role definition")
+    created_at: datetime = Field(..., description="When the role was created")
+    updated_at: datetime = Field(..., description="When the role was last updated")
 
     @field_validator("created_at", mode="before")
     @classmethod

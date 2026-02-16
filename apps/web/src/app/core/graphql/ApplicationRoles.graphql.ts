@@ -12,12 +12,11 @@ export const ApplicationRolesCreate = /* GraphQL */ `
       message
       item {
         applicationRoleId
-        userId
         applicationId
         roleId
         roleName
         roleType
-        permissions
+        description
         status
         createdAt
         updatedAt
@@ -34,12 +33,11 @@ export const ApplicationRolesUpdate = /* GraphQL */ `
       message
       item {
         applicationRoleId
-        userId
         applicationId
         roleId
         roleName
         roleType
-        permissions
+        description
         status
         createdAt
         updatedAt
@@ -56,12 +54,11 @@ export const ApplicationRolesDelete = /* GraphQL */ `
       message
       item {
         applicationRoleId
-        userId
         applicationId
         roleId
         roleName
         roleType
-        permissions
+        description
         status
         createdAt
         updatedAt
@@ -78,12 +75,11 @@ export const ApplicationRolesDisable = /* GraphQL */ `
       message
       item {
         applicationRoleId
-        userId
         applicationId
         roleId
         roleName
         roleType
-        permissions
+        description
         status
         createdAt
         updatedAt
@@ -100,12 +96,11 @@ export const ApplicationRolesGet = /* GraphQL */ `
       message
       item {
         applicationRoleId
-        userId
         applicationId
         roleId
         roleName
         roleType
-        permissions
+        description
         status
         createdAt
         updatedAt
@@ -122,58 +117,11 @@ export const ApplicationRolesListByApplicationRoleId = /* GraphQL */ `
       message
       items {
         applicationRoleId
-        userId
         applicationId
         roleId
         roleName
         roleType
-        permissions
-        status
-        createdAt
-        updatedAt
-      }
-      nextToken
-    }
-  }
-`;
-
-export const ApplicationRolesListByUserId = /* GraphQL */ `
-  query ApplicationRolesListByUserId($input: ApplicationRolesListByUserIdInput!) {
-    ApplicationRolesListByUserId(input: $input) {
-      code
-      success
-      message
-      items {
-        applicationRoleId
-        userId
-        applicationId
-        roleId
-        roleName
-        roleType
-        permissions
-        status
-        createdAt
-        updatedAt
-      }
-      nextToken
-    }
-  }
-`;
-
-export const ApplicationRolesListByUserIdAndRoleId = /* GraphQL */ `
-  query ApplicationRolesListByUserIdAndRoleId($input: ApplicationRolesListByUserIdAndRoleIdInput!) {
-    ApplicationRolesListByUserIdAndRoleId(input: $input) {
-      code
-      success
-      message
-      items {
-        applicationRoleId
-        userId
-        applicationId
-        roleId
-        roleName
-        roleType
-        permissions
+        description
         status
         createdAt
         updatedAt
@@ -191,12 +139,11 @@ export const ApplicationRolesListByApplicationId = /* GraphQL */ `
       message
       items {
         applicationRoleId
-        userId
         applicationId
         roleId
         roleName
         roleType
-        permissions
+        description
         status
         createdAt
         updatedAt
@@ -214,12 +161,11 @@ export const ApplicationRolesListByApplicationIdAndRoleId = /* GraphQL */ `
       message
       items {
         applicationRoleId
-        userId
         applicationId
         roleId
         roleName
         roleType
-        permissions
+        description
         status
         createdAt
         updatedAt
@@ -237,12 +183,11 @@ export const ApplicationRolesListByRoleId = /* GraphQL */ `
       message
       items {
         applicationRoleId
-        userId
         applicationId
         roleId
         roleName
         roleType
-        permissions
+        description
         status
         createdAt
         updatedAt
@@ -260,12 +205,11 @@ export const ApplicationRolesListByRoleIdAndRoleType = /* GraphQL */ `
       message
       items {
         applicationRoleId
-        userId
         applicationId
         roleId
         roleName
         roleType
-        permissions
+        description
         status
         createdAt
         updatedAt

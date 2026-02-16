@@ -24,19 +24,6 @@ class ApplicationRolesTable(Construct):
         )
 
         self.table.add_global_secondary_index(
-            index_name="UserRoleIndex",
-            partition_key=dynamodb.Attribute(
-                name="userId",
-                type=dynamodb.AttributeType.STRING,
-            ),
-            sort_key=dynamodb.Attribute(
-                name="roleId",
-                type=dynamodb.AttributeType.STRING,
-            ),
-            projection_type=dynamodb.ProjectionType.ALL,
-        )
-
-        self.table.add_global_secondary_index(
             index_name="ApplicationRoleIndex",
             partition_key=dynamodb.Attribute(
                 name="applicationId",

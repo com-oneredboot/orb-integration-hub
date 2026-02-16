@@ -23,7 +23,6 @@ export const GetApplicationUsers = /* GraphQL */ `
           environment
           roleId
           roleName
-          permissions
           status
           createdAt
           updatedAt
@@ -57,7 +56,6 @@ export interface RoleAssignment {
   environment: string;
   roleId: string;
   roleName: string;
-  permissions: string[];
   status: string;
   createdAt: number;
   updatedAt: number;
