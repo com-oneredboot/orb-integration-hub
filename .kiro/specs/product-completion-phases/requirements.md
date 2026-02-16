@@ -29,18 +29,21 @@ This specification addresses the final items needed to complete the orb-integrat
 5. THE ApplicationUsersListComponent SHALL use the DataGridComponent for displaying user data
 6. THE ApplicationUsersListComponent SHALL follow store-first architecture with a dedicated application-users store
 
-### Requirement 2: Application User Assignment Management
+### Requirement 2: Application User Invitation Management
 
-**User Story:** As an administrator, I want to assign and unassign users to applications, so that I can control application access.
+**User Story:** As an administrator, I want to invite users to applications via email, so that I can control application access while protecting user privacy.
 
 #### Acceptance Criteria
 
-1. WHEN an administrator clicks "Assign User" on the Users tab, THE System SHALL display a dialog with available users
-2. WHEN an administrator selects a user and confirms, THE System SHALL assign the user to the application
-3. WHEN an administrator clicks "Unassign" next to a user, THE System SHALL display a confirmation dialog
-4. WHEN the administrator confirms unassignment, THE System SHALL remove the user's access to the application
-5. WHEN assignment or unassignment completes, THE System SHALL display a success notification
-6. IF assignment or unassignment fails, THEN THE System SHALL display an error message with details
+1. WHEN an administrator clicks "Invite User" on the Users tab, THE System SHALL display a dialog requesting an email address
+2. WHEN an administrator enters an email and confirms, THE System SHALL send an invitation notification to that email address
+3. WHEN a user accepts an invitation, THE System SHALL add the user to the application's user list
+4. WHEN an administrator clicks "Remove" next to a user, THE System SHALL display a confirmation dialog
+5. WHEN the administrator confirms removal, THE System SHALL remove the user's access to the application
+6. WHEN invitation or removal completes, THE System SHALL display a success notification
+7. IF invitation or removal fails, THEN THE System SHALL display an error message with details
+8. THE System SHALL NOT allow administrators to directly add users without sending an invitation
+9. THE System SHALL NOT expose user email addresses or PII to administrators until the user accepts the invitation
 
 ### Requirement 3: Application User Role Management
 
@@ -53,6 +56,21 @@ This specification addresses the final items needed to complete the orb-integrat
 3. WHEN role update completes, THE System SHALL display a success notification and refresh the user list
 4. IF role update fails, THEN THE System SHALL display an error message with details
 5. THE System SHALL validate that the selected role exists for the application before updating
+6. THE System SHALL only allow role changes for users who have already accepted their invitation
+
+### Requirement 3a: User Invitation Acceptance Flow
+
+**User Story:** As a user, I want to accept or reject invitations to join applications/organizations, so that I control which resources I have access to.
+
+#### Acceptance Criteria
+
+1. WHEN a user receives an invitation notification, THE System SHALL display it in their notifications list
+2. WHEN a user views an invitation, THE System SHALL show the organization/application name and inviting administrator
+3. WHEN a user clicks "Accept" on an invitation, THE System SHALL add them to the organization/application users list
+4. WHEN a user clicks "Reject" on an invitation, THE System SHALL mark the invitation as rejected and remove it from pending invitations
+5. WHEN an invitation is accepted, THE System SHALL notify the inviting administrator
+6. WHEN an invitation expires (after 7 days), THE System SHALL automatically mark it as expired
+7. THE System SHALL NOT expose the user's email or PII to administrators until the invitation is accepted
 
 ### Requirement 4: Last Activity Column on List Pages
 
@@ -372,3 +390,18 @@ This specification addresses the final items needed to complete the orb-integrat
 8. THE System SHALL verify all commits reference issues
 9. THE System SHALL verify accessibility audit passes WCAG 2.1 AA
 10. THE System SHALL verify mobile responsiveness testing passes
+
+### Requirement 30: Invitation-Based User Management (Phase 5)
+
+**User Story:** As a platform architect, I want to convert the direct user assignment implementation to an invitation-based flow, so that user privacy is protected and PII is not exposed without consent.
+
+#### Acceptance Criteria
+
+1. THE System SHALL replace AssignUserDialogComponent with InviteUserDialogComponent that accepts email addresses
+2. THE System SHALL create invitation notifications in the Notifications table when users are invited
+3. THE System SHALL NOT expose user email addresses or PII to administrators until invitations are accepted
+4. THE System SHALL provide an invitation acceptance interface for users to accept or reject invitations
+5. THE System SHALL create ApplicationUsers or OrganizationUsers records only after invitation acceptance
+6. THE System SHALL expire invitations after 7 days if not accepted
+7. THE System SHALL notify inviting administrators when invitations are accepted
+8. THE System SHALL support the same invitation flow for both applications and organizations

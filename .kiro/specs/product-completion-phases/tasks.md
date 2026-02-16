@@ -584,9 +584,215 @@ This implementation plan addresses the final items needed to complete the orb-in
 
 
 
+### Phase 5: Invitation-Based User Management Conversion
+
+- [ ] 43. Update Notifications Schema for Invitations
+  - [ ] 43.1 Verify Notifications table schema
+    - Verify ORGANIZATION_INVITATION_RECEIVED type exists
+    - Verify APPLICATION_INVITATION_RECEIVED type exists
+    - Verify metadata field supports invitation context (organizationId, applicationId, roleIds)
+    - _Requirements: 2.8, 3a.1_
+  
+  - [ ] 43.2 Create invitation notification templates
+    - Create email template for organization invitations
+    - Create email template for application invitations
+    - Include accept/reject links in templates
+    - _Requirements: 3a.2_
+
+- [ ] 44. Replace AssignUserDialogComponent with InviteUserDialogComponent
+  - [ ] 44.1 Create InviteUserDialogComponent
+    - Create component file in `features/customers/applications/components/invite-user-dialog/`
+    - Create reactive form with email input and environment role assignments
+    - Implement email validation
+    - Implement submit handler that dispatches invite action
+    - _Requirements: 2.1, 2.2_
+  
+  - [ ]* 44.2 Write property test for user invitation
+    - **Property: User invitation creates notification**
+    - **Validates: Requirements 2.2, 3a.1**
+  
+  - [ ] 44.3 Delete AssignUserDialogComponent
+    - Remove component files
+    - Remove from imports
+    - Update references to use InviteUserDialogComponent
+    - _Requirements: 2.8_
+
+- [ ] 45. Update Application Users Store for Invitations
+  - [ ] 45.1 Replace assign actions with invite actions
+    - Replace `assignUserToApplication` with `inviteUserToApplication`
+    - Replace `assignUserSuccess` with `inviteUserSuccess`
+    - Replace `assignUserFailure` with `inviteUserFailure`
+    - Update state interface: `isAssigning` → `isInviting`, `assignError` → `inviteError`
+    - _Requirements: 2.2, 2.5_
+  
+  - [ ] 45.2 Replace unassign actions with remove actions
+    - Replace `unassignUserFromApplication` with `removeUserFromApplication`
+    - Replace `unassignUserSuccess` with `removeUserSuccess`
+    - Replace `unassignUserFailure` with `removeUserFailure`
+    - Update state interface: `isUnassigning` → `isRemoving`, `unassignError` → `removeError`
+    - _Requirements: 2.4, 2.6_
+  
+  - [ ] 45.3 Update effects for invitation flow
+    - Update `inviteUserToApplication$` effect to create notification instead of direct assignment
+    - Update `removeUserFromApplication$` effect to handle removal
+    - Remove user detail fetching from invite flow (user not yet accepted)
+    - _Requirements: 2.2, 2.4_
+  
+  - [ ]* 45.4 Write property test for invitation store
+    - **Property: Invitation action creates notification**
+    - **Validates: Requirements 2.2**
+
+- [ ] 46. Create Invitation Acceptance Flow
+  - [ ] 46.1 Create InvitationListComponent
+    - Create component in `features/user/components/invitation-list/`
+    - Display pending invitations from Notifications table
+    - Show organization/application name and inviting administrator
+    - Implement accept/reject buttons
+    - _Requirements: 3a.1, 3a.2_
+  
+  - [ ] 46.2 Create invitation acceptance store
+    - Create `invitation.state.ts` with pending invitations
+    - Create `invitation.actions.ts` with accept/reject actions
+    - Create `invitation.reducer.ts` with invitation state management
+    - Create `invitation.selectors.ts` with invitation queries
+    - Create `invitation.effects.ts` with API call handling
+    - _Requirements: 3a.3, 3a.4_
+  
+  - [ ] 46.3 Implement accept invitation logic
+    - Create ApplicationUsers or OrganizationUsers record on accept
+    - Update notification status to ACCEPTED
+    - Notify inviting administrator
+    - _Requirements: 3a.3, 3a.5_
+  
+  - [ ] 46.4 Implement reject invitation logic
+    - Update notification status to REJECTED
+    - Remove from pending invitations list
+    - _Requirements: 3a.4_
+  
+  - [ ] 46.5 Implement invitation expiration
+    - Add Lambda function to expire invitations after 7 days
+    - Update notification status to EXPIRED
+    - Schedule via EventBridge rule (daily)
+    - _Requirements: 3a.6_
+  
+  - [ ]* 46.6 Write property tests for invitation acceptance
+    - **Property: Accepting invitation adds user to application**
+    - **Property: Rejecting invitation removes from pending**
+    - **Property: Expired invitations are marked as expired**
+    - **Validates: Requirements 3a.3, 3a.4, 3a.6**
+
+- [ ] 47. Update ApplicationUsersListComponent
+  - [ ] 47.1 Replace "Assign User" button with "Invite User"
+    - Update button text and icon
+    - Update click handler to open InviteUserDialogComponent
+    - _Requirements: 2.1_
+  
+  - [ ] 47.2 Replace "Unassign" button with "Remove"
+    - Update button text
+    - Update confirmation dialog text
+    - Update action dispatch to use removeUserFromApplication
+    - _Requirements: 2.4_
+  
+  - [ ] 47.3 Remove PII from list view
+    - Ensure email addresses are not displayed in user list
+    - Only show userId, name, roles, environments
+    - _Requirements: 2.9_
+  
+  - [ ] 47.4 Add pending invitations indicator
+    - Show count of pending invitations for this application
+    - Link to invitations view
+    - _Requirements: 3a.1_
+
+- [ ] 48. Update ApplicationUsersService
+  - [ ] 48.1 Replace assignUserToApplication with inviteUserToApplication
+    - Update method signature to accept email instead of userId
+    - Create notification record instead of ApplicationUsers record
+    - Send invitation email
+    - _Requirements: 2.2_
+  
+  - [ ] 48.2 Replace unassignUserFromApplication with removeUserFromApplication
+    - Update method name
+    - Keep deletion logic the same
+    - _Requirements: 2.4_
+  
+  - [ ] 48.3 Add invitation acceptance methods
+    - Add acceptInvitation method
+    - Add rejectInvitation method
+    - _Requirements: 3a.3, 3a.4_
+
+- [ ] 49. Create Organization Users Management (Mirror Application Users)
+  - [ ] 49.1 Create OrganizationUsersListComponent
+    - Follow same pattern as ApplicationUsersListComponent
+    - Display users assigned to organization
+    - Support invite/remove/role change operations
+    - _Requirements: Similar to Req 1-3 but for organizations_
+  
+  - [ ] 49.2 Create organization-users store
+    - Follow same pattern as application-users store
+    - Implement invite/remove/role update actions
+    - _Requirements: Similar to Req 1-3 but for organizations_
+  
+  - [ ] 49.3 Add Users tab to OrganizationDetailPageComponent
+    - Add tab configuration
+    - Integrate OrganizationUsersListComponent
+    - Load organization users when tab selected
+    - _Requirements: Similar to Req 1 but for organizations_
+  
+  - [ ] 49.4 Create InviteUserToOrganizationDialogComponent
+    - Follow same pattern as InviteUserDialogComponent
+    - Support organization-level role assignments
+    - _Requirements: Similar to Req 2 but for organizations_
+
+- [ ] 50. Update GraphQL Schema and Resolvers
+  - [ ] 50.1 Add InviteUserToApplication mutation
+    - Define mutation input (email, applicationId, roleIds)
+    - Create VTL resolver or Lambda resolver
+    - Return invitation notification record
+    - _Requirements: 2.2_
+  
+  - [ ] 50.2 Add InviteUserToOrganization mutation
+    - Define mutation input (email, organizationId, roleIds)
+    - Create VTL resolver or Lambda resolver
+    - Return invitation notification record
+    - _Requirements: Similar to 2.2 but for organizations_
+  
+  - [ ] 50.3 Add AcceptInvitation mutation
+    - Define mutation input (notificationId)
+    - Create Lambda resolver for complex logic
+    - Create ApplicationUsers or OrganizationUsers record
+    - Update notification status
+    - _Requirements: 3a.3_
+  
+  - [ ] 50.4 Add RejectInvitation mutation
+    - Define mutation input (notificationId)
+    - Update notification status to REJECTED
+    - _Requirements: 3a.4_
+  
+  - [ ] 50.5 Add GetPendingInvitations query
+    - Define query for current user's pending invitations
+    - Filter by recipientUserId and status=PENDING
+    - Return invitation notifications
+    - _Requirements: 3a.1_
+
+- [ ] 51. Update Documentation for Invitation Flow
+  - Update architecture documentation to reflect invitation-based flow
+  - Document Notifications table usage for invitations
+  - Document invitation acceptance workflow
+  - Update API documentation with new mutations/queries
+  - _Requirements: 26.1, 26.2_
+
+- [ ] 52. Checkpoint - Phase 5 Complete
+  - Ensure all tests pass, ask the user if questions arise.
+  - Verify invitation flow works end-to-end
+  - Verify no PII is exposed before invitation acceptance
+  - Verify notifications are created correctly
+  - Verify invitation expiration works
+
+
+
 ### Standard Requirements (All Phases)
 
-- [ ] 43. Update Documentation
+- [ ] 53. Update Documentation
   - Update architecture documentation to reflect Application Users Management feature
   - Update UI standards documentation to reflect compliance requirements
   - Update accessibility documentation with WCAG 2.1 AA compliance details
@@ -594,7 +800,7 @@ This implementation plan addresses the final items needed to complete the orb-in
   - Ensure no duplicate or outdated information exists
   - _Requirements: 26.1, 26.2, 26.3, 26.4, 26.5_
 
-- [ ] 44. Version and Changelog Management
+- [ ] 54. Version and Changelog Management
   - Bump version following semantic versioning (major.minor.patch)
   - Update CHANGELOG.md with descriptions of all new features and improvements
   - Include issue numbers in changelog entries
@@ -602,7 +808,7 @@ This implementation plan addresses the final items needed to complete the orb-in
   - Ensure changelog entries are clear and user-facing
   - _Requirements: 27.1, 27.2, 27.3, 27.4, 27.5_
 
-- [ ] 45. Git Commit Standards
+- [ ] 55. Git Commit Standards
   - Reference issue numbers in all commit messages
   - Follow conventional commits format: "feat: description #issue"
   - Reference all related issues if multiple are addressed
@@ -610,7 +816,7 @@ This implementation plan addresses the final items needed to complete the orb-in
   - Ensure commits are atomic and focused on single concerns
   - _Requirements: 28.1, 28.2, 28.3, 28.4, 28.5_
 
-- [ ] 46. Final Verification
+- [ ] 56. Final Verification
   - Verify all unit tests pass
   - Verify all property-based tests pass
   - Verify no linting errors or warnings exist
@@ -638,4 +844,6 @@ This implementation plan addresses the final items needed to complete the orb-in
 - WCAG 2.1 AA compliance is mandatory for all UI components
 - Mobile responsiveness is mandatory for all pages
 - SDKs must be published before project is considered complete
+- Phase 5 (Invitation-Based User Management) converts the existing direct assignment implementation to a privacy-focused invitation flow
+- Invitation flow protects user PII by not exposing email addresses until users accept invitations
 

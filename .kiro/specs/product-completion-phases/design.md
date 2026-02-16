@@ -6,10 +6,11 @@ This design addresses the final items needed to complete the orb-integration-hub
 
 ### Phase Summary
 
-1. **Application Users Management** - Add missing feature for managing user assignments to applications
+1. **Application Users Management** - Add missing feature for managing user assignments to applications (COMPLETED - needs conversion to invitation flow)
 2. **UI Standards Compliance** - Ensure all pages follow established patterns and conventions
 3. **Quality Assurance & Polish** - Comprehensive accessibility, mobile, and error handling improvements
 4. **SDK Implementation** - Create TypeScript and Python SDKs for programmatic platform access
+5. **Invitation-Based User Management Conversion** - Convert direct assignment to privacy-focused invitation flow
 
 ### Design Principles
 
@@ -162,14 +163,14 @@ interface ApplicationUsersState {
   
   // Loading states
   isLoading: boolean;
-  isAssigning: boolean;
-  isUnassigning: boolean;
+  isInviting: boolean;
+  isRemoving: boolean;
   isUpdatingRole: boolean;
   
   // Error states
   error: string | null;
-  assignError: string | null;
-  unassignError: string | null;
+  inviteError: string | null;
+  removeError: string | null;
   roleUpdateError: string | null;
 }
 ```
@@ -182,15 +183,15 @@ loadApplicationUsers({ applicationId: string })
 loadApplicationUsersSuccess({ users: IUsers[], roleAssignments: RoleAssignment[] })
 loadApplicationUsersFailure({ error: string })
 
-// Assign user to application
-assignUserToApplication({ applicationId: string, userId: string, environmentRoles: EnvironmentRole[] })
-assignUserSuccess({ user: IUsers, roleAssignments: RoleAssignment[] })
-assignUserFailure({ error: string })
+// Invite user to application
+inviteUserToApplication({ applicationId: string, organizationId: string, email: string, environmentRoles: EnvironmentRole[] })
+inviteUserSuccess({ invitationId: string, email: string })
+inviteUserFailure({ error: string })
 
-// Unassign user from application
-unassignUserFromApplication({ applicationId: string, userId: string })
-unassignUserSuccess({ userId: string })
-unassignUserFailure({ error: string })
+// Remove user from application
+removeUserFromApplication({ applicationId: string, userId: string })
+removeUserSuccess({ userId: string })
+removeUserFailure({ error: string })
 
 // Update user role for environment
 updateUserRole({ applicationId: string, userId: string, environmentId: string, roleId: string })
@@ -205,25 +206,27 @@ setEnvironmentFilter({ environmentFilter: string })
 
 
 
-#### AssignUserDialogComponent
+#### InviteUserDialogComponent
 
-**Purpose:** Dialog for assigning users to an application with initial role selections.
+**Purpose:** Dialog for inviting users to an application via email with initial role selections.
 
 **Component Interface:**
 
 ```typescript
 @Component({
-  selector: 'app-assign-user-dialog',
+  selector: 'app-invite-user-dialog',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FontAwesomeModule],
-  templateUrl: './assign-user-dialog.component.html',
-  styleUrls: ['./assign-user-dialog.component.scss']
+  templateUrl: './invite-user-dialog.component.html',
+  styleUrls: ['./invite-user-dialog.component.scss']
 })
-export class AssignUserDialogComponent {
+export class InviteUserDialogComponent {
   @Input() applicationId!: string;
+  @Input() applicationName!: string;
+  @Input() organizationId!: string;
+  @Input() organizationName!: string;
   @Input() environments!: IEnvironments[];
-  @Input() availableUsers!: IUsers[];
-  @Output() assign = new EventEmitter<UserAssignment>();
+  @Output() invite = new EventEmitter<UserInvitation>();
   @Output() cancel = new EventEmitter<void>();
   
   form: FormGroup;
@@ -232,8 +235,8 @@ export class AssignUserDialogComponent {
   onCancel(): void;
 }
 
-interface UserAssignment {
-  userId: string;
+interface UserInvitation {
+  email: string;
   environmentRoles: Array<{
     environmentId: string;
     roleId: string;
@@ -1000,12 +1003,12 @@ A property is a characteristic or behavior that should hold true across all vali
 *For any* application with assigned users, selecting the Users tab should display all users assigned to that application with their name, email, and role assignments per environment.
 **Validates: Requirements 1.2, 1.3**
 
-**Property 2: User assignment adds user to application**
-*For any* user and application, assigning the user should result in the user appearing in the application's user list.
+**Property 2: User invitation sends notification**
+*For any* user email and application, inviting the user should result in a notification being created in the Notifications table with type ORGANIZATION_INVITATION_RECEIVED or APPLICATION_INVITATION_RECEIVED.
 **Validates: Requirements 2.2**
 
-**Property 3: User unassignment removes user from application**
-*For any* assigned user and application, unassigning the user should result in the user no longer appearing in the application's user list.
+**Property 3: User removal removes user from application**
+*For any* assigned user and application, removing the user should result in the user no longer appearing in the application's user list.
 **Validates: Requirements 2.4**
 
 **Property 4: Role update changes user's environment role**
@@ -1017,7 +1020,7 @@ A property is a characteristic or behavior that should hold true across all vali
 **Validates: Requirements 3.5**
 
 **Property 6: Operation notifications are displayed**
-*For any* successful or failed operation (assign, unassign, role update), an appropriate notification should be displayed.
+*For any* successful or failed operation (invite, remove, role update), an appropriate notification should be displayed.
 **Validates: Requirements 2.5, 2.6, 3.3, 3.4**
 
 
