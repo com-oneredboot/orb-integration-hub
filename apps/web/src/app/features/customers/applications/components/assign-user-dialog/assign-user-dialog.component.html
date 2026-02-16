@@ -1,0 +1,97 @@
+<!-- Assign User Dialog Template -->
+<div *ngIf="isOpen"
+  class="dialog-overlay"
+  (click)="onClose()"
+  (keyup.escape)="onClose()"
+  tabindex="-1"
+  role="presentation">
+  <div class="dialog" (click)="$event.stopPropagation()" (keyup)="$event.stopPropagation()" role="dialog" aria-labelledby="dialog-title" aria-modal="true">
+    <div class="dialog__header">
+      <h3 id="dialog-title" class="dialog__title">
+        <fa-icon icon="user-plus" class="dialog__title-icon"></fa-icon>
+        Assign User to Application
+      </h3>
+      <button
+        class="dialog__close"
+        (click)="onClose()"
+        aria-label="Close dialog">
+        <fa-icon icon="times"></fa-icon>
+      </button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="dialog__body">
+        <!-- Error Message -->
+        <div *ngIf="assignError$ | async as error" class="dialog__error" role="alert">
+          <fa-icon icon="exclamation-triangle"></fa-icon>
+          {{ error }}
+        </div>
+
+        <!-- User Selection -->
+        <div class="dialog__form-group">
+          <label for="user-select" class="dialog__label">Select User *</label>
+          <select
+            id="user-select"
+            class="dialog__select"
+            [class.dialog__select--error]="userIdError"
+            formControlName="userId">
+            <option value="">-- Select a user --</option>
+            <option *ngFor="let user of availableUsers" [value]="user.userId">
+              {{ getUserFullName(user) }} ({{ user.email }})
+            </option>
+          </select>
+          <div *ngIf="userIdError" class="dialog__field-error">
+            {{ userIdError }}
+          </div>
+        </div>
+
+        <!-- Environment Roles -->
+        <div class="dialog__form-group">
+          <span class="dialog__label">Assign Roles per Environment</span>
+          <p class="dialog__help-text">
+            Select a role for each environment where this user should have access.
+          </p>
+
+          <div formArrayName="environmentRoles" class="environment-roles">
+            <div *ngFor="let envRole of environmentRoles.controls; let i = index"
+              [formGroupName]="i"
+              class="environment-role">
+              <div class="environment-role__header">
+                <fa-icon icon="server" class="environment-role__icon"></fa-icon>
+                <span class="environment-role__name">{{ envRole.get('environmentName')?.value }}</span>
+              </div>
+              <select
+                class="dialog__select dialog__select--compact"
+                formControlName="roleId">
+                <option value="">-- No role --</option>
+                <option *ngFor="let role of getRolesForEnvironment(envRole.get('environmentId')?.value)"
+                  [value]="role.roleId">
+                  {{ role.roleName }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div *ngIf="environments.length === 0" class="dialog__info">
+            <fa-icon icon="info-circle"></fa-icon>
+            No environments configured for this application.
+          </div>
+        </div>
+      </div>
+
+      <div class="dialog__footer">
+        <button type="button" class="dialog__btn dialog__btn--secondary" (click)="onClose()">
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="dialog__btn dialog__btn--primary"
+          [disabled]="(isAssigning$ | async) || form.invalid">
+          <fa-icon *ngIf="isAssigning$ | async" icon="spinner" animation="spin"></fa-icon>
+          <span *ngIf="(isAssigning$ | async) === false">Assign User</span>
+          <span *ngIf="isAssigning$ | async">Assigning...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

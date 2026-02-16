@@ -1,6 +1,6 @@
 <!-- Application Detail Page Template -->
 <!-- Uses NgRx store as single source of truth (store-first pattern) -->
-<!-- Includes tabbed interface for Overview, Environments, Groups, and Danger Zone -->
+<!-- Includes tabbed interface for Overview, Environments, and Danger Zone -->
 <!-- @see .kiro/specs/store-centric-refactoring/design.md -->
 <!-- @see .kiro/specs/application-access-management/design.md -->
 <!-- @see .kiro/specs/environment-detail-page/design.md -->
@@ -411,18 +411,29 @@
             </app-environments-list>
           </div>
 
-          <!-- Groups Tab Panel -->
+          <!-- Roles Tab Panel -->
           <div
             class="app-detail-tab-panel"
-            *ngIf="activeTab === 'groups' && !isDraft"
+            *ngIf="activeTab === 'roles' && !isDraft"
             role="tabpanel"
-            id="panel-groups"
-            [attr.aria-labelledby]="'tab-groups'">
-            <app-groups-list
+            id="panel-roles"
+            [attr.aria-labelledby]="'tab-roles'">
+            <app-application-roles-list
               [applicationId]="application.applicationId"
-              (groupSelected)="onGroupSelected($event)"
-              (createGroup)="onCreateGroup()">
-            </app-groups-list>
+              [organizationId]="application.organizationId">
+            </app-application-roles-list>
+          </div>
+
+          <!-- Users Tab Panel -->
+          <div
+            class="app-detail-tab-panel"
+            *ngIf="activeTab === 'users' && !isDraft"
+            role="tabpanel"
+            id="panel-users"
+            [attr.aria-labelledby]="'tab-users'">
+            <app-application-users-list
+              [applicationId]="application.applicationId">
+            </app-application-users-list>
           </div>
 
           <!-- Danger Zone Tab Panel -->
@@ -434,7 +445,7 @@
             [attr.aria-labelledby]="'tab-danger'">
             <app-danger-zone-card
               title="Delete Application"
-              description="Permanently delete this application and all associated data including API keys and groups. This action cannot be undone."
+              description="Permanently delete this application and all associated data including API keys. This action cannot be undone."
               buttonText="Delete Application"
               [isLoading]="data.isSaving"
               (action)="onDelete()">

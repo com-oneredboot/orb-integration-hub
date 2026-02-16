@@ -1,0 +1,62 @@
+/**
+ * Assign User Dialog Component Styles
+ * 
+ * Uses global dialog classes with component-specific additions.
+ */
+
+@use '../../../../../../styles/variables' as v;
+@use '../../../../../../styles/mixins' as m;
+
+.environment-roles {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.environment-role {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--color-background-secondary);
+  border-radius: 8px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 150px;
+  }
+
+  &__icon {
+    color: var(--color-primary);
+    font-size: 16px;
+  }
+
+  &__name {
+    font-weight: 500;
+    color: var(--color-text-primary);
+  }
+
+  select {
+    flex: 1;
+  }
+}
+
+// Mobile responsiveness
+@media (max-width: 768px) {
+  .environment-role {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+
+    &__header {
+      min-width: auto;
+    }
+
+    select {
+      width: 100%;
+    }
+  }
+}

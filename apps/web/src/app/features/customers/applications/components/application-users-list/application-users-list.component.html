@@ -1,0 +1,86 @@
+<!-- Application Users List -->
+<div class="orb-card">
+  <div class="orb-card__header">
+    <h2 class="orb-card__title">
+      <fa-icon icon="users" class="orb-card__icon"></fa-icon>
+      Users
+    </h2>
+    <div class="orb-card__header-actions">
+      <button class="orb-card-btn" (click)="onAssignUser()">
+        <fa-icon icon="user-plus" class="orb-card-btn__icon"></fa-icon>
+        Assign User
+      </button>
+    </div>
+  </div>
+
+  <div class="orb-card__content">
+    <app-data-grid
+      [columns]="columns"
+      [data]="(filteredUserRows$ | async) || []"
+      [pageState]="pageState"
+      [sortState]="sortState"
+      [filterState]="filterState"
+      [loading]="(isLoading$ | async) || false"
+      [showFilters]="true"
+      [showPagination]="true"
+      [showReset]="true"
+      [selectable]="false"
+      trackByField="user"
+      emptyMessage="No users assigned to this application"
+      (pageChange)="onPageChange($event)"
+      (sortChange)="onSortChange($event)"
+      (filterChange)="onFilterChange($event)"
+      (resetGrid)="onResetGrid()"
+      (rowClick)="onRowClick($event)">
+    </app-data-grid>
+  </div>
+</div>
+
+<!-- Custom Cell Templates -->
+
+<!-- User Info Cell -->
+<ng-template #userInfoCell let-row>
+  <div class="orb-info">
+    <div class="orb-info__name">{{ getUserFullName(row.user) }}</div>
+    <div class="orb-info__id">{{ row.user.email }}</div>
+  </div>
+</ng-template>
+
+<!-- Role Cell -->
+<ng-template #roleCell let-row>
+  <div class="role-assignments">
+    <div *ngIf="row.roleAssignments.length === 0" class="role-assignments__empty">
+      No roles assigned
+    </div>
+    <div *ngFor="let assignment of row.roleAssignments" class="role-assignment">
+      <span class="role-assignment__environment">{{ assignment.environmentName }}:</span>
+      <span class="orb-role-badge orb-role-badge--{{ getRoleClass(assignment.roleName) }}">
+        {{ assignment.roleName }}
+      </span>
+      <button 
+        class="role-assignment__edit"
+        (click)="onEditRole(row.user.userId, assignment.environmentId); $event.stopPropagation()"
+        title="Edit role">
+        <fa-icon icon="edit"></fa-icon>
+      </button>
+    </div>
+  </div>
+</ng-template>
+
+<!-- Last Activity Cell -->
+<ng-template #lastActivityCell let-row>
+  <span class="last-activity">{{ row.lastActivity }}</span>
+</ng-template>
+
+<!-- Actions Cell -->
+<ng-template #actionsCell let-row>
+  <div class="actions">
+    <button 
+      class="orb-btn orb-btn--sm orb-btn--danger"
+      (click)="onUnassignUser(row.user.userId); $event.stopPropagation()"
+      title="Unassign user">
+      <fa-icon icon="user-minus"></fa-icon>
+      Unassign
+    </button>
+  </div>
+</ng-template>

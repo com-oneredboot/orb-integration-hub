@@ -4,7 +4,7 @@
  * Standalone page for viewing/editing a single application.
  * Handles both PENDING (create) and ACTIVE (edit) modes based on application status.
  * Uses the create-on-click pattern with NgRx store as single source of truth.
- * Includes tabbed interface for Overview, Groups, Security, and Danger Zone.
+ * Includes tabbed interface for Overview, Environments, Security, and Danger Zone.
  *
  * @see .kiro/specs/store-centric-refactoring/design.md
  * @see .kiro/specs/application-access-management/design.md
@@ -23,7 +23,6 @@ import { takeUntil, map, filter, take } from 'rxjs/operators';
 
 import { IApplications } from '../../../../../core/models/ApplicationsModel';
 import { IOrganizations } from '../../../../../core/models/OrganizationsModel';
-import { IApplicationGroups } from '../../../../../core/models/ApplicationGroupsModel';
 import { IApplicationApiKeys } from '../../../../../core/models/ApplicationApiKeysModel';
 import { IApplicationEnvironmentConfig } from '../../../../../core/models/ApplicationEnvironmentConfigModel';
 import { ApplicationStatus } from '../../../../../core/enums/ApplicationStatusEnum';
@@ -37,9 +36,10 @@ import { TabConfig } from '../../../../../shared/models/tab-config.model';
 import { UserPageComponent } from '../../../../../layouts/pages/user-page/user-page.component';
 
 // Child components
-import { GroupsListComponent } from '../groups-list/groups-list.component';
 import { DangerZoneCardComponent } from '../../../../../shared/components/danger-zone-card/danger-zone-card.component';
 import { EnvironmentsListComponent } from '../environments-list/environments-list.component';
+import { ApplicationRolesListComponent } from '../application-roles-list/application-roles-list.component';
+import { ApplicationUsersListComponent } from '../application-users-list/application-users-list.component';
 
 // Data Grid types (component uses EnvironmentsListComponent which wraps DataGrid)
 import {
@@ -67,6 +67,7 @@ import { OrganizationsActions } from '../../../organizations/store/organizations
 import { EnvironmentsActions } from '../../store/environments/environments.actions';
 import { EnvironmentConfigActions } from '../../store/environment-config/environment-config.actions';
 import { GeneratedKeyResult } from '../../store/environments/environments.state';
+import { ApplicationRolesActions } from '../../store/application-roles/application-roles.actions';
 
 /**
  * Get activity text for an API key based on its status and timestamps.
@@ -185,7 +186,8 @@ export interface EnvironmentRow {
 export enum ApplicationDetailTab {
   Overview = 'overview',
   Environments = 'environments',
-  Groups = 'groups',
+  Roles = 'roles',
+  Users = 'users',
   Danger = 'danger',
 }
 
@@ -199,9 +201,10 @@ export enum ApplicationDetailTab {
     FontAwesomeModule,
     StatusBadgeComponent,
     DebugPanelComponent,
-    GroupsListComponent,
     DangerZoneCardComponent,
     EnvironmentsListComponent,
+    ApplicationRolesListComponent,
+    ApplicationUsersListComponent,
     UserPageComponent
   ],
   templateUrl: './application-detail-page.component.html',
@@ -218,7 +221,7 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
   get heroSubtitle(): string {
     return this.isDraft 
       ? 'Your application was created but needs to be completed. Fill in the details below and click Activate Application to finish setup.' 
-      : 'Manage your application settings, groups, and API keys.';
+      : 'Manage your application settings, environments, and API keys.';
   }
 
   // Tab configuration for TabNavigationComponent
@@ -536,7 +539,8 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
         this.tabs = [
           { id: 'overview', label: 'Overview', icon: 'info-circle' },
           { id: 'environments', label: 'Environments', icon: 'server', badge: app.environments?.length || 0 },
-          { id: 'groups', label: 'Groups', icon: 'users', badge: app.groupCount || undefined },
+          { id: 'roles', label: 'Roles', icon: 'user-tag' },
+          { id: 'users', label: 'Users', icon: 'users' },
           { id: 'danger', label: 'Danger Zone', icon: 'exclamation-triangle' }
         ];
       } else {
@@ -544,7 +548,8 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
         this.tabs = [
           { id: 'overview', label: 'Overview', icon: 'info-circle' },
           { id: 'environments', label: 'Environments', icon: 'server' },
-          { id: 'groups', label: 'Groups', icon: 'users' },
+          { id: 'roles', label: 'Roles', icon: 'user-tag' },
+          { id: 'users', label: 'Users', icon: 'users' },
           { id: 'danger', label: 'Danger Zone', icon: 'exclamation-triangle' }
         ];
       }
@@ -561,13 +566,14 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
     this.tabs = [
       { id: 'overview', label: 'Overview', icon: 'info-circle' },
       { id: 'environments', label: 'Environments', icon: 'server', badge: this.application.environments?.length || 0 },
-      { id: 'groups', label: 'Groups', icon: 'users', badge: this.application.groupCount || undefined },
+      { id: 'roles', label: 'Roles', icon: 'user-tag' },
+      { id: 'users', label: 'Users', icon: 'users' },
       { id: 'danger', label: 'Danger Zone', icon: 'exclamation-triangle' }
     ];
 
-    // Hide Environments tab for draft applications
+    // Hide Environments, Roles, and Users tabs for draft applications
     if (this.isDraft) {
-      this.tabs = this.tabs.filter(tab => tab.id !== 'environments');
+      this.tabs = this.tabs.filter(tab => tab.id !== 'environments' && tab.id !== 'roles' && tab.id !== 'users');
     }
   }
 
@@ -595,6 +601,23 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
       this.store.dispatch(EnvironmentsActions.loadEnvironments({
         applicationId: this.application.applicationId
       }));
+    }
+
+    // Load roles when switching to Roles tab
+    if (tabId === 'roles' && this.application) {
+      this.store.dispatch(ApplicationRolesActions.setApplicationContext({
+        applicationId: this.application.applicationId,
+        organizationId: this.application.organizationId
+      }));
+      this.store.dispatch(ApplicationRolesActions.loadRoles({
+        applicationId: this.application.applicationId
+      }));
+    }
+
+    // Load users when switching to Users tab
+    if (tabId === 'users' && this.application) {
+      // Users will be loaded by ApplicationUsersListComponent
+      // No need to dispatch here as the component handles its own data loading
     }
   }
 
@@ -1074,17 +1097,6 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
       hour: '2-digit',
       minute: '2-digit'
     });
-  }
-
-  // Groups tab event handlers
-  onGroupSelected(group: IApplicationGroups): void {
-    // Navigate to group detail page (future implementation)
-    console.log('Group selected:', group.applicationGroupId);
-  }
-
-  onCreateGroup(): void {
-    // Open group creation dialog (future implementation)
-    console.log('Create group requested');
   }
 
   // API Keys tab event handlers (kept for potential future use)

@@ -1,0 +1,20 @@
+/**
+ * Confirm Unassign Dialog Component Styles
+ * 
+ * Uses global dialog classes.
+ */
+
+.dialog__message {
+  margin-bottom: 12px;
+  line-height: 1.6;
+
+  &--secondary {
+    color: var(--color-text-secondary);
+    font-size: 14px;
+  }
+
+  strong {
+    color: var(--color-text-primary);
+    font-weight: 600;
+  }
+}

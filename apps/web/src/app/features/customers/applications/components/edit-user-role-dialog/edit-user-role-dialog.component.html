@@ -1,0 +1,80 @@
+<!-- Edit User Role Dialog Template -->
+<div *ngIf="isOpen"
+  class="dialog-overlay"
+  (click)="onClose()"
+  (keyup.escape)="onClose()"
+  tabindex="-1"
+  role="presentation">
+  <div class="dialog" (click)="$event.stopPropagation()" (keyup)="$event.stopPropagation()" role="dialog" aria-labelledby="dialog-title" aria-modal="true">
+    <div class="dialog__header">
+      <h3 id="dialog-title" class="dialog__title">
+        <fa-icon icon="user-edit" class="dialog__title-icon"></fa-icon>
+        Edit User Role
+      </h3>
+      <button
+        class="dialog__close"
+        (click)="onClose()"
+        aria-label="Close dialog">
+        <fa-icon icon="times"></fa-icon>
+      </button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="dialog__body">
+        <!-- Error Message -->
+        <div *ngIf="roleUpdateError$ | async as error" class="dialog__error" role="alert">
+          <fa-icon icon="exclamation-triangle"></fa-icon>
+          {{ error }}
+        </div>
+
+        <!-- User and Environment Info -->
+        <div class="dialog__info-section">
+          <div class="info-item">
+            <span class="info-item__label">User:</span>
+            <span class="info-item__value">{{ userName }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-item__label">Environment:</span>
+            <span class="info-item__value">{{ environmentName }}</span>
+          </div>
+        </div>
+
+        <!-- Role Selection -->
+        <div class="dialog__form-group">
+          <label for="role-select" class="dialog__label">Select Role *</label>
+          <select
+            id="role-select"
+            class="dialog__select"
+            [class.dialog__select--error]="roleIdError"
+            formControlName="roleId">
+            <option value="">-- Select a role --</option>
+            <option *ngFor="let role of availableRoles" [value]="role.roleId">
+              {{ role.roleName }}
+              <span *ngIf="role.description"> - {{ role.description }}</span>
+            </option>
+          </select>
+          <div *ngIf="roleIdError" class="dialog__field-error">
+            {{ roleIdError }}
+          </div>
+          <p class="dialog__help-text">
+            This will change the user's permissions for the {{ environmentName }} environment.
+          </p>
+        </div>
+      </div>
+
+      <div class="dialog__footer">
+        <button type="button" class="dialog__btn dialog__btn--secondary" (click)="onClose()">
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="dialog__btn dialog__btn--primary"
+          [disabled]="(isUpdatingRole$ | async) || form.invalid || form.get('roleId')?.value === currentRoleId">
+          <fa-icon *ngIf="isUpdatingRole$ | async" icon="spinner" animation="spin"></fa-icon>
+          <span *ngIf="(isUpdatingRole$ | async) === false">Save Changes</span>
+          <span *ngIf="isUpdatingRole$ | async">Saving...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
