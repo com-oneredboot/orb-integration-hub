@@ -18,12 +18,14 @@ import { map, catchError, switchMap, withLatestFrom, filter, mergeMap } from 'rx
 import { ApplicationsActions } from './applications.actions';
 import { ApplicationService } from '../../../../core/services/application.service';
 import { OrganizationService } from '../../../../core/services/organization.service';
+import { ApplicationRolesService, CreateRoleInput } from '../../../../core/services/application-roles.service';
 import { selectIsCreatingNew, selectApplications } from './applications.selectors';
 import { selectCurrentUser } from '../../../user/store/user.selectors';
 import { selectOrganizations } from '../../organizations/store/organizations.selectors';
 import { OrganizationsActions } from '../../organizations/store/organizations.actions';
 import { IApplications } from '../../../../core/models/ApplicationsModel';
 import { ApplicationStatus } from '../../../../core/enums/ApplicationStatusEnum';
+import { ApplicationRoleType } from '../../../../core/enums/ApplicationRoleTypeEnum';
 
 @Injectable()
 export class ApplicationsEffects {
@@ -31,6 +33,7 @@ export class ApplicationsEffects {
     private actions$: Actions,
     private applicationService: ApplicationService,
     private organizationService: OrganizationService,
+    private applicationRolesService: ApplicationRolesService,
     private store: Store
   ) {}
 
@@ -226,6 +229,86 @@ export class ApplicationsEffects {
       ),
       switchMap(() => of(ApplicationsActions.loadApplications()))
     )
+  );
+
+  /**
+   * Create Default Roles on Application Activation
+   * When an application is successfully created (activated from PENDING to ACTIVE),
+   * create the 4 default roles: Owner, Administrator, User, Guest.
+   * Errors are logged but don't block the application creation.
+   * _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7_
+   */
+  createDefaultRolesOnActivation$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(ApplicationsActions.createApplicationSuccess),
+        filter((action) => action.application.status === ApplicationStatus.Active),
+        mergeMap((action) => {
+          const { applicationId, organizationId } = action.application;
+
+          const defaultRoles: CreateRoleInput[] = [
+            {
+              applicationId,
+              organizationId,
+              roleName: 'Owner',
+              roleType: ApplicationRoleType.Admin,
+              description: 'Full administrative access to the application',
+            },
+            {
+              applicationId,
+              organizationId,
+              roleName: 'Administrator',
+              roleType: ApplicationRoleType.Admin,
+              description: 'Administrative access to manage application settings',
+            },
+            {
+              applicationId,
+              organizationId,
+              roleName: 'User',
+              roleType: ApplicationRoleType.User,
+              description: 'Standard user access to the application',
+            },
+            {
+              applicationId,
+              organizationId,
+              roleName: 'Guest',
+              roleType: ApplicationRoleType.Guest,
+              description: 'Limited guest access to the application',
+            },
+          ];
+
+          // Create all default roles in parallel, catching errors individually
+          return forkJoin(
+            defaultRoles.map((roleInput) =>
+              this.applicationRolesService.create(roleInput).pipe(
+                map((role) => {
+                  console.log(
+                    `[ApplicationsEffects] Created default role: ${role.roleName} for application ${applicationId}`
+                  );
+                  return { success: true, role };
+                }),
+                catchError((error) => {
+                  console.error(
+                    `[ApplicationsEffects] Failed to create default role ${roleInput.roleName}:`,
+                    error
+                  );
+                  return of({ success: false, error: error.message, roleName: roleInput.roleName });
+                })
+              )
+            )
+          ).pipe(
+            map((results) => {
+              const successCount = results.filter((r) => r.success).length;
+              const failCount = results.filter((r) => !r.success).length;
+              console.log(
+                `[ApplicationsEffects] Default roles creation complete: ${successCount} succeeded, ${failCount} failed`
+              );
+              return { type: '[Applications] Default Roles Created' };
+            })
+          );
+        })
+      ),
+    { dispatch: false }
   );
 
   /**
