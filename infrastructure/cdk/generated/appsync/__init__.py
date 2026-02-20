@@ -2,4 +2,3 @@
 # Regenerate with: orb-schema generate
 
 from .api import AppSyncApi as AppSyncApi
-from .sdk_api import AppSyncSdkApi as AppSyncSdkApi

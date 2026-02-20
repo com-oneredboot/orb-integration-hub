@@ -50,7 +50,7 @@ output:
     cdk:
       base_dir: ./infrastructure/cdk/generated
       language: python
-      generate_stack: true
+      generate_stack: false
 
 generation:
   validate_schemas: true
