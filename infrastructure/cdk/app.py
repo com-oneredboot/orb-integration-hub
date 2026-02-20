@@ -126,13 +126,20 @@ def main() -> None:
     )
 
     # Add stack dependencies explicitly
-    lambda_stack.add_dependency(cognito_stack)
-    lambda_stack.add_dependency(dynamodb_stack)  # Lambda needs table names from DynamoDB
+    # Bootstrap must deploy first (provides S3, SQS, IAM)
+    cognito_stack.add_dependency(bootstrap_stack)
+    dynamodb_stack.add_dependency(bootstrap_stack)
+    frontend_stack.add_dependency(bootstrap_stack)
     
-    appsync_stack.add_dependency(dynamodb_stack)  # AppSync needs table ARNs from DynamoDB
-    appsync_stack.add_dependency(lambda_stack)  # AppSync needs Lambda ARNs from Lambda stack
+    # Lambda depends on Cognito and DynamoDB
+    lambda_stack.add_dependency(cognito_stack)
+    lambda_stack.add_dependency(dynamodb_stack)
+    
+    # AppSync depends on DynamoDB and Lambda
+    appsync_stack.add_dependency(dynamodb_stack)
+    appsync_stack.add_dependency(lambda_stack)
 
-    # Monitoring depends on AppSync stack (for API IDs)
+    # Monitoring depends on AppSync
     monitoring_stack.add_dependency(appsync_stack)
 
     # Synthesize the app
