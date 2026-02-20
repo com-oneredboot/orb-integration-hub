@@ -151,8 +151,18 @@ jobs:
           
           PREFIX="${{ env.CUSTOMER_ID }}-${{ env.PROJECT_ID }}-${{ github.event.inputs.environment }}"
           # Note: lambda-layers is deployed separately via deploy-lambda-layers workflow
-          for stack in bootstrap cognito dynamodb frontend lambda appsync monitoring; do
+          # backend stack contains DynamoDB tables, Main AppSync API, and SDK AppSync API
+          for stack in bootstrap cognito backend frontend lambda monitoring; do
             STACK_NAME="${PREFIX}-${stack}"
             STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo "NOT_FOUND")
             echo "| $STACK_NAME | $STATUS |" >> $GITHUB_STEP_SUMMARY
           done
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Backend Stack Details" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The backend stack includes:" >> $GITHUB_STEP_SUMMARY
+          echo "- 12 DynamoDB tables" >> $GITHUB_STEP_SUMMARY
+          echo "- Main AppSync API (Cognito authentication)" >> $GITHUB_STEP_SUMMARY
+          echo "- SDK AppSync API (Lambda authorizer)" >> $GITHUB_STEP_SUMMARY
+          echo "- Zero CloudFormation exports" >> $GITHUB_STEP_SUMMARY
