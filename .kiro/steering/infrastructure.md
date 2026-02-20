@@ -15,11 +15,35 @@ For complete CDK coding standards, see:
 
 **NEVER use CloudFormation Outputs with Export for cross-stack references.**
 **NEVER pass stack objects between stacks (this creates implicit exports).**
+**USE orb-schema-generator with `generate_stack: true` to create single-stack backends.**
 
 CloudFormation exports create tight coupling between stacks that causes deployment failures:
 - Cannot update an export while another stack imports it
 - Layer version updates fail with "Cannot update export as it is in use"
 - Creates deployment order dependencies that are hard to manage
+
+### Correct Architecture: Single Backend Stack
+
+orb-schema-generator 1.3.0+ generates a single `BackendStack` that contains both DynamoDB tables and AppSync API:
+
+```yaml
+# schema-generator.yml
+infrastructure:
+  format: cdk
+  cdk:
+    base_dir: ./infrastructure/cdk/generated
+    language: python
+    generate_stack: true  # CRITICAL - enables stack generation
+```
+
+This generates `infrastructure/cdk/lib/backend_stack.py` with:
+- All DynamoDB tables
+- AppSync API with all resolvers
+- Everything in ONE stack = NO cross-stack references = NO exports
+
+**DO NOT create separate hand-written `dynamodb_stack.py` or `appsync_stack.py` files.**
+
+If hand-written stacks exist, rename them (e.g., `.old`) and regenerate with `pipenv run orb-schema generate`.
 
 ### What NOT to do:
 

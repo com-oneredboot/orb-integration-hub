@@ -402,11 +402,20 @@ pipenv run orb-schema generate
 - TypeScript enums (`apps/web/src/app/core/enums/`)
 - VTL resolvers (`apps/api/graphql/resolvers/`)
 - CDK constructs (`infrastructure/cdk/generated/`)
+- **CDK BackendStack** (`infrastructure/cdk/lib/backend_stack.py`) - when `generate_stack: true`
 
 **What it does NOT generate:**
 - TypeScript GraphQL query definition files (`apps/web/src/app/core/graphql/*.graphql.ts`) - these are hand-written and must match the generated schema
 
 **Configuration:** `schema-generator.yml`
+
+**CRITICAL - Stack Generation:**
+- Set `infrastructure.cdk.generate_stack: true` in `schema-generator.yml`
+- orb-schema-generator creates a single `BackendStack` containing both DynamoDB tables and AppSync API
+- This eliminates CloudFormation cross-stack exports (violates steering file)
+- The generated stack is at `infrastructure/cdk/lib/backend_stack.py`
+- DO NOT create separate hand-written `dynamodb_stack.py` or `appsync_stack.py` files
+- If hand-written stack files exist, rename them (e.g., `.old`) so orb-schema-generator can regenerate
 
 **Schema locations:**
 - `schemas/tables/` - DynamoDB table schemas
