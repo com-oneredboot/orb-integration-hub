@@ -126,9 +126,11 @@ def main() -> None:
     )
 
     # Add stack dependencies explicitly
-    appsync_stack.add_dependency(dynamodb_stack)  # AppSync needs table ARNs from DynamoDB
     lambda_stack.add_dependency(cognito_stack)
     lambda_stack.add_dependency(dynamodb_stack)  # Lambda needs table names from DynamoDB
+    
+    appsync_stack.add_dependency(dynamodb_stack)  # AppSync needs table ARNs from DynamoDB
+    appsync_stack.add_dependency(lambda_stack)  # AppSync needs Lambda ARNs from Lambda stack
 
     # Monitoring depends on AppSync stack (for API IDs)
     monitoring_stack.add_dependency(appsync_stack)
