@@ -25,10 +25,11 @@ sys.path.insert(0, str(Path(__file__).parent))
 import aws_cdk as cdk
 
 from config import Config
-from lib.backend_stack import BackendStackStack
 from stacks import (
+    AppSyncStack,
     BootstrapStack,
     CognitoStack,
+    DynamoDBStack,
     FrontendStack,
     LambdaStack,
     MonitoringStack,
@@ -71,14 +72,21 @@ def main() -> None:
         description="Cognito resources: User Pool, Identity Pool, Groups",
     )
 
-    # Backend Stack - DynamoDB tables + Main AppSync API + SDK AppSync API
-    # This single stack eliminates CloudFormation cross-stack exports
-    # Both APIs share the same DynamoDB tables via direct references
-    backend_stack = BackendStackStack(
+    # DynamoDB Stack - All tables with SSM parameters
+    dynamodb_stack = DynamoDBStack(
         app,
-        f"{stack_prefix}-backend",
+        f"{stack_prefix}-dynamodb",
         env=env,
-        description="Backend resources: DynamoDB tables, Main AppSync API (Cognito), SDK AppSync API (Lambda authorizer)",
+        description="DynamoDB tables (writes table names/ARNs to SSM)",
+    )
+
+    # AppSync Main API Stack - Cognito authentication
+    appsync_stack = AppSyncStack(
+        app,
+        f"{stack_prefix}-appsync",
+        config=config,
+        env=env,
+        description="Main AppSync GraphQL API with Cognito authentication",
     )
 
     # NOTE: Lambda Layers Stack is deployed separately via deploy-lambda-layers workflow
@@ -118,13 +126,12 @@ def main() -> None:
     )
 
     # Add stack dependencies explicitly
+    appsync_stack.add_dependency(dynamodb_stack)  # AppSync needs table ARNs from DynamoDB
     lambda_stack.add_dependency(cognito_stack)
-    
-    # Backend depends on Lambda (needs Lambda authorizer ARN from SSM)
-    backend_stack.add_dependency(lambda_stack)
+    lambda_stack.add_dependency(dynamodb_stack)  # Lambda needs table names from DynamoDB
 
-    # Monitoring depends on Backend stack (for AppSync APIs)
-    monitoring_stack.add_dependency(backend_stack)
+    # Monitoring depends on AppSync stack (for API IDs)
+    monitoring_stack.add_dependency(appsync_stack)
 
     # Synthesize the app
     app.synth()
