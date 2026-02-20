@@ -63,6 +63,7 @@ class LambdaStack(Stack):
         self.check_email_exists_lambda = self._create_check_email_exists_lambda()
         self.create_user_from_cognito_lambda = self._create_create_user_from_cognito_lambda()
         self.get_current_user_lambda = self._create_get_current_user_lambda()
+        self.get_application_users_lambda = self._create_get_application_users_lambda()
         self.api_key_authorizer_lambda = self._create_api_key_authorizer_lambda()
 
     def _apply_tags(self) -> None:
@@ -277,7 +278,7 @@ class LambdaStack(Stack):
         # Read table name from SSM parameter
         sms_rate_limit_table_name = ssm.StringParameter.value_for_string_parameter(
             self,
-            self.config.ssm_parameter_name("dynamodb/sms-rate-limit/table-name"),
+            self.config.ssm_parameter_name("dynamodb/smsratelimit/table-name"),
         )
 
         function = lambda_.Function(
@@ -601,6 +602,64 @@ class LambdaStack(Stack):
         self._export_lambda_arn_custom(function, "getcurrentuser")
         return function
 
+    def _create_get_application_users_lambda(self) -> lambda_.Function:
+        """Create GetApplicationUsers Lambda function for querying application users.
+
+        This Lambda is used by the GetApplicationUsers GraphQL query to retrieve
+        users with role assignments in applications. Supports filtering by
+        organization, application, and environment.
+
+        Uses Cognito authentication with authorization rules based on user groups.
+        """
+        # Read table names from SSM parameters
+        users_table_name = ssm.StringParameter.value_for_string_parameter(
+            self,
+            self.config.ssm_parameter_name("dynamodb/users/table-name"),
+        )
+        
+        application_user_roles_table_name = ssm.StringParameter.value_for_string_parameter(
+            self,
+            self.config.ssm_parameter_name("dynamodb/applicationuserroles/table-name"),
+        )
+        
+        organizations_table_name = ssm.StringParameter.value_for_string_parameter(
+            self,
+            self.config.ssm_parameter_name("dynamodb/organizations/table-name"),
+        )
+        
+        applications_table_name = ssm.StringParameter.value_for_string_parameter(
+            self,
+            self.config.ssm_parameter_name("dynamodb/applications/table-name"),
+        )
+
+        function = lambda_.Function(
+            self,
+            "GetApplicationUsersLambda",
+            function_name=self.config.resource_name("get-application-users"),
+            description="Lambda function to query application users with filtering",
+            runtime=lambda_.Runtime.PYTHON_3_12,
+            handler="index.lambda_handler",
+            code=lambda_.Code.from_asset("../apps/api/lambdas/get_application_users"),
+            timeout=Duration.seconds(30),
+            memory_size=256,
+            role=self.lambda_execution_role,
+            environment={
+                "ALERTS_QUEUE": f"arn:aws:sqs:{self.region}:{self.account}:{self.config.prefix}-alerts-queue",
+                "LOGGING_LEVEL": "INFO",
+                "VERSION": "1",
+                "USERS_TABLE_NAME": users_table_name,
+                "APPLICATION_USER_ROLES_TABLE_NAME": application_user_roles_table_name,
+                "ORGANIZATIONS_TABLE_NAME": organizations_table_name,
+                "APPLICATIONS_TABLE_NAME": applications_table_name,
+            },
+            dead_letter_queue_enabled=True,
+        )
+
+        self.functions["get-application-users"] = function
+        # Export with lowercase name to match orb-schema-generator convention
+        self._export_lambda_arn_custom(function, "getapplicationusers")
+        return function
+
     def _create_api_key_authorizer_lambda(self) -> lambda_.Function:
         """Create API Key Authorizer Lambda for SDK AppSync API.
 
@@ -631,7 +690,7 @@ class LambdaStack(Stack):
         # Read table name from SSM parameter
         api_keys_table_name = ssm.StringParameter.value_for_string_parameter(
             self,
-            self.config.ssm_parameter_name("dynamodb/application-api-keys/table-name"),
+            self.config.ssm_parameter_name("dynamodb/applicationapikeys/table-name"),
         )
 
         # DynamoDB access for ApplicationApiKeys table

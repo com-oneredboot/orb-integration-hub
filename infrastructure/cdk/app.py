@@ -25,11 +25,10 @@ sys.path.insert(0, str(Path(__file__).parent))
 import aws_cdk as cdk
 
 from config import Config
+from lib.backend_stack import BackendStackStack
 from stacks import (
-    AppSyncStack,
     BootstrapStack,
     CognitoStack,
-    DynamoDBStack,
     FrontendStack,
     LambdaStack,
     MonitoringStack,
@@ -72,21 +71,12 @@ def main() -> None:
         description="Cognito resources: User Pool, Identity Pool, Groups",
     )
 
-    # DynamoDB Stack - All tables with SSM parameters
-    dynamodb_stack = DynamoDBStack(
+    # Backend Stack (GENERATED) - DynamoDB tables + AppSync API
+    backend_stack = BackendStackStack(
         app,
-        f"{stack_prefix}-dynamodb",
+        f"{stack_prefix}-backend",
         env=env,
-        description="DynamoDB tables (writes table names/ARNs to SSM)",
-    )
-
-    # AppSync Main API Stack - Cognito authentication
-    appsync_stack = AppSyncStack(
-        app,
-        f"{stack_prefix}-appsync",
-        config=config,
-        env=env,
-        description="Main AppSync GraphQL API with Cognito authentication",
+        description="Backend: DynamoDB tables + AppSync GraphQL API (generated)",
     )
 
     # NOTE: Lambda Layers Stack is deployed separately via deploy-lambda-layers workflow
@@ -128,19 +118,18 @@ def main() -> None:
     # Add stack dependencies explicitly
     # Bootstrap must deploy first (provides S3, SQS, IAM)
     cognito_stack.add_dependency(bootstrap_stack)
-    dynamodb_stack.add_dependency(bootstrap_stack)
+    backend_stack.add_dependency(bootstrap_stack)
     frontend_stack.add_dependency(bootstrap_stack)
     
-    # Lambda depends on Cognito and DynamoDB
+    # Lambda depends on Cognito and Backend (for table SSM parameters)
     lambda_stack.add_dependency(cognito_stack)
-    lambda_stack.add_dependency(dynamodb_stack)
+    lambda_stack.add_dependency(backend_stack)
     
-    # AppSync depends on DynamoDB and Lambda
-    appsync_stack.add_dependency(dynamodb_stack)
-    appsync_stack.add_dependency(lambda_stack)
+    # Backend needs Cognito for AppSync auth configuration
+    backend_stack.add_dependency(cognito_stack)
 
-    # Monitoring depends on AppSync
-    monitoring_stack.add_dependency(appsync_stack)
+    # Monitoring depends on Backend (for API IDs)
+    monitoring_stack.add_dependency(backend_stack)
 
     # Synthesize the app
     app.synth()
