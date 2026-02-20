@@ -496,7 +496,7 @@ class LambdaStack(Stack):
         # Read table name from SSM parameter
         users_table_name = ssm.StringParameter.value_for_string_parameter(
             self,
-            self.config.ssm_parameter_name("dynamodb/users/name"),
+            self.config.ssm_parameter_name("dynamodb/users/table-name"),
         )
 
         function = lambda_.Function(
