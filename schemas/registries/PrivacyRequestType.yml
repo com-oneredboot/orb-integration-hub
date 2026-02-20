@@ -2,7 +2,9 @@ type: registry
 version: '1.0'
 name: PrivacyRequestType
 targets:
-  - api
+  - python-main
+  - ts-main
+  - graphql-main
 description: "Types of privacy requests users can submit"
 
 items:

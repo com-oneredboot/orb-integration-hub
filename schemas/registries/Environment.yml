@@ -2,7 +2,9 @@ type: registry
 version: '1.0'
 name: Environment
 targets:
-  - api
+  - python-main
+  - ts-main
+  - graphql-main
 description: "Application deployment environments"
 
 items:

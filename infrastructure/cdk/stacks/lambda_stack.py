@@ -31,7 +31,6 @@ from constructs import Construct
 
 from config import Config
 from stacks.cognito_stack import CognitoStack
-from stacks.dynamodb_stack import DynamoDBStack
 
 
 class LambdaStack(Stack):
@@ -43,13 +42,11 @@ class LambdaStack(Stack):
         construct_id: str,
         config: Config,
         cognito_stack: CognitoStack,
-        dynamodb_stack: DynamoDBStack,
         **kwargs,
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
         self.config = config
         self.cognito_stack = cognito_stack
-        self.dynamodb_stack = dynamodb_stack
         self._apply_tags()
 
         # Dictionary to store all Lambda functions for cross-stack references
@@ -87,7 +84,8 @@ class LambdaStack(Stack):
             ],
         )
 
-        # DynamoDB Access
+        # DynamoDB Access - uses wildcard for all tables in this project
+        # Table names follow pattern: {customer}-{project}-{env}-{table}
         role.add_to_policy(
             iam.PolicyStatement(
                 sid="DynamoDBAccess",
@@ -101,15 +99,13 @@ class LambdaStack(Stack):
                     "dynamodb:Scan",
                 ],
                 resources=[
-                    self.dynamodb_stack.tables["users"].table_arn,
-                    f"{self.dynamodb_stack.tables['users'].table_arn}/index/*",
-                    self.dynamodb_stack.tables["sms-rate-limit"].table_arn,
-                    self.dynamodb_stack.tables["organizations"].table_arn,
+                    f"arn:aws:dynamodb:{self.region}:{self.account}:table/{self.config.prefix}-*",
+                    f"arn:aws:dynamodb:{self.region}:{self.account}:table/{self.config.prefix}-*/index/*",
                 ],
             )
         )
 
-        # DynamoDB Stream Access
+        # DynamoDB Stream Access - uses wildcard for all table streams
         role.add_to_policy(
             iam.PolicyStatement(
                 sid="DynamoDBStreamAccess",
@@ -121,7 +117,7 @@ class LambdaStack(Stack):
                     "dynamodb:ListStreams",
                 ],
                 resources=[
-                    f"{self.dynamodb_stack.tables['users'].table_arn}/stream/*",
+                    f"arn:aws:dynamodb:{self.region}:{self.account}:table/{self.config.prefix}-*/stream/*",
                 ],
             )
         )
@@ -278,6 +274,12 @@ class LambdaStack(Stack):
 
     def _create_sms_verification_lambda(self) -> lambda_.Function:
         """Create SMS Verification Lambda function."""
+        # Read table name from SSM parameter
+        sms_rate_limit_table_name = ssm.StringParameter.value_for_string_parameter(
+            self,
+            self.config.ssm_parameter_name("dynamodb/sms-rate-limit/table-name"),
+        )
+
         function = lambda_.Function(
             self,
             "SmsVerificationLambda",
@@ -295,9 +297,7 @@ class LambdaStack(Stack):
                 "VERSION": "1",
                 "SMS_ORIGINATION_NUMBER": self.config.sms_origination_number,
                 "SMS_VERIFICATION_SECRET_NAME": self.config.secret_name("sms", "verification"),
-                "SMS_RATE_LIMIT_TABLE_NAME": self.dynamodb_stack.tables[
-                    "sms-rate-limit"
-                ].table_name,
+                "SMS_RATE_LIMIT_TABLE_NAME": sms_rate_limit_table_name,
             },
             dead_letter_queue_enabled=True,
         )
@@ -333,7 +333,26 @@ class LambdaStack(Stack):
         return function
 
     def _create_user_status_calculator_lambda(self) -> lambda_.Function:
-        """Create User Status Calculator Lambda with DynamoDB stream trigger."""
+        """Create User Status Calculator Lambda with DynamoDB stream trigger.
+        
+        NOTE: The DynamoDB stream event source mapping must be configured manually
+        after deployment using AWS CLI or Console because the generated BackendStack
+        doesn't export stream ARNs to SSM parameters.
+        
+        To configure manually:
+        aws lambda create-event-source-mapping \
+            --function-name orb-integration-hub-dev-user-status-calculator \
+            --event-source-arn <users-table-stream-arn> \
+            --starting-position LATEST \
+            --batch-size 10 \
+            --maximum-batching-window-in-seconds 5
+        """
+        # Read table name from SSM parameter
+        users_table_name = ssm.StringParameter.value_for_string_parameter(
+            self,
+            self.config.ssm_parameter_name("dynamodb/users/table-name"),
+        )
+
         function = lambda_.Function(
             self,
             "UserStatusCalculatorLambda",
@@ -350,19 +369,9 @@ class LambdaStack(Stack):
                 "LOGGING_LEVEL": "INFO",
                 "VERSION": "1",
                 "USER_POOL_ID": self.cognito_stack.user_pool.user_pool_id,
-                "USERS_TABLE_NAME": self.dynamodb_stack.tables["users"].table_name,
+                "USERS_TABLE_NAME": users_table_name,
             },
             dead_letter_queue_enabled=True,
-        )
-
-        # Add DynamoDB Stream event source
-        function.add_event_source(
-            lambda_event_sources.DynamoEventSource(
-                self.dynamodb_stack.tables["users"],
-                starting_position=lambda_.StartingPosition.LATEST,
-                batch_size=10,
-                max_batching_window=Duration.seconds(5),
-            )
         )
 
         self.functions["user-status-calculator"] = function
@@ -389,6 +398,12 @@ class LambdaStack(Stack):
             organizations_security_layer_arn,
         )
 
+        # Read table name from SSM parameter
+        organizations_table_name = ssm.StringParameter.value_for_string_parameter(
+            self,
+            self.config.ssm_parameter_name("dynamodb/organizations/table-name"),
+        )
+
         function = lambda_.Function(
             self,
             "OrganizationsLambda",
@@ -405,7 +420,7 @@ class LambdaStack(Stack):
                 "ALERTS_QUEUE": f"arn:aws:sqs:{self.region}:{self.account}:{self.config.prefix}-alerts-queue",
                 "LOGGING_LEVEL": "INFO",
                 "VERSION": "1",
-                "ORGANIZATIONS_TABLE_NAME": self.dynamodb_stack.tables["organizations"].table_name,
+                "ORGANIZATIONS_TABLE_NAME": organizations_table_name,
                 "USER_POOL_ID": self.cognito_stack.user_pool.user_pool_id,
             },
             dead_letter_queue_enabled=True,
@@ -422,6 +437,12 @@ class LambdaStack(Stack):
         email exists in the system. It uses API key authentication for public access
         during the signup/signin flow.
         """
+        # Read table name from SSM parameter
+        users_table_name = ssm.StringParameter.value_for_string_parameter(
+            self,
+            self.config.ssm_parameter_name("dynamodb/users/table-name"),
+        )
+
         function = lambda_.Function(
             self,
             "CheckEmailExistsLambda",
@@ -437,7 +458,7 @@ class LambdaStack(Stack):
                 "ALERTS_QUEUE": f"arn:aws:sqs:{self.region}:{self.account}:{self.config.prefix}-alerts-queue",
                 "LOGGING_LEVEL": "INFO",
                 "VERSION": "1",
-                "USERS_TABLE_NAME": self.dynamodb_stack.tables["users"].table_name,
+                "USERS_TABLE_NAME": users_table_name,
                 "USER_POOL_ID": self.cognito_stack.user_pool.user_pool_id,
             },
             dead_letter_queue_enabled=True,
@@ -472,6 +493,12 @@ class LambdaStack(Stack):
             common_layer_arn,
         )
 
+        # Read table name from SSM parameter
+        users_table_name = ssm.StringParameter.value_for_string_parameter(
+            self,
+            self.config.ssm_parameter_name("dynamodb/users/name"),
+        )
+
         function = lambda_.Function(
             self,
             "CreateUserFromCognitoLambda",
@@ -488,7 +515,7 @@ class LambdaStack(Stack):
                 "ALERTS_QUEUE": f"arn:aws:sqs:{self.region}:{self.account}:{self.config.prefix}-alerts-queue",
                 "LOGGING_LEVEL": "INFO",
                 "VERSION": "1",
-                "USERS_TABLE_NAME": self.dynamodb_stack.tables["users"].table_name,
+                "USERS_TABLE_NAME": users_table_name,
                 "USER_POOL_ID": self.cognito_stack.user_pool.user_pool_id,
             },
             dead_letter_queue_enabled=True,
@@ -542,6 +569,12 @@ class LambdaStack(Stack):
             common_layer_arn,
         )
 
+        # Read table name from SSM parameter
+        users_table_name = ssm.StringParameter.value_for_string_parameter(
+            self,
+            self.config.ssm_parameter_name("dynamodb/users/table-name"),
+        )
+
         function = lambda_.Function(
             self,
             "GetCurrentUserLambda",
@@ -558,7 +591,7 @@ class LambdaStack(Stack):
                 "ALERTS_QUEUE": f"arn:aws:sqs:{self.region}:{self.account}:{self.config.prefix}-alerts-queue",
                 "LOGGING_LEVEL": "INFO",
                 "VERSION": "1",
-                "USERS_TABLE_NAME": self.dynamodb_stack.tables["users"].table_name,
+                "USERS_TABLE_NAME": users_table_name,
             },
             dead_letter_queue_enabled=True,
         )
@@ -595,6 +628,12 @@ class LambdaStack(Stack):
             ],
         )
 
+        # Read table name from SSM parameter
+        api_keys_table_name = ssm.StringParameter.value_for_string_parameter(
+            self,
+            self.config.ssm_parameter_name("dynamodb/application-api-keys/table-name"),
+        )
+
         # DynamoDB access for ApplicationApiKeys table
         authorizer_role.add_to_policy(
             iam.PolicyStatement(
@@ -607,8 +646,8 @@ class LambdaStack(Stack):
                     "dynamodb:UpdateItem",
                 ],
                 resources=[
-                    self.dynamodb_stack.tables["ApplicationApiKeys"].table_arn,
-                    f"{self.dynamodb_stack.tables['ApplicationApiKeys'].table_arn}/index/*",
+                    f"arn:aws:dynamodb:{self.region}:{self.account}:table/{api_keys_table_name}",
+                    f"arn:aws:dynamodb:{self.region}:{self.account}:table/{api_keys_table_name}/index/*",
                 ],
             )
         )
@@ -641,9 +680,7 @@ class LambdaStack(Stack):
             memory_size=128,
             role=authorizer_role,
             environment={
-                "APPLICATION_API_KEYS_TABLE": self.dynamodb_stack.tables[
-                    "ApplicationApiKeys"
-                ].table_name,
+                "APPLICATION_API_KEYS_TABLE": api_keys_table_name,
                 "LOGGING_LEVEL": "INFO",
                 "VERSION": "1",
                 "RATE_LIMIT_MAX_REQUESTS": "100",

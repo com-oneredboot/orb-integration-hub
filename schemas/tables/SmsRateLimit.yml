@@ -8,7 +8,9 @@ pitr_enabled: false
 version: '1.0'
 name: SmsRateLimit
 targets:
-  - api
+  - python-main
+  - ts-main
+  - graphql-main
 model:
   ttl:
     enabled: true

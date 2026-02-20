@@ -11,7 +11,10 @@ pitr_enabled: false
 version: '1.0'
 name: Users
 targets:
-  - api
+  - python-main
+  - ts-main
+  - graphql-main
+  - graphql-sdk
 model:
   stream:
     enabled: true

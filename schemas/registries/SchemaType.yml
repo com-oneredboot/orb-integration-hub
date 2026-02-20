@@ -2,7 +2,9 @@ type: registry
 version: '1.0'
 name: SchemaType
 targets:
-  - api
+  - python-main
+  - ts-main
+  - graphql-main
 description: "Types of schemas supported by the schema generator"
 
 items:

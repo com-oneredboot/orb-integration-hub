@@ -8,7 +8,9 @@
 type: lambda
 name: GetCurrentUser
 targets:
-  - api
+  - python-main
+  - ts-main
+  - graphql-main
 model:
   operation: query
   authConfig:

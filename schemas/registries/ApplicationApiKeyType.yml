@@ -2,7 +2,9 @@ type: registry
 version: '1.0'
 name: ApplicationApiKeyType
 targets:
-  - api
+  - python-main
+  - ts-main
+  - graphql-main
 description: "Type of API key (publishable for frontend, secret for backend)"
 
 items:

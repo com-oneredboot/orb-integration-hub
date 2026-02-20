@@ -2,7 +2,9 @@ type: registry
 version: '1.0'
 name: RecoveryAction
 targets:
-  - api
+  - python-main
+  - ts-main
+  - graphql-main
 description: "Recovery actions determined by the smart check flow"
 
 items:

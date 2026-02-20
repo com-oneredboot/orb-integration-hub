@@ -8,7 +8,9 @@
 type: lambda
 name: CreateUserFromCognito
 targets:
-  - api
+  - python-main
+  - ts-main
+  - graphql-main
 model:
   operation: mutation
   authConfig:

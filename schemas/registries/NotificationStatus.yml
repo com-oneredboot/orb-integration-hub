@@ -2,7 +2,9 @@ type: registry
 version: '1.0'
 name: NotificationStatus
 targets:
-  - api
+  - python-main
+  - ts-main
+  - graphql-main
 description: "Status of a notification"
 
 items:

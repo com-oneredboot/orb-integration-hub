@@ -6,7 +6,9 @@
 type: standard
 name: MfaSetupDetails
 targets:
-  - api
+  - python-main
+  - ts-main
+  - graphql-main
 model:
   attributes:
     qrCode:

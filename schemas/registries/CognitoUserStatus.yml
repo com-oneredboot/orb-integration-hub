@@ -2,7 +2,9 @@ type: registry
 version: '1.0'
 name: CognitoUserStatus
 targets:
-  - api
+  - python-main
+  - ts-main
+  - graphql-main
 description: "Cognito user status values returned by adminGetUser"
 
 items:

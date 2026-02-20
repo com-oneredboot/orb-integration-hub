@@ -10,7 +10,10 @@ pitr_enabled: false
 version: '1.0'
 name: Applications
 targets:
-  - api
+  - python-main
+  - ts-main
+  - graphql-main
+  - graphql-sdk
 model:
   authConfig:
     cognitoAuthentication:

@@ -6,7 +6,9 @@
 type: model
 name: UserWithRoles
 targets:
-  - api
+  - python-main
+  - ts-main
+  - graphql-main
 model:
   attributes:
     userId:

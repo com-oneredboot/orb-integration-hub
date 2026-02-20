@@ -2,7 +2,9 @@ type: registry
 version: '1.0'
 name: UserGroup
 targets:
-  - api
+  - python-main
+  - ts-main
+  - graphql-main
 description: "User group types for Cognito authentication. Groups are additive - users can have multiple groups. Every user has at least USER group (baseline). CUSTOMER group is added when user pays for subscription."
 
 items:

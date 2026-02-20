@@ -1,0 +1,275 @@
+"""SDK AppSync Stack - GraphQL API for external SDK access.
+
+This stack creates a separate AppSync API for SDK consumers that uses
+Lambda authorizer authentication with API keys instead of Cognito.
+
+Features:
+- Lambda authorizer for API key validation
+- Subset of operations (excludes API key management)
+- Organization/Application context from API key
+- WAF protection
+
+The SDK API allows external applications to:
+- Query user data within their application scope
+- Manage application groups and roles
+- Access organization data they have permission for
+"""
+
+import sys
+from pathlib import Path
+
+# Add cdk directory to path for imports
+_cdk_dir = Path(__file__).parent.parent
+if str(_cdk_dir) not in sys.path:
+    sys.path.insert(0, str(_cdk_dir))
+
+from aws_cdk import (
+    Duration,
+    Stack,
+    Tags,
+    aws_appsync as appsync,
+    aws_dynamodb as dynamodb,
+    aws_iam as iam,
+    aws_lambda as lambda_,
+    aws_ssm as ssm,
+    aws_wafv2 as wafv2,
+)
+from constructs import Construct
+
+from config import Config
+from stacks.lambda_stack import LambdaStack
+
+
+class AppSyncSdkStack(Stack):
+    """SDK AppSync stack with Lambda authorizer authentication."""
+
+    def __init__(
+        self,
+        scope: Construct,
+        construct_id: str,
+        config: Config,
+        lambda_stack: LambdaStack,
+        **kwargs,
+    ) -> None:
+        super().__init__(scope, construct_id, **kwargs)
+        self.config = config
+        self._apply_tags()
+
+        # Get the API key authorizer Lambda
+        self.authorizer_lambda = lambda_stack.functions.get("api-key-authorizer")
+        if not self.authorizer_lambda:
+            raise ValueError("API key authorizer Lambda not found in lambda_stack")
+
+        # Create the SDK AppSync API
+        self.api = self._create_api()
+
+        # Create SSM parameters for SDK discovery
+        self._create_ssm_parameters()
+
+        # Add DynamoDB data sources
+        self._add_data_sources()
+
+        # Create WAF WebACL
+        self.web_acl = self._create_waf_web_acl()
+        self._associate_waf_with_appsync()
+
+    def _apply_tags(self) -> None:
+        """Apply standard tags to all resources in this stack."""
+        for key, value in self.config.standard_tags.items():
+            Tags.of(self).add(key, value)
+
+    def _create_api(self) -> appsync.GraphqlApi:
+        """Create the SDK AppSync API with Lambda authorizer."""
+        # Calculate schema path
+        schema_path = Path(__file__).parent.parent.parent.parent / "apps/api/graphql/schema.graphql"
+
+        # Create CloudWatch Logs role
+        logging_role = iam.Role(
+            self,
+            "SdkAppSyncLoggingRole",
+            assumed_by=iam.ServicePrincipal("appsync.amazonaws.com"),
+            managed_policies=[
+                iam.ManagedPolicy.from_aws_managed_policy_name(
+                    "service-role/AWSAppSyncPushToCloudWatchLogs"
+                ),
+            ],
+        )
+
+        # Create the GraphQL API with Lambda authorizer
+        api = appsync.GraphqlApi(
+            self,
+            "SdkApi",
+            name=self.config.resource_name("appsync-sdk-api"),
+            definition=appsync.Definition.from_file(str(schema_path)),
+            authorization_config=appsync.AuthorizationConfig(
+                default_authorization=appsync.AuthorizationMode(
+                    authorization_type=appsync.AuthorizationType.LAMBDA,
+                    lambda_authorizer_config=appsync.LambdaAuthorizerConfig(
+                        handler=self.authorizer_lambda,
+                        results_cache_ttl=Duration.seconds(300),
+                        validation_regex=r"^(Bearer\s+)?orb_[a-z]+_[a-zA-Z0-9]+$",
+                    ),
+                ),
+            ),
+            log_config=appsync.LogConfig(
+                field_log_level=appsync.FieldLogLevel.ALL,
+                exclude_verbose_content=False,
+                role=logging_role,
+            ),
+            xray_enabled=True,
+        )
+
+        return api
+
+    def _create_ssm_parameters(self) -> None:
+        """Create SSM parameters for SDK API discovery."""
+        ssm.StringParameter(
+            self,
+            "SdkApiIdParameter",
+            parameter_name=self.config.ssm_parameter_name("appsync-sdk/api-id"),
+            string_value=self.api.api_id,
+            description="SDK AppSync API ID",
+        )
+
+        ssm.StringParameter(
+            self,
+            "SdkGraphqlUrlParameter",
+            parameter_name=self.config.ssm_parameter_name("appsync-sdk/graphql-url"),
+            string_value=self.api.graphql_url,
+            description="SDK AppSync GraphQL URL",
+        )
+
+    def _add_data_sources(self) -> None:
+        """Add DynamoDB data sources and resolvers.
+        
+        SDK API has access to a subset of tables:
+        - Users (read-only for application users)
+        - Organizations (read-only)
+        - ApplicationUserRoles
+        
+        Excludes:
+        - ApplicationApiKeys (SDK can't manage its own keys)
+        - PrivacyRequests, OwnershipTransferRequests (admin only)
+        
+        NOTE: Group tables removed in v0.4.0 - see .kiro/specs/simplify-roles-remove-groups/
+        
+        Tables are referenced via SSM parameters to avoid CloudFormation exports.
+        """
+        # Tables accessible via SDK - read table ARNs from SSM
+        sdk_table_names = {
+            "Users": "users",
+            "Organizations": "organizations",
+            "Applications": "applications",
+            "ApplicationUserRoles": "application-user-roles",
+        }
+
+        # Create data sources for each table
+        for display_name, table_key in sdk_table_names.items():
+            # Read table ARN from SSM parameter
+            table_arn = ssm.StringParameter.value_for_string_parameter(
+                self,
+                self.config.ssm_parameter_name(f"dynamodb/{table_key}/table-arn"),
+            )
+
+            # Create table reference from ARN
+            table = dynamodb.Table.from_table_arn(
+                self,
+                f"{display_name}TableRef",
+                table_arn,
+            )
+
+            data_source = self.api.add_dynamo_db_data_source(
+                f"{display_name}DataSource",
+                table,
+            )
+
+            # Add basic CRUD resolvers
+            self._add_table_resolvers(data_source, display_name)
+
+    def _add_table_resolvers(
+        self,
+        data_source: appsync.DynamoDbDataSource,
+        table_name: str,
+    ) -> None:
+        """Add resolvers for a table.
+        
+        Uses inline VTL templates for basic operations.
+        SDK operations are scoped by the applicationId/organizationId
+        from the Lambda authorizer context.
+        """
+        resolver_path = Path(__file__).parent.parent / "generated/appsync/resolvers"
+
+        # Get resolver - uses existing VTL templates
+        get_request = resolver_path / f"Query.{table_name}Get.request.vtl"
+        get_response = resolver_path / f"Query.{table_name}Get.response.vtl"
+
+        if get_request.exists() and get_response.exists():
+            data_source.create_resolver(
+                f"{table_name}GetResolver",
+                type_name="Query",
+                field_name=f"{table_name}Get",
+                request_mapping_template=appsync.MappingTemplate.from_file(str(get_request)),
+                response_mapping_template=appsync.MappingTemplate.from_file(str(get_response)),
+            )
+
+    def _create_waf_web_acl(self) -> wafv2.CfnWebACL:
+        """Create WAF WebACL for SDK API protection."""
+        web_acl = wafv2.CfnWebACL(
+            self,
+            "SdkAppSyncWebACL",
+            name=self.config.resource_name("appsync-sdk-waf"),
+            description="WAF WebACL for SDK AppSync API protection",
+            default_action=wafv2.CfnWebACL.DefaultActionProperty(allow={}),
+            scope="REGIONAL",
+            visibility_config=wafv2.CfnWebACL.VisibilityConfigProperty(
+                cloud_watch_metrics_enabled=True,
+                metric_name=self.config.resource_name("appsync-sdk-waf"),
+                sampled_requests_enabled=True,
+            ),
+            rules=[
+                # AWS Managed Common Rule Set
+                wafv2.CfnWebACL.RuleProperty(
+                    name="AWSManagedRulesCommonRuleSet",
+                    priority=1,
+                    override_action=wafv2.CfnWebACL.OverrideActionProperty(none={}),
+                    statement=wafv2.CfnWebACL.StatementProperty(
+                        managed_rule_group_statement=wafv2.CfnWebACL.ManagedRuleGroupStatementProperty(
+                            vendor_name="AWS",
+                            name="AWSManagedRulesCommonRuleSet",
+                        )
+                    ),
+                    visibility_config=wafv2.CfnWebACL.VisibilityConfigProperty(
+                        cloud_watch_metrics_enabled=True,
+                        metric_name=self.config.resource_name("sdk-common-rules"),
+                        sampled_requests_enabled=True,
+                    ),
+                ),
+                # Rate limiting - stricter for SDK (1000 req/5min per IP)
+                wafv2.CfnWebACL.RuleProperty(
+                    name="SdkRateLimitRule",
+                    priority=2,
+                    action=wafv2.CfnWebACL.RuleActionProperty(block={}),
+                    statement=wafv2.CfnWebACL.StatementProperty(
+                        rate_based_statement=wafv2.CfnWebACL.RateBasedStatementProperty(
+                            limit=1000,
+                            aggregate_key_type="IP",
+                        )
+                    ),
+                    visibility_config=wafv2.CfnWebACL.VisibilityConfigProperty(
+                        cloud_watch_metrics_enabled=True,
+                        metric_name=self.config.resource_name("sdk-rate-limit"),
+                        sampled_requests_enabled=True,
+                    ),
+                ),
+            ],
+        )
+        return web_acl
+
+    def _associate_waf_with_appsync(self) -> wafv2.CfnWebACLAssociation:
+        """Associate WAF WebACL with SDK AppSync API."""
+        return wafv2.CfnWebACLAssociation(
+            self,
+            "SdkAppSyncWAFAssociation",
+            resource_arn=self.api.arn,
+            web_acl_arn=self.web_acl.attr_arn,
+        )

@@ -25,12 +25,10 @@ sys.path.insert(0, str(Path(__file__).parent))
 import aws_cdk as cdk
 
 from config import Config
+from lib.backend_stack import BackendStackStack
 from stacks import (
-    AppSyncSdkStack,
-    AppSyncStack,
     BootstrapStack,
     CognitoStack,
-    DynamoDBStack,
     FrontendStack,
     LambdaStack,
     MonitoringStack,
@@ -73,13 +71,14 @@ def main() -> None:
         description="Cognito resources: User Pool, Identity Pool, Groups",
     )
 
-    # DynamoDB Stack - All DynamoDB tables
-    dynamodb_stack = DynamoDBStack(
+    # Backend Stack - DynamoDB tables + Main AppSync API + SDK AppSync API
+    # This single stack eliminates CloudFormation cross-stack exports
+    # Both APIs share the same DynamoDB tables via direct references
+    backend_stack = BackendStackStack(
         app,
-        f"{stack_prefix}-dynamodb",
-        config=config,
+        f"{stack_prefix}-backend",
         env=env,
-        description="DynamoDB tables for application data",
+        description="Backend resources: DynamoDB tables, Main AppSync API (Cognito), SDK AppSync API (Lambda authorizer)",
     )
 
     # NOTE: Lambda Layers Stack is deployed separately via deploy-lambda-layers workflow
@@ -96,43 +95,20 @@ def main() -> None:
 
     # ===== Application Stacks (with dependencies) =====
 
-    # Lambda Stack - Lambda functions (depends on Cognito, DynamoDB)
+    # Lambda Stack - Lambda functions (depends on Cognito and Backend)
+    # Table names are read from SSM parameters (set by backend stack)
     # Layer ARNs are read from SSM parameters (set by lambda-layers stack)
     lambda_stack = LambdaStack(
         app,
         f"{stack_prefix}-lambda",
         config=config,
         cognito_stack=cognito_stack,
-        dynamodb_stack=dynamodb_stack,
         env=env,
         description="Lambda functions for business logic",
     )
 
-    # AppSync Stack - GraphQL API (depends on Cognito, DynamoDB, Lambda)
-    appsync_stack = AppSyncStack(
-        app,
-        f"{stack_prefix}-appsync",
-        config=config,
-        cognito_stack=cognito_stack,
-        dynamodb_stack=dynamodb_stack,
-        lambda_stack=lambda_stack,
-        env=env,
-        description="AppSync GraphQL API",
-    )
-
-    # SDK AppSync Stack - GraphQL API for external SDK access (depends on DynamoDB, Lambda)
-    appsync_sdk_stack = AppSyncSdkStack(
-        app,
-        f"{stack_prefix}-appsync-sdk",
-        config=config,
-        dynamodb_stack=dynamodb_stack,
-        lambda_stack=lambda_stack,
-        env=env,
-        description="SDK AppSync GraphQL API with Lambda authorizer",
-    )
-
     # Monitoring Stack - CloudWatch dashboards and alarms
-    # Reads AppSync API ID from SSM parameter (no cross-stack reference)
+    # Reads AppSync API IDs from SSM parameters (no cross-stack reference)
     monitoring_stack = MonitoringStack(
         app,
         f"{stack_prefix}-monitoring",
@@ -143,17 +119,10 @@ def main() -> None:
 
     # Add stack dependencies explicitly
     lambda_stack.add_dependency(cognito_stack)
-    lambda_stack.add_dependency(dynamodb_stack)
+    lambda_stack.add_dependency(backend_stack)
 
-    appsync_stack.add_dependency(cognito_stack)
-    appsync_stack.add_dependency(dynamodb_stack)
-    appsync_stack.add_dependency(lambda_stack)
-
-    appsync_sdk_stack.add_dependency(dynamodb_stack)
-    appsync_sdk_stack.add_dependency(lambda_stack)
-
-    # Monitoring depends on AppSync SSM parameter existing
-    monitoring_stack.add_dependency(appsync_stack)
+    # Monitoring depends on Backend stack (for AppSync APIs)
+    monitoring_stack.add_dependency(backend_stack)
 
     # Synthesize the app
     app.synth()

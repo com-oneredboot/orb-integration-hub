@@ -2,7 +2,9 @@ type: registry
 version: '1.0'
 name: ApplicationRoleType
 targets:
-  - api
+  - python-main
+  - ts-main
+  - graphql-main
 description: "Types of application roles"
 
 items:

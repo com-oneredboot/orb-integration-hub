@@ -2,7 +2,9 @@ type: registry
 version: '1.0'
 name: OwnershipTransferStatus
 targets:
-  - api
+  - python-main
+  - ts-main
+  - graphql-main
 description: "Status of an ownership transfer request"
 
 items:

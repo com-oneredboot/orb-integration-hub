@@ -6,7 +6,9 @@
 type: lambda
 name: SmsVerification
 targets:
-  - api
+  - python-main
+  - ts-main
+  - graphql-main
 model:
   authConfig:
     cognitoAuthentication:

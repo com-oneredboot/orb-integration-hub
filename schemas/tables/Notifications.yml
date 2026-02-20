@@ -9,7 +9,9 @@ pitr_enabled: false
 version: '1.0'
 name: Notifications
 targets:
-  - api
+  - python-main
+  - ts-main
+  - graphql-main
 model:
   authConfig:
     cognitoAuthentication:

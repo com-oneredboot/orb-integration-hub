@@ -2,7 +2,9 @@ type: registry
 version: '1.0'
 name: OrganizationUserStatus
 targets:
-  - api
+  - python-main
+  - ts-main
+  - graphql-main
 description: "Status of a user's membership in an organization"
 
 items:

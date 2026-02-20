@@ -1,0 +1,4 @@
+{
+  "lambdas/get_application_users/test_get_application_users.py": true,
+  "lambdas/get_application_users/test_get_application_users_property.py": true
+}

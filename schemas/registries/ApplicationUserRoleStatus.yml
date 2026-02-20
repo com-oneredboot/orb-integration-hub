@@ -2,7 +2,9 @@ type: registry
 version: '1.0'
 name: ApplicationUserRoleStatus
 targets:
-  - api
+  - python-main
+  - ts-main
+  - graphql-main
 description: "Application user role assignment status"
 
 items:

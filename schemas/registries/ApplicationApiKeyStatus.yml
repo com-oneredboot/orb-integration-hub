@@ -2,7 +2,9 @@ type: registry
 version: '1.0'
 name: ApplicationApiKeyStatus
 targets:
-  - api
+  - python-main
+  - ts-main
+  - graphql-main
 description: "Application API key status"
 
 items:
