@@ -119,7 +119,9 @@ def main() -> None:
 
     # Add stack dependencies explicitly
     lambda_stack.add_dependency(cognito_stack)
-    lambda_stack.add_dependency(backend_stack)
+    
+    # Backend depends on Lambda (needs Lambda authorizer ARN from SSM)
+    backend_stack.add_dependency(lambda_stack)
 
     # Monitoring depends on Backend stack (for AppSync APIs)
     monitoring_stack.add_dependency(backend_stack)
