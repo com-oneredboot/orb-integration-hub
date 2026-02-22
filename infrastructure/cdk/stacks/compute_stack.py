@@ -41,6 +41,16 @@ from stacks.authorization_stack import AuthorizationStack
 class ComputeStack(Stack):
     """Compute stack with business logic Lambda functions."""
 
+    @staticmethod
+    def _get_lambda_asset_path(lambda_name: str) -> str:
+        """Get Lambda asset path resolving from stack file location to repo root.
+        
+        __file__ is at: infrastructure/cdk/stacks/compute_stack.py
+        Target is at: apps/api/lambdas/{lambda_name}
+        Go up 3 levels to repo root, then down to apps
+        """
+        return str(Path(__file__).resolve().parent.parent.parent.parent / "apps" / "api" / "lambdas" / lambda_name)
+
     def __init__(
         self,
         scope: Construct,
@@ -292,7 +302,7 @@ class ComputeStack(Stack):
             description="Lambda function for SMS verification",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="index.lambda_handler",
-            code=lambda_.Code.from_asset("../../apps/api/lambdas/sms_verification"),
+            code=lambda_.Code.from_asset(self._get_lambda_asset_path("sms_verification")),
             timeout=Duration.seconds(30),
             memory_size=256,
             role=self.lambda_execution_role,
@@ -321,7 +331,7 @@ class ComputeStack(Stack):
             description="Lambda function to manage Cognito User Pool groups",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="index.lambda_handler",
-            code=lambda_.Code.from_asset("../../apps/api/lambdas/cognito_group_manager"),
+            code=lambda_.Code.from_asset(self._get_lambda_asset_path("cognito_group_manager")),
             timeout=Duration.seconds(30),
             memory_size=256,
             role=self.lambda_execution_role,
@@ -371,7 +381,7 @@ class ComputeStack(Stack):
             description="Lambda function triggered by DynamoDB streams to automatically calculate user status",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="index.lambda_handler",
-            code=lambda_.Code.from_asset("../../apps/api/lambdas/user_status_calculator"),
+            code=lambda_.Code.from_asset(self._get_lambda_asset_path("user_status_calculator")),
             timeout=Duration.seconds(30),
             memory_size=256,
             role=self.lambda_execution_role,
@@ -428,7 +438,7 @@ class ComputeStack(Stack):
             description="Lambda function to handle organizations CRUD operations",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="index.lambda_handler",
-            code=lambda_.Code.from_asset("../../apps/api/lambdas/organizations"),
+            code=lambda_.Code.from_asset(self._get_lambda_asset_path("organizations")),
             timeout=Duration.seconds(30),
             memory_size=256,
             role=self.lambda_execution_role,
@@ -473,7 +483,7 @@ class ComputeStack(Stack):
             description="Lambda function to check if an email exists (public endpoint)",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="index.lambda_handler",
-            code=lambda_.Code.from_asset("../../apps/api/lambdas/check_email_exists"),
+            code=lambda_.Code.from_asset(self._get_lambda_asset_path("check_email_exists")),
             timeout=Duration.seconds(10),
             memory_size=128,
             role=self.lambda_execution_role,
@@ -535,7 +545,7 @@ class ComputeStack(Stack):
             description="Lambda function to create user records from Cognito data (public endpoint)",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="index.lambda_handler",
-            code=lambda_.Code.from_asset("../../apps/api/lambdas/create_user_from_cognito"),
+            code=lambda_.Code.from_asset(self._get_lambda_asset_path("create_user_from_cognito")),
             timeout=Duration.seconds(10),
             memory_size=128,
             role=self.lambda_execution_role,
@@ -611,7 +621,7 @@ class ComputeStack(Stack):
             description="Lambda function to get current user's own record (secure self-lookup)",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="index.lambda_handler",
-            code=lambda_.Code.from_asset("../../apps/api/lambdas/get_current_user"),
+            code=lambda_.Code.from_asset(self._get_lambda_asset_path("get_current_user")),
             timeout=Duration.seconds(10),
             memory_size=128,
             role=self.lambda_execution_role,
@@ -667,7 +677,7 @@ class ComputeStack(Stack):
             description="Lambda function to query application users with filtering",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="index.lambda_handler",
-            code=lambda_.Code.from_asset("../../apps/api/lambdas/get_application_users"),
+            code=lambda_.Code.from_asset(self._get_lambda_asset_path("get_application_users")),
             timeout=Duration.seconds(30),
             memory_size=256,
             role=self.lambda_execution_role,
