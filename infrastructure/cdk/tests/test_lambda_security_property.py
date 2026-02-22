@@ -57,15 +57,15 @@ class TestLambdaSecurityConfiguration:
 
     @pytest.fixture
     def lambda_stack_content(self) -> str:
-        """Load the Lambda stack file content."""
-        lambda_stack_path = Path(__file__).parent.parent / "stacks" / "lambda_stack.py"
-        return lambda_stack_path.read_text()
+        """Load the Compute stack file content."""
+        compute_stack_path = Path(__file__).parent.parent / "stacks" / "compute_stack.py"
+        return compute_stack_path.read_text()
 
     @pytest.fixture
     def cognito_stack_content(self) -> str:
-        """Load the Cognito stack file content (for Lambda triggers)."""
-        cognito_stack_path = Path(__file__).parent.parent / "stacks" / "cognito_stack.py"
-        return cognito_stack_path.read_text()
+        """Load the Authorization stack file content (for Lambda triggers)."""
+        authorization_stack_path = Path(__file__).parent.parent / "stacks" / "authorization_stack.py"
+        return authorization_stack_path.read_text()
 
     def test_no_hardcoded_secrets_in_environment(self, lambda_stack_content: str) -> None:
         """Property: Environment variables SHALL NOT contain hardcoded secrets.

@@ -535,6 +535,11 @@ Please login at: https://orb-integration-hub.com/authenticate/""",
             )
         )
 
+        # Determine Lambda code path based on execution context
+        # In GitHub Actions: working dir is infrastructure/, so path is ../apps/api/lambdas/api_key_authorizer
+        # Locally: working dir is infrastructure/cdk/, so path is ../../apps/api/lambdas/api_key_authorizer
+        lambda_code_path = Path(__file__).parent.parent.parent / "apps" / "api" / "lambdas" / "api_key_authorizer"
+        
         function = lambda_.Function(
             self,
             "ApiKeyAuthorizerLambda",
@@ -542,7 +547,7 @@ Please login at: https://orb-integration-hub.com/authenticate/""",
             description="Lambda authorizer for SDK AppSync API - validates API keys",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="index.lambda_handler",
-            code=lambda_.Code.from_asset("../../apps/api/lambdas/api_key_authorizer"),
+            code=lambda_.Code.from_asset(str(lambda_code_path)),
             timeout=Duration.seconds(10),
             memory_size=128,
             role=authorizer_role,
