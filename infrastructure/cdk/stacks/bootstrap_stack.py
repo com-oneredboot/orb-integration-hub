@@ -68,7 +68,7 @@ class BootstrapStack(Stack):
         bucket = s3.Bucket(
             self,
             "BuildArtifactsBucket",
-            bucket_name=f"{self.config.customer_id}-{self.config.project_id}-build-artifacts",
+            bucket_name=self.config.resource_name("build-artifacts"),
             removal_policy=RemovalPolicy.RETAIN,
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
         )
@@ -79,7 +79,7 @@ class BootstrapStack(Stack):
         bucket = s3.Bucket(
             self,
             "BuildTemplatesBucket",
-            bucket_name=f"{self.config.customer_id}-{self.config.project_id}-build-templates",
+            bucket_name=self.config.resource_name("build-templates"),
             versioned=True,
             removal_policy=RemovalPolicy.RETAIN,
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
