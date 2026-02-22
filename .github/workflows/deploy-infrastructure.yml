@@ -151,18 +151,19 @@ jobs:
           
           PREFIX="${{ env.CUSTOMER_ID }}-${{ env.PROJECT_ID }}-${{ github.event.inputs.environment }}"
           # Note: lambda-layers is deployed separately via deploy-lambda-layers workflow
-          # backend stack contains DynamoDB tables, Main AppSync API, and SDK AppSync API
-          for stack in bootstrap cognito backend frontend lambda monitoring; do
+          # Stacks use descriptive names: data, authorization, compute, api
+          for stack in bootstrap data authorization frontend compute api monitoring; do
             STACK_NAME="${PREFIX}-${stack}"
             STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo "NOT_FOUND")
             echo "| $STACK_NAME | $STATUS |" >> $GITHUB_STEP_SUMMARY
           done
           
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Backend Stack Details" >> $GITHUB_STEP_SUMMARY
+          echo "## Stack Architecture" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "The backend stack includes:" >> $GITHUB_STEP_SUMMARY
-          echo "- 12 DynamoDB tables" >> $GITHUB_STEP_SUMMARY
-          echo "- Main AppSync API (Cognito authentication)" >> $GITHUB_STEP_SUMMARY
-          echo "- SDK AppSync API (Lambda authorizer)" >> $GITHUB_STEP_SUMMARY
-          echo "- Zero CloudFormation exports" >> $GITHUB_STEP_SUMMARY
+          echo "Stacks use descriptive names that reflect their purpose:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Data Stack**: 12 DynamoDB tables" >> $GITHUB_STEP_SUMMARY
+          echo "- **Authorization Stack**: Cognito User Pool, Identity Pool, API Key Authorizer Lambda" >> $GITHUB_STEP_SUMMARY
+          echo "- **Compute Stack**: Lambda functions for business logic" >> $GITHUB_STEP_SUMMARY
+          echo "- **API Stack**: Main AppSync API (Cognito auth) + SDK AppSync API (Lambda auth)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Zero CloudFormation exports** - all cross-stack references via SSM parameters" >> $GITHUB_STEP_SUMMARY
