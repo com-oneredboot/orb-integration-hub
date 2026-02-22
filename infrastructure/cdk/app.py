@@ -49,15 +49,12 @@ def main() -> None:
         region=config.region or os.environ.get("CDK_DEFAULT_REGION", "us-east-1"),
     )
 
-    # Stack naming convention: {customer_id}-{project_id}-{environment}-{stack_name}
-    stack_prefix = f"{config.customer_id}-{config.project_id}-{config.environment}"
-
     # ===== Foundation Stacks (no dependencies) =====
 
     # Bootstrap Stack - S3 buckets, IAM, SQS queues
     bootstrap_stack = BootstrapStack(
         app,
-        f"{stack_prefix}-bootstrap",
+        f"{config.customer_id}-{config.project_id}-{config.environment}-bootstrap",
         config=config,
         env=env,
         description="Bootstrap resources: S3 buckets, IAM, SQS queues",
@@ -66,7 +63,7 @@ def main() -> None:
     # Authorization Stack - Cognito User Pool, Identity Pool, Groups, API Key Authorizer
     authorization_stack = AuthorizationStack(
         app,
-        f"{stack_prefix}-authorization",
+        f"{config.customer_id}-{config.project_id}-{config.environment}-authorization",
         config=config,
         env=env,
         description="Authorization resources: Cognito User Pool, Identity Pool, Groups, API Key Authorizer",
@@ -75,7 +72,7 @@ def main() -> None:
     # Data Stack - All tables (writes SSM parameters)
     data_stack = DataStack(
         app,
-        f"{stack_prefix}-data",
+        f"{config.customer_id}-{config.project_id}-{config.environment}-data",
         env=env,
         description="DynamoDB tables (writes table names/ARNs to SSM)",
     )
@@ -86,7 +83,7 @@ def main() -> None:
     # Frontend Stack - S3 and CloudFront for website
     frontend_stack = FrontendStack(
         app,
-        f"{stack_prefix}-frontend",
+        f"{config.customer_id}-{config.project_id}-{config.environment}-frontend",
         config=config,
         env=env,
         description="Frontend resources: S3 bucket, CloudFront distribution",
@@ -97,7 +94,7 @@ def main() -> None:
     # Compute Stack - Business logic Lambda functions
     compute_stack = ComputeStack(
         app,
-        f"{stack_prefix}-compute",
+        f"{config.customer_id}-{config.project_id}-{config.environment}-compute",
         config=config,
         authorization_stack=authorization_stack,
         env=env,
@@ -109,7 +106,7 @@ def main() -> None:
     # Reads Lambda ARNs from SSM parameters (set by Compute Stack)
     api_stack = ApiStack(
         app,
-        f"{stack_prefix}-api",
+        f"{config.customer_id}-{config.project_id}-{config.environment}-api",
         config=config,
         env=env,
         description="AppSync APIs: Main (Cognito auth) and SDK (Lambda auth)",
@@ -119,7 +116,7 @@ def main() -> None:
     # Reads AppSync API IDs from SSM parameters (no cross-stack reference)
     monitoring_stack = MonitoringStack(
         app,
-        f"{stack_prefix}-monitoring",
+        f"{config.customer_id}-{config.project_id}-{config.environment}-monitoring",
         config=config,
         env=env,
         description="Monitoring: CloudWatch dashboards, alarms, GuardDuty",
