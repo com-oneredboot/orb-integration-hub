@@ -1,4 +1,4 @@
-"""Lambda Stack - Lambda functions for orb-integration-hub.
+"""Compute Stack - Business logic Lambda functions for orb-integration-hub.
 
 Creates:
 - LambdaExecutionRole with required policies
@@ -6,10 +6,15 @@ Creates:
 - CognitoGroupManagerLambda
 - UserStatusCalculatorLambda with DynamoDB stream trigger
 - OrganizationsLambda with layer reference (from SSM parameter)
+- CheckEmailExistsLambda
+- CreateUserFromCognitoLambda
+- GetCurrentUserLambda
+- GetApplicationUsersLambda
 - SSM parameters for Lambda ARNs
 
 Note: Lambda layers are referenced via SSM parameters to avoid CloudFormation
 cross-stack exports which cause update failures when layer versions change.
+API Key Authorizer Lambda is in Authorization Stack (not here).
 """
 
 import sys
@@ -30,23 +35,23 @@ from aws_cdk import (
 from constructs import Construct
 
 from config import Config
-from stacks.cognito_stack import CognitoStack
+from stacks.authorization_stack import AuthorizationStack
 
 
-class LambdaStack(Stack):
-    """Lambda stack with all Lambda functions."""
+class ComputeStack(Stack):
+    """Compute stack with business logic Lambda functions."""
 
     def __init__(
         self,
         scope: Construct,
         construct_id: str,
         config: Config,
-        cognito_stack: CognitoStack,
+        authorization_stack: AuthorizationStack,
         **kwargs,
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
         self.config = config
-        self.cognito_stack = cognito_stack
+        self.authorization_stack = authorization_stack
         self._apply_tags()
 
         # Dictionary to store all Lambda functions for cross-stack references
@@ -64,7 +69,6 @@ class LambdaStack(Stack):
         self.create_user_from_cognito_lambda = self._create_create_user_from_cognito_lambda()
         self.get_current_user_lambda = self._create_get_current_user_lambda()
         self.get_application_users_lambda = self._create_get_application_users_lambda()
-        self.api_key_authorizer_lambda = self._create_api_key_authorizer_lambda()
 
     def _apply_tags(self) -> None:
         """Apply standard tags to all resources in this stack."""
@@ -288,7 +292,7 @@ class LambdaStack(Stack):
             description="Lambda function for SMS verification",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="index.lambda_handler",
-            code=lambda_.Code.from_asset("../apps/api/lambdas/sms_verification"),
+            code=lambda_.Code.from_asset("../../apps/api/lambdas/sms_verification"),
             timeout=Duration.seconds(30),
             memory_size=256,
             role=self.lambda_execution_role,
@@ -317,7 +321,7 @@ class LambdaStack(Stack):
             description="Lambda function to manage Cognito User Pool groups",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="index.lambda_handler",
-            code=lambda_.Code.from_asset("../apps/api/lambdas/cognito_group_manager"),
+            code=lambda_.Code.from_asset("../../apps/api/lambdas/cognito_group_manager"),
             timeout=Duration.seconds(30),
             memory_size=256,
             role=self.lambda_execution_role,
@@ -354,6 +358,12 @@ class LambdaStack(Stack):
             self.config.ssm_parameter_name("dynamodb/users/table-name"),
         )
 
+        # Read user pool ID from SSM parameter
+        user_pool_id = ssm.StringParameter.value_for_string_parameter(
+            self,
+            self.config.ssm_parameter_name("cognito/user-pool-id"),
+        )
+
         function = lambda_.Function(
             self,
             "UserStatusCalculatorLambda",
@@ -361,7 +371,7 @@ class LambdaStack(Stack):
             description="Lambda function triggered by DynamoDB streams to automatically calculate user status",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="index.lambda_handler",
-            code=lambda_.Code.from_asset("../apps/api/lambdas/user_status_calculator"),
+            code=lambda_.Code.from_asset("../../apps/api/lambdas/user_status_calculator"),
             timeout=Duration.seconds(30),
             memory_size=256,
             role=self.lambda_execution_role,
@@ -369,7 +379,7 @@ class LambdaStack(Stack):
                 "ALERTS_QUEUE": f"arn:aws:sqs:{self.region}:{self.account}:{self.config.prefix}-alerts-queue",
                 "LOGGING_LEVEL": "INFO",
                 "VERSION": "1",
-                "USER_POOL_ID": self.cognito_stack.user_pool.user_pool_id,
+                "USER_POOL_ID": user_pool_id,
                 "USERS_TABLE_NAME": users_table_name,
             },
             dead_letter_queue_enabled=True,
@@ -405,6 +415,12 @@ class LambdaStack(Stack):
             self.config.ssm_parameter_name("dynamodb/organizations/table-name"),
         )
 
+        # Read user pool ID from SSM parameter
+        user_pool_id = ssm.StringParameter.value_for_string_parameter(
+            self,
+            self.config.ssm_parameter_name("cognito/user-pool-id"),
+        )
+
         function = lambda_.Function(
             self,
             "OrganizationsLambda",
@@ -412,7 +428,7 @@ class LambdaStack(Stack):
             description="Lambda function to handle organizations CRUD operations",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="index.lambda_handler",
-            code=lambda_.Code.from_asset("../apps/api/lambdas/organizations"),
+            code=lambda_.Code.from_asset("../../apps/api/lambdas/organizations"),
             timeout=Duration.seconds(30),
             memory_size=256,
             role=self.lambda_execution_role,
@@ -422,7 +438,7 @@ class LambdaStack(Stack):
                 "LOGGING_LEVEL": "INFO",
                 "VERSION": "1",
                 "ORGANIZATIONS_TABLE_NAME": organizations_table_name,
-                "USER_POOL_ID": self.cognito_stack.user_pool.user_pool_id,
+                "USER_POOL_ID": user_pool_id,
             },
             dead_letter_queue_enabled=True,
         )
@@ -444,6 +460,12 @@ class LambdaStack(Stack):
             self.config.ssm_parameter_name("dynamodb/users/table-name"),
         )
 
+        # Read user pool ID from SSM parameter
+        user_pool_id = ssm.StringParameter.value_for_string_parameter(
+            self,
+            self.config.ssm_parameter_name("cognito/user-pool-id"),
+        )
+
         function = lambda_.Function(
             self,
             "CheckEmailExistsLambda",
@@ -451,7 +473,7 @@ class LambdaStack(Stack):
             description="Lambda function to check if an email exists (public endpoint)",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="index.lambda_handler",
-            code=lambda_.Code.from_asset("../apps/api/lambdas/check_email_exists"),
+            code=lambda_.Code.from_asset("../../apps/api/lambdas/check_email_exists"),
             timeout=Duration.seconds(10),
             memory_size=128,
             role=self.lambda_execution_role,
@@ -460,7 +482,7 @@ class LambdaStack(Stack):
                 "LOGGING_LEVEL": "INFO",
                 "VERSION": "1",
                 "USERS_TABLE_NAME": users_table_name,
-                "USER_POOL_ID": self.cognito_stack.user_pool.user_pool_id,
+                "USER_POOL_ID": user_pool_id,
             },
             dead_letter_queue_enabled=True,
         )
@@ -500,6 +522,12 @@ class LambdaStack(Stack):
             self.config.ssm_parameter_name("dynamodb/users/table-name"),
         )
 
+        # Read user pool ID from SSM parameter
+        user_pool_id = ssm.StringParameter.value_for_string_parameter(
+            self,
+            self.config.ssm_parameter_name("cognito/user-pool-id"),
+        )
+
         function = lambda_.Function(
             self,
             "CreateUserFromCognitoLambda",
@@ -507,7 +535,7 @@ class LambdaStack(Stack):
             description="Lambda function to create user records from Cognito data (public endpoint)",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="index.lambda_handler",
-            code=lambda_.Code.from_asset("../apps/api/lambdas/create_user_from_cognito"),
+            code=lambda_.Code.from_asset("../../apps/api/lambdas/create_user_from_cognito"),
             timeout=Duration.seconds(10),
             memory_size=128,
             role=self.lambda_execution_role,
@@ -517,7 +545,7 @@ class LambdaStack(Stack):
                 "LOGGING_LEVEL": "INFO",
                 "VERSION": "1",
                 "USERS_TABLE_NAME": users_table_name,
-                "USER_POOL_ID": self.cognito_stack.user_pool.user_pool_id,
+                "USER_POOL_ID": user_pool_id,
             },
             dead_letter_queue_enabled=True,
         )
@@ -583,7 +611,7 @@ class LambdaStack(Stack):
             description="Lambda function to get current user's own record (secure self-lookup)",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="index.lambda_handler",
-            code=lambda_.Code.from_asset("../apps/api/lambdas/get_current_user"),
+            code=lambda_.Code.from_asset("../../apps/api/lambdas/get_current_user"),
             timeout=Duration.seconds(10),
             memory_size=128,
             role=self.lambda_execution_role,
@@ -639,7 +667,7 @@ class LambdaStack(Stack):
             description="Lambda function to query application users with filtering",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="index.lambda_handler",
-            code=lambda_.Code.from_asset("../apps/api/lambdas/get_application_users"),
+            code=lambda_.Code.from_asset("../../apps/api/lambdas/get_application_users"),
             timeout=Duration.seconds(30),
             memory_size=256,
             role=self.lambda_execution_role,
@@ -660,93 +688,3 @@ class LambdaStack(Stack):
         self._export_lambda_arn_custom(function, "getapplicationusers")
         return function
 
-    def _create_api_key_authorizer_lambda(self) -> lambda_.Function:
-        """Create API Key Authorizer Lambda for SDK AppSync API.
-
-        This Lambda is used as a Lambda authorizer for the SDK AppSync API.
-        It validates API keys in the format orb_{env}_{key} and returns
-        application/organization context on success.
-
-        Features:
-        - Validates API key by hash lookup in ApplicationApiKeys table
-        - Returns application/organization/environment context
-        - Handles invalid/expired/revoked keys with 401
-        - Supports rate limiting
-        - Audit logging for key usage
-        """
-        # Create a dedicated role for the authorizer with minimal permissions
-        authorizer_role = iam.Role(
-            self,
-            "ApiKeyAuthorizerRole",
-            role_name=self.config.resource_name("api-key-authorizer-role"),
-            assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"),
-            managed_policies=[
-                iam.ManagedPolicy.from_aws_managed_policy_name(
-                    "service-role/AWSLambdaBasicExecutionRole"
-                ),
-            ],
-        )
-
-        # Read table name from SSM parameter
-        api_keys_table_name = ssm.StringParameter.value_for_string_parameter(
-            self,
-            self.config.ssm_parameter_name("dynamodb/applicationapikeys/table-name"),
-        )
-
-        # DynamoDB access for ApplicationApiKeys table
-        authorizer_role.add_to_policy(
-            iam.PolicyStatement(
-                sid="DynamoDBApiKeysAccess",
-                effect=iam.Effect.ALLOW,
-                actions=[
-                    "dynamodb:GetItem",
-                    "dynamodb:Query",
-                    "dynamodb:Scan",
-                    "dynamodb:UpdateItem",
-                ],
-                resources=[
-                    f"arn:aws:dynamodb:{self.region}:{self.account}:table/{api_keys_table_name}",
-                    f"arn:aws:dynamodb:{self.region}:{self.account}:table/{api_keys_table_name}/index/*",
-                ],
-            )
-        )
-
-        # CloudWatch Logging
-        authorizer_role.add_to_policy(
-            iam.PolicyStatement(
-                sid="CloudWatchLogging",
-                effect=iam.Effect.ALLOW,
-                actions=[
-                    "logs:CreateLogGroup",
-                    "logs:CreateLogStream",
-                    "logs:PutLogEvents",
-                ],
-                resources=[
-                    f"arn:aws:logs:{self.region}:{self.account}:log-group:/aws/lambda/{self.config.prefix}-api-key-authorizer*",
-                ],
-            )
-        )
-
-        function = lambda_.Function(
-            self,
-            "ApiKeyAuthorizerLambda",
-            function_name=self.config.resource_name("api-key-authorizer"),
-            description="Lambda authorizer for SDK AppSync API - validates API keys",
-            runtime=lambda_.Runtime.PYTHON_3_12,
-            handler="index.lambda_handler",
-            code=lambda_.Code.from_asset("../apps/api/lambdas/api_key_authorizer"),
-            timeout=Duration.seconds(10),
-            memory_size=128,
-            role=authorizer_role,
-            environment={
-                "APPLICATION_API_KEYS_TABLE": api_keys_table_name,
-                "LOGGING_LEVEL": "INFO",
-                "VERSION": "1",
-                "RATE_LIMIT_MAX_REQUESTS": "100",
-            },
-            dead_letter_queue_enabled=True,
-        )
-
-        self.functions["api-key-authorizer"] = function
-        self._export_lambda_arn_custom(function, "apikeyauthorizer")
-        return function

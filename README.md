@@ -25,6 +25,7 @@ Orb Integration Hub is a serverless application that provides a unified API for 
 - Python 3.12+
 - Node.js 20.x+
 - AWS CLI configured with `--profile sso-orb-dev`
+- AWS CDK CLI 2.172.0+ (install with `npm install -g aws-cdk`)
 - pipenv for Python dependency management
 - npm for TypeScript dependency management
 
@@ -34,6 +35,9 @@ Orb Integration Hub is a serverless application that provides a unified API for 
 # Clone the repository
 git clone https://github.com/com-oneredboot/orb-integration-hub.git
 cd orb-integration-hub
+
+# Install AWS CDK CLI globally (required for infrastructure deployment)
+npm install -g aws-cdk
 
 # Set up reference repositories (required for standards and MCP server)
 mkdir -p repositories
@@ -193,6 +197,13 @@ Deployment is handled via GitHub Actions workflows:
 
 ```bash
 cd infrastructure
+
+# Install CDK CLI if not already installed
+npm install -g aws-cdk
+
+# Verify CDK CLI version matches library version
+cdk --version  # Should be 2.172.0 or higher
+pipenv run pip show aws-cdk-lib  # Should match CLI version
 
 # Synthesize CloudFormation templates
 cdk synth --all \

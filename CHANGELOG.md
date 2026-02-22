@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Refactored CDK infrastructure stacks to use descriptive names
+  - Renamed DynamoDB Stack → Data Stack (`data_stack.py`)
+  - Renamed Cognito Stack → Authorization Stack (`authorization_stack.py`)
+  - Renamed Lambda Stack → Compute Stack (`compute_stack.py`)
+  - Renamed AppSync Stack → API Stack (`api_stack.py`)
+  - Moved API Key Authorizer Lambda from Compute Stack to Authorization Stack
+  - Added SDK AppSync API to API Stack (both Main and SDK APIs now in one stack)
+  - Updated stack dependencies: Bootstrap → Data → Authorization → Compute → API → Monitoring
+  - Updated all tests and documentation to reflect new naming
+  - Stack IDs now use descriptive names: `{prefix}-data`, `{prefix}-authorization`, `{prefix}-compute`, `{prefix}-api`
+  - Spec: `.kiro/specs/infrastructure-stack-refactoring/`
+
 ### Added
 - Application Roles Management feature
   - Roles tab on Application Detail page for managing ApplicationRoles

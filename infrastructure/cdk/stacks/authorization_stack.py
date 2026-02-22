@@ -1,4 +1,4 @@
-"""Cognito Stack - User authentication and authorization resources.
+"""Authorization Stack - User authentication and authorization resources.
 
 Creates:
 - User Pool with password policies and MFA configuration
@@ -7,6 +7,7 @@ Creates:
 - User groups (USER, CUSTOMER, CLIENT, EMPLOYEE, OWNER)
 - PostUserConfirmation Lambda trigger
 - SMS role and verification topic
+- API Key Authorizer Lambda for SDK API
 - SSM parameters for cross-stack references
 """
 
@@ -33,8 +34,8 @@ from constructs import Construct
 from config import Config
 
 
-class CognitoStack(Stack):
-    """Cognito stack with user authentication resources."""
+class AuthorizationStack(Stack):
+    """Authorization stack with user authentication and API key authorization resources."""
 
     # User groups to create
     USER_GROUPS = [
@@ -82,6 +83,9 @@ class CognitoStack(Stack):
 
         # SMS Verification Topic
         self.sms_verification_topic = self._create_sms_verification_topic()
+
+        # API Key Authorizer Lambda
+        self.api_key_authorizer_lambda = self._create_api_key_authorizer_lambda()
 
         # SSM Parameters
         self._create_ssm_parameters()
@@ -463,6 +467,104 @@ Please login at: https://orb-integration-hub.com/authenticate/""",
         )
 
         return topic
+
+    def _create_api_key_authorizer_lambda(self) -> lambda_.Function:
+        """Create API Key Authorizer Lambda for SDK AppSync API.
+
+        This Lambda is used as a Lambda authorizer for the SDK AppSync API.
+        It validates API keys in the format orb_{env}_{key} and returns
+        application/organization context on success.
+
+        Features:
+        - Validates API key by hash lookup in ApplicationApiKeys table
+        - Returns application/organization/environment context
+        - Handles invalid/expired/revoked keys with 401
+        - Supports rate limiting
+        - Audit logging for key usage
+        """
+        # Create a dedicated role for the authorizer with minimal permissions
+        authorizer_role = iam.Role(
+            self,
+            "ApiKeyAuthorizerRole",
+            role_name=self.config.resource_name("api-key-authorizer-role"),
+            assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"),
+            managed_policies=[
+                iam.ManagedPolicy.from_aws_managed_policy_name(
+                    "service-role/AWSLambdaBasicExecutionRole"
+                ),
+            ],
+        )
+
+        # Read table name from SSM parameter
+        api_keys_table_name = ssm.StringParameter.value_for_string_parameter(
+            self,
+            self.config.ssm_parameter_name("dynamodb/applicationapikeys/table-name"),
+        )
+
+        # DynamoDB access for ApplicationApiKeys table
+        authorizer_role.add_to_policy(
+            iam.PolicyStatement(
+                sid="DynamoDBApiKeysAccess",
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "dynamodb:GetItem",
+                    "dynamodb:Query",
+                    "dynamodb:Scan",
+                    "dynamodb:UpdateItem",
+                ],
+                resources=[
+                    f"arn:aws:dynamodb:{self.region}:{self.account}:table/{api_keys_table_name}",
+                    f"arn:aws:dynamodb:{self.region}:{self.account}:table/{api_keys_table_name}/index/*",
+                ],
+            )
+        )
+
+        # CloudWatch Logging
+        authorizer_role.add_to_policy(
+            iam.PolicyStatement(
+                sid="CloudWatchLogging",
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents",
+                ],
+                resources=[
+                    f"arn:aws:logs:{self.region}:{self.account}:log-group:/aws/lambda/{self.config.prefix}-api-key-authorizer*",
+                ],
+            )
+        )
+
+        function = lambda_.Function(
+            self,
+            "ApiKeyAuthorizerLambda",
+            function_name=self.config.resource_name("api-key-authorizer"),
+            description="Lambda authorizer for SDK AppSync API - validates API keys",
+            runtime=lambda_.Runtime.PYTHON_3_12,
+            handler="index.lambda_handler",
+            code=lambda_.Code.from_asset("../../apps/api/lambdas/api_key_authorizer"),
+            timeout=Duration.seconds(10),
+            memory_size=128,
+            role=authorizer_role,
+            environment={
+                "APPLICATION_API_KEYS_TABLE": api_keys_table_name,
+                "LOGGING_LEVEL": "INFO",
+                "VERSION": "1",
+                "RATE_LIMIT_MAX_REQUESTS": "100",
+            },
+            dead_letter_queue_enabled=True,
+        )
+
+        # Export Lambda ARN to SSM
+        ssm.StringParameter(
+            self,
+            "ApiKeyAuthorizerLambdaArnParameter",
+            parameter_name=self.config.ssm_parameter_name("lambda/authorizer/arn"),
+            string_value=function.function_arn,
+            description="ARN of the API Key Authorizer Lambda function",
+        )
+
+        return function
 
     def _create_ssm_parameters(self) -> None:
         """Create SSM parameters for cross-stack references."""

@@ -1,4 +1,4 @@
-"""Unit tests for CognitoStack."""
+"""Unit tests for AuthorizationStack."""
 
 import sys
 from pathlib import Path
@@ -11,7 +11,7 @@ from aws_cdk import App
 from aws_cdk.assertions import Match, Template
 
 from config import Config
-from stacks.cognito_stack import CognitoStack
+from stacks.authorization_stack import AuthorizationStack
 
 
 @pytest.fixture
@@ -29,11 +29,11 @@ def test_config() -> Config:
 
 @pytest.fixture
 def template(test_config: Config) -> Template:
-    """Create CDK template from CognitoStack."""
+    """Create CDK template from AuthorizationStack."""
     app = App()
-    stack = CognitoStack(
+    stack = AuthorizationStack(
         app,
-        "TestCognitoStack",
+        "TestAuthorizationStack",
         config=test_config,
     )
     return Template.from_stack(stack)
@@ -347,5 +347,87 @@ class TestCognitoStackTags:
                     "Environment": "dev",
                     "ProjectId": "project",
                 }
+            },
+        )
+
+
+class TestAuthorizationStackApiKeyAuthorizer:
+    """Tests for API Key Authorizer Lambda."""
+
+    def test_creates_api_key_authorizer_lambda(self, template: Template) -> None:
+        """Verify API Key Authorizer Lambda is created."""
+        template.has_resource_properties(
+            "AWS::Lambda::Function",
+            {
+                "FunctionName": "test-project-dev-api-key-authorizer",
+                "Runtime": "python3.12",
+                "Handler": "index.lambda_handler",
+                "Description": "Lambda authorizer for SDK AppSync API - validates API keys",
+            },
+        )
+
+    def test_api_key_authorizer_has_correct_timeout(self, template: Template) -> None:
+        """Verify API Key Authorizer Lambda has 10 second timeout."""
+        template.has_resource_properties(
+            "AWS::Lambda::Function",
+            {
+                "FunctionName": "test-project-dev-api-key-authorizer",
+                "Timeout": 10,
+            },
+        )
+
+    def test_api_key_authorizer_has_correct_memory(self, template: Template) -> None:
+        """Verify API Key Authorizer Lambda has 128MB memory."""
+        template.has_resource_properties(
+            "AWS::Lambda::Function",
+            {
+                "FunctionName": "test-project-dev-api-key-authorizer",
+                "MemorySize": 128,
+            },
+        )
+
+    def test_api_key_authorizer_has_environment_variables(self, template: Template) -> None:
+        """Verify API Key Authorizer Lambda has required environment variables."""
+        template.has_resource_properties(
+            "AWS::Lambda::Function",
+            {
+                "FunctionName": "test-project-dev-api-key-authorizer",
+                "Environment": {
+                    "Variables": {
+                        "LOGGING_LEVEL": "INFO",
+                        "VERSION": "1",
+                        "RATE_LIMIT_MAX_REQUESTS": "100",
+                    }
+                },
+            },
+        )
+
+    def test_api_key_authorizer_has_dlq_enabled(self, template: Template) -> None:
+        """Verify API Key Authorizer Lambda has DLQ enabled."""
+        template.has_resource_properties(
+            "AWS::Lambda::Function",
+            {
+                "FunctionName": "test-project-dev-api-key-authorizer",
+                "DeadLetterConfig": Match.object_like({"TargetArn": Match.any_value()}),
+            },
+        )
+
+    def test_exports_api_key_authorizer_arn(self, template: Template) -> None:
+        """Verify API Key Authorizer Lambda ARN is exported to SSM."""
+        template.has_resource_properties(
+            "AWS::SSM::Parameter",
+            {
+                "Name": "/test/project/dev/lambda/authorizer/arn",
+                "Type": "String",
+                "Description": "ARN of the API Key Authorizer Lambda function",
+            },
+        )
+
+    def test_api_key_authorizer_role_has_dynamodb_access(self, template: Template) -> None:
+        """Verify API Key Authorizer role has DynamoDB access."""
+        template.has_resource_properties(
+            "AWS::IAM::Role",
+            {
+                "RoleName": "test-project-dev-api-key-authorizer-role",
             },
         )

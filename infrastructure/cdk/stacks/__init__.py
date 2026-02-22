@@ -1,19 +1,21 @@
 # CDK Stack definitions for orb-integration-hub
 
+from .api_stack import ApiStack
+from .authorization_stack import AuthorizationStack
 from .bootstrap_stack import BootstrapStack
-from .cognito_stack import CognitoStack
-from .dynamodb_stack import DynamoDBStack
+from .compute_stack import ComputeStack
+from .data_stack import DataStack
 from .frontend_stack import FrontendStack
 from .lambda_layers_stack import LambdaLayersStack
-from .lambda_stack import LambdaStack
 from .monitoring_stack import MonitoringStack
 
 __all__ = [
+    "ApiStack",
+    "AuthorizationStack",
     "BootstrapStack",
-    "CognitoStack",
-    "DynamoDBStack",
+    "ComputeStack",
+    "DataStack",
     "FrontendStack",
     "LambdaLayersStack",
-    "LambdaStack",
     "MonitoringStack",
 ]

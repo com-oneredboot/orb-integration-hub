@@ -26,11 +26,12 @@ import aws_cdk as cdk
 
 from config import Config
 from stacks import (
+    ApiStack,
+    AuthorizationStack,
     BootstrapStack,
-    CognitoStack,
-    DynamoDBStack,
+    ComputeStack,
+    DataStack,
     FrontendStack,
-    LambdaStack,
     MonitoringStack,
 )
 
@@ -62,19 +63,19 @@ def main() -> None:
         description="Bootstrap resources: S3 buckets, IAM, SQS queues",
     )
 
-    # Cognito Stack - User Pool, Identity Pool, Groups
-    cognito_stack = CognitoStack(
+    # Authorization Stack - Cognito User Pool, Identity Pool, Groups, API Key Authorizer
+    authorization_stack = AuthorizationStack(
         app,
-        f"{stack_prefix}-cognito",
+        f"{stack_prefix}-authorization",
         config=config,
         env=env,
-        description="Cognito resources: User Pool, Identity Pool, Groups",
+        description="Authorization resources: Cognito User Pool, Identity Pool, Groups, API Key Authorizer",
     )
 
-    # DynamoDB Stack - All tables (writes SSM parameters)
-    dynamodb_stack = DynamoDBStack(
+    # Data Stack - All tables (writes SSM parameters)
+    data_stack = DataStack(
         app,
-        f"{stack_prefix}-dynamodb",
+        f"{stack_prefix}-data",
         env=env,
         description="DynamoDB tables (writes table names/ARNs to SSM)",
     )
@@ -93,16 +94,25 @@ def main() -> None:
 
     # ===== Application Stacks (with dependencies) =====
 
-    # Lambda Stack - Lambda functions (depends on Cognito and Backend)
-    # Table names are read from SSM parameters (set by backend stack)
-    # Layer ARNs are read from SSM parameters (set by lambda-layers stack)
-    lambda_stack = LambdaStack(
+    # Compute Stack - Business logic Lambda functions
+    compute_stack = ComputeStack(
         app,
-        f"{stack_prefix}-lambda",
+        f"{stack_prefix}-compute",
         config=config,
-        cognito_stack=cognito_stack,
+        authorization_stack=authorization_stack,
         env=env,
         description="Lambda functions for business logic",
+    )
+
+    # API Stack - Main and SDK GraphQL APIs
+    # Reads table names from SSM parameters (set by Data Stack)
+    # Reads Lambda ARNs from SSM parameters (set by Compute Stack)
+    api_stack = ApiStack(
+        app,
+        f"{stack_prefix}-api",
+        config=config,
+        env=env,
+        description="AppSync APIs: Main (Cognito auth) and SDK (Lambda auth)",
     )
 
     # Monitoring Stack - CloudWatch dashboards and alarms
@@ -117,16 +127,22 @@ def main() -> None:
 
     # Add stack dependencies explicitly
     # Bootstrap must deploy first (provides S3, SQS, IAM)
-    cognito_stack.add_dependency(bootstrap_stack)
-    dynamodb_stack.add_dependency(bootstrap_stack)
+    data_stack.add_dependency(bootstrap_stack)
+    authorization_stack.add_dependency(bootstrap_stack)
+    authorization_stack.add_dependency(data_stack)  # Needs ApplicationApiKeys table
     frontend_stack.add_dependency(bootstrap_stack)
     
-    # Lambda depends on Cognito (for user pool ID) and DynamoDB (for table names)
-    lambda_stack.add_dependency(cognito_stack)
-    lambda_stack.add_dependency(dynamodb_stack)
+    # Compute depends on Authorization (for user pool ID) and Data (for table names)
+    compute_stack.add_dependency(authorization_stack)
+    compute_stack.add_dependency(data_stack)
 
-    # Monitoring depends on Lambda
-    monitoring_stack.add_dependency(lambda_stack)
+    # API depends on Data (for table names), Compute (for Lambda ARNs), and Authorization (for API Key Authorizer)
+    api_stack.add_dependency(data_stack)
+    api_stack.add_dependency(compute_stack)
+    api_stack.add_dependency(authorization_stack)
+
+    # Monitoring depends on API
+    monitoring_stack.add_dependency(api_stack)
 
     # Synthesize the app
     app.synth()

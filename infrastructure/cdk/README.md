@@ -4,40 +4,64 @@ This directory contains AWS CDK infrastructure code for the orb-integration-hub 
 
 ## Stack Structure
 
-The infrastructure is organized into 8 stacks with the following dependency graph:
+The infrastructure is organized into 7 stacks with the following dependency graph:
 
 ```
-┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
-│  Bootstrap  │  │   Cognito   │  │  DynamoDB   │  │Lambda Layers│  │  Frontend   │
-└─────────────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └─────────────┘
-                       │                │                │
-                       └────────┬───────┴────────────────┘
-                                │
-                         ┌──────▼──────┐
-                         │   Lambda    │
-                         └──────┬──────┘
-                                │
-                         ┌──────▼──────┐
-                         │   AppSync   │
-                         └──────┬──────┘
-                                │
-                         ┌──────▼──────┐
-                         │  Monitoring │
-                         └─────────────┘
+┌─────────────┐
+│  Bootstrap  │
+└──────┬──────┘
+       │
+       ├──────────────┬──────────────┬──────────────┐
+       │              │              │              │
+┌──────▼──────┐  ┌───▼────┐  ┌──────▼──────┐  ┌───▼────┐
+│    Data     │  │  Auth  │  │  Frontend   │  │ Layers │
+└──────┬──────┘  └───┬────┘  └─────────────┘  └────────┘
+       │             │                          (deployed
+       │             │                           separately)
+       └──────┬──────┘
+              │
+       ┌──────▼──────┐
+       │   Compute   │
+       └──────┬──────┘
+              │
+       ┌──────▼──────┐
+       │     API     │
+       └──────┬──────┘
+              │
+       ┌──────▼──────┐
+       │ Monitoring  │
+       └─────────────┘
 ```
 
 ### Stack Descriptions
 
-| Stack | Description | Dependencies |
-|-------|-------------|--------------|
-| Bootstrap | S3 buckets, IAM users, SQS queues | None |
-| Cognito | User Pool, Identity Pool, Groups | None |
-| DynamoDB | All DynamoDB tables | None |
-| Lambda Layers | Shared Lambda layers | None |
-| Frontend | S3 bucket, CloudFront distribution | None |
-| Lambda | Lambda functions | Cognito, DynamoDB, Lambda Layers |
-| AppSync | GraphQL API | Cognito, DynamoDB, Lambda |
-| Monitoring | CloudWatch dashboards, alarms, GuardDuty | AppSync |
+The stacks use descriptive names that reflect their purpose rather than the underlying technology:
+
+| Stack | Description | Dependencies | Technologies |
+|-------|-------------|--------------|--------------|
+| Bootstrap | S3 buckets, IAM users, SQS queues | None | S3, IAM, SQS |
+| Data | All DynamoDB tables | Bootstrap | DynamoDB |
+| Authorization | User Pool, Identity Pool, Groups, API Key Authorizer | Bootstrap, Data | Cognito, Lambda |
+| Frontend | S3 bucket, CloudFront distribution | Bootstrap | S3, CloudFront |
+| Compute | Lambda functions for business logic | Authorization, Data | Lambda |
+| API | Main and SDK GraphQL APIs | Data, Compute, Authorization | AppSync |
+| Monitoring | CloudWatch dashboards, alarms, GuardDuty | API | CloudWatch, GuardDuty |
+
+**Note:** Lambda Layers stack is deployed separately via the `deploy-lambda-layers` workflow to avoid CloudFormation cross-stack export issues when layer versions change.
+
+### Rationale for Descriptive Naming
+
+The stacks are named based on their function rather than technology:
+- **Data** instead of DynamoDB - describes what it provides (data storage)
+- **Authorization** instead of Cognito - describes its purpose (authentication and authorization)
+- **Compute** instead of Lambda - describes its role (business logic computation)
+- **API** instead of AppSync - describes what it exposes (API layer)
+
+This naming convention:
+- Makes the architecture more understandable to new team members
+- Allows technology changes without renaming stacks
+- Aligns with domain-driven design principles
+- Improves clarity in deployment logs and AWS Console
 
 ## Configuration
 
@@ -111,7 +135,7 @@ Deploy a single stack:
 
 ```bash
 cd infrastructure
-pipenv run cdk deploy orb-integration-hub-dev-appsync
+pipenv run cdk deploy orb-integration-hub-dev-api
 ```
 
 ### Deploy with Custom Context
@@ -139,7 +163,7 @@ Run tests for a specific stack:
 
 ```bash
 cd infrastructure
-pipenv run pytest cdk/tests/test_appsync_stack.py -v
+pipenv run pytest cdk/tests/test_authorization_stack.py -v
 ```
 
 ## Directory Structure
@@ -150,24 +174,24 @@ infrastructure/cdk/
 ├── config.py           # Configuration management
 ├── stacks/             # Stack definitions
 │   ├── __init__.py
-│   ├── appsync_stack.py
-│   ├── bootstrap_stack.py
-│   ├── cognito_stack.py
-│   ├── dynamodb_stack.py
-│   ├── frontend_stack.py
-│   ├── lambda_layers_stack.py
-│   ├── lambda_stack.py
-│   └── monitoring_stack.py
+│   ├── api_stack.py           # Main and SDK GraphQL APIs
+│   ├── authorization_stack.py # Cognito + API Key Authorizer
+│   ├── bootstrap_stack.py     # S3, IAM, SQS
+│   ├── compute_stack.py       # Lambda functions
+│   ├── data_stack.py          # DynamoDB tables
+│   ├── frontend_stack.py      # S3 + CloudFront
+│   ├── lambda_layers_stack.py # Shared Lambda layers
+│   └── monitoring_stack.py    # CloudWatch + GuardDuty
 ├── shared_constructs/  # Reusable constructs
 │   └── tagged_resource.py
 └── tests/              # Unit tests
-    ├── test_appsync_stack.py
+    ├── test_api_stack.py
+    ├── test_authorization_stack.py
     ├── test_bootstrap_stack.py
-    ├── test_cognito_stack.py
-    ├── test_dynamodb_stack.py
+    ├── test_compute_stack.py
+    ├── test_data_stack.py
     ├── test_frontend_stack.py
     ├── test_lambda_layers_stack.py
-    ├── test_lambda_stack.py
     └── test_monitoring_stack.py
 ```
 
@@ -197,7 +221,7 @@ Example: `/orb/integration-hub/dev/cognito/user-pool-id`
 
 ### Parameter Reference by Stack
 
-#### Cognito Stack (`/orb/integration-hub/{env}/cognito/`)
+#### Authorization Stack (`/orb/integration-hub/{env}/cognito/` and `/orb/integration-hub/{env}/lambda/`)
 
 | Parameter Path | Description |
 |----------------|-------------|
@@ -206,16 +230,17 @@ Example: `/orb/integration-hub/dev/cognito/user-pool-id`
 | `/orb/integration-hub/{env}/cognito/identity-pool-id` | Cognito Identity Pool ID |
 | `/orb/integration-hub/{env}/cognito/user-pool-arn` | Cognito User Pool ARN |
 | `/orb/integration-hub/{env}/cognito/qr-issuer` | MFA QR code issuer name |
-| `/orb/integration-hub/{env}/cognito/phone-number-verification-topic-arn` | SNS topic for phone verification |
+| `/orb/integration-hub/{env}/cognito/phone-number-verification-topic/arn` | SNS topic for phone verification |
+| `/orb/integration-hub/{env}/lambda/authorizer/arn` | API Key Authorizer Lambda ARN |
 
-#### DynamoDB Stack (`/orb/integration-hub/{env}/dynamodb/`)
+#### Data Stack (`/orb/integration-hub/{env}/dynamodb/`)
 
 | Parameter Path | Description |
 |----------------|-------------|
-| `/orb/integration-hub/{env}/dynamodb/{table-name}/arn` | Table ARN |
-| `/orb/integration-hub/{env}/dynamodb/{table-name}/name` | Table name |
+| `/orb/integration-hub/{env}/dynamodb/{table-name}/table-arn` | Table ARN |
+| `/orb/integration-hub/{env}/dynamodb/{table-name}/table-name` | Table name |
 
-Tables: `users`, `organizations`, `organization-users`, `applications`, `application-users`, `application-roles`, `roles`, `notifications`, `privacy-requests`, `ownership-transfer-requests`, `sms-rate-limit`
+Tables: `users`, `organizations`, `organizationusers`, `applications`, `applicationusers`, `applicationroles`, `applicationapikeys`, `applicationenvironmentconfig`, `applicationuserroles`, `notifications`, `privacyrequests`, `ownershiptransferrequests`, `smsratelimit`
 
 #### Lambda Layers Stack (`/orb/integration-hub/{env}/lambda-layers/`)
 
@@ -225,13 +250,13 @@ Tables: `users`, `organizations`, `organization-users`, `applications`, `applica
 
 Layers: `common`, `authentication-dynamodb`, `organizations-security`, `stripe`
 
-#### Lambda Stack (`/orb/integration-hub/{env}/lambda/`)
+#### Compute Stack (`/orb/integration-hub/{env}/lambda/`)
 
 | Parameter Path | Description |
 |----------------|-------------|
 | `/orb/integration-hub/{env}/lambda/{function-name}/arn` | Lambda function ARN |
 
-Functions: `sms-verification`, `pre-cognito-claims`, `cognito-group-manager`, `user-status-calculator`, `contact-us`, `stripe`, `stripe-publishable-key`, `paypal`, `organizations`, `ownership-transfer-service`, `privacy-rights-resolver`, `kms-cleanup-orphaned`
+Functions: `sms-verification`, `pre-cognito-claims`, `cognito-group-manager`, `user-status-calculator`, `contact-us`, `stripe`, `stripe-publishable-key`, `paypal`, `organizations`, `ownership-transfer-service`, `privacy-rights-resolver`, `kms-cleanup-orphaned`, `check-email-exists`, `create-user-from-cognito`, `get-current-user`, `get-application-users`
 
 #### Bootstrap Stack (`/orb/integration-hub/{env}/`)
 
@@ -243,13 +268,17 @@ Functions: `sms-verification`, `pre-cognito-claims`, `cognito-group-manager`, `u
 | `/orb/integration-hub/{env}/iam/ci-user/access-key-id` | CI user access key ID |
 | `/orb/integration-hub/{env}/secrets/ci-user-secret-key/arn` | CI user secret key ARN |
 
-#### AppSync Stack (`/orb/integration-hub/{env}/appsync/`)
+#### API Stack (`/orb/integration-hub/{env}/appsync/`)
 
 | Parameter Path | Description |
 |----------------|-------------|
-| `/orb/integration-hub/{env}/appsync/api-id` | AppSync API ID |
-| `/orb/integration-hub/{env}/appsync/api-url` | AppSync GraphQL endpoint URL |
-| `/orb/integration-hub/{env}/appsync/api-key` | AppSync API key |
+| `/orb/integration-hub/{env}/appsync/main/api-id` | Main AppSync API ID |
+| `/orb/integration-hub/{env}/appsync/main/api-url` | Main AppSync GraphQL endpoint URL |
+| `/orb/integration-hub/{env}/appsync/main/api-key` | Main AppSync API key |
+| `/orb/integration-hub/{env}/appsync/sdk/api-id` | SDK AppSync API ID |
+| `/orb/integration-hub/{env}/appsync/sdk/api-url` | SDK AppSync GraphQL endpoint URL |
+
+**Note:** The API Stack contains both the Main API (Cognito authentication) and SDK API (Lambda authorizer with API keys).
 
 #### Frontend Stack (`/orb/integration-hub/{env}/frontend/`)
 
