@@ -47,7 +47,7 @@ class TestBootstrapStackBuckets:
         template.has_resource_properties(
             "AWS::S3::Bucket",
             {
-                "BucketName": "test-project-build-artifacts",
+                "BucketName": "test-project-dev-build-artifacts",
                 "PublicAccessBlockConfiguration": {
                     "BlockPublicAcls": True,
                     "BlockPublicPolicy": True,
@@ -62,7 +62,7 @@ class TestBootstrapStackBuckets:
         template.has_resource_properties(
             "AWS::S3::Bucket",
             {
-                "BucketName": "test-project-build-templates",
+                "BucketName": "test-project-dev-build-templates",
                 "VersioningConfiguration": {"Status": "Enabled"},
             },
         )
