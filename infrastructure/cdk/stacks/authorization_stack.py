@@ -535,10 +535,11 @@ Please login at: https://orb-integration-hub.com/authenticate/""",
             )
         )
 
-        # Determine Lambda code path based on execution context
-        # In GitHub Actions: working dir is infrastructure/, so path is ../apps/api/lambdas/api_key_authorizer
-        # Locally: working dir is infrastructure/cdk/, so path is ../../apps/api/lambdas/api_key_authorizer
-        lambda_code_path = Path(__file__).parent.parent.parent / "apps" / "api" / "lambdas" / "api_key_authorizer"
+        # Determine Lambda code path - resolve from CDK stack file location
+        # __file__ is at: infrastructure/cdk/stacks/authorization_stack.py
+        # Target is at: apps/api/lambdas/api_key_authorizer
+        # Go up 3 levels to repo root, then down to apps
+        lambda_code_path = Path(__file__).resolve().parent.parent.parent.parent / "apps" / "api" / "lambdas" / "api_key_authorizer"
         
         function = lambda_.Function(
             self,
