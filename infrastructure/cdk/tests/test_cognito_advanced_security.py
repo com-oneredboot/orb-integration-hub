@@ -20,7 +20,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import Config
-from stacks.cognito_stack import CognitoStack
+from stacks.authorization_stack import AuthorizationStack
 
 
 @pytest.fixture
@@ -38,9 +38,9 @@ def test_config() -> Config:
 
 @pytest.fixture
 def cognito_template(test_config: Config) -> Template:
-    """Create CDK template from CognitoStack."""
+    """Create CDK template from AuthorizationStack."""
     app = App()
-    cognito = CognitoStack(app, "Cognito", config=test_config)
+    cognito = AuthorizationStack(app, "Authorization", config=test_config)
     return Template.from_stack(cognito)
 
 
