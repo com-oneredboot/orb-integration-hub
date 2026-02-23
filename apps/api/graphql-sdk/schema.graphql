@@ -306,3 +306,21 @@ type Mutation {
 }
 
 # Enums
+
+enum ApplicationStatus {
+  UNKNOWN
+  ACTIVE
+  INACTIVE
+  PENDING
+  DELETED
+}
+
+enum UserStatus {
+  UNKNOWN
+  ACTIVE
+  INACTIVE
+  PENDING
+  REJECTED
+  SUSPENDED
+  DELETED
+}
