@@ -665,24 +665,36 @@ dynamodb.update_item(code, {'used': True, 'used_at': current_time})
 - API key authorizer has rate limiting support
 - Need to add rate limiting to SDK auth endpoints
 
-### 7. Callback URL Validation ✅ NEEDS IMPLEMENTATION
+### 7. Callback URL Validation ✅ TO BE IMPLEMENTED
 
 **Threat:** Attacker redirects authorization code to their own server.
 
 **Mitigation:**
-- Callback URLs must be pre-registered with application
+- Callback URLs stored in Applications table (array field)
 - Exact match validation (no wildcards)
 - HTTPS required for production environments
 - Subdomain validation to prevent subdomain takeover
 
-**Implementation Needed:**
+**Implementation:**
 ```python
 # In initiate endpoint
-registered_callbacks = get_application_callbacks(client_id)
+application = dynamodb.get_item('Applications', {'applicationId': client_id})
+registered_callbacks = application.get('callbackUrls', [])
+
 if callback_url not in registered_callbacks:
     raise AuthenticationError('Invalid callback URL')
 if environment == 'production' and not callback_url.startswith('https://'):
     raise AuthenticationError('HTTPS required for production')
+```
+
+**Schema Addition:**
+```yaml
+# schemas/tables/Applications.yml
+callbackUrls:
+  type: array
+  items: string
+  required: true
+  description: List of registered callback URLs for OAuth redirects
 ```
 
 ### 8. PKCE (Proof Key for Code Exchange) ⚠️ RECOMMENDED
@@ -727,9 +739,9 @@ await orbSDK.auth.exchange({
 | Token Revocation | ✅ Addressed | Blacklist + refresh token revocation |
 | Replay Prevention | ✅ Addressed | Single-use authorization codes |
 | MFA Support | ✅ Addressed | Cognito TOTP integration |
-| Rate Limiting | ⚠️ Partial | SMS + API keys done, SDK endpoints needed |
-| Callback Validation | ❌ Needed | Pre-registered URL validation |
-| PKCE | ⚠️ Recommended | For mobile/SPA clients |
+| Rate Limiting | 📋 In Spec | SDK endpoint rate limiting to be implemented |
+| Callback Validation | 📋 In Spec | Applications.callbackUrls field + validation |
+| PKCE | 📋 In Spec | Optional enhancement for mobile/SPA clients |
 
 ## API Endpoints
 
