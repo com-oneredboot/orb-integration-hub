@@ -12,6 +12,16 @@ The features are:
 5. Notifications UI System - Displays and manages in-app notifications
 6. Email/SMS Notification Delivery - Delivers notifications via email and SMS channels
 
+## Standard Requirements
+
+This spec follows the [orb-templates Spec Standards](../../repositories/orb-templates/docs/kiro-steering/templates/spec-standards.md).
+
+Requirements 7-10 implement the standard requirements for:
+- Documentation updates (Requirement 7)
+- Version and changelog management (Requirement 8)
+- Git commit standards (Requirement 9)
+- Final verification (Requirement 10)
+
 ## Glossary
 
 - **JWT (JSON Web Token)**: A compact, URL-safe token format used for authentication and authorization
@@ -360,10 +370,14 @@ mutation CreateInvitation {
 8. WHEN production readiness features are implemented, THE Integration_Guide SHALL document the complete user flow from invitation creation to signup completion
 9. WHEN production readiness features are implemented, THE Integration_Guide SHALL include code examples for calling the createInvitation mutation with API key authentication
 10. WHEN production readiness features are implemented, THE Integration_Guide SHALL document error handling and edge cases
-9. WHEN production readiness features are implemented, THE Documentation SHALL include API documentation for all new GraphQL mutations and queries
-10. WHEN production readiness features are implemented, THE Documentation SHALL include configuration guide for SES and SNS setup
-11. THE Documentation SHALL use consistent terminology with the Glossary
-12. THE Documentation SHALL avoid duplication by referencing existing orb-templates standards
+11. WHEN production readiness features are implemented, THE Documentation SHALL include API documentation for all new GraphQL mutations and queries
+12. WHEN production readiness features are implemented, THE Documentation SHALL include configuration guide for SES and SNS setup
+13. WHEN production readiness features are implemented, THE Documentation SHALL include OAuth authentication flow documentation (already completed in docs/authentication-flow.md)
+14. WHEN updating documentation, THE Documentation_System SHALL ensure content remains relevant and concise
+15. THE Documentation_System SHALL remove outdated information
+16. THE Documentation SHALL use consistent terminology with the Glossary
+17. THE Documentation SHALL avoid duplication by referencing existing orb-templates standards
+18. THE Documentation SHALL include "Related Documentation" links where appropriate
 
 ### Requirement 8: Version and Changelog Management
 
@@ -387,7 +401,24 @@ mutation CreateInvitation {
 3. WHEN multiple issues are addressed, THE Commit_Message SHALL reference all issue numbers
 4. THE Commit_Message SHALL use descriptive text explaining the change
 
-### Requirement 10: Final Verification
+### Requirement 10: Property-Based Testing
+
+**User Story:** As a developer, I want property-based tests for critical correctness properties, so that I can validate the system behaves correctly across many generated inputs.
+
+#### Acceptance Criteria
+
+1. WHEN the design document includes correctness properties, THE Testing_System SHALL implement property-based tests
+2. THE property tests SHALL run minimum 100 iterations per property
+3. EACH property test SHALL reference its design document property number
+4. THE property test SHALL include a tag with format: "Feature: {feature_name}, Property {N}: {title}"
+5. WHEN testing OAuth token generation, THE Property_Test SHALL verify token uniqueness across 100 generations
+6. WHEN testing authorization code usage, THE Property_Test SHALL verify single-use enforcement
+7. WHEN testing token expiration, THE Property_Test SHALL verify expired tokens are rejected
+8. WHEN testing callback URL validation, THE Property_Test SHALL verify only registered URLs are accepted
+9. THE property tests SHALL use hypothesis (Python) or fast-check (TypeScript) libraries
+10. THE property tests SHALL be annotated with "Validates: Requirements X.Y" comments
+
+### Requirement 11: Final Verification
 
 **User Story:** As a developer, I want all tests and checks to pass, so that I can be confident the code is production-ready.
 
@@ -398,6 +429,11 @@ mutation CreateInvitation {
 3. WHEN implementation is complete, THE Linter SHALL report no errors
 4. WHEN implementation is complete, THE Type_Checker SHALL report no errors
 5. WHEN implementation is complete, THE Documentation SHALL render correctly
+6. THE CHANGELOG.md SHALL be updated with all changes
+7. THE Version SHALL be bumped appropriately
+8. THE Commits SHALL reference all related issues
+9. WHEN all checks pass, THE Final_Verification SHALL confirm no markdown syntax errors
+10. WHEN all checks pass, THE Final_Verification SHALL confirm documentation renders correctly in GitHub
 6. THE CHANGELOG.md SHALL be updated with all changes
 7. THE Version SHALL be bumped appropriately
 8. THE Commits SHALL reference all related issues
