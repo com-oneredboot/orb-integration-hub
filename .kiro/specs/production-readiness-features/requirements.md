@@ -58,6 +58,78 @@ Requirements 7-10 implement the standard requirements for:
 - **Rate_Limiter**: A system component that enforces request limits per client or token to prevent abuse
 - **State_Parameter**: A random value used for CSRF protection, passed through the OAuth flow and validated on callback
 
+## API Boundary Definitions
+
+**CRITICAL:** This section defines strict API boundaries to prevent crosstalk between SDK API and Main AppSync API.
+
+### SDK API (Third-Party Integrations)
+
+**Purpose:** Programmatic access for third-party applications and systems
+
+**Authentication:** Lambda Authorizer with API keys (client_id + client_secret)
+
+**Endpoints:**
+- `POST /sdk/auth/initiate` - Create auth token for OAuth flow
+- `POST /sdk/auth/exchange` - Exchange authorization code for tokens
+- `POST /sdk/auth/refresh` - Refresh access token
+- `POST /sdk/auth/logout` - Revoke tokens
+
+**GraphQL Mutations (SDK API ONLY):**
+- `createInvitation` - Generate invitation token for user signup
+- `revokeInvitation` - Revoke an invitation token
+- `createBulkInvitations` - Generate multiple invitation tokens
+
+**Access Pattern:** Third-party backend servers call SDK API with API keys
+
+**Security:** Lambda authorizer validates API keys against Applications table
+
+### Main AppSync API (Web Application)
+
+**Purpose:** Frontend application access for authenticated users
+
+**Authentication:** AWS Cognito User Pools (JWT tokens)
+
+**GraphQL Mutations (Main API ONLY):**
+- `removeUserFromApplication` - Admin removes user from application
+- `unassignUserFromEnvironment` - Admin removes user from environment
+- `revokeUserRole` - Admin revokes specific role
+- `bulkRemoveUsers` - Admin removes multiple users
+- `NotificationCreate` - Create notification
+- `NotificationUpdate` - Update notification status
+- `NotificationDelete` - Delete notification
+
+**GraphQL Queries (Main API ONLY):**
+- `UserNotifications` - Query user's notifications
+- `ApplicationUsers` - Query application users
+- `getCurrentUser` - Get current authenticated user
+
+**Access Pattern:** Angular frontend calls Main AppSync API with Cognito JWT
+
+**Security:** Cognito authentication + AppSync authorization rules (groups: OWNER, ADMIN, CUSTOMER, USER)
+
+### Public Endpoints (No Authentication)
+
+**Purpose:** User-facing pages accessible without authentication
+
+**Endpoints:**
+- `GET /login?token={auth_token}` - Login page with OAuth token
+- `GET /signup?token={invitation_token}` - Signup page with invitation token
+- `POST /auth/validate-token` - Validate auth token (called by frontend)
+
+**Access Pattern:** User's browser accesses these pages directly
+
+**Security:** Token validation against DynamoDB, no API key or Cognito required
+
+### Strict Separation Rules
+
+1. **SDK API mutations SHALL NOT be callable from Main AppSync API**
+2. **Main AppSync API mutations SHALL NOT be callable from SDK API**
+3. **Third-party applications SHALL NOT receive Cognito credentials**
+4. **Web application SHALL NOT use API keys for authentication**
+5. **Lambda authorizer SHALL ONLY validate SDK API requests**
+6. **Cognito authentication SHALL ONLY validate Main AppSync API requests**
+7. **Public endpoints SHALL NOT require authentication but SHALL validate tokens**
+
 ## Requirements
 
 ### Requirement 1: JWT Token Claims Enhancement
