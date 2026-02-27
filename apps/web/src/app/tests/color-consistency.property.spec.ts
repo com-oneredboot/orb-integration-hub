@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/core';
 /**
  * Property tests for color consistency in the design system.
  *
@@ -12,7 +13,7 @@
  */
 
 import { TestBed } from '@angular/core/testing';
-import { DOCUMENT } from '@angular/common';
+
 
 describe('Color Consistency Property Tests', () => {
   let document: Document;

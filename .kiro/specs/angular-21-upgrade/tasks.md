@@ -36,21 +36,21 @@ This implementation plan guides the upgrade of the orb-integration-hub Angular f
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 3. Angular 20 Migration
-  - [-] 3.1 Execute Angular 20 update command
+  - [x] 3.1 Execute Angular 20 update command
     - Navigate to frontend: `cd apps/web`
     - Run Angular CLI update: `ng update @angular/core@20 @angular/cli@20`
     - Review migration schematic output
     - Document any warnings or manual steps required
     - _Requirements: 1.1, 1.2, 2.1_
   
-  - [ ] 3.2 Update TypeScript and build tools
+  - [x] 3.2 Update TypeScript and build tools
     - Update TypeScript to version required by Angular 20
     - Update @angular-devkit/build-angular to version 20
     - Update @angular/compiler-cli to version 20
     - Run `npm install` to resolve dependencies
     - _Requirements: 3.1, 5.2_
   
-  - [ ] 3.3 Update NgRx packages to version 20
+  - [x] 3.3 Update NgRx packages to version 20
     - Update @ngrx/store to version 20
     - Update @ngrx/effects to version 20
     - Update @ngrx/entity to version 20
@@ -58,20 +58,20 @@ This implementation plan guides the upgrade of the orb-integration-hub Angular f
     - Run `npm install` to resolve dependencies
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
   
-  - [ ] 3.4 Update Angular Material and CDK to version 20
+  - [x] 3.4 Update Angular Material and CDK to version 20
     - Update @angular/cdk to version 20
     - Update @angular/material to version 20
     - Run `npm install` to resolve dependencies
     - _Requirements: 3.3_
   
-  - [ ] 3.5 Resolve Angular 20 breaking changes
+  - [x] 3.5 Resolve Angular 20 breaking changes
     - Review migration schematic changes
     - Manually resolve any breaking changes not handled by schematics
     - Update deprecated API usage
     - Fix TypeScript compilation errors
     - _Requirements: 2.2, 2.3, 2.5_
   
-  - [ ] 3.6 Fix linting errors from Angular 20 changes
+  - [x] 3.6 Fix linting errors from Angular 20 changes
     - Run linter: `npm run lint`
     - Fix all linting errors
     - Ensure zero errors and zero warnings
@@ -91,14 +91,14 @@ This implementation plan guides the upgrade of the orb-integration-hub Angular f
     - Test that production build succeeds
     - Compare bundle sizes to baseline (within 10%)
   
-  - [ ] 3.9 Verify development workflows work
+  - [x] 3.9 Verify development workflows work
     - Test dev server: `npm start` (verify starts without errors)
     - Test production build: `npm run build` (verify completes successfully)
     - Test linter: `npm run lint` (verify zero errors)
     - Test hot module replacement works
     - _Requirements: 8.1, 8.2, 8.4, 8.5_
   
-  - [ ] 3.10 Commit Angular 20 upgrade
+  - [-] 3.10 Commit Angular 20 upgrade
     - Review all changes with `git diff`
     - Stage all changes: `git add .`
     - Commit with conventional format: `feat: upgrade to Angular 20 #issue-number`

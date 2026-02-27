@@ -13,6 +13,8 @@ import { map, catchError, switchMap, withLatestFrom, filter } from 'rxjs/operato
 import { ApplicationUsersActions } from './application-users.actions';
 import { ApplicationUsersService } from '../../../../../core/services/application-users.service';
 import { UsersService } from '../../../../../core/services/users.service';
+import { UserStatus } from '../../../../../core/enums/UserStatusEnum';
+import { ApplicationUserStatus } from '../../../../../core/enums/ApplicationUserStatusEnum';
 import { selectCurrentUser } from '../../../../user/store/user.selectors';
 import { EnvironmentRoleAssignment } from './application-users.state';
 import { IUsers } from '../../../../../core/models/UsersModel';
@@ -42,7 +44,7 @@ export class ApplicationUsersEffects {
               userId: uwr.userId,
               firstName: uwr.firstName,
               lastName: uwr.lastName,
-              status: uwr.status as any,
+              status: uwr.status as UserStatus,
               // These fields would need to be fetched separately or included in the query
               cognitoId: '',
               cognitoSub: '',
@@ -55,7 +57,7 @@ export class ApplicationUsersEffects {
               applicationUserId: '', // Would need to be included in query
               userId: uwr.userId,
               applicationId: action.applicationId,
-              status: uwr.status as any,
+              status: uwr.status as ApplicationUserStatus,
               createdAt: new Date(),
               updatedAt: new Date()
             }));

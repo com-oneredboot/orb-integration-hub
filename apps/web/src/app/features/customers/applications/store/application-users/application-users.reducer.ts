@@ -26,7 +26,7 @@ export const applicationUsersReducer = createReducer(
     // Build table rows from raw data
     const userRows: ApplicationUserTableRow[] = users.map((user) => {
       const appUser = applicationUsers.find(au => au.userId === user.userId);
-      const userRoleAssignments = roleAssignments.filter(ra => 
+      const userRoleAssignments = roleAssignments.filter(_ra => 
         // Match role assignments for this user (would need to be passed with user context)
         // For now, we'll use empty array and populate this when we have the full data structure
         false

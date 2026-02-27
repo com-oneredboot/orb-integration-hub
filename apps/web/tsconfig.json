@@ -13,11 +13,13 @@
     "sourceMap": true,
     "declaration": false,
     "experimentalDecorators": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "importHelpers": true,
     "baseUrl": "src",
     "paths": {
-      "@styles/*": ["styles/*"]
+      "@styles/*": [
+        "styles/*"
+      ]
     },
     "target": "ES2022",
     "module": "ES2022",
