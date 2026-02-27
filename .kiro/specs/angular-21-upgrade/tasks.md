@@ -98,7 +98,7 @@ This implementation plan guides the upgrade of the orb-integration-hub Angular f
     - Test hot module replacement works
     - _Requirements: 8.1, 8.2, 8.4, 8.5_
   
-  - [-] 3.10 Commit Angular 20 upgrade
+  - [x] 3.10 Commit Angular 20 upgrade
     - Review all changes with `git diff`
     - Stage all changes: `git add .`
     - Commit with conventional format: `feat: upgrade to Angular 20 #issue-number`
@@ -108,21 +108,21 @@ This implementation plan guides the upgrade of the orb-integration-hub Angular f
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 5. Angular 21 Migration
-  - [ ] 5.1 Execute Angular 21 update command
+  - [x] 5.1 Execute Angular 21 update command
     - Navigate to frontend: `cd apps/web`
     - Run Angular CLI update: `ng update @angular/core@21 @angular/cli@21`
     - Review migration schematic output
     - Document any warnings or manual steps required
     - _Requirements: 1.1, 1.2, 2.1_
   
-  - [ ] 5.2 Update TypeScript to 5.7+
+  - [x] 5.2 Update TypeScript to 5.7+
     - Update TypeScript to version 5.7 or higher (Angular 21 requirement)
     - Update @angular-devkit/build-angular to version 21
     - Update @angular/compiler-cli to version 21
     - Run `npm install` to resolve dependencies
     - _Requirements: 3.1, 5.2_
   
-  - [ ] 5.3 Update NgRx packages to version 21
+  - [x] 5.3 Update NgRx packages to version 21
     - Update @ngrx/store to version 21
     - Update @ngrx/effects to version 21
     - Update @ngrx/entity to version 21
@@ -130,27 +130,27 @@ This implementation plan guides the upgrade of the orb-integration-hub Angular f
     - Run `npm install` to resolve dependencies
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
   
-  - [ ] 5.4 Update Angular Material and CDK to version 21
+  - [x] 5.4 Update Angular Material and CDK to version 21
     - Update @angular/cdk to version 21
     - Update @angular/material to version 21
     - Run `npm install` to resolve dependencies
     - _Requirements: 3.3_
   
-  - [ ] 5.5 Update third-party Angular integrations
+  - [x] 5.5 Update third-party Angular integrations
     - Update @fortawesome/angular-fontawesome to Angular 21 compatible version
     - Update angular-eslint to Angular 21 compatible version
     - Check aws-amplify compatibility and update if needed
     - Run `npm install` to resolve dependencies
     - _Requirements: 7.1, 7.2, 7.3_
   
-  - [ ] 5.6 Resolve Angular 21 breaking changes
+  - [x] 5.6 Resolve Angular 21 breaking changes
     - Review migration schematic changes
     - Manually resolve any breaking changes not handled by schematics
     - Update deprecated API usage
     - Fix TypeScript compilation errors
     - _Requirements: 2.2, 2.3, 2.5_
   
-  - [ ] 5.7 Fix linting errors from Angular 21 changes
+  - [x] 5.7 Fix linting errors from Angular 21 changes
     - Run linter: `npm run lint`
     - Fix all linting errors
     - Ensure zero errors and zero warnings
@@ -170,19 +170,19 @@ This implementation plan guides the upgrade of the orb-integration-hub Angular f
     - Test that Angular Material version matches Angular version
     - Test that all ecosystem packages are compatible
   
-  - [ ] 5.10 Verify development workflows work
+  - [x] 5.10 Verify development workflows work
     - Test dev server: `npm start` (verify starts without errors)
     - Test production build: `npm run build` (verify completes successfully)
     - Test linter: `npm run lint` (verify zero errors)
     - Test hot module replacement works
     - _Requirements: 8.1, 8.2, 8.4, 8.5_
   
-  - [ ] 5.11 Update property test to verify Angular 21
+  - [x] 5.11 Update property test to verify Angular 21
     - Update test from task 1.3 to verify all @angular/* packages at version 21.x.x
     - Run test to confirm all packages updated correctly
     - _Requirements: 1.2, 1.4, 1.5_
   
-  - [ ] 5.12 Commit Angular 21 upgrade
+  - [-] 5.12 Commit Angular 21 upgrade
     - Review all changes with `git diff`
     - Stage all changes: `git add .`
     - Commit with conventional format: `feat: upgrade to Angular 21 #issue-number`

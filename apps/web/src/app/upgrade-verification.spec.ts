@@ -26,29 +26,24 @@ describe('Angular 21 Upgrade Properties', () => {
    * - Angular 21: All packages should be 21.x.x
    */
   describe('Property 1: Angular Package Version Consistency', () => {
-    it('should have Angular core at the expected major version', () => {
+    it('should have Angular core at version 21', () => {
       // Get the Angular version from the framework itself
       const angularVersion = VERSION.full;
       const majorVersion = parseInt(VERSION.major, 10);
 
-      // During upgrade, this test will verify we're at the expected version
-      // Angular 19: majorVersion should be 19
-      // Angular 20: majorVersion should be 20
-      // Angular 21: majorVersion should be 21
-      
-      // For now, verify we're at Angular 19 (baseline)
-      expect(majorVersion).toBeGreaterThanOrEqual(19);
+      // Verify we're at Angular 21
+      expect(majorVersion).toBe(21);
       
       console.log(`✓ Angular core version: ${angularVersion} (major: ${majorVersion})`);
     });
 
-    it('should verify Angular version is 19, 20, or 21', () => {
+    it('should verify Angular version is 21', () => {
       const majorVersion = parseInt(VERSION.major, 10);
       
-      // This test will pass for Angular 19, 20, or 21
-      expect([19, 20, 21]).toContain(majorVersion);
+      // This test verifies we successfully upgraded to Angular 21
+      expect(majorVersion).toBe(21);
       
-      console.log(`✓ Angular version ${VERSION.full} is in the expected range (19-21)`);
+      console.log(`✓ Angular version ${VERSION.full} is at the target version 21`);
     });
   });
 
@@ -73,7 +68,7 @@ describe('Angular 21 Upgrade Properties', () => {
       const majorVersion = parseInt(VERSION.major, 10);
       
       expect(angularVersion).toBeDefined();
-      expect(majorVersion).toBeGreaterThanOrEqual(19);
+      expect(majorVersion).toBe(21);
       
       console.log(`✓ Angular ${angularVersion} framework is loaded and functional`);
     });
