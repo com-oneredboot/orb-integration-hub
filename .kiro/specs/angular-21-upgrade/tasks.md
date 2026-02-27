@@ -32,11 +32,11 @@ This implementation plan guides the upgrade of the orb-integration-hub Angular f
     - Test that all @angular/* packages have consistent version
     - Test will initially verify Angular 19, then 20, then 21 as upgrade progresses
 
-- [ ] 2. Checkpoint - Verify clean baseline
+- [x] 2. Checkpoint - Verify clean baseline
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 3. Angular 20 Migration
-  - [ ] 3.1 Execute Angular 20 update command
+  - [-] 3.1 Execute Angular 20 update command
     - Navigate to frontend: `cd apps/web`
     - Run Angular CLI update: `ng update @angular/core@20 @angular/cli@20`
     - Review migration schematic output
