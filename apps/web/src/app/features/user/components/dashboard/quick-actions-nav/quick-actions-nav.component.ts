@@ -42,6 +42,12 @@ export class QuickActionsNavComponent implements OnInit, OnDestroy {
       route: '/customers/applications'
     },
     {
+      id: 'groups',
+      icon: 'users',
+      tooltip: 'Groups',
+      route: '/customers/groups'
+    },
+    {
       id: 'users',
       icon: 'user',
       tooltip: 'Users',

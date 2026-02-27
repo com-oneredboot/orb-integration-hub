@@ -20,6 +20,7 @@ import {
   faSyncAlt,
   faRefresh,
   faHome,
+  faMap,
   faTrash,
   
   // User & Roles
@@ -49,6 +50,8 @@ import {
   faLaptopCode,
   faCodeBranch,
   faFlask,
+  faTachometerAlt,
+  faFlag,
   
   // Charts & Analytics
   faChartBar,
@@ -110,6 +113,7 @@ export function configureFontAwesome(library: FaIconLibrary): void {
     faSyncAlt,
     faRefresh,
     faHome,
+    faMap,
     faTrash,
     
     // User & Roles
@@ -139,6 +143,8 @@ export function configureFontAwesome(library: FaIconLibrary): void {
     faLaptopCode,
     faCodeBranch,
     faFlask,
+    faTachometerAlt,
+    faFlag,
     
     // Charts & Analytics
     faChartBar,
@@ -199,6 +205,7 @@ export const registeredIcons = [
   'sync-alt',
   'refresh',
   'home',
+  'map',
   'trash',
   
   // User & Roles

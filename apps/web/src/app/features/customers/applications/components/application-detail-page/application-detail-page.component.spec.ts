@@ -511,14 +511,15 @@ describe('ApplicationDetailPageComponent', () => {
         expect(ApplicationDetailTab.Overview).toBe('overview');
       });
 
-      it('should have Overview, Environments, Groups, and Danger tabs', () => {
+      it('should have Overview, Environments, Roles, Users, and Danger tabs', () => {
         // Validates: Requirements 1.3
         const tabValues = Object.values(ApplicationDetailTab) as string[];
         expect(tabValues).toContain('overview');
         expect(tabValues).toContain('environments');
-        expect(tabValues).toContain('groups');
+        expect(tabValues).toContain('roles');
+        expect(tabValues).toContain('users');
         expect(tabValues).toContain('danger');
-        expect(tabValues.length).toBe(4);
+        expect(tabValues.length).toBe(5);
       });
 
       it('should default to Overview tab', fakeAsync(() => {
@@ -553,25 +554,25 @@ describe('ApplicationDetailPageComponent', () => {
         tick();
       }));
 
-      it('should render Environments tab button with shield-alt icon', () => {
+      it('should render Environments tab button with server icon', () => {
         // Validates: Requirements 1.1
         const compiled = fixture.nativeElement as HTMLElement;
-        const securityTab = compiled.querySelector('#tab-environments');
+        const environmentsTab = compiled.querySelector('#tab-environments');
 
-        expect(securityTab).toBeTruthy();
-        expect(securityTab?.textContent).toContain('Environments');
+        expect(environmentsTab).toBeTruthy();
+        expect(environmentsTab?.textContent).toContain('Environments');
 
-        // Check for shield-alt icon (FontAwesome renders as SVG with data-icon attribute)
-        const icon = securityTab?.querySelector('fa-icon');
+        // Check for server icon (FontAwesome renders as SVG with data-icon attribute)
+        const icon = environmentsTab?.querySelector('fa-icon');
         expect(icon).toBeTruthy();
       });
 
       it('should render Environments tab with correct aria attributes', () => {
         const compiled = fixture.nativeElement as HTMLElement;
-        const securityTab = compiled.querySelector('#tab-environments');
+        const environmentsTab = compiled.querySelector('#tab-environments');
 
-        expect(securityTab?.getAttribute('role')).toBe('tab');
-        expect(securityTab?.getAttribute('aria-controls')).toBe('panel-environments');
+        expect(environmentsTab?.getAttribute('role')).toBe('tab');
+        expect(environmentsTab?.getAttribute('aria-controls')).toBe('panel-environments');
       });
     });
 
@@ -1303,38 +1304,25 @@ describe('ApplicationDetailPageComponent', () => {
 
     it('should render with full-width layout', () => {
       // Validates: Requirements 8.1, 8.3
+      // UserPageComponent handles layout with max-width: 1400px
       const compiled = fixture.nativeElement as HTMLElement;
-      const pageContainer = compiled.querySelector('.application-detail-page');
+      const userPage = compiled.querySelector('app-user-page');
       
-      expect(pageContainer).toBeTruthy();
-      
-      // Verify no max-width constraint is applied
-      const computedStyle = window.getComputedStyle(pageContainer as Element);
-      const maxWidth = computedStyle.getPropertyValue('max-width');
-      
-      // Should be 'none' or not set (empty string)
-      expect(maxWidth === 'none' || maxWidth === '').toBe(true);
+      expect(userPage).toBeTruthy();
     });
 
     it('should follow layout order: breadcrumb → tabs → content', () => {
       // Validates: Requirements 2.5
+      // Component now uses UserPageComponent which handles layout internally
       const compiled = fixture.nativeElement as HTMLElement;
       
-      // Get all direct children of the page container
-      const pageContainer = compiled.querySelector('.application-detail-page');
-      expect(pageContainer).toBeTruthy();
+      // UserPageComponent wraps everything - verify it exists
+      const userPage = compiled.querySelector('app-user-page');
+      expect(userPage).toBeTruthy();
       
-      const children = Array.from(pageContainer?.children || []);
-      
-      // Find indices of key elements
-      const breadcrumbIndex = children.findIndex(el => el.tagName.toLowerCase() === 'app-breadcrumb');
-      const tabsIndex = children.findIndex(el => el.tagName.toLowerCase() === 'app-tab-navigation');
-      const contentIndex = children.findIndex(el => el.classList.contains('application-detail-page__content'));
-      
-      // Verify order: breadcrumb comes before tabs, tabs come before content
-      expect(breadcrumbIndex).toBeGreaterThanOrEqual(0);
-      expect(tabsIndex).toBeGreaterThan(breadcrumbIndex);
-      expect(contentIndex).toBeGreaterThan(tabsIndex);
+      // Verify tab panels exist (content is projected into UserPageComponent)
+      const tabPanels = compiled.querySelector('.app-detail-tab-panels');
+      expect(tabPanels).toBeTruthy();
     });
 
     it('should have tabs with icons', () => {

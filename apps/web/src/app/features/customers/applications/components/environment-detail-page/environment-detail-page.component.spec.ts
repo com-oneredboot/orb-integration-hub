@@ -8,6 +8,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { of } from 'rxjs';
+import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
+import { faArrowLeft, faMap, faChevronRight, faLayerGroup, faLaptopCode, faCodeBranch, faFlask, faKey, faSpinner, faGlobe, faTachometerAlt, faBolt, faFlag } from '@fortawesome/free-solid-svg-icons';
 import { EnvironmentDetailPageComponent } from './environment-detail-page.component';
 import { Environment } from '../../../../../core/enums/EnvironmentEnum';
 import { ApplicationStatus } from '../../../../../core/enums/ApplicationStatusEnum';
@@ -110,10 +112,18 @@ describe('EnvironmentDetailPageComponent - Integration Tests', () => {
           provide: Router,
           useValue: {
             navigate: jasmine.createSpy('navigate'),
+            events: of(),
+            url: '/customers/applications/app-123/environments/DEVELOPMENT',
+            createUrlTree: jasmine.createSpy('createUrlTree').and.returnValue({}),
+            serializeUrl: jasmine.createSpy('serializeUrl').and.returnValue(''),
           },
         },
       ],
     }).compileComponents();
+
+    // Register FontAwesome icons
+    const library = TestBed.inject(FaIconLibrary);
+    library.addIcons(faArrowLeft, faMap, faChevronRight, faLayerGroup, faLaptopCode, faCodeBranch, faFlask, faKey, faSpinner, faGlobe, faTachometerAlt, faBolt, faFlag);
 
     store = TestBed.inject(MockStore);
     fixture = TestBed.createComponent(EnvironmentDetailPageComponent);

@@ -6,20 +6,20 @@ This specification defines six critical features required for production readine
 
 The features are:
 1. JWT Token Claims Enhancement - Ensures proper authorization data in authentication tokens
-2. Third-Party User Invitation System - Enables external systems to invite users programmatically
-3. Third-Party OAuth Authentication Flow - Enables secure user authentication for third-party applications
-4. Admin User Management - Provides user removal and role management capabilities
-5. Notifications UI System - Displays and manages in-app notifications
-6. Email/SMS Notification Delivery - Delivers notifications via email and SMS channels
+2. Third-Party OAuth Authentication Flow - Enables secure user authentication for third-party applications (login/signup/logout)
+3. Admin User Management - Provides user removal and role management capabilities
+4. Notifications UI System - Displays and manages in-app notifications
+5. Email/SMS Notification Delivery - Delivers notifications via email and SMS channels
 
 ## Standard Requirements
 
 This spec follows the [orb-templates Spec Standards](../../repositories/orb-templates/docs/kiro-steering/templates/spec-standards.md).
 
-Requirements 7-10 implement the standard requirements for:
-- Documentation updates (Requirement 7)
-- Version and changelog management (Requirement 8)
-- Git commit standards (Requirement 9)
+Requirements 6-10 implement the standard requirements for:
+- Documentation updates (Requirement 6)
+- Version and changelog management (Requirement 7)
+- Git commit standards (Requirement 8)
+- Property-based testing (Requirement 9)
 - Final verification (Requirement 10)
 
 ## Glossary
@@ -29,14 +29,11 @@ Requirements 7-10 implement the standard requirements for:
 - **Pre_Token_Generation_Lambda**: AWS Lambda function triggered before Cognito issues JWT tokens, used to add custom claims
 - **Custom_Claims**: Additional data fields added to JWT tokens beyond standard Cognito claims
 - **Regular_Login_Flow**: Existing users authenticate with email/password via Cognito, receive JWT with custom claims
-- **Invitation_Signup_Flow**: New users sign up using invitation token, creating Cognito account and role assignments
-- **Invitation_Token**: A secure, time-limited token used to authorize user signup for specific applications
 - **Application_User_Role**: A record linking a user to an application with a specific role in a specific environment
 - **Notification_System**: The infrastructure for creating, storing, and delivering notifications to users
 - **SES (Simple Email Service)**: AWS managed email sending service
 - **SNS (Simple Notification Service)**: AWS managed messaging service for SMS and push notifications
 - **SDK_API**: The GraphQL API endpoint for third-party integrations, secured with Lambda authorizer
-- **orb_sdk**: The Python/TypeScript SDK that third-party applications use to interact with the integration hub and validate tokens
 - **Main_AppSync_API**: The primary GraphQL API for the web application, secured with Cognito authentication
 - **Lambda_Authorizer**: AWS Lambda function that validates API keys or tokens for SDK API access
 - **NgRx_Store**: Redux-based state management library for Angular applications
@@ -75,9 +72,7 @@ Requirements 7-10 implement the standard requirements for:
 - `POST /sdk/auth/logout` - Revoke tokens
 
 **GraphQL Mutations (SDK API ONLY):**
-- `createInvitation` - Generate invitation token for user signup
-- `revokeInvitation` - Revoke an invitation token
-- `createBulkInvitations` - Generate multiple invitation tokens
+- None currently (OAuth flow uses REST endpoints only)
 
 **Access Pattern:** Third-party backend servers call SDK API with API keys
 
@@ -90,18 +85,18 @@ Requirements 7-10 implement the standard requirements for:
 **Authentication:** AWS Cognito User Pools (JWT tokens)
 
 **GraphQL Mutations (Main API ONLY):**
-- `removeUserFromApplication` - Admin removes user from application
-- `unassignUserFromEnvironment` - Admin removes user from environment
-- `revokeUserRole` - Admin revokes specific role
-- `bulkRemoveUsers` - Admin removes multiple users
-- `NotificationCreate` - Create notification
-- `NotificationUpdate` - Update notification status
-- `NotificationDelete` - Delete notification
+- `NotificationsCreate` - Create notification (auto-generated from YAML)
+- `NotificationsUpdate` - Update notification status (auto-generated from YAML)
+- `NotificationsDelete` - Delete notification (auto-generated from YAML)
+- `ApplicationUserRolesRemoveAll` - Admin removes user from application (custom mutation)
+- `ApplicationUserRolesRemoveByEnvironment` - Admin removes user from environment (custom mutation)
+- `ApplicationUserRolesRevoke` - Admin revokes specific role (custom mutation)
+- `ApplicationUserRolesBulkRemove` - Admin removes multiple users (custom mutation)
 
 **GraphQL Queries (Main API ONLY):**
-- `UserNotifications` - Query user's notifications
-- `ApplicationUsers` - Query application users
-- `getCurrentUser` - Get current authenticated user
+- `NotificationsByUser` - Query user's notifications (custom query)
+- `ApplicationUserRolesList` - Query application users (auto-generated from YAML)
+- Note: `getCurrentUser` is a Lambda function, not a GraphQL query
 
 **Access Pattern:** Angular frontend calls Main AppSync API with Cognito JWT
 
@@ -113,7 +108,7 @@ Requirements 7-10 implement the standard requirements for:
 
 **Endpoints:**
 - `GET /login?token={auth_token}` - Login page with OAuth token
-- `GET /signup?token={invitation_token}` - Signup page with invitation token
+- `GET /signup` - Signup page for new users
 - `POST /auth/validate-token` - Validate auth token (called by frontend)
 
 **Access Pattern:** User's browser accesses these pages directly
@@ -165,97 +160,29 @@ Requirements 7-10 implement the standard requirements for:
 9. WHEN the frontend needs to check authorization, THE Auth_Service SHALL use cached JWT claims without additional API calls
 10. THE Pre_Token_Generation_Lambda SHALL complete token generation within 5 seconds to avoid Cognito timeout
 
-### Requirement 2: Third-Party User Invitation and Login System
-
-**User Story:** As an external system administrator, I want to generate invitation tokens programmatically and have users log in through my system, so that I can manage the complete user lifecycle without manual intervention.
-
-**Context:** This requirement enables external systems to invite new users AND handle subsequent logins. There are two flows:
-
-**A) Invitation Signup Flow (First Time):**
-1. Third-party system authenticates to SDK API using their API key (validated by Lambda authorizer)
-2. Third-party calls GraphQL createInvitation mutation on SDK API with applicationId, environmentId, roleId, recipientEmail
-3. System generates invitation token and returns signup URL: `https://integration-hub.example.com/signup?token=abc123`
-4. Third-party redirects user to signup URL (or sends via email)
-5. User lands on our public signup page with token in URL query parameter
-6. Our signup page validates token, extracts invitation details, shows signup form pre-filled with email
-7. User completes signup (password, name, etc.)
-8. System creates Cognito user, DynamoDB user record, and ApplicationUserRole assignment
-9. User is logged in and redirected to the application
-
-**B) Third-Party Login Flow (Subsequent Logins):**
-1. User visits third-party application and clicks login/access integration
-2. Third-party redirects user to our login page: `https://integration-hub.example.com/login?redirect_uri=https://thirdparty.com/callback`
-3. User enters email/password on our login page
-4. Cognito validates credentials and triggers Pre-Token-Generation Lambda
-5. Lambda adds custom claims (userId, roles, permissions) to JWT
-6. User is logged in and redirected back to third-party via redirect_uri with JWT token
-7. Third-party uses orb-sdk to validate JWT token signature and extract claims
-8. Third-party grants access to their application based on permissions in JWT claims
-
-**What we receive:** 
-- Signup: invitation token AND redirect_uri in URL query parameters (`?token=abc123&redirect_uri=https://thirdparty.com/callback`)
-- Login: redirect_uri in URL query parameter (`?redirect_uri=https://thirdparty.com/callback`)
-
-**Example GraphQL Mutation (called by third party on SDK API):**
-```graphql
-mutation CreateInvitation {
-  createInvitation(input: {
-    applicationId: "app-123"
-    environmentId: "PRODUCTION"
-    roleId: "role-456"
-    recipientEmail: "user@example.com"
-    redirectUri: "https://thirdparty.com/callback"  # Optional: where to redirect after signup
-  }) {
-    invitationToken
-    signupUrl  # Returns: https://integration-hub.example.com/signup?token=abc123&redirect_uri=https://thirdparty.com/callback
-    expiresAt
-  }
-}
-```
-
-#### Acceptance Criteria
-
-1. WHEN an authorized third-party calls createInvitation mutation on SDK API with valid API key, THE Lambda_Authorizer SHALL validate the API key
-2. WHEN an authorized third-party calls createInvitation mutation with applicationId, environmentId, and roleId, THE Invitation_System SHALL generate a cryptographically secure invitation token
-2. WHEN creating an invitation, THE Invitation_System SHALL store applicationId, environmentId, roleId, recipientEmail, and expirationTimestamp in DynamoDB
-3. WHEN creating an invitation, THE Invitation_System SHALL encode applicationId, environmentId, roleId, and recipientEmail in the invitation token
-4. WHEN creating an invitation, THE Invitation_System SHALL set expiration to 7 days from creation by default
-5. WHEN an invitation is created, THE Invitation_System SHALL return the invitation token and a complete signup URL with token as query parameter
-6. WHEN a user accesses the public signup page with token query parameter, THE Signup_Page SHALL extract the token from URL
-7. WHEN a user accesses the public signup page with a valid invitation token, THE Signup_Handler SHALL decode the token and extract invitation details
-8. WHEN a user accesses the public signup page with a valid invitation token, THE Signup_Handler SHALL validate the token has not expired
-9. WHEN a user accesses the public signup page with a valid invitation token, THE Signup_Handler SHALL validate the token has not been revoked
-10. WHEN a user accesses the public signup page with a valid invitation token, THE Signup_Page SHALL pre-fill the email field with recipientEmail from token
-11. WHEN a user completes signup with a valid invitation token, THE Signup_Handler SHALL create the user in Cognito
-12. WHEN a user completes signup with a valid invitation token, THE Signup_Handler SHALL create the user record in Users table
-13. WHEN a user completes signup with a valid invitation token, THE Signup_Handler SHALL create ApplicationUserRole record with applicationId, environmentId, and roleId from the token
-14. WHEN a user completes signup with a valid invitation token, THE Signup_Handler SHALL mark the invitation as ACCEPTED in DynamoDB
-15. WHEN a user completes signup with a valid invitation token AND redirect_uri is present, THE Signup_Handler SHALL redirect the user back to the third-party application via redirect_uri with authentication token
-16. WHEN an authorized user calls revokeInvitation mutation, THE Invitation_System SHALL mark the invitation as REVOKED
-17. WHEN a user attempts to use a revoked invitation, THE Signup_Handler SHALL reject the signup with an error message
-18. WHEN an authorized user calls createBulkInvitations mutation, THE Invitation_System SHALL generate multiple invitations and return all tokens
-19. THE Invitation_System SHALL track invitation status (PENDING, ACCEPTED, EXPIRED, REVOKED)
-20. WHEN a user accesses the login page with redirect_uri parameter, THE Login_Page SHALL store the redirect_uri for post-login redirect
-21. WHEN a user successfully logs in with redirect_uri parameter, THE Login_Handler SHALL redirect the user back to the third-party application via redirect_uri
-22. WHEN redirecting back to third-party, THE Login_Handler SHALL include authentication token or authorization code in the redirect URL
-23. WHEN a third-party application receives the redirect with token, THE Third_Party SHALL use the orb-sdk to validate the token
-24. WHEN the orb-sdk validates the token, THE SDK SHALL verify the token signature and extract user claims
-25. WHEN token validation succeeds, THE Third_Party SHALL grant the user access to their application with permissions from JWT claims
-26. WHEN a user accesses the signup page with redirect_uri parameter, THE Signup_Page SHALL store the redirect_uri through the multi-step signup process
-27. WHEN redirect_uri is provided, THE Signup_Handler SHALL validate the redirect_uri against a whitelist of allowed domains
-28. WHEN redirect_uri validation fails, THE Signup_Handler SHALL reject the redirect and show an error message
-
-### Requirement 3: Third-Party OAuth Authentication Flow
+### Requirement 2: Third-Party OAuth Authentication Flow
 
 **User Story:** As a third-party application developer, I want users to authenticate on the orb-integration-hub platform and receive secure tokens, so that my application can verify user identity and access permissions without handling credentials.
 
-**Context:** This requirement implements an OAuth-style authentication flow where third-party applications redirect users to the orb-integration-hub login page, users authenticate with their credentials, and authentication tokens are returned to the third-party application via callback URL. This is documented in detail in `docs/authentication-flow.md`.
+**Context:** This requirement implements an OAuth-style authentication flow where third-party applications redirect users to the orb-integration-hub login/signup page, users authenticate with their credentials (or create a new account), and authentication tokens are returned to the third-party application via callback URL. This is documented in detail in `docs/authentication-flow.md`.
+
+**User Flow:**
+1. User visits third-party application
+2. User clicks "Sign in with orb-integration-hub" button
+3. Third-party calls `/sdk/auth/initiate` to get auth token and login URL
+4. Third-party redirects user to login URL
+5. User either:
+   - Logs in with existing credentials (email/password)
+   - Clicks "Sign up" and creates new account
+6. After successful authentication, user is redirected back to third-party with authorization code
+7. Third-party exchanges code for access token and refresh token
+8. Third-party uses access token to make API calls on behalf of user
 
 **Reference Documentation:** See `docs/authentication-flow.md` for complete flow diagrams, security analysis, and implementation details.
 
 #### Acceptance Criteria
 
-**3.1 Application Registration and Callback URLs**
+**2.1 Application Registration and Callback URLs**
 
 1. WHEN an application is created, THE Applications_Table SHALL include a callbackUrls array field
 2. WHEN an application is created, THE Application_Owner SHALL register one or more callback URLs
@@ -368,25 +295,25 @@ mutation CreateInvitation {
 79. WHEN tokens are issued or revoked, THE System SHALL create audit log entry
 80. THE System SHALL emit CloudWatch metrics for authentication attempts, token generation, and error rates
 
-### Requirement 4: Admin User Management
+### Requirement 3: Admin User Management
 
 **User Story:** As an application administrator, I want to remove users from applications and modify their role assignments, so that I can manage user access throughout the user lifecycle.
 
 #### Acceptance Criteria
 
-1. WHEN an OWNER or ADMIN calls removeUserFromApplication mutation, THE User_Management_System SHALL delete all ApplicationUserRole records for that user and application
-2. WHEN an OWNER or ADMIN calls unassignUserFromEnvironment mutation, THE User_Management_System SHALL delete ApplicationUserRole records for that user, application, and environment
-3. WHEN an OWNER or ADMIN calls revokeUserRole mutation, THE User_Management_System SHALL delete the specific ApplicationUserRole record
+1. WHEN an OWNER or ADMIN calls ApplicationUserRolesRemoveAll mutation, THE User_Management_System SHALL delete all ApplicationUserRole records for that user and application
+2. WHEN an OWNER or ADMIN calls ApplicationUserRolesRemoveByEnvironment mutation, THE User_Management_System SHALL delete ApplicationUserRole records for that user, application, and environment
+3. WHEN an OWNER or ADMIN calls ApplicationUserRolesRevoke mutation, THE User_Management_System SHALL delete the specific ApplicationUserRole record
 4. WHEN a USER or CUSTOMER attempts to call user removal mutations, THE GraphQL_API SHALL reject the request with authorization error
 5. WHEN an admin removes a user, THE User_Management_System SHALL create an audit log entry with admin userId, target userId, action, and timestamp
-6. WHEN an admin calls bulkRemoveUsers mutation, THE User_Management_System SHALL remove multiple users and return success count and failure details
+6. WHEN an admin calls ApplicationUserRolesBulkRemove mutation, THE User_Management_System SHALL remove multiple users and return success count and failure details
 7. WHEN the frontend displays the user management UI, THE Application_Users_Component SHALL show "Remove User" button only for OWNER and ADMIN roles
 8. WHEN an admin clicks "Remove User", THE Application_Users_Component SHALL display a confirmation dialog with user details
 9. WHEN an admin confirms user removal, THE Application_Users_Component SHALL dispatch removeUser action to NgRx store
 10. WHEN user removal succeeds, THE Application_Users_Component SHALL refresh the user list and display success message
 11. WHEN user removal fails, THE Application_Users_Component SHALL display error message with failure reason
 
-### Requirement 5: Notifications UI System
+### Requirement 4: Notifications UI System
 
 **User Story:** As a user, I want to see and manage my notifications in the application interface, so that I stay informed about important events and can take action when needed.
 
@@ -405,7 +332,7 @@ mutation CreateInvitation {
 11. WHEN a notification has an expiresAt timestamp in the past, THE Notification_Item_Component SHALL display it as expired and disable actions
 12. THE Notification_Panel_Component SHALL display a maximum of 50 notifications per page
 
-### Requirement 6: Email/SMS Notification Delivery
+### Requirement 5: Email/SMS Notification Delivery
 
 **User Story:** As a user, I want to receive important notifications via email and SMS, so that I am informed even when not actively using the application.
 
@@ -426,32 +353,30 @@ mutation CreateInvitation {
 13. THE Email_Template_Service SHALL support templates for APPLICATION_TRANSFER_REQUEST, APPLICATION_TRANSFER_COMPLETED, ORGANIZATION_INVITATION_RECEIVED, ORGANIZATION_INVITATION_ACCEPTED, and ORGANIZATION_INVITATION_REJECTED
 14. THE SMS_Template_Service SHALL support SMS templates for CRITICAL notification types only
 
-### Requirement 7: Documentation Updates
+### Requirement 6: Documentation Updates
 
 **User Story:** As a developer, I want comprehensive documentation for all production readiness features, so that I can understand, maintain, and extend the system.
 
 #### Acceptance Criteria
 
 1. WHEN production readiness features are implemented, THE Documentation SHALL include architecture diagrams for JWT token flow
-2. WHEN production readiness features are implemented, THE Documentation SHALL include sequence diagrams for invitation signup flow
-3. WHEN production readiness features are implemented, THE Documentation SHALL include a complete integration guide for third-party invitation system in docs/integration-guides/user-invitations.md
-4. WHEN production readiness features are implemented, THE Integration_Guide SHALL document that createInvitation is called on SDK API (not main AppSync API)
+2. WHEN production readiness features are implemented, THE Documentation SHALL include sequence diagrams for OAuth authentication flow
+3. WHEN production readiness features are implemented, THE Documentation SHALL include a complete integration guide for third-party OAuth authentication in docs/integration-guides/oauth-authentication.md
+4. WHEN production readiness features are implemented, THE Integration_Guide SHALL document REST endpoint usage for /sdk/auth/* endpoints
 5. WHEN production readiness features are implemented, THE Integration_Guide SHALL document Lambda authorizer authentication requirements
-6. WHEN production readiness features are implemented, THE Integration_Guide SHALL document the GraphQL mutation signature with all parameters
-7. WHEN production readiness features are implemented, THE Integration_Guide SHALL document the invitation token format and security model
-8. WHEN production readiness features are implemented, THE Integration_Guide SHALL document the complete user flow from invitation creation to signup completion
-9. WHEN production readiness features are implemented, THE Integration_Guide SHALL include code examples for calling the createInvitation mutation with API key authentication
-10. WHEN production readiness features are implemented, THE Integration_Guide SHALL document error handling and edge cases
-11. WHEN production readiness features are implemented, THE Documentation SHALL include API documentation for all new GraphQL mutations and queries
-12. WHEN production readiness features are implemented, THE Documentation SHALL include configuration guide for SES and SNS setup
-13. WHEN production readiness features are implemented, THE Documentation SHALL include OAuth authentication flow documentation (already completed in docs/authentication-flow.md)
-14. WHEN updating documentation, THE Documentation_System SHALL ensure content remains relevant and concise
-15. THE Documentation_System SHALL remove outdated information
-16. THE Documentation SHALL use consistent terminology with the Glossary
-17. THE Documentation SHALL avoid duplication by referencing existing orb-templates standards
-18. THE Documentation SHALL include "Related Documentation" links where appropriate
+6. WHEN production readiness features are implemented, THE Integration_Guide SHALL document the complete OAuth flow from initiate to token exchange
+7. WHEN production readiness features are implemented, THE Integration_Guide SHALL include code examples for calling OAuth REST endpoints with API key authentication
+8. WHEN production readiness features are implemented, THE Integration_Guide SHALL document error handling and edge cases
+9. WHEN production readiness features are implemented, THE Documentation SHALL include API documentation for all new GraphQL mutations and queries
+10. WHEN production readiness features are implemented, THE Documentation SHALL include configuration guide for SES and SNS setup
+11. WHEN production readiness features are implemented, THE Documentation SHALL include OAuth authentication flow documentation (already completed in docs/authentication-flow.md)
+12. WHEN updating documentation, THE Documentation_System SHALL ensure content remains relevant and concise
+13. THE Documentation_System SHALL remove outdated information
+14. THE Documentation SHALL use consistent terminology with the Glossary
+15. THE Documentation SHALL avoid duplication by referencing existing orb-templates standards
+16. THE Documentation SHALL include "Related Documentation" links where appropriate
 
-### Requirement 8: Version and Changelog Management
+### Requirement 7: Version and Changelog Management
 
 **User Story:** As a developer, I want version numbers and changelogs updated, so that I can track changes and understand release history.
 
@@ -462,7 +387,7 @@ mutation CreateInvitation {
 3. WHEN updating CHANGELOG.md, THE Changelog_Entry SHALL reference all related issue numbers
 4. THE CHANGELOG.md SHALL follow the format: "- Feature description (#issue)"
 
-### Requirement 9: Git Commit Standards
+### Requirement 8: Git Commit Standards
 
 **User Story:** As a developer, I want git commits to follow conventions, so that I can track changes and understand commit history.
 
@@ -473,7 +398,7 @@ mutation CreateInvitation {
 3. WHEN multiple issues are addressed, THE Commit_Message SHALL reference all issue numbers
 4. THE Commit_Message SHALL use descriptive text explaining the change
 
-### Requirement 10: Property-Based Testing
+### Requirement 9: Property-Based Testing
 
 **User Story:** As a developer, I want property-based tests for critical correctness properties, so that I can validate the system behaves correctly across many generated inputs.
 
@@ -490,7 +415,7 @@ mutation CreateInvitation {
 9. THE property tests SHALL use hypothesis (Python) or fast-check (TypeScript) libraries
 10. THE property tests SHALL be annotated with "Validates: Requirements X.Y" comments
 
-### Requirement 11: Final Verification
+### Requirement 10: Final Verification
 
 **User Story:** As a developer, I want all tests and checks to pass, so that I can be confident the code is production-ready.
 

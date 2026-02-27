@@ -7,7 +7,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { FontAwesomeModule, FaIconLibrary } from '@fortawesome/angular-fontawesome';
-import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { faChevronRight, faMap } from '@fortawesome/free-solid-svg-icons';
 import * as fc from 'fast-check';
 import { BreadcrumbComponent, BreadcrumbItem } from './breadcrumb.component';
 
@@ -49,7 +49,7 @@ describe('BreadcrumbComponent Property Tests', () => {
 
     // Add icons to library
     const library = TestBed.inject(FaIconLibrary);
-    library.addIcons(faChevronRight);
+    library.addIcons(faChevronRight, faMap);
 
     fixture = TestBed.createComponent(BreadcrumbComponent);
     component = fixture.componentInstance;
@@ -127,11 +127,11 @@ describe('BreadcrumbComponent Property Tests', () => {
   });
 
   /**
-   * Property 3: Separator count equals items minus one
+   * Property 3: Separator count equals display items minus one
    * **Validates: Requirements 1.5**
    *
-   * For any breadcrumb items array with n items (n > 0), the component
-   * SHALL render exactly n-1 separator icons.
+   * For any breadcrumb items array, after truncation is applied,
+   * the component SHALL render exactly displayItems.length - 1 separator icons.
    */
   describe('Property 3: Separator count equals items minus one', () => {
     it('should render exactly n-1 separators for n items', () => {
@@ -143,9 +143,10 @@ describe('BreadcrumbComponent Property Tests', () => {
 
           // Act
           const separators = fixture.debugElement.queryAll(By.css('.breadcrumb__separator'));
+          const displayItems = component.displayItems;
 
-          // Assert: Separator count = items.length - 1
-          const expectedSeparatorCount = items.length - 1;
+          // Assert: Separator count = displayItems.length - 1 (after truncation)
+          const expectedSeparatorCount = displayItems.length - 1;
           expect(separators.length).toBe(expectedSeparatorCount);
 
           return true;

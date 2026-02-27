@@ -5,9 +5,13 @@
  */
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
+import { of } from 'rxjs';
 import { UserPageComponent } from './user-page.component';
 import { BreadcrumbItem } from '../../../shared/components/breadcrumb/breadcrumb.component';
 import { TabConfig } from '../../../shared/models/tab-config.model';
+import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
+import { faMap, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 
 describe('UserPageComponent', () => {
   let component: UserPageComponent;
@@ -15,8 +19,21 @@ describe('UserPageComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [UserPageComponent]
+      imports: [UserPageComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            paramMap: of(new Map()),
+            queryParamMap: of(new Map())
+          }
+        }
+      ]
     }).compileComponents();
+
+    // Register FontAwesome icons needed by BreadcrumbComponent
+    const library = TestBed.inject(FaIconLibrary);
+    library.addIcons(faMap, faChevronRight);
 
     fixture = TestBed.createComponent(UserPageComponent);
     component = fixture.componentInstance;
@@ -162,11 +179,15 @@ describe('UserPageComponent', () => {
       // Content section should be second
       expect(children[1].classList.contains('user-page__content')).toBe(true);
       
-      // Within content section: breadcrumbs → tabs → main
+      // Within content section: header (containing breadcrumbs + tabs) → main
       const contentChildren = Array.from(children[1].children);
-      expect(contentChildren[0].classList.contains('orb-breadcrumb-container')).toBe(true);
-      expect(contentChildren[1].tagName.toLowerCase()).toBe('app-tab-navigation');
-      expect(contentChildren[2].classList.contains('user-page__main')).toBe(true);
+      expect(contentChildren[0].classList.contains('user-page__header')).toBe(true);
+      expect(contentChildren[1].classList.contains('user-page__main')).toBe(true);
+      
+      // Within header: breadcrumbs → tabs
+      const headerChildren = Array.from(contentChildren[0].children);
+      expect(headerChildren[0].classList.contains('orb-breadcrumb-container')).toBe(true);
+      expect(headerChildren[1].tagName.toLowerCase()).toBe('app-tab-navigation');
     });
 
     /**
@@ -218,12 +239,33 @@ describe('UserPageComponent', () => {
         const content = compiled.querySelector('.user-page__content');
         const contentChildren = Array.from(content?.children || []);
 
-        // Find indices of elements
-        let breadcrumbIndex = -1;
-        let tabsIndex = -1;
+        // Find the header and main elements
+        let headerIndex = -1;
         let mainIndex = -1;
 
         contentChildren.forEach((child, index) => {
+          const element = child as HTMLElement;
+          if (element.classList.contains('user-page__header')) {
+            headerIndex = index;
+          }
+          if (element.classList.contains('user-page__main')) {
+            mainIndex = index;
+          }
+        });
+
+        // Verify header comes before main
+        expect(headerIndex).toBeGreaterThanOrEqual(0);
+        expect(mainIndex).toBeGreaterThanOrEqual(0);
+        expect(headerIndex).toBeLessThan(mainIndex);
+        
+        // Within header, verify breadcrumbs come before tabs
+        const header = contentChildren[headerIndex] as HTMLElement;
+        const headerChildren = Array.from(header.children);
+        
+        let breadcrumbIndex = -1;
+        let tabsIndex = -1;
+        
+        headerChildren.forEach((child, index) => {
           const element = child as HTMLElement;
           if (element.classList.contains('orb-breadcrumb-container')) {
             breadcrumbIndex = index;
@@ -231,17 +273,11 @@ describe('UserPageComponent', () => {
           if (element.tagName.toLowerCase() === 'app-tab-navigation') {
             tabsIndex = index;
           }
-          if (element.classList.contains('user-page__main')) {
-            mainIndex = index;
-          }
         });
-
-        // Verify order
+        
         expect(breadcrumbIndex).toBeGreaterThanOrEqual(0);
         expect(tabsIndex).toBeGreaterThanOrEqual(0);
-        expect(mainIndex).toBeGreaterThanOrEqual(0);
         expect(breadcrumbIndex).toBeLessThan(tabsIndex);
-        expect(tabsIndex).toBeLessThan(mainIndex);
       });
     });
 
@@ -332,13 +368,13 @@ describe('UserPageComponent', () => {
       fixture.detectChanges();
 
       const compiled = fixture.nativeElement as HTMLElement;
-      const content = compiled.querySelector('.user-page__content');
-      const breadcrumb = content?.querySelector('.orb-breadcrumb-container');
-      const tabs = content?.querySelector('app-tab-navigation');
+      const header = compiled.querySelector('.user-page__header');
+      const breadcrumb = header?.querySelector('.orb-breadcrumb-container');
+      const tabs = header?.querySelector('app-tab-navigation');
 
-      // Get positions in DOM
-      const breadcrumbPosition = Array.from(content?.children || []).indexOf(breadcrumb as Element);
-      const tabsPosition = Array.from(content?.children || []).indexOf(tabs as Element);
+      // Get positions in DOM within header
+      const breadcrumbPosition = Array.from(header?.children || []).indexOf(breadcrumb as Element);
+      const tabsPosition = Array.from(header?.children || []).indexOf(tabs as Element);
 
       expect(breadcrumbPosition).toBeLessThan(tabsPosition);
     });
@@ -351,14 +387,14 @@ describe('UserPageComponent', () => {
 
       const compiled = fixture.nativeElement as HTMLElement;
       const content = compiled.querySelector('.user-page__content');
-      const tabs = content?.querySelector('app-tab-navigation');
+      const header = content?.querySelector('.user-page__header');
       const main = content?.querySelector('.user-page__main');
 
-      // Get positions in DOM
-      const tabsPosition = Array.from(content?.children || []).indexOf(tabs as Element);
+      // Get positions in DOM within content
+      const headerPosition = Array.from(content?.children || []).indexOf(header as Element);
       const mainPosition = Array.from(content?.children || []).indexOf(main as Element);
 
-      expect(tabsPosition).toBeLessThan(mainPosition);
+      expect(headerPosition).toBeLessThan(mainPosition);
     });
   });
 });
