@@ -182,7 +182,7 @@ This implementation plan guides the upgrade of the orb-integration-hub Angular f
     - Run test to confirm all packages updated correctly
     - _Requirements: 1.2, 1.4, 1.5_
   
-  - [-] 5.12 Commit Angular 21 upgrade
+  - [x] 5.12 Commit Angular 21 upgrade
     - Review all changes with `git diff`
     - Stage all changes: `git add .`
     - Commit with conventional format: `feat: upgrade to Angular 21 #issue-number`
