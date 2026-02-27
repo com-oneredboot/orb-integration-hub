@@ -536,6 +536,8 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
       takeUntil(this.destroy$)
     ).subscribe(app => {
       if (app) {
+        const isDraft = app.status === ApplicationStatus.Pending;
+        
         this.tabs = [
           { id: 'overview', label: 'Overview', icon: 'info-circle' },
           { id: 'environments', label: 'Environments', icon: 'server', badge: app.environments?.length || 0 },
@@ -543,6 +545,11 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
           { id: 'users', label: 'Users', icon: 'users' },
           { id: 'danger', label: 'Danger Zone', icon: 'exclamation-triangle' }
         ];
+        
+        // Hide Environments, Roles, and Users tabs for draft applications
+        if (isDraft) {
+          this.tabs = this.tabs.filter(tab => tab.id !== 'environments' && tab.id !== 'roles' && tab.id !== 'users');
+        }
       } else {
         // Default tabs for draft/loading state
         this.tabs = [

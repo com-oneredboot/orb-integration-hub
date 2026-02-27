@@ -234,7 +234,7 @@ describe('DashboardComponent', () => {
 
   describe('Template Rendering', () => {
     it('should render the page header', () => {
-      const header = fixture.nativeElement.querySelector('.orb-page-header');
+      const header = fixture.nativeElement.querySelector('app-hero-split');
       expect(header).toBeTruthy();
     });
 
