@@ -115,7 +115,7 @@ describe('Environment Detail Page Property Tests', () => {
           const component = createMinimalComponent();
           component.setActiveTab(startTab);
 
-          const tabs = component.tabs;
+          const tabs = component.legacyTabs;
           const startIndex = tabs.findIndex((t) => t.id === startTab);
 
           // Simulate ArrowRight key
@@ -138,7 +138,7 @@ describe('Environment Detail Page Property Tests', () => {
           const component = createMinimalComponent();
           component.setActiveTab(startTab);
 
-          const tabs = component.tabs;
+          const tabs = component.legacyTabs;
           const startIndex = tabs.findIndex((t) => t.id === startTab);
 
           // Simulate ArrowLeft key
@@ -387,9 +387,10 @@ describe('Environment Detail Page Property Tests', () => {
 
     // Initialize required properties
     component.activeTab = EnvironmentDetailTab.ApiKeys;
+    component.activeTabLegacy = EnvironmentDetailTab.ApiKeys;
     component.environmentApiKey = null;
     component.selectedConfig = null;
-    component.tabs = [
+    component.legacyTabs = [
       { id: EnvironmentDetailTab.ApiKeys, label: 'API Keys', icon: 'key' },
       { id: EnvironmentDetailTab.Origins, label: 'Origins', icon: 'globe' },
       {

@@ -504,9 +504,10 @@ describe('Property 13: Revoked Key Has ExpiresAt Equal to RevokedAt', () => {
         fc.date({ min: new Date('2020-01-01'), max: new Date() }),
         (revokedAt) => {
           // For revoked keys, expiresAt should equal revokedAt
-          const expiresAt = revokedAt;
+          const expiresAt = new Date(revokedAt.getTime());
           
-          expect(expiresAt.getTime()).toBe(revokedAt.getTime());
+          // Both dates should have the same timestamp
+          return expiresAt.getTime() === revokedAt.getTime();
         }
       ),
       { numRuns: 100 }

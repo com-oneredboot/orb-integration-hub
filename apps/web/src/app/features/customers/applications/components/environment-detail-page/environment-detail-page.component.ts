@@ -600,6 +600,7 @@ export class EnvironmentDetailPageComponent implements OnInit, OnDestroy {
   // Tab Navigation
   setActiveTab(tab: EnvironmentDetailTab): void {
     this.activeTabLegacy = tab;
+    this.activeTab = tab; // Also update activeTab for property tests
   }
 
   /**
