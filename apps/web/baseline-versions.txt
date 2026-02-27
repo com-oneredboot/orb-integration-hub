@@ -1,0 +1,49 @@
+Angular 19.2.18 Version Baseline
+=================================
+Date: 2025-01-XX
+Branch: feat/angular-21-upgrade
+
+Framework Versions:
+- Angular: 19.2.18
+- Angular CLI: 19.2.19
+- TypeScript: 5.6.3
+- NgRx: 19.2.1
+- Node.js: (check with `node --version`)
+- npm: (check with `npm --version`)
+
+Key Dependencies:
+- @angular/animations: ^19.2.18
+- @angular/build: ^19.2.19
+- @angular/cdk: ^19.2.18
+- @angular/common: ^19.2.18
+- @angular/compiler: ^19.2.18
+- @angular/core: ^19.2.18
+- @angular/forms: ^19.2.18
+- @angular/material: ^19.2.18
+- @angular/platform-browser: ^19.2.18
+- @angular/platform-browser-dynamic: ^19.2.18
+- @angular/router: ^19.2.18
+- @ngrx/effects: ^19.2.1
+- @ngrx/entity: ^19.2.1
+- @ngrx/store: ^19.2.1
+- @ngrx/store-devtools: ^19.2.1
+- rxjs: ^7.8.1
+- zone.js: ^0.15.0
+
+Dev Dependencies:
+- @angular-devkit/build-angular: ^19.2.19
+- @angular/cli: ^19.2.19
+- @angular/compiler-cli: ^19.2.18
+- angular-eslint: 20.1.0
+- typescript-eslint: 8.26.0
+
+Third-Party Integrations:
+- @fortawesome/angular-fontawesome: ^1.0.0
+- aws-amplify: ^6.6.0
+- fast-check: ^4.5.3 (for property-based testing)
+
+Notes:
+- All Angular packages at consistent version 19.2.18
+- NgRx at version 19.2.1 (compatible with Angular 19)
+- TypeScript 5.6.3 meets Angular 19 requirements
+- Ready for upgrade to Angular 20, then Angular 21

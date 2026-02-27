@@ -1,0 +1,122 @@
+# Implementation Plan
+
+- [ ] 1. Write bug condition exploration test
+  - **Property 1: Fault Condition** - NPM Audit Detects 42 Vulnerabilities
+  - **CRITICAL**: This test MUST FAIL on unfixed code - failure confirms the bug exists
+  - **DO NOT attempt to fix the test or the code when it fails**
+  - **NOTE**: This test encodes the expected behavior - it will validate the fix when it passes after implementation
+  - **GOAL**: Surface counterexamples that demonstrate the vulnerabilities exist
+  - **Scoped PBT Approach**: Scope the property to the concrete failing cases - npm audit detecting vulnerable package versions
+  - Test that npm audit reports 42 total vulnerabilities (1 critical, 32 high, 7 moderate, 2 low)
+  - Test that fast-xml-parser <=5.3.7 is present in dependency tree (critical vulnerability)
+  - Test that rollup 4.0.0 - 4.58.0 is present (high-severity path traversal)
+  - Test that tar <=7.5.7 is present (high-severity race conditions)
+  - Test that webpack 5.49.0 - 5.104.0 is present (high-severity SSRF)
+  - Test that ajv <8.18.0 is present (moderate ReDoS)
+  - Test that minimatch vulnerable versions are present (moderate ReDoS)
+  - Test that qs <6.14.2 is present (moderate DoS)
+  - Run test on UNFIXED code
+  - **EXPECTED OUTCOME**: Test FAILS (this is correct - it proves the vulnerabilities exist)
+  - Document counterexamples found (specific vulnerable package versions and CVEs)
+  - Mark task complete when test is written, run, and failure is documented
+  - _Requirements: 1.1, 1.2, 1.3, 1.4_
+
+- [ ] 2. Write preservation property tests (BEFORE implementing fix)
+  - **Property 2: Preservation** - Application Functionality Unchanged
+  - **IMPORTANT**: Follow observation-first methodology
+  - Observe behavior on UNFIXED code for non-buggy functionality
+  - Write property-based tests capturing observed behavior patterns from Preservation Requirements
+  - Property-based testing generates many test cases for stronger guarantees
+  - Test that production build completes successfully: `ng build --configuration production`
+  - Test that development server starts successfully: `ng serve` (check process starts, don't wait for completion)
+  - Test that all existing unit tests pass: `ng test --watch=false`
+  - Test that AWS SDK scripts execute successfully: `node scripts/secrets-retrieval.js` and `node scripts/setup-dev-env.js`
+  - Test that build scripts complete successfully: `npm run build:secure` and `npm run build:angular`
+  - Test that GraphQL operations work correctly (if applicable)
+  - Test that NgRx store operations work correctly (if applicable)
+  - Run tests on UNFIXED code
+  - **EXPECTED OUTCOME**: Tests PASS (this confirms baseline behavior to preserve)
+  - Mark task complete when tests are written, run, and passing on unfixed code
+  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10_
+
+- [ ] 3. Fix npm security vulnerabilities
+
+  - [ ] 3.1 Update AWS SDK packages to resolve critical fast-xml-parser vulnerability
+    - Navigate to apps/web directory
+    - Run `npm update @aws-sdk/client-secrets-manager @aws-sdk/client-ssm` to get latest versions
+    - Verify fast-xml-parser transitive dependency is updated to >5.3.7 using `npm ls fast-xml-parser`
+    - _Bug_Condition: isBugCondition(input) where npmAudit(input).vulnerabilities includes fast-xml-parser <=5.3.7_
+    - _Expected_Behavior: fast-xml-parser version >5.3.7 installed, critical vulnerability eliminated_
+    - _Preservation: AWS SDK scripts continue to execute successfully, authentication flows work correctly_
+    - _Requirements: 2.1, 2.2, 3.4_
+
+  - [ ] 3.2 Run automated audit fix for direct dependency vulnerabilities
+    - Navigate to apps/web directory
+    - Run `npm audit fix` to automatically update packages with available patches
+    - Review changes to package.json and package-lock.json
+    - Verify no breaking changes are introduced by checking package versions
+    - _Bug_Condition: isBugCondition(input) where npmAudit(input).vulnerabilities includes ajv, qs, minimatch_
+    - _Expected_Behavior: ajv >=8.18.0, qs >=6.14.2, minimatch patched versions installed_
+    - _Preservation: All application functionality continues to work, no breaking changes_
+    - _Requirements: 2.5, 2.6, 3.1, 3.2, 3.3, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10_
+
+  - [ ] 3.3 Force update build tools to resolve transitive dependency vulnerabilities
+    - Navigate to apps/web directory
+    - Run `npm audit fix --force` to update transitive dependencies in Angular build tools
+    - This will update rollup, webpack, and tar through their parent packages
+    - Review changes carefully as this may update Angular toolchain packages
+    - _Bug_Condition: isBugCondition(input) where npmAudit(input).vulnerabilities includes rollup, webpack, tar_
+    - _Expected_Behavior: rollup >=4.58.1, tar >7.5.7, webpack >=5.104.1 installed_
+    - _Preservation: Production builds and development server continue to work correctly_
+    - _Requirements: 2.3, 2.4, 3.1, 3.2_
+
+  - [ ] 3.4 Manual version updates if needed
+    - Check if any vulnerabilities remain after automated fixes: `npm audit`
+    - If vulnerabilities persist, manually update package.json version constraints
+    - Use `npm install <package>@latest` to update specific packages to latest secure versions
+    - Verify package-lock.json is updated with secure versions
+    - _Bug_Condition: isBugCondition(input) where npmAudit(input).vulnerabilities.total > 0 after automated fixes_
+    - _Expected_Behavior: All remaining vulnerabilities resolved, npm audit reports 0 vulnerabilities_
+    - _Preservation: All application functionality continues to work after manual updates_
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6_
+
+  - [ ] 3.5 Verify and lock dependency versions
+    - Run `npm audit` to confirm zero vulnerabilities
+    - Run `npm install` to ensure package-lock.json is properly updated
+    - Verify all secure package versions are locked in package-lock.json
+    - Commit both package.json and package-lock.json changes together
+    - _Bug_Condition: isBugCondition(input) where npmAudit(input).vulnerabilities.total > 0_
+    - _Expected_Behavior: npm audit reports 0 vulnerabilities, all packages at secure versions_
+    - _Preservation: Dependency tree is stable and reproducible across environments_
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6_
+
+  - [ ] 3.6 Verify bug condition exploration test now passes
+    - **Property 1: Expected Behavior** - Zero Vulnerabilities After Update
+    - **IMPORTANT**: Re-run the SAME test from task 1 - do NOT write a new test
+    - The test from task 1 encodes the expected behavior
+    - When this test passes, it confirms the expected behavior is satisfied
+    - Run bug condition exploration test from step 1
+    - **EXPECTED OUTCOME**: Test PASSES (confirms vulnerabilities are fixed)
+    - Verify npm audit reports 0 vulnerabilities
+    - Verify all packages are at secure versions (fast-xml-parser >5.3.7, rollup >=4.58.1, etc.)
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6_
+
+  - [ ] 3.7 Verify preservation tests still pass
+    - **Property 2: Preservation** - Application Functionality Unchanged
+    - **IMPORTANT**: Re-run the SAME tests from task 2 - do NOT write new tests
+    - Run preservation property tests from step 2
+    - **EXPECTED OUTCOME**: Tests PASS (confirms no regressions)
+    - Verify production build completes successfully
+    - Verify development server starts successfully
+    - Verify all existing unit tests pass
+    - Verify AWS SDK scripts execute successfully
+    - Verify build scripts complete successfully
+    - Confirm all tests still pass after fix (no regressions)
+    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10_
+
+- [ ] 4. Checkpoint - Ensure all tests pass
+  - Run `npm audit` and verify 0 vulnerabilities reported
+  - Run `ng build --configuration production` and verify successful build
+  - Run `ng test --watch=false` and verify all tests pass
+  - Run AWS SDK scripts and verify successful execution
+  - Ask the user if questions arise or if additional verification is needed
