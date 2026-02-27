@@ -11,7 +11,8 @@
         "search_standards",
         "validate_naming",
         "get_workflow_template",
-        "search_standards_tool"
+        "search_standards_tool",
+        "get_document_tool"
       ]
     }
   }

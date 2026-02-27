@@ -69,6 +69,7 @@ describe('OrganizationsListComponent', () => {
         provideMockStore({
           selectors: [
             { selector: fromUser.selectCurrentUser, value: mockUser },
+            { selector: fromUser.selectDebugMode, value: false },
             { selector: fromOrganizations.selectOrganizationRows, value: [mockOrganizationRow] },
             { selector: fromOrganizations.selectFilteredOrganizationRows, value: [mockOrganizationRow] },
             { selector: fromOrganizations.selectIsLoading, value: false },

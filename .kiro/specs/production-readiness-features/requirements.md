@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This specification defines six critical features required for production readiness of the orb-integration-hub platform. These features address authentication, authorization, user lifecycle management, and notification delivery - all essential for a production-grade multi-tenant SaaS application.
+This specification defines comprehensive production readiness features for the orb-integration-hub platform. These features address authentication, authorization, user lifecycle management, notification delivery, observability, infrastructure automation, and cost optimization - all essential for a production-grade multi-tenant SaaS application.
 
 The features are:
 1. JWT Token Claims Enhancement - Ensures proper authorization data in authentication tokens
@@ -10,17 +10,21 @@ The features are:
 3. Admin User Management - Provides user removal and role management capabilities
 4. Notifications UI System - Displays and manages in-app notifications
 5. Email/SMS Notification Delivery - Delivers notifications via email and SMS channels
+6. Observability and Monitoring - Comprehensive monitoring, alerting, and distributed tracing
+7. IAM Policy Automation - Auto-generated least-privilege policies from Lambda code analysis
+8. Infrastructure Validation - CDK template validation and security compliance checking
+9. Cost Optimization - Resource cost analysis and optimization recommendations
 
 ## Standard Requirements
 
 This spec follows the [orb-templates Spec Standards](../../repositories/orb-templates/docs/kiro-steering/templates/spec-standards.md).
 
-Requirements 6-10 implement the standard requirements for:
-- Documentation updates (Requirement 6)
-- Version and changelog management (Requirement 7)
-- Git commit standards (Requirement 8)
-- Property-based testing (Requirement 9)
-- Final verification (Requirement 10)
+Requirements 10-14 implement the standard requirements for:
+- Documentation updates (Requirement 10)
+- Version and changelog management (Requirement 11)
+- Git commit standards (Requirement 12)
+- Property-based testing (Requirement 13)
+- Final verification (Requirement 14)
 
 ## Glossary
 
@@ -54,6 +58,20 @@ Requirements 6-10 implement the standard requirements for:
 - **Token_Blacklist**: A DynamoDB table storing revoked access tokens until their natural expiration
 - **Rate_Limiter**: A system component that enforces request limits per client or token to prevent abuse
 - **State_Parameter**: A random value used for CSRF protection, passed through the OAuth flow and validated on callback
+- **CloudWatch_Dashboard**: A visual interface displaying metrics, logs, and alarms for system monitoring
+- **Distributed_Tracing**: A method to track requests across multiple services using X-Ray or similar tools
+- **SLO (Service Level Objective)**: A target value or range for a service level metric (e.g., 99.9% uptime)
+- **Alarm**: A CloudWatch notification triggered when a metric crosses a defined threshold
+- **IAM_Policy**: AWS Identity and Access Management policy defining permissions for AWS resources
+- **Least_Privilege**: Security principle of granting only the minimum permissions required for a task
+- **Policy_Autopilot**: Automated system that analyzes code to generate minimal IAM policies
+- **CDK_Template**: AWS Cloud Development Kit infrastructure-as-code template written in TypeScript or Python
+- **CloudFormation_Stack**: A collection of AWS resources managed as a single unit
+- **Security_Compliance**: Adherence to security best practices and organizational standards
+- **Well_Architected_Framework**: AWS best practices for building secure, high-performing, resilient infrastructure
+- **Cost_Explorer**: AWS service for analyzing and visualizing cloud spending
+- **Resource_Optimization**: Process of adjusting resource configurations to reduce costs while maintaining performance
+- **Cost_Anomaly**: Unexpected increase in AWS spending that may indicate misconfiguration or waste
 
 ## API Boundary Definitions
 
@@ -353,7 +371,255 @@ Requirements 6-10 implement the standard requirements for:
 13. THE Email_Template_Service SHALL support templates for APPLICATION_TRANSFER_REQUEST, APPLICATION_TRANSFER_COMPLETED, ORGANIZATION_INVITATION_RECEIVED, ORGANIZATION_INVITATION_ACCEPTED, and ORGANIZATION_INVITATION_REJECTED
 14. THE SMS_Template_Service SHALL support SMS templates for CRITICAL notification types only
 
-### Requirement 6: Documentation Updates
+### Requirement 6: Observability and Monitoring
+
+**User Story:** As a platform operator, I want comprehensive monitoring and alerting for all production systems, so that I can detect issues proactively, troubleshoot problems quickly, and maintain high availability.
+
+**Context:** This requirement leverages the aws-observability Kiro power to implement CloudWatch dashboards, alarms, distributed tracing, and automated observability gap analysis. It ensures all critical paths (OAuth flow, JWT generation, notification delivery) are fully instrumented.
+
+#### Acceptance Criteria
+
+**6.1 CloudWatch Dashboards**
+
+1. WHEN the observability system is deployed, THE CloudWatch_Dashboard SHALL display OAuth flow metrics (initiate, exchange, refresh, logout request counts and latencies)
+2. WHEN the observability system is deployed, THE CloudWatch_Dashboard SHALL display JWT token generation metrics (success rate, latency, error count)
+3. WHEN the observability system is deployed, THE CloudWatch_Dashboard SHALL display notification delivery metrics (email/SMS sent, delivered, failed, bounced counts)
+4. WHEN the observability system is deployed, THE CloudWatch_Dashboard SHALL display Lambda function metrics (invocations, errors, duration, throttles)
+5. WHEN the observability system is deployed, THE CloudWatch_Dashboard SHALL display DynamoDB metrics (read/write capacity, throttles, latency)
+6. WHEN the observability system is deployed, THE CloudWatch_Dashboard SHALL display API Gateway metrics (request count, 4xx/5xx errors, latency)
+7. THE CloudWatch_Dashboard SHALL refresh metrics every 1 minute for real-time monitoring
+
+**6.2 CloudWatch Alarms**
+
+8. WHEN authentication failure rate exceeds 10% over 5 minutes, THE CloudWatch_Alarm SHALL trigger and notify operations team
+9. WHEN token generation errors exceed 5 per minute, THE CloudWatch_Alarm SHALL trigger and notify operations team
+10. WHEN notification delivery failure rate exceeds 15% over 10 minutes, THE CloudWatch_Alarm SHALL trigger and notify operations team
+11. WHEN Lambda function error rate exceeds 5% over 5 minutes, THE CloudWatch_Alarm SHALL trigger and notify operations team
+12. WHEN DynamoDB throttling occurs, THE CloudWatch_Alarm SHALL trigger and notify operations team
+13. WHEN API Gateway 5xx error rate exceeds 1% over 5 minutes, THE CloudWatch_Alarm SHALL trigger and notify operations team
+14. WHEN Lambda function duration exceeds 80% of timeout threshold, THE CloudWatch_Alarm SHALL trigger warning notification
+15. THE CloudWatch_Alarms SHALL use SNS topics for notification delivery to email and Slack
+
+**6.3 Distributed Tracing**
+
+16. WHEN a request enters the OAuth flow, THE X-Ray_Tracing SHALL create a trace with segments for each Lambda invocation
+17. WHEN tracing OAuth flow, THE X-Ray_Trace SHALL include segments for DynamoDB operations (auth_tokens, authorization_codes, refresh_tokens)
+18. WHEN tracing JWT generation, THE X-Ray_Trace SHALL include segments for Cognito operations and DynamoDB queries
+19. WHEN tracing notification delivery, THE X-Ray_Trace SHALL include segments for SES/SNS operations
+20. WHEN an error occurs, THE X-Ray_Trace SHALL capture error details and stack traces
+21. THE X-Ray_Tracing SHALL be enabled for all Lambda functions, API Gateway, and DynamoDB
+22. THE X-Ray_Traces SHALL be retained for 30 days for troubleshooting
+
+**6.4 Custom Metrics and Logs**
+
+23. WHEN an OAuth flow completes, THE System SHALL emit custom CloudWatch metric with flow duration and outcome
+24. WHEN a token is generated, THE System SHALL emit custom CloudWatch metric with token type and expiration
+25. WHEN a notification is delivered, THE System SHALL emit custom CloudWatch metric with channel and delivery status
+26. WHEN rate limiting is triggered, THE System SHALL emit custom CloudWatch metric with client_id and endpoint
+27. THE Lambda_Functions SHALL use structured logging with JSON format for easy parsing
+28. THE Logs SHALL include correlation IDs to trace requests across services
+29. THE CloudWatch_Logs SHALL be retained for 90 days for compliance and troubleshooting
+
+**6.5 SLO Tracking**
+
+30. THE Observability_System SHALL track OAuth flow success rate SLO target of 99.5%
+31. THE Observability_System SHALL track JWT generation latency SLO target of p99 < 500ms
+32. THE Observability_System SHALL track notification delivery success rate SLO target of 98%
+33. THE Observability_System SHALL track API availability SLO target of 99.9%
+34. THE CloudWatch_Dashboard SHALL display current SLO compliance status with red/yellow/green indicators
+
+**6.6 Automated Observability Gap Analysis**
+
+35. WHEN the codebase is analyzed, THE Observability_Gap_Analyzer SHALL identify Lambda functions without error handling
+36. WHEN the codebase is analyzed, THE Observability_Gap_Analyzer SHALL identify Lambda functions without CloudWatch metrics
+37. WHEN the codebase is analyzed, THE Observability_Gap_Analyzer SHALL identify Lambda functions without X-Ray tracing
+38. WHEN gaps are identified, THE Observability_Gap_Analyzer SHALL generate a report with recommendations
+39. THE Observability_Gap_Analysis SHALL run automatically in CI/CD pipeline
+
+### Requirement 7: IAM Policy Automation
+
+**User Story:** As a developer, I want IAM policies automatically generated from Lambda code analysis, so that I can ensure least-privilege access without manual policy writing and reduce permission troubleshooting time.
+
+**Context:** This requirement leverages the iam-policy-autopilot-power Kiro power to analyze Lambda function code and generate minimal IAM policies based on actual AWS SDK calls. This eliminates overly permissive policies and reduces security risks.
+
+#### Acceptance Criteria
+
+**7.1 Lambda Code Analysis**
+
+1. WHEN a Lambda function is analyzed, THE IAM_Policy_Autopilot SHALL scan the code for AWS SDK calls (boto3, aws-sdk)
+2. WHEN analyzing code, THE IAM_Policy_Autopilot SHALL identify DynamoDB operations (GetItem, PutItem, Query, UpdateItem, DeleteItem)
+3. WHEN analyzing code, THE IAM_Policy_Autopilot SHALL identify Cognito operations (AdminGetUser, AdminUpdateUserAttributes)
+4. WHEN analyzing code, THE IAM_Policy_Autopilot SHALL identify SES operations (SendEmail, SendTemplatedEmail)
+5. WHEN analyzing code, THE IAM_Policy_Autopilot SHALL identify SNS operations (Publish)
+6. WHEN analyzing code, THE IAM_Policy_Autopilot SHALL identify Secrets Manager operations (GetSecretValue)
+7. WHEN analyzing code, THE IAM_Policy_Autopilot SHALL identify CloudWatch Logs operations (CreateLogGroup, CreateLogStream, PutLogEvents)
+
+**7.2 Policy Generation**
+
+8. WHEN SDK calls are identified, THE IAM_Policy_Autopilot SHALL generate IAM policy statements with specific actions
+9. WHEN generating policies, THE IAM_Policy_Autopilot SHALL use resource ARNs from environment variables or CDK context
+10. WHEN generating policies, THE IAM_Policy_Autopilot SHALL apply least-privilege principle (no wildcards unless necessary)
+11. WHEN generating policies, THE IAM_Policy_Autopilot SHALL include condition keys for additional security (e.g., aws:SecureTransport)
+12. WHEN multiple Lambda functions access the same resource, THE IAM_Policy_Autopilot SHALL generate shared policy statements
+13. THE IAM_Policy_Autopilot SHALL generate policies in JSON format compatible with CDK and CloudFormation
+
+**7.3 Policy Validation**
+
+14. WHEN a policy is generated, THE IAM_Policy_Validator SHALL check for overly permissive statements (e.g., Action: "*")
+15. WHEN a policy is generated, THE IAM_Policy_Validator SHALL check for missing resource ARNs
+16. WHEN a policy is generated, THE IAM_Policy_Validator SHALL check for compliance with AWS best practices
+17. WHEN validation fails, THE IAM_Policy_Validator SHALL provide specific recommendations for fixes
+18. THE IAM_Policy_Validator SHALL use AWS IAM Access Analyzer for policy validation
+
+**7.4 CDK Integration**
+
+19. WHEN policies are generated, THE IAM_Policy_Autopilot SHALL output CDK PolicyStatement objects
+20. WHEN integrating with CDK, THE Generated_Policies SHALL be added to Lambda execution roles
+21. WHEN CDK synthesizes, THE CloudFormation_Template SHALL include the generated IAM policies
+22. THE Generated_Policies SHALL be committed to version control for review and audit
+
+**7.5 Policy Documentation**
+
+23. WHEN a policy is generated, THE IAM_Policy_Autopilot SHALL create documentation explaining each statement
+24. WHEN documenting policies, THE Documentation SHALL include the Lambda function name and code location
+25. WHEN documenting policies, THE Documentation SHALL include the AWS SDK calls that triggered each statement
+26. THE Policy_Documentation SHALL be generated in Markdown format in docs/iam-policies/
+
+**7.6 Continuous Policy Updates**
+
+27. WHEN Lambda code changes, THE CI/CD_Pipeline SHALL re-run IAM policy analysis
+28. WHEN new SDK calls are detected, THE CI/CD_Pipeline SHALL generate updated policies
+29. WHEN policies change, THE CI/CD_Pipeline SHALL create a diff report for review
+30. THE CI/CD_Pipeline SHALL fail if generated policies are not committed to version control
+
+### Requirement 8: Infrastructure Validation
+
+**User Story:** As a platform engineer, I want CDK templates validated for security compliance and well-architected patterns, so that I can deploy infrastructure confidently and meet organizational standards.
+
+**Context:** This requirement leverages the aws-infrastructure-as-code Kiro power to validate CloudFormation templates, check resource configurations for security compliance, and ensure adherence to AWS Well-Architected Framework principles.
+
+#### Acceptance Criteria
+
+**8.1 CDK Template Validation**
+
+1. WHEN CDK synthesizes CloudFormation templates, THE Infrastructure_Validator SHALL validate template syntax
+2. WHEN validating templates, THE Infrastructure_Validator SHALL check for missing required properties
+3. WHEN validating templates, THE Infrastructure_Validator SHALL check for invalid resource references
+4. WHEN validating templates, THE Infrastructure_Validator SHALL check for circular dependencies
+5. WHEN validation fails, THE Infrastructure_Validator SHALL provide specific error messages with line numbers
+6. THE Infrastructure_Validator SHALL use cfn-lint for template validation
+
+**8.2 Security Compliance Checking**
+
+7. WHEN validating infrastructure, THE Security_Compliance_Checker SHALL verify DynamoDB tables have encryption enabled
+8. WHEN validating infrastructure, THE Security_Compliance_Checker SHALL verify Lambda functions have IAM roles (no inline policies)
+9. WHEN validating infrastructure, THE Security_Compliance_Checker SHALL verify API Gateway has logging enabled
+10. WHEN validating infrastructure, THE Security_Compliance_Checker SHALL verify S3 buckets have encryption and versioning enabled
+11. WHEN validating infrastructure, THE Security_Compliance_Checker SHALL verify Secrets Manager secrets have rotation enabled
+12. WHEN validating infrastructure, THE Security_Compliance_Checker SHALL verify CloudWatch Logs have retention policies
+13. WHEN compliance violations are found, THE Security_Compliance_Checker SHALL generate a report with severity levels
+14. THE Security_Compliance_Checker SHALL use cfn-guard for policy-as-code validation
+
+**8.3 Well-Architected Framework Checks**
+
+15. WHEN validating infrastructure, THE Well_Architected_Checker SHALL verify Lambda functions have timeout < 15 minutes
+16. WHEN validating infrastructure, THE Well_Architected_Checker SHALL verify Lambda functions have memory >= 512MB for production
+17. WHEN validating infrastructure, THE Well_Architected_Checker SHALL verify DynamoDB tables have auto-scaling enabled
+18. WHEN validating infrastructure, THE Well_Architected_Checker SHALL verify API Gateway has throttling configured
+19. WHEN validating infrastructure, THE Well_Architected_Checker SHALL verify Lambda functions have reserved concurrency for critical paths
+20. WHEN validating infrastructure, THE Well_Architected_Checker SHALL verify CloudWatch alarms exist for critical resources
+21. THE Well_Architected_Checker SHALL generate recommendations for improvements
+
+**8.4 Resource Configuration Validation**
+
+22. WHEN validating Lambda functions, THE Resource_Validator SHALL check environment variables are not hardcoded secrets
+23. WHEN validating Lambda functions, THE Resource_Validator SHALL check VPC configuration if network access required
+24. WHEN validating DynamoDB tables, THE Resource_Validator SHALL check partition key design for even distribution
+25. WHEN validating DynamoDB tables, THE Resource_Validator SHALL check GSI projection types for query efficiency
+26. WHEN validating API Gateway, THE Resource_Validator SHALL check CORS configuration for security
+27. THE Resource_Validator SHALL provide specific recommendations for each violation
+
+**8.5 Deployment Troubleshooting**
+
+28. WHEN a CloudFormation stack fails to deploy, THE Troubleshooter SHALL analyze stack events for root cause
+29. WHEN analyzing failures, THE Troubleshooter SHALL identify resource dependencies causing issues
+30. WHEN analyzing failures, THE Troubleshooter SHALL identify IAM permission issues
+31. WHEN analyzing failures, THE Troubleshooter SHALL identify resource limit issues (e.g., Lambda concurrent executions)
+32. THE Troubleshooter SHALL provide actionable recommendations for fixing deployment failures
+
+**8.6 CI/CD Integration**
+
+33. WHEN CDK code is committed, THE CI/CD_Pipeline SHALL run infrastructure validation
+34. WHEN validation fails, THE CI/CD_Pipeline SHALL block deployment and report errors
+35. WHEN validation passes with warnings, THE CI/CD_Pipeline SHALL allow deployment but report warnings
+36. THE CI/CD_Pipeline SHALL generate validation reports in JUnit XML format for CI integration
+37. THE Validation_Reports SHALL be archived as build artifacts for audit
+
+### Requirement 9: Cost Optimization
+
+**User Story:** As a platform owner, I want cost analysis and optimization recommendations for AWS resources, so that I can reduce spending while maintaining performance and reliability.
+
+**Context:** This requirement leverages the aws-cost-optimization Kiro power to analyze DynamoDB, Lambda, SES/SNS spending, identify optimization opportunities, and implement cost-aware architecture patterns.
+
+#### Acceptance Criteria
+
+**9.1 Cost Analysis**
+
+1. WHEN the cost analyzer runs, THE Cost_Analyzer SHALL retrieve spending data from AWS Cost Explorer for the last 30 days
+2. WHEN analyzing costs, THE Cost_Analyzer SHALL break down spending by service (DynamoDB, Lambda, API Gateway, SES, SNS)
+3. WHEN analyzing costs, THE Cost_Analyzer SHALL break down spending by environment (dev, staging, prod)
+4. WHEN analyzing costs, THE Cost_Analyzer SHALL identify top 10 most expensive resources
+5. WHEN analyzing costs, THE Cost_Analyzer SHALL calculate cost trends (increasing, decreasing, stable)
+6. WHEN analyzing costs, THE Cost_Analyzer SHALL identify cost anomalies (unexpected spikes)
+7. THE Cost_Analyzer SHALL generate a cost report in Markdown format with charts and tables
+
+**9.2 DynamoDB Optimization**
+
+8. WHEN analyzing DynamoDB tables, THE Optimizer SHALL check if on-demand pricing is more cost-effective than provisioned
+9. WHEN analyzing DynamoDB tables, THE Optimizer SHALL check if auto-scaling is configured optimally
+10. WHEN analyzing DynamoDB tables, THE Optimizer SHALL identify tables with low utilization (< 20% of provisioned capacity)
+11. WHEN analyzing DynamoDB tables, THE Optimizer SHALL recommend switching to Standard-IA storage class for infrequently accessed data
+12. WHEN analyzing DynamoDB tables, THE Optimizer SHALL recommend TTL for temporary data (auth_tokens, authorization_codes)
+13. THE Optimizer SHALL calculate potential savings for each DynamoDB recommendation
+
+**9.3 Lambda Optimization**
+
+14. WHEN analyzing Lambda functions, THE Optimizer SHALL identify over-provisioned memory (< 50% memory utilization)
+15. WHEN analyzing Lambda functions, THE Optimizer SHALL identify under-provisioned memory (> 90% memory utilization)
+16. WHEN analyzing Lambda functions, THE Optimizer SHALL recommend optimal memory settings based on CloudWatch metrics
+17. WHEN analyzing Lambda functions, THE Optimizer SHALL identify functions with high invocation counts suitable for reserved concurrency
+18. WHEN analyzing Lambda functions, THE Optimizer SHALL recommend ARM64 architecture for cost savings (Graviton2)
+19. THE Optimizer SHALL calculate potential savings for each Lambda recommendation
+
+**9.4 API Gateway and Data Transfer Optimization**
+
+20. WHEN analyzing API Gateway, THE Optimizer SHALL identify opportunities to use HTTP API instead of REST API
+21. WHEN analyzing API Gateway, THE Optimizer SHALL check if caching is enabled for frequently accessed endpoints
+22. WHEN analyzing data transfer, THE Optimizer SHALL identify high egress costs and recommend CloudFront or VPC endpoints
+23. THE Optimizer SHALL calculate potential savings for API Gateway and data transfer optimizations
+
+**9.5 SES/SNS Optimization**
+
+24. WHEN analyzing SES usage, THE Optimizer SHALL identify email bounce rates and recommend list hygiene
+25. WHEN analyzing SNS usage, THE Optimizer SHALL identify SMS delivery failures and recommend phone number validation
+26. WHEN analyzing notification delivery, THE Optimizer SHALL recommend batching for bulk notifications
+27. THE Optimizer SHALL calculate potential savings for SES/SNS optimizations
+
+**9.6 Cost Monitoring and Alerting**
+
+28. WHEN daily spending exceeds budget threshold, THE Cost_Monitor SHALL trigger CloudWatch alarm
+29. WHEN cost anomalies are detected, THE Cost_Monitor SHALL send notification with details
+30. WHEN monthly spending is projected to exceed budget, THE Cost_Monitor SHALL send early warning notification
+31. THE Cost_Monitor SHALL create CloudWatch dashboard with cost metrics and trends
+
+**9.7 Cost-Aware Architecture Recommendations**
+
+32. WHEN designing new features, THE Cost_Advisor SHALL recommend cost-effective architecture patterns
+33. WHEN designing new features, THE Cost_Advisor SHALL estimate monthly costs based on expected usage
+34. WHEN designing new features, THE Cost_Advisor SHALL compare alternative implementations (e.g., Lambda vs Fargate)
+35. THE Cost_Advisor SHALL document cost considerations in architecture decision records (ADRs)
+
+### Requirement 10: Documentation Updates
 
 **User Story:** As a developer, I want comprehensive documentation for all production readiness features, so that I can understand, maintain, and extend the system.
 
@@ -370,13 +636,17 @@ Requirements 6-10 implement the standard requirements for:
 9. WHEN production readiness features are implemented, THE Documentation SHALL include API documentation for all new GraphQL mutations and queries
 10. WHEN production readiness features are implemented, THE Documentation SHALL include configuration guide for SES and SNS setup
 11. WHEN production readiness features are implemented, THE Documentation SHALL include OAuth authentication flow documentation (already completed in docs/authentication-flow.md)
-12. WHEN updating documentation, THE Documentation_System SHALL ensure content remains relevant and concise
-13. THE Documentation_System SHALL remove outdated information
-14. THE Documentation SHALL use consistent terminology with the Glossary
-15. THE Documentation SHALL avoid duplication by referencing existing orb-templates standards
-16. THE Documentation SHALL include "Related Documentation" links where appropriate
+12. WHEN production readiness features are implemented, THE Documentation SHALL include observability runbooks in docs/operations/observability.md
+13. WHEN production readiness features are implemented, THE Documentation SHALL include IAM policy generation guide in docs/operations/iam-policies.md
+14. WHEN production readiness features are implemented, THE Documentation SHALL include infrastructure validation guide in docs/operations/infrastructure-validation.md
+15. WHEN production readiness features are implemented, THE Documentation SHALL include cost optimization guide in docs/operations/cost-optimization.md
+16. WHEN updating documentation, THE Documentation_System SHALL ensure content remains relevant and concise
+17. THE Documentation_System SHALL remove outdated information
+18. THE Documentation SHALL use consistent terminology with the Glossary
+19. THE Documentation SHALL avoid duplication by referencing existing orb-templates standards
+20. THE Documentation SHALL include "Related Documentation" links where appropriate
 
-### Requirement 7: Version and Changelog Management
+### Requirement 11: Version and Changelog Management
 
 **User Story:** As a developer, I want version numbers and changelogs updated, so that I can track changes and understand release history.
 
@@ -387,7 +657,7 @@ Requirements 6-10 implement the standard requirements for:
 3. WHEN updating CHANGELOG.md, THE Changelog_Entry SHALL reference all related issue numbers
 4. THE CHANGELOG.md SHALL follow the format: "- Feature description (#issue)"
 
-### Requirement 8: Git Commit Standards
+### Requirement 12: Git Commit Standards
 
 **User Story:** As a developer, I want git commits to follow conventions, so that I can track changes and understand commit history.
 
@@ -398,7 +668,7 @@ Requirements 6-10 implement the standard requirements for:
 3. WHEN multiple issues are addressed, THE Commit_Message SHALL reference all issue numbers
 4. THE Commit_Message SHALL use descriptive text explaining the change
 
-### Requirement 9: Property-Based Testing
+### Requirement 13: Property-Based Testing
 
 **User Story:** As a developer, I want property-based tests for critical correctness properties, so that I can validate the system behaves correctly across many generated inputs.
 
@@ -415,7 +685,7 @@ Requirements 6-10 implement the standard requirements for:
 9. THE property tests SHALL use hypothesis (Python) or fast-check (TypeScript) libraries
 10. THE property tests SHALL be annotated with "Validates: Requirements X.Y" comments
 
-### Requirement 10: Final Verification
+### Requirement 14: Final Verification
 
 **User Story:** As a developer, I want all tests and checks to pass, so that I can be confident the code is production-ready.
 
@@ -431,6 +701,3 @@ Requirements 6-10 implement the standard requirements for:
 8. THE Commits SHALL reference all related issues
 9. WHEN all checks pass, THE Final_Verification SHALL confirm no markdown syntax errors
 10. WHEN all checks pass, THE Final_Verification SHALL confirm documentation renders correctly in GitHub
-6. THE CHANGELOG.md SHALL be updated with all changes
-7. THE Version SHALL be bumped appropriately
-8. THE Commits SHALL reference all related issues

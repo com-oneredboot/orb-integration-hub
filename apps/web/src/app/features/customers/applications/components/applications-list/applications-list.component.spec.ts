@@ -79,6 +79,11 @@ describe('ApplicationsListComponent', () => {
     organizations: {
       organizations: [],
     },
+    user: {
+      debugMode: false,
+      isAuthenticated: true,
+      currentUser: null,
+    },
   };
 
   beforeEach(async () => {

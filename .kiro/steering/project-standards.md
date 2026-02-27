@@ -2,25 +2,66 @@
 
 ## orb-templates MCP Server
 
-This project uses the orb-templates MCP server for accessing organization standards. The MCP tools are available and should be used proactively.
+This project uses the orb-templates MCP server v0.4.2 for accessing organization standards. The MCP tools are available and should be used proactively.
 
 ### Available Tools
 
 | Tool | Purpose | When to Use |
 |------|---------|-------------|
-| `search_standards` | Search orb-templates documentation | Before implementing new patterns, when unsure about conventions |
-| `validate_naming` | Validate AWS resource names | When creating SSM parameters, secrets, log groups, physical resources |
-| `get_workflow_template` | Get GitHub Actions workflow templates | When creating or updating CI/CD pipelines |
+| `search_standards_tool` | Search orb-templates documentation | Before implementing new patterns, when unsure about conventions |
+| `get_document_tool` | Retrieve full document content | After searching, to read complete documentation |
+| `validate_naming_tool` | Validate AWS resource names | When creating SSM parameters, secrets, log groups, physical resources |
+| `get_workflow_template_tool` | Get GitHub Actions workflow templates | When creating or updating CI/CD pipelines |
+| `list_templates_tool` | List available templates by category | When browsing available templates |
+
+### Complete Workflow (v0.4.2)
+
+**Step 1: Search for Documentation**
+```typescript
+// Search returns results with document paths
+mcp_orb_templates_search_standards_tool("schema generator custom operations")
+```
+
+**Step 2: Retrieve Full Document**
+```typescript
+// Use the path from search results (e.g., "integration-guides/schema-generator.md")
+mcp_orb_templates_get_document_tool("integration-guides/schema-generator.md")
+```
+
+**Step 3: Validate Resource Names**
+```typescript
+// Validate AWS resource naming conventions
+mcp_orb_templates_validate_naming_tool(
+  name: "/orb/integration-hub/dev/appsync/api-id",
+  resource_type: "ssm-parameter"
+)
+```
+
+**Step 4: Get Workflow Templates**
+```typescript
+// Get complete GitHub Actions workflow YAML
+mcp_orb_templates_get_workflow_template_tool("ci")
+```
+
+### Key Features
+
+- ✅ **Search**: Returns document paths and section summaries
+- ✅ **Full Retrieval**: Get complete markdown content using paths from search
+- ✅ **Path Format**: Use forward slashes (e.g., `integration-guides/schema-generator.md`)
+- ✅ **Validation**: Check AWS resource names against orb conventions
+- ✅ **Templates**: Get complete workflow YAML with best practices
+- ✅ **Security**: Only accesses bundled docs (path traversal blocked)
+- ✅ **Error Handling**: Suggests similar documents when path not found
 
 ### Proactive Usage Guidelines
 
 **ALWAYS use these tools when:**
-- Creating new files or modules → Search for naming conventions
+- Creating new files or modules → Search for naming conventions, then get full document
 - Adding AWS resources → Validate naming before implementation
-- Writing infrastructure code → Search for CDK standards
+- Writing infrastructure code → Search for CDK standards, retrieve full guide
 - Setting up CI/CD → Get workflow templates
-- Implementing tests → Search for testing standards
-- Unsure about any convention → Search first, implement second
+- Implementing tests → Search for testing standards, read complete documentation
+- Unsure about any convention → Search first, retrieve document, implement second
 
 ### Documentation Categories Available
 
@@ -44,6 +85,8 @@ If the MCP server is not working, run:
 ```
 
 Then restart Kiro.
+
+**Version**: 0.4.2 (includes `get_document_tool` for full document retrieval)
 
 ## Documentation References
 
