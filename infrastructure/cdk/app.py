@@ -43,10 +43,15 @@ def main() -> None:
     # Get configuration from CDK context
     config = Config.from_context(app)
 
-    # Environment configuration
+    # Environment configuration with custom bootstrap qualifier
     env = cdk.Environment(
         account=config.account or os.environ.get("CDK_DEFAULT_ACCOUNT"),
         region=config.region or os.environ.get("CDK_DEFAULT_REGION", "us-east-1"),
+    )
+
+    # Use custom bootstrap qualifier 'orb' instead of default 'hnb659fds'
+    synthesizer = cdk.DefaultStackSynthesizer(
+        qualifier="orb",
     )
 
     # ===== Foundation Stacks (no dependencies) =====
@@ -57,6 +62,7 @@ def main() -> None:
         f"{config.customer_id}-{config.project_id}-{config.environment}-bootstrap",
         config=config,
         env=env,
+        synthesizer=synthesizer,
         description="Bootstrap resources: S3 buckets, IAM, SQS queues",
     )
 
@@ -66,6 +72,7 @@ def main() -> None:
         f"{config.customer_id}-{config.project_id}-{config.environment}-authorization",
         config=config,
         env=env,
+        synthesizer=synthesizer,
         description="Authorization resources: Cognito User Pool, Identity Pool, Groups, API Key Authorizer",
     )
 
@@ -74,6 +81,7 @@ def main() -> None:
         app,
         f"{config.customer_id}-{config.project_id}-{config.environment}-data",
         env=env,
+        synthesizer=synthesizer,
         description="DynamoDB tables (writes table names/ARNs to SSM)",
     )
 
@@ -86,6 +94,7 @@ def main() -> None:
         f"{config.customer_id}-{config.project_id}-{config.environment}-frontend",
         config=config,
         env=env,
+        synthesizer=synthesizer,
         description="Frontend resources: S3 bucket, CloudFront distribution",
     )
 
@@ -98,6 +107,7 @@ def main() -> None:
         config=config,
         authorization_stack=authorization_stack,
         env=env,
+        synthesizer=synthesizer,
         description="Lambda functions for business logic",
     )
 
@@ -109,6 +119,7 @@ def main() -> None:
         f"{config.customer_id}-{config.project_id}-{config.environment}-api",
         config=config,
         env=env,
+        synthesizer=synthesizer,
         description="AppSync APIs: Main (Cognito auth) and SDK (Lambda auth)",
     )
 
@@ -119,6 +130,7 @@ def main() -> None:
         f"{config.customer_id}-{config.project_id}-{config.environment}-monitoring",
         config=config,
         env=env,
+        synthesizer=synthesizer,
         description="Monitoring: CloudWatch dashboards, alarms, GuardDuty",
     )
 
@@ -128,7 +140,7 @@ def main() -> None:
     authorization_stack.add_dependency(bootstrap_stack)
     authorization_stack.add_dependency(data_stack)  # Needs ApplicationApiKeys table
     frontend_stack.add_dependency(bootstrap_stack)
-    
+
     # Compute depends on Authorization (for user pool ID) and Data (for table names)
     compute_stack.add_dependency(authorization_stack)
     compute_stack.add_dependency(data_stack)
