@@ -11,10 +11,10 @@ import { EnvironmentRoleAssignment } from './application-users.state';
 
 export interface UserAssignment {
   userId: string;
-  environmentRoles: Array<{
+  environmentRoles: {
     environmentId: string;
     roleId: string;
-  }>;
+  }[];
 }
 
 export interface RoleUpdate {

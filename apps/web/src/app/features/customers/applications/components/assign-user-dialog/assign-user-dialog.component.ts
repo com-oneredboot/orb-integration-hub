@@ -14,7 +14,7 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators, FormArray, FormGroup } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, FormArray } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
@@ -109,8 +109,8 @@ export class AssignUserDialogComponent implements OnInit, OnDestroy {
     const assignment: UserAssignment = {
       userId: formValue.userId!,
       environmentRoles: (formValue.environmentRoles || [])
-        .filter((er: any) => er.roleId) // Only include environments with roles selected
-        .map((er: any) => ({
+        .filter((er: { roleId?: string }) => er.roleId) // Only include environments with roles selected
+        .map((er: { environmentId: string; roleId: string }) => ({
           environmentId: er.environmentId,
           roleId: er.roleId
         }))
@@ -150,7 +150,7 @@ export class AssignUserDialogComponent implements OnInit, OnDestroy {
     return `${user.firstName} ${user.lastName}`;
   }
 
-  getRolesForEnvironment(environmentId: string): IApplicationRoles[] {
+  getRolesForEnvironment(_environmentId: string): IApplicationRoles[] {
     // In a real implementation, roles might be filtered by environment
     // For now, return all available roles
     return this.availableRoles;

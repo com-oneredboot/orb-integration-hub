@@ -1,0 +1,39 @@
+Angular 19.2.18 Production Build Baseline
+==========================================
+Date: 2025-01-XX
+Branch: feat/angular-21-upgrade
+
+Build Time: 16.699 seconds
+
+Initial Chunk Files:
+- chunk-TQG4SNMP.js: 476.84 kB (121.33 kB gzipped)
+- main-NMOXOLLY.js: 375.88 kB (65.69 kB gzipped)
+- chunk-4F64NMJZ.js: 162.55 kB (37.89 kB gzipped)
+- chunk-LEXTVJNJ.js: 153.47 kB (38.79 kB gzipped)
+- polyfills-B6TNHZQ6.js: 34.58 kB (11.32 kB gzipped)
+- styles-AUYSHUZR.css: 28.68 kB (5.12 kB gzipped)
+- chunk-T34KH7QP.js: 26.82 kB (8.14 kB gzipped)
+- chunk-EH7QZ3KP.js: 19.05 kB (5.37 kB gzipped)
+- chunk-JL7UKYOW.js: 9.60 kB (2.23 kB gzipped)
+- chunk-KPTC6PSY.js: 1.64 kB (583 bytes gzipped)
+- chunk-P6FPL2TQ.js: 937 bytes (937 bytes gzipped)
+- chunk-XYAZSGUV.js: 173 bytes (173 bytes gzipped)
+
+Initial Total: 1.29 MB (297.57 kB gzipped)
+
+Lazy Chunk Files:
+- chunk-W4RQVGQ6.js (applications-routes): 160.35 kB (26.71 kB gzipped)
+- chunk-5ZFQNOIS.js (organizations-routes): 39.54 kB (8.70 kB gzipped)
+- chunk-4PBG6TQD.js (browser): 24.61 kB (8.32 kB gzipped)
+- chunk-TKSEWAGA.js (users-routes): 11.69 kB (3.27 kB gzipped)
+- chunk-YQRDRWRB.js: 5.67 kB (1.90 kB gzipped)
+- chunk-7JGR3ME2.js: 2.73 kB (1.02 kB gzipped)
+- chunk-H4QKJMLT.js (index): 1.02 kB (1.02 kB gzipped)
+
+Warnings:
+- Bundle initial exceeded maximum budget by 40.21 kB (Budget: 1.25 MB, Actual: 1.29 MB)
+
+Notes:
+- Build completed successfully
+- Bundle size slightly over budget (acceptable for baseline)
+- After upgrade, bundle size should remain within 10% of this baseline
