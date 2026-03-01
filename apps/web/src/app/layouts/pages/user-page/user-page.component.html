@@ -28,13 +28,13 @@
     <!-- Header: Breadcrumbs + Tabs (horizontal on desktop, vertical on mobile) -->
     <div class="user-page__header">
       <!-- Breadcrumbs (required) -->
-      <div class="orb-breadcrumb-container" *ngIf="breadcrumbItems?.length">
+      <div class="orb-breadcrumb-container" *ngIf="breadcrumbItems.length">
         <app-breadcrumb [items]="breadcrumbItems"></app-breadcrumb>
       </div>
 
       <!-- Tab Navigation (optional) -->
       <app-tab-navigation
-        *ngIf="tabs?.length"
+        *ngIf="tabs.length"
         [tabs]="tabs"
         [activeTabId]="activeTabId"
         (tabChange)="onTabChange($event)">
