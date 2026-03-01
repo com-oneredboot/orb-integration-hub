@@ -11,6 +11,7 @@
     ]
   },
   "context": {
+    "@aws-cdk/core:bootstrapQualifier": "orb",
     "customer_id": "orb",
     "project_id": "integration-hub",
     "environment": "dev",
