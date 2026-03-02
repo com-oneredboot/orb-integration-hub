@@ -18,9 +18,41 @@ Run `ng build` to build the project. The build artifacts will be stored in the `
 
 Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
 
-## Running end-to-end tests
+## E2E Testing
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+This project uses Playwright for end-to-end testing. Tests run against the local frontend (localhost:4200) and deployed AWS backend.
+
+### Quick Start
+
+```bash
+# Install Playwright browsers (first time only)
+npm run e2e:install
+
+# Run all tests
+npm run e2e
+
+# Open Playwright UI (recommended for development)
+npm run e2e:ui
+```
+
+### Available Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run e2e` | Run all tests headless |
+| `npm run e2e:ui` | Open Playwright UI |
+| `npm run e2e:headed` | Run with visible browser |
+| `npm run e2e:debug` | Debug mode with inspector |
+| `npm run e2e:report` | Open HTML report |
+| `npm run e2e:codegen` | Generate test code |
+
+### Setup
+
+1. Create `.env.test` from `.env.test.example`
+2. Retrieve test credentials from AWS Secrets Manager
+3. Ensure AWS SSO session is active: `aws sso login --profile sso-orb-dev`
+
+For complete documentation, see [e2e/README.md](e2e/README.md).
 
 ## Further help
 

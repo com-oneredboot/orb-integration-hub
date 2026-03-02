@@ -703,3 +703,42 @@ Deletes a test user from both Cognito and DynamoDB (dev environment only):
 5. Report: "User [email] deleted from Cognito and DynamoDB"
 
 **Warning**: This permanently deletes user data. Only use for test accounts in dev environment.
+
+### "run e2e tests"
+Runs Playwright end-to-end tests against local frontend and deployed AWS backend:
+1. Navigate to frontend: `cd apps/web`
+2. Ensure AWS SSO session is active: `aws --profile sso-orb-dev sts get-caller-identity`
+3. Run tests: `npm run e2e`
+4. Report test results summary
+5. If failures occur, suggest: `npm run e2e:report` to view HTML report
+
+**Prerequisites**: `.env.test` file must exist with test credentials from AWS Secrets Manager.
+
+### "setup e2e testing"
+Sets up E2E testing environment for the first time:
+1. Navigate to frontend: `cd apps/web`
+2. Install Playwright browsers: `npm run e2e:install`
+3. Create `.env.test` from template: `cp .env.test.example .env.test`
+4. Retrieve test credentials:
+   ```bash
+   aws --profile sso-orb-dev secretsmanager get-secret-value \
+     --secret-id orb-integration-hub-dev-e2e-test-user \
+     --query SecretString --output text
+   ```
+5. Instruct user to update `.env.test` with retrieved credentials
+6. Verify AWS credentials: `aws --profile sso-orb-dev sts get-caller-identity`
+7. Run test to verify setup: `npm run e2e -- auth.spec.ts`
+8. Report setup status
+
+### "debug e2e test [test-name]"
+Opens Playwright debugger for a specific E2E test:
+1. Navigate to frontend: `cd apps/web`
+2. If test-name provided: `npm run e2e:debug -- [test-name]`
+3. If no test-name: `npm run e2e:ui` (opens Playwright UI)
+4. Explain debugging features:
+   - Step through test line-by-line
+   - Inspect page state at any point
+   - View network requests and console logs
+   - Take screenshots manually
+5. Suggest viewing HTML report if test already failed: `npm run e2e:report`
+

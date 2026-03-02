@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Local E2E Testing Setup with Playwright
+  - Complete E2E testing framework for local development
+  - Authentication system with Cognito and stored auth state reuse
+  - Test fixtures for creating and cleaning up test resources (organizations, applications, groups)
+  - Utility functions for GraphQL waiting, screenshots, and AWS credential validation
+  - Comprehensive documentation in `apps/web/e2e/README.md`
+  - npm scripts for running tests (`e2e`, `e2e:ui`, `e2e:headed`, `e2e:debug`)
+  - Example test demonstrating best practices
+  - Command phrases: "run e2e tests", "setup e2e testing", "debug e2e test"
+  - Spec: `.kiro/specs/local-e2e-testing-setup/`
+
 ### Changed
 - Refactored CDK infrastructure stacks to use descriptive names
   - Renamed DynamoDB Stack → Data Stack (`data_stack.py`)

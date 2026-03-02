@@ -1,6 +1,6 @@
 {
   "name": "orb-integration-hub",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -33,7 +33,15 @@
     "setup-prod": "node scripts/setup-dev-env.js prod",
     "cleanup-env": "node scripts/setup-dev-env.js cleanup",
     "ngrok": "node scripts/start-ngrok.js",
-    "start:ngrok": "concurrently \"npm start\" \"npm run ngrok\""
+    "start:ngrok": "concurrently \"npm start\" \"npm run ngrok\"",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "e2e:headed": "playwright test --headed",
+    "e2e:debug": "playwright test --debug",
+    "e2e:report": "playwright show-report",
+    "e2e:codegen": "playwright codegen http://localhost:4200",
+    "e2e:install": "playwright install"
+    "e2e:report": "playwright show-report"
   },
   "private": true,
   "dependencies": {

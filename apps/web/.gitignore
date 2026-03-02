@@ -44,3 +44,10 @@ Thumbs.db
 # Local development files with credentials
 src/environments/environment.local.ts
 .secrets-temp.json
+
+# E2E Testing
+e2e/.auth/
+playwright-report/
+test-results/
+.env.test
+e2e/.test-data.json

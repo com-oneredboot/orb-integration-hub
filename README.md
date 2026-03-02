@@ -142,10 +142,27 @@ cd apps/api && pipenv run pytest
 # Frontend tests
 cd apps/web && npm test
 
+# E2E tests (Playwright)
+cd apps/web && npm run e2e
+
 # Property-based tests
 bash tests/property/test_import_path_migration.sh
 bash tests/property/test_schema_generator_output.sh
 ```
+
+#### E2E Tests
+
+End-to-end tests verify complete user workflows against the deployed AWS backend using Playwright. Tests run locally against `localhost:4200` (frontend) and the dev AWS environment (AppSync, Cognito, DynamoDB).
+
+**Quick Start:**
+```bash
+cd apps/web
+npm run e2e:install  # First time only
+npm run e2e          # Run all tests
+npm run e2e:ui       # Open Playwright UI
+```
+
+**Setup:** Create `.env.test` from `.env.test.example` and retrieve test credentials from AWS Secrets Manager. See [apps/web/e2e/README.md](apps/web/e2e/README.md) for complete documentation.
 
 ### Code Quality with Pre-commit
 
