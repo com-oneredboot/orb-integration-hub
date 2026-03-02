@@ -1,0 +1,42 @@
+{{ header }}/**
+ * Utility functions for E2E tests
+ */
+
+import { Page } from '@playwright/test';
+
+/**
+ * Wait for GraphQL request to complete
+ */
+export async function waitForGraphQL(page: Page, operationName: string): Promise<void> {
+  await page.waitForResponse(
+    response =>
+      response.url().includes('/graphql') &&
+      response.request().postDataJSON()?.operationName === operationName
+  );
+}
+
+/**
+ * Generate random test data
+ */
+export function generateTestData(prefix: string = 'test'): string {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+}
+
+/**
+ * Take screenshot with timestamp
+ */
+export async function takeTimestampedScreenshot(page: Page, name: string): Promise<void> {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  await page.screenshot({ path: `e2e/screenshots/${name}-${timestamp}.png` });
+}
+
+/**
+ * Wait for element to be stable (no animations)
+ */
+export async function waitForStable(page: Page, selector: string): Promise<void> {
+  const element = page.locator(selector);
+  await element.waitFor({ state: 'visible' });
+
+  // Wait for animations to complete
+  await page.waitForTimeout(300);
+}

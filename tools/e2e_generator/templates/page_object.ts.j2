@@ -1,0 +1,134 @@
+{{ header }}/**
+ * Page Object Model for {{ schema.name }}
+ */
+
+import { Page, Locator } from '@playwright/test';
+
+export class {{ page_object_name }} {
+  readonly page: Page;
+
+  // Locators
+  readonly pageTitle: Locator;
+  readonly dataGrid: Locator;
+  readonly createButton: Locator;
+  readonly submitButton: Locator;
+  readonly editButton: Locator;
+  readonly deleteButton: Locator;
+  readonly confirmDeleteButton: Locator;
+  readonly successMessage: Locator;
+  readonly paginationControls: Locator;
+  readonly nextPageButton: Locator;
+  readonly filterInput: Locator;
+{% for attr_name in schema.attributes.keys() %}
+  readonly {{ attr_name|camelCase }}Input: Locator;
+  readonly {{ attr_name|camelCase }}Display: Locator;
+{% endfor %}
+
+  constructor(page: Page) {
+    this.page = page;
+
+    // Initialize locators
+    this.pageTitle = page.locator('h1, h2').first();
+    this.dataGrid = page.locator('app-data-grid, table');
+    this.createButton = page.locator('button:has-text("Create")');
+    this.submitButton = page.locator('button[type="submit"]');
+    this.editButton = page.locator('button:has-text("Edit")');
+    this.deleteButton = page.locator('button:has-text("Delete")');
+    this.confirmDeleteButton = page.locator('button:has-text("Confirm")');
+    this.successMessage = page.locator('.success-message, .alert-success');
+    this.paginationControls = page.locator('.pagination, app-pagination');
+    this.nextPageButton = page.locator('button:has-text("Next")');
+    this.filterInput = page.locator('input[placeholder*="Filter"], input[placeholder*="Search"]');
+{% for attr_name in schema.attributes.keys() %}
+    this.{{ attr_name|camelCase }}Input = page.locator('input[name="{{ attr_name }}"], input[formControlName="{{ attr_name }}"]');
+    this.{{ attr_name|camelCase }}Display = page.locator('[data-field="{{ attr_name }}"]');
+{% endfor %}
+  }
+
+  // Navigation methods
+  async goToList() {
+    await this.page.goto('{{ schema.e2e.routes.get("list", "/") }}');
+    await this.page.waitForLoadState('networkidle');
+  }
+
+  async goToDetail(id: string) {
+    const url = '{{ schema.e2e.routes.get("detail", "/:id") }}'.replace(':id', id);
+    await this.page.goto(url);
+    await this.page.waitForLoadState('networkidle');
+  }
+
+  async goToCreate() {
+    await this.page.goto('{{ schema.e2e.routes.get("create", "/create") }}');
+    await this.page.waitForLoadState('networkidle');
+  }
+
+  // Interaction methods
+  async clickCreate() {
+    await this.createButton.click();
+  }
+
+  async clickSubmit() {
+    await this.submitButton.click();
+  }
+
+  async clickEdit() {
+    await this.editButton.click();
+  }
+
+  async clickDelete() {
+    await this.deleteButton.click();
+  }
+
+  async confirmDelete() {
+    await this.confirmDeleteButton.click();
+  }
+
+  async clickFirstRow() {
+    await this.dataGrid.locator('tr').nth(1).click();
+  }
+
+  async clickNextPage() {
+    await this.nextPageButton.click();
+  }
+
+  async applyFilter(filterText: string) {
+    await this.filterInput.fill(filterText);
+  }
+
+  async clickSortColumn(columnName: string) {
+    await this.dataGrid.locator(`th:has-text("${columnName}")`).click();
+  }
+{% for attr_name, attr_def in schema.attributes.items() %}
+
+  async fill{{ attr_name|pascalCase }}(value: string) {
+    await this.{{ attr_name|camelCase }}Input.fill(value);
+  }
+{% endfor %}
+
+  // Assertion helpers
+  getPageTitle() {
+    return this.pageTitle;
+  }
+
+  getDataGrid() {
+    return this.dataGrid;
+  }
+
+  getSuccessMessage() {
+    return this.successMessage;
+  }
+
+  getPaginationControls() {
+    return this.paginationControls;
+  }
+
+  getFirstRow() {
+    return this.dataGrid.locator('tr').nth(1);
+  }
+{% for attr_name in schema.attributes.keys() %}
+
+  get{{ attr_name|pascalCase }}Display() {
+    return this.{{ attr_name|camelCase }}Display;
+  }
+{% endfor %}
+}

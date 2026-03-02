@@ -1,0 +1,4 @@
+# file: C:\infrastructure\src\tpf-master-plan\organizations\com-oneredboot\repositories\orb-integration-hub\tools\e2e_generator\schema_loader.py
+# hypothesis_version: 6.151.9
+
+['*.yml', 'attributes', 'auth_required', 'e2e', 'model', 'name', 'page_object', 'r', 'roles', 'routes', 'scenarios', 'type', 'unknown']

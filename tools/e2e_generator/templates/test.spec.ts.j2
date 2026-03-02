@@ -1,0 +1,201 @@
+{{ header }}/**
+ * E2E tests for {{ schema.name }}
+ * Generated from schema: {{ schema.name }}
+ */
+
+import { test, expect } from '@playwright/test';
+import { {{ schema.e2e.page_object or (schema.name + 'Page') }} } from '../page-objects/{{ schema.name|lower }}.page';
+{% if schema.e2e.auth_required %}
+import { login, logout } from '../auth/cognito';
+{% endif %}
+import { createTestUser, cleanupTestData } from '../fixtures';
+
+test.describe('{{ schema.name }} E2E Tests', () => {
+  let page: {{ schema.e2e.page_object or (schema.name + 'Page') }};
+
+  test.beforeEach(async ({ page: playwrightPage }) => {
+    page = new {{ schema.e2e.page_object or (schema.name + 'Page') }}(playwrightPage);
+    {% if schema.e2e.auth_required %}
+
+    // Authenticate before each test
+    await login(playwrightPage, {
+      username: process.env.TEST_USER_EMAIL!,
+      password: process.env.TEST_USER_PASSWORD!
+    });
+    {% endif %}
+  });
+
+  test.afterEach(async ({ page: playwrightPage }) => {
+    await cleanupTestData(playwrightPage);
+    {% if schema.e2e.auth_required %}
+    await logout(playwrightPage);
+    {% endif %}
+  });
+{% if 'create' in schema.e2e.scenarios %}
+
+  test('should create a new {{ schema.name|lower }}', async () => {
+    await page.goToCreate();
+
+    // Fill form with test data
+    {% for attr_name, attr_def in schema.attributes.items() %}
+    {% if attr_def.get('required') and attr_name not in ['createdAt', 'updatedAt', schema.name|lower + 'Id'] %}
+    await page.fill{{ attr_name|pascalCase }}('test-{{ attr_name|lower }}');
+    {% endif %}
+    {% endfor %}
+
+    await page.clickSubmit();
+
+    // Verify success message
+    await expect(page.getSuccessMessage()).toBeVisible();
+
+    // Verify appears in list
+    await page.goToList();
+    await expect(page.getFirstRow()).toContainText('test-');
+  });
+{% endif %}
+{% if 'read' in schema.e2e.scenarios %}
+
+  test('should read {{ schema.name|lower }} details', async () => {
+    await page.goToList();
+    await page.clickFirstRow();
+
+    // Verify detail page loaded
+    await expect(page.getPageTitle()).toContainText('{{ schema.name }}');
+  });
+{% endif %}
+{% if 'update' in schema.e2e.scenarios %}
+
+  test('should update an existing {{ schema.name|lower }}', async () => {
+    await page.goToList();
+    await page.clickFirstRow();
+    await page.clickEdit();
+
+    // Update a field
+    {% set updated = namespace(done=false) %}
+    {% for attr_name, attr_def in schema.attributes.items() %}
+    {% if not updated.done and not attr_def.get('required', False) and attr_name not in ['createdAt', 'updatedAt'] %}
+    await page.fill{{ attr_name|pascalCase }}('updated-{{ attr_name|lower }}');
+    {% set updated.done = true %}
+    {% endif %}
+    {% endfor %}
+
+    await page.clickSubmit();
+
+    // Verify success message
+    await expect(page.getSuccessMessage()).toBeVisible();
+  });
+{% endif %}
+{% if 'delete' in schema.e2e.scenarios %}
+
+  test('should delete a {{ schema.name|lower }}', async () => {
+    await page.goToList();
+    await page.clickFirstRow();
+    await page.clickDelete();
+    await page.confirmDelete();
+
+    // Verify success message
+    await expect(page.getSuccessMessage()).toBeVisible();
+
+    // Verify removed from list
+    await page.goToList();
+    // Add verification that item is gone
+  });
+{% endif %}
+{% if 'list' in schema.e2e.scenarios %}
+
+  test('should display {{ schema.name|lower }} list', async () => {
+    await page.goToList();
+
+    // Verify page title
+    await expect(page.getPageTitle()).toContainText('{{ schema.name }}');
+
+    // Verify table is visible
+    await expect(page.getDataGrid()).toBeVisible();
+  });
+{% endif %}
+{% if 'pagination' in schema.e2e.scenarios %}
+
+  test('should paginate {{ schema.name|lower }} list', async () => {
+    await page.goToList();
+
+    // Verify pagination controls exist
+    await expect(page.getPaginationControls()).toBeVisible();
+
+    // Click next page
+    await page.clickNextPage();
+
+    // Verify URL changed
+    expect(page.page.url()).toContain('page=2');
+  });
+{% endif %}
+{% if 'filter' in schema.e2e.scenarios %}
+
+  test('should filter {{ schema.name|lower }} list', async () => {
+    await page.goToList();
+
+    // Apply filter
+    await page.applyFilter('test-filter');
+
+    // Verify filtered results
+    await expect(page.getDataGrid()).toBeVisible();
+  });
+{% endif %}
+{% if 'sort' in schema.e2e.scenarios %}
+
+  test('should sort {{ schema.name|lower }} list', async () => {
+    await page.goToList();
+
+    // Click sort column
+    await page.clickSortColumn('name');
+
+    // Verify sort order changed
+    await expect(page.getDataGrid()).toBeVisible();
+  });
+{% endif %}
+{% if 'detail' in schema.e2e.scenarios %}
+
+  test('should display {{ schema.name|lower }} detail', async () => {
+    await page.goToList();
+    await page.clickFirstRow();
+
+    // Verify detail page loaded
+    await expect(page.getPageTitle()).toContainText('{{ schema.name }}');
+
+    // Verify attributes are displayed
+    {% for attr_name in schema.attributes.keys() %}
+    await expect(page.get{{ attr_name|pascalCase }}Display()).toBeVisible();
+    {% endfor %}
+  });
+{% endif %}
+{% if 'round_trip' in schema.e2e.scenarios %}
+
+  test('should preserve data in create-read round trip', async () => {
+    const testData = {
+      {% for attr_name, attr_def in schema.attributes.items() %}
+      {% if attr_def.get('required') and attr_name not in ['createdAt', 'updatedAt', schema.name|lower + 'Id'] %}
+      {{ attr_name }}: 'test-{{ attr_name|lower }}-' + Date.now(),
+      {% endif %}
+      {% endfor %}
+    };
+
+    // Create resource
+    await page.goToCreate();
+    {% for attr_name, attr_def in schema.attributes.items() %}
+    {% if attr_def.get('required') and attr_name not in ['createdAt', 'updatedAt', schema.name|lower + 'Id'] %}
+    await page.fill{{ attr_name|pascalCase }}(testData.{{ attr_name }});
+    {% endif %}
+    {% endfor %}
+    await page.clickSubmit();
+
+    // Read back and verify
+    await page.goToList();
+    await page.clickFirstRow();
+
+    {% for attr_name, attr_def in schema.attributes.items() %}
+    {% if attr_def.get('required') and attr_name not in ['createdAt', 'updatedAt', schema.name|lower + 'Id'] %}
+    await expect(page.get{{ attr_name|pascalCase }}Display()).toContainText(testData.{{ attr_name }});
+    {% endif %}
+    {% endfor %}
+  });
+{% endif %}
+});

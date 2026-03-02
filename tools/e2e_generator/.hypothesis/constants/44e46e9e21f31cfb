@@ -1,0 +1,4 @@
+# file: C:\infrastructure\src\tpf-master-plan\organizations\com-oneredboot\repositories\orb-integration-hub\tools\e2e_generator\config.py
+# hypothesis_version: 6.151.9
+
+['./apps/web/e2e', './schemas', 'E2EConfig', 'E2ETestingConfig', 'base_dir', 'e2e', 'enabled', 'framework', 'language', 'name', 'output', 'paths', 'playwright', 'project', 'r', 'schemas', 'targets', 'test_patterns', 'testing', 'ts-main', 'typescript', '{resource}.spec.ts']

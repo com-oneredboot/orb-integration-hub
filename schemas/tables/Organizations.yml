@@ -85,3 +85,27 @@ model:
       required: false
       default: 0
       description: Denormalized count of applications belonging to this organization
+
+e2e:
+  enabled: true
+  auth_required: true
+  scenarios:
+    - create
+    - read
+    - update
+    - delete
+    - list
+    - detail
+    - round_trip
+  roles:
+    - OWNER
+    - EMPLOYEE
+  page_object: OrganizationsPage
+  routes:
+    list: /organizations
+    detail: /organizations/:id
+    create: /organizations/new
+  test_data:
+    name: "Test Organization"
+    description: "E2E test organization"
+    status: "ACTIVE"

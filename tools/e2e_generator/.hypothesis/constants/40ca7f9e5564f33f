@@ -1,0 +1,4 @@
+# file: C:\infrastructure\src\tpf-master-plan\organizations\com-oneredboot\repositories\orb-integration-hub\tools\e2e_generator\playwright_generator.py
+# hypothesis_version: 6.151.9
+
+['-', '_', 'auth', 'auth_helper.ts.j2', 'camelCase', 'cognito.ts', 'fixtures', 'fixtures.ts.j2', 'html', 'index.ts', 'page-objects', 'page_object.ts.j2', 'pascalCase', 'playwright.config.ts', 'templates', 'test.spec.ts.j2', 'tests', 'tools.e2e_generator', 'utils', 'utils.ts.j2', 'xml']

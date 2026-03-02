@@ -104,3 +104,30 @@ model:
       type: number
       required: false
       description: Count of ACTIVE direct user role assignments (denormalized for display)
+
+e2e:
+  enabled: true
+  auth_required: true
+  scenarios:
+    - create
+    - read
+    - update
+    - delete
+    - list
+    - detail
+    - round_trip
+  roles:
+    - OWNER
+    - EMPLOYEE
+  page_object: ApplicationsPage
+  routes:
+    list: /applications
+    detail: /applications/:id
+    create: /applications/new
+  test_data:
+    name: "Test Application"
+    description: "E2E test application"
+    status: "ACTIVE"
+    environments:
+      - "DEVELOPMENT"
+      - "STAGING"

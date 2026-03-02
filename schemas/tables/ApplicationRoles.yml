@@ -87,3 +87,27 @@ model:
       type: timestamp
       required: true
       description: When the role was last updated
+
+e2e:
+  enabled: true
+  auth_required: true
+  scenarios:
+    - create
+    - read
+    - update
+    - delete
+    - list
+    - detail
+  roles:
+    - OWNER
+    - EMPLOYEE
+  page_object: ApplicationRolesPage
+  routes:
+    list: /applications/:applicationId/roles
+    detail: /applications/:applicationId/roles/:id
+    create: /applications/:applicationId/roles/new
+  test_data:
+    roleName: "Test Role"
+    roleType: "CUSTOM"
+    description: "E2E test role"
+    status: "ACTIVE"

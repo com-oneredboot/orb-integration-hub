@@ -52,6 +52,16 @@ output:
       language: python
       generate_stack: false
 
+  testing:
+    e2e:
+      enabled: true
+      framework: playwright
+      base_dir: ./apps/web/e2e
+      tests_subdir: tests
+      page_objects_subdir: page-objects
+      fixtures_subdir: fixtures
+      config_file: playwright.config.ts
+
 generation:
   validate_schemas: true
   validate_graphql: true
