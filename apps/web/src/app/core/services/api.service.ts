@@ -30,7 +30,6 @@ type OperationType = 'query' | 'mutation';
   providedIn: 'root',
 })
 export abstract class ApiService {
-  private apiKeyClient = generateClient({ authMode: 'apiKey' });
   private debugLog = inject(DebugLogService);
 
   /**
@@ -283,11 +282,17 @@ export abstract class ApiService {
     this.debugLog.logApi(operationName, 'pending', { authMode, type });
 
     try {
-      // Always get a fresh userPool client to ensure current tokens are used
-      const client = authMode === 'apiKey' ? this.apiKeyClient : this.getUserPoolClient();
+      // Reject deprecated apiKey auth mode - callers should use SdkApiService
+      if (authMode === 'apiKey') {
+        this.debugLog.logError(operationName, 'apiKey auth mode is no longer supported on the Main API. Use SdkApiService for pre-auth operations.', { authMode });
+        throw new ApiError(
+          'apiKey auth mode is no longer supported on the Main API. Use SdkApiService for pre-auth operations.',
+          'DEPRECATED_AUTH_MODE'
+        );
+      }
 
-      // Log which client type we're using
-      console.debug(`[ApiService] Using ${authMode} client for ${operationName}`);
+      // Always get a fresh userPool client to ensure current tokens are used
+      const client = this.getUserPoolClient();
 
       // For userPool auth, verify we have tokens before making the request
       if (authMode === 'userPool') {

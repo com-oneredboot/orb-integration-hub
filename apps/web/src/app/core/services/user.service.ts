@@ -11,6 +11,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 
 // Application Imports
 import {ApiService} from "./api.service";
+import { SdkApiService } from './sdk-api.service';
 import {
   UsersCreate, UsersUpdate,
   UsersListByUserId, UsersListByEmail, UsersListByCognitoSub
@@ -19,6 +20,7 @@ import { SmsVerification } from "../graphql/SmsVerification.graphql";
 import { CheckEmailExists } from "../graphql/CheckEmailExists.graphql";
 import { CreateUserFromCognito } from "../graphql/CreateUserFromCognito.graphql";
 import { GetCurrentUser } from "../graphql/GetCurrentUser.graphql";
+import { NetworkError, AuthenticationError } from '../errors/api-errors';
 import {
   UsersCreateInput, UsersUpdateInput,
   UsersUpdateResponse, IUsers, Users
@@ -50,7 +52,8 @@ export class UserService extends ApiService {
    */
   constructor(
     private cognitoService: CognitoService,
-    private store: Store
+    private store: Store,
+    private sdkApiService: SdkApiService
   ) {
     super();
 
@@ -1249,22 +1252,18 @@ export class UserService extends ApiService {
    * @param email Email address to check
    * @returns Promise with exists boolean, cognitoStatus, and cognitoSub
    */
-  public async checkEmailExists(email: string): Promise<{ 
-    exists: boolean; 
+  public async checkEmailExists(email: string): Promise<{
+    exists: boolean;
     cognitoStatus?: string | null;
     cognitoSub?: string | null;
   }> {
     try {
-      const response = await this.query(
-        CheckEmailExists,
-        { input: { email } },
-        'apiKey'
-      ) as GraphQLResult<{ CheckEmailExists?: { 
-        email: string; 
+      const response = await this.sdkApiService.query<{ CheckEmailExists?: {
+        email: string;
         exists: boolean;
         cognitoStatus?: string | null;
         cognitoSub?: string | null;
-      } }>;
+      } }>(CheckEmailExists, { input: { email } });
 
       return {
         exists: response.data?.CheckEmailExists?.exists ?? false,
@@ -1273,6 +1272,12 @@ export class UserService extends ApiService {
       };
     } catch (error) {
       console.error('[UserService][checkEmailExists] Error checking email:', error);
+      if (error instanceof NetworkError) {
+        throw new Error('Failed to check email existence: SDK API is unreachable');
+      }
+      if (error instanceof AuthenticationError) {
+        throw new Error('Failed to check email existence: API key is invalid or expired');
+      }
       throw new Error('Failed to check email existence');
     }
   }
@@ -1306,11 +1311,7 @@ export class UserService extends ApiService {
     this.userDebugLog.logApi('createUserFromCognito', 'pending', { cognitoSub: sanitizeCognitoSub(cognitoSub) });
 
     try {
-      const response = await this.mutate(
-        CreateUserFromCognito,
-        { input: { cognitoSub } },
-        'apiKey'
-      ) as GraphQLResult<{ CreateUserFromCognito?: {
+      const response = await this.sdkApiService.mutate<{ CreateUserFromCognito?: {
         userId: string;
         email: string;
         firstName: string;
@@ -1323,7 +1324,7 @@ export class UserService extends ApiService {
         groups: string[];
         createdAt: number;
         updatedAt: number;
-      } }>;
+      } }>(CreateUserFromCognito, { input: { cognitoSub } });
 
       const data = response.data?.CreateUserFromCognito;
       if (!data) {
@@ -1349,6 +1350,12 @@ export class UserService extends ApiService {
       };
     } catch (error) {
       console.error('[UserService][createUserFromCognito] Error:', error);
+      if (error instanceof NetworkError) {
+        throw new Error('Failed to create user from Cognito: SDK API is unreachable');
+      }
+      if (error instanceof AuthenticationError) {
+        throw new Error('Failed to create user from Cognito: API key is invalid or expired');
+      }
       const errorObj = error as { message?: string };
       const message = errorObj?.message || String(error) || '';
       this.userDebugLog.logError('createUserFromCognito', message, { error: String(error) });

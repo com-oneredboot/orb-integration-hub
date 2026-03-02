@@ -15,7 +15,11 @@ export const environment = {
   },
   graphql: {
     url: '{{GRAPHQL_API_URL}}',
-    region: '{{AWS_REGION}}',
-    apiKey: '{{GRAPHQL_API_KEY}}'
+    region: '{{AWS_REGION}}'
+  },
+  sdkApi: {
+    url: '{{SDK_API_URL}}',
+    apiKey: '{{SDK_API_KEY}}',
+    region: '{{AWS_REGION}}'
   }
 };

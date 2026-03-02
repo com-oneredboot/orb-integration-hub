@@ -65,13 +65,17 @@ const FRONTEND_SECRETS_MAP = {
     type: 'parameter',
     name: ssmParameterName('appsync/graphql-url')
   },
+  'SDK_API_URL': {
+    type: 'parameter',
+    name: ssmParameterName('appsync/sdk-graphql-url')
+  },
+  'SDK_API_KEY': {
+    type: 'parameter',
+    name: ssmParameterName('appsync/sdk-frontend-api-key')
+  },
   'AWS_REGION': {
     type: 'static',
     value: CONFIG.region
-  },
-  'GRAPHQL_API_KEY': {
-    type: 'secret',
-    name: secretName('appsync', 'api-key')
   }
 };
 
@@ -149,8 +153,12 @@ export const environment = {
   },
   graphql: {
     url: '${credentials.GRAPHQL_API_URL}',
-    region: '${credentials.AWS_REGION}',
-    apiKey: '${credentials.GRAPHQL_API_KEY}'
+    region: '${credentials.AWS_REGION}'
+  },
+  sdkApi: {
+    url: '${credentials.SDK_API_URL}',
+    apiKey: '${credentials.SDK_API_KEY}',
+    region: '${credentials.AWS_REGION}'
   }
 };
 `;
