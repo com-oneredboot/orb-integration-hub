@@ -7,6 +7,20 @@
  * that replaces the placeholder environment.ts for local development
  */
 
+/**
+ * PREREQUISITE: SDK API Key Provisioning
+ * 
+ * Before running this script, the Frontend_API_Key must be provisioned:
+ * 
+ * 1. Create an API key in the ApplicationApiKeys DynamoDB table in `orb_{env}_{key}` format
+ *    - The key should be scoped to CheckEmailExists and CreateUserFromCognito operations only
+ * 2. Store the key in SSM at: /orb/integration-hub/{env}/appsync/sdk-frontend-api-key
+ * 3. The SDK API URL is already stored at: /orb/integration-hub/{env}/appsync/sdk-graphql-url
+ * 
+ * The Lambda authorizer validates keys from the ApplicationApiKeys table,
+ * so no authorizer changes are needed.
+ */
+
 const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
 const { SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm');
 const { fromSSO } = require('@aws-sdk/credential-provider-sso');

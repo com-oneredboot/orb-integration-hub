@@ -12,12 +12,12 @@ This E2E testing framework provides a complete local development workflow for ru
 - **Language**: TypeScript
 - **Frontend**: Angular (localhost:4200)
 - **Backend**: AWS AppSync, Cognito, DynamoDB (deployed dev environment)
-- **Authentication**: Cognito with stored auth state
+- **Authentication**: Cognito user pools
 - **Test Data**: GraphQL mutations with automatic cleanup
 
 ### Test Coverage
 
-- Authentication flows (login, signup, password recovery)
+- Authentication flows (signup, signin, signout, account cleanup)
 - User profile management
 - Organization CRUD operations
 - Application CRUD operations
@@ -29,10 +29,6 @@ This E2E testing framework provides a complete local development workflow for ru
 
 ```
 e2e/
-├── .auth/                    # Stored authentication state (gitignored)
-│   └── user.json            # Playwright auth storage
-├── auth/                     # Authentication helpers
-│   └── cognito.ts           # Cognito login/logout functions
 ├── fixtures/                 # Test data creation/cleanup
 │   └── index.ts             # Resource fixtures (organizations, apps, groups)
 ├── page-objects/            # Page object models
@@ -40,7 +36,7 @@ e2e/
 │   ├── applications.page.ts
 │   └── *.page.ts            # Generated page objects
 ├── tests/                    # Test specifications
-│   ├── auth.spec.ts         # Authentication flow tests
+│   ├── auth.spec.ts         # Self-contained auth lifecycle tests
 │   ├── organizations.spec.ts
 │   ├── applications.spec.ts
 │   └── *.spec.ts            # Generated test specs
@@ -53,10 +49,9 @@ e2e/
 
 ### Prerequisites
 
-1. **Node.js and npm** - Already installed for Angular development
-2. **AWS SSO** - Configured with `sso-orb-dev` profile
-3. **Active AWS Session** - Run `aws sso login --profile sso-orb-dev`
-4. **Test User Credentials** - Retrieved from AWS Secrets Manager
+1. **Node.js and npm** — Already installed for Angular development
+2. **AWS SSO** — Configured with `sso-orb-dev` profile
+3. **Active AWS Session** — Run `aws sso login --profile sso-orb-dev`
 
 ### First-Time Setup
 
@@ -66,28 +61,49 @@ e2e/
    npm run e2e:install
    ```
 
-2. **Create `.env.test` file**:
-   ```bash
-   cp .env.test.example .env.test
-   ```
-
-3. **Retrieve test user credentials from AWS Secrets Manager**:
-   ```bash
-   aws --profile sso-orb-dev secretsmanager get-secret-value \
-     --secret-id orb-integration-hub-dev-e2e-test-user \
-     --query SecretString --output text
-   ```
-
-4. **Update `.env.test`** with the retrieved credentials:
-   ```bash
-   TEST_USER_EMAIL=e2e-test-user@orb-integration-hub.com
-   TEST_USER_PASSWORD=<password-from-secrets-manager>
-   ```
-
-5. **Verify AWS credentials are active**:
+2. **Verify AWS credentials are active**:
    ```bash
    aws --profile sso-orb-dev sts get-caller-identity
    ```
+
+That's it. Auth tests are self-contained and don't require any additional configuration.
+
+## Authentication Tests
+
+### Self-Contained Approach
+
+The auth test suite (`e2e/tests/auth.spec.ts`) is fully self-contained. It creates its own test user dynamically and cleans up after itself — no `.env.test` file, pre-existing test users, or Secrets Manager retrieval needed.
+
+**How it works:**
+
+1. **Signup** — Creates a new Cognito user with a unique timestamped email (`e2e-test-{timestamp}@test.orb-integration-hub.com`) and a generated password. Uses `AdminConfirmSignUp` via AWS SDK to bypass email verification.
+2. **Signin** — Signs in with the credentials created during signup, verifies navigation to the dashboard.
+3. **Signout** — Signs out and verifies redirect to `/authenticate` and that protected routes are inaccessible.
+4. **Cleanup** — Deletes the test user from both Cognito and DynamoDB in an `afterAll` hook (best-effort — errors are logged but don't fail the suite).
+
+Tests run serially using `test.describe.serial` since each test depends on the previous test's state. If signup fails, subsequent tests are skipped.
+
+### Running Auth Tests
+
+```bash
+# Prerequisite: active AWS SSO session
+aws sso login --profile sso-orb-dev
+
+# Ensure the local frontend is running at http://localhost:4200
+npm start
+
+# Run auth tests
+npx playwright test auth.spec.ts
+```
+
+### Auth Test Prerequisites
+
+| Prerequisite | Why |
+|--------------|-----|
+| Active AWS SSO session (`sso-orb-dev`) | AWS SDK calls for user confirmation and cleanup |
+| Local frontend running at `localhost:4200` | Tests interact with the Angular app via Playwright |
+
+No `.env.test` file is needed for auth tests.
 
 ## Running Tests
 
@@ -134,34 +150,19 @@ npm run e2e -- --project=chromium
 
 ## Test User Management
 
-### Dedicated Test User
+### Auth Tests — Dynamic Users
 
-All E2E tests use a single dedicated test user account:
-- **Email**: Stored in `.env.test` as `TEST_USER_EMAIL`
-- **Password**: Stored in `.env.test` as `TEST_USER_PASSWORD`
-- **Source**: AWS Secrets Manager (`orb-integration-hub-dev-e2e-test-user`)
+Auth tests create their own user dynamically each run:
+- A unique email is generated with a timestamp prefix (`e2e-test-{timestamp}@test.orb-integration-hub.com`)
+- A strong random password is generated meeting Cognito policy requirements
+- The user is auto-confirmed via `AdminConfirmSignUp` (bypasses email verification)
+- After all tests complete, the user is deleted from Cognito and DynamoDB
 
-### Authentication State Reuse
+No manual user management is needed for auth tests.
 
-To avoid repeated logins, Playwright stores authentication state:
+### Other Tests — Fixtures
 
-1. **Setup Project** runs once before all tests
-2. Logs in with test user credentials
-3. Saves auth state to `e2e/.auth/user.json`
-4. All subsequent tests load this auth state
-5. Tests skip login and start authenticated
-
-### Refreshing Auth State
-
-If authentication expires or fails:
-
-```bash
-# Delete stored auth state
-rm -rf e2e/.auth/
-
-# Re-run tests (setup project will re-authenticate)
-npm run e2e
-```
+Other test types (organizations, applications, groups) may use fixtures from `e2e/fixtures/index.ts` to create and clean up test resources via GraphQL mutations. These fixtures use the `e2e-test-` prefix for all resource names.
 
 ## Test Data Management
 
@@ -171,6 +172,7 @@ All test resources use the `e2e-test-` prefix:
 - Organizations: `e2e-test-org-1234567890`
 - Applications: `e2e-test-app-1234567890`
 - Groups: `e2e-test-group-1234567890`
+- Auth test users: `e2e-test-1234567890@test.orb-integration-hub.com`
 
 This prefix:
 - Distinguishes test data from production data
@@ -286,24 +288,27 @@ test('my test', async ({ page }) => {
 
 ## Troubleshooting
 
-### Authentication Issues
+### Auth Test Issues
 
-**Problem**: Login fails with "Authentication failed"
+**Problem**: Signup test fails with timeout
 
 **Solutions**:
-1. Verify test user exists in Cognito:
+1. Verify the local frontend is running at `http://localhost:4200`
+2. Verify AWS SSO session is active:
    ```bash
-   aws --profile sso-orb-dev cognito-idp list-users \
-     --user-pool-id us-east-1_8ch8unBaX \
-     --filter "email = \"<test-user-email>\""
+   aws --profile sso-orb-dev sts get-caller-identity
    ```
+3. Check Playwright test output for specific error messages — the `beforeAll` hook validates AWS credentials and will log a clear message if they're expired
 
-2. Verify credentials in `.env.test` match Secrets Manager
+**Problem**: Cleanup fails (test user not deleted)
 
-3. Delete stored auth state and retry:
+**Solutions**:
+1. The `afterAll` hook logs cleanup errors — check test output
+2. Manually delete the user if needed:
    ```bash
-   rm -rf e2e/.auth/
-   npm run e2e
+   aws --profile sso-orb-dev cognito-idp admin-delete-user \
+     --user-pool-id us-east-1_8ch8unBaX \
+     --username "e2e-test-<timestamp>@test.orb-integration-hub.com"
    ```
 
 ### Timeout Issues
@@ -319,11 +324,6 @@ test('my test', async ({ page }) => {
 2. Check if frontend is running:
    ```bash
    curl http://localhost:4200
-   ```
-
-3. Check if AWS backend is accessible:
-   ```bash
-   curl -H "x-api-key: $APPSYNC_API_KEY" $APPSYNC_API_URL
    ```
 
 ### Cleanup Failures
@@ -355,8 +355,6 @@ test('my test', async ({ page }) => {
    aws --profile sso-orb-dev sts get-caller-identity
    ```
 
-3. Check `.env.test` has correct `AWS_PROFILE` value
-
 ## Writing New Tests
 
 ### Using Page Objects
@@ -364,7 +362,6 @@ test('my test', async ({ page }) => {
 ```typescript
 import { test, expect } from '@playwright/test';
 import { OrganizationsPage } from '../page-objects/organizations.page';
-import { getTestUser, login } from '../auth/cognito';
 import { createTestOrganization, cleanupTestData, TestResource } from '../fixtures';
 
 test.describe('Organizations', () => {
@@ -395,14 +392,14 @@ test.describe('Organizations', () => {
 
 ### Best Practices
 
-1. **Use Page Objects** - Encapsulate page interactions
-2. **Clean Up Test Data** - Always use `afterEach` hooks
-3. **Use Fixtures** - Create test data via fixtures module
-4. **Wait for GraphQL** - Use `waitForGraphQL()` for mutations
-5. **Descriptive Names** - Use clear test and variable names
-6. **Isolate Tests** - Each test should be independent
-7. **Handle Errors** - Use try/finally for cleanup
-8. **Use Selectors** - Prefer `data-testid` attributes
+1. **Use Page Objects** — Encapsulate page interactions for non-auth tests
+2. **Clean Up Test Data** — Always use `afterEach` or `afterAll` hooks
+3. **Use Fixtures** — Create test data via fixtures module
+4. **Wait for GraphQL** — Use `waitForGraphQL()` for mutations
+5. **Descriptive Names** — Use clear test and variable names
+6. **Isolate Tests** — Each test should be independent (except serial auth tests)
+7. **Handle Errors** — Use try/finally for cleanup
+8. **Use Selectors** — Prefer `data-testid` attributes or stable `id` attributes
 
 ### Example Test Structure
 
@@ -442,8 +439,6 @@ Tests run automatically in CI/CD pipeline:
     cd apps/web
     npm run e2e
   env:
-    TEST_USER_EMAIL: ${{ secrets.E2E_TEST_USER_EMAIL }}
-    TEST_USER_PASSWORD: ${{ secrets.E2E_TEST_USER_PASSWORD }}
     AWS_PROFILE: sso-orb-dev
 ```
 
@@ -460,4 +455,3 @@ Playwright config automatically adjusts for CI:
 - [Playwright Documentation](https://playwright.dev/)
 - [Playwright Best Practices](https://playwright.dev/docs/best-practices)
 - [orb-templates Testing Standards](../../repositories/orb-templates/docs/testing-standards/)
-- [E2E Test Generator Spec](.kiro/specs/e2e-test-generator/)

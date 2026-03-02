@@ -10,12 +10,9 @@ name: CreateUserFromCognito
 targets:
   - python-main
   - ts-main
-  - graphql-main
+  - graphql-sdk
 model:
   operation: mutation
-  authConfig:
-    apiKeyAuthentication:
-      - CreateUserFromCognito
   attributes:
     # Input attribute
     cognitoSub:

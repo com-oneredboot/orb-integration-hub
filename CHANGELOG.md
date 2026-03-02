@@ -18,8 +18,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Example test demonstrating best practices
   - Command phrases: "run e2e tests", "setup e2e testing", "debug e2e test"
   - Spec: `.kiro/specs/local-e2e-testing-setup/`
+- Migrate Pre-Auth Operations to SDK API
+  - Created `SdkApiService` with fetch-based GraphQL client for the SDK API (Lambda authorizer)
+  - Migrated `CheckEmailExists` and `CreateUserFromCognito` from Main API to SDK API
+  - Added `sdkApi` configuration block to environment files
+  - Updated `setup-dev-env.js` and `secrets-retrieval.js` to retrieve SDK API credentials from SSM
+  - Removed stale `apiKey` from `graphql` config and `apiKeyClient` from `ApiService`
+  - Documented Dual AppSync API Architecture in project steering file
+  - Spec: `.kiro/specs/migrate-auth-to-sdk-api/`
 
 ### Changed
+- `ApiService` now rejects `apiKey` auth mode with `DEPRECATED_AUTH_MODE` error directing callers to `SdkApiService`
+- `UserService.checkEmailExists()` and `createUserFromCognito()` now route through `SdkApiService` instead of Main API
 - Refactored CDK infrastructure stacks to use descriptive names
   - Renamed DynamoDB Stack → Data Stack (`data_stack.py`)
   - Renamed Cognito Stack → Authorization Stack (`authorization_stack.py`)

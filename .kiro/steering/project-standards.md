@@ -742,3 +742,65 @@ Opens Playwright debugger for a specific E2E test:
    - Take screenshots manually
 5. Suggest viewing HTML report if test already failed: `npm run e2e:report`
 
+
+## Dual AppSync API Architecture
+
+This project uses two AppSync GraphQL APIs with different authentication modes:
+
+### Main API (Cognito Auth)
+
+- **Auth mode**: Cognito userPool
+- **Use for**: All authenticated user operations (CRUD on users, organizations, applications, etc.)
+- **Frontend client**: `ApiService` (uses Amplify `generateClient` with `authMode: 'userPool'`)
+- **Endpoint config**: `environment.graphql.url`
+
+### SDK API (Lambda Authorizer)
+
+- **Auth mode**: Lambda authorizer validating API keys in `orb_{env}_{key}` format
+- **Use for**: Pre-authentication operations and programmatic/third-party access
+- **Frontend client**: `SdkApiService` (uses native `fetch` with API key in `Authorization` header)
+- **Endpoint config**: `environment.sdkApi.url` and `environment.sdkApi.apiKey`
+
+### Pre-Authentication Operations
+
+Operations that must execute before a user is authenticated with Cognito belong on the SDK API:
+
+| Operation | Type | Description |
+|-----------|------|-------------|
+| `CheckEmailExists` | Query | Check if an email exists in the system (used in signup/recovery flows) |
+| `CreateUserFromCognito` | Mutation | Create a DynamoDB user record from Cognito data (used after MFA setup) |
+
+### SSM Parameter Paths
+
+| Parameter | Path | Description |
+|-----------|------|-------------|
+| SDK API URL | `/orb/integration-hub/{env}/appsync/sdk-graphql-url` | SDK API GraphQL endpoint |
+| Frontend API Key | `/orb/integration-hub/{env}/appsync/sdk-frontend-api-key` | API key for frontend pre-auth calls |
+
+### Adding New Pre-Auth Operations
+
+To add a new pre-authentication operation to the SDK API:
+
+1. Create or update the YAML schema file in `schemas/lambdas/` with `graphql-sdk` target (not `graphql-main`)
+2. Run `pipenv run orb-schema generate` to regenerate CDK constructs and GraphQL schemas
+3. Use `SdkApiService.query()` or `SdkApiService.mutate()` in the frontend service
+4. Do NOT use `ApiService` with `authMode: 'apiKey'` — this will throw an error
+
+## Future Specs
+
+Planned specs that have been discussed and earmarked for future implementation.
+
+### Remove Amplify Dependency
+
+**Priority:** Medium
+**Depends on:** `migrate-auth-to-sdk-api` spec (must complete first)
+
+Replace AWS Amplify entirely with direct SDK calls:
+
+1. **Auth**: Replace Amplify Auth (`aws-amplify/auth`) with `amazon-cognito-identity-js` in `cognito.service.ts`. All 12 Amplify auth functions (signIn, signUp, signOut, confirmSignUp, fetchAuthSession, getCurrentUser, fetchUserAttributes, fetchMFAPreference, setUpTOTP, resetPassword, confirmResetPassword, confirmSignIn) are already wrapped in `CognitoService` — swap internals only.
+2. **GraphQL**: Replace Amplify `generateClient` (`aws-amplify/api`) with fetch-based client in `api.service.ts`. The `migrate-auth-to-sdk-api` spec introduces this pattern for the SDK API — extend it to the Main API.
+3. **Bootstrap**: Remove `Amplify.configure()` from `main.ts`. Token management moves to `CognitoService`.
+
+**Benefits:** Own the entire auth stack (important for auth-as-a-product), smaller bundle (~60% reduction), no single-API limitation, no Amplify version upgrade surprises.
+
+**Effort:** ~2-3 days. `CognitoService` is a clean boundary — the rest of the app doesn't touch Amplify directly.

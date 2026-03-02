@@ -54,7 +54,16 @@ export default defineConfig({
   
   // Browser projects
   projects: [
-    // Setup project for authentication
+    // Auth tests — self-contained, no stored state needed
+    {
+      name: 'auth',
+      testMatch: /auth\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+      },
+    },
+
+    // Setup project for authentication (used by non-auth tests)
     {
       name: 'setup',
       testMatch: /.*\.setup\.ts/,
@@ -63,6 +72,7 @@ export default defineConfig({
     // Chromium with stored auth
     {
       name: 'chromium',
+      testIgnore: /auth\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'e2e/.auth/user.json',
@@ -73,6 +83,7 @@ export default defineConfig({
     // Firefox with stored auth
     {
       name: 'firefox',
+      testIgnore: /auth\.spec\.ts/,
       use: {
         ...devices['Desktop Firefox'],
         storageState: 'e2e/.auth/user.json',
@@ -83,6 +94,7 @@ export default defineConfig({
     // WebKit with stored auth
     {
       name: 'webkit',
+      testIgnore: /auth\.spec\.ts/,
       use: {
         ...devices['Desktop Safari'],
         storageState: 'e2e/.auth/user.json',

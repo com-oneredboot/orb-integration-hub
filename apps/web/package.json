@@ -1,6 +1,6 @@
 {
   "name": "orb-integration-hub",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -41,7 +41,6 @@
     "e2e:report": "playwright show-report",
     "e2e:codegen": "playwright codegen http://localhost:4200",
     "e2e:install": "playwright install"
-    "e2e:report": "playwright show-report"
   },
   "private": true,
   "dependencies": {
@@ -73,13 +72,18 @@
   "devDependencies": {
     "@angular/cli": "^21.2.0",
     "@angular/compiler-cli": "^21.2.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.1000.0",
+    "@aws-sdk/client-dynamodb": "^3.1000.0",
     "@aws-sdk/client-secrets-manager": "^3.0.0",
     "@aws-sdk/client-ssm": "^3.0.0",
+    "@aws-sdk/client-sts": "^3.1000.0",
     "@aws-sdk/credential-provider-sso": "^3.0.0",
+    "@aws-sdk/credential-providers": "^3.1000.0",
     "@playwright/test": "^1.58.2",
     "@types/jasmine": "^5.1.4",
     "@types/qrcode": "^1.5.5",
     "angular-eslint": "20.1.0",
+    "dotenv": "^17.3.1",
     "eslint": "^9.22.0",
     "fast-check": "^4.5.3",
     "jasmine-core": "^5.3.0",

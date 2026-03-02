@@ -121,7 +121,6 @@ Placeholder tokens in source files use the format:
 - `{{COGNITO_QR_ISSUER}}`: QR code issuer for TOTP MFA
 - `{{GRAPHQL_API_URL}}`: GraphQL API endpoint URL
 - `{{AWS_REGION}}`: AWS region
-- `{{GRAPHQL_API_KEY}}`: GraphQL API key
 
 ## Security Features
 

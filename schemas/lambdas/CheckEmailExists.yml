@@ -8,12 +8,9 @@ name: CheckEmailExists
 targets:
   - python-main
   - ts-main
-  - graphql-main
+  - graphql-sdk
 model:
   operation: query
-  authConfig:
-    apiKeyAuthentication:
-      - CheckEmailExists
   attributes:
     email:
       type: string

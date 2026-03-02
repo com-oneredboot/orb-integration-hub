@@ -218,29 +218,6 @@ type MfaSetupDetails {
   setupUri: String
 }
 
-type CheckEmailExists @aws_api_key {
-  email: String!
-  exists: Boolean
-  cognitoStatus: String
-  cognitoSub: String
-}
-
-type CreateUserFromCognito @aws_api_key {
-  cognitoSub: String!
-  userId: String
-  email: String
-  firstName: String
-  lastName: String
-  status: String
-  emailVerified: Boolean
-  phoneVerified: Boolean
-  mfaEnabled: Boolean
-  mfaSetupComplete: Boolean
-  groups: [String]
-  createdAt: AWSTimestamp
-  updatedAt: AWSTimestamp
-}
-
 type GetApplicationUsers @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"]) {
   organizationIds: [String]
   applicationIds: [String]
@@ -793,29 +770,6 @@ type UsersListResponse {
 }
 
 # Input Types
-
-input CheckEmailExistsInput {
-  email: String!
-  exists: Boolean
-  cognitoStatus: String
-  cognitoSub: String
-}
-
-input CreateUserFromCognitoInput {
-  cognitoSub: String!
-  userId: String
-  email: String
-  firstName: String
-  lastName: String
-  status: String
-  emailVerified: Boolean
-  phoneVerified: Boolean
-  mfaEnabled: Boolean
-  mfaSetupComplete: Boolean
-  groups: [String]
-  createdAt: AWSTimestamp
-  updatedAt: AWSTimestamp
-}
 
 input GetApplicationUsersInput {
   organizationIds: [String]
@@ -1777,7 +1731,6 @@ input UsersListByCognitoSubInput {
 
 # Queries
 type Query {
-  CheckEmailExists(input: CheckEmailExistsInput!): CheckEmailExists @aws_api_key
   GetApplicationUsers(input: GetApplicationUsersInput!): GetApplicationUsers @aws_auth(cognito_groups: ["CUSTOMER", "EMPLOYEE", "OWNER"])
   GetCurrentUser(input: GetCurrentUserInput!): GetCurrentUser @aws_auth(cognito_groups: ["OWNER", "USER"])
   ApplicationApiKeysGet(input: ApplicationApiKeysGetInput!): ApplicationApiKeysGetResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])
@@ -1857,7 +1810,6 @@ type Query {
 
 # Mutations
 type Mutation {
-  CreateUserFromCognito(input: CreateUserFromCognitoInput!): CreateUserFromCognito @aws_api_key
   SmsVerification(input: SmsVerificationInput!): SmsVerification @aws_auth(cognito_groups: ["OWNER", "USER"])
   ApplicationApiKeysCreate(input: ApplicationApiKeysCreateInput!): ApplicationApiKeysCreateResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])
   ApplicationApiKeysUpdate(input: ApplicationApiKeysUpdateInput!): ApplicationApiKeysUpdateResponse @aws_auth(cognito_groups: ["EMPLOYEE", "OWNER"])

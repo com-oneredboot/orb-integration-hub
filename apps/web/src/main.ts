@@ -43,7 +43,6 @@ Amplify.configure({
   },
   API: {
     GraphQL: {
-      apiKey: environment.graphql.apiKey,
       endpoint: environment.graphql.url,
       region: environment.graphql.region,
       defaultAuthMode: 'userPool',

@@ -32,8 +32,7 @@ function createMockSecrets() {
       COGNITO_CLIENT_ID: 'test-client-456',
       COGNITO_QR_ISSUER: 'test-issuer',
       GRAPHQL_API_URL: 'https://test-api.amazonaws.com/graphql',
-      AWS_REGION: 'us-east-1',
-      GRAPHQL_API_KEY: 'test-api-key-789'
+      AWS_REGION: 'us-east-1'
     }
   };
 
@@ -63,8 +62,7 @@ const environment = {
   },
   graphql: {
     url: '{{GRAPHQL_API_URL}}',
-    region: '{{AWS_REGION}}',
-    apiKey: '{{GRAPHQL_API_KEY}}'
+    region: '{{AWS_REGION}}'
   }
 };
 console.log('Environment configured with:', environment);
@@ -78,8 +76,7 @@ export const environment = {
     clientId: "{{COGNITO_CLIENT_ID}}"
   },
   api: {
-    url: "{{GRAPHQL_API_URL}}",
-    key: "{{GRAPHQL_API_KEY}}"
+    url: "{{GRAPHQL_API_URL}}"
   }
 };
 `;
@@ -92,8 +89,7 @@ export const environment = {
         clientId: "{{COGNITO_CLIENT_ID}}"
       },
       graphql: {
-        url: "{{GRAPHQL_API_URL}}",
-        apiKey: "{{GRAPHQL_API_KEY}}"
+        url: "{{GRAPHQL_API_URL}}"
       }
     },
     environment: "test"
