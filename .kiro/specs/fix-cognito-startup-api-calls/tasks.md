@@ -1,0 +1,151 @@
+# Implementation Plan
+
+- [x] 1. Write bug condition exploration test
+  - **Property 1: Fault Condition** - No API Calls Without Local Tokens
+  - **CRITICAL**: This test MUST FAIL on unfixed code - failure confirms the bug exists
+  - **DO NOT attempt to fix the test or the code when it fails**
+  - **NOTE**: This test encodes the expected behavior - it will validate the fix when it passes after implementation
+  - **GOAL**: Surface counterexamples that demonstrate unnecessary Cognito API calls on startup
+  - **Scoped PBT Approach**: Scope the property to concrete failing cases: app startup with no tokens in IndexedDB
+  - Test that `checkIsAuthenticated()` and `checkHasTokens()` make HTTP requests when no local tokens exist
+  - Test implementation details from Fault Condition in design:
+    - Clear IndexedDB completely (no LastAuthUser key)
+    - Call `checkIsAuthenticated()` and observe HTTP request to Cognito
+    - Call `checkHasTokens()` and observe HTTP request to Cognito
+    - Verify 400 errors appear in console
+  - The test assertions should match the Expected Behavior Properties from design:
+    - ASSERT noHttpRequestMade() when no local tokens exist
+    - ASSERT noConsoleErrors() when no local tokens exist
+  - Run test on UNFIXED code
+  - **EXPECTED OUTCOME**: Test FAILS (this is correct - it proves the bug exists)
+  - Document counterexamples found to understand root cause:
+    - HTTP requests made when IndexedDB is empty
+    - 400 "Bad Request" errors in console
+    - `fetchAuthSession()` called immediately without local storage check
+  - Mark task complete when test is written, run, and failure is documented
+  - _Requirements: 1.1, 2.1, 2.2, 2.4_
+
+- [x] 2. Write preservation property tests (BEFORE implementing fix)
+  - **Property 2: Preservation** - Authenticated User Behavior
+  - **IMPORTANT**: Follow observation-first methodology
+  - Observe behavior on UNFIXED code for authenticated users (cases where tokens DO exist in IndexedDB):
+    - Logged-in user with valid tokens → `checkIsAuthenticated()` returns true
+    - Logged-in user with expired tokens → automatic token refresh occurs
+    - User group verification works correctly
+    - Redirect from `/authenticate` to `/dashboard` works
+    - Authentication state observable updates correctly
+  - Write property-based tests capturing observed behavior patterns from Preservation Requirements:
+    - For all inputs where tokens exist in IndexedDB, authentication validation works
+    - For all inputs where tokens are expired, refresh flow executes
+    - For all authenticated users, group verification succeeds
+    - For all authenticated users on `/authenticate`, redirect to `/dashboard` occurs
+  - Property-based testing generates many test cases for stronger guarantees
+  - Run tests on UNFIXED code
+  - **EXPECTED OUTCOME**: Tests PASS (this confirms baseline behavior to preserve)
+  - Mark task complete when tests are written, run, and passing on unfixed code
+  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
+
+- [x] 3. Fix for unnecessary Cognito API calls on startup
+
+  - [x] 3.1 Add hasLocalTokens() helper method
+    - Create private async method `hasLocalTokens(): Promise<boolean>`
+    - Import `defaultStorage` from `@aws-amplify/utils/storage`
+    - Check for `LastAuthUser` key in IndexedDB using storage key pattern: `CognitoIdentityServiceProvider.{clientId}.LastAuthUser`
+    - If `LastAuthUser` exists, check for `accessToken` and `idToken` keys for that user
+    - Return boolean indicating token existence without making any API calls
+    - Wrap storage access in try-catch to handle IndexedDB errors gracefully
+    - If storage check fails, return true to fall back to API call
+    - Add debug logging for storage check failures
+    - _Bug_Condition: isBugCondition(input) where input.hasLocalTokens === false_
+    - _Expected_Behavior: Return false immediately without HTTP requests when no local tokens exist_
+    - _Preservation: Fall back to API call if storage access fails_
+    - _Requirements: 2.1, 2.2, 2.4_
+
+  - [x] 3.2 Update checkHasTokens() to check local storage first
+    - Call `hasLocalTokens()` at the start of the method
+    - If `hasLocalTokens()` returns false, return false immediately (no API call)
+    - If `hasLocalTokens()` returns true, proceed with existing `fetchAuthSession()` logic
+    - Preserve existing error handling and return value logic
+    - _Bug_Condition: isBugCondition(input) where input.method === 'checkHasTokens'_
+    - _Expected_Behavior: No HTTP requests when no local tokens exist_
+    - _Preservation: Token validation with Cognito continues to work for logged-in users_
+    - _Requirements: 2.1, 2.2, 2.4, 3.1_
+
+  - [x] 3.3 Update checkIsAuthenticated() to add early-exit path
+    - Call `hasLocalTokens()` at the start of the method (before line 285)
+    - If `hasLocalTokens()` returns false, set `isAuthenticatedSubject.next(false)` and return false immediately
+    - Add debug log message: '[CognitoService] No local tokens found'
+    - If `hasLocalTokens()` returns true, proceed with existing full validation logic
+    - Preserve all existing token validation, refresh, group verification, and redirect logic
+    - _Bug_Condition: isBugCondition(input) where input.method === 'checkIsAuthenticated'_
+    - _Expected_Behavior: No HTTP requests when no local tokens exist_
+    - _Preservation: All authentication validation, token refresh, group verification, and redirect behavior unchanged_
+    - _Requirements: 2.1, 2.2, 2.4, 3.1, 3.2, 3.3, 3.4, 3.5_
+
+  - [x] 3.4 Add unit tests for hasLocalTokens()
+    - Test with no LastAuthUser key in IndexedDB (returns false)
+    - Test with LastAuthUser but no tokens (returns false)
+    - Test with LastAuthUser and only accessToken (returns false)
+    - Test with LastAuthUser and only idToken (returns false)
+    - Test with LastAuthUser and both tokens (returns true)
+    - Test with IndexedDB access error (returns true, falls back to API call)
+    - Test with private browsing mode (returns true, falls back to API call)
+    - Mock `defaultStorage.getItem()` for each test case
+    - _Requirements: 2.1, 2.2, 2.4_
+
+  - [x] 3.5 Add unit tests for updated checkHasTokens()
+    - Test early-exit path: no local tokens → returns false immediately
+    - Test validation path: local tokens exist → calls fetchAuthSession()
+    - Test validation path: valid session → returns true
+    - Test validation path: invalid session → returns false
+    - Mock `hasLocalTokens()` and `fetchAuthSession()` for each test case
+    - Verify no HTTP requests made when `hasLocalTokens()` returns false
+    - _Requirements: 2.1, 2.2, 2.4, 3.1_
+
+  - [x] 3.6 Add unit tests for updated checkIsAuthenticated()
+    - Test early-exit path: no local tokens → returns false, updates subject
+    - Test validation path: local tokens exist → proceeds with full validation
+    - Test validation path: valid session → returns true, updates subject
+    - Test validation path: expired tokens → triggers refresh flow
+    - Test validation path: invalid session → returns false, updates subject
+    - Mock `hasLocalTokens()` and `fetchAuthSession()` for each test case
+    - Verify no HTTP requests made when `hasLocalTokens()` returns false
+    - Verify authentication state observable updates correctly in all cases
+    - _Requirements: 2.1, 2.2, 2.4, 3.1, 3.2, 3.3, 3.4, 3.5_
+
+  - [x] 3.7 Verify bug condition exploration test now passes
+    - **Property 1: Expected Behavior** - No API Calls Without Local Tokens
+    - **IMPORTANT**: Re-run the SAME test from task 1 - do NOT write a new test
+    - The test from task 1 encodes the expected behavior
+    - When this test passes, it confirms the expected behavior is satisfied
+    - Run bug condition exploration test from step 1
+    - **EXPECTED OUTCOME**: Test PASSES (confirms bug is fixed)
+    - Verify no HTTP requests made when no local tokens exist
+    - Verify no console errors on app startup
+    - Verify `checkIsAuthenticated()` returns false immediately
+    - Verify `checkHasTokens()` returns false immediately
+    - _Requirements: 2.1, 2.2, 2.4_
+
+  - [x] 3.8 Verify preservation tests still pass
+    - **Property 2: Preservation** - Authenticated User Behavior
+    - **IMPORTANT**: Re-run the SAME tests from task 2 - do NOT write new tests
+    - Run preservation property tests from step 2
+    - **EXPECTED OUTCOME**: Tests PASS (confirms no regressions)
+    - Verify token validation with Cognito works for logged-in users
+    - Verify automatic token refresh for expired tokens works
+    - Verify user group verification works
+    - Verify redirect from `/authenticate` to `/dashboard` works
+    - Verify authentication state observable updates work
+    - Confirm all tests still pass after fix (no regressions)
+    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
+
+
+- [x] 4. Checkpoint - Ensure all tests pass
+  - Run all unit tests: `cd apps/web && npm test`
+  - Run all E2E tests: `cd apps/web && npm run e2e`
+  - Verify no linting errors: `cd apps/web && npm run lint`
+  - Verify no type errors: `cd apps/web && npm run typecheck`
+  - Verify no console errors on app startup (manual test)
+  - Verify authentication flows work correctly (manual test)
+  - Ask the user if questions arise
+  - _Requirements: All requirements validated_

@@ -20,6 +20,7 @@ import {
   confirmResetPassword,
   setUpTOTP,
 } from 'aws-amplify/auth';
+import { defaultStorage } from '@aws-amplify/core/internals/utils';
 import {BehaviorSubject, Observable} from 'rxjs';
 
 // Application-specific imports
@@ -72,6 +73,41 @@ export class CognitoService {
     this.isAuthenticated = this.isAuthenticatedSubject.asObservable();
     this.mfaSetupRequired = this.mfaSetupRequiredSubject.asObservable();
     this.mfaRequired = this.mfaRequiredSubject.asObservable();
+  }
+
+  /**
+   * Check if tokens exist in local storage (IndexedDB) without making API calls
+   * This is a lightweight check that only accesses browser storage
+   * @returns Promise<boolean> True if tokens exist locally, false otherwise
+   * @private
+   */
+  private async hasLocalTokens(): Promise<boolean> {
+    try {
+      const storage = defaultStorage;
+      const clientId = environment.cognito.userPoolClientId;
+      
+      // Check if any user was logged in
+      const lastAuthUser = await storage.getItem(
+        `CognitoIdentityServiceProvider.${clientId}.LastAuthUser`
+      );
+      
+      if (!lastAuthUser) {
+        return false;
+      }
+      
+      // Check if tokens exist for that user
+      const accessToken = await storage.getItem(
+        `CognitoIdentityServiceProvider.${clientId}.${lastAuthUser}.accessToken`
+      );
+      const idToken = await storage.getItem(
+        `CognitoIdentityServiceProvider.${clientId}.${lastAuthUser}.idToken`
+      );
+      
+      return !!(accessToken && idToken);
+    } catch (error) {
+      console.debug('[CognitoService] Failed to check local storage, falling back to API call');
+      return true; // Fall back to API call if storage check fails
+    }
   }
 
   /**
@@ -281,6 +317,14 @@ export class CognitoService {
    */
   public async checkIsAuthenticated(): Promise<boolean> {
     try {
+      // Early exit if no local tokens - no API call
+      const hasLocal = await this.hasLocalTokens();
+      if (!hasLocal) {
+        console.debug('[CognitoService] No local tokens found');
+        this.isAuthenticatedSubject.next(false);
+        return false;
+      }
+
       // Step 1: Check if session and tokens exist
       let session = await fetchAuthSession();
       if (!session.tokens?.accessToken || !session.tokens?.idToken) {
@@ -378,13 +422,21 @@ export class CognitoService {
    * For dashboard/protected routes, use checkIsAuthenticated() instead
    */
   public async checkHasTokens(): Promise<boolean> {
-    try {
-      const session = await fetchAuthSession();
-      return !!session.tokens?.accessToken && !!session.tokens?.idToken;
-    } catch {
-      return false;
+      // Check local storage first - no API call
+      const hasLocal = await this.hasLocalTokens();
+      if (!hasLocal) {
+        return false;
+      }
+
+      // Tokens exist locally, validate with Cognito
+      try {
+        const session = await fetchAuthSession();
+        return !!session.tokens?.accessToken && !!session.tokens?.idToken;
+      } catch {
+        return false;
+      }
     }
-  }
+
 
   public async getCognitoProfile(): Promise<CognitoProfile | null> {
     try {
