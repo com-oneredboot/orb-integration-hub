@@ -67,14 +67,14 @@ Implement a self-contained Playwright E2E auth test suite (signup → signin →
 - [x] 4. Checkpoint - Verify auth test suite compiles
   - Ensure no TypeScript compilation errors in `apps/web/e2e/tests/auth.spec.ts`, ask the user if questions arise.
 
-- [ ] 5. Property-based tests for helper functions
-  - [ ]* 5.1 Write property test for generateTestEmail
+- [x] 5. Property-based tests for helper functions
+  - [x]* 5.1 Write property test for generateTestEmail
     - **Property 1: Generated test emails are unique and well-formed**
     - Use fast-check to generate random timestamps, verify each email matches `e2e-test-{digits}@test.orb-integration-hub.com` and distinct timestamps produce distinct emails
     - Create test file at `apps/web/e2e/tests/auth-helpers.property.spec.ts`
     - Run minimum 100 iterations
     - **Validates: Requirements 1.1**
-  - [ ]* 5.2 Write property test for generateTestPassword
+  - [x]* 5.2 Write property test for generateTestPassword
     - **Property 2: Generated passwords meet Cognito password policy**
     - Use fast-check to generate 100+ passwords, verify each has ≥8 chars, at least one uppercase, one lowercase, one digit, one special character from `!@#$%^&*`
     - Add to `apps/web/e2e/tests/auth-helpers.property.spec.ts`
