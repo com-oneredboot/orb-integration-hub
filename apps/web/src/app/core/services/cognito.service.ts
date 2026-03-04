@@ -20,7 +20,6 @@ import {
   confirmResetPassword,
   setUpTOTP,
 } from 'aws-amplify/auth';
-import { defaultStorage } from '@aws-amplify/core/internals/utils';
 import {BehaviorSubject, Observable} from 'rxjs';
 
 // Application-specific imports
@@ -76,37 +75,26 @@ export class CognitoService {
   }
 
   /**
-   * Check if tokens exist in local storage (IndexedDB) without making API calls
-   * This is a lightweight check that only accesses browser storage
+   * Check if tokens exist in local storage without making API calls
+   * This is a lightweight check that accesses Amplify's token cache
    * @returns Promise<boolean> True if tokens exist locally, false otherwise
    * @private
    */
   private async hasLocalTokens(): Promise<boolean> {
     try {
-      const storage = defaultStorage;
-      const clientId = environment.cognito.userPoolClientId;
+      // Amplify v6 stores tokens in memory/cache after first fetch
+      // We can check if a session exists without making a network request
+      // by using fetchAuthSession which checks the cache first
+      const session = await fetchAuthSession();
       
-      // Check if any user was logged in
-      const lastAuthUser = await storage.getItem(
-        `CognitoIdentityServiceProvider.${clientId}.LastAuthUser`
-      );
-      
-      if (!lastAuthUser) {
-        return false;
-      }
-      
-      // Check if tokens exist for that user
-      const accessToken = await storage.getItem(
-        `CognitoIdentityServiceProvider.${clientId}.${lastAuthUser}.accessToken`
-      );
-      const idToken = await storage.getItem(
-        `CognitoIdentityServiceProvider.${clientId}.${lastAuthUser}.idToken`
-      );
-      
-      return !!(accessToken && idToken);
+      // If we get tokens back, they exist locally
+      // If no tokens exist, Amplify returns an empty session (no network call needed)
+      return !!(session.tokens?.accessToken && session.tokens?.idToken);
     } catch (error) {
-      console.debug('[CognitoService] Failed to check local storage, falling back to API call');
-      return true; // Fall back to API call if storage check fails
+      // If there's an error, assume no tokens exist
+      // This handles cases where Amplify hasn't been initialized yet
+      console.debug('[CognitoService] Error checking local tokens, assuming none exist');
+      return false;
     }
   }
 
