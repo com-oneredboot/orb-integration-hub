@@ -49,9 +49,9 @@ def main() -> None:
         region=config.region or os.environ.get("CDK_DEFAULT_REGION", "us-east-1"),
     )
 
-    # Use custom bootstrap qualifier 'orb' instead of default 'hnb659fds'
+    # Use default CDK bootstrap qualifier
     synthesizer = cdk.DefaultStackSynthesizer(
-        qualifier="orb",
+        qualifier="hnb659fds",
     )
 
     # ===== Foundation Stacks (no dependencies) =====
