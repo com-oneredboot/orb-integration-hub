@@ -52,7 +52,7 @@ Migrate `CheckEmailExists` and `CreateUserFromCognito` from the Main API (broken
     - Implement error handling per design: detect network errors (`TypeError`, `Failed to fetch`), authorization errors (HTTP 401/403, `Unauthorized`), GraphQL errors, and invalid JSON
     - _Requirements: 2.4, 2.5, 3.4, 3.5_
 
-  - [-]* 4.2 Write property test: SDK client sends correct Authorization header (Property 1)
+  - [x]* 4.2 Write property test: SDK client sends correct Authorization header (Property 1)
     - **Property 1: SDK client sends correct Authorization header**
     - Use `fast-check` to generate random operation strings and variables objects
     - Verify every request includes `Authorization` header equal to configured `sdkApi.apiKey`
@@ -60,7 +60,7 @@ Migrate `CheckEmailExists` and `CreateUserFromCognito` from the Main API (broken
     - Tag: `Feature: migrate-auth-to-sdk-api, Property 1: SDK client sends correct Authorization header`
     - **Validates: Requirements 2.4**
 
-  - [ ]* 4.3 Write property test: Error classification correctness (Property 4)
+  - [x]* 4.3 Write property test: Error classification correctness (Property 4)
     - **Property 4: Error classification correctness**
     - Use `fast-check` to generate random error objects representing network failures and authorization failures
     - Verify network errors produce "unreachable" error messages and auth errors produce "invalid or expired" messages
@@ -68,7 +68,7 @@ Migrate `CheckEmailExists` and `CreateUserFromCognito` from the Main API (broken
     - Tag: `Feature: migrate-auth-to-sdk-api, Property 4: Error classification correctness`
     - **Validates: Requirements 3.4, 3.5**
 
-  - [ ]* 4.4 Write unit tests for `SdkApiService`
+  - [x]* 4.4 Write unit tests for `SdkApiService`
     - Test correct request construction (URL, headers, body)
     - Test handling of empty response
     - Test network error handling
@@ -84,7 +84,7 @@ Migrate `CheckEmailExists` and `CreateUserFromCognito` from the Main API (broken
     - Log a warning via `DebugLogService`
     - _Requirements: 5.4, 5.5_
 
-  - [ ]* 5.2 Write property test: apiKey auth mode rejection (Property 5)
+  - [x]* 5.2 Write property test: apiKey auth mode rejection (Property 5)
     - **Property 5: apiKey auth mode rejection**
     - Use `fast-check` to generate random operation strings and variables
     - Verify `ApiService.execute()` with `authMode === 'apiKey'` always throws an error
@@ -92,7 +92,7 @@ Migrate `CheckEmailExists` and `CreateUserFromCognito` from the Main API (broken
     - Tag: `Feature: migrate-auth-to-sdk-api, Property 5: apiKey auth mode rejection`
     - **Validates: Requirements 5.5**
 
-  - [ ]* 5.3 Write unit tests for `ApiService` changes
+  - [x]* 5.3 Write unit tests for `ApiService` changes
     - Test that `apiKeyClient` field no longer exists
     - Test that `execute()` with `authMode: 'apiKey'` throws the expected error
     - _Requirements: 5.4, 5.5_
@@ -107,7 +107,7 @@ Migrate `CheckEmailExists` and `CreateUserFromCognito` from the Main API (broken
     - Ensure response shape returned to callers (including `RecoveryService`) is unchanged
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-  - [ ]* 6.2 Write property test: Pre-auth operations route through SDK client (Property 2)
+  - [x]* 6.2 Write property test: Pre-auth operations route through SDK client (Property 2)
     - **Property 2: Pre-auth operations route through SDK client**
     - Use `fast-check` to generate random email strings for `checkEmailExists()` and random cognitoSub strings for `createUserFromCognito()`
     - Verify `SdkApiService.query`/`mutate` is called exactly once per invocation
@@ -115,14 +115,14 @@ Migrate `CheckEmailExists` and `CreateUserFromCognito` from the Main API (broken
     - Tag: `Feature: migrate-auth-to-sdk-api, Property 2: Pre-auth operations route through SDK client`
     - **Validates: Requirements 3.1, 3.2**
 
-  - [ ]* 6.3 Write property test: Response shape compatibility (Property 3)
+  - [x]* 6.3 Write property test: Response shape compatibility (Property 3)
     - **Property 3: Response shape compatibility**
     - Use `fast-check` to generate random valid `CheckEmailExists` response objects with `{ email, exists, cognitoStatus, cognitoSub }`
     - Verify `UserService.checkEmailExists()` returns an object with the same `{ exists, cognitoStatus, cognitoSub }` shape preserving all field values
     - Tag: `Feature: migrate-auth-to-sdk-api, Property 3: Response shape compatibility`
     - **Validates: Requirements 3.3**
 
-  - [ ]* 6.4 Write unit tests for `UserService` changes
+  - [x]* 6.4 Write unit tests for `UserService` changes
     - Test `checkEmailExists()` calls `SdkApiService.query` (not `ApiService`)
     - Test `createUserFromCognito()` calls `SdkApiService.mutate` (not `ApiService`)
     - Test network error wrapping
