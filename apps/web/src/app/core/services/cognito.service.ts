@@ -76,24 +76,35 @@ export class CognitoService {
 
   /**
    * Check if tokens exist in local storage without making API calls
-   * This is a lightweight check that accesses Amplify's token cache
+   * This is a lightweight check that accesses browser localStorage directly
    * @returns Promise<boolean> True if tokens exist locally, false otherwise
    * @private
    */
   private async hasLocalTokens(): Promise<boolean> {
     try {
-      // Amplify v6 stores tokens in memory/cache after first fetch
-      // We can check if a session exists without making a network request
-      // by using fetchAuthSession which checks the cache first
-      const session = await fetchAuthSession();
+      // Amplify v6 stores tokens in localStorage with keys following this pattern:
+      // CognitoIdentityServiceProvider.{clientId}.{username}.{tokenType}
+      // First check if there's a LastAuthUser key
+      const clientId = environment.cognito.userPoolClientId;
+      const lastAuthUserKey = `CognitoIdentityServiceProvider.${clientId}.LastAuthUser`;
+      const lastAuthUser = localStorage.getItem(lastAuthUserKey);
       
-      // If we get tokens back, they exist locally
-      // If no tokens exist, Amplify returns an empty session (no network call needed)
-      return !!(session.tokens?.accessToken && session.tokens?.idToken);
+      if (!lastAuthUser) {
+        return false;
+      }
+      
+      // Check if tokens exist for that user
+      const accessTokenKey = `CognitoIdentityServiceProvider.${clientId}.${lastAuthUser}.accessToken`;
+      const idTokenKey = `CognitoIdentityServiceProvider.${clientId}.${lastAuthUser}.idToken`;
+      
+      const accessToken = localStorage.getItem(accessTokenKey);
+      const idToken = localStorage.getItem(idTokenKey);
+      
+      return !!(accessToken && idToken);
     } catch (error) {
-      // If there's an error, assume no tokens exist
-      // This handles cases where Amplify hasn't been initialized yet
-      console.debug('[CognitoService] Error checking local tokens, assuming none exist');
+      // If there's an error accessing localStorage (e.g., private browsing mode),
+      // return false to avoid making unnecessary API calls
+      console.debug('[CognitoService] Error checking local storage, assuming no tokens exist');
       return false;
     }
   }
