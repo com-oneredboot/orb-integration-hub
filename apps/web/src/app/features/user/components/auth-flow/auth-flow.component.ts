@@ -96,7 +96,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
   
   // Real-time validation state
   public showValidationErrors = false;
-  private validationDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   public fieldFocusStates: Record<string, boolean> = {};
 
   // Touch interaction state
@@ -745,9 +744,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
 
 
   ngOnDestroy(): void {
-    if (this.validationDebounceTimer) {
-      clearTimeout(this.validationDebounceTimer);
-    }
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -1256,42 +1252,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       Object.keys(this.authForm.controls).forEach(fieldName => {
         const control = this.authForm.get(fieldName);
         if (control) {
-          // Real-time validation with debouncing
-          control.valueChanges
-            .pipe(
-              takeUntil(this.destroy$),
-              tap(() => {
-                try {
-                  // Clear existing timer
-                  if (this.validationDebounceTimer) {
-                    clearTimeout(this.validationDebounceTimer);
-                  }
-                  
-                  // Set new timer for delayed validation
-                  this.validationDebounceTimer = setTimeout(() => {
-                    this.validateFieldRealTime(fieldName);
-                  }, 500); // 500ms delay for real-time validation
-                } catch (error) {
-                  this.errorHandler.captureValidationError(
-                    'validateFieldRealTime',
-                    error,
-                    'AuthFlowComponent',
-                    fieldName
-                  );
-                }
-              })
-            )
-            .subscribe({
-              error: (error) => {
-                this.errorHandler.captureValidationError(
-                  'valueChanges',
-                  error,
-                  'AuthFlowComponent',
-                  fieldName
-                );
-              }
-            });
-          
           // Track focus states for better UX
           control.statusChanges
             .pipe(takeUntil(this.destroy$))
@@ -2462,38 +2422,6 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       this.showSuccessMessage = false;
       this.successMessage = '';
     }, duration);
-  }
-
-  /**
-   * Validate field in real-time with enhanced error handling
-   */
-  private validateFieldRealTime(fieldName: string): void {
-    try {
-      const control = this.authForm.get(fieldName);
-      if (!control) return;
-      
-      // Mark field as loading during validation
-      this.validationLoadingStates[fieldName] = true;
-      
-      // Perform validation
-      control.updateValueAndValidity({ emitEvent: false });
-      
-      // Clear loading state
-      setTimeout(() => {
-        this.validationLoadingStates[fieldName] = false;
-      }, 200);
-      
-    } catch (error) {
-      this.errorHandler.captureValidationError(
-        'validateFieldRealTime',
-        error,
-        'AuthFlowComponent',
-        fieldName
-      );
-      
-      // Clear loading state on error
-      this.validationLoadingStates[fieldName] = false;
-    }
   }
 
   /**
