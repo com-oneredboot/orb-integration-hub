@@ -195,6 +195,12 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
 
     // Initialize debug logs observable
     this.debugLogs$ = this.debugLogService.logs$;
+    
+    // Explicitly initialize loading states to prevent stale values
+    this.isStepTransitioning = false;
+    this.loadingMessage = '';
+    this.qrCodeLoading = false;
+    this.buttonProgress = 0;
 
     // Initialize the form with enhanced validation
     this.authForm = this.fb.group({
