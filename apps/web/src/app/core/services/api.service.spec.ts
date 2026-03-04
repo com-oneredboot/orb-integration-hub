@@ -18,6 +18,7 @@ import {
   NotFoundError,
 } from '../errors/api-errors';
 import { GraphQLError } from '../types/graphql.types';
+import * as fc from 'fast-check';
 
 // Concrete implementation for testing
 @Injectable()
@@ -264,6 +265,83 @@ describe('ApiService', () => {
 
         expect(result).toBeInstanceOf(NotFoundError);
       });
+    });
+  });
+
+  // ============================================================================
+  // Task 5.3: Unit tests for ApiService apiKey rejection
+  // ============================================================================
+
+  describe('apiKey auth mode rejection', () => {
+    it('should throw ApiError with DEPRECATED_AUTH_MODE when apiKey is used', async () => {
+      try {
+        await service.testExecuteGetQuery('query { ping }', {}, 'apiKey');
+        fail('Expected ApiError with DEPRECATED_AUTH_MODE');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).code).toBe('DEPRECATED_AUTH_MODE');
+      }
+    });
+
+    it('should include SdkApiService guidance in error message', async () => {
+      try {
+        await service.testExecuteMutation('mutation { test }', {}, 'apiKey');
+        fail('Expected ApiError');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).message).toContain('SdkApiService');
+      }
+    });
+
+    it('should not have apiKeyClient field', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((service as any).apiKeyClient).toBeUndefined();
+    });
+  });
+
+  // ============================================================================
+  // Feature: migrate-auth-to-sdk-api, Property 5: apiKey auth mode rejection
+  // ============================================================================
+
+  describe('Property 5: apiKey auth mode rejection', () => {
+    it('should reject apiKey auth mode for all random operations', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.string({ minLength: 1, maxLength: 200 }),
+          fc.dictionary(fc.string({ minLength: 1, maxLength: 20 }), fc.oneof(fc.string(), fc.integer(), fc.boolean())),
+          async (operation, variables) => {
+            try {
+              await service.testExecuteGetQuery(operation, variables, 'apiKey');
+              // Should never reach here
+              throw new Error('Expected rejection but succeeded');
+            } catch (error) {
+              expect(error).toBeInstanceOf(ApiError);
+              expect((error as ApiError).code).toBe('DEPRECATED_AUTH_MODE');
+              expect((error as ApiError).message).toContain('SdkApiService');
+            }
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should reject apiKey auth mode for all random mutations', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.string({ minLength: 1, maxLength: 200 }),
+          fc.dictionary(fc.string({ minLength: 1, maxLength: 20 }), fc.string()),
+          async (mutation, variables) => {
+            try {
+              await service.testExecuteMutation(mutation, variables, 'apiKey');
+              throw new Error('Expected rejection but succeeded');
+            } catch (error) {
+              expect(error).toBeInstanceOf(ApiError);
+              expect((error as ApiError).code).toBe('DEPRECATED_AUTH_MODE');
+            }
+          }
+        ),
+        { numRuns: 100 }
+      );
     });
   });
 });

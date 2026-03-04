@@ -6,7 +6,7 @@ Migrate `CheckEmailExists` and `CreateUserFromCognito` from the Main API (broken
 
 ## Tasks
 
-- [ ] 1. Extend SDK API schema and regenerate CDK constructs
+- [x] 1. Extend SDK API schema and regenerate CDK constructs
   - [x] 1.1 Add `CheckEmailExists` and `CreateUserFromCognito` to SDK API YAML schemas
     - Create or update YAML schema files under `schemas/` to add `CheckEmailExists` query (with `CheckEmailExistsInput` input type and `CheckEmailExists` response type) and `CreateUserFromCognito` mutation (with `CreateUserFromCognitoInput` input type and `CreateUserFromCognito` response type) to the SDK API
     - Wire both operations to their existing Lambda functions via Lambda data sources using SSM ARN lookup
@@ -43,7 +43,7 @@ Migrate `CheckEmailExists` and `CreateUserFromCognito` from the Main API (broken
     - Update the environment template generation to populate `sdkApi.url`, `sdkApi.apiKey`, and `sdkApi.region` from retrieved values
     - _Requirements: 6.2, 6.3_
 
-- [ ] 4. Implement `SdkApiService`
+- [x] 4. Implement `SdkApiService`
   - [x] 4.1 Create `SdkApiService` at `apps/web/src/app/core/services/sdk-api.service.ts`
     - Implement `@Injectable({ providedIn: 'root' })` service
     - Read `sdkApi.url` and `sdkApi.apiKey` from environment config in constructor
@@ -52,7 +52,7 @@ Migrate `CheckEmailExists` and `CreateUserFromCognito` from the Main API (broken
     - Implement error handling per design: detect network errors (`TypeError`, `Failed to fetch`), authorization errors (HTTP 401/403, `Unauthorized`), GraphQL errors, and invalid JSON
     - _Requirements: 2.4, 2.5, 3.4, 3.5_
 
-  - [ ]* 4.2 Write property test: SDK client sends correct Authorization header (Property 1)
+  - [-]* 4.2 Write property test: SDK client sends correct Authorization header (Property 1)
     - **Property 1: SDK client sends correct Authorization header**
     - Use `fast-check` to generate random operation strings and variables objects
     - Verify every request includes `Authorization` header equal to configured `sdkApi.apiKey`
@@ -77,7 +77,7 @@ Migrate `CheckEmailExists` and `CreateUserFromCognito` from the Main API (broken
     - Test invalid JSON response handling
     - _Requirements: 2.4, 3.4, 3.5_
 
-- [ ] 5. Modify `ApiService` to remove `apiKeyClient` and reject `apiKey` auth mode
+- [x] 5. Modify `ApiService` to remove `apiKeyClient` and reject `apiKey` auth mode
   - [x] 5.1 Remove `apiKeyClient` and reject `apiKey` auth mode in `ApiService`
     - Remove the `apiKeyClient` field (the `generateClient({ authMode: 'apiKey' })` call)
     - In the `execute()` method, if `authMode === 'apiKey'` is passed, throw an error with code `DEPRECATED_AUTH_MODE` and message: "apiKey auth mode is no longer supported on the Main API. Use SdkApiService for pre-auth operations."
@@ -97,7 +97,7 @@ Migrate `CheckEmailExists` and `CreateUserFromCognito` from the Main API (broken
     - Test that `execute()` with `authMode: 'apiKey'` throws the expected error
     - _Requirements: 5.4, 5.5_
 
-- [ ] 6. Modify `UserService` to route pre-auth operations through `SdkApiService`
+- [x] 6. Modify `UserService` to route pre-auth operations through `SdkApiService`
   - [x] 6.1 Update `UserService` to inject `SdkApiService` and route pre-auth calls
     - Inject `SdkApiService` into `UserService` constructor
     - Rewrite `checkEmailExists()` to call `sdkApiService.query<CheckEmailExistsResponse>(...)` with the `CheckEmailExists` GraphQL query string and variables
@@ -162,7 +162,7 @@ Migrate `CheckEmailExists` and `CreateUserFromCognito` from the Main API (broken
     - Reference related issue numbers in the changelog entry
     - _Requirements: 9.1, 9.2, 9.3_
 
-- [~] 11. Final checkpoint - Verify all changes
+- [x] 11. Final checkpoint - Verify all changes
   - Ensure all tests pass (unit + property-based), no linting errors, no TypeScript compilation errors, CHANGELOG.md updated, version bumped, all commits reference related issues. Ask the user if questions arise.
   - _Requirements: 10.1, 10.2, 10.3, 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7_
 

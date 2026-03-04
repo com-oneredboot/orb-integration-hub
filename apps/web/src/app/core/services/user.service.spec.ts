@@ -1,31 +1,49 @@
-// file: apps/web/src/app/core/services/user.service.spec.ts
-// author: Corey Dale Peters
-// date: 2026-01-16
-// description: Unit tests for UserService.checkEmailExists and createUserFromCognito methods
+/**
+ * UserService Unit Tests and Property-Based Tests
+ *
+ * Tests for checkEmailExists and createUserFromCognito methods
+ * after migration to SdkApiService.
+ *
+ * @see .kiro/specs/migrate-auth-to-sdk-api/design.md
+ */
 
 import { TestBed } from '@angular/core/testing';
 import { provideMockStore } from '@ngrx/store/testing';
 import { UserService } from './user.service';
+import { SdkApiService } from './sdk-api.service';
 import { CognitoService } from './cognito.service';
+import { NetworkError, AuthenticationError, ApiError } from '../errors/api-errors';
+import * as fc from 'fast-check';
 
 describe('UserService', () => {
   let service: UserService;
+  let sdkApiSpy: jasmine.SpyObj<SdkApiService>;
 
   beforeEach(() => {
     const cognitoSpy = jasmine.createSpyObj('CognitoService', [
       'currentUser',
       'checkIsAuthenticated',
       'getCognitoProfile',
-      'validateGraphQLAccess'
+      'validateGraphQLAccess',
+      'signIn',
+      'signOut',
+      'createCognitoUser',
+      'emailVerify',
+      'mfaVerify',
+      'checkMFAPreferences',
+      'getCurrentUserGroups',
     ], {
       currentUser: { subscribe: jasmine.createSpy('subscribe') }
     });
+
+    sdkApiSpy = jasmine.createSpyObj('SdkApiService', ['query', 'mutate']);
 
     TestBed.configureTestingModule({
       providers: [
         UserService,
         provideMockStore({}),
-        { provide: CognitoService, useValue: cognitoSpy }
+        { provide: CognitoService, useValue: cognitoSpy },
+        { provide: SdkApiService, useValue: sdkApiSpy },
       ]
     });
 
@@ -36,45 +54,71 @@ describe('UserService', () => {
     expect(service).toBeTruthy();
   });
 
+
+  // ============================================================================
+  // Task 6.4: Unit tests for UserService changes
+  // ============================================================================
+
   describe('checkEmailExists', () => {
-    it('should return exists: true when email exists', async () => {
-      // Mock the protected query method by spying on the service instance
-      spyOn<UserService, 'checkEmailExists'>(service, 'checkEmailExists').and.returnValue(
-        Promise.resolve({ exists: true })
-      );
+    it('should call SdkApiService.query (not ApiService)', async () => {
+      sdkApiSpy.query.and.resolveTo({
+        data: { CheckEmailExists: { email: 'test@example.com', exists: true, cognitoStatus: 'CONFIRMED', cognitoSub: 'sub-123' } },
+      });
 
-      const result = await service.checkEmailExists('existing@example.com');
+      await service.checkEmailExists('test@example.com');
 
-      expect(result).toEqual({ exists: true });
+      expect(sdkApiSpy.query).toHaveBeenCalledTimes(1);
+    });
+
+    it('should return correct shape when email exists', async () => {
+      sdkApiSpy.query.and.resolveTo({
+        data: { CheckEmailExists: { email: 'test@example.com', exists: true, cognitoStatus: 'CONFIRMED', cognitoSub: 'sub-123' } },
+      });
+
+      const result = await service.checkEmailExists('test@example.com');
+
+      expect(result.exists).toBeTrue();
+      expect(result.cognitoStatus).toBe('CONFIRMED');
+      expect(result.cognitoSub).toBe('sub-123');
     });
 
     it('should return exists: false when email does not exist', async () => {
-      spyOn<UserService, 'checkEmailExists'>(service, 'checkEmailExists').and.returnValue(
-        Promise.resolve({ exists: false })
-      );
+      sdkApiSpy.query.and.resolveTo({
+        data: { CheckEmailExists: { email: 'new@example.com', exists: false, cognitoStatus: null, cognitoSub: null } },
+      });
 
-      const result = await service.checkEmailExists('nonexistent@example.com');
+      const result = await service.checkEmailExists('new@example.com');
 
-      expect(result).toEqual({ exists: false });
+      expect(result.exists).toBeFalse();
+      expect(result.cognitoStatus).toBeNull();
+      expect(result.cognitoSub).toBeNull();
     });
 
-    it('should throw error when query fails', async () => {
-      spyOn<UserService, 'checkEmailExists'>(service, 'checkEmailExists').and.returnValue(
-        Promise.reject(new Error('Failed to check email existence'))
-      );
+    it('should wrap NetworkError with context message', async () => {
+      sdkApiSpy.query.and.rejectWith(new NetworkError('SDK API is unreachable'));
+
+      await expectAsync(service.checkEmailExists('test@example.com'))
+        .toBeRejectedWithError('Failed to check email existence: SDK API is unreachable');
+    });
+
+    it('should wrap AuthenticationError with context message', async () => {
+      sdkApiSpy.query.and.rejectWith(new AuthenticationError('SDK API key is invalid'));
+
+      await expectAsync(service.checkEmailExists('test@example.com'))
+        .toBeRejectedWithError('Failed to check email existence: API key is invalid or expired');
+    });
+
+    it('should throw generic error for unknown failures', async () => {
+      sdkApiSpy.query.and.rejectWith(new ApiError('Something broke', 'UNKNOWN'));
 
       await expectAsync(service.checkEmailExists('test@example.com'))
         .toBeRejectedWithError('Failed to check email existence');
     });
   });
 
-  // Feature: create-user-from-cognito
-  // Tests for createUserFromCognito method
-  // Validates: Requirements 4.2, 8.3
   describe('createUserFromCognito', () => {
-    const mockCognitoSub = '12345678-1234-1234-1234-123456789012';
-    const mockUserResponse = {
-      userId: mockCognitoSub,
+    const mockResponse = {
+      userId: 'u-123',
       email: 'test@example.com',
       firstName: 'Test',
       lastName: 'User',
@@ -85,70 +129,146 @@ describe('UserService', () => {
       mfaSetupComplete: true,
       groups: ['USER'],
       createdAt: 1705420800,
-      updatedAt: 1705420800
+      updatedAt: 1705420800,
     };
 
-    it('should call createUserFromCognito with apiKey auth mode', async () => {
-      // Spy on the method and verify it uses apiKey auth
-      spyOn<UserService, 'createUserFromCognito'>(service, 'createUserFromCognito').and.returnValue(
-        Promise.resolve(mockUserResponse)
-      );
+    it('should call SdkApiService.mutate (not ApiService)', async () => {
+      sdkApiSpy.mutate.and.resolveTo({
+        data: { CreateUserFromCognito: mockResponse },
+      });
 
-      const result = await service.createUserFromCognito(mockCognitoSub);
+      await service.createUserFromCognito('sub-123');
 
-      expect(service.createUserFromCognito).toHaveBeenCalledWith(mockCognitoSub);
-      expect(result.userId).toBe(mockCognitoSub);
-      expect(result.email).toBe('test@example.com');
+      expect(sdkApiSpy.mutate).toHaveBeenCalledTimes(1);
     });
 
-    it('should return user data on successful creation', async () => {
-      spyOn<UserService, 'createUserFromCognito'>(service, 'createUserFromCognito').and.returnValue(
-        Promise.resolve(mockUserResponse)
-      );
+    it('should return user data on success', async () => {
+      sdkApiSpy.mutate.and.resolveTo({
+        data: { CreateUserFromCognito: mockResponse },
+      });
 
-      const result = await service.createUserFromCognito(mockCognitoSub);
+      const result = await service.createUserFromCognito('sub-123');
 
-      expect(result).toEqual(mockUserResponse);
+      expect(result.userId).toBe('u-123');
+      expect(result.email).toBe('test@example.com');
       expect(result.status).toBe('PENDING');
       expect(result.groups).toContain('USER');
     });
 
-    it('should return existing user data for idempotent calls', async () => {
-      // When user already exists, Lambda returns existing user
-      spyOn<UserService, 'createUserFromCognito'>(service, 'createUserFromCognito').and.returnValue(
-        Promise.resolve(mockUserResponse)
-      );
+    it('should throw when no data returned', async () => {
+      sdkApiSpy.mutate.and.resolveTo({ data: { CreateUserFromCognito: null } });
 
-      const result = await service.createUserFromCognito(mockCognitoSub);
-
-      expect(result.userId).toBe(mockCognitoSub);
-    });
-
-    it('should throw error when cognitoSub is not found in Cognito', async () => {
-      spyOn<UserService, 'createUserFromCognito'>(service, 'createUserFromCognito').and.returnValue(
-        Promise.reject(new Error('User not found'))
-      );
-
-      await expectAsync(service.createUserFromCognito('invalid-sub'))
-        .toBeRejectedWithError('User not found');
-    });
-
-    it('should throw error when service is unavailable', async () => {
-      spyOn<UserService, 'createUserFromCognito'>(service, 'createUserFromCognito').and.returnValue(
-        Promise.reject(new Error('Authentication service unavailable'))
-      );
-
-      await expectAsync(service.createUserFromCognito(mockCognitoSub))
-        .toBeRejectedWithError('Authentication service unavailable');
-    });
-
-    it('should throw error when no data is returned', async () => {
-      spyOn<UserService, 'createUserFromCognito'>(service, 'createUserFromCognito').and.returnValue(
-        Promise.reject(new Error('Failed to create user record'))
-      );
-
-      await expectAsync(service.createUserFromCognito(mockCognitoSub))
+      await expectAsync(service.createUserFromCognito('sub-123'))
         .toBeRejectedWithError('Failed to create user record');
+    });
+
+    it('should wrap NetworkError with context message', async () => {
+      sdkApiSpy.mutate.and.rejectWith(new NetworkError('SDK API is unreachable'));
+
+      await expectAsync(service.createUserFromCognito('sub-123'))
+        .toBeRejectedWithError('Failed to create user from Cognito: SDK API is unreachable');
+    });
+
+    it('should wrap AuthenticationError with context message', async () => {
+      sdkApiSpy.mutate.and.rejectWith(new AuthenticationError('SDK API key is invalid'));
+
+      await expectAsync(service.createUserFromCognito('sub-123'))
+        .toBeRejectedWithError('Failed to create user from Cognito: API key is invalid or expired');
+    });
+  });
+
+  // ============================================================================
+  // Property-Based Tests
+  // ============================================================================
+
+  // Feature: migrate-auth-to-sdk-api, Property 2: Pre-auth operations route through SDK client
+  describe('Property 2: Pre-auth operations route through SDK client', () => {
+    it('should route checkEmailExists through SdkApiService for all emails', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.emailAddress(),
+          async (email) => {
+            sdkApiSpy.query.and.resolveTo({
+              data: { CheckEmailExists: { email, exists: false, cognitoStatus: null, cognitoSub: null } },
+            });
+
+            await service.checkEmailExists(email);
+
+            // SdkApiService.query must be called exactly once
+            expect(sdkApiSpy.query).toHaveBeenCalledTimes(1);
+
+            sdkApiSpy.query.calls.reset();
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should route createUserFromCognito through SdkApiService for all cognitoSubs', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.uuid(),
+          async (cognitoSub) => {
+            sdkApiSpy.mutate.and.resolveTo({
+              data: {
+                CreateUserFromCognito: {
+                  userId: cognitoSub,
+                  email: 'test@example.com',
+                  firstName: '',
+                  lastName: '',
+                  status: 'PENDING',
+                  emailVerified: false,
+                  phoneVerified: false,
+                  mfaEnabled: false,
+                  mfaSetupComplete: false,
+                  groups: [],
+                  createdAt: 0,
+                  updatedAt: 0,
+                },
+              },
+            });
+
+            await service.createUserFromCognito(cognitoSub);
+
+            // SdkApiService.mutate must be called exactly once
+            expect(sdkApiSpy.mutate).toHaveBeenCalledTimes(1);
+
+            sdkApiSpy.mutate.calls.reset();
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+  });
+
+  // Feature: migrate-auth-to-sdk-api, Property 3: Response shape compatibility
+  describe('Property 3: Response shape compatibility', () => {
+    it('should preserve response shape for all valid CheckEmailExists responses', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({
+            email: fc.emailAddress(),
+            exists: fc.boolean(),
+            cognitoStatus: fc.option(fc.constantFrom('CONFIRMED', 'UNCONFIRMED', 'FORCE_CHANGE_PASSWORD', 'RESET_REQUIRED'), { nil: null }),
+            cognitoSub: fc.option(fc.uuid(), { nil: null }),
+          }),
+          async (responseData) => {
+            sdkApiSpy.query.and.resolveTo({
+              data: { CheckEmailExists: responseData },
+            });
+
+            const result = await service.checkEmailExists(responseData.email);
+
+            // Shape must match: { exists, cognitoStatus, cognitoSub }
+            expect(result.exists).toBe(responseData.exists);
+            expect(result.cognitoStatus).toBe(responseData.cognitoStatus);
+            expect(result.cognitoSub).toBe(responseData.cognitoSub);
+
+            sdkApiSpy.query.calls.reset();
+          }
+        ),
+        { numRuns: 100 }
+      );
     });
   });
 });

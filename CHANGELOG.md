@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-03-03
+
 ### Added
 - Local E2E Testing Setup with Playwright
   - Complete E2E testing framework for local development
@@ -18,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Example test demonstrating best practices
   - Command phrases: "run e2e tests", "setup e2e testing", "debug e2e test"
   - Spec: `.kiro/specs/local-e2e-testing-setup/`
-- Migrate Pre-Auth Operations to SDK API
+- Migrate Pre-Auth Operations to SDK API ([orb-schema-generator#67](https://github.com/com-oneredboot/orb-schema-generator/issues/67), [orb-schema-generator#68](https://github.com/com-oneredboot/orb-schema-generator/issues/68))
   - Created `SdkApiService` with fetch-based GraphQL client for the SDK API (Lambda authorizer)
   - Migrated `CheckEmailExists` and `CreateUserFromCognito` from Main API to SDK API
   - Added `sdkApi` configuration block to environment files
