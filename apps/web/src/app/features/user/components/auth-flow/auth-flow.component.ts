@@ -242,8 +242,12 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     try {
-      // Initialize all systems with error boundaries
-      this.initializeAuthFlowSafely();
+      // Defer initialization to avoid NG0100 ExpressionChangedAfterItHasBeenCheckedError
+      // The async operations and store subscriptions can change bound values during
+      // the first change detection cycle, so we push initialization to the next tick
+      setTimeout(() => {
+        this.initializeAuthFlowSafely();
+      }, 0);
     } catch (error) {
       this.handleInitializationError(error, 'ngOnInit');
     }
