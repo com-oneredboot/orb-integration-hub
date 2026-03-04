@@ -5,6 +5,7 @@ targets:
   - python-main
   - ts-main
   - graphql-main
+  - graphql-sdk
 description: "User account status"
 
 items:
