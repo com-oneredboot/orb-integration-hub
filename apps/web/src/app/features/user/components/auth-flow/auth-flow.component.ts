@@ -4,7 +4,7 @@
 // description: This file contains the Angular component that handles the authentication flow
 
 // 3rd Party Imports
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit, ChangeDetectorRef} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {ActivatedRoute, Router} from '@angular/router';
 import {Store} from '@ngrx/store';
@@ -189,7 +189,8 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
     private rateLimitingService: RateLimitingService,
     private errorHandler: AppErrorHandlerService,
     private sanitizer: DomSanitizer,
-    private debugLogService: DebugLogService
+    private debugLogService: DebugLogService,
+    private cdr: ChangeDetectorRef
   ) {
 
     // Initialize debug logs observable
@@ -271,6 +272,10 @@ export class AuthFlowComponent implements OnInit, OnDestroy {
       // Mark initialization as successful
       this.hasInitializationError = false;
       this.initializationErrorMessage = null;
+      
+      // Trigger change detection to avoid NG0100 ExpressionChangedAfterItHasBeenCheckedError
+      // The async operations above may have dispatched store actions that changed bound values
+      this.cdr.detectChanges();
       
     } catch (error) {
       this.handleInitializationError(error, 'initializeAuthFlowSafely');
