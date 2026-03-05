@@ -34,6 +34,35 @@ import { Amplify } from 'aws-amplify';
 import { environment } from './environments/environment';
 import { configureFontAwesome } from './app/core/config/fontawesome-icons';
 
+/**
+ * Console Logging Standards:
+ * 
+ * This application follows browser console best practices to keep production console output clean:
+ * 
+ * - console.debug() - Use for development/debugging information
+ *   Only visible when browser DevTools console filter is set to "Verbose"
+ *   Examples: state transitions, API calls, user interactions
+ * 
+ * - console.warn() - Use for non-fatal warnings
+ *   Always visible in production console
+ *   Examples: deprecated features, configuration issues
+ * 
+ * - console.error() - Use for errors and exceptions
+ *   Always visible in production console
+ *   Examples: API failures, validation errors, caught exceptions
+ * 
+ * - console.log() and console.info() - AVOID in production code
+ *   These are always visible and create noise in production console
+ *   Only acceptable in test files or wrapped in isDevelopment() checks
+ * 
+ * To see debug messages during development:
+ * 1. Open browser DevTools (F12)
+ * 2. Go to Console tab
+ * 3. Set filter dropdown to "Verbose" (default is "Default" which hides debug)
+ * 
+ * This keeps production console clean while preserving debug information for development.
+ */
+
 Amplify.configure({
   Auth: {
     Cognito: {

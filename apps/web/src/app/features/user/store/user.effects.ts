@@ -172,7 +172,7 @@ export class UserEffects {
     this.actions$.pipe(
       ofType(UserActions.createUserRecordOnly),
       switchMap(({ user }) => {
-        console.log('[Effect][createUserRecordOnly$] Creating DynamoDB record for:', sanitizeEmail(user.email));
+        console.debug('[Effect][createUserRecordOnly$] Creating DynamoDB record for:', sanitizeEmail(user.email));
         
         // Use UsersCreate mutation to create the DynamoDB record
         // The user already exists in Cognito, so we just need the DynamoDB record
@@ -197,7 +197,7 @@ export class UserEffects {
         return from(this.userService.createUserRecordOnly(createInput)).pipe(
           map(response => {
             if (response.StatusCode === 200 && response.Data) {
-              console.log('[Effect][createUserRecordOnly$] DynamoDB record created successfully');
+              console.debug('[Effect][createUserRecordOnly$] DynamoDB record created successfully');
               return UserActions.createUserRecordOnlySuccess({ user: new Users(response.Data) });
             }
             console.error('[Effect][createUserRecordOnly$] Failed to create record:', response.Message);
@@ -221,7 +221,7 @@ export class UserEffects {
     this.actions$.pipe(
       ofType(UserActions.createUserRecordOnlySuccess),
       map(({ user }) => {
-        console.log('[Effect][handleCreateUserRecordOnlySuccess$] Completing auth flow for:', sanitizeEmail(user.email));
+        console.debug('[Effect][handleCreateUserRecordOnlySuccess$] Completing auth flow for:', sanitizeEmail(user.email));
         return UserActions.authFlowComplete({ user });
       })
     )
@@ -233,11 +233,11 @@ export class UserEffects {
     this.actions$.pipe(
       ofType(UserActions.createUserFromCognito),
       switchMap(({ cognitoSub }) => {
-        console.log('[Effect][createUserFromCognito$] Creating user from Cognito with sub:', sanitizeCognitoSub(cognitoSub));
+        console.debug('[Effect][createUserFromCognito$] Creating user from Cognito with sub:', sanitizeCognitoSub(cognitoSub));
         
         return from(this.userService.createUserFromCognito(cognitoSub)).pipe(
           map(response => {
-            console.log('[Effect][createUserFromCognito$] User created successfully:', sanitizeEmail(response.email));
+            console.debug('[Effect][createUserFromCognito$] User created successfully:', sanitizeEmail(response.email));
             // Convert the response to a Users object
             const user = new Users({
               userId: response.userId,
@@ -273,7 +273,7 @@ export class UserEffects {
     this.actions$.pipe(
       ofType(UserActions.createUserFromCognitoSuccess),
       map(({ user }) => {
-        console.log('[Effect][handleCreateUserFromCognitoSuccess$] Completing auth flow for:', sanitizeEmail(user.email));
+        console.debug('[Effect][handleCreateUserFromCognitoSuccess$] Completing auth flow for:', sanitizeEmail(user.email));
         return UserActions.authFlowComplete({ user });
       })
     )
@@ -284,7 +284,7 @@ export class UserEffects {
     this.actions$.pipe(
       ofType(UserActions.signInSuccess),
       map(({ user }) => {
-        console.log('[Effect][handleSignInSuccess$] Completing auth flow for:', sanitizeEmail(user.email));
+        console.debug('[Effect][handleSignInSuccess$] Completing auth flow for:', sanitizeEmail(user.email));
         return UserActions.authFlowComplete({ user });
       })
     )
@@ -649,25 +649,25 @@ export class UserEffects {
       switchMap(([, currentUser, email]) => {
         // If we already have the user, complete the flow
         if (currentUser) {
-          console.log('[AuthEffects] MFA verification successful, completing auth flow for user:', sanitizeEmail(currentUser.email));
+          console.debug('[AuthEffects] MFA verification successful, completing auth flow for user:', sanitizeEmail(currentUser.email));
           return of(UserActions.authFlowComplete({ user: currentUser }));
         }
         
         // If no user but we have email, fetch the user from DynamoDB
         if (email) {
-          console.log('[AuthEffects] MFA success, fetching user from DynamoDB for:', sanitizeEmail(email));
+          console.debug('[AuthEffects] MFA success, fetching user from DynamoDB for:', sanitizeEmail(email));
           return from(this.userService.userQueryByEmail(email)).pipe(
             switchMap(response => {
               console.debug('[AuthEffects] userQueryByEmail response: StatusCode', response.StatusCode);
               if (response.StatusCode === 200 && response.Data && response.Data.length > 0) {
                 const user = new Users(response.Data[0]);
-                console.log('[AuthEffects] User fetched successfully, completing auth flow');
+                console.debug('[AuthEffects] User fetched successfully, completing auth flow');
                 return of(UserActions.authFlowComplete({ user }));
               }
               
               // User not found in DynamoDB - need to create the record using secure Lambda
               // This uses CreateUserFromCognito which validates against Cognito and extracts all data from there
-              console.log('[AuthEffects] User not found in DynamoDB (StatusCode:', response.StatusCode, ', Data length:', response.Data?.length, '), creating record via CreateUserFromCognito for:', sanitizeEmail(email));
+              console.debug('[AuthEffects] User not found in DynamoDB (StatusCode:', response.StatusCode, ', Data length:', response.Data?.length, '), creating record via CreateUserFromCognito for:', sanitizeEmail(email));
               return from(this.cognitoService.getCognitoProfile()).pipe(
                 switchMap(cognitoProfile => {
                   console.debug('[AuthEffects] getCognitoProfile result:', cognitoProfile);
@@ -682,7 +682,7 @@ export class UserEffects {
                     return of(UserActions.needsMFAFailure({ error: 'Unable to get user identifier' }));
                   }
                   
-                  console.log('[AuthEffects] Creating DynamoDB record via CreateUserFromCognito with cognitoSub:', sanitizeCognitoSub(cognitoSub));
+                  console.debug('[AuthEffects] Creating DynamoDB record via CreateUserFromCognito with cognitoSub:', sanitizeCognitoSub(cognitoSub));
                   // Use the secure CreateUserFromCognito Lambda which validates against Cognito
                   // and extracts all user data from Cognito (prevents client-side data injection)
                   return of(UserActions.createUserFromCognito({ cognitoSub }));
@@ -978,7 +978,7 @@ export class UserEffects {
                 const cognitoSub = (cognitoProfile.sub as string) || '';
                 if (cognitoSub) {
                   // Trigger CreateUserFromCognito to create the DynamoDB record
-                  console.log('[Effect][refreshSession$] Triggering CreateUserFromCognito for:', sanitizeCognitoSub(cognitoSub));
+                  console.debug('[Effect][refreshSession$] Triggering CreateUserFromCognito for:', sanitizeCognitoSub(cognitoSub));
                   return UserActions.createUserFromCognito({ cognitoSub });
                 }
                 
@@ -1173,12 +1173,12 @@ export class UserEffects {
           return of(UserActions.checkMFASetupFailure({ error: 'No user found' }));
         }
 
-        console.log('[Auth Effect] Starting MFA check for user:', user.userId);
+        console.debug('[Auth Effect] Starting MFA check for user:', user.userId);
 
         // Update the user timestamp to trigger Lambda processing
         return from(this.userService.updateUserTimestamp(user)).pipe(
           switchMap(() => {
-            console.log('[Auth Effect] User timestamp updated, starting refresh sequence...');
+            console.debug('[Auth Effect] User timestamp updated, starting refresh sequence...');
             
             // Create a sequence of refresh attempts with exponential backoff
             const refreshSequence = [
@@ -1192,14 +1192,14 @@ export class UserEffects {
               switchMap((obs, index) => 
                 obs.pipe(
                   tap(() => {
-                    console.log(`[Auth Effect] Refresh attempt ${index + 1}`);
+                    console.debug(`[Auth Effect] Refresh attempt ${index + 1}`);
                     this.store.dispatch(UserActions.refreshSession());
                   })
                 )
               ),
               // After all refreshes complete, mark as success
               finalize(() => {
-                console.log('[Auth Effect] MFA check sequence completed');
+                console.debug('[Auth Effect] MFA check sequence completed');
                 setTimeout(() => {
                   this.store.dispatch(UserActions.checkMFASetupSuccess());
                 }, 1000); // Small delay to let final refresh complete

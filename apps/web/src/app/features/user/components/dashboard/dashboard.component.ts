@@ -229,7 +229,7 @@ export class DashboardComponent implements OnInit {
    * @param card The CTA card that was clicked
    */
   onCtaCardAction(card: CtaCard): void {
-    console.log('[Dashboard] CTA card action:', card.id, card.title);
+    console.debug('[Dashboard] CTA card action:', card.id, card.title);
   }
 
   /**

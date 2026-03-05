@@ -1109,22 +1109,22 @@ export class ApplicationDetailPageComponent implements OnInit, OnDestroy, AfterV
   // API Keys tab event handlers (kept for potential future use)
   onApiKeySelected(apiKey: IApplicationApiKeys): void {
     // Handle API key selection (future implementation)
-    console.log('API key selected:', apiKey.applicationApiKeyId);
+    console.debug('API key selected:', apiKey.applicationApiKeyId);
   }
 
   onGenerateApiKey(environment: Environment): void {
     // Handle API key generation (handled by ApiKeysListComponent)
-    console.log('Generate API key for environment:', environment);
+    console.debug('Generate API key for environment:', environment);
   }
 
   onRotateApiKey(apiKey: IApplicationApiKeys): void {
     // Handle API key rotation (future implementation)
-    console.log('Rotate API key:', apiKey.applicationApiKeyId);
+    console.debug('Rotate API key:', apiKey.applicationApiKeyId);
   }
 
   onRevokeApiKey(apiKey: IApplicationApiKeys): void {
     // Handle API key revocation (handled by ApiKeysListComponent)
-    console.log('Revoke API key:', apiKey.applicationApiKeyId);
+    console.debug('Revoke API key:', apiKey.applicationApiKeyId);
   }
 
   // Security tab action handlers

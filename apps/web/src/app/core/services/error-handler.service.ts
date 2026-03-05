@@ -275,7 +275,7 @@ export class AppErrorHandlerService implements ErrorHandler {
     }
 
     const action = error.recoveryActions[actionIndex];
-    console.info('[AppErrorHandlerService] Executing recovery action:', action);
+    console.debug('[AppErrorHandlerService] Executing recovery action:', action);
 
     // Execute common recovery actions
     switch (action.toLowerCase()) {
@@ -292,7 +292,7 @@ export class AppErrorHandlerService implements ErrorHandler {
         // This would be handled by the calling component
         break;
       default:
-        console.info('[AppErrorHandlerService] Custom recovery action:', action);
+        console.debug('[AppErrorHandlerService] Custom recovery action:', action);
     }
   }
 
@@ -427,7 +427,7 @@ export class AppErrorHandlerService implements ErrorHandler {
     if (error.type === 'network' && error.severity === 'medium') {
       // Auto-retry network operations after delay
       timer(2000).subscribe(() => {
-        console.info('[AppErrorHandlerService] Attempting auto-recovery for network error');
+        console.debug('[AppErrorHandlerService] Attempting auto-recovery for network error');
         // This would trigger a retry mechanism in the calling component
       });
     }
@@ -447,7 +447,7 @@ export class AppErrorHandlerService implements ErrorHandler {
         });
       }
       
-      console.info('[AppErrorHandlerService] Browser cache cleared');
+      console.debug('[AppErrorHandlerService] Browser cache cleared');
     } catch (error) {
       console.warn('[AppErrorHandlerService] Failed to clear browser cache:', error);
     }

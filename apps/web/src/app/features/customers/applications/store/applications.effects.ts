@@ -282,7 +282,7 @@ export class ApplicationsEffects {
             defaultRoles.map((roleInput) =>
               this.applicationRolesService.create(roleInput).pipe(
                 map((role) => {
-                  console.log(
+                  console.debug(
                     `[ApplicationsEffects] Created default role: ${role.roleName} for application ${applicationId}`
                   );
                   return { success: true, role };
@@ -300,7 +300,7 @@ export class ApplicationsEffects {
             map((results) => {
               const successCount = results.filter((r) => r.success).length;
               const failCount = results.filter((r) => !r.success).length;
-              console.log(
+              console.debug(
                 `[ApplicationsEffects] Default roles creation complete: ${successCount} succeeded, ${failCount} failed`
               );
               return { type: '[Applications] Default Roles Created' };

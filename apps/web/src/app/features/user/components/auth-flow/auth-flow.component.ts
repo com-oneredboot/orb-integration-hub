@@ -8,7 +8,7 @@ import {Component, OnDestroy, OnInit, ChangeDetectorRef} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {ActivatedRoute, Router} from '@angular/router';
 import {Store} from '@ngrx/store';
-import {map, Observable, Subject, take, takeUntil, tap, filter} from 'rxjs';
+import {map, Observable, Subject, take, takeUntil, filter} from 'rxjs';
 import {Location} from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer } from '@angular/platform-browser';

@@ -37,12 +37,12 @@ export class ApplicationRolesEffects {
     this.actions$.pipe(
       ofType(ApplicationRolesActions.loadRoles),
       tap((action) => {
-        console.log('[ApplicationRolesEffects] Loading roles for application:', action.applicationId);
+        console.debug('[ApplicationRolesEffects] Loading roles for application:', action.applicationId);
       }),
       switchMap((action) =>
         this.applicationRolesService.listByApplicationId(action.applicationId).pipe(
           tap((connection: Connection<IApplicationRoles>) => {
-            console.log('[ApplicationRolesEffects] Loaded roles:', connection.items.length);
+            console.debug('[ApplicationRolesEffects] Loaded roles:', connection.items.length);
           }),
           map((connection: Connection<IApplicationRoles>) =>
             ApplicationRolesActions.loadRolesSuccess({ roles: connection.items })
@@ -69,12 +69,12 @@ export class ApplicationRolesEffects {
     this.actions$.pipe(
       ofType(ApplicationRolesActions.createRole),
       tap((action) => {
-        console.log('[ApplicationRolesEffects] Creating role:', action.input);
+        console.debug('[ApplicationRolesEffects] Creating role:', action.input);
       }),
       switchMap((action) =>
         this.applicationRolesService.create(action.input).pipe(
           tap((role: IApplicationRoles) => {
-            console.log('[ApplicationRolesEffects] Created role:', role);
+            console.debug('[ApplicationRolesEffects] Created role:', role);
           }),
           map((role: IApplicationRoles) => ApplicationRolesActions.createRoleSuccess({ role })),
           catchError((error) => {
@@ -99,12 +99,12 @@ export class ApplicationRolesEffects {
     this.actions$.pipe(
       ofType(ApplicationRolesActions.updateRole),
       tap((action) => {
-        console.log('[ApplicationRolesEffects] Updating role:', action.input);
+        console.debug('[ApplicationRolesEffects] Updating role:', action.input);
       }),
       switchMap((action) =>
         this.applicationRolesService.update(action.input).pipe(
           tap((role: IApplicationRoles) => {
-            console.log('[ApplicationRolesEffects] Updated role:', role);
+            console.debug('[ApplicationRolesEffects] Updated role:', role);
           }),
           map((role: IApplicationRoles) => ApplicationRolesActions.updateRoleSuccess({ role })),
           catchError((error) => {
@@ -129,12 +129,12 @@ export class ApplicationRolesEffects {
     this.actions$.pipe(
       ofType(ApplicationRolesActions.deactivateRole),
       tap((action) => {
-        console.log('[ApplicationRolesEffects] Deactivating role:', action.applicationRoleId);
+        console.debug('[ApplicationRolesEffects] Deactivating role:', action.applicationRoleId);
       }),
       switchMap((action) =>
         this.applicationRolesService.disable(action.applicationRoleId).pipe(
           tap((role: IApplicationRoles) => {
-            console.log('[ApplicationRolesEffects] Deactivated role:', role);
+            console.debug('[ApplicationRolesEffects] Deactivated role:', role);
           }),
           map((role: IApplicationRoles) => ApplicationRolesActions.deactivateRoleSuccess({ role })),
           catchError((error) => {
@@ -159,12 +159,12 @@ export class ApplicationRolesEffects {
     this.actions$.pipe(
       ofType(ApplicationRolesActions.deleteRole),
       tap((action) => {
-        console.log('[ApplicationRolesEffects] Deleting role:', action.applicationRoleId);
+        console.debug('[ApplicationRolesEffects] Deleting role:', action.applicationRoleId);
       }),
       switchMap((action) =>
         this.applicationRolesService.delete(action.applicationRoleId).pipe(
           tap(() => {
-            console.log('[ApplicationRolesEffects] Deleted role:', action.applicationRoleId);
+            console.debug('[ApplicationRolesEffects] Deleted role:', action.applicationRoleId);
           }),
           map(() =>
             ApplicationRolesActions.deleteRoleSuccess({

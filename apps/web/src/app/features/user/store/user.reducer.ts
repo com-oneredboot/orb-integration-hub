@@ -359,7 +359,7 @@ export const userReducer = createReducer(
 
   // Auth Flow Complete
   on(UserActions.authFlowComplete, (state, { user }) => {
-    console.log('[AuthReducer] authFlowComplete - Authentication flow completed for user:', sanitizeEmail(user.email));
+    console.debug('[AuthReducer] authFlowComplete - Authentication flow completed for user:', sanitizeEmail(user.email));
     return {
       ...state,
       currentStep: AuthStep.Complete,

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Console Logging Cleanup
+  - Replaced all `console.log()` and `console.info()` with `console.debug()` in production code
+  - Debug messages now only appear when browser console filter is set to "Verbose"
+  - Keeps production console clean while preserving debug information for development
+  - Added console logging standards documentation in `main.ts`
+  - Spec: `.kiro/specs/console-logging-cleanup/`
+
 ## [0.7.0] - 2026-03-03
 
 ### Added

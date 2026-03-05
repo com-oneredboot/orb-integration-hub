@@ -47,6 +47,6 @@ export class UserLayoutComponent implements OnInit {
    * Handle side navigation item clicked
    */
   onSideNavItemClicked(item: SideNavItem): void {
-    console.log('[UserLayout] Side nav item clicked:', item.id, item.tooltip);
+    console.debug('[UserLayout] Side nav item clicked:', item.id, item.tooltip);
   }
 } 

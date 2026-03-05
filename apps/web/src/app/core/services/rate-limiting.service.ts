@@ -285,7 +285,7 @@ export class RateLimitingService {
     patterns.delete(identifier);
     this.attackPatterns$.next(patterns);
     
-    console.info(`[RateLimitingService] Rate limit cleared for ${identifier}`);
+    console.debug(`[RateLimitingService] Rate limit cleared for ${identifier}`);
   }
 
   /**

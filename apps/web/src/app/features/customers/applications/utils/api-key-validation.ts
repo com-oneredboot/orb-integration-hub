@@ -41,7 +41,7 @@ export interface ApiKeyValidationResult {
  * ```typescript
  * const result = validateApplicationApiKeys(app, keys);
  * if (!result.isValid) {
- *   console.log(`Missing keys for: ${result.missingEnvironments.join(', ')}`);
+ *   console.debug(`Missing keys for: ${result.missingEnvironments.join(', ')}`);
  * }
  * ```
  */

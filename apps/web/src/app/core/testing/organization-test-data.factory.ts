@@ -437,7 +437,7 @@ export class OrganizationTestDataFactory {
       
       // Progress logging for large datasets
       if ((i + 1) % 10 === 0) {
-        console.log(`Created ${i + 1}/${organizationCount} performance test organizations`);
+        console.debug(`Created ${i + 1}/${organizationCount} performance test organizations`);
       }
     }
     

@@ -35,17 +35,17 @@ export class EnvironmentsEffects {
     this.actions$.pipe(
       ofType(EnvironmentsActions.loadEnvironments, EnvironmentsActions.refreshEnvironments),
       tap((action) => {
-        console.log('[EnvironmentsEffects] Action received:', action.type, 'applicationId:', action.applicationId);
+        console.debug('[EnvironmentsEffects] Action received:', action.type, 'applicationId:', action.applicationId);
       }),
       switchMap((action) => {
-        console.log('[EnvironmentsEffects] Calling apiKeyService.getApiKeysByApplication');
+        console.debug('[EnvironmentsEffects] Calling apiKeyService.getApiKeysByApplication');
         
         return this.apiKeyService.getApiKeysByApplication(action.applicationId).pipe(
           tap((connection) => {
-            console.log('[EnvironmentsEffects] API keys response:', connection);
+            console.debug('[EnvironmentsEffects] API keys response:', connection);
           }),
           map((connection) => {
-            console.log('[EnvironmentsEffects] Dispatching loadEnvironmentsSuccess with', connection.items.length, 'items');
+            console.debug('[EnvironmentsEffects] Dispatching loadEnvironmentsSuccess with', connection.items.length, 'items');
             return EnvironmentsActions.loadEnvironmentsSuccess({
               configs: [], // Configs are optional, load separately if needed
               apiKeys: connection.items,
