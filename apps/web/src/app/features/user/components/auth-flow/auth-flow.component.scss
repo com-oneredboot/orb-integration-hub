@@ -654,6 +654,16 @@
     border-radius: v.$border-radius;
     margin-bottom: v.$spacing-md;
     box-shadow: 0 2px 8px rgba(v.$primary-color, 0.1);
+    display: flex;
+    align-items: flex-start;
+    gap: v.$spacing-sm;
+
+    &-icon {
+      flex-shrink: 0;
+      color: v.$primary-color;
+      font-size: v.$font-size-base;
+      margin-top: 2px; // Align with first line of text
+    }
 
     p {
       color: v.$text-primary;
@@ -661,15 +671,7 @@
       line-height: 1.5;
       margin: 0;
       text-align: left;
-      
-      &::before {
-        content: '\f05a'; // FontAwesome info-circle
-        font-family: 'Font Awesome 6 Free';
-        font-weight: 900;
-        font-size: v.$font-size-sm;
-        color: v.$primary-color;
-        margin-right: v.$spacing-xs;
-      }
+      flex: 1;
     }
   }
 
