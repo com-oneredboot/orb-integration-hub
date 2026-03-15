@@ -140,3 +140,17 @@ apps/web/src/environments/environment.prod.ts
 
 # Admin scripts (contain sensitive operations)
 admin-scripts/
+
+# -----------------------------------------------------------------------------
+# Temp / Debug Files (should never be committed)
+# -----------------------------------------------------------------------------
+temp-*.json
+test-output.txt
+apps/web/test-output.txt
+authorizer-response.json
+config-example-full.txt
+schema-config.json
+*.backup
+test-*.json
+test-sdk-api.py
+sdk-schema.graphql
