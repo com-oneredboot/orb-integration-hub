@@ -25,23 +25,37 @@ This document outlines all user management views in the orb-integration-hub plat
 - `/customers/applications/:appId/users` - Users with access to specific application (any environment)
 - `/customers/applications/:appId/environments/:env/users` - Users with access to specific environment
 
-**Data Source:** ApplicationUserRoles table
+**Data Source:** ApplicationUserRoles table (sole source of truth for application user membership)
 
-**Query Strategy:** Single Lambda-backed query with filters
+**Query Strategy:** Lambda-backed query (`GetApplicationUsers`) with GSI-based strategy selection:
+
+| Filters Provided | Strategy | GSI Used |
+|-------------------|----------|----------|
+| `applicationIds` (± environment) | AppEnvUserIndex | `AppEnvUserIndex` (partition: applicationId, sort: environment) |
+| `organizationIds` only (± environment) | ORG_TO_APP_TO_ROLES | Resolves org → apps, then queries `AppEnvUserIndex` |
+| No filters | SCAN_WITH_AUTH | Full scan with authorization-based filtering |
+
 ```graphql
 GetApplicationUsers(
   organizationIds: [String!]    # Filter by organizations
-  applicationIds: [String!]     # Filter by applications  
-  environment: Environment      # Filter by environment
-): [UserWithRoles!]!
+  applicationIds: [String!]     # Filter by applications
+  environment: Environment      # Filter by environment (requires org or app filter)
+  limit: Int                    # Pagination limit (default: 50, max: 100)
+  nextToken: String             # Pagination token
+): GetApplicationUsersOutput!
 ```
 
 **Access Control:** CUSTOMER, EMPLOYEE, OWNER
+- CUSTOMER: sees only users in organizations they own
+- EMPLOYEE/OWNER: sees users across all organizations
 
 **Key Features:**
 - Filter by organization, application, or environment
-- Display roles per environment (most users only have PRODUCTION)
-- Bulk operations (invite, remove, change roles)
+- Users deduplicated by userId with role assignments grouped per user
+- Enriched with Users table data (firstName, lastName)
+- Results sorted by lastName then firstName
+- Expandable rows showing role details and permissions
+- Pagination with limit/nextToken
 
 **Implementation Status:** ✅ Implemented
 
@@ -63,7 +77,7 @@ OrganizationUsersQueryByOrganizationId(
 ): OrganizationUsersResponse!
 ```
 
-**Access Control:** 
+**Access Control:**
 - CUSTOMER (only for organizations they own)
 - EMPLOYEE, OWNER (all organizations)
 
@@ -107,7 +121,7 @@ GetPlatformUsers(
 
 ## Query Implementation Details
 
-### Application Users Query (Priority)
+### Application Users Query
 
 **Schema Type:** `lambda-dynamodb`
 
@@ -118,20 +132,25 @@ GetPlatformUsers(
 interface GetApplicationUsersInput {
   organizationIds?: string[];  // Optional: filter by organizations
   applicationIds?: string[];   // Optional: filter by applications
-  environment?: Environment;   // Optional: filter by environment
-  limit?: number;
-  nextToken?: string;
+  environment?: Environment;   // Optional: requires org or app filter
+  limit?: number;              // Pagination limit (default: 50, max: 100)
+  nextToken?: string;          // Pagination token
 }
 ```
 
 **Output:**
 ```typescript
+interface GetApplicationUsersOutput {
+  users: UserWithRoles[];
+  nextToken?: string;
+}
+
 interface UserWithRoles {
   userId: string;
   firstName: string;
   lastName: string;
   status: UserStatus;
-  roleAssignments: RoleAssignment[];  // Array of role assignments
+  roleAssignments: RoleAssignment[];
 }
 
 interface RoleAssignment {
@@ -143,54 +162,31 @@ interface RoleAssignment {
   environment: Environment;
   roleId: string;
   roleName: string;
+  permissions: string[];
   status: ApplicationUserRoleStatus;
   createdAt: number;
   updatedAt: number;
 }
 ```
 
-**Note:** Email addresses are intentionally excluded from the list view response to protect PII. User details are limited to firstName, lastName, and userId.
-
 **Query Logic:**
-1. Validate input filters (environment requires organizationIds or applicationIds)
-2. Apply authorization (CUSTOMER sees only owned organizations)
+1. Validate input (environment filter requires organizationIds or applicationIds)
+2. Apply authorization (CUSTOMER restricted to owned organizations)
 3. Select query strategy based on filters:
-   - If applicationIds provided: Use AppEnvUserIndex GSI
-   - If only organizationIds provided: Get applications for orgs, then query
-   - If no filters: Scan with authorization filtering
-4. Query ApplicationUserRoles using selected strategy
-5. Apply environment filter if provided
-6. Deduplicate users (group by userId)
-7. Batch get from Users table for enrichment (firstName, lastName)
-8. Sort by lastName, firstName
-9. Apply pagination (limit, nextToken)
-10. Return enriched user data with all role assignments
+   - `applicationIds` provided → query AppEnvUserIndex GSI per applicationId
+   - `organizationIds` provided → resolve to applicationIds, then query AppEnvUserIndex
+   - No filters → scan with authorization filtering
+4. Apply environment filter if provided
+5. Deduplicate users by userId
+6. Batch get from Users table for enrichment (firstName, lastName)
+7. Group role assignments by user
+8. Sort by lastName then firstName
+9. Apply pagination (limit/nextToken)
 
 **Frontend Filtering:**
-- Global route (`/customers/users`): Pass all accessible organizationIds
-- Application route (`/customers/applications/:appId/users`): Pass single applicationId
-- Environment route (`/customers/applications/:appId/environments/:env/users`): Pass applicationId + environment
-
----
-
-## Data Model Changes
-
-### Removed: ApplicationUsers Table
-
-**Status:** ✅ Removed
-
-**Reason:** Redundant with ApplicationUserRoles table
-
-**Rationale:**
-- Users MUST have at least one role in at least one environment to be considered application members
-- ApplicationUserRoles already captures:
-  - User-Application relationship (userId + applicationId)
-  - Status tracking (ACTIVE, DELETED)
-  - Timestamps (createdAt, updatedAt)
-- No application-level metadata needed that isn't environment-specific
-- Simpler data model with one source of truth
-
-**Migration:** ApplicationUsers table can be deprecated - all functionality is in ApplicationUserRoles
+- Global route (`/customers/users`): No pre-applied filters
+- Application route (`/customers/applications/:appId/users`): Pre-applies applicationId filter
+- Environment route (`/customers/applications/:appId/environments/:env/users`): Pre-applies applicationId + environment filters
 
 ---
 

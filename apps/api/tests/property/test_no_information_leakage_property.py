@@ -173,13 +173,13 @@ class TestNoInformationLeakage:
 
         for file_path in auth_files:
             leakages = scan_file_for_pii_in_logs(file_path)
-            email_leakages = [l for l in leakages if l.leakage_type == "email"]
+            email_leakages = [leak for leak in leakages if leak.leakage_type == "email"]
             all_leakages.extend(email_leakages)
 
         assert (
             len(all_leakages) == 0
         ), f"Found {len(all_leakages)} email leakages in logs:\n" + "\n".join(
-            [f"  {l.file_path}:{l.line_number} - {l.pattern_match}" for l in all_leakages]
+            [f"  {leak.file_path}:{leak.line_number} - {leak.pattern_match}" for leak in all_leakages]
         )
 
     def test_no_phone_in_logs(self, auth_files: list[str]):
@@ -193,13 +193,13 @@ class TestNoInformationLeakage:
 
         for file_path in auth_files:
             leakages = scan_file_for_pii_in_logs(file_path)
-            phone_leakages = [l for l in leakages if l.leakage_type == "phone"]
+            phone_leakages = [leak for leak in leakages if leak.leakage_type == "phone"]
             all_leakages.extend(phone_leakages)
 
         assert (
             len(all_leakages) == 0
         ), f"Found {len(all_leakages)} phone number leakages in logs:\n" + "\n".join(
-            [f"  {l.file_path}:{l.line_number} - {l.pattern_match}" for l in all_leakages]
+            [f"  {leak.file_path}:{leak.line_number} - {leak.pattern_match}" for leak in all_leakages]
         )
 
     def test_no_tokens_in_logs(self, auth_files: list[str]):
@@ -213,13 +213,13 @@ class TestNoInformationLeakage:
 
         for file_path in auth_files:
             leakages = scan_file_for_pii_in_logs(file_path)
-            token_leakages = [l for l in leakages if l.leakage_type == "token"]
+            token_leakages = [leak for leak in leakages if leak.leakage_type == "token"]
             all_leakages.extend(token_leakages)
 
         assert (
             len(all_leakages) == 0
         ), f"Found {len(all_leakages)} token leakages in logs:\n" + "\n".join(
-            [f"  {l.file_path}:{l.line_number} - {l.pattern_match}" for l in all_leakages]
+            [f"  {leak.file_path}:{leak.line_number} - {leak.pattern_match}" for leak in all_leakages]
         )
 
     def test_error_responses_no_stack_traces(self):

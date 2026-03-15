@@ -7,12 +7,12 @@ The Orb Integration Hub uses a schema-driven development approach. All data mode
 ## Schema Structure
 
 ### Entity Definitions
-Located in `schemas/entities/`:
+Located in `schemas/tables/`:
 
-- `applications.yml` - Application entity schema
-- `application_roles.yml` - Application roles schema (role definitions per application)
-- `application_user_roles.yml` - Application user roles schema (user-role assignments per environment)
-- `users.yml` - Users schema
+- `Applications.yml` - Application entity schema
+- `ApplicationUserRoles.yml` - Application user role assignments schema (lambda-dynamodb)
+- `Roles.yml` - Roles schema
+- `Users.yml` - Users schema
 
 ### Code Generation Templates
 Located in `schemas/templates/`:
@@ -75,14 +75,14 @@ The generator creates:
 
 1. Python Models:
    - `applications.py`
-   - `application_roles.py`
    - `application_user_roles.py`
+   - `roles.py`
    - `users.py`
 
 2. TypeScript Models:
    - `Applications.ts`
-   - `ApplicationRoles.ts`
    - `ApplicationUserRoles.ts`
+   - `Roles.ts`
    - `Users.ts`
 
 3. GraphQL Schema:
@@ -155,20 +155,19 @@ When users are members of organizations (via OrganizationUsers table), they have
 
 ## Key Tables and Relationships
 
-| Table             | Primary Key            | Purpose                                 | References                        |
-|-------------------|-----------------------|-----------------------------------------|------------------------------------|
-| Users             | userId                | **ALL user identities** - Cognito mapping, groups, profile | —                                  |
-| Organizations     | organizationId        | Customer organizations                  | ownerId (Users)                    |
-| OrganizationUsers | userId + organizationId | User membership in organizations      | userId, organizationId             |
-| Applications      | applicationId         | Customer applications                   | organizationId                     |
-| ApplicationRoles  | applicationRoleId     | Role definitions per application        | applicationId                      |
-| ApplicationUserRoles | applicationUserRoleId | Environment-specific role assignments | userId, applicationId, applicationRoleId |
+| Table             | Primary Key            | Type | Purpose                                 | References                        |
+|-------------------|-----------------------|------|-----------------------------------------|------------------------------------|
+| Users             | userId                | dynamodb | **ALL user identities** - Cognito mapping, groups, profile | —                                  |
+| Organizations     | organizationId        | dynamodb | Customer organizations                  | ownerId (Users)                    |
+| OrganizationUsers | userId + organizationId | dynamodb | User membership in organizations      | userId, organizationId             |
+| Applications      | applicationId         | dynamodb | Customer applications                   | organizationId                     |
+| ApplicationUserRoles | applicationUserRoleId | lambda-dynamodb | Environment-specific role assignments with denormalized org/app data | userId, applicationId, roleId, organizationId |
+| Roles             | roleId                | dynamodb | Canonical role definitions              | —                                  |
 
 ### Join Tables
 
 - **OrganizationUsers**: Maps users to organizations with organizational roles (OWNER, EMPLOYEE). References `userId` (Users) and `organizationId` (Organizations). The role field indicates whether the user owns the organization or is an employee/member.
-- **ApplicationRoles**: Defines role types available within an application (e.g., Owner, Administrator, User, Guest). Each application can have custom roles with types like ADMIN, USER, GUEST, or CUSTOM. Default roles are created when an application is activated.
-- **ApplicationUserRoles**: Maps users to roles within specific application environments (permissions). References `userId` (Users), `applicationId` (Applications), and `applicationRoleId` (ApplicationRoles). This table defines what role the user has in each environment (PRODUCTION, STAGING, etc.). Also stores denormalized `organizationId`, `organizationName`, and `applicationName` for efficient querying.
+- **ApplicationUserRoles**: The sole source of truth for application user membership and permissions. Uses `lambda-dynamodb` type to support Lambda-backed queries with custom filtering logic. References `userId` (Users), `applicationId` (Applications), `organizationId` (Organizations), and `roleId` (Roles). Includes denormalized `organizationName` and `applicationName` attributes to avoid additional lookups during queries. Defines what permissions the user has in each environment (PRODUCTION, STAGING, etc.).
 
 ### Diagram
 
@@ -178,21 +177,63 @@ Users (userId) - ALL user identities
  │                                                 |
  │   Organizations (organizationId) <─────────────┘
  │
- └─< ApplicationUserRoles (applicationUserRoleId, userId, applicationId, applicationRoleId, environment) >─┐
-                                                                                                           |
-     Applications (applicationId) <─┬─> ApplicationRoles (applicationRoleId)
+ └─< ApplicationUserRoles (applicationUserRoleId, userId, applicationId, roleId, environment) >─┐
+     [lambda-dynamodb] denormalized: organizationId, organizationName, applicationName          |
+                                                                                                |
+     Applications (applicationId) <─┬─> Roles (roleId)
+                                    │
+     Organizations (organizationId) ┘  (via denormalized organizationId)
 ```
 
+## Schema Types
+
+### dynamodb
+Standard DynamoDB table with auto-generated GraphQL CRUD operations and VTL resolvers. Queries are handled directly by AppSync via DynamoDB data sources.
+
+### lambda-dynamodb
+DynamoDB table with Lambda-backed GraphQL queries. The table still exists in DynamoDB, but query operations are routed through a custom Lambda function instead of auto-generated VTL resolvers. This enables complex query logic (filtering, deduplication, enrichment) that cannot be expressed through standard DynamoDB queries.
+
+**Currently used by:** ApplicationUserRoles (v1.1)
+
+## ApplicationUserRoles Schema Details
+
+**Type:** `lambda-dynamodb` | **Version:** 1.1
+
+**Primary Key:** `applicationUserRoleId`
+
+**GSI Indexes:**
+
+| Index | Partition Key | Sort Key | Purpose |
+|-------|--------------|----------|---------|
+| UserEnvRoleIndex | userId | environment | Query roles by user and environment |
+| AppEnvUserIndex | applicationId | environment | Query roles by application and environment |
+| UserAppIndex | userId | applicationId | Query roles by user and application |
+| UserStatusIndex | userId | status | Query roles by user and status |
+
+**Denormalized Attributes:**
+
+| Attribute | Type | Rationale |
+|-----------|------|-----------|
+| organizationId | string (required) | Enables filtering by organization without joining Applications table |
+| organizationName | string (required) | Enables display without additional lookup to Organizations table |
+| applicationName | string (required) | Enables display without additional lookup to Applications table |
+
+Denormalization trades slightly increased storage and write complexity for significant read performance gains. When an organization or application name changes, all related ApplicationUserRoles records should be updated asynchronously.
+
+For query implementation details, see [User Management Views](./user-management-views.md#1-application-users).
+
 ## Notes
-- All primary keys are now explicit and descriptive (e.g., `userId`, `applicationId`, `applicationRoleId`, `applicationUserRoleId`).
+- All primary keys are now explicit and descriptive (e.g., `userId`, `applicationId`, `roleId`, `applicationUserRoleId`).
 - **Every user has at least the USER Cognito group** - it's the baseline for all authenticated users.
 - **Cognito groups are additive** - users can have multiple groups in their `groups` array field.
 - **CUSTOMER Cognito group** is tied to payment/subscription status - added when user pays, removed when cancelled.
 - **OrganizationUsers roles** (OWNER, EMPLOYEE) are separate from Cognito groups - they indicate organizational membership roles.
-- **ApplicationRoles** defines role types available within an application (Owner, Administrator, User, Guest, or custom roles).
-- **ApplicationUserRoles** assigns users to specific roles within application environments.
-- Default roles (Owner, Administrator, User, Guest) are automatically created when an application is activated.
-- This structure supports multi-tenancy, custom roles per application, and scalable authorization. 
+- Roles are not stored directly on the user; use ApplicationUserRoles for all application-level role assignments.
+- **ApplicationUserRoles is the sole source of truth** for application user membership and permissions (the legacy ApplicationUsers table has been removed).
+- ApplicationUserRoles uses `lambda-dynamodb` type to enable custom Lambda-backed queries with filtering, deduplication, and user enrichment.
+- ApplicationUserRoles denormalizes `organizationId`, `organizationName`, and `applicationName` to avoid additional lookups during queries.
+- OrganizationUsers indicates membership in an organization with an organizational role.
+- This structure supports multi-tenancy, custom roles per application, and scalable authorization.
 
 ## Code Generation & GraphQL Auth Guarantees
 

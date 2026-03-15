@@ -15,6 +15,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added console logging standards documentation in `main.ts`
   - Spec: `.kiro/specs/console-logging-cleanup/`
 
+## [0.8.0] - 2026-03-14
+
+### Added
+- Application Users Management feature
+  - Removed redundant ApplicationUsers table; ApplicationUserRoles is now the single source of truth
+  - Updated ApplicationUserRoles schema to `lambda-dynamodb` with denormalized attributes
+  - Implemented GetApplicationUsers Lambda with filtering, authorization, pagination
+  - Authorization: CUSTOMER sees only owned organizations, EMPLOYEE/OWNER sees all
+  - User deduplication, enrichment from Users table, and result sorting
+  - Structured error handling with ORB-VAL, ORB-AUTH, and ORB-DB error codes
+  - Frontend UsersListComponent with NgRx store, DataGrid, route-based filters
+  - 52 integration tests, property tests, and unit tests
+  - Spec: `.kiro/specs/application-users-management/`
+
 ## [0.7.0] - 2026-03-03
 
 ### Added

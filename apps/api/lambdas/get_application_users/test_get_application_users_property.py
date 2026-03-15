@@ -2,22 +2,41 @@
 # author: orb-integration-hub
 # created: 2026-02-09
 # description: Property-based tests for GetApplicationUsers Lambda function
+# ruff: noqa: E402
+
+import importlib.util
+import sys
+from pathlib import Path
+from unittest.mock import patch
 
 import pytest
-from unittest.mock import patch
 from hypothesis import given, strategies as st, settings, assume
-from lambdas.get_application_users.index import (
-    validate_input,
-    apply_authorization,
-    deduplicate_and_group_by_user,
-    sort_users_by_name,
-    GetApplicationUsersInput,
-    UserWithRoles,
-    ValidationError,
-    AuthorizationError,
-    ErrorCode,
-    VALID_ENVIRONMENTS
+
+# Add the lambda directory to path for imports
+lambda_dir = Path(__file__).parent
+sys.path.insert(0, str(lambda_dir))
+
+# Import with explicit module reference to avoid conflicts with other index.py files
+_spec = importlib.util.spec_from_file_location(
+    "get_application_users_index", lambda_dir / "index.py"
 )
+assert _spec is not None and _spec.loader is not None
+index = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(index)
+sys.modules["get_application_users_index"] = index
+
+# Extract classes and functions from the module
+validate_input = index.validate_input
+apply_authorization = index.apply_authorization
+deduplicate_and_group_by_user = index.deduplicate_and_group_by_user
+sort_users_by_name = index.sort_users_by_name
+GetApplicationUsersInput = index.GetApplicationUsersInput
+UserWithRoles = index.UserWithRoles
+RoleAssignment = index.RoleAssignment
+ValidationError = index.ValidationError
+AuthorizationError = index.AuthorizationError
+ErrorCode = index.ErrorCode
+VALID_ENVIRONMENTS = index.VALID_ENVIRONMENTS
 
 
 # Test strategies
@@ -203,7 +222,7 @@ def test_property_customer_authorization_filters_to_owned_orgs(owned_org_ids, re
     )
     
     # Mock get_owned_organization_ids to return owned_org_ids
-    with patch('lambdas.get_application_users.index.get_owned_organization_ids', return_value=owned_org_ids):
+    with patch('get_application_users_index.get_owned_organization_ids', return_value=owned_org_ids):
         result = apply_authorization(caller_groups, caller_user_id, query_input)
     
     # Result should only contain organizations that are both requested AND owned
@@ -232,7 +251,7 @@ def test_property_customer_without_filter_gets_owned_orgs(owned_org_ids, limit):
     )
     
     # Mock get_owned_organization_ids to return owned_org_ids
-    with patch('lambdas.get_application_users.index.get_owned_organization_ids', return_value=owned_org_ids):
+    with patch('get_application_users_index.get_owned_organization_ids', return_value=owned_org_ids):
         result = apply_authorization(caller_groups, caller_user_id, query_input)
     
     # Result should contain all owned organizations
@@ -261,7 +280,7 @@ def test_property_employee_authorization_allows_all_orgs(organization_ids, limit
     )
     
     # Should not call get_owned_organization_ids
-    with patch('lambdas.get_application_users.index.get_owned_organization_ids') as mock_get_owned:
+    with patch('get_application_users_index.get_owned_organization_ids') as mock_get_owned:
         result = apply_authorization(caller_groups, caller_user_id, query_input)
         
         # Should not have called get_owned_organization_ids
@@ -293,7 +312,7 @@ def test_property_owner_authorization_allows_all_orgs(organization_ids, limit):
     )
     
     # Should not call get_owned_organization_ids
-    with patch('lambdas.get_application_users.index.get_owned_organization_ids') as mock_get_owned:
+    with patch('get_application_users_index.get_owned_organization_ids') as mock_get_owned:
         result = apply_authorization(caller_groups, caller_user_id, query_input)
         
         # Should not have called get_owned_organization_ids
@@ -352,7 +371,7 @@ def test_property_customer_with_employee_acts_as_employee(owned_org_ids, limit):
     )
     
     # Should not call get_owned_organization_ids because EMPLOYEE takes precedence
-    with patch('lambdas.get_application_users.index.get_owned_organization_ids') as mock_get_owned:
+    with patch('get_application_users_index.get_owned_organization_ids') as mock_get_owned:
         result = apply_authorization(caller_groups, caller_user_id, query_input)
         
         # Should not have called get_owned_organization_ids
