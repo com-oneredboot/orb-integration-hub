@@ -86,6 +86,7 @@ class RoleAssignment:
     environment: str
     roleId: str
     roleName: str
+    permissions: List[str]
     status: str
     createdAt: int
     updatedAt: int
@@ -220,19 +221,16 @@ def get_owned_organization_ids(user_id: str) -> List[str]:
         # Query OrganizationUsers table using UserOrgIndex GSI
         # Note: This assumes OrganizationUsers has a GSI on userId
         # We'll need to filter for OWNER role
-        # role is a reserved keyword, so we use ExpressionAttributeNames
         org_users_table = get_dynamodb_resource().Table("orb-integration-hub-dev-organization-users")
         
         response = org_users_table.query(
             IndexName="UserOrgIndex",
             KeyConditionExpression="userId = :userId",
             FilterExpression="#role = :role",
+            ExpressionAttributeNames={"#role": "role"},
             ExpressionAttributeValues={
                 ":userId": user_id,
                 ":role": "OWNER"
-            },
-            ExpressionAttributeNames={
-                "#role": "role"
             }
         )
         
@@ -271,7 +269,9 @@ def apply_authorization(
     Raises:
         AuthorizationError: If caller lacks required permissions
     """
-    # Check if caller has any authorized group
+    # Gate: reject callers that don't belong to any of the three authorized
+    # Cognito groups. This is the first authorization check — AppSync auth
+    # directives handle token validation before the Lambda is invoked.
     authorized_groups = {"CUSTOMER", "EMPLOYEE", "OWNER"}
     if not any(group in authorized_groups for group in caller_groups):
         raise AuthorizationError(
@@ -279,32 +279,36 @@ def apply_authorization(
             "Insufficient permissions to access this resource"
         )
     
-    # EMPLOYEE and OWNER can see all organizations
+    # EMPLOYEE and OWNER are platform-level roles with unrestricted visibility.
+    # No org-scoping is applied — they can see users across all organizations.
     if "EMPLOYEE" in caller_groups or "OWNER" in caller_groups:
         logger.info("Caller has EMPLOYEE or OWNER group - no authorization filtering needed")
         return query_input
     
-    # CUSTOMER can only see organizations they own
+    # CUSTOMER callers are tenant-scoped: they may only see users belonging to
+    # organizations they own. We enforce this by rewriting the query's
+    # organizationIds filter to the intersection of requested orgs ∩ owned orgs.
     if "CUSTOMER" in caller_groups:
         logger.info("Caller has CUSTOMER group - applying organization ownership filter")
         
-        # Get organizations owned by this customer
+        # Resolve which orgs this customer owns via OrganizationUsers table
         owned_org_ids = get_owned_organization_ids(caller_user_id)
         
         if not owned_org_ids:
             logger.warning(f"Customer {caller_user_id} owns no organizations")
-            # Return empty filter that will yield no results
+            # Empty list guarantees downstream queries return zero results
             query_input.organizationIds = []
             return query_input
         
-        # If organizationIds filter provided, intersect with owned orgs
         if query_input.organizationIds:
+            # Intersect: prevent customers from requesting orgs they don't own
             filtered_org_ids = list(set(query_input.organizationIds) & set(owned_org_ids))
             logger.info(f"Filtered organizationIds from {len(query_input.organizationIds)} "
                        f"to {len(filtered_org_ids)} based on ownership")
             query_input.organizationIds = filtered_org_ids
         else:
-            # No filter provided - use all owned orgs
+            # No explicit filter — default to all owned orgs so the customer
+            # sees their full scope without having to specify org IDs
             query_input.organizationIds = owned_org_ids
             logger.info(f"Applied ownership filter - {len(owned_org_ids)} organizations")
     
@@ -326,13 +330,29 @@ def select_query_strategy(query_input: GetApplicationUsersInput) -> QueryStrateg
     Returns:
         QueryStrategy enum indicating which strategy to use
     """
-    if query_input.applicationIds:
+    # Strategy selection prioritizes the most selective GSI to minimize read capacity usage.
+    # AppEnvUserIndex is preferred because applicationId is the most granular filter —
+    # it directly partitions the GSI, avoiding cross-partition fan-out.
+    #
+    # Note: We use `is not None` checks instead of truthiness because an empty list
+    # (e.g., organizationIds=[]) means "filter was applied but matched nothing" —
+    # distinct from None which means "no filter provided". An empty list should
+    # route through ORG_TO_APP_TO_ROLES (which returns zero results) rather than
+    # falling through to SCAN_WITH_AUTH (which returns everything).
+    if query_input.applicationIds is not None:
         logger.info("Using APP_ENV_USER_INDEX strategy (applicationIds provided)")
         return QueryStrategy.APP_ENV_USER_INDEX
-    elif query_input.organizationIds:
+    elif query_input.organizationIds is not None:
+        # Org-only queries require a two-step lookup: first resolve orgIds → appIds
+        # via the Applications table, then query AppEnvUserIndex per app.
+        # This is costlier than a direct app query but still avoids a full table scan.
         logger.info("Using ORG_TO_APP_TO_ROLES strategy (organizationIds provided)")
         return QueryStrategy.ORG_TO_APP_TO_ROLES
     else:
+        # Fallback: no filters means we must scan the entire table.
+        # Authorization (apply_authorization) will have already scoped the query
+        # to owned orgs for CUSTOMER callers, so this path is mainly hit by
+        # EMPLOYEE/OWNER users requesting an unfiltered view.
         logger.info("Using SCAN_WITH_AUTH strategy (no filters provided)")
         return QueryStrategy.SCAN_WITH_AUTH
 
@@ -414,9 +434,13 @@ def query_application_user_roles(
         table = get_dynamodb_resource().Table(table_name)
         all_items = []
         
+        # "status" is a DynamoDB reserved keyword — alias it to avoid
+        # ValidationException in FilterExpression / scan expressions.
+        status_attr_names = {"#status": "status"}
+
         if strategy == QueryStrategy.APP_ENV_USER_INDEX:
             # Query using AppEnvUserIndex GSI for each applicationId
-            for app_id in query_input.applicationIds:
+            for app_id in (query_input.applicationIds or []):
                 # Build key condition
                 key_condition = "applicationId = :appId"
                 expr_attr_values = {":appId": app_id}
@@ -426,16 +450,15 @@ def query_application_user_roles(
                     key_condition += " AND environment = :env"
                     expr_attr_values[":env"] = query_input.environment
                 
-                # Add status filter (status is a reserved keyword)
+                # Add status filter
                 expr_attr_values[":status"] = "ACTIVE"
-                expr_attr_names = {"#status": "status"}
                 
                 # Query the GSI
                 response = table.query(
                     IndexName="AppEnvUserIndex",
                     KeyConditionExpression=key_condition,
                     ExpressionAttributeValues=expr_attr_values,
-                    ExpressionAttributeNames=expr_attr_names,
+                    ExpressionAttributeNames=status_attr_names,
                     FilterExpression="#status = :status"
                 )
                 
@@ -447,7 +470,7 @@ def query_application_user_roles(
                         IndexName="AppEnvUserIndex",
                         KeyConditionExpression=key_condition,
                         ExpressionAttributeValues=expr_attr_values,
-                        ExpressionAttributeNames=expr_attr_names,
+                        ExpressionAttributeNames=status_attr_names,
                         FilterExpression="#status = :status",
                         ExclusiveStartKey=response["LastEvaluatedKey"]
                     )
@@ -455,7 +478,7 @@ def query_application_user_roles(
         
         elif strategy == QueryStrategy.ORG_TO_APP_TO_ROLES:
             # First get applicationIds for the organizations
-            application_ids = get_application_ids_for_organizations(query_input.organizationIds)
+            application_ids = get_application_ids_for_organizations(query_input.organizationIds or [])
             
             if not application_ids:
                 logger.info("No applications found for specified organizations")
@@ -470,15 +493,14 @@ def query_application_user_roles(
                     key_condition += " AND environment = :env"
                     expr_attr_values[":env"] = query_input.environment
                 
-                # Add status filter (status is a reserved keyword)
+                # Add status filter
                 expr_attr_values[":status"] = "ACTIVE"
-                expr_attr_names = {"#status": "status"}
                 
                 response = table.query(
                     IndexName="AppEnvUserIndex",
                     KeyConditionExpression=key_condition,
                     ExpressionAttributeValues=expr_attr_values,
-                    ExpressionAttributeNames=expr_attr_names,
+                    ExpressionAttributeNames=status_attr_names,
                     FilterExpression="#status = :status"
                 )
                 
@@ -490,7 +512,7 @@ def query_application_user_roles(
                         IndexName="AppEnvUserIndex",
                         KeyConditionExpression=key_condition,
                         ExpressionAttributeValues=expr_attr_values,
-                        ExpressionAttributeNames=expr_attr_names,
+                        ExpressionAttributeNames=status_attr_names,
                         FilterExpression="#status = :status",
                         ExclusiveStartKey=response["LastEvaluatedKey"]
                     )
@@ -499,16 +521,18 @@ def query_application_user_roles(
         elif strategy == QueryStrategy.SCAN_WITH_AUTH:
             # Scan the table with status filter
             # Note: This is the least efficient strategy
-            # status is a reserved keyword, so we use ExpressionAttributeNames
-            scan_kwargs = {
-                "FilterExpression": "#status = :status",
-                "ExpressionAttributeValues": {":status": "ACTIVE"},
-                "ExpressionAttributeNames": {"#status": "status"}
-            }
+            filter_expression = "#status = :status"
+            scan_expr_attr_values: Dict[str, str] = {":status": "ACTIVE"}
             
             if query_input.environment:
-                scan_kwargs["FilterExpression"] += " AND environment = :env"
-                scan_kwargs["ExpressionAttributeValues"][":env"] = query_input.environment
+                filter_expression += " AND environment = :env"
+                scan_expr_attr_values[":env"] = query_input.environment
+            
+            scan_kwargs: Dict[str, Any] = {
+                "FilterExpression": filter_expression,
+                "ExpressionAttributeValues": scan_expr_attr_values,
+                "ExpressionAttributeNames": status_attr_names,
+            }
             
             response = table.scan(**scan_kwargs)
             all_items.extend(response.get("Items", []))
@@ -582,14 +606,18 @@ def enrich_users_from_users_table(user_ids: List[str]) -> Dict[str, Dict[str, An
         dynamodb = get_dynamodb_resource()
         users_map: Dict[str, Dict[str, Any]] = {}
         
-        # Batch get in chunks of 100 (DynamoDB limit)
+        # DynamoDB BatchGetItem supports max 100 keys per request.
+        # We chunk the user IDs to stay within this limit and retry
+        # any UnprocessedKeys (which occur under heavy throughput).
         chunk_size = 100
         for i in range(0, len(user_ids), chunk_size):
             chunk = user_ids[i:i + chunk_size]
             
-            # Build batch get request
             keys = [{"userId": user_id} for user_id in chunk]
             
+            # Project only the fields needed for the response to minimize
+            # read capacity consumption. "status" is a DynamoDB reserved word,
+            # so we alias it via ExpressionAttributeNames.
             response = dynamodb.batch_get_item(
                 RequestItems={
                     users_table_name: {
@@ -600,11 +628,11 @@ def enrich_users_from_users_table(user_ids: List[str]) -> Dict[str, Dict[str, An
                 }
             )
             
-            # Process response
             for item in response.get("Responses", {}).get(users_table_name, []):
                 users_map[item["userId"]] = item
             
-            # Handle unprocessed keys
+            # Retry loop: DynamoDB may return UnprocessedKeys when provisioned
+            # throughput is exceeded. We keep retrying until all keys are fetched.
             unprocessed = response.get("UnprocessedKeys", {})
             while unprocessed:
                 response = dynamodb.batch_get_item(RequestItems=unprocessed)
@@ -646,7 +674,10 @@ def build_users_with_roles(
     users_with_roles = []
     
     for user_id, role_assignments in user_roles_map.items():
-        # Get user details (handle missing users gracefully)
+        # Join: look up user profile from the Users table batch-get results.
+        # If the user record is missing (e.g., deleted account with lingering
+        # role assignments), we fall back to placeholder values so the response
+        # still includes the orphaned role data for visibility.
         user_details = users_map.get(user_id)
         if not user_details:
             logger.warning(f"User {user_id} not found in Users table, using placeholder")
@@ -669,6 +700,7 @@ def build_users_with_roles(
                 environment=assignment.get("environment", ""),
                 roleId=assignment.get("roleId", ""),
                 roleName=assignment.get("roleName", ""),
+                permissions=assignment.get("permissions", []),
                 status=assignment.get("status", ""),
                 createdAt=int(assignment.get("createdAt", 0)),
                 updatedAt=int(assignment.get("updatedAt", 0))
@@ -748,29 +780,36 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         logger.info(f"Query filters - orgs: {query_input.organizationIds}, "
                    f"apps: {query_input.applicationIds}, env: {query_input.environment}")
         
-        # Validate input parameters
+        # Step 1: Validate input — rejects invalid filter combos early (e.g.,
+        # environment without org/app) before any DynamoDB calls.
         validate_input(query_input)
         
-        # Apply authorization rules
+        # Step 2: Authorization — rewrites organizationIds for CUSTOMER callers
+        # to enforce tenant isolation. EMPLOYEE/OWNER pass through unchanged.
         query_input = apply_authorization(caller_groups, caller_user_id, query_input)
         
-        # Select query strategy based on filters
+        # Step 3: Pick the cheapest GSI strategy based on which filters survived
+        # authorization. This determines whether we query by app, resolve orgs→apps,
+        # or fall back to a table scan.
         strategy = select_query_strategy(query_input)
         
-        # Query ApplicationUserRoles table
+        # Step 4: Execute the DynamoDB query using the chosen strategy.
+        # Returns raw role assignment items (one per user-app-env-role combo).
         role_assignments = query_application_user_roles(query_input, strategy)
         
-        # Deduplicate and group by user
+        # Step 5: Group role assignments by userId so each user appears once
+        # with all their roles collected under a single record.
         user_roles_map = deduplicate_and_group_by_user(role_assignments)
         
-        # Enrich with user details from Users table
+        # Step 6: Enrich — batch-get user profiles (firstName, lastName, status)
+        # from the Users table to complement the role data.
         user_ids = list(user_roles_map.keys())
         users_map = enrich_users_from_users_table(user_ids)
         
-        # Build UserWithRoles objects
+        # Step 7: Merge role assignments with user profiles into the response shape.
         users_with_roles = build_users_with_roles(user_roles_map, users_map)
         
-        # Sort by user name
+        # Step 8: Sort alphabetically by lastName, firstName for consistent ordering.
         users_with_roles = sort_users_by_name(users_with_roles)
         
         # Apply pagination limit
@@ -803,6 +842,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                             "environment": ra.environment,
                             "roleId": ra.roleId,
                             "roleName": ra.roleName,
+                            "permissions": ra.permissions,
                             "status": ra.status,
                             "createdAt": ra.createdAt,
                             "updatedAt": ra.updatedAt

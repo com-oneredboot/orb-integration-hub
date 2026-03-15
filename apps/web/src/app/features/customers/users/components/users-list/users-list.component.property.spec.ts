@@ -26,7 +26,7 @@ type DispatchedAction = ReturnType<typeof UsersActions.setOrganizationFilter> |
   ReturnType<typeof UsersActions.loadUsers>;
 
 describe('UsersListComponent - Property Tests', () => {
-  let component: UsersListComponent;
+  let _component: UsersListComponent;
   let fixture: ComponentFixture<UsersListComponent> | null;
   let mockStore: jasmine.SpyObj<Store>;
   let queryParamsSubject: BehaviorSubject<Record<string, string>>;
@@ -41,11 +41,9 @@ describe('UsersListComponent - Property Tests', () => {
     mockStore.select.and.returnValue(of([]));
     
     // Simple approach: just capture actions in the array
-    const captureAction = (action: DispatchedAction) => {
+    mockStore.dispatch.and.callFake(((action: DispatchedAction) => {
       dispatchedActions.push(action);
-    };
-    
-    mockStore.dispatch.and.callFake(captureAction as any);
+    }) as Store['dispatch']);
 
     // Create query params subject for testing
     queryParamsSubject = new BehaviorSubject<Record<string, string>>({});

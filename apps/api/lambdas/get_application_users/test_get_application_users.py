@@ -2,15 +2,33 @@
 # author: orb-integration-hub
 # created: 2026-02-09
 # description: Unit tests for GetApplicationUsers Lambda function
+# ruff: noqa: E402
 
-from lambdas.get_application_users.index import (
-    deduplicate_and_group_by_user,
-    sort_users_by_name,
-    UserWithRoles,
-    select_query_strategy,
-    QueryStrategy,
-    GetApplicationUsersInput
+import importlib.util
+import sys
+from pathlib import Path
+
+
+# Add the lambda directory to path for imports
+lambda_dir = Path(__file__).parent
+sys.path.insert(0, str(lambda_dir))
+
+# Import with explicit module reference to avoid conflicts with other index.py files
+_spec = importlib.util.spec_from_file_location(
+    "get_application_users_index", lambda_dir / "index.py"
 )
+assert _spec is not None and _spec.loader is not None
+index = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(index)
+
+# Extract classes and functions from the module
+deduplicate_and_group_by_user = index.deduplicate_and_group_by_user
+sort_users_by_name = index.sort_users_by_name
+UserWithRoles = index.UserWithRoles
+RoleAssignment = index.RoleAssignment
+select_query_strategy = index.select_query_strategy
+QueryStrategy = index.QueryStrategy
+GetApplicationUsersInput = index.GetApplicationUsersInput
 
 
 def test_deduplicate_and_group_by_user_empty_list():

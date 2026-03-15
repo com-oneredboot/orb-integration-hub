@@ -1,12 +1,14 @@
 /**
  * UsersListComponent Unit Tests
  *
- * Unit tests for users list component covering specific examples and edge cases.
+ * Unit tests for users list component covering specific examples, edge cases,
+ * and template rendering verification.
  *
- * @see .kiro/specs/application-users-list/design.md
+ * @see .kiro/specs/application-users-management/design.md
+ * _Requirements: 4.1-4.13_
  */
 
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { Router, ActivatedRoute } from '@angular/router';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { of } from 'rxjs';
@@ -17,6 +19,7 @@ import { UsersActions } from '../../store/users.actions';
 import * as fromUsers from '../../store/users.selectors';
 import { UserTableRow } from '../../store/users.state';
 import { UserWithRoles, RoleAssignment } from '../../../../../core/graphql/GetApplicationUsers.graphql';
+import { UserStatus } from '../../../../../core/enums/UserStatusEnum';
 import { DEFAULT_PAGE_STATE } from '../../../../../shared/components/data-grid';
 
 describe('UsersListComponent', () => {
@@ -362,19 +365,19 @@ describe('UsersListComponent', () => {
 
   describe('Status Class Helper', () => {
     it('should return correct class for ACTIVE status', () => {
-      expect(component.getStatusClass('ACTIVE' as unknown as any)).toBe('active');
+      expect(component.getStatusClass(UserStatus.Active)).toBe('active');
     });
 
     it('should return correct class for INACTIVE status', () => {
-      expect(component.getStatusClass('INACTIVE' as unknown as any)).toBe('inactive');
+      expect(component.getStatusClass(UserStatus.Inactive)).toBe('inactive');
     });
 
     it('should return correct class for PENDING status', () => {
-      expect(component.getStatusClass('PENDING' as unknown as any)).toBe('pending');
+      expect(component.getStatusClass(UserStatus.Pending)).toBe('pending');
     });
 
     it('should return default class for unknown status', () => {
-      expect(component.getStatusClass('UNKNOWN' as unknown as any)).toBe('inactive');
+      expect(component.getStatusClass(UserStatus.Unknown)).toBe('inactive');
     });
   });
 
@@ -404,6 +407,464 @@ describe('UsersListComponent', () => {
       const statusColumn = component.columns.find(col => col.field === 'userStatus');
       expect(statusColumn?.filterOptions).toBeDefined();
       expect(statusColumn?.filterOptions?.length).toBe(4); // All Statuses + 3 status values
+    });
+  });
+
+  /**
+   * Template Rendering Tests (Task 8.8)
+   * 
+   * Verifies that the component template renders correctly for all states:
+   * filter controls, table with data, loading, error, empty, and pagination.
+   * _Requirements: 4.1-4.13_
+   */
+  describe('Template Rendering', () => {
+    // Helper to query the native element
+    const query = (selector: string): HTMLElement | null =>
+      fixture.nativeElement.querySelector(selector);
+    const queryAll = (selector: string): NodeListOf<HTMLElement> =>
+      fixture.nativeElement.querySelectorAll(selector);
+
+    describe('Filter Controls Rendering', () => {
+      it('should render the data grid with filter support enabled', fakeAsync(() => {
+        store.overrideSelector(fromUsers.selectFilteredUserRows, [mockUserRow]);
+        store.overrideSelector(fromUsers.selectIsLoading, false);
+        store.overrideSelector(fromUsers.selectError, null);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        const dataGrid = query('app-data-grid');
+        expect(dataGrid).toBeTruthy();
+      }));
+
+      it('should configure data grid with showFilters enabled', fakeAsync(() => {
+        fixture.detectChanges();
+        tick();
+
+        // The data grid component receives showFilters=true from the template
+        const dataGrid = query('app-data-grid');
+        expect(dataGrid).toBeTruthy();
+        // Verify the filter toolbar is rendered inside the data grid
+        const filterToggle = query('.data-grid__filter-toggle');
+        expect(filterToggle).toBeTruthy();
+      }));
+
+      it('should render filter inputs for filterable columns', fakeAsync(() => {
+        fixture.detectChanges();
+        tick();
+
+        // The data grid renders filter inputs for filterable columns (user, userStatus)
+        const filterFields = queryAll('.data-grid__filter-field');
+        expect(filterFields.length).toBe(2); // user (text) + userStatus (select)
+      }));
+
+      it('should render a text filter for user column', fakeAsync(() => {
+        fixture.detectChanges();
+        tick();
+
+        const textFilter = query('.data-grid__filter-input');
+        expect(textFilter).toBeTruthy();
+      }));
+
+      it('should render a select filter for status column', fakeAsync(() => {
+        fixture.detectChanges();
+        tick();
+
+        const selectFilter = query('.data-grid__filter-select');
+        expect(selectFilter).toBeTruthy();
+      }));
+
+      it('should render reset button', fakeAsync(() => {
+        fixture.detectChanges();
+        tick();
+
+        const resetBtn = query('.data-grid__reset');
+        expect(resetBtn).toBeTruthy();
+        expect(resetBtn?.textContent).toContain('Reset');
+      }));
+    });
+
+    describe('Table Rendering with Data', () => {
+      beforeEach(fakeAsync(() => {
+        store.overrideSelector(fromUsers.selectFilteredUserRows, [mockUserRow]);
+        store.overrideSelector(fromUsers.selectIsLoading, false);
+        store.overrideSelector(fromUsers.selectError, null);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+      }));
+
+      it('should render the data grid table', () => {
+        const table = query('.data-grid__table');
+        expect(table).toBeTruthy();
+      });
+
+      it('should render table header columns', () => {
+        const headers = queryAll('.data-grid__header');
+        // 7 columns: user, status, roles, environments, organizations, applications, lastActivity
+        expect(headers.length).toBe(7);
+      });
+
+      it('should render header text for each column', () => {
+        const headerTexts = queryAll('.data-grid__header-text');
+        const texts = Array.from(headerTexts).map(el => el.textContent?.trim());
+        expect(texts).toContain('User');
+        expect(texts).toContain('Status');
+        expect(texts).toContain('Roles');
+        expect(texts).toContain('Environments');
+        expect(texts).toContain('Organizations');
+        expect(texts).toContain('Applications');
+        expect(texts).toContain('Last Updated');
+      });
+
+      it('should render data rows for each user', () => {
+        const rows = queryAll('.data-grid__row:not(.data-grid__row--loading):not(.data-grid__row--empty)');
+        expect(rows.length).toBe(1);
+      });
+
+      it('should render user info cell with name and userId', () => {
+        const userName = query('.orb-info__name');
+        const userId = query('.orb-info__id');
+        expect(userName?.textContent?.trim()).toBe('John Doe');
+        expect(userId?.textContent?.trim()).toBe('user-123');
+      });
+
+      it('should render role count cell', () => {
+        const roleCount = query('.orb-count');
+        expect(roleCount).toBeTruthy();
+        expect(roleCount?.textContent?.trim()).toContain('1');
+      });
+
+      it('should render environment tags', () => {
+        const envTags = queryAll('.orb-tag');
+        expect(envTags.length).toBeGreaterThan(0);
+        const tagTexts = Array.from(envTags).map(el => el.textContent?.trim());
+        expect(tagTexts).toContain('production');
+      });
+
+      it('should render organization names', () => {
+        // With a single org, it renders the name directly
+        const orgInfo = queryAll('.orb-info__name');
+        const orgTexts = Array.from(orgInfo).map(el => el.textContent?.trim());
+        expect(orgTexts).toContain('Org One');
+      });
+
+      it('should render application names', () => {
+        const appInfo = queryAll('.orb-info__name');
+        const appTexts = Array.from(appInfo).map(el => el.textContent?.trim());
+        expect(appTexts).toContain('App One');
+      });
+
+      it('should render multiple data rows when multiple users exist', fakeAsync(() => {
+        const secondUser: UserWithRoles = {
+          userId: 'user-456',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          status: 'ACTIVE',
+          roleAssignments: [{ ...mockRoleAssignment, applicationUserRoleId: 'role-2' }],
+        };
+        const secondRow: UserTableRow = {
+          user: secondUser,
+          userStatus: 'ACTIVE',
+          roleCount: 1,
+          environments: ['staging'],
+          organizationNames: ['Org Two'],
+          applicationNames: ['App Two'],
+          lastActivity: '2 hours ago',
+          roleAssignments: [{ ...mockRoleAssignment, applicationUserRoleId: 'role-2' }],
+        };
+
+        store.overrideSelector(fromUsers.selectFilteredUserRows, [mockUserRow, secondRow]);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        const rows = queryAll('.data-grid__row:not(.data-grid__row--loading):not(.data-grid__row--empty)');
+        expect(rows.length).toBe(2);
+      }));
+    });
+
+    describe('Loading State Rendering', () => {
+      it('should render loading spinner when loading', fakeAsync(() => {
+        store.overrideSelector(fromUsers.selectIsLoading, true);
+        store.overrideSelector(fromUsers.selectError, null);
+        store.overrideSelector(fromUsers.selectFilteredUserRows, []);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        const loadingRow = query('.data-grid__row--loading');
+        expect(loadingRow).toBeTruthy();
+
+        const loadingIndicator = query('.data-grid__loading');
+        expect(loadingIndicator).toBeTruthy();
+        expect(loadingIndicator?.textContent).toContain('Loading...');
+      }));
+
+      it('should render spinning icon during loading', fakeAsync(() => {
+        store.overrideSelector(fromUsers.selectIsLoading, true);
+        store.overrideSelector(fromUsers.selectError, null);
+        store.overrideSelector(fromUsers.selectFilteredUserRows, []);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        const spinnerIcon = query('.data-grid__loading-icon');
+        expect(spinnerIcon).toBeTruthy();
+      }));
+
+      it('should not render data rows when loading', fakeAsync(() => {
+        store.overrideSelector(fromUsers.selectIsLoading, true);
+        store.overrideSelector(fromUsers.selectError, null);
+        store.overrideSelector(fromUsers.selectFilteredUserRows, []);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        const dataRows = queryAll('.data-grid__row:not(.data-grid__row--loading):not(.data-grid__row--empty)');
+        expect(dataRows.length).toBe(0);
+      }));
+    });
+
+    describe('Error State Rendering', () => {
+      it('should render error message when error exists', fakeAsync(() => {
+        store.overrideSelector(fromUsers.selectError, 'Failed to load users');
+        store.overrideSelector(fromUsers.selectIsLoading, false);
+        store.overrideSelector(fromUsers.selectFilteredUserRows, []);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        const errorMessage = query('.orb-error-message');
+        expect(errorMessage).toBeTruthy();
+      }));
+
+      it('should display the error text', fakeAsync(() => {
+        store.overrideSelector(fromUsers.selectError, 'Network connection failed');
+        store.overrideSelector(fromUsers.selectIsLoading, false);
+        store.overrideSelector(fromUsers.selectFilteredUserRows, []);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        const errorText = query('.orb-error-message__text');
+        expect(errorText?.textContent?.trim()).toBe('Network connection failed');
+      }));
+
+      it('should display error title', fakeAsync(() => {
+        store.overrideSelector(fromUsers.selectError, 'Some error');
+        store.overrideSelector(fromUsers.selectIsLoading, false);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        const errorTitle = query('.orb-error-message__title');
+        expect(errorTitle?.textContent?.trim()).toBe('Unable to load users');
+      }));
+
+      it('should render retry button in error state', fakeAsync(() => {
+        store.overrideSelector(fromUsers.selectError, 'Failed to load users');
+        store.overrideSelector(fromUsers.selectIsLoading, false);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        const retryBtn = query('.orb-error-message .orb-btn--primary');
+        expect(retryBtn).toBeTruthy();
+        expect(retryBtn?.textContent).toContain('Retry');
+      }));
+
+      it('should not render data grid when error exists', fakeAsync(() => {
+        store.overrideSelector(fromUsers.selectError, 'Failed to load users');
+        store.overrideSelector(fromUsers.selectIsLoading, false);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        const dataGrid = query('app-data-grid');
+        expect(dataGrid).toBeFalsy();
+      }));
+    });
+
+    describe('Empty State Rendering', () => {
+      it('should render empty state when no users and not loading', fakeAsync(() => {
+        store.overrideSelector(fromUsers.selectFilteredUserRows, []);
+        store.overrideSelector(fromUsers.selectIsLoading, false);
+        store.overrideSelector(fromUsers.selectError, null);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        const emptyRow = query('.data-grid__row--empty');
+        expect(emptyRow).toBeTruthy();
+      }));
+
+      it('should display empty message text', fakeAsync(() => {
+        store.overrideSelector(fromUsers.selectFilteredUserRows, []);
+        store.overrideSelector(fromUsers.selectIsLoading, false);
+        store.overrideSelector(fromUsers.selectError, null);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        const emptyText = query('.data-grid__empty-text');
+        expect(emptyText?.textContent?.trim()).toBe('No users found');
+      }));
+
+      it('should render empty state icon', fakeAsync(() => {
+        store.overrideSelector(fromUsers.selectFilteredUserRows, []);
+        store.overrideSelector(fromUsers.selectIsLoading, false);
+        store.overrideSelector(fromUsers.selectError, null);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        const emptyIcon = query('.data-grid__empty-icon');
+        expect(emptyIcon).toBeTruthy();
+      }));
+    });
+
+    describe('Pagination Controls Rendering', () => {
+      it('should render pagination when data has multiple pages', fakeAsync(() => {
+        // Set page state with multiple pages
+        component.pageState = {
+          currentPage: 1,
+          pageSize: 10,
+          totalItems: 50,
+          totalPages: 5,
+        };
+        store.overrideSelector(fromUsers.selectFilteredUserRows, [mockUserRow]);
+        store.overrideSelector(fromUsers.selectIsLoading, false);
+        store.overrideSelector(fromUsers.selectError, null);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        const pagination = query('.data-grid__pagination');
+        expect(pagination).toBeTruthy();
+      }));
+
+      it('should render page size selector', fakeAsync(() => {
+        component.pageState = {
+          currentPage: 1,
+          pageSize: 10,
+          totalItems: 50,
+          totalPages: 5,
+        };
+        store.overrideSelector(fromUsers.selectFilteredUserRows, [mockUserRow]);
+        store.overrideSelector(fromUsers.selectIsLoading, false);
+        store.overrideSelector(fromUsers.selectError, null);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        const pageSizeSelect = query('.data-grid__page-size-select');
+        expect(pageSizeSelect).toBeTruthy();
+      }));
+
+      it('should render page navigation buttons', fakeAsync(() => {
+        component.pageState = {
+          currentPage: 1,
+          pageSize: 10,
+          totalItems: 50,
+          totalPages: 5,
+        };
+        store.overrideSelector(fromUsers.selectFilteredUserRows, [mockUserRow]);
+        store.overrideSelector(fromUsers.selectIsLoading, false);
+        store.overrideSelector(fromUsers.selectError, null);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        const pageNav = query('.data-grid__page-nav');
+        expect(pageNav).toBeTruthy();
+
+        const pageButtons = queryAll('.data-grid__page-btn');
+        expect(pageButtons.length).toBeGreaterThan(0);
+      }));
+
+      it('should render display range text', fakeAsync(() => {
+        component.pageState = {
+          currentPage: 1,
+          pageSize: 10,
+          totalItems: 50,
+          totalPages: 5,
+        };
+        store.overrideSelector(fromUsers.selectFilteredUserRows, [mockUserRow]);
+        store.overrideSelector(fromUsers.selectIsLoading, false);
+        store.overrideSelector(fromUsers.selectError, null);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        const displayRange = query('.data-grid__display-range');
+        expect(displayRange).toBeTruthy();
+      }));
+
+      it('should not render pagination when totalPages is 0', fakeAsync(() => {
+        component.pageState = {
+          currentPage: 1,
+          pageSize: 25,
+          totalItems: 0,
+          totalPages: 0,
+        };
+        store.overrideSelector(fromUsers.selectFilteredUserRows, []);
+        store.overrideSelector(fromUsers.selectIsLoading, false);
+        store.overrideSelector(fromUsers.selectError, null);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        const pagination = query('.data-grid__pagination');
+        expect(pagination).toBeFalsy();
+      }));
+
+      it('should render load more button when hasMore is true', fakeAsync(() => {
+        store.overrideSelector(fromUsers.selectHasMore, true);
+        store.overrideSelector(fromUsers.selectFilteredUserRows, [mockUserRow]);
+        store.overrideSelector(fromUsers.selectIsLoading, false);
+        store.overrideSelector(fromUsers.selectError, null);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        const loadMoreBtn = query('.orb-card__footer .orb-btn--secondary');
+        expect(loadMoreBtn).toBeTruthy();
+        expect(loadMoreBtn?.textContent).toContain('Load More Users');
+      }));
+
+      it('should not render load more button when hasMore is false', fakeAsync(() => {
+        store.overrideSelector(fromUsers.selectHasMore, false);
+        store.overrideSelector(fromUsers.selectFilteredUserRows, [mockUserRow]);
+        store.overrideSelector(fromUsers.selectIsLoading, false);
+        store.overrideSelector(fromUsers.selectError, null);
+        store.refreshState();
+        fixture.detectChanges();
+        tick();
+
+        const loadMoreBtn = query('.orb-card__footer .orb-btn--secondary');
+        expect(loadMoreBtn).toBeFalsy();
+      }));
+    });
+
+    describe('Card Header Rendering', () => {
+      it('should render card header with title', fakeAsync(() => {
+        fixture.detectChanges();
+        tick();
+
+        const cardTitle = query('.orb-card__title');
+        expect(cardTitle).toBeTruthy();
+        expect(cardTitle?.textContent).toContain('Application Users');
+      }));
+
+      it('should render refresh button in header', fakeAsync(() => {
+        fixture.detectChanges();
+        tick();
+
+        const refreshBtn = query('.orb-card__header-actions .orb-card-btn');
+        expect(refreshBtn).toBeTruthy();
+        expect(refreshBtn?.textContent).toContain('Refresh');
+      }));
     });
   });
 });
