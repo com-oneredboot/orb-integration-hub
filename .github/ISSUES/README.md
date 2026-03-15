@@ -4,6 +4,8 @@
 
 | Issue | Team | Title | Status | Impact |
 |-------|------|-------|--------|--------|
+| #105 | orb-schema-generator | Multi-API AppSync Configuration Not Recognized in v2.0.7 | Open | Critical |
+| #103 | orb-schema-generator | Lambda Resolvers Not Generated for SDK API in Multi-API Setup | Open | High |
 | #91 | orb-schema-generator | Feature Request: Custom Lambda Operations for lambda-dynamodb Tables | Open | High |
 | #84 | orb-schema-generator | Bug: TypeScript Generator Creates Duplicate Query Input Types for GSIs with Same Partition Key | Open | High |
 | #83 | orb-schema-generator | Enhancement: Multi-AppSync API Support with Lambda Authorizer | Open | High |

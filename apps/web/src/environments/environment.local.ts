@@ -8,17 +8,17 @@ export const environment = {
   debugMode: true,
   loggingLevel: 'debug',
   cognito: {
-    userPoolId: 'us-east-1_8ch8unBaX',
-    userPoolClientId: '6bbumeaaceom3v7vi2hghga2rb',
+    userPoolId: 'us-east-1_ZhrNI8FIz',
+    userPoolClientId: 'vaab605uqihpsfu2dagi3p31j',
     qrCodeIssuer: 'orb-integration-hub-dev'
   },
   graphql: {
-    url: 'https://f6nyocke7nbllnyp7nhqiuaivq.appsync-api.us-east-1.amazonaws.com/graphql',
+    url: 'https://zhdlbicpwffhvdoutc5yzz7gba.appsync-api.us-east-1.amazonaws.com/graphql',
     region: 'us-east-1'
   },
   sdkApi: {
-    url: '',
-    apiKey: '',
+    url: 'https://gywdksf7yzaopjdr3e5wv22sw4.appsync-api.us-east-1.amazonaws.com/graphql',
+    apiKey: 'orb_dev_frontend_7a6016017035101444f7be27901064e3a3ffe56673ca7f57632067ddcb71e6d8',
     region: 'us-east-1'
   }
 };

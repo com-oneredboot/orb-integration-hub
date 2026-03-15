@@ -1,0 +1,9 @@
+{
+  "applicationApiKeyId": {"S": "frontend-web-app"},
+  "keyName": {"S": "Frontend_Web_App"},
+  "keyValue": {"S": "orb_dev_frontend_7a6016017035101444f7be27901064e3a3ffe56673ca7f57632067ddcb71e6d8"},
+  "scopes": {"SS": ["CheckEmailExists", "CreateUserFromCognito"]},
+  "status": {"S": "ACTIVE"},
+  "createdAt": {"N": "1772696830"},
+  "updatedAt": {"N": "1772696830"}
+}

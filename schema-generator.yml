@@ -1,10 +1,3 @@
-# file: schema-generator.yml
-# author: orb-integration-hub
-# date: 2026-02-20
-# description: orb-schema-generator 2.0.3 configuration
-
-version: '2.0'
-
 project:
   name: orb-integration-hub
   customerId: orb
@@ -29,7 +22,6 @@ output:
           base_dir: ./apps/api
           enums_subdir: enums
           models_subdir: models
-
     typescript:
       targets:
         ts-main:
@@ -37,30 +29,56 @@ output:
           enums_subdir: core/enums
           models_subdir: core/models
           graphql_queries_subdir: core/graphql
-
     graphql:
       targets:
         graphql-main:
           base_dir: ./apps/api/graphql
         graphql-sdk:
           base_dir: ./apps/api/graphql-sdk
-
   infrastructure:
-    format: cdk
     cdk:
       base_dir: ./infrastructure/cdk/generated
       language: python
-      generate_stack: false
+      api_definitions:
+        - name: main-api
+          auth:
+            default: AMAZON_COGNITO_USER_POOLS
+            cognito:
+              user_pool_ssm_param: "/${customerId}/${projectId}/${environment}/cognito/user-pool-id"
+          tables:
+            - Users
+            - Organizations
+            - OrganizationUsers
+            - Applications
+            - ApplicationRoles
+            - ApplicationUserRoles
+            - ApplicationEnvironmentConfig
+            - ApplicationApiKeys
+            - Notifications
+            - OwnershipTransferRequests
+            - PrivacyRequests
+            - SmsRateLimit
+          include_operations:
+            - "*"
+          schema_output: apps/api/graphql
+          resolvers_output: apps/api/graphql/resolvers
+          cdk_output: infrastructure/cdk/generated/main_api
 
-  testing:
-    e2e:
-      enabled: true
-      framework: playwright
-      base_dir: ./apps/web/e2e
-      tests_subdir: tests
-      page_objects_subdir: page-objects
-      fixtures_subdir: fixtures
-      config_file: playwright.config.ts
+        - name: sdk-api
+          auth:
+            default: AWS_LAMBDA
+            lambda_authorizer:
+              function_arn_ssm_param: "/${customerId}/${projectId}/${environment}/lambda/authorizer/arn"
+              result_ttl_seconds: 300
+          tables:
+            - Users
+          include_operations:
+            - "CheckEmailExists"
+            - "CreateUserFromCognito"
+            - "GetApplicationUsers"
+          schema_output: apps/api/graphql-sdk
+          resolvers_output: apps/api/graphql-sdk/resolvers
+          cdk_output: infrastructure/cdk/generated/sdk_api
 
 generation:
   validate_schemas: true

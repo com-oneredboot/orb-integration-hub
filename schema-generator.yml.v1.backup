@@ -1,0 +1,66 @@
+# file: schema-generator.yml
+# author: orb-integration-hub
+# date: 2026-02-20
+# description: orb-schema-generator 2.0.3 configuration
+
+version: '2.0'
+
+project:
+  name: orb-integration-hub
+  customerId: orb
+  projectId: integration-hub
+  environment: dev
+
+paths:
+  schemas: ./schemas
+  subdirectories:
+    core: core
+    tables: tables
+    models: models
+    registries: registries
+    graphql: graphql
+    lambdas: lambdas
+
+output:
+  python:
+    targets:
+      python-main:
+        base_dir: ./apps/api
+        enums_subdir: enums
+        models_subdir: models
+
+  typescript:
+    targets:
+      ts-main:
+        base_dir: ./apps/web/src/app
+        enums_subdir: core/enums
+        models_subdir: core/models
+        graphql_queries_subdir: core/graphql
+
+  graphql:
+    targets:
+      graphql-main:
+        base_dir: ./apps/api/graphql
+      graphql-sdk:
+        base_dir: ./apps/api/graphql-sdk
+
+  infrastructure:
+    format: cdk
+    cdk:
+      base_dir: ./infrastructure/cdk/generated
+      language: python
+      generate_stack: false
+      apis:
+        - name: main
+          graphql_target: graphql-main
+        - name: sdk
+          graphql_target: graphql-sdk
+
+generation:
+  validate_schemas: true
+  validate_graphql: true
+  cleanup_old_files: true
+
+logging:
+  level: INFO
+  file: ./schema_generator.log
